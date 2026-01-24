@@ -3,9 +3,13 @@
 BizPlan CLI - Command-line interface for Agentic Business Plan 2026 Generator
 
 Usage:
-    bizplan generate <idea> --output <file.md>
+    bizplan generate <idea> --output <file.md> [--license-key KEY] [--ai]
     bizplan list-skills
     bizplan --help
+
+License Tiers:
+    FREE: Template-based generation (no key required)
+    PRO+: AI-powered generation (requires --license-key BP-PRO-XXXXXX)
 """
 
 import argparse
@@ -16,18 +20,42 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from antigravity.core.bizplan import BizPlanGenerator
+from antigravity.core.licensing import validate_license_key
 
 
 def generate_command(args):
     """Handle the generate command."""
     try:
+        # Validate license key and get tier
+        is_valid, tier, message = validate_license_key(args.license_key)
+
+        if not is_valid:
+            print(f"❌ {message}", file=sys.stderr)
+            print("\nGet a license key at: https://billmentor.gumroad.com/l/bizplan-generator", file=sys.stderr)
+            sys.exit(1)
+
+        # Show license status
+        print(f"📄 {message}")
+
         # Initialize generator
         generator = BizPlanGenerator()
 
         # Generate business plan
         if args.ai:
-            print("Generating AI-powered business plan...")
-            bizplan = generator.generate_bizplan_ai(args.idea)
+            # Check if tier allows AI generation
+            if tier == "free":
+                print("\n❌ AI generation requires Pro license or higher.", file=sys.stderr)
+                print("Your current tier: FREE (template-based only)", file=sys.stderr)
+                print("\n🚀 Upgrade to unlock AI-powered generation:", file=sys.stderr)
+                print("   https://billmentor.gumroad.com/l/bizplan-generator", file=sys.stderr)
+                print("\nGenerating template-based plan instead...\n")
+                bizplan = generator.generate_bizplan(args.idea)
+            else:
+                print("Generating AI-powered business plan...")
+                bizplan = generator.generate_with_ai(
+                    business_idea=args.idea,
+                    license_tier=tier
+                )
         else:
             print("Generating template-based business plan...")
             bizplan = generator.generate_bizplan(args.idea)
@@ -113,7 +141,13 @@ Examples:
     generate_parser.add_argument(
         '--ai',
         action='store_true',
-        help='Use AI-powered generation (requires Gemini API)'
+        help='Use AI-powered generation (requires Pro license + Gemini API)'
+    )
+    generate_parser.add_argument(
+        '--license-key',
+        type=str,
+        default=None,
+        help='License key (e.g., BP-PRO-ABC123). Omit for free tier (template only)'
     )
     generate_parser.set_defaults(func=generate_command)
 
