@@ -1,0 +1,10 @@
+name = "raas-gateway"
+main = "index.js"
+compatibility_date = "2024-02-06"
+account_id = "f691e83094f776311a1bfe3f8b126f1c"
+zone_id = "98a8077adbed666020c5b9832df5fdcf"
+routes = [{ pattern = "raas.agencyos.network", custom_domain = true }]
+
+[vars]
+OPENCLAW_URL = "https://habitat-medieval-accordingly-louise.trycloudflare.com"
+DEFAULT_MODEL = "vertexai/gemini-1.5-pro-preview-0514"
