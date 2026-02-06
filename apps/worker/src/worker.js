@@ -33,7 +33,7 @@ export const worker = new Worker('agency-queue', async (job) => {
       where: { id: dbJobId },
       data: {
         status: 'COMPLETED',
-        output: result,
+        output: JSON.stringify(result),
         completedAt: new Date(),
       },
     });

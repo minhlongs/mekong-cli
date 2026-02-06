@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -21,9 +21,9 @@ model User {
 model Job {
   id        String      @id @default(uuid())
   type      String      // e.g., "chat.completion"
-  status    JobStatus   @default(QUEUED)
-  input     Json        // The prompt/messages
-  output    Json?       // The result
+  status    String      @default("QUEUED")
+  input     String      // The prompt/messages (JSON string)
+  output    String?     // The result (JSON string)
   error     String?
   userId    String?
   user      User?       @relation(fields: [userId], references: [id])
@@ -33,9 +33,3 @@ model Job {
   completedAt DateTime?
 }
 
-enum JobStatus {
-  QUEUED
-  PROCESSING
-  COMPLETED
-  FAILED
-}

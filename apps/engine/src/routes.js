@@ -39,7 +39,7 @@ export default async function routes(fastify, options) {
         data: {
           type: 'chat.completion',
           status: 'QUEUED',
-          input: { model, messages },
+          input: JSON.stringify({ model, messages }),
           userId: userId || null,
         }
       });
@@ -96,7 +96,7 @@ export default async function routes(fastify, options) {
         object: 'chat.completion.job',
         created: Math.floor(job.createdAt.getTime() / 1000),
         status: job.status.toLowerCase(), // queued, processing, completed, failed
-        result: job.output || null,
+        result: job.output ? JSON.parse(job.output) : null,
         error: job.error || null
       };
     } catch (err) {
