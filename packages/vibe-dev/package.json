@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "tsc",
+        "test": "npm run test:sync-engine && npm run test:cli",
         "test:connection": "ts-node scripts/test-github-connection.ts",
         "test:sync-down": "ts-node scripts/test-sync-down.ts",
         "test:sync-up": "ts-node scripts/test-sync-up.ts",
@@ -48,6 +49,7 @@
         "CHANGELOG.md"
     ],
     "dependencies": {
+        "@agencyos/vibe-analytics": "file:../vibe-analytics",
         "@types/inquirer": "^9.0.9",
         "chalk": "^4.1.2",
         "commander": "^11.1.0",

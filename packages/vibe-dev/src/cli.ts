@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { SyncCommand } from './commands/sync.command';
+import { metricsCommand } from '@agencyos/vibe-analytics';
 import { promptForConfig, resolveConflicts } from './ui/interactive';
 import * as dotenv from 'dotenv';
 import path from 'path';
@@ -14,6 +15,8 @@ program
   .name('vibe')
   .description('🟢 Earth - Development Workflow Layer')
   .version('1.0.0');
+
+program.addCommand(metricsCommand);
 
 program
   .command('sync')
