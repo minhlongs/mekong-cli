@@ -8,6 +8,7 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from rich.table import Table
 from pathlib import Path
 import sys
 import os
@@ -17,6 +18,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.parser import RecipeParser
 from src.core.executor import RecipeExecutor
+from src.core.registry import RecipeRegistry
 
 app = typer.Typer(
     name="mekong",
@@ -43,8 +45,82 @@ def init():
 
 
 @app.command()
-def run(recipe: str = typer.Argument(..., help="Recipe file path (.md)")):
+def list():
+    """List available recipes"""
+    registry = RecipeRegistry()
+    recipes = registry.scan()
+
+    if not recipes:
+        console.print("[yellow]No recipes found.[/yellow]")
+        return
+
+    table = Table(title="Available Recipes")
+    table.add_column("Name", style="cyan")
+    table.add_column("Description")
+    table.add_column("Author", style="dim")
+    table.add_column("Tags", style="blue")
+
+    for recipe in recipes:
+        table.add_row(
+            recipe.name,
+            recipe.description,
+            recipe.author,
+            ", ".join(recipe.tags)
+        )
+
+    console.print(table)
+
+
+@app.command()
+def search(query: str):
+    """Search for recipes"""
+    registry = RecipeRegistry()
+    results = registry.search(query)
+
+    if not results:
+        console.print(f"[yellow]No recipes found matching '{query}'[/yellow]")
+        return
+
+    table = Table(title=f"Search Results: '{query}'")
+    table.add_column("Name", style="cyan")
+    table.add_column("Description")
+    table.add_column("Tags", style="blue")
+
+    for recipe in results:
+        table.add_row(
+            recipe.name,
+            recipe.description,
+            ", ".join(recipe.tags)
+        )
+
+    console.print(table)
+
+
+@app.command()
+def run(recipe: str = typer.Argument(..., help="Recipe file path (.md) or name")):
     """Run a recipe workflow"""
+    # Try to find recipe via registry first if it doesn't look like a file path
+    if not recipe.endswith(".md") and not Path(recipe).exists():
+        registry = RecipeRegistry()
+        found = registry.get_recipe(recipe)
+        if found:
+            # We need to pass the path to parser/executor, but get_recipe returns parsed object
+            # Let's adjust logic to use the found path
+            # Re-implementing get_recipe logic slightly here or modifying get_recipe to return path?
+            # get_recipe returns Recipe object. Executor takes Recipe object.
+            # So we can just pass the parsed recipe to executor.
+
+            try:
+                executor = RecipeExecutor(found)
+                success = executor.run()
+                if not success:
+                    raise typer.Exit(code=1)
+                return
+            except Exception as e:
+                console.print(f"[bold red]❌ Execution Error:[/bold red] {str(e)}")
+                raise typer.Exit(code=1)
+
+    # Fallback to file path logic
     recipe_path = Path(recipe)
 
     if not recipe_path.exists():
