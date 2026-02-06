@@ -49,7 +49,7 @@
         "CHANGELOG.md"
     ],
     "dependencies": {
-        "@agencyos/vibe-analytics": "file:../vibe-analytics",
+        "@agencyos/vibe-analytics": "^1.0.0",
         "@types/inquirer": "^9.0.9",
         "chalk": "^4.1.2",
         "commander": "^11.1.0",
