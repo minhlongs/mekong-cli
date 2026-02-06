@@ -3,6 +3,7 @@ import IORedis from 'ioredis';
 import dotenv from 'dotenv';
 import prisma from './db.js';
 import { executeTask } from './executor.js';
+import { safeJSONStringify, withRetry } from './utils.js';
 
 dotenv.config();
 
@@ -18,25 +19,25 @@ export const worker = new Worker('agency-queue', async (job) => {
 
   try {
     // 1. Update status to PROCESSING
-    await prisma.job.update({
+    await withRetry(() => prisma.job.update({
       where: { id: dbJobId },
       data: {
         status: 'PROCESSING',
         startedAt: new Date(),
       },
-    });
+    }));
 
     const result = await executeTask(job.data);
 
     // 2. Update status to COMPLETED
-    await prisma.job.update({
+    await withRetry(() => prisma.job.update({
       where: { id: dbJobId },
       data: {
         status: 'COMPLETED',
-        output: JSON.stringify(result),
+        output: safeJSONStringify(result),
         completedAt: new Date(),
       },
-    });
+    }));
 
     console.log(`✅ Job ${job.id} completed`);
     return result;
@@ -45,14 +46,14 @@ export const worker = new Worker('agency-queue', async (job) => {
 
     // 3. Update status to FAILED
     try {
-      await prisma.job.update({
+      await withRetry(() => prisma.job.update({
         where: { id: dbJobId },
         data: {
           status: 'FAILED',
           error: err.message || 'Unknown error',
           completedAt: new Date(),
         },
-      });
+      }));
     } catch (dbErr) {
       console.error(`Failed to update job ${dbJobId} status to FAILED:`, dbErr);
     }
