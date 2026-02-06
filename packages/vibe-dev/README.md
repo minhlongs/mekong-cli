@@ -12,6 +12,7 @@ Bidirectional sync between GitHub Projects V2 and local JSON storage for task ma
 - ✅ **Last-Write-Wins**: Automatic conflict resolution based on timestamps
 - ✅ **Interactive CLI**: Prompts for missing configuration
 - ✅ **Dry Run Mode**: Preview changes before execution
+- ✅ **DevOps Metrics**: DORA and Engineering Velocity (Cycle Time) analytics
 - ✅ **TypeScript**: Full type safety and IntelliSense support
 
 ---
@@ -69,6 +70,21 @@ vibe sync \
   --path team-tasks.json
 ```
 
+### 3. Run DevOps Metrics
+
+Analyze repository performance (DORA & Velocity):
+
+```bash
+# Auto-detects repo from current directory
+vibe metrics
+
+# Specify repo manually
+vibe metrics --owner facebook --repo react --days 90
+
+# Output as JSON for piping
+vibe metrics --json > report.json
+```
+
 ---
 
 ## Usage
@@ -87,6 +103,19 @@ Options:
   --dry-run              Preview changes without executing
   --no-interactive       Disable interactive prompts (for CI/CD)
   -h, --help             Display help
+```
+
+### Metrics Command
+
+```
+Usage: vibe metrics [options]
+
+Options:
+  -o, --owner <owner>  Repository owner (e.g. facebook)
+  -r, --repo <repo>    Repository name (e.g. react)
+  -d, --days <days>    Analysis period in days (default: "30")
+  --json               Output as JSON
+  -h, --help           display help for command
 ```
 
 ### Environment Variables
