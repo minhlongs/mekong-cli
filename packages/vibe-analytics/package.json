@@ -4,6 +4,35 @@
     "description": "VIBE Analytics - Growth Telemetry Engine",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "keywords": [
+        "vibe",
+        "analytics",
+        "dora-metrics",
+        "engineering-velocity",
+        "devops",
+        "telemetry",
+        "github-analytics"
+    ],
+    "author": "AgencyOS",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/agencyos/vibe-dev.git",
+        "directory": "packages/vibe-analytics"
+    },
+    "bugs": {
+        "url": "https://github.com/agencyos/vibe-dev/issues"
+    },
+    "homepage": "https://github.com/agencyos/vibe-dev#readme",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "files": [
+        "dist/",
+        "README.md",
+        "LICENSE",
+        "CHANGELOG.md"
+    ],
     "scripts": {
         "build": "tsc",
         "test": "vitest"
