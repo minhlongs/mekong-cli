@@ -73,3 +73,12 @@ products/paid/*.zip
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Open Core - Private Business Strategy (Binh Pháp)
+plans/internal/
+dna/pricing/
+dna/internal/
+docs/revenue-strategy/
+docs/competitor-analysis/
+apps/dashboard-internal/
+**/internal/**
