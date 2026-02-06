@@ -77,7 +77,24 @@ Use the provided `Makefile` in the `infrastructure/` directory for easy manageme
     make down
     ```
 
-### Option B: Production Deployment (Cloud Run / Kubernetes)
+### Option B: Local Development (SQLite - Zero Dependency)
+
+For rapid iteration without Docker, you can run the Engine and Worker using SQLite and a local Redis instance (or mocked).
+
+1.  **Configure Environment**:
+    Ensure `.env` in `apps/engine` and `apps/worker` has:
+    ```env
+    DATABASE_URL="file:./dev.db"
+    ```
+
+2.  **Run Services**:
+    ```bash
+    # From root
+    npm run dev
+    ```
+    This starts the API and Frontend concurrently.
+
+### Option C: Production Deployment (Cloud Run / Kubernetes)
 
 1.  **Build and Push Images**:
     You can use the Makefile to build and push images to your container registry (e.g., Google Container Registry or Docker Hub).
