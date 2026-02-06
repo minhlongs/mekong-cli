@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { jobQueue } from './queue.js';
 import prisma from './db.js';
+import { safeJSONParse } from './utils.js';
 
 const CompletionSchema = z.object({
   model: z.string().default('gemini-1.5-pro'),
@@ -46,17 +47,28 @@ export default async function routes(fastify, options) {
 
       const jobId = jobRecord.id;
 
-      // 4. Add to Queue (Redis)
-      await jobQueue.add('chat.completion', {
-        id: jobId,
-        model,
-        messages,
-        timestamp: Date.now()
-      }, {
-        jobId, // Use Postgres ID as BullMQ ID for consistency
-        removeOnComplete: 1000,
-        removeOnFail: 5000
-      });
+      try {
+        // 4. Add to Queue (Redis)
+        await jobQueue.add('chat.completion', {
+          id: jobId,
+          model,
+          messages,
+          timestamp: Date.now()
+        }, {
+          jobId, // Use Postgres ID as BullMQ ID for consistency
+          removeOnComplete: 1000,
+          removeOnFail: 5000
+        });
+      } catch (queueError) {
+        // Compensation: Delete the DB record if queuing fails
+        request.log.error(queueError, 'Failed to add job to queue, rolling back DB record');
+        try {
+          await prisma.job.delete({ where: { id: jobId } });
+        } catch (deleteError) {
+          request.log.error(deleteError, 'CRITICAL: Failed to rollback orphaned job record');
+        }
+        throw queueError; // Re-throw to trigger the main error handler
+      }
 
       // 5. Respond immediately
       return {
@@ -96,7 +108,7 @@ export default async function routes(fastify, options) {
         object: 'chat.completion.job',
         created: Math.floor(job.createdAt.getTime() / 1000),
         status: job.status.toLowerCase(), // queued, processing, completed, failed
-        result: job.output ? JSON.parse(job.output) : null,
+        result: job.output ? safeJSONParse(job.output) : null,
         error: job.error || null
       };
     } catch (err) {
