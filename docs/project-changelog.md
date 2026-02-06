@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Worker Service**: Updated worker to track job status (`PROCESSING`, `COMPLETED`, `FAILED`) in DB.
   - **Scripts**: Added `db:generate` and `db:push` scripts for easier management.
 - **System Architecture**: Added `docs/system-architecture.md` detailing the Hub-and-Spoke design.
+- **Recipe Registry**: Implemented foundation for Marketplace. Added `list`, `search`, and smart `run` commands to CLI.
 
 ### Changed
 - **Dependencies**: Updated `vibe-dev` to depend on published `@agencyos/vibe-analytics@^1.0.0` instead of local file protocol.
