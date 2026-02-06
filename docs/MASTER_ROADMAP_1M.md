@@ -48,8 +48,8 @@ Updated: 2026-02-06 | Status: EXECUTION
 | ✅ Mekong CLI Core | genesis.py            | DONE        |
 | ✅ ClaudeKit DNA   | 52 skills             | DONE        |
 | ✅ vibe-analytics  | CC CLI                | DONE        |
-| ⏳ Landing Page    | apps/agencyos-landing | CREATING    |
-| ⏳ Stripe Checkout | Pre-order $99         | PENDING     |
+| ✅ Landing Page    | apps/agencyos-landing | DONE        |
+| ✅ Stripe Checkout | Pre-order $99         | DONE        |
 
 **Target Audience:** CEO/Shop Owner Lead Gen VN
 
@@ -84,13 +84,18 @@ Updated: 2026-02-06 | Status: EXECUTION
 - [x] Mekong CLI Core (agent_base, parser, main.py)
 - [x] ClaudeKit DNA extracted (52 skills)
 - [x] Proxy Health (Claude + Gemini hybrid)
+- [x] CC CLI vibe-analytics bootstrap (researcher 166+ tools)
+- [x] AgencyOS Landing Page (Next.js + Tailwind v4)
+- [x] Stripe Checkout Integration (Pre-order $99)
+- [x] Engine Layer Setup (OpenClaw + BullMQ) - Code Complete
+- [x] Engine Layer Database Integration (PostgreSQL + Prisma)
 
 ---
 
 ## 🔄 IN PROGRESS
 
-- [/] CC CLI vibe-analytics bootstrap (researcher 166+ tools)
-- [/] Landing Page (create-next-app running)
+- [ ] Engine Layer Deployment (Docker/GCP)
+- [ ] Deployment Preparation (Vercel)
 
 ---
 
