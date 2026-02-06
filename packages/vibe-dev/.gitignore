@@ -8,3 +8,5 @@ vibe-tasks.json
 *.tsbuildinfo
 coverage/
 .nyc_output/
+openclaw-key.json
+.env.bak
