@@ -84,8 +84,11 @@ apps/dashboard-internal/
 **/internal/**
 openclaw-key.json
 
-# Local Database
+# Local Database & Runtime
 *.db
+*.pid
 dump.rdb
+local_db.json
 .vercel
 repomix-output.xml
+release-manifest.json
