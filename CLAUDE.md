@@ -64,6 +64,7 @@ packages/
 ```
 
 **Core Components:**
+
 - `planner.py` - LLM-powered task decomposition
 - `executor.py` - Multi-mode execution engine
 - `verifier.py` - Result validation layer
@@ -96,6 +97,7 @@ PRIVATE (.gitignore):
 ```
 
 **SDK Dependency Flow:**
+
 ```
 ui/ ──┐
       ├──> integrations/ ──> core/ (foundation)
@@ -165,6 +167,7 @@ mekong run "build authentication system"
 ```
 
 **Usage Pattern:**
+
 ```bash
 # High-level goal → automatic planning
 mekong run "implement user authentication"
@@ -208,16 +211,17 @@ mekong cook recipes/deploy-api.md
 
 ### Verification Criteria (Every Recipe Execution)
 
-| Gate | Criterion | Verification Method |
-|------|-----------|---------------------|
-| 始計 (Tech Debt) | 0 TODOs/FIXMEs | `grep -r "TODO\|FIXME" src` |
-| 作戰 (Type Safety) | 0 `any` types | `grep -r ": any" src` |
-| 謀攻 (Performance) | Build < 10s | `time npm run build` |
-| 軍形 (Security) | 0 high/critical vulns | `npm audit --audit-level=high` |
-| 兵勢 (UX) | Loading states on async | Manual review |
-| 虛實 (Documentation) | Updated on completion | Git diff check |
+| Gate                 | Criterion               | Verification Method            |
+| -------------------- | ----------------------- | ------------------------------ |
+| 始計 (Tech Debt)     | 0 TODOs/FIXMEs          | `grep -r "TODO\|FIXME" src`    |
+| 作戰 (Type Safety)   | 0 `any` types           | `grep -r ": any" src`          |
+| 謀攻 (Performance)   | Build < 10s             | `time npm run build`           |
+| 軍形 (Security)      | 0 high/critical vulns   | `npm audit --audit-level=high` |
+| 兵勢 (UX)            | Loading states on async | Manual review                  |
+| 虛實 (Documentation) | Updated on completion   | Git diff check                 |
 
 **Enforced by RecipeVerifier:**
+
 ```python
 # verifier.py automatically checks gates
 verification = verifier.verify(result, criteria)
@@ -226,6 +230,7 @@ if not verification.passed:
 ```
 
 **Override (Development Only):**
+
 ```bash
 mekong run --skip-gates "deploy-api"  # Emergency bypass
 ```
@@ -280,6 +285,41 @@ docs: Update documentation
 | Knowledge | `~/.gemini/antigravity/knowledge/` |
 | BMAD      | `_bmad/bmm/workflows/`             |
 | Skills    | `.claude/skills/`                  |
+
+---
+
+## 🌅 SUPREME COMMANDER PROTOCOL
+
+> T1 mekong-cli = Supreme Commander. Bật TRƯỚC mỗi ngày.
+
+### Morning Boot Sequence
+
+1. **`/insight`** — Đọc `insights/accumulated.md`, tự phân tích, tìm yếu điểm
+2. **Self-Fix** — Sửa chính mình trước (config, plans, skills, dependencies)
+3. **Sub-Project Scan** — Verify build tất cả `apps/*` bằng `turbo run build`
+4. **`/cook`** — Execute remaining phases cho từng sub-project
+5. **Daily Report** — Ghi kết quả vào `insights/daily-report-YYYY-MM-DD.md`
+
+### Key Files
+
+- `plans/morning-boot-protocol.md` — Quy trình chi tiết
+- `insights/accumulated.md` — Bài học tích lũy (KHÔNG XÓA, chỉ thêm)
+
+### Sub-Project Registry
+
+| Project           | Path                   | Type      |
+| ----------------- | ---------------------- | --------- |
+| agencyos-landing  | apps/agencyos-landing  | submodule |
+| sophia-ai-factory | apps/sophia-ai-factory | submodule |
+| 84tea             | apps/84tea             | submodule |
+| Well              | ../Well                | external  |
+
+### Rules
+
+- **KHÔNG OFF** — Em không tự khởi động lại được, cấm dừng
+- **Submodule Git** — Phải `cd` vào submodule trước khi `git commit`
+- **Insight Accumulation** — Mỗi session ghi insight mới vào `insights/accumulated.md`
+- **Proxy Check** — Nếu CC CLI hỏi lại liên tục → check proxy/model config ngay
 
 ---
 
