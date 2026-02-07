@@ -5,10 +5,10 @@ export default function NotFound() {
   const t = useTranslations('notFound');
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-slate-950 px-4 text-center">
-      <div className="rounded-full bg-slate-100 p-3 dark:bg-slate-800">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-deep-space-900 px-4 text-center">
+      <div className="rounded-full bg-white/5 p-3 border border-white/10">
         <svg
-          className="h-12 w-12 text-slate-600 dark:text-slate-400"
+          className="h-12 w-12 text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth="1.5"
@@ -21,16 +21,16 @@ export default function NotFound() {
           />
         </svg>
       </div>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+      <h1 className="mt-4 text-3xl font-bold tracking-tight text-starlight-100 sm:text-4xl">
         {t('title')}
       </h1>
-      <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+      <p className="mt-4 text-lg text-gray-400 max-w-md mx-auto">
         {t('description')}
       </p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <Link
           href="/"
-          className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          className="rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/25 transition-shadow duration-300 hover:shadow-xl hover:shadow-purple-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-500"
         >
           {t('back')}
         </Link>
