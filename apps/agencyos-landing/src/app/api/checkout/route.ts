@@ -1,49 +1,43 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextRequest, NextResponse } from 'next/server';
+import { createCheckoutSession } from '@/lib/polar-checkout-client';
+import { z } from 'zod';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
+const CheckoutSchema = z.object({
+  priceId: z.string().min(1),
+  customerEmail: z.string().email().optional(),
 });
 
-export async function POST() {
-  const priceId = process.env.STRIPE_PRICE_ID;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
-  if (!priceId) {
-    return NextResponse.json(
-      { error: 'Stripe Price ID is missing from environment variables' },
-      { status: 500 }
-    );
-  }
-
-  if (!process.env.STRIPE_SECRET_KEY) {
-     return NextResponse.json(
-      { error: 'Stripe Secret Key is missing from environment variables' },
-      { status: 500 }
-    );
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/cancel`,
+    const body = await req.json();
+    const { priceId, customerEmail } = CheckoutSchema.parse(body);
+
+    const baseUrl = req.headers.get('origin') || 'http://localhost:3000';
+    const locale = req.headers.get('x-locale') || 'en';
+
+    const session = await createCheckoutSession({
+      priceId,
+      customerEmail,
+      successUrl: `${baseUrl}/${locale}/success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
-        product: 'Agency-in-a-Box Pre-order',
+        source: 'landing-page',
+        locale,
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    console.error('Error creating checkout session:', err);
+  } catch (error) {
+    console.error('Checkout error:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.issues },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: err.message || 'Internal Server Error' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }

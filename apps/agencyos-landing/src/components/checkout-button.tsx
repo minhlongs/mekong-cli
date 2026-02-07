@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 
-export function CheckoutButton() {
+interface CheckoutButtonProps {
+  priceId: string;
+  children: React.ReactNode;
+}
+
+export function CheckoutButton({ priceId, children }: CheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -10,6 +15,10 @@ export function CheckoutButton() {
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priceId }),
       });
 
       if (!response.ok) {
@@ -19,7 +28,7 @@ export function CheckoutButton() {
 
       const { url } = await response.json();
 
-      // Redirect to Stripe Checkout
+      // Redirect to Polar.sh Checkout
       window.location.href = url;
     } catch (error) {
       console.error('Checkout error:', error);
@@ -30,12 +39,8 @@ export function CheckoutButton() {
   };
 
   return (
-    <button
-      onClick={handleCheckout}
-      disabled={loading}
-      className="mt-10 block w-full rounded-md bg-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 disabled:cursor-not-allowed"
-    >
-      {loading ? 'Processing...' : 'Pre-order Now'}
-    </button>
+    <div onClick={handleCheckout} className={loading ? 'pointer-events-none opacity-70' : ''}>
+      {children}
+    </div>
   );
 }

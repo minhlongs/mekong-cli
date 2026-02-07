@@ -1,0 +1,26 @@
+{
+  "subscriptions": [
+    {
+      "tenant_id": "tenant_test_123",
+      "plan": "PRO",
+      "status": "active",
+      "currency": "USD",
+      "updated_at": "2026-02-06T22:12:57.988643",
+      "stripe_subscription_id": "sub_test_123",
+      "stripe_customer_id": "cus_test_123",
+      "current_period_end": "2026-03-08T22:12:57.988647"
+    }
+  ],
+  "organizations": [],
+  "licenses": [
+    {
+      "license_key": "AGOS-PRO-8DDBBD40-7BCB",
+      "email": "test@example.com",
+      "plan": "pro",
+      "status": "active",
+      "metadata": {
+        "tenant_id": "tenant_test_123"
+      }
+    }
+  ]
+}

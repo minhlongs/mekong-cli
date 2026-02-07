@@ -1,0 +1,88 @@
+{
+  "nav": {
+    "features": "Tính Năng",
+    "pricing": "Bảng Giá",
+    "docs": "Tài Liệu",
+    "login": "Đăng Nhập",
+    "signup": "Bắt Đầu"
+  },
+  "hero": {
+    "title": "Xây Dựng AI Agent",
+    "titleHighlight": "Nhanh 10x",
+    "subtitle": "Hệ điều hành cho agency AI. Triển khai hệ thống agent tự động trong vài giờ, không phải vài tháng.",
+    "cta": "Dùng Thử Miễn Phí",
+    "ctaSecondary": "Xem Demo"
+  },
+  "features": {
+    "title": "Mọi Thứ Bạn Cần",
+    "subtitle": "Công cụ sẵn sàng cho agency AI hiện đại",
+    "items": {
+      "agents": {
+        "title": "Điều Phối Đa Agent",
+        "description": "Triển khai đội ngũ agent song song với điều phối tích hợp"
+      },
+      "infrastructure": {
+        "title": "Hạ Tầng Đã Kiểm Chứng",
+        "description": "Xoay vòng proxy, giới hạn tốc độ, và phục hồi lỗi"
+      },
+      "integrations": {
+        "title": "150+ Tích Hợp",
+        "description": "Kết nối với Stripe, Supabase, Vercel và nhiều hơn"
+      }
+    }
+  },
+  "pricing": {
+    "title": "Bảng Giá Đơn Giản, Minh Bạch",
+    "subtitle": "Không phí ẩn. Hủy bất cứ lúc nào. Mở rộng theo nhu cầu.",
+    "popular": "Phổ Biến Nhất",
+    "cta": "Bắt Đầu",
+    "ctaEnterprise": "Liên Hệ Bán Hàng",
+    "tiers": {
+      "starter": {
+        "name": "Khởi Đầu",
+        "description": "Hoàn hảo cho cá nhân và đội nhỏ",
+        "features": [
+          "10.000 yêu cầu AI/tháng",
+          "5 thành viên",
+          "Phân tích cơ bản",
+          "Hỗ trợ email",
+          "Truy cập API"
+        ]
+      },
+      "pro": {
+        "name": "Chuyên Nghiệp",
+        "description": "Cho agency và đội nghiên cứu đang phát triển",
+        "features": [
+          "100.000 yêu cầu AI/tháng",
+          "Thành viên không giới hạn",
+          "Phân tích nâng cao",
+          "Hỗ trợ ưu tiên",
+          "Tích hợp tùy chỉnh",
+          "Tùy chọn white-label",
+          "Quản lý tài khoản riêng"
+        ]
+      },
+      "enterprise": {
+        "name": "Doanh Nghiệp",
+        "description": "Giải pháp tùy chỉnh cho tổ chức lớn",
+        "features": [
+          "Yêu cầu không giới hạn",
+          "Triển khai on-premise",
+          "Đảm bảo SLA",
+          "Hỗ trợ 24/7",
+          "Huấn luyện AI tùy chỉnh",
+          "Kiểm tra bảo mật",
+          "Hỗ trợ tuân thủ"
+        ]
+      }
+    }
+  },
+  "faq": {
+    "title": "Câu Hỏi Thường Gặp",
+    "subtitle": "Mọi thứ bạn cần biết về AgencyOS"
+  },
+  "footer": {
+    "tagline": "Hệ điều hành cho agency AI",
+    "copyright": "© 2024 AgencyOS. Bảo lưu mọi quyền."
+  }
+}

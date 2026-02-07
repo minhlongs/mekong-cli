@@ -1,55 +1,169 @@
+"use client";
+
+import { GlassCard, GlassButton, GlassContainer } from "@/components/glass";
+import { Heading } from "@/components/typography/heading";
 import { CheckoutButton } from "./checkout-button";
+import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+import { Check, Zap, Crown, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const tiers = [
+  {
+    name: "Starter",
+    icon: Zap,
+    price: "$99",
+    period: "/ month",
+    description: "Perfect for solopreneurs and small teams",
+    priceId: process.env.NEXT_PUBLIC_POLAR_PRICE_STARTER || "",
+    features: [
+      "10,000 AI requests/month",
+      "5 team members",
+      "Basic analytics",
+      "Email support",
+      "API access",
+    ],
+    variant: "default" as const,
+    popular: false,
+  },
+  {
+    name: "Pro",
+    icon: Crown,
+    price: "$299",
+    period: "/ month",
+    description: "For growing agencies and research teams",
+    priceId: process.env.NEXT_PUBLIC_POLAR_PRICE_PRO || "",
+    features: [
+      "100,000 AI requests/month",
+      "Unlimited team members",
+      "Advanced analytics",
+      "Priority support",
+      "Custom integrations",
+      "White-label option",
+      "Dedicated account manager",
+    ],
+    variant: "highlighted" as const,
+    popular: true,
+  },
+  {
+    name: "Enterprise",
+    icon: Building2,
+    price: "Custom",
+    period: "",
+    description: "Custom solutions for large organizations",
+    priceId: "",
+    features: [
+      "Unlimited requests",
+      "On-premise deployment",
+      "SLA guarantee",
+      "24/7 phone support",
+      "Custom AI model training",
+      "Security audit",
+      "Compliance support",
+    ],
+    variant: "default" as const,
+    popular: false,
+  },
+];
 
 export function PricingSection() {
-  return (
-    <section id="pricing" className="py-24 relative overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-400">
-            Start small and scale as you grow. Secure your spot in the ecosystem today.
-          </p>
-        </div>
+  const t = useTranslations('pricing');
 
-        <div className="mx-auto max-w-lg rounded-3xl bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 p-8 xl:p-10 shadow-xl">
-          <div className="flex items-center justify-between gap-x-4">
-            <h3 className="text-lg font-semibold leading-8 text-slate-900 dark:text-white">Pre-order Access</h3>
-            <div className="rounded-full bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:text-indigo-400">
-              Limited Time
-            </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-center gap-x-2">
-            <span className="text-5xl font-bold tracking-tight text-slate-900 dark:text-white">$99</span>
-            <span className="text-sm font-semibold leading-6 text-slate-500 dark:text-slate-400">/one-time</span>
-          </div>
-          <p className="mt-6 text-base leading-7 text-slate-600 dark:text-slate-400">
-            Get early access to AgencyOS Agency-in-a-Box and $200 worth of RaaS credits.
+  return (
+    <section id="pricing" className="relative py-24">
+      <GlassContainer>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <Heading size="h2" gradient className="mb-6">
+            {t('title')}
+          </Heading>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            {t('subtitle')}
           </p>
-          <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-            {[
-              "Agency-in-a-Box License (Lifetime)",
-              "$200 RaaS Credits included",
-              "Priority Support",
-              "Access to Private Community",
-              "All standard recipes included",
-              "Early access to new features"
-            ].map((feature) => (
-              <li key={feature} className="flex gap-x-3">
-                <svg className="h-6 w-5 flex-none text-indigo-600 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                </svg>
-                {feature}
-              </li>
-            ))}
-          </ul>
-          <CheckoutButton />
-          <p className="mt-6 text-xs leading-5 text-slate-500 dark:text-slate-400 text-center">
-            Invoices and receipts available for easy company reimbursement.
-          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {tiers.map((tier, index) => {
+            const Icon = tier.icon;
+            return (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="relative"
+              >
+                {tier.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div className="glass-effect px-4 py-1 rounded-full text-sm font-medium text-purple-300 border border-purple-500/50">
+                      {t('popular')}
+                    </div>
+                  </div>
+                )}
+
+                <GlassCard
+                  variant={tier.variant}
+                  className={cn(
+                    "h-full flex flex-col",
+                    tier.popular && "scale-105 shadow-2xl shadow-purple-500/20"
+                  )}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold">{tier.name}</h3>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-400 mb-6">{tier.description}</p>
+
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                        {tier.price}
+                      </span>
+                      <span className="text-gray-400">{tier.period}</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    {tier.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <Check className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+                        <span className="text-gray-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {tier.priceId ? (
+                    <CheckoutButton priceId={tier.priceId}>
+                      <GlassButton
+                        variant={tier.popular ? "primary" : "glass"}
+                        className="w-full"
+                        magnetic={tier.popular}
+                      >
+                        {t('cta')}
+                      </GlassButton>
+                    </CheckoutButton>
+                  ) : (
+                    <GlassButton variant="outline" className="w-full">
+                      {t('ctaEnterprise')}
+                    </GlassButton>
+                  )}
+                </GlassCard>
+              </motion.div>
+            );
+          })}
         </div>
-      </div>
+      </GlassContainer>
     </section>
   );
 }
