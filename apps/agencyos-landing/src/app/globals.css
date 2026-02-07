@@ -3,13 +3,17 @@
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-deep-space: #030014;
+  --color-primary-cyan: #00F5FF;
+  --color-accent-purple: #8B5CF6;
 }
 
 @layer base {
   :root {
     --noise-opacity: 0.03;
     --glass-border: rgba(255, 255, 255, 0.1);
-    --glow-color: rgba(168, 85, 247, 0.4);
+    --glow-color: rgba(0, 245, 255, 0.4);
   }
 
   html {
@@ -17,8 +21,10 @@
   }
 
   body {
-    @apply bg-black text-white antialiased;
+    background-color: var(--color-deep-space);
+    color: white;
     font-family: var(--font-sans);
+    @apply antialiased;
   }
 }
 
@@ -30,7 +36,7 @@
   }
 
   .glass-card {
-    @apply bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl;
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl;
   }
 
   .dark .glass-card {
