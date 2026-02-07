@@ -41,7 +41,7 @@ jobs:
         run: |
           # Prevent npm from traversing up to monorepo workspace root
           rm -f "$GITHUB_WORKSPACE/package.json"
-          npm ci
+          npm install
 
       - name: Lint
         working-directory: ${{ env.WORKING_DIRECTORY }}
