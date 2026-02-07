@@ -1,0 +1,12 @@
+{
+    "name": "@mekong/vibe-revenue",
+    "version": "1.0.0",
+    "description": "🟤 Neptune - Finance & Revenue Layer",
+    "main": "index.ts",
+    "types": "index.ts",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist tsconfig.tsbuildinfo",
+        "test": "echo 'No tests yet'"
+    }
+}

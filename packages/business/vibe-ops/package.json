@@ -1,0 +1,12 @@
+{
+    "name": "@mekong/vibe-ops",
+    "version": "1.0.0",
+    "description": "🔴 Mars - DevOps & Deployment Layer",
+    "main": "index.ts",
+    "types": "index.ts",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist tsconfig.tsbuildinfo",
+        "test": "echo 'No tests yet'"
+    }
+}

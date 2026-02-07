@@ -4,7 +4,7 @@ from .agent_base import AgentBase, Task, Result, TaskStatus
 from .parser import RecipeParser, Recipe, RecipeStep
 from .registry import RecipeRegistry, RegistryIndex
 from .planner import RecipePlanner, PlanningContext, VerificationCriteria, TaskComplexity
-from .executor import RecipeExecutor, StepType
+from .executor import RecipeExecutor
 from .verifier import (
     RecipeVerifier,
     ExecutionResult,

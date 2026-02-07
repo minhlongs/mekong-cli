@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+.env
+.DS_Store
+test-e2e-tasks.json
+vibe-tasks.json
+*.tsbuildinfo
+coverage/
+.nyc_output/
+openclaw-key.json
+.env.bak

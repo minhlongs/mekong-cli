@@ -1,0 +1,28 @@
+// Mock Polar.sh client until @agencyos/money is available
+// This will be replaced with actual SDK implementation
+
+export type CheckoutSessionParams = {
+  priceId: string;
+  successUrl: string;
+  customerEmail?: string;
+  metadata?: Record<string, string>;
+};
+
+export async function createCheckoutSession(params: CheckoutSessionParams) {
+  // Mock implementation - replace with actual Polar.sh SDK
+  console.log('Creating checkout session:', params);
+
+  return {
+    url: `https://polar.sh/checkout/${params.priceId}?success_url=${encodeURIComponent(params.successUrl)}`,
+    id: `checkout_${Date.now()}`,
+  };
+}
+
+export async function verifyWebhookSignature(
+  payload: string,
+  signature: string
+): Promise<boolean> {
+  // Mock implementation - replace with actual webhook verification
+  console.log('Verifying webhook signature');
+  return true;
+}

@@ -1,0 +1,12 @@
+{
+    "name": "@mekong/vibe-marketing",
+    "version": "1.0.0",
+    "description": "🟡 Mercury - Marketing & Content Layer",
+    "main": "index.ts",
+    "types": "index.ts",
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist tsconfig.tsbuildinfo",
+        "test": "echo 'No tests yet'"
+    }
+}

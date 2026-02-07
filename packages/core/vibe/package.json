@@ -1,0 +1,18 @@
+{
+    "name": "@mekong/vibe",
+    "version": "1.0.0",
+    "description": "🌐 Unified VIBE Ecosystem - Core Foundation Layer",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "clean": "rm -rf dist tsconfig.tsbuildinfo",
+        "test": "echo 'No tests yet'"
+    },
+    "dependencies": {
+        "@mekong/shared": "workspace:*"
+    }
+}

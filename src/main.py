@@ -22,11 +22,24 @@ from src.core.registry import RecipeRegistry
 from src.agents import LeadHunter, ContentWriter, RecipeCrawler
 from rich.prompt import Prompt
 
+# Import BMAD CLI (using dash naming convention)
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    "bmad_commands",
+    Path(__file__).parent / "cli" / "bmad-commands.py"
+)
+bmad_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(bmad_module)
+bmad_app = bmad_module.app
+
 app = typer.Typer(
     name="mekong",
     help="🚀 Mekong CLI: RaaS Agency Operating System",
     add_completion=False,
 )
+
+# Register BMAD commands
+app.add_typer(bmad_app, name="bmad", help="BMAD workflow management")
 
 console = Console()
 

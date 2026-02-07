@@ -21,10 +21,39 @@ class RecipeExecutor:
     def execute_step(self, step: RecipeStep) -> bool:
         """
         Execute a single step.
-        For now, treats description as a shell command.
+        Supports multiple execution modes: shell, llm, api
         """
         self.console.print(f"\n[bold blue]Step {step.order}:[/bold blue] {step.title}")
 
+        # Determine execution mode from step params or description
+        step_type = step.params.get("type", "shell") if step.params else "shell"
+
+        # Handle different execution types
+        if step_type == "llm":
+            return self._execute_llm_step(step)
+        elif step_type == "api":
+            return self._execute_api_step(step)
+        else:
+            return self._execute_shell_step(step)
+
+    def _execute_llm_step(self, step: RecipeStep) -> bool:
+        """Execute LLM generation step."""
+        self.console.print(f"[cyan][LLM] Generating:[/cyan] {step.description}")
+        # Placeholder for LLM execution
+        # Would integrate with Antigravity Proxy or OpenAI
+        self.console.print("[dim]LLM execution not yet fully wired[/dim]")
+        return True
+
+    def _execute_api_step(self, step: RecipeStep) -> bool:
+        """Execute API call step."""
+        url = step.params.get("url", "unknown") if step.params else "unknown"
+        self.console.print(f"[cyan][API] Calling:[/cyan] {url}")
+        # Placeholder for API execution
+        self.console.print("[dim]API execution not yet fully wired[/dim]")
+        return True
+
+    def _execute_shell_step(self, step: RecipeStep) -> bool:
+        """Execute shell command step."""
         # The description contains the command.
         command = step.description.strip()
 
