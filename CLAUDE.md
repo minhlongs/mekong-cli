@@ -38,6 +38,38 @@ packages/
 - **DNA:** Luôn tuân thủ logic **Plan-Execute-Verify** của ClaudeKit
 - **Hub Architecture:** Monorepo với logical grouping theo layer
 
+### Core Components (v0.2.0)
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `RecipePlanner` | `planner.py` | LLM-powered task decomposition |
+| `RecipeExecutor` | `executor.py` | Multi-mode runner, returns `ExecutionResult` |
+| `RecipeVerifier` | `verifier.py` | Result validation with criteria |
+| `RecipeOrchestrator` | `orchestrator.py` | Plan→Execute→Verify coordination |
+| `LLMClient` | `llm_client.py` | OpenAI-compatible client (Antigravity Proxy) |
+
+### Agents
+
+| Agent | File | Operations |
+|-------|------|------------|
+| `GitAgent` | `git_agent.py` | status, diff, log, commit, branch |
+| `FileAgent` | `file_agent.py` | find, read, tree, stats, grep |
+| `LeadHunter` | `lead_hunter.py` | Company/CEO lead discovery |
+| `ContentWriter` | `content_writer.py` | Content generation |
+| `RecipeCrawler` | `recipe_crawler.py` | Recipe file discovery |
+
+### CLI Commands
+
+```bash
+mekong cook "<goal>"     # Full pipeline: Plan → Execute → Verify
+mekong plan "<goal>"     # Plan only (preview steps, no execution)
+mekong run <recipe.md>   # Execute existing recipe file
+mekong agent <name> <cmd>  # Run agent directly
+mekong list              # List available recipes
+mekong search <query>    # Search recipes
+mekong version           # Show version info
+```
+
 ---
 
 ## 第三篇 謀攻 (Mou Gong) - CODE STANDARDS
@@ -56,19 +88,21 @@ packages/
 1. PLAN    → RecipePlanner decomposes goals via LLM
             → Generates Recipe with tasks + dependencies + verification criteria
 2. EXECUTE → RecipeExecutor runs tasks (shell/LLM/API modes)
+            → Returns ExecutionResult (exit_code, stdout, stderr, metadata)
             → Retry logic with exponential backoff
             → Rollback on failure
-3. VERIFY  → RecipeVerifier validates results
+3. VERIFY  → RecipeVerifier validates ExecutionResult against criteria
             → Exit codes, file checks, LLM quality assessment
             → Generate verification reports
 ```
 
 **Core Components:**
 
-- `planner.py` - LLM-powered task decomposition
-- `executor.py` - Multi-mode execution engine
+- `planner.py` - LLM-powered task decomposition (rule-based fallback)
+- `executor.py` - Multi-mode execution engine with structured results
 - `verifier.py` - Result validation layer
 - `orchestrator.py` - Workflow coordination
+- `llm_client.py` - Unified LLM client (OpenAI-compatible APIs)
 
 ---
 
