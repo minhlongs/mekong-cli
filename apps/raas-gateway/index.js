@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    const openclawUrl = env.OPENCLAW_URL || "https://raas.agencyos.network";
+    const openclawUrl = env.BRIDGE_URL || env.OPENCLAW_URL || "https://raas.agencyos.network";
     // Ensure no double slash if env var has trailing slash
     const baseUrl = openclawUrl.endsWith('/') ? openclawUrl.slice(0, -1) : openclawUrl;
 
@@ -34,6 +34,45 @@ export default {
       }
     }
 
+    // --- ROUTE: POST /telegram (OpenClaw Bridge) ---
+    if (path === "/telegram" && request.method === "POST") {
+      // Verify Telegram secret token header
+      const secretToken = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+      if (!env.TELEGRAM_SECRET_TOKEN || secretToken !== env.TELEGRAM_SECRET_TOKEN) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      try {
+        const update = await request.json();
+        const message = update.message || update.edited_message;
+
+        if (message && message.text) {
+          const command = message.text;
+          const bridgeTaskUrl = `${baseUrl}/task`;
+
+          const bridgeResponse = await fetch(bridgeTaskUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task: command })
+          });
+
+          if (!bridgeResponse.ok) {
+            console.error("Bridge Error:", bridgeResponse.status);
+            return new Response(
+              JSON.stringify({ error: "Bridge forwarding failed", status: bridgeResponse.status }),
+              { status: 502, headers: { "Content-Type": "application/json" } }
+            );
+          }
+        }
+        return new Response("OK", { status: 200 });
+      } catch (err) {
+        return new Response(
+          JSON.stringify({ error: "Error processing Telegram update", details: err.message }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+    
     // --- ROUTE: POST /v1/chat/completions (or default) ---
     // 1. Basic Auth / Routing check
     if (request.method !== "POST") {
