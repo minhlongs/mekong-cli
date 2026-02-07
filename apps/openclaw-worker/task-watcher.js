@@ -71,73 +71,92 @@ async function sendTelegram(text) {
 function executeTask(taskContent, taskFile) {
   return new Promise((resolve) => {
     // Remove backslash escapes from Telegram (e.g., \! -> !)
-    const cleanContent = taskContent.replace(/\\!/g, '!').replace(/\\"/g, '"');
+    const cleanContent = taskContent.replace(/\\!/g, '!').replace(/\\"/g, '"').trim();
     console.log(`\n📋 Original: ${taskContent.slice(0, 50)}...`);
     console.log(`📋 Cleaned: ${cleanContent.slice(0, 50)}...`);
 
-    // For shell commands (prefix !)
+    let resolved = false;
+    const safeResolve = (value) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(value);
+    };
+
+    let cmd, args, toolName;
+
+    // 1. Shell commands (prefix !) — 5 min timeout
     if (cleanContent.startsWith('!')) {
-      const cmd = cleanContent.slice(1);
-      console.log(`🔧 Executing shell: ${cmd}`);
+      const shellCmd = cleanContent.slice(1);
+      console.log(`🔧 Executing shell: ${shellCmd}`);
 
       const { exec } = require('child_process');
-      exec(cmd, { cwd: MEKONG_DIR }, (error, stdout, stderr) => {
-        const result = {
+      exec(shellCmd, { cwd: MEKONG_DIR, timeout: 5 * 60 * 1000 }, (error, stdout, stderr) => {
+        safeResolve({
           success: !error,
           output: stdout || stderr || error?.message || 'No output'
-        };
-        console.log(`📊 Shell completed:`, { success: result.success });
-        resolve(result);
+        });
       });
       return;
     }
 
-    // For Claude tasks - spawn CC CLI with task
-    console.log(`🤖 Executing Claude task: ${cleanContent}`);
-    const claude = spawn('claude', ['-p', cleanContent], {
+    // 2. All other commands (including /plan, /cook, /ask, /deploy) -> Claude Agent (CC CLI)
+    else {
+      toolName = 'claude';
+      cmd = 'claude';
+      args = ['--dangerously-skip-permissions', '-p', cleanContent];
+      console.log(`🤖 Executing Claude Agent: ${cleanContent}`);
+    }
+
+    // Spawn the process
+    const child = spawn(cmd, args, {
       cwd: MEKONG_DIR,
       stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env, PATH: '/opt/homebrew/bin:/usr/local/bin:' + process.env.PATH }
     });
+    
+    // Close stdin immediately to prevent hanging if the tool expects input
+    child.stdin.end();
 
     let output = '';
     let errorOutput = '';
 
-    claude.stdout.on('data', (data) => {
+    child.stdout.on('data', (data) => {
       const text = data.toString();
       output += text;
       console.log(text);
     });
 
-    claude.stderr.on('data', (data) => {
+    child.stderr.on('data', (data) => {
       const text = data.toString();
       errorOutput += text;
       console.error(text);
     });
 
-    claude.on('close', (code) => {
+    child.on('close', (code) => {
       const fullOutput = output + errorOutput;
-      resolve({
+      safeResolve({
         success: code === 0,
         output: fullOutput.slice(-3000) || 'Task completed with no output'
       });
     });
 
-    claude.on('error', (error) => {
-      resolve({
+    child.on('error', (error) => {
+      safeResolve({
         success: false,
-        output: `Failed to start claude: ${error.message}`
+        output: `Failed to start ${toolName}: ${error.message}`
       });
     });
 
-    // Timeout after 5 minutes
+    // Kill child after 10 minutes to prevent hanging
     setTimeout(() => {
-      claude.kill();
-      resolve({
-        success: false,
-        output: 'Timeout after 5 minutes'
-      });
-    }, 5 * 60 * 1000);
+      if (!resolved) {
+        child.kill('SIGTERM');
+        safeResolve({
+          success: false,
+          output: 'Timeout after 10 minutes'
+        });
+      }
+    }, 10 * 60 * 1000);
   });
 }
 
