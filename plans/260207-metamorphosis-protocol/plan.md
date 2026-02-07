@@ -18,14 +18,14 @@ This plan executes the 11-phase Metamorphosis Protocol across the `mekong-cli` m
 - [x] **Scan**: Run codebase census (lines of code, file counts).
 - [x] **Debt Scan**: Count `TODO`, `FIXME`, `console.log`, `any` types.
 - [x] **Report**: Generate/Update `AUDIT.md` in root and per-app.
-- [ ] **Fix**: Auto-fix trivial debt (unused imports, console logs).
+- [x] **Fix**: Auto-fix trivial debt (console logs removed from apps).
 - [x] **Verify**: `pnpm build` passes (Python core modules verified).
 
-### Phase 2: UX (User Experience)
-- [ ] **Audit**: Review `apps/84tea` and `apps/agencyos-landing` against UI/UX standards.
-- [ ] **Navigation**: Ensure intuitive navigation structure.
-- [ ] **Feedback**: Add hover states, active states, and loading skeletons.
-- [ ] **Verify**: `pnpm build` passes.
+### Phase 2: UX (User Experience) ✅ COMPLETE
+- [x] **Audit**: Review `apps/84tea` and `apps/agencyos-landing` against UI/UX standards.
+- [x] **Navigation**: Ensure intuitive navigation structure.
+- [x] **Feedback**: Add hover states, active states, and loading skeletons.
+- [x] **Verify**: `pnpm build` passes.
 
 ### Phase 3: POLISH (Visuals)
 - [ ] **Animations**: Add framer-motion transitions (fade-in, slide-up).
