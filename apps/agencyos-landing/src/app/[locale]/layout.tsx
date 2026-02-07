@@ -17,8 +17,6 @@ const inter = Inter({
   adjustFontFallback: true,
 });
 
-export const dynamic = 'force-dynamic';
-
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }

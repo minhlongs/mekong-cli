@@ -3,7 +3,6 @@ import { HeroSection } from '@/components/hero-section';
 import { FeaturesSection } from '@/components/features-section';
 import { FadeIn } from '@/components/motion/fade-in';
 import { SlideUp } from '@/components/motion/slide-up';
-import { StickyCTA } from '@/components/marketing/sticky-cta';
 import dynamic from 'next/dynamic';
 import { SectionSkeleton } from '@/components/ui/section-skeleton';
 
@@ -38,7 +37,6 @@ export default function HomePage() {
         </SlideUp>
       </main>
       <FooterSection />
-      <StickyCTA />
     </>
   );
 }

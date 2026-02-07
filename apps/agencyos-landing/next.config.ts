@@ -44,6 +44,9 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
   async headers() {
     return [
       {
