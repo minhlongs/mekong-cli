@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import { ButtonHTMLAttributes, forwardRef, useRef } from "react";
+import { HTMLMotionProps, motion, useMotionValue, useSpring } from "framer-motion";
+import { forwardRef, useRef } from "react";
 
 const buttonVariants = cva(
   "relative inline-flex items-center justify-center rounded-full font-medium transition-all duration-300 overflow-hidden",
@@ -33,11 +33,11 @@ const buttonVariants = cva(
 );
 
 export interface GlassButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends HTMLMotionProps<"button">,
     VariantProps<typeof buttonVariants> {}
 
 export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
-  ({ className, variant, size, magnetic, children, onClick, type, disabled, ...htmlProps }, ref) => {
+  ({ className, variant, size, magnetic, children, onClick, type, disabled, ...props }, ref) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -77,6 +77,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
         disabled={disabled}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        {...(props as any)}
       >
         {children}
       </motion.button>
