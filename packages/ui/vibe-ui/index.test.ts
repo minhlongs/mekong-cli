@@ -176,8 +176,8 @@ describe("VIBE UI Design System", () => {
     it("should have valid animation objects", () => {
       const animationKeys = ["initial", "animate", "exit"];
       animationKeys.forEach((key) => {
-        expect(animations.fadeIn[key]).toBeDefined();
-        expect(typeof animations.fadeIn[key]).toBe("object");
+        expect((animations.fadeIn as any)[key]).toBeDefined();
+        expect(typeof (animations.fadeIn as any)[key]).toBe("object");
       });
     });
   });

@@ -14,7 +14,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '' }
       transition={{ duration: 0.5 }}
       className={`backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-6 shadow-xl ${className}`}
     >
-      {children}
+      {children as any}
     </motion.div>
   );
 };

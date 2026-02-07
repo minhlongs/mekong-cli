@@ -20,7 +20,7 @@ export const FloatingElement: React.FC<FloatingElementProps> = ({ children, dela
       }}
       className={className}
     >
-      {children}
+      {children as any}
     </motion.div>
   );
 };

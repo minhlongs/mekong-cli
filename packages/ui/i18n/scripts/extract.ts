@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { globSync } from 'glob';
-import { logger } from '../src/index.js';
+// import { logger } from '../src/index.js';
+const logger = { info: console.log, debug: console.debug, warn: console.warn, error: console.error };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

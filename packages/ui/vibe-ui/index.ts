@@ -130,18 +130,6 @@ export interface BadgeProps {
   children: ReactNode;
 }
 
-export interface CardProps {
-  variant: "default" | "glass" | "gradient";
-  hover?: boolean;
-  children: React.ReactNode;
-}
-
-export interface BadgeProps {
-  variant: "success" | "warning" | "error" | "info" | "vibe";
-  size: "sm" | "md";
-  children: React.ReactNode;
-}
-
 // ============================================
 // MAX WOW UTILITY CLASSES
 // ============================================
