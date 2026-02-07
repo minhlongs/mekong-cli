@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![MAX WOW](https://img.shields.io/badge/MAX-WOW-8b5cf6?style=for-the-badge&logo=sparkles&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![v0.2.0](https://img.shields.io/badge/v0.2.0-release-22c55e?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Binh Pháp](https://img.shields.io/badge/Binh_Pháp-兵法-ec4899?style=for-the-badge&logo=military-tech&logoColor=white)
 
@@ -22,6 +22,25 @@
 - Multi-mode execution (shell/LLM/API) via `RecipeExecutor`
 - Automated verification with rollback capabilities
 - Exponential backoff retry logic
+- Unified LLM client (OpenAI-compatible, Antigravity Proxy)
+
+### 🍳 **CLI Commands**
+```bash
+mekong cook "deploy auth system"   # Plan → Execute → Verify (full pipeline)
+mekong plan "add payment flow"     # Generate plan only (no execution)
+mekong run recipes/deploy-api.md   # Execute existing recipe file
+mekong agent git status            # Run agent directly
+mekong agent file stats            # Project file statistics
+```
+
+### 🤖 **Built-in Agents**
+| Agent | Purpose |
+|-------|---------|
+| `GitAgent` | Git operations (status, diff, commit, branch) |
+| `FileAgent` | File search, read, tree, stats, grep |
+| `LeadHunter` | CEO lead discovery |
+| `ContentWriter` | Content generation |
+| `RecipeCrawler` | Recipe discovery |
 
 ### 🏗️ **Hub Architecture**
 Monorepo with logical layer separation:
@@ -50,15 +69,20 @@ Parallel execution with Claude Code CLI:
 
 ```bash
 # Install dependencies
-poetry install
-cd frontend && npm install
+pip install typer rich pydantic
 
-# Start development servers
-npm run dev  # Runs API + Frontend concurrently
+# Plan a task (generates steps, no execution)
+mekong plan "implement user authentication"
 
-# Execute a recipe
-mekong run "implement user authentication"
-mekong cook recipes/deploy-api.md
+# Cook: full Plan → Execute → Verify pipeline
+mekong cook "deploy API with rate limiting"
+
+# Execute a recipe file
+mekong run recipes/deploy-api.md
+
+# Use agents directly
+mekong agent git status
+mekong agent file stats
 ```
 
 ---
@@ -71,20 +95,20 @@ mekong-cli/
 │   ├── planner.py         # 謀 Task decomposition
 │   ├── executor.py        # 執 Multi-mode runner
 │   ├── verifier.py        # 證 Result validation
-│   └── orchestrator.py    # 統 Workflow coordination
+│   ├── orchestrator.py    # 統 Workflow coordination
+│   ├── llm_client.py      # 🤖 Unified LLM client
+│   └── agent_base.py      # Base class (Plan-Execute-Verify)
+├── src/agents/            # Built-in agents
+│   ├── git_agent.py       # Git operations
+│   ├── file_agent.py      # File system operations
+│   ├── lead_hunter.py     # Lead discovery
+│   └── content_writer.py  # Content generation
 ├── _bmad/                 # 169 workflows + 9 agents
-├── packages/              # Monorepo hub structure
-│   ├── core/              # Foundation (vibe, agents, shared)
-│   ├── integrations/      # Connectors (bridge, CRM)
-│   ├── tooling/           # Dev tools (analytics, dev)
-│   ├── business/          # Revenue (money, ops, marketing)
-│   └── ui/                # Components (vibe-ui, i18n)
 ├── apps/                  # Product applications
+│   ├── raas-gateway/      # Cloudflare Worker gateway
 │   ├── agencyos-landing/  # Main landing page
-│   ├── sophia-ai-factory/ # AI product showcase
-│   ├── api/               # FastAPI revenue backend
-│   └── ...                # Additional apps
-└── automation/            # Revenue automation scripts
+│   └── openclaw-worker/   # OpenClaw bridge
+└── tests/                 # Test suite
 ```
 
 ---
