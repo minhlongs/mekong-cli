@@ -68,8 +68,6 @@ class ProvisioningService:
         if provider == "stripe":
             sub_data["stripe_subscription_id"] = subscription_id
             sub_data["stripe_customer_id"] = customer_id
-        elif provider == "paypal":
-            sub_data["paypal_subscription_id"] = subscription_id
 
         # Calculate default period end if not provided
         if not period_end:
@@ -99,9 +97,6 @@ class ProvisioningService:
             "updated_at": datetime.now().isoformat(),
         }
 
-        if provider == "paypal":
-            org_data["paypal_subscription_id"] = subscription_id
-            org_data["subscription_status"] = "active"
 
         try:
             self.db.table("organizations").update(org_data).eq("id", tenant_id).execute()
@@ -134,28 +129,6 @@ class ProvisioningService:
                     .eq("stripe_subscription_id", provider_subscription_id)
                     .execute()
                 )
-            elif provider == "paypal":
-                # First try unified subscriptions table
-                result = (
-                    self.db.table("subscriptions")
-                    .select("tenant_id")
-                    .eq("paypal_subscription_id", provider_subscription_id)
-                    .execute()
-                )
-
-                # Fallback to legacy organizations if not found
-                if not result.data:
-                    logger.info(
-                        f"Subscription {provider_subscription_id} not found in subscriptions, checking legacy organizations"
-                    )
-                    result = (
-                        self.db.table("organizations")
-                        .select("id")
-                        .eq("paypal_subscription_id", provider_subscription_id)
-                        .execute()
-                    )
-                    if result.data:
-                        result.data[0]["tenant_id"] = result.data[0]["id"]
 
             if not result.data:
                 logger.warning(f"Subscription {provider_subscription_id} not found")
@@ -204,8 +177,6 @@ class ProvisioningService:
 
         if provider == "stripe":
             payment_data["stripe_payment_intent_id"] = transaction_id
-        elif provider == "paypal":
-            payment_data["paypal_capture_id"] = transaction_id
             # If we have an order ID in metadata or passed separately, we could add it here
 
         try:
