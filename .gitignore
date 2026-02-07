@@ -87,3 +87,4 @@ openclaw-key.json
 # Local Database
 *.db
 dump.rdb
+.vercel

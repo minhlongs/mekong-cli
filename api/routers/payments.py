@@ -1,13 +1,13 @@
 """
 💳 Unified Payments Router
 ==========================
-Handles payments via PaymentService (PayPal, Stripe).
+Handles payments via PaymentService (Stripe).
 Exposes provider-specific endpoints for frontend integration.
 """
 
 from typing import Any, Dict, Literal, Optional
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from api.services.payment_service import PaymentService
@@ -23,26 +23,13 @@ class CreateOrderRequest(BaseModel):
     amount: Optional[float] = None
     currency: str = "USD"
     description: Optional[str] = None
-    provider: Literal["paypal", "stripe"] = "paypal"
-    # Stripe/PayPal Subscription specific
+    provider: Literal["stripe"] = "stripe"
+    # Stripe Subscription specific
     price_id: Optional[str] = None
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
     customer_email: Optional[str] = None
     tenant_id: Optional[str] = None
-
-
-class CaptureRequest(BaseModel):
-    order_id: str
-    provider: Literal["paypal", "stripe"] = "paypal"
-
-
-class CreateSubscriptionRequest(BaseModel):
-    plan_id: str
-    tenant_id: Optional[str] = None
-    customer_email: Optional[str] = None
-    return_url: Optional[str] = None
-    cancel_url: Optional[str] = None
 
 
 # --- Generic Endpoints ---
@@ -55,78 +42,10 @@ async def get_payment_status(payment_id: Optional[str] = None) -> Dict[str, Any]
         return {"payment_id": payment_id, "status": "pending"}
 
     return {
-        "providers": ["paypal", "stripe"],
-        "paypal_mode": service.paypal.mode,
+        "providers": ["stripe"],
         "stripe_configured": service.stripe.is_configured(),
         "status": "active",
     }
-
-
-# --- PayPal Specific Endpoints (Matching Frontend) ---
-
-
-@router.post("/paypal/create-order")
-def create_paypal_order(request: CreateOrderRequest):
-    """Create a PayPal order."""
-    try:
-        result = service.create_checkout_session(
-            provider="paypal",
-            amount=request.amount,
-            currency=request.currency,
-            mode="payment",  # Default to one-time payment for this endpoint
-        )
-        # Verify result structure
-        if not result or "id" not in result:
-            raise ValueError("Invalid response from PayPal SDK")
-
-        return {"orderId": result["id"], "details": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/paypal/capture-order")
-async def capture_paypal_order(order_id: str = Body(..., embed=True)) -> Dict[str, Any]:
-    """Capture PayPal order"""
-    return {"order_id": order_id, "status": "captured"}
-
-
-@router.post("/paypal/create-subscription")
-def create_paypal_subscription(request: CreateSubscriptionRequest):
-    """Create a PayPal subscription."""
-    try:
-        result = service.create_checkout_session(
-            provider="paypal",
-            amount=0,  # Amount determined by plan
-            price_id=request.plan_id,
-            success_url=request.return_url,
-            cancel_url=request.cancel_url,
-            customer_email=request.customer_email,
-            tenant_id=request.tenant_id,
-            mode="subscription",
-        )
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/paypal/subscription/{subscription_id}")
-def get_paypal_subscription(subscription_id: str):
-    """Get PayPal subscription details."""
-    try:
-        return service.get_subscription(provider="paypal", subscription_id=subscription_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/paypal/subscription/{subscription_id}/cancel")
-def cancel_paypal_subscription(subscription_id: str, reason: Optional[str] = None):
-    """Cancel a PayPal subscription."""
-    try:
-        return service.cancel_subscription(
-            provider="paypal", subscription_id=subscription_id, reason=reason
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # --- Stripe Specific Endpoints ---

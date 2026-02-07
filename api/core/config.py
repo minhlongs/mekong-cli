@@ -18,6 +18,7 @@ from enum import Enum
 from typing import Dict, List, Tuple
 
 from typing_extensions import TypedDict, Union
+import os
 
 # ============================================================
 # 💸 EXCHANGE RATES (2026 Projections)
@@ -129,7 +130,7 @@ DEFAULT_MODEL = "gemini-3-pro-high"
 PREMIUM_MODEL = "gemini-3-pro-high"
 
 # Proxy Configuration
-AI_PROXY_URL = "http://localhost:8080"
+AI_PROXY_URL = os.getenv("AI_PROXY_URL", "http://localhost:8080")
 AI_PROXY_ENABLED = True
 AI_PROXY_TIMEOUT = 30
 
