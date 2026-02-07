@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion } from "framer-motion";
-import { HTMLAttributes, forwardRef } from "react";
+import { HTMLMotionProps, motion } from "framer-motion";
+import { forwardRef, HTMLAttributes } from "react";
 
 const glassCardVariants = cva(
   "relative overflow-hidden rounded-2xl backdrop-blur-xl border transition-all duration-300",
@@ -34,7 +34,7 @@ const glassCardVariants = cva(
 );
 
 export interface GlassCardProps
-  extends HTMLAttributes<HTMLDivElement>,
+  extends Omit<HTMLMotionProps<"div"> & HTMLAttributes<HTMLDivElement>, 'variant'>,
     VariantProps<typeof glassCardVariants> {
   animated?: boolean;
 }
