@@ -33,7 +33,8 @@ interface ImportMetaWithEnv extends ImportMeta {
 
 export function validateEnv(requiredKeys: string[]): EnvCheck[] {
     return requiredKeys.map(key => {
-        const env = (import.meta as unknown as ImportMetaWithEnv).env;
+        // @ts-ignore
+        const env = (import.meta as any).env || {};
         const value = env?.[key] as string | undefined;
         return { key, required: true, present: !!value, isPlaceholder: value?.includes('placeholder') || value?.includes('xxx') || false };
     });
