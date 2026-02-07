@@ -81,7 +81,7 @@ async def list_products() -> List[Dict]:
             "id": "payment-scripts",
             "name": "Payment Integration Scripts",
             "price": 39.0,
-            "description": "PayPal + Stripe integration scripts",
+            "description": "Stripe integration scripts",
         },
     ]
 

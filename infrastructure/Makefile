@@ -38,12 +38,18 @@ build-engine:
 build-worker:
 	docker build -t $(REGISTRY)/agency-worker:$(TAG) -f ../apps/worker/Dockerfile ../apps/worker
 
+build-api:
+	docker build -t $(REGISTRY)/agency-api:$(TAG) -f ../apps/api/Dockerfile ../apps/api
+
 push-engine:
 	docker push $(REGISTRY)/agency-engine:$(TAG)
 
 push-worker:
 	docker push $(REGISTRY)/agency-worker:$(TAG)
 
-build-all: build-engine build-worker
+push-api:
+	docker push $(REGISTRY)/agency-api:$(TAG)
 
-push-all: push-engine push-worker
+build-all: build-engine build-worker build-api
+
+push-all: push-engine push-worker push-api

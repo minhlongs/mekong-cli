@@ -9,8 +9,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from backend.middleware.webhook_auth import verify_stripe_webhook
-from backend.services.payment_service import PaymentService
+from api.middleware.webhook_auth import verify_stripe_webhook
+from api.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
 

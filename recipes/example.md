@@ -1,17 +1,16 @@
-# Example Recipe
+---
+name: Verification Recipe
+agent: System
+---
 
-Description: A simple hello world recipe to verify the Mekong CLI.
-Author: Mekong Genesis
-Tags: test, example, verification
+# Mekong CLI Verification
 
-## Tasks
+A simple recipe to verify the execution engine.
 
-### 1. Say Hello
-- **Action**: `print`
-- **Params**:
-  - `message`: "Hello from Mekong CLI! The Genesis Protocol is active."
+## Step 1: Say Hello
 
-### 2. Check System
-- **Action**: `shell`
-- **Params**:
-  - `command`: "uname -a"
+echo "Hello from Mekong CLI! The Genesis Protocol is active."
+
+## Step 2: Check System
+
+uname -a

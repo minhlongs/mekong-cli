@@ -1,19 +1,23 @@
 [tool.poetry]
 name = "mekong-cli-lean"
-version = "0.1.0"
+version = "2.1.33"
 description = "Lean revenue-first AgencyOS architecture"
 authors = ["Binh Phap Venture Studio <admin@binhphap.io>"]
 readme = "README.md"
-packages = [{include = "api"}, {include = "automation"}]
+packages = [{include = "api"}, {include = "automation"}, {include = "src"}]
+
+[tool.poetry.scripts]
+mekong = "src.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+typer = "^0.9.0"
+rich = "^13.7.0"
 fastapi = "^0.109.0"
 uvicorn = {extras = ["standard"], version = "^0.27.0"}
 pydantic = "^2.5.0"
 pydantic-settings = "^2.1.0"
 stripe = "^7.10.0"
-paypalrestsdk = "^1.13.3"
 requests = "^2.31.0"
 python-dotenv = "^1.0.0"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.25"}

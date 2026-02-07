@@ -54,9 +54,11 @@ class Database:
                 logger.error(f"❌ Failed to connect to Supabase: {e}")
                 return None
         else:
-            logger.debug("Database credentials missing in environment. DB features disabled.")
-
-        return None
+            logger.warning("⚠️ Database credentials missing. Using Mock DB (local_db.json).")
+            from api.mock_db import MockClient
+            if not cls._instance:
+                cls._instance = MockClient()
+            return cls._instance
 
 
 def get_db() -> Optional[Client]:
