@@ -33,14 +33,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
 
       - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          # Prevent npm from traversing up to monorepo workspace root
+          # Isolate from monorepo workspace + regenerate lockfile for Node 20 compat
           rm -f "$GITHUB_WORKSPACE/package.json"
+          rm -f package-lock.json
           npm install
 
       - name: Lint
