@@ -11,11 +11,19 @@ import os
 # Add project root to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import re
 import pytest
 from typer.testing import CliRunner
 from src.main import app
 
 runner = CliRunner()
+
+_ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
+
+
+def _plain(text: str) -> str:
+    """Strip ANSI escape codes from Rich-rendered output."""
+    return _ANSI_RE.sub('', text)
 
 
 # -------------------------------------------------------------------
@@ -70,4 +78,4 @@ def test_cook_verbose_flag_in_help():
     result = runner.invoke(app, ["cook", "--help"])
 
     assert result.exit_code == 0
-    assert "--verbose" in result.output
+    assert "--verbose" in _plain(result.output)
