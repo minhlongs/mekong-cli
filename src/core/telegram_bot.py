@@ -125,6 +125,8 @@ class MekongBot:
                 ApplicationBuilder,
                 CommandHandler,
                 CallbackQueryHandler,
+                MessageHandler,
+                filters,
             )
         except ImportError:
             return
@@ -146,6 +148,11 @@ class MekongBot:
         self._application.add_handler(CommandHandler("help", self.help_handler))
         self._application.add_handler(CommandHandler("start", self.help_handler))
 
+        # NLP: catch ALL non-command text messages
+        self._application.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, self.nlp_message_handler)
+        )
+
         self._application.add_handler(CallbackQueryHandler(self._callback_handler))
 
         self._running = True
@@ -166,6 +173,78 @@ class MekongBot:
 
     def is_running(self) -> bool:
         return self._running
+
+    # ============================================================
+    # 🧠 NLP: Free-form message → Structured Command
+    # ============================================================
+
+    async def nlp_message_handler(self, update: Any, context: Any) -> None:
+        """Handle ANY non-command text message via NLP parsing."""
+        message = update.message.text
+        if not message or len(message.strip()) < 3:
+            return
+
+        chat_id = update.effective_chat.id
+
+        # Save chat_id
+        if chat_id not in self.config.chat_ids:
+            self.config.chat_ids.append(chat_id)
+            self._save_config()
+
+        # Show "thinking" indicator
+        thinking_msg = await update.message.reply_text("🧠 Đang phân tích...")
+
+        try:
+            from src.core.nlp_commander import get_commander
+
+            commander = get_commander()
+            task = commander.parse(message)
+
+            if task.parse_error:
+                await thinking_msg.edit_text(
+                    f"⚠️ Không parse được: {task.parse_error}\n\n"
+                    f"Thử dùng /cook <goal> trực tiếp."
+                )
+                return
+
+            if task.intent == "status":
+                # Status queries don't need CC CLI
+                await thinking_msg.delete()
+                await self.status_handler(update, context)
+                return
+
+            # Show what Tôm Hùm understood
+            confirmation = commander.format_confirmation(task)
+
+            # Queue the structured task
+            inbox_task = add_task(
+                goal=task.cc_cli_prompt,
+                project=task.project,
+                chat_id=chat_id,
+            )
+            # Enrich inbox with NLP metadata
+            inbox = _load_inbox()
+            for t in inbox:
+                if t["id"] == inbox_task["id"]:
+                    t["raw_message"] = task.raw_message
+                    t["intent"] = task.intent
+                    t["summary"] = task.summary
+                    t["claudekit_commands"] = task.claudekit_commands
+                    t["priority"] = task.priority
+                    break
+            _save_inbox(inbox)
+
+            await thinking_msg.edit_text(
+                f"{confirmation}\n\n"
+                f"📨 Task `{inbox_task['id']}` queued!\n"
+                f"Antigravity sẽ pick up ngay.",
+                parse_mode="Markdown",
+            )
+
+        except Exception as e:
+            await thinking_msg.edit_text(
+                f"❌ NLP error: {str(e)[:100]}\nThử /cook <goal> trực tiếp."
+            )
 
     # ============================================================
     # 🦞 TÔM HÙM: Task Relay (Telegram → Inbox → Antigravity)
