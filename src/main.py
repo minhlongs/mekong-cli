@@ -959,11 +959,67 @@ def telegram_status_cmd():
 
 
 @app.command()
+def evolve():
+    """🧬 Evolve: Analyze patterns, generate recipes, deprecate bad ones."""
+    from src.core.memory import MemoryStore
+    from src.core.recipe_gen import RecipeGenerator
+    from src.core.self_improve import SelfImprover
+
+    memory = MemoryStore()
+    generator = RecipeGenerator()
+    improver = SelfImprover(memory, generator)
+
+    console.print(
+        Panel(
+            "[bold]Running self-improvement cycle...[/bold]",
+            title="🧬 Evolution Engine",
+            border_style="magenta",
+        )
+    )
+
+    results = improver.analyze_and_improve()
+
+    if not results:
+        console.print("[yellow]No evolution actions taken — not enough data yet.[/yellow]")
+    else:
+        table = Table(title=f"Evolution Results ({len(results)} actions)")
+        table.add_column("Action", style="bold cyan")
+        table.add_column("Target", style="bold")
+        table.add_column("Reason", style="dim")
+
+        for entry in results:
+            action_style = {
+                "generated": "green",
+                "deprecated": "red",
+                "suggestion": "yellow",
+            }.get(entry.action, "dim")
+            table.add_row(
+                f"[{action_style}]{entry.action}[/{action_style}]",
+                entry.target,
+                entry.reason,
+            )
+
+        console.print(table)
+
+    # Show evolution stats
+    stats = improver.get_evolution_stats()
+    console.print(
+        Panel(
+            f"[bold]Generated:[/bold] {stats['total_generated']}\n"
+            f"[bold]Deprecated:[/bold] {stats['total_deprecated']}\n"
+            f"[bold]Journal Size:[/bold] {stats['journal_size']}",
+            title="📊 Evolution Statistics",
+            border_style="cyan",
+        )
+    )
+
+
+@app.command()
 def version():
     """Show version info"""
     console.print(
         Panel(
-            "[bold green]Mekong CLI[/bold green] v0.9.0\n"
+            "[bold green]Mekong CLI[/bold green] v0.10.0\n"
             "[dim]RaaS Agency Operating System[/dim]\n"
             "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
             "[dim]DNA: ClaudeKit v2.9.1+[/dim]",
