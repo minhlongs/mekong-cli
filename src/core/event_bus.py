@@ -19,6 +19,8 @@ class EventType(str, Enum):
     STEP_STARTED = "step_started"
     STEP_COMPLETED = "step_completed"
     STEP_FAILED = "step_failed"
+    JOB_STARTED = "job_started"
+    JOB_COMPLETED = "job_completed"
 
 
 @dataclass

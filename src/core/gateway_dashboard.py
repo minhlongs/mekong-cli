@@ -101,6 +101,26 @@ background:#0f172a;color:#e2e8f0;cursor:pointer;font-size:.8rem}
 .swarm-empty{color:#94a3b8;text-align:center;padding:2rem;font-size:.9rem}
 .swarm-stats{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
 .swarm-stat{padding:.5rem .75rem;border-radius:.5rem;background:#1e293b;border:1px solid #334155;font-size:.85rem}
+.sched-jobs{display:grid;gap:.75rem}
+.sched-job{padding:1rem;border:1px solid #334155;border-radius:.75rem;background:#1e293b;
+display:flex;align-items:center;gap:1rem}
+.sched-job .job-type{padding:.2rem .5rem;border-radius:.25rem;font-size:.7rem;font-weight:700;text-transform:uppercase}
+.sched-job .job-type.interval{background:#1e3a5f;color:#38bdf8}
+.sched-job .job-type.daily{background:#3b1f5e;color:#a78bfa}
+.sched-job .job-info{flex:1}
+.sched-job .job-name{font-weight:600;font-size:.95rem}
+.sched-job .job-goal{color:#94a3b8;font-size:.8rem}
+.sched-job .job-meta{color:#64748b;font-size:.75rem;margin-top:.2rem}
+.sched-job .job-btn{padding:.4rem .8rem;border:1px solid #334155;border-radius:.5rem;
+background:#0f172a;color:#e2e8f0;cursor:pointer;font-size:.8rem}
+.sched-job .job-btn:hover{border-color:#ef4444}
+.sched-add{display:grid;gap:.5rem;margin-top:1rem;padding:1rem;border:1px solid #334155;border-radius:.75rem;background:#1e293b}
+.sched-add-row{display:flex;gap:.5rem;align-items:center}
+.sched-add input,.sched-add select{padding:.5rem .75rem;border:1px solid #334155;border-radius:.5rem;
+background:#0f172a;color:#e2e8f0;font-size:.85rem;flex:1}
+.sched-add button{padding:.5rem 1rem;border:none;border-radius:.5rem;
+background:linear-gradient(135deg,#a78bfa,#818cf8);color:#0f172a;font-weight:700;cursor:pointer;font-size:.85rem}
+.sched-add button:hover{opacity:.9}
 </style>
 </head>
 <body>
@@ -119,6 +139,7 @@ background:#0f172a;color:#e2e8f0;cursor:pointer;font-size:.8rem}
 <div class="tabs">
 <div class="tab active" onclick="switchTab('actions')">Actions</div>
 <div class="tab" onclick="switchTab('swarm')">Swarm</div>
+<div class="tab" onclick="switchTab('autopilot')">Auto-Pilot</div>
 </div>
 <div id="tab-actions" class="tab-content active">
 <div class="grid" id="buttons"></div>
@@ -130,6 +151,21 @@ background:#0f172a;color:#e2e8f0;cursor:pointer;font-size:.8rem}
 <div id="tab-swarm" class="tab-content">
 <div class="swarm-stats" id="swarm-stats"></div>
 <div class="swarm-nodes" id="swarm-nodes"><div class="swarm-empty">Loading nodes...</div></div>
+</div>
+<div id="tab-autopilot" class="tab-content">
+<div class="swarm-stats" id="sched-stats"></div>
+<div class="sched-jobs" id="sched-jobs"><div class="swarm-empty">Loading jobs...</div></div>
+<div class="sched-add">
+<div class="sched-add-row">
+<input type="text" id="sched-name" placeholder="Job name" />
+<select id="sched-type"><option value="interval">Interval</option><option value="daily">Daily</option></select>
+</div>
+<div class="sched-add-row">
+<input type="text" id="sched-goal" placeholder="Goal to execute" />
+<input type="text" id="sched-param" placeholder="300 (seconds) or 09:00" />
+<button onclick="addScheduleJob()">Add Job</button>
+</div>
+</div>
 </div>
 <div id="live-log" class="live-log">
 <div class="live-log-hdr">Live Progress</div>
@@ -230,6 +266,60 @@ document.querySelectorAll('.tab-content').forEach(function(c){c.className='tab-c
 document.querySelector('[onclick="switchTab(\''+name+'\')"]').className='tab active';
 document.getElementById('tab-'+name).className='tab-content active';
 if(name==='swarm')loadSwarmNodes();
+if(name==='autopilot')loadScheduleJobs();
+}
+
+/* --- Schedule / Auto-Pilot --- */
+function loadScheduleJobs(){
+fetch('/schedule/jobs').then(function(r){return r.json()}).then(function(jobs){
+var container=document.getElementById('sched-jobs');
+while(container.firstChild)container.removeChild(container.firstChild);
+var stats=document.getElementById('sched-stats');
+while(stats.firstChild)stats.removeChild(stats.firstChild);
+if(!jobs.length){container.appendChild(el('div','swarm-empty','No scheduled jobs. Add one below.'));return}
+var enabled=0;jobs.forEach(function(j){if(j.enabled)enabled++});
+stats.appendChild(el('div','swarm-stat','Jobs: '+jobs.length));
+stats.appendChild(el('div','swarm-stat','Active: '+enabled+'/'+jobs.length));
+jobs.forEach(function(j){
+var row=el('div','sched-job');
+var badge=el('span','job-type '+j.job_type,j.job_type);
+var info=el('div','job-info');
+info.appendChild(el('div','job-name',j.name));
+info.appendChild(el('div','job-goal',j.goal));
+var meta=j.job_type==='interval'?'Every '+j.interval_seconds+'s':'Daily at '+j.daily_time;
+meta+=' | Runs: '+j.run_count;
+info.appendChild(el('div','job-meta',meta));
+var btn=el('button','job-btn','Remove');
+btn.onclick=function(){removeScheduleJob(j.id)};
+row.appendChild(badge);row.appendChild(info);row.appendChild(btn);
+container.appendChild(row);
+});
+}).catch(function(){
+var c=document.getElementById('sched-jobs');
+while(c.firstChild)c.removeChild(c.firstChild);
+c.appendChild(el('div','swarm-empty','Failed to load schedule.'));
+})
+}
+function addScheduleJob(){
+var name=document.getElementById('sched-name').value.trim();
+var goal=document.getElementById('sched-goal').value.trim();
+var type=document.getElementById('sched-type').value;
+var param=document.getElementById('sched-param').value.trim()||'300';
+if(!name||!goal){alert('Name and goal required.');return}
+var body={name:name,goal:goal,job_type:type};
+if(type==='interval'){body.interval_seconds=parseInt(param)||300}
+else{body.daily_time=param||'09:00'}
+fetch('/schedule/jobs',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(){
+document.getElementById('sched-name').value='';
+document.getElementById('sched-goal').value='';
+document.getElementById('sched-param').value='';
+loadScheduleJobs();
+}).catch(function(e){alert('Failed to add job: '+e.message)})
+}
+function removeScheduleJob(jobId){
+fetch('/schedule/jobs/'+jobId,{method:'DELETE'}).then(function(){loadScheduleJobs()})
+.catch(function(e){alert('Failed to remove job: '+e.message)})
 }
 
 /* --- Swarm --- */
