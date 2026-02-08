@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/polar-checkout-client';
 import { CheckoutSchema } from '@/lib/schemas/checkout';
-import { z } from 'zod';
+import { ApiError, handleRouteError } from '@/lib/api-errors';
+import { isRateLimited, getClientIp } from '@/lib/rate-limiter';
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req.headers);
+    if (isRateLimited(clientIp)) {
+      throw new ApiError('Too many requests', 'RATE_LIMITED', 429);
+    }
+
     const body = await req.json();
     const { priceId, customerEmail, locale: bodyLocale } = CheckoutSchema.parse(body);
 
     const baseUrl = req.headers.get('origin') || 'http://localhost:3000';
-    // Use locale from body, fallback to header, then default to 'en'
     const locale = bodyLocale || req.headers.get('x-locale') || 'en';
 
     const session = await createCheckoutSession({
@@ -23,17 +28,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleRouteError(error);
   }
 }

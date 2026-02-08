@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/polar-checkout-client';
 import { headers } from 'next/headers';
-import { WebhookEventSchema } from '@/lib/schemas/webhook';
+import { WebhookEventSchema, type WebhookEvent } from '@/lib/schemas/webhook';
+import { ApiError, handleRouteError } from '@/lib/api-errors';
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,57 +11,44 @@ export async function POST(req: NextRequest) {
     const signature = headersList.get('polar-signature');
 
     if (!signature) {
-      return NextResponse.json(
-        { error: 'Missing signature' },
-        { status: 401 }
-      );
+      throw new ApiError('Missing signature', 'MISSING_SIGNATURE', 401);
     }
 
     const isValid = await verifyWebhookSignature(payload, signature);
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      );
+      throw new ApiError('Invalid signature', 'INVALID_SIGNATURE', 401);
     }
 
-    // Validate payload structure using Zod
-    const json = JSON.parse(payload);
+    const json: unknown = JSON.parse(payload);
     const event = WebhookEventSchema.parse(json);
 
-    // Handle different event types
-    switch (event.type) {
-      case 'checkout.completed':
-        await handleCheckoutCompleted(event.data);
-        break;
-
-      case 'subscription.created':
-        await handleSubscriptionCreated(event.data);
-        break;
-
-      case 'subscription.updated':
-        await handleSubscriptionUpdated(event.data);
-        break;
-
-      case 'subscription.cancelled':
-        await handleSubscriptionCancelled(event.data);
-        break;
-
-      default:
-        break;
-    }
+    await routeWebhookEvent(event);
 
     return NextResponse.json({ received: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleRouteError(error);
+  }
+}
+
+async function routeWebhookEvent(event: WebhookEvent): Promise<void> {
+  switch (event.type) {
+    case 'checkout.completed':
+      await handleCheckoutCompleted(event.data);
+      break;
+    case 'subscription.created':
+      await handleSubscriptionCreated(event.data);
+      break;
+    case 'subscription.updated':
+      await handleSubscriptionUpdated(event.data);
+      break;
+    case 'subscription.cancelled':
+      await handleSubscriptionCancelled(event.data);
+      break;
   }
 }
 
 async function handleCheckoutCompleted(_data: Record<string, unknown>) {
-  // TODO: Send confirmation email, provision access, etc.
+  // TODO: Send confirmation email, provision access
 }
 
 async function handleSubscriptionCreated(_data: Record<string, unknown>) {
