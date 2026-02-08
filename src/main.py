@@ -4,6 +4,7 @@ Mekong CLI - Main Entry Point
 RaaS Agency Operating System CLI
 """
 
+import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -69,18 +70,18 @@ def list():
     recipes = registry.scan()
 
     if not recipes:
-        console.print("[yellow]No recipes found.[/yellow]")
+        console.print("[yellow]No recipes found in recipes/ directory.[/yellow]")
         return
 
-    table = Table(title="Available Recipes")
+    table = Table(title=f"Available Recipes ({len(recipes)} found)")
     table.add_column("Name", style="cyan")
     table.add_column("Description")
-    table.add_column("Author", style="dim")
+    table.add_column("File", style="dim")
     table.add_column("Tags", style="blue")
 
     for recipe in recipes:
         table.add_row(
-            recipe.name, recipe.description, recipe.author, ", ".join(recipe.tags)
+            recipe.name, recipe.description, str(recipe.path.name), ", ".join(recipe.tags)
         )
 
     console.print(table)
@@ -255,6 +256,7 @@ def cook(
     no_rollback: bool = typer.Option(False, help="Disable rollback on failure"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show step-by-step output"),
     dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Plan only, no execution"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Machine-readable JSON output"),
 ):
     """🎯 Cook: Plan → Execute → Verify workflow (Binh Pháp engine)"""
     llm_client = get_client()
@@ -305,6 +307,33 @@ def cook(
         )
 
     result = orchestrator.run_from_goal(goal)
+
+    # JSON output mode — print machine-readable result and exit
+    if json_output:
+        output = {
+            "status": result.status.value,
+            "goal": goal,
+            "total_steps": result.total_steps,
+            "completed_steps": result.completed_steps,
+            "failed_steps": result.failed_steps,
+            "success_rate": result.success_rate,
+            "errors": result.errors,
+            "warnings": result.warnings,
+            "steps": [
+                {
+                    "order": sr.step.order,
+                    "title": sr.step.title,
+                    "passed": sr.verification.passed,
+                    "exit_code": sr.execution.exit_code,
+                    "summary": sr.verification.summary,
+                }
+                for sr in result.step_results
+            ],
+        }
+        console.print(json.dumps(output, indent=2))
+        if result.status != OrchestrationStatus.SUCCESS:
+            raise typer.Exit(code=1)
+        return
 
     if verbose and result.step_results:
         detail_table = Table(title="Step Details")

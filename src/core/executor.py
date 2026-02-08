@@ -6,6 +6,7 @@ Returns ExecutionResult for orchestrator integration.
 """
 
 import subprocess
+import time
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -151,7 +152,7 @@ class RecipeExecutor:
             )
 
     def _execute_shell_step(self, step: RecipeStep) -> ExecutionResult:
-        """Execute shell command step."""
+        """Execute shell command step with automatic retry on failure."""
         command = step.description.strip()
 
         if not command:
@@ -163,78 +164,115 @@ class RecipeExecutor:
                 metadata={"mode": "shell", "skipped": True},
             )
 
-        self.console.print(f"[dim]Running:[/dim] {command}")
+        max_attempts = step.params.get("retry", 1) + 1 if step.params else 2
+        retry_delay = step.params.get("retry_delay", 2) if step.params else 2
 
-        try:
-            process = subprocess.run(
-                command, shell=True, check=True, text=True, capture_output=True
-            )
-
-            if process.stdout:
+        for attempt in range(1, max_attempts + 1):
+            if attempt > 1:
                 self.console.print(
-                    Panel(
-                        process.stdout.strip(),
-                        title="Output",
-                        border_style="green",
-                        expand=False,
-                    )
+                    f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay}s...[/yellow]"
+                )
+                time.sleep(retry_delay)
+
+            self.console.print(f"[dim]Running:[/dim] {command}")
+
+            try:
+                process = subprocess.run(
+                    command, shell=True, check=True, text=True, capture_output=True
                 )
 
-            if process.stderr:
-                self.console.print(
-                    Panel(
-                        process.stderr.strip(),
-                        title="Stderr",
-                        border_style="yellow",
-                        expand=False,
+                if process.stdout:
+                    self.console.print(
+                        Panel(
+                            process.stdout.strip(),
+                            title="Output",
+                            border_style="green",
+                            expand=False,
+                        )
                     )
+
+                if process.stderr:
+                    self.console.print(
+                        Panel(
+                            process.stderr.strip(),
+                            title="Stderr",
+                            border_style="yellow",
+                            expand=False,
+                        )
+                    )
+
+                return ExecutionResult(
+                    exit_code=process.returncode,
+                    stdout=process.stdout or "",
+                    stderr=process.stderr or "",
+                    metadata={
+                        "mode": "shell",
+                        "command": command,
+                        "attempt": attempt,
+                    },
                 )
 
-            return ExecutionResult(
-                exit_code=process.returncode,
-                stdout=process.stdout or "",
-                stderr=process.stderr or "",
-                metadata={"mode": "shell", "command": command},
-            )
+            except subprocess.CalledProcessError as e:
+                # Retry if not on last attempt
+                if attempt < max_attempts:
+                    self.console.print(
+                        f"[yellow]Step {step.order} failed (exit {e.returncode})[/yellow]"
+                    )
+                    continue
 
-        except subprocess.CalledProcessError as e:
-            self.console.print(
-                f"[bold red]Error executing step {step.order}[/bold red]"
-            )
-            if e.stdout:
                 self.console.print(
-                    Panel(
-                        e.stdout.strip(),
-                        title="Output (Partial)",
-                        border_style="yellow",
-                        expand=False,
-                    )
+                    f"[bold red]Error executing step {step.order}[/bold red]"
                 )
-            if e.stderr:
-                self.console.print(
-                    Panel(
-                        e.stderr.strip(),
-                        title="Error Output",
-                        border_style="red",
-                        expand=False,
+                if e.stdout:
+                    self.console.print(
+                        Panel(
+                            e.stdout.strip(),
+                            title="Output (Partial)",
+                            border_style="yellow",
+                            expand=False,
+                        )
                     )
+                if e.stderr:
+                    self.console.print(
+                        Panel(
+                            e.stderr.strip(),
+                            title="Error Output",
+                            border_style="red",
+                            expand=False,
+                        )
+                    )
+                return ExecutionResult(
+                    exit_code=e.returncode,
+                    stdout=e.stdout or "",
+                    stderr=e.stderr or "",
+                    error=e,
+                    metadata={
+                        "mode": "shell",
+                        "command": command,
+                        "attempt": attempt,
+                    },
                 )
-            return ExecutionResult(
-                exit_code=e.returncode,
-                stdout=e.stdout or "",
-                stderr=e.stderr or "",
-                error=e,
-                metadata={"mode": "shell", "command": command},
-            )
-        except Exception as e:
-            self.console.print(f"[bold red]Unexpected error:[/bold red] {str(e)}")
-            return ExecutionResult(
-                exit_code=1,
-                stdout="",
-                stderr=str(e),
-                error=e,
-                metadata={"mode": "shell", "command": command},
-            )
+            except Exception as e:
+                self.console.print(f"[bold red]Unexpected error:[/bold red] {str(e)}")
+                return ExecutionResult(
+                    exit_code=1,
+                    stdout="",
+                    stderr=str(e),
+                    error=e,
+                    metadata={
+                        "mode": "shell",
+                        "command": command,
+                        "attempt": attempt,
+                    },
+                )
+
+        # Should not reach here, but safety fallback
+        return ExecutionResult(
+            exit_code=1,
+            stdout="",
+            stderr="Max retries exhausted",
+            metadata={"mode": "shell", "command": command, "attempt": max_attempts},
+        )
 
     def run(self) -> bool:
         """Run the full recipe (legacy mode, returns bool for backward compat)."""
