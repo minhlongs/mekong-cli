@@ -31,7 +31,7 @@ from src.core.memory import MemoryStore, MemoryEntry
 GATEWAY_CONFIG: GatewayConfig = load_config()
 PRESET_ACTIONS: List[Dict[str, str]] = GATEWAY_CONFIG.presets
 
-VERSION = "0.9.0"
+VERSION = "0.10.0"
 
 
 # -- Request / Response models --
@@ -171,6 +171,38 @@ class NLUParseResponse(BaseModel):
     confidence: float
     entities: Dict[str, str]
     suggested_recipe: str
+
+
+class RecipeGenerateRequest(BaseModel):
+    """Recipe generation request"""
+    goal: str = Field(..., min_length=1)
+    steps: List[str] = Field(default_factory=list)
+
+
+class RecipeGenerateResponse(BaseModel):
+    """Recipe generation response"""
+    name: str
+    content: str
+    source: str
+    valid: bool
+    path: str
+
+
+class RecipeValidateRequest(BaseModel):
+    """Recipe validation request"""
+    content: str = Field(..., min_length=1)
+
+
+class RecipeValidateResponse(BaseModel):
+    """Recipe validation response"""
+    valid: bool
+    errors: List[str]
+
+
+class AutoRecipeInfo(BaseModel):
+    """Auto-generated recipe info"""
+    name: str
+    path: str
 
 
 # -- Token verification --
@@ -409,6 +441,38 @@ def create_app() -> FastAPI:
             suggested_recipe=result.suggested_recipe,
         )
 
+    # -- Recipe generation endpoints --
+
+    @gateway.post("/recipes/generate", response_model=RecipeGenerateResponse)
+    def recipes_generate(req: RecipeGenerateRequest):
+        """Generate a recipe from a goal pattern."""
+        from src.core.recipe_gen import RecipeGenerator
+
+        gen = RecipeGenerator()
+        recipe = gen.from_goal_pattern(req.goal, req.steps or None)
+        path = gen.save_recipe(recipe) if recipe.valid else ""
+        return RecipeGenerateResponse(
+            name=recipe.name, content=recipe.content,
+            source=recipe.source, valid=recipe.valid, path=path,
+        )
+
+    @gateway.get("/recipes/auto", response_model=List[AutoRecipeInfo])
+    def recipes_auto_list():
+        """List auto-generated recipes."""
+        from src.core.recipe_gen import RecipeGenerator
+
+        gen = RecipeGenerator()
+        return [AutoRecipeInfo(**r) for r in gen.list_auto_recipes()]
+
+    @gateway.post("/recipes/validate", response_model=RecipeValidateResponse)
+    def recipes_validate(req: RecipeValidateRequest):
+        """Validate recipe markdown content."""
+        from src.core.recipe_gen import RecipeGenerator
+
+        gen = RecipeGenerator()
+        valid, errors = gen.validate_recipe(req.content)
+        return RecipeValidateResponse(valid=valid, errors=errors)
+
     # -- Telegram bot integration --
     telegram_token = os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
     _bot = None
@@ -593,6 +657,11 @@ __all__ = [
     "MemoryStatsResponse",
     "NLUParseRequest",
     "NLUParseResponse",
+    "RecipeGenerateRequest",
+    "RecipeGenerateResponse",
+    "RecipeValidateRequest",
+    "RecipeValidateResponse",
+    "AutoRecipeInfo",
     "PRESET_ACTIONS",
     "GATEWAY_CONFIG",
     "VERSION",

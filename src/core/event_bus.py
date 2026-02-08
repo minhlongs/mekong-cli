@@ -23,6 +23,8 @@ class EventType(str, Enum):
     JOB_COMPLETED = "job_completed"
     MEMORY_RECORDED = "memory_recorded"
     PATTERN_DETECTED = "pattern_detected"
+    RECIPE_GENERATED = "recipe_generated"
+    RECIPE_DEPRECATED = "recipe_deprecated"
 
 
 @dataclass
