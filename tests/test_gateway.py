@@ -728,8 +728,8 @@ class TestGatewayConfig(unittest.TestCase):
         self.assertEqual(DEFAULT_PRESETS[0]["id"], "deploy")
 
     def test_version_is_0_6_0(self):
-        """Gateway version should be 0.10.0"""
-        self.assertEqual(VERSION, "0.10.0")
+        """Gateway version should be 1.0.0"""
+        self.assertEqual(VERSION, "1.0.0")
 
 
 class TestDashboardTemplate(unittest.TestCase):
@@ -1434,18 +1434,18 @@ class TestScheduleEndpoints(unittest.TestCase):
 
 
 class TestVersionIs060(unittest.TestCase):
-    """Verify version was bumped to 0.10.0."""
+    """Verify version was bumped to 1.0.0."""
 
     def test_gateway_version_string(self):
-        """VERSION constant should be 0.10.0."""
-        self.assertEqual(VERSION, "0.10.0")
+        """VERSION constant should be 1.0.0."""
+        self.assertEqual(VERSION, "1.0.0")
 
     def test_health_reports_version(self):
-        """Health endpoint should report 0.10.0."""
+        """Health endpoint should report 1.0.0."""
         app = create_app()
         client = TestClient(app)
         resp = client.get("/health")
-        self.assertEqual(resp.json()["version"], "0.10.0")
+        self.assertEqual(resp.json()["version"], "1.0.0")
 
 
 # ====================================================================
@@ -1513,6 +1513,142 @@ class TestEventBusJobEvents(unittest.TestCase):
         bus.emit(EventType.JOB_STARTED, {"job_id": "abc"})
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0].data["job_id"], "abc")
+
+
+# ====================================================================
+# L14 AGI Certification — Gateway Endpoint Tests
+# ====================================================================
+
+
+class TestConsciousnessEndpoint(unittest.TestCase):
+    """Tests for GET /autonomous/consciousness."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_consciousness_returns_200(self):
+        """Consciousness endpoint should return 200."""
+        resp = self.client.get("/autonomous/consciousness")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_consciousness_has_score(self):
+        """Response should contain score field."""
+        resp = self.client.get("/autonomous/consciousness")
+        data = resp.json()
+        self.assertIn("score", data)
+        self.assertGreaterEqual(data["score"], 0)
+        self.assertLessEqual(data["score"], 100)
+
+    def test_consciousness_has_health_fields(self):
+        """Response should contain all health fields."""
+        resp = self.client.get("/autonomous/consciousness")
+        data = resp.json()
+        for field in [
+            "memory_health", "nlu_health", "router_health",
+            "executor_health", "learner_health", "evolution_health",
+            "governance_health",
+        ]:
+            self.assertIn(field, data, f"Missing field: {field}")
+
+
+class TestGovernanceCheckEndpoint(unittest.TestCase):
+    """Tests for POST /governance/check."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_safe_goal(self):
+        """Safe goal should return action_class=safe."""
+        resp = self.client.post(
+            "/governance/check", json={"goal": "list files"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["action_class"], "safe")
+
+    def test_forbidden_goal(self):
+        """Forbidden goal should return action_class=forbidden."""
+        resp = self.client.post(
+            "/governance/check", json={"goal": "rm -rf /"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["action_class"], "forbidden")
+
+    def test_review_goal(self):
+        """Review-required goal should return action_class=review_required."""
+        resp = self.client.post(
+            "/governance/check", json={"goal": "deploy to production"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["action_class"], "review_required")
+
+
+class TestGovernanceAuditEndpoint(unittest.TestCase):
+    """Tests for GET /governance/audit."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_audit_returns_200(self):
+        """Audit endpoint should return 200."""
+        resp = self.client.get("/governance/audit")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_audit_returns_list(self):
+        """Audit should return a list."""
+        resp = self.client.get("/governance/audit")
+        self.assertIsInstance(resp.json(), list)
+
+
+class TestHaltEndpoint(unittest.TestCase):
+    """Tests for POST /halt."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
+    def test_halt_with_valid_token(self):
+        """Halt with valid token should return halted status."""
+        resp = self.client.post(
+            "/halt", json={"token": "test-secret"}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["status"], "halted")
+
+    @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
+    def test_halt_with_invalid_token(self):
+        """Halt with invalid token should return 401."""
+        resp = self.client.post(
+            "/halt", json={"token": "wrong-token"}
+        )
+        self.assertEqual(resp.status_code, 401)
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_halt_without_env_token(self):
+        """Halt without MEKONG_API_TOKEN should return 500."""
+        os.environ.pop("MEKONG_API_TOKEN", None)
+        resp = self.client.post(
+            "/halt", json={"token": "any"}
+        )
+        self.assertEqual(resp.status_code, 500)
+
+
+class TestL14RoutesExist(unittest.TestCase):
+    """Verify L14 routes are registered."""
+
+    def setUp(self):
+        self.app = create_app()
+
+    def test_l14_routes_present(self):
+        """Gateway should have L14 routes."""
+        routes = [r.path for r in self.app.routes]
+        self.assertIn("/autonomous/consciousness", routes)
+        self.assertIn("/governance/check", routes)
+        self.assertIn("/governance/audit", routes)
+        self.assertIn("/halt", routes)
 
 
 if __name__ == "__main__":

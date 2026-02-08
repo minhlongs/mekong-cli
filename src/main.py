@@ -61,6 +61,10 @@ app.add_typer(memory_app, name="memory")
 telegram_app = typer.Typer(help="Telegram: remote commander bot")
 app.add_typer(telegram_app, name="telegram")
 
+# Autonomous sub-commands
+autonomous_app = typer.Typer(help="Autonomous: AGI loop control")
+app.add_typer(autonomous_app, name="autonomous")
+
 console = Console()
 
 
@@ -959,6 +963,89 @@ def telegram_status_cmd():
 
 
 @app.command()
+def halt():
+    """🛑 Halt: Emergency stop all autonomous operations."""
+    from src.core.governance import Governance
+
+    gov = Governance()
+    gov.halt()
+    console.print("[bold red]🛑 HALTED[/bold red] — All autonomous operations stopped.")
+    console.print("Run [bold]mekong autonomous resume[/bold] to restart.")
+
+
+@autonomous_app.command(name="status")
+def autonomous_status():
+    """Show Consciousness Score and subsystem health."""
+    from src.core.autonomous import AutonomousEngine
+
+    engine = AutonomousEngine()
+    report = engine.get_consciousness()
+
+    console.print(
+        Panel(
+            f"[bold]Consciousness Score:[/bold] {report.score}/100\n\n"
+            f"[bold]Memory:[/bold]     {report.memory_health:.0%}\n"
+            f"[bold]NLU:[/bold]        {report.nlu_health:.0%}\n"
+            f"[bold]Router:[/bold]     {report.router_health:.0%}\n"
+            f"[bold]Executor:[/bold]   {report.executor_health:.0%}\n"
+            f"[bold]Learner:[/bold]    {report.learner_health:.0%}\n"
+            f"[bold]Evolution:[/bold]  {report.evolution_health:.0%}\n"
+            f"[bold]Governance:[/bold] {report.governance_health:.0%}",
+            title="🧠 AGI Consciousness",
+            border_style="magenta",
+        )
+    )
+
+
+@autonomous_app.command(name="run")
+def autonomous_run(
+    goal: str = typer.Argument(..., help="Goal to process autonomously"),
+):
+    """Run a single autonomous cycle for a goal."""
+    from src.core.autonomous import AutonomousEngine
+
+    engine = AutonomousEngine()
+
+    if engine.is_halted():
+        console.print("[bold red]System is HALTED. Use 'mekong autonomous resume' first.[/bold red]")
+        raise typer.Exit(code=1)
+
+    result = engine.process_goal(goal)
+
+    status_style = "green" if result.result_status == "success" else "red"
+    console.print(
+        Panel(
+            f"[bold]Goal:[/bold] {result.goal}\n"
+            f"[bold]Status:[/bold] [{status_style}]{result.result_status}[/{status_style}]\n"
+            f"[bold]Executed:[/bold] {result.executed}\n"
+            f"[bold]Recipe Generated:[/bold] {result.recipe_generated}\n"
+            f"[bold]Patterns Detected:[/bold] {result.patterns_detected}",
+            title="🤖 Autonomous Cycle Result",
+            border_style=status_style,
+        )
+    )
+
+    if result.governance_decision:
+        console.print(
+            f"[dim]Governance: {result.governance_decision.action_class.value} "
+            f"— {result.governance_decision.reason}[/dim]"
+        )
+
+    if result.result_status in ("blocked", "rejected"):
+        raise typer.Exit(code=1)
+
+
+@autonomous_app.command(name="resume")
+def autonomous_resume():
+    """Resume autonomous operations after halt."""
+    from src.core.governance import Governance
+
+    gov = Governance()
+    gov.resume()
+    console.print("[bold green]RESUMED[/bold green] — Autonomous operations re-enabled.")
+
+
+@app.command()
 def evolve():
     """🧬 Evolve: Analyze patterns, generate recipes, deprecate bad ones."""
     from src.core.memory import MemoryStore
@@ -1019,7 +1106,7 @@ def version():
     """Show version info"""
     console.print(
         Panel(
-            "[bold green]Mekong CLI[/bold green] v0.10.0\n"
+            "[bold green]Mekong CLI[/bold green] v1.0.0\n"
             "[dim]RaaS Agency Operating System[/dim]\n"
             "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
             "[dim]DNA: ClaudeKit v2.9.1+[/dim]",

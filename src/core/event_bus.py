@@ -25,6 +25,9 @@ class EventType(str, Enum):
     PATTERN_DETECTED = "pattern_detected"
     RECIPE_GENERATED = "recipe_generated"
     RECIPE_DEPRECATED = "recipe_deprecated"
+    AUTONOMOUS_CYCLE = "autonomous_cycle"
+    GOVERNANCE_BLOCKED = "governance_blocked"
+    HALT_TRIGGERED = "halt_triggered"
 
 
 @dataclass
