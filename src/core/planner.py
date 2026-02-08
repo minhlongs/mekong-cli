@@ -50,6 +50,16 @@ class RecipePlanner:
     This is the PLAN phase of the Plan-Execute-Verify pattern.
     """
 
+    # Keyword → agent mapping for smart routing
+    AGENT_KEYWORDS: Dict[str, List[str]] = {
+        "git": ["git", "commit", "branch", "merge", "rebase", "diff", "log", "push", "pull", "clone", "stash"],
+        "file": ["file", "read", "write", "copy", "move", "delete", "rename", "directory", "folder", "tree"],
+        "shell": ["run", "execute", "script", "command", "install", "build", "compile"],
+        "lead": ["lead", "prospect", "ceo", "email", "company", "hunt", "outreach"],
+        "content": ["content", "article", "blog", "seo", "write", "copywriting"],
+        "crawler": ["crawl", "scrape", "recipe", "discover"],
+    }
+
     def __init__(self, llm_client: Optional[Any] = None):
         """
         Initialize planner.
@@ -58,6 +68,29 @@ class RecipePlanner:
             llm_client: Optional LLM client for AI-powered planning
         """
         self.llm_client = llm_client
+
+    def suggest_agent(self, goal: str) -> Optional[str]:
+        """
+        Suggest the best agent for a goal based on keyword matching.
+
+        Args:
+            goal: User's high-level objective
+
+        Returns:
+            Agent name from AGENT_REGISTRY or None
+        """
+        goal_lower = goal.lower()
+        scores: Dict[str, int] = {}
+
+        for agent_name, keywords in self.AGENT_KEYWORDS.items():
+            score = sum(1 for kw in keywords if kw in goal_lower)
+            if score > 0:
+                scores[agent_name] = score
+
+        if not scores:
+            return None
+
+        return max(scores, key=scores.get)
 
     def decompose_goal(
         self, goal: str, context: PlanningContext
@@ -93,6 +126,7 @@ class RecipePlanner:
             List of task dictionaries
         """
         tasks = []
+        suggested_agent = self.suggest_agent(goal)
 
         # Simple heuristic: check for common patterns
         goal_lower = goal.lower()
@@ -210,6 +244,12 @@ class RecipePlanner:
             tasks.append(
                 {"title": goal, "description": goal, "dependencies": [], "type": "llm"}
             )
+
+        # Attach suggested agent to all tasks that don't already have one
+        if suggested_agent:
+            for task in tasks:
+                if "agent" not in task:
+                    task["agent"] = suggested_agent
 
         return tasks
 

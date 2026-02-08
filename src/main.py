@@ -404,6 +404,99 @@ def plan_cmd(
     )
 
 
+@app.command(name="ask")
+def ask_cmd(
+    question: str = typer.Argument(..., help="Question about the codebase or task"),
+):
+    """Ask a question - plan-only shortcut (alias for plan)"""
+    from src.core.planner import RecipePlanner
+
+    llm = get_client()
+    planner = RecipePlanner(llm_client=llm if llm.is_available else None)
+
+    context = PlanningContext(goal=question, complexity=TaskComplexity.SIMPLE)
+    recipe = planner.plan(question, context)
+
+    console.print(
+        Panel(
+            f"[bold]{recipe.name}[/bold]\n{recipe.description}",
+            title="💡 Answer",
+            border_style="cyan",
+        )
+    )
+
+    plan_table = Table(title="Steps")
+    plan_table.add_column("#", style="bold cyan", justify="right")
+    plan_table.add_column("Task", style="bold")
+    plan_table.add_column("Description", style="dim")
+
+    for step in recipe.steps:
+        agent_hint = f" [{step.agent}]" if step.agent else ""
+        plan_table.add_row(
+            str(step.order), step.title + agent_hint, step.description[:80]
+        )
+
+    console.print(plan_table)
+
+
+@app.command(name="debug")
+def debug_cmd(
+    issue: str = typer.Argument(..., help="Bug or issue description to debug"),
+    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="Plan only or execute"),
+):
+    """Debug an issue - generates a fix plan (defaults to dry-run)"""
+    goal = f"debug {issue}" if not issue.lower().startswith("debug") else issue
+
+    if dry_run:
+        from src.core.planner import RecipePlanner
+
+        llm = get_client()
+        planner = RecipePlanner(llm_client=llm if llm.is_available else None)
+        recipe = planner.plan(goal)
+
+        console.print(
+            Panel(
+                f"[bold]{recipe.name}[/bold]\n{recipe.description}",
+                title="🐛 Debug Plan",
+                border_style="yellow",
+            )
+        )
+
+        plan_table = Table(title="Debug Steps")
+        plan_table.add_column("#", style="bold cyan", justify="right")
+        plan_table.add_column("Task", style="bold")
+        plan_table.add_column("Description", style="dim")
+
+        for step in recipe.steps:
+            agent_hint = f" [{step.agent}]" if step.agent else ""
+            plan_table.add_row(
+                str(step.order), step.title + agent_hint, step.description[:80]
+            )
+
+        console.print(plan_table)
+        console.print(
+            f'\n[dim]Run [bold cyan]mekong debug "{issue}" --execute[/bold cyan] to run[/dim]'
+        )
+    else:
+        # Delegate to cook logic
+        llm_client = get_client()
+        orchestrator = RecipeOrchestrator(
+            llm_client=llm_client if llm_client.is_available else None,
+            strict_verification=True,
+            enable_rollback=True,
+        )
+        result = orchestrator.run_from_goal(goal)
+
+        if result.status == OrchestrationStatus.SUCCESS:
+            console.print("\n[bold green]🎉 Issue resolved![/bold green]")
+        else:
+            console.print("\n[bold red]❌ Debug failed[/bold red]")
+            if result.errors:
+                for e in result.errors:
+                    console.print(f"  • {e}")
+            raise typer.Exit(code=1)
+
+
 @app.command()
 def version():
     """Show version info"""
