@@ -3,12 +3,6 @@ Mekong CLI - NLP Commander (Tôm Hùm Brain)
 
 Uses Gemini 2.5 Pro to parse free-form Vietnamese/English messages
 into structured ClaudeKit/Mekong CLI commands for CC CLI execution.
-
-Flow:
-  "làm auth cho agencyos đi"
-    → Gemini parses intent
-    → StructuredTask(intent="implement", project="agencyos-web", ...)
-    → Antigravity picks up and coordinates CC CLI
 """
 
 import json
@@ -27,58 +21,82 @@ KNOWN_PROJECTS = [
     "wellnexus",
 ]
 
-# ClaudeKit command vocabulary
-CLAUDEKIT_COMMANDS = {
-    "plan": "/plan",
-    "plan_fast": "/plan:fast",
-    "plan_hard": "/plan:hard",
-    "implement": "/cook",
-    "fix": "/debug",
-    "debug": "/debug",
-    "review": "/review",
-    "test": "/test",
-    "deploy": "/check-and-commit",
-    "docs": "/docs:update",
-    "status": "/status",
-}
+SYSTEM_PROMPT = """You are Tôm Hùm's NLP brain — an AI command parser for a software development automation system.
 
-SYSTEM_PROMPT = """You are Tôm Hùm's brain — an AI command parser for the Mekong CLI system.
+Your job: Parse a user's free-form message (Vietnamese or English) into a structured JSON task for autonomous code execution.
 
-Your job: Parse a user's free-form message (Vietnamese or English) into a structured task.
+## Context: Mekong CLI + ClaudeKit Engineer
 
-## Available Projects (in apps/ directory):
-- agencyos-web: Next.js 16 RaaS platform (Tailwind, Shadcn, Supabase)
-- sophia-ai-factory: AI video content factory (Next.js, Telegram bot)
-- openclaw-worker: Cloudflare Worker gateway
-- 84tea: Tea e-commerce platform
-- wellnexus: Wellness platform
+The user runs a monorepo with these projects in apps/:
+- agencyos-web: Next.js 16 RaaS platform (Tailwind v4, Shadcn/UI, Supabase auth)
+- sophia-ai-factory: AI video content factory (Next.js, Telegram bot, Supabase, Polar.sh payments)
+- openclaw-worker: Cloudflare Worker API gateway
+- 84tea: Tea e-commerce (Next.js)
+- wellnexus: Wellness platform (Next.js, PayOS payments, i18n)
 
-## Intent Types:
-- plan: User wants to plan/design something → generates /plan or /plan:hard
-- implement: User wants to build/create/code something → generates /cook
-- fix: User wants to fix a bug or issue → generates /debug
-- review: User wants code review → generates /review
-- test: User wants to run tests → generates /test
-- deploy: User wants to deploy/commit → generates /check-and-commit
-- refactor: User wants to refactor code → generates /cook with refactor focus
-- status: User asks about system status (no CC CLI needed)
+## ClaudeKit Engineer Commands (50+ available):
 
-## Rules:
-1. ALWAYS detect the target project if mentioned (even implicitly)
-2. Generate a DETAILED cc_cli_prompt optimized for Claude Code CLI execution
-3. The cc_cli_prompt should be specific, actionable, and include file paths when possible
-4. Map to appropriate ClaudeKit commands
-5. Set priority: "urgent" if user says gấp/urgent/now, otherwise "normal"
-6. Respond ONLY with valid JSON, no markdown
+### Planning:
+- /plan [description] — Create implementation plan
+- /plan:fast [description] — Quick planning for simple tasks
+- /plan:hard [complex feature] — Detailed planning with deep research
+- /plan:two [description] — Plan with 2 alternative approaches
 
-## Output JSON format:
+### Implementation:
+- /cook [description] — Build/implement features end-to-end
+- /coding-level [level] — Set code complexity (junior/mid/senior)
+
+### Quality:
+- /review — Review entire codebase
+- /review:codebase — Parallel codebase review
+- /test — Run test suite
+- /test:ui — Run UI tests
+- /debug [issue] — Debug and fix issues
+
+### Git & Deploy:
+- /check-and-commit — Check quality and commit
+- /worktree [feature] — Create git worktree branch
+
+### Documentation:
+- /docs — Manage project documentation
+- /docs:init — First-time documentation setup
+- /docs:update — Update documentation after changes
+
+### Status:
+- /status — Get system status
+- /watzup — Get project status overview
+
+## Intent Classification:
+
+Map the user's message to one of these intents:
+- "plan" — User wants to plan/design/architect something. Use /plan or /plan:hard
+- "implement" — User wants to build/create/code/make something. Use /cook
+- "fix" — User wants to fix a bug, error, or issue. Use /debug
+- "review" — User wants code review or architecture review. Use /review
+- "test" — User wants to test or validate. Use /test
+- "deploy" — User wants to deploy, commit, push. Use /check-and-commit
+- "refactor" — User wants to refactor or restructure. Use /cook with refactor goal
+- "docs" — User wants to update docs. Use /docs:update
+- "status" — User asks about system/project status. No CC CLI needed.
+
+## Critical Rules:
+1. ALWAYS detect the target project from context (even implicitly via keywords like "sophia", "agency", "tea", "well")
+2. Generate a DETAILED cc_cli_prompt — this prompt will be sent to Claude Code CLI to execute autonomously
+3. The cc_cli_prompt must be specific: mention file paths, frameworks, libraries to use
+4. Include relevant technical context (Next.js 16, Tailwind v4, Supabase, etc.)
+5. Map to the BEST ClaudeKit command(s) for the task
+6. Set priority: "urgent" if user says gấp/urgent/asap/now, otherwise "normal"
+7. If the user's message is ambiguous, set needs_confirmation=true
+8. RESPOND ONLY WITH VALID JSON — no markdown, no explanation
+
+## Output JSON:
 {
-  "intent": "implement|plan|fix|review|test|deploy|refactor|status",
-  "project": "agencyos-web" or null,
-  "summary": "Brief 1-line summary of what user wants",
-  "cc_cli_prompt": "Detailed prompt for CC CLI to execute...",
-  "claudekit_commands": ["/plan:fast", "/cook"],
-  "priority": "normal|urgent",
+  "intent": "implement",
+  "project": "agencyos-web",
+  "summary": "Build authentication module with Supabase",
+  "cc_cli_prompt": "In the Next.js 16 app at apps/agencyos-web, create a complete Supabase authentication module: 1) lib/supabase/client.ts with createBrowserClient, 2) lib/supabase/server.ts with createServerClient using cookies, 3) app/auth/login/page.tsx with email/password form using signInWithPassword, 4) app/auth/signup/page.tsx with registration form. Use @supabase/ssr for server-side auth. Add middleware.ts for route protection.",
+  "claudekit_commands": ["/plan:fast Build Supabase auth", "/cook implement Supabase auth module"],
+  "priority": "normal",
   "needs_confirmation": false
 }"""
 
@@ -116,22 +134,14 @@ class NLPCommander:
         return self._client
 
     def parse(self, message: str) -> StructuredTask:
-        """
-        Parse free-form message into structured task.
-
-        Args:
-            message: User's natural language message (Vietnamese/English)
-
-        Returns:
-            StructuredTask with intent, project, cc_cli_prompt, etc.
-        """
+        """Parse free-form message into structured task."""
         client = self._get_client()
 
         if not client.is_available:
             return StructuredTask(
                 raw_message=message,
-                parse_error="Gemini offline — cannot parse NLP",
-                summary=message,
+                parse_error="Gemini offline",
+                summary=message[:60],
                 cc_cli_prompt=message,
                 intent="implement",
             )
@@ -147,11 +157,23 @@ class NLPCommander:
                 json_mode=True,
             )
 
-            # Parse JSON response
-            content = response.content.strip()
+            # Guard against None content
+            content = response.content
+            if not content:
+                return StructuredTask(
+                    raw_message=message,
+                    parse_error="Gemini returned empty response",
+                    summary=message[:60],
+                    cc_cli_prompt=message,
+                    intent="implement",
+                )
+
+            content = content.strip()
+
             # Strip markdown code fences if present
             if content.startswith("```"):
-                content = content.split("\n", 1)[1] if "\n" in content else content
+                lines = content.split("\n")
+                content = "\n".join(lines[1:])
                 if content.endswith("```"):
                     content = content[:-3]
                 content = content.strip()
@@ -171,7 +193,6 @@ class NLPCommander:
 
             # Validate project name
             if task.project and task.project not in KNOWN_PROJECTS:
-                # Try fuzzy match
                 for p in KNOWN_PROJECTS:
                     if (
                         task.project.lower() in p.lower()
@@ -180,10 +201,7 @@ class NLPCommander:
                         task.project = p
                         break
 
-            logger.info(
-                f"NLP parsed: intent={task.intent}, project={task.project}, "
-                f"summary={task.summary[:40]}"
-            )
+            logger.info(f"NLP parsed: intent={task.intent}, project={task.project}")
             return task
 
         except json.JSONDecodeError as e:
@@ -217,6 +235,7 @@ class NLPCommander:
             "deploy": "🚀",
             "refactor": "♻️",
             "status": "📊",
+            "docs": "📚",
         }
         icon = intent_icons.get(task.intent, "🦞")
         project_str = f"\n📂 Project: `{task.project}`" if task.project else ""
@@ -233,7 +252,7 @@ class NLPCommander:
         )
 
 
-# Module-level singleton
+# Singleton
 _commander = None
 
 
