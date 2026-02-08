@@ -17,7 +17,10 @@ from dataclasses import dataclass
 
 from fastapi.testclient import TestClient
 
-from src.core.gateway import create_app, verify_token, CommandRequest
+from src.core.gateway import (
+    create_app, verify_token, CommandRequest,
+    build_human_summary, HumanSummary, PRESET_ACTIONS, DASHBOARD_HTML,
+)
 
 
 class TestGatewayHealth(unittest.TestCase):
@@ -423,11 +426,13 @@ class TestGatewayAppFactory(unittest.TestCase):
         self.assertIsInstance(app, FastAPI)
 
     def test_create_app_has_routes(self):
-        """App should have /health and /cmd routes"""
+        """App should have /health, /cmd, /, and /presets routes"""
         app = create_app()
         routes = [r.path for r in app.routes]
         self.assertIn("/health", routes)
         self.assertIn("/cmd", routes)
+        self.assertIn("/", routes)
+        self.assertIn("/presets", routes)
 
     def test_create_app_title(self):
         """App title should be Mekong Gateway"""
@@ -455,6 +460,202 @@ class TestCommandRequestModel(unittest.TestCase):
         from pydantic import ValidationError
         with self.assertRaises(ValidationError):
             CommandRequest(goal="test", token="")
+
+
+class TestGatewayDashboard(unittest.TestCase):
+    """Tests for the Washing Machine dashboard at /"""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_dashboard_returns_200(self):
+        """Dashboard endpoint should return 200"""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_dashboard_returns_html(self):
+        """Dashboard should return HTML content type"""
+        resp = self.client.get("/")
+        self.assertIn("text/html", resp.headers["content-type"])
+
+    def test_dashboard_contains_title(self):
+        """Dashboard HTML should contain the title"""
+        resp = self.client.get("/")
+        self.assertIn("Mekong Dashboard", resp.text)
+
+    def test_dashboard_contains_preset_buttons(self):
+        """Dashboard should contain preset action labels"""
+        resp = self.client.get("/")
+        self.assertIn("Quick Deploy", resp.text)
+        self.assertIn("Audit Leads", resp.text)
+        self.assertIn("Plan Content", resp.text)
+
+    def test_dashboard_contains_token_input(self):
+        """Dashboard should have a token input field"""
+        resp = self.client.get("/")
+        self.assertIn('id="token"', resp.text)
+
+    def test_dashboard_contains_custom_goal_input(self):
+        """Dashboard should have a custom goal input"""
+        resp = self.client.get("/")
+        self.assertIn('id="custom-goal"', resp.text)
+
+
+class TestGatewayPresets(unittest.TestCase):
+    """Tests for the /presets endpoint"""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_presets_returns_200(self):
+        """Presets endpoint should return 200"""
+        resp = self.client.get("/presets")
+        self.assertEqual(resp.status_code, 200)
+
+    def test_presets_returns_list(self):
+        """Presets should return a list"""
+        resp = self.client.get("/presets")
+        data = resp.json()
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+
+    def test_presets_structure(self):
+        """Each preset should have id, icon, label, label_vi, goal"""
+        resp = self.client.get("/presets")
+        for preset in resp.json():
+            self.assertIn("id", preset)
+            self.assertIn("icon", preset)
+            self.assertIn("label", preset)
+            self.assertIn("label_vi", preset)
+            self.assertIn("goal", preset)
+
+    def test_presets_count_matches_constant(self):
+        """Presets count should match PRESET_ACTIONS constant"""
+        resp = self.client.get("/presets")
+        self.assertEqual(len(resp.json()), len(PRESET_ACTIONS))
+
+
+class TestHumanSummary(unittest.TestCase):
+    """Tests for human-friendly summary generation"""
+
+    def _make_mock_result(self, status, completed, total, failed):
+        """Helper to create mock orchestration result"""
+        mock = MagicMock()
+        mock.status.value = status
+        mock.completed_steps = completed
+        mock.total_steps = total
+        mock.failed_steps = failed
+        mock.success_rate = (completed / total * 100) if total else 0.0
+        return mock
+
+    def test_success_summary_english(self):
+        """Success summary should say 'All done'"""
+        result = self._make_mock_result("success", 3, 3, 0)
+        summary = build_human_summary(result)
+        self.assertIn("All done", summary.en)
+        self.assertIn("3", summary.en)
+
+    def test_success_summary_vietnamese(self):
+        """Success summary should have Vietnamese text"""
+        result = self._make_mock_result("success", 2, 2, 0)
+        summary = build_human_summary(result)
+        self.assertIn("Xong", summary.vi)
+
+    def test_partial_summary(self):
+        """Partial summary should mention completion ratio"""
+        result = self._make_mock_result("partial", 2, 3, 1)
+        summary = build_human_summary(result)
+        self.assertIn("Partially done", summary.en)
+        self.assertIn("2/3", summary.en)
+
+    def test_failed_summary(self):
+        """Failed summary should mention errors"""
+        result = self._make_mock_result("failed", 0, 2, 2)
+        summary = build_human_summary(result)
+        self.assertIn("Failed", summary.en)
+        self.assertIn("2", summary.en)
+
+    def test_summary_returns_human_summary_type(self):
+        """build_human_summary should return HumanSummary instance"""
+        result = self._make_mock_result("success", 1, 1, 0)
+        summary = build_human_summary(result)
+        self.assertIsInstance(summary, HumanSummary)
+
+    @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
+    @patch("src.core.gateway.get_client")
+    @patch("src.core.gateway.RecipeOrchestrator")
+    def test_cmd_includes_human_summary(self, mock_orch_cls, mock_get_client):
+        """POST /cmd response should include human_summary field"""
+        mock_client = MagicMock()
+        mock_client.is_available = False
+        mock_get_client.return_value = mock_client
+
+        mock_orch = MagicMock()
+        mock_result = MagicMock()
+        mock_result.status.value = "success"
+        mock_result.total_steps = 1
+        mock_result.completed_steps = 1
+        mock_result.failed_steps = 0
+        mock_result.success_rate = 100.0
+        mock_result.errors = []
+        mock_result.warnings = []
+        mock_result.step_results = []
+        mock_orch.run_from_goal.return_value = mock_result
+        mock_orch.telemetry.get_trace.return_value = None
+        mock_orch_cls.return_value = mock_orch
+
+        app = create_app()
+        client = TestClient(app)
+        resp = client.post(
+            "/cmd",
+            json={"goal": "test", "token": "test-secret"},
+        )
+        data = resp.json()
+        self.assertIn("human_summary", data)
+        self.assertIn("en", data["human_summary"])
+        self.assertIn("vi", data["human_summary"])
+
+
+class TestParserDisplayTag(unittest.TestCase):
+    """Tests for recipe 'display: one-button' frontmatter tag"""
+
+    def test_recipe_default_display_empty(self):
+        """Recipe display should default to empty string"""
+        from src.core.parser import Recipe
+        r = Recipe(name="Test", description="desc")
+        self.assertEqual(r.display, "")
+
+    def test_recipe_is_one_button_false_by_default(self):
+        """is_one_button should be False by default"""
+        from src.core.parser import Recipe
+        r = Recipe(name="Test", description="desc")
+        self.assertFalse(r.is_one_button)
+
+    def test_recipe_is_one_button_true(self):
+        """is_one_button should be True when display='one-button'"""
+        from src.core.parser import Recipe
+        r = Recipe(name="Test", description="desc", display="one-button")
+        self.assertTrue(r.is_one_button)
+
+    def test_parser_extracts_display_from_frontmatter(self):
+        """Parser should extract display tag from frontmatter"""
+        from src.core.parser import RecipeParser
+        parser = RecipeParser()
+        content = "---\nname: Deploy App\ndisplay: one-button\n---\n\n# Deploy\n\nDeploy all.\n\n## Step 1: Build\n\nnpm run build\n"
+        recipe = parser.parse_string(content, "test")
+        self.assertEqual(recipe.display, "one-button")
+        self.assertTrue(recipe.is_one_button)
+
+    def test_parser_no_display_tag(self):
+        """Parser should set empty display when tag is absent"""
+        from src.core.parser import RecipeParser
+        parser = RecipeParser()
+        content = "---\nname: Simple\n---\n\n# Simple\n\nDesc.\n\n## Step 1: Run\n\necho hi\n"
+        recipe = parser.parse_string(content, "test")
+        self.assertEqual(recipe.display, "")
+        self.assertFalse(recipe.is_one_button)
 
 
 if __name__ == "__main__":

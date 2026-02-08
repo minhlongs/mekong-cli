@@ -29,6 +29,12 @@ class Recipe:
     description: str
     steps: List[RecipeStep] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    display: str = ""
+
+    @property
+    def is_one_button(self) -> bool:
+        """Check if this recipe should appear as a one-button action"""
+        return self.display == "one-button"
 
 
 class RecipeParser:
@@ -134,6 +140,7 @@ class RecipeParser:
             description=description,
             steps=steps,
             metadata=metadata,
+            display=metadata.get("display", ""),
         )
 
     def parse_string(self, content: str, name: str = "inline") -> Recipe:
@@ -143,7 +150,11 @@ class RecipeParser:
         steps = self.parse_steps(clean_content)
 
         return Recipe(
-            name=metadata.get("name", name), description="", steps=steps, metadata=metadata
+            name=metadata.get("name", name),
+            description="",
+            steps=steps,
+            metadata=metadata,
+            display=metadata.get("display", ""),
         )
 
 
