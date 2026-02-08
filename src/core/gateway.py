@@ -23,13 +23,14 @@ from src.core.gateway_config import DEFAULT_PRESETS, GatewayConfig, load_config
 from src.core.gateway_dashboard import DASHBOARD_HTML
 from src.core.swarm import SwarmNode, SwarmRegistry
 from src.core.event_bus import EventType, get_event_bus
+from src.core.scheduler import Scheduler, ScheduledJob
 
 
 # -- Load config; export presets for backward compatibility --
 GATEWAY_CONFIG: GatewayConfig = load_config()
 PRESET_ACTIONS: List[Dict[str, str]] = GATEWAY_CONFIG.presets
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 
 # -- Request / Response models --
@@ -115,6 +116,29 @@ class SwarmDispatchRequest(BaseModel):
     """Request to dispatch a goal to a remote node"""
     node_id: str = Field(..., min_length=1)
     goal: str = Field(..., min_length=1)
+
+
+class ScheduleJobInfo(BaseModel):
+    """Schedule job info returned by API"""
+    id: str
+    name: str
+    goal: str
+    job_type: str
+    interval_seconds: int
+    daily_time: str
+    enabled: bool
+    last_run: float
+    next_run: float
+    run_count: int
+
+
+class ScheduleAddRequest(BaseModel):
+    """Request to add a new scheduled job"""
+    name: str = Field(..., min_length=1)
+    goal: str = Field(..., min_length=1)
+    job_type: str = Field("interval", pattern="^(interval|daily)$")
+    interval_seconds: int = Field(300, ge=10)
+    daily_time: str = Field("09:00")
 
 
 # -- Token verification --
@@ -384,6 +408,49 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="Node not found")
         return {"status": "removed", "node_id": node_id}
 
+    # -- Schedule endpoints --
+    scheduler = Scheduler()
+
+    @gateway.post("/schedule/jobs", response_model=ScheduleJobInfo)
+    def schedule_add_job(req: ScheduleAddRequest):
+        """Add a new scheduled job."""
+        job = scheduler.add_job(
+            name=req.name,
+            goal=req.goal,
+            job_type=req.job_type,
+            interval_seconds=req.interval_seconds,
+            daily_time=req.daily_time,
+        )
+        return ScheduleJobInfo(
+            id=job.id, name=job.name, goal=job.goal,
+            job_type=job.job_type, interval_seconds=job.interval_seconds,
+            daily_time=job.daily_time, enabled=job.enabled,
+            last_run=job.last_run, next_run=job.next_run,
+            run_count=job.run_count,
+        )
+
+    @gateway.get("/schedule/jobs", response_model=List[ScheduleJobInfo])
+    def schedule_list_jobs():
+        """List all scheduled jobs."""
+        return [
+            ScheduleJobInfo(
+                id=j.id, name=j.name, goal=j.goal,
+                job_type=j.job_type, interval_seconds=j.interval_seconds,
+                daily_time=j.daily_time, enabled=j.enabled,
+                last_run=j.last_run, next_run=j.next_run,
+                run_count=j.run_count,
+            )
+            for j in scheduler.list_jobs()
+        ]
+
+    @gateway.delete("/schedule/jobs/{job_id}")
+    def schedule_remove_job(job_id: str):
+        """Remove a scheduled job."""
+        removed = scheduler.remove_job(job_id)
+        if not removed:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return {"status": "removed", "job_id": job_id}
+
     return gateway
 
 
@@ -404,6 +471,8 @@ __all__ = [
     "SwarmNodeInfo",
     "SwarmRegisterRequest",
     "SwarmDispatchRequest",
+    "ScheduleJobInfo",
+    "ScheduleAddRequest",
     "PRESET_ACTIONS",
     "GATEWAY_CONFIG",
     "VERSION",

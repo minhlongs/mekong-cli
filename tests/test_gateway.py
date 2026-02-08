@@ -29,11 +29,13 @@ from src.core.gateway import (
     build_human_summary, HumanSummary, PRESET_ACTIONS,
     VERSION, ProjectInfo, _scan_projects,
     SwarmNodeInfo, SwarmRegisterRequest, SwarmDispatchRequest,
+    ScheduleJobInfo, ScheduleAddRequest,
 )
 from src.core.gateway_config import GatewayConfig, load_config, DEFAULT_PRESETS
 from src.core.gateway_dashboard import DASHBOARD_HTML
 from src.core.swarm import SwarmNode, SwarmRegistry
 from src.core.event_bus import EventType, Event, EventBus, get_event_bus
+from src.core.scheduler import ScheduledJob, Scheduler
 
 
 class TestGatewayHealth(unittest.TestCase):
@@ -725,9 +727,9 @@ class TestGatewayConfig(unittest.TestCase):
         self.assertEqual(len(DEFAULT_PRESETS), len(PRESET_ACTIONS))
         self.assertEqual(DEFAULT_PRESETS[0]["id"], "deploy")
 
-    def test_version_is_0_5_0(self):
-        """Gateway version should be 0.5.0"""
-        self.assertEqual(VERSION, "0.5.0")
+    def test_version_is_0_6_0(self):
+        """Gateway version should be 0.6.0"""
+        self.assertEqual(VERSION, "0.6.0")
 
 
 class TestDashboardTemplate(unittest.TestCase):
@@ -1130,14 +1132,6 @@ class TestSwarmEndpoints(unittest.TestCase):
         self.assertEqual(resp.status_code, 422)
 
 
-class TestVersionBump(unittest.TestCase):
-    """Verify version is v0.5.0."""
-
-    def test_gateway_version(self):
-        """VERSION constant should be 0.5.0."""
-        self.assertEqual(VERSION, "0.5.0")
-
-
 class TestDashboardSwarmTab(unittest.TestCase):
     """Tests for swarm tab in dashboard template."""
 
@@ -1162,6 +1156,363 @@ class TestDashboardSwarmTab(unittest.TestCase):
     def test_dashboard_has_swarm_stats(self):
         """Dashboard should have swarm stats container."""
         self.assertIn("swarm-stats", DASHBOARD_HTML)
+
+
+# ====================================================================
+# Scheduler Engine Tests
+# ====================================================================
+
+
+class TestScheduler(unittest.TestCase):
+    """Tests for the Scheduler engine."""
+
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(suffix=".yaml", delete=False)
+        self.tmp.close()
+        self.scheduler = Scheduler(config_path=self.tmp.name)
+
+    def tearDown(self):
+        import os
+        os.unlink(self.tmp.name)
+
+    def test_add_interval_job(self):
+        """Adding an interval job should persist it."""
+        job = self.scheduler.add_job("test", "echo hi", job_type="interval", interval_seconds=60)
+        self.assertEqual(job.name, "test")
+        self.assertEqual(job.goal, "echo hi")
+        self.assertEqual(job.job_type, "interval")
+        self.assertEqual(job.interval_seconds, 60)
+        self.assertTrue(job.enabled)
+
+    def test_add_daily_job(self):
+        """Adding a daily job should set daily_time."""
+        job = self.scheduler.add_job("daily", "backup", job_type="daily", daily_time="14:30")
+        self.assertEqual(job.job_type, "daily")
+        self.assertEqual(job.daily_time, "14:30")
+
+    def test_list_jobs(self):
+        """list_jobs should return all added jobs."""
+        self.scheduler.add_job("a", "goal a")
+        self.scheduler.add_job("b", "goal b")
+        self.assertEqual(len(self.scheduler.list_jobs()), 2)
+
+    def test_get_job(self):
+        """get_job should retrieve by ID."""
+        job = self.scheduler.add_job("x", "goal x")
+        found = self.scheduler.get_job(job.id)
+        self.assertIsNotNone(found)
+        self.assertEqual(found.name, "x")
+
+    def test_get_job_missing(self):
+        """get_job should return None for unknown ID."""
+        self.assertIsNone(self.scheduler.get_job("nope"))
+
+    def test_remove_job(self):
+        """remove_job should delete the job."""
+        job = self.scheduler.add_job("del", "goal del")
+        self.assertTrue(self.scheduler.remove_job(job.id))
+        self.assertIsNone(self.scheduler.get_job(job.id))
+
+    def test_remove_job_missing(self):
+        """remove_job should return False for unknown ID."""
+        self.assertFalse(self.scheduler.remove_job("nope"))
+
+    def test_job_count(self):
+        """job_count property should reflect number of jobs."""
+        self.assertEqual(self.scheduler.job_count, 0)
+        self.scheduler.add_job("c", "goal c")
+        self.assertEqual(self.scheduler.job_count, 1)
+
+    def test_persistence(self):
+        """Jobs should survive save/load cycle."""
+        self.scheduler.add_job("persist", "goal persist", interval_seconds=120)
+        loaded = Scheduler(config_path=self.tmp.name)
+        self.assertEqual(len(loaded.list_jobs()), 1)
+        self.assertEqual(loaded.list_jobs()[0].name, "persist")
+        self.assertEqual(loaded.list_jobs()[0].interval_seconds, 120)
+
+    def test_get_due_jobs_none(self):
+        """No jobs should be due immediately after adding with future next_run."""
+        job = self.scheduler.add_job("future", "goal", interval_seconds=9999)
+        due = self.scheduler.get_due_jobs()
+        self.assertEqual(len(due), 0)
+
+    def test_get_due_jobs_past(self):
+        """Jobs with past next_run should be due."""
+        import time
+        job = self.scheduler.add_job("past", "goal")
+        job.next_run = time.time() - 10
+        due = self.scheduler.get_due_jobs()
+        self.assertEqual(len(due), 1)
+
+    def test_mark_completed(self):
+        """mark_completed should increment run_count and update timestamps."""
+        job = self.scheduler.add_job("run", "goal")
+        self.assertEqual(job.run_count, 0)
+        self.scheduler.mark_completed(job)
+        self.assertEqual(job.run_count, 1)
+        self.assertGreater(job.last_run, 0)
+
+    def test_is_running_default_false(self):
+        """Scheduler should not be running by default."""
+        self.assertFalse(self.scheduler.is_running)
+
+    def test_stop(self):
+        """stop() should set _running to False."""
+        self.scheduler._running = True
+        self.scheduler.stop()
+        self.assertFalse(self.scheduler.is_running)
+
+
+class TestSchedulerTick(unittest.TestCase):
+    """Tests for the scheduler tick (async execution)."""
+
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(suffix=".yaml", delete=False)
+        self.tmp.close()
+        self.scheduler = Scheduler(config_path=self.tmp.name)
+
+    def tearDown(self):
+        import os
+        os.unlink(self.tmp.name)
+
+    def test_tick_no_due_jobs(self):
+        """tick should return empty list when no jobs due."""
+        import asyncio
+        self.scheduler.add_job("later", "goal", interval_seconds=9999)
+        results = asyncio.get_event_loop().run_until_complete(self.scheduler.tick())
+        self.assertEqual(len(results), 0)
+
+    def test_tick_with_due_job(self):
+        """tick should execute due jobs and return results."""
+        import asyncio
+        import time
+        job = self.scheduler.add_job("now", "goal now")
+        job.next_run = time.time() - 10
+        callback_called = []
+        self.scheduler.set_run_callback(
+            lambda goal: {"status": "success", "goal": goal} or callback_called.append(goal)
+        )
+        results = asyncio.get_event_loop().run_until_complete(self.scheduler.tick())
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["status"], "success")
+
+    def test_tick_emits_events(self):
+        """tick should emit JOB_STARTED and JOB_COMPLETED events."""
+        import asyncio
+        import time
+        bus = get_event_bus()
+        bus.clear()
+        events = []
+        bus.subscribe(EventType.JOB_STARTED, lambda e: events.append(e))
+        bus.subscribe(EventType.JOB_COMPLETED, lambda e: events.append(e))
+
+        job = self.scheduler.add_job("evt", "goal evt")
+        job.next_run = time.time() - 10
+        self.scheduler.set_run_callback(lambda g: {"status": "ok"})
+        asyncio.get_event_loop().run_until_complete(self.scheduler.tick())
+
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0].type, EventType.JOB_STARTED)
+        self.assertEqual(events[1].type, EventType.JOB_COMPLETED)
+        bus.clear()
+
+    def test_tick_handles_callback_error(self):
+        """tick should handle errors in run callback gracefully."""
+        import asyncio
+        import time
+        job = self.scheduler.add_job("err", "goal err")
+        job.next_run = time.time() - 10
+        self.scheduler.set_run_callback(lambda g: (_ for _ in ()).throw(RuntimeError("boom")))
+        results = asyncio.get_event_loop().run_until_complete(self.scheduler.tick())
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["status"], "error")
+
+    def test_tick_no_callback(self):
+        """tick with no callback should mark job as skipped."""
+        import asyncio
+        import time
+        job = self.scheduler.add_job("skip", "goal skip")
+        job.next_run = time.time() - 10
+        results = asyncio.get_event_loop().run_until_complete(self.scheduler.tick())
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["status"], "skipped")
+
+
+class TestSchedulerDailyTime(unittest.TestCase):
+    """Tests for daily time calculation."""
+
+    def test_next_daily_run_future(self):
+        """_next_daily_run should return a future timestamp."""
+        import time
+        ts = Scheduler._next_daily_run("23:59")
+        self.assertGreater(ts, time.time() - 86400)
+
+    def test_next_daily_run_invalid(self):
+        """Invalid time should default to 09:00."""
+        ts = Scheduler._next_daily_run("invalid")
+        self.assertGreater(ts, 0)
+
+
+# ====================================================================
+# Schedule Gateway Endpoints Tests
+# ====================================================================
+
+
+class TestScheduleEndpoints(unittest.TestCase):
+    """Tests for /schedule/* endpoints."""
+
+    def setUp(self):
+        self.app = create_app()
+        self.client = TestClient(self.app)
+
+    def test_list_jobs_empty(self):
+        """GET /schedule/jobs should return empty list initially."""
+        resp = self.client.get("/schedule/jobs")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsInstance(resp.json(), list)
+
+    def test_add_job(self):
+        """POST /schedule/jobs should add a job."""
+        resp = self.client.post("/schedule/jobs", json={
+            "name": "test-job",
+            "goal": "echo test",
+            "job_type": "interval",
+            "interval_seconds": 120,
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["name"], "test-job")
+        self.assertEqual(data["goal"], "echo test")
+        self.assertEqual(data["interval_seconds"], 120)
+        self.assertTrue(data["enabled"])
+
+    def test_add_daily_job(self):
+        """POST /schedule/jobs should add a daily job."""
+        resp = self.client.post("/schedule/jobs", json={
+            "name": "daily-job",
+            "goal": "backup db",
+            "job_type": "daily",
+            "daily_time": "08:00",
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertEqual(data["job_type"], "daily")
+        self.assertEqual(data["daily_time"], "08:00")
+
+    def test_add_and_list(self):
+        """Adding a job should make it appear in list."""
+        self.client.post("/schedule/jobs", json={
+            "name": "listed",
+            "goal": "echo listed",
+        })
+        resp = self.client.get("/schedule/jobs")
+        jobs = resp.json()
+        names = [j["name"] for j in jobs]
+        self.assertIn("listed", names)
+
+    def test_remove_job(self):
+        """DELETE /schedule/jobs/{id} should remove the job."""
+        add_resp = self.client.post("/schedule/jobs", json={
+            "name": "to-remove",
+            "goal": "echo remove",
+        })
+        job_id = add_resp.json()["id"]
+        del_resp = self.client.delete(f"/schedule/jobs/{job_id}")
+        self.assertEqual(del_resp.status_code, 200)
+        self.assertEqual(del_resp.json()["status"], "removed")
+
+    def test_remove_job_not_found(self):
+        """DELETE /schedule/jobs/{id} with unknown ID should return 404."""
+        resp = self.client.delete("/schedule/jobs/nonexistent")
+        self.assertEqual(resp.status_code, 404)
+
+
+# ====================================================================
+# Version bump tests
+# ====================================================================
+
+
+class TestVersionIs060(unittest.TestCase):
+    """Verify version was bumped to 0.6.0."""
+
+    def test_gateway_version_string(self):
+        """VERSION constant should be 0.6.0."""
+        self.assertEqual(VERSION, "0.6.0")
+
+    def test_health_reports_version(self):
+        """Health endpoint should report 0.6.0."""
+        app = create_app()
+        client = TestClient(app)
+        resp = client.get("/health")
+        self.assertEqual(resp.json()["version"], "0.6.0")
+
+
+# ====================================================================
+# Dashboard Auto-Pilot Tab Tests
+# ====================================================================
+
+
+class TestDashboardAutoPilotTab(unittest.TestCase):
+    """Tests for Auto-Pilot tab in dashboard template."""
+
+    def test_dashboard_has_autopilot_tab(self):
+        """Dashboard should have autopilot tab."""
+        self.assertIn("tab-autopilot", DASHBOARD_HTML)
+
+    def test_dashboard_has_schedule_jobs_container(self):
+        """Dashboard should have sched-jobs container."""
+        self.assertIn("sched-jobs", DASHBOARD_HTML)
+
+    def test_dashboard_has_load_schedule_jobs(self):
+        """Dashboard should have loadScheduleJobs function."""
+        self.assertIn("loadScheduleJobs", DASHBOARD_HTML)
+
+    def test_dashboard_has_add_schedule_job(self):
+        """Dashboard should have addScheduleJob function."""
+        self.assertIn("addScheduleJob", DASHBOARD_HTML)
+
+    def test_dashboard_has_remove_schedule_job(self):
+        """Dashboard should have removeScheduleJob function."""
+        self.assertIn("removeScheduleJob", DASHBOARD_HTML)
+
+    def test_dashboard_has_sched_add_form(self):
+        """Dashboard should have schedule add form inputs."""
+        self.assertIn("sched-name", DASHBOARD_HTML)
+        self.assertIn("sched-goal", DASHBOARD_HTML)
+        self.assertIn("sched-type", DASHBOARD_HTML)
+
+    def test_dashboard_has_job_type_styles(self):
+        """Dashboard should have job-type CSS classes."""
+        self.assertIn(".sched-job", DASHBOARD_HTML)
+        self.assertIn(".job-type.interval", DASHBOARD_HTML)
+        self.assertIn(".job-type.daily", DASHBOARD_HTML)
+
+
+# ====================================================================
+# EventBus Job Event Types Tests
+# ====================================================================
+
+
+class TestEventBusJobEvents(unittest.TestCase):
+    """Tests for JOB_STARTED and JOB_COMPLETED event types."""
+
+    def test_job_started_event_exists(self):
+        """EventType should have JOB_STARTED."""
+        self.assertEqual(EventType.JOB_STARTED.value, "job_started")
+
+    def test_job_completed_event_exists(self):
+        """EventType should have JOB_COMPLETED."""
+        self.assertEqual(EventType.JOB_COMPLETED.value, "job_completed")
+
+    def test_emit_job_events(self):
+        """Should be able to emit and subscribe to job events."""
+        bus = EventBus()
+        received = []
+        bus.subscribe(EventType.JOB_STARTED, lambda e: received.append(e))
+        bus.emit(EventType.JOB_STARTED, {"job_id": "abc"})
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0].data["job_id"], "abc")
 
 
 if __name__ == "__main__":
