@@ -31,7 +31,7 @@ from src.core.memory import MemoryStore, MemoryEntry
 GATEWAY_CONFIG: GatewayConfig = load_config()
 PRESET_ACTIONS: List[Dict[str, str]] = GATEWAY_CONFIG.presets
 
-VERSION = "0.10.0"
+VERSION = "1.0.0"
 
 
 # -- Request / Response models --
@@ -203,6 +203,16 @@ class AutoRecipeInfo(BaseModel):
     """Auto-generated recipe info"""
     name: str
     path: str
+
+
+class GovernanceCheckRequest(BaseModel):
+    """Request to check governance classification."""
+    goal: str = Field(..., min_length=1)
+
+
+class HaltRequest(BaseModel):
+    """Request to halt autonomous operations."""
+    token: str = Field(..., min_length=1)
 
 
 # -- Token verification --
@@ -631,6 +641,72 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="Job not found")
         return {"status": "removed", "job_id": job_id}
 
+    # -- Autonomous / Governance endpoints (L14) --
+
+    @gateway.get("/autonomous/consciousness")
+    def consciousness():
+        """Get Consciousness Score and subsystem health."""
+        from src.core.autonomous import AutonomousEngine
+
+        engine = AutonomousEngine()
+        report = engine.get_consciousness()
+        return {
+            "score": report.score,
+            "memory_health": report.memory_health,
+            "nlu_health": report.nlu_health,
+            "router_health": report.router_health,
+            "executor_health": report.executor_health,
+            "learner_health": report.learner_health,
+            "evolution_health": report.evolution_health,
+            "governance_health": report.governance_health,
+        }
+
+    @gateway.post("/governance/check")
+    def governance_check(req: GovernanceCheckRequest):
+        """Classify a goal's safety level."""
+        from src.core.governance import Governance
+
+        gov = Governance()
+        decision = gov.classify(req.goal)
+        return {
+            "action_class": decision.action_class.value,
+            "reason": decision.reason,
+            "requires_approval": decision.requires_approval,
+        }
+
+    @gateway.get("/governance/audit")
+    def governance_audit(limit: int = 50):
+        """Get recent audit trail entries."""
+        from src.core.governance import Governance
+
+        gov = Governance()
+        entries = gov.get_audit_trail(limit)
+        return [
+            {
+                "timestamp": e.timestamp,
+                "goal": e.goal,
+                "action_class": e.action_class,
+                "approved": e.approved,
+                "result": e.result,
+            }
+            for e in entries
+        ]
+
+    @gateway.post("/halt")
+    def halt_system(req: HaltRequest):
+        """Emergency halt all autonomous operations."""
+        server_token = os.environ.get("MEKONG_API_TOKEN", "")
+        if not server_token:
+            raise HTTPException(status_code=500, detail="MEKONG_API_TOKEN not configured")
+        if req.token != server_token:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        from src.core.governance import Governance
+
+        gov = Governance()
+        gov.halt()
+        return {"status": "halted", "message": "All autonomous operations stopped."}
+
     return gateway
 
 
@@ -662,6 +738,8 @@ __all__ = [
     "RecipeValidateRequest",
     "RecipeValidateResponse",
     "AutoRecipeInfo",
+    "GovernanceCheckRequest",
+    "HaltRequest",
     "PRESET_ACTIONS",
     "GATEWAY_CONFIG",
     "VERSION",
