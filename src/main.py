@@ -563,11 +563,83 @@ def gateway(
 
 
 @app.command()
+def dash():
+    """🟢 Dash: One-button action menu (The Washing Machine)"""
+    from src.core.gateway import PRESET_ACTIONS
+
+    console.print(
+        Panel(
+            "[bold]Press a button, get things done.[/bold]\n"
+            "[dim]Select an action below — no coding needed.[/dim]",
+            title="🟢 Mekong Dashboard — The Washing Machine",
+            border_style="green",
+        )
+    )
+
+    # Display preset actions as a numbered menu
+    table = Table(title="One-Button Actions", show_lines=True)
+    table.add_column("#", style="bold cyan", justify="right", width=3)
+    table.add_column("Action", style="bold", min_width=20)
+    table.add_column("What it does", style="dim")
+
+    for i, preset in enumerate(PRESET_ACTIONS, 1):
+        table.add_row(
+            str(i),
+            f"{preset['icon']}  {preset['label']}",
+            preset["goal"],
+        )
+
+    console.print(table)
+    console.print()
+
+    # Get user choice
+    choices = [str(i) for i in range(1, len(PRESET_ACTIONS) + 1)]
+    choice = Prompt.ask(
+        "Pick a number (or 'q' to quit)",
+        choices=choices + ["q"],
+        default="q",
+    )
+
+    if choice == "q":
+        console.print("[dim]Bye![/dim]")
+        return
+
+    selected = PRESET_ACTIONS[int(choice) - 1]
+    console.print(
+        f"\n[bold green]Running:[/bold green] {selected['icon']}  {selected['label']}"
+    )
+
+    # Execute via orchestrator
+    llm_client = get_client()
+    orchestrator = RecipeOrchestrator(
+        llm_client=llm_client if llm_client.is_available else None,
+        strict_verification=True,
+        enable_rollback=True,
+    )
+
+    result = orchestrator.run_from_goal(selected["goal"])
+
+    # Human-friendly summary
+    from src.core.gateway import build_human_summary
+
+    summary = build_human_summary(result)
+    status_style = "green" if result.status == OrchestrationStatus.SUCCESS else "red"
+
+    console.print(
+        Panel(
+            f"[bold]{summary.en}[/bold]\n[dim]{summary.vi}[/dim]",
+            title=f"[{status_style}]Result[/{status_style}]",
+            border_style=status_style,
+        )
+    )
+
+
+@app.command()
 def version():
     """Show version info"""
     console.print(
         Panel(
-            "[bold green]Mekong CLI[/bold green] v0.2.0\n"
+            "[bold green]Mekong CLI[/bold green] v0.3.0\n"
             "[dim]RaaS Agency Operating System[/dim]\n"
             "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
             "[dim]DNA: ClaudeKit v2.9.1+[/dim]",
