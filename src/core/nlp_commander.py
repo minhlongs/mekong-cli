@@ -7,6 +7,7 @@ into structured ClaudeKit/Mekong CLI commands for CC CLI execution.
 
 import json
 import logging
+import time
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional
 
@@ -126,6 +127,8 @@ class StructuredTask:
 class NLPCommander:
     """Gemini-powered NLP → structured command parser."""
 
+    MEMORY_CONTEXT_MAX = 1000
+
     def __init__(self) -> None:
         self._client = None
 
@@ -143,9 +146,10 @@ class NLPCommander:
 
         if not client.is_available:
             logger.warning("Gemini offline. Using fallback parser.")
-            return self._fallback_parse(message)
+            return self._fallback_parse(message, error_detail="LLM offline")
 
         try:
+            t0 = time.time()
             response = client.chat(
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
@@ -155,12 +159,33 @@ class NLPCommander:
                 max_tokens=1024,
                 json_mode=True,
             )
+            elapsed = time.time() - t0
+            logger.info(f"NLP LLM call took {elapsed:.1f}s (provider={client.mode})")
 
-            # Guard against None content
+            # Guard against None/empty content — retry with simplified prompt
             content = response.content
-            if not content:
-                logger.warning("Gemini returned empty response. Using fallback parser.")
-                return self._fallback_parse(message)
+            if not content or not content.strip():
+                logger.warning(
+                    f"NLP: empty response from {client.mode}. "
+                    "Retrying with simplified prompt..."
+                )
+                simplified = (
+                    f"Parse this into JSON with keys: intent, project, summary, "
+                    f"cc_cli_prompt, claudekit_commands, priority, needs_confirmation.\n\n"
+                    f"Message: {message}"
+                )
+                retry_response = client.chat(
+                    messages=[{"role": "user", "content": simplified}],
+                    temperature=0.2,
+                    max_tokens=1024,
+                    json_mode=True,
+                )
+                content = retry_response.content
+                if not content or not content.strip():
+                    return self._fallback_parse(
+                        message,
+                        error_detail=f"provider={client.mode}, both attempts empty",
+                    )
 
             content = content.strip()
 
@@ -201,9 +226,11 @@ class NLPCommander:
 
         except Exception as e:
             logger.error(f"NLP parse error: {e}")
-            return self._fallback_parse(message)
+            return self._fallback_parse(
+                message, error_detail=f"exception: {str(e)[:80]}"
+            )
 
-    def _fallback_parse(self, message: str) -> StructuredTask:
+    def _fallback_parse(self, message: str, error_detail: str = "") -> StructuredTask:
         """Fallback regex/keyword parser when AI fails."""
         msg_lower = message.lower()
 
@@ -263,7 +290,7 @@ class NLPCommander:
             priority="normal",
             needs_confirmation=True,  # Always confirm on fallback
             raw_message=message,
-            parse_error="Gemini returned empty -> Fallback used",
+            parse_error=error_detail or "Gemini returned empty -> Fallback used",
         )
 
     def format_confirmation(self, task: StructuredTask) -> str:

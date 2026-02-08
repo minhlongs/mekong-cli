@@ -51,6 +51,16 @@ HELP_TEXT = """🦞 *Tôm Hùm — Telegram Commander*
 /schedule — View scheduled jobs
 /memory — Recent 5 executions
 /help — This help message
+
+*AGI Self-Improvement:*
+/agi start — Start AGI loop
+/agi stop — Stop AGI loop
+/agi status — Detailed AGI metrics
+/agi history — Last 5 improvements
+/agi config — Show AGI configuration
+
+*Memory:*
+/remember <content> — Store memory
 """
 
 
@@ -147,6 +157,9 @@ class MekongBot:
         self._application.add_handler(CommandHandler("memory", self.memory_handler))
         self._application.add_handler(CommandHandler("help", self.help_handler))
         self._application.add_handler(CommandHandler("start", self.help_handler))
+
+        # AGI commands
+        self._application.add_handler(CommandHandler("agi", self.agi_handler))
 
         # NLP: catch ALL non-command text messages
         self._application.add_handler(
@@ -379,6 +392,118 @@ class MekongBot:
             )
         except Exception:
             await update.message.reply_text("No CC CLI sessions active.")
+
+    # ============================================================
+    # ♾️ AGI Loop Commands
+    # ============================================================
+
+    async def agi_handler(self, update: Any, context: Any) -> None:
+        """Handle /agi <subcommand> — AGI loop control."""
+        args = context.args or []
+        sub = args[0].lower() if args else "status"
+
+        if sub == "start":
+            try:
+                from src.core.agi_loop import get_agi_loop
+
+                loop = get_agi_loop()
+                if loop._running:
+                    await update.message.reply_text("♾️ AGI loop is already running.")
+                    return
+                asyncio.create_task(loop.run_forever())
+                await update.message.reply_text(
+                    "♾️ *AGI Loop Started!*\n"
+                    "Tôm Hùm is now self-improving...\n"
+                    "Use /agi status to monitor.",
+                    parse_mode="Markdown",
+                )
+            except Exception as e:
+                await update.message.reply_text(f"❌ Failed to start AGI: {e}")
+
+        elif sub == "stop":
+            try:
+                from src.core.agi_loop import get_agi_loop
+
+                loop = get_agi_loop()
+                loop.stop()
+                await update.message.reply_text("🛑 AGI loop stopped.")
+            except Exception as e:
+                await update.message.reply_text(f"❌ Failed to stop AGI: {e}")
+
+        elif sub == "status":
+            try:
+                from src.core.agi_loop import get_agi_loop
+
+                loop = get_agi_loop()
+                s = loop.get_status()
+                running_icon = "🟢" if s["running"] else "🔴"
+                uptime_min = s["uptime_seconds"] // 60
+                cooldown = s["cooldown"]
+                last = s.get("last_improvement")
+                last_str = ""
+                if last:
+                    icon = "✅" if last.get("success") else "❌"
+                    last_str = (
+                        f"\n\n📌 *Last:* {icon} {last.get('title', 'Unknown')}"
+                    )
+                await update.message.reply_text(
+                    f"♾️ *AGI Loop Status*\n\n"
+                    f"{running_icon} Running: {'Yes' if s['running'] else 'No'}\n"
+                    f"🔄 Iteration: {s['iteration']}\n"
+                    f"✅ Improvements: {s['improvements']}\n"
+                    f"📊 Success Rate: {s['success_rate']}%\n"
+                    f"❌ Consecutive Failures: {s['consecutive_failures']}\n"
+                    f"⏱ Uptime: {uptime_min}m\n"
+                    f"😴 Cooldown: {cooldown}s"
+                    f"{last_str}",
+                    parse_mode="Markdown",
+                )
+            except Exception as e:
+                await update.message.reply_text(f"❌ AGI status error: {e}")
+
+        elif sub == "history":
+            try:
+                from src.core.agi_loop import get_agi_loop
+
+                loop = get_agi_loop()
+                details = loop._history.get("details", [])
+                if not details:
+                    await update.message.reply_text("No AGI history yet.")
+                    return
+                lines = ["♾️ *AGI History (last 5)*\n"]
+                for d in details[-5:]:
+                    icon = "✅" if d.get("success") else "❌"
+                    lines.append(
+                        f"{icon} `{d.get('id', '?')}` — {d.get('title', '?')}"
+                    )
+                await update.message.reply_text(
+                    "\n".join(lines), parse_mode="Markdown"
+                )
+            except Exception as e:
+                await update.message.reply_text(f"❌ AGI history error: {e}")
+
+        elif sub == "config":
+            try:
+                from src.core.agi_loop import get_agi_loop
+
+                loop = get_agi_loop()
+                await update.message.reply_text(
+                    f"⚙️ *AGI Configuration*\n\n"
+                    f"Cooldown: {loop.cooldown}s\n"
+                    f"Max Iterations: {loop.max_iterations or '∞'}\n"
+                    f"Max Consecutive Failures: {loop.MAX_CONSECUTIVE_FAILURES}\n"
+                    f"Telegram Notify: {loop.telegram_notify}\n"
+                    f"Completed: {len(loop.completed_improvements)}\n"
+                    f"Blacklisted: {len(loop._history.get('blacklist', {}))}",
+                    parse_mode="Markdown",
+                )
+            except Exception as e:
+                await update.message.reply_text(f"❌ AGI config error: {e}")
+
+        else:
+            await update.message.reply_text(
+                "♾️ Usage: /agi <start|stop|status|history|config>"
+            )
 
     # ============================================================
     # Original Command Handlers
