@@ -10,7 +10,7 @@ packages = [{include = "api"}, {include = "automation"}, {include = "src"}]
 mekong = "src.main:app"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 typer = "^0.9.0"
 rich = "^13.7.0"
 fastapi = "^0.109.0"

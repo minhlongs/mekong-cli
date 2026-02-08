@@ -146,10 +146,69 @@ class RecipePlanner:
                 ]
             )
 
-        # Default: single task
+        # Pattern: shell commands (user typed something like "find ...", "ls ...", "git ...")
+        elif any(
+            goal_lower.startswith(cmd)
+            for cmd in [
+                "find ",
+                "ls ",
+                "git ",
+                "cat ",
+                "grep ",
+                "mkdir ",
+                "rm ",
+                "cp ",
+                "mv ",
+                "echo ",
+                "pip ",
+                "npm ",
+                "python",
+                "node ",
+                "cd ",
+                "curl ",
+                "wget ",
+                "docker ",
+                "make ",
+                "brew ",
+            ]
+        ):
+            # Smart normalization for common misformats
+            import re as _re
+
+            shell_cmd = goal
+            # "git log 5" → "git log -n 5"
+            git_log_match = _re.match(r"git\s+log\s+(\d+)$", goal, _re.IGNORECASE)
+            if git_log_match:
+                shell_cmd = f"git log --oneline -n {git_log_match.group(1)}"
+            # "git diff" is fine as-is
+            # "git status" is fine as-is
+
+            tasks.append(
+                {
+                    "title": goal,
+                    "description": shell_cmd,
+                    "dependencies": [],
+                    "type": "shell",
+                }
+            )
+
+        # Pattern: list/show/search → map to shell find/grep
+        elif any(word in goal_lower for word in ["list", "show", "search", "find"]):
+            # Smart mapping: generate actual shell command
+            if "python" in goal_lower or ".py" in goal_lower:
+                cmd = "find src/ -name '*.py' -not -path '*/__pycache__/*' | sort"
+            elif "file" in goal_lower:
+                cmd = "find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' | head -50"
+            else:
+                cmd = "find . -maxdepth 2 -not -path '*/.git/*' | sort | head -30"
+            tasks.append(
+                {"title": goal, "description": cmd, "dependencies": [], "type": "shell"}
+            )
+
+        # Default: delegate to LLM if available, else echo the goal
         else:
             tasks.append(
-                {"title": goal, "description": f"Execute: {goal}", "dependencies": []}
+                {"title": goal, "description": goal, "dependencies": [], "type": "llm"}
             )
 
         return tasks
@@ -287,6 +346,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 description=task["description"],
                 agent=task.get("agent"),
                 params={
+                    "type": task.get("type", "shell"),
                     "dependencies": task.get("dependencies", []),
                     "verification": self.generate_verification_criteria(task).__dict__,
                 },
