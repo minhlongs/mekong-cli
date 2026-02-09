@@ -15,6 +15,7 @@ import subprocess
 
 class VerificationStatus(Enum):
     """Verification result status"""
+
     PASSED = "passed"
     FAILED = "failed"
     WARNING = "warning"
@@ -24,6 +25,7 @@ class VerificationStatus(Enum):
 @dataclass
 class ExecutionResult:
     """Result from executing a recipe step"""
+
     exit_code: int = 0
     stdout: str = ""
     stderr: str = ""
@@ -35,6 +37,7 @@ class ExecutionResult:
 @dataclass
 class VerificationCheck:
     """Individual verification check result"""
+
     name: str
     status: VerificationStatus
     message: str
@@ -45,6 +48,7 @@ class VerificationCheck:
 @dataclass
 class VerificationReport:
     """Complete verification report for a step"""
+
     passed: bool
     checks: List[VerificationCheck] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -96,7 +100,7 @@ class RecipeVerifier:
                 status=VerificationStatus.PASSED,
                 message=f"Exit code {result.exit_code} matches expected",
                 expected=expected,
-                actual=result.exit_code
+                actual=result.exit_code,
             )
         else:
             return VerificationCheck(
@@ -104,7 +108,7 @@ class RecipeVerifier:
                 status=VerificationStatus.FAILED,
                 message=f"Exit code mismatch: expected {expected}, got {result.exit_code}",
                 expected=expected,
-                actual=result.exit_code
+                actual=result.exit_code,
             )
 
     def verify_file_exists(self, filepath: str) -> VerificationCheck:
@@ -124,7 +128,7 @@ class RecipeVerifier:
                 status=VerificationStatus.PASSED,
                 message=f"File exists: {filepath}",
                 expected=True,
-                actual=True
+                actual=True,
             )
         else:
             return VerificationCheck(
@@ -132,7 +136,7 @@ class RecipeVerifier:
                 status=VerificationStatus.FAILED,
                 message=f"File not found: {filepath}",
                 expected=True,
-                actual=False
+                actual=False,
             )
 
     def verify_file_not_exists(self, filepath: str) -> VerificationCheck:
@@ -152,7 +156,7 @@ class RecipeVerifier:
                 status=VerificationStatus.PASSED,
                 message=f"File correctly does not exist: {filepath}",
                 expected=False,
-                actual=False
+                actual=False,
             )
         else:
             return VerificationCheck(
@@ -160,7 +164,7 @@ class RecipeVerifier:
                 status=VerificationStatus.FAILED,
                 message=f"File exists but should not: {filepath}",
                 expected=False,
-                actual=True
+                actual=True,
             )
 
     def verify_output_contains(
@@ -186,7 +190,7 @@ class RecipeVerifier:
                     status=VerificationStatus.PASSED,
                     message=f"Output contains pattern: {pattern}",
                     expected=pattern,
-                    actual="found"
+                    actual="found",
                 )
         except re.error:
             # Not a valid regex, try simple substring
@@ -196,7 +200,7 @@ class RecipeVerifier:
                     status=VerificationStatus.PASSED,
                     message=f"Output contains: {pattern}",
                     expected=pattern,
-                    actual="found"
+                    actual="found",
                 )
 
         return VerificationCheck(
@@ -204,7 +208,7 @@ class RecipeVerifier:
             status=VerificationStatus.FAILED,
             message=f"Output does not contain: {pattern}",
             expected=pattern,
-            actual="not found"
+            actual="not found",
         )
 
     def verify_output_not_contains(
@@ -230,7 +234,7 @@ class RecipeVerifier:
                     status=VerificationStatus.FAILED,
                     message=f"Output contains forbidden pattern: {pattern}",
                     expected=f"not {pattern}",
-                    actual="found"
+                    actual="found",
                 )
         except re.error:
             # Not a valid regex, try simple substring
@@ -240,7 +244,7 @@ class RecipeVerifier:
                     status=VerificationStatus.FAILED,
                     message=f"Output contains forbidden text: {pattern}",
                     expected=f"not {pattern}",
-                    actual="found"
+                    actual="found",
                 )
 
         return VerificationCheck(
@@ -248,7 +252,7 @@ class RecipeVerifier:
             status=VerificationStatus.PASSED,
             message=f"Output correctly does not contain: {pattern}",
             expected=f"not {pattern}",
-            actual="not found"
+            actual="not found",
         )
 
     def verify(
@@ -421,15 +425,23 @@ class RecipeVerifier:
         """
         report = VerificationReport(passed=True, checks=[])
 
-        # Tech Debt check
+        # Tech Debt check (TODOs/FIXMEs)
         todo_check = self.verify_output_not_contains(result, r"TODO|FIXME")
-        todo_check.name = "binh_phap:tech_debt"
+        todo_check.name = "binh_phap:tech_debt_todos"
         report.checks.append(todo_check)
         if todo_check.status == VerificationStatus.FAILED:
             report.passed = False
 
-        # Type Safety check (for TypeScript/JavaScript)
-        any_type_check = self.verify_output_not_contains(result, r": any")
+        # Loose Logs check (console.log / print)
+        log_check = self.verify_output_not_contains(result, r"console\.log|print\(")
+        log_check.name = "binh_phap:clean_logs"
+        report.checks.append(log_check)
+        if log_check.status == VerificationStatus.FAILED:
+            report.passed = False
+
+        # Type Safety check (for TypeScript/JavaScript/Python)
+        # Check for ': any' or ': Any'
+        any_type_check = self.verify_output_not_contains(result, r": any|: Any")
         any_type_check.name = "binh_phap:type_safety"
         report.checks.append(any_type_check)
         if any_type_check.status == VerificationStatus.FAILED:

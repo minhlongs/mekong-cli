@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Tree from 'react-d3-tree';
-import { NodeCard } from './node-card';
+import { NodeCard, D3NodeDatum } from './node-card';
 import { useTheme } from '../../context/ThemeContext';
+import { CustomNodeElementProps } from 'react-d3-tree';
 import { ZoomIn, ZoomOut, Move } from 'lucide-react';
 
+
 interface NetworkTreeDesktopProps {
-  data: any;
+
+  data: D3NodeDatum;
 }
 
 export const NetworkTreeDesktop: React.FC<NetworkTreeDesktopProps> = ({ data }) => {
@@ -72,14 +75,18 @@ export const NetworkTreeDesktop: React.FC<NetworkTreeDesktopProps> = ({ data }) 
       <div ref={containerRef} className="w-full h-full">
         {dimensions.width > 0 && (
           <Tree
-            data={data}
+            data={data as any}
             translate={translate}
             nodeSize={{ x: 250, y: 150 }}
             pathFunc="step"
             orientation="vertical"
-            renderCustomNodeElement={(rd3tProps) => (
-              <NodeCard {...rd3tProps} />
+            renderCustomNodeElement={(rd3tProps: CustomNodeElementProps) => (
+              <NodeCard 
+                nodeDatum={rd3tProps.nodeDatum as unknown as D3NodeDatum} 
+                toggleNode={rd3tProps.toggleNode} 
+              />
             )}
+
             zoomable={true}
             draggable={true}
             separation={{ siblings: 1, nonSiblings: 1.5 }}

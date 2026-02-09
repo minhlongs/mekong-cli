@@ -65,12 +65,14 @@ export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => 
       await refreshUser();
 
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : t('withdrawal.errorMessage') || 'Failed to submit withdrawal request';
       toast({
         title: t('common.error'),
-        description: error.message || t('withdrawal.errorMessage') || 'Failed to submit withdrawal request',
+        description: errorMessage,
         type: 'error',
       });
+
     } finally {
       setLoading(false);
     }

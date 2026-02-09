@@ -1,295 +1,181 @@
 #!/usr/bin/env node
 /**
- * OpenClaw Task Watcher
- * Watches /tmp for openclaw_task_*.txt files and executes them via CC CLI
+ * 🦞 TÔM HÙM (OpenClaw) Task Watcher - v10.0 INBOX MIGRATION
+ * 
+ * CORE CHANGE:
+ * - Watch `~/mekong-cli/tasks/` instead of `/tmp`
+ * - Pattern: `mission_*.txt`
+ * - Logs: `~/tom_hum_cto.log`
  */
 
 const fs = require('fs');
-const { exec, spawn } = require('child_process');
+const { exec, execSync } = require('child_process');
 const path = require('path');
 
-const WATCH_DIR = '/tmp';
-const TASK_PATTERN = /^openclaw_task_.*\.txt$/;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8405197398:AAHuuykECSxEGZaBZVhtvwyIWM84LtGLO5I';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '5503922921';
-const PROCESSED_DIR = '/tmp/openclaw_processed';
 const MEKONG_DIR = '/Users/macbookprom1/mekong-cli';
+const WATCH_DIR = path.join(MEKONG_DIR, 'tasks');
+const PROCESSED_DIR = path.join(WATCH_DIR, 'processed');
+const LOG_FILE = '/Users/macbookprom1/tom_hum_cto.log';
+const TASK_PATTERN = /^mission_.*\.txt$/;
 
-// Ensure processed dir exists
 if (!fs.existsSync(PROCESSED_DIR)) {
   fs.mkdirSync(PROCESSED_DIR, { recursive: true });
 }
 
-// Send message to Telegram
-async function sendTelegram(text) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-
-  console.log('🔍 DEBUG sendTelegram() called');
-  console.log('   URL:', url);
-  console.log('   Chat ID:', TELEGRAM_CHAT_ID);
-  console.log('   Message preview:', text.slice(0, 100));
-
+function log(msg) {
+  const timestamp = new Date().toISOString().slice(11, 19);
+  const formatted = `[${timestamp}] 🦞 ${msg}\n`;
+  console.log(formatted.trim());
   try {
-    const payload = {
-      chat_id: TELEGRAM_CHAT_ID,
-      text: text,
-      parse_mode: 'Markdown'
-    };
-
-    console.log('   Payload:', JSON.stringify(payload, null, 2));
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const responseData = await response.json();
-
-    if (!response.ok) {
-      console.error('❌ Telegram API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: responseData
-      });
-      throw new Error(`Telegram API returned ${response.status}: ${JSON.stringify(responseData)}`);
-    }
-
-    console.log('✅ Telegram sent successfully!');
-    console.log('   Response:', JSON.stringify(responseData, null, 2));
-
-  } catch (error) {
-    console.error('❌ sendTelegram() FAILED:');
-    console.error('   Error name:', error.name);
-    console.error('   Error message:', error.message);
-    console.error('   Error stack:', error.stack);
-    throw error; // Re-throw to let caller know it failed
+    fs.appendFileSync(LOG_FILE, formatted);
+  } catch (e) {
+    console.error('Log write failed:', e);
   }
 }
 
-// Execute task via CC CLI
-function executeTask(taskContent, taskFile) {
+log(`--- MISSION CONTROL v10.0 ONLINE ---`);
+log(`Watching Inbox: ${WATCH_DIR}`);
+
+/** 🦞 SUPREME COMMANDER ENGINE */
+function executeTaskInTerminal(taskContent, taskFile) {
   return new Promise((resolve) => {
-    // Remove backslash escapes from Telegram (e.g., \! -> !)
     const cleanContent = taskContent.replace(/\\!/g, '!').replace(/\\"/g, '"').trim();
-    console.log(`\n📋 Original: ${taskContent.slice(0, 50)}...`);
-    console.log(`📋 Cleaned: ${cleanContent.slice(0, 50)}...`);
+    
+    let projectDir = MEKONG_DIR;
+    if (taskContent.includes('anima119')) projectDir = path.join(MEKONG_DIR, 'apps/anima119');
+    else if (taskContent.includes('84tea')) projectDir = path.join(MEKONG_DIR, 'apps/84tea');
+    else if (taskContent.includes('apex_os') || taskContent.includes('apex-os')) projectDir = path.join(MEKONG_DIR, 'apps/apex-os');
+    else if (taskContent.includes('sophia')) projectDir = path.join(MEKONG_DIR, 'apps/sophia-ai-factory');
+    else if (taskContent.includes('well')) projectDir = path.join(MEKONG_DIR, 'apps/well');
 
-    let resolved = false;
-    const safeResolve = (value) => {
-      if (resolved) return;
-      resolved = true;
-      resolve(value);
-    };
+    const manifestoCmd = `cat ${MEKONG_DIR}/docs/CTO_MANIFESTO.md`;
+    
+    // 🌲 RANDOM FOREST DISPATCHER (Load Balancing)
+    const isQwenRotation = Math.random() > 0.5;
+    const proxyPort = isQwenRotation ? 8046 : 8045;
+    const modelName = isQwenRotation ? 'qwen-coder-plus' : 'claude-sonnet-4-6';
+    const apiKey = "sk-6219c93290f14b32b047342ca8b0bea9";
+    
+    log(`DISPATCHER: Selecting ${isQwenRotation ? '🐉 QWEN' : '🤖 SONNET'} (${proxyPort}) for this mission.`);
+    
+    // 🛠 UNIFIED SUPREME COMMAND (The "Execution Tank" Pattern)
+    // We cd, set env, and THEN start claude with the mission as the first prompt
+    const unifiedCmd = `cd ${projectDir} && export ANTHROPIC_BASE_URL=http://127.0.0.1:${proxyPort} && export ANTHROPIC_API_KEY=${apiKey} && ${manifestoCmd} && claude --model ${modelName} --dangerously-skip-permissions "/binh-phap implement: ${cleanContent}"`;
+    
+    log(`DEPLOYING UNIFIED COMMAND TO ${projectDir}`);
 
-    let cmd, args, toolName;
+    try {
+      execSync(`printf '%s' "${unifiedCmd.replace(/"/g, '\\"')}" | pbcopy`);
+    } catch (e) { log(`Clipboard error: ${e.message}`); }
 
-    // 1. Shell commands (prefix !) — 5 min timeout
-    if (cleanContent.startsWith('!')) {
-      const shellCmd = cleanContent.slice(1);
-      console.log(`🔧 Executing shell: ${shellCmd}`);
+    const appleScript = `
+tell application "System Events"
+    -- 1. Focus the specific Antigravity app by bundle ID
+    set antigravityProcs to (every process whose bundle identifier is "com.google.antigravity")
+    if (count of antigravityProcs) > 0 then
+        set theProc to item 1 of antigravityProcs
+        set frontmost of theProc to true
+        delay 1.5
+        
+        tell theProc
+            -- 2. Force close any stuck Command Palette or Chat with triple ESC
+            key code 53 -- ESC
+            delay 0.3
+            key code 53 -- ESC
+            delay 0.3
+            key code 53 -- ESC
+            delay 0.8
+            
+            -- 3. Toggle Terminal Focus (Ctrl+\`)
+            -- We do this twice with a small delay to ensure it's open and focused
+            keystroke "\`" using {control down}
+            delay 1.0
+            
+            -- 4. HARD RESET terminal prompt
+            -- Multiple Ctrl+C is safer than Ctrl+D as it won't exit the shell itself
+            keystroke "c" using {control down}
+            delay 0.3
+            keystroke "c" using {control down}
+            delay 0.3
+            keystroke "c" using {control down}
+            delay 0.5
+            
+            -- Clear line and screen
+            keystroke "u" using {control down} 
+            delay 0.3
+            keystroke "l" using {control down}
+            delay 0.8
+            
+            -- 5. Paste Unified Command and Execute
+            keystroke "v" using {command down}
+            delay 1.2
+            keystroke return
+        end tell
+    else
+        log "Antigravity process not found"
+    end if
+end tell
+`;
 
-      const { exec } = require('child_process');
-      exec(shellCmd, { cwd: MEKONG_DIR, timeout: 5 * 60 * 1000 }, (error, stdout, stderr) => {
-        safeResolve({
-          success: !error,
-          output: stdout || stderr || error?.message || 'No output'
-        });
-      });
+    log(`Triggering Supreme Command...`);
+    exec(`osascript -e '${appleScript.replace(/'/g, "'\"'\"'")}'`, (error) => {
+      if (error) log(`Script Error: ${error.message}`);
+      else log(`MISSION DISPATCHED.`);
+      setTimeout(() => resolve({ success: true }), 10000);
+    });
+  });
+}
+
+/** 🔄 QUEUE */
+let isProcessing = false;
+const queue = [];
+
+async function processQueue() {
+  if (isProcessing || queue.length === 0) return;
+  isProcessing = true;
+  const taskFile = queue.shift();
+  const filePath = path.join(WATCH_DIR, taskFile);
+  
+  try {
+    if (!fs.existsSync(filePath)) {
+      log(`Ghost file ignored: ${taskFile}`);
       return;
     }
-
-    // 2. All other commands (including /plan, /cook, /ask, /deploy) -> Claude Agent (CC CLI)
-    else {
-      toolName = 'claude';
-      cmd = 'claude';
-      args = ['--dangerously-skip-permissions', '-p', cleanContent];
-      console.log(`🤖 Executing Claude Agent: ${cleanContent}`);
-    }
-
-    // Spawn the process
-    const child = spawn(cmd, args, {
-      cwd: MEKONG_DIR,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env, PATH: '/opt/homebrew/bin:/usr/local/bin:' + process.env.PATH }
-    });
-    
-    // Close stdin immediately to prevent hanging if the tool expects input
-    child.stdin.end();
-
-    let output = '';
-    let errorOutput = '';
-
-    child.stdout.on('data', (data) => {
-      const text = data.toString();
-      output += text;
-      console.log(text);
-    });
-
-    child.stderr.on('data', (data) => {
-      const text = data.toString();
-      errorOutput += text;
-      console.error(text);
-    });
-
-    child.on('close', (code) => {
-      const fullOutput = output + errorOutput;
-      safeResolve({
-        success: code === 0,
-        output: fullOutput.slice(-3000) || 'Task completed with no output'
-      });
-    });
-
-    child.on('error', (error) => {
-      safeResolve({
-        success: false,
-        output: `Failed to start ${toolName}: ${error.message}`
-      });
-    });
-
-    // Kill child after 10 minutes to prevent hanging
-    setTimeout(() => {
-      if (!resolved) {
-        child.kill('SIGTERM');
-        safeResolve({
-          success: false,
-          output: 'Timeout after 10 minutes'
-        });
-      }
-    }, 10 * 60 * 1000);
-  });
-}
-
-// Process new task file
-async function processTask(taskFile) {
-  const filePath = path.join(WATCH_DIR, taskFile);
-
-  try {
-    // Wait a bit for file to be fully written
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     const content = fs.readFileSync(filePath, 'utf-8').trim();
-    console.log(`\n🔔 New task: ${taskFile}`);
-    console.log(`📝 Task content: "${content}"`);
-
-    // Send initial notification
-    try {
-      console.log('\n📤 Sending initial Telegram notification...');
-      await sendTelegram(`⏳ Processing task...\n\n"${content.slice(0, 200)}"`);
-      console.log('✅ Initial notification sent!');
-    } catch (telegramError) {
-      console.error('❌ Failed to send initial notification:', telegramError.message);
-      // Continue anyway
-    }
-
-    // Execute the task
-    console.log('\n🚀 Executing task...');
-    const result = await executeTask(content, taskFile);
-    console.log('\n📊 Task execution result:', {
-      success: result.success,
-      outputLength: result.output.length
-    });
-
-    // Send result notification
-    try {
-      const status = result.success ? '✅ SUCCESS' : '❌ FAILED';
-      const message = `${status}\n\n${result.output.slice(0, 3500)}`;
-
-      console.log('\n📤 Sending result Telegram notification...');
-      console.log('   Status:', status);
-      console.log('   Message length:', message.length);
-
-      await sendTelegram(message);
-      console.log('✅ Result notification sent!');
-    } catch (telegramError) {
-      console.error('❌ Failed to send result notification:', telegramError.message);
-      // Continue to move file anyway
-    }
-
-    // Move to processed
-    const processedPath = path.join(PROCESSED_DIR, taskFile);
-    fs.renameSync(filePath, processedPath);
-    console.log(`\n✅ Task completed and moved: ${taskFile}`);
-
+    log(`EXECUTING: ${taskFile}`);
+    await executeTaskInTerminal(content, taskFile);
+    
+    fs.renameSync(filePath, path.join(PROCESSED_DIR, taskFile));
+    log(`Archived: ${taskFile}`);
   } catch (error) {
-    console.error('\n❌ Task processing error:', error);
-    console.error('   Error name:', error.name);
-    console.error('   Error message:', error.message);
-    console.error('   Error stack:', error.stack);
-
-    try {
-      console.log('\n📤 Sending error notification to Telegram...');
-      await sendTelegram(`❌ Error processing task: ${error.message}`);
-      console.log('✅ Error notification sent!');
-    } catch (telegramError) {
-      console.error('❌ Failed to send error notification:', telegramError.message);
-    }
-
-    // Still move to processed to avoid reprocessing
-    try {
-      const processedPath = path.join(PROCESSED_DIR, `error_${taskFile}`);
-      fs.renameSync(filePath, processedPath);
-      console.log(`📦 Error file moved: ${processedPath}`);
-    } catch (e) {
-      console.error('❌ Failed to move error file:', e);
-    }
+    log(`Error: ${error.message}`);
+  } finally {
+    isProcessing = false;
+    processQueue();
   }
 }
 
-// Track processed files to avoid duplicates
-const processedFiles = new Set();
-
-// Watch for new files
-console.log('👀 Watching for Telegram tasks...');
-console.log(`📁 Directory: ${WATCH_DIR}`);
-console.log(`🎯 Pattern: ${TASK_PATTERN}`);
-console.log(`📦 Processed dir: ${PROCESSED_DIR}`);
-
-fs.watch(WATCH_DIR, (eventType, filename) => {
-  if (eventType === 'rename' && filename && TASK_PATTERN.test(filename)) {
+function checkAndQueue(filename) {
+  if (filename && TASK_PATTERN.test(filename)) {
     const filePath = path.join(WATCH_DIR, filename);
-
-    // Check if file exists (rename event fires on both create and delete)
-    if (fs.existsSync(filePath) && !processedFiles.has(filename)) {
-      processedFiles.add(filename);
-      processTask(filename).finally(() => {
-        // Remove from set after processing
-        setTimeout(() => processedFiles.delete(filename), 60000);
-      });
+    if (fs.existsSync(filePath) && !queue.includes(filename)) {
+      log(`DETECTED: ${filename}`);
+      queue.push(filename);
+      processQueue();
     }
   }
-});
-
-// Initial scan for existing files
-console.log('🔍 Scanning for existing task files...');
-const existingFiles = fs.readdirSync(WATCH_DIR)
-  .filter(f => TASK_PATTERN.test(f));
-
-if (existingFiles.length > 0) {
-  console.log(`Found ${existingFiles.length} existing task(s)`);
-  existingFiles.forEach(f => {
-    processedFiles.add(f);
-    processTask(f).finally(() => {
-      setTimeout(() => processedFiles.delete(f), 60000);
-    });
-  });
-} else {
-  console.log('No existing tasks found');
 }
 
-console.log('✅ Task watcher ready!\n');
+// Watchers
+if (fs.existsSync(WATCH_DIR)) {
+  fs.watch(WATCH_DIR, (eventType, filename) => checkAndQueue(filename));
+}
 
-// Startup notification DISABLED to prevent spam
+setInterval(() => {
+  const files = fs.readdirSync(WATCH_DIR);
+  const tasks = files.filter(f => TASK_PATTERN.test(f));
+  if (tasks.length > 0) log(`Poll found: ${tasks.join(', ')}`);
+  tasks.forEach(checkAndQueue);
+}, 5000);
 
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n⏹️  Shutting down task watcher...');
-  // Notification DISABLED to prevent spam
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  console.log('\n⏹️  Shutting down task watcher...');
-  // Notification DISABLED to prevent spam
-  process.exit(0);
-});
+process.on('SIGINT', () => { log('OFFLINE.'); process.exit(0); });

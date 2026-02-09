@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Import modular components
-const { green, yellow, red, cyan, magenta, dim, coloredBar, RESET, shouldUseColor } = require('./hooks/lib/colors.cjs');
+const { green, yellow, red, cyan, white, magenta, dim, coloredBar, RESET, shouldUseColor } = require('./hooks/lib/colors.cjs');
 const { parseTranscript } = require('./hooks/lib/transcript-parser.cjs');
 const { countConfigs } = require('./hooks/lib/config-counter.cjs');
 const { loadConfig } = require('./hooks/lib/ck-config-utils.cjs');
@@ -157,7 +157,7 @@ function renderSessionLines(ctx) {
   if (planPart) locationPart += `  ${planPart}`;
 
   // Build session part: 🤖 model  contextBar%  ⌛ time left (usage%)
-  let sessionPart = `🤖 ${ctx.modelName}`;
+  let sessionPart = `🤖 ${white(ctx.modelName)}`;
   if (ctx.contextPercent > 0) {
     sessionPart += `  ${coloredBar(ctx.contextPercent, 12)} ${ctx.contextPercent}%`;
   }
