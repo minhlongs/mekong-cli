@@ -1,0 +1,1 @@
+Execute a critical system check on the mekong-cli architecture. Focus on verifying terminal focus consistency for the Tôm Hùm orchestrator. Respond with Pong when complete.

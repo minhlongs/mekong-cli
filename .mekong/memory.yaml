@@ -54,3 +54,25 @@
   recipe_used: ''
   status: success
   timestamp: 1770555686.560682
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1770646366.6031969
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1770646366.7195468
+- duration_ms: 5515.834093093872
+  error_summary: 'Step 1: Exit code mismatch: expected 0, got 2'
+  goal: Fix header text color in .claude/statusline.cjs to WHITE. First add 'const
+    WHITE = "\u001b[97m";' and 'function white...' to .claude/hooks/lib/colors.cjs,
+    then update statusline.cjs to apply it.
+  recipe_used: 'Plan: Fix header text color in .claude/statusline.cjs to WHITE. First
+    add ''const WHITE = "\u001b[97m";'' and ''function white...'' to .claude/hooks/lib/colors.cjs,
+    then update statusline.cjs to apply it.'
+  status: rolled_back
+  timestamp: 1770662630.946644

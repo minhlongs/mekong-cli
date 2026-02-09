@@ -12,7 +12,8 @@ const NetworkPage: React.FC = () => {
   const { user } = useStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [treeData, setTreeData] = useState<any>(null); // D3 format
+  const [treeData, setTreeData] = useState<any>(null); // TODO: Define TreeData interface once react-d3-tree type is resolved
+
   const [flatData, setFlatData] = useState<NetworkNode | null>(null); // Flat/Recursive format
   const [stats, setStats] = useState({
     totalDownlines: 0,
@@ -135,7 +136,14 @@ const NetworkPage: React.FC = () => {
   );
 };
 
-const StatsCard = ({ label, value, icon, color }: any) => (
+interface StatsCardProps {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const StatsCard = ({ label, value, icon, color }: StatsCardProps) => (
   <motion.div
     whileHover={{ y: -2 }}
     className={`p-4 rounded-2xl border backdrop-blur-md ${color}`}
@@ -149,6 +157,7 @@ const StatsCard = ({ label, value, icon, color }: any) => (
     <p className="text-xl md:text-2xl font-black text-white ml-1">{value}</p>
   </motion.div>
 );
+
 
 const EmptyState = () => (
   <div className="w-full h-64 flex flex-col items-center justify-center bg-white/5 rounded-2xl border border-white/5">

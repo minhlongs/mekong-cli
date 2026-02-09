@@ -65,6 +65,15 @@ app.add_typer(telegram_app, name="telegram")
 autonomous_app = typer.Typer(help="Autonomous: AGI loop control")
 app.add_typer(autonomous_app, name="autonomous")
 
+# Binh Pháp sub-commands
+from src.cli.binh_phap_commands import app as binh_phap_app
+
+app.add_typer(
+    binh_phap_app,
+    name="binh-phap",
+    help="Binh Pháp Strategy: Infinite loops & Standards",
+)
+
 console = Console()
 
 
@@ -101,7 +110,10 @@ def list():
 
     for recipe in recipes:
         table.add_row(
-            recipe.name, recipe.description, str(recipe.path.name), ", ".join(recipe.tags)
+            recipe.name,
+            recipe.description,
+            str(recipe.path.name),
+            ", ".join(recipe.tags),
         )
 
     console.print(table)
@@ -274,9 +286,15 @@ def cook(
     ),
     strict: bool = typer.Option(True, help="Strict verification mode"),
     no_rollback: bool = typer.Option(False, help="Disable rollback on failure"),
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show step-by-step output"),
-    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Plan only, no execution"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Machine-readable JSON output"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show step-by-step output"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-n", help="Plan only, no execution"
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", "-j", help="Machine-readable JSON output"
+    ),
 ):
     """🎯 Cook: Plan → Execute → Verify workflow (Binh Pháp engine)"""
     llm_client = get_client()
@@ -290,6 +308,7 @@ def cook(
     if dry_run:
         # Plan only — show steps without executing
         from src.core.planner import RecipePlanner
+
         planner = RecipePlanner(
             llm_client=llm_client if llm_client.is_available else None
         )
@@ -363,7 +382,9 @@ def cook(
         detail_table.add_column("Checks", style="dim")
 
         for sr in result.step_results:
-            status = "[green]PASS[/green]" if sr.verification.passed else "[red]FAIL[/red]"
+            status = (
+                "[green]PASS[/green]" if sr.verification.passed else "[red]FAIL[/red]"
+            )
             detail_table.add_row(
                 str(sr.step.order),
                 sr.step.title,
@@ -378,20 +399,24 @@ def cook(
     elif result.status == OrchestrationStatus.PARTIAL:
         console.print("\n[bold yellow]⚠️  Partial completion[/bold yellow]")
         if result.errors:
-            console.print(Panel(
-                "\n".join(f"• {e}" for e in result.errors),
-                title="[red]Errors[/red]",
-                border_style="red",
-            ))
+            console.print(
+                Panel(
+                    "\n".join(f"• {e}" for e in result.errors),
+                    title="[red]Errors[/red]",
+                    border_style="red",
+                )
+            )
         raise typer.Exit(code=1)
     else:
         console.print("\n[bold red]❌ Mission failed[/bold red]")
         if result.errors:
-            console.print(Panel(
-                "\n".join(f"• {e}" for e in result.errors),
-                title="[red]Errors[/red]",
-                border_style="red",
-            ))
+            console.print(
+                Panel(
+                    "\n".join(f"• {e}" for e in result.errors),
+                    title="[red]Errors[/red]",
+                    border_style="red",
+                )
+            )
         raise typer.Exit(code=1)
 
 
@@ -491,7 +516,9 @@ def ask_cmd(
 @app.command(name="debug")
 def debug_cmd(
     issue: str = typer.Argument(..., help="Bug or issue description to debug"),
-    dry_run: bool = typer.Option(True, "--dry-run/--execute", help="Plan only or execute"),
+    dry_run: bool = typer.Option(
+        True, "--dry-run/--execute", help="Plan only or execute"
+    ),
 ):
     """Debug an issue - generates a fix plan (defaults to dry-run)"""
     goal = f"debug {issue}" if not issue.lower().startswith("debug") else issue
@@ -704,10 +731,14 @@ def swarm_list():
 
     for node in nodes:
         status_style = {
-            "healthy": "green", "unhealthy": "yellow", "unreachable": "red",
+            "healthy": "green",
+            "unhealthy": "yellow",
+            "unreachable": "red",
         }.get(node.status, "dim")
         table.add_row(
-            node.id, node.name, f"{node.host}:{node.port}",
+            node.id,
+            node.name,
+            f"{node.host}:{node.port}",
             f"[{status_style}]{node.status}[/{status_style}]",
         )
 
@@ -773,7 +804,9 @@ def schedule_list():
 
     if not jobs:
         console.print("[yellow]No scheduled jobs.[/yellow]")
-        console.print("[dim]Use: mekong schedule add <name> <goal> [--type interval|daily][/dim]")
+        console.print(
+            "[dim]Use: mekong schedule add <name> <goal> [--type interval|daily][/dim]"
+        )
         return
 
     table = Table(title=f"Scheduled Jobs ({len(jobs)})")
@@ -798,9 +831,15 @@ def schedule_list():
 def schedule_add(
     name: str = typer.Argument(..., help="Job name"),
     goal: str = typer.Argument(..., help="Goal to execute"),
-    job_type: str = typer.Option("interval", "--type", "-t", help="Job type: interval or daily"),
-    interval: int = typer.Option(300, "--interval", "-i", help="Interval in seconds (for interval type)"),
-    daily_time: str = typer.Option("09:00", "--time", help="Time HH:MM (for daily type)"),
+    job_type: str = typer.Option(
+        "interval", "--type", "-t", help="Job type: interval or daily"
+    ),
+    interval: int = typer.Option(
+        300, "--interval", "-i", help="Interval in seconds (for interval type)"
+    ),
+    daily_time: str = typer.Option(
+        "09:00", "--time", help="Time HH:MM (for daily type)"
+    ),
 ):
     """Add a new scheduled job."""
     from src.core.scheduler import Scheduler
@@ -842,6 +881,7 @@ def schedule_remove(
 
 
 # -- Memory CLI commands --
+
 
 @memory_app.command(name="list")
 def memory_list(
@@ -1007,7 +1047,9 @@ def autonomous_run(
     engine = AutonomousEngine()
 
     if engine.is_halted():
-        console.print("[bold red]System is HALTED. Use 'mekong autonomous resume' first.[/bold red]")
+        console.print(
+            "[bold red]System is HALTED. Use 'mekong autonomous resume' first.[/bold red]"
+        )
         raise typer.Exit(code=1)
 
     result = engine.process_goal(goal)
@@ -1042,7 +1084,9 @@ def autonomous_resume():
 
     gov = Governance()
     gov.resume()
-    console.print("[bold green]RESUMED[/bold green] — Autonomous operations re-enabled.")
+    console.print(
+        "[bold green]RESUMED[/bold green] — Autonomous operations re-enabled."
+    )
 
 
 @app.command()
@@ -1067,7 +1111,9 @@ def evolve():
     results = improver.analyze_and_improve()
 
     if not results:
-        console.print("[yellow]No evolution actions taken — not enough data yet.[/yellow]")
+        console.print(
+            "[yellow]No evolution actions taken — not enough data yet.[/yellow]"
+        )
     else:
         table = Table(title=f"Evolution Results ({len(results)} actions)")
         table.add_column("Action", style="bold cyan")
