@@ -14,6 +14,7 @@ const config = require('../config');
 const { log, isBrainAlive } = require('./brain-process-manager');
 const { isQueueEmpty } = require('./task-queue');
 const { classifyComplexity, generateMissionPrompt } = require('./mission-complexity-classifier');
+const { isOverheating } = require('./m1-cooling-daemon');
 
 let emptyQueueCount = 0;
 let intervalRef = null;
@@ -78,6 +79,10 @@ function startAutoCTO() {
           emptyQueueCount = 0;
           if (!isBrainAlive()) {
             log('AUTO-CTO: Brain not alive — skipping task generation');
+            return;
+          }
+          if (isOverheating()) {
+            log('AUTO-CTO: System overheating — skipping task generation');
             return;
           }
           generateNextTask();

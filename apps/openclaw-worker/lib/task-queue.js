@@ -3,6 +3,7 @@ const path = require('path');
 const config = require('../config');
 const { log } = require('./brain-process-manager');
 const { executeTask } = require('./mission-dispatcher');
+const { pauseIfOverheating } = require('./m1-cooling-daemon');
 
 let isProcessing = false;
 let currentTaskFile = null;
@@ -13,6 +14,10 @@ let watcher = null;
 async function processQueue() {
   if (isProcessing || queue.length === 0) return;
   isProcessing = true;
+
+  // Thermal gate: block until system is cool enough
+  await pauseIfOverheating();
+
   const taskFile = queue.shift();
   currentTaskFile = taskFile;
   const filePath = path.join(config.WATCH_DIR, taskFile);
