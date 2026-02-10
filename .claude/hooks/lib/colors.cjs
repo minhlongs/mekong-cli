@@ -15,7 +15,6 @@ const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
 const MAGENTA = '\x1b[35m';
 const CYAN = '\x1b[36m';
-const WHITE = '\x1b[97m'; // Bright White
 
 // Detect color support at module load (cached)
 // Claude Code statusline runs via pipe but output displays in TTY - default to true
@@ -47,7 +46,6 @@ function green(text) { return colorize(text, GREEN); }
 function yellow(text) { return colorize(text, YELLOW); }
 function red(text) { return colorize(text, RED); }
 function cyan(text) { return colorize(text, CYAN); }
-function white(text) { return colorize(text, WHITE); }
 function magenta(text) { return colorize(text, MAGENTA); }
 function dim(text) { return colorize(text, DIM); }
 
@@ -88,7 +86,6 @@ module.exports = {
   yellow,
   red,
   cyan,
-  white,
   magenta,
   dim,
   getContextColor,
