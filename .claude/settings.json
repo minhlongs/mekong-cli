@@ -86,6 +86,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "Plan",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/cook-after-plan-reminder.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      }
     ]
   }
 }
