@@ -2,14 +2,15 @@
 # ============================================================================
 # 🦞 TÔM HÙM — Autonomous Daemon Launcher
 #
-# One command to start full autonomy:
-#   task-watcher.js boots → expect brain spawns in tmux → auto-cto generates
-#   missions → task-queue detects → dispatcher executes via CC CLI → loop
+# Runs task-watcher.js inside a detached tmux session "tom-hum".
+# Designed to run from a REAL terminal (not inside CC CLI sandbox).
 #
-# Usage: bash scripts/tom-hum-autonomous-daemon-launcher.sh
-# Watch: tmux attach -t tom-hum-brain
-# Logs:  tail -f ~/tom_hum_cto.log
-# Stop:  Ctrl+C (or kill the node process)
+# Usage:
+#   bash scripts/tom-hum-autonomous-daemon-launcher.sh        # start
+#   tmux attach -t tom-hum                                     # watch daemon
+#   tmux attach -t tom-hum-brain                               # watch CC CLI
+#   tail -f ~/tom_hum_cto.log                                  # watch logs
+#   tmux kill-session -t tom-hum                                # stop
 # ============================================================================
 
 set -e
@@ -18,58 +19,42 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 MEKONG_DIR="$(dirname "$SCRIPT_DIR")"
 OPENCLAW_DIR="$MEKONG_DIR/apps/openclaw-worker"
 LOG_FILE="${TOM_HUM_LOG:-$HOME/tom_hum_cto.log}"
+TMUX_DAEMON="tom-hum"
 
-# Verify openclaw-worker exists
+# --- Prereq checks ---
+for cmd in expect tmux claude node; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "❌ $cmd not found in PATH"
+    exit 1
+  fi
+done
+
 if [ ! -f "$OPENCLAW_DIR/task-watcher.js" ]; then
   echo "❌ task-watcher.js not found at $OPENCLAW_DIR"
   exit 1
 fi
 
-# Verify expect is installed (needed for interactive brain mode)
-if ! command -v expect &>/dev/null; then
-  echo "❌ expect not installed. Run: brew install expect"
-  exit 1
-fi
-
-# Verify tmux is installed (needed for interactive brain mode)
-if ! command -v tmux &>/dev/null; then
-  echo "❌ tmux not installed. Run: brew install tmux"
-  exit 1
-fi
-
-# Verify claude CLI is available
-if ! command -v claude &>/dev/null; then
-  echo "❌ claude CLI not found in PATH"
-  exit 1
-fi
-
-# Ensure tasks directory exists
+# --- Cleanup stale state ---
+tmux kill-session -t "$TMUX_DAEMON" 2>/dev/null || true
+tmux kill-session -t tom-hum-brain 2>/dev/null || true
+rm -f /tmp/tom_hum_next_mission.txt /tmp/tom_hum_mission_done
 mkdir -p "$MEKONG_DIR/tasks/processed"
 
-# Kill stale tmux brain sessions
-tmux kill-session -t tom-hum-brain 2>/dev/null || true
-
-# Clear stale IPC files
-rm -f /tmp/tom_hum_next_mission.txt /tmp/tom_hum_mission_done
+# --- Launch in detached tmux ---
+tmux new-session -d -s "$TMUX_DAEMON" -x 200 -y 50 \
+  "TOM_HUM_BRAIN_MODE=interactive MEKONG_DIR=$MEKONG_DIR node $OPENCLAW_DIR/task-watcher.js 2>&1 | tee -a $LOG_FILE"
 
 echo ""
 echo "  🦞 ═══════════════════════════════════════════════"
-echo "  🦞  TÔM HÙM AUTONOMOUS DAEMON"
-echo "  🦞  Mode: interactive (expect brain in tmux)"
+echo "  🦞  TÔM HÙM AUTONOMOUS DAEMON STARTED"
+echo "  🦞  Tmux session: $TMUX_DAEMON"
 echo "  🦞  Engine: ${TOM_HUM_ENGINE:-antigravity}"
 echo "  🦞  Log: $LOG_FILE"
-echo "  🦞  Watch CC CLI: tmux attach -t tom-hum-brain"
 echo "  🦞 ═══════════════════════════════════════════════"
 echo ""
-echo "  Flow: task-watcher → detect mission → dispatch to CC CLI → complete → next"
-echo "  Auto-CTO generates Binh Phap tasks when queue empty (30s idle)"
+echo "  Commands:"
+echo "    tmux attach -t $TMUX_DAEMON          # watch daemon"
+echo "    tmux attach -t tom-hum-brain         # watch CC CLI"
+echo "    tail -f $LOG_FILE                    # watch logs"
+echo "    tmux kill-session -t $TMUX_DAEMON     # stop"
 echo ""
-echo "  Press Ctrl+C to stop"
-echo ""
-
-# Export brain mode to ensure interactive (self-spawning) mode
-export TOM_HUM_BRAIN_MODE="${TOM_HUM_BRAIN_MODE:-interactive}"
-export MEKONG_DIR="$MEKONG_DIR"
-
-# Start the daemon — node stays in foreground
-exec node "$OPENCLAW_DIR/task-watcher.js"
