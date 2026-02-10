@@ -17,18 +17,19 @@
 |-----------|------------|
 | Runtime | Node.js |
 | Language | JavaScript (CommonJS) |
-| Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v25.0) |
-| Proxy | Antigravity Proxy (port 8080) |
-| Model | claude-opus-4-6-thinking |
+| Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v26.0) |
+| Engine | Dual-engine: `antigravity` (port 8080) or `qwen` (port 8081) |
+| Proxy | Antigravity Proxy (port 8080) / Qwen Bridge (port 8081) |
+| Model | claude-opus-4-6-thinking (antigravity) / qwen-coder-plus (qwen) |
 
-## Architecture (v25.0 Dual-Mode Brain)
+## Architecture (v26.0 Dual-Mode, Dual-Engine Brain)
 
 ```
 apps/openclaw-worker/
 ├── task-watcher.js              # Thin orchestrator: boot + shutdown (entry point)
 ├── config.js                    # All constants, paths, env vars, project registry
 └── lib/
-    ├── brain-process-manager.js # Dual-mode brain (direct + tmux) v25.0
+    ├── brain-process-manager.js # Dual-mode, dual-engine brain v26.0
     ├── mission-dispatcher.js    # Prompt building, project routing, runMission()
     ├── task-queue.js            # File watching (fs.watch + poll), FIFO queue
     ├── auto-cto-pilot.js        # Self-CTO: generates Binh Phap quality tasks
@@ -45,10 +46,13 @@ apps/openclaw-worker/
 - `TASK_PATTERN` — `/^mission_.*\.txt$/` (file naming convention)
 - `MISSION_TIMEOUT_MS` — 45 minutes per mission
 - `BRAIN_MODE` — `'direct'` (default) or `'tmux'` (fallback), set via `TOM_HUM_BRAIN_MODE`
+- `ENGINE` — `'antigravity'` (default, port 8080) or `'qwen'` (port 8081), set via `TOM_HUM_ENGINE`
+- `QWEN_PROXY_PORT` — 8081 (Qwen Bridge Flask server)
+- `QWEN_MODEL_NAME` — `'qwen-coder-plus'` (mapped by bridge to DashScope model)
 - `TMUX_SESSION` — Tmux session name (only used in tmux mode)
 - `PROJECTS` — Array of sub-project names for routing
 
-### Brain Modes (v25.0)
+### Brain Modes (v26.0)
 
 #### Mode 1: Direct (DEFAULT) — `claude -p`
 - Each mission runs: `claude -p "<prompt>" --model X --dangerously-skip-permissions`
@@ -64,6 +68,20 @@ apps/openclaw-worker/
 - Missions injected via `tmux send-keys -l`
 - Completion detected via `tmux capture-pane -p` polling
 - Set via: `TOM_HUM_BRAIN_MODE=tmux node task-watcher.js`
+
+### Engines (v26.0)
+
+#### Engine 1: Antigravity (DEFAULT) — port 8080
+- Routes through Antigravity Proxy (load balancing, failover)
+- Model: `claude-opus-4-6-thinking`
+- Default for all missions
+
+#### Engine 2: Qwen — port 8081
+- Routes through Qwen Bridge (`scripts/qwen_bridge.py`)
+- Converts Anthropic Messages API → DashScope OpenAI Chat Completions API
+- Model: `qwen-coder-plus` (mapped to DashScope model by bridge)
+- Start bridge: `scripts/start-qwen-bridge.sh`
+- Set via: `TOM_HUM_ENGINE=qwen node task-watcher.js`
 
 ### Live Mission Viewer
 Run in any terminal (VS Code recommended) to watch missions:
@@ -90,6 +108,7 @@ node apps/openclaw-worker/lib/live-mission-viewer.js
   "
   ```
 - Test tmux mode: `TOM_HUM_BRAIN_MODE=tmux node task-watcher.js`
+- Test qwen engine: `TOM_HUM_ENGINE=qwen node -e "const c = require('./config'); console.log(c.ENGINE, c.QWEN_PROXY_PORT)"`
 
 ### Adding New Modules
 - Create in `lib/` with kebab-case naming
