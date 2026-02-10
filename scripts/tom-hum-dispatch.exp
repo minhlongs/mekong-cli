@@ -99,6 +99,13 @@ while {1} {
         incr mission_count
         logmsg "📨 MISSION #$mission_count: [string range $mission_text 0 100]..."
 
+        # Detect team missions → extend timeout
+        set mission_timeout 2700
+        if {[regexp -nocase {agent team|teammate} $mission_text]} {
+            set mission_timeout 7200
+            logmsg "🤖 TEAM MISSION detected — timeout extended to ${mission_timeout}s (2h)"
+        }
+
         # Send mission to CC CLI
         sleep 1
         send -- "$mission_text\r"
@@ -186,9 +193,9 @@ while {1} {
                 logmsg "⏳ Mission #$mission_count working — ${elapsed}s"
             }
 
-            # 45min timeout per mission
-            if {$elapsed > 2700} {
-                logmsg "⏰ Mission #$mission_count TIMEOUT (${elapsed}s)"
+            # Per-mission timeout (45min normal, 2h for team missions)
+            if {$elapsed > $mission_timeout} {
+                logmsg "⏰ Mission #$mission_count TIMEOUT (${elapsed}s, limit=${mission_timeout}s)"
                 set f [open $done_file w]
                 puts $f "timeout"
                 close $f

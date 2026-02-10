@@ -3,6 +3,7 @@ const path = require('path');
 const config = require('../config');
 const { log, isBrainAlive } = require('./brain-process-manager');
 const { isQueueEmpty } = require('./task-queue');
+const { classifyComplexity, generateMissionPrompt } = require('./mission-complexity-classifier');
 
 let emptyQueueCount = 0;
 let lastGeneratedProject = null;
@@ -74,11 +75,13 @@ function generateNextTask() {
     const nextTask = config.BINH_PHAP_TASKS.find(t => !state.completedTasks[project].includes(t.id));
 
     if (nextTask) {
+      const complexity = classifyComplexity(nextTask, project);
+      const missionPrompt = generateMissionPrompt(nextTask, project, complexity);
       const filename = `mission_${project.replace(/-/g, '_')}_auto_${nextTask.id}.txt`;
-      fs.writeFileSync(path.join(config.WATCH_DIR, filename), `${nextTask.cmd} in ${project}`);
+      fs.writeFileSync(path.join(config.WATCH_DIR, filename), missionPrompt);
       state.completedTasks[project].push(nextTask.id);
       lastGeneratedProject = project;
-      log(`AUTO-CTO: Generated ${nextTask.id} for ${project}`);
+      log(`AUTO-CTO: Generated ${nextTask.id} for ${project} [${complexity.toUpperCase()}]`);
       saveState(state);
     }
   } catch (error) {

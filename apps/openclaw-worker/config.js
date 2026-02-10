@@ -30,16 +30,29 @@ module.exports = {
   TMUX_HEIGHT: 50,
   PROMPT_DEBOUNCE_MS: 2000,
   PROJECTS: ['sophia-ai-factory', 'wellnexus', 'apex-os', '84tea', 'anima119'],
+
+  // Agent Team orchestration
+  AGENT_TEAM_SIZE_DEFAULT: 4,
+  AGENT_TEAM_TIMEOUT_MS: 2 * 60 * 60 * 1000, // 2 hours for team missions
+
+  // Complexity classification keywords
+  COMPLEXITY: {
+    COMPLEX_KEYWORDS: ['refactor', 'redesign', 'migrate', 'rewrite', 'overhaul', 'architecture', 'cross-module', 'full-stack', 'multi-project', 'monorepo'],
+    MEDIUM_KEYWORDS: ['feature', 'implement', 'security', 'audit', 'multi-file', 'integration', 'api', 'database', 'auth', 'testing'],
+    // Anything not matching COMPLEX or MEDIUM is SIMPLE
+  },
+
   // Rule: Match ClaudeKit /commands to situation — NOT blind /cook
+  // complexity: 'simple' | 'medium' | 'complex' — determines prompt format
   BINH_PHAP_TASKS: [
-    { id: 'console_cleanup', cmd: '/cook "Clean all console.log and debug statements from production code"' },
-    { id: 'type_safety', cmd: '/review "Audit TypeScript any types — report all locations needing proper type annotations"' },
-    { id: 'a11y_audit', cmd: '/review "WCAG 2.1 AA accessibility audit — report alt text, ARIA labels, semantic HTML issues"' },
-    { id: 'security_scan', cmd: '/review "Security audit — check CSP headers, XSS vectors, exposed secrets, CORS config"' },
-    { id: 'perf_audit', cmd: '/review "Performance audit — bundle size, lazy loading, image optimization, Core Web Vitals"' },
-    { id: 'test_suite', cmd: '/test "Run full test suite, report failures and coverage gaps"' },
-    { id: 'debug_errors', cmd: '/debug "Investigate any runtime errors, unhandled rejections, or console warnings in production"' },
-    { id: 'i18n_sync', cmd: '/cook "Sync all i18n translation keys — fix missing translations across all locales"' },
-    { id: 'tech_debt', cmd: '/review:codebase "Full codebase review — TODO/FIXME/HACK count, dead code, circular deps"' },
+    { id: 'console_cleanup', complexity: 'simple', cmd: 'Clean all console.log and debug statements from production code' },
+    { id: 'type_safety', complexity: 'medium', cmd: 'Audit TypeScript any types — report all locations needing proper type annotations, fix them' },
+    { id: 'a11y_audit', complexity: 'medium', cmd: 'WCAG 2.1 AA accessibility audit — report and fix alt text, ARIA labels, semantic HTML issues' },
+    { id: 'security_scan', complexity: 'complex', cmd: 'Security audit — check CSP headers, XSS vectors, exposed secrets, CORS config. Fix all issues found' },
+    { id: 'perf_audit', complexity: 'medium', cmd: 'Performance audit — bundle size, lazy loading, image optimization, Core Web Vitals improvements' },
+    { id: 'test_suite', complexity: 'medium', cmd: 'Run full test suite, report failures and coverage gaps, fix failing tests' },
+    { id: 'debug_errors', complexity: 'simple', cmd: 'Investigate any runtime errors, unhandled rejections, or console warnings in production' },
+    { id: 'i18n_sync', complexity: 'medium', cmd: 'Sync all i18n translation keys — fix missing translations across all locales' },
+    { id: 'tech_debt', complexity: 'complex', cmd: 'Full codebase review — TODO/FIXME/HACK count, dead code, circular deps. Fix all tech debt' },
   ],
 };
