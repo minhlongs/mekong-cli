@@ -40,9 +40,12 @@ tmux kill-session -t tom-hum-brain 2>/dev/null || true
 rm -f /tmp/tom_hum_next_mission.txt /tmp/tom_hum_mission_done
 mkdir -p "$MEKONG_DIR/tasks/processed"
 
-# --- Launch in detached tmux ---
-tmux new-session -d -s "$TMUX_DAEMON" -x 200 -y 50 \
-  "TOM_HUM_BRAIN_MODE=interactive MEKONG_DIR=$MEKONG_DIR node $OPENCLAW_DIR/task-watcher.js 2>&1 | tee -a $LOG_FILE"
+# --- Launch in detached tmux with auto-restart loop ---
+# No tee pipe — node already writes to LOG_FILE via brain-process-manager.
+# remain-on-exit keeps pane visible if node crashes. While-loop auto-restarts.
+tmux new-session -d -s "$TMUX_DAEMON" -x 200 -y 50
+tmux set-option -t "$TMUX_DAEMON" remain-on-exit on
+tmux send-keys -t "$TMUX_DAEMON" "while true; do TOM_HUM_BRAIN_MODE=interactive MEKONG_DIR=$MEKONG_DIR node $OPENCLAW_DIR/task-watcher.js; echo '[tom-hum] CRASHED — restarting in 5s...'; sleep 5; done" Enter
 
 echo ""
 echo "  🦞 ═══════════════════════════════════════════════"
