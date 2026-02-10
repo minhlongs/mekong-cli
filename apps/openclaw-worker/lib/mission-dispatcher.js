@@ -11,6 +11,7 @@
 const path = require('path');
 const config = require('../config');
 const { log, runMission } = require('./brain-process-manager');
+const { isTeamMission } = require('./mission-complexity-classifier');
 
 // Project routing: detect project from task content keywords
 function detectProjectDir(taskContent) {
@@ -50,9 +51,10 @@ function buildPrompt(taskContent) {
 async function executeTask(taskContent, taskFile) {
   const projectDir = detectProjectDir(taskContent);
   const prompt = buildPrompt(taskContent);
-  log(`PROMPT: ${prompt.slice(0, 120)}...`);
+  const timeoutMs = isTeamMission(prompt) ? config.AGENT_TEAM_TIMEOUT_MS : config.MISSION_TIMEOUT_MS;
+  log(`PROMPT: ${prompt.slice(0, 120)}... [timeout=${Math.round(timeoutMs/60000)}min]`);
 
-  return runMission(prompt, projectDir, config.MISSION_TIMEOUT_MS);
+  return runMission(prompt, projectDir, timeoutMs);
 }
 
 module.exports = { executeTask, buildPrompt, detectProjectDir };
