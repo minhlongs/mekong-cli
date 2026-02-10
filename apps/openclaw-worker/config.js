@@ -8,6 +8,7 @@ module.exports = {
   WATCH_DIR: path.join(MEKONG_DIR, 'tasks'),
   PROCESSED_DIR: path.join(MEKONG_DIR, 'tasks', 'processed'),
   LOG_FILE: process.env.TOM_HUM_LOG || '/Users/macbookprom1/tom_hum_cto.log',
+  THERMAL_LOG: process.env.TOM_HUM_THERMAL_LOG || '/Users/macbookprom1/tom_hum_thermal.log',
   MISSION_FILE: '/tmp/tom_hum_next_mission.txt',
   DONE_FILE: '/tmp/tom_hum_mission_done',
   TASK_PATTERN: /^mission_.*\.txt$/,
