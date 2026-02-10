@@ -3,9 +3,10 @@ const config = require('../config');
 const { log } = require('./brain-process-manager');
 
 let coolingCycle = 0;
+let intervalRef = null;
 
 function startCooling() {
-  setInterval(() => {
+  intervalRef = setInterval(() => {
     coolingCycle++;
     try {
       // Check system load
@@ -43,4 +44,11 @@ function startCooling() {
   }, config.COOLING_INTERVAL_MS);
 }
 
-module.exports = { startCooling };
+function stopCooling() {
+  if (intervalRef) {
+    clearInterval(intervalRef);
+    intervalRef = null;
+  }
+}
+
+module.exports = { startCooling, stopCooling };

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * 🦞 TÔM HÙM (OpenClaw) Task Watcher — v22.0 MODULAR BRAIN
+ * TOM HUM (OpenClaw) Task Watcher — v25.1 DAEMON MODE
  *
  * Thin orchestrator: imports modules, wires lifecycle, handles shutdown.
- * CC CLI stays alive via expect brain — persistent session across missions.
+ * Runs FOREVER as a daemon — never exits after queue empties.
  *
  * Modules:
  *   config.js               — All constants, paths, env vars
@@ -15,27 +15,46 @@
  */
 
 const { spawnBrain, killBrain, log } = require('./lib/brain-process-manager');
-const { startWatching } = require('./lib/task-queue');
-const { startAutoCTO } = require('./lib/auto-cto-pilot');
-const { startCooling } = require('./lib/m1-cooling-daemon');
+const { startWatching, stopWatching } = require('./lib/task-queue');
+const { startAutoCTO, stopAutoCTO } = require('./lib/auto-cto-pilot');
+const { startCooling, stopCooling } = require('./lib/m1-cooling-daemon');
 
 // --- Boot ---
-log('--- MISSION CONTROL v25.0 ONLINE (Dual-Mode Brain) ---');
+log('--- MISSION CONTROL v25.1 ONLINE (Daemon Mode) ---');
 
 spawnBrain();
 startWatching();
 startAutoCTO();
 startCooling();
 
-log('🧠 Persistent Brain: CC CLI stays alive across missions');
-log('❄️ M1 Cooling Daemon ACTIVE');
-log('🧠 Self-CTO Auto-Pilot ACTIVE');
+log('Persistent Brain + File Watcher + Auto-CTO + M1 Cooling ACTIVE');
+
+// --- Keepalive: prevent Node from exiting when event loop is idle ---
+const keepalive = setInterval(() => {}, 60000);
+
+// --- Unhandled error protection: log but do NOT crash the daemon ---
+process.on('uncaughtException', (err) => {
+  log(`UNCAUGHT EXCEPTION (daemon stays alive): ${err.stack || err.message}`);
+});
+process.on('unhandledRejection', (reason) => {
+  log(`UNHANDLED REJECTION (daemon stays alive): ${reason}`);
+});
 
 // --- Graceful Shutdown ---
-['SIGTERM', 'SIGINT'].forEach(sig => {
-  process.on(sig, () => {
-    log(`Received ${sig} — shutting down`);
-    killBrain();
-    process.exit(0);
-  });
-});
+let shuttingDown = false;
+
+function shutdown(sig) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  log(`Received ${sig} — shutting down gracefully`);
+  clearInterval(keepalive);
+  stopWatching();
+  stopAutoCTO();
+  stopCooling();
+  killBrain();
+  log('All modules stopped. Goodbye.');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
