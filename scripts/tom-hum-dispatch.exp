@@ -112,12 +112,15 @@ while {1} {
         logmsg "📨 Injected into CC CLI!"
 
         # Monitor for completion via dual detection:
-        # 1. FAST PATH: ❯ prompt detected after 10s+ elapsed (2 consecutive sightings)
-        # 2. FALLBACK: 25s+ silence after 30s+ elapsed (3 consecutive idle checks)
+        # 1. FAST PATH: ❯ prompt detected after 120s+ elapsed (3 consecutive sightings)
+        #    Opus model can emit ❯ in status bar during work — need high elapsed guard
+        # 2. FALLBACK: 120s+ silence after 300s+ elapsed (5 consecutive idle checks)
+        #    Opus extended thinking can be silent for 60s+ — never trigger before 5min
         set start_time [clock seconds]
         set last_activity [clock seconds]
         set idle_checks 0
         set prompt_hits 0
+        set last_prompt_time 0
 
         while {1} {
             set now [clock seconds]
@@ -134,31 +137,37 @@ while {1} {
                     set clean [string trim $clean]
 
                     # FAST PATH: detect CC CLI prompt ❯ returning after mission
-                    if {$elapsed >= 10 && [regexp {❯} $clean]} {
-                        incr prompt_hits
-                        if {$prompt_hits >= 2} {
-                            set now [clock seconds]
+                    # Require 120s+ elapsed to avoid false positives from boot/status bar
+                    if {$elapsed >= 120 && [regexp {❯} $clean]} {
+                        set now [clock seconds]
+                        set gap [expr {$now - $last_prompt_time}]
+                        set last_prompt_time $now
+                        # Only count if gap > 3s (filters rapid status bar redraws)
+                        if {$gap >= 3} {
+                            incr prompt_hits
+                        }
+                        if {$prompt_hits >= 3} {
                             set elapsed [expr {$now - $start_time}]
-                            logmsg "🏁 MISSION #$mission_count COMPLETE! (${elapsed}s, prompt ❯ confirmed)"
+                            logmsg "🏁 MISSION #$mission_count COMPLETE! (${elapsed}s, prompt ❯ confirmed x3)"
                             set f [open $done_file w]
                             puts $f "done"
                             close $f
                             break
                         }
-                        logmsg "📡 Prompt ❯ detected (hit $prompt_hits/2)"
+                        logmsg "📡 Prompt ❯ detected (hit $prompt_hits/3, gap=${gap}s)"
                     }
 
                     # Only meaningful output resets the idle timer
                     if {[string length $clean] > 3} {
                         set last_activity [clock seconds]
                         set idle_checks 0
-                        # Reset prompt_hits if substantive work output appears
+                        # Reset prompt_hits if substantive work output appears (not ❯)
                         if {![regexp {❯} $clean]} {
                             set prompt_hits 0
                         }
 
                         # Log interesting output
-                        foreach pattern {"Bash" "Read" "Wrote" "Created" "Updated" "Error" "error" "✓" "✗" "build" "test" "COMPLETE" "fix" "success" "tool" "Running" "PASS" "FAIL"} {
+                        foreach pattern {"Bash" "Read" "Wrote" "Created" "Updated" "Error" "error" "✓" "✗" "build" "test" "COMPLETE" "fix" "success" "tool" "Running" "PASS" "FAIL" "commit" "push" "deploy"} {
                             if {[string match -nocase "*$pattern*" $clean]} {
                                 logmsg "📺 [string range $clean 0 130]"
                                 break
@@ -166,31 +175,34 @@ while {1} {
                         }
                     }
                 }
-                -timeout 5 {
+                -timeout 10 {
+                    # Increased from 5s to 10s — Opus model has long think pauses
                     set now [clock seconds]
                     set elapsed [expr {$now - $start_time}]
                     set idle_secs [expr {$now - $last_activity}]
                 }
             }
 
-            # FALLBACK: idle detection — 25s+ silence AND 30s+ elapsed
-            if {$idle_secs >= 25 && $elapsed >= 30} {
+            # FALLBACK: idle detection — 120s+ silence AND 300s+ elapsed
+            # Opus extended thinking: routinely silent 30-90s during deep reasoning
+            # Only trigger after 5min minimum elapsed (no real mission finishes faster)
+            if {$idle_secs >= 120 && $elapsed >= 300} {
                 incr idle_checks
-                if {$idle_checks >= 3} {
-                    logmsg "🏁 MISSION #$mission_count COMPLETE! (${elapsed}s, idle ${idle_secs}s)"
+                if {$idle_checks >= 5} {
+                    logmsg "🏁 MISSION #$mission_count COMPLETE! (${elapsed}s, idle ${idle_secs}s — 5 checks passed)"
                     set f [open $done_file w]
                     puts $f "done"
                     close $f
                     break
                 }
-                logmsg "⏳ Idle ${idle_secs}s (check $idle_checks/3)"
+                logmsg "⏳ Idle ${idle_secs}s elapsed ${elapsed}s (check $idle_checks/5)"
             } else {
                 set idle_checks 0
             }
 
-            # Status every 60s
-            if {$elapsed > 0 && $elapsed % 60 < 6} {
-                logmsg "⏳ Mission #$mission_count working — ${elapsed}s"
+            # Status every 120s (reduced noise from 60s)
+            if {$elapsed > 0 && $elapsed % 120 < 11} {
+                logmsg "⏳ Mission #$mission_count working — ${elapsed}s (idle ${idle_secs}s)"
             }
 
             # Per-mission timeout (45min normal, 2h for team missions)
