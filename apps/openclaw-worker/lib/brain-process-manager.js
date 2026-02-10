@@ -1,26 +1,25 @@
 /**
- * Brain Process Manager v24.0 — Tmux-based visible CC CLI brain
+ * Brain Process Manager v25.0 — Dual-mode CC CLI brain
  *
- * Spawns CC CLI inside a tmux session so the user can watch it work.
- * Missions injected via `tmux send-keys`, completion detected via
- * `tmux capture-pane` polling for the prompt character.
+ * Mode 'direct' (DEFAULT): claude -p per mission. Supports all ClaudeKit agents/tools.
+ *   stdin MUST be 'ignore' to prevent pipe hang.
+ *   Output streamed to log file for live-mission-viewer.
  *
- * Exports (unchanged API surface):
- *   spawnBrain()  — Create tmux session + start CC CLI
- *   killBrain()   — Destroy tmux session
- *   isBrainAlive()— Check tmux session exists
- *   runMission()  — Inject prompt, poll for completion
- *   log()         — Timestamped logger
+ * Mode 'tmux' (FALLBACK): Persistent tmux session, user can tmux attach.
+ *   Set TOM_HUM_BRAIN_MODE=tmux to activate.
+ *
+ * Exports (unchanged API): spawnBrain, killBrain, isBrainAlive, runMission, log
  */
 
-const { execSync } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
 let missionCount = 0;
+let currentProc = null;
 
-// --- Helpers ---
+// --- Shared helpers ---
 
 function getApiKey() {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
@@ -35,20 +34,105 @@ function log(msg) {
   try { fs.appendFileSync(config.LOG_FILE, formatted); } catch (e) {}
 }
 
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
 function tmux(cmd) {
   return execSync(`tmux ${cmd}`, { encoding: 'utf-8', timeout: 10000 }).trim();
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+// =============================================================================
+// DIRECT MODE — claude -p per mission (default)
+// =============================================================================
+
+function spawnBrainDirect() {
+  log('BRAIN v25.0: Direct mode (claude -p per mission)');
+  log('All ClaudeKit agents/tools supported. Watch via: node lib/live-mission-viewer.js');
 }
 
-// --- Pane capture & prompt detection ---
+function killBrainDirect() {
+  if (currentProc) {
+    try { currentProc.kill('SIGTERM'); } catch (e) {}
+    currentProc = null;
+  }
+}
+
+function isBrainAliveDirect() { return true; }
+
+function runMissionDirect(prompt, projectDir, timeoutMs) {
+  return new Promise((resolve) => {
+    missionCount++;
+    const num = missionCount;
+    const startTime = Date.now();
+    log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
+    log(`PROJECT: ${projectDir} | MODE: direct`);
+
+    const apiKey = getApiKey();
+    const proc = spawn('claude', [
+      '-p', prompt,
+      '--model', config.MODEL_NAME,
+      '--dangerously-skip-permissions',
+    ], {
+      cwd: projectDir,
+      env: {
+        ...process.env,
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${config.PROXY_PORT}`,
+        ANTHROPIC_API_KEY: apiKey,
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    currentProc = proc;
+    let output = '';
+
+    proc.stdout.on('data', (chunk) => {
+      const text = chunk.toString();
+      output += text;
+      try { fs.appendFileSync(config.LOG_FILE, text); } catch (e) {}
+    });
+
+    proc.stderr.on('data', (chunk) => {
+      const text = chunk.toString();
+      try { fs.appendFileSync(config.LOG_FILE, `[stderr] ${text}`); } catch (e) {}
+    });
+
+    const timer = setTimeout(() => {
+      log(`TIMEOUT: Mission #${num} exceeded ${Math.round(timeoutMs / 1000)}s`);
+      try { proc.kill('SIGTERM'); } catch (e) {}
+    }, timeoutMs);
+
+    // Status heartbeat every 60s
+    const heartbeat = setInterval(() => {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      log(`Mission #${num} working -- ${elapsed}s`);
+    }, 60000);
+
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      clearInterval(heartbeat);
+      currentProc = null;
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      const success = code === 0;
+      log(`${success ? 'COMPLETE' : 'FAILED'}: Mission #${num} (${elapsed}s, exit=${code})`);
+      resolve({ success, result: success ? 'done' : `exit_${code}`, elapsed });
+    });
+
+    proc.on('error', (err) => {
+      clearTimeout(timer);
+      clearInterval(heartbeat);
+      currentProc = null;
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      log(`ERROR: Mission #${num} spawn failed: ${err.message}`);
+      resolve({ success: false, result: `spawn_error: ${err.message}`, elapsed });
+    });
+  });
+}
+
+// =============================================================================
+// TMUX MODE — persistent visible session (fallback)
+// =============================================================================
 
 function capturePane() {
-  try {
-    return tmux(`capture-pane -t ${config.TMUX_SESSION} -p`);
-  } catch (e) { return ''; }
+  try { return tmux(`capture-pane -t ${config.TMUX_SESSION} -p`); } catch (e) { return ''; }
 }
 
 function isPromptVisible(paneText) {
@@ -58,131 +142,93 @@ function isPromptVisible(paneText) {
   return last.includes('\u276f') || />\s*$/.test(last);
 }
 
-// --- Core API ---
-
-function spawnBrain() {
-  log('BRAIN v24.0: Tmux-based visible CC CLI session');
-
-  // Kill existing session if any
+function spawnBrainTmux() {
+  log('BRAIN v25.0: Tmux mode (persistent visible session)');
   try { tmux(`kill-session -t ${config.TMUX_SESSION}`); } catch (e) {}
-
-  // Clean legacy IPC files
   try { fs.unlinkSync(config.MISSION_FILE); } catch (e) {}
   try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
-
-  // Create new tmux session
-  tmux(
-    `new-session -d -s ${config.TMUX_SESSION} ` +
-    `-x ${config.TMUX_WIDTH} -y ${config.TMUX_HEIGHT}`
-  );
-  log(`Tmux session "${config.TMUX_SESSION}" created`);
-
-  // Build CC CLI launch command with env vars
+  tmux(`new-session -d -s ${config.TMUX_SESSION} -x ${config.TMUX_WIDTH} -y ${config.TMUX_HEIGHT}`);
   const apiKey = getApiKey();
   const cliCmd = [
-    `cd ${config.MEKONG_DIR}`,
-    `&&`,
+    `cd ${config.MEKONG_DIR}`, '&&',
     `ANTHROPIC_BASE_URL=http://127.0.0.1:${config.PROXY_PORT}`,
     `ANTHROPIC_API_KEY=${apiKey}`,
-    `claude`,
-    `--model ${config.MODEL_NAME}`,
-    `--dangerously-skip-permissions`,
+    'claude', `--model ${config.MODEL_NAME}`, '--dangerously-skip-permissions',
   ].join(' ');
-
-  // Send CC CLI command into tmux session (literal to avoid char interpretation)
   tmux(`send-keys -t ${config.TMUX_SESSION} -l ${JSON.stringify(cliCmd)}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} Enter`);
-  log('CC CLI spawned inside tmux — waiting for prompt...');
+  log(`Tmux session "${config.TMUX_SESSION}" created — tmux attach to watch`);
 }
 
-function killBrain() {
-  log('Killing tmux brain session');
+function killBrainTmux() {
   try { tmux(`kill-session -t ${config.TMUX_SESSION}`); } catch (e) {}
 }
 
-function isBrainAlive() {
-  try {
-    execSync(`tmux has-session -t ${config.TMUX_SESSION}`, { timeout: 5000 });
-    return true;
-  } catch (e) { return false; }
+function isBrainAliveTmux() {
+  try { execSync(`tmux has-session -t ${config.TMUX_SESSION}`, { timeout: 5000 }); return true; }
+  catch (e) { return false; }
 }
 
-/**
- * Wait for the CC CLI prompt to appear in the tmux pane.
- * Used both after initial spawn and after mission completion.
- */
 async function waitForPrompt(timeoutMs = 120000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    const pane = capturePane();
-    if (isPromptVisible(pane)) {
-      // Debounce: wait, then confirm prompt is still there
+    if (isPromptVisible(capturePane())) {
       await sleep(config.PROMPT_DEBOUNCE_MS);
-      const pane2 = capturePane();
-      if (isPromptVisible(pane2)) return true;
+      if (isPromptVisible(capturePane())) return true;
     }
     await sleep(config.POLL_INTERVAL_MS);
   }
   return false;
 }
 
-/**
- * Run a mission by injecting the prompt into the tmux session and
- * polling capture-pane for the CC CLI prompt to return.
- *
- * @param {string} prompt - Mission prompt text
- * @param {string} projectDir - Working directory (cd first)
- * @param {number} timeoutMs - Max execution time in milliseconds
- * @returns {Promise<{success: boolean, result: string, elapsed: number}>}
- */
-async function runMission(prompt, projectDir, timeoutMs) {
+async function runMissionTmux(prompt, projectDir, timeoutMs) {
   missionCount++;
   const num = missionCount;
   const startTime = Date.now();
 
-  if (!isBrainAlive()) {
+  if (!isBrainAliveTmux()) {
     log(`Brain dead before mission #${num} — respawning`);
-    spawnBrain();
-    const ready = await waitForPrompt();
-    if (!ready) {
+    spawnBrainTmux();
+    if (!(await waitForPrompt())) {
       return { success: false, result: 'brain_spawn_timeout', elapsed: 0 };
     }
   }
 
   log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-  log(`PROJECT: ${projectDir}`);
-
-  // cd to project dir first, then send the mission prompt
+  log(`PROJECT: ${projectDir} | MODE: tmux`);
   tmux(`send-keys -t ${config.TMUX_SESSION} -l ${JSON.stringify(`cd ${projectDir}`)}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} Enter`);
   await sleep(1000);
-
-  // Send mission prompt (literal mode for special chars)
   tmux(`send-keys -t ${config.TMUX_SESSION} -l ${JSON.stringify(prompt)}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} Enter`);
-
-  // Poll for prompt return (mission completion)
-  // First, wait a bit so the prompt disappears while CC CLI is working
   await sleep(5000);
 
-  // Status logging interval
-  const statusInterval = setInterval(() => {
-    const elapsed = Math.round((Date.now() - startTime) / 1000);
-    log(`Mission #${num} working -- ${elapsed}s`);
+  const heartbeat = setInterval(() => {
+    log(`Mission #${num} working -- ${Math.round((Date.now() - startTime) / 1000)}s`);
   }, 60000);
 
   const completed = await waitForPrompt(timeoutMs);
-  clearInterval(statusInterval);
-
+  clearInterval(heartbeat);
   const elapsed = Math.round((Date.now() - startTime) / 1000);
 
   if (completed) {
     log(`COMPLETE: Mission #${num} (${elapsed}s)`);
     return { success: true, result: 'done', elapsed };
   }
-
   log(`TIMEOUT: Mission #${num} exceeded ${Math.round(timeoutMs / 1000)}s`);
   return { success: false, result: 'timeout', elapsed };
 }
 
-module.exports = { spawnBrain, killBrain, isBrainAlive, runMission, log };
+// =============================================================================
+// Mode dispatch — export unified API
+// =============================================================================
+
+const isDirect = config.BRAIN_MODE === 'direct';
+
+module.exports = {
+  spawnBrain:    isDirect ? spawnBrainDirect   : spawnBrainTmux,
+  killBrain:     isDirect ? killBrainDirect    : killBrainTmux,
+  isBrainAlive:  isDirect ? isBrainAliveDirect : isBrainAliveTmux,
+  runMission:    isDirect ? runMissionDirect    : runMissionTmux,
+  log,
+};

@@ -9,8 +9,6 @@ module.exports = {
   LOG_FILE: process.env.TOM_HUM_LOG || '/Users/macbookprom1/tom_hum_cto.log',
   MISSION_FILE: '/tmp/tom_hum_next_mission.txt',
   DONE_FILE: '/tmp/tom_hum_mission_done',
-  // DEPRECATED: expect script no longer used (CC CLI v2.1.38+ Ink TUI breaks PTY detection)
-  EXPECT_SCRIPT_LEGACY: path.join(MEKONG_DIR, 'scripts', 'tom-hum-persistent-dispatch.exp'),
   TASK_PATTERN: /^mission_.*\.txt$/,
   MISSION_TIMEOUT_MS: 45 * 60 * 1000,
   POLL_INTERVAL_MS: 3000,
@@ -19,6 +17,8 @@ module.exports = {
   STATE_FILE: path.join(MEKONG_DIR, 'tasks', '.tom_hum_state.json'),
   PROXY_PORT: parseInt(process.env.PROXY_PORT || '8080', 10),
   MODEL_NAME: 'claude-opus-4-6-thinking',
+  // Dual-mode brain: 'direct' = claude -p per mission, 'tmux' = persistent tmux session
+  BRAIN_MODE: process.env.TOM_HUM_BRAIN_MODE || 'direct',
   TMUX_SESSION: 'tom-hum-brain',
   TMUX_WIDTH: 200,
   TMUX_HEIGHT: 50,
