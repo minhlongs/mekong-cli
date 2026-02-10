@@ -1,17 +1,24 @@
 #!/usr/bin/env node
 /**
- * TOM HUM (OpenClaw) Task Watcher — v26.0 FULL AUTONOMY
+ * TOM HUM (OpenClaw) Task Watcher — v27.0 HEADLESS AUTONOMY
  *
  * Thin orchestrator: imports modules, wires lifecycle, handles shutdown.
  * Runs FOREVER as a daemon — never exits after queue empties.
+ * Self-healing: any exception → log + sleep 30s + continue.
+ *
+ * v27 changes:
+ *   - Uses brain-headless-per-mission (claude -p per mission, no file IPC)
+ *   - Self-healing main loop wrapper
+ *   - PM2 watchdog support via ecosystem.config.js
+ *   - Enhanced thermal gate (load<7, RAM>300MB)
  *
  * Modules:
- *   config.js               — All constants, paths, env vars
- *   lib/brain-process-manager.js — External-only brain (CC CLI in visible terminal)
- *   lib/mission-dispatcher.js    — Atomic file IPC, prompt building
- *   lib/task-queue.js            — File watching, queuing, archiving
- *   lib/auto-cto-pilot.js       — Binh Phap auto-task generation
- *   lib/m1-cooling-daemon.js     — M1 thermal management
+ *   config.js                          — All constants, paths, env vars
+ *   lib/brain-headless-per-mission.js  — Headless brain (claude -p per mission)
+ *   lib/mission-dispatcher.js          — Prompt building, project routing
+ *   lib/task-queue.js                  — File watching, queuing, archiving
+ *   lib/auto-cto-pilot.js             — Binh Phap auto-task generation
+ *   lib/m1-cooling-daemon.js           — M1 thermal management + thermal gate
  */
 
 const fs = require('fs');
@@ -29,10 +36,25 @@ process.on('unhandledRejection', (reason) => {
   try { fs.appendFileSync(config.LOG_FILE, msg); } catch (e) {}
 });
 
-const { spawnBrain, killBrain, log } = require('./lib/brain-process-manager');
+// --- Import modules (headless brain instead of external brain) ---
+const { spawnBrain, killBrain, log } = require('./lib/brain-headless-per-mission');
 const { startWatching, stopWatching } = require('./lib/task-queue');
 const { startAutoCTO, stopAutoCTO } = require('./lib/auto-cto-pilot');
 const { startCooling, stopCooling } = require('./lib/m1-cooling-daemon');
+
+// --- Self-healing boot: retry each module independently ---
+function safeBoot(name, fn) {
+  try {
+    fn();
+    log(`BOOT OK: ${name}`);
+  } catch (e) {
+    log(`BOOT ERROR (${name}): ${e.message} — will retry in 30s`);
+    setTimeout(() => {
+      try { fn(); log(`BOOT RETRY OK: ${name}`); }
+      catch (e2) { log(`BOOT RETRY FAILED (${name}): ${e2.message}`); }
+    }, 30000);
+  }
+}
 
 // --- Ensure required directories exist ---
 try {
@@ -42,15 +64,15 @@ try {
   log(`WARN: Could not create task dirs: ${e.message}`);
 }
 
-// --- Boot (wrapped in try/catch so daemon survives partial failures) ---
-log('--- MISSION CONTROL v26.0 ONLINE (Full Autonomy) ---');
+// --- Boot ---
+log('--- MISSION CONTROL v27.0 ONLINE (Headless Autonomy) ---');
 
-try { spawnBrain(); } catch (e) { log(`BOOT ERROR (spawnBrain): ${e.message}`); }
-try { startWatching(); } catch (e) { log(`BOOT ERROR (startWatching): ${e.message}`); }
-try { startAutoCTO(); } catch (e) { log(`BOOT ERROR (startAutoCTO): ${e.message}`); }
-try { startCooling(); } catch (e) { log(`BOOT ERROR (startCooling): ${e.message}`); }
+safeBoot('spawnBrain', spawnBrain);
+safeBoot('startWatching', startWatching);
+safeBoot('startAutoCTO', startAutoCTO);
+safeBoot('startCooling', startCooling);
 
-log('Persistent Brain + File Watcher + Auto-CTO + M1 Cooling ACTIVE');
+log('Headless Brain + File Watcher + Auto-CTO + M1 Cooling ACTIVE');
 
 // --- Keepalive: prevent Node from exiting when event loop is idle ---
 const keepalive = setInterval(() => {}, 60000);
@@ -63,10 +85,10 @@ function shutdown(sig) {
   shuttingDown = true;
   log(`Received ${sig} — shutting down gracefully`);
   clearInterval(keepalive);
-  stopWatching();
-  stopAutoCTO();
-  stopCooling();
-  killBrain();
+  try { stopWatching(); } catch (e) { log(`Shutdown error (stopWatching): ${e.message}`); }
+  try { stopAutoCTO(); } catch (e) { log(`Shutdown error (stopAutoCTO): ${e.message}`); }
+  try { stopCooling(); } catch (e) { log(`Shutdown error (stopCooling): ${e.message}`); }
+  try { killBrain(); } catch (e) { log(`Shutdown error (killBrain): ${e.message}`); }
   log('All modules stopped. Goodbye.');
   process.exit(0);
 }

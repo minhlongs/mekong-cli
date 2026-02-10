@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { log } = require('./brain-process-manager');
+const { log } = require('./brain-headless-per-mission');
 const { executeTask } = require('./mission-dispatcher');
-const { pauseIfOverheating } = require('./m1-cooling-daemon');
+const { pauseIfOverheating, waitForSafeTemperature } = require('./m1-cooling-daemon');
 
 let isProcessing = false;
 let currentTaskFile = null;
@@ -17,6 +17,7 @@ async function processQueue() {
 
   // Thermal gate: block until system is cool enough
   await pauseIfOverheating();
+  await waitForSafeTemperature();
 
   const taskFile = queue.shift();
   currentTaskFile = taskFile;
