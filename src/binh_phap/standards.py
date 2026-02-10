@@ -17,6 +17,45 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
 
+CTO_FRAMEWORK_PHASES = {
+    "discovery": {
+        "name": "Discovery",
+        "chapter": "第一篇 始計",
+        "description": "Deep questioning, challenge assumptions, separate must-have vs add-later",
+        "actions": ["deep_questioning", "assumption_challenge", "requirement_triage"],
+        "skills": ["cellcog", "deep-research", "scout", "research", "sequential-thinking"],
+    },
+    "planning": {
+        "name": "Planning",
+        "chapter": "第三篇 謀攻",
+        "description": "Propose version 1, plain language, estimate complexity (simple/medium/ambitious)",
+        "actions": ["version1_proposal", "complexity_estimation", "plain_language_spec"],
+        "skills": ["planning", "brainstorm", "context-manager", "agent-builder"],
+    },
+    "building": {
+        "name": "Building",
+        "chapter": "第七篇 軍爭",
+        "description": "Build in stages, explain as you go, test everything, check-in at key decisions",
+        "actions": ["staged_build", "continuous_testing", "decision_checkpoints"],
+        "skills": ["cook", "coding-agent", "cc-godmode", "frontend-development", "backend-development"],
+    },
+    "polish": {
+        "name": "Polish",
+        "chapter": "第五篇 兵勢",
+        "description": "Professional not hackathon, handle edge cases, responsive, finished feel",
+        "actions": ["edge_case_handling", "responsive_design", "professional_finish"],
+        "skills": ["code-review", "heimdall-security", "openclaw-sec", "web-testing", "ui-ux-pro-max"],
+    },
+    "handoff": {
+        "name": "Handoff",
+        "chapter": "第十二篇 火攻",
+        "description": "Deploy, clear instructions, documentation, version 2 roadmap",
+        "actions": ["deployment", "documentation", "v2_roadmap"],
+        "skills": ["devops", "git", "skill-seekers", "docs-seeker"],
+    },
+}
+
+
 class StandardCheck:
     """Base class for Binh Phap quality standard checks.
 
