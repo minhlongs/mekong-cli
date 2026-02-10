@@ -1,12 +1,11 @@
 /**
- * Brain Process Manager v25.0 — Dual-mode CC CLI brain
+ * Brain Process Manager v26.0 — Dual-mode, dual-engine CC CLI brain
  *
- * Mode 'direct' (DEFAULT): claude -p per mission. Supports all ClaudeKit agents/tools.
- *   stdin MUST be 'ignore' to prevent pipe hang.
- *   Output streamed to log file for live-mission-viewer.
+ * Engines: 'antigravity' (port 8080, default) or 'qwen' (port 8081, Qwen Bridge)
+ *   Set TOM_HUM_ENGINE=qwen to use Qwen models via DashScope.
  *
- * Mode 'tmux' (FALLBACK): Persistent tmux session, user can tmux attach.
- *   Set TOM_HUM_BRAIN_MODE=tmux to activate.
+ * Modes: 'direct' (claude -p, default) or 'tmux' (persistent session, fallback)
+ *   Set TOM_HUM_BRAIN_MODE=tmux to activate tmux mode.
  *
  * Exports (unchanged API): spawnBrain, killBrain, isBrainAlive, runMission, log
  */
@@ -40,12 +39,28 @@ function tmux(cmd) {
   return execSync(`tmux ${cmd}`, { encoding: 'utf-8', timeout: 10000 }).trim();
 }
 
+// --- Engine helpers ---
+
+const isQwen = config.ENGINE === 'qwen';
+
+function getProxyPort() {
+  return isQwen ? config.QWEN_PROXY_PORT : config.PROXY_PORT;
+}
+
+function getModelName() {
+  return isQwen ? config.QWEN_MODEL_NAME : config.MODEL_NAME;
+}
+
+function getEngineLabel() {
+  return isQwen ? `qwen (port ${config.QWEN_PROXY_PORT})` : `antigravity (port ${config.PROXY_PORT})`;
+}
+
 // =============================================================================
 // DIRECT MODE — claude -p per mission (default)
 // =============================================================================
 
 function spawnBrainDirect() {
-  log('BRAIN v25.0: Direct mode (claude -p per mission)');
+  log(`BRAIN v26.0: Direct mode (claude -p) | Engine: ${getEngineLabel()}`);
   log('All ClaudeKit agents/tools supported. Watch via: node lib/live-mission-viewer.js');
 }
 
@@ -64,18 +79,20 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
     const num = missionCount;
     const startTime = Date.now();
     log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-    log(`PROJECT: ${projectDir} | MODE: direct`);
+    log(`PROJECT: ${projectDir} | MODE: direct | ENGINE: ${getEngineLabel()}`);
 
     const apiKey = getApiKey();
+    const proxyPort = getProxyPort();
+    const modelName = getModelName();
     const proc = spawn('claude', [
       '-p', prompt,
-      '--model', config.MODEL_NAME,
+      '--model', modelName,
       '--dangerously-skip-permissions',
     ], {
       cwd: projectDir,
       env: {
         ...process.env,
-        ANTHROPIC_BASE_URL: `http://127.0.0.1:${config.PROXY_PORT}`,
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${proxyPort}`,
         ANTHROPIC_API_KEY: apiKey,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -143,17 +160,19 @@ function isPromptVisible(paneText) {
 }
 
 function spawnBrainTmux() {
-  log('BRAIN v25.0: Tmux mode (persistent visible session)');
+  log(`BRAIN v26.0: Tmux mode (persistent visible session) | Engine: ${getEngineLabel()}`);
   try { tmux(`kill-session -t ${config.TMUX_SESSION}`); } catch (e) {}
   try { fs.unlinkSync(config.MISSION_FILE); } catch (e) {}
   try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
   tmux(`new-session -d -s ${config.TMUX_SESSION} -x ${config.TMUX_WIDTH} -y ${config.TMUX_HEIGHT}`);
   const apiKey = getApiKey();
+  const proxyPort = getProxyPort();
+  const modelName = getModelName();
   const cliCmd = [
     `cd ${config.MEKONG_DIR}`, '&&',
-    `ANTHROPIC_BASE_URL=http://127.0.0.1:${config.PROXY_PORT}`,
+    `ANTHROPIC_BASE_URL=http://127.0.0.1:${proxyPort}`,
     `ANTHROPIC_API_KEY=${apiKey}`,
-    'claude', `--model ${config.MODEL_NAME}`, '--dangerously-skip-permissions',
+    'claude', `--model ${modelName}`, '--dangerously-skip-permissions',
   ].join(' ');
   tmux(`send-keys -t ${config.TMUX_SESSION} -l ${JSON.stringify(cliCmd)}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} Enter`);
@@ -195,7 +214,7 @@ async function runMissionTmux(prompt, projectDir, timeoutMs) {
   }
 
   log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-  log(`PROJECT: ${projectDir} | MODE: tmux`);
+  log(`PROJECT: ${projectDir} | MODE: tmux | ENGINE: ${getEngineLabel()}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} -l ${JSON.stringify(`cd ${projectDir}`)}`);
   tmux(`send-keys -t ${config.TMUX_SESSION} Enter`);
   await sleep(1000);

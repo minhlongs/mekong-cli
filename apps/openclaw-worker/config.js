@@ -16,7 +16,11 @@ module.exports = {
   AUTO_CTO_EMPTY_THRESHOLD: 60,
   STATE_FILE: path.join(MEKONG_DIR, 'tasks', '.tom_hum_state.json'),
   PROXY_PORT: parseInt(process.env.PROXY_PORT || '8080', 10),
+  QWEN_PROXY_PORT: parseInt(process.env.QWEN_PROXY_PORT || '8081', 10),
   MODEL_NAME: 'claude-opus-4-6-thinking',
+  QWEN_MODEL_NAME: process.env.QWEN_MODEL_NAME || 'qwen-coder-plus',
+  // Engine selection: 'antigravity' (default, port 8080) or 'qwen' (port 8081)
+  ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
   // Dual-mode brain: 'direct' = claude -p per mission, 'tmux' = persistent tmux session
   BRAIN_MODE: process.env.TOM_HUM_BRAIN_MODE || 'direct',
   TMUX_SESSION: 'tom-hum-brain',
