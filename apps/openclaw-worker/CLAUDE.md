@@ -1,5 +1,7 @@
 # OpenClaw Worker — TOM HUM Autonomous Daemon
 
+**Version:** v2026.2.9
+
 > **Chapter 9 Xing Jun** — On the march, seek high ground and reliable water sources
 >
 > This file governs CC CLI behavior ONLY when working inside `apps/openclaw-worker/`.
@@ -17,19 +19,20 @@
 |-----------|------------|
 | Runtime | Node.js |
 | Language | JavaScript (CommonJS) |
-| Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v26.0) |
+| Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v2026.2.9) |
 | Engine | Dual-engine: `antigravity` (port 8080) or `qwen` (port 8081) |
 | Proxy | Antigravity Proxy (port 8080) / Qwen Bridge (port 8081) |
 | Model | claude-opus-4-6-thinking (antigravity) / qwen-coder-plus (qwen) |
 
-## Architecture (v26.0 Dual-Mode, Dual-Engine Brain)
+## Architecture (v2026.2.9 Dual-Mode, Dual-Engine Brain)
 
 ```
 apps/openclaw-worker/
 ├── task-watcher.js              # Thin orchestrator: boot + shutdown (entry point)
 ├── config.js                    # All constants, paths, env vars, project registry
 └── lib/
-    ├── brain-process-manager.js # Dual-mode, dual-engine brain v26.0
+    ├── brain-process-manager.js # Dual-mode, dual-engine brain v2026.2.9
+    ├── mission-recovery.js      # Model failover & context overflow recovery
     ├── mission-dispatcher.js    # Prompt building, project routing, runMission()
     ├── task-queue.js            # File watching (fs.watch + poll), FIFO queue
     ├── auto-cto-pilot.js        # Self-CTO: generates Binh Phap quality tasks
@@ -41,6 +44,7 @@ apps/openclaw-worker/
 
 ### config.js — Single Source of Truth
 - `MEKONG_DIR` — Root project directory
+- `OPENCLAW_HOME` — Runtime data directory (override via `OPENCLAW_HOME` env var, default `~/.openclaw`)
 - `WATCH_DIR` — `tasks/` directory for mission files
 - `PROCESSED_DIR` — `tasks/processed/` for completed missions
 - `TASK_PATTERN` — `/^mission_.*\.txt$/` (file naming convention)
@@ -52,7 +56,7 @@ apps/openclaw-worker/
 - `TMUX_SESSION` — Tmux session name (only used in tmux mode)
 - `PROJECTS` — Array of sub-project names for routing
 
-### Brain Modes (v26.0)
+### Brain Modes (v2026.2.9)
 
 #### Mode 1: Direct (DEFAULT) — `claude -p`
 - Each mission runs: `claude -p "<prompt>" --model X --dangerously-skip-permissions`
@@ -69,7 +73,7 @@ apps/openclaw-worker/
 - Completion detected via `tmux capture-pane -p` polling
 - Set via: `TOM_HUM_BRAIN_MODE=tmux node task-watcher.js`
 
-### Engines (v26.0)
+### Engines (v2026.2.9)
 
 #### Engine 1: Antigravity (DEFAULT) — port 8080
 - Routes through Antigravity Proxy (load balancing, failover)
@@ -82,6 +86,20 @@ apps/openclaw-worker/
 - Model: `qwen-coder-plus` (mapped to DashScope model by bridge)
 - Start bridge: `scripts/start-qwen-bridge.sh`
 - Set via: `TOM_HUM_ENGINE=qwen node task-watcher.js`
+
+### Recovery Features (v2026.2.9)
+
+#### Model Failover on HTTP 400
+When a mission fails and stderr contains model-related errors (400, `model_not_found`, `overloaded`), the brain automatically retries ONCE with a fallback model:
+- Antigravity engine fallback: `claude-sonnet-4-20250514`
+- Qwen engine fallback: `qwen-max`
+- Recovery logic in `lib/mission-recovery.js`
+
+#### Context Overflow Recovery
+When stderr indicates context overflow (`token limit`, `too long`, `context overflow`), the brain truncates the prompt to 8000 chars and retries ONCE. Original intent preserved via first-N-chars strategy.
+
+#### OPENCLAW_HOME Environment Override
+Set `OPENCLAW_HOME` env var to override the default runtime data directory (`~/.openclaw`). Useful for CI, testing, or multi-instance deployments.
 
 ### Live Mission Viewer
 Run in any terminal (VS Code recommended) to watch missions:

@@ -4,6 +4,7 @@ const MEKONG_DIR = process.env.MEKONG_DIR || '/Users/macbookprom1/mekong-cli';
 
 module.exports = {
   MEKONG_DIR,
+  OPENCLAW_HOME: process.env.OPENCLAW_HOME || path.join(process.env.HOME || '', '.openclaw'),
   WATCH_DIR: path.join(MEKONG_DIR, 'tasks'),
   PROCESSED_DIR: path.join(MEKONG_DIR, 'tasks', 'processed'),
   LOG_FILE: process.env.TOM_HUM_LOG || '/Users/macbookprom1/tom_hum_cto.log',
