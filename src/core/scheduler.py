@@ -12,7 +12,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from src.core.event_bus import EventType, get_event_bus
 
@@ -37,12 +37,17 @@ class Scheduler:
     """Autonomous scheduler for recurring Mekong missions."""
 
     def __init__(self, config_path: Optional[str] = None) -> None:
+        """Initialize Scheduler and load persisted jobs from disk.
+
+        Args:
+            config_path: Path to the YAML config file. Defaults to .mekong/schedule.yaml.
+        """
         self._jobs: Dict[str, ScheduledJob] = {}
         self._config_path = config_path or str(
             Path(".mekong") / "schedule.yaml"
         )
         self._running = False
-        self._run_callback: Optional[Callable[[str], dict]] = None
+        self._run_callback: Optional[Callable[[str], Dict[str, Any]]] = None
         self._load()
 
     def add_job(
@@ -112,21 +117,23 @@ class Scheduler:
 
         self._save()
 
-    def set_run_callback(self, callback: Callable[[str], dict]) -> None:
+    def set_run_callback(self, callback: Callable[[str], Dict[str, Any]]) -> None:
         """Set the function called to execute a goal."""
         self._run_callback = callback
 
     @property
     def is_running(self) -> bool:
+        """Whether the scheduler loop is currently active."""
         return self._running
 
     @property
     def job_count(self) -> int:
+        """Total number of registered jobs."""
         return len(self._jobs)
 
-    async def tick(self) -> List[dict]:
+    async def tick(self) -> List[Dict[str, Any]]:
         """Check for due jobs and execute them. Returns results."""
-        results: List[dict] = []
+        results: List[Dict[str, Any]] = []
         due = self.get_due_jobs()
         bus = get_event_bus()
 
@@ -138,7 +145,7 @@ class Scheduler:
                 "source": "scheduler",
             })
 
-            result: dict = {"job_id": job.id, "status": "skipped"}
+            result: Dict[str, Any] = {"job_id": job.id, "status": "skipped"}
             if self._run_callback:
                 try:
                     result = self._run_callback(job.goal)
@@ -168,7 +175,7 @@ class Scheduler:
             self._running = False
 
     def stop(self) -> None:
-        """Stop the scheduler loop."""
+        """Signal the scheduler loop to stop after the current tick completes."""
         self._running = False
 
     @staticmethod

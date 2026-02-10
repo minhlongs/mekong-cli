@@ -7,6 +7,13 @@ interface NetworkListMobileProps {
   node: NetworkNode;
 }
 
+/**
+ * Renders an icon corresponding to the user's rank level.
+ *
+ * @param props - The component props.
+ * @param props.rank - The rank string (e.g. 'diamond', 'gold', 'silver').
+ * @returns A Lucide icon styled for the given rank.
+ */
 const RankIcon = ({ rank }: { rank: string }) => {
   switch (rank?.toLowerCase()) {
     case 'diamond': return <Trophy className="w-4 h-4 text-cyan-400" />;
@@ -16,6 +23,14 @@ const RankIcon = ({ rank }: { rank: string }) => {
   }
 };
 
+/**
+ * Renders a single node row in the mobile network list with expandable children.
+ *
+ * @param props - The component props.
+ * @param props.node - The network node data to display.
+ * @param props.level - The nesting depth level (0 = root, auto-expanded).
+ * @returns An expandable list item showing node avatar, name, rank, and sales.
+ */
 const NodeItem: React.FC<{ node: NetworkNode; level: number }> = ({ node, level }) => {
   const [isOpen, setIsOpen] = useState(level === 0); // Open root by default
   const hasChildren = node.children && node.children.length > 0;
@@ -86,6 +101,19 @@ const NodeItem: React.FC<{ node: NetworkNode; level: number }> = ({ node, level 
   );
 };
 
+/**
+ * Displays a referral network as a collapsible list optimized for mobile viewports.
+ * Recursively renders each node using {@link NodeItem}.
+ *
+ * @param props - The component props.
+ * @param props.node - The root network node to render.
+ * @returns A vertically stacked, expandable list of network nodes.
+ *
+ * @example
+ * ```tsx
+ * <NetworkListMobile node={rootNetworkNode} />
+ * ```
+ */
 export const NetworkListMobile: React.FC<NetworkListMobileProps> = ({ node }) => {
   return (
     <div className="w-full space-y-2 pb-20">

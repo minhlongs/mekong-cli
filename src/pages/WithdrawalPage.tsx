@@ -7,6 +7,12 @@ import { WithdrawalForm } from '../components/withdrawal/withdrawal-form';
 import { WithdrawalHistory } from '../components/withdrawal/withdrawal-history';
 import { formatVND } from '../utils/format';
 
+/**
+ * Page component for the withdrawal feature. Shows the user's available balance,
+ * a withdrawal request form, and transaction history in a responsive grid layout.
+ *
+ * @returns The full withdrawal page with balance card, form, and history panels.
+ */
 const WithdrawalPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useStore();

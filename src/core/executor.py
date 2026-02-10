@@ -18,7 +18,12 @@ from src.core.verifier import ExecutionResult
 class RecipeExecutor:
     """Executes a Recipe step by step, returning structured results."""
 
-    def __init__(self, recipe: Recipe):
+    def __init__(self, recipe: Recipe) -> None:
+        """Initialize RecipeExecutor with a parsed recipe.
+
+        Args:
+            recipe: The Recipe object containing steps to execute.
+        """
         self.recipe = recipe
         self.console = Console()
 

@@ -47,7 +47,7 @@ class TelemetryCollector:
         collector.finish_trace()
     """
 
-    def __init__(self, output_dir: Optional[str] = None):
+    def __init__(self, output_dir: Optional[str] = None) -> None:
         """
         Initialize collector.
 

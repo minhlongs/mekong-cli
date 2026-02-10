@@ -32,10 +32,11 @@ class LLMResponse:
 
     content: str
     model: str = ""
-    usage: Dict[str, int] = None
-    raw: Dict[str, Any] = None
+    usage: Optional[Dict[str, int]] = None
+    raw: Optional[Dict[str, Any]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        """Set default values for mutable fields after dataclass init."""
         if self.usage is None:
             self.usage = {}
         if self.raw is None:
@@ -51,15 +52,22 @@ class ProviderHealth:
 
     @property
     def is_healthy(self) -> bool:
+        """Check if this provider is healthy enough to receive requests.
+
+        Returns:
+            True if fewer than 3 consecutive failures, or cooldown has elapsed.
+        """
         if self.failures < 3:
             return True
         return (time.time() - self.last_failure) > self.cooldown_secs
 
-    def record_failure(self):
+    def record_failure(self) -> None:
+        """Record a failed request, incrementing the failure counter."""
         self.failures += 1
         self.last_failure = time.time()
 
-    def record_success(self):
+    def record_success(self) -> None:
+        """Record a successful request, resetting the failure counter."""
         self.failures = 0
 
 
@@ -76,7 +84,16 @@ class LLMClient:
         gemini_key: Optional[str] = None,
         model: str = "gemini-2.5-pro",
         timeout: int = 60,
-    ):
+    ) -> None:
+        """Initialize LLMClient with provider credentials and failover config.
+
+        Args:
+            proxy_url: Antigravity Proxy URL. Falls back to ANTIGRAVITY_PROXY_URL env var.
+            api_key: OpenAI API key. Falls back to OPENAI_API_KEY env var.
+            gemini_key: Google Gemini API key. Falls back to GEMINI_API_KEY env var.
+            model: Default model name for requests.
+            timeout: HTTP request timeout in seconds.
+        """
         self.proxy_url = proxy_url or os.getenv("ANTIGRAVITY_PROXY_URL", "")
         self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
         self.gemini_key = gemini_key or os.getenv("GEMINI_API_KEY", "")

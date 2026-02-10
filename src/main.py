@@ -78,7 +78,7 @@ console = Console()
 
 
 @app.command()
-def init():
+def init() -> None:
     """Initialize Mekong CLI in current directory"""
     console.print(
         Panel(
@@ -93,7 +93,7 @@ def init():
 
 
 @app.command()
-def list():
+def list() -> None:
     """List available recipes"""
     registry = RecipeRegistry()
     recipes = registry.scan()
@@ -120,7 +120,7 @@ def list():
 
 
 @app.command()
-def search(query: str):
+def search(query: str) -> None:
     """Search for recipes"""
     registry = RecipeRegistry()
     results = registry.search(query)
@@ -141,7 +141,7 @@ def search(query: str):
 
 
 @app.command()
-def run(recipe: str = typer.Argument(..., help="Recipe file path (.md) or name")):
+def run(recipe: str = typer.Argument(..., help="Recipe file path (.md) or name")) -> None:
     """Run a recipe workflow"""
     # Try to find recipe via registry first if it doesn't look like a file path
     if not recipe.endswith(".md") and not Path(recipe).exists():
@@ -190,7 +190,7 @@ def run(recipe: str = typer.Argument(..., help="Recipe file path (.md) or name")
 
 
 @app.command()
-def ui():
+def ui() -> None:
     """Open interactive terminal UI"""
     console.print(
         Panel(
@@ -295,8 +295,8 @@ def cook(
     json_output: bool = typer.Option(
         False, "--json", "-j", help="Machine-readable JSON output"
     ),
-):
-    """🎯 Cook: Plan → Execute → Verify workflow (Binh Pháp engine)"""
+) -> None:
+    """Cook: Plan -> Execute -> Verify workflow (Binh Phap engine)"""
     llm_client = get_client()
 
     orchestrator = RecipeOrchestrator(
@@ -426,7 +426,7 @@ def plan_cmd(
     complexity: str = typer.Option(
         "moderate", help="Task complexity: simple/moderate/complex"
     ),
-):
+) -> None:
     """📋 Plan: Decompose a goal into executable steps (plan only, no execution)"""
     from src.core.planner import RecipePlanner
 
@@ -481,7 +481,7 @@ def plan_cmd(
 @app.command(name="ask")
 def ask_cmd(
     question: str = typer.Argument(..., help="Question about the codebase or task"),
-):
+) -> None:
     """Ask a question - plan-only shortcut (alias for plan)"""
     from src.core.planner import RecipePlanner
 
@@ -519,7 +519,7 @@ def debug_cmd(
     dry_run: bool = typer.Option(
         True, "--dry-run/--execute", help="Plan only or execute"
     ),
-):
+) -> None:
     """Debug an issue - generates a fix plan (defaults to dry-run)"""
     goal = f"debug {issue}" if not issue.lower().startswith("debug") else issue
 
@@ -577,7 +577,7 @@ def debug_cmd(
 def gateway(
     port: int = typer.Option(8000, "--port", "-p", help="Server port"),
     host: str = typer.Option("127.0.0.1", "--host", "-H", help="Server bind address"),
-):
+) -> None:
     """🌐 Gateway: Start the OpenClaw Hybrid Commander HTTP server"""
     import uvicorn
 
@@ -610,7 +610,7 @@ def gateway(
 
 
 @app.command()
-def dash():
+def dash() -> None:
     """🟢 Dash: One-button action menu (The Washing Machine)"""
     from src.core.gateway import PRESET_ACTIONS
 
@@ -686,7 +686,7 @@ def swarm_add(
     name: str = typer.Argument(..., help="Node name"),
     host_port: str = typer.Argument(..., help="host:port of remote gateway"),
     token: str = typer.Argument(..., help="API token for the remote node"),
-):
+) -> None:
     """Register a remote Mekong gateway node."""
     from src.core.swarm import SwarmRegistry
 
@@ -709,7 +709,7 @@ def swarm_add(
 
 
 @swarm_app.command(name="list")
-def swarm_list():
+def swarm_list() -> None:
     """List all swarm nodes with health status."""
     from src.core.swarm import SwarmRegistry
 
@@ -749,7 +749,7 @@ def swarm_list():
 def swarm_dispatch(
     node_id: str = typer.Argument(..., help="Node ID to dispatch to"),
     goal: str = typer.Argument(..., help="Goal to execute on remote node"),
-):
+) -> None:
     """Send a goal to a remote swarm node."""
     from src.core.swarm import SwarmRegistry
 
@@ -782,7 +782,7 @@ def swarm_dispatch(
 @swarm_app.command(name="remove")
 def swarm_remove(
     node_id: str = typer.Argument(..., help="Node ID to remove"),
-):
+) -> None:
     """Remove a node from the swarm."""
     from src.core.swarm import SwarmRegistry
 
@@ -795,7 +795,7 @@ def swarm_remove(
 
 
 @schedule_app.command(name="list")
-def schedule_list():
+def schedule_list() -> None:
     """List all scheduled jobs."""
     from src.core.scheduler import Scheduler
 
@@ -840,7 +840,7 @@ def schedule_add(
     daily_time: str = typer.Option(
         "09:00", "--time", help="Time HH:MM (for daily type)"
     ),
-):
+) -> None:
     """Add a new scheduled job."""
     from src.core.scheduler import Scheduler
 
@@ -868,7 +868,7 @@ def schedule_add(
 @schedule_app.command(name="remove")
 def schedule_remove(
     job_id: str = typer.Argument(..., help="Job ID to remove"),
-):
+) -> None:
     """Remove a scheduled job."""
     from src.core.scheduler import Scheduler
 
@@ -886,7 +886,7 @@ def schedule_remove(
 @memory_app.command(name="list")
 def memory_list(
     limit: int = typer.Option(20, "--limit", "-l", help="Number of entries"),
-):
+) -> None:
     """List recent execution memory entries."""
     from src.core.memory import MemoryStore
 
@@ -916,7 +916,7 @@ def memory_list(
 
 
 @memory_app.command(name="stats")
-def memory_stats_cmd():
+def memory_stats_cmd() -> None:
     """Show memory statistics."""
     from src.core.memory import MemoryStore
 
@@ -936,7 +936,7 @@ def memory_stats_cmd():
 
 
 @memory_app.command(name="clear")
-def memory_clear_cmd():
+def memory_clear_cmd() -> None:
     """Clear all execution memory."""
     from src.core.memory import MemoryStore
 
@@ -946,7 +946,7 @@ def memory_clear_cmd():
 
 
 @telegram_app.command(name="start")
-def telegram_start():
+def telegram_start() -> None:
     """Start Telegram bot in foreground (blocking)."""
     import asyncio
 
@@ -974,6 +974,7 @@ def telegram_start():
     console.print("[green]Starting Telegram bot...[/green]")
 
     async def run():
+        """Start the Telegram bot and keep it running until interrupted."""
         await bot.start()
         try:
             while bot.is_running():
@@ -987,7 +988,7 @@ def telegram_start():
 
 
 @telegram_app.command(name="status")
-def telegram_status_cmd():
+def telegram_status_cmd() -> None:
     """Check Telegram bot configuration status."""
     token = os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
     configured = bool(token)
@@ -1003,7 +1004,7 @@ def telegram_status_cmd():
 
 
 @app.command()
-def halt():
+def halt() -> None:
     """🛑 Halt: Emergency stop all autonomous operations."""
     from src.core.governance import Governance
 
@@ -1014,7 +1015,7 @@ def halt():
 
 
 @autonomous_app.command(name="status")
-def autonomous_status():
+def autonomous_status() -> None:
     """Show Consciousness Score and subsystem health."""
     from src.core.autonomous import AutonomousEngine
 
@@ -1040,7 +1041,7 @@ def autonomous_status():
 @autonomous_app.command(name="run")
 def autonomous_run(
     goal: str = typer.Argument(..., help="Goal to process autonomously"),
-):
+) -> None:
     """Run a single autonomous cycle for a goal."""
     from src.core.autonomous import AutonomousEngine
 
@@ -1078,7 +1079,7 @@ def autonomous_run(
 
 
 @autonomous_app.command(name="resume")
-def autonomous_resume():
+def autonomous_resume() -> None:
     """Resume autonomous operations after halt."""
     from src.core.governance import Governance
 
@@ -1090,7 +1091,7 @@ def autonomous_resume():
 
 
 @app.command()
-def evolve():
+def evolve() -> None:
     """🧬 Evolve: Analyze patterns, generate recipes, deprecate bad ones."""
     from src.core.memory import MemoryStore
     from src.core.recipe_gen import RecipeGenerator
@@ -1148,7 +1149,7 @@ def evolve():
 
 
 @app.command()
-def version():
+def version() -> None:
     """Show version info"""
     console.print(
         Panel(
@@ -1163,7 +1164,7 @@ def version():
 
 
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(ctx: typer.Context) -> None:
     """Mekong CLI: RaaS Agency Operating System"""
     if ctx.invoked_subcommand is None:
         console.print(

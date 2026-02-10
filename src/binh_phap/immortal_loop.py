@@ -6,6 +6,7 @@ Infinite Supervisor for AgencyOS RaaS & Mekong CLI.
 import time
 import sys
 import os
+from typing import Dict
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -30,7 +31,15 @@ except ImportError:
 console = Console()
 
 
-def run_audit(standards):
+def run_audit(standards: Dict[str, "StandardCheck"]) -> Dict[str, "StandardCheck"]:
+    """Execute all checks in a standards group and return results.
+
+    Args:
+        standards: Dict of check key to StandardCheck instances.
+
+    Returns:
+        Same dict after running each check (status/details populated).
+    """
     results = {}
     for key, check in standards.items():
         check.run()
@@ -38,7 +47,17 @@ def run_audit(standards):
     return results
 
 
-def calculate_score(raas_results, oss_results, anima_results):
+def calculate_score(raas_results: Dict[str, "StandardCheck"], oss_results: Dict[str, "StandardCheck"], anima_results: Dict[str, "StandardCheck"]) -> int:
+    """Calculate overall quality score as percentage of passed checks.
+
+    Args:
+        raas_results: RaaS standard check results.
+        oss_results: OSS standard check results.
+        anima_results: Anima standard check results.
+
+    Returns:
+        Integer 0-100 representing percentage of checks that passed.
+    """
     total_checks = len(raas_results) + len(oss_results) + len(anima_results)
     if total_checks == 0:
         return 0
@@ -50,7 +69,7 @@ def calculate_score(raas_results, oss_results, anima_results):
     return int((passed / total_checks) * 100)
 
 
-def delegate_task(failed_check):
+def delegate_task(failed_check: "StandardCheck") -> str:
     """
     Delegates a fix task to the CC CLI via the task-watcher protocol.
     """
@@ -61,10 +80,13 @@ def delegate_task(failed_check):
     # Prefix with /cook for ClaudeKit agent activation
     command = f"/cook {task_description}"
 
-    # 1. Mobile Remote Handover Protocol: Write to /tmp/openclaw_task_*.txt
-    # This simulates a "Telegram" command injection that the Task Watcher picks up.
+    # 1. Supreme Commander Protocol: Write to ~/mekong-cli/tasks/
     timestamp = int(time.time())
-    task_file = f"/tmp/openclaw_task_{timestamp}.txt"
+    tasks_dir = os.path.expanduser("~/mekong-cli/tasks")
+    if not os.path.exists(tasks_dir):
+        os.makedirs(tasks_dir, exist_ok=True)
+
+    task_file = os.path.join(tasks_dir, f"mission_bp_{timestamp}.txt")
 
     try:
         with open(task_file, "w") as f:
@@ -74,7 +96,13 @@ def delegate_task(failed_check):
         return f"Delegation Failed: {e}"
 
 
-def main():
+def main() -> None:
+    """Run the infinite Binh Phap audit loop.
+
+    Continuously audits RaaS, OSS, and Anima standards, displays results
+    in a Rich table, and delegates fix tasks for failures via task files.
+    Runs until interrupted with Ctrl+C.
+    """
     console.print(Panel.fit("Starting Binh Pháp Immortal Loop...", style="bold green"))
 
     raas_standards = get_raas_standards()
@@ -147,10 +175,10 @@ def main():
                 # In real RaaS, we might poll for the task results file
                 # For now, sleep 30s to give CC CLI time to react
                 with console.status(
-                    "[bold cyan]Waiting for Agent execution...[/bold cyan]",
+                    "[bold cyan]Waiting for Agent execution (300s)...[/bold cyan]",
                     spinner="dots",
                 ):
-                    time.sleep(30)
+                    time.sleep(300)
 
         time.sleep(5)
 

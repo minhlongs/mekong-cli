@@ -2,10 +2,22 @@
 @.cleo/templates/AGENT-INJECTION.md
 <!-- CLEO:END -->
 
+# Sophia Proposal — 第七篇 軍爭 (Jun Zheng) — Sales Proposals
+
+> **Inherits**: `../../CLAUDE.md` (Root Constitution)
+> **Domain**: AI Video Factory sales proposals — competitive positioning, client pitches
+> **Binh Phap**: 軍爭 — Military maneuvering: speed-to-proposal, value demonstration
+
+## Core Rules
+
+- Proposal content must be accurate and verifiable
+- Pricing must reference Polar.sh tiers
+- Visual demos must use real Sophia AI Factory outputs
+- Follow ClaudeKit engineer standards
 
 ---
 
-## 🚀 AGENT TEAMS + BMAD (Feb 2026)
+## AGENT TEAMS + BMAD (Feb 2026)
 
 **Enabled:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
 

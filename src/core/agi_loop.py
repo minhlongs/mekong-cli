@@ -22,7 +22,7 @@ import os
 import signal
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class AGILoop:
         cooldown: int = DEFAULT_COOLDOWN,
         telegram_notify: bool = True,
         max_iterations: Optional[int] = None,
-    ):
+    ) -> None:
         self.cooldown = cooldown
         self.telegram_notify = telegram_notify
         self.max_iterations = max_iterations
@@ -103,7 +103,7 @@ class AGILoop:
         self.start_time = time.time()
         self.last_success_time: Optional[float] = None
 
-    def _load_history(self) -> dict:
+    def _load_history(self) -> Dict[str, Any]:
         """Load persistent improvement history from disk."""
         if HISTORY_PATH.exists():
             try:
@@ -112,7 +112,7 @@ class AGILoop:
                 return {"completed": [], "blacklist": {}, "details": []}
         return {"completed": [], "blacklist": {}, "details": []}
 
-    def _save_history(self):
+    def _save_history(self) -> None:
         """Persist history to disk (keep last 100 entries)."""
         HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
         self._history["completed"] = self._history["completed"][-100:]
@@ -136,7 +136,7 @@ class AGILoop:
             return self.cooldown
         return min(self.cooldown * (2 ** self.consecutive_failures), 600)
 
-    def get_status(self) -> dict:
+    def get_status(self) -> Dict[str, Any]:
         """Return AGI loop metrics for Telegram and monitoring."""
         uptime = time.time() - self.start_time if self.start_time else 0
         total = len(self._history.get("details", []))
@@ -154,7 +154,7 @@ class AGILoop:
             "cooldown": self._calculate_cooldown(),
         }
 
-    async def run_forever(self):
+    async def run_forever(self) -> None:
         """Main infinite loop."""
         self._running = True
         logger.info("🦞 AGI Loop started! Tôm Hùm is now self-improving...")
@@ -239,7 +239,7 @@ class AGILoop:
 
         logger.info("🛑 AGI Loop stopped.")
 
-    async def _assess(self) -> Optional[dict]:
+    async def _assess(self) -> Optional[Dict[str, Any]]:
         """Step 1: Query Gemini + NeuralMemory for next improvement."""
         logger.info("🧠 ASSESS: Analyzing codebase for improvements...")
 
@@ -309,7 +309,7 @@ class AGILoop:
             logger.error(f"Assessment failed: {e}")
             return None
 
-    async def _execute(self, improvement: dict) -> bool:
+    async def _execute(self, improvement: Dict[str, Any]) -> bool:
         """Step 2: Spawn CC CLI to implement the improvement."""
         title = improvement.get("title", "Unknown")
         cc_prompt = improvement.get("cc_cli_prompt", "")
@@ -354,7 +354,7 @@ class AGILoop:
             logger.error(f"Execution failed: {e}")
             return False
 
-    async def _memorize(self, improvement: dict, success: bool):
+    async def _memorize(self, improvement: Dict[str, Any], success: bool) -> None:
         """Step 3: Encode result into NeuralMemory."""
         try:
             from src.core.memory_client import get_memory_client
@@ -386,7 +386,7 @@ class AGILoop:
         except Exception as e:
             logger.warning(f"Memorization failed: {e}")
 
-    async def _report(self, improvement: dict, success: bool):
+    async def _report(self, improvement: Dict[str, Any], success: bool) -> None:
         """Step 4: Report to Telegram."""
         if not self.telegram_notify:
             return
@@ -405,7 +405,7 @@ class AGILoop:
 
         await self._send_telegram(msg)
 
-    async def _report_error(self, error: str):
+    async def _report_error(self, error: str) -> None:
         """Report error to Telegram."""
         if not self.telegram_notify:
             return
@@ -413,7 +413,7 @@ class AGILoop:
         msg = f"⚠️ *AGI Loop #{self.iteration} Error*\n\n```\n{error[:500]}\n```"
         await self._send_telegram(msg)
 
-    async def _send_telegram(self, message: str):
+    async def _send_telegram(self, message: str) -> None:
         """Send message via Telegram bot."""
         try:
             import requests
@@ -452,21 +452,21 @@ class AGILoop:
         except Exception as e:
             logger.warning(f"Telegram send failed: {e}")
 
-    async def _safe_sleep(self, seconds: int):
+    async def _safe_sleep(self, seconds: int) -> None:
         """Sleep that can be interrupted by shutdown."""
         try:
             await asyncio.wait_for(self._shutdown_event.wait(), timeout=seconds)
         except asyncio.TimeoutError:
             pass  # Normal: timeout means sleep completed
 
-    def _handle_shutdown(self):
+    def _handle_shutdown(self) -> None:
         """Handle SIGINT/SIGTERM."""
         logger.info("\n🛑 Shutdown signal received. Finishing current cycle...")
         self._running = False
         self._shutdown_event.set()
 
-    def stop(self):
-        """Stop the loop gracefully."""
+    def stop(self) -> None:
+        """Stop the AGI loop gracefully, allowing the current cycle to finish."""
         self._handle_shutdown()
 
 
@@ -482,7 +482,7 @@ def get_agi_loop() -> AGILoop:
     return _agi_loop
 
 
-async def main():
+async def main() -> None:
     """Entry point for standalone execution."""
     logging.basicConfig(
         level=logging.INFO,

@@ -1,0 +1,166 @@
+#!/usr/bin/expect -f
+# 🧠 FORKED ANTIGRAVITY BRAIN — Persistent CC CLI Session
+#
+# Tôm Hùm WIELDS CC CLI via this script — KEEPS IT ALIVE.
+# Spawn CC CLI ONCE → loop forever reading missions.
+# Just like Antigravity holds a terminal open and types missions into it.
+#
+# Usage: expect tom-hum-dispatch.exp <default_project_dir> <log_file>
+# Missions are read from: /tmp/tom_hum_next_mission.txt
+# Done signal written to: /tmp/tom_hum_mission_done
+
+set timeout 2700
+set default_dir [lindex $argv 0]
+set log_file [lindex $argv 1]
+set mission_file "/tmp/tom_hum_next_mission.txt"
+set done_file "/tmp/tom_hum_mission_done"
+
+proc logmsg {msg} {
+    global log_file
+    set timestamp [clock format [clock seconds] -format "%H:%M:%S"]
+    set line "\[$timestamp\] 🦞 $msg"
+    if {$log_file ne ""} {
+        set f [open $log_file a]
+        puts $f $line
+        close $f
+    }
+}
+
+# Clean up from previous runs
+file delete -force $done_file
+file delete -force $mission_file
+
+logmsg "🧠 PERSISTENT BRAIN ONLINE — will keep CC CLI alive forever"
+logmsg "📂 Default dir: $default_dir"
+logmsg "📬 Mission inbox: $mission_file"
+
+# === SPAWN CC CLI ONCE (= Antigravity opening terminal) ===
+cd $default_dir
+spawn claude --model claude-opus-4-6-thinking --dangerously-skip-permissions
+
+logmsg "✅ CC CLI spawned — waiting for ready"
+
+# Wait for first prompt
+set ready 0
+expect {
+    -re {❯} {
+        set ready 1
+        logmsg "📡 CC CLI READY — ❯ detected. Entering mission loop."
+    }
+    -re {>\s*$} {
+        set ready 1
+        logmsg "📡 CC CLI READY — > detected. Entering mission loop."
+    }
+    "Welcome" {
+        logmsg "📺 Welcome..."
+        exp_continue
+    }
+    -timeout 120 {
+        logmsg "❌ TIMEOUT waiting for CC CLI prompt"
+        exit 1
+    }
+}
+
+if {!$ready} { exit 1 }
+
+# === MISSION LOOP — runs forever, checking for new missions ===
+log_user 0
+set mission_count 0
+
+while {1} {
+    # Check for mission file
+    if {[file exists $mission_file]} {
+        # Read mission
+        set f [open $mission_file r]
+        set mission_text [string trim [read $f]]
+        close $f
+        file delete -force $mission_file
+        file delete -force $done_file
+
+        if {$mission_text eq ""} {
+            logmsg "⚠️ Empty mission, skipping"
+            continue
+        }
+
+        incr mission_count
+        logmsg "📨 MISSION #$mission_count: [string range $mission_text 0 100]..."
+
+        # Send mission to CC CLI
+        sleep 1
+        send -- "$mission_text\r"
+        logmsg "📨 Injected into CC CLI!"
+
+        # Monitor for completion via idle detection
+        set start_time [clock seconds]
+        set last_activity [clock seconds]
+        set idle_checks 0
+
+        while {1} {
+            set now [clock seconds]
+            set elapsed [expr {$now - $start_time}]
+            set idle_secs [expr {$now - $last_activity}]
+
+            expect {
+                -re {.+} {
+                    set last_activity [clock seconds]
+                    set idle_checks 0
+
+                    # Log interesting output
+                    set raw $expect_out(0,string)
+                    set clean [regsub -all {\x1b\[[0-9;]*[a-zA-Z]} $raw ""]
+                    set clean [regsub -all {\x1b\][^\x07]*\x07} $clean ""]
+                    set clean [string trim $clean]
+                    if {[string length $clean] > 3} {
+                        foreach pattern {"Bash" "Read" "Wrote" "Created" "Updated" "Error" "error" "✓" "✗" "build" "test" "COMPLETE" "fix" "success" "tool" "Running" "PASS" "FAIL"} {
+                            if {[string match -nocase "*$pattern*" $clean]} {
+                                logmsg "📺 [string range $clean 0 130]"
+                                break
+                            }
+                        }
+                    }
+                }
+                -timeout 5 {
+                    set now [clock seconds]
+                    set elapsed [expr {$now - $start_time}]
+                    set idle_secs [expr {$now - $last_activity}]
+                }
+            }
+
+            # Idle: 25s+ silence AND 30s+ elapsed
+            if {$idle_secs >= 25 && $elapsed >= 30} {
+                incr idle_checks
+                if {$idle_checks >= 3} {
+                    logmsg "🏁 MISSION #$mission_count COMPLETE! (${elapsed}s, idle ${idle_secs}s)"
+                    # Signal done to task-watcher
+                    set f [open $done_file w]
+                    puts $f "done"
+                    close $f
+                    break
+                }
+                logmsg "⏳ Idle ${idle_secs}s (check $idle_checks/3)"
+            } else {
+                set idle_checks 0
+            }
+
+            # Status every 60s
+            if {$elapsed > 0 && $elapsed % 60 < 6} {
+                logmsg "⏳ Mission #$mission_count working — ${elapsed}s"
+            }
+
+            # 45min timeout per mission
+            if {$elapsed > 2700} {
+                logmsg "⏰ Mission #$mission_count TIMEOUT"
+                set f [open $done_file w]
+                puts $f "timeout"
+                close $f
+                break
+            }
+        }
+
+        logmsg "✅ Mission #$mission_count finished. CC CLI stays alive. Waiting for next..."
+
+    } else {
+        # No mission — sleep 3s and check again
+        sleep 3
+    }
+}

@@ -15,6 +15,8 @@ Commands:
   /help                 — This help message
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import os
@@ -22,9 +24,15 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import yaml
+
+if TYPE_CHECKING:
+    from telegram import InlineKeyboardMarkup, Update
+    from telegram.ext import Application, ContextTypes
+
+    from src.core.orchestrator import OrchestrationResult
 
 INBOX_PATH = Path(".mekong/inbox.json")
 
@@ -120,10 +128,15 @@ class MekongBot:
     CONFIG_PATH = ".mekong/telegram.yaml"
 
     def __init__(self, token: Optional[str] = None) -> None:
+        """Initialize MekongBot with a Telegram bot token.
+
+        Args:
+            token: Telegram Bot API token. Falls back to MEKONG_TELEGRAM_TOKEN env var.
+        """
         self.token = token or os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
         self.config = self._load_config()
         self._running = False
-        self._application: Any = None
+        self._application: Optional[Application] = None
 
     async def start(self) -> None:
         """Start the Telegram bot polling loop."""
@@ -185,13 +198,14 @@ class MekongBot:
                 pass
 
     def is_running(self) -> bool:
+        """Whether the Telegram bot polling loop is currently active."""
         return self._running
 
     # ============================================================
     # 🧠 NLP: Free-form message → Structured Command
     # ============================================================
 
-    async def nlp_message_handler(self, update: Any, context: Any) -> None:
+    async def nlp_message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle ANY non-command text message via NLP parsing."""
         message = update.message.text
         if not message or len(message.strip()) < 3:
@@ -263,7 +277,7 @@ class MekongBot:
     # 🦞 TÔM HÙM: Task Relay (Telegram → Inbox → Antigravity)
     # ============================================================
 
-    async def cook_handler(self, update: Any, context: Any) -> None:
+    async def cook_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /cook <goal> — queue task for Antigravity."""
         goal = " ".join(context.args) if context.args else ""
         if not goal:
@@ -294,7 +308,7 @@ class MekongBot:
             parse_mode="Markdown",
         )
 
-    async def spawn_handler(self, update: Any, context: Any) -> None:
+    async def spawn_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /spawn <project> <goal> — queue task for specific project."""
         args = context.args or []
         if len(args) < 2:
@@ -325,7 +339,7 @@ class MekongBot:
             parse_mode="Markdown",
         )
 
-    async def tasks_handler(self, update: Any, context: Any) -> None:
+    async def tasks_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /tasks — view pending tasks in inbox."""
         inbox = _load_inbox()
 
@@ -356,7 +370,7 @@ class MekongBot:
             parse_mode="Markdown",
         )
 
-    async def sessions_handler(self, update: Any, context: Any) -> None:
+    async def sessions_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /sessions — list active CC CLI terminals."""
         try:
             from src.core.cc_spawner import get_spawner
@@ -397,7 +411,7 @@ class MekongBot:
     # ♾️ AGI Loop Commands
     # ============================================================
 
-    async def agi_handler(self, update: Any, context: Any) -> None:
+    async def agi_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /agi <subcommand> — AGI loop control."""
         args = context.args or []
         sub = args[0].lower() if args else "status"
@@ -509,7 +523,7 @@ class MekongBot:
     # Original Command Handlers
     # ============================================================
 
-    async def cmd_handler(self, update: Any, context: Any) -> None:
+    async def cmd_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /cmd <goal> — execute via orchestrator."""
         goal = " ".join(context.args) if context.args else ""
         if not goal:
@@ -523,7 +537,7 @@ class MekongBot:
             parse_mode="Markdown",
         )
 
-    async def status_handler(self, update: Any, context: Any) -> None:
+    async def status_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /status — system health."""
         from src.core.memory import MemoryStore
 
@@ -556,7 +570,7 @@ class MekongBot:
         )
         await update.message.reply_text(text, parse_mode="Markdown")
 
-    async def schedule_handler(self, update: Any, context: Any) -> None:
+    async def schedule_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /schedule — list scheduled jobs."""
         from src.core.scheduler import Scheduler
 
@@ -571,7 +585,7 @@ class MekongBot:
             lines.append(f"• {j.name}: {j.goal[:30]} ({j.job_type})")
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
-    async def swarm_handler(self, update: Any, context: Any) -> None:
+    async def swarm_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /swarm — swarm node status."""
         from src.core.swarm import SwarmRegistry
 
@@ -586,7 +600,7 @@ class MekongBot:
             lines.append(f"• {n.name} ({n.host}:{n.port}) — {n.status}")
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
-    async def memory_handler(self, update: Any, context: Any) -> None:
+    async def memory_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /memory — recent 5 executions."""
         from src.core.memory import MemoryStore
 
@@ -602,7 +616,7 @@ class MekongBot:
             lines.append(f"{icon} {e.goal[:30]} — {e.status}")
         await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
 
-    async def help_handler(self, update: Any, context: Any) -> None:
+    async def help_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /help — show available commands."""
         kb = self._build_keyboard()
         await update.message.reply_text(
@@ -611,7 +625,7 @@ class MekongBot:
             reply_markup=kb,
         )
 
-    async def _callback_handler(self, update: Any, context: Any) -> None:
+    async def _callback_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle inline keyboard button presses."""
         query = update.callback_query
         await query.answer()
@@ -643,7 +657,7 @@ class MekongBot:
         except Exception:
             pass
 
-    def _build_keyboard(self) -> Any:
+    def _build_keyboard(self) -> Optional[InlineKeyboardMarkup]:
         """Build inline keyboard for quick actions."""
         try:
             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -662,7 +676,7 @@ class MekongBot:
         except ImportError:
             return None
 
-    def _execute_goal(self, goal: str) -> Any:
+    def _execute_goal(self, goal: str) -> OrchestrationResult:
         """Execute goal via orchestrator (runs in thread)."""
         from src.core.orchestrator import RecipeOrchestrator
         from src.core.llm_client import get_client
@@ -673,7 +687,7 @@ class MekongBot:
         )
         return orchestrator.run_from_goal(goal)
 
-    def _format_result(self, result: Any) -> str:
+    def _format_result(self, result: Optional[OrchestrationResult]) -> str:
         """Format OrchestrationResult for Telegram message."""
         if result is None:
             return "❌ Execution failed — no result"

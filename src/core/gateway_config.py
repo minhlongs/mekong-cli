@@ -7,7 +7,7 @@ Falls back to hardcoded defaults when no config file exists.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 # Default preset actions — the "Washing Machine" buttons

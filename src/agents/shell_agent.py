@@ -5,7 +5,6 @@ Safe execution of arbitrary shell commands with timeout and sandbox restrictions
 """
 
 import subprocess
-import shlex
 from typing import List
 
 from ..core.agent_base import AgentBase, Task, Result
@@ -42,7 +41,13 @@ class ShellAgent(AgentBase):
     DEFAULT_TIMEOUT = 30
     MAX_TIMEOUT = 120
 
-    def __init__(self, cwd: str = ".", timeout: int = DEFAULT_TIMEOUT):
+    def __init__(self, cwd: str = ".", timeout: int = DEFAULT_TIMEOUT) -> None:
+        """Initialize ShellAgent with working directory and timeout.
+
+        Args:
+            cwd: Working directory for shell commands. Defaults to current dir.
+            timeout: Max seconds per command, capped at MAX_TIMEOUT.
+        """
         super().__init__(name="ShellAgent")
         self.cwd = cwd
         self.timeout = min(timeout, self.MAX_TIMEOUT)

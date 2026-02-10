@@ -1,0 +1,1 @@
+/cook "Lighthouse performance audit and optimization for sophia-ai-factory"

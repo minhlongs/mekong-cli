@@ -5,14 +5,15 @@ Specialized agent for finding CEO/Founder contact information from domains.
 """
 
 from typing import List
-from ..core.agent_base import AgentBase, Task, Result, TaskStatus
+from ..core.agent_base import AgentBase, Task, Result
 
 class LeadHunter(AgentBase):
     """
     Agent responsible for hunting leads (CEO/Founder emails) from a domain.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize LeadHunter agent for CEO/Founder contact discovery."""
         super().__init__(name="LeadHunter")
 
     def plan(self, input_data: str) -> List[Task]:

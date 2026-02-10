@@ -20,7 +20,7 @@ console = Console()
 @app.command("list")
 def list_workflows(
     agent_type: str = typer.Option(None, "--agent-type", help="Filter by agent type")
-):
+) -> None:
     """List available BMAD workflows."""
     try:
         loader = BMADWorkflowLoader()
@@ -48,7 +48,7 @@ def list_workflows(
 
 
 @app.command("info")
-def workflow_info(workflow_id: str):
+def workflow_info(workflow_id: str) -> None:
     """Show detailed workflow information."""
     try:
         loader = BMADWorkflowLoader()
@@ -77,7 +77,7 @@ def workflow_info(workflow_id: str):
 
 
 @app.command("catalog")
-def build_catalog():
+def build_catalog() -> None:
     """Build and cache workflow catalog."""
     try:
         catalog = WorkflowCatalog()
@@ -93,7 +93,7 @@ def build_catalog():
 
 
 @app.command("search")
-def search_workflows(query: str):
+def search_workflows(query: str) -> None:
     """Search workflows by name or description."""
     try:
         loader = BMADWorkflowLoader()
@@ -112,7 +112,7 @@ def search_workflows(query: str):
 def run_workflow(
     workflow_id: str,
     context: str = typer.Option(None, help="Context as JSON string")
-):
+) -> None:
     """Execute a BMAD workflow."""
     console.print("[yellow]Note: Workflow execution requires orchestrator integration[/yellow]")
     console.print(f"[bold]Workflow ID:[/bold] {workflow_id}")

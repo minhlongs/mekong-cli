@@ -53,7 +53,13 @@ class AgentBase(ABC):
     3. Verify: Validate output
     """
 
-    def __init__(self, name: str, max_retries: int = 3):
+    def __init__(self, name: str, max_retries: int = 3) -> None:
+        """Initialize AgentBase with name and retry configuration.
+
+        Args:
+            name: Unique identifier for this agent.
+            max_retries: Maximum retry attempts per task before marking as failed.
+        """
         self.name = name
         self.max_retries = max_retries
         self.tasks: List[Task] = []
@@ -138,6 +144,7 @@ class AgentBase(ABC):
         return results
 
     def __repr__(self) -> str:
+        """Return a developer-friendly string representation of the agent."""
         return f"<Agent:{self.name} tasks={len(self.tasks)}>"
 
 

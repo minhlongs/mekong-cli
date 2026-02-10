@@ -72,7 +72,7 @@ class RecipeVerifier:
     This is the VERIFY phase of the Plan-Execute-Verify pattern.
     """
 
-    def __init__(self, strict_mode: bool = True):
+    def __init__(self, strict_mode: bool = True) -> None:
         """
         Initialize verifier.
 

@@ -7,6 +7,12 @@ import { NetworkTreeDesktop } from '../components/network/network-tree-desktop';
 import { NetworkListMobile } from '../components/network/network-list-mobile';
 import { useStore } from '../store';
 
+/**
+ * Page component for the referral network. Fetches and displays network stats,
+ * and renders a tree visualization (desktop) or collapsible list (mobile).
+ *
+ * @returns The full network page with stats cards and adaptive tree/list views.
+ */
 const NetworkPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useStore();
@@ -143,6 +149,16 @@ interface StatsCardProps {
   color: string;
 }
 
+/**
+ * Displays a single statistic in a styled card with icon, label, and value.
+ *
+ * @param props - The component props.
+ * @param props.label - The stat label text (e.g. "Total Downlines").
+ * @param props.value - The stat value (string or number).
+ * @param props.icon - A React node icon element to display.
+ * @param props.color - Tailwind background and border color classes.
+ * @returns A hover-animated stat card.
+ */
 const StatsCard = ({ label, value, icon, color }: StatsCardProps) => (
   <motion.div
     whileHover={{ y: -2 }}
@@ -159,6 +175,12 @@ const StatsCard = ({ label, value, icon, color }: StatsCardProps) => (
 );
 
 
+/**
+ * Renders a placeholder UI when no network data is available,
+ * prompting the user to invite members.
+ *
+ * @returns A centered empty state card with icon and message.
+ */
 const EmptyState = () => (
   <div className="w-full h-64 flex flex-col items-center justify-center bg-white/5 rounded-2xl border border-white/5">
     <Users className="w-12 h-12 text-zinc-600 mb-4" />

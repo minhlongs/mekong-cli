@@ -1,18 +1,7 @@
 {
-  "goal": "Fix header text color in .claude/statusline.cjs to WHITE. First add 'const WHITE = \"\\u001b[97m\";' and 'function white...' to .claude/hooks/lib/colors.cjs, then update statusline.cjs to apply it.",
-  "steps": [
-    {
-      "step_order": 1,
-      "title": "Identify issue",
-      "duration_seconds": 4.394,
-      "exit_code": 2,
-      "self_healed": false,
-      "agent_used": null
-    }
-  ],
-  "total_duration": 5.514,
-  "llm_calls": 1,
-  "errors": [
-    "Self-heal retry also failed for step 1"
-  ]
+  "goal": "deploy app",
+  "steps": [],
+  "total_duration": 0.0,
+  "llm_calls": 0,
+  "errors": []
 }

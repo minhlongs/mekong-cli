@@ -14,10 +14,18 @@ APP_ROOT = Path("/Users/macbookprom1/mekong-cli/apps/anima119")
 
 
 class AnimaBuildCheck(StandardCheck):
-    def __init__(self):
+    """Check that the Anima 119 Next.js project builds successfully."""
+
+    def __init__(self) -> None:
+        """Initialize AnimaBuildCheck with preset name."""
         super().__init__("Anima Build Health")
 
     def run(self) -> bool:
+        """Run 'npm run build' and verify exit code is 0.
+
+        Returns:
+            True if build succeeds, False otherwise.
+        """
         try:
             result = subprocess.run(
                 ["npm", "run", "build"],
@@ -39,10 +47,18 @@ class AnimaBuildCheck(StandardCheck):
 
 
 class AnimaSEOCheck(StandardCheck):
-    def __init__(self):
+    """Check that SEO essentials (sitemap.xml, robots.txt) are present."""
+
+    def __init__(self) -> None:
+        """Initialize AnimaSEOCheck with preset name."""
         super().__init__("Anima SEO & Meta")
 
     def run(self) -> bool:
+        """Verify sitemap.xml and robots.txt exist in public/.
+
+        Returns:
+            True if all SEO files are present, False otherwise.
+        """
         checks = ["public/sitemap.xml", "public/robots.txt"]
         missing = []
         for c in checks:
@@ -59,10 +75,18 @@ class AnimaSEOCheck(StandardCheck):
 
 
 class Animai18nCheck(StandardCheck):
-    def __init__(self):
+    """Check that Vietnamese i18n translation file exists."""
+
+    def __init__(self) -> None:
+        """Initialize Animai18nCheck with preset name."""
         super().__init__("Anima i18n VI Coverage")
 
     def run(self) -> bool:
+        """Verify messages/vi.json exists in the app directory.
+
+        Returns:
+            True if Vietnamese locale file is present, False otherwise.
+        """
         vi_path = APP_ROOT / "messages/vi.json"
         if vi_path.exists():
             self.status = True
@@ -74,10 +98,18 @@ class Animai18nCheck(StandardCheck):
 
 
 class AnimaImageCheck(StandardCheck):
-    def __init__(self):
+    """Check that brand image assets are properly integrated."""
+
+    def __init__(self) -> None:
+        """Initialize AnimaImageCheck with preset name."""
         super().__init__("Anima Image Assets")
 
     def run(self) -> bool:
+        """Verify public/images/brand/ contains at least 5 PNG files.
+
+        Returns:
+            True if sufficient brand images exist, False otherwise.
+        """
         brand_path = APP_ROOT / "public/images/brand"
         if brand_path.exists():
             files = list(brand_path.glob("*.png"))
@@ -94,10 +126,18 @@ class AnimaImageCheck(StandardCheck):
 
 
 class AnimaMobileCheck(StandardCheck):
-    def __init__(self):
+    """Check that Tailwind responsive classes are used sufficiently."""
+
+    def __init__(self) -> None:
+        """Initialize AnimaMobileCheck with preset name."""
         super().__init__("Anima Mobile Responsive")
 
     def run(self) -> bool:
+        """Grep src/ for 'md:' responsive breakpoint classes.
+
+        Returns:
+            True if responsive class density is adequate, False otherwise.
+        """
         try:
             result = subprocess.run(
                 ["grep", "-r", "md:", "src"],
@@ -118,10 +158,18 @@ class AnimaMobileCheck(StandardCheck):
 
 
 class AnimaA11yCheck(StandardCheck):
-    def __init__(self):
+    """Check that image accessibility alt attributes are present."""
+
+    def __init__(self) -> None:
+        """Initialize AnimaA11yCheck with preset name."""
         super().__init__("Anima Accessibility (a11y)")
 
     def run(self) -> bool:
+        """Grep src/ for 'alt=' attributes and require more than 20 hits.
+
+        Returns:
+            True if sufficient alt text definitions exist, False otherwise.
+        """
         try:
             result = subprocess.run(
                 ["grep", "-r", "alt=", "src"],
@@ -143,6 +191,12 @@ class AnimaA11yCheck(StandardCheck):
 
 
 def get_anima_standards() -> Dict[str, StandardCheck]:
+    """Return all Anima 119 pharma-ecommerce quality checks.
+
+    Returns:
+        Dict mapping check keys to StandardCheck instances for build,
+        SEO, i18n, images, mobile, and accessibility.
+    """
     return {
         "build": AnimaBuildCheck(),
         "seo": AnimaSEOCheck(),

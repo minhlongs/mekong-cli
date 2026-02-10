@@ -24,7 +24,12 @@ class FileAgent(AgentBase):
     - grep <pattern>: Search content in files
     """
 
-    def __init__(self, cwd: str = "."):
+    def __init__(self, cwd: str = ".") -> None:
+        """Initialize FileAgent with working directory.
+
+        Args:
+            cwd: Root directory for file operations. Defaults to current dir.
+        """
         super().__init__(name="FileAgent")
         self.cwd = cwd
 

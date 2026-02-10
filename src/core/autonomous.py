@@ -97,7 +97,6 @@ class AutonomousEngine:
             )
         except Exception:
             pass
-            pass
 
     def process_goal(self, goal: str) -> CycleResult:
         """Run one full autonomous cycle for a goal."""
@@ -152,7 +151,7 @@ class AutonomousEngine:
                 orch_result = self.orchestrator.run_from_goal(goal)
                 result.executed = True
                 result.result_status = orch_result.status.value
-            except Exception as e:
+            except Exception:
                 result.executed = True
                 result.result_status = "error"
 

@@ -6,7 +6,7 @@ Interacts with local NeuralMemory server (nmem serve) via HTTP.
 import logging
 import time
 import requests
-from typing import Optional, Dict
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +17,20 @@ class NeuralMemoryClient:
     def __init__(
         self, base_url: str = "http://localhost:8000", brain_id: str = "default",
         timeout: float = 5.0, health_ttl: float = 30.0,
-    ):
+    ) -> None:
+        """Initialize NeuralMemoryClient with connection settings.
+
+        Args:
+            base_url: Base URL of the NeuralMemory server.
+            brain_id: Brain identifier for multi-tenant memory isolation.
+            timeout: HTTP request timeout in seconds.
+            health_ttl: Seconds to cache the health check result before re-checking.
+        """
         self.base_url = base_url
         self.brain_id = brain_id
         self.timeout = timeout
         self.health_ttl = health_ttl
-        self._available = None
+        self._available: Optional[bool] = None
         self._health_checked_at = 0.0
 
     @property
@@ -39,12 +47,12 @@ class NeuralMemoryClient:
         self._health_checked_at = now
         return self._available
 
-    def invalidate_health(self):
+    def invalidate_health(self) -> None:
         """Force re-check on next is_available call."""
         self._available = None
         self._health_checked_at = 0.0
 
-    def add_memory(self, content: str, metadata: Optional[Dict] = None) -> bool:
+    def add_memory(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
         """Encode a new memory."""
         if not self.is_available:
             return False
@@ -65,7 +73,7 @@ class NeuralMemoryClient:
             logger.error(f"Error encoding memory: {e}")
             return False
 
-    def add_memory_deduped(self, content: str, metadata: Optional[Dict] = None) -> bool:
+    def add_memory_deduped(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
         """Add memory, boosting existing if similar content found."""
         if not self.is_available:
             return False
@@ -108,6 +116,7 @@ _memory_client = None
 
 
 def get_memory_client() -> NeuralMemoryClient:
+    """Get or create the singleton NeuralMemoryClient instance."""
     global _memory_client
     if _memory_client is None:
         _memory_client = NeuralMemoryClient()

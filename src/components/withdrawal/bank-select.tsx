@@ -28,6 +28,21 @@ interface BankSelectProps {
   error?: string;
 }
 
+/**
+ * Renders an animated dropdown selector for Vietnamese banks.
+ * Displays a list of predefined VN banks with short-name badges and selection checkmarks.
+ *
+ * @param props - The component props.
+ * @param props.value - The currently selected bank name.
+ * @param props.onChange - Callback invoked with the selected bank name.
+ * @param props.error - Optional validation error message to display.
+ * @returns A styled dropdown bank selector with animated open/close transitions.
+ *
+ * @example
+ * ```tsx
+ * <BankSelect value={bankName} onChange={setBankName} error={errors.bank} />
+ * ```
+ */
 export const BankSelect: React.FC<BankSelectProps> = ({ value, onChange, error }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
