@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { log } = require('./brain-process-manager');
+const { log, isBrainAlive } = require('./brain-process-manager');
 const { isQueueEmpty } = require('./task-queue');
 
 let emptyQueueCount = 0;
+let lastGeneratedProject = null;
+let intervalRef = null;
 
 function loadState() {
   try {
@@ -20,27 +22,49 @@ function saveState(state) {
 }
 
 function startAutoCTO() {
-  setInterval(() => {
-    const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
-    if (tasks.length === 0 && isQueueEmpty()) {
-      emptyQueueCount++;
-      if (emptyQueueCount >= config.AUTO_CTO_EMPTY_THRESHOLD) {
+  intervalRef = setInterval(() => {
+    try {
+      const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
+      if (tasks.length === 0 && isQueueEmpty()) {
+        emptyQueueCount++;
+        if (emptyQueueCount >= config.AUTO_CTO_EMPTY_THRESHOLD) {
+          emptyQueueCount = 0;
+          // Only generate if brain is alive
+          if (!isBrainAlive()) {
+            log('AUTO-CTO: Brain not alive — skipping task generation');
+            return;
+          }
+          generateNextTask();
+        }
+      } else {
         emptyQueueCount = 0;
-        generateNextTask();
       }
-    } else {
-      emptyQueueCount = 0;
-    }
+    } catch (e) {}
   }, 5000);
+}
+
+function stopAutoCTO() {
+  if (intervalRef) {
+    clearInterval(intervalRef);
+    intervalRef = null;
+  }
 }
 
 function generateNextTask() {
   try {
     const state = loadState();
     state.autoScanCycle++;
-    const project = config.PROJECTS[(state.autoScanCycle - 1) % config.PROJECTS.length];
-    const projectDir = path.join(config.MEKONG_DIR, 'apps', project);
 
+    // Pick project, skipping the last-generated one to avoid consecutive repeats
+    let projectIdx = (state.autoScanCycle - 1) % config.PROJECTS.length;
+    let project = config.PROJECTS[projectIdx];
+    if (project === lastGeneratedProject && config.PROJECTS.length > 1) {
+      state.autoScanCycle++;
+      projectIdx = (state.autoScanCycle - 1) % config.PROJECTS.length;
+      project = config.PROJECTS[projectIdx];
+    }
+
+    const projectDir = path.join(config.MEKONG_DIR, 'apps', project);
     if (!fs.existsSync(projectDir)) {
       saveState(state);
       return;
@@ -53,12 +77,13 @@ function generateNextTask() {
       const filename = `mission_${project.replace(/-/g, '_')}_auto_${nextTask.id}.txt`;
       fs.writeFileSync(path.join(config.WATCH_DIR, filename), `${nextTask.cmd} in ${project}`);
       state.completedTasks[project].push(nextTask.id);
-      log(`🧠 AUTO-CTO: Generated ${nextTask.id} for ${project}`);
+      lastGeneratedProject = project;
+      log(`AUTO-CTO: Generated ${nextTask.id} for ${project}`);
       saveState(state);
     }
   } catch (error) {
-    log(`⚠️ AUTO-CTO error: ${error.message}`);
+    log(`AUTO-CTO error: ${error.message}`);
   }
 }
 
-module.exports = { startAutoCTO };
+module.exports = { startAutoCTO, stopAutoCTO };

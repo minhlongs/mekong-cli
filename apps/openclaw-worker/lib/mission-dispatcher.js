@@ -50,7 +50,6 @@ function buildPrompt(taskContent) {
 async function executeTask(taskContent, taskFile) {
   const projectDir = detectProjectDir(taskContent);
   const prompt = buildPrompt(taskContent);
-  log(`PROJECT: ${projectDir}`);
   log(`PROMPT: ${prompt.slice(0, 120)}...`);
 
   return runMission(prompt, projectDir, config.MISSION_TIMEOUT_MS);

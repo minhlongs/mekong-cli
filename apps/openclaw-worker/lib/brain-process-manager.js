@@ -1,11 +1,13 @@
 /**
- * Brain Process Manager v2026.2.9 — Dual-mode, dual-engine CC CLI brain
+ * Brain Process Manager v2026.3.0 — Tri-mode, dual-engine CC CLI brain
  *
  * Engines: 'antigravity' (port 8080, default) or 'qwen' (port 8081, Qwen Bridge)
  *   Set TOM_HUM_ENGINE=qwen to use Qwen models via DashScope.
  *
- * Modes: 'direct' (claude -p, default) or 'tmux' (persistent session, fallback)
- *   Set TOM_HUM_BRAIN_MODE=tmux to activate tmux mode.
+ * Modes:
+ *   'interactive' (default) — expect PTY → Claude Code interactive UI, ClaudeKit agents work
+ *   'direct'               — claude -p per mission, headless
+ *   'tmux'                 — persistent tmux session, fallback
  *
  * Recovery: model failover on HTTP 400, context overflow prompt truncation
  *   See lib/mission-recovery.js for patterns and constants.
@@ -183,6 +185,221 @@ async function runMissionDirect(prompt, projectDir, timeoutMs) {
 }
 
 // =============================================================================
+// INTERACTIVE MODE — expect PTY → Claude Code official interactive UI (default)
+// Fixes applied from CC CLI audit: shutdown flag, respawn rate limit,
+// crash-aware promise, model passthrough
+// =============================================================================
+
+let expectProc = null;
+let shuttingDown = false;       // Issue #1: prevent respawn after kill
+let lastSpawnTime = 0;          // Issue #2: rapid failure detection
+let rapidFailCount = 0;         // Issue #2: consecutive rapid crash counter
+let activeMissionReject = null; // Issue #4: crash-aware promise resolution
+let activeMissionStart = 0;     // N1 fix: track mission start for elapsed calc in crash handler
+
+function spawnBrainInteractive() {
+  const proxyPort = getProxyPort();
+  const apiKey = getApiKey();
+  const modelName = getModelName();
+  lastSpawnTime = Date.now();
+  log(`BRAIN v2026.4.0: Interactive mode (VISIBLE tmux) | Engine: ${getEngineLabel()}`);
+  log('Watch live: tmux attach -t tom-hum-brain');
+
+  // Clean up stale files
+  try { fs.unlinkSync(config.MISSION_FILE); } catch (e) {}
+  try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
+
+  // Kill any existing tmux session
+  try { execSync('tmux kill-session -t tom-hum-brain 2>/dev/null'); } catch (e) {}
+
+  // Build the expect command
+  const expectCmd = [
+    'expect',
+    config.EXPECT_SCRIPT,
+    config.MEKONG_DIR,
+    config.LOG_FILE,
+    String(proxyPort),
+    apiKey,
+    modelName,
+  ].join(' ');
+
+  // Spawn expect inside a VISIBLE tmux session
+  // User can `tmux attach -t tom-hum-brain` to watch CC CLI live
+  try {
+    execSync(`tmux new-session -d -s tom-hum-brain -x ${config.TMUX_WIDTH} -y ${config.TMUX_HEIGHT} '${expectCmd}'`, {
+      cwd: config.MEKONG_DIR,
+      timeout: 10000,
+    });
+  } catch (err) {
+    log(`FATAL: Failed to create tmux session: ${err.message}`);
+    return;
+  }
+
+  // Monitor the tmux session for death — poll every 5s
+  const monitorInterval = setInterval(() => {
+    let alive = false;
+    try {
+      execSync('tmux has-session -t tom-hum-brain 2>/dev/null');
+      alive = true;
+    } catch (e) {}
+
+    if (!alive) {
+      clearInterval(monitorInterval);
+      const uptime = Date.now() - lastSpawnTime;
+
+      // Issue #4: resolve any in-flight mission promise
+      if (activeMissionReject) {
+        activeMissionReject({ success: false, result: 'brain_crashed', elapsed: Math.round((Date.now() - activeMissionStart) / 1000) });
+        activeMissionReject = null;
+        activeMissionStart = 0;
+      }
+
+      // Issue #1: don't respawn during shutdown
+      if (shuttingDown) {
+        log('Tmux brain session ended. Shutdown — no respawn.');
+        return;
+      }
+
+      // Issue #2: rate-limit rapid failures
+      if (uptime < 10000) {
+        rapidFailCount++;
+        if (rapidFailCount >= 5) {
+          log('BRAIN RESPAWN HALTED: 5 rapid failures in a row.');
+          return;
+        }
+      } else {
+        rapidFailCount = 0;
+      }
+
+      const delay = Math.min(5000 * Math.pow(2, rapidFailCount), 60000);
+      log(`Tmux brain died (uptime=${Math.round(uptime / 1000)}s). Respawning in ${delay / 1000}s...`);
+      setTimeout(() => {
+        if (!shuttingDown) spawnBrainInteractive();
+      }, delay);
+    }
+  }, 5000);
+
+  // Store interval ref for cleanup
+  expectProc = { kill: () => {
+    clearInterval(monitorInterval);
+    try { execSync('tmux kill-session -t tom-hum-brain 2>/dev/null'); } catch (e) {}
+  }};
+
+  log('Tmux session "tom-hum-brain" created');
+}
+
+function killBrainInteractive() {
+  shuttingDown = true; // Issue #1: signal intentional shutdown
+  if (expectProc) {
+    try { expectProc.kill('SIGTERM'); } catch (e) {}
+    expectProc = null;
+  }
+}
+
+function isBrainAliveInteractive() {
+  if (!expectProc) return false;
+  try {
+    execSync('tmux has-session -t tom-hum-brain 2>/dev/null');
+    return true;
+  } catch (e) { return false; }
+}
+
+async function runMissionInteractive(prompt, projectDir, timeoutMs) {
+  missionCount++;
+  const num = missionCount;
+  const startTime = Date.now();
+
+  // Respawn if brain died
+  if (!isBrainAliveInteractive()) {
+    log(`Brain dead before mission #${num} — respawning`);
+    shuttingDown = false; // Reset shutdown flag for new spawn
+    spawnBrainInteractive();
+    await sleep(15000); // Wait for CC CLI to boot
+  }
+
+  log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
+  log(`PROJECT: ${projectDir} | MODE: interactive | ENGINE: ${getEngineLabel()}`);
+
+  // Clean done file before dispatching
+  try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
+
+  // Prepend cd command if not in default dir
+  let fullPrompt = prompt;
+  if (projectDir !== config.MEKONG_DIR) {
+    fullPrompt = `cd ${projectDir} && ${prompt}`;
+  }
+
+  // Write mission file — expect script will pick it up
+  fs.writeFileSync(config.MISSION_FILE, fullPrompt);
+  log(`Mission file written → ${config.MISSION_FILE}`);
+
+  // Wait for done signal OR brain crash
+  return new Promise((resolve) => {
+    activeMissionReject = resolve;
+    activeMissionStart = startTime;
+
+    const heartbeat = setInterval(() => {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      log(`Mission #${num} working — ${elapsed}s`);
+    }, 60000);
+
+    const cleanup = () => {
+      clearInterval(heartbeat);
+      clearTimeout(timer);
+      clearInterval(healthPoll);
+      fs.unwatchFile(config.DONE_FILE); // Stop fs.watchFile listener
+      activeMissionReject = null;
+      activeMissionStart = 0;
+    };
+
+    // Shared handler: check done file, resolve promise if found
+    let resolved = false;
+    const checkDoneFile = () => {
+      if (resolved) return;
+      try {
+        if (fs.existsSync(config.DONE_FILE)) {
+          const signal = fs.readFileSync(config.DONE_FILE, 'utf-8').trim();
+          resolved = true;
+          cleanup();
+          try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          const success = signal !== 'timeout';
+          log(`${success ? 'COMPLETE' : 'TIMEOUT'}: Mission #${num} (${elapsed}s, signal=${signal})`);
+          resolve({ success, result: success ? 'done' : 'timeout', elapsed });
+        }
+      } catch (e) {}
+    };
+
+    const timer = setTimeout(() => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      log(`TIMEOUT: Mission #${num} exceeded ${Math.round(timeoutMs / 1000)}s`);
+      resolve({ success: false, result: 'timeout', elapsed: Math.round((Date.now() - startTime) / 1000) });
+    }, timeoutMs);
+
+    // Primary: fs.watchFile detects done file creation within ~500ms
+    fs.watchFile(config.DONE_FILE, { interval: 500 }, (curr) => {
+      if (curr.size > 0) checkDoneFile();
+    });
+
+    // Fallback: 3s poll for brain health check + backup done detection
+    const healthPoll = setInterval(() => {
+      if (resolved) return;
+      if (!isBrainAliveInteractive()) {
+        resolved = true;
+        cleanup();
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        log(`BRAIN CRASHED: Mission #${num} aborted (${elapsed}s)`);
+        resolve({ success: false, result: 'brain_crashed', elapsed });
+        return;
+      }
+      checkDoneFile(); // Backup in case fs.watchFile missed the event
+    }, 3000);
+  });
+}
+
+// =============================================================================
 // TMUX MODE — persistent visible session (fallback)
 // =============================================================================
 
@@ -277,15 +494,130 @@ async function runMissionTmux(prompt, projectDir, timeoutMs) {
 }
 
 // =============================================================================
+// EXTERNAL MODE — brain managed in a separate visible terminal
+// task-watcher writes prompt to MISSION_FILE, polls DONE_FILE for completion.
+// The expect script (tom-hum-dispatch.exp) handles actual CC CLI interaction.
+// =============================================================================
+
+function isBrainAliveExternal() {
+  try { execSync('pgrep -f "expect.*tom-hum-dispatch"', { timeout: 3000 }); return true; }
+  catch (e) { return false; }
+}
+
+async function runMissionExternal(prompt, projectDir, timeoutMs) {
+  missionCount++;
+  const num = missionCount;
+  const startTime = Date.now();
+
+  if (!isBrainAliveExternal()) {
+    log(`Brain not running (pgrep tom-hum-dispatch failed) — cannot dispatch mission #${num}`);
+    return { success: false, result: 'brain_not_running', elapsed: 0 };
+  }
+
+  log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
+  log(`PROJECT: ${projectDir} | MODE: external`);
+
+  // Clean done file before dispatching
+  try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
+
+  // Write mission file — expect script picks it up
+  let fullPrompt = prompt;
+  if (projectDir !== config.MEKONG_DIR) {
+    fullPrompt = `cd ${projectDir} && ${prompt}`;
+  }
+  fs.writeFileSync(config.MISSION_FILE, fullPrompt);
+
+  // Poll for done signal with timeout
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const heartbeat = setInterval(() => {
+      const elapsed = Math.round((Date.now() - startTime) / 1000);
+      log(`Mission #${num} working — ${elapsed}s`);
+    }, 60000);
+
+    const cleanup = () => {
+      clearInterval(heartbeat);
+      clearTimeout(timer);
+      clearInterval(poll);
+    };
+
+    const timer = setTimeout(() => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      log(`TIMEOUT: Mission #${num} exceeded ${Math.round(timeoutMs / 1000)}s`);
+      resolve({ success: false, result: 'timeout', elapsed: Math.round((Date.now() - startTime) / 1000) });
+    }, timeoutMs);
+
+    const poll = setInterval(() => {
+      if (resolved) return;
+
+      // Check if brain died mid-mission
+      if (!isBrainAliveExternal()) {
+        resolved = true;
+        cleanup();
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        log(`BRAIN DIED: Mission #${num} aborted (${elapsed}s)`);
+        resolve({ success: false, result: 'brain_died', elapsed });
+        return;
+      }
+
+      // Check for done file
+      try {
+        if (fs.existsSync(config.DONE_FILE)) {
+          const signal = fs.readFileSync(config.DONE_FILE, 'utf-8').trim();
+          resolved = true;
+          cleanup();
+          try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
+          const elapsed = Math.round((Date.now() - startTime) / 1000);
+          const success = signal !== 'timeout';
+          log(`${success ? 'COMPLETE' : 'TIMEOUT'}: Mission #${num} (${elapsed}s, signal=${signal})`);
+          resolve({ success, result: success ? 'done' : 'timeout', elapsed });
+        }
+      } catch (e) {}
+    }, config.POLL_INTERVAL_MS);
+  });
+}
+
+// =============================================================================
 // Mode dispatch — export unified API
 // =============================================================================
 
-const isDirect = config.BRAIN_MODE === 'direct';
+const modeMap = {
+  interactive: {
+    spawnBrain: spawnBrainInteractive,
+    killBrain: killBrainInteractive,
+    isBrainAlive: isBrainAliveInteractive,
+    runMission: runMissionInteractive,
+  },
+  direct: {
+    spawnBrain: spawnBrainDirect,
+    killBrain: killBrainDirect,
+    isBrainAlive: isBrainAliveDirect,
+    runMission: runMissionDirect,
+  },
+  tmux: {
+    spawnBrain: spawnBrainTmux,
+    killBrain: killBrainTmux,
+    isBrainAlive: isBrainAliveTmux,
+    runMission: runMissionTmux,
+  },
+  external: {
+    // Brain runs in a VISIBLE terminal — task-watcher does NOT spawn/kill it
+    spawnBrain: () => { log('BRAIN MODE: external — CC CLI runs in visible terminal. No spawn needed.'); },
+    killBrain: () => { log('BRAIN MODE: external — CC CLI managed externally. No kill.'); },
+    isBrainAlive: isBrainAliveExternal,
+    runMission: runMissionExternal,
+  },
+};
+
+const active = modeMap[config.BRAIN_MODE] || modeMap.external;
 
 module.exports = {
-  spawnBrain:    isDirect ? spawnBrainDirect   : spawnBrainTmux,
-  killBrain:     isDirect ? killBrainDirect    : killBrainTmux,
-  isBrainAlive:  isDirect ? isBrainAliveDirect : isBrainAliveTmux,
-  runMission:    isDirect ? runMissionDirect    : runMissionTmux,
+  spawnBrain:   active.spawnBrain,
+  killBrain:    active.killBrain,
+  isBrainAlive: active.isBrainAlive,
+  runMission:   active.runMission,
   log,
 };
