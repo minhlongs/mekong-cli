@@ -20,7 +20,7 @@ const { startAutoCTO } = require('./lib/auto-cto-pilot');
 const { startCooling } = require('./lib/m1-cooling-daemon');
 
 // --- Boot ---
-log('--- MISSION CONTROL v22.0 ONLINE (Modular Brain) ---');
+log('--- MISSION CONTROL v25.0 ONLINE (Dual-Mode Brain) ---');
 
 spawnBrain();
 startWatching();

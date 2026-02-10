@@ -1,15 +1,15 @@
-# 🦞 OpenClaw Worker — TÔM HÙM Autonomous Daemon
+# OpenClaw Worker — TOM HUM Autonomous Daemon
 
-> **第九篇 行軍 (Xing Jun)** — On the march, seek high ground and reliable water sources
+> **Chapter 9 Xing Jun** — On the march, seek high ground and reliable water sources
 >
 > This file governs CC CLI behavior ONLY when working inside `apps/openclaw-worker/`.
 > Inherits from root `CLAUDE.md` (Constitution) and `~/.claude/CLAUDE.md` (Global).
 
 ## Identity
 
-**Codename:** Tôm Hùm (Lobster)
-**Role:** General / Đại Tướng — autonomous task dispatch daemon
-**ĐIỀU 54:** Tôm Hùm Tự Trị (Autonomous Self-Governance)
+**Codename:** Tom Hum (Lobster)
+**Role:** General / Dai Tuong — autonomous task dispatch daemon
+**DIEU 54:** Tom Hum Tu Tri (Autonomous Self-Governance)
 
 ## Tech Stack
 
@@ -17,22 +17,23 @@
 |-----------|------------|
 | Runtime | Node.js |
 | Language | JavaScript (CommonJS) |
-| Brain Control | Tmux session with interactive CC CLI (v24.0) |
+| Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v25.0) |
 | Proxy | Antigravity Proxy (port 8080) |
 | Model | claude-opus-4-6-thinking |
 
-## Architecture (v24.0 Tmux Visible Brain)
+## Architecture (v25.0 Dual-Mode Brain)
 
 ```
 apps/openclaw-worker/
 ├── task-watcher.js              # Thin orchestrator: boot + shutdown (entry point)
 ├── config.js                    # All constants, paths, env vars, project registry
 └── lib/
-    ├── brain-process-manager.js # Tmux-based CC CLI brain (v24.0: visible session)
+    ├── brain-process-manager.js # Dual-mode brain (direct + tmux) v25.0
     ├── mission-dispatcher.js    # Prompt building, project routing, runMission()
     ├── task-queue.js            # File watching (fs.watch + poll), FIFO queue
     ├── auto-cto-pilot.js        # Self-CTO: generates Binh Phap quality tasks
-    └── m1-cooling-daemon.js     # M1 thermal/RAM protection
+    ├── m1-cooling-daemon.js     # M1 thermal/RAM protection
+    └── live-mission-viewer.js   # Real-time colored log viewer for VS Code terminal
 ```
 
 ## Key Files & Contracts
@@ -43,20 +44,34 @@ apps/openclaw-worker/
 - `PROCESSED_DIR` — `tasks/processed/` for completed missions
 - `TASK_PATTERN` — `/^mission_.*\.txt$/` (file naming convention)
 - `MISSION_TIMEOUT_MS` — 45 minutes per mission
-- `TMUX_SESSION` — Tmux session name (`tom-hum-brain`)
+- `BRAIN_MODE` — `'direct'` (default) or `'tmux'` (fallback), set via `TOM_HUM_BRAIN_MODE`
+- `TMUX_SESSION` — Tmux session name (only used in tmux mode)
 - `PROJECTS` — Array of sub-project names for routing
 
-### Execution Protocol (v24.0: Tmux Visible Brain)
-- CC CLI runs inside tmux session `tom-hum-brain` (user can `tmux attach` to watch)
-- Missions injected via `tmux send-keys -l` (literal mode for special chars)
-- Completion detected via `tmux capture-pane -p` polling for prompt return
-- Debounce: prompt must persist 2s to confirm idle (not mid-output)
-- CC CLI stays alive across missions (persistent interactive session)
-- Brain auto-respawns if tmux session dies before next mission
+### Brain Modes (v25.0)
 
-### Legacy: Expect Brain + claude -p (DEPRECATED)
-- `scripts/tom-hum-persistent-dispatch.exp` — expect brain, broken by Ink TUI
-- `claude -p` direct spawn — invisible, no user observation possible
+#### Mode 1: Direct (DEFAULT) — `claude -p`
+- Each mission runs: `claude -p "<prompt>" --model X --dangerously-skip-permissions`
+- stdin set to `'ignore'` (critical: piped stdin causes hang)
+- All ClaudeKit agents, tools, and skills fully supported
+- Output streamed to log file in real-time
+- User watches via: `node lib/live-mission-viewer.js` in VS Code terminal
+- No persistent session — fresh process per mission
+
+#### Mode 2: Tmux (FALLBACK) — persistent session
+- CC CLI runs inside tmux session `tom-hum-brain`
+- User can `tmux attach -t tom-hum-brain` to watch
+- Missions injected via `tmux send-keys -l`
+- Completion detected via `tmux capture-pane -p` polling
+- Set via: `TOM_HUM_BRAIN_MODE=tmux node task-watcher.js`
+
+### Live Mission Viewer
+Run in any terminal (VS Code recommended) to watch missions:
+```bash
+node apps/openclaw-worker/lib/live-mission-viewer.js
+```
+- Colored output: cyan=mission start, green=complete, red=error, yellow=timeout
+- Shows last 20 log lines on start, then live-tails new output
 
 ## Development Rules (Domain-Specific)
 
@@ -66,14 +81,20 @@ apps/openclaw-worker/
 
 ### Modifying the Brain
 - Changes to `brain-process-manager.js` require testing the full mission cycle
-- Test by writing a `tasks/mission_test_*.txt` file and watching logs
-- Verify tmux session: `tmux has-session -t tom-hum-brain && echo OK`
-- Watch CC CLI live: `tmux attach -t tom-hum-brain`
+- Test direct mode:
+  ```bash
+  node -e "
+    const { spawnBrain, runMission } = require('./lib/brain-process-manager');
+    spawnBrain();
+    runMission('Reply with: TEST_OK', '.', 60000).then(r => console.log(JSON.stringify(r)));
+  "
+  ```
+- Test tmux mode: `TOM_HUM_BRAIN_MODE=tmux node task-watcher.js`
 
 ### Adding New Modules
 - Create in `lib/` with kebab-case naming
 - Export from module, import in `task-watcher.js`
-- Keep modules < 100 lines (thin, focused)
+- Keep modules < 200 lines
 
 ### Testing
 - No automated test suite (daemon process, not unit-testable)
@@ -82,7 +103,7 @@ apps/openclaw-worker/
 
 ## Quality Gates (Binh Phap)
 
-- All missions must use `/cook` or `/binh-phap` prefix (ĐIỀU 47)
+- All missions must use `/cook` or `/binh-phap` prefix (DIEU 47)
 - Sequential processing only (no parallel missions)
 - M1 cooling daemon kills resource hogs every 90s
 - Auto-CTO generates quality tasks when queue empty for 5min
