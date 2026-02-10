@@ -341,6 +341,20 @@ skill-seekers github --repo user/repo              # GitHub repo → skill
 skill-seekers install --config configs/X.json       # End-to-end pipeline
 ```
 
+### CTO Framework — Technical Co-Founder Phases
+
+5-phase execution framework mapping skills to delivery stages:
+
+| Phase | Chapter | Key Skills | Actions |
+|-------|---------|------------|---------|
+| Discovery | 始計 | cellcog, deep-research, scout, research | Deep questioning, challenge assumptions, must-have vs add-later |
+| Planning | 謀攻 | planning, brainstorm, agent-builder | V1 proposal, plain language spec, complexity estimation |
+| Building | 軍爭 | cook, coding-agent, cc-godmode | Staged build, continuous testing, decision checkpoints |
+| Polish | 兵勢 | code-review, heimdall-security, web-testing | Edge cases, responsive, professional finish |
+| Handoff | 火攻 | devops, git, skill-seekers, docs-seeker | Deploy, documentation, V2 roadmap |
+
+Full skills registry: `docs/SKILLS_REGISTRY.md`
+
 ### Mekong Agents
 
 | Agent | Operations |
