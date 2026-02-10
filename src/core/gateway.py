@@ -18,7 +18,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from src.core.llm_client import get_client
-from src.core.orchestrator import RecipeOrchestrator
+from src.core.orchestrator import RecipeOrchestrator, OrchestrationResult
 from src.core.gateway_config import DEFAULT_PRESETS, GatewayConfig, load_config
 from src.core.gateway_dashboard import DASHBOARD_HTML
 from src.core.swarm import SwarmNode, SwarmRegistry
@@ -229,7 +229,7 @@ def verify_token(token: str) -> None:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def build_human_summary(result) -> HumanSummary:
+def build_human_summary(result: OrchestrationResult) -> HumanSummary:
     """Generate a non-dev friendly summary from orchestration result."""
     status = result.status.value
     rate = result.success_rate
@@ -266,7 +266,7 @@ def _scan_projects() -> List[ProjectInfo]:
     return projects
 
 
-def _build_orchestrator():
+def _build_orchestrator() -> RecipeOrchestrator:
     """Create a configured RecipeOrchestrator instance."""
     llm_client = get_client()
     return RecipeOrchestrator(
@@ -276,7 +276,7 @@ def _build_orchestrator():
     )
 
 
-def _build_cmd_response(result, goal: str, orchestrator) -> CommandResponse:
+def _build_cmd_response(result: OrchestrationResult, goal: str, orchestrator: RecipeOrchestrator) -> CommandResponse:
     """Build CommandResponse from orchestration result."""
     steps = [
         StepSummary(
@@ -404,6 +404,7 @@ def create_app() -> FastAPI:
                 future.result(timeout=10)
 
             def run_goal():
+                """Execute the orchestration pipeline in a worker thread."""
                 orchestrator = _build_orchestrator()
                 result = orchestrator.run_from_goal(
                     goal, progress_callback=progress_callback
@@ -500,11 +501,13 @@ def create_app() -> FastAPI:
 
     @gateway.on_event("startup")
     async def _startup_bot():
+        """Start the Telegram bot polling on application startup."""
         if _bot:
             asyncio.create_task(_bot.start())
 
     @gateway.on_event("shutdown")
     async def _shutdown_bot():
+        """Gracefully stop the Telegram bot on application shutdown."""
         if _bot:
             await _bot.stop()
 

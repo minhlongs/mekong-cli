@@ -5,11 +5,23 @@ import { withdrawalService, WithdrawalRequest } from '../../services/withdrawal-
 import { Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { formatVND } from '../../utils/format';
 
+/**
+ * Displays a scrollable list of past withdrawal requests with status badges.
+ * Automatically refreshes when a 'withdrawal-created' custom event is dispatched.
+ *
+ * @returns A card containing the transaction history or a loading/empty state.
+ *
+ * @example
+ * ```tsx
+ * <WithdrawalHistory />
+ * ```
+ */
 export const WithdrawalHistory: React.FC = () => {
   const { t } = useTranslation();
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /** Fetches the user's withdrawal history from the API and updates local state. */
   const fetchHistory = async () => {
     setLoading(true);
     try {
@@ -34,6 +46,12 @@ export const WithdrawalHistory: React.FC = () => {
     };
   }, []);
 
+  /**
+   * Returns a styled status badge element for the given withdrawal status.
+   *
+   * @param status - The withdrawal status string ('completed', 'rejected', 'cancelled', or pending).
+   * @returns A JSX badge element with appropriate color and icon.
+   */
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':

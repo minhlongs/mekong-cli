@@ -5,7 +5,7 @@ Coordinates Plan → Execute → Verify workflow.
 Implements ClaudeKit DNA's triadic pattern.
 """
 
-from typing import Optional, Any, List, Dict, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -82,7 +82,7 @@ class RecipeOrchestrator:
         llm_client: Optional["LLMClient"] = None,
         strict_verification: bool = True,
         enable_rollback: bool = True,
-    ):
+    ) -> None:
         """
         Initialize orchestrator.
 
@@ -112,7 +112,7 @@ class RecipeOrchestrator:
         self,
         goal: str,
         context: Optional[PlanningContext] = None,
-        progress_callback=None,
+        progress_callback: Optional[Callable[..., None]] = None,
     ) -> OrchestrationResult:
         """
         Execute complete workflow from high-level goal.
@@ -122,6 +122,7 @@ class RecipeOrchestrator:
         Args:
             goal: User's high-level objective
             context: Optional planning context
+            progress_callback: Optional callback for step progress
 
         Returns:
             OrchestrationResult with complete workflow results
@@ -210,7 +211,7 @@ class RecipeOrchestrator:
         return result
 
     def run_from_recipe(
-        self, recipe: Recipe, progress_callback=None,
+        self, recipe: Recipe, progress_callback: Optional[Callable[..., None]] = None,
     ) -> OrchestrationResult:
         """
         Execute existing recipe with verification.

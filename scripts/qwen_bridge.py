@@ -4,7 +4,7 @@
 Port: 8081
 
 Converts Anthropic Messages API → OpenAI Chat Completions API
-specifically for Qwen Models.
+specifically for Qwen Models. Supports multi-key Load Balancing.
 """
 
 import os
@@ -18,18 +18,37 @@ app = Flask(__name__)
 
 # --- CONFIG ---
 PORT = 8081
-DASHSCOPE_API_KEY = os.environ.get(
-    "DASHSCOPE_API_KEY", "sk-6219c93290f14b32b047342ca8b0bea9"
-)  # Default from settings
+API_KEYS = [
+    "sk-6219c93290f14b32b047342ca8b0bea9",
+    "sk-c397f4b713e6400e96c18e8c07ffeaef",
+]
+
+# Merge any env key into the pool if it's not already there
+env_key = os.environ.get("DASHSCOPE_API_KEY")
+if env_key and env_key not in API_KEYS:
+    API_KEYS.append(env_key)
+
 DASHSCOPE_BASE_URL = (
     "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
 )
 
+# Rotation index
+_current_key_idx = 0
+
+# MODEL MAP (DashScope Compatible Mode names)
+# If using dashscope-intl.aliyuncs.com/compatible-mode/v1, use these:
 MODEL_MAP = {
-    "qwen-coder-plus": "qwen2.5-coder-32b-instruct",
-    "claude-3-5-sonnet-20241022": "qwen2.5-coder-32b-instruct",
-    "claude-sonnet-4-20250514": "qwen2.5-coder-32b-instruct",
+    "qwen-coder-plus": "qwen-plus",  # Mapping to qwen-plus as more reliable fallback
+    "claude-3-5-sonnet-20241022": "qwen-max",
+    "claude-sonnet-4-20250514": "qwen-plus",
 }
+
+
+def get_next_key():
+    global _current_key_idx
+    key = API_KEYS[_current_key_idx]
+    _current_key_idx = (_current_key_idx + 1) % len(API_KEYS)
+    return key
 
 
 def anthropic_to_openai(data):
@@ -43,17 +62,53 @@ def anthropic_to_openai(data):
         content = msg.get("content")
 
         if isinstance(content, list):
-            text_parts = [
-                part.get("text", "") for part in content if part.get("type") == "text"
-            ]
-            content = "\n".join(text_parts)
+            # Handle mixed content (text + tool_use) or tool_result
+            new_content = []
+            for part in content:
+                if part.get("type") == "text":
+                    new_content.append(part.get("text", ""))
+                elif part.get("type") == "tool_use":
+                    # Convert tool_use to OpenAI tool_calls
+                    messages.append(
+                        {
+                            "role": "assistant",
+                            "tool_calls": [
+                                {
+                                    "id": part.get("id"),
+                                    "type": "function",
+                                    "function": {
+                                        "name": part.get("name"),
+                                        "arguments": json.dumps(part.get("input")),
+                                    },
+                                }
+                            ],
+                        }
+                    )
+                    # Skip appending to new_content as we handled it via a separate message
+                    # note: this is a simplification; authentic conversion might be more complex
+                    # if text and tool_use are mixed in one turn.
+                    continue
+                elif part.get("type") == "tool_result":
+                    # Convert tool_result to OpenAI tool message
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": part.get("tool_use_id"),
+                            "content": str(part.get("content", "")),
+                        }
+                    )
+                    continue
+
+            if new_content:
+                messages.append({"role": role, "content": "\n".join(new_content)})
+            continue  # handled above
 
         messages.append({"role": role, "content": content})
 
     requested_model = data.get("model", "qwen-coder-plus")
     target_model = MODEL_MAP.get(requested_model, "qwen2.5-coder-32b-instruct")
 
-    return {
+    payload = {
         "model": target_model,
         "messages": messages,
         "stream": data.get("stream", False),
@@ -61,20 +116,63 @@ def anthropic_to_openai(data):
         "temperature": data.get("temperature", 0.7),
     }
 
+    # Convert Tools
+    if "tools" in data:
+        openai_tools = []
+        for tool in data["tools"]:
+            openai_tools.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": tool["name"],
+                        "description": tool.get("description", ""),
+                        "parameters": tool.get("input_schema", {}),
+                    },
+                }
+            )
+        payload["tools"] = openai_tools
+
+    return payload
+
 
 def openai_to_anthropic(oa_res, model):
     choice = oa_res["choices"][0]
+    message_content = []
+
+    # 1. Handle Text Content
+    if choice["message"].get("content"):
+        message_content.append({"type": "text", "text": choice["message"]["content"]})
+
+    # 2. Handle Tool Calls
+    if choice["message"].get("tool_calls"):
+        for tc in choice["message"]["tool_calls"]:
+            message_content.append(
+                {
+                    "type": "tool_use",
+                    "id": tc["id"],
+                    "name": tc["function"]["name"],
+                    "input": json.loads(tc["function"]["arguments"]),
+                }
+            )
+
+    # 3. Handle Finish Reason
+    stop_reason = choice["finish_reason"]
+    if stop_reason == "stop":
+        stop_reason = "end_turn"
+    elif stop_reason == "tool_calls":
+        stop_reason = "tool_use"
+    elif stop_reason == "length":
+        stop_reason = "max_tokens"
+
     usage = oa_res.get("usage", {"prompt_tokens": 0, "completion_tokens": 0})
 
     return {
         "id": f"msg_{uuid.uuid4().hex}",
         "type": "message",
         "role": "assistant",
-        "content": [{"type": "text", "text": choice["message"]["content"]}],
+        "content": message_content,
         "model": model,
-        "stop_reason": "end_turn"
-        if choice["finish_reason"] == "stop"
-        else choice["finish_reason"],
+        "stop_reason": stop_reason,
         "usage": {
             "input_tokens": usage["prompt_tokens"],
             "output_tokens": usage["completion_tokens"],
@@ -94,19 +192,36 @@ def messages():
 
     oa_payload = anthropic_to_openai(data)
 
-    headers = {
-        "Authorization": f"Bearer {DASHSCOPE_API_KEY}",
-        "Content-Type": "application/json",
-    }
+    # Try multiple keys if needed
+    last_error = None
+    for _ in range(len(API_KEYS)):
+        current_key = get_next_key()
+        headers = {
+            "Authorization": f"Bearer {current_key}",
+            "Content-Type": "application/json",
+        }
 
-    res = requests.post(DASHSCOPE_BASE_URL, headers=headers, json=oa_payload)
+        print(f"🐉 Using key: ...{current_key[-4:]}")
+        try:
+            res = requests.post(
+                DASHSCOPE_BASE_URL, headers=headers, json=oa_payload, timeout=60
+            )
+            if res.status_code == 200:
+                return jsonify(openai_to_anthropic(res.json(), data.get("model")))
 
-    if res.status_code != 200:
-        return jsonify(
-            {"error": "Upstream error", "details": res.text}
-        ), res.status_code
+            last_error = res.text
+            print(
+                f"❌ Key ...{current_key[-4:]} failed: {res.status_code} - {res.text}"
+            )
 
-    return jsonify(openai_to_anthropic(res.json(), data.get("model")))
+            if res.status_code not in [429, 401, 403, 404]:
+                break  # Non-retryable error
+
+        except Exception as e:
+            last_error = str(e)
+            print(f"❌ Key ...{current_key[-4:]} error: {e}")
+
+    return jsonify({"error": "All keys failed", "details": last_error}), 502
 
 
 @app.route("/health")

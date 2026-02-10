@@ -1,0 +1,1 @@
+Binh Pháp: Complete WCAG 2.1 AA audit for 84tea - fix alt text, ARIA labels, semantic HTML, color contrast

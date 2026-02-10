@@ -8,7 +8,7 @@ Enables WebSocket subscribers and future Telegram/webhook integrations.
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 
 class EventType(str, Enum):
@@ -47,6 +47,7 @@ class EventBus:
     """In-process publish/subscribe event bus."""
 
     def __init__(self) -> None:
+        """Initialize EventBus with an empty subscriber registry."""
         self._subscribers: Dict[EventType, List[Subscriber]] = {}
 
     def subscribe(self, event_type: EventType, callback: Subscriber) -> None:
@@ -61,7 +62,7 @@ class EventBus:
         if callback in listeners:
             listeners.remove(callback)
 
-    def emit(self, event_type: EventType, data: Dict[str, Any] = None) -> Event:
+    def emit(self, event_type: EventType, data: Optional[Dict[str, Any]] = None) -> Event:
         """Emit an event to all subscribers of that type."""
         event = Event(type=event_type, data=data or {})
         for callback in self._subscribers.get(event_type, []):

@@ -24,14 +24,14 @@ class RegistryIndex:
     path: Path
     author: str = "Unknown"
     version: str = "0.1.0"
-    tags: List[str] = None
+    tags: Optional[List[str]] = None
 
 class RecipeRegistry:
     """
     Manages the collection of available recipes.
     """
 
-    def __init__(self, recipes_dir: Path = Path("recipes")):
+    def __init__(self, recipes_dir: Path = Path("recipes")) -> None:
         self.recipes_dir = recipes_dir
         self.parser = RecipeParser()
         self.console = Console()

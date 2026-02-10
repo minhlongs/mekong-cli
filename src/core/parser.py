@@ -60,7 +60,8 @@ class RecipeParser:
     Another step.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize RecipeParser with compiled regex patterns for headers and frontmatter."""
         self.header_pattern = re.compile(r"^##\s+Step\s+(\d+):\s*(.+)$", re.MULTILINE)
         self.frontmatter_pattern = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 

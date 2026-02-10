@@ -25,7 +25,12 @@ class GitAgent(AgentBase):
     - branch: List or create branches
     """
 
-    def __init__(self, cwd: str = "."):
+    def __init__(self, cwd: str = ".") -> None:
+        """Initialize GitAgent with working directory.
+
+        Args:
+            cwd: Working directory for git commands. Defaults to current dir.
+        """
         super().__init__(name="GitAgent")
         self.cwd = cwd
 
@@ -153,7 +158,7 @@ class GitAgent(AgentBase):
         except Exception as e:
             return Result(task_id=task.id, success=False, output=None, error=str(e))
 
-    def _build_command(self, task: Task) -> list:
+    def _build_command(self, task: Task) -> List[str]:
         """Build git command list from task."""
         cmd_map = {
             "git_status": ["git", "status", "--short"],

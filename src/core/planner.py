@@ -63,7 +63,7 @@ class RecipePlanner:
         "crawler": ["crawl", "scrape", "recipe", "discover"],
     }
 
-    def __init__(self, llm_client: Optional["LLMClient"] = None):
+    def __init__(self, llm_client: Optional["LLMClient"] = None) -> None:
         """
         Initialize planner.
 

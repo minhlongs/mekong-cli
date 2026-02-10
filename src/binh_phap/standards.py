@@ -18,20 +18,47 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 class StandardCheck:
-    def __init__(self, name: str):
+    """Base class for Binh Phap quality standard checks.
+
+    Provides a common interface for running automated quality checks
+    against the codebase with pass/fail results and detail messages.
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initialize StandardCheck.
+
+        Args:
+            name: Human-readable identifier for this check.
+        """
         self.name = name
         self.status = False
         self.details = ""
 
     def run(self) -> bool:
+        """Execute the quality check. Must be overridden by subclasses.
+
+        Returns:
+            True if the check passed, False otherwise.
+
+        Raises:
+            NotImplementedError: If subclass does not implement this method.
+        """
         raise NotImplementedError
 
 
 class RaaSRevenueCheck(StandardCheck):
-    def __init__(self):
+    """Check that RaaS revenue integration is configured via Polar token."""
+
+    def __init__(self) -> None:
+        """Initialize RaaSRevenueCheck with preset name."""
         super().__init__("RaaS Revenue Integration")
 
     def run(self) -> bool:
+        """Verify POLAR_ACCESS_TOKEN is present in environment.
+
+        Returns:
+            True if token is set, False otherwise.
+        """
         # Check POLAR_ACCESS_TOKEN via environment variable (loaded from .env or shell)
         polar_token = os.getenv("POLAR_ACCESS_TOKEN", "")
         if polar_token:
@@ -44,10 +71,18 @@ class RaaSRevenueCheck(StandardCheck):
 
 
 class OSSDocsCheck(StandardCheck):
-    def __init__(self):
+    """Check that project README.md exists and has sufficient content."""
+
+    def __init__(self) -> None:
+        """Initialize OSSDocsCheck with preset name."""
         super().__init__("OSS Documentation")
 
     def run(self) -> bool:
+        """Verify README.md exists at project root and exceeds 100 lines.
+
+        Returns:
+            True if README is present and large enough, False otherwise.
+        """
         # Check if README.md exists and is larger than 100 lines
         try:
             readme_path = PROJECT_ROOT / "README.md"
@@ -70,10 +105,18 @@ class OSSDocsCheck(StandardCheck):
 
 
 class OSSTestCheck(StandardCheck):
-    def __init__(self):
+    """Check that the project test suite passes via pytest."""
+
+    def __init__(self) -> None:
+        """Initialize OSSTestCheck with preset name."""
         super().__init__("OSS Test Suite")
 
     def run(self) -> bool:
+        """Run pytest with quick fail and verify all tests pass.
+
+        Returns:
+            True if all tests pass, False otherwise.
+        """
         # Run pytest and check for success
         try:
             # Running typical pytest command in project root
@@ -96,10 +139,18 @@ class OSSTestCheck(StandardCheck):
 
 
 class TypeSafetyCheck(StandardCheck):
-    def __init__(self):
+    """Check that no untyped 'Any' annotations exist in Python source."""
+
+    def __init__(self) -> None:
+        """Initialize TypeSafetyCheck with preset name."""
         super().__init__("Type Safety (Zero Any)")
 
     def run(self) -> bool:
+        """Grep src/ for ': Any' type annotations and flag violations.
+
+        Returns:
+            True if zero instances found, False otherwise.
+        """
         # Grep for ": any" in src
         try:
             # Search for ': Any' or ':Any' (case-insensitive for robustness)
@@ -126,12 +177,22 @@ class TypeSafetyCheck(StandardCheck):
 
 
 def get_raas_standards() -> Dict[str, StandardCheck]:
+    """Return RaaS-specific quality checks (revenue integration).
+
+    Returns:
+        Dict mapping check keys to StandardCheck instances.
+    """
     return {
         "revenue": RaaSRevenueCheck(),
     }
 
 
 def get_oss_standards() -> Dict[str, StandardCheck]:
+    """Return open-source quality checks (docs, tests, type safety).
+
+    Returns:
+        Dict mapping check keys to StandardCheck instances.
+    """
     return {
         "docs": OSSDocsCheck(),
         "tests": OSSTestCheck(),
@@ -140,6 +201,13 @@ def get_oss_standards() -> Dict[str, StandardCheck]:
 
 
 def get_anima_standards() -> Dict[str, StandardCheck]:
+    """Return Anima 119 pharma-ecommerce quality checks.
+
+    Lazily imports from anima_standards module to avoid circular deps.
+
+    Returns:
+        Dict mapping check keys to StandardCheck instances.
+    """
     from .anima_standards import get_anima_standards as get_anima
 
     return get_anima()

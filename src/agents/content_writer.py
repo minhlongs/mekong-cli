@@ -5,14 +5,15 @@ Specialized agent for generating SEO-optimized content from keywords.
 """
 
 from typing import List
-from ..core.agent_base import AgentBase, Task, Result, TaskStatus
+from ..core.agent_base import AgentBase, Task, Result
 
 class ContentWriter(AgentBase):
     """
     Agent responsible for writing SEO articles based on keywords.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize ContentWriter agent for SEO content generation."""
         super().__init__(name="ContentWriter")
 
     def plan(self, input_data: str) -> List[Task]:

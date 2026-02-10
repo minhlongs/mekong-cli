@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class SessionStatus(str, Enum):
@@ -57,7 +57,7 @@ class CCSession:
         """Last 10 lines of output."""
         return "\n".join(self.output_buffer[-10:])
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize for API/Telegram responses."""
         return {
             "id": self.id,
@@ -83,7 +83,13 @@ class CCSpawner:
     DEFAULT_CWD = str(Path.home() / "mekong-cli")
     DEFAULT_TIMEOUT = 600  # 10 minutes
 
-    def __init__(self, cwd: Optional[str] = None, timeout: int = DEFAULT_TIMEOUT):
+    def __init__(self, cwd: Optional[str] = None, timeout: int = DEFAULT_TIMEOUT) -> None:
+        """Initialize CCSpawner with working directory and timeout.
+
+        Args:
+            cwd: Working directory for CC CLI sessions. Defaults to ~/mekong-cli.
+            timeout: Default timeout in seconds for each session.
+        """
         self.cwd = cwd or self.DEFAULT_CWD
         self.timeout = timeout
         self._sessions: Dict[str, CCSession] = {}
@@ -163,7 +169,8 @@ class CCSpawner:
             session.pid = process.pid
 
             # Read output line by line
-            async def read_output():
+            async def read_output() -> None:
+                """Read stdout lines from the CC CLI process into the session buffer."""
                 while True:
                     line = await process.stdout.readline()
                     if not line:

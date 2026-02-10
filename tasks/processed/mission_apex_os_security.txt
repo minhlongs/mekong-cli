@@ -1,0 +1,1 @@
+Binh Pháp: Implement security headers (CSP, HSTS, X-Frame-Options) and clean up i18n missing translation keys in apex-os

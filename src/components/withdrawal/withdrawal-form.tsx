@@ -16,6 +16,19 @@ interface WithdrawalFormProps {
   onSuccess?: () => void;
 }
 
+/**
+ * Renders a validated withdrawal request form with bank selection, amount input,
+ * and account details. Uses Zod schema validation and react-hook-form.
+ *
+ * @param props - The component props.
+ * @param props.onSuccess - Optional callback invoked after a successful withdrawal submission.
+ * @returns A form card with amount, bank, account number, and account name fields.
+ *
+ * @example
+ * ```tsx
+ * <WithdrawalForm onSuccess={() => refreshHistory()} />
+ * ```
+ */
 export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
   const { user, refreshUser } = useStore();

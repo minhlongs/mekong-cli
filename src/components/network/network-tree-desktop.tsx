@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import Tree from 'react-d3-tree';
 import { NodeCard, D3NodeDatum } from './node-card';
 import { useTheme } from '../../context/ThemeContext';
-import { CustomNodeElementProps } from 'react-d3-tree';
+import { CustomNodeElementProps, RawNodeDatum } from 'react-d3-tree';
 import { ZoomIn, ZoomOut, Move } from 'lucide-react';
 
 
@@ -11,6 +11,19 @@ interface NetworkTreeDesktopProps {
   data: D3NodeDatum;
 }
 
+/**
+ * Renders an interactive D3-based tree visualization of the referral network
+ * for desktop viewports. Supports zoom, drag, and node expand/collapse.
+ *
+ * @param props - The component props.
+ * @param props.data - The root D3 node datum representing the network tree.
+ * @returns A full-width tree visualization with zoom controls and a rank legend.
+ *
+ * @example
+ * ```tsx
+ * <NetworkTreeDesktop data={d3TreeData} />
+ * ```
+ */
 export const NetworkTreeDesktop: React.FC<NetworkTreeDesktopProps> = ({ data }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -75,7 +88,7 @@ export const NetworkTreeDesktop: React.FC<NetworkTreeDesktopProps> = ({ data }) 
       <div ref={containerRef} className="w-full h-full">
         {dimensions.width > 0 && (
           <Tree
-            data={data as any}
+            data={data as unknown as RawNodeDatum}
             translate={translate}
             nodeSize={{ x: 250, y: 150 }}
             pathFunc="step"

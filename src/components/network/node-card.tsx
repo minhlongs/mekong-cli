@@ -8,7 +8,7 @@ export interface D3NodeDatum {
     rank?: string;
     avatar?: string;
     totalSales?: number;
-    [key: string]: any;
+    [key: string]: string | number | undefined;
   };
   children?: D3NodeDatum[];
   __rd3t: {
@@ -23,12 +23,31 @@ interface NodeCardProps {
 }
 
 
+/**
+ * Renders a single node card within the D3 tree visualization.
+ * Displays avatar or rank icon, name, rank badge, and total sales.
+ *
+ * @param props - The component props.
+ * @param props.nodeDatum - The D3 node datum containing name, attributes, and collapse state.
+ * @param props.toggleNode - Callback to expand or collapse the node's children.
+ * @returns An SVG foreignObject containing a styled card for the tree node.
+ *
+ * @example
+ * ```tsx
+ * <NodeCard nodeDatum={d3Node} toggleNode={() => toggle()} />
+ * ```
+ */
 export const NodeCard: React.FC<NodeCardProps> = ({ nodeDatum, toggleNode }) => {
   const attributes = nodeDatum.attributes || {};
   const isExpanded = nodeDatum.__rd3t.collapsed === false;
   const hasChildren = nodeDatum.children && nodeDatum.children.length > 0;
 
-  // Rank badge configuration
+  /**
+   * Maps a rank string to its corresponding color, background, border, and icon.
+   *
+   * @param rank - The rank name (e.g. 'diamond', 'gold', 'silver').
+   * @returns A config object with Tailwind color classes and a Lucide icon component.
+   */
   const getRankBadge = (rank: string) => {
     switch (rank?.toLowerCase()) {
       case 'diamond':

@@ -9,7 +9,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -30,7 +30,12 @@ class SwarmNode:
 class SwarmRegistry:
     """Registry of Mekong gateway nodes forming a swarm."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None) -> None:
+        """Initialize SwarmRegistry and load persisted nodes from disk.
+
+        Args:
+            config_path: Path to the YAML config file. Defaults to .mekong/swarm.yaml.
+        """
         self._nodes: Dict[str, SwarmNode] = {}
         self._config_path = config_path or str(
             Path(".mekong") / "swarm.yaml"
@@ -89,7 +94,7 @@ class SwarmRegistry:
 
     def dispatch_goal(
         self, node_id: str, goal: str, timeout: float = 60.0
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """Send a goal to a remote node via POST /cmd."""
         node = self.get_node(node_id)
         if not node:

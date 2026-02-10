@@ -9,7 +9,10 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field, asdict
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +123,8 @@ class StructuredTask:
     raw_message: str = ""
     parse_error: Optional[str] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the structured task to a plain dictionary."""
         return asdict(self)
 
 
@@ -132,7 +136,7 @@ class NLPCommander:
     def __init__(self) -> None:
         self._client = None
 
-    def _get_client(self):
+    def _get_client(self) -> "LLMClient":
         """Lazy-load LLM client."""
         if self._client is None:
             from src.core.llm_client import get_client

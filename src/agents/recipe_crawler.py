@@ -5,15 +5,15 @@ Specialized agent for discovering and downloading recipes from the community rep
 """
 
 from typing import List
-import json
-from ..core.agent_base import AgentBase, Task, Result, TaskStatus
+from ..core.agent_base import AgentBase, Task, Result
 
 class RecipeCrawler(AgentBase):
     """
     Agent responsible for finding and downloading recipes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize RecipeCrawler with community repository URL."""
         super().__init__(name="RecipeCrawler")
         self.community_repo = "https://github.com/mekong-cli/community-recipes"
 
