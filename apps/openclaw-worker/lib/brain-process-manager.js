@@ -1,11 +1,14 @@
 /**
- * Brain Process Manager v26.0 — Dual-mode, dual-engine CC CLI brain
+ * Brain Process Manager v2026.2.9 — Dual-mode, dual-engine CC CLI brain
  *
  * Engines: 'antigravity' (port 8080, default) or 'qwen' (port 8081, Qwen Bridge)
  *   Set TOM_HUM_ENGINE=qwen to use Qwen models via DashScope.
  *
  * Modes: 'direct' (claude -p, default) or 'tmux' (persistent session, fallback)
  *   Set TOM_HUM_BRAIN_MODE=tmux to activate tmux mode.
+ *
+ * Recovery: model failover on HTTP 400, context overflow prompt truncation
+ *   See lib/mission-recovery.js for patterns and constants.
  *
  * Exports (unchanged API): spawnBrain, killBrain, isBrainAlive, runMission, log
  */
@@ -14,6 +17,7 @@ const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const recovery = require('./mission-recovery');
 
 let missionCount = 0;
 let currentProc = null;
@@ -60,7 +64,7 @@ function getEngineLabel() {
 // =============================================================================
 
 function spawnBrainDirect() {
-  log(`BRAIN v26.0: Direct mode (claude -p) | Engine: ${getEngineLabel()}`);
+  log(`BRAIN v2026.2.9: Direct mode (claude -p) | Engine: ${getEngineLabel()}`);
   log('All ClaudeKit agents/tools supported. Watch via: node lib/live-mission-viewer.js');
 }
 
@@ -73,17 +77,13 @@ function killBrainDirect() {
 
 function isBrainAliveDirect() { return true; }
 
-function runMissionDirect(prompt, projectDir, timeoutMs) {
+function spawnDirectProc(prompt, projectDir, timeoutMs, opts = {}) {
   return new Promise((resolve) => {
-    missionCount++;
-    const num = missionCount;
+    const num = opts.missionNum || missionCount;
     const startTime = Date.now();
-    log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-    log(`PROJECT: ${projectDir} | MODE: direct | ENGINE: ${getEngineLabel()}`);
-
     const apiKey = getApiKey();
     const proxyPort = getProxyPort();
-    const modelName = getModelName();
+    const modelName = opts.modelOverride || getModelName();
     const proc = spawn('claude', [
       '-p', prompt,
       '--model', modelName,
@@ -100,6 +100,7 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
 
     currentProc = proc;
     let output = '';
+    let stderrBuf = '';
 
     proc.stdout.on('data', (chunk) => {
       const text = chunk.toString();
@@ -109,6 +110,7 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
 
     proc.stderr.on('data', (chunk) => {
       const text = chunk.toString();
+      stderrBuf += text;
       try { fs.appendFileSync(config.LOG_FILE, `[stderr] ${text}`); } catch (e) {}
     });
 
@@ -117,7 +119,6 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
       try { proc.kill('SIGTERM'); } catch (e) {}
     }, timeoutMs);
 
-    // Status heartbeat every 60s
     const heartbeat = setInterval(() => {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       log(`Mission #${num} working -- ${elapsed}s`);
@@ -129,8 +130,7 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
       currentProc = null;
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       const success = code === 0;
-      log(`${success ? 'COMPLETE' : 'FAILED'}: Mission #${num} (${elapsed}s, exit=${code})`);
-      resolve({ success, result: success ? 'done' : `exit_${code}`, elapsed });
+      resolve({ success, code, output, stderr: stderrBuf, elapsed, num });
     });
 
     proc.on('error', (err) => {
@@ -139,9 +139,47 @@ function runMissionDirect(prompt, projectDir, timeoutMs) {
       currentProc = null;
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       log(`ERROR: Mission #${num} spawn failed: ${err.message}`);
-      resolve({ success: false, result: `spawn_error: ${err.message}`, elapsed });
+      resolve({ success: false, code: -1, output: '', stderr: err.message, elapsed, num });
     });
   });
+}
+
+async function runMissionDirect(prompt, projectDir, timeoutMs) {
+  missionCount++;
+  const num = missionCount;
+  log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
+  log(`PROJECT: ${projectDir} | MODE: direct | ENGINE: ${getEngineLabel()}`);
+
+  const result = await spawnDirectProc(prompt, projectDir, timeoutMs, { missionNum: num });
+
+  if (result.success) {
+    log(`COMPLETE: Mission #${num} (${result.elapsed}s, exit=0)`);
+    return { success: true, result: 'done', elapsed: result.elapsed };
+  }
+
+  // Check for recoverable errors before giving up
+  const combined = `${result.output}\n${result.stderr}`;
+  const diagnosis = recovery.diagnoseFailure(combined);
+
+  if (diagnosis.action === 'model_failover') {
+    log(`MODEL FAILOVER: Retrying with fallback model ${diagnosis.model}...`);
+    const retry = await spawnDirectProc(prompt, projectDir, timeoutMs, {
+      missionNum: num, modelOverride: diagnosis.model,
+    });
+    log(`${retry.success ? 'COMPLETE' : 'FAILED'}: Mission #${num} retry (${retry.elapsed}s, exit=${retry.code})`);
+    return { success: retry.success, result: retry.success ? 'done' : `exit_${retry.code}`, elapsed: result.elapsed + retry.elapsed };
+  }
+
+  if (diagnosis.action === 'context_truncate') {
+    log(`CONTEXT OVERFLOW: Retrying with truncated prompt...`);
+    const truncated = recovery.truncatePrompt(prompt);
+    const retry = await spawnDirectProc(truncated, projectDir, timeoutMs, { missionNum: num });
+    log(`${retry.success ? 'COMPLETE' : 'FAILED'}: Mission #${num} retry (${retry.elapsed}s, exit=${retry.code})`);
+    return { success: retry.success, result: retry.success ? 'done' : `exit_${retry.code}`, elapsed: result.elapsed + retry.elapsed };
+  }
+
+  log(`FAILED: Mission #${num} (${result.elapsed}s, exit=${result.code})`);
+  return { success: false, result: `exit_${result.code}`, elapsed: result.elapsed };
 }
 
 // =============================================================================
@@ -160,7 +198,7 @@ function isPromptVisible(paneText) {
 }
 
 function spawnBrainTmux() {
-  log(`BRAIN v26.0: Tmux mode (persistent visible session) | Engine: ${getEngineLabel()}`);
+  log(`BRAIN v2026.2.9: Tmux mode (persistent visible session) | Engine: ${getEngineLabel()}`);
   try { tmux(`kill-session -t ${config.TMUX_SESSION}`); } catch (e) {}
   try { fs.unlinkSync(config.MISSION_FILE); } catch (e) {}
   try { fs.unlinkSync(config.DONE_FILE); } catch (e) {}
