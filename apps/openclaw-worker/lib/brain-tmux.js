@@ -62,6 +62,11 @@ function log(msg) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+/** Strip ANSI escape sequences from text (CSI, OSC, simple escapes) */
+function stripAnsi(text) {
+  return text.replace(/\x1B(?:\[[0-9;?]*[A-Za-z]|\][^\x07]*\x07|[A-Za-z])/g, '');
+}
+
 // --- Tmux helpers ---
 
 function tmuxExec(cmd) {
@@ -81,29 +86,42 @@ function capturePane() {
   return tmuxExec(`tmux capture-pane -t ${TMUX_SESSION} -p -S -50`);
 }
 
-/** Get last non-empty line from captured pane */
-function getLastLine(output) {
-  const lines = output.split('\n').filter(l => l.trim());
-  return lines[lines.length - 1] || '';
+/** Detect CC CLI prompt (❯ or >) in captured output.
+ *  CC CLI v2.1.38+ has a status bar (2-3 lines) below the prompt,
+ *  so we scan last 10 lines, not just the last one. */
+function hasPrompt(output) {
+  const clean = stripAnsi(output);
+  const lines = clean.split('\n').slice(-10);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // ❯ prompt — unique CC CLI char, not in status bar lines
+    if (trimmed.includes('❯')) return true;
+    // > prompt — standalone line (after /clear or context reset)
+    if (/^>\s*$/.test(trimmed)) return true;
+  }
+  return false;
 }
 
-/** Detect CC CLI prompt (❯ or >) at end of captured output */
-function hasPrompt(output) {
-  const last = getLastLine(output);
-  // CC CLI uses ❯ normally, but may show > after /clear or context reset
-  return last.includes('❯') || /^[>❯]\s*$/.test(last.trim());
+/** Detect "Cooked for Xm Ys" or "Churned for Xm Ys" — mission done indicator.
+ *  CC CLI prints this when /cook completes, before prompt may render. */
+function hasCompletionPattern(output) {
+  const clean = stripAnsi(output);
+  return /(?:Cooked|Churned) for \d+m \d+s/i.test(clean);
 }
 
 /** Check if CC CLI is asking an approve/confirm/proceed question */
 function hasApproveQuestion(output) {
-  const lines = output.split('\n').slice(-10); // check last 10 lines
+  const clean = stripAnsi(output);
+  const lines = clean.split('\n').slice(-10);
   const tail = lines.join('\n');
   return APPROVE_PATTERNS.some(pattern => pattern.test(tail));
 }
 
 /** Check if CC CLI hit context limit and needs /clear */
 function hasContextLimit(output) {
-  const lines = output.split('\n').slice(-15);
+  const clean = stripAnsi(output);
+  const lines = clean.split('\n').slice(-15);
   const tail = lines.join('\n');
   return CONTEXT_LIMIT_PATTERNS.some(pattern => pattern.test(tail));
 }
@@ -123,7 +141,7 @@ async function autoClearIfNeeded() {
 /** Auto-approve if CC CLI is asking a question — send 'y' + Enter */
 async function autoApproveIfNeeded() {
   const output = capturePane();
-  if (hasPrompt(output)) return false; // already at prompt, no need
+  if (hasPrompt(output) || hasCompletionPattern(output)) return false; // already done, no need
   // Check context limit FIRST (higher priority)
   if (hasContextLimit(output)) {
     await autoClearIfNeeded();
@@ -321,10 +339,11 @@ async function runMission(prompt, projectDir, timeoutMs) {
     }
 
     const output = capturePane();
-    if (hasPrompt(output)) {
+    if (hasPrompt(output) || hasCompletionPattern(output)) {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
       const usage = parseContextUsage(output);
-      log(`COMPLETE: Mission #${num} (${elapsed}s)${usage >= 0 ? ` [ctx=${usage}%]` : ''}`);
+      const how = hasCompletionPattern(output) ? 'cooked-pattern' : 'prompt';
+      log(`COMPLETE: Mission #${num} (${elapsed}s) [${how}]${usage >= 0 ? ` [ctx=${usage}%]` : ''}`);
       return { success: true, result: 'done', elapsed };
     }
 
