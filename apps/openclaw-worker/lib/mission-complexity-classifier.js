@@ -86,7 +86,7 @@ function generateMissionPrompt(task, project, complexity) {
 
   if (complexity === 'complex') {
     const teamBlock = buildAgentTeamBlock(task.id);
-    return { prompt: `/cook "${mission} ${teamBlock}"`, timeout };
+    return { prompt: `/cook "${mission} ${teamBlock}" --auto`, timeout };
   }
 
   if (complexity === 'medium') {
