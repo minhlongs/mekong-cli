@@ -31,6 +31,16 @@ const MAX_RESPAWNS_PER_HOUR = 5;
 const RESPAWN_COOLDOWN_MS = 5 * 60 * 1000;
 const PROMPT_FILE = '/tmp/tom_hum_prompt.txt';
 
+// Patterns CC CLI shows when waiting for user approval/confirm
+const APPROVE_PATTERNS = [
+  /\(y\/n\)/i, /\[y\/n\]/i, /\[Y\/n\]/i,
+  /Do you want to proceed/i, /Do you want to continue/i,
+  /Allow .+? to /i, /Approve\?/i, /Confirm\?/i,
+  /Press Enter/i, /waiting for input/i,
+  /Would you like to/i, /Should I /i,
+  /\? \(Use arrow/i,  // AskUserQuestion TUI pattern
+];
+
 let missionCount = 0;
 let respawnTimestamps = [];
 
@@ -74,6 +84,26 @@ function getLastLine(output) {
 function hasPrompt(output) {
   const last = getLastLine(output);
   return last.includes('❯');
+}
+
+/** Check if CC CLI is asking an approve/confirm/proceed question */
+function hasApproveQuestion(output) {
+  const lines = output.split('\n').slice(-10); // check last 10 lines
+  const tail = lines.join('\n');
+  return APPROVE_PATTERNS.some(pattern => pattern.test(tail));
+}
+
+/** Auto-approve if CC CLI is asking a question — send 'y' + Enter */
+async function autoApproveIfNeeded() {
+  const output = capturePane();
+  if (hasPrompt(output)) return false; // already at prompt, no need
+  if (hasApproveQuestion(output)) {
+    log('AUTO-APPROVE: CC CLI asking question — sending y + Enter');
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION} y Enter`);
+    await sleep(3000);
+    return true;
+  }
+  return false;
 }
 
 /** Send prompt via tmux paste-buffer (handles long text, special chars) */
@@ -229,11 +259,15 @@ async function runMission(prompt, projectDir, timeoutMs) {
 
   // Send prompt via paste-buffer (reliable for long text)
   pasteText(fullPrompt);
+  await sleep(1000); // Let Ink TUI render pasted text before Enter
   sendEnter();
   log(`DISPATCHED: Mission #${num} sent to tmux`);
 
   // Wait for CC CLI to start processing
   await sleep(15000);
+
+  // Auto-approve any early questions (skill review gates, confirm prompts)
+  await autoApproveIfNeeded();
 
   // Poll for completion
   const deadline = Date.now() + timeoutMs;
@@ -254,6 +288,9 @@ async function runMission(prompt, projectDir, timeoutMs) {
       log(`COMPLETE: Mission #${num} (${elapsed}s)${usage >= 0 ? ` [ctx=${usage}%]` : ''}`);
       return { success: true, result: 'done', elapsed };
     }
+
+    // Auto-approve if CC CLI is asking for confirmation mid-mission
+    await autoApproveIfNeeded();
 
     if (Date.now() - lastLogTime > 60000) {
       const elapsed = Math.round((Date.now() - startTime) / 1000);
