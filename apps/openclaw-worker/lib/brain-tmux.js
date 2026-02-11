@@ -25,7 +25,6 @@ const fs = require('fs');
 const config = require('../config');
 
 const TMUX_SESSION = 'tom_hum_brain';
-const CONTEXT_WARN_PCT = 85;
 const COMPACT_EVERY_N = 5;
 const MAX_RESPAWNS_PER_HOUR = 5;
 const RESPAWN_COOLDOWN_MS = 5 * 60 * 1000;
@@ -210,6 +209,11 @@ function isBrainAlive() {
 }
 
 // --- Context management ---
+// NOTE: Qua Antigravity Proxy, 🔋 XX% của CC CLI là SỐ ẢO (track Anthropic limits
+// nhưng route qua Gemini model khác). KHÔNG dùng % để quyết định /clear.
+// Thay vào đó: /clear theo số mission cố định.
+
+const CLEAR_EVERY_N = 3;   // /clear mỗi 3 missions
 
 function parseContextUsage(output) {
   const match = output.match(/🔋\s*(\d+)%/);
@@ -217,10 +221,11 @@ function parseContextUsage(output) {
 }
 
 async function manageContext() {
-  const usage = parseContextUsage(capturePane());
-  if (usage >= CONTEXT_WARN_PCT) {
-    log(`CONTEXT: ${usage}% — sending /clear`);
+  // /clear based on mission count (not fake percentage)
+  if (missionCount > 0 && missionCount % CLEAR_EVERY_N === 0) {
+    log(`CONTEXT: /clear mỗi ${CLEAR_EVERY_N} missions (mission #${missionCount})`);
     pasteText('/clear');
+    await sleep(1000);
     sendEnter();
     await sleep(5000);
     await waitForPrompt(30000);
@@ -233,6 +238,7 @@ async function compactIfNeeded() {
   if (missionCount > 0 && missionCount % COMPACT_EVERY_N === 0) {
     log(`CONTEXT: Periodic /compact (every ${COMPACT_EVERY_N} missions)`);
     pasteText('/compact');
+    await sleep(1000);
     sendEnter();
     await sleep(10000);
     await waitForPrompt(60000);
