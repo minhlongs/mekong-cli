@@ -1,33 +1,12 @@
-.git
-.vercel
-node_modules
-apps/
-packages/
-infrastructure/
-plans/
-docs/
-scripts/
-recipes/
-*.log
-*.db
-.env
-.env.*
-venv
-.venv
-__pycache__
-*.pyc
-*.pyo
-claudekit-engineer-dna/
-com-anh-duong-10x/
-apex-os/
-repomix-output.xml
-.git_backup_sophia/
-.claude/
-.opencode/
-frontend/
-_bmad/
-products/
-local_db.json
-release-manifest.json
-pyproject.toml
-poetry.lock
+# 軍形 Gate — Vercel Bundle Defense
+# Root project: only api/ folder needs to deploy
+# CRITICAL: Bundle must stay under 250MB
+
+# === EXCLUDE EVERYTHING FIRST ===
+*
+
+# === INCLUDE ONLY API ===
+!api/
+!api/**
+!requirements.txt
+!vercel.json
