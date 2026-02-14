@@ -67,7 +67,7 @@ ${bridgeStatus} Bridge: ${env.BRIDGE_URL?.slice(0, 40) || 'Not configured'}
 
     try {
       await sendTelegramAction(env.TELEGRAM_BOT_TOKEN, chatId, 'typing');
-      const response = await env.AI.run(MODELS.llama, {
+      const response = await env.AI.run(MODELS.llama as any, {
         messages: [
           { role: 'system', content: 'Be concise and helpful.' },
           { role: 'user', content: args }
@@ -86,7 +86,7 @@ ${bridgeStatus} Bridge: ${env.BRIDGE_URL?.slice(0, 40) || 'Not configured'}
 
     try {
       await sendTelegramAction(env.TELEGRAM_BOT_TOKEN, chatId, 'typing');
-      const response = await env.AI.run(MODELS.llama, {
+      const response = await env.AI.run(MODELS.llama as any, {
         messages: [
           { role: 'system', content: 'Expert programmer. Provide clean, commented code.' },
           { role: 'user', content: `Task: ${args}\n\nProvide solution with code.` }
@@ -116,12 +116,12 @@ Example:
 The local MacBook bridge server is offline.
 Start it with: node bridge-server.js
 
-Then create tunnel: cloudflared tunnel --url http://localhost:8765`;
+Then create tunnel: ssh -R 80:localhost:8765 serveo.net`;
     }
 
     try {
       await sendTelegramAction(env.TELEGRAM_BOT_TOKEN, chatId, 'typing');
-      
+
       const response = await fetch(`${env.BRIDGE_URL}/task`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -208,14 +208,14 @@ async function handleTelegramWebhook(request: Request, env: Env): Promise<Respon
       // Auto AI for regular messages
       await sendTelegramAction(env.TELEGRAM_BOT_TOKEN, chatId, 'typing');
       try {
-        const response = await env.AI.run(MODELS.llama, {
+        const response = await env.AI.run(MODELS.llama as any, {
           messages: [
             { role: 'system', content: 'Be helpful and concise.' },
             { role: 'user', content: text }
           ],
           max_tokens: 500,
         });
-        await sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId, 
+        await sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId,
           (response as { response?: string }).response || `Hi ${firstName}! Use /help`);
       } catch {
         await sendTelegramMessage(env.TELEGRAM_BOT_TOKEN, chatId, `👋 Hi ${firstName}! Use /help`);

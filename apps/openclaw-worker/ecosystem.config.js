@@ -4,7 +4,7 @@
  * Apps:
  *   tom-hum         — Autonomous task dispatch daemon (restarts every 6h)
  *   openclaw-bridge — Bridge HTTP server
- *   openclaw-tunnel — Cloudflare tunnel manager
+ *   openclaw-tunnel — Serveo.net tunnel manager
  *
  * Usage:
  *   pm2 start ecosystem.config.js

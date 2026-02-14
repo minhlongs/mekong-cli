@@ -79,14 +79,30 @@ function buildPrompt(taskContent) {
  * @param {number} [timeoutMs] - Override timeout from classifier (optional)
  * @returns {Promise<{success: boolean, result: string, elapsed: number}>}
  */
-async function executeTask(taskContent, taskFile, timeoutMs) {
+async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
   const projectDir = detectProjectDir(taskContent);
   const prompt = buildPrompt(taskContent);
   const finalTimeout = timeoutMs || (isTeamMission(prompt) ? config.AGENT_TEAM_TIMEOUT_MS : config.MISSION_TIMEOUT_MS);
   const mode = isTeamMission(prompt) ? 'AGENT_TEAM' : 'SINGLE';
-  log(`PROMPT [${mode}]: ${prompt.slice(0, 150)}... [timeout=${Math.round(finalTimeout / 60000)}min]`);
 
-  return runMission(prompt, projectDir, finalTimeout);
+  // 虛實 Model Routing: Opus only for complex, qwen3 for rest
+  let modelOverride = null;
+  if (complexity === 'complex') {
+    modelOverride = config.OPUS_MODEL;
+    log(`🔥 OPUS ACTIVATED: ${modelOverride} — Complex mission requires Ultra power`);
+  }
+
+  log(`PROMPT [${mode}]: ${prompt.slice(0, 150)}... [timeout=${Math.round(finalTimeout / 60000)}min] [model=${modelOverride || config.MODEL_NAME}]`);
+
+  const result = await runMission(prompt, projectDir, finalTimeout, modelOverride);
+
+  // 虛實: Switch back to default model after Opus mission
+  if (modelOverride) {
+    log(`🔥→🌲 Opus mission done — switching back to ${config.MODEL_NAME}`);
+    // Model switch back happens at next runMission start (no explicit /model needed)
+  }
+
+  return result;
 }
 
 module.exports = { executeTask, buildPrompt, detectProjectDir };

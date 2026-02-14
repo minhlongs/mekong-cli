@@ -500,13 +500,13 @@ async function respawnBrain(useContinue = true) {
 
 // --- Core: run mission via tmux (state machine) ---
 
-async function runMission(prompt, projectDir, timeoutMs) {
+async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
   missionCount++;
   const num = missionCount;
   const startTime = Date.now();
 
   log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-  log(`PROJECT: ${projectDir} | MODE: tmux-interactive`);
+  log(`PROJECT: ${projectDir} | MODE: tmux-interactive${modelOverride ? ` | MODEL: ${modelOverride} 🔥` : ''}`);
 
   // Thermal gate
   const { waitForSafeTemperature } = require('./m1-cooling-daemon');
@@ -518,6 +518,15 @@ async function runMission(prompt, projectDir, timeoutMs) {
 
   // Rotate to next worker pane (Round Robin P1..N)
   rotateWorker();
+
+  // 虛實 Model Switch: Opus for complex
+  if (modelOverride) {
+    log(`🔥 SWITCHING MODEL → ${modelOverride} (Binh Phap: chỉ dùng khi thật sự cần)`);
+    pasteText(`/model ${modelOverride}`);
+    await sleep(2000);
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION} Enter`);
+    await sleep(3000); // Wait for model switch
+  }
 
   // Build full prompt
   let fullPrompt = prompt;

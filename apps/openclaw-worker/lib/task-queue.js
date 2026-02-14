@@ -33,7 +33,7 @@ async function processQueue() {
     const content = fs.readFileSync(filePath, 'utf-8').trim();
     const { complexity, timeout } = classifyContentTimeout(content);
     log(`EXECUTING [${complexity.toUpperCase()}/${Math.round(timeout / 60000)}min]: ${taskFile}`);
-    const result = await executeTask(content, taskFile, timeout);
+    const result = await executeTask(content, taskFile, timeout, complexity);
 
     // === 軍形 CI/CD GATE (Ch.4: 先為不可勝) ===
     // After mission → verify build → push if GREEN

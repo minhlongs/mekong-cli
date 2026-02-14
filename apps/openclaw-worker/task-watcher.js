@@ -26,14 +26,14 @@ const config = require('./config');
 
 // --- Unhandled error protection FIRST: log but do NOT crash the daemon ---
 process.on('uncaughtException', (err) => {
-  const msg = `[${new Date().toISOString().slice(11,19)}] [tom-hum] UNCAUGHT EXCEPTION (daemon stays alive): ${err.stack || err.message}\n`;
-  process.stderr.write(msg);
-  try { fs.appendFileSync(config.LOG_FILE, msg); } catch (e) {}
+  const msg = `[${new Date().toISOString().slice(11, 19)}] [tom-hum] UNCAUGHT EXCEPTION (daemon stays alive): ${err.stack || err.message}\n`;
+  // try { process.stderr.write(msg); } catch (e) { }
+  try { fs.appendFileSync(config.LOG_FILE, msg); } catch (e) { }
 });
 process.on('unhandledRejection', (reason) => {
-  const msg = `[${new Date().toISOString().slice(11,19)}] [tom-hum] UNHANDLED REJECTION (daemon stays alive): ${reason}\n`;
-  process.stderr.write(msg);
-  try { fs.appendFileSync(config.LOG_FILE, msg); } catch (e) {}
+  const msg = `[${new Date().toISOString().slice(11, 19)}] [tom-hum] UNHANDLED REJECTION (daemon stays alive): ${reason}\n`;
+  // try { process.stderr.write(msg); } catch (e) { }
+  try { fs.appendFileSync(config.LOG_FILE, msg); } catch (e) { }
 });
 
 // --- Import modules (headless brain instead of external brain) ---
@@ -75,7 +75,7 @@ safeBoot('startCooling', startCooling);
 log('Tmux Brain + File Watcher + Auto-CTO + M1 Cooling ACTIVE');
 
 // --- Keepalive: prevent Node from exiting when event loop is idle ---
-const keepalive = setInterval(() => {}, 60000);
+const keepalive = setInterval(() => { }, 60000);
 
 // --- Graceful Shutdown ---
 let shuttingDown = false;

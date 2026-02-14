@@ -157,11 +157,12 @@ start_swarm() {
   sleep 1
 
   # Phase 0: Start task-watcher (manages tmux brain internally)
-  log "Phase 0: Khởi động Tôm Hùm Task Watcher..."
-  nohup node "$OPENCLAW_DIR/task-watcher.js" >> "$TOM_HUM_LOG" 2>&1 &
+  log "Phase 0: Khởi động Tôm Hùm Task Watcher (VISUAL MODE: 4 SCREENS)..."
+  # FIXED: Enforce TMUX mode for 4-screen layout
+  TOM_HUM_BRAIN_MODE=tmux nohup node "$OPENCLAW_DIR/task-watcher.js" >> "$TOM_HUM_LOG" 2>&1 &
   TW_PID=$!
   echo "$TW_PID" > "$PID_DIR/task-watcher.pid"
-  ok "Task Watcher started (PID: $TW_PID)"
+  ok "Task Watcher started (PID: $TW_PID) [Mode: Visual/Tmux]"
 
   # Wait for tmux session to be ready (brain-tmux creates it)
   log "Đợi Brain-Tmux khởi tạo..."

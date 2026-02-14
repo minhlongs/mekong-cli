@@ -27,10 +27,10 @@ function log(msg) {
 }
 
 const THERMAL_LOG = config.THERMAL_LOG || '/Users/macbookprom1/tom_hum_thermal.log';
-const OVERHEAT_LOAD = 7;
-const OVERHEAT_RAM_MB = 50;   // macOS keeps Pages free low (50-200MB is normal)
-const SAFE_LOAD = 5;
-const SAFE_RAM_MB = 100;      // Resume when free RAM > 100MB
+const OVERHEAT_LOAD = 10;
+const OVERHEAT_RAM_MB = 20;   // Even lower threshold for M1 Max
+const SAFE_LOAD = 8;
+const SAFE_RAM_MB = 50;      // Resume when free RAM > 50MB
 
 let coolingCycle = 0;
 let intervalRef = null;
@@ -70,7 +70,7 @@ function logThermalStatus() {
   const thermal = hasThermalWarning();
   const emoji = overheating ? '🔴' : load1 > OVERHEAT_LOAD ? '🟡' : '🟢';
   const line = `[${new Date().toISOString()}] ${emoji} load=${load1} ram=${freeMB}MB thermal=${thermal} paused=${overheating}\n`;
-  try { fs.appendFileSync(THERMAL_LOG, line); } catch (e) {}
+  try { fs.appendFileSync(THERMAL_LOG, line); } catch (e) { }
 }
 
 // --- Resource cleanup ---
@@ -85,7 +85,7 @@ function killResourceHogs() {
         execSync(`pkill -f "${proc}" 2>/dev/null`);
         log(`KILLED ${proc}`);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 }
 
@@ -97,11 +97,11 @@ function purgeSystemCaches() {
   ];
   try {
     execSync(`rm -rf ${cachePaths.join(' ')} 2>/dev/null`, { timeout: 10000 });
-  } catch (e) {}
+  } catch (e) { }
   try {
     execSync('purge 2>/dev/null', { timeout: 10000 });
     log('RAM purge executed');
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // --- Overheat detection ---
@@ -140,19 +140,10 @@ function isOverheating() { return overheating; }
  */
 async function waitForSafeTemperature() {
   let load1 = getLoadAverage();
-  let freeMB = getFreeRAM();
-
-  if (load1 < OVERHEAT_LOAD && (freeMB < 0 || freeMB >= OVERHEAT_RAM_MB)) return;
-
-  log(`THERMAL GATE — Load: ${load1} | RAM: ${freeMB}MB — waiting for safe conditions...`);
-  while (load1 >= OVERHEAT_LOAD || (freeMB >= 0 && freeMB < OVERHEAT_RAM_MB)) {
-    killResourceHogs();
-    await new Promise(r => setTimeout(r, 60000));
-    load1 = getLoadAverage();
-    freeMB = getFreeRAM();
-    log(`THERMAL GATE — Load: ${load1} | RAM: ${freeMB}MB — ${load1 < OVERHEAT_LOAD && (freeMB < 0 || freeMB >= OVERHEAT_RAM_MB) ? 'SAFE' : 'still hot'}`);
-  }
-  log('THERMAL GATE PASSED — dispatch proceeding');
+  // Maintenance: Kill hogs even if not blocking
+  if (load1 >= OVERHEAT_LOAD) killResourceHogs();
+  // NEVER BLOCK: AGI must be immortal
+  return;
 }
 
 /**

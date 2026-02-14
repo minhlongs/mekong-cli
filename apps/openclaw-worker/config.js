@@ -25,6 +25,11 @@ module.exports = {
   CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://localhost:11436',
   QWEN_PROXY_PORT: 8081, // Qwen/VLLM dedicated port
   MODEL_NAME: process.env.MODEL_NAME || 'qwen3-coder-next', // Cloud Model (80B A100)
+  // 虛實 Binh Phap Model Hierarchy — tiết kiệm, không lãng phí
+  // 🌪️GIÓ (Simple) → qwen3-coder-next (fast, cheap)
+  // 🌲RỪNG (Medium) → qwen3-coder-next (balanced)
+  // 🔥LỬA (Complex) → claude-opus-4-5-20250514 via cashback Ultra (only when truly needed)
+  OPUS_MODEL: 'claude-opus-4-5-20250514', // ACC cashback Ultra — CẤM lạm dụng
   USE_GH_MODELS: false,
   GH_MODEL_NAME: 'deepseek-coder-v2',
   WORKER_MODEL_NAME: 'deepseek-coder-v2', // "Strongest" Local Model
