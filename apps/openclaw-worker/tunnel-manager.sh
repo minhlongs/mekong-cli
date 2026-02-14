@@ -10,25 +10,25 @@ cd /Users/macbookprom1/mekong-cli/apps/openclaw-worker
 
 echo "🚀 Starting Cloudflare Tunnel..."
 
-# Create tunnel and capture URL
-cloudflared tunnel --url http://localhost:8765 2>&1 | while read line; do
+# Create tunnel (Serveo.net)
+ssh -o StrictHostKeyChecking=no -R 80:localhost:8765 serveo.net 2>&1 | while read line; do
   echo "$line"
   
   # Extract tunnel URL
-  if echo "$line" | grep -q "trycloudflare.com"; then
-    TUNNEL_URL=$(echo "$line" | grep -o 'https://[a-z-]*\.trycloudflare\.com')
+  if echo "$line" | grep -q "Forwarding HTTP traffic from"; then
+    TUNNEL_URL=$(echo "$line" | grep -o 'https://[a-z0-9-]*\.serveo\.net')
     
     if [ -n "$TUNNEL_URL" ]; then
       echo "📡 Tunnel URL: $TUNNEL_URL"
       
-      # Update Cloudflare secret
+      # Update Cloudflare secret (Yes, still need to update the Worker Env via Wrangler)
       echo "$TUNNEL_URL" | CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN" wrangler secret put BRIDGE_URL --force 2>/dev/null
       
       # Notify via Telegram
       curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -H "Content-Type: application/json" \
-        -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"text\": \"🌉 Bridge tunnel started!\n\n${TUNNEL_URL}\", \"parse_mode\": \"Markdown\"}" > /dev/null
-      
+        -d "{\"chat_id\": \"${TELEGRAM_CHAT_ID}\", \"text\": \"🌉 Bridge tunnel started (Serveo)!\n\n${TUNNEL_URL}\", \"parse_mode\": \"Markdown\"}" > /dev/null
+        
       echo "✅ BRIDGE_URL secret updated!"
     fi
   fi

@@ -26,24 +26,25 @@ echo "👀 Task Watcher started (PID: $WATCHER_PID)"
 sleep 2
 
 # Start tunnel and auto-update secret
-$CLOUDFLARED tunnel --url http://localhost:8765 2>&1 | while read line; do
+# Start tunnel and auto-update secret
+ssh -o StrictHostKeyChecking=no -R 80:localhost:8765 serveo.net 2>&1 | while read line; do
   echo "$line"
   
-  if echo "$line" | grep -q "trycloudflare.com"; then
-    TUNNEL_URL=$(echo "$line" | grep -o 'https://[a-z-]*\.trycloudflare\.com')
+  if echo "$line" | grep -q "serveo.net"; then
+    TUNNEL_URL=$(echo "$line" | grep -o 'https://[a-z0-9-]*\.serveo\.net')
     
     if [ -n "$TUNNEL_URL" ]; then
       echo "📡 Tunnel: $TUNNEL_URL"
       
       # Update secret
       echo "$TUNNEL_URL" | CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN" \
-        wrangler secret put BRIDGE_URL --force 2>/dev/null && \
+        $WRANGLER secret put BRIDGE_URL --force 2>/dev/null && \
         echo "✅ Secret updated"
       
       # Notify
       curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -H "Content-Type: application/json" \
-        -d "{\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"🌉 OpenClaw Bridge Online!\n\n${TUNNEL_URL}\"}" > /dev/null
+        -d "{\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"🌉 OpenClaw Bridge Online (Serveo)!\n\n${TUNNEL_URL}\"}" > /dev/null
     fi
   fi
 done

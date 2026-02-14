@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const config = require('../config');
 
 // Hunter Scanner Module
 // Scans for: TODO, FIXME, console.log, @ts-ignore, secrets
@@ -15,10 +16,10 @@ const PATTERNS = [
 function scanProject(dir, options = {}) {
   const issues = [];
   const maxIssues = options.maxIssues || 50;
-  
+
   function walk(currentDir) {
     if (issues.length >= maxIssues) return;
-    
+
     let files;
     try {
       files = fs.readdirSync(currentDir);
@@ -27,13 +28,13 @@ function scanProject(dir, options = {}) {
     for (const file of files) {
       if (issues.length >= maxIssues) return;
       if (file.startsWith('.') || file === 'node_modules' || file === 'dist' || file === 'build' || file === '.next') continue;
-      
+
       const filePath = path.join(currentDir, file);
       let stat;
       try {
         stat = fs.statSync(filePath);
       } catch (e) { continue; }
-      
+
       if (stat.isDirectory()) {
         walk(filePath);
       } else if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js')) {
@@ -43,7 +44,7 @@ function scanProject(dir, options = {}) {
             // Check if we already have enough of this type
             const curTypeCount = issues.filter(i => i.pattern === pattern.name).length;
             if (curTypeCount < (pattern.limit || 10)) {
-               issues.push({
+              issues.push({
                 file: filePath.replace(dir, ''),
                 pattern: pattern.name,
                 type: pattern.type,
@@ -57,7 +58,7 @@ function scanProject(dir, options = {}) {
       }
     }
   }
-  
+
   walk(dir);
   return issues;
 }
@@ -65,8 +66,10 @@ function scanProject(dir, options = {}) {
 // Gemini Flash Verification (The Beggar Strategy)
 async function verifyIssueWithGemini(fileContent, pattern, filePath) {
   try {
-    const PROXY_URL = 'http://127.0.0.1:8080/v1/chat/completions';
-    const MODEL = 'moonshotai/kimi-k2.5'; // Nvidia free tier via Proxy (was gemini-2.5-flash)
+    // FIXED: Use Cloud Brain URL (Serveo/Ollama) - No Legacy Proxy
+    const PROXY_URL = `${config.CLOUD_BRAIN_URL}/v1/chat/completions`;
+    // Fallback model from config or hardcoded equivalent
+    const MODEL = config.FALLBACK_MODEL_NAME || 'gemini-2.0-flash';
 
     const response = await fetch(PROXY_URL, {
       method: 'POST',
@@ -83,7 +86,7 @@ async function verifyIssueWithGemini(fileContent, pattern, filePath) {
 
     if (!response.ok) return { isReal: true, note: "Verification skipped (API Error)" }; // Fail safe: assume real
     const data = await response.json();
-    
+
     // Parse JSON from content (handle markdown wrapping)
     let content = data.choices[0].message.content;
     content = content.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -96,27 +99,27 @@ async function verifyIssueWithGemini(fileContent, pattern, filePath) {
 
 async function generateHunterMission(project, projectDir) {
   const issues = scanProject(projectDir);
-  
+
   if (issues.length === 0) return null;
-  
+
   // Pick the most critical or frequent issue type
-  const counts = issues.reduce((acc, i) => { acc[i.pattern] = (acc[i.pattern]||0)+1; return acc; }, {});
-  
+  const counts = issues.reduce((acc, i) => { acc[i.pattern] = (acc[i.pattern] || 0) + 1; return acc; }, {});
+
   // Priority: SECURITY > TYPE_SAFETY > TECH_DEBT > CONSOLE_LOG
   let selectedPattern = 'CONSOLE_LOG';
   if (counts['SECURITY_RISK'] > 0) selectedPattern = 'SECURITY_RISK';
   else if (counts['TYPE_SAFETY'] > 0) selectedPattern = 'TYPE_SAFETY';
   else if (counts['TECH_DEBT'] > 0) selectedPattern = 'TECH_DEBT';
-  
+
   const targetIssues = issues.filter(i => i.pattern === selectedPattern);
   const topIssue = targetIssues[0];
-  
+
   // VERIFICATION STEP (The Beggar Strategy)
   // Read file content and verify with Gemini Flash
   try {
     const content = require('fs').readFileSync(path.join(projectDir, topIssue.file), 'utf8');
     const verification = await verifyIssueWithGemini(content, selectedPattern, topIssue.file);
-    
+
     if (!verification.isReal) {
       console.log(`[HUNTER] 🙈 False positive detected in ${topIssue.file} (Gemini Check)`);
       return null;
@@ -130,7 +133,7 @@ async function generateHunterMission(project, projectDir) {
   const targetFile = topIssue.file;
   const targetPane = topIssue.pane;
   const complexity = topIssue.type;
-  
+
   const missionContent = `COMPLEXITY: ${complexity}
 TIMEOUT: 20
 PROJECT: ${project}
@@ -149,4 +152,3 @@ Task:
 }
 
 module.exports = { scanProject, generateHunterMission };
-

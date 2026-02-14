@@ -20,9 +20,9 @@
 | Runtime | Node.js |
 | Language | JavaScript (CommonJS) |
 | Brain Control | Dual-mode: `direct` (claude -p) or `tmux` (v2026.2.9) |
-| Engine | Dual-engine: `antigravity` (port 8080) or `qwen` (port 8081) |
-| Proxy | Antigravity Proxy (port 8080) / Qwen Bridge (port 8081) |
-| Model | claude-opus-4-6-thinking (antigravity) / qwen-coder-plus (qwen) |
+| Engine | Triple-provider: Ollama Cloud + OpenRouter + Google AI (port 11436) |
+| Proxy | Antigravity Proxy v4 (port 11436, Anthropic-compatible) |
+| Model | gemini-3-flash-preview (via proxy) |
 
 ## Architecture (v2026.2.9 Dual-Mode, Dual-Engine Brain)
 
@@ -50,7 +50,7 @@ apps/openclaw-worker/
 - `TASK_PATTERN` — `/^mission_.*\.txt$/` (file naming convention)
 - `MISSION_TIMEOUT_MS` — 45 minutes per mission
 - `BRAIN_MODE` — `'direct'` (default) or `'tmux'` (fallback), set via `TOM_HUM_BRAIN_MODE`
-- `ENGINE` — `'antigravity'` (default, port 8080) or `'qwen'` (port 8081), set via `TOM_HUM_ENGINE`
+- `ENGINE` — `'antigravity'` (default, port 11436), set via `TOM_HUM_ENGINE`
 - `QWEN_PROXY_PORT` — 8081 (Qwen Bridge Flask server)
 - `QWEN_MODEL_NAME` — `'qwen-coder-plus'` (mapped by bridge to DashScope model)
 - `TMUX_SESSION` — Tmux session name (only used in tmux mode)
@@ -75,9 +75,9 @@ apps/openclaw-worker/
 
 ### Engines (v2026.2.9)
 
-#### Engine 1: Antigravity (DEFAULT) — port 8080
-- Routes through Antigravity Proxy (load balancing, failover)
-- Model: `claude-opus-4-6-thinking`
+#### Engine 1: Antigravity (DEFAULT) — port 11436
+- Routes through Antigravity Proxy v4 (Ollama Cloud + OpenRouter + Google AI)
+- Model: `gemini-3-flash-preview`
 - Default for all missions
 
 #### Engine 2: Qwen — port 8081
