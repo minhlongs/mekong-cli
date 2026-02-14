@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const { log } = require('./brain-tmux');
-const { executeTask } = require('./mission-dispatcher');
+const { executeTask, detectProjectDir } = require('./mission-dispatcher');
 const { classifyContentTimeout } = require('./mission-complexity-classifier');
 const { pauseIfOverheating, waitForSafeTemperature } = require('./m1-cooling-daemon');
+const { runFullGate } = require('./post-mission-gate');
 
 let isProcessing = false;
 let currentTaskFile = null;
@@ -31,8 +32,28 @@ async function processQueue() {
     }
     const content = fs.readFileSync(filePath, 'utf-8').trim();
     const { complexity, timeout } = classifyContentTimeout(content);
-    log(`EXECUTING [${complexity.toUpperCase()}/${Math.round(timeout/60000)}min]: ${taskFile}`);
-    await executeTask(content, taskFile, timeout);
+    log(`EXECUTING [${complexity.toUpperCase()}/${Math.round(timeout / 60000)}min]: ${taskFile}`);
+    const result = await executeTask(content, taskFile, timeout);
+
+    // === 軍形 CI/CD GATE (Ch.4: 先為不可勝) ===
+    // After mission → verify build → push if GREEN
+    if (result && result.success) {
+      // Extract project from taskFile: mission_84tea_auto_xxx.txt → 84tea
+      const projectMatch = taskFile.match(/^(?:HIGH_|MEDIUM_|LOW_)?mission_([a-z0-9_-]+?)_(?:auto_)?/i);
+      const project = projectMatch ? projectMatch[1].replace(/_/g, '-') : null;
+      const missionId = taskFile.replace(/^.*?_auto_/, '').replace('.txt', '');
+
+      if (project) {
+        log(`GATE: 軍形 verify for ${project}/${missionId}...`);
+        const gate = runFullGate(project, missionId);
+        if (gate.build) {
+          log(`GATE: ✅ GREEN — ${gate.pushed ? 'PUSHED' : 'no changes'}`);
+        } else {
+          log(`GATE: ❌ RED — build failed, NOT pushing`);
+        }
+      }
+    }
+
     fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
     log(`Archived: ${taskFile}`);
   } catch (error) {
@@ -76,8 +97,9 @@ function startWatching() {
         log(`Poll found new: ${newTasks.join(', ')}`);
       }
       tasks.forEach(enqueue);
-    } catch (e) {}
-  }, 5000);
+      tasks.forEach(enqueue);
+    } catch (e) { }
+  }, config.POLL_INTERVAL_MS); // PROJECT FLASH: 1s Backup Poll
 }
 
 function stopWatching() {
