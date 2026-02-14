@@ -38,7 +38,7 @@ try:
 except: print('PARSE_ERR')
 " 2>/dev/null)
 
-  # === WORKER STATUS ===
+  # === WORKER STATUS (虛實: 1 chạy 2 nghỉ) ===
   W=""
   DEAD_WORKERS=""
   for p in 1 2 3; do
