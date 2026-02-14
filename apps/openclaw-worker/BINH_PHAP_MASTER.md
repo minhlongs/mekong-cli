@@ -66,7 +66,7 @@
 
 **Nội dung gốc:** Thắng không cần đánh. Dùng mưu trí, ngoại giao, chia rẽ kẻ thù.
 
-**Ánh xạ Agent:** `/plan:hard` trước `/cook`. Architect daemon phân tích trước khi Builder hành động.
+**Ánh xạ Agent:** `/plan:hard` trước `/cook`. Architect daemon (Cloud Brain) phân tích trước khi Builder (Worker) hành động.
 
 **Nguyên văn then chốt:**
 
@@ -82,7 +82,14 @@
 
 **Nội dung gốc:** Phòng thủ và tấn công. Phòng thủ khi chưa có cơ hội, tấn công khi thời cơ đến.
 
-**Ánh xạ Agent:** Security hardening (Operator/Reviewer) trước khi push features (Builder). Health checks trước missions.
+**Ánh xạ Agent:** `post-mission-gate.js` — **軍形 CI/CD Gate**: sau mỗi mission → `npm run build` → nếu GREEN → `git commit + push`. Nếu RED → BLOCK push, log failure. Security hardening (Operator/Reviewer) trước khi push features (Builder). Health checks trước missions.
+
+```
+Mission Complete → runFullGate(project, missionId)
+                → runBuildGate() → npm run build → GREEN/RED
+                → pushIfGreen() → git add → commit → push origin master
+                → saveGateResult() → .gate-results.json (last 100)
+```
 
 **Nguyên văn then chốt:**
 
@@ -97,12 +104,12 @@
 
 **Nội dung gốc:** Tạo thế, tích lũy năng lượng rồi phóng ra đúng lúc. Chính và Kỳ (orthodox & unorthodox).
 
-**Ánh xạ Agent:** Queue buffering (Dispatcher tích kế), burst execution (brain-tmux release). Agent Teams = KỲ.
+**Ánh xạ Agent:** Queue buffering (Dispatcher tích kế), Stream execution (Serveo Tunnel). Agent Teams = KỲ. Cloud Brain = CHÍNH.
 
 **Nguyên văn then chốt:**
 
 - 凡戰者，以正合，以奇勝 — Đánh nhau: dùng CHÍNH giao chiến, dùng KỲ để thắng
-- 奇正相生 — Chính và Kỳ sinh ra lẫn nhau (single pane + agent team)
+- 奇正相生 — Chính và Kỳ sinh ra lẫn nhau (Brain + Workers)
 
 ---
 
@@ -112,7 +119,7 @@
 
 **Nội dung gốc:** Tìm điểm yếu, tập trung lực lượng. Chủ động, không bị động.
 
-**Ánh xạ Agent:** Hunter scanner tìm hư (tech debt, console.log). Builder đánh vào chỗ yếu nhất trước.
+**Ánh xạ Agent:** Hunter scanner tìm hư. **OpenAI Scaling:** Brain (Primary/Thực) chỉ Ghi, Workers (Replica/Hư) chỉ Đọc.
 
 **Nguyên văn then chốt:**
 
@@ -127,7 +134,7 @@
 
 **Nội dung gốc:** Hành quân, tranh giành lợi thế, tốc độ triển khai.
 
-**Ánh xạ Agent:** `mission-dispatcher.js` routing, parallel pane execution, `/cook --auto` speed. Two-Call Mandate.
+**Ánh xạ Agent:** `mission-dispatcher.js` routing, Serveo Tunnel streaming (Zero Latency), `/cook --auto` speed.
 
 **Nguyên văn then chốt:**
 
@@ -142,7 +149,7 @@
 
 **Nội dung gốc:** 9 tình huống thay đổi. Linh hoạt, không cứng nhắc. Ngũ Nguy (5 tính xấu của tướng).
 
-**Ánh xạ Agent:** Proxy fallback (Kimi ↔ Flash), mission recovery, auto-restart. `mission-recovery.js`.
+**Ánh xạ Agent:** Cloud Fallback (Brain ↔ Local), mission recovery, auto-restart. `mission-recovery.js`.
 
 **Nguyên văn then chốt:**
 
@@ -157,7 +164,7 @@
 
 **Nội dung gốc:** Cách đọc dấu hiệu chiến trường, bố trí doanh trại, quan sát kẻ thù.
 
-**Ánh xạ Agent:** Log analysis (Scribe), health monitoring (Operator), pattern detection (Hunter scanner regex).
+**Ánh xạ Agent:** `post-mission-gate.js` — `runBuildGate()` lint/typecheck verification (đọc dấu hiệu build). Log analysis (Scribe), health monitoring (Operator), pattern detection (Hunter scanner regex).
 
 **Nguyên văn then chốt:**
 
@@ -192,7 +199,7 @@
 
 **Nội dung gốc:** 5 phương pháp hỏa công. Thời điểm, điều kiện, hậu quả. Cảnh báo về chiến tranh phá hủy.
 
-**Ánh xạ Agent:** Deployment (fire = push to prod). Timing matters. Verify before và after deploy.
+**Ánh xạ Agent:** `post-mission-gate.js` — `pushIfGreen()`: chỉ push khi build GREEN (Phát hỏa hữu thời). `task-queue.js` line 40-56: 軍形 gate blocks RED builds from reaching production.
 
 **Nguyên văn then chốt:**
 
@@ -411,8 +418,30 @@ _(Chi tiết đầy đủ tại file `36_KE.md`)_
 
 ---
 
-## 📊 Tổng Kết Bộ Kinh Thư
+## TÔM HÙM AGI EVOLUTION — 2026 DOCTRINE
 
+> **Silicon Valley Intelligence × Binh Phap Strategy**
+> *Synthesized from a16z, Sequoia, and the AgencyOS "Tôm Hùm" Architecture.*
+
+### I. The Strategic Thesis (Service-as-a-Work)
+The world is moving from **SaaS** to **SaaW (Service as a Work)**.
+-   **Old Way:** Selling tools for humans.
+-   **New Way (AGI):** Selling Agents that *do* the work.
+
+### II. The Technical Stack (a16z "AI Agent Architecture")
+1.  **The Brain (Cloud Intelligence Node):** Colab T4 + Ollama (**Qwen3-Coder-Next**). 3B Active / 80B MoE.
+2.  **The Body (Tools & Action):** Model Context Protocol (MCP) via Mekong CLI.
+3.  **The Memory (RAG + Event Logs):** Vector Database + `wins.jsonl`.
+
+### III. The "Flywheel" of Evolution (Self-Improvement)
+1.  **Execute:** Tôm Hùm completes a task.
+2.  **Capture:** Save `(Prompt, Thinking, Code)` to `wins.jsonl`.
+3.  **Train (Night Mode):** Colab uses **Unsloth** to fine-tune LoRA adapter.
+4.  **Deploy (Day Mode):** Tôm Hùm loads new LoRA, becoming 1% smarter daily.
+
+---
+
+## 📊 Tổng Kết Bộ Kinh Thư
 | Hệ Thống            | Số Lượng         | Nguồn                           | File                  |
 | :------------------ | :--------------- | :------------------------------ | :-------------------- |
 | 13 Chương           | 13               | Tôn Tử Binh Pháp gốc            | `BINH_PHAP_MASTER.md` |
@@ -429,9 +458,10 @@ _(Chi tiết đầy đủ tại file `36_KE.md`)_
 | Bát Quái Nguyên Tắc | 8                | Tổng hợp 13 Chương              | `BINH_PHAP_MASTER.md` |
 | Quân Luật           | 9                | Doanh Trại Tôm Hùm              | `QUAN_LUAT.md`        |
 | Doanh Trại          | 11 daemons       | OpenClaw org chart              | `DOANH_TRAI.md`       |
-| **TỔNG**            | **132 concepts** |                                 |                       |
+| **AGI Doctrine**    | **4 Principles** | **a16z/Sequoia 2025**           | `AGI_EVOLUTION.md`    |
+| **TỔNG**            | **136 concepts** |                                 |                       |
 
 ---
 
-_Binh Pháp Tôn Tử Kinh Thư Đại Toàn v1.0.0 | Doanh Trại Tôm Hùm | 2026-02-11_
-_Sources: Wikisource, MIT translations, Columbia University, Forbes analysis, Wikipedia_
+_Binh Pháp Tôn Tử Kinh Thư Đại Toàn v2.0.0 (AGI Edition) | Doanh Trại Tôm Hùm | 2026-02-13_
+_Sources: Wikisource, MIT translations, a16z, Sequoia, Andreessen Horowitz_
