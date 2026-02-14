@@ -28,12 +28,12 @@ const fs = require('fs');
 const config = require('../config');
 
 const TMUX_SESSION = 'tom_hum_brain';
-const COMPACT_EVERY_N = 5;
-const CLEAR_EVERY_N = 3;
+const COMPACT_EVERY_N = 10; // Relaxed: Compact every 10 missions
+const CLEAR_EVERY_N = 5;    // Relaxed: Clear every 5 missions
 const MAX_RESPAWNS_PER_HOUR = 5;
 const RESPAWN_COOLDOWN_MS = 5 * 60 * 1000;
 const PROMPT_FILE = '/tmp/tom_hum_prompt.txt';
-const MIN_MISSION_SECONDS = 45;   // Don't accept idle-without-busy before this
+const MIN_MISSION_SECONDS = 15;   // SPEED BOOST: Reduced from 45s for faster local inference
 const IDLE_CONFIRM_POLLS = 3;     // Consecutive idle polls required for completion
 
 // --- DETECTION PATTERNS ---
@@ -41,15 +41,19 @@ const IDLE_CONFIRM_POLLS = 3;     // Consecutive idle polls required for complet
 // CC CLI activity indicators (present continuous = actively processing)
 const BUSY_PATTERNS = [
   /Photosynthesizing/i, /Crunching/i, /Saut[eé]ing/i,
+  /Crunching/i, /Saut[eé]ing/i,
   /Marinating/i, /Fermenting/i, /Braising/i,
   /Reducing/i, /Blanching/i, /Thinking/i,
   /Churning/i, /Cooking/i, /Toasting/i,
   /Simmering/i, /Steaming/i, /Grilling/i, /Roasting/i,
+  /Vibing/i,                           // ClaudeKit status
   /✻\s+\w+ing/,                        // General: ✻ + any gerund verb
-  /\d+[ms]\s+\d+[ms]\s*·\s*↓/,         // Timer + download: "4m 27s · ↓"
-  /↓\s*[\d.]+k?\s*tokens/i,            // Download counter: "↓ 4.5k tokens"
+  // FIXED: Detect BOTH Up (Upload) and Down (Download) arrows
+  /\d+[ms]\s+\d+[ms]\s*·\s*[↑↓]/,      // Timer + arrow: "4m 27s · ↑"
+  /[↑↓]\s*[\d.]+k?\s*tokens/i,         // Counter: "↑ 0 tokens" or "↓ 4.5k tokens"
   /queued messages/i,
   /Press up to edit queued/i,
+  /Cost:\s*\$[\d.]+/,                  // Cost display usually means busy calculating
 ];
 
 // CC CLI completion indicators (past tense = finished cooking)
@@ -60,12 +64,22 @@ const COMPLETION_PATTERNS = [
 
 // CC CLI asking for approval/confirmation
 const APPROVE_PATTERNS = [
+  /Do you want to run this command\?/,
+  /Do you want to proceed\?/,
+  /Do you want to execute this code\?/,
+  /terraform apply/,
+  /npm install/,
+  /Allow this/i,
+  /Enter your API key/, // Legacy prompt
+  /Do you want to use this API key\?/, // <--- NEW: Custom Key Confirmation
   /\(y\/n\)/i, /\[y\/n\]/i, /\[Y\/n\]/i,
-  /Do you want to proceed/i, /Do you want to continue/i,
-  /Allow .+? to /i, /Approve\?/i, /Confirm\?/i,
+  /Do you want to continue/i,
+  /Approve\?/i, /Confirm\?/i,
   /Press Enter/i, /waiting for input/i,
   /Would you like to/i, /Should I /i,
-  /\? \(Use arrow/i,
+  /Use arrow keys to select/i, // More specific for menus
+  /Select an option/i,
+  /Approve this code change/i, /2\.\s+No\s+\(recommended\)/i, // Catch the menu state directly
 ];
 
 // CC CLI context exhaustion
@@ -84,8 +98,8 @@ let respawnTimestamps = [];
 function log(msg) {
   const timestamp = new Date().toISOString().slice(11, 19);
   const formatted = `[${timestamp}] [tom-hum] ${msg}\n`;
-  process.stderr.write(formatted);
-  try { fs.appendFileSync(config.LOG_FILE, formatted); } catch (e) {}
+  try { process.stderr.write(formatted); } catch (e) { /* EPIPE safe */ }
+  try { fs.appendFileSync(config.LOG_FILE, formatted); } catch (e) { }
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -116,7 +130,8 @@ function isSessionAlive() {
 }
 
 function capturePane() {
-  return tmuxExec(`tmux capture-pane -t ${TMUX_SESSION} -p -S -50`);
+  const target = `${TMUX_SESSION}:0.${currentWorkerIdx}`;
+  return tmuxExec(`tmux capture-pane -t ${target} -p -S -50`);
 }
 
 /** Get clean last N lines from captured tmux output */
@@ -163,15 +178,33 @@ function hasContextLimit(output) {
   return CONTEXT_LIMIT_PATTERNS.some(p => p.test(tail));
 }
 
+/** Check if the pane is sitting at a raw shell prompt (zsh/bash) instead of Claude */
+function isShellPrompt(output) {
+  const tail = getCleanTail(output, 5).join('\n');
+  // Matches typical shell prompts: "user@host dir %", "bash-3.2$", etc.
+  // CRITICAL: Claude's prompt is "❯" or ">". Shell is "%" or "$".
+  if (tail.includes('❯')) return false; // Claude is active
+  if (tail.includes('Choose a capability:')) return false; // Claude menu
+  if (/^>\s*$/.test(tail.trim())) return false; // Simple interactive prompt
+
+  if (/%[\s]*$/.test(tail)) return true; // zsh
+  if (/\$ \s*$/.test(tail)) return true; // bash
+  if (/# \s*$/.test(tail)) return true; // root
+  return false;
+}
+
 /** Unified state detection from tmux output.
  *  Returns: 'busy' | 'complete' | 'context_limit' | 'question' | 'idle' | 'unknown'
  *  CRITICAL: BUSY checked BEFORE completion — prevents stale "Cooked for"
  *  in scrollback from overriding active processing indicators. */
 function detectState(output) {
   if (hasContextLimit(output)) return 'context_limit';
+  // BUG FIX: Prompts (Questions) can appear while "Busy" text is still visible (e.g. Osmosing...)
+  // We must handle questions FIRST to unblock.
+  if (hasApproveQuestion(output)) return 'question';
+
   if (isBusy(output)) return 'busy';
   if (hasCompletionPattern(output)) return 'complete';
-  if (hasApproveQuestion(output)) return 'question';
   if (hasPrompt(output)) return 'idle';
   return 'unknown';
 }
@@ -181,16 +214,24 @@ function detectState(output) {
 function pasteText(text) {
   fs.writeFileSync(PROMPT_FILE, text);
   tmuxExec(`tmux load-buffer ${PROMPT_FILE}`);
-  tmuxExec(`tmux paste-buffer -t ${TMUX_SESSION}`);
-  try { fs.unlinkSync(PROMPT_FILE); } catch (e) {}
+  const target = `${TMUX_SESSION}:0.${currentWorkerIdx}`;
+  tmuxExec(`tmux paste-buffer -t ${target}`);
+  try { fs.unlinkSync(PROMPT_FILE); } catch (e) { }
 }
 
 function sendEnter() {
-  tmuxExec(`tmux send-keys -t ${TMUX_SESSION} Enter`);
+  const target = `${TMUX_SESSION}:0.${currentWorkerIdx}`;
+  // AGGRESSIVE ENTER STRATEGY (v31 Fix)
+  tmuxExec(`tmux send-keys -t ${target} Enter`);
+  execSync('sleep 0.2');
+  tmuxExec(`tmux send-keys -t ${target} C-m`); // Force Carriage Return
+  execSync('sleep 0.2');
+  tmuxExec(`tmux send-keys -t ${target} Enter`); // Double tap
 }
 
 function sendCtrlC() {
-  tmuxExec(`tmux send-keys -t ${TMUX_SESSION} C-c`);
+  const target = `${TMUX_SESSION}:0.${currentWorkerIdx}`;
+  tmuxExec(`tmux send-keys -t ${target} C-c`);
 }
 
 /** Poll until prompt appears (used by spawnBrain/respawn/context management) */
@@ -206,28 +247,186 @@ async function waitForPrompt(timeoutMs = 120000) {
 // --- Respawn rate limiting ---
 
 function canRespawn() {
-  const cutoff = Date.now() - 3600000;
-  respawnTimestamps = respawnTimestamps.filter(ts => ts > cutoff);
-  return respawnTimestamps.length < MAX_RESPAWNS_PER_HOUR;
+  // USER DEMAND: "vòng lặp vô tận cấm off" (Infinite Loop, Never Off)
+  // We disable the rate limiter entirely.
+  // const cutoff = Date.now() - 3600000;
+  // respawnTimestamps = respawnTimestamps.filter(ts => ts > cutoff);
+  // return respawnTimestamps.length < MAX_RESPAWNS_PER_HOUR;
+  return true;
 }
 
 function buildClaudeCmd() {
   const port = config.ENGINE === 'qwen' ? config.QWEN_PROXY_PORT : config.PROXY_PORT;
   const model = config.ENGINE === 'qwen' ? config.QWEN_MODEL_NAME : config.MODEL_NAME;
-  return `ANTHROPIC_BASE_URL=http://127.0.0.1:${port} claude --model ${model} --dangerously-skip-permissions`;
+  const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
+  // FORCE correct proxy port — ignore shell env (might be stale 8045)
+  const baseUrl = `http://127.0.0.1:${port}`;
+  // FIX: Unset AUTH_TOKEN to prevent auth conflict, only set API_KEY
+  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${baseUrl}"`;
+  return `${envVars} && claude --model ${model} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
 }
 
 // --- Brain lifecycle ---
 
+// Brain State
+let currentWorkerIdx = 1; // Start at P1 (P0 is Monitor), unless Full CLI
+
 function spawnBrain() {
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 4; // Default 4 (P0-P3)
+
   if (isSessionAlive()) {
-    log('BRAIN: tmux session already exists — reusing');
-    return;
+    try {
+      const paneCount = parseInt(execSync(`tmux list-panes -t ${TMUX_SESSION} | wc -l`, { encoding: 'utf-8' }).trim());
+      if (paneCount >= teamSize) {
+        log(`BRAIN: tmux session exists (Panes: ${paneCount}/${teamSize}) — reusing`);
+        return;
+      }
+      log(`BRAIN: Session exists but has ${paneCount}/${teamSize} panes. REPAIRING...`);
+
+      // FIXED: Use Cloud Brain URL (Serveo/Ollama)
+      const proxyUrl = config.CLOUD_BRAIN_URL;
+
+      // FIX: Standardize all env vars to 'ollama' bridge protocol
+      const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
+      // FIX: Standardize all env vars to 'ollama' bridge protocol
+      // REMOVED ANTHROPIC_AUTH_TOKEN to avoid conflict (502/Auth Warning)
+      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
+      const geminiCmd = `${envVars} && claude --model ${config.MODEL_NAME} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
+
+      // Repair Loop: Add missing panes
+      for (let i = paneCount; i < teamSize; i++) {
+        log(`BRAIN: Spawning missing Worker P${i}...`);
+        tmuxExec(`tmux split-window -t ${TMUX_SESSION}:0`);
+        tmuxExec(`tmux select-layout -t ${TMUX_SESSION}:0 tiled`);
+        execSync('sleep 1');
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} '${geminiCmd}' Enter`);
+        // AUTO-ACCEPT Bypass Permissions for repaired panes
+        execSync('sleep 5');
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Down Enter`);
+        execSync('sleep 2');
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Down Enter`); // Double Down just in case
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Enter`);
+      }
+      return; // Repair done
+    } catch (e) {
+      log(`BRAIN: Error checking/repairing session: ${e.message}`);
+    }
   }
-  log('BRAIN: Creating tmux session with CC CLI interactive...');
-  tmuxExec(`tmux new-session -d -s ${TMUX_SESSION} -x 200 -y 50`);
-  tmuxExec(`tmux send-keys -t ${TMUX_SESSION} '${buildClaudeCmd()}' Enter`);
-  log(`BRAIN: Spawned [session=${TMUX_SESSION}] — waiting for prompt...`);
+
+  log(`BRAIN: Creating tmux session with CC CLI interactive (Team Size: ${teamSize})...`);
+  if (config.FULL_CLI_MODE) log('BRAIN: ⚡️ ANTIGRAVITY GOD MODE ACTIVE: P0 IS A WORKER ⚡️');
+
+  // FORCE correct proxy URL — ignore shell env to prevent ECONNREFUSED
+  const proxyUrl = config.CLOUD_BRAIN_URL || `http://127.0.0.1:${config.PROXY_PORT}`;
+  log(`BRAIN: Connecting to Brain URL: ${proxyUrl}`);
+
+  // Create explicit config with CLAUDEKIT INJECTION 💉
+  const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
+  const fs = require('fs');
+  if (!fs.existsSync(claudeConfigDir)) fs.mkdirSync(claudeConfigDir, { recursive: true });
+
+  // MCP INJECTION: ClaudeKit + Filesystem
+  const mcpConfig = {
+    "mcpServers": {
+      "claudekit": {
+        "command": "/opt/homebrew/bin/ck",
+        "args": ["mcp"]
+      },
+      "filesystem": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/macbookprom1/mekong-cli"]
+      }
+    }
+  };
+
+  const configContent = {
+    "completedProjectSetup": true,
+    "lastUpdateCheck": Date.now(),
+    "primaryColor": "#D97757", // Tôm Hùm Orange
+    "theme": "dark",
+    "verbose": true,
+    "dangerouslySkipPermissions": true,
+    "agreedToBypassPermissions": true,
+    "bypassPermissions": true,
+    // "mcp": mcpConfig.mcpServers // Native CLI might ignore this in main config
+  };
+
+  // Inject API Key if present to avoid prompts
+  // Inject API Key to avoid prompts (Standard Ollama protocol)
+  configContent.anthropicApiKey = "ollama";
+  configContent.anthropicAuthToken = "ollama"; // Bypass Login via Ollama protocol
+  configContent.agreedToBypassPermissions = true;
+  configContent.bypassPermissions = true;
+
+  fs.writeFileSync(`${claudeConfigDir}/config.json`, JSON.stringify(configContent, null, 2));
+
+  // Write dedicated MCP config file for --mcp-config flag
+  fs.writeFileSync(`${claudeConfigDir}/mcp.json`, JSON.stringify(mcpConfig, null, 2));
+
+  // FORCE API URL via wrapper env function
+  // We use config.MODEL_NAME to bypass CLI validation (Opus masquerade)
+  const apiKeyExport = process.env.ANTHROPIC_API_KEY ? `export ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY}" && ` : '';
+  // FIX: Unset AUTH_TOKEN to prevent auth conflict
+  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
+
+  // FIX: Run 'claude' directly to avoid wrapper logic overhead
+  const geminiCmd = `${envVars} && claude --model ${config.MODEL_NAME} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
+
+  // Create session (Pane 0) - MONITOR (Standard) OR WORKER (God Mode)
+  let p0Cmd = `tail -f ${config.LOG_FILE}`;
+  let p0Title = "P0: SUPERVISOR (Auto-CTO)";
+
+  if (config.FULL_CLI_MODE) {
+    p0Cmd = geminiCmd;
+    p0Title = "P0: GOD MODE WORKER (Antigravity)";
+  }
+
+  tmuxExec(`tmux new-session -d -s ${TMUX_SESSION} -n brain -x 200 -y 50`);
+  tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.0 '${p0Cmd}' Enter`);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.0 -T "${p0Title}"`);
+
+  // Create additional panes - WORKERS (Gemini 3 Pro High)
+  for (let i = 1; i < teamSize; i++) {
+    tmuxExec(`tmux split-window -t ${TMUX_SESSION}:0`);
+    tmuxExec(`tmux select-layout -t ${TMUX_SESSION}:0 tiled`);
+    execSync('sleep 1'); // Stagger boot to prevent API rate spikes
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} '${geminiCmd}' Enter`);
+  }
+
+  // AUTO-ACCEPT Bypass Permissions for all Workers
+  log('BRAIN: Auto-accepting Bypass Permissions for all panes...');
+  execSync('sleep 8');
+  for (let i = 0; i < teamSize; i++) {
+    // Only workers (and P0 if God Mode)
+    if (i === 0 && !config.FULL_CLI_MODE) continue;
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} 2`);
+    execSync('sleep 1');
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Enter`);
+  }
+
+  // Set initial focus to P0 (if God Mode) or P1
+  const startPane = config.FULL_CLI_MODE ? 0 : 1;
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${startPane}`);
+
+  log(`BRAIN: Spawned [session=${TMUX_SESSION}] [panes=${teamSize}]`);
+  log(`BRAIN: P0=${config.FULL_CLI_MODE ? 'WORKER' : 'MONITOR'}, P1-${teamSize - 1}=WORKERS`);
+}
+
+/**
+ * Select next worker pane for Round-Robin dispatch
+ * (Cycles 1 -> 2 -> 3 -> 1 ... OR 0 -> 1 -> 2 ... if Full CLI)
+ */
+function rotateWorker() {
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 5;
+  currentWorkerIdx++;
+
+  // Wrap logic
+  const minIdx = config.FULL_CLI_MODE ? 0 : 1;
+  if (currentWorkerIdx >= teamSize) currentWorkerIdx = minIdx;
+
+  log(`DISPATCH: Rotating to Worker P${currentWorkerIdx}`);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${currentWorkerIdx}`);
+  return currentWorkerIdx;
 }
 
 function killBrain() {
@@ -288,11 +487,12 @@ async function respawnBrain(useContinue = true) {
   }
   respawnTimestamps.push(Date.now());
   killBrain();
-  await sleep(5000);
-  const continueFlag = useContinue ? ' --continue' : '';
-  tmuxExec(`tmux new-session -d -s ${TMUX_SESSION} -x 200 -y 50`);
-  tmuxExec(`tmux send-keys -t ${TMUX_SESSION} '${buildClaudeCmd()}${continueFlag}' Enter`);
-  log(`RESPAWN: New session [continue=${useContinue}]`);
+  await sleep(5000); // Wait for cleanup
+
+  // REUSE spawnBrain() logic to ensure P0=Monitor, P1..=Workers layout
+  spawnBrain();
+
+  log(`RESPAWN: Session rebuilt via spawnBrain()`);
   return waitForPrompt(120000);
 }
 
@@ -310,17 +510,12 @@ async function runMission(prompt, projectDir, timeoutMs) {
   const { waitForSafeTemperature } = require('./m1-cooling-daemon');
   await waitForSafeTemperature();
 
-  // Ensure brain alive
-  if (!isBrainAlive()) {
-    log(`BRAIN DEAD — respawning before mission #${num}`);
-    if (!(await respawnBrain(true))) {
-      return { success: false, result: 'brain_respawn_failed', elapsed: 0 };
-    }
-  }
-
   // Context management
   await manageContext();
   await compactIfNeeded();
+
+  // Rotate to next worker pane (Round Robin P1..N)
+  rotateWorker();
 
   // Build full prompt
   let fullPrompt = prompt;
@@ -328,9 +523,46 @@ async function runMission(prompt, projectDir, timeoutMs) {
     fullPrompt = `First cd to ${projectDir} then: ${prompt}`;
   }
 
+  // CC CLI activity indicators (present continuous = actively processing)
+  const BUSY_PATTERNS = [
+    /Photosynthesizing/i, /Crunching/i, /Saut[eé]ing/i,
+    /Marinating/i, /Fermenting/i, /Braising/i,
+    /Reducing/i, /Blanching/i, /Thinking/i,
+    /Churning/i, /Cooking/i, /Toasting/i,
+    /Simmering/i, /Steaming/i, /Grilling/i, /Roasting/i,
+    /Vibing/i,                           // ClaudeKit status
+    /✻\s+\w+ing/,                        // General: ✻ + any gerund verb
+    /\d+[ms]\s+\d+[ms]\s*·\s*↓/,         // Timer + download: "4m 27s · ↓"
+    /↓\s*[\d.]+k?\s*tokens/i,            // Download counter: "↓ 4.5k tokens"
+    /queued messages/i,
+    /Press up to edit queued/i,
+  ];
+
+  // ... (patterns remain)
+
+  function sendEnter() {
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION} Enter`);
+  }
+
+  // ... (helpers remain)
+
+  // SAFETY CHECK: Ensure Claude is actually running before dispatching
+  // If we paste into a raw ZSH shell, we get "Command not found" errors.
+  const checkOutput = capturePane();
+  if (!isBrainAlive() || isShellPrompt(checkOutput)) {
+    log(`CRITICAL: Brain died or dropped to shell! check=${!isBrainAlive()} shell=${isShellPrompt(checkOutput)}`);
+    // Attempt rapid recovery
+    const respawnSuccess = await respawnBrain(true);
+    if (!respawnSuccess) {
+      return { success: false, result: 'brain_died_fatal', elapsed: 0 };
+    }
+    // Give post-respawn some time to settle
+    await sleep(5000);
+  }
+
   // Dispatch via paste-buffer (reliable for long text + special chars)
   pasteText(fullPrompt);
-  await sleep(1000);
+  await sleep(3000); // FIXED: Increased from 1000ms to allow TUI to render large pastes
   sendEnter();
   log(`DISPATCHED: Mission #${num} sent to tmux`);
 
@@ -348,9 +580,10 @@ async function runMission(prompt, projectDir, timeoutMs) {
   let idleConfirmCount = 0;
   const deadline = Date.now() + timeoutMs;
   let lastLogTime = Date.now();
+  let kickStartCount = 0;
 
   // Give CC CLI time to parse prompt and begin processing
-  await sleep(15000);
+  await sleep(5000); // Reduced initial sleep to check for early failures
 
   while (Date.now() < deadline) {
     if (!isSessionAlive()) {
@@ -363,6 +596,21 @@ async function runMission(prompt, projectDir, timeoutMs) {
     const output = capturePane();
     const state = detectState(output);
     const elapsedSec = Math.round((Date.now() - startTime) / 1000);
+
+    // KICK-START: If idle and never busy in first 30s, press Enter again
+    if (state === 'idle' && !wasBusy && elapsedSec < 30 && kickStartCount < 2) {
+      log(`KICK-START: Idle detected early (${elapsedSec}s) — sending Enter again...`);
+      sendEnter();
+      kickStartCount++;
+      await sleep(2000);
+      continue;
+      continue;
+    }
+
+    // STUCK INTERVENTION (Parallel Cooling): Kill stuck task if Hot & Long
+    if (checkStuckIntervention(elapsedSec, num)) {
+      return { success: false, result: 'killed_stuck', elapsed: elapsedSec };
+    }
 
     switch (state) {
       case 'complete': {
@@ -383,7 +631,36 @@ async function runMission(prompt, projectDir, timeoutMs) {
 
       case 'question':
         log(`QUESTION: Mission #${num} — auto-approving`);
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION} y Enter`);
+        const targetPane = `${TMUX_SESSION}:0.${currentWorkerIdx}`;
+
+        // SPECIAL CASE: API Key Confirmation (Needs "1" + Enter for "Yes")
+        // Matches the "2. No (recommended)" text which is selected by default
+        if (/2\.\s+No\s+\(recommended\)/i.test(output)) {
+          log(`QUESTION: API Key detected in P${currentWorkerIdx} — selecting '1. Yes'`);
+          // Spam 1 and Enter for a few seconds to ensure TUI registers it
+          for (let i = 0; i < 3; i++) {
+            tmuxExec(`tmux send-keys -t ${targetPane} 1`);
+            await sleep(500);
+            tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+            await sleep(500);
+          }
+        }
+        // SPECIAL CASE: Kick-Start waiting for Enter (bypass permissions)
+        else if (/By proceeding, you accept all responsibility/i.test(output) || /Yes, I accept/i.test(output)) {
+          log(`QUESTION: Bypass Permissions prompt — ACCEPTING with '2' + Enter`);
+          tmuxExec(`tmux send-keys -t ${targetPane} 2`);
+          await sleep(500);
+          tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+        }
+        // SPECIAL CASE: Legacy API Key Prompt
+        else if (/Enter your API key/i.test(output)) {
+          log(`QUESTION: Legacy API Key prompt detected — sending Enter`);
+          tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+        } else {
+          // Default "Yes" for simple prompts
+          log(`QUESTION: Generic question detected — sending 'y' Enter`);
+          tmuxExec(`tmux send-keys -t ${targetPane} y Enter`);
+        }
         await sleep(3000);
         idleConfirmCount = 0;
         continue; // Re-check immediately
@@ -425,7 +702,8 @@ async function runMission(prompt, projectDir, timeoutMs) {
       lastLogTime = Date.now();
     }
 
-    await sleep(10000);
+    // PROJECT FLASH: Ultra Speed Polling (1s)
+    await sleep(1000);
   }
 
   // Timeout — send Ctrl+C and report
@@ -435,4 +713,52 @@ async function runMission(prompt, projectDir, timeoutMs) {
   return { success: false, result: 'timeout', elapsed };
 }
 
-module.exports = { spawnBrain, killBrain, isBrainAlive, runMission, log };
+// --- SYSTEM MONITORING (User Request: "Giám sát nhiệt độ & API") ---
+
+function getSystemMetrics() {
+  try {
+    // macOS Load Average
+    const loadString = execSync('sysctl -n vm.loadavg').toString().trim();
+    // Format: "{ 2.15 2.05 1.98 }" -> remove braces -> split
+    const parts = loadString.replace(/[{}]/g, '').trim().split(/\s+/);
+    const load1min = parseFloat(parts[0]);
+
+    // Memory Usage (Approximate RSS)
+    const mem = process.memoryUsage().rss / 1024 / 1024;
+
+    return { load: load1min, mem: Math.round(mem) };
+  } catch (e) {
+    return { load: 0, mem: 0 };
+  }
+}
+
+function isOverheating() {
+  const metrics = getSystemMetrics();
+  // THRESHOLD: Load > 4.0 is "Overheating" (Intervention Zone)
+  if (metrics.load > 4.0) {
+    // ACTIVE INTERVENTION: Monitor & Support
+    const coolingTime = 10000; // 10s Cooling Nap
+    appendFileSync(config.THERMAL_LOG, `[${new Date().toISOString()}] 🔥 HIGH LOAD (${metrics.load}). Intervening... Sleeping ${coolingTime / 1000}s\n`);
+
+    // We intentionally block here to force the system to slow down.
+    // This supports the machine as requested ("can thiệp hỗ trợ").
+    execSync(`sleep ${coolingTime / 1000}`);
+
+    return true;
+  }
+  return false;
+}
+
+// STUCK INTERVENTION: If task > 5min AND Load > 4.0, assume stuck model -> Ctrl+C
+function checkStuckIntervention(elapsedSec, num) {
+  const metrics = getSystemMetrics();
+  // 300s = 5 minutes
+  if (elapsedSec > 300 && metrics.load > 4.0) {
+    log(`INTERVENTION: Mission #${num} stuck (${elapsedSec}s) & Hot (${metrics.load}) — Sending Ctrl+C to unblock.`);
+    sendCtrlC();
+    return true;
+  }
+  return false;
+}
+
+module.exports = { spawnBrain, killBrain, isBrainAlive, runMission, log, isOverheating, getSystemMetrics, checkStuckIntervention };
