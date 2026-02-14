@@ -39,7 +39,7 @@ module.exports = {
   FULL_CLI_MODE: false, // P0 is CTO/Monitor, P1-P3 are Workers
 
   // Agent Team orchestration
-  AGENT_TEAM_SIZE_DEFAULT: 2, // 虛實: P0 (CTO) + P1 (Worker) — 1 chạy, 0 nghỉ → không sập proxy
+  AGENT_TEAM_SIZE_DEFAULT: 4, // 虛實: P0 (CTO) + P1-P3 (Workers) — 1 chạy 2 nghỉ, tuần tự không sập proxy
   AGENT_TEAM_TIMEOUT_MS: 4 * 60 * 60 * 1000, // 4 hours for deep missions
 
   // Complexity classification keywords

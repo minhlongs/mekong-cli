@@ -413,24 +413,20 @@ function spawnBrain() {
 }
 
 /**
- * 虛實 (Xu Shi) — Single Worker Strategy
- * Only P1 active. 1 chạy, 0 nghỉ → proxy không sập
- * If we add more workers later, implement stagger logic here
+ * 虛實 (Xu Shi) — 1 chạy 2 nghỉ Strategy
+ * Round-robin P1→P2→P3: daemon bay vào pane để chạy
+ * task-queue isProcessing mutex = chỉ 1 active tại 1 thời điểm
+ * Pane nghỉ = idle ở prompt, visible nhưng không tốn proxy
  */
 function rotateWorker() {
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 2;
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 4;
+  currentWorkerIdx++;
 
-  if (teamSize <= 2) {
-    // Single worker mode: always P1
-    currentWorkerIdx = 1;
-  } else {
-    // Multi-worker: round-robin with stagger
-    currentWorkerIdx++;
-    const minIdx = config.FULL_CLI_MODE ? 0 : 1;
-    if (currentWorkerIdx >= teamSize) currentWorkerIdx = minIdx;
-  }
+  // Wrap: P1 → P2 → P3 → P1...
+  const minIdx = config.FULL_CLI_MODE ? 0 : 1;
+  if (currentWorkerIdx >= teamSize) currentWorkerIdx = minIdx;
 
-  log(`DISPATCH: → Worker P${currentWorkerIdx} (team=${teamSize})`);
+  log(`DISPATCH: → Worker P${currentWorkerIdx} (1 chạy, ${teamSize - 2} nghỉ)`);
   tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${currentWorkerIdx}`);
   return currentWorkerIdx;
 }
