@@ -413,18 +413,24 @@ function spawnBrain() {
 }
 
 /**
- * Select next worker pane for Round-Robin dispatch
- * (Cycles 1 -> 2 -> 3 -> 1 ... OR 0 -> 1 -> 2 ... if Full CLI)
+ * 虛實 (Xu Shi) — Single Worker Strategy
+ * Only P1 active. 1 chạy, 0 nghỉ → proxy không sập
+ * If we add more workers later, implement stagger logic here
  */
 function rotateWorker() {
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 5;
-  currentWorkerIdx++;
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 2;
 
-  // Wrap logic
-  const minIdx = config.FULL_CLI_MODE ? 0 : 1;
-  if (currentWorkerIdx >= teamSize) currentWorkerIdx = minIdx;
+  if (teamSize <= 2) {
+    // Single worker mode: always P1
+    currentWorkerIdx = 1;
+  } else {
+    // Multi-worker: round-robin with stagger
+    currentWorkerIdx++;
+    const minIdx = config.FULL_CLI_MODE ? 0 : 1;
+    if (currentWorkerIdx >= teamSize) currentWorkerIdx = minIdx;
+  }
 
-  log(`DISPATCH: Rotating to Worker P${currentWorkerIdx}`);
+  log(`DISPATCH: → Worker P${currentWorkerIdx} (team=${teamSize})`);
   tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${currentWorkerIdx}`);
   return currentWorkerIdx;
 }
