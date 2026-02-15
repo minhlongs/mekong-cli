@@ -3,7 +3,7 @@ import { paginateGraphql } from "@octokit/plugin-paginate-graphql";
 import { GraphqlResponseError } from "@octokit/graphql";
 import { GraphQLRepositoryResponse, RepoMetricsData } from "../types/github.js";
 
-const MyOctokit = Octokit.plugin(paginateGraphql);
+const MyOctokit = Octokit.plugin(paginateGraphql as any);
 
 export class GitHubClient {
   private octokit: InstanceType<typeof MyOctokit>;
@@ -21,7 +21,7 @@ export class GitHubClient {
 
     try {
       // Fetch Pull Requests
-      const prData = await this.octokit.graphql.paginate<GraphQLRepositoryResponse>(
+      const prData = await (this.octokit.graphql as any).paginate(
         `
         query($owner: String!, $repo: String!, $cursor: String) {
           repository(owner: $owner, name: $repo) {
@@ -68,10 +68,10 @@ export class GitHubClient {
           owner,
           repo,
         }
-      );
+      ) as GraphQLRepositoryResponse;
 
       // Fetch Releases
-      const releaseData = await this.octokit.graphql.paginate<GraphQLRepositoryResponse>(
+      const releaseData = await (this.octokit.graphql as any).paginate(
         `
         query($owner: String!, $repo: String!, $cursor: String) {
           repository(owner: $owner, name: $repo) {
@@ -97,7 +97,7 @@ export class GitHubClient {
           owner,
           repo,
         }
-      );
+      ) as GraphQLRepositoryResponse;
 
       // Filter by date (client-side filtering as GraphQL filter support varies)
       // Note: We fetch loosely based on count/pagination but strict filter here
@@ -108,11 +108,11 @@ export class GitHubClient {
       // and filter here. A more optimized version would use an iterator.
 
       const pullRequests = (prData.repository?.pullRequests?.nodes || []).filter(
-        (pr) => new Date(pr.createdAt) >= sinceDate
+        (pr: any) => new Date(pr.createdAt) >= sinceDate
       );
 
       const releases = (releaseData.repository?.releases?.nodes || []).filter(
-        (rel) => new Date(rel.createdAt) >= sinceDate
+        (rel: any) => new Date(rel.createdAt) >= sinceDate
       );
 
       return {
