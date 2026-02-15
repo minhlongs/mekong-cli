@@ -1,0 +1,7 @@
+- Project: mekong-cli
+- Priority: LOW
+- Description: Use this mission to refactor existing code for better maintainability, performance, or type safety.
+- Instructions:
+  1. Scan the codebase for `: any` types or high cyclomatic complexity.
+  2. Refactor into smaller, focused modules (< 200 lines).
+  3. Ensure 100% test coverage post-refactor.

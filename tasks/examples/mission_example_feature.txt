@@ -1,0 +1,8 @@
+- Project: mekong-cli
+- Priority: MEDIUM
+- Description: This is a template for a new feature implementation. Describe the feature requirements and how it fits into the overall architecture.
+- Instructions:
+  1. Use `/plan:hard` to design the feature.
+  2. Implement the core logic using `/cook`.
+  3. Add documentation in the `docs/` folder.
+  4. Verify with integration tests.

@@ -1,0 +1,8 @@
+- Project: mekong-cli
+- Priority: HIGH
+- Description: Perform a deep security audit of the current module.
+- Instructions:
+  1. Check for exposed secrets or API keys.
+  2. Verify input validation using Pydantic/Zod.
+  3. Check for vulnerable dependencies via `npm audit` or `pip audit`.
+  4. Ensure secure communication protocols are enforced.
