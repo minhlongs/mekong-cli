@@ -1,205 +1,154 @@
-# 🌊 Mekong CLI - RaaS Agency Operating System
+# 🌊 Mekong CLI — RaaS Agency Operating System
 
 <div align="center">
 
-![v0.2.0](https://img.shields.io/badge/v0.2.0-release-22c55e?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Binh Pháp](https://img.shields.io/badge/Binh_Pháp-兵法-ec4899?style=for-the-badge&logo=military-tech&logoColor=white)
+![v2.1.33](https://img.shields.io/badge/v2.1.33-release-22c55e?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-Binh_Pháp-ec4899?style=for-the-badge&logo=military-tech&logoColor=white)
 
-**Revenue-First Architecture Powered by ClaudeKit DNA + Binh Pháp Framework**
+**The Revenue-as-a-Service (RaaS) Foundation for Autonomous AI Agencies.**
+Powered by **ClaudeKit DNA** & **Sun Tzu's Art of War (孫子兵法)**.
 
-[🚀 Quick Start](#-quick-start) • [📦 Architecture](#-architecture) • [🎯 Features](#-features) • [📚 Documentation](#-documentation)
+[🚀 Quick Start](#-quick-start) • [📦 Architecture](#-architecture) • [💎 Tiers](#-raas-foundation-tiers) • [🎯 Features](#-features) • [🤝 Contributing](#-contributing) • [🇻🇳 Tiếng Việt](README.vi.md)
 
 </div>
 
 ---
 
-## ✨ Features
+## 📖 Introduction
 
-### 🧠 **Plan-Execute-Verify Engine**
-- LLM-powered task decomposition with `RecipePlanner`
-- Multi-mode execution (shell/LLM/API) via `RecipeExecutor`
-- Automated verification with rollback capabilities
-- Exponential backoff retry logic
-- Unified LLM client (OpenAI-compatible, Antigravity Proxy)
+**Mekong CLI** is the central nervous system of a **Revenue-as-a-Service (RaaS)** agency. It transforms traditional service models into autonomous outcome-based engines.
 
-### 🍳 **CLI Commands**
-```bash
-mekong cook "deploy auth system"   # Plan → Execute → Verify (full pipeline)
-mekong plan "add payment flow"     # Generate plan only (no execution)
-mekong run recipes/deploy-api.md   # Execute existing recipe file
-mekong agent git status            # Run agent directly
-mekong agent file stats            # Project file statistics
-```
+Inspired by the strategic depth of **The Art of War**, Mekong CLI orchestrates "armies" of AI agents (Fullstack, QA, Security, Marketing) to plan, execute, and verify complex engineering and business tasks with high precision.
 
-### 🤖 **Built-in Agents**
-| Agent | Purpose |
-|-------|---------|
-| `GitAgent` | Git operations (status, diff, commit, branch) |
-| `FileAgent` | File search, read, tree, stats, grep |
-| `LeadHunter` | CEO lead discovery |
-| `ContentWriter` | Content generation |
-| `RecipeCrawler` | Recipe discovery |
+## 🎯 Key Features
 
-### 🏗️ **Hub Architecture**
-Monorepo with logical layer separation:
-- **Core** - Foundation SDKs (vibe, agents, shared)
-- **Integrations** - External connectors (bridge, CRM)
-- **Tooling** - Developer utilities (dev, analytics)
-- **Business** - Revenue logic (money, ops, marketing)
-- **UI** - Interface components (vibe-ui, i18n)
+### 🧠 **Autonomous Execution Engine (PEV)**
+The core **Plan-Execute-Verify** workflow ensures every task is handled systematically:
+- **Plan**: Multi-step decomposition using specialized reasoning models.
+- **Execute**: Multi-mode execution (Shell, API, LLM) with autonomous self-healing.
+- **Verify**: Rigorous quality gates (Binh Phap) that enforce zero technical debt, type safety, and security standards.
 
-### 🤖 **169 BMAD Workflows**
-Pre-built agent workflows from BMAD Method:
-- `/product-brief` - Scope definition
-- `/create-prd` - Requirements engineering
-- `/create-architecture` - System design
-- `/dev-story` - Implementation with QA
+### 🦞 **Tôm Hùm (OpenClaw Daemon)**
+The "General" of your AI swarm, maintaining 24/7 readiness:
+- **Autonomous Dispatch**: Watches `tasks/` directory to route missions to the most suitable agents.
+- **Auto-CTO**: Proactively improves codebase quality when missions are idle.
+- **Thermal Guard**: Specialized resource management for Edge devices (M1/M2/M3 MacBooks).
 
-### ⚡ **Agent Teams Integration**
-Parallel execution with Claude Code CLI:
-- Automatic spawning (FE + BE + Debug + Review)
-- Shared task list coordination
-- Plan-driven delegation
-
----
-
-## 🚀 Quick Start
-
-```bash
-# Install dependencies
-pip install typer rich pydantic
-
-# Plan a task (generates steps, no execution)
-mekong plan "implement user authentication"
-
-# Cook: full Plan → Execute → Verify pipeline
-mekong cook "deploy API with rate limiting"
-
-# Execute a recipe file
-mekong run recipes/deploy-api.md
-
-# Use agents directly
-mekong agent git status
-mekong agent file stats
-```
+### ⚡ **Antigravity Proxy**
+A unified LLM gateway (`port 11436`) providing:
+- **Intelligent Load Balancing**: Spreads requests across multiple providers (Ollama, OpenRouter, Google AI).
+- **Failover Autonomy**: Automatically switches models during quota exhaustion.
+- **Cost Optimization**: Routes simple tasks to faster models while reserving high-reasoning tasks for Claude Opus.
 
 ---
 
 ## 📦 Architecture
 
-```
-mekong-cli/
-├── src/core/              # Plan-Execute-Verify engine
-│   ├── planner.py         # 謀 Task decomposition
-│   ├── executor.py        # 執 Multi-mode runner
-│   ├── verifier.py        # 證 Result validation
-│   ├── orchestrator.py    # 統 Workflow coordination
-│   ├── llm_client.py      # 🤖 Unified LLM client
-│   └── agent_base.py      # Base class (Plan-Execute-Verify)
-├── src/agents/            # Built-in agents
-│   ├── git_agent.py       # Git operations
-│   ├── file_agent.py      # File system operations
-│   ├── lead_hunter.py     # Lead discovery
-│   └── content_writer.py  # Content generation
-├── _bmad/                 # 169 workflows + 9 agents
-├── apps/                  # Product applications
-│   ├── raas-gateway/      # Cloudflare Worker gateway
-│   ├── agencyos-landing/  # Main landing page
-│   └── openclaw-worker/   # OpenClaw bridge
-└── tests/                 # Test suite
-```
+Mekong CLI utilizes a **Hub-and-Spoke** architecture to ensure modularity and scalability:
 
----
+```mermaid
+graph TD
+    User[User / Webhook] -->|Task File| Inbox[tasks/ inbox]
+    Inbox --> TomHum[🦞 Tôm Hùm Daemon]
 
-## 🎯 Tech Stack
+    subgraph "Hub (Orchestration)"
+        TomHum -->|Dispatch| Brain[CC CLI Brain]
+        Brain -->|PEV Cycle| Engine[Mekong Engine]
+    end
 
-### Backend
-- **Python 3.11+** with Poetry
-- **FastAPI** for API layer
-- **Typer** for CLI commands
-- **Rich** for terminal UI
-- **Pydantic** for type safety
+    subgraph "Execution Layer"
+        Engine -->|Edit Code| Files[Source Code]
+        Engine -->|Verify| Test[Pytest / Vitest]
+        Engine -->|Deploy| CI[GitHub Actions]
+    end
 
-### Frontend
-- **Next.js 16** with App Router
-- **TypeScript 5.0+**
-- **Tailwind CSS 4.0**
-- **Framer Motion** for animations
-- **Glassmorphism** design system
+    subgraph "Intelligence"
+        Engine -->|Proxy :11436| Antigravity[Antigravity Proxy]
+        Antigravity --> Models[Claude 3.5/3.7 / Gemini 1.5/2.0]
+    end
 
-### AI & Orchestration
-- **Claude 3.5 Sonnet** via Anthropic API
-- **Gemini Pro** integration
-- **Agent Teams** coordination
-- **BMAD Method** workflows
-
----
-
-## 🏯 Binh Pháp Quality Gates
-
-Every recipe execution enforces quality standards:
-
-| Gate | Criterion | Verification |
-|------|-----------|--------------|
-| 始計 (Tech Debt) | 0 TODOs/FIXMEs | `grep -r "TODO\|FIXME" src` |
-| 作戰 (Type Safety) | 0 `any` types | `grep -r ": any" src` |
-| 謀攻 (Performance) | Build < 10s | `time npm run build` |
-| 軍形 (Security) | 0 high vulns | `npm audit --audit-level=high` |
-| 兵勢 (UX) | Loading states | Manual review |
-| 虛實 (Documentation) | Updated docs | Git diff check |
-
----
-
-## 📚 Documentation
-
-- **[CLAUDE.md](./CLAUDE.md)** - Binh Pháp rules for AI agents
-- **[docs/](./docs/)** - Project documentation
-- **[packages/](./packages/)** - Package-specific READMEs
-- **[_bmad/](._bmad/)** - BMAD workflow catalog
-
----
-
-## 🎨 Visual Design System
-
-### Glassmorphism Classes
-```css
-.glass-card {
-  @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;
-}
+    subgraph "RaaS Ecosystem"
+        Engine --> App1[Sophia AI Factory]
+        Engine --> App2[84tea F&B]
+        Engine --> App3[Apex OS]
+    end
 ```
 
-### Dark Mode Palette
-- Background: `#0a0a0f`
-- Surface: `#13131a`
-- Accent: `#8b5cf6` (Purple), `#ec4899` (Pink)
+---
 
-### Typography
-- **Headings**: Inter Display
-- **Body**: Inter
-- **Code**: JetBrains Mono
+## 💎 RaaS Foundation Tiers
+
+Mekong CLI is built on a tiered foundation designed for both independent developers and enterprise agencies.
+
+| Feature | **Free Tier** (Community) | **Paid Tier** (Enterprise) |
+|---------|---------------------------|----------------------------|
+| **Execution** | Local Edge Execution | High-Performance Cloud GPU |
+| **Models** | Basic Models (Flash/Haiku) | Premium (Opus 4.5/4.6, DeepSeek R1) |
+| **Agent Swarm** | Sequential execution | Massive Parallel Agent Teams |
+| **Deployment** | Manual verification | 100% Automated Green Production |
+| **Support** | Community GitHub Issues | 24/7 Dedicated RaaS Architect |
+| **Advanced Tools** | Basic CLI tools | Custom Skills, Advanced CRM/Ads Ops |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Python**: 3.11+
+- **Node.js**: 20+
+- **pnpm**: 8+
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/longtho638-jpg/mekong-cli.git
+cd mekong-cli
+
+# Install all dependencies
+pnpm install
+pip install -r requirements.txt
+
+# Configure your environment
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+### Starting the Daemon
+
+```bash
+# Launch the Tôm Hùm Daemon
+cd apps/openclaw-worker
+npm run start
+```
+
+### Basic Commands
+
+```bash
+# Execute a mission
+mekong cook "Fix the authentication bug in Apex OS"
+
+# Plan a mission without executing
+mekong plan "Create a 12-month roadmap for Sophia Video Bot"
+
+# Check your agent's current status
+mekong status
+```
 
 ---
 
 ## 🤝 Contributing
 
-This is an open-core project. See our [contribution guidelines](./CONTRIBUTING.md).
-
----
-
-## 📄 License
-
-MIT License - See [LICENSE](./LICENSE)
+We welcome contributions to the RaaS ecosystem. Please read our **[CONTRIBUTING.md](./CONTRIBUTING.md)** and **[Binh Phap Standards](./docs/code-standards.md)** before submitting a PR.
 
 ---
 
 <div align="center">
 
-**Built with 🏯 Binh Pháp Principles**
-
-*"Bất chiến nhi khuất nhân chi binh" - Win without fighting*
-
-[AgencyOS](https://agencyos.dev) • [Documentation](./docs/) • [BMAD Method](./_bmad/)
+**Mekong CLI** © 2026 Binh Phap Venture Studio.
+*"In war, let your great object be victory, not lengthy campaigns."*
 
 </div>
