@@ -31,9 +31,9 @@ describe("VIBE UI Design System", () => {
 
     it("should have dark mode colors", () => {
       expect(colors.dark).toBeDefined();
-      expect(colors.dark.bg).toBe("#0f172a");
-      expect(colors.dark.card).toBe("#1e293b");
-      expect(colors.dark.border).toBe("#334155");
+      expect(colors.dark.bg).toBe("#0a0a0f");
+      expect(colors.dark.card).toBe("#1a1a24");
+      expect(colors.dark.border).toBe("#2a2a3a");
     });
   });
 
@@ -130,7 +130,7 @@ describe("VIBE UI Design System", () => {
   describe("Vibe Classes", () => {
     it("should have glass morphism class", () => {
       expect(vibeClasses.glass).toBe(
-        "backdrop-blur-xl bg-white/10 border border-white/20",
+        "backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl",
       );
     });
 
@@ -142,19 +142,19 @@ describe("VIBE UI Design System", () => {
 
     it("should have hover scale class", () => {
       expect(vibeClasses.hoverScale).toBe(
-        "transition-transform hover:scale-105",
+        "transition-transform hover:scale-105 duration-300",
       );
     });
 
     it("should have hover glow class", () => {
       expect(vibeClasses.hoverGlow).toBe(
-        "hover:shadow-lg hover:shadow-purple-500/25",
+        "hover:shadow-lg hover:shadow-purple-500/25 transition-shadow duration-300",
       );
     });
 
     it("should have focus ring class", () => {
       expect(vibeClasses.focusRing).toBe(
-        "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2",
+        "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-dark-bg",
       );
     });
   });
