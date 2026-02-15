@@ -7,14 +7,14 @@
 - [x] Triển khai chiến thuật RSI + SMA.
 - [x] Hệ thống báo cáo Console & HTML.
 
-## Phase 2: Arbitrage Expansion (Current)
+## Phase 2: Arbitrage Expansion (Completed)
 - [x] Triển khai **Cross-Exchange Arbitrage**.
 - [x] Triển khai **Triangular Arbitrage**.
 - [x] Triển khai **Statistical Arbitrage** (Pairs Trading).
 - [ ] Tích hợp WebSocket cho dữ liệu thời gian thực (Low latency).
 - [ ] Cơ chế tối ưu hóa phí giao dịch (Fee calculation).
 
-## Phase 3: Risk & Advanced Features (Planned)
+## Phase 3: Advanced Arbitrage & Risk (Current)
 - [ ] Hỗ trợ Multi-symbol trading đồng thời.
 - [ ] Triển khai Trailing Stop Loss & Take Profit nâng cao.
 - [ ] Dashboard UI Web (React/Next.js) để theo dõi real-time.

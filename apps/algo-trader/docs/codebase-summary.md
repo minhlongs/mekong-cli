@@ -15,15 +15,23 @@ Algo Trader là một modular trading bot được thiết kế để thực thi
 
 ## Key Components
 - **BotEngine**: Điều phối luồng dữ liệu từ `IDataProvider` qua `IStrategy` đến `IExchange`.
-- **RiskManager**: Quản lý rủi ro và tính toán khối lượng lệnh.
-- **OrderManager**: Theo dõi và quản lý trạng thái các lệnh.
-- **StrategyLoader**: Tải các chiến thuật từ file cấu hình.
+- **RiskManager**: Quản lý rủi ro và tính toán khối lượng lệnh dựa trên số dư khả dụng.
+- **OrderManager**: Theo dõi và quản lý trạng thái các lệnh (Pending, Executed, Canceled).
+- **StrategyLoader**: Tải linh hoạt các chiến thuật từ file cấu hình.
+- **Indicators**: Thư viện tính toán toán học/tài chính tùy chỉnh (SMA, RSI, StdDev, Z-Score, Correlation).
 
-## Recent Additions: Arbitrage Strategies
-Hệ thống đã bổ sung 3 chiến thuật Arbitrage mới:
-1. **Cross-Exchange Arbitrage**: Khai thác chênh lệch giá của cùng một tài sản trên hai sàn khác nhau.
-2. **Triangular Arbitrage**: Khai thác chênh lệch giá giữa 3 cặp tiền trên cùng một sàn (ví dụ: BTC -> ETH -> USDT -> BTC).
-3. **Statistical Arbitrage (Pairs Trading)**: Giao dịch cặp tiền dựa trên sự tương quan và hồi quy về giá trị trung bình (Mean Reversion), sử dụng Z-Score.
+## Implementation Details: Arbitrage Strategies
+Hệ thống đã triển khai đầy đủ 3 chiến thuật Arbitrage cốt lõi:
+1. **Cross-Exchange Arbitrage** (`src/strategies/CrossExchangeArbitrage.ts`):
+   - So sánh `candle.close` với `metadata.exchangeBPrice`.
+   - Ngưỡng kích hoạt mặc định: 0.1% spread.
+2. **Triangular Arbitrage** (`src/strategies/TriangularArbitrage.ts`):
+   - Tính toán tỷ giá chéo Forward/Backward qua 3 cặp tiền.
+   - Ngưỡng lợi nhuận mặc định: 0.05% per loop.
+3. **Statistical Arbitrage** (`src/strategies/StatisticalArbitrage.ts`):
+   - Theo dõi tương quan giữa 2 tài sản.
+   - Sử dụng Lookback Period = 100 nến để tính Z-Score.
+   - Entry: Z-Score > 2.0 hoặc < -2.0. Exit: Z-Score < 0.5.
 
 ## Tech Stack
 - TypeScript
