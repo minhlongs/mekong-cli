@@ -47,6 +47,7 @@ const BUSY_PATTERNS = [
   /Reducing/i, /Blanching/i, /Thinking/i,
   /Churning/i, /Cooking/i, /Toasting/i,
   /Simmering/i, /Steaming/i, /Grilling/i, /Roasting/i,
+  /Reticulating/i,                      // CC CLI processing status
   /Vibing/i,                           // ClaudeKit status
   /✻\s+\w+ing/,                        // General: ✻ + any gerund verb
   // FIXED: Detect BOTH Up (Upload) and Down (Download) arrows
