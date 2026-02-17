@@ -96,7 +96,8 @@ class TestMekongBot(unittest.TestCase):
 
     def test_help_text_contains_commands(self):
         """Help text lists all commands."""
-        for cmd in ["/cmd", "/status", "/schedule", "/swarm", "/memory", "/help"]:
+        # Updated list based on Tôm Hùm edition help text
+        for cmd in ["/cook", "/spawn", "/tasks", "/sessions", "/status", "/schedule", "/memory", "/help", "/agi", "/remember"]:
             self.assertIn(cmd, HELP_TEXT)
 
     def test_build_keyboard_no_telegram(self):
@@ -160,7 +161,7 @@ class TestMekongBot(unittest.TestCase):
 
         asyncio.run(bot.status_handler(update, context))
         call_args = update.message.reply_text.call_args
-        self.assertIn("Mekong Status", call_args[0][0])
+        self.assertIn("Tôm Hùm Status", call_args[0][0])
 
     def test_memory_handler_empty(self):
         """memory_handler handles empty memory."""
