@@ -51,15 +51,52 @@ function isComplexRawMission(text) {
 }
 
 /**
+ * Detect if task should be split into multiple /cook commands.
+ * Heuristic: >100 chars AND has separators ("; ", " và ", " and ", multiple sentences)
+ * @param {string} text - Sanitized task text
+ * @returns {boolean}
+ */
+function shouldChainCooks(text) {
+  if (text.length < 100) return false;
+  const hasMultipleSentences = (text.match(/\.\s+[A-Z]/g) || []).length > 1;
+  const hasSeparators = /;\s+|và\s+|and\s+/i.test(text);
+  return hasMultipleSentences || hasSeparators;
+}
+
+/**
+ * Split task into multiple subtasks based on separators.
+ * @param {string} text - Task text
+ * @returns {string[]} - Array of subtasks
+ */
+function splitTaskIntoSubtasks(text) {
+  // Try splitting by: "; ", " và ", " and ", ". " (sentences)
+  let subtasks = text.split(/;\s+|và\s+|and\s+|\.\s+(?=[A-Z])/i);
+
+  // Filter out empty/short subtasks
+  subtasks = subtasks.filter(s => s.trim().length > 10);
+
+  // If split resulted in too many (>5), merge back to max 3-4 subtasks
+  if (subtasks.length > 5) {
+    const chunk1 = subtasks.slice(0, 2).join('; ');
+    const chunk2 = subtasks.slice(2, 4).join('; ');
+    const chunk3 = subtasks.slice(4).join('; ');
+    subtasks = [chunk1, chunk2, chunk3].filter(s => s.length > 0);
+  }
+
+  return subtasks;
+}
+
+/**
  * Build prompt from raw task content.
- * Rule 13: Command Obsession + Hàn Băng Quyết v4 Adaptive Scaling
+ * Rule 13: Command Obsession + Hàn Băng Quyết v4 Adaptive Scaling + Multi-Cook Chaining
  */
 function buildPrompt(taskContent) {
   let clean = taskContent.replace(/\\!/g, '!').replace(/\\"/g, '"').trim();
   clean = clean.replace(/^[a-z0-9_-]+:\s*/i, '');
   const safe = clean.replace(/[()$`\\!]/g, ' ').replace(/\s+/g, ' ').trim();
 
-  if (safe.includes('/binh-phap') || safe.includes('/cook')) return safe;
+  // 🔒 Chairman Fix: REMOVED bypass — ALL prompts MUST go through mandatePrefix for đa luồng
+  // OLD BUG: if (safe.includes('/cook')) return safe; ← SKIPPED all multi-thread mandates!
 
   // 🧠 FIX #1: PERSISTENT MEMORY — Always load memory.md + post-mortem lessons
   const memoryCtx = getTopLessons(10);
@@ -87,20 +124,38 @@ function buildPrompt(taskContent) {
 
   // Smart Throttle: If load is high, reduce power to stay alive
   let adaptiveMandate = '';
-  if (load > 12 || overheat) {
-    adaptiveMandate = 'HÀN BĂNG MODE: Máy rất nóng — Chỉ dùng TỐI ĐA 2 subagents. Ưu tiên giải quyết nhanh, ít file. ';
+  if (load > 25 || overheat) {
+    adaptiveMandate = 'HÀN BĂNG MODE: Máy rất nóng — Chỉ dùng TỐI ĐA 3 subagents parallel. Ưu tiên giải quyết nhanh, ít file. ';
   } else {
     adaptiveMandate = 'COMMANDER RULE 13: Bạn là Elite Commander. Chỉ huy team subagents một cách ÁM ẢNH (10+ agents nếu cần) để đạt hiệu quả 1000%. ';
   }
 
+  // 🔒 IRON RULE (Chairman Decree 2026-02-17): MỌI prompt PHẢI dùng ClaudeKit command.
+  // CẤM gửi raw text. PHẢI có /cook, /plan:hard, /debug, /plan:parallel, /review.
+  // Đa luồng (10+ subagents) + Deep 10x thinking = BẮT BUỘC khi không overheat.
+  const claudekitEnforcement = 'CLAUDEKIT MANDATORY: Mọi task PHẢI dùng ClaudeKit commands (/cook, /plan:hard, /debug). PHẢI bật đa luồng subagents. PHẢI deep thinking. ';
+  const mandatePrefix = `${memoryPrefix}${adaptiveMandate}${claudekitEnforcement}`;
+
+  // 🔥 NEW: Multi-Cook Chaining for complex tasks (check BEFORE intent detection)
+  // Chaining có precedence cao hơn single intent khi có nhiều subtasks rõ ràng
+  if (shouldChainCooks(safe) && !overheat && load <= 30) {
+    const subtasks = splitTaskIntoSubtasks(safe);
+    if (subtasks.length >= 2) {
+      log(`🔗 CHAIN COOK DETECTED: Splitting into ${subtasks.length} parallel /cook commands`);
+      const cookCommands = subtasks.map((subtask, i) =>
+        `/cook "${VI_PREFIX}${subtask.trim()}. ${FILE_LIMIT} PHẢI dùng đa luồng 10+ subagents parallel." --parallel --auto`
+      ).join('\n\n');
+      return `${mandatePrefix}${cookCommands}`;
+    }
+  }
+
   const intent = detectIntent(safe);
-  const mandatePrefix = `${memoryPrefix}${adaptiveMandate}`;
 
   if (isComplexRawMission(safe.toLowerCase())) {
     // If exceptionally hot, don't even use plan:parallel, just cook to avoid bailing
-    if (load > 20) {
-      log(`⚠️ THERMAL CRITICAL (Load ${load}): Downgrading parallel mission to single /cook`);
-      return `${mandatePrefix}/cook "${VI_PREFIX}${safe}. ${FILE_LIMIT}" --auto`;
+    if (load > 30) {
+      log(`⚠️ THERMAL CRITICAL (Load ${load}): Downgrading to minimal parallel /cook`);
+      return `${mandatePrefix}/cook "${VI_PREFIX}${safe}. ${FILE_LIMIT} Nhiệt cao nhưng PHẢI dùng ít nhất 3 subagents parallel." --parallel --auto`;
     }
 
     const decomposed = buildDecomposedPrompt(safe, 'default');
@@ -114,7 +169,7 @@ function buildPrompt(taskContent) {
   if (intent === 'FIX') return `${mandatePrefix}/debug "${VI_PREFIX}${safe}" --fast`;
   if (intent === 'REVIEW') return `${mandatePrefix}/review "${VI_PREFIX}${safe}"`;
 
-  return `${memoryPrefix}/cook "${VI_PREFIX}${safe}. ${FILE_LIMIT}" --auto`;
+  return `${mandatePrefix}/cook "${VI_PREFIX}${safe}. ${FILE_LIMIT} PHẢI dùng đa luồng 10+ subagents parallel. 風林火山: 🔥LỬA mode — Agent Teams parallel execution." --parallel --auto`;
 }
 
 const { preemptiveCool } = require('./m1-cooling-daemon');
