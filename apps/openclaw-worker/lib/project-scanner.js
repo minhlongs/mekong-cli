@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const config = require('../config');
-const { log } = require('./brain-tmux');
+const { log } = require('./brain-process-manager');
 
 let scannerInterval = null;
 
