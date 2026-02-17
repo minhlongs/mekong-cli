@@ -79,13 +79,16 @@ const APPROVE_PATTERNS = [
   /2\.\s+No\s+\(recommended\)/i,
   /1\.\s+Yes,\s+I accept/i,
   /By proceeding, you accept all responsibility/i,
-  // 🧬 FIX Bug #2: ADD decision-request patterns
+  // 🧬 FIX Bug #2/#7: Decision-request patterns + comprehensive coverage
   /muốn.*làm gì/i,                     // "Bạn muốn tôi làm gì tiếp theo?"
   /USER DECISION/i,                    // "USER DECISION REQUIRED"
   /Khuyến nghị.*chọn/i,                // "Khuyến nghị: Chọn Option A"
   /Options?:/i,                        // "Options: A) ... B) ..."
   /What would you like/i,              // "What would you like me to do?"
   /Which option/i,                     // "Which option do you prefer?"
+  /tiếp theo/i,                        // "làm gì tiếp theo?"
+  /Continue with/i,                    // "Continue with this?"
+  /Proceed with/i,                     // "Proceed with implementation?"
 ];
 
 // CC CLI context exhaustion
@@ -686,7 +689,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     let kickStartCount = 0;
 
     // Give CC CLI time to parse prompt and begin processing
-    await sleep(5000); // Reduced initial sleep to check for early failures
+    await sleep(2000); // 🧬 FIX #5: Reduced from 5000→2000 for faster CTO response
 
     while (Date.now() < deadline) {
       if (!isSessionAlive()) {
