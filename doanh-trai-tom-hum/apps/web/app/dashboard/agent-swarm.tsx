@@ -29,7 +29,7 @@ export function AgentSwarm() {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/agents/status');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/agents/status`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.agents)) {
@@ -51,7 +51,7 @@ export function AgentSwarm() {
     setLoading(true);
     setResults([]);
     try {
-      const res = await fetch('http://localhost:8000/api/agents/run', { method: 'POST' });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/agents/run`, { method: 'POST' });
       if (res.ok) {
         const data: SwarmResponse = await res.json();
         if (data.success) {
