@@ -10,6 +10,15 @@ const { recordMission, countTokensBetween } = require('./mission-journal');
 const { reflectOnMission } = require('./post-mortem-reflector');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// 🧬 FIX Bug #3: Priority sorting CRITICAL > HIGH > MEDIUM > LOW > (no prefix)
+function getPriority(filename) {
+  if (filename.startsWith('CRITICAL_')) return 0;
+  if (filename.startsWith('HIGH_')) return 1;
+  if (filename.startsWith('MEDIUM_')) return 2;
+  if (filename.startsWith('LOW_')) return 3;
+  return 4; // No prefix = lowest priority
+}
+
 let activeCount = 0;
 let currentTaskFile = null;
 const queue = [];
@@ -18,6 +27,9 @@ let pollIntervalRef = null;
 let watcher = null;
 
 async function processQueue() {
+  // 🧬 FIX Bug #3: Sort queue by priority before processing
+  queue.sort((a, b) => getPriority(a) - getPriority(b));
+
   // Allow up to MAX_CONCURRENT_MISSIONS parallel tasks
   if (activeCount >= config.MAX_CONCURRENT_MISSIONS || queue.length === 0) return;
   activeCount++;
