@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const config = require('../config');
-const { log, isBrainAlive } = require('./brain-tmux');
+const { log, isBrainAlive } = require('./brain-process-manager');
 const { isQueueEmpty } = require('./task-queue');
 const { isOverheating } = require('./m1-cooling-daemon');
 

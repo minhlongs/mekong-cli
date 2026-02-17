@@ -7,7 +7,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { log } = require('./brain-tmux');
+const { log } = require('./brain-process-manager');
 const config = require('../config');
 
 /**

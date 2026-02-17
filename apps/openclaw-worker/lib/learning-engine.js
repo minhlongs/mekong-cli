@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { log } = require('./brain-tmux');
+const { log } = require('./brain-process-manager');
 
 const HISTORY_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/mission-history.json');
 const INSIGHTS_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/learning-insights.json');
