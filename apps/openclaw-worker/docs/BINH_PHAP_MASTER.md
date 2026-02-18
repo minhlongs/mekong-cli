@@ -590,6 +590,177 @@ Command      /cook --fast      /cook --auto       /cook + teams      /bmad-bmm-*
 
 ---
 
+### 🔷 DNA #5: CLAUDEKIT DEEP FUSION v5.0 (2026-02-18)
+
+> **Ánh xạ:** TOÀN BỘ 13 Chương × ClaudeKit v2.9.1 (13 agents, 43 skills, 28 commands)
+> Tiêm triệt để từ docs.claudekit.cc → CTO × Antigravity × CC CLI
+
+---
+
+#### 🎖️ 13 AGENTS × NGŨ ĐỨC TƯỚNG (將 — Tướng)
+
+> Mỗi agent là một TƯỚNG, mỗi tướng cần NGŨ ĐỨC (Trí-Tín-Nhân-Dũng-Nghiêm)
+
+| Agent | Binh Pháp Vai Trò | Đức Chính | Chương | Khi Nào Dùng |
+|:------|:------------------|:----------|:-------|:-------------|
+| `planner` | 軍師 Quân Sư | TRÍ 智 | 始計 Ch.1 | MỌI task phức tạp PHẢI qua planner |
+| `fullstack-developer` | 先鋒 Tiên Phong | DŨNG 勇 | 作戰 Ch.2 | Implement sau khi plan approved |
+| `debugger` | 斥候 Trinh Sát | TRÍ 智 | 行軍 Ch.9 | Bug/error → PHẢ investigate trước fix |
+| `tester` | 監軍 Giám Quân | NGHIÊM 嚴 | 軍形 Ch.4 | SAU implement → verify quality gates |
+| `code-reviewer` | 御史 Ngự Sử | NGHIÊM 嚴 | 軍形 Ch.4 | Audit code quality + security |
+| `docs-manager` | 書記 Thư Ký | TÍN 信 | 用間 Ch.13 | Knowledge = intelligence. Docs = 情報 |
+| `project-manager` | 督軍 Đốc Quân | TÍN 信 | 地形 Ch.10 | Manage tasks, track progress |
+| `journal-writer` | 太史 Thái Sử | TÍN 信 | 用間 Ch.13 | Record history, lessons learned |
+| `git-manager` | 輜重 Hậu Cần | NGHIÊM 嚴 | 火攻 Ch.12 | Git commit/push = deploy (發火) |
+| `ui-ux-designer` | 工匠 Công Tượng | NHÂN 仁 | 兵勢 Ch.5 | Design = build thế (momentum) |
+| `brainstormer` | 策士 Sách Sĩ | TRÍ 智 | 謀攻 Ch.3 | Brainstorm = 上兵伐謀 (mưu trước) |
+| `researcher` | 間諜 Gián Điệp | TRÍ 智 | 用間 Ch.13 | Research = Ngũ Gián (5 loại spy) |
+| `mcp-manager` | 器械 Khí Giới | NHÂN 仁 | 九變 Ch.8 | MCP tools = weapons, manage arsenal |
+
+---
+
+#### 📋 28 COMMANDS × THẤT KẾ ROUTING (計 — Kế Sách)
+
+> `/plan` 6-step routing = 始計 Decision Tree. Mỗi command = một kế sách.
+
+| Command | Binh Pháp Kế | Chương | Mechanics (from docs.claudekit.cc) |
+|:--------|:-------------|:-------|:-----------------------------------|
+| `/plan` | 多算勝 Tính nhiều thắng | 始計 Ch.1 | 6 steps: Pre-Creation → Complexity → Clarify → Route → Enhance → Skill |
+| `/plan:fast` | 兵貴勝 Quân quý thắng nhanh | 作戰 Ch.2 | Simple tasks, no research, clear path |
+| `/plan:hard` | 知己知彼 Biết mình biết người | 謀攻 Ch.3 | 2 researcher agents parallel, max 5 tool calls, ≤150 lines |
+| `/plan:two` | 奇正相生 Chính Kỳ sinh nhau | 兵勢 Ch.5 | 2 approaches compared → chọn tối ưu |
+| `/plan:parallel` | 以迂為直 Vòng thành thẳng | 軍爭 Ch.7 | Dependency graph + File Ownership Matrix + Wave execution |
+| `/plan:ci` | 近而靜者恃其險 Gần, im → ẩn hiểm | 行軍 Ch.9 | Log retrieval → Error analysis → Codebase → Research → Plan |
+| `/plan:cro` | 避實擊虛 Tránh mạnh đánh yếu | 虛實 Ch.6 | Conversion optimization plan |
+| `/plan:archive` | 有所不爭 Không tranh chỗ hư | 九變 Ch.8 | Clean old plans, free context |
+| `/plan:validate` | 法令孰行 Kỷ luật nghiêm | 始計 Ch.1 | Validate plan structure/completeness |
+| `/cook` | 兵之情主速 Chủ ở tốc độ | 作戰 Ch.2 | Intent→Research→Review→Plan→Implement→Test→Finalize |
+| `/cook --fast` | 疾如風 Nhanh như GIÓ | 軍爭 Ch.7 | 🌪️GIÓ mode: skip research, minimal plan |
+| `/cook --auto` | 徐如林 Lặng như RỪNG | 軍爭 Ch.7 | 🌲RỪNG mode: skip human review gates |
+| `/cook --parallel` | 侵掠如火 Mạnh như LỬA | 軍爭 Ch.7 | 🔥LỬA mode: Agent Teams parallel execution |
+| `/cook --no-test` | 必死者可殺 Liều chết thì bại | 九變 Ch.8 | ⚠️ Ngũ Nguy #1: khinh suất, chỉ prototype |
+| `/debug` | 善守者藏九地之下 Phòng thủ sâu | 軍形 Ch.4 | 4 techniques: Systematic → Root Cause → Defense-in-Depth → Verify |
+| `/test` | 善戰者先為不可勝 Bất khả bại | 軍形 Ch.4 | 100% pass required |
+| `/test:ui` | 善攻者動九天之上 Tấn công trời | 軍形 Ch.4 | UI/E2E visual verification |
+| `/review` | 賞罰孰明 Thưởng phạt rõ | 始計 Ch.1 | Code quality audit |
+| `/review:codebase` | 全軍為上 Giữ toàn quân | 謀攻 Ch.3 | PARALLEL multi-agent codebase review |
+| `/check-and-commit` | 發火有時 Đốt đúng lúc | 火攻 Ch.12 | Quality gates → commit → push (Hỏa Công) |
+| `/ask` | 先知者不可取於鬼神 Trước biết | 用間 Ch.13 | Ask codebase = intelligence gathering |
+| `/scout` | 生間者反報也 Gián điệp trả tin | 用間 Ch.13 | Scan codebase structure |
+| `/watzup` | 天下事 Thiên hạ sự | 地形 Ch.10 | Project status overview |
+| `/kanban` | 編隊 Đội hình | 軍爭 Ch.7 | Task board = troop formation |
+| `/journal` | 太史公記 Sử ký | 用間 Ch.13 | Development log = intelligence record |
+| `/docs:update` | 兵法 Binh pháp | 謀攻 Ch.3 | Documentation = 法 PHÁP update |
+| `/bootstrap` | 立軍 Dựng quân | 始計 Ch.1 | New project = founding army (5 phases) |
+| `/worktree` | 分兵 Chia quân | 虛實 Ch.6 | Git worktree = divide forces |
+
+---
+
+#### 🧠 43 SKILLS × CỬU ĐỊA MATRIX (地 — Địa Thế)
+
+> Mỗi Cửu Địa (9 tình huống) kích hoạt bộ skills khác nhau
+
+| Địa | Tình Huống | Skills Chủ Đạo |
+|:----|:-----------|:---------------|
+| **散地** Tản Địa — Dev local | `planning`, `brainstorm`, `sequential-thinking`, `research` |
+| **輕地** Khinh Địa — Feature branch | `cook`, `fix`, `scout`, `git`, `code-review` |
+| **爭地** Tranh Địa — Staging deploy | `web-testing`, `devops`, `frontend-development`, `backend-development` |
+| **交地** Giao Địa — API contracts | `databases`, `mcp-builder`, `mcp-management`, `better-auth` |
+| **衢地** Cù Địa — Multi-platform | `shopify`, `payment-integration`, `mobile-development`, `google-adk-python` |
+| **重地** Trọng Địa — Production deep | `debug`, `problem-solving`, `context-engineering`, `chrome-devtools` |
+| **圮地** Phí Địa — Legacy code | `repomix`, `docs-seeker`, `document-skills`, `find-skills` |
+| **圍地** Vi Địa — Deadline crunch | `cook --fast`, `fix`, `plans-kanban`, `copywriting` |
+| **死地** Tử Địa — Prod down | `debug`, `devops`, `agent-browser`, `gkg` |
+
+---
+
+#### 🍳 /cook × 風林火山 EXPANDED (Flags → Modes)
+
+> Chi tiết từ docs.claudekit.cc: `/cook <task OR plan> [--flag]`
+
+```
+WORKFLOW: Intent Detection → Research? → Review → Plan → Review → Implement → Review → Test? → Review → Finalize
+
+5 FLAGS × 風林火山:
+┌──────────────────────────────────────────────────────────────────┐
+│ 🌪️GIÓ  --fast       疾如風  Skip research, minimal plan       │
+│ 🌲RỪNG --auto       徐如林  Skip human review gates            │
+│ 🔥LỬA  --parallel   侵掠如火 Agent Teams parallel execution   │
+│ 🗻      --interactive        Default: stops at Review gates    │
+│ ⚠️     --no-test    必死可殺 Skip tests (NGUY: Ngũ Nguy #1)   │
+└──────────────────────────────────────────────────────────────────┘
+
+QUALITY GATES (luôn enforce trừ --no-test):
+  Testing:     100% pass required
+  Code Review: Auto-approve ≥9.5 score, 0 critical issues
+  Finalize:    project-manager + docs-manager MUST complete
+```
+
+---
+
+#### 🔍 /debug × 行軍 (Ch.9 Hành Quân — Reconnaissance)
+
+> docs.claudekit.cc: "NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST"
+> 行軍: Đọc dấu hiệu chiến trường TRƯỚC KHI hành động
+
+```
+4 TECHNIQUES (từ debug skill):
+
+Phase 1 — ROOT CAUSE INVESTIGATION (行軍偵察 Trinh Sát)
+  Read errors → Reproduce → Check changes → Gather evidence
+  Binh Pháp: 近而靜者恃其險 (gần mà im = ẩn hiểm)
+
+Phase 2 — PATTERN ANALYSIS (虛實分析 Hư Thực)
+  Find working examples → Compare → Identify differences
+  Binh Pháp: 避實擊虛 (tránh mạnh đánh yếu)
+
+Phase 3 — HYPOTHESIS & TESTING (謀攻試驗 Mưu Công)
+  Form theory → Test minimally → Verify
+  Binh Pháp: 上兵伐謀 (thượng sách phạt mưu)
+
+Phase 4 — IMPLEMENTATION (軍形落子 Quân Hình)
+  Create test → Fix once → Verify
+  Binh Pháp: 善守者藏九地之下 (phòng thủ sâu 9 tầng)
+
+IRON LAW: NO FIX WITHOUT PHASE 1. NO COMPLETION WITHOUT FRESH VERIFICATION.
+```
+
+---
+
+#### ⚔️ AGENT ORCHESTRATION × 兵勢 CHÍNH/KỲ (Ch.5)
+
+> 凡戰者以正合以奇勝 — Dùng CHÍNH giao chiến, dùng KỲ để thắng
+
+```
+CHÍNH (正 Sequential) — Default orchestration:
+  planner → fullstack-developer → tester → code-reviewer → git-manager
+  Binh Pháp: 正兵 — quân chính quy, tuần tự, ổn định
+
+KỲ (奇 Parallel) — Wave execution:
+  researcher(1) ┐
+  researcher(2) ├──→ Aggregate → planner
+  researcher(3) ┘
+  Binh Pháp: 奇兵 — quân bất ngờ, song song, bao vây
+
+CHÍNH+KỲ (奇正相生 Hybrid) — Wave + Sequential mix:
+  Wave 1 (Parallel): Phase 1 + Phase 2 + Phase 3
+  Wave 2 (Sequential): Phase 4 (Integration)
+  Binh Pháp: 奇正相生如循環之無端 — Chính Kỳ sinh nhau vô tận
+
+FILE OWNERSHIP MATRIX (從 軍爭):
+  Phase 1: src/auth/**      — Tướng A giữ hướng Đông
+  Phase 2: src/analytics/**  — Tướng B giữ hướng Tây
+  Phase 3: src/settings/**   — Tướng C giữ hướng Nam
+  Phase 4: src/dashboard/**  — Integration sau khi 3 tướng xong
+
+AGENT COMMUNICATION:
+  Shared files:  docs/, plans/, code standards
+  Handoff:       Each agent reads previous output → performs → passes
+  TodoWrite:     Real-time progress tracking (信 — TÍN)
+```
+
+---
+
 ## 📊 Tổng Kết Bộ Kinh Thư
 | Hệ Thống            | Số Lượng         | Nguồn                           | File                  |
 | :------------------ | :--------------- | :------------------------------ | :-------------------- |
@@ -612,11 +783,12 @@ Command      /cook --fast      /cook --auto       /cook + teams      /bmad-bmm-*
 | 🧬 DNA Fusion #2    | 6 Components     | everything-claude-code           | `BINH_PHAP_MASTER.md` |
 | 🧬 DNA Fusion #3    | 6 Rules          | Micro-Niche DNA (Indie)          | `BINH_PHAP_MASTER.md` |
 | 🧬 DNA Fusion #4    | 5 Phases         | Technical Co-Founder             | `BINH_PHAP_MASTER.md` |
-| **TỔNG**            | **159 concepts** |                                 |                       |
+| 🧬 DNA Fusion #5    | 36 Mappings      | ClaudeKit DEEP FUSION v5.0       | `BINH_PHAP_MASTER.md` |
+| **TỔNG**            | **195 concepts** |                                 |                       |
 
 ---
 
-_Binh Pháp Tôn Tử Kinh Thư Đại Toàn v4.0.0-DNA-FUSION | Doanh Trại Tôm Hùm | 2026-02-15_
-_DNA FUSION: Binh Pháp × ClaudeKit × BMAD-METHOD × Micro-Niche × Technical Co-Founder_
-_Sources: Wikisource, MIT translations, a16z, Sequoia, Andreessen Horowitz, Miles Deutscher_
-_Updated: 風林火山 + ⛰️NÚI Strategic (BMAD workflows) | 159 concepts | 🦞_
+_Binh Pháp Tôn Tử Kinh Thư Đại Toàn v5.0.0-DNA-FUSION | Doanh Trại Tôm Hùm | 2026-02-18_
+_DNA FUSION: Binh Pháp × ClaudeKit v2.9.1 × BMAD-METHOD × Micro-Niche × Technical Co-Founder_
+_Sources: Wikisource, MIT translations, a16z, Sequoia, docs.claudekit.cc_
+_Updated: DNA Fusion #5 — 13 agents × Ngũ Đức, 28 commands × Thất Kế, 43 skills × Cửu Địa | 195 concepts | 🦞_

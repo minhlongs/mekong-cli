@@ -410,19 +410,57 @@ PRIVATE (.gitignore):
 
 ### Task Delegation Mandate (ĐIỀU 47)
 
-**NO COMMAND = NO ACTION.** Every task MUST use a ClaudeKit command:
+**NO COMMAND = NO ACTION.** Every task MUST use a ClaudeKit command.
+**Deep Reference:** `knowledge/CLAUDEKIT_DEEP_REFERENCE.md` (28 commands, 13 agents, 50+ skills)
 
-| Situation | Command |
-|-----------|---------|
-| Build/implement | `/cook "description"` |
-| Complex planning | `/plan:hard "description"` |
-| Quick plan | `/plan:fast "description"` |
-| Debug issue | `/debug "description"` |
-| Code review | `/review` |
-| Scan codebase | `/scout "what to find"` |
-| Run tests | `/test` |
-| Fix bug | `/fix "description"` |
-| Commit | `/check-and-commit` |
+| Situation | Command | Complexity |
+|-----------|---------|------------|
+| Simple impl | `/cook "task" --auto` | TRIVIAL |
+| Quick plan | `/plan:fast "task"` | SIMPLE |
+| Complex feat | `/plan:hard "task"` | MODERATE |
+| 2 approaches | `/plan:two "task"` | MODERATE |
+| Mega feature | `/plan:parallel "task"` | COMPLEX |
+| CI broken | `/plan:ci` | MODERATE |
+| CRO optimize | `/plan:cro` | MODERATE |
+| Archive plans | `/plan:archive` | TRIVIAL |
+| Validate plan | `/plan:validate` | TRIVIAL |
+| Debug issue | `/debug "issue"` | MODERATE |
+| Run tests | `/test` | TRIVIAL |
+| UI/E2E tests | `/test:ui` | SIMPLE |
+| Code review | `/review` | SIMPLE |
+| Parallel review | `/review:codebase` | COMPLEX |
+| Quality+commit | `/check-and-commit` | SIMPLE |
+| Ask codebase | `/ask "question"` | TRIVIAL |
+| Project status | `/watzup` | TRIVIAL |
+| Kanban board | `/kanban` | TRIVIAL |
+| Dev journal | `/journal` | TRIVIAL |
+| Init docs | `/docs:init` | SIMPLE |
+| Update docs | `/docs:update` | SIMPLE |
+| Summarize docs | `/docs:summarize` | SIMPLE |
+| Git worktree | `/worktree "name"` | SIMPLE |
+| Scout codebase | `/scout "what"` | SIMPLE |
+| Fix bug | `/fix "issue"` | SIMPLE |
+| Bootstrap new | `/bootstrap "desc"` | COMPLEX |
+| Set level | `/coding-level "lvl"` | TRIVIAL |
+| Preview work | `/preview` | TRIVIAL |
+
+### Complexity Routing (Auto-select)
+
+```
+TRIVIAL   → /cook "task" --auto           (< 5 files, < 15min)
+SIMPLE    → /plan:fast → /cook            (< 10 files, < 30min)
+MODERATE  → /plan:hard → /cook → /test    (< 20 files, < 1h)
+COMPLEX   → /plan:parallel → /cook phases (> 20 files, > 1h)
+STRATEGIC → /plan:parallel [5] → phases   (Architecture-level)
+```
+
+### Agent Orchestration (13 agents, auto by commands)
+
+```
+Sequential: planner → fullstack-developer → tester → code-reviewer → git-manager
+Parallel:   researcher(1) + researcher(2) + researcher(3) → planner
+Explicit:   "Use debugger agent to investigate, then planner to create fix"
+```
 
 ```
 ❌ REJECTED: "Fix the bug in the parser"

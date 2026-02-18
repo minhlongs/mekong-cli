@@ -11,6 +11,19 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
+| 2026-02-18 | fix | HIGH_mission_fix_fix_anima119_ | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | fix | HIGH_mission_fix_anima119_fix_ | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
+| 2026-02-18 | anima119 | HIGH_mission_anima119_fix_buil | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
+| 2026-02-18 | openclaw | HIGH_mission_openclaw_upstream | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | anima119 | MEDIUM_mission_anima119_fix_li | Clean success in 0min — good pattern | 0 | 0/min |
+| 2026-02-18 | awesome | HIGH_mission_awesome_skills_in | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | agent | HIGH_mission_agent_browser_ins | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | postiz | MEDIUM_mission_postiz_social_m | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | fix | HIGH_mission_fix_anima119_fix_ | FAILED — not_run | 0 | 0/min |
+| 2026-02-18 | anima119 | HIGH_mission_anima119_fix_buil | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
+| 2026-02-18 | fix | HIGH_mission_fix_fix_anima119_ | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
+| 2026-02-18 | fix | HIGH_mission_fix_anima119_fix_ | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
+| 2026-02-18 | anima119 | HIGH_mission_anima119_fix_buil | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
 | 2026-02-18 | fix | HIGH_mission_fix_anima119_fix_ | Clean success in 1min — good pattern | 0 | 0/min |
 | 2026-02-18 | hyperskill | HIGH_mission_hyperskill_genera | FAILED — not_run | 0 | 0/min |
 | 2026-02-18 | anima119 | MEDIUM_mission_anima119_fix_te | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
@@ -84,6 +97,7 @@
 
 > Patterns thành công → tái sử dụng cho missions tương lai.
 
+- **2026-02-18** [anima119]: Efficient mission — 0 tokens/min in 0min
 - **2026-02-18** [fix]: Efficient mission — 0 tokens/min in 1min
 - **2026-02-17** [openclaw]: AGI Evolution code loaded successfully — BINH_PHAP_VERIFIED (Ch.4 軍形: 先為不可勝)
 - **2026-02-17** [monitor-test]: Efficient mission — 40 tokens/min in 5min

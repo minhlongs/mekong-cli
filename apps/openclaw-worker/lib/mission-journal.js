@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+console.log('DEBUG: mission-journal config:', config);
 const { log } = require('./brain-process-manager');
 
 const HISTORY_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/mission-history.json');
@@ -53,7 +54,9 @@ async function recordMission(data) {
     // Keep last 1000 missions
     if (history.length > 1000) history = history.slice(-1000);
 
-    fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
+    const tempFile = `${HISTORY_FILE}.tmp`;
+    fs.writeFileSync(tempFile, JSON.stringify(history, null, 2));
+    fs.renameSync(tempFile, HISTORY_FILE);
     log(`JOURNAL: Recorded mission ${data.missionId} for project ${data.project}`);
 
   } catch (error) {

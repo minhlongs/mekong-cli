@@ -108,7 +108,7 @@ async function processSignals() {
                 if (!QL.checkQueueDiscipline(DAEMON_NAME)) continue;
                 fs.writeFileSync(missionPath, content);
                 QL.logQuanLuat(DAEMON_NAME, `🚨 signal -> mission: ${missionFilename}`);
-                QL.createSignal(DAEMON_NAME, 'brain-tmux', 'MISSION_READY', { file: missionFilename, from: signal.from }, 'HIGH');
+                QL.createSignal(DAEMON_NAME, 'brain-process-manager', 'MISSION_READY', { file: missionFilename, from: signal.from }, 'HIGH');
             }
 
             // Archive Signal

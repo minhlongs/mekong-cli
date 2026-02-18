@@ -4,7 +4,7 @@
  * Problem: Swarm (11 daemons) + Agent Teams (4-9 sub-agents) = 20 processes fighting
  * Solution: File-based mutex. When Agent Teams active → Swarm pauses dispatching.
  *
- * Usage in brain-tmux.js:
+ * Usage in brain-process-manager.js:
  *   if (teamMutex.isTeamActive()) { log('Agent Teams active — pausing'); return; }
  *
  * Usage when spawning Agent Teams:

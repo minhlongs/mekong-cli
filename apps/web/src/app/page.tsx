@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
@@ -12,8 +13,10 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
           <div className="text-center space-y-8">
             {/* Badge */}
-            <div className="inline-flex items-center rounded-full border border-cyan-500/50 bg-cyan-500/10 px-4 py-1.5 text-sm font-medium text-cyan-400 backdrop-blur">
-              <span className="animate-pulse mr-2">●</span> Enterprise AI Infrastructure
+            <div className="flex justify-center">
+              <Badge variant="outline" className="rounded-full border-cyan-500/50 bg-cyan-500/10 px-4 py-1.5 text-sm font-medium text-cyan-400 backdrop-blur">
+                <span className="animate-pulse mr-2">●</span> Enterprise AI Infrastructure
+              </Badge>
             </div>
 
             {/* Hero Headline */}
