@@ -146,9 +146,9 @@ function buildPrompt(taskContent) {
       const memoryContent = require('fs').readFileSync(memoryFile, 'utf-8');
       // Extract GOTCHAS section (most critical)
       const gotchasMatch = memoryContent.match(/## GOTCHAS[\s\S]*?(?=##|$)/);
-      // Token efficiency: Limit to 2000 chars (was 800)
-      const gotchas = gotchasMatch ? gotchasMatch[0].slice(0, 2000) : '';
-      memoryPrefix += gotchas ? `📜 MEMORY (GOTCHAS):\n${gotchas}\n\n` : '';
+      // Token efficiency: Limit to 800 chars (Critical only)
+      const gotchas = gotchasMatch ? gotchasMatch[0].slice(0, 800) : '';
+      memoryPrefix += gotchas ? `📜 MEMORY:\n${gotchas}\n\n` : '';
     }
   } catch (e) { /* silent fail — memory is optional */ }
 
@@ -200,10 +200,10 @@ function buildPrompt(taskContent) {
   let claudekitEnforcement;
   if (!isComplex && !isStrategic && safe.length < 200) {
     // Simple task: Minimal prompt
-    claudekitEnforcement = `CLAUDEKIT v2.9.1: ${claudekitRouting}CẤM raw text. PHẢI dùng ClaudeKit commands.`;
+    claudekitEnforcement = `CK2.9: ${claudekitRouting} NO raw text. MUST use commands.`;
   } else {
-    // Complex task: Full context
-    claudekitEnforcement = `CLAUDEKIT v2.9.1 MANDATORY: ${claudekitRouting}CẤM raw text. PHẢI dùng ClaudeKit commands. Available: /cook /plan:hard /plan:fast /plan:parallel /plan:ci /plan:cro /debug /test /test:ui /review /review:codebase /docs:update /check-and-commit /kanban /watzup /journal /ask. Agents: planner, fullstack-developer, debugger, tester, code-reviewer, researcher (auto-orchestrated). Đa luồng 10+ subagents + deep thinking BẮT BUỘC. `;
+    // Complex task: Context optimized (Brain Surgery 260218)
+    claudekitEnforcement = `CK2.9: ${claudekitRouting} NO raw text. Use /cook, /plan:hard, /plan:parallel.`;
   }
 
   const mandatePrefix = `${memoryPrefix}${adaptiveMandate}${claudekitEnforcement}`;

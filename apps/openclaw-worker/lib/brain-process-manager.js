@@ -31,14 +31,15 @@ const path = require('path');
 const config = require('../config');
 
 const TMUX_SESSION = 'tom_hum_brain';
-const COMPACT_EVERY_N = 50; // Compact every 50 missions
+const COMPACT_EVERY_N = 10; // Compact every 10 missions (Proactive)
+const COMPACT_TOKEN_THRESHOLD = 50000; // 50k tokens (Keep context lean)
 // 🧬 FIX #3: REMOVE /clear — CC CLI's /compact handles cleanup better
 // CLEAR_EVERY_N removed — /clear is redundant with /compact
 const MAX_RESPAWNS_PER_HOUR = 5;
 const RESPAWN_COOLDOWN_MS = 5 * 60 * 1000;
 const PROMPT_FILE = '/tmp/tom_hum_prompt.txt';
 // 🔒 LOCKED — DO NOT REDUCE (2026-02-15) — prevents false mission completion
-const MIN_MISSION_SECONDS = 60;   // Must wait 60s before idle-no-busy can trigger
+const MIN_MISSION_SECONDS = 10;   // Reduced 60s -> 10s (Brain Surgery 260218)
 const IDLE_CONFIRM_POLLS = 5;     // 5 consecutive idle polls required
 
 // --- DETECTION PATTERNS ---
@@ -103,6 +104,7 @@ const CONTEXT_LIMIT_PATTERNS = [
 ];
 
 let missionCount = 0;
+let tokensSinceCompact = 0; // Track accumulated context usage
 let respawnTimestamps = [];
 // 🧬 FIX Bug #1: DUPLICATE DISPATCH PREVENTION
 // Track recent mission hashes (prompt content) to prevent duplicate dispatch
@@ -493,13 +495,21 @@ function parseContextUsage(output) {
 // Only use /compact every 50 missions for context cleanup
 
 async function compactIfNeeded() {
-  if (missionCount > 0 && missionCount % COMPACT_EVERY_N === 0) {
-    log(`CONTEXT: /compact (mission #${missionCount})`);
+  const shouldCompact = (missionCount > 0 && missionCount % COMPACT_EVERY_N === 0) ||
+                        (tokensSinceCompact > COMPACT_TOKEN_THRESHOLD);
+
+  if (shouldCompact) {
+    const reason = tokensSinceCompact > COMPACT_TOKEN_THRESHOLD ?
+      `Token Threshold (${Math.round(tokensSinceCompact/1000)}k > ${Math.round(COMPACT_TOKEN_THRESHOLD/1000)}k)` :
+      `Mission Count (${missionCount})`;
+
+    log(`CONTEXT: /compact triggered by ${reason}`);
     pasteText('/compact');
     await sleep(1000);
     sendEnter();
     await sleep(2000);
     await waitForPrompt(60000);
+    tokensSinceCompact = 0; // Reset counter
   }
 }
 
@@ -524,7 +534,7 @@ async function respawnBrain(useContinue = true) {
 }
 
 // --- Per-Worker Mission Lock (enables parallel dispatch) ---
-const STALE_LOCK_THRESHOLD_MS = 30 * 60 * 1000; // 30min — Ch.2 作戰: 日費千金
+const STALE_LOCK_THRESHOLD_MS = 60 * 60 * 1000; // 60min — > MISSION_TIMEOUT (45m) (Brain Surgery 260218)
 
 function workerLockFile(idx) {
   return require('path').join(__dirname, '..', `.mission-active-P${idx}.lock`);
@@ -758,7 +768,8 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
           log(`COMPLETE: Mission #${num} (${elapsedSec}s) [cooked-pattern]${usage >= 0 ? ` [ctx=${usage}%]` : ''}`);
           // 作戰 Token tracking
           const tk1 = countTokensBetween(missionStartDate, new Date());
-          log(`TOKENS: Mission #${num} used ${tk1.tokens.toLocaleString()} tokens (${tk1.requests} reqs, ${tk1.model})`);
+          tokensSinceCompact += tk1.tokens; // Accumulate for proactive cleanup
+          log(`TOKENS: Mission #${num} used ${tk1.tokens.toLocaleString()} tokens (${tk1.requests} reqs, ${tk1.model}) [Session accum: ${Math.round(tokensSinceCompact/1000)}k]`);
           recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk1.tokens, elapsedSec, tk1.model);
           const daily1 = getDailyUsage(); if (daily1.overBudget) log(`⚠️ 作戰: DAILY BUDGET EXCEEDED — ${daily1.tokens.toLocaleString()} tokens today!`);
           return { success: true, result: 'done', elapsed: elapsedSec };
@@ -838,7 +849,8 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
               const usage = parseContextUsage(output);
               log(`COMPLETE: Mission #${num} (${elapsedSec}s) [idle-after-busy x${IDLE_CONFIRM_POLLS}]${usage >= 0 ? ` [ctx=${usage}%]` : ''}`);
               const tk2 = countTokensBetween(missionStartDate, new Date());
-              log(`TOKENS: Mission #${num} used ${tk2.tokens.toLocaleString()} tokens (${tk2.requests} reqs, ${tk2.model})`);
+              tokensSinceCompact += tk2.tokens;
+              log(`TOKENS: Mission #${num} used ${tk2.tokens.toLocaleString()} tokens (${tk2.requests} reqs, ${tk2.model}) [Session accum: ${Math.round(tokensSinceCompact/1000)}k]`);
               recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk2.tokens, elapsedSec, tk2.model);
               const daily2 = getDailyUsage(); if (daily2.overBudget) log(`⚠️ 作戰: DAILY BUDGET EXCEEDED — ${daily2.tokens.toLocaleString()} tokens today!`);
               return { success: true, result: 'done', elapsed: elapsedSec };
@@ -849,7 +861,8 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
             if (idleConfirmCount >= IDLE_CONFIRM_POLLS) {
               log(`COMPLETE: Mission #${num} (${elapsedSec}s) [idle-no-busy x${IDLE_CONFIRM_POLLS}]`);
               const tk3 = countTokensBetween(missionStartDate, new Date());
-              log(`TOKENS: Mission #${num} used ${tk3.tokens.toLocaleString()} tokens (${tk3.requests} reqs, ${tk3.model})`);
+              tokensSinceCompact += tk3.tokens;
+              log(`TOKENS: Mission #${num} used ${tk3.tokens.toLocaleString()} tokens (${tk3.requests} reqs, ${tk3.model}) [Session accum: ${Math.round(tokensSinceCompact/1000)}k]`);
               recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk3.tokens, elapsedSec, tk3.model);
               const daily3 = getDailyUsage(); if (daily3.overBudget) log(`⚠️ 作戰: DAILY BUDGET EXCEEDED — ${daily3.tokens.toLocaleString()} tokens today!`);
               return { success: true, result: 'done', elapsed: elapsedSec };
