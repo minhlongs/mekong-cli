@@ -540,7 +540,7 @@ _Expected Reliability: +90% (lock leak + memory injection)_
 **Problem:** `STALE_LOCK_THRESHOLD_MS` (30m) < `MISSION_TIMEOUT_MS` (45m).
 **Impact:** Valid long missions get killed/overwritten by cleaner → context corruption.
 **Fix:** Raised `STALE_LOCK_THRESHOLD_MS` to **60 minutes**.
-**Status:** ✅ Applied (Verified in previous step).
+**Status:** ✅ Applied (Verified 2026-02-18 10:10 via `scripts/verify-brain-surgery.js`)
 
 #### YẾU #2: TOKEN INEFFICIENCY (Score: 63/100)
 **File:** `lib/mission-dispatcher.js`
@@ -550,12 +550,13 @@ _Expected Reliability: +90% (lock leak + memory injection)_
 - Reduced `GOTCHAS` memory injection limit from 2000 → **800 chars**.
 - Simplified `claudekitEnforcement` string (removed redundant text).
 - **Result:** ~500-1000 tokens saved per mission.
+**Status:** ✅ Applied (Verified 2026-02-18 10:10).
 
 #### YẾU #3: ARTIFICIAL LATENCY (Score: 60/100)
 **File:** `lib/brain-process-manager.js`
 **Problem:** `MIN_MISSION_SECONDS` was 60s. Fast tasks waited unnecessarily.
 **Fix:** Reduced `MIN_MISSION_SECONDS` to **10s**.
-**Status:** ✅ Applied (Verified in previous step).
+**Status:** ✅ Applied (Verified 2026-02-18 10:10).
 
 #### YẾU #4: REACTIVE CONTEXT CLEANUP (Score: 48/100)
 **File:** `lib/brain-process-manager.js`
@@ -564,6 +565,7 @@ _Expected Reliability: +90% (lock leak + memory injection)_
 - `COMPACT_EVERY_N`: 50 → **10 missions**.
 - `COMPACT_TOKEN_THRESHOLD`: 120k → **50k tokens**.
 - **Result:** Proactive compaction keeps context fresh and prevents "overloaded" errors.
+**Status:** ✅ Applied (Verified 2026-02-18 10:10).
 
 ---
 
@@ -576,5 +578,6 @@ _Expected Reliability: +90% (lock leak + memory injection)_
 | Min Latency | 60s | 10s | **6x Faster** for small tasks |
 | Context Freshness | Reactive (120k) | Proactive (50k) | **2.4x More Frequent** cleanup |
 
-_Last Updated: 2026-02-18 10:05_
+_Last Updated: 2026-02-18 10:12_
 _Files Changed: 2 (brain-process-manager.js, mission-dispatcher.js)_
+_Verification: Passed via `scripts/verify-brain-surgery.js`_

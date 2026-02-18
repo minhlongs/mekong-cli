@@ -22,7 +22,7 @@ const config = require('../config');
 
 const CHAIN_OF_COMMAND = {
   CHU_SOAI: 'antigravity',     // 👑 Chủ Soái
-  QUAN_SU: 'brain-tmux',       // 🧠 Quân Sư
+  QUAN_SU: 'brain-process-manager', // 🧠 Quân Sư
   TUONG: ['pane_0', 'pane_1'], // ⚔️ Tướng (CC CLI Panes)
   QUAN: [                      // 🐾 Quân (Daemons)
     'hunter', 'builder', 'dispatcher', 'reviewer', 'artist',

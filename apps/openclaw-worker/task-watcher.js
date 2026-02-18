@@ -95,6 +95,8 @@ const { startLearningEngine, stopLearningEngine } = require('./lib/learning-engi
 const { startCooling, stopCooling } = require('./lib/m1-cooling-daemon');
 const { startMonitor: startHealer, stopMonitor: stopHealer } = require('./lib/self-healer');
 const { startLobsterPilot, stopLobsterPilot } = require('./lib/lobster-proxy-pilot');
+// 🧠 Brain Supervisor: Unified CTO + CC CLI monitoring
+const { startSupervisor, stopSupervisor } = require('./lib/brain-supervisor');
 // AGI Level 6: Self-Evolving Engine
 const { checkEvolutionTriggers } = require('./lib/evolution-engine');
 // AGI Level 7: Multi-Project Commander
@@ -203,8 +205,10 @@ safeBoot('startCooling', startCooling);
 safeBoot('startHealer', startHealer);
 // 🦞 Lobster Proxy Pilot (Guardian of Quota)
 safeBoot('startLobsterPilot', startLobsterPilot);
+// 🧠 Brain Supervisor (知己知彼: monitor BOTH CTO + CC CLI)
+safeBoot('startSupervisor', startSupervisor);
 
-log('始計 + 防 + 🏯: Task Queue PRIORITY #1 → Brain + Auto-CTO + Scanner + Cooling + Healer + Registry ACTIVE');
+log('始計 + 防 + 🏯: Task Queue PRIORITY #1 → Brain + Auto-CTO + Scanner + Cooling + Healer + Supervisor ACTIVE');
 
 // --- Keepalive: prevent Node from exiting when event loop is idle ---
 const keepalive = setInterval(() => { }, 60000);
@@ -226,6 +230,7 @@ function shutdown(sig) {
   try { stopCooling(); } catch (e) { log(`Shutdown error (stopCooling): ${e.message}`); }
   try { stopHealer(); } catch (e) { log(`Shutdown error (stopHealer): ${e.message}`); }
   try { stopLobsterPilot(); } catch (e) { log(`Shutdown error (stopLobsterPilot): ${e.message}`); }
+  try { stopSupervisor(); } catch (e) { log(`Shutdown error (stopSupervisor): ${e.message}`); }
   // 🔒 DO NOT killBrain() — tmux must survive task-watcher restarts
   // CC CLI context is precious — killing it loses mission progress
   log('All modules stopped (brain preserved). Goodbye.');
@@ -236,6 +241,7 @@ function shutdown(sig) {
 process.on('SIGUSR1', () => {
   log('Received SIGUSR1 — in-process restart (clearing stale state)');
   try { stopWatching(); } catch (e) { }
+  try { stopAutoCTO(); } catch (e) { }
   try { stopScanner(); } catch (e) { }
   try { stopLearningEngine(); } catch (e) { }
   try { stopEvolutionEngine(); } catch (e) { }
@@ -243,9 +249,22 @@ process.on('SIGUSR1', () => {
   try { stopCooling(); } catch (e) { }
   try { stopHealer(); } catch (e) { }
   try { stopLobsterPilot(); } catch (e) { }
+  try { stopSupervisor(); } catch (e) { }
+
+  // 🧬 Hot-reload: Invalidate require.cache for all lib/ modules
+  // Without this, SIGUSR1 restart keeps OLD code in memory
+  const libDir = path.join(__dirname, 'lib');
+  Object.keys(require.cache).forEach(key => {
+    if (key.startsWith(libDir) || key.includes('config.js')) {
+      delete require.cache[key];
+    }
+  });
+  log('SIGUSR1: require.cache cleared for lib/ — hot-reload active');
+
   clearStaleState();
   safeBoot('spawnBrain', spawnBrain);
   safeBoot('startWatching', startWatching);
+  safeBoot('startAutoCTO', startAutoCTO);
   safeBoot('startScanner', startScanner);
   safeBoot('startLearningEngine', startLearningEngine);
   safeBoot('startEvolutionEngine', startEvolutionEngine);
@@ -253,7 +272,8 @@ process.on('SIGUSR1', () => {
   safeBoot('startCooling', startCooling);
   safeBoot('startHealer', startHealer);
   safeBoot('startLobsterPilot', startLobsterPilot);
-  log('SIGUSR1 restart complete — all modules re-initialized');
+  safeBoot('startSupervisor', startSupervisor);
+  log('SIGUSR1 restart complete — all modules re-initialized (including Auto-CTO)');
 });
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

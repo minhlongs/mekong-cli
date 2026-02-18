@@ -1,0 +1,23 @@
+{
+  "doanh-trai-tom-hum": {
+    "lastStrategicAt": "2026-02-17T23:09:56.730Z",
+    "taskHistory": {
+      "10x_architecture": 1
+    },
+    "totalStrategic": 1
+  },
+  "84tea": {
+    "lastStrategicAt": "2026-02-17T23:11:39.821Z",
+    "taskHistory": {
+      "10x_architecture": 1
+    },
+    "totalStrategic": 1
+  },
+  "anima119": {
+    "lastStrategicAt": "2026-02-17T23:13:29.762Z",
+    "taskHistory": {
+      "i18n_sync": 1
+    },
+    "totalStrategic": 1
+  }
+}

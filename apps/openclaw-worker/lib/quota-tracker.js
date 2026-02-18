@@ -173,6 +173,30 @@ function getChannelQuota(channel) {
   return { channel, used, limit: null, remaining: null };
 }
 
+/**
+ * Budget enforcement gate — 作戰 Ch.2: 日費千金
+ * Pre-dispatch check: returns true if missions this hour < AG_HOURLY_BUDGET.
+ *
+ * @param {string} [channel] - Channel to check (default: 'dev-brain')
+ * @returns {{ withinBudget: boolean, hourlyMissions: number, budget: number }}
+ */
+function isWithinBudget(channel) {
+  loadTracking();
+  const now = Date.now();
+  const hourAgo = now - 3600 * 1000;
+  const hourMissions = trackingData.missions.filter(m => {
+    if (channel && m.channel !== channel) return false;
+    return m.ts > hourAgo;
+  });
+
+  const budget = config.AG_HOURLY_BUDGET || 30;
+  return {
+    withinBudget: hourMissions.length < budget,
+    hourlyMissions: hourMissions.length,
+    budget,
+  };
+}
+
 // Initialize on require
 loadTracking();
 
@@ -181,5 +205,7 @@ module.exports = {
   getSummary,
   getChannelQuota,
   readProxyUsage,
+  isWithinBudget,
   CHANNELS,
 };
+

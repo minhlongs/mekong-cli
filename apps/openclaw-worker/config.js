@@ -1,5 +1,7 @@
 const path = require('path');
 
+console.log('DEBUG: config.js LOADED. env.MEKONG_DIR:', process.env.MEKONG_DIR);
+
 const MEKONG_DIR = process.env.MEKONG_DIR || path.join(process.env.HOME || '', 'mekong-cli');
 
 // ═══════════════════════════════════════════════════════════════
@@ -19,13 +21,13 @@ const config = {
   THERMAL_LOG: process.env.TOM_HUM_THERMAL_LOG || path.join(process.env.HOME || '', 'tom_hum_thermal.log'),
   MISSION_FILE: '/tmp/tom_hum_next_mission.txt',
   DONE_FILE: '/tmp/tom_hum_mission_done',
-  TASK_PATTERN: /^(?:CRITICAL_|HIGH_|MEDIUM_|LOW_)?mission_.*\.txt$/,
-  MISSION_TIMEOUT_MS: 45 * 60 * 1000,
+  TASK_PATTERN: /^(?:CRITICAL_|HIGH_|MEDIUM_|LOW_)?(?:mission_)?.+\.txt$/,
+  MISSION_TIMEOUT_MS: 60 * 60 * 1000,
   TIMEOUT_SIMPLE: 15 * 60 * 1000,     // 15 phút — 🌪️GIÓ
   TIMEOUT_MEDIUM: 30 * 60 * 1000,     // 30 phút — 🌲RỪNG
-  TIMEOUT_COMPLEX: 45 * 60 * 1000,    // 45 phút — 🔥LỬA
-  TIMEOUT_STRATEGIC: 60 * 60 * 1000,  // 60 phút — ⛰️NÚI (BMAD workflows)
-  POLL_INTERVAL_MS: 100, // ⚡ WARP SPEED: 100ms Polling (FIX #1: CTO phản xạ)
+  TIMEOUT_COMPLEX: 60 * 60 * 1000,    // 60 phút — 🔥LỬA
+  TIMEOUT_STRATEGIC: 90 * 60 * 1000,  // 90 phút — ⛰️NÚI (BMAD workflows)
+  POLL_INTERVAL_MS: 2000, // ⚡ NORMAL SPEED: 2000ms Polling (Fixed Bug #1: High CPU)
   COOLING_INTERVAL_MS: 90000,
   SCANNER_INTERVAL_MS: 30 * 60 * 1000, // 30 mins — Level 4 Scanner
   AUTO_CTO_EMPTY_THRESHOLD: 10, // 10 polls × 0.2s = 2s idle → generate next task
@@ -38,12 +40,12 @@ const config = {
   // 🦞 LOBSTER: Cân bằng tải 2 acc Ultra qua adapter
   CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://127.0.0.1:11436',
   QWEN_PROXY_PORT: 8081, // Qwen/VLLM dedicated port
-  MODEL_NAME: process.env.MODEL_NAME || 'claude-sonnet-4-5-20250514', // Sonnet 4.5 via Antigravity Proxy
+  MODEL_NAME: process.env.MODEL_NAME || 'claude-sonnet-4-6-20250514', // Sonnet 4.6 via Antigravity Proxy (升級 2026-02-18)
   // 虛實 Binh Phap Model Hierarchy — tiết kiệm, không lãng phí
   // 🌪️GIÓ (Simple) → qwen3-coder-next (fast, cheap)
   // 🌲RỪNG (Medium) → qwen3-coder-next (balanced)
   // 🔥LỬA (Complex) → claude-opus-4-5-20250514 via cashback Ultra (only when truly needed)
-  OPUS_MODEL: 'claude-opus-4-5-20250514', // ACC cashback Ultra — CẤM lạm dụng
+  OPUS_MODEL: 'claude-opus-4-6-20250514', // ACC cashback Ultra — CẤM lạm dụng (升級 4.6)
   USE_GH_MODELS: false,
   GH_MODEL_NAME: 'deepseek-coder-v2',
   WORKER_MODEL_NAME: 'deepseek-coder-v2', // "Strongest" Local Model
@@ -54,23 +56,22 @@ const config = {
   ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
   // 🎯 FOCUSED DELIVERY MODE — Only client projects (Feb 14 2026)
   // Original: ['mekong-cli', 'agencyos-web', 'sophia-ai-factory', 'wellnexus', 'apex-os', '84tea', 'anima119', 'sa-dec-flower-hunt'],
-  PROJECTS: ['84tea', 'anima119', 'wellnexus'],
+  PROJECTS: ['doanh-trai-tom-hum', '84tea', 'anima119', 'wellnexus'],
 
   // Self-Healer (v2026.2.13)
   HEALTH_CHECK_INTERVAL_MS: 30_000,
   PROXY_PING_TIMEOUT_MS: 5_000,
   MAX_RECOVERY_ATTEMPTS: 3,
   STALE_OUTPUT_THRESHOLD_MS: 3 * 60_000,
-  MODEL_FALLBACK_CHAIN: ['claude-sonnet-4-5-20250514', 'gemini-3-flash', 'qwen3-coder-next'],
+  MODEL_FALLBACK_CHAIN: ['claude-sonnet-4-6-20250514', 'claude-sonnet-4-5-20250514', 'gemini-3-flash', 'qwen3-coder-next'],
 
   // ANTIGRAVITY GOD MODE
   ANTIGRAVITY_KEY: 'GOD_MODE_ACTIVE',
   FULL_CLI_MODE: true, // P0 IS CC CLI — no monitor pane
 
   // Agent Team orchestration
-  // Agent Team orchestration
-  AGENT_TEAM_SIZE_DEFAULT: 1, // 🦞 1-Tab: CC CLI handles parallelism internally via /plan:parallel subagents
-  MAX_CONCURRENT_MISSIONS: 1, // 🐉 1 Worker + internal subagents = lighter thermal load than 3 tabs
+  AGENT_TEAM_SIZE_DEFAULT: 1, // 1 tmux pane — đa luồng qua --parallel flag BÊN TRONG CC CLI (Task tool subagents)
+  MAX_CONCURRENT_MISSIONS: 4, // 4 workers can run parallel missions
   AGENT_TEAM_TIMEOUT_MS: 4 * 60 * 60 * 1000, // 4 hours for deep missions
 
   // Complexity classification keywords
@@ -113,15 +114,22 @@ const config = {
     { id: 'bmad_code_review', complexity: 'strategic', cmd: 'BMAD: Run /bmad-bmm-code-review for comprehensive adversarial quality review across all code facets' },
     { id: 'bmad_retrospective', complexity: 'strategic', cmd: 'BMAD: Run /bmad-bmm-retrospective to analyze recent work patterns and suggest process improvements' },
   ],
-};
 
-// 🔒 IRON LOCK: Object.freeze prevents runtime modification
-// CC CLI, Tôm Hùm, or any agent cannot change these values programmatically
-Object.freeze(config);
-Object.freeze(config.COMPLEXITY);
-Object.freeze(config.AGENT_TEAM_ROLES);
-Object.freeze(config.BINH_PHAP_TASKS);
-Object.freeze(config.MODEL_FALLBACK_CHAIN);
+  // 🔥 Safety Gate v2.0 (火攻 Ch.12) — 亡國不可以復存
+  SAFETY_GATE: {
+    MAX_FILES_CHANGED: 15,
+    MAX_DELETIONS: 500,
+    FORBIDDEN_FILES: [
+      'package.json', 'package-lock.json', 'pnpm-lock.yaml', '.env', '.env.local',
+      'next.config.js', 'next.config.mjs', 'next.config.ts',
+      'tsconfig.json', 'vercel.json', 'wrangler.jsonc',
+      'ecosystem.config.js', 'config.js',
+    ],
+  },
+
+  // 💰 Budget Enforcement (作戰 Ch.2) — 日費千金
+  AG_HOURLY_BUDGET: 30,
+};
 
 // 🧬 DNA FUSION: BMAD × ClaudeKit — Slash command mapping
 // Strategic missions use BMAD slash commands instead of /cook
@@ -134,5 +142,15 @@ config.BMAD_WORKFLOW_MAP = Object.freeze({
   arch: '/bmad-bmm-create-architecture', // Architecture design
   epics: '/bmad-bmm-create-epics-and-stories', // Epic & story decomposition
 });
+
+// 🔒 IRON LOCK: Object.freeze prevents runtime modification
+// CC CLI, Tôm Hùm, or any agent cannot change these values programmatically
+Object.freeze(config);
+Object.freeze(config.COMPLEXITY);
+Object.freeze(config.AGENT_TEAM_ROLES);
+Object.freeze(config.BINH_PHAP_TASKS);
+Object.freeze(config.MODEL_FALLBACK_CHAIN);
+Object.freeze(config.SAFETY_GATE);
+Object.freeze(config.SAFETY_GATE.FORBIDDEN_FILES);
 
 module.exports = config;

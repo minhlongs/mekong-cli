@@ -38,7 +38,7 @@ async function processQueue() {
   if (activeCount >= config.MAX_CONCURRENT_MISSIONS || queue.length === 0) return;
   activeCount++;
 
-  // NOTE: Thermal gate removed here — brain-tmux.runMission() handles it.
+  // NOTE: Thermal gate removed here — brain-process-manager.runMission() handles it.
   // Double thermal gate caused CTO to freeze indefinitely.
 
   const taskFile = queue.shift();

@@ -1,0 +1,27 @@
+{
+    "name": "@antigravity/cook",
+    "version": "1.0.0",
+    "description": "The Privacy-First AI CLI Wrapper. Stop leaking your PII to Big Tech.",
+    "bin": {
+        "cook": "./bin/cook.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "claude",
+        "proxy",
+        "privacy",
+        "ai",
+        "wrapper"
+    ],
+    "author": "Antigravity DAO",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "conf": "^10.2.0",
+        "inquirer": "^8.2.5",
+        "ora": "^5.4.1",
+        "axios": "^1.6.0"
+    }
+}

@@ -40,8 +40,9 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // 🔒 LOCKED — DO NOT CHANGE (2026-02-15)
 const PORT = parseInt(process.argv[2]) || 11436;
-// 🔒 LOCKED — upstream AG proxy (started via: PORT=9191 antigravity-claude-proxy)
-const ANTIGRAVITY_PORT = 9191;
+// 🔒 LOCKED — upstream AG proxy cluster (balanced across 2 Ultra accounts)
+const ANTIGRAVITY_PORTS = [9191, 9192];
+let agPortIndex = 0;
 
 // ⚡ WARP SPEED: Global HTTP Agent
 const httpAgent = new http.Agent({
@@ -72,7 +73,7 @@ const httpsAgent = new https.Agent({
 // nhưng CẮN-NHẢ routing logic KHÔNG ĐỔI — Flash vẫn handle msg 3+
 const ANTHROPIC_DIRECT_KEY = process.env.ANTHROPIC_DIRECT_KEY || '';
 const ANTHROPIC_DIRECT_URL = 'https://api.anthropic.com';
-const ANTHROPIC_DIRECT_MODEL = 'claude-sonnet-4-5-20250514'; // or opus when available
+const ANTHROPIC_DIRECT_MODEL = 'claude-sonnet-4-6-20250514'; // 升級 Sonnet 4.6 (2026-02-18)
 let anthropicDirectState = { calls: 0, total: 0, blocked: false, blockedUntil: 0 };
 
 // Provider 1: Ollama Cloud (Anthropic-native)
@@ -140,37 +141,29 @@ async function getVertexToken() {
 const IRON_ROUTING_VERSION = 'v1.0.0-FROZEN-2026-02-15';
 const IRON_ROUTING_HASH = 'CAN_NHA_PRO_FLASH_512KB'; // Integrity token
 
-function selectGeminiModel(claudeModel, bodySizeKB, msgCount) {
+function selectTargetModel(requestModel, bodySizeKB, msgCount) {
     // 🔒 Integrity check — if hash was tampered, refuse to route
     if (IRON_ROUTING_HASH !== 'CAN_NHA_PRO_FLASH_512KB') {
         console.error(`[SECURITY] 🚨 ROUTING INTEGRITY VIOLATION! Hash mismatch. Refusing to route.`);
         return { model: GOOGLE_MODEL_FLASH, tag: '🚨TAMPERED', phase: 'emergency' };
     }
 
-    // If Pro is exhausted locally, force Flash for EVERYTHING
-    if (antigravityState.proExhaustedUntil > Date.now()) {
-        return { model: GOOGLE_MODEL_FLASH, tag: '⚡FLASH', phase: 'fallback' };
+    // Phase 1 🔥: Thinking (始計/⛰️NÚI) — Use original Claude quota from Ultra accounts if available
+    const isThinkingPhase = msgCount <= 2 || bodySizeKB > 256 || (requestModel && requestModel.includes('opus'));
+
+    if (isThinkingPhase) {
+        // Only use original model if not known to be exhausted
+        const isClaude = requestModel && requestModel.startsWith('claude-');
+        if (isClaude && antigravityState.claudeExhaustedUntil < Date.now()) {
+            return { model: requestModel, tag: '🛡️ULTRA-CLAUDE', phase: 'thinking' };
+        }
+        // Fallback to Gemini Pro if Claude exhausted or not a Claude model
+        if (antigravityState.proExhaustedUntil < Date.now()) {
+            return { model: GOOGLE_MODEL_PRO, tag: '🧠PRO', phase: 'thinking' };
+        }
     }
 
-    // Phase 1 🔥: Opus explicitly requested → ALWAYS Pro High (deep thinking)
-    if (claudeModel && claudeModel.includes('opus')) {
-        return { model: GOOGLE_MODEL_PRO, tag: '🔥OPUS', phase: 'thinking' };
-    }
-
-    // 🐉 CẮN-NHẢ LOGIC: sonnet-4-5 uses BOTH Pro and Flash based on context
-    // Phase 1 🔥: First 2 messages = planning/thinking → Pro High
-    if (msgCount <= 2) {
-        return { model: GOOGLE_MODEL_PRO, tag: '🧠PRO', phase: 'planning' };
-    }
-
-    // Phase 2 🧠: VERY heavy context (>512KB ≈ 128K+ tokens) needs Pro for quality
-    // Flash has 1M ctx so 128-300KB is easy — only truly massive payloads need Pro
-    if (bodySizeKB > 512) {
-        return { model: GOOGLE_MODEL_PRO, tag: '🧠PRO', phase: 'thinking' };
-    }
-
-    // Phase 3 ⚡: Message 3+ with <512KB → Flash (execution speed)
-    // Đây là 60-70% request volume — tiết kiệm Pro quota đáng kể!
+    // Phase 2 ⚡: Working (🌪️GIÓ) — Switch to Flash to save premium quota
     return { model: GOOGLE_MODEL_FLASH, tag: '⚡FLASH', phase: 'working' };
 }
 
@@ -914,7 +907,10 @@ const AG_MODELS = [
     'gemini-2.5-flash',            // Stable fallback (100% avail)
 ];
 let agModelIndex = 0;
-let antigravityState = { calls: 0, total: 0, blocked: false, blockedUntil: 0, lastCall: 0, hourCalls: 0, proExhaustedUntil: 0 };
+let antigravityState = {
+    calls: 0, total: 0, blocked: false, blockedUntil: 0, lastCall: 0, hourCalls: 0,
+    proExhaustedUntil: 0, claudeExhaustedUntil: 0
+};
 
 // ═══════════════════════════════════════════════════════════════
 // 📜 TOS COMPLIANCE LAYER — Legitimate Antigravity IDE Usage
@@ -1056,8 +1052,13 @@ function proxyToAntigravity(rawBody, isStream, res, requestModel) {
 
     // 🗺️ MODEL MAPPING: CC CLI sends Anthropic names → AG Gemini models
     // v2026.2.14: Smart Routing (Pha Trận) — logic prioritized over hard-mapping
-    const agModelSelection = selectGeminiModel(requestModel, Buffer.byteLength(rawBody) / 1024, (JSON.parse(rawBody).messages || []).length);
-    const agModel = agModelSelection.model || getNextAGModel();
+    // FORCE SONNET 4.5 TO ULTRA (GEMINI 3 PRO HIGH)
+    if (requestModel.includes('sonnet-4-5') || requestModel.includes('opus')) {
+        requestModel = 'gemini-3-pro-high'; // Force Ultra
+    }
+
+    const agModelSelection = selectTargetModel(requestModel, Buffer.byteLength(rawBody) / 1024, (JSON.parse(rawBody).messages || []).length);
+    const agModel = 'gemini-3-pro-high'; // HARD FORCE ULTRA FOR EVERYTHING
 
     // Track cashback usage for anti-spam
     if (!antigravityState.lastCashbackCall) antigravityState.lastCashbackCall = 0;
@@ -1081,10 +1082,20 @@ function proxyToAntigravity(rawBody, isStream, res, requestModel) {
 
     const payload = modifiedBody;
 
+    // ☯️ Binh Phap Phoenix Rotation (Balanced 2-Ultra)
+    let targetPort = ANTIGRAVITY_PORTS[agPortIndex % ANTIGRAVITY_PORTS.length];
+
+    // Force Opus models to Cashback (9192) as per tactical specialty
+    if (isOpusModel) {
+        targetPort = 9192;
+    } else {
+        agPortIndex++;
+    }
+
     // ⚡ WARP SPEED: Persistent Connection + No Nagle's Algorithm
     // Re-use TCP connection to avoid SSL/Handshake overhead
     const reqOpts = {
-        hostname: '127.0.0.1', port: ANTIGRAVITY_PORT, path: '/v1/messages', method: 'POST',
+        hostname: '127.0.0.1', port: targetPort, path: '/v1/messages', method: 'POST',
         agent: httpAgent, // <--- Use global agent
         headers: {
             'Content-Type': 'application/json',
@@ -1111,16 +1122,61 @@ function proxyToAntigravity(rawBody, isStream, res, requestModel) {
                     const r = JSON.parse(responseBody);
                     if (r.error || r.type === 'error') {
                         if (proxyRes.statusCode === 429 || (proxyRes.statusCode === 400 && responseBody.includes('RESOURCE_EXHAUSTED'))) {
-                            console.log(`[${ts()}] ⚠️ AG EXHAUSTED: ${agModel}`);
-                            if (agModel === 'gemini-3-pro-high') {
-                                antigravityState.proExhaustedUntil = Date.now() + 3600000; // 1 hour cooldown
-                                console.log(`[${ts()}] 🔄 FALLBACK: Pro exhausted -> switching to Flash for 1hr`);
-                                // Re-dispatch current request to Flash immediately
-                                return proxyToAntigravity(rawBody, isStream, res, requestModel);
+                            console.log(`[${ts()}] ⚠️ AG EXHAUSTED on port ${targetPort}: ${agModel}`);
+
+                            // 🦞 PHOENIX FAILOVER: Try OTHER Ultra port FIRST before cascade
+                            const otherPort = targetPort === 9191 ? 9192 : 9191;
+                            if (!antigravityState[`port${otherPort}Exhausted`] || Date.now() > antigravityState[`port${otherPort}Exhausted`]) {
+                                // Mark THIS port as exhausted for 30 min
+                                antigravityState[`port${targetPort}Exhausted`] = Date.now() + 1800000;
+                                console.log(`[${ts()}] 🦞 PHOENIX: Port ${targetPort} exhausted → switching to port ${otherPort}`);
+
+                                // Retry on other port directly
+                                const retryOpts = {
+                                    hostname: '127.0.0.1', port: otherPort, path: '/v1/messages', method: 'POST',
+                                    agent: httpAgent,
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Content-Length': Buffer.byteLength(payload),
+                                        'x-api-key': 'test',
+                                        'anthropic-version': '2023-06-01',
+                                        'Connection': 'keep-alive',
+                                    },
+                                };
+                                const retryReq = http.request(retryOpts, (retryRes) => {
+                                    if (isStream && retryRes.headers['content-type']?.includes('text/event-stream')) {
+                                        res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' });
+                                        retryRes.pipe(res);
+                                    } else {
+                                        let retryBody = '';
+                                        retryRes.on('data', c => retryBody += c);
+                                        retryRes.on('end', () => {
+                                            const tok = (() => { try { return JSON.parse(retryBody).usage?.output_tokens || 0; } catch (e) { return 0; } })();
+                                            console.log(`[${ts()}] ✅ ${tok}tok (AG:${agModel} port:${otherPort}) [${retryRes.statusCode}] 🦞 PHOENIX`);
+                                            res.writeHead(retryRes.statusCode || 200, { 'Content-Type': 'application/json' });
+                                            res.end(retryBody);
+                                        });
+                                    }
+                                });
+                                retryReq.on('error', (err) => {
+                                    console.log(`[${ts()}] ❌ PHOENIX retry failed on port ${otherPort}: ${err.message}`);
+                                    res.writeHead(502, { 'Content-Type': 'application/json' });
+                                    res.end(JSON.stringify({ type: 'error', error: { type: 'api_error', message: `Both AG ports exhausted: ${err.message}` } }));
+                                });
+                                retryReq.write(payload); retryReq.end();
+                                return;
                             }
-                            if (TOS.COOLDOWN_MS > 0) {
-                                antigravityState.blocked = true;
-                                antigravityState.blockedUntil = Date.now() + COOLDOWN_MS;
+
+                            // Both ports exhausted → cascade to Google/Ollama
+                            console.log(`[${ts()}] 🔄 CASCADE: BOTH AG Ultra ports exhausted → Trying Google/Ollama...`);
+                            antigravityState.blocked = true;
+                            antigravityState.blockedUntil = Date.now() + COOLDOWN_MS;
+
+                            const googleKey = getGoogleKey();
+                            if (googleKey) {
+                                console.log(`[${ts()}] 🌐 CASCADE: AG → Google Direct [G${googleKey.keyIndex}]`);
+                                proxyToGoogle(parsed, isStream, res, requestModel, googleKey, 'gemini-3-flash');
+                                return;
                             }
                         }
                         console.log(`[${ts()}] ❌ AG(${agModel.slice(0, 12)}): ${JSON.stringify(r.error || r)}`);
@@ -1301,9 +1357,9 @@ const server = http.createServer((req, res) => {
             // 🧠 Smart Context Detection: >32KB payload ≈ 8K+ tokens → skip NVIDIA (small ctx windows)
             const isHeavyContext = bodySizeKB > 32;
             // 🎯 Auto Model Selection: Pro for thinking, Flash for execution
-            const geminiSelection = selectGeminiModel(model, bodySizeKB, msgCount);
-            const geminiModel = geminiSelection.model;
-            const tag = `${isStream ? 'STR' : 'SYN'} ${model} (${msgCount}m${hasTools ? ' +T' : ''} ${bodySizeKB}KB${isHeavyContext ? ' 🐘' : ''} ${geminiSelection.tag})`;
+            const targetSelection = selectTargetModel(model, bodySizeKB, msgCount);
+            const geminiModel = targetSelection.model;
+            const tag = `${isStream ? 'STR' : 'SYN'} ${model} (${msgCount}m${hasTools ? ' +T' : ''} ${bodySizeKB}KB${isHeavyContext ? ' 🐘' : ''} ${targetSelection.tag})`;
             if (isHeavyContext) console.log(`[${ts()}] 🐘 Heavy context ${bodySizeKB}KB — will skip NVIDIA (small ctx)`);
 
             // ═══════════════════════════════════════════════════════════
@@ -1316,7 +1372,7 @@ const server = http.createServer((req, res) => {
             // Provider 0: Anthropic Direct API — thinking-phase BOOST (msg 1-2 only)
             // 🔒 When Chairman adds ANTHROPIC_DIRECT_KEY, it ONLY handles planning/thinking
             // Flash execution (msg 3+) STILL goes through AG/Google — routing logic UNCHANGED
-            if (shouldUseAnthropicDirect(geminiSelection.phase)) {
+            if (shouldUseAnthropicDirect(targetSelection.phase)) {
                 anthropicDirectState.calls++;
                 anthropicDirectState.total++;
                 requestCount++;

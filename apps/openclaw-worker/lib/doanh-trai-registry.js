@@ -26,7 +26,7 @@ const DIVISIONS = {
     'quan-su': {
         label: '🧠 Quân Sư (Brain Command)',
         files: [
-            'lib/brain-tmux.js',
+            'lib/brain-process-manager.js',
             'lib/mission-dispatcher.js',
             'lib/mission-complexity-classifier.js',
             'lib/auto-cto-pilot.js',
@@ -108,7 +108,6 @@ const DIVISIONS = {
 // Legacy/experimental/test files (not part of active roster)
 const LEGACY = [
     'lib/brain-headless-per-mission.js',
-    'lib/brain-process-manager.js',
     'lib/brain-terminal-app.js',
     'lib/brain-vscode-terminal.js',
     'lib/v2/cli-worker.js',

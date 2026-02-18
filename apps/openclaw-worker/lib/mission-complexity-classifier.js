@@ -206,6 +206,18 @@ function detectIntent(text) {
   const lower = text.toLowerCase();
 
   if (lower.includes('research') || lower.includes('tìm hiểu') || lower.includes('khảo sát')) return 'RESEARCH';
+
+  // MULTI_FIX: 2+ bug/error keywords → parallel fix mode (check BEFORE single FIX)
+  const bugWords = ['bug', 'lỗi', 'error', 'loi'];
+  const bugCount = bugWords.filter(w => lower.includes(w)).length;
+  if (bugCount >= 2) return 'MULTI_FIX';
+
+  // DEBUG: investigation/root-cause intent (check BEFORE single FIX)
+  if (lower.includes('tại sao') || lower.includes('tai-sao') || lower.includes('why') || lower.includes('root-cause') || lower.includes('investigate')) return 'DEBUG';
+
+  // STRATEGIC: large-scale architectural work (check BEFORE BUILD)
+  if (lower.includes('architecture') || lower.includes('redesign') || lower.includes('migration') || lower.includes('refactor-toan-bo')) return 'STRATEGIC';
+
   if (lower.includes('bug') || lower.includes('fix') || lower.includes('lỗi') || lower.includes('sửa')) return 'FIX';
   if (lower.includes('review') || lower.includes('audit') || lower.includes('kiểm tra')) return 'REVIEW';
   if (lower.includes('plan') || lower.includes('kế hoạch') || lower.includes('thiết kế')) return 'PLAN';
@@ -238,12 +250,12 @@ function generateMissionPrompt(task, project, complexity) {
   // 🔥 LỬA mode — Complex: 10x parallel decomposition, max token burn
   if (complexity === 'complex') {
     const decomposed = buildDecomposedPrompt(task.cmd, task.id);
-    return { prompt: `/cook "${mission} ${decomposed}" --auto`, timeout, mode: '🔥LỬA' };
+    return { prompt: `/cook "${mission} ${decomposed}" --parallel --auto`, timeout, mode: '🔥LỬA' };
   }
 
   // 🌲 RỪNG mode — Medium: standard /cook with auto, balanced
   if (complexity === 'medium') {
-    return { prompt: `/cook "${mission}" --auto`, timeout, mode: '🌲RỪNG' };
+    return { prompt: `/cook "${mission}" --parallel --auto`, timeout, mode: '🌲RỪNG' };
   }
 
   // 🌪️ GIÓ mode — Simple: fast + no-test, minimum token burn, maximum speed
@@ -260,7 +272,126 @@ function isTeamMission(prompt) {
   return lower.includes('agent team') ||
     lower.includes('parallel task subagents') ||
     lower.includes('scope: thorough') ||
-    lower.includes('teammates');
+    lower.includes('teammates') ||
+    lower.includes('parallel') ||
+    lower.includes('--parallel');
 }
 
-module.exports = { classifyComplexity, generateMissionPrompt, isTeamMission, buildAgentTeamBlock, buildDecomposedPrompt, classifyContentTimeout, getTimeoutForComplexity, adjustTimeout, detectIntent };
+/**
+ * Thất Kế Assessment — 7-question pre-mission evaluation (始計 Ch.1)
+ * 多算勝，少算不勝 — Calculate more to win
+ *
+ * Only runs for 'complex' and 'strategic' missions.
+ * Simple/medium missions skip (兵貴勝 — speed matters).
+ *
+ * @param {string} taskContent - Raw task content
+ * @param {string} project - Project name
+ * @returns {{ score: number, recommendation: string, factors: object } | null}
+ */
+function assessThietKe(taskContent, project) {
+  let score = 0;
+  const factors = {};
+
+  // 1. 道 ĐẠO — Project culture / code quality
+  try {
+    const pkgPath = path.join(config.MEKONG_DIR, 'apps', project, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      const hasLint = !!(pkg.scripts && pkg.scripts.lint);
+      const hasTest = !!(pkg.scripts && pkg.scripts.test);
+      factors.dao = { hasLint, hasTest, healthy: hasLint || hasTest };
+      if (factors.dao.healthy) score++;
+    } else {
+      factors.dao = { healthy: false, reason: 'no package.json' };
+    }
+  } catch (e) {
+    factors.dao = { healthy: false, reason: e.message };
+  }
+
+  // 2. 天 THIÊN — Timing (system thermal + resource load)
+  try {
+    const { getLoadAverage } = require('./m1-cooling-daemon');
+    const load = getLoadAverage();
+    factors.thien = { load, safe: load < 15 };
+    if (factors.thien.safe) score++;
+  } catch (e) {
+    factors.thien = { safe: true, reason: 'cooling unavailable' };
+    score++; // Assume safe if we can't check
+  }
+
+  // 3. 地 ĐỊA — Environment readiness
+  try {
+    const projectDir = path.join(config.MEKONG_DIR, 'apps', project);
+    const hasGit = fs.existsSync(path.join(projectDir, '.git'));
+    const hasNodeModules = fs.existsSync(path.join(projectDir, 'node_modules'));
+    factors.dia = { hasGit, hasNodeModules, ready: hasGit && hasNodeModules };
+    if (factors.dia.ready) score++;
+  } catch (e) {
+    factors.dia = { ready: false, reason: e.message };
+  }
+
+  // 4. 將 TƯỚNG — Model capability match
+  const taskLen = (taskContent || '').length;
+  const isHeavy = taskLen > 2000 || /complex|architecture|refactor|migrate/i.test(taskContent);
+  factors.tuong = { model: config.MODEL_NAME, isHeavy, capable: true };
+  score++; // AG Proxy always capable
+
+  // 5. 法 PHÁP — Lint/test strictness
+  try {
+    const pkgPath = path.join(config.MEKONG_DIR, 'apps', project, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      const hasTypecheck = !!(pkg.scripts && (pkg.scripts.typecheck || pkg.scripts['type-check']));
+      const hasBuild = !!(pkg.scripts && pkg.scripts.build);
+      factors.phap = { hasTypecheck, hasBuild, strict: hasBuild };
+      if (factors.phap.strict) score++;
+    } else {
+      factors.phap = { strict: false };
+    }
+  } catch (e) {
+    factors.phap = { strict: false };
+  }
+
+  // 6. 兵 BINH — Available resources (RAM, API quota)
+  try {
+    const qt = require('./quota-tracker');
+    const summary = qt.getSummary();
+    const hourlyMissions = summary.lastHour.missions;
+    const withinBudget = hourlyMissions < config.AG_HOURLY_BUDGET;
+    factors.binh = { hourlyMissions, budget: config.AG_HOURLY_BUDGET, withinBudget };
+    if (withinBudget) score++;
+  } catch (e) {
+    factors.binh = { withinBudget: true, reason: 'quota unavailable' };
+    score++;
+  }
+
+  // 7. 賞 THƯỞNG — Recent mission success rate
+  try {
+    if (fs.existsSync(HISTORY_FILE)) {
+      const history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'));
+      const recent = history.filter(m => m.project === project).slice(-10);
+      const successRate = recent.length > 0
+        ? recent.filter(m => m.success).length / recent.length
+        : 0.5; // No data → neutral
+      factors.thuong = { recentMissions: recent.length, successRate };
+      if (successRate >= 0.5) score++;
+    } else {
+      factors.thuong = { successRate: 0.5, reason: 'no history' };
+      score++; // No data → neutral pass
+    }
+  } catch (e) {
+    factors.thuong = { successRate: 0.5, reason: 'history error' };
+    score++;
+  }
+
+  // Recommendation
+  let recommendation;
+  if (score <= 3) recommendation = 'abort';
+  else if (score <= 5) recommendation = 'downgrade';
+  else recommendation = 'proceed';
+
+  return { score, recommendation, factors };
+}
+
+module.exports = { classifyComplexity, generateMissionPrompt, isTeamMission, buildAgentTeamBlock, buildDecomposedPrompt, classifyContentTimeout, getTimeoutForComplexity, adjustTimeout, detectIntent, assessThietKe };
+

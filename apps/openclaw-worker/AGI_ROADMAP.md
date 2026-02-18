@@ -33,17 +33,18 @@ AGI = Autonomous General Intelligence - khả năng **tự nhận task → tự 
 - Cập nhật BINH_PHAP_MASTER.md từ lessons learned
 - Tự điều chỉnh strategy cho mission tiếp theo
 
-### Level 6: Self-Evolving ❌ (CẦN LÀM)
-- Tự viết code cải thiện chính nó
-- Thêm tools/capabilities mới
-- Optimize token usage
-- Tự tạo skills mới trong .claude/skills/
+### Level 6: Self-Evolving ✅ (ĐÃ ĐẠT — 2026-02-18)
+- Tự viết code cải thiện chính nó (evolution-engine.js)
+- Thêm tools/capabilities mới (auto-generate skills from failures)
+- Optimize token usage (token routing recommendations)
+- Tự tạo skills mới trong .claude/skills/ (auto-fix-* skills)
+- Strategic Brain proactive mission dispatch (strategic-brain.js)
 
-### Level 7: Multi-Project Commander ❌ (CẦN LÀM)
-- Quản lý N dự án song song
-- Allocate resources giữa projects
-- Cross-project knowledge sharing
-- Portfolio-level optimization
+### Level 7: Multi-Project Commander ✅ (ĐÃ ĐẠT — 2026-02-18)
+- Quản lý N dự án song song (4 projects: doanh-trai-tom-hum, 84tea, anima119, wellnexus)
+- Allocate resources giữa projects (project scoring: error × priority × staleness)
+- Cross-project knowledge sharing (fix pattern → auto-generate fix missions)
+- Portfolio-level optimization (portfolio-dashboard.json, auto-rebalance priorities)
 
 ## VÒNG LẶP AGI (Auto-CTO Loop)
 
