@@ -11,7 +11,7 @@ type AgentStatus = {
 type ExecutionResult = {
     agentId: string;
     success: boolean;
-    data: any;
+    data: Record<string, unknown>;
     executionTimeMs: number;
     timestamp: string;
 };

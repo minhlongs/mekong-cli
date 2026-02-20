@@ -66,11 +66,12 @@ api.post("/agents/run", async (c) => {
             results,
             timestamp: new Date().toISOString(),
         });
-    } catch (error: any) {
-        console.error("Agent execution failed:", error);
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        console.error("Agent execution failed:", msg);
         return c.json({
             success: false,
-            error: error.message || "Unknown error",
+            error: msg,
         }, 500);
     }
 });
@@ -82,11 +83,12 @@ api.get("/missions", async (c) => {
             orderBy: { createdAt: "desc" },
         });
         return c.json({ success: true, data: missions });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
         return c.json(
             {
                 success: false,
-                error: { message: e.message, code: "INTERNAL_ERROR" },
+                error: { message: msg, code: "INTERNAL_ERROR" },
             },
             500
         );
@@ -110,19 +112,26 @@ api.post("/missions", async (c) => {
             );
         }
 
+        const validStatuses = ["TODO", "IN_PROGRESS", "DONE"] as const;
+        const validPriorities = ["LOW", "MEDIUM", "HIGH"] as const;
+
+        const safeStatus = validStatuses.includes(status) ? status : "TODO";
+        const safePriority = validPriorities.includes(priority) ? priority : "MEDIUM";
+
         const mission = await prisma.mission.create({
             data: {
                 title: title.trim(),
-                status: status || "TODO",
-                priority: priority || "MEDIUM",
+                status: safeStatus,
+                priority: safePriority,
             },
         });
         return c.json({ success: true, data: mission }, 201);
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Unknown error";
         return c.json(
             {
                 success: false,
-                error: { message: e.message, code: "INTERNAL_ERROR" },
+                error: { message: msg, code: "INTERNAL_ERROR" },
             },
             500
         );
@@ -137,10 +146,24 @@ api.patch("/missions/:id", async (c) => {
         const { title, status, priority } = body;
 
         // Build update data (only include defined fields)
-        const data: any = {};
-        if (title !== undefined) data.title = title.trim();
-        if (status !== undefined) data.status = status;
-        if (priority !== undefined) data.priority = priority;
+        const validStatuses = ["TODO", "IN_PROGRESS", "DONE"];
+        const validPriorities = ["LOW", "MEDIUM", "HIGH"];
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data: Record<string, any> = {};
+        if (title !== undefined) data.title = String(title).trim();
+        if (status !== undefined) {
+            if (!validStatuses.includes(status)) {
+                return c.json({ success: false, error: { message: "Invalid status", code: "VALIDATION_ERROR" } }, 400);
+            }
+            data.status = status;
+        }
+        if (priority !== undefined) {
+            if (!validPriorities.includes(priority)) {
+                return c.json({ success: false, error: { message: "Invalid priority", code: "VALIDATION_ERROR" } }, 400);
+            }
+            data.priority = priority;
+        }
 
         if (Object.keys(data).length === 0) {
             return c.json(
@@ -157,8 +180,8 @@ api.patch("/missions/:id", async (c) => {
             data,
         });
         return c.json({ success: true, data: mission });
-    } catch (e: any) {
-        if (e.code === "P2025") {
+    } catch (e: unknown) {
+        if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "P2025") {
             return c.json(
                 {
                     success: false,
@@ -167,10 +190,11 @@ api.patch("/missions/:id", async (c) => {
                 404
             );
         }
+        const msg = e instanceof Error ? e.message : "Unknown error";
         return c.json(
             {
                 success: false,
-                error: { message: e.message, code: "INTERNAL_ERROR" },
+                error: { message: msg, code: "INTERNAL_ERROR" },
             },
             500
         );
@@ -185,8 +209,8 @@ api.delete("/missions/:id", async (c) => {
             where: { id },
         });
         return c.json({ success: true, data: { id } });
-    } catch (e: any) {
-        if (e.code === "P2025") {
+    } catch (e: unknown) {
+        if (e && typeof e === "object" && "code" in e && (e as { code: string }).code === "P2025") {
             return c.json(
                 {
                     success: false,
@@ -195,10 +219,11 @@ api.delete("/missions/:id", async (c) => {
                 404
             );
         }
+        const msg = e instanceof Error ? e.message : "Unknown error";
         return c.json(
             {
                 success: false,
-                error: { message: e.message, code: "INTERNAL_ERROR" },
+                error: { message: msg, code: "INTERNAL_ERROR" },
             },
             500
         );
