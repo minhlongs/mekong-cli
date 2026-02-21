@@ -22,3 +22,5 @@ if (process.env.NODE_ENV !== "production") {
 
 export default prisma;
 export { PrismaClient };
+// Re-export Prisma namespace for type usage (e.g. Prisma.PrismaClientKnownRequestError)
+export { Prisma } from "@prisma/client";
