@@ -10,6 +10,7 @@ export interface ISignal {
   type: SignalType;
   price: number;
   timestamp: number;
+  tag?: string;
   metadata?: Record<string, any>;
 }
 

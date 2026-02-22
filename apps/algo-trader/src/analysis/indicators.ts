@@ -1,6 +1,51 @@
-import { RSI, SMA } from 'technicalindicators';
+import { RSI, SMA, MACD, BollingerBands } from 'technicalindicators';
+
+export interface MacdResult {
+  MACD?: number;
+  signal?: number;
+  histogram?: number;
+}
+
+export interface BBandsResult {
+  middle: number;
+  upper: number;
+  lower: number;
+  pb: number;
+}
 
 export class Indicators {
+  /**
+   * Calculate MACD (Moving Average Convergence Divergence)
+   */
+  static macd(values: number[], fastPeriod: number = 12, slowPeriod: number = 26, signalPeriod: number = 9): MacdResult[] {
+    return MACD.calculate({
+      values,
+      fastPeriod,
+      slowPeriod,
+      signalPeriod,
+      SimpleMAOscillator: false,
+      SimpleMASignal: false
+    });
+  }
+
+  /**
+   * Calculate Bollinger Bands
+   */
+  static bbands(values: number[], period: number = 20, stdDev: number = 2): BBandsResult[] {
+    return BollingerBands.calculate({
+      values,
+      period,
+      stdDev
+    });
+  }
+
+  /**
+   * Get the last value of Bollinger Bands array
+   */
+  static getLastBBands(values: BBandsResult[]): BBandsResult | null {
+    if (!values || values.length === 0) return null;
+    return values[values.length - 1];
+  }
   /**
    * Calculate Relative Strength Index (RSI)
    * @param values Array of prices
