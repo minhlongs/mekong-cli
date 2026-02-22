@@ -25,12 +25,13 @@ export class BotEngine {
     strategy: IStrategy,
     dataProvider: IDataProvider,
     exchange: IExchange,
-    config: BotConfig
+    config: BotConfig,
+    orderManager?: OrderManager
   ) {
     this.strategy = strategy;
     this.dataProvider = dataProvider;
     this.exchange = exchange;
-    this.orderManager = new OrderManager();
+    this.orderManager = orderManager ?? new OrderManager();
     this.config = config;
   }
 
