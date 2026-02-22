@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import { IOrder } from '../interfaces/IExchange';
+import { logger } from '../utils/logger';
 
 export class CliDashboard {
   private lastPrice: number = 0;
@@ -29,14 +30,14 @@ export class CliDashboard {
 
   render() {
     console.clear();
-    console.log(chalk.bold.blue('=== ALGO TRADER DASHBOARD ==='));
-    console.log(`Time: ${new Date().toISOString()}`);
-    console.log('-----------------------------');
-    console.log(`Current Price:  ${chalk.green(this.lastPrice)}`);
-    console.log(`Last Signal:    ${this.getColorForSignal(this.lastSignal)(this.lastSignal)}`);
-    console.log(`Balance:        ${this.balance.toFixed(2)}`);
-    console.log(`Open Positions: ${this.openPositions}`);
-    console.log('-----------------------------');
+    logger.info(chalk.bold.blue('=== ALGO TRADER DASHBOARD ==='));
+    logger.info(`Time: ${new Date().toISOString()}`);
+    logger.info('-----------------------------');
+    logger.info(`Current Price:  ${chalk.green(this.lastPrice)}`);
+    logger.info(`Last Signal:    ${this.getColorForSignal(this.lastSignal)(this.lastSignal)}`);
+    logger.info(`Balance:        ${this.balance.toFixed(2)}`);
+    logger.info(`Open Positions: ${this.openPositions}`);
+    logger.info('-----------------------------');
   }
 
   private getColorForSignal(signal: string) {

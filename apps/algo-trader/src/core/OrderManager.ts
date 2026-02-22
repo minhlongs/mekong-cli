@@ -1,11 +1,13 @@
 import { IOrder } from '../interfaces/IExchange';
 
+import { logger } from '../utils/logger';
+
 export class OrderManager {
   private orders: IOrder[] = [];
 
   addOrder(order: IOrder) {
     this.orders.push(order);
-    console.log(`[OrderManager] Order added: ${order.side.toUpperCase()} ${order.amount} @ ${order.price}`);
+    logger.info(`[OrderManager] Order added: ${order.side.toUpperCase()} ${order.amount} @ ${order.price}`);
   }
 
   getOrders(): IOrder[] {

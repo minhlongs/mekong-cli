@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { PerformanceMetrics, TradeRecord } from './PerformanceAnalyzer';
+import { logger } from '../utils/logger';
 
 export class HtmlReporter {
   static generate(metrics: PerformanceMetrics, trades: TradeRecord[], outputPath: string = 'report.html') {
@@ -93,6 +94,6 @@ export class HtmlReporter {
     `;
 
     fs.writeFileSync(path.resolve(process.cwd(), outputPath), html);
-    console.log(`Report generated at: ${outputPath}`);
+    logger.info(`Report generated at: ${outputPath}`);
   }
 }

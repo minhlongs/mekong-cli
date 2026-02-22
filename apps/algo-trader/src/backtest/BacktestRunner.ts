@@ -2,6 +2,8 @@ import { IStrategy, SignalType } from '../interfaces/IStrategy';
 import { IDataProvider } from '../interfaces/IDataProvider';
 import { ICandle } from '../interfaces/ICandle';
 
+import { logger } from '../utils/logger';
+
 interface Trade {
   entryPrice: number;
   exitPrice: number;
@@ -27,18 +29,18 @@ export class BacktestRunner {
   }
 
   async run(days: number = 30): Promise<void> {
-    console.log(`Starting backtest for ${this.strategy.name} over ${days} days...`);
+    logger.info(`Starting backtest for ${this.strategy.name} over ${days} days...`);
 
     // 1. Get History
     const limit = days * 24 * 60; // Minutes
     const history = await this.dataProvider.getHistory(limit);
 
     if (history.length === 0) {
-      console.log('No data available for backtest');
+      logger.info('No data available for backtest');
       return;
     }
 
-    console.log(`Loaded ${history.length} candles.`);
+    logger.info(`Loaded ${history.length} candles.`);
 
     // 2. Init Strategy
     await this.strategy.init(history.slice(0, 200)); // Warmup with first 200
@@ -96,14 +98,14 @@ export class BacktestRunner {
     const winRate = this.trades.length > 0 ? (wins / this.trades.length) * 100 : 0;
     const totalReturn = ((this.balance - this.initialBalance) / this.initialBalance) * 100;
 
-    console.log('\n--- Backtest Results ---');
-    console.log(`Initial Balance: ${this.initialBalance}`);
-    console.log(`Final Balance:   ${this.balance.toFixed(2)}`);
-    console.log(`Return:          ${totalReturn.toFixed(2)}%`);
-    console.log(`Total Trades:    ${this.trades.length}`);
-    console.log(`Wins:            ${wins}`);
-    console.log(`Losses:          ${losses}`);
-    console.log(`Win Rate:        ${winRate.toFixed(2)}%`);
-    console.log('------------------------\n');
+    logger.info('\n--- Backtest Results ---');
+    logger.info(`Initial Balance: ${this.initialBalance}`);
+    logger.info(`Final Balance:   ${this.balance.toFixed(2)}`);
+    logger.info(`Return:          ${totalReturn.toFixed(2)}%`);
+    logger.info(`Total Trades:    ${this.trades.length}`);
+    logger.info(`Wins:            ${wins}`);
+    logger.info(`Losses:          ${losses}`);
+    logger.info(`Win Rate:        ${winRate.toFixed(2)}%`);
+    logger.info('------------------------\n');
   }
 }

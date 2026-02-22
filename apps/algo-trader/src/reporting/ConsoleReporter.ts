@@ -1,18 +1,19 @@
 import * as chalk from 'chalk';
 import { PerformanceMetrics } from './PerformanceAnalyzer';
+import { logger } from '../utils/logger';
 
 export class ConsoleReporter {
   static report(metrics: PerformanceMetrics) {
-    console.log(chalk.bold.blue('\n=== Performance Report ==='));
-    console.log(`Total Trades:   ${metrics.totalTrades}`);
-    console.log(`Win Rate:       ${this.colorValue(metrics.winRate, 50, '%')}`);
-    console.log(`Total Return:   ${this.colorValue(metrics.totalReturn, 0, '%')}`);
-    console.log(`Profit Factor:  ${metrics.profitFactor.toFixed(2)}`);
-    console.log(`Max Drawdown:   ${chalk.red(metrics.maxDrawdown.toFixed(2) + '%')}`);
-    console.log(`Sharpe Ratio:   ${metrics.sharpeRatio.toFixed(3)}`);
-    console.log(`Avg Win:        ${chalk.green(metrics.averageWin.toFixed(2))}`);
-    console.log(`Avg Loss:       ${chalk.red(metrics.averageLoss.toFixed(2))}`);
-    console.log('==========================\n');
+    logger.info(chalk.bold.blue('\n=== Performance Report ==='));
+    logger.info(`Total Trades:   ${metrics.totalTrades}`);
+    logger.info(`Win Rate:       ${this.colorValue(metrics.winRate, 50, '%')}`);
+    logger.info(`Total Return:   ${this.colorValue(metrics.totalReturn, 0, '%')}`);
+    logger.info(`Profit Factor:  ${metrics.profitFactor.toFixed(2)}`);
+    logger.info(`Max Drawdown:   ${chalk.red(metrics.maxDrawdown.toFixed(2) + '%')}`);
+    logger.info(`Sharpe Ratio:   ${metrics.sharpeRatio.toFixed(3)}`);
+    logger.info(`Avg Win:        ${chalk.green(metrics.averageWin.toFixed(2))}`);
+    logger.info(`Avg Loss:       ${chalk.red(metrics.averageLoss.toFixed(2))}`);
+    logger.info('==========================\n');
   }
 
   private static colorValue(value: number, threshold: number, suffix: string = ''): string {

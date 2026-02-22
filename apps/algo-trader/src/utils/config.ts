@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { IConfig } from '../interfaces/IConfig';
 
+import { logger } from './logger';
+
 export class ConfigLoader {
   private static config: IConfig;
 
@@ -19,7 +21,7 @@ export class ConfigLoader {
 
       return this.config;
     } catch (e) {
-      console.error(`Failed to load config from ${configPath}`, e);
+      logger.error(`Failed to load config from ${configPath}: ${e instanceof Error ? e.message : String(e)}`);
       throw e;
     }
   }

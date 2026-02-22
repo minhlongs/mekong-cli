@@ -4,6 +4,7 @@ import { IExchange } from '../interfaces/IExchange';
 import { RiskManager } from './RiskManager';
 import { OrderManager } from './OrderManager';
 import { ICandle } from '../interfaces/ICandle';
+import { logger } from '../utils/logger';
 
 export interface BotConfig {
   symbol: string;
@@ -34,7 +35,7 @@ export class BotEngine {
   }
 
   async start() {
-    console.log('Starting Bot Engine...');
+    logger.info('Starting Bot Engine...');
     await this.exchange.connect();
     await this.dataProvider.init();
 
@@ -44,11 +45,11 @@ export class BotEngine {
     await this.dataProvider.start();
 
     this.isRunning = true;
-    console.log('Bot Engine Running.');
+    logger.info('Bot Engine Running.');
   }
 
   async stop() {
-    console.log('Stopping Bot Engine...');
+    logger.info('Stopping Bot Engine...');
     await this.dataProvider.stop();
     this.isRunning = false;
   }
@@ -60,7 +61,7 @@ export class BotEngine {
       const signal = await this.strategy.onCandle(candle);
 
       if (signal) {
-        console.log(`[SIGNAL] ${signal.type} @ ${signal.price} (${JSON.stringify(signal.metadata)})`);
+        logger.info(`[SIGNAL] ${signal.type} @ ${signal.price} (${JSON.stringify(signal.metadata)})`);
 
         if (signal.type === SignalType.BUY && !this.openPosition) {
           await this.executeBuy(signal.price);
@@ -69,7 +70,7 @@ export class BotEngine {
         }
       }
     } catch (error) {
-      console.error('Error in onCandle processing:', error);
+      logger.error(`Error in onCandle processing: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -81,14 +82,14 @@ export class BotEngine {
     const balance = balances[quoteCurrency]?.free || 0;
 
     if (balance === 0) {
-      console.warn(`Insufficient ${quoteCurrency} balance.`);
+      logger.warn(`Insufficient ${quoteCurrency} balance.`);
       return;
     }
 
     // 2. Risk Management
     const amount = RiskManager.calculatePositionSize(balance, this.config.riskPercentage, currentPrice);
 
-    console.log(`Executing BUY for ${amount} ${this.config.symbol}...`);
+    logger.info(`Executing BUY for ${amount} ${this.config.symbol}...`);
 
     // 3. Execute Order
     // In real bot, we would handle errors, partial fills, etc.
@@ -98,7 +99,7 @@ export class BotEngine {
       this.orderManager.addOrder(order);
       this.openPosition = true;
     } catch (e) {
-      console.error('Buy order failed:', e);
+      logger.error(`Buy order failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
@@ -110,18 +111,18 @@ export class BotEngine {
     const amount = balances[baseCurrency]?.free || 0;
 
     if (amount === 0) {
-      console.warn(`No ${baseCurrency} to sell.`);
+      logger.warn(`No ${baseCurrency} to sell.`);
       return;
     }
 
-    console.log(`Executing SELL for ${amount} ${this.config.symbol}...`);
+    logger.info(`Executing SELL for ${amount} ${this.config.symbol}...`);
 
     try {
       const order = await this.exchange.createMarketOrder(this.config.symbol, 'sell', amount);
       this.orderManager.addOrder(order);
       this.openPosition = false;
     } catch (e) {
-      console.error('Sell order failed:', e);
+      logger.error(`Sell order failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 }
