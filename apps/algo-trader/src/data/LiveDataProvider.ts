@@ -33,7 +33,7 @@ export class LiveDataProvider implements IDataProvider {
         apiKey?: string,
         secret?: string
     ) {
-        const ExchangeClass = (ccxt as Record<string, any>)[exchangeId];
+        const ExchangeClass = (ccxt as unknown as Record<string, new (config: Record<string, unknown>) => ccxt.Exchange>)[exchangeId];
         if (!ExchangeClass) {
             throw new Error(`Exchange '${exchangeId}' not found in CCXT`);
         }

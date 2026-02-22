@@ -5,5 +5,5 @@ export interface ICandle {
   low: number;
   close: number;
   volume: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

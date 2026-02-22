@@ -11,7 +11,7 @@ export interface ISignal {
   price: number;
   timestamp: number;
   tag?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface IStrategy {

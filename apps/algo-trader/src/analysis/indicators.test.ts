@@ -86,7 +86,8 @@ describe('Indicators', () => {
     });
 
     it('should return null for null input', () => {
-      expect(Indicators.getLastBBands(null as any)).toBeNull();
+      // @ts-expect-error Testing invalid input
+      expect(Indicators.getLastBBands(null)).toBeNull();
     });
 
     it('should return the last bbands result', () => {
@@ -112,7 +113,8 @@ describe('Indicators', () => {
     });
 
     it('should return 0 for null input', () => {
-      expect(Indicators.getLast(null as any)).toBe(0);
+      // @ts-expect-error Testing invalid input
+      expect(Indicators.getLast(null)).toBe(0);
     });
 
     it('should return the last value', () => {

@@ -11,7 +11,7 @@ export class ExchangeClient implements IExchange {
     this.name = exchangeId;
 
     // Check if exchange exists in ccxt
-    const exchangeClass = (ccxt as Record<string, any>)[exchangeId];
+    const exchangeClass = (ccxt as unknown as Record<string, new (config: Record<string, unknown>) => ccxt.Exchange>)[exchangeId];
     if (!exchangeClass) {
       throw new Error(`Exchange ${exchangeId} not found in CCXT`);
     }
