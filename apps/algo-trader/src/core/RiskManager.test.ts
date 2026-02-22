@@ -22,6 +22,10 @@ describe('RiskManager', () => {
     it('should throw if currentPrice is negative', () => {
       expect(() => RiskManager.calculatePositionSize(10000, 1, -1)).toThrow('greater than 0');
     });
+
+    it('should throw if balance is negative', () => {
+      expect(() => RiskManager.calculatePositionSize(-10000, 1, 100)).toThrow('Balance cannot be negative');
+    });
   });
 
   describe('initTrailingStop', () => {

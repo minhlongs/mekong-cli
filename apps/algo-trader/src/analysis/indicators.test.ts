@@ -49,6 +49,10 @@ describe('Indicators', () => {
     it('should return 0 for zero variance arrays', () => {
       expect(Indicators.correlation([1, 1, 1], [1, 2, 3])).toBe(0);
     });
+
+    it('should return 0 if denX or denY is 0', () => {
+      expect(Indicators.correlation([1, 1, 1], [1, 1, 1])).toBe(0);
+    });
   });
 
   describe('sma', () => {

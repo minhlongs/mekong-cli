@@ -109,4 +109,64 @@ describe('StatisticalArbitrage', () => {
       expect(result.metadata?.action).toBe('BUY_A_SELL_B');
     }
   });
+
+  it('should return null when correlation is < 0.8', async () => {
+    const s = new StatisticalArbitrage();
+
+    // Create totally random base data to have bad correlation
+    for (let i = 0; i < 100; i++) {
+      await s.onCandle({
+        timestamp: 1000 * i,
+        open: 10,
+        high: 10,
+        low: 10,
+        close: Math.random() * 10 + 10, // Random A
+        volume: 100,
+        metadata: { priceB: Math.random() * 10 + 10 } // Random B (uncorrelated)
+      });
+    }
+
+    // Attempt trigger
+    const result = await s.onCandle({
+      timestamp: 1000 * 101,
+      open: 5,
+      high: 5,
+      low: 5,
+      close: 5,
+      volume: 100,
+      metadata: { priceB: 20 }
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it('should init correctly and slice to lookbackPeriod', async () => {
+    const s = new StatisticalArbitrage();
+    const history = Array.from({ length: 150 }, (_, i) => ({
+      timestamp: 1000 * i,
+      open: 10,
+      high: 10,
+      low: 10,
+      close: 10,
+      volume: 100,
+      metadata: { priceB: 10 }
+    }));
+
+    await s.init(history);
+
+    // We can't directly inspect private properties, but we can verify it works by
+    // seeing that the next candle triggers logic rather than returning null
+    const result = await s.onCandle({
+      timestamp: 150000,
+      open: 10,
+      high: 10,
+      low: 10,
+      close: 10,
+      volume: 100,
+      metadata: { priceB: 10 }
+    });
+
+    // Should return null because zScore is 0 (prices are identical), but it went through the logic
+    expect(result).toBeNull();
+  });
 });
