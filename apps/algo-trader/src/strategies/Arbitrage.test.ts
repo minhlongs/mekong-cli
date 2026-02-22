@@ -47,6 +47,20 @@ describe('Arbitrage Strategies', () => {
       const signal = await strategy.onCandle(candle);
       expect(signal).toBeNull();
     });
+
+    it('should not generate signal when exchangeBPrice is missing', async () => {
+      const candle: ICandle = {
+        timestamp,
+        open: 100, high: 101, low: 99, close: 100, volume: 1000,
+        metadata: {} // Missing exchangeBPrice
+      };
+      const signal = await strategy.onCandle(candle);
+      expect(signal).toBeNull();
+    });
+
+    it('should ignore init method as it is not needed', async () => {
+      await expect(strategy.init([])).resolves.not.toThrow();
+    });
   });
 
   describe('TriangularArbitrage', () => {
@@ -88,6 +102,36 @@ describe('Arbitrage Strategies', () => {
         expect(signal.type).toBe(SignalType.SELL);
         expect(signal.metadata.direction).toBe('backward');
       }
+    });
+
+    it('should return null if priceETH_BTC or priceETH_USDT is missing', async () => {
+      const candle: ICandle = {
+        timestamp,
+        open: 50000, high: 50000, low: 50000, close: 50000, volume: 1000,
+        metadata: {
+          priceETH_BTC: 0.051
+          // missing priceETH_USDT
+        }
+      };
+      const signal = await strategy.onCandle(candle);
+      expect(signal).toBeNull();
+    });
+
+    it('should return null if profit is not greater than minProfit', async () => {
+      const candle: ICandle = {
+        timestamp,
+        open: 50000, high: 50000, low: 50000, close: 50000, volume: 1000,
+        metadata: {
+          priceETH_BTC: 0.05,
+          priceETH_USDT: 2500 // forwardRate = 1 / 50000 / 0.05 * 2500 = 1. backwardRate = 1 / 2500 * 0.05 * 50000 = 1
+        }
+      };
+      const signal = await strategy.onCandle(candle);
+      expect(signal).toBeNull();
+    });
+
+    it('should ignore init method as it is not needed', async () => {
+      await expect(strategy.init([])).resolves.not.toThrow();
     });
   });
 

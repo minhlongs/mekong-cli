@@ -69,6 +69,27 @@ describe('BollingerBandStrategy', () => {
     expect(true).toBe(true); // no crash = pass
   });
 
+  it('should return null when bb is null (edge case)', async () => {
+    const s = new BollingerBandStrategy();
+    await s.init([]);
+
+    // Mock bbands to return empty array
+    const { Indicators } = require('../analysis/indicators');
+    const originalBBands = Indicators.bbands;
+    Indicators.bbands = jest.fn().mockReturnValue([]);
+
+    // Need enough candles to pass the length check
+    const candles = makeCandles(50);
+    for (const c of candles) {
+      await s.onCandle(c);
+    }
+
+    const result = await s.onCandle(makeCandle(100, 100));
+    expect(result).toBeNull();
+
+    Indicators.bbands = originalBBands;
+  });
+
   it('BUY signal should have tag bb_lower_rsi_oversold', async () => {
     const s = new BollingerBandStrategy();
     await s.init([]);
