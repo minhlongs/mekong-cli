@@ -97,8 +97,17 @@ export class Indicators {
   static standardDeviation(values: number[]): number {
     const n = values.length;
     if (n === 0) return 0;
-    const mean = values.reduce((a, b) => a + b) / n;
-    return Math.sqrt(values.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+
+    let sum = 0;
+    let sumSq = 0;
+    for (let i = 0; i < n; i++) {
+      sum += values[i];
+      sumSq += values[i] * values[i];
+    }
+
+    const mean = sum / n;
+    const variance = (sumSq / n) - (mean * mean);
+    return Math.sqrt(Math.max(0, variance));
   }
 
   /**

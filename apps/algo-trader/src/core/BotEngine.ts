@@ -20,6 +20,8 @@ export class BotEngine {
   private config: BotConfig;
   private isRunning = false;
   private openPosition = false; // Simplified state tracking
+  private baseCurrency: string;
+  private quoteCurrency: string;
 
   constructor(
     strategy: IStrategy,
@@ -33,6 +35,9 @@ export class BotEngine {
     this.exchange = exchange;
     this.orderManager = orderManager ?? new OrderManager();
     this.config = config;
+    const [base, quote] = this.config.symbol.split('/');
+    this.baseCurrency = base;
+    this.quoteCurrency = quote;
   }
 
   async start() {
@@ -77,8 +82,7 @@ export class BotEngine {
 
   private async executeTrade(side: 'buy' | 'sell', currentPrice: number) {
     const isBuy = side === 'buy';
-    const [baseCurrency, quoteCurrency] = this.config.symbol.split('/');
-    const currency = isBuy ? quoteCurrency : baseCurrency;
+    const currency = isBuy ? this.quoteCurrency : this.baseCurrency;
 
     const balances = await this.exchange.fetchBalance();
     const balance = balances[currency]?.free || 0;
