@@ -70,7 +70,7 @@ async function processQueue() {
     const durationMs = Date.now() - startTime;
 
     // 🔒 If mission was BLOCKED (not executed), wait for active mission to finish
-    if (result && (result.result === 'mission_locked' || result.result === 'busy_blocked')) {
+    if (result && (result.result === 'mission_locked' || result.result === 'busy_blocked' || result.result === 'all_workers_busy')) {
       const retries = retryCounts.get(taskFile) || 0;
 
       if (retries >= MAX_RETRIES) {

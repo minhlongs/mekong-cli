@@ -7,7 +7,6 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-console.log('DEBUG: mission-journal config:', config);
 const { log } = require('./brain-process-manager');
 
 const HISTORY_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/mission-history.json');
