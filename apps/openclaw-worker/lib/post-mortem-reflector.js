@@ -102,6 +102,7 @@ async function reflectOnMission(data) {
 function extractFailureReason(data) {
     if (data.buildResult && data.buildResult.output) {
         const output = String(data.buildResult.output);
+        if (output === 'not_run') return 'workers_busy — mission queued but not dispatched';
         if (output.includes('TypeError')) return 'TypeError in code';
         if (output.includes('SyntaxError')) return 'SyntaxError in code';
         if (output.includes('timeout')) return 'Mission timed out';

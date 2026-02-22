@@ -6,9 +6,6 @@
  */
 
 const cp = require('child_process');
-console.log('DEBUG: SUT child_process type:', typeof cp);
-console.log('DEBUG: SUT child_process keys:', Object.keys(cp));
-console.log('DEBUG: SUT execSync isMock:', cp.execSync && cp.execSync._isMockFunction);
 const { execSync, spawn } = cp;
 const path = require('path');
 const fs = require('fs');
