@@ -67,7 +67,6 @@ export class BacktestRunner {
       price: candle.close,
       time: candle.timestamp
     };
-    // console.log(`[BUY] @ ${candle.close} on ${new Date(candle.timestamp).toISOString()}`);
   }
 
   private executeSell(candle: ICandle) {
@@ -89,7 +88,6 @@ export class BacktestRunner {
 
     this.balance += profit;
     this.openPosition = null;
-    // console.log(`[SELL] @ ${candle.close} on ${new Date(candle.timestamp).toISOString()} | PnL: ${profit.toFixed(2)} (${profitPercent.toFixed(2)}%)`);
   }
 
   private printResults() {

@@ -29,7 +29,7 @@ export class CliDashboard {
   }
 
   render() {
-    console.clear();
+    logger.info(''); // Use logger to clear or add empty line if clear is not supported by logger directly. For now just removing the direct console call.
     logger.info(chalk.bold.blue('=== ALGO TRADER DASHBOARD ==='));
     logger.info(`Time: ${new Date().toISOString()}`);
     logger.info('-----------------------------');
