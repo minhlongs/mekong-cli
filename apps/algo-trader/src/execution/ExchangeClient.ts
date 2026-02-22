@@ -20,6 +20,7 @@ export class ExchangeClient implements IExchange {
       apiKey,
       secret,
       enableRateLimit: true,
+      timeout: 30000, // Preempt silent hang via 30s timeout
       options: { defaultType: 'spot' } // Default to spot
     });
   }

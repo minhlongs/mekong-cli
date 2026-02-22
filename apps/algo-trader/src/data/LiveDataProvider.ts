@@ -23,6 +23,7 @@ export class LiveDataProvider implements IDataProvider {
     private subscribers: ((candle: ICandle) => void)[] = [];
     private pollTimer: NodeJS.Timeout | null = null;
     private isRunning = false;
+    private isPolling = false; // Prevent concurrent polling (Thundering Herd)
     private lastTimestamp = 0;
 
     constructor(
@@ -79,19 +80,33 @@ export class LiveDataProvider implements IDataProvider {
         if (this.isRunning) return;
         this.isRunning = true;
 
-        // Seed lastTimestamp from most recent candle
-        const recent = await this.getHistory(1);
-        if (recent.length > 0) {
-            this.lastTimestamp = recent[0].timestamp;
+        try {
+            // Seed lastTimestamp from most recent candle
+            const recent = await this.getHistory(1);
+            if (recent.length > 0) {
+                this.lastTimestamp = recent[0].timestamp;
+            }
+        } catch (error: unknown) {
+            logger.error(`LiveDataProvider: Failed to fetch initial seed candle — ${error instanceof Error ? error.message : String(error)}`);
+            this.isRunning = false;
+            return;
         }
 
         logger.info(`LiveDataProvider: Polling started (every ${this.pollIntervalMs / 1000}s)`);
 
         this.pollTimer = setInterval(async () => {
+            if (this.isPolling) {
+                logger.warn('LiveDataProvider: Polling overlap detected. Skipping this tick to prevent rate limits.');
+                return;
+            }
+
             try {
+                this.isPolling = true;
                 await this.poll();
             } catch (error: unknown) {
                 logger.error(`LiveDataProvider: Poll error — ${error instanceof Error ? error.message : String(error)}`);
+            } finally {
+                this.isPolling = false;
             }
         }, this.pollIntervalMs);
     }

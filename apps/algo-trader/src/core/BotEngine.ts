@@ -22,6 +22,7 @@ export class BotEngine {
   private openPosition = false; // Simplified state tracking
   private baseCurrency: string;
   private quoteCurrency: string;
+  private isProcessingSignal = false; // Prevent race conditions during async trade execution
 
   constructor(
     strategy: IStrategy,
@@ -61,9 +62,10 @@ export class BotEngine {
   }
 
   private async onCandle(candle: ICandle) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || this.isProcessingSignal) return;
 
     try {
+      this.isProcessingSignal = true;
       const signal = await this.strategy.onCandle(candle);
 
       if (signal) {
@@ -77,6 +79,8 @@ export class BotEngine {
       }
     } catch (error) {
       logger.error(`Error in onCandle processing: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      this.isProcessingSignal = false;
     }
   }
 
