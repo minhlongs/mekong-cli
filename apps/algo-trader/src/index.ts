@@ -48,31 +48,54 @@ program
   .action(async (options) => {
     logger.info(`Starting Live Bot on ${options.exchange} for ${options.symbol}`);
 
-    // For demo purposes, using MockDataProvider even in "live" mode
-    // In production, you'd implement a WebSocketDataProvider or PollingDataProvider
-    const dataProvider = new MockDataProvider();
+    try {
+      // For demo purposes, using MockDataProvider even in "live" mode
+      // In production, you'd implement a WebSocketDataProvider or PollingDataProvider
+      const dataProvider = new MockDataProvider();
 
-    // Exchange Client
-    // NOTE: In a real scenario, you'd load API keys from .env
-    const apiKey = process.env.EXCHANGE_API_KEY || process.env.API_KEY;
-    const apiSecret = process.env.EXCHANGE_SECRET || process.env.API_SECRET;
-    const exchange = new ExchangeClient(options.exchange, apiKey, apiSecret);
+      // Exchange Client
+      // NOTE: In a real scenario, you'd load API keys from .env
+      const apiKey = process.env.EXCHANGE_API_KEY || process.env.API_KEY;
+      const apiSecret = process.env.EXCHANGE_SECRET || process.env.API_SECRET;
+      const exchange = new ExchangeClient(options.exchange, apiKey, apiSecret);
 
-    const strategy = new RsiSmaStrategy();
+      const strategy = new RsiSmaStrategy();
 
-    const engine = new BotEngine(strategy, dataProvider, exchange, {
-      symbol: options.symbol,
-      riskPercentage: 1, // 1%
-      pollInterval: 1000
-    });
+      const engine = new BotEngine(strategy, dataProvider, exchange, {
+        symbol: options.symbol,
+        riskPercentage: 1, // 1%
+        pollInterval: 1000
+      });
 
-    await engine.start();
+      await engine.start();
 
-    // Keep process alive
-    process.on('SIGINT', async () => {
-      await engine.stop();
-      process.exit(0);
-    });
+      const shutdown = async () => {
+        await engine.stop();
+        process.exit(0);
+      };
+
+      // Keep process alive
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(`Live bot failed: ${error.message}`);
+      } else {
+        logger.error(`Live bot failed: ${String(error)}`);
+      }
+      process.exit(1);
+    }
   });
+
+// Global handlers for unhandled promise rejections and uncaught exceptions
+process.on('unhandledRejection', (reason: unknown) => {
+  logger.error(`Unhandled Rejection: ${reason instanceof Error ? reason.message : String(reason)}`);
+  process.exit(1);
+});
+
+process.on('uncaughtException', (error: Error) => {
+  logger.error(`Uncaught Exception: ${error.message}`);
+  process.exit(1);
+});
 
 program.parse(process.argv);

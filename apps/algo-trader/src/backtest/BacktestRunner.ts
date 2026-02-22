@@ -31,35 +31,40 @@ export class BacktestRunner {
   async run(days: number = 30): Promise<void> {
     logger.info(`Starting backtest for ${this.strategy.name} over ${days} days...`);
 
-    // 1. Get History
-    const limit = days * 24 * 60; // Minutes
-    const history = await this.dataProvider.getHistory(limit);
+    try {
+      // 1. Get History
+      const limit = days * 24 * 60; // Minutes
+      const history = await this.dataProvider.getHistory(limit);
 
-    if (history.length === 0) {
-      logger.info('No data available for backtest');
-      return;
-    }
+      if (history.length === 0) {
+        logger.info('No data available for backtest');
+        return;
+      }
 
-    logger.info(`Loaded ${history.length} candles.`);
+      logger.info(`Loaded ${history.length} candles.`);
 
-    // 2. Init Strategy
-    await this.strategy.init(history.slice(0, 200)); // Warmup with first 200
+      // 2. Init Strategy
+      await this.strategy.init(history.slice(0, 200)); // Warmup with first 200
 
-    // 3. Iterate through history
-    for (let i = 200; i < history.length; i++) {
-      const candle = history[i];
-      const signal = await this.strategy.onCandle(candle);
+      // 3. Iterate through history
+      for (let i = 200; i < history.length; i++) {
+        const candle = history[i];
+        const signal = await this.strategy.onCandle(candle);
 
-      if (signal) {
-        if (signal.type === SignalType.BUY && !this.openPosition) {
-          this.executeBuy(candle);
-        } else if (signal.type === SignalType.SELL && this.openPosition) {
-          this.executeSell(candle);
+        if (signal) {
+          if (signal.type === SignalType.BUY && !this.openPosition) {
+            this.executeBuy(candle);
+          } else if (signal.type === SignalType.SELL && this.openPosition) {
+            this.executeSell(candle);
+          }
         }
       }
-    }
 
-    this.printResults();
+      this.printResults();
+    } catch (error: unknown) {
+      logger.error(`Backtest run error: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    }
   }
 
   private executeBuy(candle: ICandle) {
