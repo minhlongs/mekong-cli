@@ -1,6 +1,7 @@
-import { IStrategy, ISignal, SignalType } from '../interfaces/IStrategy';
+import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators, MacdResult } from '../analysis/indicators';
+import { BaseStrategy } from './BaseStrategy';
 
 export interface MacdCrossoverParams {
   fastPeriod?: number;
@@ -8,26 +9,27 @@ export interface MacdCrossoverParams {
   signalPeriod?: number;
 }
 
-export class MacdCrossoverStrategy implements IStrategy {
+export class MacdCrossoverStrategy extends BaseStrategy {
   name = 'MACD Crossover Strategy';
 
-  private candles: ICandle[] = [];
   private readonly fastPeriod: number;
   private readonly slowPeriod: number;
   private readonly signalPeriod: number;
   private prevMacd: MacdResult | null = null;
 
   constructor(params: MacdCrossoverParams = {}) {
+    super();
     this.fastPeriod = params.fastPeriod ?? 12;
     this.slowPeriod = params.slowPeriod ?? 26;
     this.signalPeriod = params.signalPeriod ?? 9;
+    this.maxHistoryBuffer = 300;
   }
 
   async init(history: ICandle[]): Promise<void> {
-    this.candles = [...history];
+    await super.init(history);
     // Warm up prevMacd from history
-    if (history.length > this.slowPeriod + this.signalPeriod) {
-      const closes = history.map(c => c.close);
+    if (this.candles.length > this.slowPeriod + this.signalPeriod) {
+      const closes = this.getCloses();
       const results = Indicators.macd(closes, this.fastPeriod, this.slowPeriod, this.signalPeriod);
       if (results.length >= 2) {
         this.prevMacd = results[results.length - 2];
@@ -36,18 +38,14 @@ export class MacdCrossoverStrategy implements IStrategy {
   }
 
   async onCandle(candle: ICandle): Promise<ISignal | null> {
-    this.candles.push(candle);
-
-    if (this.candles.length > 300) {
-      this.candles.shift();
-    }
+    this.bufferCandle(candle);
 
     const minRequired = this.slowPeriod + this.signalPeriod + 1;
     if (this.candles.length < minRequired) {
       return null;
     }
 
-    const closes = this.candles.map(c => c.close);
+    const closes = this.getCloses();
     const macdResults = Indicators.macd(closes, this.fastPeriod, this.slowPeriod, this.signalPeriod);
 
     if (macdResults.length < 2) return null;

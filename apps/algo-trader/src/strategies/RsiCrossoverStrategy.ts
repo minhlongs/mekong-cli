@@ -1,32 +1,32 @@
-import { IStrategy, ISignal, SignalType } from '../interfaces/IStrategy';
+import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators } from '../analysis/indicators';
+import { BaseStrategy } from './BaseStrategy';
 
-export class RsiCrossoverStrategy implements IStrategy {
+export class RsiCrossoverStrategy extends BaseStrategy {
   name = 'RSI Crossover Strategy';
-  private candles: ICandle[] = [];
   private prevRsi: number | null = null;
 
   private readonly rsiPeriod = 14;
   private readonly rsiOverbought = 70;
   private readonly rsiOversold = 30;
 
+  constructor() {
+    super();
+    this.maxHistoryBuffer = 200;
+  }
+
   async init(history: ICandle[]): Promise<void> {
-    this.candles = [...history];
-    const closes = this.candles.map(c => c.close);
+    await super.init(history);
+    const closes = this.getCloses();
     const rsiValues = Indicators.rsi(closes, this.rsiPeriod);
     this.prevRsi = Indicators.getLast(rsiValues);
   }
 
   async onCandle(candle: ICandle): Promise<ISignal | null> {
-    this.candles.push(candle);
+    this.bufferCandle(candle);
 
-    // Giữ lịch sử tối thiểu để tính toán (khoảng 200 nến là đủ cho RSI 14)
-    if (this.candles.length > 200) {
-      this.candles.shift();
-    }
-
-    const closes = this.candles.map(c => c.close);
+    const closes = this.getCloses();
     const rsiValues = Indicators.rsi(closes, this.rsiPeriod);
     const currentRsi = Indicators.getLast(rsiValues);
 

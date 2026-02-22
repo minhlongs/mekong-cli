@@ -1,41 +1,34 @@
-import { IStrategy, ISignal, SignalType } from '../interfaces/IStrategy';
+import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators } from '../analysis/indicators';
+import { BaseStrategy } from './BaseStrategy';
 
-export class RsiSmaStrategy implements IStrategy {
+export class RsiSmaStrategy extends BaseStrategy {
   name = 'RSI + SMA Strategy';
 
-  private candles: ICandle[] = [];
-  private closes: number[] = [];
   private readonly rsiPeriod = 14;
   private readonly smaFastPeriod = 20;
   private readonly smaSlowPeriod = 50;
   private readonly rsiOverbought = 70;
   private readonly rsiOversold = 30;
 
-  async init(history: ICandle[]): Promise<void> {
-    this.candles = [...history];
-    this.closes = history.map(c => c.close);
+  constructor() {
+    super();
+    this.maxHistoryBuffer = 200;
   }
 
   async onCandle(candle: ICandle): Promise<ISignal | null> {
-    this.candles.push(candle);
-    this.closes.push(candle.close);
-
-    // Keep only necessary history to save memory, but enough for calculation
-    if (this.candles.length > 200) {
-      this.candles.shift();
-      this.closes.shift();
-    }
+    this.bufferCandle(candle);
 
     // Need enough data
     if (this.candles.length < this.smaSlowPeriod) {
       return null;
     }
 
-    const rsiValues = Indicators.rsi(this.closes, this.rsiPeriod);
-    const smaFastValues = Indicators.sma(this.closes, this.smaFastPeriod);
-    const smaSlowValues = Indicators.sma(this.closes, this.smaSlowPeriod);
+    const closes = this.getCloses();
+    const rsiValues = Indicators.rsi(closes, this.rsiPeriod);
+    const smaFastValues = Indicators.sma(closes, this.smaFastPeriod);
+    const smaSlowValues = Indicators.sma(closes, this.smaSlowPeriod);
 
     const currentRsi = Indicators.getLast(rsiValues);
     const currentSmaFast = Indicators.getLast(smaFastValues);
