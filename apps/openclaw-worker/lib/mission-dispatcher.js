@@ -360,7 +360,7 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
     }
 
     // Don't retry on certain result types
-    if (['unsafe_blocked', 'brain_died', 'no_brain_module'].includes(result.result)) {
+    if (['unsafe_blocked', 'brain_died', 'brain_died_fatal', 'no_brain_module', 'max_retries_exhausted', 'duplicate_rejected'].includes(result.result)) {
       return result;
     }
 

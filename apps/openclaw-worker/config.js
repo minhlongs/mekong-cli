@@ -1,7 +1,5 @@
 const path = require('path');
 
-console.log('DEBUG: config.js LOADED. env.MEKONG_DIR:', process.env.MEKONG_DIR);
-
 const MEKONG_DIR = process.env.MEKONG_DIR || path.join(process.env.HOME || '', 'mekong-cli');
 
 // ═══════════════════════════════════════════════════════════════
