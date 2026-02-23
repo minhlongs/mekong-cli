@@ -25,7 +25,7 @@ export default function Home() {
           <Link href="#" className="hover:text-white transition-colors" aria-label="Developers">Developers</Link>
         </nav>
         <div className="flex items-center gap-4">
-          <Link href="#" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors" aria-label="Login">Login</Link>
+          <Link href="/auth/login" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors" aria-label="Login">Login</Link>
           <Button variant="secondary" className="rounded-full px-6 bg-white text-black hover:bg-zinc-200" aria-label="Get Started">
             Get Started
           </Button>
