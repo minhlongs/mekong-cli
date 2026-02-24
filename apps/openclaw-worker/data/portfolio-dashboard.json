@@ -1,20 +1,20 @@
 {
-  "timestamp": "2026-02-22T18:06:58.464Z",
+  "timestamp": "2026-02-24T18:26:53.865Z",
   "agiLevel": 7,
-  "evolutionScore": 32,
+  "evolutionScore": 31,
   "totalProjects": 1,
   "healthyProjects": 1,
   "needsAttention": 0,
   "projects": [
     {
-      "project": "algo-trader",
-      "score": 10,
+      "project": "well",
+      "score": 4,
       "errorCount": 0,
       "basePriority": 1,
-      "stalenessFactor": 5,
-      "successRate": 50,
-      "lastMission": "never",
-      "missionCount": 0,
+      "stalenessFactor": 1.4,
+      "successRate": 0,
+      "lastMission": "2026-02-24T12:53:08.500Z",
+      "missionCount": 1,
       "health": {}
     }
   ],

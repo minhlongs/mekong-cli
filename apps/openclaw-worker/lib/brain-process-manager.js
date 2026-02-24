@@ -243,18 +243,21 @@ function isBusy(output) {
     return false;
   }
 
-  // Pass 1: Subagent detection (ALWAYS check full tail — appears on status bar below ❯)
+  // 🦞 FIX 2026-02-25: ALL checks now scan only lines AFTER the last ❯ prompt.
+  // Old bug: "2 local agents" from COMPLETED subagents in scrollback ABOVE ❯
+  // was matching as BUSY, creating a 2-min blind spot between missions.
+  const promptIdx = lines.findLastIndex(l => l.includes('❯'));
+  const checkLines = promptIdx >= 0 ? lines.slice(promptIdx) : lines;
+  const tail = checkLines.join('\n');
+
+  // Subagent detection (check AFTER ❯ — status bar renders below prompt when active)
   const subagentPattern = /\d+\s+local\s+agents?/i;
-  if (subagentPattern.test(fullTail)) {
-    log(`isBusy MATCH: SUBAGENTS ACTIVE → ${fullTail.match(subagentPattern)?.[0]}`);
+  if (subagentPattern.test(tail)) {
+    log(`isBusy MATCH: SUBAGENTS ACTIVE → ${tail.match(subagentPattern)?.[0]}`);
     return true;
   }
 
-  // Pass 2: Status text — check ❯ line AND lines after it (queued messages appears ON ❯ line)
-  const promptIdx = lines.findLastIndex(l => l.includes('❯'));
-  const checkLines = promptIdx >= 0 ? lines.slice(promptIdx) : lines; // 🦞 FIX: include ❯ line (was promptIdx+1)
-  const tail = checkLines.join('\n');
-  // Only idle if ❯ line has NOTHING else (just "❯" or "❯ Try...")
+  // Status text — check ❯ line AND lines after it
   const promptLine = promptIdx >= 0 ? lines[promptIdx] : '';
   if (promptLine.match(/^[❯>]\s*(Try\s|$)/) && checkLines.length <= 1) return false;
   const matched = BUSY_PATTERNS.find(p => p.test(tail));
@@ -333,16 +336,16 @@ function pasteText(text, workerIdx) {
   const idx = workerIdx !== undefined ? workerIdx : currentWorkerIdx;
   const target = `${TMUX_SESSION}:0.${idx}`;
 
-  // 🧬 FIX Bug: 'tmux send-keys -l' silently fails on macOS for long strings.
-  // Original 'tmux paste-buffer' emits \e[200~ bracketed paste sequences, 
-  // which CC CLI 2.1.50 captures as multi-line mode, swallows the Enter key, 
-  // and sits idle waiting for Ctrl+D.
-  // 
-  // SOLUTION: 'tmux paste-buffer -p' DISABLES bracketed paste.
-  // It feeds the buffer characters literally and instantly like a human, 
-  // letting CC CLI process it and accept the trailing Enter.
+  // 🔒 TWO-CALL MANDATE (Chairman Rule 2026-02-03):
+  // Step 1: Paste text WITHOUT any trailing \n
+  // Step 2: Send Enter SEPARATELY via sendEnter() (called by runMission)
+  //
+  // CC CLI needs Enter as a separate event to submit the command.
+  // If \n is embedded in the paste, CC CLI treats it as multi-line input
+  // and waits for Ctrl+D instead of executing.
+  const cleanText = text.replace(/\n+$/, ''); // Strip ALL trailing newlines
   const promptFile = `/tmp/tom_hum_prompt_P${idx}.txt`;
-  fs.writeFileSync(promptFile, text);
+  fs.writeFileSync(promptFile, cleanText); // NO trailing newline in file
   tmuxExec(`tmux load-buffer ${promptFile}`);
   tmuxExec(`tmux paste-buffer -p -t ${target}`);
   try { fs.unlinkSync(promptFile); } catch (e) { }
@@ -418,7 +421,7 @@ function spawnBrain() {
       // FIX: Standardize all env vars to 'ollama' bridge protocol
       // REMOVED ANTHROPIC_AUTH_TOKEN to avoid conflict (502/Auth Warning)
       // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
-      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash"`;
+      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
 
       // Repair Loop: Add missing panes
       for (let i = paneCount; i < teamSize; i++) {
@@ -500,7 +503,7 @@ function spawnBrain() {
   const apiKeyExport = process.env.ANTHROPIC_API_KEY ? `export ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY}" && ` : '';
   // FIX: Unset AUTH_TOKEN to prevent auth conflict
   // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
-  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash" && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`;
+  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`;
 
   // Create session (Pane 0) - MONITOR (Standard) OR WORKER (God Mode)
   let p0Cmd = `tail -f ${config.LOG_FILE}`;
@@ -857,8 +860,11 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
         // "Context left until auto-compact: 0%" in status bar is NORMAL — do NOT kick for that.
         const hasZeroPercent = /Compacting[^\n]*0%/i.test(recentLines) || /0%[^\n]*Compacting/i.test(recentLines);
         if (isCompacting && hasZeroPercent) {
-          log(`🆘 ANTI-HANG: CC CLI stuck compacting at 0% — kicking Enter (attempt ${waitAttempt + 1})...`);
-          tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Enter`);
+          log(`🆘 ANTI-HANG: CC CLI stuck compacting at 0% — sending /clear to reset context (attempt ${waitAttempt + 1})...`);
+          pasteText('/clear', workerIdx);
+          await sleep(1000);
+          sendEnter(workerIdx);
+          await sleep(10000); // Wait for /clear to process
         } else if (!isCompacting) {
           const matchedPat = BUSY_PATTERNS.find(p => p.test(recentLines));
           log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/18) — matched: ${matchedPat || 'NONE'} — waiting 10s...`);
@@ -902,6 +908,13 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
       return { success: false, result: 'queued_abort', elapsed: 0 };
     }
 
+    // 🦞 SELF-HEAL #3: Background tasks overlay stuck (Esc to close)
+    if (/Background tasks/i.test(finalCheck) || /Esc to close/i.test(finalCheck)) {
+      log(`🩺 SELF-HEAL: CC CLI stuck on "Background tasks" view — sending Escape to dismiss`);
+      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+      await sleep(1000);
+    }
+
     // 🔒 Clear input line before dispatch (stale text protection)
     tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
     tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} C-c`);
@@ -913,6 +926,15 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     // Dispatch via paste-buffer
     pasteText(safePrompt, workerIdx);
     await sleep(2000);
+
+    // 🦞 FIX 2026-02-24: "Đơ" / "Ngáo" — The Two-Call Mandate
+    // CC CLI often drops the first Enter if it's still parsing syntax highlighting.
+    // Spam Enter 3 times to guarantee it executes.
+    log(`Sending Triple Enter to guarantee execution...`);
+    sendEnter(workerIdx);
+    await sleep(500);
+    sendEnter(workerIdx);
+    await sleep(500);
     sendEnter(workerIdx);
 
     // 🔒 VERIFIED ENTER: Wait 5s (was 3s) then retry ONCE if still idle
@@ -922,10 +944,13 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     if (postEnterState === 'idle' && !isBusy(postEnterOutput)) {
       // Only kick if 25s+ elapsed AND text is stuck after prompt
       const elapsedPostDispatch = Math.round((Date.now() - startTime) / 1000);
-      if (elapsedPostDispatch >= 25) {
-        log(`ENTER RETRY: CC CLI still idle after 25s — sending ONE safety Enter`);
+      if (elapsedPostDispatch >= 15) { // 🦞 FIX 2026-02-24: Reduced from 25s to 15s to be more responsive
+        log(`ENTER RETRY: CC CLI still idle after 15s — sending THREE safety Enters`);
         sendEnter(workerIdx);
-        await sleep(1000);
+        await sleep(500);
+        sendEnter(workerIdx);
+        await sleep(500);
+        sendEnter(workerIdx);
       }
     }
     log(`DISPATCHED: Mission #${num} sent to P${workerIdx}`);
@@ -995,12 +1020,14 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
         continue;
       }
 
-      // 🦞 CC CLI PROXY RULE FIX: Context left 0% & Compacting conversation pause
+      // 🦞 FIX 2026-02-25: Context left 0% & Compacting conversation → send /clear
       const bottomOutput = getCleanTail(output, 20).join('\n');
       if (bottomOutput.includes('Compacting conversation') || bottomOutput.includes('auto-compact: 0%')) {
-        log(`PROXY PAUSE: CC CLI waiting for auto-compact Enter (${elapsedSec}s) — kicking with Enter...`);
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Enter`);
-        await sleep(2000);
+        log(`CONTEXT 0%: Mission #${num} — sending /clear to reset context (${elapsedSec}s)`);
+        pasteText('/clear', workerIdx);
+        await sleep(1000);
+        sendEnter(workerIdx);
+        await sleep(10000); // Wait for /clear to rebuild context
         idleConfirmCount = 0;
         continue;
       }
@@ -1024,6 +1051,8 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
           log(`TOKENS: Mission #${num} used ${tk1.tokens.toLocaleString()} tokens (${tk1.requests} reqs, ${tk1.model}) [Session accum: ${Math.round(tokensSinceCompact / 1000)}k]`);
           recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk1.tokens, elapsedSec, tk1.model);
           const daily1 = getDailyUsage(); if (daily1.overBudget) log(`⚠️ 作戰: DAILY BUDGET EXCEEDED — ${daily1.tokens.toLocaleString()} tokens today!`);
+          // 🧠 LEARNING: Record outcome for pattern analysis
+          try { require('./learning-engine').recordOutcome(prompt.slice(0, 40), path.basename(projectDir || ''), 'done', elapsedSec); } catch (e) { }
           return { success: true, result: 'done', elapsed: elapsedSec };
         }
 
@@ -1087,9 +1116,13 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
           continue; // Re-check immediately
 
         case 'context_limit':
-          // 🦞 FIX 2026-02-23: REMOVED /clear — freezes tmux. Let CC CLI auto-compact handle it.
-          log(`CONTEXT LIMIT: Mission #${num} — letting CC CLI auto-compact handle context`);
-          await sleep(5000); // Wait for auto-compact to kick in
+          // 🦞 FIX 2026-02-25: RE-ENABLED /clear — uses pasteText + sendEnter (Two-Call Mandate)
+          // Old bug: raw `send-keys /clear Enter` froze tmux. Now uses paste-buffer method.
+          log(`CONTEXT LIMIT: Mission #${num} — context at 0%, sending /clear to reset`);
+          pasteText('/clear', workerIdx);
+          await sleep(1000);
+          sendEnter(workerIdx);
+          await sleep(10000); // Wait 10s for CC CLI to clear and rebuild context
           idleConfirmCount = 0;
           continue;
 
@@ -1105,6 +1138,14 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
               log(`TOKENS: Mission #${num} used ${tk2.tokens.toLocaleString()} tokens (${tk2.requests} reqs, ${tk2.model}) [Session accum: ${Math.round(tokensSinceCompact / 1000)}k]`);
               recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk2.tokens, elapsedSec, tk2.model);
               const daily2 = getDailyUsage(); if (daily2.overBudget) log(`⚠️ 作戰: DAILY BUDGET EXCEEDED — ${daily2.tokens.toLocaleString()} tokens today!`);
+              // 🧠 LLM VISION: Get mission completion summary (non-blocking, don't block dispatch)
+              try {
+                const { getMissionSummary, clearCache } = require('./llm-interpreter');
+                clearCache();
+                // 🧠 LEARNING: Record successful completion
+                try { require('./learning-engine').recordOutcome(prompt.slice(0, 40), path.basename(projectDir || ''), 'done', elapsedSec); } catch (e) { }
+                getMissionSummary(output).catch(() => { }); // Fire-and-forget
+              } catch (e) { }
               return { success: true, result: 'done', elapsed: elapsedSec };
             }
           } else if (elapsedSec > MIN_MISSION_SECONDS) {
@@ -1120,6 +1161,8 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
               tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
               await sleep(1000);
               tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+              // 🧠 LEARNING: Record failure for pattern analysis
+              try { require('./learning-engine').recordOutcome(prompt.slice(0, 40), path.basename(projectDir || ''), 'failed_to_start', elapsedSec); } catch (e) { }
               return { success: false, result: 'failed_to_start', elapsed: elapsedSec };
             }
           }

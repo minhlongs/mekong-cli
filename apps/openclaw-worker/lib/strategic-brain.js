@@ -13,6 +13,7 @@
  * Cooldown: 30 min per project prevents token waste (Ch.2 作戰: 日費千金)
  */
 
+const { isQueueEmpty } = require('./task-queue');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
@@ -63,7 +64,7 @@ function getFailedTaskIds() {
 
 // --- Task Selection (Weighted Random) ---
 
-function selectStrategicTask(project, projectState, capabilityFilter = () => true) {
+async function selectStrategicTask(project, projectState, capabilityFilter = () => true) {
   const tasks = config.BINH_PHAP_TASKS.filter(capabilityFilter);
   const taskHistory = projectState.taskHistory || {};
   const failedIds = getFailedTaskIds();
@@ -71,21 +72,38 @@ function selectStrategicTask(project, projectState, capabilityFilter = () => tru
   if (tasks.length === 0) return null;
 
   // Weight each task: lower count = higher weight, failed tasks get lower weight
+  // 🧠 LLM VISION: Try intelligent task selection first
+  try {
+    const { selectNextTask } = require('./llm-interpreter');
+    const llmPick = await selectNextTask(
+      state?.currentProject || 'well',
+      taskHistory,
+      tasks.map(t => ({ id: t.id, cmd: t.cmd, complexity: t.complexity }))
+    );
+    if (llmPick?.taskId) {
+      const found = tasks.find(t => t.id === llmPick.taskId);
+      if (found) return found;
+    }
+  } catch (e) {
+    // LLM failed — fall back to weighted random
+  }
+
+  // 🧠 LEARNING: Apply adaptive adjustments from past mission outcomes
+  let adjustments = {};
+  try { adjustments = require('./learning-engine').getTaskAdjustments(); } catch (e) { }
+
+  // Fallback: Weighted random selection (augmented by learning)
   const weighted = tasks.map(task => {
     const runCount = taskHistory[task.id] || 0;
     const isFailed = failedIds.includes(task.id);
-
-    // Base weight: inverse of run count (tasks run less get priority)
     let weight = Math.max(1, 10 - runCount);
-
-    // Penalties
-    if (isFailed) weight *= 0.3; // Heavily penalize known failures
-    if (task.complexity === 'strategic') weight *= 0.5; // Strategic tasks are expensive
-
+    if (isFailed) weight *= 0.3;
+    if (task.complexity === 'strategic') weight *= 0.5;
+    // Apply learning adjustment (0.1 - 2.0)
+    if (adjustments[task.id]) weight *= adjustments[task.id];
     return { task, weight };
   });
 
-  // Weighted random selection
   const totalWeight = weighted.reduce((sum, w) => sum + w.weight, 0);
   let random = Math.random() * totalWeight;
 
@@ -94,9 +112,31 @@ function selectStrategicTask(project, projectState, capabilityFilter = () => tru
     if (random <= 0) return task;
   }
 
-  // Fallback: first task
   return tasks[0];
 }
+
+// --- Claude Engineer Workflow (injected into every mission) ---
+const WORKFLOW_RULES = `
+WORKFLOW ORCHESTRATION (MANDATORY):
+1. PLAN MODE DEFAULT: Enter plan mode for ANY non-trivial task (3+ steps). If something goes sideways, STOP and re-plan. Write detailed specs upfront.
+2. SUBAGENT STRATEGY: Use subagents liberally. Offload research/exploration/analysis to subagents. One task per subagent for focused execution.
+3. SELF-IMPROVEMENT LOOP: After ANY correction, update tasks/lessons.md. Write rules that prevent the same mistake. Review lessons at session start.
+4. VERIFICATION BEFORE DONE: Never mark a task complete without proving it works. Run tests, check logs, demonstrate correctness. Ask "Would a staff engineer approve this?"
+5. DEMAND ELEGANCE: For non-trivial changes, pause and ask "is there a more elegant way?" If a fix feels hacky, implement the elegant solution. Skip this for simple, obvious fixes.
+6. AUTONOMOUS BUG FIXING: When given a bug report, just fix it. Point at logs/errors/failing tests then resolve them. Zero context switching from the user.
+
+TASK MANAGEMENT:
+1. Plan First: Write plan to tasks/todo.md with checkable items
+2. Track Progress: Mark items complete as you go
+3. Explain Changes: High-level summary at each step
+4. Document Results: Add review section to tasks/todo.md
+5. Capture Lessons: Update tasks/lessons.md after corrections
+
+CORE PRINCIPLES:
+- Simplicity First: Make every change as simple as possible. Minimal code impact.
+- No Laziness: Find root causes. No temporary fixes. Senior developer standards.
+- Minimal Impact: Changes should only touch what is necessary. Avoid introducing bugs.
+`.trim();
 
 // --- Mission Generation ---
 
@@ -108,6 +148,8 @@ PROJECT: ${project}
 
 AGI LEVEL 6 — STRATEGIC MISSION (Proactive Improvement)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${WORKFLOW_RULES}
 
 /cook "${task.cmd}
 
@@ -132,7 +174,7 @@ Respond in TIẾNG VIỆT." --auto
  * @param {string} projectDir - project directory path
  * @returns {boolean} true if a mission was dispatched
  */
-function tryStrategicMission(state, project, projectDir) {
+async function tryStrategicMission(state, project, projectDir) {
   const strategicState = loadStrategicState();
   const projectState = strategicState[project] || {
     lastStrategicAt: null,
@@ -150,10 +192,10 @@ function tryStrategicMission(state, project, projectDir) {
     }
   }
 
-  // Don't dispatch if task queue is not empty
+  // 🦞 FIX 2026-02-24: Check BOTH filesystem tasks AND active missions in queue
   const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
-  if (tasks.length > 0) {
-    log(`[STRATEGIC] ${project} — task queue not empty (${tasks.length} pending). Skipping.`);
+  if (tasks.length > 0 || !isQueueEmpty()) {
+    log(`[STRATEGIC] ${project} — queue busy (${tasks.length} files, queueEmpty=${isQueueEmpty()}). Skipping.`);
     return false;
   }
 
@@ -172,14 +214,54 @@ function tryStrategicMission(state, project, projectDir) {
     if (task.id === 'i18n_sync' && !fs.existsSync(path.join(projectDir, 'src/i18n')) && !fs.existsSync(path.join(projectDir, 'i18n'))) return false;
     return true;
   };
-  const selectedTask = selectStrategicTask(project, projectState, capabilityFilter);
+  const selectedTask = await selectStrategicTask(project, projectState, capabilityFilter);
   if (!selectedTask) {
     log(`[STRATEGIC] ${project} — no applicable tasks for this project's capabilities. Skipping.`);
     return false;
   }
-  const { filename, prompt } = generateStrategicMission(selectedTask, project);
 
-  // Write mission file
+  // 🧠 AGI Level 9: Every 5th mission, generate a CUSTOM mission via LLM
+  const useCustomMission = (projectState.totalStrategic + 1) % 5 === 0;
+  let filename, prompt;
+
+  if (useCustomMission) {
+    try {
+      const { generateCustomMission } = require('./mission-generator');
+      const { getReport } = require('./learning-engine');
+      const learningReport = getReport();
+      const customTask = await generateCustomMission(projectDir, learningReport);
+      if (customTask?.cmd) {
+        const ts = Date.now();
+        filename = `HIGH_mission_custom_${project}_${ts}.txt`;
+        prompt = `COMPLEXITY: medium
+PROJECT: ${project}
+
+AGI LEVEL 9 — CUSTOM MISSION (LLM-Generated)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${WORKFLOW_RULES}
+
+/cook "${customTask.cmd}
+
+Project: ${project}
+Context: Generated by CTO's Mission Generator (Level 9 AGI).
+Reason: ${customTask.reason || 'LLM-identified improvement'}
+Focus on measurable improvements. Max 5 files.
+Respond in TIẾNG VIỆT." --auto
+`;
+        log(`[STRATEGIC] 🧠 Level 9 — CUSTOM MISSION: "${customTask.cmd}" for ${project}`);
+      }
+    } catch (e) {
+      log(`[STRATEGIC] Custom mission gen failed: ${e.message}`);
+    }
+  }
+
+  // Fallback: use static task selection
+  if (!filename) {
+    ({ filename, prompt } = generateStrategicMission(selectedTask, project));
+  }
+
+  // 🦞 RE-ENABLED 2026-02-24: Deep 10x scanning for WellNexus zero-bug target
   const missionPath = path.join(config.WATCH_DIR, filename);
   fs.writeFileSync(missionPath, prompt);
 
@@ -190,7 +272,7 @@ function tryStrategicMission(state, project, projectDir) {
   strategicState[project] = projectState;
   saveStrategicState(strategicState);
 
-  log(`[STRATEGIC] 🧠 Level 6 — Dispatched: ${selectedTask.id} for ${project} (total: ${projectState.totalStrategic})`);
+  log(`[STRATEGIC] 🧠 Level ${useCustomMission ? '9' : '8'} — Dispatched: ${useCustomMission ? 'CUSTOM' : selectedTask.id} for ${project} (total: ${projectState.totalStrategic})`);
 
   return true;
 }

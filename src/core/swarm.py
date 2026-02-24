@@ -157,4 +157,126 @@ class SwarmRegistry:
                 self._nodes[node.id] = node
 
 
-__all__ = ["SwarmNode", "SwarmRegistry"]
+class SwarmDispatcher:
+    """Dispatches RecipeStep tasks to local agents or remote swarm nodes.
+
+    Routing logic:
+    - If healthy remote nodes exist, dispatch to first available (V1: round-robin not needed)
+    - Fallback to local agent execution when no healthy nodes
+
+    Local agent routing:
+    - step type "git"   -> GitAgent
+    - step type "file"  -> FileAgent
+    - step type "shell" -> ShellAgent (default)
+    """
+
+    # Map step type keywords to agent class names
+    _AGENT_TYPE_MAP: Dict[str, str] = {
+        "git": "git",
+        "file": "file",
+        "shell": "shell",
+    }
+
+    def __init__(self, registry: SwarmRegistry) -> None:
+        self.registry = registry
+        self._local_agents: Dict[str, Any] = {}
+        self._init_local_agents()
+
+    def _init_local_agents(self) -> None:
+        """Lazy-load local agents to avoid circular imports."""
+        try:
+            from src.agents.git_agent import GitAgent
+            from src.agents.file_agent import FileAgent
+            from src.agents.shell_agent import ShellAgent
+            self._local_agents = {
+                "git": GitAgent(),
+                "file": FileAgent(),
+                "shell": ShellAgent(),
+            }
+        except ImportError:
+            self._local_agents = {}
+
+    def get_healthy_nodes(self) -> List[SwarmNode]:
+        """Return all nodes with status='healthy'."""
+        return [n for n in self.registry.list_nodes() if n.status == "healthy"]
+
+    def _route_step(self, step: Any) -> str:
+        """Determine agent type from step params or description.
+
+        Returns one of: 'git', 'file', 'shell'
+        """
+        params = getattr(step, "params", None) or {}
+        step_type = str(params.get("type", "")).lower()
+        if step_type in self._AGENT_TYPE_MAP:
+            return self._AGENT_TYPE_MAP[step_type]
+
+        # Fallback: infer from description keywords
+        description = str(getattr(step, "description", "")).lower()
+        if any(kw in description for kw in ("git ", "commit", "branch", "diff", "status")):
+            return "git"
+        if any(kw in description for kw in ("read file", "write file", "find file", "grep")):
+            return "file"
+        return "shell"
+
+    def _dispatch_local(self, step: Any, agent_type: str) -> Any:
+        """Execute step using local agent. Returns ExecutionResult."""
+        agent = self._local_agents.get(agent_type) or self._local_agents.get("shell")
+        if agent is None:
+            # No agents available — return minimal failure result
+            from .verifier import ExecutionResult
+            return ExecutionResult(exit_code=1, stdout="", stderr="No local agent available")
+
+        from ..core.agent_base import Task
+        description = getattr(step, "description", "")
+        params = getattr(step, "params", None) or {}
+        # ShellAgent reads command from input["command"]
+        task_input = dict(params)
+        if "command" not in task_input:
+            task_input["command"] = description
+        task = Task(
+            id="swarm-dispatch",
+            description=description,
+            input=task_input,
+        )
+        result = agent.execute(task)
+
+        # Convert Result -> ExecutionResult
+        from .verifier import ExecutionResult
+        return ExecutionResult(
+            exit_code=0 if result.success else 1,
+            stdout=result.output or "",
+            stderr=result.error or "",
+        )
+
+    def _dispatch_remote(self, step: Any, node: SwarmNode) -> Any:
+        """Send step to remote node via POST /cmd. Returns ExecutionResult."""
+        from .verifier import ExecutionResult
+        url = f"http://{node.host}:{node.port}/cmd"
+        try:
+            resp = requests.post(
+                url,
+                json={"goal": getattr(step, "description", ""), "token": node.token},
+                timeout=60.0,
+            )
+            data = resp.json()
+            return ExecutionResult(
+                exit_code=0 if data.get("status") == "success" else 1,
+                stdout=str(data.get("result", "")),
+                stderr=str(data.get("error", "")),
+            )
+        except requests.RequestException as e:
+            return ExecutionResult(exit_code=1, stdout="", stderr=str(e))
+
+    def dispatch(self, step: Any) -> Any:
+        """Dispatch a single RecipeStep. Returns ExecutionResult.
+
+        Priority: healthy remote node -> local agent fallback.
+        """
+        agent_type = self._route_step(step)
+        healthy = self.get_healthy_nodes()
+        if healthy:
+            return self._dispatch_remote(step, healthy[0])
+        return self._dispatch_local(step, agent_type)
+
+
+__all__ = ["SwarmNode", "SwarmRegistry", "SwarmDispatcher"]

@@ -1,13 +1,1 @@
-[
-  {
-    "project": "algo-trader",
-    "timestamp": "2026-02-22T18:06:56.481Z",
-    "build": "GREEN",
-    "techDebt": {
-      "todos": 0,
-      "consoleLogs": 46
-    },
-    "gitStatus": "DIRTY",
-    "recommendations": []
-  }
-]
+[]

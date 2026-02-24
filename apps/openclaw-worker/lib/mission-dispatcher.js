@@ -78,7 +78,8 @@ function detectProjectDir(taskContent) {
     apex: 'apps/apex-os',
     anima: 'apps/anima119',
     sophia: 'apps/sophia-ai-factory',
-    well: 'apps/well',
+    wellnexus: '../archive-2026/Well',
+    well: '../archive-2026/Well',
     agency: 'apps/agencyos-web',
     'sa-dec': 'apps/sa-dec-flower-hunt',
     'flower': 'apps/sa-dec-flower-hunt',
@@ -159,7 +160,7 @@ function buildPrompt(taskContent) {
   // 🦞 FIX 2026-02-23: LEAN PROMPT — Stop dumping 1500+ chars overhead into every prompt.
   // MEMORY/GOTCHAS/lessons are already in customInstructions (config.json), loaded once per session.
   // Prompt should only contain: command + task content + file limit.
-  const mandatePrefix = 'Trả lời bằng TIẾNG VIỆT. ';
+  const mandatePrefix = 'Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi code (tasks/todo.md) 2.Dùng subagents cho research/analysis 3.Verification trước khi done (chạy test, check logs) 4.Sau correction update tasks/lessons.md 5.Tìm root cause, không fix tạm 6.Chỉ sửa file cần thiết. ';
   const FILE_LIMIT = 'Chỉ sửa TỐI ĐA 5 file mỗi mission. Nếu cần sửa nhiều hơn, báo cáo danh sách còn lại.';
   const VI_PREFIX = '';
 
@@ -353,7 +354,9 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
     }
 
     // Don't retry on certain result types. If busy, bubble up immediately so queue can sleep/retry.
-    if (['all_workers_busy', 'busy_blocked', 'mission_locked', 'unsafe_blocked', 'brain_died', 'brain_died_fatal', 'no_brain_module', 'max_retries_exhausted', 'duplicate_rejected'].includes(result.result)) {
+    // 🦞 FIX 2026-02-24: failed_to_start + queued_abort bubble up to task-queue.js for delayed re-enqueue
+    // DO NOT retry here — instant retry paste-stacks into CC CLI creating "queued messages"
+    if (['all_workers_busy', 'busy_blocked', 'mission_locked', 'unsafe_blocked', 'brain_died', 'brain_died_fatal', 'no_brain_module', 'max_retries_exhausted', 'duplicate_rejected', 'queued_abort', 'failed_to_start'].includes(result.result)) {
       return result;
     }
 

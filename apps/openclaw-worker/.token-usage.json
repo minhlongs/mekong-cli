@@ -822,5 +822,45 @@
     "tokens": 0,
     "duration": 10,
     "model": "unknown"
+  },
+  {
+    "ts": "2026-02-23T22:27:11.348Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT.\n\nWorking Dir: /Users/macbook",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 25,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-23T22:27:58.642Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT.\n\nWorking Dir: /Users/macbook",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 43,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-24T12:01:24.461Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT.\n\nWellNexus R4-13: Deep Bug H",
+    "project": "well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-24T12:24:18.067Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT.\n\nWellNexus R4-14: Deep Bug H",
+    "project": "src",
+    "tokens": 0,
+    "duration": 62,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-24T12:48:32.334Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT.\n\nTrả lời bằng TIẾNG VIỆT. Fi",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 74,
+    "model": "unknown"
   }
 ]

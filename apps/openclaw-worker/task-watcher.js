@@ -184,6 +184,29 @@ log('--- MISSION CONTROL v2026.2.17 ONLINE (FIX: CTO phản xạ) ---');
 const { archiveProcessedMissions } = require('./lib/task-queue');
 safeBoot('startWatching', startWatching);
 safeBoot('spawnBrain', spawnBrain);
+
+// 🦞🔥 PROACTIVE SELF-HEAL ON BOOT (v2026.2.24)
+// If CC CLI has "queued messages" from a previous crash/failed dispatch,
+// clear them BEFORE any dispatch attempt to prevent the busy→no-dispatch deadlock.
+safeBoot('bootSelfHeal', () => {
+  const { execSync } = require('child_process');
+  try {
+    const output = execSync('tmux capture-pane -t tom_hum_brain:0.0 -p 2>/dev/null', { encoding: 'utf-8', timeout: 3000 });
+    if (/queued messages/i.test(output) || /Press up to edit queued/i.test(output)) {
+      log('🩺 BOOT SELF-HEAL: Detected stale "queued messages" — auto-clearing with Escape...');
+      for (let i = 0; i < 5; i++) {
+        execSync('tmux send-keys -t tom_hum_brain:0.0 Escape');
+        execSync('sleep 0.5');
+      }
+      log('🩺 BOOT SELF-HEAL: Queued messages cleared ✅');
+    } else {
+      log('🩺 BOOT SELF-HEAL: CC CLI clean — no queued messages detected.');
+    }
+  } catch (e) {
+    log(`🩺 BOOT SELF-HEAL: Skipped — ${e.message}`);
+  }
+});
+
 // 防 PROXY_RULES: Validate config alignment BEFORE dispatching any mission
 const { validateProxyRules } = require('./lib/proxy-rules-validator');
 safeBoot('validateProxyRules', validateProxyRules);
@@ -201,6 +224,13 @@ safeBoot('startLearningEngine', startLearningEngine);
 safeBoot('startEvolutionEngine', startEvolutionEngine);
 // AGI Level 7: Multi-Project Commander (火攻)
 safeBoot('startCommander', startCommander);
+// AGI Level 10: Self-Analyzer + Cross-Session Memory
+safeBoot('startSelfAnalyzer', () => {
+  const { recordSessionStart, getAGIScore } = require('./lib/self-analyzer');
+  recordSessionStart();
+  const agi = getAGIScore();
+  log(`🧠 AGI SCORE: ${agi.total}/100 (Level ${agi.level}) — Vision:${agi.components.vision} Learn:${agi.components.learning} Auto:${agi.components.autonomy} Mem:${agi.components.memory} Win:${agi.components.success}`);
+});
 safeBoot('startCooling', startCooling);
 safeBoot('startHealer', startHealer);
 // 🦞 Lobster Proxy Pilot (Guardian of Quota)
