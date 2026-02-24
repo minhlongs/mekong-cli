@@ -802,6 +802,9 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     // 4. Max 18 attempts (180s) for long compactions
 
     let wasCompacting = false;
+    let compactionStartTime = 0; // 🎯 COMPACTION STALL FIX: Track how long compaction runs
+    const COMPACTION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes max for compaction
+
     for (let waitAttempt = 0; waitAttempt < 18; waitAttempt++) {
       const preDispatch = capturePane(workerIdx);
       const recentLines = getCleanTail(preDispatch, 8).join('\n');
@@ -817,18 +820,46 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
       }
 
       if (preState === 'busy') {
+        const isCompacting = /Compacting/i.test(recentLines) || /Compacting/i.test(fullTailLines);
+
         // Track compaction for post-compaction cooldown
-        if (/Compacting/i.test(recentLines) || /Compacting/i.test(fullTailLines)) {
-          wasCompacting = true;
+        if (isCompacting) {
+          if (!wasCompacting) {
+            wasCompacting = true;
+            compactionStartTime = Date.now();
+            log(`⏱️ COMPACTION STARTED: Tracking compaction duration...`);
+          }
+
+          // 🎯 COMPACTION STALL FIX: If compacting > 3 minutes → abort + /clear
+          const compactingDuration = Date.now() - compactionStartTime;
+          if (compactingDuration > COMPACTION_TIMEOUT_MS) {
+            log(`🚨 COMPACTION STALL DETECTED: ${Math.round(compactingDuration / 60000)}min > 3min limit!`);
+            log(`🚨 Aborting compaction with Ctrl+C → /clear to recover...`);
+            tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} C-c`);
+            await sleep(3000);
+            // Send /clear to reset context instead of stalling forever
+            pasteText('/clear', workerIdx);
+            await sleep(1000);
+            sendEnter(workerIdx);
+            await sleep(5000);
+            wasCompacting = false;
+            compactionStartTime = 0;
+            log(`🩺 COMPACTION RECOVERY: Sent /clear — CC CLI context reset. Ready for next dispatch.`);
+            // Wait for prompt after /clear
+            await waitForPrompt(30000);
+            break;
+          }
+
+          log(`⏱️ COMPACTING: ${Math.round(compactingDuration / 1000)}s elapsed (limit: 180s) — waiting...`);
         }
+
         // 🆘 ANTI-HANG: ONLY kick Enter when BOTH "Compacting" text AND "0%" on SAME line
         // "Context left until auto-compact: 0%" in status bar is NORMAL — do NOT kick for that.
-        const isCompacting = /Compacting/i.test(recentLines);
         const hasZeroPercent = /Compacting[^\n]*0%/i.test(recentLines) || /0%[^\n]*Compacting/i.test(recentLines);
         if (isCompacting && hasZeroPercent) {
           log(`🆘 ANTI-HANG: CC CLI stuck compacting at 0% — kicking Enter (attempt ${waitAttempt + 1})...`);
           tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Enter`);
-        } else {
+        } else if (!isCompacting) {
           const matchedPat = BUSY_PATTERNS.find(p => p.test(recentLines));
           log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/18) — matched: ${matchedPat || 'NONE'} — waiting 10s...`);
         }
@@ -841,6 +872,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
         if (wasCompacting) {
           log(`POST-COMPACT: Compaction just finished — cooling 10s before dispatch...`);
           wasCompacting = false;
+          compactionStartTime = 0;
           await sleep(10000);
           continue; // Re-check state after cooldown
         }
