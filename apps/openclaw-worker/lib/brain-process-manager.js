@@ -39,7 +39,7 @@ const MAX_RESPAWNS_PER_HOUR = 5;
 const RESPAWN_COOLDOWN_MS = 5 * 60 * 1000;
 const PROMPT_FILE = '/tmp/tom_hum_prompt.txt';
 // 🦞 FIX 2026-02-23: 10s too fast → false positives (5 CRITICAL tasks lost in 1 min)
-const MIN_MISSION_SECONDS = 30;   // 30s minimum before considering mission done
+const MIN_MISSION_SECONDS = 60;   // 🦞 FIX 2026-02-24: 30→60s — CC CLI via proxy needs up to 60s to initialize
 const IDLE_CONFIRM_POLLS = 8;     // 8 consecutive idle polls required (was 5)
 
 // --- DETECTION PATTERNS ---
@@ -388,7 +388,8 @@ function buildClaudeCmd() {
   // FORCE correct proxy port — ignore shell env (might be stale 8045)
   const baseUrl = `http://127.0.0.1:${port}`;
   // FIX: Unset AUTH_TOKEN to prevent auth conflict, only set API_KEY
-  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${baseUrl}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-sonnet-4-6" && export CLAUDE_CODE_SUBAGENT_MODEL="claude-sonnet-4-6"`;
+  // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
+  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${baseUrl}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash"`;
   return `${envVars} && claude --model ${model} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
 }
 
@@ -416,7 +417,8 @@ function spawnBrain() {
       const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
       // FIX: Standardize all env vars to 'ollama' bridge protocol
       // REMOVED ANTHROPIC_AUTH_TOKEN to avoid conflict (502/Auth Warning)
-      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-sonnet-4-6" && export CLAUDE_CODE_SUBAGENT_MODEL="claude-sonnet-4-6"`;
+      // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
+      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash"`;
 
       // Repair Loop: Add missing panes
       for (let i = paneCount; i < teamSize; i++) {
@@ -497,7 +499,8 @@ function spawnBrain() {
   // We use config.MODEL_NAME to bypass CLI validation (Opus masquerade)
   const apiKeyExport = process.env.ANTHROPIC_API_KEY ? `export ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY}" && ` : '';
   // FIX: Unset AUTH_TOKEN to prevent auth conflict
-  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="claude-sonnet-4-6" && export CLAUDE_CODE_SUBAGENT_MODEL="claude-sonnet-4-6" && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`;
+  // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
+  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash" && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`;
 
   // Create session (Pane 0) - MONITOR (Standard) OR WORKER (God Mode)
   let p0Cmd = `tail -f ${config.LOG_FILE}`;
@@ -789,67 +792,109 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
       await sleep(2000);
     }
 
-    // 🛡️ ANTI-STACKING GUARD: Wait for CC CLI to be TRULY idle before dispatching
-    // Prevents "queued messages" bug where commands pile up
-    // 🔒 Ch.2 作戰: 120s timeout (12×10s) — complex missions need time to finish
-    for (let waitAttempt = 0; waitAttempt < 12; waitAttempt++) {
+    // 🦞🔥 SELF-HEALING + ANTI-STACKING GUARD (v2026.2.24 — ALL FIXES BAKED IN)
+    // Sếp's mandate: CTO must STOP BEING BLIND and AUTO-RECOVER like a game respawn.
+    //
+    // Self-heal capabilities:
+    // 1. Detects "queued messages" → sends Escape to clear
+    // 2. Detects post-compaction gap → waits 10s extra
+    // 3. Detects 0% compaction deadlock → ONLY kicks when truly stuck (not status bar)
+    // 4. Max 18 attempts (180s) for long compactions
+
+    let wasCompacting = false;
+    for (let waitAttempt = 0; waitAttempt < 18; waitAttempt++) {
       const preDispatch = capturePane(workerIdx);
-      // 🦞 FIX: Only check LAST 8 lines — old session stale text in top of pane causes false positives
       const recentLines = getCleanTail(preDispatch, 8).join('\n');
+      const fullTailLines = getCleanTail(preDispatch, 20).join('\n');
       const preState = detectState(recentLines);
-      if (preState === 'busy') {
-        const matchedPat = BUSY_PATTERNS.find(p => p.test(recentLines));
-        log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/12) — matched: ${matchedPat || 'NONE'} — waiting 10s...`);
-        log(`ANTI-STACK DEBUG tail: ${getCleanTail(preDispatch, 5).join(' | ').slice(0, 200)}`);
-        await sleep(1000);
+
+      // 🦞 SELF-HEAL #1: Detect "queued messages" and auto-clear via Escape
+      if (/queued messages/i.test(recentLines) || /Press up to edit queued/i.test(recentLines)) {
+        log(`🩺 SELF-HEAL: Detected "queued messages" — sending Escape to clear (attempt ${waitAttempt + 1})...`);
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+        await sleep(3000);
         continue;
       }
+
+      if (preState === 'busy') {
+        // Track compaction for post-compaction cooldown
+        if (/Compacting/i.test(recentLines) || /Compacting/i.test(fullTailLines)) {
+          wasCompacting = true;
+        }
+        // 🆘 ANTI-HANG: ONLY kick Enter when BOTH "Compacting" text AND "0%" on SAME line
+        // "Context left until auto-compact: 0%" in status bar is NORMAL — do NOT kick for that.
+        const isCompacting = /Compacting/i.test(recentLines);
+        const hasZeroPercent = /Compacting[^\n]*0%/i.test(recentLines) || /0%[^\n]*Compacting/i.test(recentLines);
+        if (isCompacting && hasZeroPercent) {
+          log(`🆘 ANTI-HANG: CC CLI stuck compacting at 0% — kicking Enter (attempt ${waitAttempt + 1})...`);
+          tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Enter`);
+        } else {
+          const matchedPat = BUSY_PATTERNS.find(p => p.test(recentLines));
+          log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/18) — matched: ${matchedPat || 'NONE'} — waiting 10s...`);
+        }
+        await sleep(10000);
+        continue;
+      }
+
       if (preState === 'idle' || preState === 'complete' || preState === 'unknown') {
+        // 🦞 POST-COMPACTION COOLDOWN: CC CLI spinner disappears BEFORE compaction finishes.
+        if (wasCompacting) {
+          log(`POST-COMPACT: Compaction just finished — cooling 10s before dispatch...`);
+          wasCompacting = false;
+          await sleep(10000);
+          continue; // Re-check state after cooldown
+        }
         break; // Safe to dispatch
       }
+
       if (preState === 'question') {
-        log(`ANTI-STACK: CC CLI has pending question — auto-approving first`);
+        log(`ANTI-STACK: CC CLI has pending question — auto-approving`);
         tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} y Enter`);
-        await sleep(1000);
+        await sleep(2000);
         continue;
       }
       break;
     }
 
-    // Final check: if STILL busy after 120s, abort this mission
+    // Final check: if STILL busy after 180s, abort this mission
     const finalCheck = capturePane(workerIdx);
     if (isBusy(finalCheck)) {
-      log(`ANTI-STACK: P${workerIdx} still busy after 120s — ABORTING mission #${num}`);
+      log(`ANTI-STACK: P${workerIdx} still busy after 180s — ABORTING mission #${num}`);
       return { success: false, result: 'busy_blocked', elapsed: 0 };
     }
 
-    // 🔒 Chairman Fix: CLEAR INPUT LINE before dispatch
-    // Bug: CC CLI may have stale text ("commit and push this") in input
-    // → paste-buffer appends to it → garbled prompt → mission fails
-    // 🔒 Chairman Fix: CLEAR INPUT LINE before dispatch
-    // Escape then Ctrl-C to ensure we are at a fresh prompt
+    // 🦞 SELF-HEAL #2: Final queued-messages check after ANTI-STACK
+    if (/queued messages/i.test(finalCheck) || /Press up to edit queued/i.test(finalCheck)) {
+      log(`🩺 SELF-HEAL: FINAL CHECK — queued messages still present. Sending Escape + aborting this round.`);
+      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+      return { success: false, result: 'queued_abort', elapsed: 0 };
+    }
+
+    // 🔒 Clear input line before dispatch (stale text protection)
     tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
     tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} C-c`);
     await sleep(200);
 
-    // 🦞 FIX: To prevent CC CLI from switching to multi-line input mode (which eats Enter keys),
-    // we must convert all internal newlines in the prompt to spaces before pasting.
+    // Convert newlines to spaces to prevent CC CLI multi-line input mode
     const safePrompt = fullPrompt.replace(/\n/g, ' ');
 
-    // Dispatch via paste-buffer (reliable for long text + special chars)
+    // Dispatch via paste-buffer
     pasteText(safePrompt, workerIdx);
     await sleep(2000);
     sendEnter(workerIdx);
 
-    // 🔒 VERIFIED ENTER: Check CC CLI received Enter - retry once if still idle
-    // Root cause of "CTO thường xuyên thiếu Enter": single Enter races on loaded M1
-    await sleep(3000);
+    // 🔒 VERIFIED ENTER: Wait 5s (was 3s) then retry ONCE if still idle
+    await sleep(5000);
     const postEnterOutput = capturePane(workerIdx);
     const postEnterState = detectState(postEnterOutput);
     if (postEnterState === 'idle' && !isBusy(postEnterOutput)) {
-      log(`ENTER RETRY: CC CLI still idle after first Enter — sending safety Enter`);
-      sendEnter(workerIdx);
-      await sleep(1000);
+      // Only kick if 25s+ elapsed AND text is stuck after prompt
+      const elapsedPostDispatch = Math.round((Date.now() - startTime) / 1000);
+      if (elapsedPostDispatch >= 25) {
+        log(`ENTER RETRY: CC CLI still idle after 25s — sending ONE safety Enter`);
+        sendEnter(workerIdx);
+        await sleep(1000);
+      }
     }
     log(`DISPATCHED: Mission #${num} sent to P${workerIdx}`);
 
@@ -1035,8 +1080,14 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
             // DO NOT assume success if wasBusy is false! Allow the idle counter to accumulate until 3x the limit, then FAIL!
             if (idleConfirmCount === 0) log(`WARNING: Mission #${num} idle for ${elapsedSec}s without ever becoming busy!`);
             idleConfirmCount++;
-            if (idleConfirmCount >= IDLE_CONFIRM_POLLS * 3) {
-              log(`ERROR: Mission #${num} failed to start after ${elapsedSec}s [wasBusy=false]. Aborting prematurely!`);
+            // 🦞 FIX 2026-02-24: 3x→6x — CC CLI via proxy startup is slow, don't abort prematurely
+            if (idleConfirmCount >= IDLE_CONFIRM_POLLS * 6) {
+              log(`ERROR: Mission #${num} failed to start after ${elapsedSec}s [wasBusy=false]. Clearing CC CLI + aborting.`);
+              // 🦞 SELF-HEAL: Send Escape to clear the pasted command from CC CLI
+              // This prevents retry from stacking on top of the failed command.
+              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+              await sleep(1000);
+              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
               return { success: false, result: 'failed_to_start', elapsed: elapsedSec };
             }
           }
