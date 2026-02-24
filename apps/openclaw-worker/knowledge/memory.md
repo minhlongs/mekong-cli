@@ -11,6 +11,31 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
+| 2026-02-24 | strategic | HIGH_mission_strategic_self_co | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-24 | strategic | HIGH_mission_strategic_securit | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-24 | well | MEDIUM_mission_well_fix_test_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-24 | 14 | CRITICAL_14_R4_Well_I18n_Missi | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-24 | fix | HIGH_mission_fix_13_R4_Well_UI | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-24 | 00 | LOW_00_CTO_Test | FAILED — result=brain_died | ~0(est) | 0/min |
+| 2026-02-24 | 13 | CRITICAL_13_R4_Well_UI_Perform | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | 07 | CRITICAL_07_R4_Profile_Auth | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | 09 | CRITICAL_09_R4_Final_Sweep | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | 08 | CRITICAL_08_R4_Admin_Metrics | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | r4 | HIGH_r4_bug_hunt | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | implement | MEDIUM_implement_swarm_dispatc | FAILED — duplicate_rejected | ~0(est) | 0/min |
+| 2026-02-24 | swarm | MEDIUM_swarm_go_now | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
+| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
+| 2026-02-23 | unknown | MEDIUM_swarm_phase04go | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
+| 2026-02-23 | unknown | MEDIUM_swarm_phase04_clean | FAILED — Brain process died — respawn needed | ~0(est) | 0/min |
+| 2026-02-23 | add | MEDIUM_mission_add_tests_token | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
+| 2026-02-23 | add | MEDIUM_mission_add_tests_task_ | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-23 | add | MEDIUM_mission_add_tests_dispa | Clean success in 1min — good pattern | ~200(est) | 200/min |
 | 2026-02-22 | evolution | CRITICAL_mission_evolution_sur | FAILED — Max retries exhausted — task too complex or flaky | 0 | 0/min |
 | 2026-02-22 | strategic | HIGH_mission_strategic_knowled | Clean success in 1min — good pattern | 0 | 0/min |
 | 2026-02-22 | strategic | HIGH_mission_strategic_self_co | FAILED — Max retries exhausted — task too complex or flaky | 0 | 0/min |
@@ -36,31 +61,6 @@
 | 2026-02-22 | algo | MEDIUM_mission_algo_trader_fix | FAILED — Max retries exhausted — task too complex or flaky | 0 | 0/min |
 | 2026-02-22 | fix | HIGH_mission_fix_fix_evolution | FAILED — Max retries exhausted — task too complex or flaky | 0 | 0/min |
 | 2026-02-22 | fix | HIGH_mission_fix_evolution_sur | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
-| 2026-02-22 | evolution | CRITICAL_mission_evolution_sur | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
-| 2026-02-22 | algo | HIGH_mission_algo_trader_phase | Clean success in 0min — good pattern | 0 | 0/min |
-| 2026-02-22 | strategic | HIGH_mission_strategic_debug_e | Clean success in 0min — good pattern | 0 | 0/min |
-| 2026-02-22 | fix | HIGH_mission_fix_fix_anima119_ | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
-| 2026-02-22 | fix | HIGH_mission_fix_anima119_fix_ | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
-| 2026-02-22 | anima119 | HIGH_mission_anima119_fix_buil | Code worked but BUILD FAILED — check types/lint | 0 | 0/min |
-| 2026-02-22 | strategic | HIGH_mission_strategic_deep_au | Clean success in 3min — good pattern | 0 | 0/min |
-| 2026-02-22 | evolution | CRITICAL_mission_evolution_sur | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | HIGH_mission_84tea_fix_build_1 | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | HIGH_mission_84tea_fix_build_1 | Clean success in 2min — good pattern | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | Clean success in 0min — good pattern | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_lint_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | HIGH_mission_84tea_fix_build_1 | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
-| 2026-02-22 | 84tea | MEDIUM_mission_84tea_fix_test_ | FAILED — workers_busy — mission queued but not dispatched | 0 | 0/min |
 
 ---
 

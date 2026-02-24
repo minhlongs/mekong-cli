@@ -1,103 +1,169 @@
 /**
- * AGI Level 5: Self-Learning Engine — 知彼知己 (Know enemy, know self)
+ * Learning Engine — CTO Self-Improvement via Mission Analysis
+ * AGI Level 8: Self-Learning Loop
  *
- * Phân tích lịch sử mission để rút ra bài học và tối ưu hóa chiến lược.
- * Trọng tâm:
- * 1. Phân tích tỷ lệ thành công theo loại task.
- * 2. Nhận diện các lỗi phổ biến (failure modes).
- * 3. Đề xuất cải thiện cho Binh Pháp tasks.
+ * 📜 Binh Pháp Ch.6 虛實: 「因敵變化而取勝」
+ *    "Adapt your strategy based on the enemy's changes to achieve victory"
+ *
+ * Tracks mission outcomes, calculates success rates per task type,
+ * and provides adaptive recommendations for the Strategic Brain.
  */
 
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
-const { log } = require('./brain-process-manager');
 
-const HISTORY_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/mission-history.json');
-const INSIGHTS_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/learning-insights.json');
+const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data');
+const OUTCOMES_FILE = path.join(DATA_DIR, 'mission-outcomes.json');
+const LESSONS_FILE = path.join(DATA_DIR, 'cto-lessons.json');
 
-let learningInterval = null;
+// Ensure data dir
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-async function generateLearningInsights() {
-  if (!fs.existsSync(HISTORY_FILE)) {
-    log('[LEARNING] No mission history found. Skipping analysis.');
-    return;
-  }
+function log(msg) {
+  const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const line = `[${ts}] [tom-hum] [LEARNING] ${msg}`;
+  try { fs.appendFileSync('/Users/macbookprom1/tom_hum_cto.log', line + '\n'); } catch (e) { }
+}
 
-  log('[LEARNING] Analyzing mission history for patterns...');
-
+function loadOutcomes() {
   try {
-    const history = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'));
-    if (history.length < 5) {
-      log('[LEARNING] Not enough history (min 5 missions). Skipping.');
-      return;
-    }
+    if (fs.existsSync(OUTCOMES_FILE)) return JSON.parse(fs.readFileSync(OUTCOMES_FILE, 'utf-8'));
+  } catch (e) { }
+  return [];
+}
 
-    // Lấy 20 missions gần nhất để phân tích
-    const recentHistory = history.slice(-20);
+function saveOutcomes(outcomes) {
+  if (outcomes.length > 200) outcomes = outcomes.slice(-200);
+  try { fs.writeFileSync(OUTCOMES_FILE, JSON.stringify(outcomes, null, 2)); } catch (e) { }
+}
 
-    const summary = {
-      total: recentHistory.length,
-      success: recentHistory.filter(m => m.success).length,
-      failed: recentHistory.filter(m => !m.success).length,
-      avgTokens: Math.round(recentHistory.reduce((a, b) => a + (b.tokensUsed || 0), 0) / recentHistory.length),
-      failureReasons: recentHistory.filter(m => !m.success).map(m => m.failureType || (typeof m.buildResult === 'object' && m.buildResult !== null ? m.buildResult.output : null) || 'unknown')
-    };
+function loadLessons() {
+  try {
+    if (fs.existsSync(LESSONS_FILE)) return JSON.parse(fs.readFileSync(LESSONS_FILE, 'utf-8'));
+  } catch (e) { }
+  return { rules: [], patterns: {}, updatedAt: null };
+}
 
-    // AI Analysis (用間 - Intelligence)
-    const response = await fetch(`${config.CLOUD_BRAIN_URL}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: config.FALLBACK_MODEL_NAME,
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI Strategist (Sun Tzu style). Analyze mission history and provide 'Lessons Learned' and 'Strategy Adjustments'. Respond in TIẾNG VIỆT. Format as JSON: { lessons: [string], adjustments: [string], top_failure_mode: string }"
-          },
-          {
-            role: "user",
-            content: `Recent History Summary:\n${JSON.stringify(summary, null, 2)}`
-          }
-        ],
-        temperature: 0.3
-      })
-    });
+function saveLessons(lessons) {
+  lessons.updatedAt = new Date().toISOString();
+  try { fs.writeFileSync(LESSONS_FILE, JSON.stringify(lessons, null, 2)); } catch (e) { }
+}
 
-    if (response.ok) {
-      const data = await response.json();
-      const content = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
-      const insights = JSON.parse(content);
+/**
+ * Record a mission outcome.
+ */
+function recordOutcome(taskId, project, result, elapsedSec, missionSummary = null) {
+  const outcomes = loadOutcomes();
+  const outcome = {
+    taskId, project, result,
+    success: result === 'done',
+    elapsedSec,
+    summary: missionSummary?.summary || '',
+    filesChanged: missionSummary?.filesChanged || 0,
+    timestamp: new Date().toISOString()
+  };
+  outcomes.push(outcome);
+  saveOutcomes(outcomes);
+  analyzePatterns(outcomes);
+  log(`Recorded: ${taskId} → ${result} (${elapsedSec}s)${outcome.filesChanged ? ` [${outcome.filesChanged} files]` : ''}`);
+  return outcome;
+}
 
-      const report = {
-        timestamp: new Date().toISOString(),
-        stats: summary,
-        insights
-      };
-
-      fs.writeFileSync(INSIGHTS_FILE, JSON.stringify(report, null, 2));
-      log(`[LEARNING] AGI Level 5 Insights generated: ${insights.top_failure_mode}`);
-    }
-  } catch (e) {
-    log(`[LEARNING] Analysis failed: ${e.message}`);
+/**
+ * Get success rate per task type.
+ */
+function getSuccessRates() {
+  const outcomes = loadOutcomes();
+  const rates = {};
+  for (const o of outcomes) {
+    if (!rates[o.taskId]) rates[o.taskId] = { runs: 0, successes: 0, rate: 0, avgTime: 0, totalTime: 0, filesChanged: 0, lastRun: null };
+    const r = rates[o.taskId];
+    r.runs++;
+    if (o.success) r.successes++;
+    r.totalTime += o.elapsedSec || 0;
+    r.avgTime = Math.round(r.totalTime / r.runs);
+    r.filesChanged += o.filesChanged || 0;
+    r.rate = Math.round((r.successes / r.runs) * 100);
+    r.lastRun = o.timestamp;
   }
+  return rates;
 }
 
-function startLearningEngine() {
-  if (learningInterval) return;
+/**
+ * Analyze patterns and generate lessons.
+ */
+function analyzePatterns(outcomes) {
+  const lessons = loadLessons();
+  const rates = getSuccessRates();
 
-  // Chạy ngay lần đầu
-  generateLearningInsights();
-
-  // Chạy mỗi 4 tiếng (Learning is a slow process)
-  learningInterval = setInterval(generateLearningInsights, 4 * 60 * 60 * 1000);
-}
-
-function stopLearningEngine() {
-  if (learningInterval) {
-    clearInterval(learningInterval);
-    learningInterval = null;
+  // Pattern 1: Tasks that fail > 70% (after 3+ runs) → AVOID
+  for (const [taskId, stats] of Object.entries(rates)) {
+    if (stats.runs >= 3 && stats.rate < 30) {
+      const rule = `AVOID: ${taskId} — ${stats.rate}% success (${stats.successes}/${stats.runs})`;
+      if (!lessons.rules.some(r => r.startsWith(`AVOID: ${taskId}`))) {
+        lessons.rules.push(rule);
+        log(`LESSON: ${rule}`);
+      }
+    }
   }
+
+  // Pattern 2: 0 file changes 3x in a row → diminishing returns
+  const taskGroups = {};
+  for (const o of outcomes) {
+    if (!taskGroups[o.taskId]) taskGroups[o.taskId] = [];
+    taskGroups[o.taskId].push(o);
+  }
+  for (const [taskId, runs] of Object.entries(taskGroups)) {
+    const last3 = runs.slice(-3);
+    if (last3.length >= 3 && last3.every(r => r.success && (r.filesChanged || 0) === 0)) {
+      const rule = `DEPRIORITIZE: ${taskId} — 0 changes 3x in a row`;
+      if (!lessons.rules.some(r => r.startsWith(`DEPRIORITIZE: ${taskId}`))) {
+        lessons.rules.push(rule);
+        log(`LESSON: ${rule}`);
+      }
+    }
+  }
+
+  lessons.patterns = rates;
+  saveLessons(lessons);
+  return lessons;
 }
 
-module.exports = { startLearningEngine, stopLearningEngine };
+/**
+ * Get priority adjustments from learned patterns.
+ * Returns: { taskId: multiplier (0.1 - 2.0) }
+ */
+function getTaskAdjustments() {
+  const rates = getSuccessRates();
+  const adjustments = {};
+  for (const [taskId, stats] of Object.entries(rates)) {
+    let mult = 1.0;
+    if (stats.runs >= 3 && stats.rate < 30) mult = 0.1;
+    else if (stats.runs >= 3 && stats.rate < 50) mult = 0.3;
+    if (stats.runs >= 3 && stats.rate > 80 && stats.filesChanged === 0) mult = 0.2;
+    if (stats.runs < 2) mult = 1.5;
+    if (stats.filesChanged > 3) mult = Math.min(mult * 1.3, 2.0);
+    adjustments[taskId] = mult;
+  }
+  return adjustments;
+}
+
+/**
+ * Get learning engine report.
+ */
+function getReport() {
+  const rates = getSuccessRates();
+  const lessons = loadLessons();
+  const outcomes = loadOutcomes();
+  return {
+    totalMissions: outcomes.length,
+    totalSuccess: outcomes.filter(o => o.success).length,
+    overallRate: outcomes.length > 0 ? Math.round((outcomes.filter(o => o.success).length / outcomes.length) * 100) : 0,
+    taskRates: rates,
+    lessons: lessons.rules,
+    adjustments: getTaskAdjustments()
+  };
+}
+
+module.exports = { recordOutcome, getSuccessRates, getTaskAdjustments, getReport, analyzePatterns };

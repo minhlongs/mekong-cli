@@ -23,6 +23,7 @@ const { isOverheating, isSafeToScan } = require('./m1-cooling-daemon');
 const { tryStrategicMission } = require('./strategic-brain');
 
 let intervalRef = null;
+let _questionLoopCount = 0; // 🧠 QUESTION loop detector (module-level to avoid 'state' TDZ)
 
 const SCAN_RESULT_FILE = path.join(__dirname, '..', '.cto-scan-state.json');
 const MAX_FIX_CYCLES = 3;
@@ -289,7 +290,7 @@ function startAutoCTO() {
 
   function scheduleNext() {
     const interval = getPhaseInterval(currentPhase);
-    intervalRef = setTimeout(() => {
+    intervalRef = setTimeout(async () => {
       try {
         // Guards
         if (!isBrainAlive()) { log('AUTO-CTO DEBUG: isBrainAlive() failed'); scheduleNext(); return; }
@@ -301,33 +302,69 @@ function startAutoCTO() {
 
         if (!isQueueEmpty()) { log('AUTO-CTO DEBUG: memory queue pending'); scheduleNext(); return; }
 
-        // 🔒 Ch.3 謀攻: 知己知彼 — STRICT idle guard
+        // 🧠 LLM VISION: 知己知彼 — Use gemini-3-flash to READ CC CLI output
+        // Replaces fragile regex patterns that caused "blind CTO" bugs
         try {
           const paneOutput = require('child_process').execSync(
-            `tmux capture-pane -t tom_hum_brain -p -S -8 2>/dev/null`,
+            `tmux capture-pane -t tom_hum_brain -p -S -30 2>/dev/null`,
             { encoding: 'utf-8', timeout: 3000 }
           );
-          const busyPatterns = [/Thinking/i, /Orbiting/i, /Saut[eé]ing/i, /Frolicking/i,
-            /Cooking/i, /Crunching/i, /Marinating/i, /Fermenting/i, /Calculating/i,
-            /Compacting\.\.\./i, /Simmering/i, /Steaming/i, /Vibing/i, /Toasting/i,
-            /Photosynthesizing/i, /Braising/i, /Reducing/i, /Blanching/i,
-            /Sketching/i, /Initializing/i, /Running/i, /Waiting/i, /Perambulating/i,
-            /Pontificating/i, /Tinkering/i, /Flowing/i, /Roosting/i, /Herding/i,
-            /thought for \d+/i];
-          const matchedBusy = busyPatterns.find(p => p.test(paneOutput));
-          if (matchedBusy) {
-            log(`AUTO-CTO DEBUG: busyPattern matched: ${matchedBusy}`);
+          const { interpretState } = require('./llm-interpreter');
+          const llmResult = await interpretState(paneOutput);
+
+          // Reset question loop counter on non-QUESTION state
+          if (llmResult.state !== 'question') _questionLoopCount = 0;
+
+          if (llmResult.state === 'busy') {
+            log(`[LLM-VISION] CC CLI BUSY: ${llmResult.summary} (confidence: ${llmResult.confidence})`);
             scheduleNext(); return;
           }
-          // 🔒 FIX: CC CLI prompt is '❯' OR '>' (brain-process-manager.js line 212)
-          // OLD BUG: only checked ❯ → never saw CC CLI idle at > prompt → never dispatched
-          const lines = paneOutput.trim().split('\n').slice(-10);
-          const hasIdlePrompt = paneOutput.includes('❯') || lines.some(l => /^>\s*$/.test(l.trim()));
-          if (!hasIdlePrompt) {
-            log(`AUTO-CTO DEBUG: hasIdlePrompt failed. Output: ${paneOutput.replace(/\\n/g, ' ')}`);
+          if (llmResult.state === 'question') {
+            log(`[LLM-VISION] CC CLI has QUESTION: ${llmResult.summary}`);
+            // 🧠 AUTO-APPROVE with loop detection
+            _questionLoopCount++;
+            if (llmResult.confidence >= 0.8) {
+              if (_questionLoopCount >= 3) {
+                // 🚨 LOOP DETECTED: 3+ consecutive QUESTIONs → CC CLI stuck in TUI menu
+                log(`[LLM-VISION] LOOP BREAK: ${_questionLoopCount} consecutive QUESTIONs — sending Escape to exit menu`);
+                try {
+                  require('child_process').execSync(`tmux send-keys -t tom_hum_brain:0.0 Escape`, { timeout: 2000 });
+                } catch (e) { }
+                _questionLoopCount = 0;
+              } else {
+                log(`[LLM-VISION] AUTO-APPROVE: Sending Enter (confidence: ${llmResult.confidence}, attempt ${_questionLoopCount})`);
+                try {
+                  require('child_process').execSync(`tmux send-keys -t tom_hum_brain:0.0 Enter`, { timeout: 2000 });
+                } catch (e) { }
+              }
+              const { clearCache } = require('./llm-interpreter');
+              clearCache();
+            }
             scheduleNext(); return;
           }
-        } catch (e) { log(`AUTO-CTO DEBUG: pane capture failed: ${e.message}`); scheduleNext(); return; }
+          if (llmResult.state === 'error') {
+            log(`[LLM-VISION] CC CLI ERROR: ${llmResult.summary} — recommendation: ${llmResult.recommendation}`);
+            scheduleNext(); return;
+          }
+          if (llmResult.state !== 'idle' && llmResult.state !== 'complete' && llmResult.state !== 'unknown') {
+            log(`[LLM-VISION] CC CLI state: ${llmResult.state} — ${llmResult.summary}`);
+            scheduleNext(); return;
+          }
+          // LLM says idle/complete — proceed to scan/fix/verify
+          if (llmResult.state !== 'unknown') {
+            log(`[LLM-VISION] CC CLI ${llmResult.state.toUpperCase()}: ${llmResult.summary}`);
+          }
+
+          // Fallback: also check for basic prompt presence
+          if (llmResult.state === 'unknown') {
+            // LLM failed — use basic regex fallback
+            const hasIdlePrompt = paneOutput.includes('❯') || paneOutput.trim().split('\n').slice(-5).some(l => /^>\s*$/.test(l.trim()));
+            if (!hasIdlePrompt) {
+              log(`[LLM-VISION] FALLBACK: No idle prompt detected`);
+              scheduleNext(); return;
+            }
+          }
+        } catch (e) { log(`[LLM-VISION] Capture failed: ${e.message}`); scheduleNext(); return; }
 
         const state = loadState();
         currentPhase = state.phase;
@@ -344,6 +381,11 @@ function startAutoCTO() {
           projectDir = path.join(config.MEKONG_DIR, 'apps', project);
         }
         if (!fs.existsSync(projectDir)) {
+          // Fallback: use mission-dispatcher's routing table
+          const { detectProjectDir } = require('./mission-dispatcher');
+          projectDir = detectProjectDir(project);
+        }
+        if (!fs.existsSync(projectDir)) {
           log(`AUTO-CTO: Bỏ qua ${project} — không tìm thấy`);
           advanceProject(state);
           scheduleNext();
@@ -358,7 +400,7 @@ function startAutoCTO() {
               scheduleNext();
               return;
             }
-            handleScan(state, project, projectDir);
+            await handleScan(state, project, projectDir);
             break;
           case 'fix':
             handleFix(state, project);
@@ -382,7 +424,7 @@ function startAutoCTO() {
   scheduleNext();
 }
 
-function handleScan(state, project, projectDir) {
+async function handleScan(state, project, projectDir) {
   log(`AUTO-CTO [始計 SCAN]: Scanning ${project} (cycle ${state.cycle + 1}/${MAX_FIX_CYCLES})...`);
 
   const errors = scanProject(projectDir);
@@ -396,7 +438,7 @@ function handleScan(state, project, projectDir) {
   if (errors.length === 0) {
     // 軍形 GREEN — project is clean!
     // Level 6: Strategic Autonomy — proactive improvement when GREEN
-    const dispatched = tryStrategicMission(state, project, projectDir);
+    const dispatched = await tryStrategicMission(state, project, projectDir);
     if (!dispatched) {
       log(`AUTO-CTO [軍形 GREEN]: ${project} — ALL CLEAR ✅ Advancing to next project`);
       advanceProject(state);
@@ -417,6 +459,11 @@ function handleScan(state, project, projectDir) {
 }
 
 function handleFix(state, project) {
+  // 🦞 FIX 2026-02-24: Don't generate fix missions when queue is busy — prevents flooding
+  if (!isQueueEmpty()) {
+    log(`AUTO-CTO [謀攻]: ${project} — queue busy, skipping fix generation this cycle.`);
+    return;
+  }
   if (state.fixIndex >= state.errors.length) {
     // All fixes dispatched — move to verify
     log(`AUTO-CTO [謀攻]: ${project} — all ${state.errors.length} fixes dispatched. Entering VERIFY phase.`);
@@ -428,10 +475,9 @@ function handleFix(state, project) {
   const error = state.errors[state.fixIndex];
   const { prompt, filename } = generateFixMission(error, project);
 
-  // Write mission file
+  // 🦞 RE-ENABLED 2026-02-24: Auto-fix for WellNexus zero-bug target
   fs.writeFileSync(path.join(config.WATCH_DIR, filename), prompt);
-  log(`AUTO-CTO [謀攻 FIX ${state.fixIndex + 1}/${state.errors.length}]: ${error.type} — ${error.file || error.message}`);
-
+  log(`AUTO-CTO [謀攻 FIX]: Dispatched fix for ${error.type} — ${error.file || error.message} → ${filename}`);
   state.fixIndex++;
   saveState(state);
 }

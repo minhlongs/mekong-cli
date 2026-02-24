@@ -82,6 +82,7 @@ class RecipeOrchestrator:
         llm_client: Optional["LLMClient"] = None,
         strict_verification: bool = True,
         enable_rollback: bool = True,
+        use_swarm: bool = False,
     ) -> None:
         """
         Initialize orchestrator.
@@ -90,6 +91,7 @@ class RecipeOrchestrator:
             llm_client: Optional LLM client for planning and execution
             strict_verification: If True, warnings are treated as failures
             enable_rollback: If True, failed steps trigger rollback
+            use_swarm: If True, route steps through SwarmDispatcher
         """
         self.planner = RecipePlanner(llm_client=llm_client)
         self.verifier = RecipeVerifier(strict_mode=strict_verification)
@@ -98,6 +100,13 @@ class RecipeOrchestrator:
         self.telemetry = TelemetryCollector()
         self.memory = MemoryStore()
         self.nlu = IntentClassifier(llm_client=llm_client)
+
+        # Swarm dispatcher (optional)
+        if use_swarm:
+            from .swarm import SwarmDispatcher, SwarmRegistry
+            self.dispatcher: Optional[Any] = SwarmDispatcher(SwarmRegistry())
+        else:
+            self.dispatcher = None
 
         # Initialize BMAD loader
         try:

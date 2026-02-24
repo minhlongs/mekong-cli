@@ -32,7 +32,7 @@ const config = {
   STATE_FILE: path.join(MEKONG_DIR, 'tasks', '.tom_hum_state.json'),
   API_RATE_GATE_MS: 0, // 🛡️ PROXY_RULES §4: Nuclear Speed — AG Ultra UNLIMITED, zero gap
   // 🔒 LOCKED — DO NOT CHANGE (2026-02-15) — Port must match running anthropic-adapter.js
-  // 🦞 LOBSTER PILOT v1.0: Route through ADAPTER (11436) for dual-Ultra rotation (9191+9192)
+  // 🦞 LOBSTER PILOT v1.0: Route through ADAPTER (11436)
   PROXY_PORT: process.env.PROXY_PORT ? parseInt(process.env.PROXY_PORT) : 11436,
   // Anthropic Adapter (translates /v1/messages → dual AG Proxy rotation)
   // 🦞 LOBSTER: Cân bằng tải 2 acc Ultra qua adapter
@@ -54,7 +54,7 @@ const config = {
   ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
   // 🎯 FOCUSED DELIVERY MODE — algo-trader focus (Feb 22 2026)
   // Previous: ['doanh-trai-tom-hum', '84tea', 'anima119', 'wellnexus', 'apex-os', 'sophia-ai-factory', 'agencyos-web'],
-  PROJECTS: ['algo-trader'],
+  PROJECTS: ['well'],
 
   // Self-Healer (v2026.2.13)
   HEALTH_CHECK_INTERVAL_MS: 30_000,
