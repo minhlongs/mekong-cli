@@ -104,13 +104,16 @@ async function reflectOnMission(data) {
  * Extract failure reason from mission data
  */
 function extractFailureReason(data) {
-    // 🧬 FIX: Check mission result code first for accurate failure classification
+    // 🧬 BRAIN SURGERY v31: Priority to resultCode for evolution tracking
     const resultCode = data.resultCode || '';
-    if (resultCode === 'timeout') return 'Mission timed out';
-    if (resultCode === 'max_retries_exhausted') return 'Max retries exhausted — task too complex or flaky';
-    if (resultCode === 'unsafe_blocked') return 'Blocked by safety gate';
-    if (resultCode === 'brain_died') return 'Brain process died — respawn needed';
-    if (resultCode === 'no_brain_module') return 'Brain module not available';
+    if (resultCode) {
+        if (resultCode === 'timeout') return 'Mission timed out';
+        if (resultCode === 'max_retries_exhausted') return 'Max retries exhausted';
+        if (resultCode === 'duplicate_rejected') return 'Duplicate rejected';
+        if (resultCode === 'unsafe_blocked') return 'Blocked by safety gate';
+        if (resultCode === 'all_workers_busy') return 'All workers busy';
+        return `result=${resultCode}`;
+    }
 
     if (data.buildResult && data.buildResult.output) {
         const output = String(data.buildResult.output);

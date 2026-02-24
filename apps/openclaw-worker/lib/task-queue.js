@@ -69,8 +69,25 @@ async function processQueue() {
     const result = await executeTask(content, taskFile, timeout, complexity);
     const durationMs = Date.now() - startTime;
 
+    // 🦞 FIX 2026-02-24: Handle CC CLI startup failures and queued message states
+    // These mean CTO sent the command but CC CLI didn't process it → needs longer cooldown
+    if (result && (result.result === 'failed_to_start' || result.result === 'queued_abort')) {
+      const qaRetries = retryCounts.get(taskFile) || 0;
+      if (qaRetries >= 3) {
+        log(`${result.result.toUpperCase()}: ${taskFile} — max retries (3) exhausted. Archiving.`);
+        retryCounts.delete(taskFile);
+        if (fs.existsSync(filePath)) fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
+      } else {
+        retryCounts.set(taskFile, qaRetries + 1);
+        log(`${result.result.toUpperCase()}: ${taskFile} — CC CLI not ready. Waiting 2min then retry (${qaRetries + 1}/3).`);
+        queuedSet.add(taskFile);
+        await sleep(2 * 60 * 1000); // 2 minutes
+        queue.push(taskFile);
+      }
+    }
+
     // 🔒 If mission was BLOCKED (not executed), wait for active mission to finish
-    if (result && (result.result === 'mission_locked' || result.result === 'busy_blocked' || result.result === 'all_workers_busy')) {
+    else if (result && (result.result === 'mission_locked' || result.result === 'busy_blocked' || result.result === 'all_workers_busy')) {
       const retries = retryCounts.get(taskFile) || 0;
 
       if (retries >= MAX_RETRIES) {
@@ -79,7 +96,7 @@ async function processQueue() {
 
         // Treat as processed (archived) to unblock queue
         if (fs.existsSync(filePath)) {
-           fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
+          fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
         }
       } else {
         // RE-ENQUEUE instead of archive — task was never executed!
@@ -118,6 +135,7 @@ async function processQueue() {
         missionId,
         taskFile,
         success: !!(result && result.success),
+        failureType: result ? (result.result || 'unknown_failure') : 'no_result',
         duration: durationMs,
         buildResult,
         tokensUsed: tokens
@@ -155,7 +173,7 @@ function enqueue(filename) {
   if (filename && config.TASK_PATTERN.test(filename)) {
     const filePath = path.join(config.WATCH_DIR, filename);
     const processedPath = path.join(config.PROCESSED_DIR, filename);
-    
+
     // 🧬 FIX Bug #2: Use queuedSet for O(1) atomic deduplication
     const isDuplicate = queuedSet.has(filename) || processingSet.has(filename) || filename === currentTaskFile;
 
