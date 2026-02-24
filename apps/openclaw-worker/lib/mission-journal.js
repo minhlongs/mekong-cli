@@ -35,6 +35,7 @@ async function recordMission(data) {
       missionId: data.missionId,
       duration: data.duration,
       success: data.success,
+      failureType: data.failureType,
       buildResult: data.buildResult,
       tokensUsed: data.tokensUsed || 0
     };

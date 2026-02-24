@@ -157,9 +157,10 @@ function classifyError(output) {
     if (!output) return { errorType: 'unknown', errorMessage: '', recoverable: false };
 
     // Fast path: short result codes from brain-process-manager
-    const codeMatch = RESULT_CODE_MAP[output.trim()];
+    const cleanOutput = (output || '').trim();
+    const codeMatch = RESULT_CODE_MAP[cleanOutput];
     if (codeMatch) {
-        return { ...codeMatch, errorMessage: output };
+        return { ...codeMatch, errorMessage: cleanOutput };
     }
 
     const quick = quickAnalyze(output);

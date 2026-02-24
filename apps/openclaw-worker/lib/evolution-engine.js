@@ -119,7 +119,8 @@ function checkEvolutionTriggers() {
   // 2. Check for repeated failure patterns
   const failureCounts = {};
   recent.filter(m => !m.success).forEach(m => {
-    const key = m.failureType || m.task?.split('_')[0] || 'unknown';
+    // 🧬 BRAIN SURGERY v31: Priority to failureType/resultCode
+    const key = m.failureType || m.resultCode || m.task?.split('_')[0] || 'unknown';
     failureCounts[key] = (failureCounts[key] || 0) + 1;
   });
 
