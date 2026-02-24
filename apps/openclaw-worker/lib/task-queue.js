@@ -69,6 +69,12 @@ async function processQueue() {
     const result = await executeTask(content, taskFile, timeout, complexity);
     const durationMs = Date.now() - startTime;
 
+    // 🧬 v32 FIX: Helper to extract project/missionId for journal recording in early-return branches
+    const stripped = taskFile.replace(/^(?:HIGH_|MEDIUM_|LOW_|CRITICAL_)/, '').replace(/^mission_/, '');
+    const segments = stripped.split('_');
+    const projectShortNameEarly = segments[0] && segments[0].length > 1 ? segments[0] : (segments[1] || 'openclaw');
+    const missionIdEarly = taskFile.replace(/^.*?_auto_/, '').replace('.txt', '');
+
     // 🦞 FIX 2026-02-24: Handle CC CLI startup failures and queued message states
     // These mean CTO sent the command but CC CLI didn't process it → needs longer cooldown
     if (result && (result.result === 'failed_to_start' || result.result === 'queued_abort')) {
@@ -76,6 +82,8 @@ async function processQueue() {
       if (qaRetries >= 3) {
         log(`${result.result.toUpperCase()}: ${taskFile} — max retries (3) exhausted. Archiving.`);
         retryCounts.delete(taskFile);
+        // 🧬 v32: Record terminal failures so evolution-engine sees them (not 'unknown')
+        await recordMission({ project: projectShortNameEarly, missionId: missionIdEarly, taskFile, success: false, failureType: result.result, duration: durationMs, buildResult: { build: false, output: result.result }, tokensUsed: 0 });
         if (fs.existsSync(filePath)) fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
       } else {
         retryCounts.set(taskFile, qaRetries + 1);
@@ -93,6 +101,8 @@ async function processQueue() {
       if (retries >= MAX_RETRIES) {
         log(`BLOCKED: ${taskFile} — MAX RETRIES EXCEEDED (${MAX_RETRIES}). Archiving.`);
         retryCounts.delete(taskFile);
+        // 🧬 v32: Record blocked missions so they appear in journal (benign, not 'unknown')
+        await recordMission({ project: projectShortNameEarly, missionId: missionIdEarly, taskFile, success: false, failureType: result.result, duration: durationMs, buildResult: { build: false, output: result.result }, tokensUsed: 0 });
 
         // Treat as processed (archived) to unblock queue
         if (fs.existsSync(filePath)) {
