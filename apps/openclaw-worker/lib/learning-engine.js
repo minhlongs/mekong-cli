@@ -41,7 +41,7 @@ async function generateLearningInsights() {
       success: recentHistory.filter(m => m.success).length,
       failed: recentHistory.filter(m => !m.success).length,
       avgTokens: Math.round(recentHistory.reduce((a, b) => a + (b.tokensUsed || 0), 0) / recentHistory.length),
-      failureReasons: recentHistory.filter(m => !m.success).map(m => m.missionId)
+      failureReasons: recentHistory.filter(m => !m.success).map(m => m.failureType || (typeof m.buildResult === 'object' && m.buildResult !== null ? m.buildResult.output : null) || 'unknown')
     };
 
     // AI Analysis (用間 - Intelligence)

@@ -103,15 +103,27 @@ function checkEvolutionTriggers() {
 
   const triggers = [];
 
-  // 🧬 BRAIN SURGERY v32: Exclude benign failures from all metrics
+  // 🧬 BRAIN SURGERY v33: Exclude benign + transient failures from all metrics
   // duplicate_rejected = dedup working correctly (not a bug worth tracking)
-  const BENIGN_FAILURES = new Set(['duplicate_rejected', 'all_workers_busy', 'mission_locked', 'busy_blocked']);
+  // max_retries_exhausted / brain_died / failed_to_start = infra transients, not code bugs
+  const BENIGN_FAILURES = new Set([
+    'duplicate_rejected', 'all_workers_busy', 'mission_locked', 'busy_blocked',
+    'max_retries_exhausted', 'brain_died', 'brain_died_fatal', 'failed_to_start',
+    'queued_abort', 'killed_stuck', 'timeout',
+  ]);
+
+  // Helper: get failure key from mission record
+  // Priority: failureType → resultCode → buildResult.output → 'unknown'
+  const getFailureKey = (m) => {
+    if (m.success) return null;
+    return m.failureType || m.resultCode || (typeof m.buildResult === 'object' && m.buildResult !== null ? m.buildResult.output : null) || 'unknown';
+  };
 
   // 1. Check overall success rate (exclude benign failures from denominator)
   const recent = history.slice(-20);
   const recentActual = recent.filter(m => {
     if (m.success) return true;
-    const key = m.failureType || m.resultCode || m.buildResult?.output || '';
+    const key = getFailureKey(m);
     return !BENIGN_FAILURES.has(key);
   });
   const successes = recentActual.filter(m => m.success).length;
@@ -126,13 +138,11 @@ function checkEvolutionTriggers() {
   }
 
   // 2. Check for repeated failure patterns
-  // Reuse BENIGN_FAILURES from above — only track actionable failures
+  // Only count actionable (non-benign) failures with a real key (not 'unknown')
   const failureCounts = {};
   recent.filter(m => !m.success).forEach(m => {
-    // 🧬 BRAIN SURGERY v32: Priority failureType → resultCode → buildResult.output → 'unknown'
-    // Most history entries only have buildResult.output (not failureType) — must read it too
-    const key = m.failureType || m.resultCode || m.buildResult?.output || m.task?.split('_')[0] || 'unknown';
-    if (!BENIGN_FAILURES.has(key)) {
+    const key = getFailureKey(m);
+    if (key && key !== 'unknown' && !BENIGN_FAILURES.has(key)) {
       failureCounts[key] = (failureCounts[key] || 0) + 1;
     }
   });
@@ -308,6 +318,34 @@ function optimizeTokenRouting() {
  * CẤM raw text — PHẢI dùng ClaudeKit command (IRON RULE Chairman 2026-02-17)
  */
 function triggerBrainSurgery(triggers, state) {
+  // 🧬 BRAIN SURGERY v33: Guard against duplicate surgery missions
+  // Don't create if an evolution_surgery task is already pending/processed recently
+  try {
+    const pendingEvolution = fs.existsSync(TASKS_DIR)
+      ? fs.readdirSync(TASKS_DIR).some(f => f.includes('evolution_surgery'))
+      : false;
+    if (pendingEvolution) {
+      log(`🧬 Brain surgery SKIPPED — evolution_surgery already pending in tasks/`);
+      return;
+    }
+    // Also check processed/ in last 30min
+    const processedDir = path.join(TASKS_DIR, 'processed');
+    if (fs.existsSync(processedDir)) {
+      const cutoff = Date.now() - 30 * 60 * 1000;
+      const recentProcessed = fs.readdirSync(processedDir)
+        .filter(f => f.includes('evolution_surgery'))
+        .some(f => {
+          try { return fs.statSync(path.join(processedDir, f)).mtimeMs > cutoff; } catch { return false; }
+        });
+      if (recentProcessed) {
+        log(`🧬 Brain surgery SKIPPED — evolution_surgery ran within last 30min`);
+        return;
+      }
+    }
+  } catch (e) {
+    log(`WARN: Could not check for pending evolution missions: ${e.message}`);
+  }
+
   // 始計: Concise trigger summary for ClaudeKit prompt
   const triggerSummary = triggers.map(t => `${t.type}: ${t.detail} (sev ${t.severity})`).join('; ');
 
