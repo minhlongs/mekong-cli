@@ -255,6 +255,19 @@ safeBoot('startGeminiAgentic', async () => {
     log(`⚠️ GEMINI AGENTIC: ${status} — check GEMINI_API_KEY in .env`);
   }
 });
+// Jules Agent — Google's AI Coding Agent (九地)
+safeBoot('startJulesAgent', async () => {
+  const { checkJulesStatus, checkActiveSessions } = require('./lib/jules-agent');
+  const status = await checkJulesStatus();
+  if (status === 'ONLINE') {
+    log(`🤖 JULES AGENT: ${status} — 16 GitHub repos connected. Auto-PR dispatch READY`);
+    // Check for any active sessions
+    const sessions = await checkActiveSessions();
+    if (sessions.length > 0) log(`📋 JULES: ${sessions.length} active session(s)`);
+  } else {
+    log(`⚠️ JULES AGENT: ${status} — check API key at jules.google.com/settings`);
+  }
+});
 safeBoot('startCooling', startCooling);
 safeBoot('startHealer', startHealer);
 // 🦞 Lobster Proxy Pilot (Guardian of Quota)
