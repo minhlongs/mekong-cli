@@ -289,6 +289,23 @@ ${events ? `CALENDAR: ${events} upcoming events` : ''}
   // Inject Google intel into mission prompt
   if (googleIntel) prompt = prompt + '\n' + googleIntel;
 
+  // 🤖 JULES DISPATCH: Every 3rd mission goes to Jules for auto-PR on GitHub
+  const useJules = (projectState.totalStrategic + 1) % 3 === 0;
+  if (useJules) {
+    try {
+      const { dispatchStrategicTask } = require('./jules-agent');
+      const taskDesc = useCustomMission
+        ? prompt.match(/\/cook "([^"]+)/)?.[1] || 'Improve code quality'
+        : `${selectedTask.id}: Strategic improvement for ${project}`;
+      const session = await dispatchStrategicTask(project, taskDesc);
+      if (session) {
+        log(`[STRATEGIC] 🤖 JULES DISPATCHED: Session ${session.id} — "${taskDesc.slice(0, 60)}..." for ${project} (auto-PR)`);
+      }
+    } catch (e) {
+      log(`[STRATEGIC] Jules dispatch failed: ${e.message}`);
+    }
+  }
+
   // 🦞 RE-ENABLED 2026-02-24: Deep 10x scanning for WellNexus zero-bug target
   const missionPath = path.join(config.WATCH_DIR, filename);
   fs.writeFileSync(missionPath, prompt);
@@ -300,7 +317,7 @@ ${events ? `CALENDAR: ${events} upcoming events` : ''}
   strategicState[project] = projectState;
   saveStrategicState(strategicState);
 
-  log(`[STRATEGIC] 🧠 Level ${useCustomMission ? '9' : '8'} — Dispatched: ${useCustomMission ? 'CUSTOM' : selectedTask.id} for ${project} (total: ${projectState.totalStrategic})`);
+  log(`[STRATEGIC] 🧠 Level ${useCustomMission ? '9' : '8'} — Dispatched: ${useCustomMission ? 'CUSTOM' : selectedTask.id} for ${project} (total: ${projectState.totalStrategic})${useJules ? ' [+JULES PR]' : ''}`);
 
   return true;
 }
