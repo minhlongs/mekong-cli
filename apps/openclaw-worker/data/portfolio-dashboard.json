@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-24T19:38:34.770Z",
+  "timestamp": "2026-02-24T19:49:25.753Z",
   "agiLevel": 7,
   "evolutionScore": 31,
   "totalProjects": 1,
@@ -8,10 +8,10 @@
   "projects": [
     {
       "project": "well",
-      "score": 0,
+      "score": 1,
       "errorCount": 0,
       "basePriority": 1,
-      "stalenessFactor": 0.1,
+      "stalenessFactor": 0.2,
       "successRate": 0,
       "lastMission": "2026-02-24T19:04:44.517Z",
       "missionCount": 2,
