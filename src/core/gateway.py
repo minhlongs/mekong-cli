@@ -7,6 +7,7 @@ Enables remote command execution: Cloud Ra Lenh + Local Thuc Thi.
 """
 
 import asyncio
+import contextlib
 import json
 import os
 from dataclasses import asdict
@@ -315,10 +316,32 @@ def _build_cmd_response(result: OrchestrationResult, goal: str, orchestrator: Re
 
 def create_app() -> FastAPI:
     """Create and configure the gateway FastAPI application."""
+
+    @contextlib.asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Manage Telegram bot lifecycle."""
+        telegram_token = os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
+        app.state.bot = None
+        if telegram_token:
+            try:
+                from src.core.telegram_bot import MekongBot
+                from src.core.notifier import Notifier
+
+                app.state.bot = MekongBot(token=telegram_token)
+                notifier = Notifier(bot=app.state.bot)
+                notifier.subscribe(get_event_bus())
+                asyncio.create_task(app.state.bot.start())
+            except ImportError:
+                pass
+        yield
+        if app.state.bot:
+            await app.state.bot.stop()
+
     gateway = FastAPI(
         title="Mekong Gateway",
         description="OpenClaw Hybrid Commander — Cloud Ra Lenh, Local Thuc Thi",
         version=VERSION,
+        lifespan=lifespan,
     )
 
     @gateway.get("/", response_class=HTMLResponse)
@@ -484,39 +507,13 @@ def create_app() -> FastAPI:
         valid, errors = gen.validate_recipe(req.content)
         return RecipeValidateResponse(valid=valid, errors=errors)
 
-    # -- Telegram bot integration --
-    telegram_token = os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
-    _bot = None
-
-    if telegram_token:
-        try:
-            from src.core.telegram_bot import MekongBot
-            from src.core.notifier import Notifier
-
-            _bot = MekongBot(token=telegram_token)
-            _notifier = Notifier(bot=_bot)
-            _notifier.subscribe(get_event_bus())
-        except ImportError:
-            pass
-
-    @gateway.on_event("startup")
-    async def _startup_bot():
-        """Start the Telegram bot polling on application startup."""
-        if _bot:
-            asyncio.create_task(_bot.start())
-
-    @gateway.on_event("shutdown")
-    async def _shutdown_bot():
-        """Gracefully stop the Telegram bot on application shutdown."""
-        if _bot:
-            await _bot.stop()
-
     @gateway.get("/telegram/status")
     def telegram_status():
         """Check Telegram bot status."""
+        bot = getattr(gateway.state, "bot", None)
         return {
-            "running": _bot.is_running() if _bot else False,
-            "configured": bool(telegram_token),
+            "running": bot.is_running() if bot else False,
+            "configured": bool(os.environ.get("MEKONG_TELEGRAM_TOKEN", "")),
         }
 
     # -- Swarm endpoints --
