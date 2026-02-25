@@ -25,11 +25,27 @@ const { tryStrategicMission } = require('./strategic-brain');
 let intervalRef = null;
 let _questionLoopCount = 0; // 🧠 QUESTION loop detector (module-level to avoid 'state' TDZ)
 
+// 🔒 Mission dedup: prevent re-dispatching same error within 30min
+const _dispatchedMissions = new Map(); // key → timestamp
+const MISSION_DEDUP_TTL_MS = 30 * 60 * 1000; // 30min
+
+function isMissionDuplicate(errorKey) {
+  const lastSent = _dispatchedMissions.get(errorKey);
+  if (!lastSent) return false;
+  if (Date.now() - lastSent < MISSION_DEDUP_TTL_MS) return true;
+  _dispatchedMissions.delete(errorKey); // expired
+  return false;
+}
+
+function markMissionDispatched(errorKey) {
+  _dispatchedMissions.set(errorKey, Date.now());
+}
+
 const SCAN_RESULT_FILE = path.join(__dirname, '..', '.cto-scan-state.json');
 const MAX_FIX_CYCLES = 3;
 const MAX_FIXES_PER_SCAN = 3;  // 🔒 Ch.6 虛實: focus force on fewer targets
 // 🔒 Ch.2 作戰: 日費千金 — Phase-aware intervals (v2: 九變 adaptive speed)
-const SCAN_INTERVAL_MS = 45000;   // 45s — scan phase: check đủ thư thả
+const SCAN_INTERVAL_MS = 120000;   // 120s — increased from 45s to prevent CC CLI interrupt spam
 const FIX_INTERVAL_MS = 15000;    // 15s — fix/verify: phản xạ nhanh, dispatch liên tục
 const DEFAULT_INTERVAL_MS = 45000; // 45s — fallback
 
@@ -502,10 +518,20 @@ async function handleFix(state, project) {
   }
 
   const { prompt: basePrompt, filename } = generateFixMission(error, project);
+
+  // 🔒 Dedup: skip if same error was dispatched within 30min
+  const dedupKey = `${error.file || error.message}:${error.code || error.type}`;
+  if (isMissionDuplicate(dedupKey)) {
+    log(`AUTO-CTO [謀攻 SKIP]: ${project} — mission for "${dedupKey}" already dispatched recently. Skipping.`);
+    state.fixIndex++;
+    saveState(state);
+    return;
+  }
+
   const prompt = webIntel ? basePrompt + '\n' + webIntel : basePrompt;
 
-  // 🦞 RE-ENABLED 2026-02-24: Auto-fix for WellNexus zero-bug target
   fs.writeFileSync(path.join(config.WATCH_DIR, filename), prompt);
+  markMissionDispatched(dedupKey);
   log(`AUTO-CTO [謀攻 FIX]: Dispatched fix for ${error.type} — ${error.file || error.message} → ${filename}${webIntel ? ' [+WEB INTEL]' : ''}`);
   state.fixIndex++;
   saveState(state);

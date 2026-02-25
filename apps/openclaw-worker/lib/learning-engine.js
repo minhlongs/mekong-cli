@@ -166,7 +166,33 @@ function getReport() {
   };
 }
 
-function startLearningEngine() {}
-function stopLearningEngine() {}
+let learningInterval = null;
+const LEARNING_INTERVAL_MS = 60 * 60 * 1000; // 60 phút
+
+function runLearningCycle() {
+  try {
+    const outcomes = loadOutcomes();
+    if (outcomes.length === 0) { log('No outcomes yet — skipping'); return; }
+    const lessons = analyzePatterns(outcomes);
+    const rates = getSuccessRates();
+    const taskCount = Object.keys(rates).length;
+    const ok = outcomes.filter(o => o.success).length;
+    const rate = Math.round((ok / outcomes.length) * 100);
+    log(`Cycle: ${outcomes.length} missions, ${rate}% success, ${taskCount} types, ${lessons.rules.length} lessons`);
+  } catch (e) {
+    log(`Learning cycle error: ${e.message}`);
+  }
+}
+
+function startLearningEngine() {
+  if (learningInterval) return;
+  log('Learning Engine started (AGI L5 — Yong Jian 用間)');
+  runLearningCycle();
+  learningInterval = setInterval(runLearningCycle, LEARNING_INTERVAL_MS);
+}
+
+function stopLearningEngine() {
+  if (learningInterval) { clearInterval(learningInterval); learningInterval = null; log('Learning Engine stopped'); }
+}
 
 module.exports = { recordOutcome, getSuccessRates, getTaskAdjustments, getReport, analyzePatterns, startLearningEngine, stopLearningEngine };
