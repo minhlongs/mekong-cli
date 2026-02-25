@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-25T02:36:40.985Z",
+  "timestamp": "2026-02-25T02:59:03.911Z",
   "agiLevel": 7,
   "evolutionScore": 28,
   "totalProjects": 1,
@@ -11,7 +11,7 @@
       "score": 1,
       "errorCount": 0,
       "basePriority": 1,
-      "stalenessFactor": 0.3,
+      "stalenessFactor": 0.4,
       "successRate": 13,
       "lastMission": "2026-02-25T01:29:23.558Z",
       "missionCount": 8,

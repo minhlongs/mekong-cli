@@ -1,6 +1,6 @@
 {
   "well": {
-    "lastStrategicAt": "2026-02-25T02:30:19.942Z",
+    "lastStrategicAt": "2026-02-25T02:58:49.697Z",
     "taskHistory": {
       "10x_architecture": 9,
       "test_suite": 9,
@@ -11,13 +11,13 @@
       "console_cleanup": 9,
       "binh_phap_deep_scan": 9,
       "debug_errors": 10,
-      "knowledge_synthesis": 4,
-      "bmad_code_review": 2,
+      "knowledge_synthesis": 5,
+      "bmad_code_review": 3,
       "a11y_audit": 5,
-      "perf_audit": 3,
+      "perf_audit": 4,
       "bmad_quick_spec": 2,
-      "tech_debt": 1
+      "tech_debt": 2
     },
-    "totalStrategic": 29
+    "totalStrategic": 33
   }
 }
