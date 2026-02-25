@@ -942,5 +942,21 @@
     "tokens": 0,
     "duration": 60,
     "model": "unknown"
+  },
+  {
+    "ts": "2026-02-25T02:44:40.460Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-25T02:52:04.068Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 68,
+    "model": "unknown"
   }
 ]

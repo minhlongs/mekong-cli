@@ -11,6 +11,8 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
+| 2026-02-25 | strategic | HIGH_mission_strategic_tech_de | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-25 | strategic | HIGH_mission_strategic_knowled | Clean success in 1min — good pattern | ~200(est) | 200/min |
 | 2026-02-25 | strategic | HIGH_mission_strategic_a11y_au | FAILED — Duplicate rejected | ~0(est) | 0/min |
 | 2026-02-25 | strategic | HIGH_mission_strategic_agi_evo | FAILED — Duplicate rejected | ~0(est) | 0/min |
 | 2026-02-25 | strategic | HIGH_mission_strategic_bmad_qu | FAILED — Duplicate rejected | ~0(est) | 0/min |
@@ -59,8 +61,6 @@
 | 2026-02-24 | swarm | MEDIUM_swarm_go_now | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
 | 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
 | 2026-02-23 | unknown | MEDIUM_swarm_phase04go | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
-| 2026-02-23 | unknown | MEDIUM_swarm_phase04_clean | FAILED — Brain process died — respawn needed | ~0(est) | 0/min |
-| 2026-02-23 | add | MEDIUM_mission_add_tests_token | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
 
 ---
 
