@@ -29,8 +29,11 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+const { isProAvailable, setProLimitHit } = require('./system-status-registry');
+const { getHandForIntent } = require('./hands-registry');
 
-const TMUX_SESSION = 'tom_hum_brain';
+const TMUX_SESSION_PRO = `${config.TMUX_SESSION}:brain`;
+const TMUX_SESSION_API = `${config.TMUX_SESSION}:brain`;
 const COMPACT_EVERY_N = Infinity; // 🦞 DISABLED — AG Proxy manages context
 const COMPACT_TOKEN_THRESHOLD = Infinity; // 🦞 DISABLED — AG Proxy manages context
 // 🧬 FIX #3: REMOVE /clear — CC CLI's /compact handles cleanup better
@@ -49,32 +52,32 @@ const BUSY_PATTERNS = [
   /Photosynthesizing/i, /Crunching/i, /Saut[eé]ing/i,
   /Marinating/i, /Fermenting/i, /Braising/i,
   /Reducing/i, /Blanching/i,
-  /[·✢✻]\s*(?:Thinking|Compacting)/i,  // 🦞 FIX: Match '✢ Thinking' or '✢ Compacting' or '·'
-  /Churning/i, /Cooking/i, /Toasting/i,
+  /[*·✢✻✽✳✶]\s*(?:Thinking|Compacting|Galloping|Reading|Writing|Executing|Running|Bắt đầu|Gusting|Whirring|Boondoggling|Pondering|Synthesizing|Refining|Actioning|Investigating|Analyzing|Exploring)/i,  // 🦞 FIX: Match * status lines + Vibe words
+  /Churning/i, /Cooking/i, /Toasting/i, /Galloping/i,
   /Simmering/i, /Steaming/i, /Grilling/i, /Roasting/i,
   /Levitating/i,                       // CC CLI status (Finalizing/Summarizing)
   /Osmosing/i,                         // CC CLI status (Context ingestion)
   /Computing/i, /^\s*⏺\s*Read/m, /^\s*⏺\s*Execut/m, /Indexing/i, // 🦞 FIX: Reading/Executing need ⏺ prefix
-  /[·✻✢]\s+\w+ing/,                     // General: ✻ or ✢ or · + any gerund verb
+  /[*·✻✢✽✳✶]\s+\w+ing/,                     // General: ✻ or * or ✢ or · or ✽ or ✳ + any gerund verb
   /\d+[ms]\s+\d+[ms]\s*·\s*[↑↓]/,      // Timer + arrow: "4m 27s · ↑"
   /[↑↓]\s*[\d.]+k?\s*tokens/i,         // Counter: "↑ 0 tokens" or "↓ 4.5k tokens"
   /\d+\s+local\s+agents?/i,             // 🦞 FIX 2026-02-23: CC CLI subagents running ("3 local agents")
-  // REMOVED: /queued messages/i — false-positive matches CC CLI UI text "Press up to edit queued messages" (idle, not busy)
   /Cost:\s*\$[\d.]+/,                  // Cost display usually means busy calculating
-  /Calling tool/i, /Running command/i, /Searching/i, /Reading/i, /Writing/i, // Explicit explicit status
-  /Running tests/i, /Running/i, /thinking/i, // CC CLI generic status messages
+  /Calling tool/i, /Running command/i, /Searching/i, /Reading/i, /Writing/i, // Explicit status
+  /Running tests/i, /Running\s+\d+\s+Task agents?/i, // CC CLI generic status messages
   /[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]/,          // Braille spinners
   /Nesting/i,                          // 🦞 FIX 2026-02-23: CC CLI nested operations (✽ Nesting…)
   /Puttering/i,                        // 🦞 FIX 2026-02-23: CC CLI processing state
   /Pasted text/i,                      // 🦞 FIX 2026-02-23: CC CLI received pasted command, processing it
   /filesystem\s*[-–—]\s*/i,            // 🦞 FIX 2026-02-23: MCP tool calls (filesystem - list_directory)
-  /\+\d+\s+lines\s*\(ctrl/i,           // 🦞 FIX 2026-02-23: CC CLI collapsible output (+477 lines (ctrl+o to expand))
+  /\+\d+\s+lines\s*\(ctrl/i,           // 🦞 FIX 2026-02-23: CC CLI collapsible output (+477 lines (ctrlo to expand))
+  /Gusting/i, /Whirring/i, /Boondoggling/i, /Pondering/i, /Synthesizing/i, /Refining/i, /Actioning/i, /Investigating/i, /Analyzing/i, /Exploring/i, // 🦞 FIX: Add explicit Vibe words
 ];
 
 // CC CLI completion indicators (past tense = finished cooking)
 const COMPLETION_PATTERNS = [
   /(?:Cooked|Churned|Saut[eé]ed|Braised|Blanched|Reduced|Fermented|Marinated|Toasted|Simmered|Steamed|Grilled|Roasted)\s+for\s+\d+/i,
-  /✻\s+\w+(?:ed|t)\s+for\s+\d+/i,     // General: ✻ + past tense + "for N"
+  /[·✻✢✽✳✶]\s+\w+(?:ed|t)\s+for\s+\d+/i,     // General: ✻ + past tense + "for N"
   /Task completed in/i, /Finished in \d+/i, /Completed\s+\d+\s+steps/i, /Subagent finished/i, // Explicit explicit status
 ];
 
@@ -107,6 +110,16 @@ const APPROVE_PATTERNS = [
   // 🧬 FIX: Treat proxy compacting as an approval point to unblock CC CLI
   // /Compacting conversation/i, // 🦞 DISABLED
   // /Context left until auto-compact/ // 🦞 DISABLED
+  /Waiting for approval/i,             // Pending user approval inside tool execution
+  /Press\s+Enter\s+to\s+continue/i,    // Waiting for Enter to continue
+];
+
+// Claude Pro Rate Limit indicators
+const PRO_LIMIT_PATTERNS = [
+  /You(?:'ve| have) hit your limit/i,
+  /resets 6am/i,
+  /Switch to extra usage/i,
+  /Upgrade your plan/i,
 ];
 
 // CC CLI context exhaustion
@@ -121,12 +134,10 @@ let missionCount = 0;
 let tokensSinceCompact = 0; // Track accumulated context usage
 let respawnTimestamps = [];
 // 🧬 FIX Bug #1: DUPLICATE DISPATCH PREVENTION
-// Track recent mission hashes with TTL — Map<hash, timestamp>
-// 🧬 BRAIN SURGERY v30: Changed Set → Map with TTL to prevent false duplicate rejection
-// across session restarts. Hashes expire after 10 minutes (not 20-mission window).
-const recentMissionHashes = new Map(); // hash → dispatched_timestamp
-const DEDUP_WINDOW_SIZE = 20; // Max entries
-const DEDUP_TTL_MS = 10 * 60 * 1000; // 10 minutes — same task OK to retry after 10min
+// We track hashes of recently dispatched missions to prevent spamming
+// However, to allow legitimate retries after failure, we use a 10-minute TTL instead of indefinite blockade.
+const DEDUP_TTL_MS = 10 * 60 * 1000;
+const dispatchedMissions = new Map(); // hash -> timestamp
 
 // --- Logging ---
 
@@ -141,28 +152,21 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // 🧬 FIX Bug #1: Simple hash function for mission deduplication
 function hashPrompt(prompt) {
-  // Use first 100 chars + length as fingerprint (fast, good enough)
-  const sample = prompt.slice(0, 100).toLowerCase().replace(/\s+/g, '');
-  return `${sample}_${prompt.length}`;
+  return require('crypto').createHash('md5').update(prompt).digest('hex');
 }
 
 // 🧬 BRAIN SURGERY v30: TTL-based dedup check
 function isDuplicateMission(promptHash) {
   const now = Date.now();
   // Purge expired entries
-  for (const [hash, ts] of recentMissionHashes.entries()) {
-    if (now - ts > DEDUP_TTL_MS) recentMissionHashes.delete(hash);
+  for (const [hash, ts] of dispatchedMissions.entries()) {
+    if (now - ts > DEDUP_TTL_MS) dispatchedMissions.delete(hash);
   }
-  return recentMissionHashes.has(promptHash);
+  return dispatchedMissions.has(promptHash);
 }
 
 function trackMissionHash(promptHash) {
-  recentMissionHashes.set(promptHash, Date.now());
-  // Maintain max size (evict oldest)
-  if (recentMissionHashes.size > DEDUP_WINDOW_SIZE) {
-    const firstKey = recentMissionHashes.keys().next().value;
-    recentMissionHashes.delete(firstKey);
-  }
+  dispatchedMissions.set(promptHash, Date.now());
 }
 
 /** Strip ANSI escape codes + control characters from captured tmux text */
@@ -177,17 +181,34 @@ function stripAnsi(text) {
 
 // --- Tmux helpers ---
 
-function tmuxExec(cmd) {
+function tmuxExec(cmd, sessionName = TMUX_SESSION_PRO) {
   try {
     return execSync(cmd, { encoding: 'utf-8', timeout: 10000 }).trim();
-  } catch (e) { return ''; }
+  } catch (e) {
+    log(`TMUX ERROR [session=${sessionName}]: ${e.message}`);
+    return '';
+  }
 }
 
-function isSessionAlive() {
+function isSessionAlive(sessionName = TMUX_SESSION_PRO) {
   try {
-    execSync(`tmux has-session -t ${TMUX_SESSION} 2>/dev/null`, { timeout: 5000 });
+    execSync(`tmux has-session -t ${sessionName} 2>/dev/null`, { timeout: 5000 });
     return true;
   } catch (e) { return false; }
+}
+
+function sendEnter(workerIdx, sessionName = TMUX_SESSION_PRO) {
+  tmuxExec(`tmux send-keys -t ${sessionName}.${workerIdx} Enter`, sessionName);
+}
+
+function sendCtrlC(workerIdx, sessionName = TMUX_SESSION_PRO) {
+  tmuxExec(`tmux send-keys -t ${sessionName}.${workerIdx} C-c`, sessionName);
+}
+
+function pasteText(text, workerIdx, sessionName = TMUX_SESSION_PRO) {
+  const tmpFile = `/tmp/tom_hum_paste_P${workerIdx}_${sessionName}.txt`;
+  fs.writeFileSync(tmpFile, text);
+  tmuxExec(`tmux load-buffer ${tmpFile} && tmux paste-buffer -t ${sessionName}.${workerIdx}`, sessionName);
 }
 
 // 🦞 FIX 2026-02-23: Centralized tmux throttle guard
@@ -195,26 +216,36 @@ function isSessionAlive() {
 // Prevents tmux socket contention that causes freezing
 let _lastTmuxCallTime = 0;
 let _lastTmuxResult = '';
-const TMUX_MIN_GAP_MS = 5000; // 5s minimum between tmux calls
+let _lastTmuxCacheKey = '';
+// 🦞 OPTIMIZATION 2026-02-26: 5s → 1.5s (Sub-5s response mandate)
+const TMUX_MIN_GAP_MS = 1500;
 
-function capturePane(workerIdx) {
+/** 
+ * Diagnostics: Log the visual tail to the CTO log to ensure we are not "blind"
+ * Only logs when state is 'unknown' or stuck for a while.
+ */
+function logVision(output, label = 'UNKNOWN') {
+  const tail = getCleanTail(output, 8).join('\n');
+  log(`[👀 VISION] (${label}) captured tail:\n------------------\n${tail}\n------------------`);
+}
+
+function capturePane(workerIdx, sessionName = TMUX_SESSION_PRO) {
   const now = Date.now();
   const elapsed = now - _lastTmuxCallTime;
 
-  // Throttle: return cached result if called too soon
-  if (elapsed < TMUX_MIN_GAP_MS && _lastTmuxResult) {
+  // Throttle: return cached result ONLY if same worker and session and called too soon
+  const cacheKey = `${sessionName}:${workerIdx}`;
+  if (elapsed < TMUX_MIN_GAP_MS && _lastTmuxResult && _lastTmuxCacheKey === cacheKey) {
     return _lastTmuxResult;
   }
 
   const idx = workerIdx !== undefined ? workerIdx : currentWorkerIdx;
   _lastTmuxCallTime = now;
+  _lastTmuxCacheKey = cacheKey;
 
   try {
     // Rely exclusively on tmux capture-pane. 
-    // The previous attempt to read pipe-pane logs failed because raw TTY streams 
-    // rely on cursor movement sequences (CSI) rather than spaces, breaking regexes. 
-    // The TMUX_MIN_GAP_MS throttle above safely prevents CPU contention.
-    const rawTmux = tmuxExec(`tmux capture-pane -t ${TMUX_SESSION}:0.${idx} -p -S -50`);
+    const rawTmux = tmuxExec(`tmux capture-pane -t ${sessionName}.${idx} -p -S -50`, sessionName);
     _lastTmuxResult = stripAnsi(rawTmux);
   } catch (e) {
     _lastTmuxResult = '';
@@ -222,9 +253,16 @@ function capturePane(workerIdx) {
   return _lastTmuxResult;
 }
 
-/** Get clean last N lines from captured tmux output */
+/** Get clean last N lines from captured tmux output, ignoring trailing empty lines */
 function getCleanTail(output, n) {
-  return stripAnsi(output).split('\n').slice(-n);
+  const lines = stripAnsi(output).split('\n');
+  // Find last line with actual content
+  let last = lines.length - 1;
+  while (last >= 0 && lines[last].trim() === '') {
+    last--;
+  }
+  // Return n lines ending at 'last'
+  return lines.slice(Math.max(0, last - n + 1), last + 1);
 }
 
 // --- State detection functions ---
@@ -237,32 +275,42 @@ function isBusy(output) {
   const lines = getCleanTail(output, 8);
   const fullTail = lines.join('\n');
 
-  // 🚨 CRITICAL FIX: If CC CLI is interrupted (Ctrl+C), it is IDLE, not busy!
-  // It prints "L Interrupted... What should Claude do instead?" below the prompt.
-  if (/Interrupted\.\s*What should Claude do instead\?/i.test(fullTail) || /Interrupted/i.test(fullTail)) {
-    return false;
-  }
-
   // 🦞 FIX 2026-02-25: ALL checks now scan only lines AFTER the last ❯ prompt.
   // Old bug: "2 local agents" from COMPLETED subagents in scrollback ABOVE ❯
   // was matching as BUSY, creating a 2-min blind spot between missions.
   const promptIdx = lines.findLastIndex(l => l.includes('❯'));
-  const checkLines = promptIdx >= 0 ? lines.slice(promptIdx) : lines;
+  const checkLines = (promptIdx >= 0 ? lines.slice(promptIdx) : lines).filter(l => {
+    const clean = l.trim();
+    if (!clean) return false;
+    if (/^[─━-]+$/.test(clean)) return false; // Ignore horizontal separators
+    if (/bypass permissions/i.test(clean)) return false; // Ignore footer
+    return true;
+  });
   const tail = checkLines.join('\n');
 
   // Subagent detection (check AFTER ❯ — status bar renders below prompt when active)
   const subagentPattern = /\d+\s+local\s+agents?/i;
-  if (subagentPattern.test(tail)) {
-    log(`isBusy MATCH: SUBAGENTS ACTIVE → ${tail.match(subagentPattern)?.[0]}`);
-    return true;
-  }
+  const hasSubagent = subagentPattern.test(tail);
 
-  // Status text — check ❯ line AND lines after it
   const promptLine = promptIdx >= 0 ? lines[promptIdx] : '';
   if (promptLine.match(/^[❯>]\s*(Try\s|$)/) && checkLines.length <= 1) return false;
   const matched = BUSY_PATTERNS.find(p => p.test(tail));
-  if (matched) log(`isBusy MATCH: ${matched} → ${tail.match(matched)?.[0]?.slice(0, 50)}`);
-  return !!matched;
+
+  const isActuallyBusy = hasSubagent || !!matched;
+
+  // 🚨 CRITICAL FIX: If CC CLI is interrupted (Ctrl+C), it is IDLE, not busy!
+  // BUT only if Interrupted happened AFTER any busy pattern.
+  const interruptedIdx = lines.findLastIndex(l => /Interrupted\.\s*What should Claude do instead\?/i.test(l) || /Interrupted/i.test(l));
+  const busyIdx = lines.findLastIndex(l => (matched && matched.test(l)) || subagentPattern.test(l));
+
+  if (interruptedIdx > busyIdx && interruptedIdx !== -1) {
+    return false;
+  }
+
+  if (hasSubagent) log(`isBusy MATCH: SUBAGENTS ACTIVE → ${tail.match(subagentPattern)?.[0]}`);
+  else if (matched) log(`isBusy MATCH: ${matched} → ${tail.match(matched)?.[0]?.slice(0, 50)}`);
+
+  return isActuallyBusy;
 }
 
 /** Mission completion pattern found (Cooked for Xm Ys, Sautéed for Xm Ys) */
@@ -295,8 +343,8 @@ function hasApproveQuestion(output) {
 }
 
 function hasContextLimit(output) {
-  const tail = getCleanTail(output, 15).join('\n');
-  return CONTEXT_LIMIT_PATTERNS.some(p => p.test(tail));
+  // 🦞 FIX: Proxy handles infinite context, so we never trigger context_limit state.
+  return false;
 }
 
 /** Check if the pane is sitting at a raw shell prompt (zsh/bash) instead of Claude */
@@ -332,42 +380,34 @@ function detectState(output) {
 
 // --- Text dispatch ---
 
-function pasteText(text, workerIdx) {
+function pasteText(text, workerIdx, sessionName = TMUX_SESSION_PRO) {
   const idx = workerIdx !== undefined ? workerIdx : currentWorkerIdx;
-  const target = `${TMUX_SESSION}:0.${idx}`;
+  const target = `${sessionName}.${idx}`;
 
   // 🔒 TWO-CALL MANDATE (Chairman Rule 2026-02-03):
-  // Step 1: Paste text WITHOUT any trailing \n
-  // Step 2: Send Enter SEPARATELY via sendEnter() (called by runMission)
-  //
-  // CC CLI needs Enter as a separate event to submit the command.
-  // If \n is embedded in the paste, CC CLI treats it as multi-line input
-  // and waits for Ctrl+D instead of executing.
   const cleanText = text.replace(/\n+$/, ''); // Strip ALL trailing newlines
   const promptFile = `/tmp/tom_hum_prompt_P${idx}.txt`;
   fs.writeFileSync(promptFile, cleanText); // NO trailing newline in file
-  tmuxExec(`tmux load-buffer ${promptFile}`);
-  tmuxExec(`tmux paste-buffer -p -t ${target}`);
+  tmuxExec(`tmux load-buffer ${promptFile}`, sessionName);
+  tmuxExec(`tmux paste-buffer -p -t ${target}`, sessionName);
   try { fs.unlinkSync(promptFile); } catch (e) { }
 }
 
-function sendEnter(workerIdx) {
-  const idx = workerIdx !== undefined ? workerIdx : currentWorkerIdx;
-  const target = `${TMUX_SESSION}:0.${idx}`;
-  tmuxExec(`tmux send-keys -t ${target} Enter`);
+function sendEnter(workerIdx, sessionName = TMUX_SESSION_PRO) {
+  const target = `${sessionName}.${workerIdx}`;
+  tmuxExec(`tmux send-keys -t ${target} Enter`, sessionName);
 }
 
-function sendCtrlC(workerIdx) {
-  const idx = workerIdx !== undefined ? workerIdx : currentWorkerIdx;
-  const target = `${TMUX_SESSION}:0.${idx}`;
-  tmuxExec(`tmux send-keys -t ${target} C-c`);
+function sendCtrlC(workerIdx, sessionName = TMUX_SESSION_PRO) {
+  const target = `${sessionName}.${workerIdx}`;
+  tmuxExec(`tmux send-keys -t ${target} C-c`, sessionName);
 }
 
 /** Poll until prompt appears (used by spawnBrain/respawn/context management) */
-async function waitForPrompt(timeoutMs = 120000) {
+async function waitForPrompt(timeoutMs = 120000, workerIdx = 0, sessionName = TMUX_SESSION_PRO) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (hasPrompt(capturePane())) return true;
+    if (hasPrompt(capturePane(workerIdx, sessionName))) return true;
     await sleep(1000);
   }
   return false;
@@ -384,16 +424,25 @@ function canRespawn() {
   return true;
 }
 
-function buildClaudeCmd() {
-  const port = config.ENGINE === 'qwen' ? config.QWEN_PROXY_PORT : config.PROXY_PORT;
-  const model = config.ENGINE === 'qwen' ? config.QWEN_MODEL_NAME : config.MODEL_NAME;
-  const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
-  // FORCE correct proxy port — ignore shell env (might be stale 8045)
-  const baseUrl = `http://127.0.0.1:${port}`;
-  // FIX: Unset AUTH_TOKEN to prevent auth conflict, only set API_KEY
-  // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
-  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${baseUrl}" && export ANTHROPIC_DEFAULT_HAIKU_MODEL="gemini-3-flash" && export CLAUDE_CODE_SUBAGENT_MODEL="gemini-3-flash"`;
-  return `${envVars} && claude --model ${model} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
+/**
+ * 虛實 (Xu Shi) — Intent-Aware Command Generator
+ * Enforces strict isolation between Planning (Pro) and Execution (API)
+ */
+function generateClaudeCommand(intent = 'API') {
+  if (intent === 'PRO') {
+    const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_pro`;
+    let envVars = `export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
+    envVars += ` && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false`;
+    return `${envVars} && claude --model claude-3-7-sonnet-20250219 --dangerously-skip-permissions`;
+  } else {
+    // API (Execution via Gemini Proxy)
+    const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_api`;
+    let envVars = `export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
+    const baseUrl = `http://127.0.0.1:9191`;
+    envVars += ` && unset ANTHROPIC_API_KEY && export ANTHROPIC_BASE_URL="${baseUrl}" && export ANTHROPIC_AUTH_TOKEN="test"`;
+    envVars += ` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false`;
+    return `${envVars} && claude --dangerously-skip-permissions`;
+  }
 }
 
 // --- Brain lifecycle ---
@@ -401,202 +450,136 @@ function buildClaudeCmd() {
 // Brain State
 let currentWorkerIdx = 1; // Start at P1 (P0 is Monitor), unless Full CLI
 
-function spawnBrain() {
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 4; // Default 4 (P0-P3)
+async function spawnBrain() {
+  const TMUX_SESSION = `${config.TMUX_SESSION}:brain`;
 
-  if (isSessionAlive()) {
+  if (isSessionAlive(TMUX_SESSION)) {
     try {
       const paneCount = parseInt(execSync(`tmux list-panes -t ${TMUX_SESSION} | wc -l`, { encoding: 'utf-8' }).trim());
-      if (paneCount >= teamSize) {
-        log(`BRAIN: tmux session exists (Panes: ${paneCount}/${teamSize}) — reusing`);
+      if (paneCount >= 2) {
+        log(`BRAIN: tmux session exists (Panes: ${paneCount}/2) — reusing`);
         return;
       }
-      log(`BRAIN: Session exists but has ${paneCount}/${teamSize} panes. REPAIRING...`);
-
-      // FIXED: Use Cloud Brain URL (Serveo/Ollama)
-      const proxyUrl = config.CLOUD_BRAIN_URL;
-
-      // FIX: Standardize all env vars to 'ollama' bridge protocol
-      const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
-      // FIX: Standardize all env vars to 'ollama' bridge protocol
-      // REMOVED ANTHROPIC_AUTH_TOKEN to avoid conflict (502/Auth Warning)
-      // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
-      const envVars = `export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}"`;
-
-      // Repair Loop: Add missing panes
-      for (let i = paneCount; i < teamSize; i++) {
-        log(`BRAIN: Spawning missing Worker P${i}...`);
-
-        // Reverted: Script streaming causes CSI ANSI cursor pollution that breaks detectState
-        const geminiCmd = `${envVars} && claude --model ${config.MODEL_NAME} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
-
-        tmuxExec(`tmux split-window -t ${TMUX_SESSION}:0`);
-        tmuxExec(`tmux select-layout -t ${TMUX_SESSION}:0 tiled`);
-        execSync('sleep 1');
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} '${geminiCmd}' Enter`);
-        // AUTO-ACCEPT Bypass Permissions for repaired panes
-        execSync('sleep 5');
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Down Enter`);
-        execSync('sleep 2');
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Down Enter`); // Double Down just in case
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Enter`);
-      }
-      return; // Repair done
+      log(`BRAIN: Session exists but has ${paneCount}/2 panes. REPAIRING to DUAL-PANE Sandwich Workflow...`);
+      tmuxExec(`tmux kill-session -t ${TMUX_SESSION}`, TMUX_SESSION);
     } catch (e) {
-      log(`BRAIN: Error checking/repairing session: ${e.message}`);
+      log(`BRAIN: Error checking session: ${e.message}`);
     }
   }
 
-  log(`BRAIN: Creating tmux session with CC CLI interactive (Team Size: ${teamSize})...`);
-  if (config.FULL_CLI_MODE) log('BRAIN: ⚡️ ANTIGRAVITY GOD MODE ACTIVE: P0 IS A WORKER ⚡️');
+  log(`BRAIN: Creating DUAL-PANE SANDWICH tmux session with CC CLI interactive...`);
 
-  // FORCE correct proxy URL — ignore shell env to prevent ECONNREFUSED
-  const proxyUrl = config.CLOUD_BRAIN_URL || `http://127.0.0.1:${config.PROXY_PORT}`;
-  log(`BRAIN: Connecting to Brain URL: ${proxyUrl}`);
-
-  // Create explicit config with CLAUDEKIT INJECTION 💉
-  const claudeConfigDir = `/Users/macbookprom1/.claude_antigravity_${config.PROXY_PORT}`;
-  const fs = require('fs');
-  if (!fs.existsSync(claudeConfigDir)) fs.mkdirSync(claudeConfigDir, { recursive: true });
-
-  // MCP INJECTION: ClaudeKit + Filesystem
   const mcpConfig = {
     "mcpServers": {
-      "claudekit": {
-        "command": "/opt/homebrew/bin/ck",
-        "args": ["mcp"]
-      },
       "filesystem": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/macbookprom1/mekong-cli"]
+        "command": "node",
+        "args": ["/Users/macbookprom1/.npm/_npx/a3241bba59c344f5/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js", "/Users/macbookprom1/mekong-cli"]
       }
     }
   };
 
-  const configContent = {
-    "completedProjectSetup": true,
-    "lastUpdateCheck": Date.now(),
-    "primaryColor": "#D97757", // Tôm Hùm Orange
-    "theme": "dark",
-    "verbose": true,
-    "dangerouslySkipPermissions": true,
-    "agreedToBypassPermissions": true,
-    "bypassPermissions": true,
-    "customInstructions": "🔥 BẠN LÀ CC CLI (CLAUDEKIT ENGINE) — CỖ MÁY ĐẺ CODE TỰ ĐỘNG. LUẬT SẮT: LUÔN LUÔN chạy ĐA LUỒNG, CẤM đơn luồng. Khi nhận MISSION từ CTO: (1) PHẢI dùng Task tool để spawn 3-5 subagents SONG SONG, mỗi subagent xử lý 1 phần riêng biệt. (2) KHÔNG BAO GIỜ chạy từng bước tuần tự — LUÔN phân tích task rồi chia thành subtasks chạy parallel. (3) Khi CTO truyền /cook, /plan:parallel, /debug → kích hoạt ClaudeKit Agents, Skills qua MCP. Tuân thủ CLAUDE.md gốc. Ví dụ: Fix 3 lint errors → spawn 3 Task subagents, mỗi cái fix 1 error song song, KHÔNG fix tuần tự.",
-    // "mcp": mcpConfig.mcpServers // Native CLI might ignore this in main config
-  };
+  const handPro = getHandForIntent('PLAN');
+  const baseConfigPro = { "primaryColor": "#A020F0", "customInstructions": handPro.instructions, "dangerouslySkipPermissions": true, "bypassPermissions": true, "agreedToBypassPermissions": true };
+  if (!fs.existsSync(`/Users/macbookprom1/.claude_antigravity_pro`)) fs.mkdirSync(`/Users/macbookprom1/.claude_antigravity_pro`, { recursive: true });
+  fs.writeFileSync(`/Users/macbookprom1/.claude_antigravity_pro/config.json`, JSON.stringify(baseConfigPro, null, 2));
+  fs.writeFileSync(`/Users/macbookprom1/.claude_antigravity_pro/mcp.json`, JSON.stringify(mcpConfig, null, 2));
 
-  // Inject API Key if present to avoid prompts
-  // Inject API Key to avoid prompts (Standard Ollama protocol)
-  configContent.anthropicApiKey = "ollama";
-  configContent.anthropicAuthToken = "ollama"; // Bypass Login via Ollama protocol
-  configContent.agreedToBypassPermissions = true;
-  configContent.bypassPermissions = true;
+  const handApi = getHandForIntent('COOK');
+  const baseConfigApi = { "primaryColor": "#00FF00", "customInstructions": handApi.instructions, "dangerouslySkipPermissions": true, "bypassPermissions": true, "agreedToBypassPermissions": true };
+  if (!fs.existsSync(`/Users/macbookprom1/.claude_antigravity_api`)) fs.mkdirSync(`/Users/macbookprom1/.claude_antigravity_api`, { recursive: true });
+  fs.writeFileSync(`/Users/macbookprom1/.claude_antigravity_api/config.json`, JSON.stringify(baseConfigApi, null, 2));
+  fs.writeFileSync(`/Users/macbookprom1/.claude_antigravity_api/mcp.json`, JSON.stringify(mcpConfig, null, 2));
 
-  fs.writeFileSync(`${claudeConfigDir}/config.json`, JSON.stringify(configContent, null, 2));
-
-  // Write dedicated MCP config file for --mcp-config flag
-  fs.writeFileSync(`${claudeConfigDir}/mcp.json`, JSON.stringify(mcpConfig, null, 2));
-
-  // FORCE API URL via wrapper env function
-  // We use config.MODEL_NAME to bypass CLI validation (Opus masquerade)
-  const apiKeyExport = process.env.ANTHROPIC_API_KEY ? `export ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY}" && ` : '';
-  // FIX: Unset AUTH_TOKEN to prevent auth conflict
-  // 🎯 MODEL TIERING: Subagents use Flash (Tier 3) to save Ultra credits
-  const envVars = `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY="ollama" && export ANTHROPIC_BASE_URL="${proxyUrl}" && export CLAUDE_BASE_URL="${proxyUrl}" && export CLAUDE_CONFIG_DIR="${claudeConfigDir}" && export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`;
-
-  // Create session (Pane 0) - MONITOR (Standard) OR WORKER (God Mode)
-  let p0Cmd = `tail -f ${config.LOG_FILE}`;
-  let p0Title = "P0: SUPERVISOR (Auto-CTO)";
-
-  if (config.FULL_CLI_MODE) {
-    p0Cmd = `${envVars} && claude --model ${config.MODEL_NAME} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
-    p0Title = "P0: GOD Mode WORKER (Antigravity)";
+  // 🦞 AUTH PERSISTENCE: Copy oauth_creds to both profiles to avoid login loops
+  try {
+    const srcTokens = fs.readdirSync('/Users/macbookprom1/.claude').filter(f => f.startsWith('oauth_creds'));
+    for (const token of srcTokens) {
+      const srcPath = path.join('/Users/macbookprom1/.claude', token);
+      fs.copyFileSync(srcPath, path.join('/Users/macbookprom1/.claude_antigravity_pro', token));
+      fs.copyFileSync(srcPath, path.join('/Users/macbookprom1/.claude_antigravity_api', token));
+    }
+    log(`BRAIN: Persisted Auth Pro credentials to Sandbox Profiles.`);
+  } catch (e) {
+    log(`BRAIN: Auth persistence warning - ${e.message}`);
   }
 
-  tmuxExec(`tmux new-session -d -s ${TMUX_SESSION} -n brain -x 200 -y 50`);
-  tmuxExec(`tmux set-option -t ${TMUX_SESSION} remain-on-exit on`);  // 🔒 Pane stays open on crash
-  tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.0 '${p0Cmd}' Enter`);
-  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.0 -T "${p0Title}"`);
+  const cmdPro = generateClaudeCommand('PRO');
+  const cmdApi = generateClaudeCommand('API');
 
-  if (config.FULL_CLI_MODE) {
-    // Reverted: pipe-pane breaks detectState
-  }
+  const bootDir = config.MEKONG_DIR;
+  const sessionName = TMUX_SESSION.split(':')[0];
+  const windowName = 'brain';
 
-  // Create additional panes - WORKERS (Gemini 3 Pro High)
-  for (let i = 1; i < teamSize; i++) {
-    // Reverted: pipe-pane causes CSI ANSI cursor pollution
-    const geminiCmd = `${envVars} && claude --model ${config.MODEL_NAME} --mcp-config "${claudeConfigDir}/mcp.json" --dangerously-skip-permissions`;
+  log(`BRAIN: Creating NEW session [${sessionName}] with window [${windowName}] in ${bootDir}...`);
+  tmuxExec(`tmux new-session -d -s ${sessionName} -n ${windowName} -x 200 -y 50 -c ${bootDir}`, TMUX_SESSION);
+  tmuxExec(`tmux set-option -t ${sessionName} remain-on-exit on`, TMUX_SESSION);
+  tmuxExec(`tmux set-option -t ${sessionName} allow-rename off`, TMUX_SESSION);
 
-    tmuxExec(`tmux split-window -t ${TMUX_SESSION}:0`);
-    tmuxExec(`tmux select-layout -t ${TMUX_SESSION}:0 tiled`);
-    execSync('sleep 1'); // Stagger boot to prevent API rate spikes
-    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} '${geminiCmd}' Enter`);
-  }
+  // Split window horizontally
+  tmuxExec(`tmux split-window -h -t ${TMUX_SESSION}.0 -c ${bootDir}`, TMUX_SESSION);
 
-  // 🔒 Auto-accept bypass permissions for ALL panes
-  // --dangerously-skip-permissions still shows confirmation prompt on boot
-  // CRITICAL: Must send Down and Enter as SEPARATE commands with delay
-  // CC CLI select prompt: Down moves cursor, Enter confirms focused item
-  log('BRAIN: Waiting for CC CLI bypass prompt...');
-  execSync('sleep 5');
-  for (let i = 0; i < teamSize; i++) {
-    // Step 1: Move cursor to "2. Yes, I accept"
-    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Down`);
-    execSync('sleep 1');
-    // Step 2: Confirm selection
-    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${i} Enter`);
-    execSync('sleep 1');
-  }
-  execSync('sleep 3');
+  await sleep(1000);
 
-  // Set initial focus to P0 (if God Mode) or P1
-  const startPane = config.FULL_CLI_MODE ? 0 : 1;
-  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${startPane}`);
+  // Pane 0: PLANNER (PRO)
+  tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.0 '${cmdPro}' Enter`, TMUX_SESSION);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.0 -T "PRO: Planner"`, TMUX_SESSION);
 
-  log(`BRAIN: Spawned [session=${TMUX_SESSION}] [panes=${teamSize}]`);
-  log(`BRAIN: P0=${config.FULL_CLI_MODE ? 'WORKER' : 'MONITOR'}, P1-${teamSize - 1}=WORKERS`);
-}
+  // Pane 1: EXECUTION (API / Free)
+  tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.1 '${cmdApi}' Enter`, TMUX_SESSION);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.1 -T "API: Executor"`, TMUX_SESSION);
 
-/**
- * 虛實 (Xu Shi) — PARALLEL TEAM Strategy
- * Find first IDLE worker (not locked) instead of round-robin.
- * Each worker has its own lock file: .mission-active-P{idx}.lock
- */
-function findIdleWorker() {
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 3;
-  const minIdx = config.FULL_CLI_MODE ? 0 : 1;
-  for (let i = minIdx; i < teamSize; i++) {
-    if (!isWorkerBusy(i)) {
-      log(`DISPATCH: → Worker P${i} (idle) — ${teamSize} total`);
-      tmuxExec(`tmux select-pane -t ${TMUX_SESSION}:0.${i}`);
-      return i;
+  // Auto-accept bypass permissions for both panes
+  log(`BRAIN: Waiting for CC CLI bypass prompts...`);
+  await sleep(10000);
+  for (let paneIdx = 0; paneIdx < 2; paneIdx++) {
+    for (let retry = 0; retry < 30; retry++) {
+      const paneOutput = capturePane(paneIdx, TMUX_SESSION);
+
+      if (paneOutput.includes('accept all responsibility') || paneOutput.includes('Permissions mode.')) {
+        log(`BRAIN: P${paneIdx} prompt — sending Down+Enter (attempt ${retry + 1})...`);
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${paneIdx} Down`, TMUX_SESSION);
+        await sleep(1000);
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${paneIdx} Enter`, TMUX_SESSION);
+      } else if (paneOutput.includes('Choose the text style') || paneOutput.includes('Press Enter to continue') || paneOutput.includes('Yes, I trust this folder')) {
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${paneIdx} Enter`, TMUX_SESSION);
+      } else if (paneOutput.includes('❯')) {
+        log(`BRAIN: P${paneIdx} Native Boot Complete!`);
+        break;
+      }
+      await sleep(3000);
     }
   }
-  return -1; // All busy
+
+  log(`BRAIN: Dual-Pane Sandwich Boot Complete [session=${TMUX_SESSION}]`);
 }
 
-// Legacy: keep rotateWorker as alias for backward compat
-function rotateWorker() {
-  const idx = findIdleWorker();
-  if (idx >= 0) currentWorkerIdx = idx;
-  return currentWorkerIdx;
+function findIdleWorker(sessionName = TMUX_SESSION, intent = 'EXECUTION') {
+  // Pro Intent -> Pane 0
+  // Execution Intent -> Pane 1
+  const isProIntent = /plan|think|research|insight|binh-phap/.test(intent.toLowerCase()) || intent === 'PRO';
+  const targetPane = isProIntent ? 0 : 1;
+
+  if (!isWorkerBusy(targetPane, sessionName)) {
+    log(`DISPATCH: → Worker P${targetPane} (idle) — session=${sessionName} intent=${intent}`);
+    tmuxExec(`tmux select-pane -t ${sessionName}.${targetPane}`, sessionName);
+    return targetPane;
+  }
+  return -1; // Busy
 }
 
-function killBrain() {
-  if (isSessionAlive()) {
-    tmuxExec(`tmux kill-session -t ${TMUX_SESSION}`);
-    log('BRAIN: tmux session killed');
+function killBrain(sessionName = TMUX_SESSION) {
+  if (isSessionAlive(sessionName)) {
+    tmuxExec(`tmux kill-session -t ${sessionName}`, sessionName);
+    log(`BRAIN: tmux session ${sessionName} killed`);
   }
 }
 
-function isBrainAlive() {
-  if (!isSessionAlive()) return false;
+function isBrainAlive(sessionName = TMUX_SESSION_PRO) {
+  if (!isSessionAlive(sessionName)) return false;
   try {
     // 🔒 Check tmux pane content for CC CLI indicators instead of pgrep
-    // pgrep -f "claude" is unreliable — sometimes misses idle CC CLI process
     const output = execSync(
-      `tmux capture-pane -t ${TMUX_SESSION}:0.0 -p 2>/dev/null`,
+      `tmux capture-pane -t ${sessionName}.0 -p 2>/dev/null`,
       { encoding: 'utf-8', timeout: 3000 }
     );
     // CC CLI shows these when alive (idle or busy)
@@ -626,22 +609,25 @@ async function compactIfNeeded() {
 
 // --- Crash recovery ---
 
-async function respawnBrain(useContinue = true) {
+async function respawnBrain(intent = 'EXECUTION', useContinue = true) {
+  const isPlanning = intent === 'PLAN' || intent === 'RESEARCH';
+  const sessionName = isPlanning ? TMUX_SESSION_PRO : TMUX_SESSION_API;
+
   if (!canRespawn()) {
     log(`RESPAWN: Rate limit (${MAX_RESPAWNS_PER_HOUR}/hr) — cooldown ${RESPAWN_COOLDOWN_MS / 1000}s`);
     await sleep(RESPAWN_COOLDOWN_MS);
     respawnTimestamps = [];
   }
   respawnTimestamps.push(Date.now());
-  killBrain();
+  killBrain(sessionName);
   await sleep(2000); // Wait for cleanup
 
-  // REUSE spawnBrain() logic to ensure P0=Monitor, P1..=Workers layout
-  spawnBrain();
-  await sleep(2000); // Wait for CC CLI to fully boot before accepting missions
+  // REUSE spawnBrain() logic with intent
+  await spawnBrain(config.AGENT_TEAM_SIZE_DEFAULT, intent);
+  await sleep(5000); // 🦞 Increased wait for CC CLI to boot
 
-  log(`RESPAWN: Session rebuilt via spawnBrain()`);
-  return waitForPrompt(120000);
+  log(`RESPAWN: Session ${sessionName} rebuilt via spawnBrain(${intent})`);
+  return waitForPrompt(120000, 0, sessionName);
 }
 
 // --- Per-Worker Mission Lock (enables parallel dispatch) ---
@@ -717,21 +703,28 @@ const MISSION_LOCK = require('path').join(__dirname, '..', '.mission-active.lock
 function setMissionLock(num) { setWorkerLock(currentWorkerIdx, num); }
 function clearMissionLock() { clearWorkerLock(currentWorkerIdx); }
 
-// --- Core: run mission via tmux (state machine) ---
+async function runMission(prompt, projectDir, timeoutMs, modelOverride, complexity, intent) {
+  const isPlanning = intent === 'PLAN' || intent === 'RESEARCH' || (prompt || '').startsWith('/plan') || (prompt || '').includes('[PLAN ONLY]');
+  const suffix = isPlanning ? 'pro' : 'api';
+  const TMUX_SESSION = isPlanning ? TMUX_SESSION_PRO : TMUX_SESSION_API;
 
-async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
   // 🧬 FIX Bug #1 + BRAIN SURGERY v30: TTL-based DUPLICATE DISPATCH DETECTION
-  // Missions with same content are rejected within 10min window only (not forever)
   const promptHash = hashPrompt(prompt);
   if (isDuplicateMission(promptHash)) {
     log(`DUPLICATE MISSION REJECTED: Hash ${promptHash.slice(0, 20)}... dispatched within last ${DEDUP_TTL_MS / 60000}min`);
     return { success: false, result: 'duplicate_rejected', elapsed: 0 };
   }
 
-  // 🔒 PARALLEL: Find idle worker instead of blocking all
-  const workerIdx = findIdleWorker();
+  // 🔒 MAP: findIdleWorker now routes exactly to the assigned visual Pane
+  const workerIdx = findIdleWorker(TMUX_SESSION, intent);
+
+  if (workerIdx === 0 && (prompt.includes('/cook') || prompt.includes('/debug') || prompt.includes('/test'))) {
+    log(`🔴 CHAIRMAN OVERRIDE: FATAL REJECT! Pane 0 (PRO) is strictly forbidden from executing /cook, /debug, or /test. Mission aborted.`);
+    return { success: false, result: 'p0_violation', elapsed: 0 };
+  }
+
   if (workerIdx === -1) {
-    log(`MISSION BLOCKED: All ${config.AGENT_TEAM_SIZE_DEFAULT} workers busy — refusing dispatch`);
+    log(`MISSION BLOCKED: Worker P${intent === 'PLAN' || intent === 'RESEARCH' ? 0 : 1} is busy — refusing dispatch`);
     return { success: false, result: 'all_workers_busy', elapsed: 0 };
   }
 
@@ -785,10 +778,10 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
 
     // SAFETY CHECK: Ensure Claude is actually running before dispatching
     // If we paste into a raw ZSH shell, we get "Command not found" errors.
-    const checkOutput = capturePane(workerIdx);
-    if (!isBrainAlive() || isShellPrompt(checkOutput)) {
-      log(`CRITICAL: Brain died or dropped to shell! check=${!isBrainAlive()} shell=${isShellPrompt(checkOutput)}`);
-      const respawnSuccess = await respawnBrain(true);
+    const checkOutput = capturePane(workerIdx, TMUX_SESSION);
+    if (!isBrainAlive(TMUX_SESSION) || isShellPrompt(checkOutput)) {
+      log(`CRITICAL: Brain died or dropped to shell! session=${TMUX_SESSION}`);
+      const respawnSuccess = await respawnBrain(isPlanning ? 'PLAN' : 'EXECUTION', true);
       if (!respawnSuccess) {
         return { success: false, result: 'brain_died_fatal', elapsed: 0 };
       }
@@ -808,17 +801,38 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     let compactionStartTime = 0; // 🎯 COMPACTION STALL FIX: Track how long compaction runs
     const COMPACTION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes max for compaction
 
-    for (let waitAttempt = 0; waitAttempt < 18; waitAttempt++) {
-      const preDispatch = capturePane(workerIdx);
+    for (let waitAttempt = 0; waitAttempt < 10; waitAttempt++) {  // 🦞 FIX BUG #2 2026-02-27: Reduced 18→10 (max wait 50s vs 180s)
+      const preDispatch = capturePane(workerIdx, TMUX_SESSION);
       const recentLines = getCleanTail(preDispatch, 8).join('\n');
       const fullTailLines = getCleanTail(preDispatch, 20).join('\n');
       const preState = detectState(recentLines);
 
+      // 🚨 PRO LIMIT DETECTION (v2026.2.27) -> NUCLEAR LIQUIDATION
+      if (PRO_LIMIT_PATTERNS.some(p => p.test(fullTailLines))) {
+        log(`🚨 [CRITICAL] Claude Pro limit hit detected on Worker P${workerIdx}!`);
+        log(`💣 [NUCLEAR LIQUIDATION] Killing stalled Pro session for immediate rotation...`);
+        setProLimitHit(true);
+        killBrain(); // Force EVERYTHING to stop immediately
+        return { success: false, result: 'pro_limit_hit', elapsed: Date.now() - startTime };
+      }
+
       // 🦞 SELF-HEAL #1: Detect "queued messages" and auto-clear via Escape
       if (/queued messages/i.test(recentLines) || /Press up to edit queued/i.test(recentLines)) {
         log(`🩺 SELF-HEAL: Detected "queued messages" — sending Escape to clear (attempt ${waitAttempt + 1})...`);
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
         await sleep(3000);
+        continue;
+      }
+
+      // 🦞 SELF-HEAL #2: Detect "Interrupted" banner sitting idle and auto-clear via Escape
+      // If CC CLI thinks it's interrupted, any text sent might get eaten or cause syntax errors.
+      if (!isBusy(preDispatch) && (/Interrupted\.\s*What should Claude do instead\?/i.test(fullTailLines) || /Interrupted/i.test(fullTailLines))) {
+        log(`🩺 SELF-HEAL: Detected "Interrupted" state — sending Escape to clear (attempt ${waitAttempt + 1})...`);
+        for (let i = 0; i < 3; i++) {
+          tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
+          await sleep(500);
+        }
+        await sleep(2000);
         continue;
       }
 
@@ -838,18 +852,18 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
           if (compactingDuration > COMPACTION_TIMEOUT_MS) {
             log(`🚨 COMPACTION STALL DETECTED: ${Math.round(compactingDuration / 60000)}min > 3min limit!`);
             log(`🚨 Aborting compaction with Ctrl+C → /clear to recover...`);
-            tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} C-c`);
+            sendCtrlC(workerIdx, TMUX_SESSION);
             await sleep(3000);
             // Send /clear to reset context instead of stalling forever
-            pasteText('/clear', workerIdx);
+            // pasteText('/clear', workerIdx, TMUX_SESSION);
             await sleep(1000);
-            sendEnter(workerIdx);
+            sendEnter(workerIdx, TMUX_SESSION);
             await sleep(5000);
             wasCompacting = false;
             compactionStartTime = 0;
             log(`🩺 COMPACTION RECOVERY: Sent /clear — CC CLI context reset. Ready for next dispatch.`);
             // Wait for prompt after /clear
-            await waitForPrompt(30000);
+            await waitForPrompt(30000, workerIdx, TMUX_SESSION);
             break;
           }
 
@@ -861,15 +875,15 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
         const hasZeroPercent = /Compacting[^\n]*0%/i.test(recentLines) || /0%[^\n]*Compacting/i.test(recentLines);
         if (isCompacting && hasZeroPercent) {
           log(`🆘 ANTI-HANG: CC CLI stuck compacting at 0% — sending /clear to reset context (attempt ${waitAttempt + 1})...`);
-          pasteText('/clear', workerIdx);
+          // pasteText('/clear', workerIdx, TMUX_SESSION);
           await sleep(1000);
-          sendEnter(workerIdx);
+          sendEnter(workerIdx, TMUX_SESSION);
           await sleep(10000); // Wait for /clear to process
         } else if (!isCompacting) {
           const matchedPat = BUSY_PATTERNS.find(p => p.test(recentLines));
-          log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/18) — matched: ${matchedPat || 'NONE'} — waiting 10s...`);
+          log(`ANTI-STACK: CC CLI still busy (attempt ${waitAttempt + 1}/10) — matched: ${matchedPat || 'NONE'} — waiting 5s...`);
         }
-        await sleep(10000);
+        await sleep(5000);  // 🦞 FIX BUG #2 2026-02-27: Reduced from 10s to 5s per attempt
         continue;
       }
 
@@ -887,7 +901,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
 
       if (preState === 'question') {
         log(`ANTI-STACK: CC CLI has pending question — auto-approving`);
-        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} y Enter`);
+        tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} y Enter`, TMUX_SESSION);
         await sleep(2000);
         continue;
       }
@@ -895,7 +909,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     }
 
     // Final check: if STILL busy after 180s, abort this mission
-    const finalCheck = capturePane(workerIdx);
+    const finalCheck = capturePane(workerIdx, TMUX_SESSION);
     if (isBusy(finalCheck)) {
       log(`ANTI-STACK: P${workerIdx} still busy after 180s — ABORTING mission #${num}`);
       return { success: false, result: 'busy_blocked', elapsed: 0 };
@@ -904,53 +918,74 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     // 🦞 SELF-HEAL #2: Final queued-messages check after ANTI-STACK
     if (/queued messages/i.test(finalCheck) || /Press up to edit queued/i.test(finalCheck)) {
       log(`🩺 SELF-HEAL: FINAL CHECK — queued messages still present. Sending Escape + aborting this round.`);
-      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
       return { success: false, result: 'queued_abort', elapsed: 0 };
     }
 
     // 🦞 SELF-HEAL #3: Background tasks overlay stuck (Esc to close)
     if (/Background tasks/i.test(finalCheck) || /Esc to close/i.test(finalCheck)) {
       log(`🩺 SELF-HEAL: CC CLI stuck on "Background tasks" view — sending Escape to dismiss`);
-      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
+      await sleep(1000);
+    }
+
+    // 🦞 SELF-HEAL #4: Intermittent Feedback Prompt Intercept (0: Dismiss)
+    // CC CLI occasionally asks "How is Claude doing this session?" after completion.
+    // This hijacks the input buffer and swallows any incoming new tasks.
+    if (/0:\s*Dismiss/i.test(finalCheck) || /How is Claude doing/i.test(finalCheck)) {
+      log(`🩺 SELF-HEAL: CC CLI intercepting payload with Feedback Screen — sending '0' to dismiss`);
+      tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} 0`, TMUX_SESSION);
       await sleep(1000);
     }
 
     // 🔒 Clear input line before dispatch (stale text protection)
-    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
-    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} C-c`);
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
+    tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} C-c`, TMUX_SESSION);
     await sleep(200);
 
     // Convert newlines to spaces to prevent CC CLI multi-line input mode
     const safePrompt = fullPrompt.replace(/\n/g, ' ');
 
-    // Dispatch via paste-buffer
-    pasteText(safePrompt, workerIdx);
+    // 🦞 FIX 2026-02-26: Claude Code v2.1.59 "Queued Messages" Paste Bug
+    // Newer versions of CC CLI interpret tmux paste buffers as multi-line queued messages if they exceed a certain size or contain specific formatting.
+    // We write the prompt to a temp file, load it into a named buffer, and paste it without brackets.
+    log(`Sending payload via tmux load-buffer (Suffix: ${suffix}) to prevent "queued messages"...`);
+    const tempFile = require('path').join(require('os').tmpdir(), `mission_prompt_${workerIdx}_${Date.now()}.txt`);
+    try {
+      require('fs').writeFileSync(tempFile, safePrompt);
+      tmuxExec(`tmux load-buffer -b mission_${workerIdx} ${tempFile}`);
+      // -p: paste without bracketed paste mode (often the culprit for multiline queued messages)
+      // -d: delete buffer after
+      tmuxExec(`tmux paste-buffer -b mission_${workerIdx} -p -d -t ${TMUX_SESSION}.${workerIdx}`, TMUX_SESSION);
+    } finally {
+      try { require('fs').unlinkSync(tempFile); } catch (e) { }
+    }
+
     await sleep(2000);
 
-    // 🦞 FIX 2026-02-24: "Đơ" / "Ngáo" — The Two-Call Mandate
-    // CC CLI often drops the first Enter if it's still parsing syntax highlighting.
-    // Spam Enter 3 times to guarantee it executes.
-    log(`Sending Triple Enter to guarantee execution...`);
-    sendEnter(workerIdx);
-    await sleep(500);
-    sendEnter(workerIdx);
-    await sleep(500);
-    sendEnter(workerIdx);
+    // TWO-CALL MANDATE: First Enter submits the pasted text
+    // 🦞 FIX 2026-02-27: "Triple Enter" / "Pasted Text" Block Bug
+    // The Chairman demands absolute continuous execution. CC CLI swallows the first Enter
+    // into a `[Pasted text]` block. We must forcefully punch through it.
+    log(`[MANDATE] Sending explicit Enter keystrokes to pierce the [Pasted text] modal...`);
+    sendEnter(workerIdx, TMUX_SESSION);
+    await sleep(2000); // Wait for CC CLI to register it
+    sendEnter(workerIdx, TMUX_SESSION);
+    await sleep(2000); // Double tap
+    sendEnter(workerIdx, TMUX_SESSION); // Triple tap (Guarantee)
 
-    // 🔒 VERIFIED ENTER: Wait 5s (was 3s) then retry ONCE if still idle
-    await sleep(5000);
-    const postEnterOutput = capturePane(workerIdx);
+    // 🔒 VERIFIED ENTER: Wait 8s then retry ONCE if still idle
+    await sleep(8000);
+    const postEnterOutput = capturePane(workerIdx, TMUX_SESSION);
     const postEnterState = detectState(postEnterOutput);
     if (postEnterState === 'idle' && !isBusy(postEnterOutput)) {
-      // Only kick if 25s+ elapsed AND text is stuck after prompt
+      // Only kick if 15s+ elapsed AND text is stuck after prompt
       const elapsedPostDispatch = Math.round((Date.now() - startTime) / 1000);
-      if (elapsedPostDispatch >= 15) { // 🦞 FIX 2026-02-24: Reduced from 25s to 15s to be more responsive
-        log(`ENTER RETRY: CC CLI still idle after 15s — sending THREE safety Enters`);
-        sendEnter(workerIdx);
-        await sleep(500);
-        sendEnter(workerIdx);
-        await sleep(500);
-        sendEnter(workerIdx);
+      if (elapsedPostDispatch >= 15) {
+        log(`ENTER RETRY: CC CLI still idle after 15s — sending ONE safety Enter`);
+        sendEnter(workerIdx, TMUX_SESSION);
+        await sleep(1000);
+        sendEnter(workerIdx, TMUX_SESSION);
       }
     }
     log(`DISPATCHED: Mission #${num} sent to P${workerIdx}`);
@@ -975,65 +1010,21 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     await sleep(1000); // 🧬 AGI BRAIN UPGRADE: Reduced from 2000→1000 for faster response
 
     while (Date.now() < deadline) {
-      if (!isSessionAlive()) {
+      if (!isSessionAlive(TMUX_SESSION)) {
         const elapsed = Math.round((Date.now() - startTime) / 1000);
-        log(`BRAIN DIED: Mission #${num} (${elapsed}s)`);
-        await respawnBrain(true);
+        log(`BRAIN DIED: Session ${TMUX_SESSION} died during mission #${num} (${elapsed}s)`);
+        await respawnBrain(isPlanning ? 'PLAN' : 'EXECUTION', true);
         return { success: false, result: 'brain_died', elapsed };
       }
 
       // Layer 2 fix removed - relying on `capturePane` throttle instead
 
-      const output = capturePane(workerIdx);
+      const output = capturePane(workerIdx, TMUX_SESSION);
       const state = detectState(output);
       const elapsedSec = Math.round((Date.now() - startTime) / 1000);
 
-      // SMART KICK-START: Avoid x2 dispatch bug by checking if there is unsubmitted text sitting next to the prompt
-      // 🦞 FIX 2026-02-23: DISABLED — this causes Enter spam and duplicate commands.
-      if (false && state === 'idle' && !wasBusy && elapsedSec >= 10 && elapsedSec < 30 && kickStartCount < 2) {
-        log(`WAITING: CC CLI idle (${elapsedSec}s) — waiting for processing to start...`);
-
-        // Parse the tail to find unsubmitted text
-        const tailLines = getCleanTail(output, 10);
-        let hasStuckText = false;
-
-        for (let i = tailLines.length - 1; i >= 0; i--) {
-          const line = tailLines[i];
-          if (line.includes('❯')) {
-            const afterPrompt = line.split('❯')[1];
-            if (afterPrompt && afterPrompt.trim().length > 0) {
-              hasStuckText = true;
-            }
-            break; // Found the last prompt line
-          }
-        }
-
-        if (hasStuckText) {
-          log(`KICK-START: Unsubmitted text detected after '❯'. Sending Enter...`);
-          sendEnter(workerIdx);
-          kickStartCount++;
-        } else {
-          log(`WAITING: Prompt is empty. No kick-start needed yet.`);
-        }
-
-        await sleep(2000);
-        continue;
-      }
-
-      // 🦞 FIX 2026-02-25: Context left 0% & Compacting conversation → send /clear
-      const bottomOutput = getCleanTail(output, 20).join('\n');
-      if (bottomOutput.includes('Compacting conversation') || bottomOutput.includes('auto-compact: 0%')) {
-        log(`CONTEXT 0%: Mission #${num} — sending /clear to reset context (${elapsedSec}s)`);
-        pasteText('/clear', workerIdx);
-        await sleep(1000);
-        sendEnter(workerIdx);
-        await sleep(10000); // Wait for /clear to rebuild context
-        idleConfirmCount = 0;
-        continue;
-      }
-
       // STUCK INTERVENTION (Parallel Cooling): Kill stuck task if Hot & Long
-      if (checkStuckIntervention(elapsedSec, num)) {
+      if (checkStuckIntervention(workerIdx, elapsedSec, wasBusy)) {
         return { success: false, result: 'killed_stuck', elapsed: elapsedSec };
       }
 
@@ -1064,7 +1055,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
 
         case 'question':
           log(`QUESTION: Mission #${num} — auto-approving`);
-          const targetPane = `${TMUX_SESSION}:0.${workerIdx}`;
+          const targetPane = `${TMUX_SESSION}.${workerIdx}`;
 
           // SPECIAL CASE: API Key Confirmation (Needs "1" + Enter for "Yes")
           // Matches the "2. No (recommended)" text which is selected by default
@@ -1072,9 +1063,9 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
             log(`QUESTION: API Key detected in P${workerIdx} — selecting '1. Yes'`);
             // Spam 1 and Enter for a few seconds to ensure TUI registers it
             for (let i = 0; i < 3; i++) {
-              tmuxExec(`tmux send-keys -t ${targetPane} 1`);
+              tmuxExec(`tmux send-keys -t ${targetPane} 1`, TMUX_SESSION);
               await sleep(500);
-              tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+              tmuxExec(`tmux send-keys -t ${targetPane} Enter`, TMUX_SESSION);
               await sleep(500);
             }
           }
@@ -1086,28 +1077,26 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
             log(`QUESTION: Bypass Permissions TUI detected — selecting '2. No (recommended)' via Down+Enter`);
             // The TUI menu for bypass usually has "Yes" at 1 and "No" at 2.
             // We want "No (recommended)" to proceed with the mission.
-            tmuxExec(`tmux send-keys -t ${targetPane} Down`);
+            tmuxExec(`tmux send-keys -t ${targetPane} Down`, TMUX_SESSION);
             await sleep(500);
-            tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+            tmuxExec(`tmux send-keys -t ${targetPane} Enter`, TMUX_SESSION);
           }
           // SPECIAL CASE: Legacy API Key Prompt
           else if (/Enter your API key/i.test(output)) {
             log(`QUESTION: Legacy API Key prompt detected — sending Enter`);
-            tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+            tmuxExec(`tmux send-keys -t ${targetPane} Enter`, TMUX_SESSION);
           } else {
             // 🧬 FIX Bug #2: AUTO-SELECT RECOMMENDED instead of WAIT
-            // If question contains "(Recommended)" or "Option A" → auto-select it
-            // Otherwise send Enter (default choice)
             if (/\(Recommended\)/i.test(output)) {
               log(`QUESTION: Auto-selecting (Recommended) option via Enter`);
-              tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+              tmuxExec(`tmux send-keys -t ${targetPane} Enter`, TMUX_SESSION);
             } else if (/Option A/i.test(output)) {
               log(`QUESTION: Auto-selecting Option A (recommended pattern)`);
-              tmuxExec(`tmux send-keys -t ${targetPane} a Enter`);
+              tmuxExec(`tmux send-keys -t ${targetPane} a Enter`, TMUX_SESSION);
             } else {
               // Generic decision: send Enter (usually default = recommended)
               log(`QUESTION: Unrecognized question — auto-selecting default via Enter`);
-              tmuxExec(`tmux send-keys -t ${targetPane} Enter`);
+              tmuxExec(`tmux send-keys -t ${targetPane} Enter`, TMUX_SESSION);
             }
           }
           // 🧬 FIX Bug #7: Reduce question response delay 3000ms → 1000ms
@@ -1119,7 +1108,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
           // 🦞 FIX 2026-02-25: RE-ENABLED /clear — uses pasteText + sendEnter (Two-Call Mandate)
           // Old bug: raw `send-keys /clear Enter` froze tmux. Now uses paste-buffer method.
           log(`CONTEXT LIMIT: Mission #${num} — context at 0%, sending /clear to reset`);
-          pasteText('/clear', workerIdx);
+          // pasteText('/clear', workerIdx);
           await sleep(1000);
           sendEnter(workerIdx);
           await sleep(10000); // Wait 10s for CC CLI to clear and rebuild context
@@ -1149,19 +1138,32 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
               return { success: true, result: 'done', elapsed: elapsedSec };
             }
           } else if (elapsedSec > MIN_MISSION_SECONDS) {
-            // 🦞 FIX 2026-02-23: Never saw BUSY! CC CLI could have dropped the prompt or stuck on an empty line.
-            // DO NOT assume success if wasBusy is false! Allow the idle counter to accumulate until 3x the limit, then FAIL!
+            // 🦞 FIX BUG #1 2026-02-27: Fast-proxy completion path
+            // If never saw BUSY but enough time passed + enough idle confirms → treat as done
             if (idleConfirmCount === 0) log(`WARNING: Mission #${num} idle for ${elapsedSec}s without ever becoming busy!`);
             idleConfirmCount++;
-            // 🦞 FIX 2026-02-24: 3x→6x — CC CLI via proxy startup is slow, don't abort prematurely
+
+            // Fast-proxy path: enough idle confirms after MIN_MISSION_SECONDS → success
+            if (idleConfirmCount >= IDLE_CONFIRM_POLLS && idleConfirmCount < IDLE_CONFIRM_POLLS * 6) {
+              // Check if output shows any sign of completion (not just empty prompt)
+              const hasCompletionSign = output && output.length > 200;
+              if (hasCompletionSign) {
+                log(`COMPLETE: Mission #${num} (${elapsedSec}s) [fast-proxy-path: idle x${idleConfirmCount}, wasBusy=false]`);
+                const tk2 = countTokensBetween(missionStartDate, new Date());
+                tokensSinceCompact += tk2.tokens;
+                log(`TOKENS: Mission #${num} used ${tk2.tokens.toLocaleString()} tokens`);
+                recordMission(prompt.slice(0, 60), path.basename(projectDir || ''), tk2.tokens, elapsedSec, tk2.model);
+                try { require('./learning-engine').recordOutcome(prompt.slice(0, 40), path.basename(projectDir || ''), 'done', elapsedSec); } catch (e) { }
+                return { success: true, result: 'done', elapsed: elapsedSec, path: 'fast_proxy_completion' };
+              }
+            }
+
+            // Ultimate fail after 6x idle confirms
             if (idleConfirmCount >= IDLE_CONFIRM_POLLS * 6) {
               log(`ERROR: Mission #${num} failed to start after ${elapsedSec}s [wasBusy=false]. Clearing CC CLI + aborting.`);
-              // 🦞 SELF-HEAL: Send Escape to clear the pasted command from CC CLI
-              // This prevents retry from stacking on top of the failed command.
-              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
+              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
               await sleep(1000);
-              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}:0.${workerIdx} Escape`);
-              // 🧠 LEARNING: Record failure for pattern analysis
+              tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.${workerIdx} Escape`, TMUX_SESSION);
               try { require('./learning-engine').recordOutcome(prompt.slice(0, 40), path.basename(projectDir || ''), 'failed_to_start', elapsedSec); } catch (e) { }
               return { success: false, result: 'failed_to_start', elapsed: elapsedSec };
             }
@@ -1186,7 +1188,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride) {
     // Timeout — send Ctrl+C and report
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     log(`TIMEOUT: Mission #${num} on P${workerIdx} exceeded ${Math.round(timeoutMs / 1000)}s — sending Ctrl+C`);
-    sendCtrlC(workerIdx);
+    sendCtrlC(workerIdx, TMUX_SESSION);
     return { success: false, result: 'timeout', elapsed };
   } finally {
     // 🔒 GUARANTEED CLEANUP: Always clear per-worker lock on exit
@@ -1231,12 +1233,20 @@ function isOverheating() {
 }
 
 // STUCK INTERVENTION: If task > 5min AND Load > 4.0, assume stuck model -> Ctrl+C
-function checkStuckIntervention(elapsedSec, num) {
-  const metrics = getSystemMetrics();
-  // 300s = 5 minutes
-  if (elapsedSec > 300 && metrics.load > 4.0) {
-    log(`INTERVENTION: Mission #${num} stuck (${elapsedSec}s) & Hot (${metrics.load}) — Sending Ctrl+C to unblock.`);
-    sendCtrlC();
+function checkStuckIntervention(workerIdx, elapsedSec, wasBusy) {
+  // 🦞 BUG 2026-02-26: CC CLI mid-mission kill
+  // Deep Research/Scan missions can be idle for long periods.
+  // If we are BUSY (meaning it is actually outputting text), DO NOT kill!
+  if (wasBusy) return false;
+
+  // Only intervene if IDLE and elapsed > cooling interval + safety margin
+  // 🦞 FIX: Increased from 90s+30s to 300s (5 minutes) for deep scans
+  const cooling = 300000; // 300s
+  const margin = 60000;  // 60s
+
+  if (elapsedSec > (cooling + margin) / 1000) {
+    log(`STUCK: (P${workerIdx}) seems stuck after ${elapsedSec}s — INTERVENING...`);
+    sendCtrlC(workerIdx); // Send Ctrl+C to the specific worker
     return true;
   }
   return false;

@@ -9,8 +9,11 @@
  * v3: Complex missions get Agent Team prompts → parallel Task subagents
  */
 
+const fs = require('fs');
 const path = require('path');
 const config = require('../config');
+
+const { isProAvailable } = require('./system-status-registry');
 
 // 🛡️ Safe Logger Import
 let log = console.log;
@@ -64,42 +67,64 @@ let _memoryCacheTs = 0;
 const MEMORY_CACHE_TTL = 60000; // 60 seconds
 
 // Project routing: detect project from task content keywords
-function detectProjectDir(taskContent) {
-  const lower = taskContent.toLowerCase();
+function detectProjectDir(taskContent, taskFile = '') {
+  const lowerContent = taskContent.toLowerCase();
+  const lowerFile = (taskFile || '').toLowerCase();
+
   const routes = {
-    'doanh-trai': 'doanh-trai-tom-hum',
-    'lobster': 'doanh-trai-tom-hum',
-    'tom-hum': 'doanh-trai-tom-hum',
-    'raas': 'doanh-trai-tom-hum',
+    'wellnexus': 'apps/wellnexus',
+    'well': 'apps/well',
     'com-anh-duong': 'apps/com-anh-duong-10x',
+    'doanh-trai': 'doanh-trai-tom-hum',
     '84tea': 'apps/84tea',
     'algo-trader': 'apps/algo-trader',
-    'algo': 'apps/algo-trader',
-    apex: 'apps/apex-os',
-    anima: 'apps/anima119',
-    sophia: 'apps/sophia-ai-factory',
-    wellnexus: '../archive-2026/Well',
-    well: '../archive-2026/Well',
-    agency: 'apps/agencyos-web',
-    'sa-dec': 'apps/sa-dec-flower-hunt',
-    'flower': 'apps/sa-dec-flower-hunt',
-    // 🧬 BRAIN SURGERY v30: Added missing keywords for mekong-cli root routing
-    'openclaw-worker': '.',  // openclaw-worker files = root monorepo
-    'openclaw': '.',          // openclaw = root monorepo
-    'task-watcher': '.',      // task-watcher = root
-    'brain-process': '.',     // brain-process-manager = root
-    'auto-cto': '.',          // auto-cto-pilot = root
-    'mekong-cli': '.',        // explicit mekong-cli mention
-    mekong: '.',
+    'apex-os': 'apps/apex-os',
+    'anima119': 'apps/anima119',
+    'sophia-ai-factory': 'apps/sophia-ai-factory',
+    'agencyos-web': 'apps/agencyos-web',
+    'sa-dec-flower-hunt': 'apps/sa-dec-flower-hunt',
+    'openclaw-worker': '.',
+    'mekong-cli': '.',
   };
-  for (const [keyword, dir] of Object.entries(routes)) {
-    // 🧬 BRAIN SURGERY v30: Fix short-keyword matching
-    // Only exact-match for very short (≤3 chars) to avoid false positives like "well" in "wellness"
-    // All others use includes() to match substrings
-    if (keyword.length <= 3 && lower === keyword) return path.join(config.MEKONG_DIR, dir);
-    if (keyword.length > 3 && lower.includes(keyword)) return path.join(config.MEKONG_DIR, dir);
+
+  // 1. PRIORITIZE FILENAME: If mission name has a project key, stick to it!
+  for (const [key, dir] of Object.entries(routes)) {
+    if (lowerFile.includes(key)) {
+      const target = path.join(config.MEKONG_DIR, dir);
+      if (fs.existsSync(target)) {
+        log(`[ROUTING] Filename match: ${key} -> ${target}`);
+        return target;
+      }
+    }
   }
-  // 🦞 DEFAULT: mekong-cli root (FOCUS MODE 2026-02-23: ONLY mekong-cli)
+
+  // 2. FALLBACK TO CONTENT (Only if filename is generic)
+  for (const [keyword, dir] of Object.entries(routes)) {
+    const target = path.join(config.MEKONG_DIR, dir);
+    if (keyword.length <= 3 && lowerContent === keyword) {
+      if (fs.existsSync(target)) {
+        log(`[ROUTING] Content exact match: ${keyword} -> ${target}`);
+        return target;
+      }
+    }
+    if (keyword.length > 3 && lowerContent.includes(keyword)) {
+      if (fs.existsSync(target)) {
+        log(`[ROUTING] Content keyword match: ${keyword} -> ${target}`);
+        return target;
+      }
+    }
+  }
+
+  // 3. IRON FOCUS VALIDATION: If config.PROJECTS is set, don't wander off!
+  if (config.PROJECTS && config.PROJECTS.length > 0) {
+    const defaultProj = config.PROJECTS[0];
+    const target = path.join(config.MEKONG_DIR, routes[defaultProj] || `apps/${defaultProj}`);
+    if (fs.existsSync(target)) {
+      log(`[ROUTING] Iron Focus fallback: ${defaultProj} -> ${target}`);
+      return target;
+    }
+  }
+
   return config.MEKONG_DIR;
 }
 
@@ -152,16 +177,53 @@ function splitTaskIntoSubtasks(text) {
  * Build prompt from raw task content.
  * Rule 13: Command Obsession + Hàn Băng Quyết v4 Adaptive Scaling + Multi-Cook Chaining
  */
-function buildPrompt(taskContent) {
+// --- Prompt Sanitization (v2026.2.27: Lean Stealth) ---
+
+function stripPollution(content) {
+  let clean = content;
+  // 1. Strip WORKFLOW ORCHESTRATION block
+  clean = clean.replace(/WORKFLOW ORCHESTRATION \(MANDATORY\):[\s\S]*?CORE PRINCIPLES:[\s\S]*?Avoid introducing bugs\./gi, '');
+  // 2. Strip GOOGLE ULTRA INTEL block
+  clean = clean.replace(/GOOGLE ULTRA INTEL \(searched Drive\/Gmail\/Calendar\):[\s\S]*?━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━/gi, '');
+  // 3. Strip extra separators
+  clean = clean.replace(/━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━/g, '');
+  return clean.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function findLatestPlan(projectDir) {
+  if (!projectDir || projectDir === config.MEKONG_DIR) return null;
+  const plansDir = path.join(projectDir, 'plans');
+  if (!fs.existsSync(plansDir)) return null;
+
+  try {
+    const { execSync } = require('child_process');
+    // Find latest plan.md in subdirectories of /plans
+    const findCmd = `ls -t "${plansDir}"/*/plan.md 2>/dev/null | head -n 1`;
+    const planPath = execSync(findCmd, { encoding: 'utf8' }).trim();
+    return planPath || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function buildPrompt(taskContent, projectDir = null) {
   let clean = taskContent.replace(/\\!/g, '!').replace(/\\"/g, '"').trim();
   clean = clean.replace(/^[a-z0-9_-]+:\s*/i, '');
-  const safe = clean.replace(/[()$`\\!]/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // 🦞 FIX 2026-02-23: LEAN PROMPT — Stop dumping 1500+ chars overhead into every prompt.
-  // MEMORY/GOTCHAS/lessons are already in customInstructions (config.json), loaded once per session.
-  // Prompt should only contain: command + task content + file limit.
-  const mandatePrefix = 'Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi code (tasks/todo.md) 2.Dùng subagents cho research/analysis 3.Verification trước khi done (chạy test, check logs) 4.Sau correction update tasks/lessons.md 5.Tìm root cause, không fix tạm 6.Chỉ sửa file cần thiết. ';
-  const FILE_LIMIT = 'Chỉ sửa TỐI ĐA 5 file mỗi mission. Nếu cần sửa nhiều hơn, báo cáo danh sách còn lại.';
+  // 🦞 STRIP POLLUTION: Save tokens by removing verbose mandates
+  const leanContent = stripPollution(clean);
+
+  const safe = leanContent.replace(/[()$`\\!]/g, ' ').replace(/\s+/g, ' ').trim();
+  const lowerSafe = safe.toLowerCase();
+  const isDeepTask = lowerSafe.includes('deep 10x') || lowerSafe.includes('deep scan') || lowerSafe.includes('ánh xạ');
+
+  // 🧬 CLAUDEKIT DNA v2026.2.27: Aggressive Agental Execution (Rule 13)
+  const isPro = isProAvailable();
+
+  // 🛡️ CHAIRMAN MANDATE: Pro is for THINKING (PLAN) only.
+  const STRATEGIC_STOP = 'CHỈ RESEARCH VÀ LẬP PLAN (plan.md). TUYỆT ĐỐI KHÔNG FIX/COOK. Xong plan hãy dừng lại. ';
+  const mandatePrefix = `Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> PLAN FIRST. ${STRATEGIC_STOP}`;
+  const FILE_LIMIT = 'Sửa < 5 file mỗi mission.';
   const VI_PREFIX = '';
 
   // Routing variables (kept lean — no prompt injection, just for command selection)
@@ -170,12 +232,15 @@ function buildPrompt(taskContent) {
   const isHanBangMode = load > 30;
 
   // Helper to construct ClaudeKit command properly
-  // Output format: /command "mandatePrefix \n\n VI_PREFIX parsedText FILE_LIMIT" flags
   const formatCmd = (cmd, text, flags = '') => {
     const escapedText = text.replace(/"/g, '\\"').trim();
-    const payload = escapedText ? `\n\n${VI_PREFIX}${escapedText} ${FILE_LIMIT}` : '';
-    // Fix string builder so mandatePrefix and payload are strictly inside the double quotes
-    return `${cmd} "${mandatePrefix.trim()}${payload}" ${flags}`.trim();
+    const isPlanCmd = cmd.startsWith('/plan') || cmd === '/bootstrap';
+
+    // Minimal mandate for cooking to reduce noise
+    const finalMandate = isPlanCmd ? mandatePrefix : 'Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ. ';
+
+    const payload = escapedText ? `\n\n${escapedText} ${FILE_LIMIT}` : '';
+    return `${cmd} "${finalMandate.trim()}${payload}" ${flags}`.trim();
   };
 
   // 🔒 Chairman Fix v5: Support explicit user commands (e.g. `/plan:hard "task" --auto`)
@@ -211,45 +276,63 @@ function buildPrompt(taskContent) {
     }
   }
 
-  // If user provided an explicit command, respect it
+  if (isDeepTask && (parsedCmd === '/cook' || !parsedCmd) && isPro) {
+    log(`🛡️ [HYBRID BRAIN] Deep Task detected — Forcing /plan:hard (Pro) for thinking phase.`);
+    return formatCmd('/plan:hard', parsedText, parsedFlags);
+  }
+
+  // 🦞 PLAN INFILTRATION: Auto-link latest plan.md for /cook
+  if ((parsedCmd === '/cook' || parsedCmd === '/plan:fast') && projectDir && projectDir !== config.MEKONG_DIR) {
+    const planPath = findLatestPlan(projectDir);
+    if (planPath && !parsedText.includes('plan.md')) {
+      log(`🎯 [PLAN INFILTRATION] Linking plan context: ${path.basename(path.dirname(planPath))}/plan.md`);
+      const planRelPath = `./plans/${path.basename(path.dirname(planPath))}/plan.md`;
+      return formatCmd(parsedCmd, `Using plan from ${planRelPath}: ${parsedText}`, parsedFlags);
+    }
+  }
+
+  // If user provided an explicit command, respect it (unless it was a forced deep /cook)
   if (parsedCmd) {
     return formatCmd(parsedCmd, parsedText, parsedFlags);
   }
 
-  // 🤖 NEW INTENTS (CI, BOOTSTRAP, TEST) - Added 2026-02-18
-  const lowerSafe = safe.toLowerCase();
+  const intent = detectIntent(safe);
+  const routingLog = (msg) => log(`[HYBRID ROUTING] ${isPro ? '' : '⚠️ FALLBACK: '}${msg}`);
 
   // 1. CI Intent
   if (lowerSafe.includes('ci/cd') || lowerSafe.includes('pipeline') || lowerSafe.includes('build fail')) {
+    routingLog(`CI/CD detected -> Routing to ${isPro ? 'Claude Pro (/plan:ci)' : '9Router API (/plan:ci)'}`);
     return formatCmd('/plan:ci', safe);
   }
 
   // 2. BOOTSTRAP Intent
   if (lowerSafe.includes('new project') || lowerSafe.includes('bootstrap') || lowerSafe.includes('khoi tao')) {
+    routingLog(`Bootstrap detected -> Routing to ${isPro ? 'Claude Pro (/bootstrap)' : '9Router API (/bootstrap)'}`);
     return formatCmd('/bootstrap', safe, isHanBangMode ? '--auto' : '--parallel --auto');
   }
 
   // 3. TEST Intent
   if (lowerSafe.includes('test') || lowerSafe.includes('kiem thu')) {
+    routingLog(`Testing task detected -> Routing to 9Router(/test)`);
     return formatCmd('/test', safe);
   }
 
-  const intent = detectIntent(safe);
-
   // MULTI_FIX: parallel bug fixing (2+ bug/error keywords detected)
-  if (intent === 'MULTI_FIX') return formatCmd('/cook', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ' PHẢI dùng đa luồng 10+ subagents.'), isHanBangMode ? '--auto' : '--parallel --auto');
+  if (intent === 'MULTI_FIX') {
+    routingLog(`Multi - bug detected -> Routing to 9Router(/cook --parallel)`);
+    return formatCmd('/cook', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ' PHẢI dùng đa luồng 10+ subagents.'), isHanBangMode ? '--auto' : '--parallel --auto');
+  }
 
   // STRATEGIC: large-scale architecture/redesign → deep parallel planning
-  if (intent === 'STRATEGIC') return formatCmd(isHanBangMode ? '/plan:hard' : '/plan:parallel', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Downgraded to /plan:hard]' : ''));
+  if (intent === 'STRATEGIC') {
+    routingLog(`Strategic mission detected -> Routing to ${isPro ? 'Claude Pro' : '9Router API'} (${isHanBangMode ? '/plan:hard' : '/plan:parallel'})`);
+    return formatCmd(isHanBangMode ? '/plan:hard' : '/plan:parallel', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Downgraded to /plan:hard]' : ''));
+  }
 
   if (isComplexRawMission(lowerSafe)) {
     const decomposed = buildDecomposedPrompt(safe, 'default');
 
-    // If exceptionally hot, downgrade command but preserve Binh Phap decomposed context
-    if (isHanBangMode) {
-      log(`⚠️ THERMAL CRITICAL (Load ${load}): Downgrading complex mission to /plan:hard to preserve Binh Phap strategy while reducing concurrency`);
-      return formatCmd('/plan:hard', safe + '\n\n[HÀN BĂNG MODE: Tạm thời dùng /plan:hard thay vì /plan:parallel do CPU load > 30, tuy nhiên vẫn giữ nguyên chiến lược Binh Pháp]\n\n' + decomposed);
-    }
+    routingLog(`Complex raw mission detected -> Routing to Claude Pro for strategic planning`);
 
     if (intent === 'FIX') return formatCmd('/debug', safe, '--parallel');
     if (intent === 'PLAN' || intent === 'RESEARCH') return formatCmd('/plan:hard', safe);
@@ -258,10 +341,18 @@ function buildPrompt(taskContent) {
     return formatCmd('/plan:parallel', safe + '\n\n' + decomposed);
   }
 
-  if (intent === 'FIX') return formatCmd('/debug', safe, isHanBangMode ? '' : '--parallel');
-  if (intent === 'REVIEW') return formatCmd('/review', safe, isHanBangMode ? '' : '--parallel');
+  if (intent === 'FIX') {
+    routingLog(`Fix intent detected -> Routing to 9Router(/debug)`);
+    return formatCmd('/debug', safe, isHanBangMode ? '' : '--parallel');
+  }
+
+  if (intent === 'REVIEW') {
+    routingLog(`Review intent detected -> Routing to 9Router(/review)`);
+    return formatCmd('/review', safe, isHanBangMode ? '' : '--parallel');
+  }
 
   // 🦞 FIX 2026-02-23: PLAN-FIRST — ClaudeKit workflow: /plan:hard → 100x DEEP PIPELINE auto-chains /cook
+  routingLog(`Default Planning fallback -> Routing to ${isPro ? 'Claude Pro (/plan:hard)' : '9Router API (/plan:hard)'}`);
   return formatCmd('/plan:hard', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ''), isHanBangMode ? '' : '--parallel');
 }
 
@@ -272,7 +363,7 @@ let checkSafety = async () => ({ status: 'SAFE', reason: 'no_guard' });
 try {
   const sg = require('./safety-guard');
   checkSafety = sg.checkSafety;
-} catch (e) { log(`WARN: safety-guard not found: ${e.message}`); }
+} catch (e) { log(`WARN: safety - guard not found: ${e.message} `); }
 
 // Task 11: Strategy Optimizer integration
 let optimizeStrategy = async (p) => p;
@@ -281,7 +372,7 @@ try {
   const so = require('./strategy-optimizer');
   optimizeStrategy = so.optimizeStrategy;
   classifyError = so.classifyError;
-} catch (e) { log(`WARN: strategy-optimizer not found: ${e.message}`); }
+} catch (e) { log(`WARN: strategy - optimizer not found: ${e.message} `); }
 
 /**
  * Full dispatch flow: safety check → detect project → build prompt → run via brain
@@ -297,15 +388,29 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
   // ═══ Task 8: Safety Gate ═══
   const safety = await checkSafety(taskContent);
   if (safety.status === 'UNSAFE') {
-    log(`🚫 BLOCKED BY SAFETY: ${taskFile} — ${safety.reason}`);
+    log(`🚫 BLOCKED BY SAFETY: ${taskFile} — ${safety.reason} `);
     return { success: false, result: 'unsafe_blocked', elapsed: 0 };
   }
   if (safety.status === 'NEEDS_CONFIRMATION') {
     log(`⚠️ SAFETY CAUTION: ${taskFile} — ${safety.reason} (proceeding in CTO auto mode)`);
   }
 
-  const projectDir = detectProjectDir(taskContent);
-  const prompt = buildPrompt(taskContent);
+  const projectDir = detectProjectDir(taskContent, taskFile);
+  const lowerContent = taskContent.toLowerCase();
+
+  // 🦞 HYBRID BRAIN: Force PLAN intent for Deep 10x tasks to hit Claude Pro
+  // UNLESS Pro is hit, then let it stay in default intent for 9Router fallback
+  let intent = detectIntent(taskContent);
+  const isPro = isProAvailable();
+
+  if ((lowerContent.includes('deep 10x') || lowerContent.includes('deep scan') || lowerContent.includes('ánh xạ')) && isPro) {
+    intent = 'PLAN';
+  }
+
+  let prompt = buildPrompt(taskContent, projectDir);
+
+  // 🧬 BRAIN SURGERY: Well-specific strategic mandates (REMOVED - Simplified)
+
   const finalTimeout = timeoutMs || (isTeamMission(prompt) ? config.AGENT_TEAM_TIMEOUT_MS : config.MISSION_TIMEOUT_MS);
   const mode = isTeamMission(prompt) ? 'AGENT_TEAM' : 'SINGLE';
 
@@ -319,28 +424,28 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
     log(`🔥 OPUS ACTIVATED: ${modelOverride} — Complex mission requires Ultra power`);
   }
 
-  log(`PROMPT [${mode}]: ${prompt.slice(0, 150)}... [timeout=${Math.round(finalTimeout / 60000)}min] [model=${modelOverride || config.MODEL_NAME}]`);
+  log(`PROMPT[${mode}]: ${prompt.slice(0, 150)}...[timeout = ${Math.round(finalTimeout / 60000)}min][model = ${modelOverride || config.MODEL_NAME}]`);
 
   // ═══ Task 12: Retry-with-hints loop ═══
   let currentPrompt = prompt;
   const MAX_RETRIES = 2;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const result = await runMission(currentPrompt, projectDir, finalTimeout, modelOverride);
+    const result = await runMission(currentPrompt, projectDir, finalTimeout, modelOverride, complexity, intent);
 
     if (result.success || result.result === 'success') {
       if (modelOverride) {
-        log(`🔥→🌲 Opus mission done — switching back to ${config.MODEL_NAME}`);
+        log(`🔥→🌲 Opus mission done — switching back to ${config.MODEL_NAME} `);
       }
 
       // 🦞 FIX 2026-02-23: DISABLED 100x DEEP PIPELINE auto-chain
       // ClaudeKit workflow: /plan:hard → REVIEW plan → /cook <plan_dir>
       // CTO must NOT auto-cook immediately. Let Auto-CTO discover plan.md in next scan cycle.
       if (/^\/(plan:|bootstrap)/.test(currentPrompt)) {
-        log(`[PLAN-FIRST] Planning complete. Plan saved. Waiting for review before /cook.`);
+        log(`[PLAN - FIRST] Planning complete.Plan saved.Waiting for review before / cook.`);
         try {
           const execSync = require('child_process').execSync;
-          const lsCmdPlans = `ls -t "${projectDir}/plans"/*/plan.md 2>/dev/null | head -n 1`;
+          const lsCmdPlans = `ls - t "${projectDir}/plans"/*/plan.md 2>/dev/null | head -n 1`;
           let latestPlan = '';
           try { latestPlan = execSync(lsCmdPlans, { encoding: 'utf8' }).trim(); } catch (e) { }
           if (latestPlan) {

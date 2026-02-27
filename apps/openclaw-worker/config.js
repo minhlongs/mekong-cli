@@ -32,29 +32,28 @@ const config = {
   STATE_FILE: path.join(MEKONG_DIR, 'tasks', '.tom_hum_state.json'),
   API_RATE_GATE_MS: 0, // 🛡️ PROXY_RULES §4: Nuclear Speed — AG Ultra UNLIMITED, zero gap
   // 🔒 LOCKED — DO NOT CHANGE (2026-02-15) — Port must match running anthropic-adapter.js
-  // 🦞 LOBSTER PILOT v1.0: Route through ADAPTER (11436)
-  PROXY_PORT: process.env.PROXY_PORT ? parseInt(process.env.PROXY_PORT) : 11436,
+  // 🦞 LOBSTER PILOT v1.0: Route through ADAPTER (20128)
+  // 🦞 HYBRID BRAIN v2.0: Route CC CLI through BRIDGE (20129) -> ADAPTER (20128)
+  PROXY_PORT: process.env.PROXY_PORT ? parseInt(process.env.PROXY_PORT) : 20129,
   // Anthropic Adapter (translates /v1/messages → dual AG Proxy rotation)
   // 🦞 LOBSTER: Cân bằng tải 2 acc Ultra qua adapter
-  CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://127.0.0.1:11436',
+  CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128',
   QWEN_PROXY_PORT: 8081, // Qwen/VLLM dedicated port
-  MODEL_NAME: process.env.MODEL_NAME || 'claude-sonnet-4-6-20250514', // Sonnet 4.6 via Antigravity Proxy (升級 2026-02-18)
-  // 虛實 Binh Phap Model Hierarchy — tiết kiệm, không lãng phí
-  // 🌪️GIÓ (Simple) → qwen3-coder-next (fast, cheap)
-  // 🌲RỪNG (Medium) → qwen3-coder-next (balanced)
-  // 🔥LỬA (Complex) → claude-opus-4-5-20250514 via cashback Ultra (only when truly needed)
-  OPUS_MODEL: 'claude-opus-4-6-20250514', // ACC cashback Ultra — CẤM lạm dụng (升級 4.6)
+  MODEL_NAME: process.env.MODEL_NAME || 'claude-sonnet-4-6-20250514', // v2026.2.27: Model 4.6
+  // 虛實 Binh Phap Model Hierarchy
+  // 🔥LỬA (Complex) → claude-opus-4-5-20250514
+  OPUS_MODEL: 'claude-opus-4-5-20250514', // v2026.2.27: Model 4.5
   USE_GH_MODELS: false,
-  GH_MODEL_NAME: 'deepseek-coder-v2',
-  WORKER_MODEL_NAME: 'deepseek-coder-v2', // "Strongest" Local Model
+  GH_MODEL_NAME: 'claude-sonnet-4-6-20250514',
+  WORKER_MODEL_NAME: 'claude-sonnet-4-6-20250514', // "Strongest" Local Model
   FALLBACK_MODEL_NAME: 'gemini-3-flash', // v2026.2.15: Aligned with PROXY_RULES.md (gemini-3-flash)
   QWEN_MODEL_NAME: process.env.QWEN_MODEL_NAME || 'qwen3-coder-next',
-  // Engine selection: 'antigravity' (default, port 11436) or 'qwen' (port 8081)
-  // 🔒 LOCKED — 'antigravity' uses port 11436 → upstream AG 9191 + Google fallback
+  // Engine selection: 'antigravity' (default, port 20128) or 'qwen' (port 8081)
+  // 🔒 LOCKED — 'antigravity' uses port 20128 → upstream AG 9191 + Google fallback
   ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
   // 🎯 FOCUSED DELIVERY MODE — algo-trader focus (Feb 22 2026)
   // Previous: ['doanh-trai-tom-hum', '84tea', 'anima119', 'wellnexus', 'apex-os', 'sophia-ai-factory', 'agencyos-web'],
-  PROJECTS: ['well'],
+  PROJECTS: ['well', 'wellnexus'],
 
   // Self-Healer (v2026.2.13)
   HEALTH_CHECK_INTERVAL_MS: 30_000,
@@ -66,10 +65,15 @@ const config = {
   // ANTIGRAVITY GOD MODE
   ANTIGRAVITY_KEY: 'GOD_MODE_ACTIVE',
   FULL_CLI_MODE: true, // P0 IS CC CLI — no monitor pane
+  // 🦞 1-Tmux Multiplexer Mode (Feb 2026)
+  // 1 Session (`tom_hum`), 2 Windows (`pro` and `api`)
+  TMUX_SESSION: 'tom_hum',
+  WINDOW_PRO: 'pro',
+  WINDOW_API: 'api',
 
   // Agent Team orchestration
-  AGENT_TEAM_SIZE_DEFAULT: 1, // 1 tmux pane — đa luồng qua --parallel flag BÊN TRONG CC CLI (Task tool subagents)
-  MAX_CONCURRENT_MISSIONS: 4, // 4 workers can run parallel missions
+  AGENT_TEAM_SIZE_DEFAULT: 1, // 1 worker per window
+  MAX_CONCURRENT_MISSIONS: 1, // 1 worker processing dynamically
   AGENT_TEAM_TIMEOUT_MS: 4 * 60 * 60 * 1000, // 4 hours for deep missions
 
   // Complexity classification keywords
