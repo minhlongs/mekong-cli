@@ -18,15 +18,22 @@ app = Flask(__name__)
 
 # --- CONFIG ---
 PORT = 8081
-API_KEYS = [
-    "sk-6219c93290f14b32b047342ca8b0bea9",
-    "sk-c397f4b713e6400e96c18e8c07ffeaef",
+
+# Load keys from env first (comma-separated), fallback to hardcoded (may be expired)
+_env_keys = [k.strip() for k in os.environ.get("DASHSCOPE_API_KEYS", "").split(",") if k.strip()]
+_single_key = os.environ.get("DASHSCOPE_API_KEY", "").strip()
+if _single_key and _single_key not in _env_keys:
+    _env_keys.append(_single_key)
+
+# Hardcoded keys as fallback — update when rotating keys
+_HARDCODED_KEYS = [
+    "sk-4d2965a589ca4d9da2ea05e4bd200d97",  # minhlong.rice@gmail.com (2026-02-27)
 ]
 
-# Merge any env key into the pool if it's not already there
-env_key = os.environ.get("DASHSCOPE_API_KEY")
-if env_key and env_key not in API_KEYS:
-    API_KEYS.append(env_key)
+API_KEYS = _env_keys if _env_keys else _HARDCODED_KEYS
+if not _env_keys:
+    print("⚠️  WARNING: No DASHSCOPE_API_KEYS env var — using expired hardcoded keys!")
+    print("⚠️  Set DASHSCOPE_API_KEYS=key1,key2 or DASHSCOPE_API_KEY=key")
 
 DASHSCOPE_BASE_URL = (
     "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"

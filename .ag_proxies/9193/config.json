@@ -1,0 +1,5 @@
+{
+    "accountConfigPath": "./accounts.json",
+    "logLevel": "info",
+    "debug": true
+}
