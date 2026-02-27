@@ -1,7 +1,8 @@
 {
   "lastRebalance": null,
   "projectScores": {
-    "well": 1
+    "well": 0,
+    "wellnexus": 0
   },
   "crossProjectFixes": [],
   "portfolioSnapshot": null,

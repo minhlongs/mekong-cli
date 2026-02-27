@@ -1,0 +1,134 @@
+{
+  "rules": [
+    "AVOID: /test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW — 29% success (2/7)",
+    "AVOID: /cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW — 0% success (0/3)",
+    "AVOID: /plan:parallel \"Trả lời bằng TIẾNG VIỆT. — 0% success (0/3)",
+    "AVOID: /plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI — 0% success (0/3)",
+    "AVOID: /cook \"Trả lời bằng TIẾNG VIỆT. 📜 BINH  — 0% success (0/3)",
+    "AVOID: /plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF — 25% success (1/4)",
+    "DEPRIORITIZE: /test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW — 0 changes 3x in a row",
+    "AVOID: /plan:hard \"Trả lời bằng TIẾNG VIỆT. WOR — 0% success (0/3)",
+    "AVOID: /cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook — 0% success (0/3)",
+    "AVOID: /debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo — 0% success (0/3)"
+  ],
+  "patterns": {
+    "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
+      "runs": 79,
+      "successes": 8,
+      "rate": 10,
+      "avgTime": 93,
+      "totalTime": 7316,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T18:46:05.712Z"
+    },
+    "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
+      "runs": 8,
+      "successes": 3,
+      "rate": 38,
+      "avgTime": 103,
+      "totalTime": 824,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T16:54:32.841Z"
+    },
+    "/plan:parallel \"Trả lời bằng TIẾNG VIỆT.": {
+      "runs": 18,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 92,
+      "totalTime": 1656,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T01:32:26.583Z"
+    },
+    "/debug \"Trả lời bằng TIẾNG VIỆT. WORKFLO": {
+      "runs": 1,
+      "successes": 1,
+      "rate": 100,
+      "avgTime": 60,
+      "totalTime": 60,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T06:28:06.256Z"
+    },
+    "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI": {
+      "runs": 24,
+      "successes": 2,
+      "rate": 8,
+      "avgTime": 84,
+      "totalTime": 2026,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T09:05:06.613Z"
+    },
+    "/cook \"Trả lời bằng TIẾNG VIỆT. 📜 BINH ": {
+      "runs": 5,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 86,
+      "totalTime": 432,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T07:19:22.145Z"
+    },
+    "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF": {
+      "runs": 9,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 119,
+      "totalTime": 1067,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T17:41:54.106Z"
+    },
+    "/plan:hard \"Trả lời bằng TIẾNG VIỆT. WOR": {
+      "runs": 9,
+      "successes": 2,
+      "rate": 22,
+      "avgTime": 89,
+      "totalTime": 797,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T12:19:30.339Z"
+    },
+    "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
+      "runs": 38,
+      "successes": 3,
+      "rate": 8,
+      "avgTime": 87,
+      "totalTime": 3299,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T13:36:31.191Z"
+    },
+    "/test \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
+      "runs": 2,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 85,
+      "totalTime": 170,
+      "filesChanged": 0,
+      "lastRun": "2026-02-26T19:02:37.011Z"
+    },
+    "/debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo": {
+      "runs": 5,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 86,
+      "totalTime": 428,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T08:29:43.523Z"
+    },
+    "/plan:hard \"verify flywheel architecture": {
+      "runs": 1,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 85,
+      "totalTime": 85,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T01:29:25.299Z"
+    },
+    "/cook \"add test.txt with hello world\"": {
+      "runs": 1,
+      "successes": 0,
+      "rate": 0,
+      "avgTime": 85,
+      "totalTime": 85,
+      "filesChanged": 0,
+      "lastRun": "2026-02-27T01:30:51.813Z"
+    }
+  },
+  "updatedAt": "2026-02-27T13:39:29.630Z"
+}

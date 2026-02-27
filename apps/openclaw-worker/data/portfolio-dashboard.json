@@ -1,20 +1,31 @@
 {
-  "timestamp": "2026-02-25T02:59:03.911Z",
+  "timestamp": "2026-02-27T13:39:29.659Z",
   "agiLevel": 7,
-  "evolutionScore": 28,
-  "totalProjects": 1,
-  "healthyProjects": 1,
+  "evolutionScore": 23,
+  "totalProjects": 2,
+  "healthyProjects": 2,
   "needsAttention": 0,
   "projects": [
     {
       "project": "well",
-      "score": 1,
+      "score": 0,
+      "errorCount": 0,
+      "basePriority": 2,
+      "stalenessFactor": 0,
+      "successRate": 15,
+      "lastMission": "2026-02-27T13:35:23.744Z",
+      "missionCount": 73,
+      "health": {}
+    },
+    {
+      "project": "wellnexus",
+      "score": 0,
       "errorCount": 0,
       "basePriority": 1,
-      "stalenessFactor": 0.4,
-      "successRate": 13,
-      "lastMission": "2026-02-25T01:29:23.558Z",
-      "missionCount": 8,
+      "stalenessFactor": 0,
+      "successRate": 8,
+      "lastMission": "2026-02-27T13:36:47.364Z",
+      "missionCount": 13,
       "health": {}
     }
   ],

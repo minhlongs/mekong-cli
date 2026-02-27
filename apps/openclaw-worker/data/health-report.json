@@ -1,1 +1,56 @@
-[]
+[
+  {
+    "project": "well",
+    "timestamp": "2026-02-27T13:39:05.750Z",
+    "build": "GREEN",
+    "techDebt": {
+      "todos": 76,
+      "consoleLogs": 781
+    },
+    "gitStatus": "DIRTY",
+    "recommendations": [
+      {
+        "title": "Dọn dẹp trạng thái Git và Chốt phiên bản",
+        "priority": "HIGH",
+        "reason": "Trạng thái Git đang là DIRTY, điều này cực kỳ rủi ro vì các thay đổi chưa được lưu vết có thể dẫn đến mất mát mã nguồn hoặc xung đột nghiêm trọng. Cần commit hoặc stash các thay đổi ngay lập tức."
+      },
+      {
+        "title": "Tối ưu hóa hệ thống Logging",
+        "priority": "HIGH",
+        "reason": "781 Console Logs là một con số báo động. Việc lạm dụng log gây nhiễu quá trình debug, làm giảm hiệu năng ứng dụng và có thể rò rỉ thông tin nhạy cảm. Cần thay thế bằng một thư viện quản lý log chuyên nghiệp."
+      },
+      {
+        "title": "Xử lý nợ kỹ thuật (Technical Debt)",
+        "priority": "MEDIUM",
+        "reason": "Mặc dù Build đang GREEN, nhưng 76 TODOs cho thấy dự án đang tích tụ lượng lớn nợ kỹ thuật. Cần phân loại và giải quyết các ghi chú này để đảm bảo khả năng mở rộng và bảo trì trong tương lai."
+      }
+    ]
+  },
+  {
+    "project": "wellnexus",
+    "timestamp": "2026-02-27T13:39:38.270Z",
+    "build": "GREEN",
+    "techDebt": {
+      "todos": 14,
+      "consoleLogs": 0
+    },
+    "gitStatus": "DIRTY",
+    "recommendations": [
+      {
+        "title": "Kiểm soát và Commit các thay đổi Git",
+        "priority": "HIGH",
+        "reason": "Trạng thái Git hiện tại là DIRTY, điều này tiềm ẩn rủi ro mất mát dữ liệu và gây khó khăn cho việc cộng tác. Cần rà soát và commit các thay đổi để đảm bảo tính nhất quán của mã nguồn."
+      },
+      {
+        "title": "Giải quyết nợ kỹ thuật (14 TODOs)",
+        "priority": "MEDIUM",
+        "reason": "Dự án hiện có 14 mục TODO. Việc xử lý các ghi chú này sẽ giúp cải thiện chất lượng code, hoàn thiện các tính năng còn dang dở và tránh tích tụ nợ kỹ thuật về lâu dài."
+      },
+      {
+        "title": "Thiết lập quy trình kiểm thử và duy trì Build ổn định",
+        "priority": "MEDIUM",
+        "reason": "Mặc dù Build đang GREEN và không có Console Logs, cần tận dụng trạng thái ổn định này để triển khai thêm các bài kiểm thử tự động (Unit/Integration Tests) nhằm bảo vệ thành quả khi xử lý các TODO."
+      }
+    ]
+  }
+]
