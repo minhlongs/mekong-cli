@@ -1,12 +1,15 @@
-import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
+import { defineConfig } from 'vitest/config';
 
-export default defineWorkersConfig({
+export default defineConfig({
     test: {
-        poolOptions: {
-            workers: {
-                wrangler: { configPath: './wrangler.jsonc' },
-            },
-        },
-        exclude: ['**/node_modules/**', '**/.claude/**', '**/dist/**', '**/.git/**'],
+        // Node-based tests: daemon logic using child_process, fs, module
+        include: ['test/**/*.{test,spec}.{js,ts}'],
+        exclude: [
+            '**/node_modules/**', '**/.claude/**', '**/dist/**',
+            '**/.git/**', '**/plans/**',
+            // Exclude Workers-specific tests (run in vitest.workers.config.ts)
+            'test/test-exec.test.ts',
+            'test/string-calculator.test.ts',
+        ],
     },
 });

@@ -75,8 +75,8 @@ function runAppleScriptFile(script) {
 function spawnBrain() {
     log('BRAIN MODE: Terminal.app — CC CLI interactive in native macOS Terminal');
 
-    const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:11436';
-    const proxyPort = new URL(proxyUrl).port || '11436';
+    const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
+    const proxyPort = new URL(proxyUrl).port || '20128';
     const configDir = `/Users/macbookprom1/.claude_antigravity_${proxyPort}`;
 
     // Build the CC CLI command

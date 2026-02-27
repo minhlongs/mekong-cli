@@ -28,9 +28,9 @@ function log(msg) {
 
 const THERMAL_LOG = config.THERMAL_LOG || '/Users/macbookprom1/tom_hum_thermal.log';
 const OVERHEAT_LOAD = 30;    // 🔒 Chairman Fix: M1 load 12 is NORMAL, stop false pauses
-const OVERHEAT_RAM_MB = 100;  // Lower threshold — 16GB Mac can handle it
+const OVERHEAT_RAM_MB = 30;   // Lower threshold — macOS aggressively caches, 30MB is the true floor
 const SAFE_LOAD = 20;        // Resume at 20 — was blocking at 10 causing STALL loops
-const SAFE_RAM_MB = 300;     // Safe resume level
+const SAFE_RAM_MB = 100;     // Safe resume level
 const CRITICAL_LOAD = 40;    // Nuclear intervention
 const PROPORTIONAL_DELAY_MS = 2000; // 2s per load point (v4: faster feedback)
 const COHERENCE_PENALTY_FACTOR = 1000; // 1s per subagent (v4: balanced)
@@ -77,6 +77,24 @@ function getSubagentCount() {
   } catch (e) { return 0; }
 }
 
+function getPowerSource() {
+  try {
+    const raw = execSync('pmset -g batt 2>/dev/null', { encoding: 'utf-8', timeout: 5000 });
+    const isAC = raw.includes("AC Power") || raw.includes("AC attached");
+    const match = raw.match(/(\d+)%/);
+    const pct = match ? parseInt(match[1]) : -1;
+    return { source: isAC ? 'AC' : 'BATTERY', pct };
+  } catch (e) { return { source: 'UNKNOWN', pct: -1 }; }
+}
+
+function getSwapUsage() {
+  try {
+    const raw = execSync('sysctl -n vm.swapusage 2>/dev/null', { encoding: 'utf-8', timeout: 5000 });
+    const match = raw.match(/used\s+=\s+([\d.]+)M/);
+    return match ? parseFloat(match[1]) : 0;
+  } catch (e) { return 0; }
+}
+
 // --- Thermal logging (every 30s) ---
 
 function logThermalStatus() {
@@ -84,8 +102,10 @@ function logThermalStatus() {
   const freeMB = getFreeRAM();
   const thermal = hasThermalWarning();
   const subagents = getSubagentCount();
+  const power = getPowerSource();
+  const swap = getSwapUsage();
   const emoji = overheating ? '🔴' : load1 > OVERHEAT_LOAD ? '🟡' : '🟢';
-  const line = `[${new Date().toISOString()}] ${emoji} load=${load1} subagents=${subagents} ram=${freeMB}MB thermal=${thermal} paused=${overheating}\n`;
+  const line = `[${new Date().toISOString()}] ${emoji} load=${load1} subagents=${subagents} ram=${freeMB}MB swap=${swap}M pwr=${power.source}(${power.pct}%) thermal=${thermal} paused=${overheating}\n`;
   try { fs.appendFileSync(THERMAL_LOG, line); } catch (e) { }
 }
 
@@ -175,15 +195,25 @@ function checkOverheatStatus() {
   lastLoadTime = now;
 
   const subagents = getSubagentCount();
+  const power = getPowerSource();
   // 🔒 Chairman Fix v2: velocity only triggers overheat IF load is also above SAFE threshold
   const velocityOverheat = velocity > VELOCITY_THRESHOLD && load1 > SAFE_LOAD;
-  const isOverheated = load1 > OVERHEAT_LOAD || (freeMB >= 0 && freeMB < OVERHEAT_RAM_MB) || thermal || velocityOverheat || subagents > (config.AGENT_TEAM_SIZE_DEFAULT * 4);
-  const isSafe = load1 < SAFE_LOAD && (freeMB < 0 || freeMB > SAFE_RAM_MB) && velocity < 0.2 && subagents <= config.AGENT_TEAM_SIZE_DEFAULT;
+  // 🦞 Battery Safety: If on battery and load > 10, trigger overheating to protect cell health & prevent shutdown
+  const batteryRisk = power.source === 'BATTERY' && load1 > 10;
+
+  // 🦞 FIX 2026-02-26: Prevent false overheating stall when load is 0 but RAM is temporarily low
+  const ramCritical = (freeMB >= 0 && freeMB < OVERHEAT_RAM_MB);
+  // If we have literally 0 load and 0 subagents, memory compression is likely fine down to 50MB, don't stall.
+  const isTrulyOverheated = load1 > OVERHEAT_LOAD || (ramCritical && (subagents > 0 || load1 > 1.5 || freeMB < 50)) || thermal || velocityOverheat || subagents > (config.AGENT_TEAM_SIZE_DEFAULT * 4) || batteryRisk;
+
+  // Let it cool down much more easily if load is 0 and subagents is 0 (even if RAM is still slightly under OVERHEAT limit)
+  const isSafe = (load1 < SAFE_LOAD && velocity < 0.2 && subagents <= config.AGENT_TEAM_SIZE_DEFAULT) && (freeMB < 0 || freeMB >= 80 || (load1 === 0 && subagents === 0));
 
   // Hysteresis: only change state at clear thresholds
-  if (isOverheated && !overheating) {
+  if (isTrulyOverheated && !overheating) {
     overheating = true;
-    log(`OVERHEAT DETECTED — Load: ${load1} | Velocity: ${velocity.toFixed(2)} | Subagents: ${subagents} | RAM: ${freeMB}MB — PAUSING DISPATCH`);
+    const reason = batteryRisk ? 'BATTERY PROTECTION' : load1 > OVERHEAT_LOAD ? 'LOAD' : velocityOverheat ? 'VELOCITY' : thermal ? 'THERMAL HW' : 'RAM/SUBAGENTS';
+    log(`OVERHEAT DETECTED (${reason}) — Load: ${load1} | Velocity: ${velocity.toFixed(2)} | Subagents: ${subagents} | RAM: ${freeMB}MB | Pwr: ${power.source} — PAUSING DISPATCH`);
     killResourceHogs();
     purgeSystemCaches();
   } else if (isSafe && overheating) {

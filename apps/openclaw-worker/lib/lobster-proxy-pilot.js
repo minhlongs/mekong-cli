@@ -25,7 +25,8 @@ const config = require('../config');
 const { log } = require('./brain-process-manager'); // Use common logger
 
 // --- Configuration ---
-const CHECK_INTERVAL_MS = 60000; // Check every 1 minute
+const CHECK_INTERVAL_MS = 120000; // Increase to 2 minutes to reduce flapping
+const HEALTH_TIMEOUT_MS = 10000;  // 10s timeout for health check
 const PROXIES = [
   { port: 9191, name: 'Billwill (Ultra)', dir: path.join(process.env.HOME, '.antigravity_9191_proxy') },
   { port: 9192, name: 'Cashback (Ultra)', dir: path.join(process.env.HOME, '.antigravity_9192_proxy') }
@@ -48,7 +49,7 @@ function getProcessId(port) {
 
 function checkHealth(proxy) {
   try {
-    execSync(`curl -sf http://localhost:${proxy.port}/health`, { timeout: 3000, stdio: 'pipe' });
+    execSync(`curl -sf http://localhost:${proxy.port}/health`, { timeout: HEALTH_TIMEOUT_MS, stdio: 'pipe' });
     return true;
   } catch (e) {
     return false;
@@ -57,11 +58,11 @@ function checkHealth(proxy) {
 
 function restartProxy(proxy) {
   log(`🦞 [Lobster Pilot]: Restarting ${proxy.name} on port ${proxy.port}...`);
-  
+
   // Kill existing
   const pid = getProcessId(proxy.port);
   if (pid) {
-    try { process.kill(pid, 'SIGKILL'); } catch (e) {}
+    try { process.kill(pid, 'SIGKILL'); } catch (e) { }
   }
 
   // Start new
@@ -69,10 +70,10 @@ function restartProxy(proxy) {
     const logFile = path.join(proxy.dir, `${proxy.port}.log`);
     const out = fs.openSync(logFile, 'a');
     const err = fs.openSync(logFile, 'a');
-    
+
     // Ensure PORT env var is set
     const env = { ...process.env, PORT: String(proxy.port) };
-    
+
     const child = spawn('/opt/homebrew/bin/antigravity-claude-proxy', ['start'], {
       cwd: proxy.dir,
       env,
@@ -92,17 +93,17 @@ function extractTokensFromDB() {
     // 1. Unified Token (The "Mã Hoá" one)
     const cmd = `sqlite3 "${VSC_DB_PATH}" "SELECT value FROM ItemTable WHERE key = 'antigravityUnifiedStateSync.oauthToken';"`;
     const output = execSync(cmd, { encoding: 'utf-8' }).trim();
-    
+
     // In a real 10x smart implementation, we would decode this.
     // However, since we are mimicking the manual fix:
     // If we find a fresh refresh token in the standard locations, we grab it.
-    
+
     // For now, let's assume if 9192 fails, we might need to "refresh" via the 9191 DB path tactic 
     // OR just restart 9191 (since it uses the DB directly).
-    
+
     // The TRICK: 9192 uses a static JSON with a refresh token. 
     // If that token dies, we need to find the NEW one from the DB (if the user logged in there).
-    
+
     // 🧠 HEURISTIC: Just restarting often fixes "stuck" proxies. 
     // If persistent 401, we alert the Chairman for now (Phase 1).
     // Phase 2 (True Smart): Implement the AES decryption if keys are available.
@@ -117,25 +118,25 @@ function extractTokensFromDB() {
 
 function startLobsterPilot() {
   if (intervalRef) return;
-  
+
   log('🦞 [Lobster Pilot]: Guardian Online. Watching ports 9191 & 9192.');
-  
+
   intervalRef = setInterval(() => {
     PROXIES.forEach(proxy => {
       const isHealthy = checkHealth(proxy);
       if (!isHealthy) {
         log(`🦞 [Lobster Pilot]: ⚠️ ${proxy.name} is UNHEALTHY/DEAD.`);
         restartProxy(proxy);
-        
+
         // Wait and check again
         setTimeout(() => {
-            if (checkHealth(proxy)) {
-                log(`🦞 [Lobster Pilot]: ✅ ${proxy.name} recovered successfully.`);
-            } else {
-                log(`🦞 [Lobster Pilot]: ❌ ${proxy.name} still dead after restart.`);
-                // Here we would trigger the 'Deep Smart' recovery logic
-                // e.g., extractTokensFromDB();
-            }
+          if (checkHealth(proxy)) {
+            log(`🦞 [Lobster Pilot]: ✅ ${proxy.name} recovered successfully.`);
+          } else {
+            log(`🦞 [Lobster Pilot]: ❌ ${proxy.name} still dead after restart.`);
+            // Here we would trigger the 'Deep Smart' recovery logic
+            // e.g., extractTokensFromDB();
+          }
         }, 5000);
       }
     });

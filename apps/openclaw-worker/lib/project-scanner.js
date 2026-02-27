@@ -65,7 +65,7 @@ TODOs: ${stats.techDebt.todos}
 Console Logs: ${stats.techDebt.consoleLogs}
 Git Status: ${stats.gitStatus}`;
 
-    const response = await fetch(`${config.CLOUD_BRAIN_URL}/v1/chat/completions`, {
+    const response = await fetch(`http://127.0.0.1:11436/v1/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -80,7 +80,8 @@ Git Status: ${stats.gitStatus}`;
 
     if (response.ok) {
       const data = await response.json();
-      const content = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+      let content = data.choices[0].message.content || '';
+      content = content.replace(/<thought>[\s\S]*?<\/thought>/g, '').replace(/```json\n?/g, '').replace(/```/g, '').trim();
       const analysis = JSON.parse(content);
       stats.recommendations = analysis.missions;
     }

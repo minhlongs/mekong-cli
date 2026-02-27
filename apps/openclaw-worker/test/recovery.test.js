@@ -21,7 +21,7 @@ describe('Brain Headless Recovery (Fresh CC CLI Instance)', () => {
     // This is more reliable than mocking the module since config.js reads process.env
     vi.stubEnv('MODEL_NAME', 'gemini-3-flash-preview');
     vi.stubEnv('TOM_HUM_LOG', '/dev/null');
-    vi.stubEnv('PROXY_PORT', '11436');
+    vi.stubEnv('PROXY_PORT', '20128');
     vi.stubEnv('TOM_HUM_ENGINE', 'antigravity');
 
     // Create a spy on child_process.spawn

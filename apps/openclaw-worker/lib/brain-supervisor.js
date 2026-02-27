@@ -36,7 +36,7 @@ const COOLDOWNS = {
     surgery: 2 * 60 * 60 * 1000, // 2h between brain surgeries
 };
 
-const TMUX_SESSION = 'tom_hum_brain';
+const TMUX_SESSION = `${config.TMUX_SESSION}:brain`;
 const CTO_STATE_FILE = path.join(config.MEKONG_DIR, 'tasks', '.tom_hum_state.json');
 
 // --- State ---
@@ -78,17 +78,21 @@ function parseContextPercent(paneOutput) {
 }
 
 /**
- * Capture tmux pane output (last 30 lines)
+ * Capture tmux pane output (last 30 lines) combining both Pro (0) and API (1) panes
  */
 function capturePaneOutput() {
-    try {
-        return execSync(
-            `tmux capture-pane -t ${TMUX_SESSION} -p -S -30 2>/dev/null`,
-            { encoding: 'utf-8', timeout: 5000 }
-        );
-    } catch (e) {
-        return '';
+    let output = '';
+    for (let paneIdx = 0; paneIdx < 2; paneIdx++) {
+        try {
+            output += execSync(
+                `tmux capture-pane -t ${TMUX_SESSION}.${paneIdx} -p -S -30 2>/dev/null`,
+                { encoding: 'utf-8', timeout: 5000 }
+            ) + '\n';
+        } catch (e) {
+            // pane might not exist
+        }
     }
+    return output;
 }
 
 /**

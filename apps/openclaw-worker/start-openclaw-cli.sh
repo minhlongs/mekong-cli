@@ -6,7 +6,7 @@ unset CLAUDECODE
 
 cd "$(dirname "$0")"
 
-ANTHROPIC_BASE_URL=http://127.0.0.1:11436 \
+ANTHROPIC_BASE_URL=http://127.0.0.1:20128 \
   claude \
   --model claude-sonnet-4-6-20250514 \
   --mcp-config /Users/macbookprom1/mekong-cli/.claude/mcp.json \

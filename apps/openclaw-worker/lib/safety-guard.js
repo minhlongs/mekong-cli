@@ -158,7 +158,8 @@ async function checkSafety(content) {
         }
 
         const data = await response.json();
-        const answer = (data?.choices?.[0]?.message?.content || '').trim();
+        let content = data?.choices?.[0]?.message?.content || '';
+        const answer = content.replace(/<thought>[\s\S]*?<\/thought>/g, '').trim();
 
         if (answer.startsWith('UNSAFE')) {
             log(`🚫 SAFETY AI: ${answer}`);
