@@ -15,6 +15,7 @@ const { log } = require('./brain-logger');
 const HASH_INTERVAL_MS = 60_000;
 const STAGNATION_THRESHOLD = 3;
 const KICKSTART_WAIT_MS = 30_000;
+const WATCHDOG_PANE = 1; // P1 = Executor (API) pane — must match target pane
 
 let hashHistory = [];
 let watchdogInterval = null;
@@ -28,7 +29,7 @@ async function checkOutputHash() {
   if (isKickstarting) return;
   try {
     const { capturePane } = require('./brain-tmux-controller');
-    const output = capturePane();
+    const output = capturePane(WATCHDOG_PANE);
     const hash = hashOutput(output);
     hashHistory.push(hash);
     if (hashHistory.length > STAGNATION_THRESHOLD) hashHistory.shift();
@@ -50,14 +51,14 @@ async function handleStagnation() {
   log('[HASH_WATCHDOG] Step 1: Sending kickstart newline');
   try {
     const { sendEnter } = require('./brain-tmux-controller');
-    sendEnter(0);
+    sendEnter(WATCHDOG_PANE);
   } catch (e) {
     log(`[HASH_WATCHDOG] Kickstart failed: ${e.message}`);
   }
   await new Promise(r => setTimeout(r, KICKSTART_WAIT_MS));
   try {
     const { capturePane } = require('./brain-tmux-controller');
-    const output = capturePane();
+    const output = capturePane(WATCHDOG_PANE);
     const newHash = hashOutput(output);
     if (hashHistory.length > 0 && newHash === hashHistory[0]) {
       log('[HASH_WATCHDOG] Step 2: Kickstart ineffective, triggering respawn');

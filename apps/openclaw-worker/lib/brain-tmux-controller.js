@@ -12,8 +12,8 @@ const fs = require('fs');
 const config = require('../config');
 const { log } = require('./brain-logger');
 
-const TMUX_SESSION_PRO = `${config.TMUX_SESSION}:brain`;
-const TMUX_SESSION_API = `${config.TMUX_SESSION}:brain`;
+const TMUX_SESSION_PRO = `${config.TMUX_SESSION}:brain.0`; // Pane 0: Claude Pro (Planner)
+const TMUX_SESSION_API = `${config.TMUX_SESSION}:brain.1`; // Pane 1: Gemini Proxy (Executor)
 
 // 🦞 OPTIMIZATION 2026-02-26: 5s → 1.5s (Sub-5s response mandate)
 const TMUX_MIN_GAP_MS = 1500;
