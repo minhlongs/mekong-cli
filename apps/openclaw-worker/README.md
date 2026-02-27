@@ -83,7 +83,7 @@ Edit `config.js`:
 MODEL_NAME: 'claude-3-5-sonnet-20241022',  // AI model
 MAX_CONCURRENT_MISSIONS: 3,                 // Parallel workers
 MISSION_TIMEOUT_MS: 15 * 60 * 1000,        // 15min per task
-CLOUD_BRAIN_URL: 'http://localhost:11436',  // Proxy URL
+CLOUD_BRAIN_URL: 'http://localhost:20128',  // Proxy URL
 ```
 
 ## 📋 Mission File Format

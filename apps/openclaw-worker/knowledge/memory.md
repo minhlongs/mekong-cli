@@ -11,56 +11,56 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
-| 2026-02-25 | strategic | HIGH_mission_strategic_tech_de | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_knowled | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_a11y_au | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_agi_evo | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_bmad_qu | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | fix | HIGH_mission_fix_well_fix_test | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | well | MEDIUM_mission_well_fix_test_1 | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_bmad_co | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-25 | well | MEDIUM_mission_well_fix_test_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_knowled | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_tech_de | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-25 | strategic | HIGH_mission_strategic_perf_au | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_knowled | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_perf_au | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_debug_e | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_bmad_co | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_knowled | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_agi_evo | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_type_sa | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_test_su | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | fix | HIGH_mission_fix_strategic_bin | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_binh_ph | Code worked but BUILD FAILED — check types/lint | ~800(est) | 200/min |
-| 2026-02-24 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_console | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_agi_evo | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_self_co | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | well | HIGH_mission_well_fix_build_17 | FAILED — Blocked by safety gate | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_bmad_re | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | deep10x | CRITICAL_deep10x_well_17719584 | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_self_co | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | strategic | HIGH_mission_strategic_securit | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | well | MEDIUM_mission_well_fix_test_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | 14 | CRITICAL_14_R4_Well_I18n_Missi | Clean success in 1min — good pattern | ~200(est) | 200/min |
-| 2026-02-24 | fix | HIGH_mission_fix_13_R4_Well_UI | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-24 | 00 | LOW_00_CTO_Test | FAILED — result=brain_died | ~0(est) | 0/min |
-| 2026-02-24 | 13 | CRITICAL_13_R4_Well_UI_Perform | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | 07 | CRITICAL_07_R4_Profile_Auth | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | 09 | CRITICAL_09_R4_Final_Sweep | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | 08 | CRITICAL_08_R4_Admin_Metrics | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | r4 | HIGH_r4_bug_hunt | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | implement | MEDIUM_implement_swarm_dispatc | FAILED — duplicate_rejected | ~0(est) | 0/min |
-| 2026-02-24 | swarm | MEDIUM_swarm_go_now | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
-| 2026-02-24 | evolution | CRITICAL_mission_evolution_sur | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
-| 2026-02-23 | unknown | MEDIUM_swarm_phase04go | FAILED — Max retries exhausted — task too complex or flaky | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-27 | well | MEDIUM_mission_well_fix_lint_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | plan | HIGH_mission_plan_cro_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | exec | HIGH_mission_exec_build_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | MEDIUM_mission_well_fix_test_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | Clean success in 1min — good pattern | ~200(est) | 200/min |
 
 ---
 
