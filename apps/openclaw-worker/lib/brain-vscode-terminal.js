@@ -48,8 +48,8 @@ function runAppleScriptFile(script) {
 
 // --- CC CLI config ---
 function getProxyConfig() {
-    const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:11436';
-    const proxyPort = new URL(proxyUrl).port || '11436';
+    const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
+    const proxyPort = new URL(proxyUrl).port || '20128';
     return {
         proxyUrl,
         configDir: `/Users/macbookprom1/.claude_antigravity_${proxyPort}`,

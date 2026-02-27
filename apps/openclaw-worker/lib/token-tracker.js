@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROXY_LOG = '/tmp/proxy_11436.log';
+const PROXY_LOG = '/tmp/proxy_20128.log';
 const USAGE_FILE = path.join(__dirname, '..', '.token-usage.json');
 const DAILY_BUDGET = 50000; // 🔒 Alert threshold
 
@@ -126,7 +126,7 @@ function shouldUseBudget() {
         }
 
         if (usage.tokens > (DAILY_BUDGET * 0.8)) {
-             console.log(`TOKEN_TRACKER: ⚠️ Warning: 80% of daily budget used (${usage.tokens}/${DAILY_BUDGET}).`);
+            console.log(`TOKEN_TRACKER: ⚠️ Warning: 80% of daily budget used (${usage.tokens}/${DAILY_BUDGET}).`);
         }
 
         return true;

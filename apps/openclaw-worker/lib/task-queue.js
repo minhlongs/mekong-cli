@@ -29,13 +29,14 @@ const queuedSet = new Set(); // 🔒 O(1) Lookup for queued items (Bug #2)
 const processingSet = new Set(); // 🔒 Track files being processed to prevent re-enqueue
 let pollIntervalRef = null;
 let watcher = null;
+let pollFailCount = 0; // 🦞 FIX BUG #7 2026-02-27: Track poll failures for recovery
 
 async function processQueue() {
   // 🧬 FIX Bug #3: Sort queue by priority before processing
   queue.sort((a, b) => getPriority(a) - getPriority(b));
 
-  // Allow up to MAX_CONCURRENT_MISSIONS parallel tasks
-  if (activeCount >= config.MAX_CONCURRENT_MISSIONS || queue.length === 0) return;
+  // 🥪 DUAL-STREAM FLYWHEEL: Allow 2 concurrent missions (P0 and P1)
+  if (activeCount >= 2 || queue.length === 0) return;
   activeCount++;
 
   // NOTE: Thermal gate removed here — brain-process-manager.runMission() handles it.
@@ -76,8 +77,8 @@ async function processQueue() {
     const missionIdEarly = taskFile.replace(/^.*?_auto_/, '').replace('.txt', '');
 
     // 🦞 FIX 2026-02-24: Handle CC CLI startup failures and queued message states
-    // These mean CTO sent the command but CC CLI didn't process it → needs longer cooldown
-    if (result && (result.result === 'failed_to_start' || result.result === 'queued_abort')) {
+    // 💣 FIX 2026-02-27: Handle Nuclear Liquidation (pro_limit_hit)
+    if (result && (result.result === 'failed_to_start' || result.result === 'queued_abort' || result.result === 'pro_limit_hit')) {
       const qaRetries = retryCounts.get(taskFile) || 0;
       if (qaRetries >= 3) {
         log(`${result.result.toUpperCase()}: ${taskFile} — max retries (3) exhausted. Archiving.`);
@@ -87,9 +88,10 @@ async function processQueue() {
         if (fs.existsSync(filePath)) fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));
       } else {
         retryCounts.set(taskFile, qaRetries + 1);
-        log(`${result.result.toUpperCase()}: ${taskFile} — CC CLI not ready. Waiting 2min then retry (${qaRetries + 1}/3).`);
+        const waitTime = result.result === 'pro_limit_hit' ? 30000 : 120000;
+        log(`${result.result.toUpperCase()}: ${taskFile} — CC CLI not ready or rotated. Waiting ${waitTime / 1000}s then retry (${qaRetries + 1}/3).`);
         queuedSet.add(taskFile);
-        await sleep(2 * 60 * 1000); // 2 minutes
+        await sleep(waitTime);
         queue.push(taskFile);
       }
     }
@@ -124,11 +126,8 @@ async function processQueue() {
       // 🧬 FIX: init buildResult with actual result reason, not 'not_run' for real failures
       const failReason = (result && !result.success) ? (result.result || 'unknown_failure') : 'not_run';
       let buildResult = { build: false, output: result && result.success ? 'not_run' : failReason };
-      // 🧬 FIX: Extract project name — strip priority prefix + 'mission' keyword + trailing identifiers
-      const stripped = taskFile.replace(/^(?:HIGH_|MEDIUM_|LOW_|CRITICAL_)/, '').replace(/^mission_/, '');
-      // Take first meaningful segment (before numeric IDs or known suffixes)
-      const segments = stripped.split('_');
-      const projectShortName = segments[0] && segments[0].length > 1 ? segments[0].replace(/-/g, '-') : (segments[1] || 'openclaw');
+      const projectIdMatch = taskFile.match(/mission_([^0-9_]+)/i);
+      const projectShortName = projectIdMatch ? projectIdMatch[1] : (segments[0] && segments[0].length > 1 ? segments[0] : (segments[1] || 'openclaw'));
       const projectDir = detectProjectDir(content);
       const missionId = taskFile.replace(/^.*?_auto_/, '').replace('.txt', '');
 
@@ -196,6 +195,19 @@ function enqueue(filename) {
   }
 }
 
+// 🦞 FIX BUG #7 2026-02-27: Recovery function for poll failures
+function restartWatcher() {
+  try {
+    if (watcher) { watcher.close(); watcher = null; }
+  } catch (e) { /* ignore */ }
+  try {
+    watcher = fs.watch(config.WATCH_DIR, (eventType, filename) => enqueue(filename));
+    log('[QUEUE] Watcher restarted successfully');
+  } catch (e) {
+    log(`[QUEUE] Failed to restart watcher: ${e.message}`);
+  }
+}
+
 function startWatching() {
   // Ensure processed dir exists
   if (!fs.existsSync(config.PROCESSED_DIR)) {
@@ -218,7 +230,15 @@ function startWatching() {
         log(`Poll found new: ${newTasks.join(', ')}`);
       }
       tasks.forEach(enqueue);
-    } catch (e) { }
+    } catch (e) {
+      log(`[QUEUE] Poll error (will retry): ${e.message}`);
+      pollFailCount = (pollFailCount || 0) + 1;
+      if (pollFailCount > 5) {
+        log('[QUEUE] CRITICAL: Poll failing repeatedly, restarting watcher');
+        pollFailCount = 0;
+        restartWatcher();
+      }
+    }
   }, config.POLL_INTERVAL_MS); // PROJECT FLASH: 1s Backup Poll
 }
 

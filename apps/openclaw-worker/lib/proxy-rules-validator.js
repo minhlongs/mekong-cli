@@ -10,7 +10,7 @@
 const config = require('../config');
 
 const RULES = {
-    PROXY_PORT: 11436,
+    PROXY_PORT: 20128,
     BANNED_IN_WORKERS: ['GOOGLE_KEYS'],
     ALLOWED_FALLBACK_MODELS: ['gemini-3-flash', 'gemini-3-pro-high'],
     MIN_GAP_MS: 0,

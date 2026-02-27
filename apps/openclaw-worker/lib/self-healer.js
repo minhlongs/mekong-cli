@@ -38,7 +38,7 @@ const MAX_CONSECUTIVE_FAILURES = 5;
 
 function isTmuxAlive() {
     try {
-        const result = execSync('tmux has-session -t tom_hum_brain 2>&1', { encoding: 'utf8', timeout: 5000 });
+        const result = execSync('tmux has-session -t tom_hum:brain 2>&1', { encoding: 'utf8', timeout: 5000 });
         return true;
     } catch (e) {
         return false;
@@ -47,7 +47,7 @@ function isTmuxAlive() {
 
 function isProxyAlive() {
     try {
-        const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:11436';
+        const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
         execSync(`curl -sf -m 3 ${proxyUrl}/health`, { timeout: 5000, stdio: 'pipe' });
         return true;
     } catch (e) {
@@ -56,27 +56,8 @@ function isProxyAlive() {
 }
 
 function restartProxy() {
-    log('🩺 Restarting Anthropic Adapter (port 11436)...');
-    try {
-        execSync('pkill -f "anthropic-adapter.js"', { timeout: 3000 }).toString();
-    } catch (e) { /* may not be running */ }
-
-    try {
-        const adapterPath = path.join(config.MEKONG_DIR, 'scripts', 'anthropic-adapter.js');
-        const logPath = '/tmp/adapter_11436.log';
-        const out = fs.openSync(logPath, 'a');
-        const err = fs.openSync(logPath, 'a');
-        const child = spawn('node', [adapterPath, '11436'], {
-            detached: true,
-            stdio: ['ignore', out, err],
-        });
-        child.unref();
-        log(`🩺 Adapter spawned (PID ${child.pid})`);
-        return true;
-    } catch (e) {
-        log(`🩺 ❌ Failed to restart adapter: ${e.message}`);
-        return false;
-    }
+    log('🩺 Proxy 20128 (9router) is external — skip auto-restart');
+    return false;
 }
 
 function isProcessStuck() {
@@ -141,7 +122,7 @@ function preFlightCheck() {
 
     // Check proxy
     if (!isProxyAlive()) {
-        issues.push('Proxy 11436 is down');
+        issues.push('Proxy 20128 is down');
         restartProxy();
     }
 
@@ -195,13 +176,8 @@ function healthCheck() {
 
     // Check 2: Proxy health
     if (!isProxyAlive()) {
-        log('🩺 Proxy 11436 DOWN — auto-restarting...');
-        const ok = restartProxy();
-        if (ok) {
-            sendTelegram('🩺 Self-Healer: Adapter 11436 auto-restarted');
-        } else {
-            sendTelegram('🚨 Self-Healer: Adapter 11436 FAILED to restart!');
-        }
+        log('🩺 Proxy 20128 DOWN — manual check required');
+        // const ok = restartProxy();
     }
 }
 
