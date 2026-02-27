@@ -4,16 +4,6 @@
     "project": "mekong-cli",
     "result": "failed_to_start",
     "success": false,
-    "elapsedSec": 87,
-    "summary": "",
-    "filesChanged": 0,
-    "timestamp": "2026-02-25T12:06:13.728Z"
-  },
-  {
-    "taskId": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW",
-    "project": "mekong-cli",
-    "result": "failed_to_start",
-    "success": false,
     "elapsedSec": 97,
     "summary": "",
     "filesChanged": 0,
@@ -2018,5 +2008,15 @@
     "summary": "",
     "filesChanged": 0,
     "timestamp": "2026-02-27T13:36:31.191Z"
+  },
+  {
+    "taskId": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook",
+    "project": "well",
+    "result": "done",
+    "success": true,
+    "elapsedSec": 64,
+    "summary": "",
+    "filesChanged": 0,
+    "timestamp": "2026-02-27T13:41:02.963Z"
   }
 ]

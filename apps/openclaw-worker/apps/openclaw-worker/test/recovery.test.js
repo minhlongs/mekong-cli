@@ -8,12 +8,12 @@ vi.mock('../config', () => ({
   default: {
     MODEL_NAME: 'gemini-3-flash-preview',
     LOG_FILE: '/dev/null',
-    PROXY_PORT: 11436,
+    PROXY_PORT: 20128,
     ENGINE: 'antigravity'
   },
   MODEL_NAME: 'gemini-3-flash-preview',
   LOG_FILE: '/dev/null',
-  PROXY_PORT: 11436,
+  PROXY_PORT: 20128,
   ENGINE: 'antigravity'
 }));
 

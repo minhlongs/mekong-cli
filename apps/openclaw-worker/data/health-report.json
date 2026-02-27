@@ -1,7 +1,7 @@
 [
   {
     "project": "well",
-    "timestamp": "2026-02-27T13:39:05.750Z",
+    "timestamp": "2026-02-27T13:43:40.365Z",
     "build": "GREEN",
     "techDebt": {
       "todos": 76,
@@ -10,25 +10,25 @@
     "gitStatus": "DIRTY",
     "recommendations": [
       {
-        "title": "Dọn dẹp trạng thái Git và Chốt phiên bản",
+        "title": "Dọn dẹp và Commit mã nguồn (Git Status: DIRTY)",
         "priority": "HIGH",
-        "reason": "Trạng thái Git đang là DIRTY, điều này cực kỳ rủi ro vì các thay đổi chưa được lưu vết có thể dẫn đến mất mát mã nguồn hoặc xung đột nghiêm trọng. Cần commit hoặc stash các thay đổi ngay lập tức."
+        "reason": "Trạng thái DIRTY cho thấy có nhiều thay đổi chưa được kiểm soát. Cần phải rà soát, staging và commit ngay lập tức để đảm bảo tính nhất quán của mã nguồn và tránh rủi ro mất mát dữ liệu khi làm việc nhóm."
       },
       {
-        "title": "Tối ưu hóa hệ thống Logging",
+        "title": "Tối ưu hóa hệ thống Logging và loại bỏ Console Logs",
         "priority": "HIGH",
-        "reason": "781 Console Logs là một con số báo động. Việc lạm dụng log gây nhiễu quá trình debug, làm giảm hiệu năng ứng dụng và có thể rò rỉ thông tin nhạy cảm. Cần thay thế bằng một thư viện quản lý log chuyên nghiệp."
+        "reason": "Với 781 console logs, hiệu năng của ứng dụng đang bị ảnh hưởng nghiêm trọng và gây nhiễu quá trình debug thực tế. Cần thay thế bằng một thư viện logging chuyên nghiệp hoặc gỡ bỏ các log không cần thiết trước khi deploy."
       },
       {
-        "title": "Xử lý nợ kỹ thuật (Technical Debt)",
+        "title": "Lập kế hoạch giải quyết nợ kỹ thuật (Technical Debt)",
         "priority": "MEDIUM",
-        "reason": "Mặc dù Build đang GREEN, nhưng 76 TODOs cho thấy dự án đang tích tụ lượng lớn nợ kỹ thuật. Cần phân loại và giải quyết các ghi chú này để đảm bảo khả năng mở rộng và bảo trì trong tương lai."
+        "reason": "76 TODOs là một con số đáng báo động về nợ kỹ thuật. Mặc dù Build đang GREEN, nhưng việc tích tụ quá nhiều tác vụ chưa hoàn thành sẽ gây khó khăn cho việc bảo trì và mở rộng tính năng trong tương lai."
       }
     ]
   },
   {
     "project": "wellnexus",
-    "timestamp": "2026-02-27T13:39:38.270Z",
+    "timestamp": "2026-02-27T13:44:12.745Z",
     "build": "GREEN",
     "techDebt": {
       "todos": 14,
@@ -37,19 +37,19 @@
     "gitStatus": "DIRTY",
     "recommendations": [
       {
-        "title": "Kiểm soát và Commit các thay đổi Git",
+        "title": "Ổn định hóa trạng thái Git",
         "priority": "HIGH",
-        "reason": "Trạng thái Git hiện tại là DIRTY, điều này tiềm ẩn rủi ro mất mát dữ liệu và gây khó khăn cho việc cộng tác. Cần rà soát và commit các thay đổi để đảm bảo tính nhất quán của mã nguồn."
+        "reason": "Trạng thái Git hiện tại là 'DIRTY', nghĩa là có nhiều thay đổi chưa được commit. Điều này gây rủi ro mất mát dữ liệu và xung đột mã nguồn. Cần kiểm tra và commit các thay đổi ngay lập tức để đảm bảo tính toàn vẹn của dự án."
       },
       {
-        "title": "Giải quyết nợ kỹ thuật (14 TODOs)",
+        "title": "Giải quyết nợ kỹ thuật (Technical Debt)",
         "priority": "MEDIUM",
-        "reason": "Dự án hiện có 14 mục TODO. Việc xử lý các ghi chú này sẽ giúp cải thiện chất lượng code, hoàn thiện các tính năng còn dang dở và tránh tích tụ nợ kỹ thuật về lâu dài."
+        "reason": "Dự án đang tồn đọng 14 TODOs. Việc để các ghi chú này kéo dài sẽ làm tăng độ phức tạp khi bảo trì. Cần phân loại và xử lý các đầu việc này để tối ưu hóa codebase."
       },
       {
-        "title": "Thiết lập quy trình kiểm thử và duy trì Build ổn định",
+        "title": "Duy trì và chuẩn hóa quy trình kiểm soát chất lượng",
         "priority": "MEDIUM",
-        "reason": "Mặc dù Build đang GREEN và không có Console Logs, cần tận dụng trạng thái ổn định này để triển khai thêm các bài kiểm thử tự động (Unit/Integration Tests) nhằm bảo vệ thành quả khi xử lý các TODO."
+        "reason": "Mặc dù Build đang GREEN và không có Console Logs (rất tốt), nhưng cần thiết lập cơ chế kiểm tra tự động để đảm bảo các thay đổi từ trạng thái DIRTY sau khi commit không phá vỡ tính ổn định hiện tại."
       }
     ]
   }
