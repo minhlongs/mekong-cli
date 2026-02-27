@@ -1,7 +1,16 @@
 {
   "currentProjectIdx": 0,
-  "phase": "scan",
-  "cycle": 0,
-  "errors": [],
+  "phase": "fix",
+  "cycle": 1,
+  "errors": [
+    {
+      "type": "lint",
+      "severity": "medium",
+      "file": "package.json",
+      "message": "Lint command failed with exit code null. Output snippet:  > wellnexus-mvp@1.0.0-seed lint > eslint src  ...",
+      "rule": "general-lint-failure",
+      "project": "well"
+    }
+  ],
   "fixIndex": 0
 }

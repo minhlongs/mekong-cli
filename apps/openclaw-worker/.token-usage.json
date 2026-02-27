@@ -958,5 +958,117 @@
     "tokens": 0,
     "duration": 68,
     "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T09:44:52.037Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 73,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T10:03:16.084Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 91,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T10:51:29.596Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T11:07:54.066Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 229,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T12:07:08.808Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T13:35:46.454Z",
+    "mission": "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "Well",
+    "tokens": 0,
+    "duration": 75,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T17:30:27.790Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 61,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T18:05:49.862Z",
+    "mission": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước khi c",
+    "project": "well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T18:09:27.881Z",
+    "mission": "/plan:hard \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.Plan trước ",
+    "project": "well",
+    "tokens": 0,
+    "duration": 60,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-26T18:13:49.882Z",
+    "mission": "/plan:hard \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: 1.THINK DEEP:",
+    "project": "well",
+    "tokens": 0,
+    "duration": 61,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-27T10:53:11.067Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 63,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-27T11:06:45.434Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 80,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-27T13:36:31.190Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTr",
+    "project": "wellnexus",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-27T13:41:02.962Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
   }
 ]
