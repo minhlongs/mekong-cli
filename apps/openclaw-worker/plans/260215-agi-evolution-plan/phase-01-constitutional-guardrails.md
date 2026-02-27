@@ -17,7 +17,7 @@ Currently, `mission-dispatcher.js` executes any valid task file found in `tasks/
 
 1.  **Create `lib/safety-guard.js`**:
     -   Define `checkSafety(prompt)` function.
-    -   Implement call to Antigravity Proxy (port 11436) with a specific system prompt enforcing Binh Phap ethics.
+    -   Implement call to Antigravity Proxy (port 20128) with a specific system prompt enforcing Binh Phap ethics.
     -   Handle timeouts (fail-safe: if check fails, default to strict/block or warn).
 
 2.  **Define Safety Constitution**:

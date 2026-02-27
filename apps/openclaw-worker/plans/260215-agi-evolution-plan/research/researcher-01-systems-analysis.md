@@ -11,7 +11,7 @@ The current **Mekong-CLI** ecosystem operates as a robust, autonomous task execu
 
 | Component | Current State (v2026.2.13) | Function |
 |-----------|----------------------------|----------|
-| **Antigravity Proxy** | v4 (Port 11436) | Load balances Anthropic/Gemini/Ollama. Handles quota exhaustion via `proxy-recovery.sh`. |
+| **Antigravity Proxy** | v4 (Port 20128) | Load balances Anthropic/Gemini/Ollama. Handles quota exhaustion via `proxy-recovery.sh`. |
 | **OpenClaw Worker** | Node.js Daemon | Thin orchestrator. Watches `tasks/`, dispatches to CC CLI. Features "WARP SPEED" (3 concurrent missions). |
 | **Brain** | Dual-Mode | **Direct** (External process) or **Tmux** (Interactive session). |
 | **Self-Healing** | Reactive | `self-healer.js` monitors Proxy/CLI health. `mission-recovery.js` handles 400s/Context Overflow. |
