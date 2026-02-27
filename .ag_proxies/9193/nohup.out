@@ -1,0 +1,54 @@
+[90m[2026-02-27T14:31:50.852Z][0m [34m[INFO][0m [WebUI] Mounted at /
+
+╔══════════════════════════════════════════════════════════════╗
+║            Antigravity Claude Proxy Server v2.7.6            ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  Server and WebUI running at: http://localhost:9193          ║
+║  Bound to: 0.0.0.0:9193                                      ║
+║                                                              ║
+║  Active Modes:                                               ║
+║    ✓ Strategy: Hybrid (Smart Distribution)                   ║
+║                                                              ║
+║  Control:                                                    ║
+║    --strategy=<s>     Set account selection strategy         ║
+║                         (sticky/round-robin/hybrid)          ║
+║    --dev-mode         Enable developer mode                  ║
+║    --fallback         Enable model fallback on quota exhaust ║
+║    Ctrl+C             Stop server                            ║
+║                                                              ║
+║  Endpoints:                                                  ║
+║    POST /v1/messages         - Anthropic Messages API        ║
+║    GET  /v1/models           - List available models         ║
+║    GET  /health              - Health check                  ║
+║    GET  /account-limits      - Account status & quotas       ║
+║    POST /refresh-token       - Force token refresh           ║
+║                                                              ║
+║  Configuration:                                              ║
+║    Storage: /Users/macbookprom1/.antigravity-claude-proxy    ║
+║                                                              ║
+║  Usage with Claude Code:                                     ║
+║    export ANTHROPIC_BASE_URL=http://localhost:9193           ║
+║    export ANTHROPIC_API_KEY=dummy                            ║
+║    claude                                                    ║
+║                                                              ║
+║  Add Google accounts:                                        ║
+║    npm run accounts                                          ║
+║                                                              ║
+║  Prerequisites (if no accounts configured):                  ║
+║    - Antigravity must be running                             ║
+║    - Have a chat panel open in Antigravity                   ║
+║                                                              ║
+║  Environment Variables:                                      ║
+║    PORT                Server port (default: 8080)           ║
+║    HOST                Bind address (default: 0.0.0.0)       ║
+║    HTTP_PROXY          Route requests through a proxy        ║
+║    CLAUDE_CONFIG_PATH  Path to .claude dir (for systemd)     ║
+║    See README.md for detailed configuration examples         ║
+╚══════════════════════════════════════════════════════════════╝
+  
+[90m[2026-02-27T14:31:50.859Z][0m [32m[SUCCESS][0m Server started successfully on port 9193
+[90m[2026-02-27T14:31:53.599Z][0m [34m[INFO][0m [AccountManager] Loaded 2 account(s) from config
+[90m[2026-02-27T14:31:53.599Z][0m [34m[INFO][0m [AccountManager] Using Round Robin (Load Balanced) selection strategy
+[90m[2026-02-27T14:31:53.599Z][0m [32m[SUCCESS][0m [Server] Account pool initialized: 2 total, 2 available, 2 rate-limited, 0 invalid
+[90m[2026-02-27T14:31:54.073Z][0m [34m[INFO][0m [GET] /health 200 (476ms)

@@ -41,6 +41,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 // 🔒 LOCKED — DO NOT CHANGE (2026-02-15)
 const PORT = parseInt(process.argv[2]) || 11436;
 // 🔒 LOCKED — upstream AG proxy cluster (balanced across 2 Ultra accounts)
+// AG proxy cluster — 3 Ultra accounts (billwill, cashback, minhlong)
 const ANTIGRAVITY_PORTS = [9191, 9192, 9193];
 let agPortIndex = 0;
 
@@ -81,7 +82,7 @@ const OLLAMA_KEYS = (process.env.OLLAMA_KEYS || '').split(',').filter(Boolean);
 
 // Provider 2: OpenRouter (OpenAI-compatible)
 const OPENROUTER_KEY = process.env.OPENROUTER_KEY || '';
-const OPENROUTER_MODEL = 'google/gemini-3-flash';
+const OPENROUTER_MODEL = 'google/gemini-3-flash-preview';
 
 // Provider 3: Google AI Studio — Pro+Flash Phối Trộn
 const GOOGLE_KEYS = (process.env.GOOGLE_KEYS || '').split(',').filter(Boolean);
