@@ -306,81 +306,81 @@ function startAutoCTO() {
 
   function scheduleNext() {
     const interval = getPhaseInterval(currentPhase);
+    // 🦞 FIX 2026-02-26: Clear existing timeout before scheduling next to prevent interval drift/overlap
+    if (intervalRef) clearTimeout(intervalRef);
+
     intervalRef = setTimeout(async () => {
       try {
         // Guards
         if (!isBrainAlive()) { log('AUTO-CTO DEBUG: isBrainAlive() failed'); scheduleNext(); return; }
         if (isOverheating()) { log('AUTO-CTO DEBUG: isOverheating() failed'); scheduleNext(); return; }
 
+        // 🧠 LLM VISION: 知己知彼 — Use gemini-3-flash to READ CC CLI output
+        // Replaces fragile regex patterns that caused "blind CTO" bugs
+        let isApiBusy = false;
+        try {
+          const { interpretState, clearCache } = require('./llm-interpreter');
+          for (let pIdx = 0; pIdx < 2; pIdx++) {
+            try {
+              const paneOutput = require('child_process').execSync(
+                `tmux capture-pane -t tom_hum:brain.${pIdx} -p -S -30 2>/dev/null`,
+                { encoding: 'utf-8', timeout: 3000 }
+              );
+              const llmResult = await interpretState(paneOutput);
+
+              if (pIdx === 1 && llmResult.state !== 'question') _questionLoopCount = 0;
+
+              if (llmResult.state === 'busy') {
+                log(`[LLM-VISION][P${pIdx}] CC CLI BUSY: ${llmResult.summary}`);
+                if (pIdx === 1) isApiBusy = true;
+              } else if (llmResult.state === 'question') {
+                log(`[LLM-VISION][P${pIdx}] CC CLI QUESTION: ${llmResult.summary}`);
+                if (pIdx === 1) _questionLoopCount++;
+
+                if (llmResult.confidence >= 0.8) {
+                  if (pIdx === 1 && _questionLoopCount >= 3) {
+                    log(`[LLM-VISION][P${pIdx}] LOOP BREAK: ${_questionLoopCount} questions — sending Escape`);
+                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:brain.${pIdx} Escape`, { timeout: 2000 }); } catch (e) { }
+                    _questionLoopCount = 0;
+                  } else {
+                    log(`[LLM-VISION][P${pIdx}] AUTO-APPROVE: Sending Enter`);
+                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:brain.${pIdx} Enter`, { timeout: 2000 }); } catch (e) { }
+                  }
+                  clearCache();
+                }
+                if (pIdx === 1) isApiBusy = true;
+              } else if (llmResult.state === 'error') {
+                log(`[LLM-VISION][P${pIdx}] CC CLI ERROR: ${llmResult.summary}`);
+                if (pIdx === 1) isApiBusy = true;
+              } else if (llmResult.state !== 'idle' && llmResult.state !== 'complete' && llmResult.state !== 'unknown') {
+                log(`[LLM-VISION][P${pIdx}] CC CLI state: ${llmResult.state}`);
+                if (pIdx === 1) isApiBusy = true;
+              } else if (llmResult.state === 'unknown' && pIdx === 1) {
+                const hasIdlePrompt = paneOutput.includes('❯') || paneOutput.trim().split('\n').slice(-5).some(l => /^>\s*$/.test(l.trim()));
+                if (!hasIdlePrompt) {
+                  log(`[LLM-VISION][P1] FALLBACK: No idle prompt detected`);
+                  isApiBusy = true;
+                }
+              }
+            } catch (innerE) {
+              log(`[LLM-VISION][P${pIdx}] Capture failed: ${innerE.message}`);
+              if (pIdx === 1) isApiBusy = true;
+            }
+          }
+        } catch (e) {
+          log(`[LLM-VISION] Fatal error during capture: ${e.message}`);
+          isApiBusy = true;
+        }
+
+        if (isApiBusy) {
+          scheduleNext(); return;
+        }
+
         // Check if queue has pending tasks — don't flood
         const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
         if (tasks.length > 0) { log('AUTO-CTO DEBUG: filesystem tasks pending'); scheduleNext(); return; }
 
         if (!isQueueEmpty()) { log('AUTO-CTO DEBUG: memory queue pending'); scheduleNext(); return; }
-
-        // 🧠 LLM VISION: 知己知彼 — Use gemini-3-flash to READ CC CLI output
-        // Replaces fragile regex patterns that caused "blind CTO" bugs
-        try {
-          const paneOutput = require('child_process').execSync(
-            `tmux capture-pane -t tom_hum_brain -p -S -30 2>/dev/null`,
-            { encoding: 'utf-8', timeout: 3000 }
-          );
-          const { interpretState } = require('./llm-interpreter');
-          const llmResult = await interpretState(paneOutput);
-
-          // Reset question loop counter on non-QUESTION state
-          if (llmResult.state !== 'question') _questionLoopCount = 0;
-
-          if (llmResult.state === 'busy') {
-            log(`[LLM-VISION] CC CLI BUSY: ${llmResult.summary} (confidence: ${llmResult.confidence})`);
-            scheduleNext(); return;
-          }
-          if (llmResult.state === 'question') {
-            log(`[LLM-VISION] CC CLI has QUESTION: ${llmResult.summary}`);
-            // 🧠 AUTO-APPROVE with loop detection
-            _questionLoopCount++;
-            if (llmResult.confidence >= 0.8) {
-              if (_questionLoopCount >= 3) {
-                // 🚨 LOOP DETECTED: 3+ consecutive QUESTIONs → CC CLI stuck in TUI menu
-                log(`[LLM-VISION] LOOP BREAK: ${_questionLoopCount} consecutive QUESTIONs — sending Escape to exit menu`);
-                try {
-                  require('child_process').execSync(`tmux send-keys -t tom_hum_brain:0.0 Escape`, { timeout: 2000 });
-                } catch (e) { }
-                _questionLoopCount = 0;
-              } else {
-                log(`[LLM-VISION] AUTO-APPROVE: Sending Enter (confidence: ${llmResult.confidence}, attempt ${_questionLoopCount})`);
-                try {
-                  require('child_process').execSync(`tmux send-keys -t tom_hum_brain:0.0 Enter`, { timeout: 2000 });
-                } catch (e) { }
-              }
-              const { clearCache } = require('./llm-interpreter');
-              clearCache();
-            }
-            scheduleNext(); return;
-          }
-          if (llmResult.state === 'error') {
-            log(`[LLM-VISION] CC CLI ERROR: ${llmResult.summary} — recommendation: ${llmResult.recommendation}`);
-            scheduleNext(); return;
-          }
-          if (llmResult.state !== 'idle' && llmResult.state !== 'complete' && llmResult.state !== 'unknown') {
-            log(`[LLM-VISION] CC CLI state: ${llmResult.state} — ${llmResult.summary}`);
-            scheduleNext(); return;
-          }
-          // LLM says idle/complete — proceed to scan/fix/verify
-          if (llmResult.state !== 'unknown') {
-            log(`[LLM-VISION] CC CLI ${llmResult.state.toUpperCase()}: ${llmResult.summary}`);
-          }
-
-          // Fallback: also check for basic prompt presence
-          if (llmResult.state === 'unknown') {
-            // LLM failed — use basic regex fallback
-            const hasIdlePrompt = paneOutput.includes('❯') || paneOutput.trim().split('\n').slice(-5).some(l => /^>\s*$/.test(l.trim()));
-            if (!hasIdlePrompt) {
-              log(`[LLM-VISION] FALLBACK: No idle prompt detected`);
-              scheduleNext(); return;
-            }
-          }
-        } catch (e) { log(`[LLM-VISION] Capture failed: ${e.message}`); scheduleNext(); return; }
 
         const state = loadState();
         currentPhase = state.phase;

@@ -151,14 +151,14 @@ function clearStaleState() {
 }
 
 // --- Self-healing boot: retry each module independently ---
-function safeBoot(name, fn) {
+async function safeBoot(name, fn) {
   try {
-    fn();
+    await fn();
     log(`BOOT OK: ${name}`);
   } catch (e) {
     log(`BOOT ERROR (${name}): ${e.message} — will retry in 30s`);
-    setTimeout(() => {
-      try { fn(); log(`BOOT RETRY OK: ${name}`); }
+    setTimeout(async () => {
+      try { await fn(); log(`BOOT RETRY OK: ${name}`); }
       catch (e2) { log(`BOOT RETRY FAILED (${name}): ${e2.message}`); }
     }, 30000);
   }
@@ -176,106 +176,118 @@ try {
 // --- v2026.2.13: Clear stale state before boot ---
 clearStaleState();
 
-// --- Boot ---
-log('--- MISSION CONTROL v2026.2.17 ONLINE (FIX: CTO phản xạ) ---');
+// --- 🔒 v2026.2.27: ASYNC MASTER BOOT SEQUENCE 🔒 ---
+(async () => {
+  log('--- MISSION CONTROL v2026.2.27 ONLINE (FIX: Dual-Stream Flywheel) ---');
 
-// FIX #2: Task queue PHẢI ưu tiên số 1 — scan TRƯỚC spawn brain
-// Archive processed missions AFTER dispatch
-const { archiveProcessedMissions } = require('./lib/task-queue');
-safeBoot('startWatching', startWatching);
-safeBoot('spawnBrain', spawnBrain);
+  // FIX #2: Task queue PHẢI ưu tiên số 1 — scan TRƯỚC spawn brain
+  // Archive processed missions AFTER dispatch
+  const { archiveProcessedMissions } = require('./lib/task-queue');
+  await safeBoot('startWatching', startWatching);
+  // 🥪 DUAL-PANE SANDWICH ARCHITECTURE (User request 2026-02-27):
+  // Pane 0: Claude Pro (Planner) | Pane 1: Gemini Proxy (Executor)
+  await safeBoot('spawnBrain:SANDWICH', () => spawnBrain());
 
-// 🦞🔥 PROACTIVE SELF-HEAL ON BOOT (v2026.2.24)
-// If CC CLI has "queued messages" from a previous crash/failed dispatch,
-// clear them BEFORE any dispatch attempt to prevent the busy→no-dispatch deadlock.
-safeBoot('bootSelfHeal', () => {
-  const { execSync } = require('child_process');
-  try {
-    const output = execSync('tmux capture-pane -t tom_hum_brain:0.0 -p 2>/dev/null', { encoding: 'utf-8', timeout: 3000 });
-    if (/queued messages/i.test(output) || /Press up to edit queued/i.test(output)) {
-      log('🩺 BOOT SELF-HEAL: Detected stale "queued messages" — auto-clearing with Escape...');
-      for (let i = 0; i < 5; i++) {
-        execSync('tmux send-keys -t tom_hum_brain:0.0 Escape');
-        execSync('sleep 0.5');
+  // 🦞🔥 PROACTIVE SELF-HEAL ON BOOT (v2026.2.24)
+  // If CC CLI has "queued messages" from a previous crash/failed dispatch,
+  // clear them BEFORE any dispatch attempt to prevent the busy→no-dispatch deadlock.
+  safeBoot('bootSelfHeal', () => {
+    const { execSync } = require('child_process');
+    try {
+      let cleared = false;
+      for (let pIdx = 0; pIdx < 2; pIdx++) {
+        try {
+          const output = execSync(`tmux capture-pane -t tom_hum:brain.${pIdx} -p 2>/dev/null`, { encoding: 'utf-8', timeout: 3000 });
+          if (/queued messages/i.test(output) || /Press up to edit queued/i.test(output)) {
+            log(`🩺 BOOT SELF-HEAL: Detected stale "queued messages" on Pane ${pIdx} — auto-clearing with Escape...`);
+            for (let i = 0; i < 5; i++) {
+              execSync(`tmux send-keys -t tom_hum:brain.${pIdx} Escape`);
+              execSync('sleep 0.5');
+            }
+            cleared = true;
+          }
+        } catch (e) { }
       }
-      log('🩺 BOOT SELF-HEAL: Queued messages cleared ✅');
-    } else {
-      log('🩺 BOOT SELF-HEAL: CC CLI clean — no queued messages detected.');
+      if (cleared) {
+        log('🩺 BOOT SELF-HEAL: Queued messages cleared ✅');
+      } else {
+        log('🩺 BOOT SELF-HEAL: CC CLI clean — no queued messages detected.');
+      }
+    } catch (e) {
+      log(`🩺 BOOT SELF-HEAL: Skipped — ${e.message}`);
     }
-  } catch (e) {
-    log(`🩺 BOOT SELF-HEAL: Skipped — ${e.message}`);
-  }
-});
+  });
 
-// 防 PROXY_RULES: Validate config alignment BEFORE dispatching any mission
-const { validateProxyRules } = require('./lib/proxy-rules-validator');
-safeBoot('validateProxyRules', validateProxyRules);
-// 🏯 DOANH TRẠI: Validate all soldiers assigned to divisions
-const { validateDivisions } = require('./lib/doanh-trai-registry');
-safeBoot('validateDivisions', validateDivisions);
-// 始計 BINH PHÁP: Auto-CTO RE-ENABLED — "多算勝" (tính nhiều thì thắng)
-// Hậu cần tạo pre-analyzed tasks → CC CLI chỉ execute, không scan
-safeBoot('startAutoCTO', startAutoCTO);
-// AGI Level 4: Self-Planning Scanner
-safeBoot('startScanner', startScanner);
-// AGI Level 5: Self-Learning Engine (Dụng Gián)
-safeBoot('startLearningEngine', startLearningEngine);
-// AGI Level 6: Self-Evolving Engine (九地)
-safeBoot('startEvolutionEngine', startEvolutionEngine);
-// AGI Level 7: Multi-Project Commander (火攻)
-safeBoot('startCommander', startCommander);
-// AGI Level 10: Self-Analyzer + Cross-Session Memory
-safeBoot('startSelfAnalyzer', () => {
-  const { recordSessionStart, getAGIScore } = require('./lib/self-analyzer');
-  recordSessionStart();
-  const agi = getAGIScore();
-  log(`🧠 AGI SCORE: ${agi.total}/100 (Level ${agi.level}) — Vision:${agi.components.vision} Learn:${agi.components.learning} Auto:${agi.components.autonomy} Mem:${agi.components.memory} Win:${agi.components.success}`);
-});
-// Google Ultra Integration (用間 Espionage)
-safeBoot('startGoogleUltra', () => {
-  const { checkAuthStatus, getAccount } = require('./lib/google-ultra');
-  const acc = getAccount();
-  if (acc) {
-    log(`🔑 GOOGLE ULTRA: Authenticated as ${acc} — Drive/Docs/Sheets/Gmail/Calendar ONLINE`);
-    // Start periodic intelligence gathering loop
-    const { startIntelLoop } = require('./lib/google-ultra');
-    startIntelLoop(['well']);
-    log(`🔄 GOOGLE ULTRA: Intel loop activated — scanning Drive/Gmail/Calendar every 10min for project insights`);
-  } else {
-    log(`⚠️ GOOGLE ULTRA: No accounts — run 'gog login <email>' to enable`);
-  }
-});
-// Gemini AI Agentic Ecosystem (用間 Deep 100x)
-safeBoot('startGeminiAgentic', async () => {
-  const { checkGeminiStatus } = require('./lib/gemini-agentic');
-  const status = await checkGeminiStatus();
-  if (status === 'ONLINE') {
-    log(`🤖 GEMINI AGENTIC: ${status} — Search Grounding + Code Execution + Deep Research + Architecture Advisor ACTIVE`);
-  } else {
-    log(`⚠️ GEMINI AGENTIC: ${status} — check GEMINI_API_KEY in .env`);
-  }
-});
-// Jules Agent — Google's AI Coding Agent (九地)
-safeBoot('startJulesAgent', async () => {
-  const { checkJulesStatus, checkActiveSessions } = require('./lib/jules-agent');
-  const status = await checkJulesStatus();
-  if (status === 'ONLINE') {
-    log(`🤖 JULES AGENT: ${status} — 16 GitHub repos connected. Auto-PR dispatch READY`);
-    // Check for any active sessions
-    const sessions = await checkActiveSessions();
-    if (sessions.length > 0) log(`📋 JULES: ${sessions.length} active session(s)`);
-  } else {
-    log(`⚠️ JULES AGENT: ${status} — check API key at jules.google.com/settings`);
-  }
-});
-safeBoot('startCooling', startCooling);
-safeBoot('startHealer', startHealer);
-// 🦞 Lobster Proxy Pilot (Guardian of Quota)
-safeBoot('startLobsterPilot', startLobsterPilot);
-// 🧠 Brain Supervisor (知己知彼: monitor BOTH CTO + CC CLI)
-safeBoot('startSupervisor', startSupervisor);
+  // 防 PROXY_RULES: Validate config alignment BEFORE dispatching any mission
+  const { validateProxyRules } = require('./lib/proxy-rules-validator');
+  safeBoot('validateProxyRules', validateProxyRules);
+  // 🏯 DOANH TRẠI: Validate all soldiers assigned to divisions
+  const { validateDivisions } = require('./lib/doanh-trai-registry');
+  safeBoot('validateDivisions', validateDivisions);
+  // 始計 BINH PHÁP: Auto-CTO RE-ENABLED — "多算勝" (tính nhiều thì thắng)
+  // Hậu cần tạo pre-analyzed tasks → CC CLI chỉ execute, không scan
+  safeBoot('startAutoCTO', startAutoCTO);
+  // AGI Level 4: Self-Planning Scanner
+  safeBoot('startScanner', startScanner);
+  // AGI Level 5: Self-Learning Engine (Dụng Gián)
+  safeBoot('startLearningEngine', startLearningEngine);
+  // AGI Level 6: Self-Evolving Engine (九地)
+  safeBoot('startEvolutionEngine', startEvolutionEngine);
+  // AGI Level 7: Multi-Project Commander (火攻)
+  safeBoot('startCommander', startCommander);
+  // AGI Level 10: Self-Analyzer + Cross-Session Memory
+  safeBoot('startSelfAnalyzer', () => {
+    const { recordSessionStart, getAGIScore } = require('./lib/self-analyzer');
+    recordSessionStart();
+    const agi = getAGIScore();
+    log(`🧠 AGI SCORE: ${agi.total}/100 (Level ${agi.level}) — Vision:${agi.components.vision} Learn:${agi.components.learning} Auto:${agi.components.autonomy} Mem:${agi.components.memory} Win:${agi.components.success}`);
+  });
+  // Google Ultra Integration (用間 Espionage)
+  safeBoot('startGoogleUltra', () => {
+    const { checkAuthStatus, getAccount } = require('./lib/google-ultra');
+    const acc = getAccount();
+    if (acc) {
+      log(`🔑 GOOGLE ULTRA: Authenticated as ${acc} — Drive/Docs/Sheets/Gmail/Calendar ONLINE`);
+      // Start periodic intelligence gathering loop
+      const { startIntelLoop } = require('./lib/google-ultra');
+      startIntelLoop(['well']);
+      log(`🔄 GOOGLE ULTRA: Intel loop activated — scanning Drive/Gmail/Calendar every 10min for project insights`);
+    } else {
+      log(`⚠️ GOOGLE ULTRA: No accounts — run 'gog login <email>' to enable`);
+    }
+  });
+  // Gemini AI Agentic Ecosystem (用間 Deep 100x)
+  safeBoot('startGeminiAgentic', async () => {
+    const { checkGeminiStatus } = require('./lib/gemini-agentic');
+    const status = await checkGeminiStatus();
+    if (status === 'ONLINE') {
+      log(`🤖 GEMINI AGENTIC: ${status} — Search Grounding + Code Execution + Deep Research + Architecture Advisor ACTIVE`);
+    } else {
+      log(`⚠️ GEMINI AGENTIC: ${status} — check GEMINI_API_KEY in .env`);
+    }
+  });
+  // Jules Agent — Google's AI Coding Agent (九地)
+  safeBoot('startJulesAgent', async () => {
+    const { checkJulesStatus, checkActiveSessions } = require('./lib/jules-agent');
+    const status = await checkJulesStatus();
+    if (status === 'ONLINE') {
+      log(`🤖 JULES AGENT: ${status} — 16 GitHub repos connected. Auto-PR dispatch READY`);
+      // Check for any active sessions
+      const sessions = await checkActiveSessions();
+      if (sessions.length > 0) log(`📋 JULES: ${sessions.length} active session(s)`);
+    } else {
+      log(`⚠️ JULES AGENT: ${status} — check API key at jules.google.com/settings`);
+    }
+  });
+  safeBoot('startCooling', startCooling);
+  safeBoot('startHealer', startHealer);
+  // 🦞 Lobster Proxy Pilot (Guardian of Quota)
+  safeBoot('startLobsterPilot', startLobsterPilot);
+  // 🧠 Brain Supervisor (知己知彼: monitor BOTH CTO + CC CLI)
+  safeBoot('startSupervisor', startSupervisor);
 
-log('始計 + 防 + 🏯: Task Queue PRIORITY #1 → Brain + Auto-CTO + Scanner + Cooling + Healer + Supervisor ACTIVE');
+  log('始計 + 防 + 🏯: Task Queue PRIORITY #1 → Brain + Auto-CTO + Scanner + Cooling + Healer + Supervisor ACTIVE');
+})();
 
 // --- Keepalive: prevent Node from exiting when event loop is idle ---
 const keepalive = setInterval(() => { }, 60000);
