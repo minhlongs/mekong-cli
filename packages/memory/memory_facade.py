@@ -12,10 +12,10 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
-
 from .mem0_client import Mem0Client
 from .qdrant_provider import QdrantProvider
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_QDRANT_URL = "http://localhost:6333"
 _DEFAULT_COLLECTION = "mekong_agent_memory"

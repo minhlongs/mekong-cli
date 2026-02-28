@@ -68,7 +68,7 @@ class MemoryStore:
                 )
                 facade.add(
                     content,
-                    user_id=f"mekong:memory",
+                    user_id="mekong:memory",
                     metadata={
                         "status": entry.status,
                         "recipe_used": entry.recipe_used,

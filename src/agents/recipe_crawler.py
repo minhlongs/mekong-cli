@@ -53,7 +53,7 @@ class RecipeCrawler(AgentBase):
         """
         try:
             # Simulation of GitHub API interaction
-            query = task.input.get("query")
+            _query = task.input.get("query")  # noqa: F841
 
             if task.id == "search_repo":
                 return Result(

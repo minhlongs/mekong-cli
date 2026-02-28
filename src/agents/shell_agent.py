@@ -107,7 +107,6 @@ class ShellAgent(AgentBase):
                 timeout=self.timeout,
             )
 
-            output = result.stdout.strip() or result.stderr.strip()
             return Result(
                 task_id=task.id,
                 success=result.returncode == 0,
