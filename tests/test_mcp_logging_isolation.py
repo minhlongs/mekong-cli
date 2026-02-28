@@ -10,9 +10,12 @@ class TestMCPLoggingIsolation(unittest.TestCase):
     """Test that MCP servers log to stderr, not stdout."""
 
     def test_all_servers_log_to_stderr(self):
-        """Verify all 14 MCP servers configure logging to stderr."""
+        """Verify all 14 MCP servers configure logging to stderr.
+
+        Servers can configure logging either directly (logging.basicConfig + stream=sys.stderr)
+        or by inheriting from BaseMCPServer which handles stderr logging via _setup_logging().
+        """
         import os
-        import re
 
         mcp_servers_dir = "antigravity/mcp_servers"
         server_files = []
@@ -30,13 +33,18 @@ class TestMCPLoggingIsolation(unittest.TestCase):
                 with open(server_file, 'r') as f:
                     content = f.read()
 
-                # Verify logging.basicConfig is present
-                self.assertIn("logging.basicConfig", content,
-                             f"{server_file} missing logging.basicConfig")
+                # Servers must configure logging via one of:
+                # 1. Direct: logging.basicConfig(stream=sys.stderr)
+                # 2. Inherited: BaseMCPServer._setup_logging() handles stderr
+                has_direct_config = ("logging.basicConfig" in content
+                                     and "stream=sys.stderr" in content)
+                has_base_class = "BaseMCPServer" in content
 
-                # Verify stream=sys.stderr is set
-                self.assertIn("stream=sys.stderr", content,
-                             f"{server_file} not logging to stderr")
+                self.assertTrue(
+                    has_direct_config or has_base_class,
+                    f"{server_file} must either use logging.basicConfig(stream=sys.stderr) "
+                    f"or inherit from BaseMCPServer (which handles stderr logging)"
+                )
 
                 # Ensure no print() statements (corrupts JSON-RPC)
                 # Allow print in __main__ blocks and comments
