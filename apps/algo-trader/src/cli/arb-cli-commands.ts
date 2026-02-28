@@ -2,8 +2,8 @@
  * Arbitrage CLI commands — All arb:* commands extracted from index.ts.
  * Registers: arb:scan, arb:run, arb:engine, arb:orchestrator, arb:auto
  *
- * All arb logic imported from @agencyos/trading-core/arbitrage (single source of truth).
- * App provides ExchangeClient as IExchange factory for CCXT connectivity.
+ * All arb logic from @agencyos/trading-core (single source of truth).
+ * App provides ExchangeClientBase as IExchange factory for CCXT connectivity.
  */
 
 import { Command } from 'commander';
@@ -14,7 +14,7 @@ import {
   ArbitrageOrchestrator,
   ExchangeConfig,
 } from '@agencyos/trading-core/arbitrage';
-import { ExchangeClient } from '../execution/ExchangeClient';
+import { ExchangeClientBase } from '@agencyos/trading-core/exchanges';
 import { logger } from '../utils/logger';
 import {
   parseList,
@@ -24,9 +24,9 @@ import {
   buildExchangeConfigs,
 } from './exchange-factory';
 
-/** Bridge: creates ExchangeClient (CCXT) from generic ExchangeConfig */
-function exchangeFactory(config: ExchangeConfig): ExchangeClient {
-  return new ExchangeClient(config.id, config.apiKey, config.secret);
+/** Bridge: creates ExchangeClientBase (CCXT) from generic ExchangeConfig */
+function exchangeFactory(config: ExchangeConfig): ExchangeClientBase {
+  return new ExchangeClientBase(config.id, config.apiKey, config.secret);
 }
 
 /**

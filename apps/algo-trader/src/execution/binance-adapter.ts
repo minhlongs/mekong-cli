@@ -1,43 +1,6 @@
 /**
- * BinanceAdapter — Binance-specific exchange adapter.
- * Extends ExchangeClient with Binance fee tiers, BNB discount, rate limit tuning.
+ * Re-export wrapper — canonical source is @agencyos/trading-core/exchanges.
+ * Kept for backward compatibility with existing imports.
  */
-
-import { ExchangeClient } from './ExchangeClient';
-
-/** Binance spot maker/taker fee schedule (VIP tiers) */
-const BINANCE_FEE_TIERS = {
-  default: { maker: 0.001, taker: 0.001 },
-  bnbDiscount: { maker: 0.00075, taker: 0.00075 },
-} as const;
-
-export interface BinanceAdapterConfig {
-  apiKey?: string;
-  secret?: string;
-  /** Enable BNB fee discount (25% off when paying fees in BNB) */
-  useBnbDiscount?: boolean;
-  /** Recv window for timestamp tolerance (ms) */
-  recvWindow?: number;
-}
-
-export class BinanceAdapter extends ExchangeClient {
-  readonly exchangeId = 'binance' as const;
-  private readonly feeRate: { maker: number; taker: number };
-
-  constructor(config: BinanceAdapterConfig = {}) {
-    super('binance', config.apiKey, config.secret);
-    this.feeRate = config.useBnbDiscount
-      ? BINANCE_FEE_TIERS.bnbDiscount
-      : BINANCE_FEE_TIERS.default;
-  }
-
-  /** Binance-specific fee rates (accounts for BNB discount) */
-  getFeeRate(): { maker: number; taker: number } {
-    return { ...this.feeRate };
-  }
-
-  /** Taker fee used for arb cost estimation */
-  getTakerFee(): number {
-    return this.feeRate.taker;
-  }
-}
+export { BinanceAdapter } from '@agencyos/trading-core/exchanges';
+export type { BinanceAdapterConfig } from '@agencyos/trading-core/exchanges';

@@ -1,24 +1,28 @@
 /**
  * Exchange factory — Shared exchange validation + construction for arb CLI commands.
  * Routes to exchange-specific adapters (Binance, OKX, Bybit) with optimized fee/config.
- * Falls back to generic ExchangeClient for unsupported exchanges.
+ * Falls back to generic ExchangeClientBase for unsupported exchanges.
+ *
+ * All exchange primitives from @agencyos/trading-core/exchanges (single source of truth).
  */
 
-import { ExchangeClient } from '../execution/ExchangeClient';
-import { BinanceAdapter } from '../execution/binance-adapter';
-import { OkxAdapter } from '../execution/okx-adapter';
-import { BybitAdapter } from '../execution/bybit-adapter';
+import {
+  ExchangeClientBase,
+  BinanceAdapter,
+  OkxAdapter,
+  BybitAdapter,
+} from '@agencyos/trading-core/exchanges';
 import { logger } from '../utils/logger';
 
 /**
  * Create exchange-specific adapter based on exchange ID.
- * Uses optimized adapter for Binance/OKX/Bybit, generic ExchangeClient for others.
+ * Uses optimized adapter for Binance/OKX/Bybit, generic ExchangeClientBase for others.
  */
 export function createExchangeAdapter(
   id: string,
   apiKey?: string,
   secret?: string,
-): ExchangeClient {
+): ExchangeClientBase {
   switch (id.toLowerCase()) {
     case 'binance':
       return new BinanceAdapter({ apiKey, secret, useBnbDiscount: false });
@@ -27,7 +31,7 @@ export function createExchangeAdapter(
     case 'bybit':
       return new BybitAdapter({ apiKey, secret });
     default:
-      return new ExchangeClient(id, apiKey, secret);
+      return new ExchangeClientBase(id, apiKey, secret);
   }
 }
 
@@ -60,8 +64,8 @@ export function buildExchangeConfigs(exchangeIds: string[]): ExchangeEntry[] {
  * Create ExchangeClient instances from exchange IDs (no API key validation).
  * Used by arb:scan (dry-run, no keys needed).
  */
-export function buildExchangeClients(exchangeIds: string[]): Map<string, ExchangeClient> {
-  const clients = new Map<string, ExchangeClient>();
+export function buildExchangeClients(exchangeIds: string[]): Map<string, ExchangeClientBase> {
+  const clients = new Map<string, ExchangeClientBase>();
 
   for (const id of exchangeIds) {
     try {
@@ -79,8 +83,8 @@ export function buildExchangeClients(exchangeIds: string[]): Map<string, Exchang
  * Create authenticated ExchangeClient instances (with API keys).
  * Used by arb:run.
  */
-export function buildAuthenticatedClients(exchangeIds: string[]): Map<string, ExchangeClient> {
-  const clients = new Map<string, ExchangeClient>();
+export function buildAuthenticatedClients(exchangeIds: string[]): Map<string, ExchangeClientBase> {
+  const clients = new Map<string, ExchangeClientBase>();
 
   for (const id of exchangeIds) {
     const apiKey = process.env[`${id.toUpperCase()}_API_KEY`] || '';
