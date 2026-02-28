@@ -29,6 +29,7 @@ env/
 
 # Node
 node_modules/
+package-lock.json
 .next/
 .nuxt/
 dist/
