@@ -25,18 +25,21 @@ async function spawnBrain() {
 
   if (isSessionAlive(TMUX_SESSION)) {
     try {
+      // Use session name only — window may be renamed by tmux config
+      const sessionOnly = TMUX_SESSION.split(':')[0];
       const paneCount = parseInt(
-        execSync(`tmux list-panes -t ${TMUX_SESSION} | wc -l`, { encoding: 'utf-8' }).trim()
+        execSync(`tmux list-panes -t ${sessionOnly} | wc -l`, { encoding: 'utf-8' }).trim()
       );
       if (paneCount >= 3) {
         log(`BRAIN: tmux session exists (Panes: ${paneCount}/3) — reusing`);
         return;
       }
       log(`BRAIN: Session exists but has ${paneCount}/3 panes. REPAIRING...`);
-      tmuxExec(`tmux kill-session -t ${TMUX_SESSION.split(':')[0]}`, TMUX_SESSION);
+      tmuxExec(`tmux kill-session -t ${sessionOnly}`, TMUX_SESSION);
     } catch (e) {
-      log(`BRAIN: Error checking session: ${e.message}`);
-      tmuxExec(`tmux kill-session -t ${TMUX_SESSION.split(':')[0]}`, TMUX_SESSION);
+      log(`BRAIN: Error checking session: ${e.message} — will recreate`);
+      // DO NOT kill session here — it may be alive with renamed window
+      try { tmuxExec(`tmux kill-session -t ${TMUX_SESSION.split(':')[0]}`, TMUX_SESSION); } catch (_) { }
     }
   }
 

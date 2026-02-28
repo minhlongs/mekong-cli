@@ -51,9 +51,9 @@ const config = {
   // Engine selection: 'antigravity' (default, port 20128) or 'qwen' (port 8081)
   // 🔒 LOCKED — 'antigravity' uses port 20128 → upstream AG 9191 + Google fallback
   ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
-  // 🎯 FOCUSED DELIVERY MODE — algo-trader focus (Feb 22 2026)
-  // Previous: ['doanh-trai-tom-hum', '84tea', 'anima119', 'wellnexus', 'apex-os', 'sophia-ai-factory', 'agencyos-web'],
-  PROJECTS: ['well', 'wellnexus'],
+  // 🎯 FOCUSED DELIVERY MODE — 3-worker assignment (Feb 28 2026)
+  // P0: standby (Opus 4.6) | P1: Well ONLY | P2: algo-trader ZERO BUG GO LIVE
+  PROJECTS: ['well', 'algo-trader'],
 
   // Self-Healer (v2026.2.13)
   HEALTH_CHECK_INTERVAL_MS: 30_000,
@@ -66,12 +66,13 @@ const config = {
   ANTIGRAVITY_KEY: 'GOD_MODE_ACTIVE',
   FULL_CLI_MODE: true, // P0 IS CC CLI — no monitor pane
   // 🦞 1-Tmux Session, 1 Window (`brain`), 2 Panes (P0=Opus, P1=Proxy)
-  // Pane targets: tom_hum:brain.0 (PRO) and tom_hum:brain.1 (API)
+  // 🦞 1-Tmux Session, 1 Window (`brain`), 3 Panes:
+  //   P0=Opus Standby, P1=Well (API/Proxy), P2=Algo-Trader (API/Proxy)
   TMUX_SESSION: 'tom_hum',
 
   // Agent Team orchestration
-  AGENT_TEAM_SIZE_DEFAULT: 1, // 1 worker per window
-  MAX_CONCURRENT_MISSIONS: 1, // 1 worker processing dynamically
+  AGENT_TEAM_SIZE_DEFAULT: 3, // 3 workers: P0(standby) P1(well) P2(algo-trader)
+  MAX_CONCURRENT_MISSIONS: 2, // P1 + P2 active, P0 standby
   AGENT_TEAM_TIMEOUT_MS: 4 * 60 * 60 * 1000, // 4 hours for deep missions
 
   // Complexity classification keywords

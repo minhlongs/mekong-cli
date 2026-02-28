@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@agencyos/i18n": "workspace:^",
+    "@mekong/i18n": "workspace:^",
     "@astrojs/mdx": "^4.3.7",
     "@astrojs/node": "^9.5.1",
     "@astrojs/react": "^4.0.0",

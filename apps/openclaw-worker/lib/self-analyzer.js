@@ -22,7 +22,10 @@ const PROXY_PORT = config.PROXY_PORT || 20128;
 
 function log(msg) {
     const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
-    try { fs.appendFileSync('/Users/macbookprom1/tom_hum_cto.log', `[${ts}] [tom-hum] [AGI-10] ${msg}\n`); } catch (e) { }
+    try {
+        const logFile = config.LOG_FILE || process.env.TOM_HUM_LOG || path.join(process.env.HOME || '/tmp', 'tom_hum_cto.log');
+        fs.appendFileSync(logFile, `[${ts}] [tom-hum] [AGI-10] ${msg}\n`);
+    } catch (e) { }
 }
 
 // ═══════════════════════════════════════════════════
