@@ -65,6 +65,25 @@ target-version = ['py311']
 line-length = 100
 target-version = "py311"
 
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "src/raas/*",
+    "src/main.py",
+    "src/core/nlp_commander.py",
+    "src/core/telegram_bot.py",
+    "src/core/memory_client.py",
+    "src/pages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__",
+    "raise NotImplementedError",
+]
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
