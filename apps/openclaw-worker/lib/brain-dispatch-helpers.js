@@ -143,6 +143,23 @@ async function autoApproveQuestion(output, workerIdx, TMUX_SESSION) {
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
   } else if (/Option A/i.test(output)) {
     tmuxExec(`tmux send-keys -t ${t} a Enter`, TMUX_SESSION);
+  } else if (
+    // CC CLI completion menu: "Tiếp tục / Kết thúc / Type something / Chat about this"
+    /Ti[eế]p t[uụ]c/i.test(output) ||
+    /Continue/i.test(output) ||
+    /1\.\s+(?:Ti[eế]p t[uụ]c|Continue)/i.test(output)
+  ) {
+    log(`QUESTION: CC CLI completion menu — selecting 'Tiếp tục/Continue'`);
+    // Menu uses arrow keys — option 1 is already highlighted by default, just Enter
+    tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
+  } else if (/Switch to Root Project/i.test(output)) {
+    log(`QUESTION: Project switch menu — selecting option 1 (stay)`);
+    tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
+  } else if (/not now|LSP|typescript-lsp|Never for/i.test(output)) {
+    log(`QUESTION: LSP recommendation — selecting 'No, not now'`);
+    tmuxExec(`tmux send-keys -t ${t} Down`, TMUX_SESSION);
+    await new Promise(r => setTimeout(r, 300));
+    tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
   } else {
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
   }

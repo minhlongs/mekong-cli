@@ -8,6 +8,7 @@ const { executeTask, detectProjectDir } = require('./mission-dispatcher');
 const { classifyContentTimeout } = require('./mission-complexity-classifier');
 const { pauseIfOverheating, waitForSafeTemperature } = require('./m1-cooling-daemon');
 const { runPostMissionGate } = require('./post-mission-gate');
+const { sendRewardSignal } = require('./openclaw-rl-client');
 const { recordMission, countTokensBetween } = require('./mission-journal');
 const { reflectOnMission } = require('./post-mortem-reflector');
 const { updateSessionStats } = require('./self-analyzer');
@@ -230,6 +231,17 @@ async function processQueue() {
         content,
         resultCode: result ? (result.result || '') : ''  // 🧬 FIX: pass result code for accurate failure classification
       });
+
+      // 🧠 OpenClaw-RL: Send reward signal for continuous learning
+      sendRewardSignal({
+        project: projectShortName || 'unknown',
+        missionId,
+        success: missionSuccess,
+        failureType: result ? (result.result || '') : 'no_result',
+        duration: durationMs,
+        buildResult,
+        prompt: content,
+      }).catch(e => log(`[OPENCLAW-RL] Reward error: ${e.message}`));
 
       if (fs.existsSync(filePath)) {
         fs.renameSync(filePath, path.join(config.PROCESSED_DIR, taskFile));

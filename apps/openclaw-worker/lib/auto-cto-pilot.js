@@ -484,22 +484,39 @@ async function handleScan(state, project, projectDir) {
       advanceProject(state);
       return;
     }
-    // Level 6: Strategic Autonomy — proactive improvement when GREEN
-    const dispatched = await tryStrategicMission(state, project, projectDir);
-    if (!dispatched) {
-      // AGI L11: ClawWork Economic Benchmark — dispatch khi idle
-      const ecoMission = generateEconomicMission();
-      if (ecoMission) {
-        fs.writeFileSync(path.join(config.WATCH_DIR, ecoMission.filename), ecoMission.prompt);
-        log(`AUTO-CTO [作戰 CLAWWORK]: ${project} GREEN → Economic benchmark dispatched`);
-      } else {
-        log(`AUTO-CTO [軍形 GREEN]: ${project} — ALL CLEAR ✅ Advancing to next project`);
+    // 🚀 GREEN PATH: Open Source RaaS AGI — đích đến của mọi dự án
+    // Khi project GREEN, đẩy hướng Open Source + RaaS AGI thay vì idle
+    const RAAS_COOLDOWN_MS = 30 * 60 * 1000; // 30 phút giữa các lần dispatch cùng project
+    const raasStateFile = path.join(__dirname, '..', `.raas-last-${project}.json`);
+    let raasRecentlyDispatched = false;
+    try {
+      if (fs.existsSync(raasStateFile)) {
+        const last = JSON.parse(fs.readFileSync(raasStateFile, 'utf-8'));
+        raasRecentlyDispatched = (Date.now() - last.ts) < RAAS_COOLDOWN_MS;
       }
-      advanceProject(state);
+    } catch (e) { /* ignore */ }
+
+    if (!raasRecentlyDispatched) {
+      // Project-specific Open Source RaaS AGI missions
+      const RAAS_MISSIONS = {
+        'mekong-cli': '/cook "始計 Open Source RaaS Hub: audit secrets → .env.example, README cho contributors, MIT LICENSE, npm audit fix, CI/CD pipeline cho open-source, ánh xạ binh_phap_master.md 13 chương vào kiến trúc. Target: production-ready open-source RaaS AGI CTO brain." --auto',
+        'algo-trader': '/cook "始計 Open Source AGI Trading Bot: audit credentials → .env.example, document AGI strategies trong README, clean tests, error handling missing env vars, security audit cho open-source RaaS marketplace release." --auto',
+        'well': '/cook "始計 Open Source Health Platform: audit Supabase keys, i18n vi/en hoàn chỉnh, PayOS integration docs, zero console errors, README cho RaaS open-source health platform release." --auto',
+        '84tea': '/cook "始計 Open Source F&B Platform: audit secrets, menu system docs, PWA optimization, README open-source contribution guide cho RaaS F&B vertical." --auto',
+      };
+      const mission = RAAS_MISSIONS[project];
+      if (mission) {
+        const filename = `HIGH_mission_${project}_open_source_raas_${Date.now()}.txt`;
+        fs.writeFileSync(path.join(config.WATCH_DIR, filename), `${project}: ${mission}`);
+        fs.writeFileSync(raasStateFile, JSON.stringify({ ts: Date.now(), project }));
+        log(`AUTO-CTO [🚀 OPEN SOURCE RaaS AGI]: ${project} GREEN → Dispatched open-source preparation mission`);
+      } else {
+        log(`AUTO-CTO [軍形 GREEN]: ${project} — ALL CLEAR ✅ (no RaaS mission defined)`);
+      }
     } else {
-      log(`AUTO-CTO [軍形 GREEN → 始計]: ${project} — Strategic mission dispatched. Advancing.`);
-      advanceProject(state);
+      log(`AUTO-CTO [軍形 GREEN]: ${project} — RaaS mission recently dispatched, cooldown active ⏳`);
     }
+    advanceProject(state);
     return;
   }
 

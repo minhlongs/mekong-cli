@@ -123,32 +123,42 @@ function isShellPrompt(output) {
 // --- Worker routing ---
 
 /**
- * findIdleWorker — intent-based routing (CLEAR RULES):
- *   P0 (PRO/Opus) ← PLAN, RESEARCH only
- *   P1 (API/Proxy) ← everything else (EXECUTION, COOK, etc.)
- * sessionName is the TMUX_SESSION_PRO or TMUX_SESSION_API (already includes pane).
- * Returns pane index (0 or 1) or -1 if busy.
+ * findIdleWorker — STRICT 1P1 Project Routing (Binh Phap Fix 2026-02-28):
+ * Chairman Rule: "MỖI P 1 DỰ ÁN TỪ ĐẦU ĐẾN CUỐI"
+ *   P0 ← mekong-cli ONLY
+ *   P1 ← algo-trader ONLY
+ *   P2 ← well ONLY
+ * 
+ * NO FALLBACK. NO OVERFLOW. NO EXCEPTIONS.
+ * Unknown projects → REJECTED (-1)
  */
-function findIdleWorker(sessionName = config.TMUX_SESSION, intent = 'EXECUTION') {
-  const isProIntent = intent === 'PLAN' || intent === 'RESEARCH' || intent === 'PRO';
-  const targetPane = isProIntent ? 0 : 1;
+function findIdleWorker(sessionName = config.TMUX_SESSION, intent = 'EXECUTION', projectDir = '') {
+  const projectName = projectDir ? require('path').basename(projectDir) : '';
+
+  // STRICT 1:1 Mapping — Chairman Decree
+  let targetPane = -1;
+  if (projectName === 'mekong-cli' || projectDir === config.MEKONG_DIR) {
+    targetPane = 0;
+  } else if (projectName === 'algo-trader') {
+    targetPane = 1;
+  } else if (projectName === 'well' || projectName === '84tea') {
+    targetPane = 2;
+  }
+
+  // Unknown project → REJECT (no fallback, no overflow)
+  if (targetPane === -1) {
+    log(`DISPATCH: ❌ REJECTED unknown project="${projectName}" — only mekong-cli/algo-trader/well allowed`);
+    return -1;
+  }
+
+  // Check if target pane is free
   if (!isWorkerBusy(targetPane)) {
-    log(`DISPATCH: → Worker P${targetPane} (idle) — intent=${intent}`);
+    log(`DISPATCH: → Worker P${targetPane} (strict 1:1) — project=${projectName}`);
     return targetPane;
   }
 
-  // 🦞 OVERFLOW P2 (Algo-Trader CC CLI 4.6): If primary pane is busy and intent is cook/execute,
-  // allow fallback to P2 which is fully capable.
-  if (!isProIntent && !isWorkerBusy(2)) {
-    log(`DISPATCH: → Worker P2 (overflow) — intent=${intent} (P1 is busy)`);
-    return 2;
-  }
-  // Even if planning, fallback to API worker if Pro is blocked
-  if (isProIntent && !isWorkerBusy(1)) {
-    log(`DISPATCH: → Worker P1 (fallback) — intent=${intent} (P0 is busy)`);
-    return 1;
-  }
-
+  // Pane busy → wait in queue, NEVER overflow to another pane
+  log(`DISPATCH: ⏳ P${targetPane} busy, ${projectName} waits in queue (NO overflow)`);
   return -1;
 }
 

@@ -64,10 +64,9 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride, complexi
     return { success: false, result: 'duplicate_rejected', elapsed: 0 };
   }
 
-  const workerIdx = findIdleWorker(TMUX_SESSION, intent);
-  // CHAIRMAN OVERRIDE removed — routing by intent is sufficient.
-  // P0 only receives PLAN/RESEARCH intents (via findIdleWorker).
-  // P1 receives all EXECUTION/COOK intents. No prompt-content check needed.
+  const workerIdx = findIdleWorker(TMUX_SESSION, intent, projectDir);
+  // P0 = mekong-cli, P1 = algo-trader, P2 = well (via sticky routing).
+  // If target pane is busy, it returns -1 to wait in queue.
   if (workerIdx === -1) {
     log(`MISSION BLOCKED: Worker busy — refusing dispatch`);
     return { success: false, result: 'all_workers_busy', elapsed: 0 };

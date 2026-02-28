@@ -128,6 +128,7 @@ const DIVISIONS = {
             'lib/skill-factory.js',
             'lib/vector-service.js',
             'lib/agi-score-calculator.js',
+            'lib/openclaw-rl-client.js',
         ],
     },
 

@@ -51,9 +51,9 @@ const config = {
   // Engine selection: 'antigravity' (default, port 20128) or 'qwen' (port 8081)
   // 🔒 LOCKED — 'antigravity' uses port 20128 → upstream AG 9191 + Google fallback
   ENGINE: process.env.TOM_HUM_ENGINE || 'antigravity',
-  // 🎯 FOCUSED DELIVERY MODE — 3-worker assignment (Feb 28 2026)
-  // P0: standby (Opus 4.6) | P1: Well ONLY | P2: algo-trader ZERO BUG GO LIVE
-  PROJECTS: ['well', 'algo-trader'],
+  // 🎯 STICKY ROUTING MODE — 3-worker assignment (Feb 28 2026)
+  // P0: mekong-cli | P1: algo-trader | P2: well
+  PROJECTS: ['mekong-cli', 'algo-trader', 'well'],
 
   // Self-Healer (v2026.2.13)
   HEALTH_CHECK_INTERVAL_MS: 30_000,
@@ -130,6 +130,15 @@ const config = {
 
   // 💰 Budget Enforcement (作戰 Ch.2) — 日費千金
   AG_HOURLY_BUDGET: 30,
+
+  // 🧠 OpenClaw-RL Integration (Continuous Reinforcement Learning)
+  // Connect to remote GPU server running OpenClaw-RL for self-improving CTO
+  OPENCLAW_RL_HOST: process.env.OPENCLAW_RL_HOST || null, // e.g. 'http://<GPU_IP>:30000/v1'
+  OPENCLAW_RL_API_KEY: process.env.OPENCLAW_RL_API_KEY || 'openclaw-rl',
+  OPENCLAW_RL_MODEL: process.env.OPENCLAW_RL_MODEL || 'qwen3-4b',
+  OPENCLAW_RL_ENABLED: !!process.env.OPENCLAW_RL_HOST, // Auto-enable when host is set
+  OPENCLAW_RL_FEEDBACK_MODE: process.env.OPENCLAW_RL_FEEDBACK_MODE || 'auto', // 'auto' | 'manual'
+  OPENCLAW_RL_COOLDOWN_MS: 5 * 60 * 1000, // 5 min between RL dispatches
 };
 
 // 🧬 DNA FUSION: BMAD × ClaudeKit — Slash command mapping
