@@ -35,14 +35,14 @@ function perceive() {
     const alerts = [];
     const metrics = {};
 
-    // 1. CPU Temperature (M1 Mac)
-    const tempOut = safeExec("sudo powermetrics -n 1 -i 100 --samplers smc 2>/dev/null | grep 'CPU die' | head -1");
-    const tempMatch = tempOut.match(/([\d.]+)\s*C/);
-    metrics.cpuTemp = tempMatch ? parseFloat(tempMatch[1]) : null;
-    if (metrics.cpuTemp && metrics.cpuTemp > 90) {
-        alerts.push({ type: 'cpu_hot', severity: 'high', message: `CPU temp ${metrics.cpuTemp}°C — throttling likely` });
-    } else if (metrics.cpuTemp && metrics.cpuTemp > 80) {
-        alerts.push({ type: 'cpu_warm', severity: 'medium', message: `CPU temp ${metrics.cpuTemp}°C — monitor closely` });
+    // 1. CPU Load Average (M1 Mac — no sudo needed, more reliable than powermetrics)
+    const loadOut = safeExec("sysctl -n vm.loadavg 2>/dev/null");
+    const loadMatch = loadOut.match(/([\d.]+)/);
+    metrics.cpuLoad1m = loadMatch ? parseFloat(loadMatch[1]) : null;
+    if (metrics.cpuLoad1m && metrics.cpuLoad1m > 8) {
+        alerts.push({ type: 'cpu_hot', severity: 'high', message: `CPU load ${metrics.cpuLoad1m} — system overloaded` });
+    } else if (metrics.cpuLoad1m && metrics.cpuLoad1m > 5) {
+        alerts.push({ type: 'cpu_warm', severity: 'medium', message: `CPU load ${metrics.cpuLoad1m} — elevated` });
     }
 
     // 2. Disk space
@@ -63,11 +63,11 @@ function perceive() {
         alerts.push({ type: 'memory_warn', severity: 'medium', message: 'Memory pressure WARNING' });
     }
 
-    // 4. Proxy ports alive
-    for (const port of [9191, 9192, 20128]) {
+    // 4. Proxy ports alive — both 9191 (CC CLI) and 20128 (Engine) are critical
+    for (const port of [9191, 20128]) {
         const alive = safeExec(`curl -sf http://127.0.0.1:${port}/health 2>/dev/null | head -c 10`);
         metrics[`port_${port}`] = alive.length > 0;
-        if (!alive && port === 20128) {
+        if (!alive) {
             alerts.push({ type: 'proxy_down', severity: 'high', message: `Proxy port ${port} is DOWN` });
         }
     }

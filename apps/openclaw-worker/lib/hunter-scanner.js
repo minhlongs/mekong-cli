@@ -6,10 +6,11 @@ const config = require('../config');
 // Scans for: TODO, FIXME, console.log, @ts-ignore, secrets
 // Generates: Mission content object
 
+// 🧬 FIX: Removed /g flag — .test() with /g mutates lastIndex causing false negatives on alternating calls
 const PATTERNS = [
-  { name: 'TECH_DEBT', regex: /\/\/\s*(TODO|FIXME):/g, type: 'SIMPLE', pane: 'WORKER', limit: 10 },
-  { name: 'CONSOLE_LOG', regex: /console\.(log|warn|error)/g, type: 'SIMPLE', pane: 'WORKER', limit: 20 },
-  { name: 'TYPE_SAFETY', regex: /(@ts-ignore|: any)/g, type: 'SIMPLE', pane: 'WORKER', limit: 15 },
+  { name: 'TECH_DEBT', regex: /\/\/\s*(TODO|FIXME):/, type: 'SIMPLE', pane: 'WORKER', limit: 10 },
+  { name: 'CONSOLE_LOG', regex: /console\.(log|warn|error)/, type: 'SIMPLE', pane: 'WORKER', limit: 20 },
+  { name: 'TYPE_SAFETY', regex: /(@ts-ignore|: any)/, type: 'SIMPLE', pane: 'WORKER', limit: 15 },
   { name: 'SECURITY_RISK', regex: /(password|api_key|secret)\s*=/i, type: 'COMPLEX', pane: 'THINKER', limit: 5 }
 ];
 
@@ -38,19 +39,21 @@ function scanProject(dir, options = {}) {
       if (stat.isDirectory()) {
         walk(filePath);
       } else if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js')) {
-        const content = fs.readFileSync(filePath, 'utf8');
-        PATTERNS.forEach(pattern => {
-          if (pattern.regex.test(content)) {
-            // Check if we already have enough of this type
-            const curTypeCount = issues.filter(i => i.pattern === pattern.name).length;
-            if (curTypeCount < (pattern.limit || 10)) {
+        let content;
+        try { content = fs.readFileSync(filePath, 'utf8'); } catch (e) { continue; }
+        PATTERNS.forEach(pat => {
+          const match = pat.regex.exec(content);
+          if (match) {
+            const curTypeCount = issues.filter(i => i.pattern === pat.name).length;
+            if (curTypeCount < (pat.limit || 10)) {
+              // 🧬 FIX: Use match.index for accurate line counting
+              const lineNum = (content.substring(0, match.index).match(/\n/g) || []).length + 1;
               issues.push({
                 file: filePath.replace(dir, ''),
-                pattern: pattern.name,
-                type: pattern.type,
-                pane: pattern.pane,
-                // simple line finding
-                line: (content.substring(0, pattern.regex.lastIndex).match(/\n/g) || []).length + 1
+                pattern: pat.name,
+                type: pat.type,
+                pane: pat.pane,
+                line: lineNum
               });
             }
           }
@@ -63,35 +66,22 @@ function scanProject(dir, options = {}) {
   return issues;
 }
 
-// Gemini Flash Verification (The Beggar Strategy)
+// Gemini Flash Verification (The Beggar Strategy) — uses proxy-client (Anthropic format)
 async function verifyIssueWithGemini(fileContent, pattern, filePath) {
   try {
-    // FIXED: Use Cloud Brain URL (Serveo/Ollama) - No Legacy Proxy
-    const PROXY_URL = `${config.CLOUD_BRAIN_URL}/v1/chat/completions`;
-    // Fallback model from config or hardcoded equivalent
-    const MODEL = config.FALLBACK_MODEL_NAME || 'gemini-2.0-flash';
-
-    const response = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: "You are a Senior Code Auditor. Verify if the code snippet contains a REAL issue relating to the pattern. Return JSON: { isReal: boolean, severity: 'low'|'high', fixSuggestion: string }" },
-          { role: "user", content: `Pattern: ${pattern}\nFile: ${filePath}\n\nCode snippet:\n${fileContent.slice(0, 2000)}...` }
-        ],
-        temperature: 0.1
-      })
+    const { callLLM } = require('./proxy-client');
+    const result = await callLLM({
+      system: "You are a Senior Code Auditor. Verify if the code snippet contains a REAL issue. Return JSON: { isReal: boolean, severity: 'low'|'high', fixSuggestion: string }",
+      user: `Pattern: ${pattern}\nFile: ${filePath}\n\nCode snippet:\n${fileContent.slice(0, 2000)}`,
+      maxTokens: 200,
+      timeoutMs: 10000,
     });
 
-    if (!response.ok) return { isReal: true, note: "Verification skipped (API Error)" }; // Fail safe: assume real
-    const data = await response.json();
+    if (!result) return { isReal: true, note: "Verification skipped (LLM returned null)" };
 
     // Parse JSON from content (handle markdown wrapping)
-    let content = data.choices[0].message.content;
-    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(content);
-
+    const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned);
   } catch (e) {
     return { isReal: true, note: `Verification skipped: ${e.message}` };
   }

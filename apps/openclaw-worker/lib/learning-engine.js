@@ -55,9 +55,11 @@ function saveLessons(lessons) {
  */
 function recordOutcome(taskId, project, result, elapsedSec, missionSummary = null) {
   const outcomes = loadOutcomes();
+  // 🧬 FIX: Accept 'done' OR 'success' as success indicators (brain-mission-runner returns 'done')
+  const isSuccess = result === 'done' || result === 'success' || result === true;
   const outcome = {
     taskId, project, result,
-    success: result === 'done',
+    success: isSuccess,
     elapsedSec,
     summary: missionSummary?.summary || '',
     filesChanged: missionSummary?.filesChanged || 0,
@@ -66,7 +68,7 @@ function recordOutcome(taskId, project, result, elapsedSec, missionSummary = nul
   outcomes.push(outcome);
   saveOutcomes(outcomes);
   analyzePatterns(outcomes);
-  log(`Recorded: ${taskId} → ${result} (${elapsedSec}s)${outcome.filesChanged ? ` [${outcome.filesChanged} files]` : ''}`);
+  log(`Recorded: ${taskId} → ${result} (${isSuccess ? '✅' : '❌'}) (${elapsedSec}s)${outcome.filesChanged ? ` [${outcome.filesChanged} files]` : ''}`);
   return outcome;
 }
 
@@ -204,4 +206,48 @@ function getAvoidPatterns() {
   return (lessons.rules || []).filter(r => r.startsWith('AVOID:')).map(r => r.split('—')[0].replace('AVOID:', '').trim());
 }
 
-module.exports = { recordOutcome, getSuccessRates, getTaskAdjustments, getReport, analyzePatterns, startLearningEngine, stopLearningEngine, getAvoidPatterns };
+/**
+ * Get adaptive dispatch hints based on learned patterns.
+ * Returns timeout/complexity adjustments for a given task type.
+ * @param {string} taskContent - Mission content text
+ * @returns {{ timeoutMultiplier: number, shouldSkip: boolean, preferredIntent: string|null, reason: string }}
+ */
+function getDispatchHints(taskContent) {
+  const lowerContent = (taskContent || '').toLowerCase().slice(0, 100);
+  const adjustments = getTaskAdjustments();
+  const lessons = loadLessons();
+
+  // Check if any AVOID rules match this task content
+  const avoidPatterns = getAvoidPatterns();
+  for (const pattern of avoidPatterns) {
+    if (lowerContent.includes(pattern.toLowerCase())) {
+      return { timeoutMultiplier: 0, shouldSkip: true, preferredIntent: null, reason: `AVOID: ${pattern} — historical success <30%` };
+    }
+  }
+
+  // Check if any DEPRIORITIZE rules match (0 changes repeatedly)
+  const deprioritized = (lessons.rules || []).filter(r => r.startsWith('DEPRIORITIZE:'));
+  for (const rule of deprioritized) {
+    const taskId = rule.split('—')[0].replace('DEPRIORITIZE:', '').trim();
+    if (lowerContent.includes(taskId.toLowerCase())) {
+      return { timeoutMultiplier: 0.5, shouldSkip: false, preferredIntent: null, reason: `DEPRIORITIZE: ${taskId} — diminishing returns` };
+    }
+  }
+
+  // Success rate-based timeout adjustment
+  const rates = getSuccessRates();
+  for (const [taskId, stats] of Object.entries(rates)) {
+    if (lowerContent.includes(taskId.toLowerCase())) {
+      if (stats.runs >= 3 && stats.rate > 80) {
+        return { timeoutMultiplier: 0.8, shouldSkip: false, preferredIntent: null, reason: `High success (${stats.rate}%) — optimized timeout` };
+      }
+      if (stats.runs >= 3 && stats.avgTime > 1800) {
+        return { timeoutMultiplier: 1.5, shouldSkip: false, preferredIntent: 'PLAN', reason: `Slow task (avg ${stats.avgTime}s) — extended timeout + PLAN intent` };
+      }
+    }
+  }
+
+  return { timeoutMultiplier: 1.0, shouldSkip: false, preferredIntent: null, reason: 'No learned pattern' };
+}
+
+module.exports = { recordOutcome, getSuccessRates, getTaskAdjustments, getReport, analyzePatterns, startLearningEngine, stopLearningEngine, getAvoidPatterns, getDispatchHints };

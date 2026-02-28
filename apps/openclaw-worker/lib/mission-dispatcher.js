@@ -58,13 +58,16 @@ try {
   log(`WARN: post-mortem-reflector not found: ${e.message}`);
 }
 
-const VI_PREFIX = 'Trả lời bằng TIẾNG VIỆT. ';
-const FILE_LIMIT = 'Chỉ sửa TỐI ĐA 5 file mỗi mission. Nếu cần sửa nhiều hơn, báo cáo danh sách còn lại.';
+// 🧬 LEARNING LOOP: Dispatch hints from learning-engine
+let getDispatchHints = () => ({ timeoutMultiplier: 1.0, shouldSkip: false, preferredIntent: null, reason: 'no_learning_engine' });
+try {
+  const le = require('./learning-engine');
+  getDispatchHints = le.getDispatchHints || getDispatchHints;
+} catch (e) {
+  log(`WARN: learning-engine not found: ${e.message}`);
+}
 
-// 🧬 BRAIN SURGERY: Cache memory.md reads (TTL 60s)
-let _memoryCacheContent = '';
-let _memoryCacheTs = 0;
-const MEMORY_CACHE_TTL = 60000; // 60 seconds
+// 🧬 Dead code cleaned: VI_PREFIX, FILE_LIMIT, memory cache vars (unused at module level)
 
 // Project routing: detect project from task content keywords
 function detectProjectDir(taskContent, taskFile = '') {
@@ -395,6 +398,16 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
     log(`⚠️ SAFETY CAUTION: ${taskFile} — ${safety.reason} (proceeding in CTO auto mode)`);
   }
 
+  // 🧬 LEARNING LOOP: Check dispatch hints before executing
+  const hints = getDispatchHints(taskContent);
+  if (hints.shouldSkip) {
+    log(`🧠 LEARNING SKIP: ${taskFile} — ${hints.reason}`);
+    return { success: false, result: 'learning_skip', elapsed: 0 };
+  }
+  if (hints.reason !== 'No learned pattern' && hints.reason !== 'no_learning_engine') {
+    log(`🧠 LEARNING HINT: ${hints.reason} [timeout×${hints.timeoutMultiplier}]`);
+  }
+
   const projectDir = detectProjectDir(taskContent, taskFile);
   const lowerContent = taskContent.toLowerCase();
 
@@ -406,12 +419,19 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
   if ((lowerContent.includes('deep 10x') || lowerContent.includes('deep scan') || lowerContent.includes('ánh xạ')) && isPro) {
     intent = 'PLAN';
   }
+  // 🦞 PROJECT ROUTING: AGI/openclaw tasks → P0 (PRO intent)
+  if (/\bagi\b|openclaw-worker|mekong-cli/i.test(taskContent) && isPro) {
+    intent = 'PRO';
+    log(`[ROUTING] AGI/openclaw task detected → forcing PRO intent (P0)`);
+  }
 
   let prompt = buildPrompt(taskContent, projectDir);
 
   // 🧬 BRAIN SURGERY: Well-specific strategic mandates (REMOVED - Simplified)
 
-  const finalTimeout = timeoutMs || (isTeamMission(prompt) ? config.AGENT_TEAM_TIMEOUT_MS : config.MISSION_TIMEOUT_MS);
+  // 🧬 LEARNING LOOP: Apply timeout multiplier from learned patterns
+  const baseTimeout = timeoutMs || (isTeamMission(prompt) ? config.AGENT_TEAM_TIMEOUT_MS : config.MISSION_TIMEOUT_MS);
+  const finalTimeout = Math.round(baseTimeout * (hints.timeoutMultiplier || 1.0));
   const mode = isTeamMission(prompt) ? 'AGENT_TEAM' : 'SINGLE';
 
   // 10x Predictive Cooling: Pre-purge for complex missions
@@ -445,7 +465,7 @@ async function executeTask(taskContent, taskFile, timeoutMs, complexity) {
         log(`[PLAN - FIRST] Planning complete.Plan saved.Waiting for review before / cook.`);
         try {
           const execSync = require('child_process').execSync;
-          const lsCmdPlans = `ls - t "${projectDir}/plans"/*/plan.md 2>/dev/null | head -n 1`;
+          const lsCmdPlans = `ls -t "${projectDir}/plans"/*/plan.md 2>/dev/null | head -n 1`;
           let latestPlan = '';
           try { latestPlan = execSync(lsCmdPlans, { encoding: 'utf8' }).trim(); } catch (e) { }
           if (latestPlan) {

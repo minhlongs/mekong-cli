@@ -68,13 +68,23 @@ function getQueueStats() {
   return { pending: queue.length, active: activeCount, dlqCount };
 }
 
-async function processQueue() {
-  // 🧬 FIX Bug #3: Sort queue by priority before processing
-  queue.sort((a, b) => getPriority(a) - getPriority(b));
+let _processing = false; // 🧬 FIX: Mutex guard against concurrent processQueue() calls
 
-  // 🥪 DUAL-STREAM FLYWHEEL: Allow 2 concurrent missions (P0 and P1)
-  if (activeCount >= 2 || queue.length === 0) return;
-  activeCount++;
+async function processQueue() {
+  // 🧬 FIX Bug #13: Prevent race condition — only one processQueue at a time
+  if (_processing) return;
+  _processing = true;
+
+  try {
+    // 🧬 FIX Bug #3: Sort queue by priority before processing
+    queue.sort((a, b) => getPriority(a) - getPriority(b));
+
+    // 🥪 DUAL-STREAM FLYWHEEL: Allow 2 concurrent missions (P0 and P1)
+    if (activeCount >= 2 || queue.length === 0) return;
+    activeCount++;
+  } finally {
+    _processing = false;
+  }
 
   // NOTE: Thermal gate removed here — brain-process-manager.runMission() handles it.
   // Double thermal gate caused CTO to freeze indefinitely.
@@ -284,11 +294,12 @@ function startWatching() {
       const files = fs.readdirSync(config.WATCH_DIR);
       const tasks = files.filter(f => config.TASK_PATTERN.test(f));
       // 🧬 FIX Bug #2: Check queuedSet instead of O(n) array includes
-      const newTasks = tasks.filter(f => !queuedSet.has(f) && !processingSet.has(f) && f !== currentTaskFile);
+      const newTasks = tasks.filter(f => !queuedSet.has(f) && !processingSet.has(f) && f !== currentTaskFile
+        && !fs.existsSync(path.join(config.PROCESSED_DIR, f))); // 🧬 FIX #17: Skip already-processed
       if (newTasks.length > 0) {
         log(`Poll found new: ${newTasks.join(', ')}`);
       }
-      tasks.forEach(enqueue);
+      newTasks.forEach(enqueue); // 🧬 FIX #17: Only enqueue truly new tasks (not all matched)
     } catch (e) {
       log(`[QUEUE] Poll error (will retry): ${e.message}`);
       pollFailCount = (pollFailCount || 0) + 1;

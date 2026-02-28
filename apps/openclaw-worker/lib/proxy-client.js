@@ -13,8 +13,8 @@ const fs = require('fs');
 const config = require('../config');
 
 const PROXY_URL = `${config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128'}/v1/messages`;
-const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 3000;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
 
 function log(msg) {
     const ts = new Date().toISOString().slice(11, 19);
