@@ -15,6 +15,7 @@ from datetime import datetime
 # Import standards
 try:
     from src.binh_phap.standards import (
+        StandardCheck,
         get_raas_standards,
         get_oss_standards,
         get_anima_standards,
@@ -23,6 +24,7 @@ except ImportError:
     # Fallback if running as script from root
     sys.path.append(os.getcwd())
     from src.binh_phap.standards import (
+        StandardCheck,
         get_raas_standards,
         get_oss_standards,
         get_anima_standards,

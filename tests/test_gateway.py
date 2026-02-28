@@ -1030,7 +1030,7 @@ class TestEventBus(unittest.TestCase):
     def test_unsubscribe(self):
         """Unsubscribed callbacks should not receive events."""
         received = []
-        cb = lambda e: received.append(e)
+        def cb(e): received.append(e)
         self.bus.subscribe(EventType.GOAL_STARTED, cb)
         self.bus.unsubscribe(EventType.GOAL_STARTED, cb)
         self.bus.emit(EventType.GOAL_STARTED)
@@ -1228,7 +1228,7 @@ class TestScheduler(unittest.TestCase):
 
     def test_get_due_jobs_none(self):
         """No jobs should be due immediately after adding with future next_run."""
-        job = self.scheduler.add_job("future", "goal", interval_seconds=9999)
+        self.scheduler.add_job("future", "goal", interval_seconds=9999)
         due = self.scheduler.get_due_jobs()
         self.assertEqual(len(due), 0)
 

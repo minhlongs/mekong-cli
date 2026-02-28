@@ -60,7 +60,7 @@ class RecipeRegistry:
                     tags=meta.get("tags", "").split(",") if meta.get("tags") else []
                 )
                 index.append(entry)
-            except (ValueError, KeyError, OSError) as e:
+            except (ValueError, KeyError, OSError):
                 # Skip invalid recipes silently
                 continue
 

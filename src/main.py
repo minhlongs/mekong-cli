@@ -24,6 +24,8 @@ from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 from src.core.planner import PlanningContext, TaskComplexity
 from src.core.llm_client import get_client
 from src.agents import LeadHunter, ContentWriter, RecipeCrawler
+from src.cli.binh_phap_commands import app as binh_phap_app
+from src.commands.agi import app as agi_app
 from rich.prompt import Prompt
 
 # Import BMAD CLI (using dash naming convention)
@@ -66,8 +68,6 @@ autonomous_app = typer.Typer(help="Autonomous: AGI loop control")
 app.add_typer(autonomous_app, name="autonomous")
 
 # Binh Pháp sub-commands
-from src.cli.binh_phap_commands import app as binh_phap_app
-
 app.add_typer(
     binh_phap_app,
     name="binh-phap",
@@ -75,8 +75,6 @@ app.add_typer(
 )
 
 # AGI daemon sub-commands
-from src.commands.agi import app as agi_app
-
 app.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
 
 console = Console()
