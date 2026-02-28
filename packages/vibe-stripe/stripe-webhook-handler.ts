@@ -51,8 +51,8 @@ export function createStripeWebhookHandler(config: StripeWebhookHandlerConfig) {
      * @param signatureHeader — Value of `Stripe-Signature` header
      */
     async handleRequest(rawBody: string, signatureHeader: string): Promise<WebhookResult> {
-      // Step 1: Verify signature
-      const verification = verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
+      // Step 1: Verify signature via real HMAC-SHA256
+      const verification = await verifyStripeSignatureAsync(rawBody, signatureHeader, webhookSecret);
       if (!verification.valid || !verification.event) {
         return { status: 'error', message: verification.error ?? 'Invalid signature' };
       }
@@ -87,8 +87,8 @@ export function createStripeWebhookHandler(config: StripeWebhookHandlerConfig) {
     },
 
     /** Verify signature only (without processing) */
-    verify(rawBody: string, signatureHeader: string): StripeWebhookVerifyResult {
-      return verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
+    async verify(rawBody: string, signatureHeader: string): Promise<StripeWebhookVerifyResult> {
+      return verifyStripeSignatureAsync(rawBody, signatureHeader, webhookSecret);
     },
   };
 }
@@ -122,60 +122,22 @@ async function routeEvent(event: StripeWebhookEvent, handlers: StripeWebhookHand
   }
 }
 
-// ─── Signature Verification ─────────────────────────────────────
+// ─── Signature Verification (HMAC-SHA256) ───────────────────────
 
-/**
- * Verify Stripe webhook signature using HMAC-SHA256.
- * Stripe-Signature header format: `t=timestamp,v1=hex_signature`
- *
- * Uses Web Crypto API (works in Node.js 18+, Cloudflare Workers, Deno, Bun).
- */
-function verifyWebhookSignature(
-  rawBody: string,
-  sigHeader: string,
-  _secret: string,
-): StripeWebhookVerifyResult {
-  try {
-    // Parse signature header
-    const parts = sigHeader.split(',').reduce<Record<string, string>>((acc, part) => {
-      const [key, value] = part.split('=', 2);
-      if (key && value) acc[key.trim()] = value.trim();
-      return acc;
-    }, {});
-
-    const timestamp = parts['t'];
-    const expectedSig = parts['v1'];
-
-    if (!timestamp || !expectedSig) {
-      return { valid: false, error: 'Missing timestamp or signature in header' };
-    }
-
-    // Check timestamp tolerance (5 minutes)
-    const eventTime = parseInt(timestamp, 10);
-    const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - eventTime) > 300) {
-      return { valid: false, error: 'Webhook timestamp outside tolerance (5 min)' };
-    }
-
-    // Note: Actual HMAC verification requires async crypto.subtle
-    // For synchronous verification, use node:crypto in Node.js environments.
-    // This structural implementation parses and validates the event format.
-    const event = JSON.parse(rawBody) as StripeWebhookEvent;
-
-    // Validate event structure
-    if (!event.id || !event.type || !event.data) {
-      return { valid: false, error: 'Invalid event structure' };
-    }
-
-    return { valid: true, event };
-  } catch (err) {
-    return { valid: false, error: err instanceof Error ? err.message : 'Verification failed' };
-  }
+/** Parse Stripe-Signature header into timestamp + v1 signature */
+function parseSigHeader(sigHeader: string): { timestamp: string | undefined; signature: string | undefined } {
+  const parts = sigHeader.split(',').reduce<Record<string, string>>((acc, part) => {
+    const [key, value] = part.split('=', 2);
+    if (key && value) acc[key.trim()] = value.trim();
+    return acc;
+  }, {});
+  return { timestamp: parts['t'], signature: parts['v1'] };
 }
 
 /**
  * Async HMAC-SHA256 verification using Web Crypto API.
- * Use this in environments that support crypto.subtle (Node 18+, Workers, Deno).
+ * Works in Node.js 18+, Cloudflare Workers, Deno, Bun.
+ * Uses constant-time comparison to prevent timing attacks.
  */
 export async function verifyStripeSignatureAsync(
   rawBody: string,
@@ -183,14 +145,7 @@ export async function verifyStripeSignatureAsync(
   secret: string,
 ): Promise<StripeWebhookVerifyResult> {
   try {
-    const parts = sigHeader.split(',').reduce<Record<string, string>>((acc, part) => {
-      const [key, value] = part.split('=', 2);
-      if (key && value) acc[key.trim()] = value.trim();
-      return acc;
-    }, {});
-
-    const timestamp = parts['t'];
-    const expectedSig = parts['v1'];
+    const { timestamp, signature: expectedSig } = parseSigHeader(sigHeader);
 
     if (!timestamp || !expectedSig) {
       return { valid: false, error: 'Missing timestamp or signature' };
@@ -218,11 +173,25 @@ export async function verifyStripeSignatureAsync(
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    if (computedSig !== expectedSig) {
+    // Constant-time comparison to prevent timing attacks
+    if (computedSig.length !== expectedSig.length) {
+      return { valid: false, error: 'Signature mismatch' };
+    }
+    let mismatch = 0;
+    for (let i = 0; i < computedSig.length; i++) {
+      mismatch |= computedSig.charCodeAt(i) ^ expectedSig.charCodeAt(i);
+    }
+    if (mismatch !== 0) {
       return { valid: false, error: 'Signature mismatch' };
     }
 
     const event = JSON.parse(rawBody) as StripeWebhookEvent;
+
+    // Validate event structure
+    if (!event.id || !event.type || !event.data) {
+      return { valid: false, error: 'Invalid event structure' };
+    }
+
     return { valid: true, event };
   } catch (err) {
     return { valid: false, error: err instanceof Error ? err.message : 'Async verification failed' };
