@@ -1,1 +1,0 @@
-well: /cook "Deep 10x scan Well project — verify all pages render correctly, check i18n translations complete, audit Supabase queries for error handling, verify PayOS integration, ensure zero console errors on production build. Fix any issues found." --auto
