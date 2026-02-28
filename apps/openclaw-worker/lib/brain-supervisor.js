@@ -263,7 +263,9 @@ function supervisionCycle() {
                     log(`[SUPERVISOR] Heartbeat stale detected — brain may be frozen`);
                 }
 
-                triggerRespawn();
+                // 🦞 FIX 2026-02-28: Disable internal triggerRespawn.
+                // Rely strictly on external tom-hum-watchdog.sh to avoid race conditions.
+                // triggerRespawn();
             }
         } else {
             // Reset stuck tracker — CC CLI is responsive
@@ -290,7 +292,8 @@ function supervisionCycle() {
                     const successRate = recent.filter(m => m.success).length / recent.length;
                     if (successRate < SUCCESS_RATE_THRESHOLD) {
                         log(`⚠️ Mission success rate: ${Math.round(successRate * 100)}% (last 10)`);
-                        triggerSurgery(`Success rate ${Math.round(successRate * 100)}% < ${SUCCESS_RATE_THRESHOLD * 100}%`);
+                        // 🦞 FIX 2026-02-28: Supervisor is crashing session due to this
+                        // triggerSurgery(`Success rate ${Math.round(successRate * 100)}% < ${SUCCESS_RATE_THRESHOLD * 100}%`);
                     }
                 }
             }
