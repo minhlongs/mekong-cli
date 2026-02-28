@@ -96,7 +96,7 @@ export interface StripeWebhookVerifyResult {
 
 export interface StripeSubscriptionInfo {
   id: string;
-  status: 'active' | 'trialing' | 'past_due' | 'paused' | 'canceled' | 'unpaid' | 'incomplete';
+  status: 'active' | 'trialing' | 'past_due' | 'paused' | 'canceled' | 'unpaid' | 'incomplete' | 'incomplete_expired';
   currentPeriodStart: number;
   currentPeriodEnd: number;
   cancelAtPeriodEnd: boolean;

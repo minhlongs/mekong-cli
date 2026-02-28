@@ -67,13 +67,17 @@ export class StripeAdapter implements VibePaymentProvider {
   }
 
   async getPaymentStatus(orderCode: number): Promise<VibePaymentStatus> {
-    // Stripe doesn't natively index by orderCode — search by metadata
     const sessions = await this.stripeGet<{ data: Record<string, unknown>[] }>(
       '/checkout/sessions',
-      { limit: '1' },
+      { limit: '10' },
     );
 
-    const session = sessions.data[0];
+    // Filter by orderCode in metadata (Stripe doesn't support metadata filtering in list)
+    const session = sessions.data.find(s => {
+      const meta = s.metadata as Record<string, string> | undefined;
+      return meta?.orderCode === String(orderCode);
+    }) ?? sessions.data[0];
+
     const status = session?.payment_status as string;
 
     return {
@@ -88,7 +92,21 @@ export class StripeAdapter implements VibePaymentProvider {
   }
 
   async cancelPayment(orderCode: number, _reason?: string): Promise<VibePaymentStatus> {
-    // Stripe checkout sessions can't be cancelled directly — expire them
+    // Find session by orderCode, then expire it
+    const sessions = await this.stripeGet<{ data: Record<string, unknown>[] }>(
+      '/checkout/sessions',
+      { limit: '10' },
+    );
+
+    const session = sessions.data.find(s => {
+      const meta = s.metadata as Record<string, string> | undefined;
+      return meta?.orderCode === String(orderCode);
+    });
+
+    if (session?.id && session.status === 'open') {
+      await this.stripePost(`/checkout/sessions/${session.id}/expire`, {});
+    }
+
     return this.getPaymentStatus(orderCode);
   }
 
@@ -393,8 +411,9 @@ function mapStripeEventToVibeEvent(stripeType: string): 'payment.paid' | 'paymen
 }
 
 /**
- * Verify Stripe webhook signature (HMAC-SHA256).
+ * Verify Stripe webhook signature (HMAC-SHA256) using node:crypto.
  * Stripe uses `t=timestamp,v1=signature` format in Stripe-Signature header.
+ * Synchronous version — for async Web Crypto API, use verifyStripeSignatureAsync.
  */
 function verifyStripeSignature(payload: string, sigHeader: string, secret: string): boolean {
   try {
@@ -404,21 +423,24 @@ function verifyStripeSignature(payload: string, sigHeader: string, secret: strin
 
     if (!timestamp || !signature) return false;
 
-    // Build signed payload: `${timestamp}.${payload}`
+    // Timestamp tolerance check (5 min)
+    const now = Math.floor(Date.now() / 1000);
+    if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
+
+    // HMAC-SHA256 via node:crypto
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const crypto = require('node:crypto');
     const signedPayload = `${timestamp}.${payload}`;
+    const computedSig = crypto
+      .createHmac('sha256', secret)
+      .update(signedPayload)
+      .digest('hex');
 
-    // HMAC-SHA256 verification would require crypto module
-    // In production, use: crypto.createHmac('sha256', secret).update(signedPayload).digest('hex')
-    // For framework-agnostic approach, delegate to runtime's crypto
-    const encoder = new TextEncoder();
-    // Note: Actual HMAC verification should be done server-side with appropriate crypto
-    // This is a structural placeholder — real verification uses crypto.subtle or node:crypto
-    void encoder;
-    void signedPayload;
-    void secret;
-
-    // Return true for structural completeness — real impl below in createStripeWebhookVerifier
-    return true;
+    // Constant-time comparison to prevent timing attacks
+    return crypto.timingSafeEqual(
+      Buffer.from(computedSig, 'hex'),
+      Buffer.from(signature, 'hex'),
+    );
   } catch {
     return false;
   }
