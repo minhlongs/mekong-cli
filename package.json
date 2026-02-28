@@ -2,6 +2,7 @@
   "name": "mekong-cli",
   "version": "2.1.33",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "description": "RaaS Agency Operating System - Powered by Binh Phap & ClaudeKit DNA",
   "author": "Binh Phap Venture Studio",
   "license": "MIT",
