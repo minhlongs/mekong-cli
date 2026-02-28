@@ -10,35 +10,30 @@
     "AVOID: /plan:hard \"Trả lời bằng TIẾNG VIỆT. WOR — 0% success (0/3)",
     "AVOID: /cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook — 0% success (0/3)",
     "AVOID: /debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo — 0% success (0/3)",
-    "DEPRIORITIZE: /cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook — 0 changes 3x in a row"
+    "DEPRIORITIZE: /cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook — 0 changes 3x in a row",
+    "DEPRIORITIZE: /plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF — 0 changes 3x in a row",
+    "DEPRIORITIZE: /debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo — 0 changes 3x in a row"
   ],
   "patterns": {
     "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
-      "runs": 76,
-      "successes": 8,
-      "rate": 11,
-      "avgTime": 91,
-      "totalTime": 6884,
+      "runs": 56,
+      "successes": 7,
+      "rate": 13,
+      "avgTime": 89,
+      "totalTime": 4995,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T18:46:05.712Z"
     },
-    "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
-      "runs": 8,
-      "successes": 3,
-      "rate": 38,
-      "avgTime": 103,
-      "totalTime": 824,
-      "filesChanged": 0,
-      "lastRun": "2026-02-26T16:54:32.841Z"
-    },
     "/plan:parallel \"Trả lời bằng TIẾNG VIỆT.": {
-      "runs": 18,
-      "successes": 0,
-      "rate": 0,
+      "runs": 13,
+      "successes": 1,
+      "rate": 8,
       "avgTime": 92,
-      "totalTime": 1656,
+      "totalTime": 1202,
       "filesChanged": 0,
-      "lastRun": "2026-02-27T01:32:26.583Z"
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-02-28T08:28:39.329Z"
     },
     "/debug \"Trả lời bằng TIẾNG VIỆT. WORKFLO": {
       "runs": 1,
@@ -47,6 +42,7 @@
       "avgTime": 60,
       "totalTime": 60,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T06:28:06.256Z"
     },
     "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI": {
@@ -56,6 +52,7 @@
       "avgTime": 84,
       "totalTime": 2026,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T09:05:06.613Z"
     },
     "/cook \"Trả lời bằng TIẾNG VIỆT. 📜 BINH ": {
@@ -65,16 +62,28 @@
       "avgTime": 86,
       "totalTime": 432,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T07:19:22.145Z"
     },
     "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF": {
-      "runs": 9,
-      "successes": 0,
-      "rate": 0,
-      "avgTime": 119,
-      "totalTime": 1067,
+      "runs": 18,
+      "successes": 9,
+      "rate": 50,
+      "avgTime": 92,
+      "totalTime": 1649,
       "filesChanged": 0,
-      "lastRun": "2026-02-26T17:41:54.106Z"
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-02-28T10:25:50.924Z"
+    },
+    "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
+      "runs": 7,
+      "successes": 2,
+      "rate": 29,
+      "avgTime": 109,
+      "totalTime": 762,
+      "filesChanged": 0,
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-02-26T16:54:32.841Z"
     },
     "/plan:hard \"Trả lời bằng TIẾNG VIỆT. WOR": {
       "runs": 9,
@@ -83,16 +92,18 @@
       "avgTime": 89,
       "totalTime": 797,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-27T12:19:30.339Z"
     },
     "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
-      "runs": 41,
-      "successes": 6,
-      "rate": 15,
-      "avgTime": 85,
-      "totalTime": 3493,
+      "runs": 55,
+      "successes": 20,
+      "rate": 36,
+      "avgTime": 80,
+      "totalTime": 4397,
       "filesChanged": 0,
-      "lastRun": "2026-02-27T13:46:45.046Z"
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-02-28T10:50:51.358Z"
     },
     "/test \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
       "runs": 2,
@@ -101,16 +112,18 @@
       "avgTime": 85,
       "totalTime": 170,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T19:02:37.011Z"
     },
     "/debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo": {
-      "runs": 5,
-      "successes": 0,
-      "rate": 0,
-      "avgTime": 86,
-      "totalTime": 428,
+      "runs": 8,
+      "successes": 3,
+      "rate": 38,
+      "avgTime": 78,
+      "totalTime": 622,
       "filesChanged": 0,
-      "lastRun": "2026-02-27T08:29:43.523Z"
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-02-28T11:07:25.223Z"
     },
     "/plan:hard \"verify flywheel architecture": {
       "runs": 1,
@@ -119,6 +132,7 @@
       "avgTime": 85,
       "totalTime": 85,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-27T01:29:25.299Z"
     },
     "/cook \"add test.txt with hello world\"": {
@@ -128,8 +142,9 @@
       "avgTime": 85,
       "totalTime": 85,
       "filesChanged": 0,
+      "avgFilesPerRun": 0,
       "lastRun": "2026-02-27T01:30:51.813Z"
     }
   },
-  "updatedAt": "2026-02-28T01:08:02.930Z"
+  "updatedAt": "2026-02-28T11:46:59.426Z"
 }

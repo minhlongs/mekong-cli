@@ -2,6 +2,7 @@ packages:
   - 'packages/core/*'
   - 'packages/integrations/*'
   - 'packages/business/*'
+  - 'packages/ui'
   - 'packages/ui/*'
   - 'packages/tooling/*'
   - 'apps/*'

@@ -1,7 +1,3872 @@
 {
-  "goal": "deploy app",
-  "steps": [],
-  "total_duration": 0.0,
+  "goal": "test goal",
+  "steps": [
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    },
+    {
+      "step_order": 1,
+      "title": "echo hello",
+      "duration_seconds": 0.5,
+      "exit_code": 0,
+      "self_healed": false,
+      "agent_used": null
+    }
+  ],
+  "total_duration": 0.001,
   "llm_calls": 0,
   "errors": []
 }

@@ -110,8 +110,8 @@ apps/openclaw-worker/
 - `OPENCLAW_HOME` — Runtime data directory (override via `OPENCLAW_HOME` env var, default `~/.openclaw`)
 - `WATCH_DIR` — `tasks/` directory for mission files
 - `PROCESSED_DIR` — `tasks/processed/` for completed missions
-- `TASK_PATTERN` — `/^mission_.*\.txt$/` (file naming convention)
-- `MISSION_TIMEOUT_MS` — 45 minutes per mission
+- `TASK_PATTERN` — `/^(?:CRITICAL_|HIGH_|MEDIUM_|LOW_)?(?:mission_)?.+\.txt$/` (priority prefix + file naming)
+- `MISSION_TIMEOUT_MS` — 60 minutes per mission (風林火山: GIÓ=15min, RỪNG=30min, LỬA=60min, NÚI=90min)
 - `BRAIN_MODE` — `'direct'` (default) or `'tmux'` (fallback), set via `TOM_HUM_BRAIN_MODE`
 - `ENGINE` — `'antigravity'` (default, port 20128), set via `TOM_HUM_ENGINE`
 - `QWEN_PROXY_PORT` — 8081 (Qwen Bridge Flask server)
@@ -197,7 +197,8 @@ node apps/openclaw-worker/lib/live-mission-viewer.js
 - Keep modules < 200 lines
 
 ### Testing
-- No automated test suite (daemon process, not unit-testable)
+- **Vitest test suite**: `npm test` — 100+ tests covering circuit-breaker, state machine, complexity classifier, recovery, post-mission-gate
+- Tests use ESM imports with `createRequire(import.meta.url)` for CommonJS modules
 - Manual testing: write a `tasks/mission_test_*.txt` and watch logs
 - Log file: `~/tom_hum_cto.log`
 

@@ -11,6 +11,42 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
+| 2026-02-28 | well | HIGH_well_deep_10x_go_live | FAILED — result=brain_died | ~0(est) | 0/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_bmad_re | FAILED — result=brain_died | ~0(est) | 0/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_securit | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_binh_ph | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | clawwork | mission_clawwork_gdp-004_17722 | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
+| 2026-02-28 | algo | HIGH_mission_algo_trader_fix_b | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | algo | HIGH_mission_algo_trader_fix_b | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | clawwork | mission_clawwork_gdp-003_17722 | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | clawwork | mission_clawwork_gdp-002_17722 | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_binh_ph | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_perf_au | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
+| 2026-02-28 | fix | HIGH_mission_fix_fix_wellnexus | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
+| 2026-02-28 | fix | HIGH_mission_fix_wellnexus_fix | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | wellnexus | HIGH_wellnexus_fix_build_red | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_fix_well_fix_ | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_well_fix_buil | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | well | HIGH_mission_well_fix_build_17 | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_fix_mekong-cl | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_mekong-cli_ag | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | mekong-cli | CRITICAL_mission_mekong-cli_ag | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | well | CRITICAL_mission_well_agi_goli | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | algo-trader | CRITICAL_mission_algo-trader_a | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_mekong-cli_ze | FAILED — Duplicate rejected | ~0(est) | 0/min |
+| 2026-02-28 | mekong-cli | CRITICAL_mission_mekong-cli_ze | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | algo-trader | CRITICAL_mission_algo-trader_z | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | well | CRITICAL_mission_well_zero_bug | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_fix_clawwork_ | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_clawwork_gdp- | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | clawwork | mission_clawwork_gdp-001_17722 | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_a11y_au | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | strategic | HIGH_mission_strategic_knowled | Clean success in 1min — good pattern | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_fix_well_fix_ | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | fix | HIGH_mission_fix_well_fix_lint | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-02-28 | well | MEDIUM_mission_well_fix_lint_1 | Code worked but BUILD FAILED — check types/lint | ~2600(est) | 200/min |
+| 2026-02-28 | well | CRITICAL_well_zero_bug_golive | FAILED — Max retries exhausted | ~0(est) | 0/min |
+| 2026-02-28 | algo | CRITICAL_algo_trader_zero_bug_ | FAILED — Max retries exhausted | ~0(est) | 0/min |
 | 2026-02-28 | agi | CRITICAL_agi_master_opensource | Clean success in 1min — good pattern | ~200(est) | 200/min |
 | 2026-02-27 | well | HIGH_mission_well_planned_1772 | Clean success in 1min — good pattern | ~200(est) | 200/min |
 | 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
@@ -25,42 +61,6 @@
 | 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
 | 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
 | 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | wellnexus | HIGH_mission_wellnexus_planned | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_planned_1772 | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-02-27 | well | MEDIUM_mission_well_fix_lint_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | plan | HIGH_mission_plan_cro_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | exec | HIGH_mission_exec_build_1 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
-| 2026-02-27 | well | HIGH_mission_well_fix_build_17 | FAILED — Duplicate rejected | ~0(est) | 0/min |
 
 ---
 

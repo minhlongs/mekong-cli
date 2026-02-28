@@ -1,278 +1,6 @@
 {
   "sessions": [
     {
-      "id": 1772189126614,
-      "startedAt": "2026-02-27T10:45:26.614Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772189188346,
-      "startedAt": "2026-02-27T10:46:28.346Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772189401729,
-      "startedAt": "2026-02-27T10:50:01.729Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772189673431,
-      "startedAt": "2026-02-27T10:54:33.431Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772189952445,
-      "startedAt": "2026-02-27T10:59:12.445Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772190221025,
-      "startedAt": "2026-02-27T11:03:41.025Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772190502876,
-      "startedAt": "2026-02-27T11:08:22.876Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772190774281,
-      "startedAt": "2026-02-27T11:12:54.281Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772191050333,
-      "startedAt": "2026-02-27T11:17:30.333Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772191320508,
-      "startedAt": "2026-02-27T11:22:00.508Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772191389168,
-      "startedAt": "2026-02-27T11:23:09.168Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772191600590,
-      "startedAt": "2026-02-27T11:26:40.590Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772191875462,
-      "startedAt": "2026-02-27T11:31:15.462Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192087608,
-      "startedAt": "2026-02-27T11:34:47.608Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192150902,
-      "startedAt": "2026-02-27T11:35:50.902Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192234978,
-      "startedAt": "2026-02-27T11:37:14.978Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192424920,
-      "startedAt": "2026-02-27T11:40:24.920Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192691807,
-      "startedAt": "2026-02-27T11:44:51.807Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772192973273,
-      "startedAt": "2026-02-27T11:49:33.273Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772193245861,
-      "startedAt": "2026-02-27T11:54:05.861Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772193417874,
-      "startedAt": "2026-02-27T11:56:57.874Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772193522742,
-      "startedAt": "2026-02-27T11:58:42.742Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772193796696,
-      "startedAt": "2026-02-27T12:03:16.696Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772194070559,
-      "startedAt": "2026-02-27T12:07:50.559Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772194350264,
-      "startedAt": "2026-02-27T12:12:30.264Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772194622008,
-      "startedAt": "2026-02-27T12:17:02.008Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772194895670,
-      "startedAt": "2026-02-27T12:21:35.670Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772195172830,
-      "startedAt": "2026-02-27T12:26:12.830Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772195444321,
-      "startedAt": "2026-02-27T12:30:44.321Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772195718051,
-      "startedAt": "2026-02-27T12:35:18.051Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772195998133,
-      "startedAt": "2026-02-27T12:39:58.133Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772196270486,
-      "startedAt": "2026-02-27T12:44:30.486Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772196541795,
-      "startedAt": "2026-02-27T12:49:01.795Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772196819112,
-      "startedAt": "2026-02-27T12:53:39.112Z",
-      "missionsDispatched": 0,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": []
-    },
-    {
       "id": 1772197091718,
       "startedAt": "2026-02-27T12:58:11.718Z",
       "missionsDispatched": 0,
@@ -403,11 +131,305 @@
       "missionsSucceeded": 0,
       "bugsFixed": 0,
       "lessonsLearned": []
+    },
+    {
+      "id": 1772261310834,
+      "startedAt": "2026-02-28T06:48:30.834Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772261534636,
+      "startedAt": "2026-02-28T06:52:14.636Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772261818196,
+      "startedAt": "2026-02-28T06:56:58.196Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772262057509,
+      "startedAt": "2026-02-28T07:00:57.509Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772262339281,
+      "startedAt": "2026-02-28T07:05:39.281Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772262605548,
+      "startedAt": "2026-02-28T07:10:05.548Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772262879649,
+      "startedAt": "2026-02-28T07:14:39.649Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772263158733,
+      "startedAt": "2026-02-28T07:19:18.733Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772263436903,
+      "startedAt": "2026-02-28T07:23:56.903Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772263703943,
+      "startedAt": "2026-02-28T07:28:23.943Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772263976432,
+      "startedAt": "2026-02-28T07:32:56.432Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772264250075,
+      "startedAt": "2026-02-28T07:37:30.075Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772264523544,
+      "startedAt": "2026-02-28T07:42:03.544Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772264799454,
+      "startedAt": "2026-02-28T07:46:39.454Z",
+      "missionsDispatched": 10,
+      "missionsSucceeded": 8,
+      "bugsFixed": 7,
+      "lessonsLearned": [
+        "max_retries_exhausted"
+      ]
+    },
+    {
+      "id": 1772271737440,
+      "startedAt": "2026-02-28T09:42:17.440Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 1,
+      "bugsFixed": 1,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772272261371,
+      "startedAt": "2026-02-28T09:51:01.371Z",
+      "missionsDispatched": 3,
+      "missionsSucceeded": 2,
+      "bugsFixed": 2,
+      "lessonsLearned": [
+        "duplicate_rejected"
+      ]
+    },
+    {
+      "id": 1772273210467,
+      "startedAt": "2026-02-28T10:06:50.467Z",
+      "missionsDispatched": 6,
+      "missionsSucceeded": 6,
+      "bugsFixed": 6,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772273817060,
+      "startedAt": "2026-02-28T10:16:57.060Z",
+      "missionsDispatched": 4,
+      "missionsSucceeded": 4,
+      "bugsFixed": 4,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772274418603,
+      "startedAt": "2026-02-28T10:26:58.603Z",
+      "missionsDispatched": 4,
+      "missionsSucceeded": 1,
+      "bugsFixed": 0,
+      "lessonsLearned": [
+        "brain_died_fatal"
+      ]
+    },
+    {
+      "id": 1772275023588,
+      "startedAt": "2026-02-28T10:37:03.588Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 1,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772275311343,
+      "startedAt": "2026-02-28T10:41:51.343Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 1,
+      "bugsFixed": 1,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772275628297,
+      "startedAt": "2026-02-28T10:47:08.297Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772275654500,
+      "startedAt": "2026-02-28T10:47:34.500Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 1,
+      "bugsFixed": 1,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772276233264,
+      "startedAt": "2026-02-28T10:57:13.264Z",
+      "missionsDispatched": 3,
+      "missionsSucceeded": 1,
+      "bugsFixed": 1,
+      "lessonsLearned": [
+        "brain_died_fatal"
+      ]
+    },
+    {
+      "id": 1772277149127,
+      "startedAt": "2026-02-28T11:12:29.127Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772277424073,
+      "startedAt": "2026-02-28T11:17:04.073Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772277686871,
+      "startedAt": "2026-02-28T11:21:26.871Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772278469423,
+      "startedAt": "2026-02-28T11:34:29.423Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772278571397,
+      "startedAt": "2026-02-28T11:36:11.397Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772278597686,
+      "startedAt": "2026-02-28T11:36:37.686Z",
+      "missionsDispatched": 2,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": [
+        "brain_died"
+      ]
+    },
+    {
+      "id": 1772278867846,
+      "startedAt": "2026-02-28T11:41:07.846Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772278935758,
+      "startedAt": "2026-02-28T11:42:15.758Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772279144375,
+      "startedAt": "2026-02-28T11:45:44.375Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
+    },
+    {
+      "id": 1772279219448,
+      "startedAt": "2026-02-28T11:46:59.448Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
     }
   ],
   "knowledgeGraph": {
     "well": {
       "documentation": [
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+        "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
         "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
         "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
         "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
@@ -503,8 +525,80 @@
       "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
       "category": "documentation",
       "recordedAt": "2026-02-26T18:43:15.161Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T07:56:43.009Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:06:48.160Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:16:43.297Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:26:42.910Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:36:49.893Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:46:45.665Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T08:56:43.072Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T09:06:42.958Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T09:16:42.989Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T09:26:43.225Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T09:36:42.999Z"
+    },
+    {
+      "project": "well",
+      "insight": "Drive has 5 docs: ML4T_full_clean.txt, ML4T_full_clean.txt, Business_Analytics_2nd_Global_Edition_by_James_R_Evans_Shared by WorldLine Technology.pdf, Advisor Agreement - Form (180521).doc, 8-Lean and agile project management how to make any project better, faster, and more cost effective - Terra Vanzant Stern PhD.pdf",
+      "category": "documentation",
+      "recordedAt": "2026-02-28T11:07:16.716Z"
     }
   ],
   "createdAt": "2026-02-24T18:28:23.656Z",
-  "updatedAt": "2026-02-28T01:08:02.954Z"
+  "updatedAt": "2026-02-28T11:46:59.448Z"
 }

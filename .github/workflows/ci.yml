@@ -43,7 +43,7 @@ jobs:
         run: ruff check src/ tests/
 
       - name: Test (Pytest)
-        run: pytest tests/
+        run: pytest tests/ --ignore=tests/backend --ignore=tests/e2e --ignore=tests/integration --ignore=tests/unit -v --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
 

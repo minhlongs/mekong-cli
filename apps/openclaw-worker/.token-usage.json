@@ -1086,5 +1086,221 @@
     "tokens": 0,
     "duration": 65,
     "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:18:28.225Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:19:34.854Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:20:40.662Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:28:39.182Z",
+    "mission": "/plan:parallel \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEE",
+    "project": "algo-trader",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:32:48.295Z",
+    "mission": "/debug \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nm",
+    "project": "well",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:35:53.832Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:38:10.326Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "wellnexus",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T08:39:16.052Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "wellnexus",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T09:45:38.791Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T09:52:06.082Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "algo-trader",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T09:53:35.937Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nZE",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:07:55.182Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "algo-trader",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:09:01.339Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:10:27.140Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTO",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:11:32.580Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:12:37.630Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:16:03.234Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:19:31.715Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "well",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:20:37.088Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:24:45.704Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nFi",
+    "project": "wellnexus",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:25:50.923Z",
+    "mission": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKFLOW: THINK DEEP -> P",
+    "project": "wellnexus",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:34:46.469Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:39:38.306Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:44:54.116Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T10:50:51.356Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nUs",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T11:04:50.478Z",
+    "mission": "/debug \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nc",
+    "project": "algo-trader",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-02-28T11:07:25.222Z",
+    "mission": "/debug \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nc",
+    "project": "well",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
   }
 ]

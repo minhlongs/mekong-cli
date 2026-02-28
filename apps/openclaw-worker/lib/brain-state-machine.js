@@ -76,6 +76,12 @@ const APPROVE_PATTERNS = [
   /Glob patterns are not allowed/i,
   /Waiting for approval/i,
   /Press\s+Enter\s+to\s+continue/i,
+  /accept edits on/i,
+  /Enter to select/i,
+  /↑\/↓ to navigate/i,
+  /Enter to confirm/i,
+  /Chat about this/i,
+  /Context low/i,
 ];
 
 // Claude Pro Rate Limit indicators

@@ -23,7 +23,10 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 function log(msg) {
   const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
   const line = `[${ts}] [tom-hum] [LEARNING] ${msg}`;
-  try { fs.appendFileSync('/Users/macbookprom1/tom_hum_cto.log', line + '\n'); } catch (e) { }
+  try {
+    const logFile = config.LOG_FILE || process.env.TOM_HUM_LOG || path.join(process.env.HOME || '/tmp', 'tom_hum_cto.log');
+    fs.appendFileSync(logFile, line + '\n');
+  } catch (e) { }
 }
 
 function loadOutcomes() {
@@ -227,7 +230,6 @@ function getAvoidPatterns() {
  */
 function getDispatchHints(taskContent) {
   const lowerContent = (taskContent || '').toLowerCase().slice(0, 100);
-  const adjustments = getTaskAdjustments();
   const lessons = loadLessons();
 
   // Check if any AVOID rules match this task content

@@ -53,8 +53,8 @@ check_cto() {
 }
 
 check_proxy() {
-  # Health check the 20129 Bridge. If it's dead, the entire CC CLI and IDE will hang.
-  if curl -sf --connect-timeout 3 http://localhost:20129/v1/users/me > /dev/null; then
+  # Health check the 9191 Bridge. If it's dead, the entire CC CLI and IDE will hang.
+  if curl -sf --connect-timeout 3 http://localhost:9191/api/v1/health > /dev/null; then
     return 0 # alive and responding
   fi
   return 1 # dead or timing out
@@ -62,12 +62,12 @@ check_proxy() {
 
 check_cc_cli() {
   # Check if tmux session exists AND has CC CLI running
-  if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
+  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
     return 1  # no tmux session
   fi
   
   local pane_content
-  pane_content=$(tmux capture-pane -t "$TMUX_SESSION:0.0" -p -S -5 2>/dev/null || echo "")
+  pane_content=$(tmux capture-pane -t "$SESSION_NAME:brain.0" -p -S -5 2>/dev/null || echo "")
   
   if echo "$pane_content" | grep -q '❯\|Spinning\|Crunching\|Dilly-dally\|Photosynthesizing'; then
     return 0  # CC CLI alive (prompt visible or processing)
@@ -84,7 +84,7 @@ check_cc_cli() {
 check_cc_cli_idle() {
   # Check if CC CLI has been idle (❯ prompt, no activity) for too long
   local pane_content
-  pane_content=$(tmux capture-pane -t "$TMUX_SESSION:0.0" -p -S -5 2>/dev/null || echo "")
+  pane_content=$(tmux capture-pane -t "$SESSION_NAME:brain.0" -p -S -5 2>/dev/null || echo "")
   
   if echo "$pane_content" | grep -qE 'Spinning|Crunching|Dilly-dally|Photosynthesizing|agents? finished|tool uses'; then
     return 1  # busy — not idle

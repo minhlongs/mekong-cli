@@ -16,7 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@agencyos/ui": "workspace:*",
+    "@mekong/ui": "workspace:*",
     "@material/web": "^2.4.1",
     "@paypal/paypal-js": "^9.2.0",
     "@paypal/react-paypal-js": "^8.9.2",

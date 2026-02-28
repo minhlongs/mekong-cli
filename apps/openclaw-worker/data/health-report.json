@@ -1,22 +1,22 @@
 [
   {
     "project": "well",
-    "timestamp": "2026-02-28T01:07:40.488Z",
+    "timestamp": "2026-02-28T11:46:39.652Z",
     "build": "GREEN",
     "techDebt": {
-      "todos": 76,
-      "consoleLogs": 781
+      "todos": 78,
+      "consoleLogs": 784
     },
     "gitStatus": "DIRTY",
     "recommendations": []
   },
   {
-    "project": "wellnexus",
-    "timestamp": "2026-02-28T01:08:10.546Z",
+    "project": "algo-trader",
+    "timestamp": "2026-02-28T11:47:06.453Z",
     "build": "GREEN",
     "techDebt": {
-      "todos": 14,
-      "consoleLogs": 0
+      "todos": 3,
+      "consoleLogs": 49
     },
     "gitStatus": "DIRTY",
     "recommendations": []

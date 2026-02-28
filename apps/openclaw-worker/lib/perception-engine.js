@@ -89,11 +89,12 @@ function perceive() {
     const claudeCount = safeExec("pgrep -f 'claude' | wc -l");
     metrics.claudeProcessCount = parseInt(claudeCount) || 0;
 
-    // 8. GPU temperature (M1 Mac — via powermetrics fallback)
-    const gpuTemp = safeExec("sudo powermetrics --samplers smc -i1 -n1 2>/dev/null | grep -i 'gpu die' | grep -oE '[0-9.]+'");
-    metrics.gpuTemp = gpuTemp ? parseFloat(gpuTemp) : null;
-    if (metrics.gpuTemp && metrics.gpuTemp > 95) {
-        alerts.push({ type: 'gpu_hot', severity: 'high', message: `GPU ${metrics.gpuTemp}°C — overheating` });
+    // 8. GPU temperature (M1 Mac — use thermal state instead of sudo powermetrics)
+    const thermalOut = safeExec("pmset -g therm 2>/dev/null | grep -i 'cpu_speed_limit' | grep -oE '[0-9]+'");
+    const cpuSpeedLimit = thermalOut ? parseInt(thermalOut) : 100;
+    metrics.cpuSpeedLimit = cpuSpeedLimit;
+    if (cpuSpeedLimit < 70) {
+        alerts.push({ type: 'thermal_throttle', severity: 'high', message: `CPU throttled to ${cpuSpeedLimit}% — overheating` });
     }
 
     // 9. Trend detection — flag repeating alert types (3+ in last 10 sweeps)

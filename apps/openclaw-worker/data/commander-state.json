@@ -1,8 +1,8 @@
 {
   "lastRebalance": null,
   "projectScores": {
-    "well": 15,
-    "wellnexus": 8
+    "well": 0,
+    "algo-trader": 0
   },
   "crossProjectFixes": [],
   "portfolioSnapshot": null,

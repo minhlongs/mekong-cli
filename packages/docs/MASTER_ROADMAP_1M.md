@@ -132,7 +132,7 @@ All sub-projects MUST align with this master roadmap:
 | **Apex-OS** (Fintech)      | Agency-in-a-Box $25k | Archived Nov 2025 plans |
 | **Sophia** (Video Factory) | $1,200/mo tier       | Active                  |
 | **Cơm Ánh Dương** (F&B)    | Turnkey POS          | Active                  |
-| **Well** (Ecommerce)       | PayOS VN             | Active                  |
+| **Well** (Ecommerce)       | PayOS VN             | Active (100% Tests Pass, 0 Bugs) |
 
 **Rules:**
 

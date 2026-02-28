@@ -16,8 +16,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@agencyos/ui": "workspace:*",
     "@material/web": "^2.4.1",
+    "@mekong/ui": "workspace:*",
     "@paypal/paypal-js": "^9.2.0",
     "@paypal/react-paypal-js": "^8.9.2",
     "@playwright/test": "^1.57.0",
@@ -25,6 +25,7 @@
     "@sentry/nextjs": "^10.36.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "@tanstack/react-query": "5.90.21",
     "@types/ioredis": "^4.28.10",
     "clsx": "^2.1.1",
     "framer-motion": "^12.24.7",
