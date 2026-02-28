@@ -1,0 +1,17 @@
+-- Init script: tạo databases cho tất cả services
+CREATE DATABASE odoo;
+CREATE DATABASE calcom;
+CREATE DATABASE pretix;
+CREATE DATABASE tastyigniter;
+CREATE DATABASE openwisp;
+CREATE DATABASE mixpost;
+CREATE DATABASE loyalty;
+
+-- Grant quyền cho user vibe
+GRANT ALL PRIVILEGES ON DATABASE odoo TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE calcom TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE pretix TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE tastyigniter TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE openwisp TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE mixpost TO vibe;
+GRANT ALL PRIVILEGES ON DATABASE loyalty TO vibe;
