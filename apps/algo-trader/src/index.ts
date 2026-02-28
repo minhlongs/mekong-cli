@@ -5,6 +5,7 @@ import { StrategyLoader } from './core/StrategyLoader';
 import { MockDataProvider } from './data/MockDataProvider';
 import { ExchangeClient } from './execution/ExchangeClient';
 import { BacktestRunner, BacktestResult } from './backtest/BacktestRunner';
+import { BacktestEngine } from './backtest/BacktestEngine';
 import { logger } from './utils/logger';
 import * as dotenv from 'dotenv';
 
@@ -146,6 +147,91 @@ program
       }
     } catch (error: unknown) {
       logger.error(`Compare failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  });
+
+program
+  .command('backtest:advanced')
+  .description('Run advanced backtest with equity curve, Sortino, Calmar, MAE/MFE')
+  .option('-s, --strategy <string>', 'Strategy name', 'RsiSma')
+  .option('-d, --days <number>', 'Number of days', '30')
+  .option('-b, --balance <number>', 'Initial balance', '10000')
+  .action(async (options) => {
+    logger.info(`Advanced Backtest: ${options.strategy}`);
+    try {
+      const dataProvider = new MockDataProvider();
+      const limit = parseInt(options.days) * 24 * 60;
+      const candles = await dataProvider.getHistory(limit);
+
+      const engine = new BacktestEngine();
+      const strategy = StrategyLoader.load(options.strategy);
+      const result = await engine.runDetailed(strategy, candles, parseFloat(options.balance));
+
+      logger.info('\n=== ADVANCED BACKTEST ===');
+      logger.info(`Strategy:     ${result.strategyName}`);
+      logger.info(`Return:       ${result.totalReturn.toFixed(2)}%`);
+      logger.info(`Sharpe:       ${result.sharpeRatio.toFixed(3)}`);
+      logger.info(`Sortino:      ${result.sortinoRatio.toFixed(3)}`);
+      logger.info(`Calmar:       ${result.calmarRatio.toFixed(3)}`);
+      logger.info(`Max Drawdown: ${result.maxDrawdown.toFixed(2)}%`);
+      logger.info(`Expectancy:   $${result.expectancy.toFixed(2)}/trade`);
+      logger.info(`Win Rate:     ${result.winRate.toFixed(1)}%`);
+      logger.info(`Trades:       ${result.totalTrades}`);
+      logger.info(`Equity pts:   ${result.equityCurve.length}`);
+      logger.info('========================\n');
+
+      // Monte Carlo robustness
+      if (result.detailedTrades.length > 5) {
+        const mc = engine.monteCarlo(result.detailedTrades, parseFloat(options.balance), 500);
+        logger.info('--- Monte Carlo (500 sims) ---');
+        logger.info(`Median Return:   ${mc.medianReturn.toFixed(2)}%`);
+        logger.info(`5th Percentile:  ${mc.p5Return.toFixed(2)}%`);
+        logger.info(`95th Percentile: ${mc.p95Return.toFixed(2)}%`);
+        logger.info(`Ruin Prob:       ${mc.ruinProbability.toFixed(1)}%`);
+        logger.info('-----------------------------\n');
+      }
+    } catch (error: unknown) {
+      logger.error(`Advanced backtest failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  });
+
+program
+  .command('backtest:walk-forward')
+  .description('Walk-forward analysis to detect overfitting')
+  .option('-s, --strategy <string>', 'Strategy name', 'RsiSma')
+  .option('-d, --days <number>', 'Number of days', '90')
+  .option('-w, --windows <number>', 'Number of walk-forward windows', '5')
+  .option('-b, --balance <number>', 'Initial balance', '10000')
+  .action(async (options) => {
+    logger.info(`Walk-Forward Analysis: ${options.strategy} (${options.windows} windows)`);
+    try {
+      const dataProvider = new MockDataProvider();
+      const limit = parseInt(options.days) * 24 * 60;
+      const candles = await dataProvider.getHistory(limit);
+
+      const engine = new BacktestEngine();
+      const result = await engine.walkForward(
+        () => StrategyLoader.load(options.strategy),
+        candles,
+        parseInt(options.windows),
+        0.7,
+        parseFloat(options.balance)
+      );
+
+      logger.info('\n=== WALK-FORWARD ANALYSIS ===');
+      logger.info(`Windows:          ${result.windows.length}`);
+      logger.info(`Avg Test Return:  ${result.aggregateTestReturn.toFixed(2)}%`);
+      logger.info(`Avg Test Sharpe:  ${result.aggregateTestSharpe.toFixed(3)}`);
+      logger.info(`Robustness Ratio: ${result.robustnessRatio.toFixed(3)}`);
+      logger.info(`Overfit:          ${result.overfit ? 'YES ⚠️' : 'NO ✅'}`);
+
+      for (let i = 0; i < result.windows.length; i++) {
+        const w = result.windows[i];
+        logger.info(`  Window ${i + 1}: Train=${w.trainResult.totalReturn.toFixed(2)}% → Test=${w.testResult.totalReturn.toFixed(2)}%`);
+      }
+      logger.info('=============================\n');
+    } catch (error: unknown) {
+      logger.error(`Walk-forward failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
