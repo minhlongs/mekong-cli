@@ -10,9 +10,7 @@ import { MultiExchangeConnector, ExchangeConfig } from './MultiExchangeConnector
 import { RealTimePriceAggregator } from './RealTimePriceAggregator';
 import { ArbitrageScanner, ArbitrageOpportunity, ScannerConfig } from './ArbitrageScanner';
 import { ArbitrageExecutor, ExecutorConfig, ExecutionResult } from './ArbitrageExecutor';
-import { LatencyOptimizer } from './LatencyOptimizer';
-import { ProfitTracker } from './ProfitTracker';
-import { AdaptiveSpreadThreshold } from './AdaptiveSpreadThreshold';
+import { LatencyOptimizer, ProfitTracker, AdaptiveSpreadThreshold } from '@agencyos/trading-core/arbitrage';
 import { WebSocketPriceFeed } from './WebSocketPriceFeed';
 import { logger } from '../utils/logger';
 

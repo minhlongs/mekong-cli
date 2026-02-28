@@ -10,11 +10,13 @@
 
 import { ArbitrageScanner, ArbitrageOpportunity, ScannerConfig } from './ArbitrageScanner';
 import { ArbitrageExecutor, ExecutorConfig, ExecutionResult } from './ArbitrageExecutor';
-import { ArbitrageSignalScorer, ScorerConfig, ScoredSignal, SignalFactors } from './ArbitrageSignalScorer';
-import { OrderBookAnalyzer, OrderBook } from './OrderBookAnalyzer';
-import { EmergencyCircuitBreaker, CircuitBreakerConfig, CircuitState } from './EmergencyCircuitBreaker';
-import { SpreadHistoryTracker, SpreadHistoryConfig, SpreadZScore } from './SpreadHistoryTracker';
-import { ProfitTracker } from './ProfitTracker';
+import {
+  ArbitrageSignalScorer, ScorerConfig, ScoredSignal, SignalFactors,
+  OrderBookAnalyzer, OrderBook,
+  EmergencyCircuitBreaker, CircuitBreakerConfig, CircuitState,
+  SpreadHistoryTracker, SpreadHistoryConfig, SpreadZScore,
+  ProfitTracker,
+} from '@agencyos/trading-core/arbitrage';
 import { MultiExchangeConnector, ExchangeConfig } from './MultiExchangeConnector';
 import { ExchangeClient } from '../execution/ExchangeClient';
 import { logger } from '../utils/logger';
