@@ -1,5 +1,7 @@
-const { diagnoseFailure, truncatePrompt, TRUNCATED_PROMPT_LENGTH, getFallbackModel } = require('../lib/mission-recovery');
-const config = require('../config');
+import { describe, it, expect } from 'vitest';
+
+// Dynamic import for CJS modules
+const { diagnoseFailure, truncatePrompt, TRUNCATED_PROMPT_LENGTH, getFallbackModel } = await import('../lib/mission-recovery.js');
 
 describe('Mission Recovery Logic', () => {
 
@@ -47,7 +49,6 @@ describe('Mission Recovery Logic', () => {
       const model = getFallbackModel();
       expect(typeof model).toBe('string');
       expect(model.length).toBeGreaterThan(0);
-      console.log(`Current fallback model: ${model}`);
     });
   });
 
@@ -58,13 +59,11 @@ describe('Mission Recovery Logic', () => {
     });
 
     it('should truncate long prompts', () => {
-      // Create a string longer than TRUNCATED_PROMPT_LENGTH
       const longPrompt = 'a'.repeat(TRUNCATED_PROMPT_LENGTH + 100);
       const truncated = truncatePrompt(longPrompt);
 
       expect(truncated.length).toBeLessThan(longPrompt.length);
       expect(truncated).toContain('[TRUNCATED');
-      // Should preserve the start
       expect(truncated.startsWith('aaaa')).toBe(true);
     });
   });

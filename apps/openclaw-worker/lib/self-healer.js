@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { execSync, spawn } = require('child_process');
+const { execSync } = require('child_process');
 const config = require('../config');
 const { sendTelegram } = require('./telegram-client');
 
@@ -107,7 +107,7 @@ function clearStaleLocks() {
 // Recovery Actions
 // ═══════════════════════════════════════════════════════════════
 
-function attemptRecovery() {
+async function attemptRecovery() {
     log('🩺 Attempting auto-recovery...');
 
     // Clear stale locks
@@ -115,8 +115,8 @@ function attemptRecovery() {
 
     // Check and restart proxy if needed
     if (!isProxyAlive()) {
-        log('🩺 Proxy is down — restarting as part of recovery');
-        restartProxy();
+        log('🩺 Proxy is down — checking health');
+        await restartProxy();
     }
 
     // Reset consecutive failure counter on successful recovery
@@ -148,12 +148,13 @@ function preFlightCheck() {
         clearStaleLocks();
     }
 
-    // Check disk space (basic)
+    // Check task queue buildup
     try {
         const tasksDir = path.join(config.MEKONG_DIR, 'tasks');
-        const files = fs.readdirSync(tasksDir).filter(f => f.endsWith('.md'));
-        if (files.length > 100) {
-            issues.push(`Task queue has ${files.length} files — possible buildup`);
+        // 🧬 FIX: Match actual TASK_PATTERN (mission_*.txt), not .md files
+        const files = fs.readdirSync(tasksDir).filter(f => config.TASK_PATTERN.test(f));
+        if (files.length > 50) {
+            issues.push(`Task queue has ${files.length} mission files — possible buildup`);
         }
     } catch (e) { }
 

@@ -320,18 +320,12 @@ function getTopLessons(n = 10) {
     }
 }
 
-module.exports = { reflectOnMission, getTopLessons };
-
-// ═══ Task 13: Cross-module integration ═══
-// Post-mortem now triggers knowledge synthesis and skill generation
-// for high-value missions. This makes CTO learn reusable patterns.
-const _originalReflect = reflectOnMission;
+// 🧬 FIX: Single export — enhancedReflect wraps core logic cleanly (no double override)
 async function enhancedReflect(data) {
-    await _originalReflect(data);
+    await reflectOnMission(data);
 
-    // Only trigger for successful, complex missions
-    if (!data.success) return;
-    if ((data.duration || 0) < 120000) return; // Skip missions < 2min
+    // Only trigger knowledge synthesis for successful, complex missions (>2min)
+    if (!data.success || (data.duration || 0) < 120000) return;
 
     try {
         const { isLearnableMission, synthesizeKnowledge } = require('./knowledge-synthesizer');
@@ -347,7 +341,6 @@ async function enhancedReflect(data) {
 
     try {
         const { generateSkill } = require('./skill-factory');
-        // Only generate skill for very successful complex missions
         if ((data.tokensUsed || 0) > 5000 && data.buildResult?.build !== false) {
             await generateSkill({
                 missionId: data.missionId,
@@ -360,6 +353,5 @@ async function enhancedReflect(data) {
     } catch (e) { /* skill-factory not available */ }
 }
 
-// Override export
 module.exports = { reflectOnMission: enhancedReflect, getTopLessons };
 
