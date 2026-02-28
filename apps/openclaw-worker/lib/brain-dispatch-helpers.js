@@ -119,17 +119,47 @@ async function preDispatchGuard(workerIdx, TMUX_SESSION, startTime) {
 
 /**
  * autoApproveQuestion — handles CC CLI question/approval prompts automatically.
+ * 🔒 CHAIRMAN RULE: CTO MUST NOT get stuck on menus. Auto-select recommended option.
+ * 
+ * Detects:
+ * - Numbered menus: "1. Xoá tất cả (Recommended)" + "Enter to select"
+ * - CC CLI completion: "Tiếp tục / Continue"
+ * - Yes/No prompts: "(Y/n)", "Proceed?"
+ * - Permission prompts: "accept all responsibility"
+ * - API key prompts
+ * - LSP recommendations
+ * - Project switch prompts
  */
 async function autoApproveQuestion(output, workerIdx, TMUX_SESSION) {
   log(`QUESTION: auto-approving on P${workerIdx}`);
   const t = TMUX_SESSION;
-  if (/2\.\s+No\s+\(recommended\)/i.test(output)) {
+
+  // ══════════════════════════════════════════════════════════════
+  // 🔒 NUMBERED MENU with "Enter to select · ↑/↓ to navigate"
+  // Example: "1. Xoá tất cả (Recommended)\n2. Chỉ .claude/skills/\n..."
+  // CC CLI highlights option 1 by default → just press Enter
+  // ══════════════════════════════════════════════════════════════
+  if (/Enter to select.*navigate/i.test(output) || /↑\/↓ to navigate/i.test(output)) {
+    log(`QUESTION: Numbered menu detected — pressing Enter (select first/recommended option)`);
+    tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
+  }
+  // Yes/No prompts: "(Y/n)" or "Proceed? (Y/n)"
+  else if (/\(Y\/n\)/i.test(output) || /Proceed\?/i.test(output)) {
+    log(`QUESTION: Y/n prompt — sending 'y' + Enter`);
+    tmuxExec(`tmux send-keys -t ${t} y`, TMUX_SESSION);
+    await new Promise(r => setTimeout(r, 300));
+    tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
+  }
+  // API Key question: "2. No (recommended)"
+  else if (/2\.\s+No\s+\(recommended\)/i.test(output)) {
     log(`QUESTION: API Key — selecting '1. Yes'`);
     for (let i = 0; i < 3; i++) {
       tmuxExec(`tmux send-keys -t ${t} 1`, TMUX_SESSION); await new Promise(r => setTimeout(r, 500));
       tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION); await new Promise(r => setTimeout(r, 500));
     }
-  } else if (
+  }
+  // Permission bypass prompt
+  else if (
     /By proceeding, you accept all responsibility/i.test(output) ||
     /Yes, I accept/i.test(output) ||
     /⏵⏵\s+bypass\s+permissions/i.test(output)
@@ -137,30 +167,44 @@ async function autoApproveQuestion(output, workerIdx, TMUX_SESSION) {
     tmuxExec(`tmux send-keys -t ${t} Down`, TMUX_SESSION);
     await new Promise(r => setTimeout(r, 500));
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else if (/Enter your API key/i.test(output)) {
+  }
+  // Enter API key
+  else if (/Enter your API key/i.test(output)) {
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else if (/\(Recommended\)/i.test(output)) {
+  }
+  // Generic (Recommended) label
+  else if (/\(Recommended\)/i.test(output)) {
+    log(`QUESTION: (Recommended) option — pressing Enter`);
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else if (/Option A/i.test(output)) {
+  }
+  // Option A pattern
+  else if (/Option A/i.test(output)) {
     tmuxExec(`tmux send-keys -t ${t} a Enter`, TMUX_SESSION);
-  } else if (
-    // CC CLI completion menu: "Tiếp tục / Kết thúc / Type something / Chat about this"
+  }
+  // CC CLI completion menu: "Tiếp tục / Continue"
+  else if (
     /Ti[eế]p t[uụ]c/i.test(output) ||
     /Continue/i.test(output) ||
     /1\.\s+(?:Ti[eế]p t[uụ]c|Continue)/i.test(output)
   ) {
     log(`QUESTION: CC CLI completion menu — selecting 'Tiếp tục/Continue'`);
-    // Menu uses arrow keys — option 1 is already highlighted by default, just Enter
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else if (/Switch to Root Project/i.test(output)) {
-    log(`QUESTION: Project switch menu — selecting option 1 (stay)`);
+  }
+  // Project switch
+  else if (/Switch to Root Project/i.test(output)) {
+    log(`QUESTION: Project switch — staying`);
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else if (/not now|LSP|typescript-lsp|Never for/i.test(output)) {
-    log(`QUESTION: LSP recommendation — selecting 'No, not now'`);
+  }
+  // LSP recommendation
+  else if (/not now|LSP|typescript-lsp|Never for/i.test(output)) {
+    log(`QUESTION: LSP — selecting 'No, not now'`);
     tmuxExec(`tmux send-keys -t ${t} Down`, TMUX_SESSION);
     await new Promise(r => setTimeout(r, 300));
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
-  } else {
+  }
+  // Fallback: just press Enter
+  else {
+    log(`QUESTION: Unknown prompt — pressing Enter (fallback)`);
     tmuxExec(`tmux send-keys -t ${t} Enter`, TMUX_SESSION);
   }
   await new Promise(r => setTimeout(r, 1000));
