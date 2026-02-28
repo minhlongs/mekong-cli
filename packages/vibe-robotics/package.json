@@ -1,0 +1,12 @@
+{
+  "name": "@agencyos/vibe-robotics",
+  "version": "0.1.0",
+  "description": "Robotics & Automation facade SDK — fleet management, predictive maintenance scheduling, digital twin simulation",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "MIT",
+  "dependencies": {},
+  "peerDependencies": {
+    "@agencyos/vibe-analytics": "workspace:*"
+  }
+}
