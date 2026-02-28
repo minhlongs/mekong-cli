@@ -1,13 +1,20 @@
 /**
  * Arbitrage CLI commands — All arb:* commands extracted from index.ts.
  * Registers: arb:scan, arb:run, arb:engine, arb:orchestrator, arb:auto
+ *
+ * All arb logic imported from @agencyos/trading-core/arbitrage (single source of truth).
+ * App provides ExchangeClient as IExchange factory for CCXT connectivity.
  */
 
 import { Command } from 'commander';
-import { ArbitrageScanner } from '../arbitrage/ArbitrageScanner';
-import { ArbitrageExecutor } from '../arbitrage/ArbitrageExecutor';
-import { SpreadDetectorEngine } from '../arbitrage/SpreadDetectorEngine';
-import { ArbitrageOrchestrator } from '../arbitrage/ArbitrageOrchestrator';
+import {
+  ArbitrageScanner,
+  ArbitrageExecutor,
+  SpreadDetectorEngine,
+  ArbitrageOrchestrator,
+  ExchangeConfig,
+} from '@agencyos/trading-core/arbitrage';
+import { ExchangeClient } from '../execution/ExchangeClient';
 import { logger } from '../utils/logger';
 import {
   parseList,
@@ -16,6 +23,11 @@ import {
   buildAuthenticatedClients,
   buildExchangeConfigs,
 } from './exchange-factory';
+
+/** Bridge: creates ExchangeClient (CCXT) from generic ExchangeConfig */
+function exchangeFactory(config: ExchangeConfig): ExchangeClient {
+  return new ExchangeClient(config.id, config.apiKey, config.secret);
+}
 
 /**
  * Register all arb:* subcommands on a Commander program.
@@ -165,6 +177,7 @@ function registerArbEngine(program: Command): void {
       const engine = new SpreadDetectorEngine({
         exchanges,
         symbols,
+        exchangeFactory,
         scanner: { minSpreadPercent: parseFloat(options.threshold), pollIntervalMs: 2000 },
         executor: { maxPositionSizeUsd: parseFloat(options.size), maxConcurrentTrades: 3 },
         scorer: { executeThreshold: 65 },
@@ -220,6 +233,7 @@ function registerArbOrchestrator(program: Command): void {
       const orchestrator = new ArbitrageOrchestrator({
         exchanges,
         symbols,
+        exchangeFactory,
         scanner: { minSpreadPercent: parseFloat(options.threshold), pollIntervalMs: 2000 },
         executor: { maxPositionSizeUsd: parseFloat(options.size), maxConcurrentTrades: 3 },
         enableLatencyOptimizer: true,
@@ -276,6 +290,7 @@ function registerArbAuto(program: Command): void {
       const engine = new SpreadDetectorEngine({
         exchanges,
         symbols,
+        exchangeFactory,
         scanner: { minSpreadPercent: parseFloat(options.threshold), pollIntervalMs: 2000 },
         executor: {
           maxPositionSizeUsd: parseFloat(options.size),

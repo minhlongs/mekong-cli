@@ -104,8 +104,9 @@ export interface ExecutorConfig {
 
 export interface ExchangeConfig {
   id: string;
-  apiKey: string;
-  secret: string;
+  apiKey?: string;
+  secret?: string;
+  label?: string;
   enabled: boolean;
   testMode?: boolean;
 }
