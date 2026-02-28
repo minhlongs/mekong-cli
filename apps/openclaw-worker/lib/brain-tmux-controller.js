@@ -46,7 +46,10 @@ function tmuxExec(cmd, sessionName = TMUX_SESSION_PRO) {
 
 function isSessionAlive(sessionName = TMUX_SESSION_PRO) {
   try {
-    execSync(`tmux has-session -t ${sessionName} 2>/dev/null`, { timeout: 5000 });
+    // Strip :window.pane suffix — only check if SESSION exists
+    // e.g. "tom_hum:brain.1" → "tom_hum"
+    const cleanSession = sessionName.split(':')[0];
+    execSync(`tmux has-session -t ${cleanSession} 2>/dev/null`, { timeout: 5000 });
     return true;
   } catch (e) { return false; }
 }
@@ -61,12 +64,18 @@ function capturePane(workerIdx, sessionName = TMUX_SESSION_PRO) {
     return _lastTmuxResult;
   }
 
+  // 🦞 FIX 2026-02-28: Detect if sessionName already includes pane index (e.g., 'tom_hum:brain.1')
+  // If so, use it directly. Otherwise append .${idx} as before.
+  // This prevents double-nested references like 'tom_hum:brain.1.1' → "can't find pane: 1.1"
+  const alreadyHasPane = /\.\d+$/.test(sessionName);
   const idx = workerIdx !== undefined ? workerIdx : 1;
+  const target = alreadyHasPane ? sessionName : `${sessionName}.${idx}`;
+
   _lastTmuxCallTime = now;
   _lastTmuxCacheKey = cacheKey;
 
   try {
-    const rawTmux = tmuxExec(`tmux capture-pane -t ${sessionName}.${idx} -p -S -50`, sessionName);
+    const rawTmux = tmuxExec(`tmux capture-pane -t ${target} -p -S -50`, sessionName);
     _lastTmuxResult = stripAnsi(rawTmux);
   } catch (e) {
     _lastTmuxResult = '';
@@ -99,7 +108,8 @@ function logVision(output, label = 'UNKNOWN') {
  */
 function pasteText(text, workerIdx, sessionName = TMUX_SESSION_PRO) {
   const idx = workerIdx !== undefined ? workerIdx : 1;
-  const target = `${sessionName}.${idx}`;
+  const alreadyHasPane = /\.\d+$/.test(sessionName);
+  const target = alreadyHasPane ? sessionName : `${sessionName}.${idx}`;
 
   const cleanText = text.replace(/\n+$/, ''); // Strip ALL trailing newlines
   const promptFile = `/tmp/tom_hum_prompt_P${idx}.txt`;
@@ -110,12 +120,14 @@ function pasteText(text, workerIdx, sessionName = TMUX_SESSION_PRO) {
 }
 
 function sendEnter(workerIdx, sessionName = TMUX_SESSION_PRO) {
-  const target = `${sessionName}.${workerIdx}`;
+  const alreadyHasPane = /\.\d+$/.test(sessionName);
+  const target = alreadyHasPane ? sessionName : `${sessionName}.${workerIdx}`;
   tmuxExec(`tmux send-keys -t ${target} Enter`, sessionName);
 }
 
 function sendCtrlC(workerIdx, sessionName = TMUX_SESSION_PRO) {
-  const target = `${sessionName}.${workerIdx}`;
+  const alreadyHasPane = /\.\d+$/.test(sessionName);
+  const target = alreadyHasPane ? sessionName : `${sessionName}.${workerIdx}`;
   tmuxExec(`tmux send-keys -t ${target} C-c`, sessionName);
 }
 
