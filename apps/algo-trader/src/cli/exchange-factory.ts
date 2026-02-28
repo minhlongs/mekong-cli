@@ -1,10 +1,35 @@
 /**
  * Exchange factory — Shared exchange validation + construction for arb CLI commands.
- * Eliminates duplicate ExchangeConfig[] building across arb:scan/run/engine/orchestrator/auto.
+ * Routes to exchange-specific adapters (Binance, OKX, Bybit) with optimized fee/config.
+ * Falls back to generic ExchangeClient for unsupported exchanges.
  */
 
 import { ExchangeClient } from '../execution/ExchangeClient';
+import { BinanceAdapter } from '../execution/binance-adapter';
+import { OkxAdapter } from '../execution/okx-adapter';
+import { BybitAdapter } from '../execution/bybit-adapter';
 import { logger } from '../utils/logger';
+
+/**
+ * Create exchange-specific adapter based on exchange ID.
+ * Uses optimized adapter for Binance/OKX/Bybit, generic ExchangeClient for others.
+ */
+export function createExchangeAdapter(
+  id: string,
+  apiKey?: string,
+  secret?: string,
+): ExchangeClient {
+  switch (id.toLowerCase()) {
+    case 'binance':
+      return new BinanceAdapter({ apiKey, secret, useBnbDiscount: false });
+    case 'okx':
+      return new OkxAdapter({ apiKey, secret });
+    case 'bybit':
+      return new BybitAdapter({ apiKey, secret });
+    default:
+      return new ExchangeClient(id, apiKey, secret);
+  }
+}
 
 export interface ExchangeEntry {
   id: string;
@@ -40,7 +65,7 @@ export function buildExchangeClients(exchangeIds: string[]): Map<string, Exchang
 
   for (const id of exchangeIds) {
     try {
-      const client = new ExchangeClient(id);
+      const client = createExchangeAdapter(id);
       clients.set(id, client);
     } catch (err) {
       logger.warn(`Skipping ${id}: ${err instanceof Error ? err.message : String(err)}`);
@@ -66,7 +91,7 @@ export function buildAuthenticatedClients(exchangeIds: string[]): Map<string, Ex
       process.exit(1);
     }
 
-    const client = new ExchangeClient(id, apiKey, secret);
+    const client = createExchangeAdapter(id, apiKey, secret);
     clients.set(id, client);
   }
 
