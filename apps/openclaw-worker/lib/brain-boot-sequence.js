@@ -10,6 +10,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const config = require('../config');
 const { getHandForIntent } = require('./hands-registry');
 const { log } = require('./brain-logger');
@@ -22,7 +23,20 @@ function generateClaudeCommand(intent) {
 
 async function spawnBrain() {
   const TMUX_SESSION = `${config.TMUX_SESSION}:brain`;
+  const LOCK_FILE = path.join(os.tmpdir(), 'tom_hum_spawn_brain.lock');
 
+  // 🦞 FIX 2026-02-28: Prevent race condition — only one spawnBrain at a time
+  try {
+    if (fs.existsSync(LOCK_FILE)) {
+      const lockAge = Date.now() - fs.statSync(LOCK_FILE).mtimeMs;
+      if (lockAge < 30000) { // Lock valid for 30s
+        log(`BRAIN: spawnBrain LOCKED (age ${Math.round(lockAge / 1000)}s) — skipping to prevent race`);
+        return;
+      }
+      fs.unlinkSync(LOCK_FILE); // Stale lock — remove
+    }
+    fs.writeFileSync(LOCK_FILE, `${process.pid}\n${Date.now()}`);
+  } catch (e) { /* ignore lock errors */ }
   if (isSessionAlive(TMUX_SESSION)) {
     try {
       // Use session name only — window may be renamed by tmux config
