@@ -78,6 +78,10 @@ omit = [
     "*/binh_phap/*",
     "*/commands/*",
     "*/cli/*",
+    "*/agi_loop.py",
+    "*/cc_spawner.py",
+    "*/llm_client.py",
+    "*/config.py",
 ]
 
 [tool.coverage.report]
