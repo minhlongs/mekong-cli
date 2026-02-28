@@ -3,3 +3,4 @@
 export * from './interfaces';
 export * from './core';
 export * from './analysis';
+export * from './arbitrage';
