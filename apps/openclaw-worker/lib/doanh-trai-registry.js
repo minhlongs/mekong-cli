@@ -27,6 +27,13 @@ const DIVISIONS = {
         label: '🧠 Quân Sư (Brain Command)',
         files: [
             'lib/brain-process-manager.js',
+            'lib/brain-state-machine.js',
+            'lib/brain-boot-sequence.js',
+            'lib/brain-spawn-manager.js',
+            'lib/brain-mission-runner.js',
+            'lib/brain-respawn-controller.js',
+            'lib/brain-tmux-controller.js',
+            'lib/brain-dispatch-helpers.js',
             'lib/mission-dispatcher.js',
             'lib/mission-complexity-classifier.js',
             'lib/auto-cto-pilot.js',
@@ -68,6 +75,9 @@ const DIVISIONS = {
             'lib/mission-journal.js',
             'lib/post-mortem-reflector.js',
             'lib/strategy-optimizer.js',
+            'lib/circuit-breaker.js',
+            'lib/hands-registry.js',
+            'lib/system-status-registry.js',
         ],
     },
 
@@ -91,6 +101,11 @@ const DIVISIONS = {
             'lib/proxy-client.js',
             'lib/token-tracker.js',
             'lib/throughput-maximizer.js',
+            'lib/brain-logger.js',
+            'lib/brain-health-server.js',
+            'lib/brain-heartbeat.js',
+            'lib/brain-system-monitor.js',
+            'lib/brain-output-hash-stagnation-watchdog.js',
         ],
     },
 
@@ -112,6 +127,7 @@ const DIVISIONS = {
             'lib/self-analyzer.js',
             'lib/skill-factory.js',
             'lib/vector-service.js',
+            'lib/agi-score-calculator.js',
         ],
     },
 
