@@ -1,0 +1,12 @@
+{
+  "name": "@agencyos/vibe-fnb",
+  "version": "0.1.0",
+  "description": "F&B operations SDK — menu management, inventory, recipe costing, kitchen ops",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "MIT",
+  "dependencies": {},
+  "peerDependencies": {
+    "@agencyos/billing": "workspace:*"
+  }
+}
