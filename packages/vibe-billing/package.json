@@ -1,0 +1,13 @@
+{
+  "name": "@agencyos/vibe-billing",
+  "version": "0.1.0",
+  "description": "Billing facade SDK — invoicing, discounts, tax calculation, payment lifecycle hooks, refund engine",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "MIT",
+  "dependencies": {},
+  "peerDependencies": {
+    "@agencyos/billing": "workspace:*",
+    "@agencyos/vibe-payment": "workspace:*"
+  }
+}
