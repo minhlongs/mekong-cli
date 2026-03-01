@@ -132,7 +132,9 @@ async function generateScoreTargetedTask(pane, scoreResult) {
     const sorted = Object.entries(scoreResult.breakdown)
         .sort(([, a], [, b]) => a - b);
 
-    const [weakestDim, weakestScore] = sorted[0];
+    // 2. Each pane targets a DIFFERENT weak dimension (P0=weakest, P1=2nd, etc.)
+    const dimIndex = Math.min(pane.idx, sorted.length - 1);
+    const [weakestDim, weakestScore] = sorted[dimIndex];
     let taskCmd = '';
 
     // 2. Map dimension to specific ClaudeKit /cook command
