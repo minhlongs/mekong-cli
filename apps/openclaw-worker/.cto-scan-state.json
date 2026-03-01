@@ -1,13 +1,13 @@
 {
   "currentProjectIdx": 0,
-  "phase": "verify",
+  "phase": "fix",
   "cycle": 1,
   "errors": [
     {
       "type": "build",
       "severity": "critical",
       "file": "package.json",
-      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build   WARNING  No locally installed `turbo` found in your repository. Using globally installed version (2.8.12), which can cause unexpected behavior.  Inst...",
+      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build  • turbo 2.8.12 • Packages in scope: 84tea, @agencyos/agents, @agencyos/agritech-hub-sdk, @agencyos/ai-hub-sdk, @agencyos/antigravity-gateway, @agencyo...",
       "project": "mekong-cli"
     }
   ],
