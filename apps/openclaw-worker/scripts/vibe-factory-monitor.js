@@ -127,23 +127,47 @@ const dedup = require('../lib/task-dedup-registry.js');
 // LLM TASK GENERATOR (Binh Pháp Strategic Scanner)
 // NEVER returns null — always produces a /plan:hard task
 // ══════════════════════════════════════════════════
-const lastDimension = {}; // paneIdx → last dimension used (to avoid repeat)
+const DIM_COOLDOWN_FILE = '/tmp/vibe-dim-cooldown.json';
+const DIM_COOLDOWN_MS = 12 * 60 * 1000; // 12 minutes per dimension per pane
+
+function loadDimCooldown() {
+    try { return JSON.parse(fs.readFileSync(DIM_COOLDOWN_FILE, 'utf-8')); } catch { return {}; }
+}
+function saveDimCooldown(data) {
+    try { fs.writeFileSync(DIM_COOLDOWN_FILE, JSON.stringify(data)); } catch { }
+}
+function isDimOnCooldown(paneIdx, dim) {
+    const key = `P${paneIdx}:${dim}`;
+    const data = loadDimCooldown();
+    const ts = data[key];
+    if (!ts) return false;
+    return (Date.now() - ts) < DIM_COOLDOWN_MS;
+}
+function recordDimUsage(paneIdx, dim) {
+    const key = `P${paneIdx}:${dim}`;
+    const data = loadDimCooldown();
+    data[key] = Date.now();
+    // Prune old entries (>1hr)
+    for (const k of Object.keys(data)) { if (Date.now() - data[k] > 3600000) delete data[k]; }
+    saveDimCooldown(data);
+}
 
 async function generateScoreTargetedTask(pane, scoreResult) {
     // 1. Sort dimensions by score (lowest first)
     const sorted = Object.entries(scoreResult.breakdown)
         .sort(([, a], [, b]) => a - b);
 
-    // 2. Each pane targets a DIFFERENT weak dimension (P0=weakest, P1=2nd, etc.)
-    // BUT skip the LAST dimension this pane used to avoid repeating same task
+    // 2. Walk dims starting at pane.idx — skip cooldown ones
     const baseIndex = Math.min(pane.idx, sorted.length - 1);
     let dimIndex = baseIndex;
-    const last = lastDimension[pane.idx];
-    if (last && sorted[dimIndex][0] === last) {
-        // Try next dimension down the list (wrapping)
-        dimIndex = (dimIndex + 1) % sorted.length;
+    for (let attempt = 0; attempt < sorted.length; attempt++) {
+        const candidate = sorted[(baseIndex + attempt) % sorted.length][0];
+        if (!isDimOnCooldown(pane.idx, candidate)) {
+            dimIndex = (baseIndex + attempt) % sorted.length;
+            break;
+        }
     }
-    lastDimension[pane.idx] = sorted[dimIndex][0]; // record for next cycle
+    recordDimUsage(pane.idx, sorted[dimIndex][0]);
 
     const [weakestDim, weakestScore] = sorted[dimIndex];
     let taskCmd = '';
@@ -423,47 +447,53 @@ async function checkAllPanes() {
                     log(`P${pane.idx}: ⚠️ Factory Pipeline error: ${e.message}`);
                 }
 
-                // --- 🏭 TPS: PRODUCTION BOARD → LLM → BINH PHÁP ---
-                // 1. Check Production Board for queued Work Orders (only if no pipeline active)
+                // ═══ 🧠 CTO VISION: LLM-FIRST DECISION ENGINE ═══
+                // Antigravity Brain Transfer — read CC CLI output, understand, decide
                 if (!cookCmd) {
                     try {
-                        if (!global.productionBoard) {
-                            global.productionBoard = require('../lib/production-board');
-                            log('🏭 Production Board loaded');
+                        if (!global.llmPerception) {
+                            global.llmPerception = require('../lib/llm-perception');
+                            log('🧠 LLM Perception Layer loaded');
                         }
-                        // Mark previous WO as done if pane was working
-                        const activeWO = global.productionBoard.getActiveByPane(pane.idx);
-                        if (activeWO) {
-                            global.productionBoard.markDone(activeWO.id);
-                            log(`P${pane.idx}: ✅ WO ${activeWO.id} DONE — "${activeWO.what.slice(0, 40)}"`);
+
+                        // Step 1: Read 30 lines of CC CLI output for context
+                        const fullOutput = tmuxCapture(pane.idx, 30);
+
+                        // Step 2: LLM Guard — quick state check via Gemini
+                        if (global.llmPerception.shouldSpendTokens(pane.idx)) {
+                            const guard = await global.llmPerception.guardCheck(fullOutput, state, pane.project, pane.idx);
+
+                            if (!guard.shouldAct) {
+                                log(`P${pane.idx}: 🧠 GUARD: Don't act — ${guard.reason}`);
+                                break;
+                            }
+
+                            // Error detected → /debug
+                            if (guard.correctedState === 'error' || guard.correctedState === 'ERROR') {
+                                cookCmd = `/debug "${pane.project}: ${guard.reason.slice(0, 80)}"`;
+                                log(`P${pane.idx}: 🧠 GUARD → DEBUG: ${guard.reason}`);
+                            }
+                            // Stuck → /cook UNSTUCK
+                            else if (guard.correctedState === 'stuck' || guard.correctedState === 'STUCK') {
+                                cookCmd = `/cook "${pane.project}: UNSTUCK — ${guard.reason.slice(0, 80)}" --auto`;
+                                log(`P${pane.idx}: 🧠 GUARD → UNSTUCK: ${guard.reason}`);
+                            }
                         }
-                        // Get next queued WO
-                        const nextWO = global.productionBoard.getNextQueued(pane.project);
-                        if (nextWO) {
-                            global.productionBoard.assignToPane(nextWO.id, pane.idx);
-                            cookCmd = nextWO.how || `/cook "${nextWO.what}"`;
-                            log(`P${pane.idx}: 🏭 WO ${nextWO.id} ASSIGNED — "${nextWO.what.slice(0, 50)}" (takt: ${nextWO.taktTime}m)`);
+
+                        // Step 3: If guard didn't set cookCmd, use LLM Perception for smart task
+                        if (!cookCmd) {
+                            const perception = await global.llmPerception.perceivePaneWithLLM(fullOutput, pane.project, pane.idx);
+                            cookCmd = global.llmPerception.buildSmartPrompt(perception, pane.project);
+                            if (cookCmd) {
+                                cookCmd += ' --auto';
+                                log(`P${pane.idx}: 🧠 LLM VISION: ${cookCmd.slice(0, 80)}...`);
+                            }
                         }
                     } catch (e) {
-                        log(`P${pane.idx}: ⚠️ Production Board unavailable (${e.message})`);
+                        log(`P${pane.idx}: ⚠️ LLM Vision failed (${e.message}) → score fallback`);
                     }
 
-                    // 2. Fallback: LLM Perception smart prompt
-                    if (!cookCmd) {
-                        try {
-                            if (!global.llmPerception) {
-                                global.llmPerception = require('../lib/llm-perception');
-                                log('🧠 LLM Perception Layer loaded');
-                            }
-                            const perception = await global.llmPerception.perceivePaneWithLLM(output, pane.project, pane.idx);
-                            cookCmd = global.llmPerception.buildSmartPrompt(perception, pane.project);
-                            if (cookCmd) log(`P${pane.idx}: 🧠 LLM PROMPT: ${cookCmd.slice(0, 80)}...`);
-                        } catch (e) {
-                            log(`P${pane.idx}: ⚠️ LLM fallback → regex mode (${e.message})`);
-                        }
-                    }
-
-                    // 3. Fallback: Binh Pháp generic scanner
+                    // Step 4: Fallback — Score-based Binh Pháp (last resort)
                     if (!cookCmd) {
                         cookCmd = await generateScoreTargetedTask(pane, scoreResult);
                     }

@@ -1,7 +1,7 @@
 [
   {
     "project": "algo-trader",
-    "timestamp": "2026-03-01T11:22:32.397Z",
+    "timestamp": "2026-03-01T11:31:46.336Z",
     "build": "GREEN",
     "techDebt": {
       "todos": 8,
@@ -12,13 +12,13 @@
   },
   {
     "project": "well",
-    "timestamp": "2026-03-01T11:22:54.224Z",
-    "build": "GREEN",
+    "timestamp": "2026-03-01T11:32:08.008Z",
+    "build": "RED",
     "techDebt": {
       "todos": 536,
       "consoleLogs": 1745
     },
-    "gitStatus": "CLEAN",
+    "gitStatus": "DIRTY",
     "recommendations": []
   }
 ]

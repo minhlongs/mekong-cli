@@ -1,62 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "8c2080c3e70e",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from temporal-",
-      "dispatchedAt": 1772338957671
-    },
-    {
-      "hash": "57ce7b550023",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN architecture & pattern from grafana/g",
-      "dispatchedAt": 1772339037746
-    },
-    {
-      "hash": "8478fd2e3322",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from electron",
-      "dispatchedAt": 1772339043690
-    },
-    {
-      "hash": "e547645ab08a",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from netdata/",
-      "dispatchedAt": 1772339130544
-    },
-    {
-      "hash": "1d47caa98160",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from cal-com/",
-      "dispatchedAt": 1772339132644
-    },
-    {
-      "hash": "54a0f96e48b7",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from mem0ai/m",
-      "dispatchedAt": 1772339138759
-    },
-    {
-      "hash": "d0fb64feaf8d",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN architecture & pattern from google/A2",
-      "dispatchedAt": 1772339228036
-    },
-    {
       "hash": "b3259c53cd77",
       "project": "mekong-cli",
       "pane": 0,
@@ -1599,6 +1543,62 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
       "dispatchedAt": 1772364517410
+    },
+    {
+      "hash": "dc4ad7472ad3",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit fix.",
+      "dispatchedAt": 1772364549861
+    },
+    {
+      "hash": "e800cb7686dd",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit test",
+      "dispatchedAt": 1772364576303
+    },
+    {
+      "hash": "90bda4f85cbc",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD apex-os: 1/ npm run build — fix ALL errors. 2/ Add build script if ",
+      "dispatchedAt": 1772364712631
+    },
+    {
+      "hash": "dc4ad7472ad3",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit fix.",
+      "dispatchedAt": 1772364782163
+    },
+    {
+      "hash": "a91c57b0f324",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD algo-trader: 1/ npm run build — fix ALL errors. 2/ Add build script",
+      "dispatchedAt": 1772364808971
+    },
+    {
+      "hash": "90bda4f85cbc",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD apex-os: 1/ npm run build — fix ALL errors. 2/ Add build script if ",
+      "dispatchedAt": 1772364840087
+    },
+    {
+      "hash": "4b6d445c1e4d",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
+      "dispatchedAt": 1772365056676
     }
   ],
   "chapterIndex": 5

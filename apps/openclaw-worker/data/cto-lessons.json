@@ -15,25 +15,25 @@
     "DEPRIORITIZE: /debug \"Trả lời TIẾNG VIỆT. Ưu tiên /coo — 0 changes 3x in a row"
   ],
   "patterns": {
+    "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF": {
+      "runs": 36,
+      "successes": 29,
+      "rate": 81,
+      "avgTime": 74,
+      "totalTime": 2657,
+      "filesChanged": 0,
+      "avgFilesPerRun": 0,
+      "lastRun": "2026-03-01T11:30:03.303Z"
+    },
     "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
-      "runs": 48,
+      "runs": 46,
       "successes": 6,
       "rate": 13,
       "avgTime": 90,
-      "totalTime": 4331,
+      "totalTime": 4148,
       "filesChanged": 0,
       "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T18:46:05.712Z"
-    },
-    "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF": {
-      "runs": 35,
-      "successes": 28,
-      "rate": 80,
-      "avgTime": 74,
-      "totalTime": 2597,
-      "filesChanged": 0,
-      "avgFilesPerRun": 0,
-      "lastRun": "2026-03-01T10:48:06.850Z"
     },
     "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
       "runs": 7,
@@ -66,14 +66,14 @@
       "lastRun": "2026-02-27T12:19:30.339Z"
     },
     "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
-      "runs": 79,
-      "successes": 44,
+      "runs": 80,
+      "successes": 45,
       "rate": 56,
       "avgTime": 80,
-      "totalTime": 6324,
+      "totalTime": 6384,
       "filesChanged": 0,
       "avgFilesPerRun": 0,
-      "lastRun": "2026-03-01T11:25:35.370Z"
+      "lastRun": "2026-03-01T11:34:38.377Z"
     },
     "/test \"Trả lời TIẾNG VIỆT. Ưu tiên /cook": {
       "runs": 2,
@@ -116,5 +116,5 @@
       "lastRun": "2026-02-27T01:30:51.813Z"
     }
   },
-  "updatedAt": "2026-03-01T11:27:16.030Z"
+  "updatedAt": "2026-03-01T11:36:21.657Z"
 }
