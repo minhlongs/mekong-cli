@@ -5,14 +5,17 @@ Converts high-level goals into executable task lists using LLM.
 Implements the PLAN phase of Plan-Execute-Verify pattern.
 """
 
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+import logging
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
-from dataclasses import dataclass, field
-from enum import Enum
 
 from .parser import Recipe, RecipeStep
+
+logger = logging.getLogger(__name__)
 
 
 class TaskComplexity(Enum):
@@ -273,7 +276,7 @@ class RecipePlanner:
 
         client = get_client()
         if not client.is_available:
-            print("[PLANNER] LLM unavailable — using rule-based fallback")
+            logger.warning("[PLANNER] LLM unavailable — using rule-based fallback")
             return self._rule_based_decompose(goal, context)
 
         prompt = f"""Decompose this goal into atomic, executable tasks.
@@ -300,7 +303,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             elif isinstance(result, dict) and "tasks" in result:
                 tasks = result["tasks"]
             elif isinstance(result, dict) and "raw_content" in result:
-                print("[PLANNER] LLM returned non-JSON — using rule-based fallback")
+                logger.warning("[PLANNER] LLM returned non-JSON — using rule-based fallback")
                 return self._rule_based_decompose(goal, context)
             else:
                 tasks = [result]
@@ -320,7 +323,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             return validated if validated else self._rule_based_decompose(goal, context)
 
         except Exception as e:
-            print(f"[PLANNER] LLM decomposition failed: {e}")
+            logger.error("[PLANNER] LLM decomposition failed: %s", e)
             return self._rule_based_decompose(goal, context)
 
     def generate_verification_criteria(
