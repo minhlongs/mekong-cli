@@ -1,30 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "2cdb5cf50a8c",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN architecture & pattern from google/A2",
-      "dispatchedAt": 1772338248073
-    },
-    {
-      "hash": "a593f03e7bfe",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from upstash/q",
-      "dispatchedAt": 1772338568414
-    },
-    {
-      "hash": "0cee9dcc1096",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from n8n-io/n8",
-      "dispatchedAt": 1772338648755
-    },
-    {
       "hash": "369a581767b8",
       "project": "mekong-cli",
       "pane": 0,
@@ -1599,6 +1575,30 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
       "dispatchedAt": 1772363997230
+    },
+    {
+      "hash": "dc4ad7472ad3",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit fix.",
+      "dispatchedAt": 1772364029087
+    },
+    {
+      "hash": "a91c57b0f324",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD algo-trader: 1/ npm run build — fix ALL errors. 2/ Add build script",
+      "dispatchedAt": 1772364055233
+    },
+    {
+      "hash": "4b6d445c1e4d",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
+      "dispatchedAt": 1772364267455
     }
   ],
   "chapterIndex": 5
