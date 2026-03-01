@@ -137,6 +137,54 @@ export class CredentialVault {
     return fs.existsSync(this.vaultPath);
   }
 
+  /**
+   * Re-encrypt all credentials with a new master password.
+   * Reads every entry with the current key, then re-encrypts with a fresh salt + new key.
+   */
+  rotateKey(_masterPassword: string, newMasterPassword: string): void {
+    if (!this.derivedKey) throw new Error('Vault is locked. Call unlock() first.');
+
+    const vault = this.loadVault();
+    if (!vault) throw new Error('No vault file found to rotate.');
+
+    // Decrypt all values with current key
+    const plainEntries: Array<{ name: string; value: string }> = [];
+    for (const entry of vault.entries) {
+      const value = this.get(entry.name);
+      if (value === null) throw new Error(`Failed to decrypt '${entry.name}' during rotation.`);
+      plainEntries.push({ name: entry.name, value });
+    }
+
+    // Derive new key with a fresh salt
+    const newSalt = crypto.randomBytes(SALT_LENGTH);
+    const newKey = crypto.pbkdf2Sync(newMasterPassword, newSalt, PBKDF2_ITERATIONS, KEY_LENGTH, 'sha512');
+
+    // Re-encrypt all entries with new key
+    const newEntries: VaultEntry[] = plainEntries.map(({ name, value }) => {
+      const iv = crypto.randomBytes(IV_LENGTH);
+      const cipher = crypto.createCipheriv(ALGORITHM, newKey, iv, { authTagLength: TAG_LENGTH });
+      const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
+      const authTag = cipher.getAuthTag();
+      return { name, encrypted: Buffer.concat([iv, authTag, encrypted]).toString('base64') };
+    });
+
+    // Persist rotated vault, then switch active key
+    this.saveVault({ version: vault.version, salt: newSalt.toString('base64'), entries: newEntries });
+    this.derivedKey = newKey;
+    logger.info('[Vault] Key rotation complete. All credentials re-encrypted.');
+  }
+
+  /**
+   * Returns the number of days since the vault salt was last written (proxy for key age).
+   * Returns -1 if vault does not exist.
+   */
+  getKeyAge(): number {
+    if (!fs.existsSync(this.vaultPath)) return -1;
+    const stat = fs.statSync(this.vaultPath);
+    const msPerDay = 86_400_000;
+    return Math.floor((Date.now() - stat.mtimeMs) / msPerDay);
+  }
+
   private loadVault(): VaultData | null {
     if (!fs.existsSync(this.vaultPath)) return null;
     try {
@@ -156,10 +204,6 @@ export class CredentialVault {
 
   private createEmptyVault(): VaultData {
     const salt = crypto.randomBytes(SALT_LENGTH);
-    // Re-derive key with new salt
-    if (this.derivedKey) {
-      // Salt was already used in unlock(), store it
-    }
     return {
       version: 1,
       salt: salt.toString('base64'),

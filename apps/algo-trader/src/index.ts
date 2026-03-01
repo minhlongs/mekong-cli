@@ -10,10 +10,14 @@ import { registerArbCommands } from './cli/arb-cli-commands';
 import { registerSpreadDetectorCommand } from './cli/spread-detector-command';
 import { registerMarketplaceCommands } from './cli/strategy-marketplace-tenant-cli-commands';
 import { logger } from './utils/logger';
+import { startHealthServer, stopHealthServer, setReady } from './core/http-health-check-server';
 import * as dotenv from 'dotenv';
 
 // Load environment variables securely
 dotenv.config();
+
+// Start health server for container liveness/readiness probes
+startHealthServer();
 
 const program = new Command();
 
@@ -85,9 +89,12 @@ program
       });
 
       await engine.start();
+      setReady(true);
 
       const shutdown = async () => {
+        setReady(false);
         await engine.stop();
+        stopHealthServer();
         process.exit(0);
       };
 
