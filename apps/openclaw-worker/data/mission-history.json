@@ -1,17 +1,5 @@
 [
   {
-    "timestamp": "2026-02-21T16:17:15.771Z",
-    "project": "84tea",
-    "missionId": "MEDIUM_mission_84tea_fix_test_1771690623525",
-    "duration": 12201,
-    "success": false,
-    "buildResult": {
-      "build": false,
-      "output": "not_run"
-    },
-    "tokensUsed": 0
-  },
-  {
     "timestamp": "2026-02-21T16:18:21.795Z",
     "project": "84tea",
     "missionId": "MEDIUM_mission_84tea_fix_test_1771690683717",
@@ -12828,6 +12816,19 @@
     "project": "fix",
     "missionId": "HIGH_mission_fix_fix_mekong_cli_fix_build_1772357386227",
     "duration": 65436,
+    "success": true,
+    "failureType": "done",
+    "buildResult": {
+      "build": false,
+      "output": "\n> mekong-cli@2.1.33 build\n> turbo run build\n\nsh: turbo: command not found\n"
+    },
+    "tokensUsed": 0
+  },
+  {
+    "timestamp": "2026-03-01T09:53:57.934Z",
+    "project": "mekong",
+    "missionId": "HIGH_mission_mekong_cli_fix_build_1772358777885",
+    "duration": 59922,
     "success": true,
     "failureType": "done",
     "buildResult": {

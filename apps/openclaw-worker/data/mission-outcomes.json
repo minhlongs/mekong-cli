@@ -7,17 +7,6 @@
     "elapsedSec": 87,
     "summary": "",
     "filesChanged": 0,
-    "timestamp": "2026-02-26T09:00:05.468Z",
-    "binhPhapLevel": 0
-  },
-  {
-    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI",
-    "project": "Well",
-    "result": "failed_to_start",
-    "success": false,
-    "elapsedSec": 87,
-    "summary": "",
-    "filesChanged": 0,
     "timestamp": "2026-02-26T09:00:14.287Z",
     "binhPhapLevel": 0
   },
@@ -2003,5 +1992,15 @@
     "summary": "",
     "filesChanged": 0,
     "timestamp": "2026-03-01T09:50:03.655Z"
+  },
+  {
+    "taskId": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook",
+    "project": "mekong-cli",
+    "result": "done",
+    "success": true,
+    "elapsedSec": 60,
+    "summary": "",
+    "filesChanged": 0,
+    "timestamp": "2026-03-01T09:53:57.807Z"
   }
 ]
