@@ -1,502 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "b3259c53cd77",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from upstash/q",
-      "dispatchedAt": 1772339317827
-    },
-    {
-      "hash": "50123c1957d1",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from n8n-io/n8",
-      "dispatchedAt": 1772339398075
-    },
-    {
-      "hash": "4c2cbda01418",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from google/zx",
-      "dispatchedAt": 1772339404274
-    },
-    {
-      "hash": "514f5c9c7583",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN architecture & pattern from vercel/ai",
-      "dispatchedAt": 1772339498006
-    },
-    {
-      "hash": "1b351bbf579f",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN architecture & pattern from portkey-a",
-      "dispatchedAt": 1772339500134
-    },
-    {
-      "hash": "c1d1478c3169",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN architecture & pattern from railway/n",
-      "dispatchedAt": 1772339572386
-    },
-    {
-      "hash": "21a4768d1860",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from temporal-",
-      "dispatchedAt": 1772339755907
-    },
-    {
-      "hash": "994d1a50fae7",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN architecture & pattern from grafana/g",
-      "dispatchedAt": 1772339944741
-    },
-    {
-      "hash": "c780d0ed4b2c",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from electron",
-      "dispatchedAt": 1772340026926
-    },
-    {
-      "hash": "4d6044274e1f",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from netdata/",
-      "dispatchedAt": 1772340045703
-    },
-    {
-      "hash": "2e19a2128ec8",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from cal-com/",
-      "dispatchedAt": 1772340049663
-    },
-    {
-      "hash": "53bf74236fab",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from mem0ai/m",
-      "dispatchedAt": 1772340328103
-    },
-    {
-      "hash": "5b855a92812e",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN architecture & pattern from google/A2",
-      "dispatchedAt": 1772340331918
-    },
-    {
-      "hash": "b666c4d3eb4a",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from trigger-d",
-      "dispatchedAt": 1772340418000
-    },
-    {
-      "hash": "d6a5599cf1e0",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from n8n-io/n8",
-      "dispatchedAt": 1772340507956
-    },
-    {
-      "hash": "0b8fbd0493e8",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from google/zx",
-      "dispatchedAt": 1772340511615
-    },
-    {
-      "hash": "88c68040914d",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN architecture & pattern from huggingfa",
-      "dispatchedAt": 1772340559957
-    },
-    {
-      "hash": "27b5af18f52a",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN architecture & pattern from BerriAI/l",
-      "dispatchedAt": 1772340646512
-    },
-    {
-      "hash": "f4a9283267cb",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN architecture & pattern from pulumi/pu",
-      "dispatchedAt": 1772340740005
-    },
-    {
-      "hash": "486de74df00c",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from inngest/i",
-      "dispatchedAt": 1772340919824
-    },
-    {
-      "hash": "646a5126f1b3",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN architecture & pattern from grafana/g",
-      "dispatchedAt": 1772341010606
-    },
-    {
-      "hash": "2933cbfa86a1",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from electron",
-      "dispatchedAt": 1772341108672
-    },
-    {
-      "hash": "7fd2c302d34b",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from louislam",
-      "dispatchedAt": 1772341111962
-    },
-    {
-      "hash": "426d5201e598",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from cal-com/",
-      "dispatchedAt": 1772341138580
-    },
-    {
-      "hash": "d0013fefa9a7",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from qdrant/q",
-      "dispatchedAt": 1772341330791
-    },
-    {
-      "hash": "536e05d11ad6",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN architecture & pattern from anthropic",
-      "dispatchedAt": 1772341412500
-    },
-    {
-      "hash": "4c5c56ff1ed4",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ upstas",
-      "dispatchedAt": 1772341511238
-    },
-    {
-      "hash": "2394f1e2060c",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from langchain",
-      "dispatchedAt": 1772341529032
-    },
-    {
-      "hash": "6c2311d55f4c",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from biomejs/b",
-      "dispatchedAt": 1772341676793
-    },
-    {
-      "hash": "25234d694c2c",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ vercel/ai & ",
-      "dispatchedAt": 1772341850104
-    },
-    {
-      "hash": "14b3debeb172",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN architecture & pattern from portkey-a",
-      "dispatchedAt": 1772341982396
-    },
-    {
-      "hash": "3ef18c36a958",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN architecture & pattern from railway/n",
-      "dispatchedAt": 1772342343476
-    },
-    {
-      "hash": "ce8d4bb643d5",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ temporal-io/",
-      "dispatchedAt": 1772342373047
-    },
-    {
-      "hash": "6f8dbb1ab322",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN architecture & pattern from highlight",
-      "dispatchedAt": 1772342433180
-    },
-    {
-      "hash": "a01b5b0a769f",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from nicegui/",
-      "dispatchedAt": 1772342605965
-    },
-    {
-      "hash": "42cbe620d352",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ netdata/net",
-      "dispatchedAt": 1772342965531
-    },
-    {
-      "hash": "1dbfbf501085",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from formbric",
-      "dispatchedAt": 1772343062397
-    },
-    {
-      "hash": "3782833deaab",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from mem0ai/m",
-      "dispatchedAt": 1772343234882
-    },
-    {
-      "hash": "93b3cb5e9722",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ google/A2UI ",
-      "dispatchedAt": 1772343415586
-    },
-    {
-      "hash": "ac6d31352cd3",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ upstas",
-      "dispatchedAt": 1772343693758
-    },
-    {
-      "hash": "5042965f72ee",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from n8n-io/n8",
-      "dispatchedAt": 1772343725360
-    },
-    {
-      "hash": "79a8b613782f",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from biomejs/b",
-      "dispatchedAt": 1772343956791
-    },
-    {
-      "hash": "1b37b7816458",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ vercel/ai & ",
-      "dispatchedAt": 1772344052654
-    },
-    {
-      "hash": "d97b74e46303",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN architecture & pattern from BerriAI/l",
-      "dispatchedAt": 1772344141133
-    },
-    {
-      "hash": "0af827c10450",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ railway/nixp",
-      "dispatchedAt": 1772344319601
-    },
-    {
-      "hash": "adaff92a3681",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from inngest/i",
-      "dispatchedAt": 1772344413955
-    },
-    {
-      "hash": "69704bc24701",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN architecture & pattern from highlight",
-      "dispatchedAt": 1772344447108
-    },
-    {
-      "hash": "50bd4a31d25e",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ electron/el",
-      "dispatchedAt": 1772344499950
-    },
-    {
-      "hash": "7a676571e240",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from louislam",
-      "dispatchedAt": 1772344594342
-    },
-    {
-      "hash": "36b83727d0be",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from formbric",
-      "dispatchedAt": 1772344627398
-    },
-    {
-      "hash": "51785e13c96a",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ mem0a",
-      "dispatchedAt": 1772344684555
-    },
-    {
-      "hash": "b8c3f739708b",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN architecture & pattern from anthropic",
-      "dispatchedAt": 1772344774769
-    },
-    {
-      "hash": "cfd50cb7128b",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from upstash/q",
-      "dispatchedAt": 1772344951712
-    },
-    {
-      "hash": "382c9631fbc2",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ n8n-io",
-      "dispatchedAt": 1772345045054
-    },
-    {
-      "hash": "d04f9cd49ddd",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ google/zx & ",
-      "dispatchedAt": 1772345079787
-    },
-    {
-      "hash": "804407618f9c",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ vercel/ai & ",
-      "dispatchedAt": 1772345132186
-    },
-    {
-      "hash": "ecf598fefe1f",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ BerriA",
-      "dispatchedAt": 1772345225358
-    },
-    {
-      "hash": "53f02796f622",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN architecture & pattern from pulumi/pu",
-      "dispatchedAt": 1772345402106
-    },
-    {
-      "hash": "61fd143df04c",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ temporal-io/",
-      "dispatchedAt": 1772345489891
-    },
-    {
-      "hash": "466cd5d53358",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ grafan",
-      "dispatchedAt": 1772346032571
-    },
-    {
-      "hash": "6f87c0ceb562",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ electron/el",
-      "dispatchedAt": 1772346065446
-    },
-    {
-      "hash": "433403a8d2be",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from netdata/",
-      "dispatchedAt": 1772346092382
-    },
-    {
       "hash": "eedaa7f5abee",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1103,502 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
       "dispatchedAt": 1772365056676
+    },
+    {
+      "hash": "010f0b7d233b",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES mekong-cli: 1/ npm outdated — update critical deps. 2/ npm audi",
+      "dispatchedAt": 1772365120092
+    },
+    {
+      "hash": "ae91b5b62183",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD well: 1/ npm run build — fix ALL errors. 2/ Add build script if mis",
+      "dispatchedAt": 1772365161936
+    },
+    {
+      "hash": "3a575745b033",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS apex-os: 1/ npm test — fix failing tests. 2/ Write 3+ unit tests fo",
+      "dispatchedAt": 1772365218058
+    },
+    {
+      "hash": "e800cb7686dd",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit test",
+      "dispatchedAt": 1772365241696
+    },
+    {
+      "hash": "7641791522ee",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD mekong-cli: 1/ npm run build — fix ALL errors. 2/ Add build script ",
+      "dispatchedAt": 1772365391197
+    },
+    {
+      "hash": "515e05f39dfb",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS well: 1/ npm test — fix failing tests. 2/ Write 3+ unit tests for c",
+      "dispatchedAt": 1772365438192
+    },
+    {
+      "hash": "ea37a1a324a6",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: security",
+      "preview": "/cook \"SECURITY algo-trader: 1/ npm audit fix. 2/ Create .env.example if .env ex",
+      "dispatchedAt": 1772365500282
+    },
+    {
+      "hash": "c0aebcdc889b",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: ci_cd",
+      "preview": "/cook \"CI/CD algo-trader: 1/ Create .github/workflows/ci.yml: lint + typecheck +",
+      "dispatchedAt": 1772365510266
+    },
+    {
+      "hash": "761f52d66d6a",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS mekong-cli: 1/ npm test — fix failing tests. 2/ Write 3+ unit tests",
+      "dispatchedAt": 1772365663266
+    },
+    {
+      "hash": "a91c57b0f324",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD algo-trader: 1/ npm run build — fix ALL errors. 2/ Add build script",
+      "dispatchedAt": 1772365758021
+    },
+    {
+      "hash": "90bda4f85cbc",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD apex-os: 1/ npm run build — fix ALL errors. 2/ Add build script if ",
+      "dispatchedAt": 1772365841852
+    },
+    {
+      "hash": "e800cb7686dd",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit test",
+      "dispatchedAt": 1772366014887
+    },
+    {
+      "hash": "a0ffc660b4cc",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: performance",
+      "preview": "/plan:parallel \"PERFORMANCE algo-trader: 1/ find src -name '*.ts' -o -name '*.ts",
+      "dispatchedAt": 1772366073096
+    },
+    {
+      "hash": "3316081d0fec",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: tests",
+      "preview": "/plan:parallel \"TESTS apex-os: 1/ npm test — fix failing tests. 2/ Write 3+ unit",
+      "dispatchedAt": 1772366154742
+    },
+    {
+      "hash": "8c1e2ae661cc",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: security",
+      "preview": "/plan:parallel \"SECURITY algo-trader: 1/ npm audit fix. 2/ Create .env.example i",
+      "dispatchedAt": 1772366400402
+    },
+    {
+      "hash": "eca420e2ba54",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/plan:parallel \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commi",
+      "dispatchedAt": 1772366895367
+    },
+    {
+      "hash": "94b61d79d587",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION algo-trader: 1/ git add -A && git status. 2/ git commit -",
+      "dispatchedAt": 1772366942668
+    },
+    {
+      "hash": "79113b878692",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/plan:hard \"RESOURCES mekong-cli: 1/ npm outdated — update critical deps. 2/ npm",
+      "dispatchedAt": 1772367214161
+    },
+    {
+      "hash": "e4523d0c1d78",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: resources",
+      "preview": "/plan:hard \"RESOURCES algo-trader: 1/ npm outdated — update critical deps. 2/ np",
+      "dispatchedAt": 1772367620230
+    },
+    {
+      "hash": "3c03636598ad",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m",
+      "dispatchedAt": 1772367655391
+    },
+    {
+      "hash": "3a7a80fc634c",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: build",
+      "preview": "/plan:hard \"BUILD mekong-cli: 1/ npm run build — fix ALL errors. 2/ Add build sc",
+      "dispatchedAt": 1772367744888
+    },
+    {
+      "hash": "780e4a3dac99",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: performance",
+      "preview": "/plan:parallel \"PERFORMANCE apex-os: 1/ find src -name '*.ts' -o -name '*.tsx' |",
+      "dispatchedAt": 1772367745697
+    },
+    {
+      "hash": "d8cada4fe1db",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/plan:hard \"PERFORMANCE well: 1/ find src -name '*.ts' -o -name '*.tsx' | xargs ",
+      "dispatchedAt": 1772367775064
+    },
+    {
+      "hash": "a4cd7fe9d4e2",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION well: 1/ git add -A && git status. 2/ git commit -m 'chor",
+      "dispatchedAt": 1772367818084
+    },
+    {
+      "hash": "29a6936924aa",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/plan:hard \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit",
+      "dispatchedAt": 1772368091692
+    },
+    {
+      "hash": "94b61d79d587",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION algo-trader: 1/ git add -A && git status. 2/ git commit -",
+      "dispatchedAt": 1772368315580
+    },
+    {
+      "hash": "ed59edb999b7",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: performance",
+      "preview": "/plan:hard \"PERFORMANCE apex-os: 1/ find src -name '*.ts' -o -name '*.tsx' | xar",
+      "dispatchedAt": 1772368468453
+    },
+    {
+      "hash": "d8cada4fe1db",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/plan:hard \"PERFORMANCE well: 1/ find src -name '*.ts' -o -name '*.tsx' | xargs ",
+      "dispatchedAt": 1772368554397
+    },
+    {
+      "hash": "3c03636598ad",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m",
+      "dispatchedAt": 1772369008233
+    },
+    {
+      "hash": "a4cd7fe9d4e2",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION well: 1/ git add -A && git status. 2/ git commit -m 'chor",
+      "dispatchedAt": 1772369124462
+    },
+    {
+      "hash": "29a6936924aa",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/plan:hard \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit",
+      "dispatchedAt": 1772369135285
+    },
+    {
+      "hash": "2ab757258df1",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: build",
+      "preview": "/plan:hard \"BUILD well: 1/ npm run build — fix ALL errors. 2/ Add build script i",
+      "dispatchedAt": 1772369189295
+    },
+    {
+      "hash": "94b61d79d587",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/plan:hard \"PRODUCTION algo-trader: 1/ git add -A && git status. 2/ git commit -",
+      "dispatchedAt": 1772369231832
+    },
+    {
+      "hash": "e4523d0c1d78",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: resources",
+      "preview": "/plan:hard \"RESOURCES algo-trader: 1/ npm outdated — update critical deps. 2/ np",
+      "dispatchedAt": 1772369242201
+    },
+    {
+      "hash": "9183c6d489e9",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/plan:hard \"BUILD algo-trader: 1/ npm run build — fix ALL errors. 2/ Add build s",
+      "dispatchedAt": 1772369268433
+    },
+    {
+      "hash": "f0148009e9eb",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/plan:hard \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit",
+      "dispatchedAt": 1772369296038
+    },
+    {
+      "hash": "e7a42a2ab141",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: security",
+      "preview": "/plan:hard \"SECURITY algo-trader: 1/ npm audit fix. 2/ Create .env.example if .e",
+      "dispatchedAt": 1772369717154
+    },
+    {
+      "hash": "5337072c44a4",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/bootstrap:auto:parallel \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/",
+      "dispatchedAt": 1772371160857
+    },
+    {
+      "hash": "ef3b638f3d03",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/bootstrap:auto:parallel \"RESOURCES mekong-cli: 1/ npm outdated — update critica",
+      "dispatchedAt": 1772371355478
+    },
+    {
+      "hash": "8159a62b0a06",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: build",
+      "preview": "/bootstrap:auto:parallel \"BUILD mekong-cli: 1/ npm run build — fix ALL errors. 2",
+      "dispatchedAt": 1772371618729
+    },
+    {
+      "hash": "b8ca1a97da1a",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/bootstrap:auto:parallel \"PRODUCTION algo-trader: 1/ git add -A && git status. 2",
+      "dispatchedAt": 1772371629180
+    },
+    {
+      "hash": "475e6f8fe907",
+      "project": "well",
+      "pane": 1,
+      "chapter": "AGI RaaS full plan",
+      "preview": "/bootstrap:auto:parallel \"AGI RaaS well 100/100: 1/ PLANNING: Create docs/ARCHIT",
+      "dispatchedAt": 1772371712891
+    },
+    {
+      "hash": "7b0f5c7f28be",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "AGI RaaS full plan",
+      "preview": "/bootstrap:auto:parallel \"AGI RaaS algo-trader 100/100: 1/ PLANNING: docs/ARCHIT",
+      "dispatchedAt": 1772371723807
+    },
+    {
+      "hash": "25cd41985d9c",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "AGI RaaS full plan",
+      "preview": "/bootstrap:auto:parallel \"AGI RaaS apex-os 100/100: 1/ PLANNING: docs/ARCHITECTU",
+      "dispatchedAt": 1772372147827
+    },
+    {
+      "hash": "7b0f5c7f28be",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "AGI RaaS full plan",
+      "preview": "/bootstrap:auto:parallel \"AGI RaaS algo-trader 100/100: 1/ PLANNING: docs/ARCHIT",
+      "dispatchedAt": 1772372414272
+    },
+    {
+      "hash": "3ead9e02ce8e",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/binh-phap implement \"mekong-cli: Nâng production từ 4→10. Scan → fix → verify. ",
+      "dispatchedAt": 1772373549864
+    },
+    {
+      "hash": "fad38468c6db",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/binh-phap implement \"mekong-cli: Nâng resources từ 5→10. Scan → fix → verify. n",
+      "dispatchedAt": 1772373818669
+    },
+    {
+      "hash": "a41f41559277",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/binh-phap implement \"algo-trader: Nâng production từ 4→10. Scan → fix → verify.",
+      "dispatchedAt": 1772373826602
+    },
+    {
+      "hash": "54835a78fb5f",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: build",
+      "preview": "/binh-phap implement \"mekong-cli: Nâng build từ 5→10. Scan → fix → verify. npm r",
+      "dispatchedAt": 1772374090187
+    },
+    {
+      "hash": "08588f700d2b",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/binh-phap implement \"algo-trader: Nâng resources từ 5→10. Scan → fix → verify. ",
+      "dispatchedAt": 1772374103520
+    },
+    {
+      "hash": "3ead9e02ce8e",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/binh-phap implement \"mekong-cli: Nâng production từ 4→10. Scan → fix → verify. ",
+      "dispatchedAt": 1772374362642
+    },
+    {
+      "hash": "780a146f2768",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-STRATEGIC: build",
+      "preview": "/binh-phap implement \"algo-trader: Nâng build từ 5→10. Scan → fix → verify. npm ",
+      "dispatchedAt": 1772374370734
+    },
+    {
+      "hash": "58934708a1f1",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: tests",
+      "preview": "/cook \"mekong-cli: Nâng tests từ 5→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772374397142
+    },
+    {
+      "hash": "54e84ca32c79",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-STRATEGIC: tests",
+      "preview": "/cook \"algo-trader: Nâng tests từ 5→10. Scan codebase, fix issues, add tests/doc",
+      "dispatchedAt": 1772374404804
+    },
+    {
+      "hash": "a48e5b262a07",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"algo-trader: Nâng production từ 4→10. Scan codebase, fix issues, add test",
+      "dispatchedAt": 1772374653952
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772374919555
+    },
+    {
+      "hash": "989337b0c32c",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "TIER3-STRATEGIC: performance",
+      "preview": "/cook \"apex-os: Nâng performance từ 3→10. Scan codebase, fix issues, add tests/d",
+      "dispatchedAt": 1772374939750
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772376763432
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772377212684
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772383674597
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772383821068
+    },
+    {
+      "hash": "e6db4650b1e8",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: build",
+      "preview": "/cook \"mekong-cli: Nâng build từ 5→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772384392672
     }
   ],
   "chapterIndex": 5

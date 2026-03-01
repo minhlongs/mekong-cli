@@ -966,5 +966,841 @@
       "agent_id": "unknown",
       "agent_role": null
     }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:49:51.806580",
+    "d": 73.45816600718535,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:49:51.812247",
+    "d": 0.386583007639274,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:49:51.900063",
+    "d": 80.36175000597723,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:49:51.925395",
+    "d": 24.271292000776157,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:56:27.273084",
+    "d": 73.1140419957228,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:56:27.274324",
+    "d": 0.07412499689962715,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:56:27.345587",
+    "d": 70.59237500652671,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T18:56:27.370470",
+    "d": 24.367165999137796,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:21:53.403838",
+    "d": 65.15145899999908,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:21:53.408442",
+    "d": 0.44966599999973766,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:21:53.487191",
+    "d": 74.2441669999998,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:21:53.511692",
+    "d": 22.326332999998755,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:38:54.332010",
+    "d": 147.83970799999224,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:38:54.335006",
+    "d": 0.1318340000580065,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:38:54.462260",
+    "d": 125.30854199985697,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:38:54.490737",
+    "d": 27.685583000220504,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:42:42.715969",
+    "d": 178.4713750002993,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:42:42.717242",
+    "d": 0.07883400030550547,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:42:42.901545",
+    "d": 183.5002920001898,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:42:42.950539",
+    "d": 48.39212499973655,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:47:17.444334",
+    "d": 320.4718749998392,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:47:17.447620",
+    "d": 0.1677499999459542,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:47:17.641462",
+    "d": 189.96983299985004,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:47:17.825691",
+    "d": 115.70654200022545,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:53:22.298838",
+    "d": 68.80254200000024,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:53:22.328677",
+    "d": 0.22437499999927724,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:53:22.399528",
+    "d": 68.42104200000065,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:53:22.423529",
+    "d": 22.679334000000217,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:56:02.073091",
+    "d": 270.35825000029945,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:56:02.097902",
+    "d": 0.45462499974746606,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:56:02.293817",
+    "d": 188.12562499988417,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T20:56:02.376837",
+    "d": 81.86158399985288,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:11:41.993230",
+    "d": 90.15720800000082,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:11:41.995956",
+    "d": 0.13787500000006503,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:11:42.066413",
+    "d": 68.47999999999921,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:11:42.178252",
+    "d": 23.70129200000015,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:16:06.186931",
+    "d": 100.46970899999951,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:16:06.191326",
+    "d": 0.09933300000053435,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:16:06.264376",
+    "d": 69.30808300000012,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:16:06.292066",
+    "d": 25.21062499999971,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:53:15.270008",
+    "d": 72.13179200000042,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:53:15.273983",
+    "d": 0.32545800000072234,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:53:15.356802",
+    "d": 79.09429099999876,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:53:15.387459",
+    "d": 26.589333000000437,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:57:36.469746",
+    "d": 74.2047079999999,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:57:36.472489",
+    "d": 0.2724169999996917,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:57:36.546760",
+    "d": 72.31150000000054,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T21:57:36.573080",
+    "d": 25.189833999999856,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:11:19.873877",
+    "d": 68.85470800000171,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:11:19.876565",
+    "d": 0.2107090000009748,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:11:19.946114",
+    "d": 65.59749999999909,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:11:19.972260",
+    "d": 23.25295800000049,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:25:25.881937",
+    "d": 66.91983400000012,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:25:25.884778",
+    "d": 0.20850000000116609,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:25:25.959029",
+    "d": 71.94450000000074,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:25:25.987732",
+    "d": 25.059584000000967,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:46:09.977865",
+    "d": 71.42966600000022,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:46:09.983020",
+    "d": 0.8790409999974713,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:46:10.060288",
+    "d": 73.1643749999975,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T22:46:10.087214",
+    "d": 25.583125000000706,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:07:07.783502",
+    "d": 73.8180419999992,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:07:07.786543",
+    "d": 0.1744590000001267,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:07:07.860484",
+    "d": 71.88583299999962,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:07:07.883234",
+    "d": 21.066875000000707,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:15:20.903302",
+    "d": 74.92158399999926,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:15:20.909127",
+    "d": 0.37316699999934144,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:15:20.985059",
+    "d": 71.40370800000007,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:15:21.011531",
+    "d": 23.093042000000175,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:23:12.515957",
+    "d": 78.69358299999973,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:23:12.518839",
+    "d": 0.25416699999958325,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:23:12.588977",
+    "d": 67.90033300000076,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-01T23:23:12.613773",
+    "d": 23.273707999999615,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-02T00:16:56.724582",
+    "d": 181.29395799996928,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-02T00:16:56.731971",
+    "d": 0.47266699993997463,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-02T00:16:57.004370",
+    "d": 267.48266599997805,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
+  },
+  {
+    "c": "agent",
+    "a": "orchestrator_run",
+    "t": "2026-03-02T00:16:57.076563",
+    "d": 69.12312499980544,
+    "s": "success",
+    "m": {
+      "agent_id": "unknown",
+      "agent_role": null
+    }
   }
 ]
