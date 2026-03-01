@@ -88,6 +88,9 @@ export type {
   FeatureGateConfig,
   OrgBillingDashboard,
   OrgRevenueMetrics,
+  UsageRecord as OrgUsageRecord,
+  UsageSummary as OrgUsageSummary,
+  UsageQuota as OrgUsageQuota,
 } from './types';
 
 // Feature gate utilities (pure logic)
