@@ -11,6 +11,8 @@
 
 | Date | Project | Mission | Lesson | Tokens | Efficiency |
 |------|---------|---------|--------|--------|------------|
+| 2026-03-01 | fix | HIGH_mission_fix_fix_mekong_cl | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
+| 2026-03-01 | fix | HIGH_mission_fix_mekong_cli_fi | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
 | 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
 | 2026-03-01 | fix | HIGH_mission_fix_fix_mekong_cl | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
 | 2026-03-01 | fix | HIGH_mission_fix_fix_agi_openc | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
@@ -58,8 +60,6 @@
 | 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | FAILED — Max retries exhausted | ~0(est) | 0/min |
 | 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | FAILED — result=brain_died_fatal | ~0(est) | 0/min |
 | 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | Code worked but BUILD FAILED — check types/lint | ~200(est) | 200/min |
-| 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | FAILED — Max retries exhausted | ~0(est) | 0/min |
-| 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | FAILED — Max retries exhausted | ~0(est) | 0/min |
 | 2026-03-01 | mekong | HIGH_mission_mekong_cli_fix_bu | FAILED — Max retries exhausted | ~0(est) | 0/min |
 
 ---
