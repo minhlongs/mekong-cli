@@ -1,17 +1,5 @@
 [
   {
-    "timestamp": "2026-02-21T16:36:03.408Z",
-    "project": "84tea",
-    "missionId": "MEDIUM_mission_84tea_fix_test_1771691712511",
-    "duration": 50863,
-    "success": false,
-    "buildResult": {
-      "build": false,
-      "output": "not_run"
-    },
-    "tokensUsed": 0
-  },
-  {
     "timestamp": "2026-02-21T16:37:19.553Z",
     "project": "84tea",
     "missionId": "MEDIUM_mission_84tea_fix_test_1771691818766",
@@ -12831,6 +12819,19 @@
     "project": "mekong",
     "missionId": "HIGH_mission_mekong_cli_fix_build_1772360959931",
     "duration": 25986,
+    "success": false,
+    "failureType": "max_retries_exhausted",
+    "buildResult": {
+      "build": false,
+      "output": "max_retries_exhausted"
+    },
+    "tokensUsed": 0
+  },
+  {
+    "timestamp": "2026-03-01T10:35:18.260Z",
+    "project": "mekong",
+    "missionId": "HIGH_mission_mekong_cli_fix_build_1772361294861",
+    "duration": 23353,
     "success": false,
     "failureType": "max_retries_exhausted",
     "buildResult": {
