@@ -1,17 +1,5 @@
 [
   {
-    "timestamp": "2026-02-21T16:45:02.914Z",
-    "project": "84tea",
-    "missionId": "MEDIUM_mission_84tea_fix_test_1771692260280",
-    "duration": 42600,
-    "success": false,
-    "buildResult": {
-      "build": false,
-      "output": "not_run"
-    },
-    "tokensUsed": 0
-  },
-  {
     "timestamp": "2026-02-21T16:46:33.330Z",
     "project": "84tea",
     "missionId": "MEDIUM_mission_84tea_fix_test_1771692351392",
@@ -12835,6 +12823,19 @@
     "buildResult": {
       "build": false,
       "output": "\n> wellnexus-mvp@1.0.0-seed prebuild\n> pnpm sitemap:generate && pnpm i18n:validate\n\n\n> wellnexus-mvp@1.0.0-seed sitemap:generate /Users/macbookprom1/mekong-cli/apps/well\n> node scripts/generate-sitemap.mjs\n\n✅ Sitemap generated: /Users/macbookprom1/mekong-cli/apps/well/public/sitemap.xml\n📝 Included 6 routes\n\n> wellnexus-mvp@1.0.0-seed i18n:validate /Users/macbookprom1/mekong-cli/apps/well\n> node scripts/validate-i18n-keys.mjs\n\n🔍 Extracting translation keys from source files...\n\n📝 Found 1481 unique translation keys\n\n🌍 Validating src/locales/vi.ts...\n✅ All keys present (1481 keys checked)\n\n🌍 Validating src/locales/en.ts...\n✅ All keys present (1481 keys checked)\n\n✅ i18n validation PASSED\n\n\n> wellnexus-mvp@1.0.0-seed build\n> NODE_OPTIONS=--max-old-space-size=4096 npx tsc && NODE_OPTIONS=--max-old-space-size=4096 npx vite build\n\n\u001b[36mvite v7.3.1 \u001b[32mbuilding client environment for production...\u001b[36m\u001b[39m\ntransforming...\n\u001b[32m✓\u001b[39m 4021 modules transformed.\nnpm warn config ignoring workspace config at /Users/macbookprom1/mekong-cli/apps/well/.npmrc\nnpm warn config ignoring workspace config at /Users/macbookprom1/mekong-cli/apps/well/.npmrc\nnpm warn config ignoring workspace config at /Users/macbookprom1/mekong-cli/apps/well/.npmrc\n\u001b[31m✗\u001b[39m Build failed in 13.41s\n\u001b[31merror during build:\n\u001b[31m[vite:esbuild-transpile] The service was stopped: write EPIPE\u001b[31m\n    at /Users/macbookprom1/mekong-cli/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:718:38\n    at responseCallbacks.<computed> (/Users/macbookprom1/mekong-cli/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:603:9)\n    at afterClose (/Users/macbookprom1/mekong-cli/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:594:28)\n    at /Users/macbookprom1/mekong-cli/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:1986:18\n    at onwriteError (node:internal/streams/writable:603:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:91:21)\u001b[39m\nnpm error Lifecycle script `build` failed with error:\nnpm error code 1\nnpm error path /Users/macbookprom1/mekong-cli/apps/well\nnpm error workspace wellnexus-mvp@1.0.0-seed\nnpm error location /Users/macbookprom1/mekong-cli/apps/well\nnpm error command failed\nnpm error command sh -c NODE_OPTIONS=--max-old-space-size=4096 npx tsc && NODE_OPTIONS=--max-old-space-size=4096 npx vite build\n"
+    },
+    "tokensUsed": 0
+  },
+  {
+    "timestamp": "2026-03-01T10:52:41.876Z",
+    "project": "mekong",
+    "missionId": "HIGH_mission_mekong_cli_fix_build_1772362335903",
+    "duration": 25936,
+    "success": false,
+    "failureType": "max_retries_exhausted",
+    "buildResult": {
+      "build": false,
+      "output": "max_retries_exhausted"
     },
     "tokensUsed": 0
   }
