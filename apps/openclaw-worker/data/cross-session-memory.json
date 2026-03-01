@@ -1,34 +1,6 @@
 {
   "sessions": [
     {
-      "id": 1772348457679,
-      "startedAt": "2026-03-01T07:00:57.679Z",
-      "missionsDispatched": 1,
-      "missionsSucceeded": 1,
-      "bugsFixed": 1,
-      "lessonsLearned": []
-    },
-    {
-      "id": 1772348731883,
-      "startedAt": "2026-03-01T07:05:31.883Z",
-      "missionsDispatched": 1,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": [
-        "all_workers_busy"
-      ]
-    },
-    {
-      "id": 1772349006671,
-      "startedAt": "2026-03-01T07:10:06.671Z",
-      "missionsDispatched": 1,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": [
-        "max_retries_exhausted"
-      ]
-    },
-    {
       "id": 1772349281471,
       "startedAt": "2026-03-01T07:14:41.471Z",
       "missionsDispatched": 1,
@@ -455,6 +427,34 @@
       "lessonsLearned": [
         "max_retries_exhausted"
       ]
+    },
+    {
+      "id": 1772360567654,
+      "startedAt": "2026-03-01T10:22:47.654Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": [
+        "max_retries_exhausted"
+      ]
+    },
+    {
+      "id": 1772360841807,
+      "startedAt": "2026-03-01T10:27:21.807Z",
+      "missionsDispatched": 1,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": [
+        "max_retries_exhausted"
+      ]
+    },
+    {
+      "id": 1772361121710,
+      "startedAt": "2026-03-01T10:32:01.710Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
     }
   ],
   "knowledgeGraph": {
@@ -642,5 +642,5 @@
     }
   ],
   "createdAt": "2026-02-24T18:28:23.656Z",
-  "updatedAt": "2026-03-01T10:20:35.223Z"
+  "updatedAt": "2026-03-01T10:32:01.710Z"
 }

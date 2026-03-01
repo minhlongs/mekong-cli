@@ -1,62 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "e80c05aa630a",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/plan:hard \"Binh Phap Ch.1 始計: Deep 10x LEARN architecture & pattern from google",
-      "dispatchedAt": 1772335884809
-    },
-    {
-      "hash": "b0fef026ace7",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/plan:hard \"Binh Phap Ch.2 作戰: Deep 10x LEARN architecture & pattern from upstas",
-      "dispatchedAt": 1772335890783
-    },
-    {
-      "hash": "b1cd919314e5",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/plan:hard \"Binh Phap Ch.3 謀攻: Deep 10x LEARN architecture & pattern from n8n-io",
-      "dispatchedAt": 1772336154198
-    },
-    {
-      "hash": "e0c4972137e0",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/plan:hard \"Binh Phap Ch.4 軍形: Deep 10x LEARN architecture & pattern from google",
-      "dispatchedAt": 1772336245596
-    },
-    {
-      "hash": "1f5f724d3e6c",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/plan:hard \"Binh Phap Ch.5 兵勢: Deep 10x LEARN architecture & pattern from vercel",
-      "dispatchedAt": 1772336251454
-    },
-    {
-      "hash": "88076b45fcb1",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/plan:hard \"Binh Phap Ch.6 虛實: Deep 10x LEARN architecture & pattern from BerriA",
-      "dispatchedAt": 1772336338631
-    },
-    {
-      "hash": "cabe7d6e5ba1",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/plan:hard \"Binh Phap Ch.7 軍爭: Deep 10x LEARN architecture & pattern from railwa",
-      "dispatchedAt": 1772336430644
-    },
-    {
       "hash": "b3bf1797d0b9",
       "project": "mekong-cli",
       "pane": 0,
@@ -1591,6 +1535,70 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
       "dispatchedAt": 1772360499327
+    },
+    {
+      "hash": "59c2370a731f",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
+      "dispatchedAt": 1772360701224
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772360732850
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772360761657
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772360969502
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772361006283
+    },
+    {
+      "hash": "88134c577b53",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
+      "dispatchedAt": 1772361034480
+    },
+    {
+      "hash": "59c2370a731f",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
+      "dispatchedAt": 1772361278703
+    },
+    {
+      "hash": "88134c577b53",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
+      "dispatchedAt": 1772361306427
     }
   ],
   "chapterIndex": 5
