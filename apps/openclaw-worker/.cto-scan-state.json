@@ -1,15 +1,17 @@
 {
   "currentProjectIdx": 0,
-  "phase": "verify",
+  "phase": "fix",
   "cycle": 1,
   "errors": [
     {
       "type": "build",
       "severity": "critical",
-      "file": "package.json",
-      "message": "Build command failed with exit code 127. Output snippet:  > mekong-cli@2.1.33 build > turbo run build  sh: turbo: command not found ...",
+      "file": "@agencyos/vibe-ui:build: src/index.ts",
+      "line": 70,
+      "code": "TS6059",
+      "message": "File '/Users/macbookprom1/mekong-cli/packages/vibe-ui/index.ts' is not under 'rootDir' '/Users/macbookprom1/mekong-cli/packages/vibe-ui/src'. 'rootDir' is expected to contain all source files.",
       "project": "mekong-cli"
     }
   ],
-  "fixIndex": 1
+  "fixIndex": 0
 }
