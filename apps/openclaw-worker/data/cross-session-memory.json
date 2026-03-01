@@ -1,16 +1,6 @@
 {
   "sessions": [
     {
-      "id": 1772349281471,
-      "startedAt": "2026-03-01T07:14:41.471Z",
-      "missionsDispatched": 1,
-      "missionsSucceeded": 0,
-      "bugsFixed": 0,
-      "lessonsLearned": [
-        "max_retries_exhausted"
-      ]
-    },
-    {
       "id": 1772349561411,
       "startedAt": "2026-03-01T07:19:21.411Z",
       "missionsDispatched": 1,
@@ -457,6 +447,14 @@
       "lessonsLearned": [
         "max_retries_exhausted"
       ]
+    },
+    {
+      "id": 1772361396551,
+      "startedAt": "2026-03-01T10:36:36.551Z",
+      "missionsDispatched": 0,
+      "missionsSucceeded": 0,
+      "bugsFixed": 0,
+      "lessonsLearned": []
     }
   ],
   "knowledgeGraph": {
@@ -644,5 +642,5 @@
     }
   ],
   "createdAt": "2026-02-24T18:28:23.656Z",
-  "updatedAt": "2026-03-01T10:35:18.336Z"
+  "updatedAt": "2026-03-01T10:36:36.552Z"
 }
