@@ -17,6 +17,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 import time
+import uuid
 
 from .planner import RecipePlanner, PlanningContext
 from .executor import RecipeExecutor
@@ -25,6 +26,9 @@ from .parser import Recipe, RecipeStep
 from .telemetry import TelemetryCollector
 from .memory import MemoryStore, MemoryEntry
 from .nlu import IntentClassifier
+from .execution_history import ExecutionHistory, ExecutionEvent, EventKind
+from .retry_policy import RetryPolicy
+from .workflow_state import WorkflowState, WorkflowStatus, StepStatus
 
 
 class OrchestrationStatus(Enum):
@@ -82,6 +86,7 @@ class RecipeOrchestrator:
         strict_verification: bool = True,
         enable_rollback: bool = True,
         use_swarm: bool = False,
+        retry_policy: Optional[RetryPolicy] = None,
     ) -> None:
         """
         Initialize orchestrator.
@@ -91,6 +96,7 @@ class RecipeOrchestrator:
             strict_verification: If True, warnings are treated as failures
             enable_rollback: If True, failed steps trigger rollback
             use_swarm: If True, route steps through SwarmDispatcher
+            retry_policy: Retry policy for step execution (Temporal-inspired)
         """
         self.planner = RecipePlanner(llm_client=llm_client)
         self.verifier = RecipeVerifier(strict_mode=strict_verification)
@@ -99,6 +105,8 @@ class RecipeOrchestrator:
         self.telemetry = TelemetryCollector()
         self.memory = MemoryStore()
         self.nlu = IntentClassifier(llm_client=llm_client)
+        self.retry_policy = retry_policy or RetryPolicy()
+        self.history = ExecutionHistory()
 
         # Swarm dispatcher (optional)
         if use_swarm:
@@ -224,7 +232,7 @@ class RecipeOrchestrator:
         """
         Execute existing recipe with verification.
 
-        EXECUTE → VERIFY
+        EXECUTE → VERIFY (with Temporal-inspired event sourcing & state machine)
 
         Args:
             recipe: Pre-planned recipe to execute
@@ -232,11 +240,23 @@ class RecipeOrchestrator:
         Returns:
             OrchestrationResult
         """
+        workflow_id = uuid.uuid4().hex[:12]
         result = OrchestrationResult(
             status=OrchestrationStatus.SUCCESS,
             recipe=recipe,
             total_steps=len(recipe.steps),
         )
+
+        # Initialize workflow state machine
+        wf_state = WorkflowState(workflow_id=workflow_id)
+        wf_state.register_steps(len(recipe.steps))
+        wf_state.transition(WorkflowStatus.RUNNING)
+
+        # Record workflow start event
+        self.history.append(ExecutionEvent.create(
+            EventKind.WORKFLOW_STARTED, workflow_id,
+            data={"recipe": recipe.name, "steps": len(recipe.steps)},
+        ))
 
         self.console.print(
             "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]"
@@ -247,15 +267,32 @@ class RecipeOrchestrator:
 
         # Execute each step with verification
         for step in recipe.steps:
-            step_result = self._execute_and_verify_step(executor, step)
+            # Record step scheduled event
+            self.history.append(ExecutionEvent.create(
+                EventKind.STEP_SCHEDULED, workflow_id, step.order,
+            ))
+            wf_state.step_transition(step.order, StepStatus.STARTED)
+
+            step_result = self._execute_and_verify_step(
+                executor, step, workflow_id, wf_state,
+            )
             result.step_results.append(step_result)
 
             if step_result.verification.passed:
                 result.completed_steps += 1
+                wf_state.step_transition(step.order, StepStatus.COMPLETED)
+                self.history.append(ExecutionEvent.create(
+                    EventKind.STEP_COMPLETED, workflow_id, step.order,
+                ))
                 self.console.print(f"[green]✓[/green] Step {step.order} passed")
             else:
                 result.failed_steps += 1
                 result.status = OrchestrationStatus.FAILED
+                wf_state.step_transition(step.order, StepStatus.FAILED)
+                self.history.append(ExecutionEvent.create(
+                    EventKind.STEP_FAILED, workflow_id, step.order,
+                    data={"errors": step_result.verification.errors[:3]},
+                ))
                 self.console.print(f"[red]✗[/red] Step {step.order} failed")
 
                 # Collect errors
@@ -273,10 +310,33 @@ class RecipeOrchestrator:
             # Handle failure after callback so the listener sees the step
             if not step_result.verification.passed:
                 if self.enable_rollback:
+                    self.history.append(ExecutionEvent.create(
+                        EventKind.ROLLBACK_STARTED, workflow_id, step.order,
+                    ))
                     self._handle_failure(result, step)
+                    self.history.append(ExecutionEvent.create(
+                        EventKind.ROLLBACK_COMPLETED, workflow_id, step.order,
+                    ))
                     break
                 else:
                     result.status = OrchestrationStatus.PARTIAL
+
+        # Finalize workflow state
+        if result.status == OrchestrationStatus.SUCCESS:
+            wf_state.transition(WorkflowStatus.COMPLETED)
+            self.history.append(ExecutionEvent.create(
+                EventKind.WORKFLOW_COMPLETED, workflow_id,
+                data={"success_rate": result.success_rate},
+            ))
+        elif result.status == OrchestrationStatus.FAILED:
+            wf_state.transition(WorkflowStatus.FAILED)
+            self.history.append(ExecutionEvent.create(
+                EventKind.WORKFLOW_FAILED, workflow_id,
+                data={"errors": result.errors[:5]},
+            ))
+
+        # Persist execution history
+        self.history.persist(workflow_id)
 
         # Display final report
         self._display_report(result)
@@ -284,7 +344,11 @@ class RecipeOrchestrator:
         return result
 
     def _execute_and_verify_step(
-        self, executor: RecipeExecutor, step: RecipeStep
+        self,
+        executor: RecipeExecutor,
+        step: RecipeStep,
+        workflow_id: str = "",
+        wf_state: Optional[WorkflowState] = None,
     ) -> StepResult:
         """
         Execute single step and verify results.
@@ -305,10 +369,14 @@ class RecipeOrchestrator:
         execution_result = executor.execute_step(step)
 
         # Self-healing: retry failed shell steps with LLM correction
+        # Uses Temporal-inspired retry policy for backoff decisions
         step_type = step.params.get("type", "shell") if step.params else "shell"
         if (
             step_type == "shell"
             and execution_result.exit_code != 0
+            and self.retry_policy.is_retryable(
+                execution_result.stderr or "", execution_result.exit_code
+            )
             and self.planner.llm_client
             and hasattr(self.planner.llm_client, "generate")
         ):
@@ -317,6 +385,11 @@ class RecipeOrchestrator:
             self.console.print(
                 "[yellow]🔧 Attempting AI self-correction...[/yellow]"
             )
+            if workflow_id:
+                self.history.append(ExecutionEvent.create(
+                    EventKind.SELF_HEAL_ATTEMPTED, workflow_id, step.order,
+                    data={"error": stderr[:200]},
+                ))
 
             try:
                 self.telemetry.record_llm_call()
@@ -345,6 +418,11 @@ class RecipeOrchestrator:
                         self.console.print(
                             "[green]✓ Self-healing succeeded[/green]"
                         )
+                        if workflow_id:
+                            self.history.append(ExecutionEvent.create(
+                                EventKind.SELF_HEAL_SUCCEEDED,
+                                workflow_id, step.order,
+                            ))
                     else:
                         self.telemetry.record_error(
                             f"Self-heal retry also failed for step {step.order}"

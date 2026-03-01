@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Set
 logger = logging.getLogger(__name__)
 
 RULES_DIR = Path(".claude/rules")
+GLOBAL_RULES_DIR = Path.home() / ".claude" / "rules"
 
 class RuleRegistry:
     """
@@ -29,41 +30,48 @@ class RuleRegistry:
         self.tag_index = {}
         self.agent_index = {}
 
-        if not self.rules_dir.exists():
-            logger.warning(f"Rules directory not found: {self.rules_dir}")
+        # Collect all rule directories to scan (project-level + global fallback)
+        dirs_to_scan = []
+        if self.rules_dir.exists():
+            dirs_to_scan.append(self.rules_dir)
+        if GLOBAL_RULES_DIR.exists() and GLOBAL_RULES_DIR != self.rules_dir.resolve():
+            dirs_to_scan.append(GLOBAL_RULES_DIR)
+
+        if not dirs_to_scan:
+            logger.warning(f"No rules directories found: {self.rules_dir}, {GLOBAL_RULES_DIR}")
             return
 
-        # Use rglob for recursive search
-        for rule_file in self.rules_dir.rglob("*.md"):
-            try:
-                metadata = self._parse_rule(rule_file)
-                # Use relative path as name to avoid collisions and support subdirectories
+        for scan_dir in dirs_to_scan:
+            for rule_file in scan_dir.rglob("*.md"):
                 try:
-                    name = str(rule_file.relative_to(self.rules_dir))
-                except ValueError:
-                    name = rule_file.name
-                    
-                self.rules[name] = metadata
+                    metadata = self._parse_rule(rule_file)
+                    # Use relative path as name — try scan_dir first, fallback to filename
+                    try:
+                        name = str(rule_file.relative_to(scan_dir))
+                    except ValueError:
+                        name = rule_file.name
 
-                # Index by tags
-                for tag in metadata.get("tags", []):
-                    tag = tag.strip().lower()
-                    if tag not in self.tag_index:
-                        self.tag_index[tag] = set()
-                    self.tag_index[tag].add(name)
+                    self.rules[name] = metadata
 
-                # Index by agents
-                agents = metadata.get("agents", [])
-                if not agents:
-                    agents = ["*"]
+                    # Index by tags
+                    for tag in metadata.get("tags", []):
+                        tag = tag.strip().lower()
+                        if tag not in self.tag_index:
+                            self.tag_index[tag] = set()
+                        self.tag_index[tag].add(name)
 
-                for agent in agents:
-                    agent = agent.strip().lower()
-                    if agent not in self.agent_index:
-                        self.agent_index[agent] = set()
-                    self.agent_index[agent].add(name)
-            except Exception as e:
-                logger.error(f"❌ Failed to parse rule {rule_file}: {e}")
+                    # Index by agents
+                    agents = metadata.get("agents", [])
+                    if not agents:
+                        agents = ["*"]
+
+                    for agent in agents:
+                        agent = agent.strip().lower()
+                        if agent not in self.agent_index:
+                            self.agent_index[agent] = set()
+                        self.agent_index[agent].add(name)
+                except Exception as e:
+                    logger.error(f"❌ Failed to parse rule {rule_file}: {e}")
 
     def _parse_rule(self, rule_file: Path) -> Dict[str, Any]:
         """Parses metadata from rule file content (Frontmatter or Headers)."""

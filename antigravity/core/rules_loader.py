@@ -14,8 +14,10 @@ from .knowledge.rules import rule_registry
 
 logger = logging.getLogger(__name__)
 
-# Base path for rules
-RULES_BASE_DIR = Path(".claude/rules")
+# Base path for rules — prefer project-level, fallback to global
+_PROJECT_RULES = Path(".claude/rules")
+_GLOBAL_RULES = Path.home() / ".claude" / "rules"
+RULES_BASE_DIR = _PROJECT_RULES if _PROJECT_RULES.exists() else _GLOBAL_RULES
 
 # Proxy to dynamic registry for backward compatibility with tests
 class RuleMappingProxy(dict):
