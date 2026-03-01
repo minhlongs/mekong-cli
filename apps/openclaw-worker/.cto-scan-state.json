@@ -1,35 +1,15 @@
 {
   "currentProjectIdx": 0,
-  "phase": "fix",
+  "phase": "verify",
   "cycle": 1,
   "errors": [
     {
       "type": "build",
       "severity": "critical",
-      "file": "react-app:build: src/features/admin/products/product-form.tsx",
-      "line": 59,
-      "code": "TS2769",
-      "message": "No overload matches this call.",
-      "project": "mekong-cli"
-    },
-    {
-      "type": "build",
-      "severity": "critical",
-      "file": "react-app:build: src/features/auth/login-form.tsx",
-      "line": 28,
-      "code": "TS2769",
-      "message": "No overload matches this call.",
-      "project": "mekong-cli"
-    },
-    {
-      "type": "build",
-      "severity": "critical",
-      "file": "react-app:build: src/features/auth/register-form.tsx",
-      "line": 35,
-      "code": "TS2769",
-      "message": "No overload matches this call.",
+      "file": "package.json",
+      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build  • turbo 2.8.12 • Packages in scope: 84tea, @agencyos/agents, @agencyos/agritech-hub-sdk, @agencyos/ai-hub-sdk, @agencyos/antigravity-gateway, @agencyo...",
       "project": "mekong-cli"
     }
   ],
-  "fixIndex": 2
+  "fixIndex": 1
 }

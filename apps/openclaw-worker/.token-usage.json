@@ -1662,5 +1662,37 @@
     "tokens": 0,
     "duration": 60,
     "model": "unknown"
+  },
+  {
+    "ts": "2026-03-01T11:39:25.842Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTr",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 64,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-03-01T13:12:56.032Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTr",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 67,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-03-01T13:20:41.973Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTr",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 140,
+    "model": "unknown"
+  },
+  {
+    "ts": "2026-03-01T13:53:02.063Z",
+    "mission": "/cook \"Trả lời TIẾNG VIỆT. Ưu tiên /cook và kiểm tra kỹ.\n\nTr",
+    "project": "mekong-cli",
+    "tokens": 0,
+    "duration": 65,
+    "model": "unknown"
   }
 ]
