@@ -1,15 +1,5 @@
 [
   {
-    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF",
-    "project": "com-anh-duong-10x",
-    "result": "failed_to_start",
-    "success": false,
-    "elapsedSec": 87,
-    "summary": "",
-    "filesChanged": 0,
-    "timestamp": "2026-02-26T09:21:59.776Z"
-  },
-  {
     "taskId": "/cook \"Trả lời bằng TIẾNG VIỆT. WORKFLOW",
     "project": "mekong-cli",
     "result": "failed_to_start",
@@ -1998,5 +1988,15 @@
     "summary": "",
     "filesChanged": 0,
     "timestamp": "2026-03-01T10:43:54.163Z"
+  },
+  {
+    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF",
+    "project": "well",
+    "result": "done",
+    "success": true,
+    "elapsedSec": 64,
+    "summary": "",
+    "filesChanged": 0,
+    "timestamp": "2026-03-01T10:48:06.850Z"
   }
 ]

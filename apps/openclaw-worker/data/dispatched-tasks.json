@@ -1,30 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "6ff6737a9212",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/plan:hard \"Binh Phap Ch.3 謀攻: Deep 10x LEARN architecture & pattern from n8n-io",
-      "dispatchedAt": 1772336888288
-    },
-    {
-      "hash": "1ca9918f4ef0",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/plan:hard \"Binh Phap Ch.4 軍形: Deep 10x LEARN architecture & pattern from google",
-      "dispatchedAt": 1772336894819
-    },
-    {
-      "hash": "a7fcd2132688",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/plan:hard \"Binh Phap Ch.5 兵勢: Deep 10x LEARN architecture & pattern from vercel",
-      "dispatchedAt": 1772336976340
-    },
-    {
       "hash": "6b2c045f9004",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1575,30 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
       "dispatchedAt": 1772362000296
+    },
+    {
+      "hash": "dc4ad7472ad3",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit fix.",
+      "dispatchedAt": 1772362068236
+    },
+    {
+      "hash": "e800cb7686dd",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit test",
+      "dispatchedAt": 1772362094441
+    },
+    {
+      "hash": "4b6d445c1e4d",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
+      "dispatchedAt": 1772362153084
     }
   ],
   "chapterIndex": 5
