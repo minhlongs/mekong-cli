@@ -1,7 +1,7 @@
 {
   "name": "@agencyos/trading-core",
   "version": "0.1.0",
-  "description": "Reusable algorithmic trading primitives \u2014 interfaces, risk management, signal processing, technical indicators, cross-exchange arbitrage monitoring & execution",
+  "description": "Reusable algorithmic trading primitives — interfaces, risk management, signal processing, technical indicators, cross-exchange arbitrage monitoring & execution",
   "main": "index.ts",
   "types": "index.ts",
   "exports": {
@@ -24,7 +24,13 @@
     "access": "public"
   },
   "peerDependencies": {
-    "technicalindicators": "^3.1.0",
-    "ccxt": "^4.0.0"
+    "ccxt": "^4.0.0",
+    "technicalindicators": "^3.1.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild@<=0.24.2": ">=0.25.0",
+      "ajv@<6.14.0": ">=6.14.0"
+    }
   }
 }
