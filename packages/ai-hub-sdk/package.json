@@ -21,6 +21,12 @@
     "@agencyos/vibe-media-trust": "workspace:*",
     "@agencyos/vibe-digital-twin": "workspace:*"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  },
   "peerDependenciesMeta": {
     "@agencyos/vibe-ai-safety": {
       "optional": true
