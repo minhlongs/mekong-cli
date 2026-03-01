@@ -204,7 +204,7 @@ node apps/openclaw-worker/lib/live-mission-viewer.js
 
 ## Quality Gates (Binh Phap)
 
-- All missions must use `/cook` or `/binh-phap` prefix (DIEU 47)
+- All missions must use `/cook` prefix (DIEU 47) — `/binh-phap` is NOT a valid ClaudeKit command
 - **AGI Level 3 Gate:** `post-mission-gate.js` verifies build status after completion.
 - **AGI Level 3 Journal:** `mission-journal.js` logs all mission outcomes for self-learning.
 - Sequential processing only (no parallel missions)

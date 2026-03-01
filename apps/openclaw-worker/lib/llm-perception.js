@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PROXY_URL = 'http://127.0.0.1:9191';
-const LLM_TIMEOUT_MS = 15000;
+const LLM_TIMEOUT_MS = 45000;
 const CACHE_TTL_MS = 30000; // Cache LLM results for 30s
 const perceptionCache = new Map();
 
@@ -75,7 +75,7 @@ function perceivePaneWithLLM(paneOutput, projectName, paneIdx) {
         const trimmedOutput = paneOutput.slice(-2000); // Max 2000 chars
 
         const payload = JSON.stringify({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-2.5-flash',
             max_tokens: 300,
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
@@ -171,12 +171,12 @@ function buildSmartPrompt(perception, projectName) {
         case 'complete':
             // Use suggestion if available, else generic scan
             if (perception.suggestion && perception.suggestion.length > 10) {
-                return `/cook "${projectName}: ${perception.suggestion}"`;
+                return `/bootstrap:auto:parallel "${projectName}: ${perception.suggestion}"`;
             }
             return null; // Let Binh Phap scanner handle it
 
         case 'stuck':
-            return `/cook "${projectName}: UNSTUCK — ${perception.suggestion || 'Analyze current state, identify blocker, fix and continue.'}"`;
+            return `/bootstrap:auto:parallel "${projectName}: UNSTUCK — ${perception.suggestion || 'Analyze current state, identify blocker, fix and continue.'}"`;
 
         case 'error':
             const errorCtx = perception.error || perception.context || 'unknown error';
@@ -275,7 +275,7 @@ function guardCheck(paneOutput, regexState, projectName, paneIdx) {
 
         const trimmed = paneOutput.slice(-1000); // Guard needs less context
         const payload = JSON.stringify({
-            model: 'gemini-2.5-pro',
+            model: 'gemini-2.5-flash',
             max_tokens: 150,
             messages: [
                 { role: 'system', content: GUARD_PROMPT },
@@ -290,7 +290,7 @@ function guardCheck(paneOutput, regexState, projectName, paneIdx) {
             path: url.pathname,
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) },
-            timeout: 10000,
+            timeout: 30000,
         }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
