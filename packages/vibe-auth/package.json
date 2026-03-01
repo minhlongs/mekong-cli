@@ -1,9 +1,15 @@
 {
     "name": "@agencyos/vibe-auth",
-    "version": "1.0.0",
-    "description": "Provider-agnostic auth SDK — route guards, auto-logout, admin checks",
+    "version": "1.1.0",
+    "description": "Provider-agnostic auth SDK — route guards, auto-logout, admin checks, Supabase provider, middleware, RBAC",
     "main": "index.ts",
     "types": "index.ts",
+    "exports": {
+        ".": "./index.ts",
+        "./supabase": "./supabase-provider.ts",
+        "./middleware": "./middleware-utils.ts",
+        "./rbac": "./rbac-utils.ts"
+    },
     "scripts": {
         "build": "tsc",
         "test": "echo 'vibe-auth tests passed'"
@@ -12,6 +18,10 @@
         "auth",
         "guard",
         "logout",
+        "supabase",
+        "rbac",
+        "middleware",
+        "jwt",
         "vibe",
         "raas"
     ],
