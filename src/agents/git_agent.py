@@ -5,7 +5,7 @@ Real agent for Git operations: status, diff, commit, branch management.
 """
 
 import subprocess
-from typing import List
+from typing import List, cast
 
 from ..core.agent_base import AgentBase, Task, Result
 
@@ -199,7 +199,7 @@ class GitAgent(AgentBase):
             return ["git", "checkout", task.input.get("target", "main")]
 
         # Fallback: custom command
-        custom = task.input.get("cmd", "")
+        custom = cast(str, task.input.get("cmd", ""))
         return ["git"] + custom.split()
 
 

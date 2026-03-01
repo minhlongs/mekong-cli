@@ -1,8 +1,8 @@
 """BMAD Workflow Loader."""
 
 from pathlib import Path
-from typing import List, Optional
-import yaml
+from typing import Any, Dict, List, Optional
+import yaml  # type: ignore[import-untyped]
 from .models import BMADWorkflow, WorkflowCatalog
 
 
@@ -57,17 +57,17 @@ class BMADWorkflowLoader:
             content = file_path.read_text()
 
             # Extract YAML frontmatter if present
-            metadata = {}
+            metadata: Dict[str, Any] = {}
             if content.startswith("---"):
-                parts = content.split("---", 2)
-                if len(parts) >= 3:
+                content_parts = content.split("---", 2)
+                if len(content_parts) >= 3:
                     try:
-                        metadata = yaml.safe_load(parts[1]) or {}
+                        metadata = yaml.safe_load(content_parts[1]) or {}
                     except yaml.YAMLError:
                         metadata = {}
 
             # Determine agent type from path
-            parts = file_path.parts
+            parts: List[str] = list(file_path.parts)
             agent_type = "general"
             if "agents" in parts:
                 idx = parts.index("agents")

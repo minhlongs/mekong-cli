@@ -171,6 +171,8 @@ class CCSpawner:
             # Read output line by line
             async def read_output() -> None:
                 """Read stdout lines from the CC CLI process into the session buffer."""
+                if process.stdout is None:
+                    return
                 while True:
                     line = await process.stdout.readline()
                     if not line:

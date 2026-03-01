@@ -16,7 +16,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Tuple
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 class UpdateChannel(Enum):

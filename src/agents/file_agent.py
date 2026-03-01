@@ -6,7 +6,7 @@ Real agent for file system operations: search, read, create, analyze.
 
 import subprocess
 from pathlib import Path
-from typing import List
+from typing import List, cast
 
 from ..core.agent_base import AgentBase, Task, Result
 
@@ -224,24 +224,24 @@ class FileAgent(AgentBase):
                     ".yml",
                     ".css",
                 ]:
-                    files = list(root.rglob(f"*{ext}"))
+                    path_files: List[Path] = list(root.rglob(f"*{ext}"))
                     # Exclude node_modules, venv, .git
-                    files = [
+                    path_files = [
                         f
-                        for f in files
+                        for f in path_files
                         if not any(
                             part in f.parts
                             for part in ("node_modules", "venv", ".git", "__pycache__")
                         )
                     ]
-                    if files:
+                    if path_files:
                         total_lines = 0
-                        for f in files:
+                        for f in path_files:
                             try:
                                 total_lines += f.read_text(errors="replace").count("\n")
                             except (OSError, UnicodeDecodeError):
                                 pass
-                        stats[ext] = {"files": len(files), "lines": total_lines}
+                        stats[ext] = {"files": len(path_files), "lines": total_lines}
 
                 return Result(task_id=task.id, success=True, output=stats)
 

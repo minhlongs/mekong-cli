@@ -1,6 +1,6 @@
 """BMAD Workflow Validator."""
 
-from typing import Dict, List
+from typing import Any, Dict, List
 from .models import BMADWorkflow
 
 
@@ -8,7 +8,7 @@ class WorkflowValidator:
     """Validates BMAD workflow structure and prerequisites."""
 
     @staticmethod
-    def validate(workflow: BMADWorkflow) -> Dict[str, any]:
+    def validate(workflow: BMADWorkflow) -> Dict[str, Any]:
         """Validate workflow structure and prerequisites.
 
         Args:

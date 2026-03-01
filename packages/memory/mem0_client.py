@@ -119,6 +119,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return False
+        assert self._mem0 is not None
         try:
             self._mem0.add(content, user_id=user_id, metadata=metadata or {})
             logger.debug(f"Mem0 add: user={user_id} content={content[:40]}...")
@@ -146,6 +147,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return []
+        assert self._mem0 is not None
         try:
             results = self._mem0.search(query, user_id=user_id, limit=limit)
             # mem0ai returns list of dicts; normalise for our API
@@ -177,6 +179,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return False
+        assert self._mem0 is not None
         try:
             self._mem0.update(memory_id, content)
             logger.debug(f"Mem0 update: id={memory_id}")
@@ -196,6 +199,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return []
+        assert self._mem0 is not None
         try:
             results = self._mem0.get_all(user_id=user_id)
             logger.debug(f"Mem0 get_all: user={user_id} count={len(results)}")
@@ -215,6 +219,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return []
+        assert self._mem0 is not None
         try:
             hist = self._mem0.history(memory_id)
             return hist if isinstance(hist, list) else []
@@ -233,6 +238,7 @@ class Mem0Client:
         """
         if not self.is_available:
             return False
+        assert self._mem0 is not None
         try:
             self._mem0.delete(memory_id)
             logger.debug(f"Mem0 forget: id={memory_id}")

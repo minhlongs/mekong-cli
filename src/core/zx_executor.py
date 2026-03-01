@@ -18,7 +18,7 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Generator, List, Optional
+from typing import Any, Callable, Generator, List, Optional
 
 
 @dataclass
@@ -216,7 +216,7 @@ def retry(
         Decorator function that wraps the target callable.
     """
     def decorator(func: Callable) -> Callable:
-        def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             last_error: Optional[Exception] = None
             current_delay = delay
 
@@ -241,7 +241,7 @@ def retry_shell(
     count: int = 3,
     delay: float = 1.0,
     backoff: float = 2.0,
-    **shell_kwargs,
+    **shell_kwargs: Any,
 ) -> ProcessOutput:
     """Execute a shell command with automatic retry on failure.
 

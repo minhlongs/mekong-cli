@@ -57,6 +57,8 @@ class LeadHunter(AgentBase):
             if task.id == "search_company":
                 # Simulate company search
                 domain = task.input.get("domain")
+                if domain is None:
+                    domain = ""
                 return Result(
                     task_id=task.id,
                     success=True,
@@ -81,6 +83,8 @@ class LeadHunter(AgentBase):
             elif task.id == "find_email":
                 # Simulate email finding
                 domain = task.input.get("domain")
+                if domain is None:
+                    domain = ""
                 return Result(
                     task_id=task.id,
                     success=True,
@@ -113,6 +117,8 @@ class LeadHunter(AgentBase):
 
         if result.task_id == "find_email":
             # Check if output looks like an email
+            if not isinstance(result.output, dict):
+                return False
             email = result.output.get("email", "")
             return "@" in email and "." in email
 

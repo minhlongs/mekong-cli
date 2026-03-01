@@ -8,7 +8,7 @@ Vector backend (Mem0 + Qdrant) is used when available; falls back to YAML.
 """
 
 import time
-import yaml
+import yaml  # type: ignore[import-untyped]
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -140,7 +140,7 @@ class MemoryStore:
         goal_counts: Dict[str, int] = {}
         for e in self._entries:
             goal_counts[e.goal] = goal_counts.get(e.goal, 0) + 1
-        top_goals = sorted(goal_counts, key=goal_counts.get, reverse=True)[:5]
+        top_goals = sorted(goal_counts, key=lambda k: goal_counts[k], reverse=True)[:5]
         recent_failures = sum(
             1 for e in self._entries[-20:] if e.status != "success"
         )

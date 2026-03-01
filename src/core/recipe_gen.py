@@ -164,6 +164,8 @@ class RecipeGenerator:
             f"Keep it to 2-4 steps. Reply with ONLY the steps."
         )
         try:
+            if self.llm_client is None:
+                return f"### Step 1: Execute\n{goal}"
             response = self.llm_client.generate(prompt).strip()
             return response if response else f"### Step 1: Execute\n{goal}"
         except Exception:

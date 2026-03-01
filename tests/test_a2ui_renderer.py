@@ -8,6 +8,7 @@ Run: python3 -m pytest tests/test_a2ui_renderer.py -v
 import os
 import sys
 from io import StringIO
+from typing import Optional
 from unittest.mock import patch
 
 import pytest
@@ -368,7 +369,7 @@ class TestA2UIRendererMessages:
 # ---------------------------------------------------------------------------
 
 class TestA2UIRendererRender:
-    def _render_and_capture(self, components: list, data: dict | None = None) -> str:
+    def _render_and_capture(self, components: list, data: Optional[dict] = None) -> str:
         renderer, buf = make_renderer()
         if data:
             renderer.process_message({"dataModelUpdate": data})

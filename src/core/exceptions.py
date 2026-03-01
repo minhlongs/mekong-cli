@@ -4,6 +4,8 @@ Mekong CLI - Custom Exceptions
 Structured error types for the Plan-Execute-Verify engine.
 """
 
+from typing import Any, List, Optional
+
 
 class MekongError(Exception):
     """Base exception for all Mekong CLI errors."""
@@ -32,7 +34,7 @@ class ExecutionError(MekongError):
 class VerificationError(MekongError):
     """Raised when verification criteria are not met."""
 
-    def __init__(self, message: str, failed_checks: list = None):
+    def __init__(self, message: str, failed_checks: Optional[List[Any]] = None):
         """Initialize VerificationError with failed check details.
 
         Args:
@@ -46,7 +48,7 @@ class VerificationError(MekongError):
 class RollbackError(MekongError):
     """Raised when rollback of a failed step fails."""
 
-    def __init__(self, message: str, original_error: Exception = None):
+    def __init__(self, message: str, original_error: Optional[Exception] = None):
         """Initialize RollbackError with the original cause.
 
         Args:

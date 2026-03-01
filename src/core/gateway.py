@@ -12,7 +12,7 @@ import json
 import os
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 import httpx
 
@@ -321,7 +321,7 @@ def create_app() -> FastAPI:
     """Create and configure the gateway FastAPI application."""
 
     @contextlib.asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         """Manage Telegram bot lifecycle."""
         telegram_token = os.environ.get("MEKONG_TELEGRAM_TOKEN", "")
         app.state.bot = None
@@ -348,7 +348,7 @@ def create_app() -> FastAPI:
     )
 
     @gateway.get("/", response_class=HTMLResponse)
-    def dashboard():
+    def dashboard() -> HTMLResponse:
         """Serve the Washing Machine dashboard UI"""
         presets_json = json.dumps(PRESET_ACTIONS)
         html = DASHBOARD_HTML.replace("__PRESETS_JSON__", presets_json)
@@ -356,22 +356,22 @@ def create_app() -> FastAPI:
         return HTMLResponse(content=html)
 
     @gateway.get("/presets", response_model=List[PresetAction])
-    def list_presets():
+    def list_presets() -> List[PresetAction]:
         """List available one-button preset actions"""
         return [PresetAction(**p) for p in PRESET_ACTIONS]
 
     @gateway.get("/projects", response_model=List[ProjectInfo])
-    def list_projects():
+    def list_projects() -> List[ProjectInfo]:
         """List available sub-projects from apps/ directory"""
         return _scan_projects()
 
     @gateway.get("/health", response_model=HealthResponse)
-    def health_check():
+    def health_check() -> HealthResponse:
         """Health check endpoint"""
         return HealthResponse()
 
     @gateway.post("/cmd", response_model=CommandResponse)
-    def execute_command(req: CommandRequest):
+    def execute_command(req: CommandRequest) -> CommandResponse:
         """Execute a goal through the Plan-Execute-Verify engine (HTTP)."""
         verify_token(req.token)
         try:
@@ -384,7 +384,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=str(e))
 
     @gateway.websocket("/ws")
-    async def ws_execute(websocket: WebSocket):
+    async def ws_execute(websocket: WebSocket) -> None:
         """Execute a goal with real-time step-by-step progress streaming."""
         await websocket.accept()
         try:
@@ -412,7 +412,7 @@ def create_app() -> FastAPI:
 
             loop = asyncio.get_running_loop()
 
-            def progress_callback(step_result, current_result):
+            def progress_callback(step_result: Any, current_result: Any) -> None:
                 """Send step progress over WebSocket (called from worker thread)."""
                 msg = {
                     "type": "step",
@@ -429,7 +429,7 @@ def create_app() -> FastAPI:
                 )
                 future.result(timeout=10)
 
-            def run_goal():
+            def run_goal() -> Tuple[OrchestrationResult, RecipeOrchestrator]:
                 """Execute the orchestration pipeline in a worker thread."""
                 orchestrator = _build_orchestrator()
                 result = orchestrator.run_from_goal(
@@ -465,7 +465,7 @@ def create_app() -> FastAPI:
     # -- NLU endpoint --
 
     @gateway.post("/nlu/parse", response_model=NLUParseResponse)
-    def nlu_parse(req: NLUParseRequest):
+    def nlu_parse(req: NLUParseRequest) -> NLUParseResponse:
         """Parse a goal into intent, confidence, and entities."""
         from src.core.nlu import IntentClassifier
 
@@ -481,7 +481,7 @@ def create_app() -> FastAPI:
     # -- Recipe generation endpoints --
 
     @gateway.post("/recipes/generate", response_model=RecipeGenerateResponse)
-    def recipes_generate(req: RecipeGenerateRequest):
+    def recipes_generate(req: RecipeGenerateRequest) -> RecipeGenerateResponse:
         """Generate a recipe from a goal pattern."""
         from src.core.recipe_gen import RecipeGenerator
 
@@ -494,7 +494,7 @@ def create_app() -> FastAPI:
         )
 
     @gateway.get("/recipes/auto", response_model=List[AutoRecipeInfo])
-    def recipes_auto_list():
+    def recipes_auto_list() -> List[AutoRecipeInfo]:
         """List auto-generated recipes."""
         from src.core.recipe_gen import RecipeGenerator
 
@@ -502,7 +502,7 @@ def create_app() -> FastAPI:
         return [AutoRecipeInfo(**r) for r in gen.list_auto_recipes()]
 
     @gateway.post("/recipes/validate", response_model=RecipeValidateResponse)
-    def recipes_validate(req: RecipeValidateRequest):
+    def recipes_validate(req: RecipeValidateRequest) -> RecipeValidateResponse:
         """Validate recipe markdown content."""
         from src.core.recipe_gen import RecipeGenerator
 
@@ -511,7 +511,7 @@ def create_app() -> FastAPI:
         return RecipeValidateResponse(valid=valid, errors=errors)
 
     @gateway.get("/telegram/status")
-    def telegram_status():
+    def telegram_status() -> Dict[str, Any]:
         """Check Telegram bot status."""
         bot = getattr(gateway.state, "bot", None)
         return {
@@ -523,7 +523,7 @@ def create_app() -> FastAPI:
     swarm_registry = SwarmRegistry()
 
     @gateway.post("/swarm/register", response_model=SwarmNodeInfo)
-    def swarm_register(req: SwarmRegisterRequest):
+    def swarm_register(req: SwarmRegisterRequest) -> SwarmNodeInfo:
         """Register a remote Mekong node in the swarm."""
         node = swarm_registry.register_node(
             name=req.name, host=req.host, port=req.port, token=req.token
@@ -535,7 +535,7 @@ def create_app() -> FastAPI:
         )
 
     @gateway.get("/swarm/nodes", response_model=List[SwarmNodeInfo])
-    def swarm_list_nodes():
+    def swarm_list_nodes() -> List[SwarmNodeInfo]:
         """List all registered swarm nodes with health status."""
         swarm_registry.check_all_health(timeout=2.0)
         return [
@@ -547,7 +547,7 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.post("/swarm/dispatch")
-    def swarm_dispatch(req: SwarmDispatchRequest):
+    def swarm_dispatch(req: SwarmDispatchRequest) -> Any:
         """Send a goal to a specific remote node."""
         node = swarm_registry.get_node(req.node_id)
         if not node:
@@ -559,7 +559,7 @@ def create_app() -> FastAPI:
         return result
 
     @gateway.delete("/swarm/nodes/{node_id}")
-    def swarm_remove_node(node_id: str):
+    def swarm_remove_node(node_id: str) -> Dict[str, str]:
         """Remove a node from the swarm."""
         removed = swarm_registry.remove_node(node_id)
         if not removed:
@@ -573,7 +573,7 @@ def create_app() -> FastAPI:
     memory_store = MemoryStore()
 
     @gateway.get("/memory/recent", response_model=List[MemoryEntryInfo])
-    def memory_recent(limit: int = 20):
+    def memory_recent(limit: int = 20) -> List[MemoryEntryInfo]:
         """Get recent execution memory entries."""
         entries = memory_store.recent(limit)
         return [
@@ -586,13 +586,13 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.get("/memory/stats", response_model=MemoryStatsResponse)
-    def memory_stats():
+    def memory_stats() -> MemoryStatsResponse:
         """Get memory aggregate statistics."""
         s = memory_store.stats()
         return MemoryStatsResponse(**s)
 
     @gateway.get("/memory/search", response_model=List[MemoryEntryInfo])
-    def memory_search(q: str = ""):
+    def memory_search(q: str = "") -> List[MemoryEntryInfo]:
         """Search execution memory by goal pattern."""
         entries = memory_store.query(q) if q else memory_store.recent()
         return [
@@ -605,7 +605,7 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.post("/schedule/jobs", response_model=ScheduleJobInfo)
-    def schedule_add_job(req: ScheduleAddRequest):
+    def schedule_add_job(req: ScheduleAddRequest) -> ScheduleJobInfo:
         """Add a new scheduled job."""
         job = scheduler.add_job(
             name=req.name,
@@ -623,7 +623,7 @@ def create_app() -> FastAPI:
         )
 
     @gateway.get("/schedule/jobs", response_model=List[ScheduleJobInfo])
-    def schedule_list_jobs():
+    def schedule_list_jobs() -> List[ScheduleJobInfo]:
         """List all scheduled jobs."""
         return [
             ScheduleJobInfo(
@@ -637,7 +637,7 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.delete("/schedule/jobs/{job_id}")
-    def schedule_remove_job(job_id: str):
+    def schedule_remove_job(job_id: str) -> Dict[str, str]:
         """Remove a scheduled job."""
         removed = scheduler.remove_job(job_id)
         if not removed:
@@ -647,7 +647,7 @@ def create_app() -> FastAPI:
     # -- Autonomous / Governance endpoints (L14) --
 
     @gateway.get("/autonomous/consciousness")
-    def consciousness():
+    def consciousness() -> Dict[str, Any]:
         """Get Consciousness Score and subsystem health."""
         from src.core.autonomous import AutonomousEngine
 
@@ -665,7 +665,7 @@ def create_app() -> FastAPI:
         }
 
     @gateway.post("/governance/check")
-    def governance_check(req: GovernanceCheckRequest):
+    def governance_check(req: GovernanceCheckRequest) -> Dict[str, Any]:
         """Classify a goal's safety level."""
         from src.core.governance import Governance
 
@@ -678,7 +678,7 @@ def create_app() -> FastAPI:
         }
 
     @gateway.get("/governance/audit")
-    def governance_audit(limit: int = 50):
+    def governance_audit(limit: int = 50) -> List[Dict[str, Any]]:
         """Get recent audit trail entries."""
         from src.core.governance import Governance
 
@@ -696,7 +696,7 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.post("/halt")
-    def halt_system(req: HaltRequest):
+    def halt_system(req: HaltRequest) -> Dict[str, str]:
         """Emergency halt all autonomous operations."""
         server_token = os.environ.get("MEKONG_API_TOKEN", "")
         if not server_token:
@@ -714,22 +714,24 @@ def create_app() -> FastAPI:
     # -- AGI daemon proxy endpoints --
 
     @gateway.get("/api/agi/health")
-    async def agi_health():
+    async def agi_health() -> Dict[str, Any]:
         """Proxy to Tom Hum health endpoint (port 9090)."""
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get("http://127.0.0.1:9090/health", timeout=5.0)
-                return resp.json()
+                result: Dict[str, Any] = resp.json()
+                return result
         except (httpx.ConnectError, httpx.TimeoutException):
             return {"error": "AGI daemon not reachable", "status": "offline"}
 
     @gateway.get("/api/agi/metrics")
-    async def agi_metrics():
+    async def agi_metrics() -> Dict[str, Any]:
         """Proxy to Tom Hum metrics endpoint (port 9090)."""
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get("http://127.0.0.1:9090/metrics", timeout=5.0)
-                return resp.json()
+                result: Dict[str, Any] = resp.json()
+                return result
         except (httpx.ConnectError, httpx.TimeoutException):
             return {"error": "AGI daemon not reachable", "status": "offline"}
 

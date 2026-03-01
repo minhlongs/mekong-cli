@@ -96,7 +96,7 @@ class RecipePlanner:
         if not scores:
             return None
 
-        return max(scores, key=scores.get)
+        return max(scores, key=lambda k: scores[k])
 
     def decompose_goal(
         self, goal: str, context: PlanningContext
@@ -131,7 +131,7 @@ class RecipePlanner:
         Returns:
             List of task dictionaries
         """
-        tasks = []
+        tasks: List[Dict[str, Any]] = []
         suggested_agent = self.suggest_agent(goal)
 
         # Simple heuristic: check for common patterns
@@ -254,8 +254,9 @@ class RecipePlanner:
         # Attach suggested agent to all tasks that don't already have one
         if suggested_agent:
             for task in tasks:
-                if "agent" not in task:
-                    task["agent"] = suggested_agent
+                task_dict: Dict[str, Any] = task
+                if "agent" not in task_dict:
+                    task_dict["agent"] = suggested_agent
 
         return tasks
 

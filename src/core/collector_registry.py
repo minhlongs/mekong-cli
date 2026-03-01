@@ -155,7 +155,7 @@ class CollectorRegistry:
                             and attr_name != "CollectorSpec"
                             and isinstance(attr, type)
                             and _has_collector_interface(attr)):
-                        info.supported_tasks = getattr(attr, "supported_tasks", property(lambda s: []))
+                        info.supported_tasks = list(getattr(attr, "supported_tasks", []))
                         result.found.append(info)
                         break
                 else:

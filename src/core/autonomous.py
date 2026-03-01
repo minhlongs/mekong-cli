@@ -49,11 +49,11 @@ class AutonomousEngine:
         """Initialize autonomous engine."""
         self.orchestrator = orchestrator
         self.governance = governance or Governance()
-        self._memory = None
-        self._nlu = None
-        self._router = None
-        self._learner = None
-        self._recipe_gen = None
+        self._memory: Optional[Any] = None
+        self._nlu: Optional[Any] = None
+        self._router: Optional[Any] = None
+        self._learner: Optional[Any] = None
+        self._recipe_gen: Optional[Any] = None
         self._init_subsystems()
 
     def _init_subsystems(self) -> None:

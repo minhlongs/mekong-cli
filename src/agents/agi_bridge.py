@@ -2,7 +2,7 @@
 import subprocess
 import pathlib
 import time
-from typing import Optional
+from typing import Any, Dict, Optional, cast
 
 import httpx
 
@@ -66,22 +66,22 @@ class AGIBridge:
         except (httpx.ConnectError, httpx.TimeoutException):
             return False
 
-    def status(self) -> dict:
+    def status(self) -> Dict[Any, Any]:
         """GET /health from daemon — returns AGI score, mission stats."""
         try:
             resp = httpx.get(f"{self.health_url}/health", timeout=5.0)
             if resp.status_code == 200:
-                return resp.json()
+                return cast(Dict[Any, Any], resp.json())
             return {"error": f"HTTP {resp.status_code}"}
         except (httpx.ConnectError, httpx.TimeoutException):
             return {"error": "Daemon not reachable", "running": False}
 
-    def metrics(self) -> dict:
+    def metrics(self) -> Dict[Any, Any]:
         """GET /metrics from daemon — returns detailed metrics."""
         try:
             resp = httpx.get(f"{self.health_url}/metrics", timeout=5.0)
             if resp.status_code == 200:
-                return resp.json()
+                return cast(Dict[Any, Any], resp.json())
             return {"error": f"HTTP {resp.status_code}"}
         except (httpx.ConnectError, httpx.TimeoutException):
             return {"error": "Daemon not reachable"}

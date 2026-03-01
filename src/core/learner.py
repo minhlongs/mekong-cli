@@ -76,7 +76,7 @@ class PatternAnalyzer:
 
     def get_time_patterns(self) -> List[Pattern]:
         """Bucket executions by time-of-day, report best performing slot."""
-        slots = {"00-06": [], "06-12": [], "12-18": [], "18-24": []}
+        slots: Dict[str, List[bool]] = {"00-06": [], "06-12": [], "12-18": [], "18-24": []}
         for entry in self.memory._entries:
             hour = time.localtime(entry.timestamp).tm_hour
             if hour < 6:
