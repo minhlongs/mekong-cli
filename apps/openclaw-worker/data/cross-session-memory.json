@@ -449,10 +449,12 @@
     {
       "id": 1772360291897,
       "startedAt": "2026-03-01T10:18:11.897Z",
-      "missionsDispatched": 0,
+      "missionsDispatched": 1,
       "missionsSucceeded": 0,
       "bugsFixed": 0,
-      "lessonsLearned": []
+      "lessonsLearned": [
+        "max_retries_exhausted"
+      ]
     }
   ],
   "knowledgeGraph": {
@@ -640,5 +642,5 @@
     }
   ],
   "createdAt": "2026-02-24T18:28:23.656Z",
-  "updatedAt": "2026-03-01T10:18:11.897Z"
+  "updatedAt": "2026-03-01T10:20:35.223Z"
 }
