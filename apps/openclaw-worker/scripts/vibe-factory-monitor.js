@@ -451,26 +451,11 @@ async function checkAllPanes() {
                     }
                 }
 
-                // 🛡️ UNIFIED INJECT GATE — ALL paths converge here
-                log(`P${pane.idx}: 🔍 DEBUG: cookCmd=${cookCmd ? cookCmd.slice(0, 60) : 'NULL'}`);
+                // 🛡️ UNIFIED INJECT GATE — cooldown 3min is the guard
                 if (cookCmd) {
-                    try {
-                        // Double-check pane is STILL idle before injecting (anti-stacking)
-                        log(`P${pane.idx}: 🔍 Pre-inject recheck state...`);
-                        const recheckOutput = tmuxCapture(pane.idx);
-                        const recheck = detectPaneState(recheckOutput);
-
-                        if (recheck !== 'IDLE') {
-                            log(`P${pane.idx}: 🛡️ ANTI-STACK — Pane changed to ${recheck} before inject, SKIP`);
-                        } else {
-                            log(`P${pane.idx}: 🚀 INJECTING: ${cookCmd.slice(0, 100)}...`);
-                            tmuxSendBuffer(pane.idx, cookCmd);
-                            recordInjection(pane.idx); // 🛡️ Start cooldown
-                        }
-                    } catch (e) {
-                        log(`P${pane.idx}: ❌ FATAL ERROR IN INJECT GATE: ${e.message}`);
-                        console.error(e);
-                    }
+                    log(`P${pane.idx}: 🚀 INJECTING: ${cookCmd.slice(0, 100)}...`);
+                    tmuxSendBuffer(pane.idx, cookCmd);
+                    recordInjection(pane.idx); // 🛡️ Start cooldown 3min
                 }
                 break;
             }

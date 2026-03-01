@@ -1,34 +1,5 @@
 [
   {
-    "timestamp": "2026-02-21T16:18:21.795Z",
-    "project": "84tea",
-    "missionId": "MEDIUM_mission_84tea_fix_test_1771690683717",
-    "duration": 18037,
-    "success": false,
-    "buildResult": {
-      "build": false,
-      "output": "not_run"
-    },
-    "tokensUsed": 0
-  },
-  {
-    "timestamp": "2026-02-21T16:21:11.256Z",
-    "project": "84tea",
-    "missionId": "MEDIUM_mission_84tea_fix_test_1771690758994",
-    "duration": 53098,
-    "success": true,
-    "buildResult": {
-      "build": true,
-      "output": "\n> doanh-trai-tom-hum@0.1.0 build\n> turbo run build\n\n• Packages in scope: @lobster/agents, @lobster/api, @lobster/db, @lobster/web\n• Running build in 4 packages\n• Remote caching disabled\n@lobster/db:build: cache hit, replaying logs af8fa469c339573b\n@lobster/agents:build: cache hit, replaying logs b33338cc88930dc5\n@lobster/agents:build: \n@lobster/db:build: \n@lobster/db:build: > @lobster/db@0.1.0 build /Users/macbookprom1/mekong-cli/doanh-trai-tom-hum/packages/db\n@lobster/db:build: > tsc\n@lobster/db:build: \n@lobster/agents:build: > @lobster/agents@0.1.0 build /Users/macbookprom1/mekong-cli/doanh-trai-tom-hum/packages/openclaw-agents\n@lobster/agents:build: > tsc\n@lobster/agents:build: \n@lobster/api:build: cache hit, replaying logs 0fc57f34a657dd67\n@lobster/api:build: \n@lobster/api:build: > @lobster/api@0.1.0 build /Users/macbookprom1/mekong-cli/doanh-trai-tom-hum/apps/api\n@lobster/api:build: > tsc\n@lobster/api:build: \n@lobster/web:build: cache hit, replaying logs 274dc6442b779639\n@lobster/web:build: \n@lobster/web:build: > @lobster/web@0.1.0 build /Users/macbookprom1/mekong-cli/doanh-trai-tom-hum/apps/web\n@lobster/web:build: > next build\n@lobster/web:build: \n@lobster/web:build:   ▲ Next.js 14.2.35\n@lobster/web:build: \n@lobster/web:build:    Creating an optimized production build ...\n@lobster/web:build:  ✓ Compiled successfully\n@lobster/web:build:    Linting and checking validity of types ...\n@lobster/web:build:    Collecting page data ...\n@lobster/web:build:    Generating static pages (0/5) ...\n@lobster/web:build:    Generating static pages (1/5) \r\n@lobster/web:build:    Generating static pages (2/5) \r\n@lobster/web:build:    Generating static pages (3/5) \r\n@lobster/web:build:  ✓ Generating static pages (5/5)\n@lobster/web:build:    Finalizing page optimization ...\n@lobster/web:build:    Collecting build traces ...\n@lobster/web:build: \n@lobster/web:build: Route (app)                              Size     First Load JS\n@lobster/web:build: ┌ ○ /                                    3.89 kB        91.2 kB\n@lobster/web:build: ├ ○ /_not-found                          875 B          88.2 kB\n@lobster/web:build: └ ƒ /dashboard                           3.81 kB        91.1 kB\n@lobster/web:build: + First Load JS shared by all            87.3 kB\n@lobster/web:build:   ├ chunks/5b8f0dd8-06695914d1228e0c.js  53.7 kB\n@lobster/web:build:   ├ chunks/749-e6201a4ceccd33e6.js       31.7 kB\n@lobster/web:build:   └ other shared chunks (total)          1.91 kB\n@lobster/web:build: \n@lobster/web:build: \n@lobster/web:build: ○  (Static)   prerendered as static content\n@lobster/web:build: ƒ  (Dynamic)  server-rendered on demand\n@lobster/web:build: \n\n Tasks:    4 successful, 4 total\nCached:    4 cached, 4 total\n  Time:    356ms >>> FULL TURBO\n\n",
-      "safety": {
-        "safe": false,
-        "tier": "MAX_FILES_CHANGED",
-        "details": "SAFETY GATE TIER 1: 22 files changed (max 15)"
-      }
-    },
-    "tokensUsed": 0
-  },
-  {
     "timestamp": "2026-02-21T16:23:19.117Z",
     "project": "84tea",
     "missionId": "MEDIUM_mission_84tea_fix_test_1771690950218",
@@ -12834,6 +12805,32 @@
     "buildResult": {
       "build": false,
       "output": "\n> mekong-cli@2.1.33 build\n> turbo run build\n\nsh: turbo: command not found\n"
+    },
+    "tokensUsed": 0
+  },
+  {
+    "timestamp": "2026-03-01T09:57:20.977Z",
+    "project": "fix",
+    "missionId": "HIGH_mission_fix_mekong_cli_fix_build_1772358777885",
+    "duration": 65520,
+    "success": true,
+    "failureType": "done",
+    "buildResult": {
+      "build": false,
+      "output": "\n> mekong-cli@2.1.33 build\n> npx turbo run build\n\nsh: turbo: command not found\n"
+    },
+    "tokensUsed": 0
+  },
+  {
+    "timestamp": "2026-03-01T09:58:39.286Z",
+    "project": "fix",
+    "missionId": "HIGH_mission_fix_fix_mekong_cli_fix_build_1772358777885",
+    "duration": 64325,
+    "success": true,
+    "failureType": "done",
+    "buildResult": {
+      "build": false,
+      "output": "\n> mekong-cli@2.1.33 build\n> npx turbo run build\n\nsh: turbo: command not found\n"
     },
     "tokensUsed": 0
   }

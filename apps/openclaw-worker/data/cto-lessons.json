@@ -16,11 +16,11 @@
   ],
   "patterns": {
     "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI": {
-      "runs": 4,
+      "runs": 2,
       "successes": 0,
       "rate": 0,
       "avgTime": 87,
-      "totalTime": 346,
+      "totalTime": 173,
       "filesChanged": 0,
       "avgFilesPerRun": 0,
       "lastRun": "2026-02-26T09:05:06.613Z"
@@ -36,14 +36,14 @@
       "lastRun": "2026-02-26T18:46:05.712Z"
     },
     "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF": {
-      "runs": 33,
-      "successes": 24,
-      "rate": 73,
-      "avgTime": 80,
-      "totalTime": 2635,
+      "runs": 35,
+      "successes": 26,
+      "rate": 74,
+      "avgTime": 79,
+      "totalTime": 2764,
       "filesChanged": 0,
       "avgFilesPerRun": 0,
-      "lastRun": "2026-03-01T09:50:03.655Z"
+      "lastRun": "2026-03-01T09:58:25.344Z"
     },
     "/test \"Trả lời bằng TIẾNG VIỆT. WORKFLOW": {
       "runs": 7,
@@ -126,5 +126,5 @@
       "lastRun": "2026-02-27T01:30:51.813Z"
     }
   },
-  "updatedAt": "2026-03-01T09:53:57.808Z"
+  "updatedAt": "2026-03-01T09:59:42.000Z"
 }

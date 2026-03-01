@@ -7,28 +7,6 @@
     "elapsedSec": 87,
     "summary": "",
     "filesChanged": 0,
-    "timestamp": "2026-02-26T09:00:14.287Z",
-    "binhPhapLevel": 0
-  },
-  {
-    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI",
-    "project": "mekong-cli",
-    "result": "failed_to_start",
-    "success": false,
-    "elapsedSec": 86,
-    "summary": "",
-    "filesChanged": 0,
-    "timestamp": "2026-02-26T09:03:00.558Z",
-    "binhPhapLevel": 0
-  },
-  {
-    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. 📜 BI",
-    "project": "Well",
-    "result": "failed_to_start",
-    "success": false,
-    "elapsedSec": 87,
-    "summary": "",
-    "filesChanged": 0,
     "timestamp": "2026-02-26T09:04:05.236Z",
     "binhPhapLevel": 0
   },
@@ -2002,5 +1980,25 @@
     "summary": "",
     "filesChanged": 0,
     "timestamp": "2026-03-01T09:53:57.807Z"
+  },
+  {
+    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF",
+    "project": "mekong-cli",
+    "result": "done",
+    "success": true,
+    "elapsedSec": 65,
+    "summary": "",
+    "filesChanged": 0,
+    "timestamp": "2026-03-01T09:57:08.145Z"
+  },
+  {
+    "taskId": "/plan:ci \"Trả lời bằng TIẾNG VIỆT. WORKF",
+    "project": "mekong-cli",
+    "result": "done",
+    "success": true,
+    "elapsedSec": 64,
+    "summary": "",
+    "filesChanged": 0,
+    "timestamp": "2026-03-01T09:58:25.344Z"
   }
 ]
