@@ -1,0 +1,18 @@
+{
+  "name": "@agencyos/construction-hub-sdk",
+  "version": "0.1.0",
+  "description": "Unified Construction SDK — BIM, project management, safety compliance, cost estimation, field operations",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./project": "./project-facade.ts",
+    "./safety": "./safety-facade.ts",
+    "./estimation": "./estimation-facade.ts"
+  },
+  "license": "MIT",
+  "publishConfig": { "access": "public" },
+  "peerDependencies": {
+    "@agencyos/vibe-construction": "workspace:*"
+  }
+}
