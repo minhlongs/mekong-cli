@@ -136,44 +136,45 @@ async function generateScoreTargetedTask(pane, scoreResult) {
     const dimIndex = Math.min(pane.idx, sorted.length - 1);
     const [weakestDim, weakestScore] = sorted[dimIndex];
     let taskCmd = '';
+    const proj = pane.project;
 
-    // 2. Map dimension to specific ClaudeKit /cook command
+    // Map dimension to SPECIFIC, MEASURABLE tasks with verification steps
     switch (weakestDim) {
         case 'planning':
-            taskCmd = '/cook "Binh Phap Ch.1 始計: Tạo file plans/plan.md đầy đủ spec acceptance criteria. Deep 10x plan. Không code vội."';
+            taskCmd = `/cook "PLANNING ${proj}: 1/ Create docs/plan.md with project overview, architecture, acceptance criteria. 2/ Create CONTRIBUTING.md with dev setup steps. 3/ Verify: cat docs/plan.md | wc -l shows >30 lines."`;
             break;
         case 'resources':
-            taskCmd = '/cook "Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix package.json cho sạch sẽ."';
+            taskCmd = `/cook "RESOURCES ${proj}: 1/ npm outdated — update critical deps. 2/ npm audit fix. 3/ Commit package-lock.json. 4/ Verify: npm audit shows 0 critical, npm ls --depth=0 clean."`;
             break;
         case 'ci_cd':
-            taskCmd = '/cook "Binh Phap Ch.3 謀攻: Tạo .github/workflows/ci.yml với lint, type-check, test, build (nếu chưa có)."';
+            taskCmd = `/cook "CI/CD ${proj}: 1/ Create .github/workflows/ci.yml: lint + typecheck + test + build jobs. 2/ Add missing npm scripts. 3/ Verify: cat .github/workflows/ci.yml shows 4 job names."`;
             break;
         case 'build':
-            taskCmd = '/cook "Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compilation errors cho đến khi GREEN."';
+            taskCmd = `/cook "BUILD ${proj}: 1/ npm run build — fix ALL errors. 2/ Add build script if missing. 3/ Fix TS compilation errors. 4/ Verify: npm run build exits 0."`;
             break;
         case 'tests':
-            taskCmd = '/cook "Binh Phap Ch.5 兵勢: npm test — fix ALL failing tests. Viết thêm test coverage."';
+            taskCmd = `/cook "TESTS ${proj}: 1/ npm test — fix failing tests. 2/ Write 3+ unit tests for core modules if <3 test files. 3/ Verify: npm test exits 0, find . -name '*.test.*' | wc -l shows >=3."`;
             break;
         case 'security':
-            taskCmd = '/cook "Binh Phap Ch.6 虛實: npm audit fix --force. Fix critical vulnerabilities. Review bảo mật."';
+            taskCmd = `/cook "SECURITY ${proj}: 1/ npm audit fix. 2/ Create .env.example if .env exists. 3/ grep secrets in src/. 4/ Verify: npm audit shows 0 critical/high."`;
             break;
         case 'performance':
-            taskCmd = '/cook "Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, loại dead code."';
+            taskCmd = `/cook "PERFORMANCE ${proj}: 1/ find src -name '*.ts' -o -name '*.tsx' | xargs wc -l | sort -rn — split largest file >300 lines. 2/ Remove dead exports. 3/ Verify: no src file >300 lines."`;
             break;
         case 'typescript':
-            taskCmd = '/cook "Binh Phap Ch.8 九變: Bật strict: true. Fix noImplicitAny. Sửa any thành proper types."';
+            taskCmd = `/cook "TYPESCRIPT ${proj}: 1/ Set strict:true in tsconfig.json. 2/ npx tsc --noEmit — fix errors. 3/ Replace any with proper types. 4/ Verify: npx tsc --noEmit exits 0."`;
             break;
         case 'production':
-            taskCmd = '/cook "Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo clean Working Tree."';
+            taskCmd = `/cook "PRODUCTION ${proj}: 1/ git add -A && git status. 2/ git commit -m 'chore: cleanup'. 3/ Ensure .gitignore covers node_modules,.env,dist. 4/ Verify: git status shows clean tree."`;
             break;
         case 'docs':
-            taskCmd = '/cook "Binh Phap Ch.10 用間: Inspect README.md, tạo CLAUDE.md. Cập nhật AGENTS docs nếu cần."';
+            taskCmd = `/cook "DOCS ${proj}: 1/ README.md: add description, install, usage, architecture (>50 lines). 2/ Create CLAUDE.md with project context. 3/ JSDoc top 3 functions. 4/ Verify: wc -l README.md shows >50."`;
             break;
         default:
-            taskCmd = '/cook "Binh Phap Ch.11 九地: Deep scan & refactor. 10x code audit toàn bộ dự án."';
+            taskCmd = `/cook "GENERAL ${proj}: npm run build && npm test. Fix errors. git add -A && git commit."`;
     }
 
-    log(`P${pane.idx}: 🎯 TARGETING WEAKEST: ${weakestDim.toUpperCase()} (Score: ${weakestScore})`);
+    log(`P${pane.idx}: 🎯 TARGET[${dimIndex}] ${weakestDim.toUpperCase()} (Score: ${weakestScore}) for ${proj}`);
 
     const finalCmd = `${taskCmd} --auto`;
     dedup.recordTask(finalCmd, pane.project, pane.idx, `Targeting: ${weakestDim}`);

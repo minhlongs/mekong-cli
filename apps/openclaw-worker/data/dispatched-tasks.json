@@ -1,62 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "b151b89fe57e",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/plan:hard \"Binh Phap Ch.9 行軍: Deep 10x LEARN architecture & pattern from grafan",
-      "dispatchedAt": 1772336528614
-    },
-    {
-      "hash": "48323e433dcb",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/plan:hard \"Binh Phap Ch.10 地形: Deep 10x LEARN architecture & pattern from elect",
-      "dispatchedAt": 1772336697539
-    },
-    {
-      "hash": "5c1a5df803ed",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/plan:hard \"Binh Phap Ch.11 九地: Deep 10x LEARN architecture & pattern from netda",
-      "dispatchedAt": 1772336703632
-    },
-    {
-      "hash": "ce1be1f897e4",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/plan:hard \"Binh Phap Ch.12 火攻: Deep 10x LEARN architecture & pattern from cal-c",
-      "dispatchedAt": 1772336787746
-    },
-    {
-      "hash": "a06bb9274a7e",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/plan:hard \"Binh Phap Ch.13 用間: Deep 10x LEARN architecture & pattern from mem0a",
-      "dispatchedAt": 1772336789477
-    },
-    {
-      "hash": "6e95e9845ab8",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/plan:hard \"Binh Phap Ch.1 始計: Deep 10x LEARN architecture & pattern from google",
-      "dispatchedAt": 1772336795725
-    },
-    {
-      "hash": "4e7fe1c194a0",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/plan:hard \"Binh Phap Ch.2 作戰: Deep 10x LEARN architecture & pattern from upstas",
-      "dispatchedAt": 1772336886318
-    },
-    {
       "hash": "6ff6737a9212",
       "project": "algo-trader",
       "pane": 2,
@@ -1599,6 +1543,62 @@
       "chapter": "Targeting: resources",
       "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
       "dispatchedAt": 1772361370521
+    },
+    {
+      "hash": "88134c577b53",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
+      "dispatchedAt": 1772361469044
+    },
+    {
+      "hash": "59c2370a731f",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
+      "dispatchedAt": 1772361558565
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772361640768
+    },
+    {
+      "hash": "88134c577b53",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
+      "dispatchedAt": 1772361677809
+    },
+    {
+      "hash": "59c2370a731f",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
+      "dispatchedAt": 1772361815867
+    },
+    {
+      "hash": "88134c577b53",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
+      "dispatchedAt": 1772361914796
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772362000296
     }
   ],
   "chapterIndex": 5
