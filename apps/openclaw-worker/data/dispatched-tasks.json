@@ -1487,6 +1487,86 @@
       "chapter": "Targeting: performance",
       "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
       "dispatchedAt": 1772359620892
+    },
+    {
+      "hash": "aa91a686d0af",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: ci_cd",
+      "preview": "/cook \"Binh Phap Ch.3 謀攻: Tạo .github/workflows/ci.yml với lint, type-check, tes",
+      "dispatchedAt": 1772359671830
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772359703302
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772359711710
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772359873768
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772359905853
+    },
+    {
+      "hash": "aa91a686d0af",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: ci_cd",
+      "preview": "/cook \"Binh Phap Ch.3 謀攻: Tạo .github/workflows/ci.yml với lint, type-check, tes",
+      "dispatchedAt": 1772359933611
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772360143718
+    },
+    {
+      "hash": "13ac8fdfde03",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: performance",
+      "preview": "/cook \"Binh Phap Ch.7 軍爭: Đánh giá file lớn >200 dòng. Code split components, lo",
+      "dispatchedAt": 1772360178262
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772360228478
+    },
+    {
+      "hash": "b055f4a83fa7",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: production",
+      "preview": "/cook \"Binh Phap Ch.9 地形: git add -A, git commit. Cleanup directory. Đảm bảo cle",
+      "dispatchedAt": 1772360243827
     }
   ],
   "chapterIndex": 5

@@ -6,12 +6,10 @@
     {
       "type": "build",
       "severity": "critical",
-      "file": "@agencyos/vibe-ui:build: src/index.ts",
-      "line": 70,
-      "code": "TS6059",
-      "message": "File '/Users/macbookprom1/mekong-cli/packages/vibe-ui/index.ts' is not under 'rootDir' '/Users/macbookprom1/mekong-cli/packages/vibe-ui/src'. 'rootDir' is expected to contain all source files.",
+      "file": "package.json",
+      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build  • turbo 2.8.8 • Packages in scope: 84tea, @agencyos/agents, @agencyos/agritech-hub-sdk, @agencyos/ai-hub-sdk, @agencyos/antigravity-gateway, @agencyos...",
       "project": "mekong-cli"
     }
   ],
-  "fixIndex": 1
+  "fixIndex": 0
 }
