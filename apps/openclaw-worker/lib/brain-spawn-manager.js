@@ -60,17 +60,10 @@ function canRespawn() {
  * API intent → Proxy (port 9191, model default by proxy).
  */
 function generateClaudeCommand(intent = 'API') {
-  if (intent === 'PRO') {
-    const dir = `/Users/macbookprom1/.claude_antigravity_pro`;
-    return `export CLAUDE_CONFIG_DIR="${dir}" && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL` +
-      ` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
-      ` && claude --model claude-opus-4-6 --dangerously-skip-permissions`;
-  }
-  const dir = `/Users/macbookprom1/.claude_antigravity_api`;
-  return `export CLAUDE_CONFIG_DIR="${dir}" && unset ANTHROPIC_API_KEY` +
-    ` && export ANTHROPIC_BASE_URL="http://127.0.0.1:9191" && export ANTHROPIC_AUTH_TOKEN="test"` +
+  // Binh Pháp: Triệt tiêu mọi proxy! Ép buộc dùng binary chuẩn
+  return `unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL` +
     ` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
-    ` && claude --dangerously-skip-permissions`;
+    ` && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`;
 }
 
 // --- Brain lifecycle (boot delegated to brain-boot-sequence.js) ---

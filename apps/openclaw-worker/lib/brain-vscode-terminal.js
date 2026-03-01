@@ -63,19 +63,19 @@ function spawnBrain() {
 
     const { proxyUrl, configDir } = getProxyConfig();
 
-    // Create launcher script
+    // Create launcher script (Triệt tiêu mọi proxy)
     const launcher = '/tmp/tom_hum_cc_launcher.sh';
     fs.writeFileSync(launcher, [
         '#!/bin/bash',
-        `export ANTHROPIC_API_KEY="ollama"`,
-        `export ANTHROPIC_BASE_URL="${proxyUrl}"`,
-        `export CLAUDE_BASE_URL="${proxyUrl}"`,
-        `export CLAUDE_CONFIG_DIR="${configDir}"`,
+        `unset ANTHROPIC_API_KEY`,
+        `unset ANTHROPIC_BASE_URL`,
+        `unset CLAUDE_BASE_URL`,
+        `unset CLAUDE_CONFIG_DIR`,
         'unset ANTHROPIC_AUTH_TOKEN',
         `cd "${config.MEKONG_DIR}"`,
         'echo "🦞 TÔM HÙM Worker — CC CLI Interactive"',
         'echo "================================"',
-        `claude --model ${config.MODEL_NAME} --dangerously-skip-permissions`,
+        `/Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`,
     ].join('\n'), { mode: 0o755 });
 
     // Open in Terminal.app via AppleScript (no Accessibility needed)

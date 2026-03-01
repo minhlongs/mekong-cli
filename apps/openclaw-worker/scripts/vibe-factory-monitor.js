@@ -31,8 +31,8 @@ const FALLBACK_MODEL = 'gemini-3-pro';
 const PANES = [
     { idx: 0, project: 'mekong-cli', dir: path.join(process.env.HOME, 'mekong-cli'), focus: 'AGI agentic skills + ClaudeKit commands for all business domains' },
     { idx: 1, project: 'well', dir: path.join(process.env.HOME, 'mekong-cli/apps/well'), focus: 'RaaS platform, i18n, Supabase, PayOS integration' },
-    { idx: 2, project: 'algo-trader', dir: path.join(process.env.HOME, 'mekong-cli/apps/algo-trader'), focus: 'Cross-exchange arbitrage engine (Binance/OKX/Bybit)' },
-    { idx: 3, project: 'apex-os', dir: path.join(process.env.HOME, 'mekong-cli/apps/apex-os'), focus: 'SaaS-to-RaaS transformation, crypto zero-fee exchange' },
+    // { idx: 2, project: 'algo-trader', dir: path.join(process.env.HOME, 'mekong-cli/apps/algo-trader'), focus: 'Cross-exchange arbitrage engine (Binance/OKX/Bybit)' },
+    // { idx: 3, project: 'apex-os', dir: path.join(process.env.HOME, 'mekong-cli/apps/apex-os'), focus: 'SaaS-to-RaaS transformation, crypto zero-fee exchange' },
 ];
 
 // ══════════════════════════════════════════════════
@@ -54,13 +54,23 @@ function tmuxCapture(paneIdx, lines = 15) {
 }
 
 function tmuxSendBuffer(paneIdx, text) {
-    const tmpFile = `/tmp/vibe_task_p${paneIdx}.txt`;
-    fs.writeFileSync(tmpFile, text);
     try {
-        execSync(`tmux load-buffer ${tmpFile}`);
-        execSync(`tmux paste-buffer -t ${SESSION}.${paneIdx}`);
-        execSync('sleep 0.3');
+        // Clear any half-written text just in case (Ctrl+U)
+        execSync(`tmux send-keys -t ${SESSION}.${paneIdx} C-u`);
+        execSync('sleep 0.2');
+
+        // Pass the string securely with bash string escaping through node
+        const escaped = text.replace(/'/g, "'\\''");
+        execSync(`tmux send-keys -l -t ${SESSION}.${paneIdx} '${escaped}'`);
+
+        // Let CC CLI UI settle before confirming
+        execSync('sleep 0.8');
+
+        // Explicitly send Enter stroke TWICE (fixing multi-line prompt drops)
         execSync(`tmux send-keys -t ${SESSION}.${paneIdx} Enter`);
+        execSync('sleep 0.5');
+        execSync(`tmux send-keys -t ${SESSION}.${paneIdx} Enter`);
+
         return true;
     } catch (e) {
         log(`P${paneIdx}: tmux send FAILED - ${e.message}`);
@@ -143,6 +153,33 @@ function isDimOnCooldown(paneIdx, dim) {
     if (!ts) return false;
     return (Date.now() - ts) < DIM_COOLDOWN_MS;
 }
+// ══════════════════════════════════════════════════
+// SCORE HISTORY TRACKER
+// ══════════════════════════════════════════════════
+const SCORE_HISTORY_FILE = '/tmp/vibe-score-history.json';
+
+function loadScoreHistory() {
+    try { return JSON.parse(fs.readFileSync(SCORE_HISTORY_FILE, 'utf-8')); } catch { return {}; }
+}
+function recordScore(project, scoreResult) {
+    const history = loadScoreHistory();
+    if (!history[project]) history[project] = [];
+    history[project].push({ ts: Date.now(), total: scoreResult.total, grade: scoreResult.grade, breakdown: scoreResult.breakdown });
+    // Keep last 20 entries per project
+    if (history[project].length > 20) history[project] = history[project].slice(-20);
+    try { fs.writeFileSync(SCORE_HISTORY_FILE, JSON.stringify(history, null, 2)); } catch { }
+}
+function getDimAttempts(project, dim) {
+    const history = loadScoreHistory();
+    const entries = history[project] || [];
+    if (entries.length < 2) return 0;
+    const last = entries[entries.length - 1];
+    const prev = entries[entries.length - 2];
+    if (!last.breakdown || !prev.breakdown) return 0;
+    // If score for this dim hasn't improved between last 2 entries
+    return (last.breakdown[dim] || 0) <= (prev.breakdown[dim] || 0) ? 1 : 0;
+}
+
 function recordDimUsage(paneIdx, dim) {
     const key = `P${paneIdx}:${dim}`;
     const data = loadDimCooldown();
@@ -157,64 +194,67 @@ async function generateScoreTargetedTask(pane, scoreResult) {
     const sorted = Object.entries(scoreResult.breakdown)
         .sort(([, a], [, b]) => a - b);
 
-    // 2. Walk dims starting at pane.idx — skip cooldown ones
-    const baseIndex = Math.min(pane.idx, sorted.length - 1);
-    let dimIndex = baseIndex;
-    for (let attempt = 0; attempt < sorted.length; attempt++) {
-        const candidate = sorted[(baseIndex + attempt) % sorted.length][0];
-        if (!isDimOnCooldown(pane.idx, candidate)) {
-            dimIndex = (baseIndex + attempt) % sorted.length;
+    // 2. Always pick the LOWEST scoring dim that is NOT maxed (10) and NOT on cooldown
+    let selectedDim = null;
+    let selectedScore = 0;
+    for (const [dim, score] of sorted) {
+        if (score >= 10) continue; // Already maxed
+        if (!isDimOnCooldown(pane.idx, dim)) {
+            selectedDim = dim;
+            selectedScore = score;
             break;
         }
     }
-    recordDimUsage(pane.idx, sorted[dimIndex][0]);
+    // Fallback: if all dims on cooldown, pick absolute lowest
+    if (!selectedDim) {
+        selectedDim = sorted[0][0];
+        selectedScore = sorted[0][1];
+    }
+    recordDimUsage(pane.idx, selectedDim);
 
-    const [weakestDim, weakestScore] = sorted[dimIndex];
+    const weakestDim = selectedDim;
+    const weakestScore = selectedScore;
     let taskCmd = '';
     const proj = pane.project;
 
-    // Map dimension to SPECIFIC, MEASURABLE tasks with verification steps
-    switch (weakestDim) {
-        case 'planning':
-            taskCmd = `/cook "PLANNING ${proj}: 1/ Create docs/plan.md with project overview, architecture, acceptance criteria. 2/ Create CONTRIBUTING.md with dev setup steps. 3/ Verify: cat docs/plan.md | wc -l shows >30 lines."`;
-            break;
-        case 'resources':
-            taskCmd = `/cook "RESOURCES ${proj}: 1/ npm outdated — update critical deps. 2/ npm audit fix. 3/ Commit package-lock.json. 4/ Verify: npm audit shows 0 critical, npm ls --depth=0 clean."`;
-            break;
-        case 'ci_cd':
-            taskCmd = `/cook "CI/CD ${proj}: 1/ Create .github/workflows/ci.yml: lint + typecheck + test + build jobs. 2/ Add missing npm scripts. 3/ Verify: cat .github/workflows/ci.yml shows 4 job names."`;
-            break;
-        case 'build':
-            taskCmd = `/cook "BUILD ${proj}: 1/ npm run build — fix ALL errors. 2/ Add build script if missing. 3/ Fix TS compilation errors. 4/ Verify: npm run build exits 0."`;
-            break;
-        case 'tests':
-            taskCmd = `/cook "TESTS ${proj}: 1/ npm test — fix failing tests. 2/ Write 3+ unit tests for core modules if <3 test files. 3/ Verify: npm test exits 0, find . -name '*.test.*' | wc -l shows >=3."`;
-            break;
-        case 'security':
-            taskCmd = `/cook "SECURITY ${proj}: 1/ npm audit fix. 2/ Create .env.example if .env exists. 3/ grep secrets in src/. 4/ Verify: npm audit shows 0 critical/high."`;
-            break;
-        case 'performance':
-            taskCmd = `/cook "PERFORMANCE ${proj}: 1/ find src -name '*.ts' -o -name '*.tsx' | xargs wc -l | sort -rn — split largest file >300 lines. 2/ Remove dead exports. 3/ Verify: no src file >300 lines."`;
-            break;
-        case 'typescript':
-            taskCmd = `/cook "TYPESCRIPT ${proj}: 1/ Set strict:true in tsconfig.json. 2/ npx tsc --noEmit — fix errors. 3/ Replace any with proper types. 4/ Verify: npx tsc --noEmit exits 0."`;
-            break;
-        case 'production':
-            taskCmd = `/cook "PRODUCTION ${proj}: 1/ git add -A && git status. 2/ git commit -m 'chore: cleanup'. 3/ Ensure .gitignore covers node_modules,.env,dist. 4/ Verify: git status shows clean tree."`;
-            break;
-        case 'docs':
-            taskCmd = `/cook "DOCS ${proj}: 1/ README.md: add description, install, usage, architecture (>50 lines). 2/ Create CLAUDE.md with project context. 3/ JSDoc top 3 functions. 4/ Verify: wc -l README.md shows >50."`;
-            break;
-        default:
-            taskCmd = `/cook "GENERAL ${proj}: npm run build && npm test. Fix errors. git add -A && git commit."`;
+    // ═══ 4-TIER SMART COMMAND SELECTION ═══
+    // Tier 1: score < 60 → /bootstrap:auto:parallel (full rewrite)
+    // Tier 2: stuck ≥ 3  → /cook debug (deep debug)
+    // Tier 3: score < 85 → /cook strategic (targeted fix)
+    // Tier 4: score ≥ 85 → /cook (light fix)
+    const totalScore = scoreResult.total;
+    const stuckAttempts = getDimAttempts(proj, weakestDim);
+
+    let tier, tierCmd;
+    if (stuckAttempts >= 3) {
+        tier = 'TIER2-DEBUG';
+        tierCmd = `/cook "DEBUG ${proj}: dim ${weakestDim} stuck ${stuckAttempts}x. Deep scan root cause. npm run build && npm test. Find WHY it fails. Fix and verify."`;
+        log(`P${pane.idx}: 🔴 TIER 2 → /cook DEBUG (${weakestDim} stuck ${stuckAttempts}x)`);
+    } else if (totalScore < 60) {
+        tier = 'TIER1-BOOTSTRAP';
+        const BOOTSTRAP_PLANS = {
+            'mekong-cli': `/bootstrap:auto:parallel "AGI RaaS mekong-cli 100/100: 1/ PRODUCTION: npm run build exit 0. Dockerfile. Health-check. 2/ RESOURCES: npm outdated update ALL. npm audit fix. 3/ BUILD: Fix ALL TS errors. strict mode. 4/ TESTS: 10+ unit tests. 80%+ coverage. 5/ SECURITY: .env audit. npm audit 0 critical. 6/ TYPESCRIPT: strict:true. VERIFY: npm run build && npm test."`,
+            'well': `/bootstrap:auto:parallel "AGI RaaS well 100/100: 1/ PLANNING: docs/ARCHITECTURE.md + ROADMAP.md. 2/ PERFORMANCE: React.lazy. Suspense. Bundle <500KB. 3/ RESOURCES: npm outdated. audit fix. 4/ BUILD: npm run build exit 0. 5/ TESTS: Vitest 80%+. 6/ SECURITY: CSP. npm audit 0 critical. 7/ CI_CD: husky + lint-staged. 8/ TYPESCRIPT: strict:true. VERIFY: build && test && lint."`,
+            'algo-trader': `/bootstrap:auto:parallel "AGI RaaS algo-trader 100/100: 1/ PLANNING: ARCHITECTURE.md + API.md. 2/ PERFORMANCE: Cache + WebSocket optimize. 3/ CI_CD: GitHub Actions. 4/ PRODUCTION: PM2 + Dockerfile + health. 5/ RESOURCES: npm outdated. 6/ BUILD: exit 0. strict. 7/ TESTS: 80%+ coverage. 8/ SECURITY: rate limit + validation. 9/ TYPESCRIPT: strict + Zod. VERIFY: build && test && lint."`,
+            'apex-os': `/bootstrap:auto:parallel "AGI RaaS apex-os 100/100: 1/ PLANNING: ARCHITECTURE.md + SECURITY.md. 2/ PERFORMANCE: Redis + DB indexes. 3/ PRODUCTION: Dockerfile + docker-compose. 4/ RESOURCES: update 77 deps. 5/ BUILD: strict exit 0. 6/ TESTS: Fix 16 failing + 80%+. 7/ SECURITY: MFA + JWT + SOC2. 8/ CI_CD: security scan CI. 9/ TYPESCRIPT: strict. VERIFY: build && test && lint."`
+        };
+        tierCmd = BOOTSTRAP_PLANS[proj] || `/bootstrap:auto:parallel "${proj}: Full AGI RaaS 100/100. Fix ALL dimensions. VERIFY: npm run build && npm test."`;
+        log(`P${pane.idx}: 🚀 TIER 1 → /bootstrap:auto:parallel (score ${totalScore} < 60)`);
+    } else if (totalScore < 85) {
+        tier = 'TIER3-STRATEGIC';
+        tierCmd = `/cook "${proj}: Nâng ${weakestDim} từ ${weakestScore}→10. Scan codebase, fix issues, add tests/docs as needed. npm run build && npm test must pass."`;
+        log(`P${pane.idx}: ⚔️ TIER 3 → /cook STRATEGIC (score ${totalScore}, dim ${weakestDim}=${weakestScore})`);
+    } else {
+        tier = 'TIER4-POLISH';
+        tierCmd = `/cook "${proj}: Polish ${weakestDim} (${weakestScore}→10). Quick fix and verify: npm run build && npm test."`;
+        log(`P${pane.idx}: 🍳 TIER 4 → /cook (score ${totalScore} ≥ 85, dim ${weakestDim}=${weakestScore})`);
     }
 
-    log(`P${pane.idx}: 🎯 TARGET[${dimIndex}] ${weakestDim.toUpperCase()} (Score: ${weakestScore}) for ${proj}`);
+    taskCmd = tierCmd;
+    log(`P${pane.idx}: 🎯 ${tier} | Score: ${totalScore} | Weakest: ${weakestDim}=${weakestScore} | for ${proj}`);
+    dedup.recordTask(taskCmd, pane.project, pane.idx, `${tier}: ${weakestDim}`);
 
-    const finalCmd = `${taskCmd} --auto`;
-    dedup.recordTask(finalCmd, pane.project, pane.idx, `Targeting: ${weakestDim}`);
-
-    return finalCmd;
+    return taskCmd;
 }
 
 // ══════════════════════════════════════════════════
@@ -247,17 +287,22 @@ function detectPaneState(output) {
     if (/Context low.*[0-5]% remaining/.test(output)) return 'LOW_CONTEXT';
     if (/rate-limit-options|You've hit your limit/.test(output)) return 'RATE_LIMITED';
     if (/❯ git (push|commit|add)|queued messages|Press up to edit/.test(output)) return 'PENDING';
+    if (/(›|❯)\s*\/(cook|bootstrap|plan|debug) /.test(output)) return 'STUCK_PROMPT';
+    // ClaudeKit interactive prompts (validation, options menu, submit answers)
+    if (/Enter to select|↑\/↓ to navigate|Esc to cancel|Yes \(Recommended\)|Type something|Submit answers|Review your answers|Ready to submit/.test(output)) return 'INTERACTIVE';
     // 🏭 FIX: CC CLI idle patterns — bypass on, cooked (finished), or just ❯ prompt
     // Fresh boot: shows `try "how do I log an error?"` or `try "fix typecheck errors"`
+    // 🔴 CRITICAL: Check WORKING FIRST before IDLE to prevent blind injection
+    if (/(Whisking|Bloviating|Churning|Crystallizing|Sprouting|Deciphering|Prestidigitating|Puttering|Nesting|Crafting|Crunched|Warping|Flowing|Sock-hopping|Building|Sautéed|Zigzagging|Quantumizing|Cogitated|Enchanting|Discombobulating|Smooshing|Spiraling|Explore agents|Running \d|Perambulating|Hashing|Processing|Unfurling|thinking|thought for|Moseying|Waddling|Jitterbugging|Flummoxing|Swooping|Hatching|Searching for)/i.test(output)) return 'WORKING';
+    if (/Running…|Waiting…|Bash\(|Read\(|Write\(|fullstack-developer\(|planner\(|debugger\(|tester\(|code-reviewer\(|researcher\(|hook error|background tasks/i.test(output)) return 'WORKING';
     if (/(›|❯)\s*[Tt]ry "/.test(output) && /bypass permissions on/.test(output)) return 'IDLE';
-    if (/bypass permissions on/.test(output) && !/Searching|Running|Explore|Read \d|Smooshing|Whisking|Bloviating|Churning|Building|Prestidigitating|Flowing|Crafting|Spiraling|Nesting|Puttering|Zigzagging|Perambulating|Hashing/.test(output)) return 'IDLE';
+    if (/bypass permissions on/.test(output) && !/Searching|Running|Explore|Read \d|Smooshing|Whisking|Bloviating|Churning|Building|Prestidigitating|Flowing|Crafting|Spiraling|Nesting|Puttering|Zigzagging|Perambulating|Hashing|Processing|Unfurling|thinking|thought for|Running…|Waiting…|Bash\(/.test(output)) return 'IDLE';
     if (/Cooked for \d/.test(output)) return 'IDLE';
     if (/Crunched for \d/.test(output)) return 'IDLE';
     if (/Choreographed for \d/.test(output)) return 'IDLE';
     if (/Sautéed for \d/.test(output)) return 'IDLE';
     if (/\w+ed for \d+[ms]/.test(output) && /bypass permissions on/.test(output) && /❯/.test(output)) return 'IDLE';
     if (/❯\s*$/.test(output)) return 'IDLE';
-    if (/(Whisking|Bloviating|Churning|Crystallizing|Sprouting|Deciphering|Prestidigitating|Puttering|Nesting|Crafting|Crunched|Warping|Flowing|Sock-hopping|Building|Sautéed|Zigzagging|Quantumizing|Cogitated|Enchanting|Discombobulating|Smooshing|Spiraling|Explore agents|Running \d|Perambulating|Hashing)/i.test(output)) return 'WORKING';
     return 'ACTIVE';
 }
 
@@ -345,20 +390,20 @@ async function checkAllPanes() {
         switch (state) {
             case 'DEAD':
                 log(`P${pane.idx}: 💀 DEAD — respawning`);
-                try { execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && claude --dangerously-skip-permissions"`); } catch { }
+                try { execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions"`); } catch { }
                 // Will inject task next cycle after bootlog(`P${pane.idx}: ✅ Respawned, task will inject next cycle`);
                 break;
 
             case 'CRASHED':
-                log(`P${pane.idx}: 🔴 CRASHED — restarting CC CLI`);
+                log(`P${pane.idx}: 🔴 CRASHED — respawn-pane -k (clean restart)`);
                 try {
-                    execSync(`tmux send-keys -t ${SESSION}.${pane.idx} "cd ${pane.dir} && claude --dangerously-skip-permissions" Enter`);
+                    execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && unset CLAUDECODE && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions"`);
                 } catch { }
                 break;
 
             case 'LOW_CONTEXT':
                 log(`P${pane.idx}: 🟡 LOW CONTEXT — fresh restart`);
-                try { execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && claude --dangerously-skip-permissions"`); } catch { }
+                try { execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions"`); } catch { }
                 break;
 
             case 'RATE_LIMITED':
@@ -372,6 +417,32 @@ async function checkAllPanes() {
                 await sleep(300);
                 tmuxSendKeys(pane.idx, 'Enter');
                 break;
+
+            case 'STUCK_PROMPT':
+                log(`P${pane.idx}: ⚠️ STUCK TEXT IN PROMPT — sending Enter`);
+                tmuxSendKeys(pane.idx, 'Enter');
+                break;
+
+            case 'INTERACTIVE': {
+                // Smart auto-answer based on prompt context
+                const output = tmuxCapture(pane.idx, 15);
+                if (/Submit answers|Review your answers|Ready to submit/.test(output)) {
+                    // Git commit / review prompt → Submit (option 1)
+                    log(`P${pane.idx}: 🟣 INTERACTIVE (Submit) — auto-selecting option 1`);
+                    tmuxSendKeys(pane.idx, '1');
+                } else if (/Validation|approve as-is/.test(output)) {
+                    // ClaudeKit validation → Skip validation (option 2)
+                    log(`P${pane.idx}: 🟣 INTERACTIVE (Validation) — auto-selecting option 2 (implement)`);
+                    tmuxSendKeys(pane.idx, '2');
+                } else {
+                    // Generic interactive → Enter to proceed
+                    log(`P${pane.idx}: 🟣 INTERACTIVE (Generic) — sending Enter`);
+                    tmuxSendKeys(pane.idx, 'Enter');
+                }
+                await sleep(500);
+                tmuxSendKeys(pane.idx, 'Enter');
+                break;
+            }
 
             case 'IDLE': {
                 // 🛡️ COOLDOWN CHECK — skip if recently injected
@@ -393,6 +464,7 @@ async function checkAllPanes() {
                 }
 
                 const scoreResult = global.calculateProjectScore(pane.dir);
+                recordScore(pane.project, scoreResult); // Track score history
                 const isGradeS = scoreResult.grade === 'S';
 
                 const intel = scanCodebase(pane);

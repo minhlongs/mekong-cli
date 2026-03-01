@@ -47,7 +47,7 @@ while true; do
     # 💀 Dead pane
     if echo "$OUTPUT" | grep -q "Pane is dead"; then
       echo "P$i: 💀 DEAD — respawning + inject task" >> "$LOG"
-      tmux respawn-pane -k -t "${SESSION}.$i" "cd ${DIRS[$i]} && claude --dangerously-skip-permissions"
+      tmux respawn-pane -k -t "${SESSION}.$i" "cd ${DIRS[$i]} && unset ANTHROPIC_BASE_URL && command claude --dangerously-skip-permissions"
       sleep 8
       tmux send-keys -t "${SESSION}.$i" -l "${TASKS[$i]}"
       sleep 0.3
@@ -58,7 +58,7 @@ while true; do
     # 🔴 Bash prompt (CC CLI crashed)
     if echo "$OUTPUT" | tail -3 | grep -qE 'macbookprom1@.*%\s*$'; then
       echo "P$i: 🔴 CRASHED — restarting CC CLI + inject task" >> "$LOG"
-      tmux send-keys -t "${SESSION}.$i" "cd ${DIRS[$i]} && claude --dangerously-skip-permissions" Enter
+      tmux send-keys -t "${SESSION}.$i" "cd ${DIRS[$i]} && unset ANTHROPIC_BASE_URL && command claude --dangerously-skip-permissions" Enter
       sleep 8
       tmux send-keys -t "${SESSION}.$i" -l "${TASKS[$i]}"
       sleep 0.3
@@ -71,7 +71,7 @@ while true; do
       PCT=$(echo "$OUTPUT" | grep -oE '[0-9]+% remaining' | grep -oE '[0-9]+')
       if [ "$PCT" -le 5 ] 2>/dev/null; then
         echo "P$i: 🟡 CONTEXT ${PCT}% — restarting fresh + inject" >> "$LOG"
-        tmux respawn-pane -k -t "${SESSION}.$i" "cd ${DIRS[$i]} && claude --dangerously-skip-permissions"
+        tmux respawn-pane -k -t "${SESSION}.$i" "cd ${DIRS[$i]} && unset ANTHROPIC_BASE_URL && command claude --dangerously-skip-permissions"
         sleep 8
         tmux send-keys -t "${SESSION}.$i" -l "${TASKS[$i]}"
         sleep 0.3

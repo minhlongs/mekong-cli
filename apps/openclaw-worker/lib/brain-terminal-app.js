@@ -79,16 +79,16 @@ function spawnBrain() {
     const proxyPort = new URL(proxyUrl).port || '20128';
     const configDir = `/Users/macbookprom1/.claude_antigravity_${proxyPort}`;
 
-    // Build the CC CLI command
+    // Build the CC CLI command (Triệt tiêu mọi proxy)
     const envSetup = [
-        `export ANTHROPIC_API_KEY="ollama"`,
-        `export ANTHROPIC_BASE_URL="${proxyUrl}"`,
-        `export CLAUDE_BASE_URL="${proxyUrl}"`,
-        `export CLAUDE_CONFIG_DIR="${configDir}"`,
+        `unset ANTHROPIC_API_KEY`,
+        `unset ANTHROPIC_BASE_URL`,
+        `unset CLAUDE_BASE_URL`,
+        `unset CLAUDE_CONFIG_DIR`,
         `unset ANTHROPIC_AUTH_TOKEN`,
     ].join(' && ');
 
-    const claudeCmd = `claude --model ${config.MODEL_NAME} --dangerously-skip-permissions`;
+    const claudeCmd = `/Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`;
     const fullCmd = `${envSetup} && ${claudeCmd}`;
 
     // AppleScript to open Terminal.app with CC CLI
