@@ -1,38 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "fa2bbc40614b",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/plan:hard \"Binh Phap Ch.9 行軍: Deep 10x LEARN architecture & pattern from grafan",
-      "dispatchedAt": 1772337146351
-    },
-    {
-      "hash": "629d9fe7a129",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/plan:hard \"Binh Phap Ch.10 地形: Deep 10x LEARN architecture & pattern from niceg",
-      "dispatchedAt": 1772337241285
-    },
-    {
-      "hash": "182d2bcbda7c",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/plan:hard \"Binh Phap Ch.11 九地: Deep 10x LEARN architecture & pattern from louis",
-      "dispatchedAt": 1772337248733
-    },
-    {
-      "hash": "7eda819abc5d",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/plan:hard \"Binh Phap Ch.12 火攻: Deep 10x LEARN architecture & pattern from formb",
-      "dispatchedAt": 1772337328790
-    },
-    {
       "hash": "8bbe00e61e2b",
       "project": "mekong-cli",
       "pane": 0,
@@ -1599,6 +1567,38 @@
       "chapter": "Targeting: production",
       "preview": "/cook \"PRODUCTION mekong-cli: 1/ git add -A && git status. 2/ git commit -m 'cho",
       "dispatchedAt": 1772362423756
+    },
+    {
+      "hash": "e800cb7686dd",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "Targeting: tests",
+      "preview": "/cook \"TESTS algo-trader: 1/ npm test — fix failing tests. 2/ Write 3+ unit test",
+      "dispatchedAt": 1772362603977
+    },
+    {
+      "hash": "90bda4f85cbc",
+      "project": "apex-os",
+      "pane": 3,
+      "chapter": "Targeting: build",
+      "preview": "/cook \"BUILD apex-os: 1/ npm run build — fix ALL errors. 2/ Add build script if ",
+      "dispatchedAt": 1772362635254
+    },
+    {
+      "hash": "010f0b7d233b",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES mekong-cli: 1/ npm outdated — update critical deps. 2/ npm audi",
+      "dispatchedAt": 1772362706123
+    },
+    {
+      "hash": "dc4ad7472ad3",
+      "project": "well",
+      "pane": 1,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"RESOURCES well: 1/ npm outdated — update critical deps. 2/ npm audit fix.",
+      "dispatchedAt": 1772362738502
     }
   ],
   "chapterIndex": 5
