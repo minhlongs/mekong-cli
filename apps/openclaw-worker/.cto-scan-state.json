@@ -7,7 +7,7 @@
       "type": "build",
       "severity": "critical",
       "file": "package.json",
-      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build  • turbo 2.8.8 • Packages in scope: 84tea, @agencyos/agents, @agencyos/agritech-hub-sdk, @agencyos/ai-hub-sdk, @agencyos/antigravity-gateway, @agencyos...",
+      "message": "Build command failed with exit code 1. Output snippet:  > mekong-cli@2.1.33 build > npx turbo run build  • turbo 2.8.12   x Invalid package dependency graph:   `-> Cyclic dependency detected:       \t@agencyos/vibe-arbitrage-engine, @agencyos/trading-core ...",
       "project": "mekong-cli"
     }
   ],

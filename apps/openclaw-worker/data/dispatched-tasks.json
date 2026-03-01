@@ -1,14 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "b3bf1797d0b9",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/plan:hard \"Binh Phap Ch.8 九變: Deep 10x LEARN architecture & pattern from tempor",
-      "dispatchedAt": 1772336525288
-    },
-    {
       "hash": "b151b89fe57e",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1591,14 @@
       "chapter": "Targeting: build",
       "preview": "/cook \"Binh Phap Ch.4 軍形: Fix npm run build errors. Sửa tất cả TypeScript/compil",
       "dispatchedAt": 1772361306427
+    },
+    {
+      "hash": "59c2370a731f",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "Targeting: resources",
+      "preview": "/cook \"Binh Phap Ch.2 作戰: Chạy npm update, npm audit fix, npm outdated và fix pa",
+      "dispatchedAt": 1772361370521
     }
   ],
   "chapterIndex": 5

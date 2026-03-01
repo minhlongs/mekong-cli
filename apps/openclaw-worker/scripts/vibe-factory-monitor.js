@@ -213,7 +213,7 @@ function detectPaneState(output) {
     if (/❯ git (push|commit|add)|queued messages|Press up to edit/.test(output)) return 'PENDING';
     // 🏭 FIX: CC CLI idle patterns — bypass on, cooked (finished), or just ❯ prompt
     // Fresh boot: shows `try "how do I log an error?"` or `try "fix typecheck errors"`
-    if (/› try "/.test(output) && /bypass permissions on/.test(output)) return 'IDLE';
+    if (/(›|❯)\s*[Tt]ry "/.test(output) && /bypass permissions on/.test(output)) return 'IDLE';
     if (/bypass permissions on/.test(output) && !/Searching|Running|Explore|Read \d|Smooshing|Whisking|Bloviating|Churning|Building|Prestidigitating|Flowing|Crafting|Spiraling|Nesting|Puttering|Zigzagging|Perambulating|Hashing/.test(output)) return 'IDLE';
     if (/Cooked for \d/.test(output)) return 'IDLE';
     if (/Crunched for \d/.test(output)) return 'IDLE';
