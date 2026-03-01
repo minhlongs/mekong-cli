@@ -157,6 +157,13 @@ class IntentClassifier:
             f"Goal: \"{goal}\"\n"
             f"Reply with ONLY the intent name."
         )
+        if self.llm_client is None or not hasattr(self.llm_client, "generate"):
+            return IntentResult(
+                intent=Intent.UNKNOWN,
+                confidence=0.1,
+                entities=self._extract_entities(goal, Intent.UNKNOWN),
+                raw_goal=goal,
+            )
         response = self.llm_client.generate(prompt).strip().upper()
 
         try:

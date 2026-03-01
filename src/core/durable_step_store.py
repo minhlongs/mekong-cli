@@ -95,7 +95,7 @@ class DurableStepStore:
 
         try:
             data = json.loads(filepath.read_text(encoding="utf-8"))
-            return data.get("exit_code", 1) == 0
+            return bool(data.get("exit_code", 1) == 0)
         except (json.JSONDecodeError, KeyError):
             return False
 

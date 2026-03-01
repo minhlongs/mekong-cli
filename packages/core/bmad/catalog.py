@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import json
+from typing import Any, Dict, cast
 from .loader import BMADWorkflowLoader
 
 
@@ -50,5 +51,5 @@ class WorkflowCatalog:
             Catalog data dictionary
         """
         if self.cache_path.exists():
-            return json.loads(self.cache_path.read_text())
+            return cast(Dict[Any, Any], json.loads(self.cache_path.read_text()))
         return self.build_catalog()

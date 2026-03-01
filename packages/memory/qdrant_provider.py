@@ -58,7 +58,7 @@ class QdrantProvider:
         if not QDRANT_AVAILABLE:
             return False
         try:
-            self._client = QdrantClient(url=self.url, timeout=5.0)
+            self._client = QdrantClient(url=self.url, timeout=int(5))
             self._ensure_collection()
             self._connected = True
             logger.info(f"Qdrant connected: {self.url} / {self.collection_name}")

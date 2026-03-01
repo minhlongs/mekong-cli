@@ -134,7 +134,7 @@ class NLPCommander:
     MEMORY_CONTEXT_MAX = 1000
 
     def __init__(self) -> None:
-        self._client = None
+        self._client: Optional["LLMClient"] = None
 
     def _get_client(self) -> "LLMClient":
         """Lazy-load LLM client."""
@@ -142,7 +142,7 @@ class NLPCommander:
             from src.core.llm_client import get_client
 
             self._client = get_client()
-        return self._client
+        return self._client  # type: ignore[return-value]
 
     def parse(self, message: str) -> StructuredTask:
         """Parse free-form message into structured task."""

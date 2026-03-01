@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from telegram import InlineKeyboardMarkup, Update
@@ -77,7 +77,8 @@ def _load_inbox() -> list:
     if not INBOX_PATH.exists():
         return []
     try:
-        return json.loads(INBOX_PATH.read_text())
+        result = json.loads(INBOX_PATH.read_text())
+        return list(result)
     except Exception:
         return []
 

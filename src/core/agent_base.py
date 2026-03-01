@@ -53,6 +53,30 @@ class AgentBase(ABC):
     3. Verify: Validate output
     """
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Warn at class-definition time if plan or execute are not overridden."""
+        super().__init_subclass__(**kwargs)
+        import warnings as _warnings
+        missing = [
+            m for m in ("plan", "execute")
+            if m in cls.__dict__ or any(
+                m in base.__dict__ for base in cls.__mro__[1:]
+                if base not in (AgentBase, ABC, object)
+            )
+        ]
+        # Only warn for concrete (non-abstract) classes missing the methods
+        abstract_methods: frozenset = getattr(cls, "__abstractmethods__", frozenset())
+        unimplemented = [
+            m for m in ("plan", "execute")
+            if m in abstract_methods
+        ]
+        if unimplemented and not getattr(cls, "__abstractmethods__", None) == frozenset(unimplemented):
+            _warnings.warn(
+                f"{cls.__name__} does not implement: {unimplemented}. "
+                "Calls to these methods will raise NotImplementedError.",
+                stacklevel=2,
+            )
+
     def __init__(self, name: str, max_retries: int = 3) -> None:
         """Initialize AgentBase with name and retry configuration.
 

@@ -79,7 +79,7 @@ class RecipeRegistry:
                 continue
 
             # Check tags
-            if any(query in tag.lower().strip() for tag in recipe.tags):
+            if any(query in tag.lower().strip() for tag in (recipe.tags or [])):
                 results.append(recipe)
 
         return results

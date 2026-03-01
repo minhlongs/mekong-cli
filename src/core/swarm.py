@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 @dataclass
@@ -107,7 +107,7 @@ class SwarmRegistry:
                 json={"goal": goal, "token": node.token},
                 timeout=timeout,
             )
-            return resp.json()
+            return dict(resp.json())
         except requests.RequestException as e:
             return {"error": str(e)}
 

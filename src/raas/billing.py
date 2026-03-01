@@ -3,6 +3,7 @@
 Verifies webhook signatures, enforces idempotency, and provisions
 credits to tenant accounts based on Polar product purchases.
 """
+from __future__ import annotations
 
 import hashlib
 import hmac

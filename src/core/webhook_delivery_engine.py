@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List
 
-import requests
+import requests  # type: ignore[import-untyped]
 
 
 class WebhookEvent(str, Enum):

@@ -107,7 +107,8 @@ class AGILoop:
         """Load persistent improvement history from disk."""
         if HISTORY_PATH.exists():
             try:
-                return json.loads(HISTORY_PATH.read_text())
+                result = json.loads(HISTORY_PATH.read_text())
+                return dict(result)
             except (json.JSONDecodeError, OSError):
                 return {"completed": [], "blacklist": {}, "details": []}
         return {"completed": [], "blacklist": {}, "details": []}
@@ -122,8 +123,8 @@ class AGILoop:
     def _is_blacklisted(self, improvement_id: str) -> bool:
         """Check if improvement failed 2+ times within 24h."""
         bl = self._history.get("blacklist", {}).get(improvement_id, {})
-        if bl.get("count", 0) >= 2:
-            return (time.time() - bl.get("last", 0)) < 86400
+        if bool(bl.get("count", 0)) and int(bl.get("count", 0)) >= 2:
+            return (time.time() - float(bl.get("last", 0))) < 86400
         return False
 
     def _calculate_cooldown(self) -> int:
@@ -132,9 +133,9 @@ class AGILoop:
             streak = len([d for d in self._history.get("details", [])[-5:]
                          if d.get("success")])
             if streak >= 3:
-                return max(30, self.cooldown // 2)
-            return self.cooldown
-        return min(self.cooldown * (2 ** self.consecutive_failures), 600)
+                return int(max(30, self.cooldown // 2))
+            return int(self.cooldown)
+        return int(min(self.cooldown * (2 ** self.consecutive_failures), 600))
 
     def get_status(self) -> Dict[str, Any]:
         """Return AGI loop metrics for Telegram and monitoring."""
@@ -301,7 +302,7 @@ class AGILoop:
                     content = content[:-3]
                 content = content.strip()
 
-            improvement = json.loads(content)
+            improvement: Dict[str, Any] = dict(json.loads(content))
             logger.info(f"🎯 Next improvement: {improvement.get('title', 'Unknown')}")
             return improvement
 
@@ -416,7 +417,7 @@ class AGILoop:
     async def _send_telegram(self, message: str) -> None:
         """Send message via Telegram bot."""
         try:
-            import requests
+            import requests  # type: ignore[import-untyped]
 
             token = os.getenv("MEKONG_TELEGRAM_TOKEN", "")
             if not token:
@@ -426,7 +427,7 @@ class AGILoop:
             chat_ids = []
             config_path = os.path.expanduser("~/.mekong/config.yaml")
             if os.path.exists(config_path):
-                import yaml
+                import yaml  # type: ignore[import-untyped]
 
                 with open(config_path) as f:
                     cfg = yaml.safe_load(f) or {}

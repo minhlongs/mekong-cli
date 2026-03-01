@@ -116,7 +116,7 @@ class CrashReporter:
     def suggest_recovery(self, report: CrashReport) -> str:
         """Return human-readable recovery suggestion matched to the error type."""
         _, suggestion = _ERROR_PATTERNS.get(report.error_type, _DEFAULT)
-        return suggestion
+        return str(suggestion)
 
 
 __all__ = ["CrashSeverity", "CrashReport", "CrashReporter"]

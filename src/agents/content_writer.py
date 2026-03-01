@@ -58,6 +58,8 @@ class ContentWriter(AgentBase):
         try:
             # Simulation of LLM/Content tools
             keyword = task.input.get("keyword")
+            if keyword is None:
+                keyword = ""
 
             if task.id == "keyword_research":
                 return Result(

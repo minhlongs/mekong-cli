@@ -12,7 +12,7 @@ backend based on the MEMORY_PROVIDER environment variable:
 import logging
 import os
 import time
-import requests
+import requests  # type: ignore[import-untyped]
 from typing import Any, Dict, Optional, Union
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class NeuralMemoryClient:
             resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
             if resp.status_code == 200:
                 data = resp.json()
-                context = data.get("context", "")
+                context = str(data.get("context", ""))
                 if context and len(context.strip()) > 0:
                     logger.info(f"Memory recalled context ({len(context)} chars)")
                     return context

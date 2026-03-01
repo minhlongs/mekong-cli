@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, List, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from .event_bus import EventBus, EventType, Event
 

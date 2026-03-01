@@ -167,8 +167,8 @@ class HealthWatchdog:
 
 def check_success_rate(ctx: Dict[str, Any]) -> float:
     """Check execution success rate (inverted: 100 = all failing)."""
-    total = ctx.get("total_steps", 0)
-    failed = ctx.get("failed_steps", 0)
+    total = float(ctx.get("total_steps", 0))
+    failed = float(ctx.get("failed_steps", 0))
     if total == 0:
         return 0.0
     return (failed / total) * 100.0
@@ -176,8 +176,8 @@ def check_success_rate(ctx: Dict[str, Any]) -> float:
 
 def check_step_duration(ctx: Dict[str, Any]) -> float:
     """Check if step duration exceeds budget (% of budget used)."""
-    actual = ctx.get("duration_seconds", 0.0)
-    budget = ctx.get("duration_budget", 60.0)
+    actual = float(ctx.get("duration_seconds", 0.0))
+    budget = float(ctx.get("duration_budget", 60.0))
     if budget <= 0:
         return 0.0
     return min((actual / budget) * 100.0, 100.0)
@@ -185,8 +185,8 @@ def check_step_duration(ctx: Dict[str, Any]) -> float:
 
 def check_error_count(ctx: Dict[str, Any]) -> float:
     """Check error count as percentage of max tolerable."""
-    errors = ctx.get("error_count", 0)
-    max_errors = ctx.get("max_errors", 5)
+    errors = float(ctx.get("error_count", 0))
+    max_errors = float(ctx.get("max_errors", 5))
     if max_errors <= 0:
         return 0.0
     return min((errors / max_errors) * 100.0, 100.0)
