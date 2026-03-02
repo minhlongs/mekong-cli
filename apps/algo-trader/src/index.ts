@@ -12,6 +12,7 @@ import { registerMarketplaceCommands } from './cli/strategy-marketplace-tenant-c
 import { registerMLCommands } from './cli/ml-train-and-backtest-commands';
 import { registerDryRunCommand } from './cli/live-dry-run-simulation-command';
 import { registerAgiTradeCommand } from './cli/agi-trade-multi-exchange-golive-command';
+import { registerArbLiveCommand } from './cli/arb-live-cross-exchange-command';
 import { logger } from './utils/logger';
 import { startRaasServer, stopRaasServer, setReady } from './api/fastify-raas-server';
 import * as dotenv from 'dotenv';
@@ -279,6 +280,7 @@ registerMarketplaceCommands(program);
 registerMLCommands(program);
 registerDryRunCommand(program);
 registerAgiTradeCommand(program);
+registerArbLiveCommand(program);
 
 // Register ML strategies in StrategyLoader
 StrategyLoader.registerMLStrategies();

@@ -150,11 +150,20 @@
 
 **Status:** Phase 8 COMPLETE ✅. AGI Trade ready for production go-live.
 
+## Phase 9: AGI Arbitrage Core — Cross-Exchange (Completed ✅)
+- [x] RealtimeArbitrageScanner — WS tick listener, stale filtering, fee-aware spread detection, opportunity events
+- [x] ArbitrageExecutionEngine — scanner → circuit breaker → atomic executor → position tracking → Telegram alerts
+- [x] Cooldown per pair, max concurrent limit, daily loss halt, dry-run/live modes
+- [x] `arb:live` CLI command — unified orchestrator with graceful shutdown + PnL report
+- [x] 24 tests
+
+**Status:** Phase 9 COMPLETE ✅. Real-time arbitrage detection + execution across Binance/OKX/Bybit.
+
 ### Future (Planned)
 - [ ] Multi-region deployment (Cloudflare Workers edge)
 - [ ] Advanced ML: ensemble strategies, online learning
 - [ ] Dashboard v2: real-time monitoring for AGI Trade
 
-**Current Status:** 1000+ tests, 0 TS errors, 220+ source files.
+**Current Status:** 1020+ tests, 0 TS errors, 225+ source files.
 
 Updated: 2026-03-02
