@@ -251,7 +251,6 @@ class CreditMeter:
 
         breakdown: Dict[str, int] = {row["task_type"]: int(row["total"]) for row in rows}
         total = sum(breakdown.values())
-        count_rows = sum(1 for _ in breakdown)  # per-type count
 
         # Get actual event count
         try:
