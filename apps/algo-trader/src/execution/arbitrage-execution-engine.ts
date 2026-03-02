@@ -9,6 +9,8 @@ import { logger } from '../utils/logger';
 import type { ArbitrageOpportunity } from './realtime-arbitrage-scanner';
 import { AtomicCrossExchangeOrderExecutor, type AtomicExecutionResult } from './atomic-cross-exchange-order-executor';
 import { AdaptiveCircuitBreaker } from './adaptive-circuit-breaker-per-exchange';
+import { AntiDetectionSafetyLayer } from './anti-detection-order-randomizer-safety-layer';
+import { BinhPhapStealthStrategy } from './binh-phap-stealth-trading-strategy';
 import type { IExchange } from '../interfaces/IExchange';
 
 export interface ArbEngineConfig {
@@ -22,6 +24,8 @@ export interface ArbEngineConfig {
   dryRun?: boolean;
   /** Max daily loss USD before halting. Default 100 */
   maxDailyLossUsd?: number;
+  /** Enable anti-detection stealth layer. Default true for live, false for dry-run */
+  enableStealth?: boolean;
 }
 
 export interface ArbTradeRecord {
@@ -46,6 +50,8 @@ export class ArbitrageExecutionEngine extends EventEmitter {
   private readonly config: Required<ArbEngineConfig>;
   private readonly executor: AtomicCrossExchangeOrderExecutor;
   private readonly circuitBreaker: AdaptiveCircuitBreaker;
+  private readonly safetyLayer: AntiDetectionSafetyLayer;
+  private readonly stealthStrategy: BinhPhapStealthStrategy;
   private readonly exchanges: Map<string, IExchange>;
   private cooldowns = new Map<string, number>(); // key: "buy:sell:symbol" → cooldown expiry
   private activeCount = 0;
@@ -62,15 +68,19 @@ export class ArbitrageExecutionEngine extends EventEmitter {
     circuitBreaker: AdaptiveCircuitBreaker,
   ) {
     super();
+    const enableStealth = config.enableStealth ?? !(config.dryRun ?? true);
     this.config = {
       cooldownMs: config.cooldownMs ?? 30_000,
       maxConcurrent: config.maxConcurrent ?? 3,
       positionSizeBase: config.positionSizeBase ?? 0.01,
       dryRun: config.dryRun ?? true,
       maxDailyLossUsd: config.maxDailyLossUsd ?? 100,
+      enableStealth,
     };
     this.exchanges = exchanges;
     this.circuitBreaker = circuitBreaker;
+    this.safetyLayer = new AntiDetectionSafetyLayer();
+    this.stealthStrategy = new BinhPhapStealthStrategy();
     this.executor = new AtomicCrossExchangeOrderExecutor();
   }
 
@@ -131,13 +141,43 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       return false;
     }
 
+    // Anti-detection stealth layer (active for live trading)
+    let stealthSize = this.config.positionSizeBase;
+    if (this.config.enableStealth) {
+      if (!this.safetyLayer.shouldProceed(spread.buyExchange)
+        || !this.safetyLayer.shouldProceed(spread.sellExchange)) {
+        logger.info(`[ArbEngine] Anti-detection paused: ${spread.buyExchange}/${spread.sellExchange}`);
+        return false;
+      }
+
+      const stealthPlan = this.stealthStrategy.planExecution(
+        spread.buyExchange, this.config.positionSizeBase, spread.symbol,
+      );
+      if (!stealthPlan.shouldProceed) {
+        logger.info(`[ArbEngine] Stealth plan blocked: ${spread.symbol} on ${spread.buyExchange}`);
+        return false;
+      }
+
+      // Apply stealth delay (timing randomization to avoid pattern detection)
+      if (stealthPlan.delayMs > 0) {
+        await new Promise((r) => setTimeout(r, stealthPlan.delayMs));
+      }
+
+      // Randomize order size (±5% to avoid uniform size detection)
+      stealthSize = this.safetyLayer.randomizeSize(this.config.positionSizeBase);
+    }
+
     this.activeCount++;
-    this.cooldowns.set(pairKey, Date.now() + this.config.cooldownMs);
+    // Apply randomized cooldown (stealth) or fixed cooldown
+    const jitteredCooldown = this.config.enableStealth
+      ? this.safetyLayer.randomizeDelay(this.config.cooldownMs)
+      : this.config.cooldownMs;
+    this.cooldowns.set(pairKey, Date.now() + jitteredCooldown);
 
     try {
       const result = await this.executor.executeAtomic({
         symbol: spread.symbol,
-        amount: this.config.positionSizeBase,
+        amount: stealthSize,
         buyExchange,
         sellExchange,
       });
@@ -146,6 +186,12 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       const record = this.createTradeRecord(opp, result);
       this.tradeHistory.push(record);
       this.dailyPnl += result.netPnl;
+
+      // Record API call for anti-detection rate tracking
+      if (this.config.enableStealth) {
+        this.safetyLayer.recordCall(spread.buyExchange);
+        this.safetyLayer.recordCall(spread.sellExchange);
+      }
 
       // Circuit breaker feedback
       if (result.success) {

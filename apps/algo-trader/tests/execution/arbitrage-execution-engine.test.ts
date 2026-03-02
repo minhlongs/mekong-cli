@@ -81,7 +81,7 @@ describe('ArbitrageExecutionEngine', () => {
 
   test('live mode calls atomic executor', async () => {
     engine = new ArbitrageExecutionEngine(
-      { dryRun: false },
+      { dryRun: false, enableStealth: false },
       exchanges,
       circuitBreaker,
     );
@@ -126,7 +126,7 @@ describe('ArbitrageExecutionEngine', () => {
 
   test('respects max concurrent limit', async () => {
     engine = new ArbitrageExecutionEngine(
-      { dryRun: false, maxConcurrent: 1 },
+      { dryRun: false, maxConcurrent: 1, enableStealth: false },
       exchanges,
       circuitBreaker,
     );
@@ -152,7 +152,7 @@ describe('ArbitrageExecutionEngine', () => {
 
   test('halts on daily loss limit', async () => {
     engine = new ArbitrageExecutionEngine(
-      { dryRun: false, maxDailyLossUsd: 10 },
+      { dryRun: false, maxDailyLossUsd: 10, enableStealth: false },
       exchanges,
       circuitBreaker,
     );
