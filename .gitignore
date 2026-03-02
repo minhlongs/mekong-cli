@@ -202,3 +202,4 @@ team_test_output.txt
 coverage_full.txt
 coverage_report.txt
 *.mission-active-*.lock
+apps/openclaw-worker/plans/260219-n8n-custom-mcp/research/repo-n8n-skills/
