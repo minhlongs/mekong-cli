@@ -16,6 +16,7 @@ import { registerArbLiveCommand } from './cli/arb-live-cross-exchange-command';
 import { registerUnifiedArbCommand } from './cli/unified-agi-arbitrage-command';
 import { registerSetupCommand } from './cli/setup-wizard-command';
 import { registerQuickstartCommand } from './cli/quickstart-zero-config-command';
+import { registerTelegramBotCommand } from './cli/telegram-phone-trading-bot-command';
 import { logger } from './utils/logger';
 import { startRaasServer, stopRaasServer, setReady } from './api/fastify-raas-server';
 import * as dotenv from 'dotenv';
@@ -287,6 +288,7 @@ registerArbLiveCommand(program);
 registerUnifiedArbCommand(program);
 registerSetupCommand(program);
 registerQuickstartCommand(program);
+registerTelegramBotCommand(program);
 
 // Register ML strategies in StrategyLoader
 StrategyLoader.registerMLStrategies();

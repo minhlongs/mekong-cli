@@ -214,11 +214,20 @@
 
 **Status:** Phase 13 COMPLETE ✅. Customer enters API key → runs immediately.
 
+## Phase 14: Telegram Phone Trading Bot (Completed ✅)
+- [x] TelegramCommandHandler — long-polling command receiver (no webhook needed)
+- [x] Security: chat ID validation, only configured chat accepted
+- [x] Commands: /status, /backtest, /balance, /health, /arb, /arb_live, /stop, /help
+- [x] CLI command: `telegram:bot` + npm script `npm run telegram`
+- [x] 0 TS errors
+
+**Status:** Phase 14 COMPLETE ✅. Trade from phone via Telegram.
+
 ### Future (Planned)
 - [ ] Multi-region deployment (Cloudflare Workers edge)
 - [ ] Advanced ML: ensemble strategies, online learning
 - [ ] Dashboard v2: real-time monitoring for AGI Trade
 
-**Current Status:** 1107+ tests, 0 TS errors, 237+ source files.
+**Current Status:** 1107+ tests, 0 TS errors, 239+ source files.
 
 Updated: 2026-03-02

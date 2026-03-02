@@ -144,6 +144,7 @@ npm start --strategy=RsiSmaStrategy --pair=BTC/USDT --timeframe=1h
 | `arb:auto` | **Unified auto-execution**: detect → score → validate → execute |
 | `arb:spread` | **Spread detector**: BTC/ETH cross-exchange scanner + auto-exec (Binance/OKX/Bybit) |
 | `arb:agi` | **AGI Arbitrage**: regime detection + Kelly sizing + self-tuning (recommended) |
+| `telegram:bot` | **Phone trading** — Telegram bot for remote control from phone |
 
 ### arb:spread (Cross-Exchange Spread Detector)
 
