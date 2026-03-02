@@ -6,7 +6,7 @@ Real agent for file system operations: search, read, create, analyze.
 
 import subprocess
 from pathlib import Path
-from typing import List, cast
+from typing import List
 
 from ..core.agent_base import AgentBase, Task, Result
 

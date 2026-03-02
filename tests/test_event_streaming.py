@@ -1,13 +1,11 @@
 """Tests for Enhanced Event Bus with Streaming (Netdata streaming pattern)."""
 
-import pytest
 from src.core.event_bus import (
     Event,
     EventBus,
     EventStream,
     EventType,
     StreamingEventBus,
-    get_event_bus,
     get_streaming_bus,
 )
 

@@ -1,9 +1,8 @@
 """Tests for zx_executor module — zx-inspired shell execution patterns."""
 
 import os
-import time
+import subprocess
 import pytest
-from unittest.mock import patch
 from src.core.zx_executor import (
     ProcessOutput,
     cd,
@@ -255,6 +254,3 @@ class TestPipe:
         assert result.ok
         assert "xyc" in result.stdout
 
-
-# Need subprocess import for TestShell.test_timeout_raises
-import subprocess

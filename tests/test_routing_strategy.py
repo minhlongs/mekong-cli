@@ -6,9 +6,7 @@ import tempfile
 import unittest
 
 from src.core.routing_strategy import (
-    CacheConfig,
     RetryConfig,
-    RouteDecision,
     RoutingError,
     RoutingMode,
     RoutingStrategy,

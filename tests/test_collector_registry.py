@@ -1,11 +1,8 @@
 """Tests for Collector Registry (Netdata-inspired plugin orchestrator)."""
 
-import pytest
 from src.core.collector_registry import (
     CollectorInfo,
     CollectorRegistry,
-    CollectorSpec,
-    DiscoveryResult,
     get_collector_registry,
 )
 

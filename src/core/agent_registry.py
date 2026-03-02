@@ -5,7 +5,6 @@ Type-safe registry for AgentBase subclasses.
 Replaces the plain AGENT_REGISTRY dict with validation at registration time.
 """
 
-import warnings
 from typing import Callable, Dict, List, Type
 
 from .agent_base import AgentBase

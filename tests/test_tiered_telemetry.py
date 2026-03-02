@@ -1,7 +1,6 @@
 """Tests for Tiered Telemetry Storage (Netdata DBENGINE-inspired)."""
 
 import json
-import pytest
 from src.core.telemetry import (
     ExecutionTrace,
     StepTrace,

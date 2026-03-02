@@ -10,7 +10,7 @@ import logging
 import threading
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed, Future
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
