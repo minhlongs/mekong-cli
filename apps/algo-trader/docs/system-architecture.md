@@ -90,6 +90,18 @@ graph TD
 - `arb:agi` — Unified command; launches all strategies in parallel: RealtimeArbitrageScanner, TriangularArbitrageLiveScanner, FundingRateArbitrageScanner, with MarketRegimeDetector providing adaptive params. Routes all opportunities through OrderBookDepthAnalyzer → CircuitBreaker → ArbitrageExecutionEngine.
 - `arb:auto` — Autonomous mode with auto-restart on error.
 
+### CLI Onboarding (Zero-Config)
+**Setup Wizard** (`src/cli/setup-wizard-command.ts`):
+- Interactive readline wizard — prompts exchange API keys, auto-generates `.env` with smart defaults.
+- Validates key format (min length), supports Binance/OKX/Bybit, optional Telegram alerts.
+
+**Quickstart** (`src/cli/quickstart-zero-config-command.ts`):
+- One command: detects `.env` → runs setup if missing → demo backtest → shows available commands.
+- Backtest/dry-run works without Docker (no DB/Redis required).
+
+**Shell Script** (`scripts/one-click-setup-and-start.sh`):
+- Prerequisites check → npm/pnpm install → CLI wizard → optional Docker infra.
+
 ### Infrastructure
 **Database** (`prisma/`):
 - PostgreSQL 16 via Prisma ORM — 9 models (Tenant, ApiKey, Strategy, Order, Trade, BacktestResult, Candle, PnlSnapshot, AlertRule).

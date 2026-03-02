@@ -203,11 +203,22 @@
 
 **Status:** Phase 12 COMPLETE ✅. Client-ready unified arbitrage platform.
 
+## Phase 13: Zero-Config Quickstart (Completed ✅)
+- [x] Interactive setup wizard CLI (`setup` command) — enter API keys, .env auto-generated
+- [x] Quickstart CLI (`quickstart` command) — setup + demo backtest + ready status
+- [x] Shell script simplified — Docker optional, npm/pnpm auto-detect
+- [x] README updated — 3-command quickstart flow
+- [x] Deployment guide updated — zero-config + one-click + full-stack paths
+- [x] Backtest/dry-run works without Docker (no DB/Redis required)
+- [x] 0 TS errors after changes
+
+**Status:** Phase 13 COMPLETE ✅. Customer enters API key → runs immediately.
+
 ### Future (Planned)
 - [ ] Multi-region deployment (Cloudflare Workers edge)
 - [ ] Advanced ML: ensemble strategies, online learning
 - [ ] Dashboard v2: real-time monitoring for AGI Trade
 
-**Current Status:** 1107+ tests, 0 TS errors, 235+ source files.
+**Current Status:** 1107+ tests, 0 TS errors, 237+ source files.
 
 Updated: 2026-03-02

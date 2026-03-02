@@ -14,6 +14,8 @@ import { registerDryRunCommand } from './cli/live-dry-run-simulation-command';
 import { registerAgiTradeCommand } from './cli/agi-trade-multi-exchange-golive-command';
 import { registerArbLiveCommand } from './cli/arb-live-cross-exchange-command';
 import { registerUnifiedArbCommand } from './cli/unified-agi-arbitrage-command';
+import { registerSetupCommand } from './cli/setup-wizard-command';
+import { registerQuickstartCommand } from './cli/quickstart-zero-config-command';
 import { logger } from './utils/logger';
 import { startRaasServer, stopRaasServer, setReady } from './api/fastify-raas-server';
 import * as dotenv from 'dotenv';
@@ -283,6 +285,8 @@ registerDryRunCommand(program);
 registerAgiTradeCommand(program);
 registerArbLiveCommand(program);
 registerUnifiedArbCommand(program);
+registerSetupCommand(program);
+registerQuickstartCommand(program);
 
 // Register ML strategies in StrategyLoader
 StrategyLoader.registerMLStrategies();

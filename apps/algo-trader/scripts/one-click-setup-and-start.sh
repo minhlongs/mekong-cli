@@ -14,12 +14,12 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     AGI Algo Trader — Setup & Start          ║${NC}"
+echo -e "${BLUE}║     AGI Algo Trader — One-Click Setup        ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 echo ""
 
 # ─── Step 1: Check prerequisites ─────────────────────────────────────────────
-echo -e "${YELLOW}[1/6] Checking prerequisites...${NC}"
+echo -e "${YELLOW}[1/4] Checking prerequisites...${NC}"
 
 check_cmd() {
   if ! command -v "$1" &> /dev/null; then
@@ -31,8 +31,6 @@ check_cmd() {
 }
 
 check_cmd "node" "https://nodejs.org (v18+)"
-check_cmd "docker" "https://docs.docker.com/get-docker/"
-check_cmd "pnpm" "npm install -g pnpm"
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
 if [ "$NODE_VERSION" -lt 18 ]; then
@@ -40,123 +38,67 @@ if [ "$NODE_VERSION" -lt 18 ]; then
   exit 1
 fi
 
-# ─── Step 2: Create .env from template ────────────────────────────────────────
-echo ""
-echo -e "${YELLOW}[2/6] Configuring environment...${NC}"
+# Detect package manager
+if command -v pnpm &> /dev/null; then
+  PKG_MGR="pnpm"
+elif command -v npm &> /dev/null; then
+  PKG_MGR="npm"
+else
+  echo -e "${RED}ERROR: npm or pnpm required${NC}"
+  exit 1
+fi
+echo -e "  ${GREEN}✓${NC} Using $PKG_MGR"
 
+# ─── Step 2: Install dependencies ────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 
-if [ ! -f .env ]; then
-  cp .env.example .env
-  echo -e "  ${GREEN}✓${NC} Created .env from template"
-else
-  echo -e "  ${GREEN}✓${NC} .env already exists"
-fi
-
-# ─── Step 3: Prompt for API keys ─────────────────────────────────────────────
 echo ""
-echo -e "${YELLOW}[3/6] Exchange API Keys${NC}"
-echo "  Enter your exchange API keys (press Enter to skip any exchange):"
-echo ""
-
-update_env() {
-  local key="$1"
-  local value="$2"
-  if [ -n "$value" ]; then
-    if grep -q "^${key}=" .env; then
-      sed -i.bak "s|^${key}=.*|${key}=${value}|" .env && rm -f .env.bak
-    else
-      echo "${key}=${value}" >> .env
-    fi
-  fi
-}
-
-# Binance
-read -p "  Binance API Key (Enter to skip): " BINANCE_KEY
-if [ -n "$BINANCE_KEY" ]; then
-  read -p "  Binance Secret: " BINANCE_SEC
-  update_env "BINANCE_API_KEY" "$BINANCE_KEY"
-  update_env "BINANCE_SECRET" "$BINANCE_SEC"
-  echo -e "  ${GREEN}✓${NC} Binance configured"
-fi
-
-# OKX
-read -p "  OKX API Key (Enter to skip): " OKX_KEY
-if [ -n "$OKX_KEY" ]; then
-  read -p "  OKX Secret: " OKX_SEC
-  update_env "OKX_API_KEY" "$OKX_KEY"
-  update_env "OKX_SECRET" "$OKX_SEC"
-  echo -e "  ${GREEN}✓${NC} OKX configured"
-fi
-
-# Bybit
-read -p "  Bybit API Key (Enter to skip): " BYBIT_KEY
-if [ -n "$BYBIT_KEY" ]; then
-  read -p "  Bybit Secret: " BYBIT_SEC
-  update_env "BYBIT_API_KEY" "$BYBIT_KEY"
-  update_env "BYBIT_SECRET" "$BYBIT_SEC"
-  echo -e "  ${GREEN}✓${NC} Bybit configured"
-fi
-
-# Telegram (optional)
-echo ""
-read -p "  Telegram Bot Token (Enter to skip): " TG_TOKEN
-if [ -n "$TG_TOKEN" ]; then
-  read -p "  Telegram Chat ID: " TG_CHAT
-  update_env "TELEGRAM_BOT_TOKEN" "$TG_TOKEN"
-  update_env "TELEGRAM_CHAT_ID" "$TG_CHAT"
-  echo -e "  ${GREEN}✓${NC} Telegram alerts configured"
-fi
-
-# ─── Step 4: Install dependencies ────────────────────────────────────────────
-echo ""
-echo -e "${YELLOW}[4/6] Installing dependencies...${NC}"
-pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+echo -e "${YELLOW}[2/4] Installing dependencies...${NC}"
+$PKG_MGR install 2>/dev/null || $PKG_MGR install --no-frozen-lockfile
 echo -e "  ${GREEN}✓${NC} Dependencies installed"
 
-# ─── Step 5: Start infrastructure ────────────────────────────────────────────
+# ─── Step 3: Interactive setup wizard (TypeScript CLI) ───────────────────────
 echo ""
-echo -e "${YELLOW}[5/6] Starting infrastructure (Docker)...${NC}"
-if docker compose up -d 2>/dev/null; then
-  echo -e "  ${GREEN}✓${NC} PostgreSQL, Redis, Prometheus, Grafana started"
+echo -e "${YELLOW}[3/4] Running setup wizard...${NC}"
+npx ts-node src/index.ts setup
 
-  # Wait for DB
-  echo "  Waiting for database..."
-  sleep 3
+# ─── Step 4: Optional Docker infrastructure ──────────────────────────────────
+echo ""
+echo -e "${YELLOW}[4/4] Infrastructure (optional)...${NC}"
 
-  # Run migrations
-  npx prisma generate 2>/dev/null && npx prisma migrate deploy 2>/dev/null
-  echo -e "  ${GREEN}✓${NC} Database migrations applied"
+if command -v docker &> /dev/null; then
+  echo -e "  Docker detected. Start PostgreSQL + Redis + Grafana? (y/N)"
+  read -r START_DOCKER
+  if [ "$START_DOCKER" = "y" ] || [ "$START_DOCKER" = "Y" ]; then
+    if docker compose up -d 2>/dev/null; then
+      echo -e "  ${GREEN}✓${NC} Infrastructure started"
+      sleep 3
+      npx prisma generate 2>/dev/null && npx prisma migrate deploy 2>/dev/null
+      echo -e "  ${GREEN}✓${NC} Database migrations applied"
+    else
+      echo -e "  ${YELLOW}⚠${NC} Docker compose failed — skipping"
+    fi
+  else
+    echo -e "  Skipped. Start later: docker compose up -d"
+  fi
 else
-  echo -e "  ${YELLOW}⚠${NC} Docker not running — skipping infrastructure"
-  echo "  You can start later with: docker compose up -d"
+  echo -e "  ${YELLOW}ℹ${NC} Docker not found — backtest & dry-run still work without it"
 fi
 
-# ─── Step 6: Ready! ──────────────────────────────────────────────────────────
+# ─── Done ─────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║          SETUP COMPLETE!                     ║${NC}"
+echo -e "${GREEN}║          SETUP COMPLETE! 🚀                  ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Quick Start Commands:${NC}"
+echo -e "Run ${BLUE}npm run quickstart${NC} to verify everything works."
 echo ""
-echo "  # Dry-run arbitrage (safe, no real trades)"
-echo "  pnpm dev arb:agi --exchanges binance,okx,bybit --symbols BTC/USDT,ETH/USDT"
-echo ""
-echo "  # Live arbitrage (REAL MONEY — be careful!)"
-echo "  pnpm dev arb:agi --live --exchanges binance,okx --symbols BTC/USDT --size 0.01"
-echo ""
-echo "  # Backtest a strategy"
-echo "  pnpm dev backtest -s RsiSma -d 30"
-echo ""
-echo "  # Start RaaS API server"
-echo "  pnpm dev api:serve"
-echo ""
-echo -e "${BLUE}Monitoring:${NC}"
-echo "  API Health:  http://localhost:3000/health"
-echo "  Prometheus:  http://localhost:9090"
-echo "  Grafana:     http://localhost:3001 (admin/admin)"
+echo -e "${BLUE}Commands:${NC}"
+echo "  npm run quickstart                    # Demo backtest + status check"
+echo "  npm run dev backtest                  # Full backtest"
+echo "  npm run dev arb:agi                   # AGI arbitrage (recommended)"
+echo "  npm run dev api:serve                 # Start RaaS API"
 echo ""
 echo -e "${YELLOW}Docs: docs/deployment-guide.md${NC}"
