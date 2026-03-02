@@ -43,11 +43,12 @@
 - [x] SpreadDetectorEngine tests (open handles fixed)
 - [x] backtest-queries.ts (Prisma types, no `any`)
 - [x] Code quality: 0 TSC errors, 0 `any` types, 0 TODOs
-- [ ] Docker Compose (PostgreSQL + Redis + TimescaleDB)
-- [ ] Prometheus + Grafana monitoring dashboards
-- [ ] Deployment guide (Docker/K8s)
+- [x] Docker Compose (PostgreSQL + Redis) + Dockerfile multi-stage ✅
+- [x] Prometheus + Grafana monitoring (auto-provisioned datasource) ✅
+- [x] `/metrics` endpoint — heap, uptime, trades, circuit breaker ✅
+- [x] Deployment guide (Docker/K8s) — `docs/deployment-guide.md` ✅
+- [x] E2E integration tests (7 tests — health, metrics, auth, 404) ✅
 - [ ] Polar.sh billing integration (per CLAUDE.md payment rules)
-- [ ] E2E integration tests (full pipeline)
 - [ ] Load/stress testing
 
 ## Phase 5: Intelligence & Growth
@@ -57,6 +58,6 @@
 - [ ] Multi-region deployment
 - [ ] Advanced risk: trailing stop, portfolio-level VaR
 
-**Current Status:** Phase 4 code quality 100% complete. Infra tasks (Docker, monitoring, deployment) remaining.
+**Current Status:** Phase 4 near-complete. 781 tests, 0 TS errors. Docker + Prometheus + E2E done. Remaining: Polar billing, load testing.
 
 Updated: 2026-03-02
