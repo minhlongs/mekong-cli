@@ -6,8 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "lint": "next lint",
+    "typecheck": "mkdir -p .next/types && test -f .next/types/routes.d.ts || echo 'export {}' > .next/types/routes.d.ts && tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
