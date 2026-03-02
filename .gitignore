@@ -194,12 +194,95 @@ RULES_*.md
 **/deployment-keys/
 .metadata_never_index
 
-# Debug scripts & temporary output
+# Debug scripts & temporary output (root level)
 debug_*.py
+check_*.py
+repro_*.py
+find_prints.py
+zip_*.py
+test_jose_debug.py
+test_plugins.py
+test_fetch.js
+test-*.mjs
+check-dist.mjs
+clean-settings.js
+demo.py
+demo_script.md
+test_input.jsonl
+factory-loop.sh
+restore_swarm.sh
+supervisor.py
+server.py
+main.py
+
+# Build & analysis output
 build_log*.txt
+build_full_log*.txt
 test_output.txt
 team_test_output.txt
 coverage_full.txt
 coverage_report.txt
+circular_deps.txt
+dead_code.txt
+src_dead_code.txt
+madge_output.txt
+ts_prune_output.txt
+tom_hum_vibe.log
+adapter.log
+
+# Private business docs (NOT public)
+dna/
+invoices/
+proposals/
+marketing/
+newsletter-saas/
+content/
+contracts/
+products/
+
+# Internal orchestration
+tom-hum/
+doanh-trai-tom-hum/
+tasks_paused/
+.tom_hum_state.json
+Users/
+
+# Private infrastructure
+infrastructure/
+terraform/
+k8s/
+docker/
+monitoring/
+ops/
+automation/
+external/
+external-proxy/
+vibe-cloud-brain-kit/
+claude_bridge/
+claudedocs/
+
+# Internal app directories
+backend/
+frontend/
+api/
+agents/
+cli/
+workers/
+mekong-docs/
+docs-portal/
+docsops/
+
+# Lock files
 *.mission-active-*.lock
-apps/openclaw-worker/plans/260219-n8n-custom-mcp/research/repo-n8n-skills/
+uv.lock
+
+# Misc internal
+apps/openclaw-worker/plans/
+scripts/m1-*.sh
+regions/
+data/
+projects/
+tmp/
+cc/
+bin/
+configs/
