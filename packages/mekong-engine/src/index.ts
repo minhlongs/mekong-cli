@@ -1,5 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { taskRoutes } from './routes/tasks'
+import { agentRoutes } from './routes/agents'
+import { billingRoutes } from './routes/billing'
 
 // Cloudflare bindings type
 export type Bindings = {
@@ -45,9 +48,9 @@ app.post('/cmd', async (c) => {
   return c.json(result)
 })
 
-// Placeholder routes — Phase 3-5
-app.get('/v1/agents', (c) => c.json({ agents: [] }))
-app.post('/v1/tasks', (c) => c.json({ error: 'Not implemented' }, 501))
-app.get('/v1/tasks/:id', (c) => c.json({ error: 'Not implemented' }, 501))
+// RaaS routes — Phase 3-5
+app.route('/v1/tasks', taskRoutes)
+app.route('/v1/agents', agentRoutes)
+app.route('/billing', billingRoutes)
 
 export default app

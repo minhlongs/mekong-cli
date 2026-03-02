@@ -1,0 +1,73 @@
+import { Hono } from 'hono'
+import type { Bindings } from '../index'
+import type { Tenant } from '../types/raas'
+import { authMiddleware } from '../raas/auth-middleware'
+import { creditMeteringMiddleware } from '../raas/credit-metering-middleware'
+import { createMission, getMission, listMissions, updateMissionStatus, estimateCredits } from '../raas/missions'
+import { deductCredits, addCredits } from '../raas/credits'
+import { createSSEStream } from '../raas/sse'
+
+type Variables = { tenant: Tenant; creditsUsed: number }
+
+const taskRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+taskRoutes.use('*', authMiddleware)
+
+taskRoutes.post('/', creditMeteringMiddleware, async (c) => {
+  const tenant = c.get('tenant')
+  const body = await c.req.json<{ goal: string }>()
+  if (!body.goal?.trim()) return c.json({ error: 'Missing goal' }, 400)
+
+  const credits = estimateCredits(body.goal)
+  const deducted = await deductCredits(c.env.DB, tenant.id, credits, `mission: ${body.goal.slice(0, 50)}`)
+  if (!deducted) return c.json({ error: 'Insufficient credits' }, 402)
+
+  c.set('creditsUsed', credits)
+  const mission = await createMission(c.env.DB, tenant.id, body.goal, credits)
+  return c.json(mission, 201)
+})
+
+taskRoutes.get('/', async (c) => {
+  const tenant = c.get('tenant')
+  const limit = Math.min(parseInt(c.req.query('limit') ?? '20', 10), 100)
+  const offset = parseInt(c.req.query('offset') ?? '0', 10)
+  const missions = await listMissions(c.env.DB, tenant.id, limit, offset)
+  return c.json({ missions, limit, offset })
+})
+
+taskRoutes.get('/:id', async (c) => {
+  const tenant = c.get('tenant')
+  const id = c.req.param('id')
+  const mission = await getMission(c.env.DB, id, tenant.id)
+  if (!mission) return c.json({ error: 'Mission not found' }, 404)
+  return c.json(mission)
+})
+
+taskRoutes.get('/:id/stream', async (c) => {
+  const tenant = c.get('tenant')
+  const id = c.req.param('id')
+  const mission = await getMission(c.env.DB, id, tenant.id)
+  if (!mission) return c.json({ error: 'Mission not found' }, 404)
+
+  const { readable, send, close } = createSSEStream()
+  send('status', { id: mission.id, status: mission.status, result: mission.result })
+  close()
+
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
+  })
+})
+
+taskRoutes.post('/:id/cancel', async (c) => {
+  const tenant = c.get('tenant')
+  const id = c.req.param('id')
+  const mission = await getMission(c.env.DB, id, tenant.id)
+  if (!mission) return c.json({ error: 'Mission not found' }, 404)
+  if (mission.status !== 'pending') return c.json({ error: 'Only pending missions can be cancelled' }, 409)
+
+  await updateMissionStatus(c.env.DB, id, 'failed', 'Cancelled by user')
+  await addCredits(c.env.DB, tenant.id, mission.credits_used, 'refund: cancelled mission')
+  return c.json({ id, status: 'cancelled', refunded: mission.credits_used })
+})
+
+export { taskRoutes }
