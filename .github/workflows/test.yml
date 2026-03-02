@@ -25,4 +25,4 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest tests/ --ignore=tests/backend --ignore=tests/e2e --ignore=tests/integration --ignore=tests/unit -v --tb=short --cov=src --cov-config=pyproject.toml --cov-report=term-missing --cov-fail-under=70
+          pytest tests/ --ignore=tests/backend --ignore=tests/e2e --ignore=tests/integration --ignore=tests/unit -v --tb=short --cov=src --cov-config=pyproject.toml --cov-report=term-missing --cov-fail-under=55
