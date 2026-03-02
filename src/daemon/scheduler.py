@@ -6,7 +6,6 @@ Single-process daemon with graceful shutdown.
 """
 
 import logging
-import os
 import signal
 import time
 from pathlib import Path

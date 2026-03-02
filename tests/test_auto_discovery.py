@@ -1,10 +1,7 @@
 """Tests for Auto-Discovery Engine (Netdata-inspired project detection)."""
 
-import pytest
-from pathlib import Path
 from src.core.auto_discovery import (
     AutoDiscovery,
-    DiscoveredProject,
     ProjectSignal,
     DEFAULT_SIGNALS,
     RECIPE_MAP,

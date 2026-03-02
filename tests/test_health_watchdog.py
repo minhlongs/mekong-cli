@@ -1,12 +1,9 @@
 """Tests for Health Watchdog Engine (Netdata-inspired cascading quality gates)."""
 
-import pytest
 from src.core.health_watchdog import (
     AlertSeverity,
-    AlertState,
     HealthCheck,
     HealthWatchdog,
-    WatchdogReport,
     check_error_count,
     check_step_duration,
     check_success_rate,
