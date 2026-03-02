@@ -66,14 +66,13 @@ jobs:
   notify:
     needs: [validate, deploy]
     runs-on: ubuntu-latest
-    # Only notify if Slack webhook is configured
-    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    if: ${{ always() }}
     steps:
       - name: Slack Notification
         uses: 8398a7/action-slack@v3
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         with:
           status: ${{ job.status }}
           fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: always()
