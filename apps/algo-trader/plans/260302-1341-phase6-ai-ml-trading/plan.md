@@ -89,31 +89,31 @@ Uses existing `Indicators.rsi()`, `Indicators.sma()`, `Indicators.macd()`, `Indi
 
 **`tests/ml/tabular-q-learning-rl-strategy.test.ts`** (~80 lines)
 
-## Phase 6.3: GRU Price Prediction (Deferred if usage high)
+## Phase 6.3: GRU Price Prediction (COMPLETE ✅)
 
 **Goal:** TensorFlow.js GRU model for price direction prediction.
 
 ### Architecture
-- Input: 60-candle window × 7 features = [60, 7]
+- Input: [windowSize, 7] sliding window of normalized features
 - GRU(64) → Dropout(0.2) → Dense(32) → Dense(1, sigmoid)
 - Output: probability of price going up → threshold 0.55 BUY, <0.45 SELL
 
-### New dep: `@tensorflow/tfjs-node` (C++ backend for Node.js)
+### Dep: `@tensorflow/tfjs` (pure JS CPU backend — M1 compatible)
 
-### New Files
-- `src/ml/gru-price-prediction-model.ts` — build/train/save/load
-- `src/ml/gru-prediction-strategy.ts` — IStrategy wrapper
-- `tests/ml/gru-price-prediction-model.test.ts`
+### Files
+- `src/ml/gru-price-prediction-model.ts` — build/train/predict/save ✅
+- `src/ml/gru-prediction-strategy.ts` — IStrategy wrapper ✅
+- `tests/ml/gru-price-prediction-model.test.ts` — 12 tests ✅
 
 ## Success Criteria
 - [x] Feature pipeline: extract 7 features from any ICandle[]
 - [x] Q-learning: train → save → load → backtest integration
-- [x] Tests for all new modules (29 ML tests)
-- [x] 0 TS errors, total tests 934
+- [x] Tests for all new modules (41 ML tests)
+- [x] 0 TS errors, total tests 946
 
 ## Risk Assessment
 | Risk | Impact | Mitigation |
 |------|--------|------------|
 | Q-table state explosion | Memory | Discretized to 162 states |
 | Overfitting to historical data | Loss | WalkForwardOptimizerPipeline validation |
-| tfjs-node M1 compatibility | Build fail | CPU-only fallback, defer to 6.3 |
+| tfjs-node M1 compatibility | Build fail | Used @tensorflow/tfjs pure JS backend ✅ |

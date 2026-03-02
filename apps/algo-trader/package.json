@@ -19,6 +19,7 @@
     "@fastify/cors": "^10.1.0",
     "@polar-sh/sdk": "^0.41.5",
     "@prisma/client": "5.21.1",
+    "@tensorflow/tfjs": "4.22.0",
     "bullmq": "^5.41.0",
     "ccxt": "^4.5.40",
     "chalk": "^4.1.2",

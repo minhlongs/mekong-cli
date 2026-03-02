@@ -81,6 +81,38 @@
 - [x] Mobile-responsive dashboard (collapsible sidebar, responsive grids, horizontal scroll tables)
 - [ ] Multi-region deployment (Cloudflare Workers edge) — deferred to Phase 6
 
-**Current Status:** Phase 5.4 COMPLETE ✅. 905 tests, 0 TS errors, 190+ source files.
+**Status:** Phase 5.4 COMPLETE ✅
+
+## Phase 6: AI/ML Trading (Completed ✅)
+
+### Phase 6.1: Feature Engineering Pipeline (Completed ✅)
+- [x] FeatureEngineeringPipeline — 7 normalized features (RSI, MACD, BB, ATR, volume, HL range)
+- [x] Sliding window tensor generation for model input
+- [x] 9 tests
+
+### Phase 6.2: Tabular Q-Learning RL Strategy (Completed ✅)
+- [x] QLearningStrategy — 162-state discretized Q-table, epsilon-greedy action selection
+- [x] QLearningEpisodeTrainer — temporal-difference learning, differential Sharpe reward
+- [x] Serialize/deserialize Q-table (train offline → deploy)
+- [x] 20 tests
+
+### Phase 6.3: GRU Neural Network (Completed ✅)
+- [x] GruPricePredictionModel — GRU(64) → Dropout → Dense(32) → Dense(1, sigmoid)
+- [x] GruPredictionStrategy — IStrategy wrapper with buy/sell thresholds
+- [x] @tensorflow/tfjs pure JS CPU backend (M1 compatible, no native build)
+- [x] 12 tests (build, predict, train, save, strategy integration)
+
+**Status:** Phase 6 COMPLETE ✅. 946 tests, 0 TS errors.
+
+## Phase 7: Production Live Trading Readiness (Planned)
+- [ ] Live exchange connection manager (multi-exchange heartbeat, auto-reconnect)
+- [ ] Real-time signal → order execution pipeline (Q-learning + traditional strategies)
+- [ ] Position management service (open/close, PnL tracking, risk limits)
+- [ ] Circuit breaker v2 (per-exchange, per-pair, adaptive thresholds)
+- [ ] Telegram/Discord alert bot (trade signals, PnL reports, anomaly detection)
+- [ ] Dry-run simulation mode (live data, paper orders)
+- [ ] Multi-region deployment (Cloudflare Workers edge)
+
+**Current Status:** 946 tests, 0 TS errors, 190+ source files.
 
 Updated: 2026-03-02
