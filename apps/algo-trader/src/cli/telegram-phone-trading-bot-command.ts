@@ -14,7 +14,18 @@ import { TelegramCommandHandler } from '../execution/telegram-command-handler';
 import { StrategyLoader } from '../core/StrategyLoader';
 import { MockDataProvider } from '../data/MockDataProvider';
 import { BacktestRunner } from '../backtest/BacktestRunner';
+import { AntiDetectionSafetyLayer } from '../execution/anti-detection-order-randomizer-safety-layer';
 import { logger } from '../utils/logger';
+
+/** Shared safety layer instance — accessible from trading commands */
+let safetyLayer: AntiDetectionSafetyLayer | null = null;
+
+export function getSafetyLayer(): AntiDetectionSafetyLayer {
+  if (!safetyLayer) {
+    safetyLayer = new AntiDetectionSafetyLayer();
+  }
+  return safetyLayer;
+}
 
 function validateTelegramConfig(): { botToken: string; chatId: string } {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -110,7 +121,39 @@ function registerTradingCommands(handler: TelegramCommandHandler): void {
 
   // /stop — Stop info
   handler.registerCommand('/stop', async () => {
-    return '🛑 To stop a running session, press Ctrl+C on the server terminal.';
+    return '🛑 To stop a running session, press Ctrl+C on the server terminal.\nFor emergency: /kill';
+  });
+
+  // /kill — Emergency kill switch
+  handler.registerCommand('/kill', async () => {
+    const safety = getSafetyLayer();
+    safety.emergencyKill('Manual kill from Telegram phone');
+    return '⛔ *EMERGENCY KILL ACTIVATED*\nAll trading operations stopped immediately.\nUse /kill\\_reset to resume.';
+  });
+
+  // /kill_reset — Reset kill switch
+  handler.registerCommand('/kill_reset', async () => {
+    const safety = getSafetyLayer();
+    safety.resetKill();
+    return '✅ Kill switch reset. Trading operations can resume.';
+  });
+
+  // /safety — Safety layer status
+  handler.registerCommand('/safety', async () => {
+    const safety = getSafetyLayer();
+    const status = safety.getStatus();
+    const lines = [
+      `🛡️ *Safety Status*`,
+      `Kill Switch: ${status.killed ? '⛔ ACTIVE' : '✅ Off'}`,
+      `Jitter: timing ±${status.config.timingJitterPct * 100}%, size ±${status.config.sizeJitterPct * 100}%`,
+      `Rate Limit: ${status.config.maxCallsPerMinute}/min, ${status.config.maxOrdersPerHour}/hour`,
+      `Balance Stop: ${status.config.balanceDropStopPct}% drop`,
+    ];
+    for (const ex of status.exchanges) {
+      const paused = Date.now() < ex.pausedUntil ? '⏸️' : '▶️';
+      lines.push(`${paused} ${ex.exchange}: ${ex.consecutiveErrors} errors, ${ex.rateLimitWarnings} rate warns`);
+    }
+    return lines.join('\n');
   });
 }
 

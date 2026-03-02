@@ -223,6 +223,18 @@
 
 **Status:** Phase 14 COMPLETE ✅. Trade from phone via Telegram.
 
+## Phase 15: Anti-Detection Safety Layer (Completed ✅)
+- [x] AntiDetectionSafetyLayer — order timing jitter ±30%, size jitter ±5%
+- [x] Rate governor — per-exchange calls/min + orders/hour limits
+- [x] Exchange response monitor — 429/418 auto-pause, 403/451 kill switch
+- [x] Balance checkpoint — auto-stop on % drop below threshold
+- [x] Emergency kill switch — /kill from Telegram phone
+- [x] Pattern breaker — random idle pauses between order bursts
+- [x] Telegram commands: /safety, /kill, /kill_reset
+- [x] 0 TS errors
+
+**Status:** Phase 15 COMPLETE ✅. Anti-detection + account protection + kill switch.
+
 ### Future (Planned)
 - [ ] Multi-region deployment (Cloudflare Workers edge)
 - [ ] Advanced ML: ensemble strategies, online learning
