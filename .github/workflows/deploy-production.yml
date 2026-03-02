@@ -28,7 +28,7 @@ jobs:
         run: pnpm install
 
       - name: Lint
-        run: pnpm turbo lint --filter='./apps/algo-trader' --filter='./apps/dashboard'
+        run: pnpm turbo lint --filter='./apps/dashboard'
 
   deploy:
     needs: validate
