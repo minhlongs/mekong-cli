@@ -266,6 +266,7 @@ backend/
 frontend/
 api/
 agents/
+!packages/**/agents/
 cli/
 workers/
 mekong-docs/
