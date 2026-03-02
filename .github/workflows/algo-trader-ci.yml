@@ -54,7 +54,7 @@ jobs:
 
       - name: Lint
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm run lint
+        run: pnpm run lint
 
   typecheck:
     name: Typecheck
@@ -88,7 +88,7 @@ jobs:
 
       - name: Typecheck
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm run typecheck
+        run: pnpm run typecheck
 
   test:
     name: Test
@@ -155,9 +155,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Build backend
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: npm run build
+        run: pnpm run build
+
+      - name: Build dashboard
+        working-directory: ${{ env.WORKING_DIRECTORY }}/dashboard
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
 
       - name: Build summary
         if: always()
