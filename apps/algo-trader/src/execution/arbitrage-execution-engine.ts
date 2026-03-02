@@ -11,6 +11,7 @@ import { AtomicCrossExchangeOrderExecutor, type AtomicExecutionResult } from './
 import { AdaptiveCircuitBreaker } from './adaptive-circuit-breaker-per-exchange';
 import { AntiDetectionSafetyLayer } from './anti-detection-order-randomizer-safety-layer';
 import { BinhPhapStealthStrategy } from './binh-phap-stealth-trading-strategy';
+import { PhantomCloakingEngine, type PhantomConfig } from './phantom-order-cloaking-engine';
 import type { IExchange } from '../interfaces/IExchange';
 
 export interface ArbEngineConfig {
@@ -26,6 +27,8 @@ export interface ArbEngineConfig {
   maxDailyLossUsd?: number;
   /** Enable anti-detection stealth layer. Default true for live, false for dry-run */
   enableStealth?: boolean;
+  /** Override Phantom engine config (useful for testing with fast delays) */
+  phantomConfig?: Partial<PhantomConfig>;
 }
 
 export interface ArbTradeRecord {
@@ -52,6 +55,7 @@ export class ArbitrageExecutionEngine extends EventEmitter {
   private readonly circuitBreaker: AdaptiveCircuitBreaker;
   private readonly safetyLayer: AntiDetectionSafetyLayer;
   private readonly stealthStrategy: BinhPhapStealthStrategy;
+  private readonly phantom: PhantomCloakingEngine;
   private readonly exchanges: Map<string, IExchange>;
   private cooldowns = new Map<string, number>(); // key: "buy:sell:symbol" → cooldown expiry
   private activeCount = 0;
@@ -76,12 +80,42 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       dryRun: config.dryRun ?? true,
       maxDailyLossUsd: config.maxDailyLossUsd ?? 100,
       enableStealth,
+      phantomConfig: config.phantomConfig ?? {},
     };
     this.exchanges = exchanges;
     this.circuitBreaker = circuitBreaker;
     this.safetyLayer = new AntiDetectionSafetyLayer();
     this.stealthStrategy = new BinhPhapStealthStrategy();
+    this.phantom = new PhantomCloakingEngine(config.phantomConfig);
     this.executor = new AtomicCrossExchangeOrderExecutor();
+
+    // Wire stealth event listeners for threat escalation (Gap #2)
+    if (enableStealth) {
+      this.safetyLayer.on('rate-limited', ({ exchange }: { exchange: string }) => {
+        this.stealthStrategy.escalateThreat(exchange, 'Rate limited by exchange (429/418)');
+        this.phantom.recordRateWarning(exchange);
+      });
+      this.safetyLayer.on('auto-paused', ({ exchange }: { exchange: string }) => {
+        this.stealthStrategy.escalateThreat(exchange, 'Auto-paused after consecutive errors');
+      });
+    }
+  }
+
+  /** Initialize balance checkpoint for stealth safety (call at startup) */
+  async initBalanceCheckpoints(): Promise<void> {
+    if (!this.config.enableStealth) return;
+    for (const [name, exchange] of this.exchanges) {
+      try {
+        const balances = await exchange.fetchBalance();
+        const usdtBalance = balances['USDT']?.total ?? balances['USD']?.total ?? 0;
+        if (usdtBalance > 0) {
+          this.safetyLayer.setInitialBalance(name, usdtBalance);
+          logger.info(`[ArbEngine] Balance checkpoint set: ${name} = $${usdtBalance.toFixed(2)}`);
+        }
+      } catch {
+        logger.warn(`[ArbEngine] Failed to fetch balance for ${name} — skipping checkpoint`);
+      }
+    }
   }
 
   /** Process an arbitrage opportunity — returns true if executed */
@@ -141,15 +175,23 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       return false;
     }
 
-    // Anti-detection stealth layer (active for live trading)
+    // Phantom Cloaking — session simulator + OTR + adaptive rate (outermost layer)
     let stealthSize = this.config.positionSizeBase;
     if (this.config.enableStealth) {
+      const cloakDecision = this.phantom.cloak(spread.buyExchange, this.config.positionSizeBase, spread.symbol);
+      if (!cloakDecision.proceed) {
+        logger.info(`[ArbEngine] Phantom blocked: ${cloakDecision.reason}`);
+        return false;
+      }
+
+      // Anti-detection safety layer (rate governor + kill switch)
       if (!this.safetyLayer.shouldProceed(spread.buyExchange)
         || !this.safetyLayer.shouldProceed(spread.sellExchange)) {
         logger.info(`[ArbEngine] Anti-detection paused: ${spread.buyExchange}/${spread.sellExchange}`);
         return false;
       }
 
+      // Binh Phap stealth plan (terrain-aware + threat escalation)
       const stealthPlan = this.stealthStrategy.planExecution(
         spread.buyExchange, this.config.positionSizeBase, spread.symbol,
       );
@@ -158,13 +200,15 @@ export class ArbitrageExecutionEngine extends EventEmitter {
         return false;
       }
 
-      // Apply stealth delay (timing randomization to avoid pattern detection)
-      if (stealthPlan.delayMs > 0) {
-        await new Promise((r) => setTimeout(r, stealthPlan.delayMs));
+      // Apply Poisson-timed delay (exponential inter-arrival, not uniform jitter)
+      const delayMs = Math.max(cloakDecision.delayMs, stealthPlan.delayMs);
+      if (delayMs > 0) {
+        await new Promise((r) => setTimeout(r, delayMs));
       }
 
-      // Randomize order size (±5% to avoid uniform size detection)
-      stealthSize = this.safetyLayer.randomizeSize(this.config.positionSizeBase);
+      // Use Phantom's log-normal sized amount (replaces uniform ±5% jitter)
+      stealthSize = cloakDecision.size;
+      this.phantom.recordOrderPlaced(spread.buyExchange);
     }
 
     this.activeCount++;
@@ -187,10 +231,36 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       this.tradeHistory.push(record);
       this.dailyPnl += result.netPnl;
 
-      // Record API call for anti-detection rate tracking
+      // Stealth feedback loop — all 3 layers must receive signals
       if (this.config.enableStealth) {
+        // Gap #1 fix: Record execution in BinhPhap for rate budget tracking
+        this.stealthStrategy.recordExecution(spread.buyExchange, spread.symbol);
+        this.stealthStrategy.recordExecution(spread.sellExchange, spread.symbol);
         this.safetyLayer.recordCall(spread.buyExchange);
         this.safetyLayer.recordCall(spread.sellExchange);
+        this.safetyLayer.recordOrder(spread.buyExchange);
+        this.safetyLayer.recordOrder(spread.sellExchange);
+
+        if (result.success) {
+          // Gap #3 fix: Record success/error in safety layer for auto-pause
+          this.safetyLayer.recordSuccess(spread.buyExchange);
+          this.safetyLayer.recordSuccess(spread.sellExchange);
+          this.phantom.recordCleanResponse(spread.buyExchange);
+          this.phantom.recordCleanResponse(spread.sellExchange);
+          this.phantom.recordOrderFilled(spread.buyExchange);
+          // Auto de-escalate threat on success
+          this.stealthStrategy.autoDeescalate(spread.buyExchange, 15);
+          this.stealthStrategy.autoDeescalate(spread.sellExchange, 15);
+        } else {
+          // Gap #3 fix: Record error → triggers auto-pause + threat escalation
+          this.safetyLayer.recordError(spread.buyExchange);
+          this.safetyLayer.recordError(spread.sellExchange);
+          this.stealthStrategy.escalateThreat(spread.buyExchange, `Trade failed: ${result.error ?? 'unknown'}`);
+          // Gap #5 fix: Rollback = cancelled orders → track OTR
+          if (result.rollbackPerformed) {
+            this.phantom.recordOrderCancelled(spread.buyExchange);
+          }
+        }
       }
 
       // Circuit breaker feedback
@@ -214,9 +284,16 @@ export class ArbitrageExecutionEngine extends EventEmitter {
       this.emit('trade', record);
       return result.success;
     } catch (err) {
-      logger.error(`[ArbEngine] Execution error: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.error(`[ArbEngine] Execution error: ${msg}`);
       this.circuitBreaker.recordFailure(buyKey);
       this.circuitBreaker.recordFailure(sellKey);
+      // Gap #3 fix: Feed error signals to stealth layers
+      if (this.config.enableStealth) {
+        this.safetyLayer.recordError(spread.buyExchange);
+        this.safetyLayer.recordError(spread.sellExchange);
+        this.stealthStrategy.escalateThreat(spread.buyExchange, `Exception: ${msg}`);
+      }
       return false;
     } finally {
       this.activeCount--;

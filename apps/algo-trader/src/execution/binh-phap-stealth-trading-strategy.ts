@@ -30,6 +30,8 @@
 
 import { EventEmitter } from 'events';
 import { logger } from '../utils/logger';
+import { StealthExecutionAlgorithms, type ChildOrder } from './stealth-execution-algorithms';
+import { stealthDelay, stealthSize } from './phantom-stealth-math';
 
 // ─── EXCHANGE TERRAIN PROFILES (第十篇 地形) ─────────────────
 
@@ -95,10 +97,14 @@ const TERRAIN_PROFILES: Record<string, ExchangeTerrainProfile> = {
 export interface StealthExecutionPlan {
   shouldProceed: boolean;
   reason?: string;
-  /** Delay before executing (ms) — randomized */
+  /** Delay before executing first chunk (ms) — randomized */
   delayMs: number;
   /** Split order into N smaller chunks */
   orderChunks: number[];
+  /** Detailed child orders for execution engine */
+  childOrders: ChildOrder[];
+  /** Algorithm name used for execution */
+  algorithm: string;
   /** Delay between chunks (ms) */
   chunkDelayMs: number;
   /** Which exchange to route to */
@@ -121,7 +127,11 @@ interface ThreatState {
 
 // ─── CONFIG ────────────────────────────────────────────────────
 
+export type ExecutionMode = 'split' | 'twap' | 'vwap' | 'iceberg';
+
 export interface BinhPhapConfig {
+  /** Default execution mode. Default 'split' */
+  defaultExecutionMode: ExecutionMode;
   /** Order split threshold — split orders above this size. Default 0.05 */
   splitThresholdBase: number;
   /** Max chunks per split order. Default 5 */
@@ -137,6 +147,7 @@ export interface BinhPhapConfig {
 }
 
 const DEFAULT_CONFIG: BinhPhapConfig = {
+  defaultExecutionMode: 'split',
   splitThresholdBase: 0.05,
   maxChunks: 5,
   threatDelayMultiplier: 1.5,
@@ -152,7 +163,6 @@ export class BinhPhapStealthStrategy extends EventEmitter {
   private threats = new Map<string, ThreatState>();
   private lastOrderAt = new Map<string, number>();   // exchange:pair → timestamp
   private orderCounts = new Map<string, number[]>();  // exchange → timestamps
-  private rotationIndex = 0;
 
   constructor(config?: Partial<BinhPhapConfig>) {
     super();
@@ -170,9 +180,16 @@ export class BinhPhapStealthStrategy extends EventEmitter {
     baseSize: number,
     pair: string,
     confidenceScore: number = 80,
+    options: {
+      mode?: ExecutionMode;
+      durationMs?: number;
+      marketVolume?: number;
+      icebergPrice?: number;
+    } = {}
   ): StealthExecutionPlan {
     const terrain = this.getTerrain(exchange);
     const threat = this.getThreat(exchange);
+    const mode = options.mode ?? this.config.defaultExecutionMode;
 
     // 火攻: Only execute high-confidence opportunities
     if (confidenceScore < this.config.minConfidenceScore) {
@@ -205,14 +222,52 @@ export class BinhPhapStealthStrategy extends EventEmitter {
       }
     }
 
-    // 虛實: Order splitting & camouflage
-    const chunks = this.splitOrder(baseSize, terrain);
+    // 虛實: Execution Strategy based on mode
+    let planResult: { totalAmount: number; childOrders: ChildOrder[]; algorithm: string };
 
-    // 九變: Adapt delay based on threat level
+    switch (mode) {
+      case 'twap':
+        planResult = StealthExecutionAlgorithms.createTwapPlan(
+          baseSize,
+          options.durationMs ?? 600_000, // Default 10 mins
+          this.config.maxChunks
+        );
+        break;
+      case 'vwap':
+        planResult = StealthExecutionAlgorithms.createVwapPlan(
+          baseSize,
+          options.marketVolume ?? baseSize * 20, // Estimate if missing
+          0.05 // 5% target
+        );
+        break;
+      case 'iceberg':
+        planResult = StealthExecutionAlgorithms.createIcebergPlan(
+          baseSize,
+          baseSize / this.config.maxChunks,
+          options.icebergPrice ?? 0 // Must be provided by strategy
+        );
+        break;
+      case 'split':
+      default:
+        const chunks = this.splitOrder(baseSize, terrain);
+        planResult = {
+          totalAmount: baseSize,
+          algorithm: 'Basic-Split',
+          childOrders: chunks.map(c => ({ amount: c, delayMs: 2000, type: 'market' as const }))
+        };
+        break;
+    }
+
+    // Apply Anti-Pattern Camouflage (九變: Adaptation)
+    planResult = StealthExecutionAlgorithms.applyAntiPatternCamouflage(planResult);
+
+    const chunks = planResult.childOrders.map(o => o.amount);
+
+    // 九變: Adapt base delay based on threat level
     const baseDelay = terrain.minPairIntervalMs;
     const threatMultiplier = Math.pow(this.config.threatDelayMultiplier, threat.level - 1);
     const delayMs = this.addJitter(Math.round(baseDelay * threatMultiplier));
-    const chunkDelayMs = this.addJitter(Math.round(2000 * threatMultiplier));
+    const chunkDelayMs = planResult.childOrders[0]?.delayMs ?? 2000;
 
     // 軍爭: Exchange rotation
     const preferredExchange = this.config.exchangeRotationEnabled
@@ -225,6 +280,8 @@ export class BinhPhapStealthStrategy extends EventEmitter {
       shouldProceed: true,
       delayMs,
       orderChunks: chunks,
+      childOrders: planResult.childOrders,
+      algorithm: planResult.algorithm,
       chunkDelayMs,
       preferredExchange,
       threatLevel: threat.level,
@@ -312,13 +369,30 @@ export class BinhPhapStealthStrategy extends EventEmitter {
 
   // ─── 軍爭: EXCHANGE ROTATION ────────────────────────────────
 
-  /** Rotate between exchanges to spread activity footprint */
+  /** Rotate between exchanges to spread activity footprint.
+   *  Picks the exchange with lowest threat + most rate budget remaining. */
   private rotateExchange(preferred: string): string {
     const available = Object.keys(TERRAIN_PROFILES);
-    // Only rotate if we have the exchange configured
-    // Return preferred if rotation is exhausted
-    this.rotationIndex = (this.rotationIndex + 1) % available.length;
-    return preferred; // Keep preferred — rotation is for future multi-exchange mode
+    if (available.length <= 1) return preferred;
+
+    // Score each exchange: lower threat + more rate budget = better
+    let bestExchange = preferred;
+    let bestScore = -Infinity;
+    for (const ex of available) {
+      const threat = this.getThreat(ex);
+      const counts = this.orderCounts.get(ex) ?? [];
+      const hourAgo = Date.now() - 3_600_000;
+      const recentOrders = counts.filter(t => t > hourAgo).length;
+      const terrain = this.getTerrain(ex);
+      const budgetRemaining = terrain.safeOrdersPerHour - recentOrders;
+      // Score: higher budget remaining, lower threat = better
+      const score = budgetRemaining - (threat.level * 30);
+      if (score > bestScore) {
+        bestScore = score;
+        bestExchange = ex;
+      }
+    }
+    return bestExchange;
   }
 
   // ─── 地形: TERRAIN LOOKUP ───────────────────────────────────
@@ -394,13 +468,15 @@ export class BinhPhapStealthStrategy extends EventEmitter {
   }
 
   private addJitter(baseMs: number): number {
-    const factor = 0.7 + Math.random() * 0.6; // 0.7-1.3
-    return Math.max(500, Math.round(baseMs * factor));
+    // Poisson-based timing via stealthDelay (exponential inter-arrival)
+    // Replaces uniform 0.7-1.3 jitter that exchanges detect via autocorrelation
+    return stealthDelay(60_000 / baseMs, 500, baseMs * 3);
   }
 
   private addSizeJitter(size: number): number {
-    const factor = 0.95 + Math.random() * 0.1; // 0.95-1.05
-    return parseFloat((size * factor).toFixed(8));
+    // Log-normal distribution + round number avoidance
+    // Replaces uniform ±5% that creates detectable flat histogram
+    return stealthSize(size, 0.25, 8);
   }
 
   private blockPlan(reason: string, threatLevel: number): StealthExecutionPlan {
@@ -409,6 +485,8 @@ export class BinhPhapStealthStrategy extends EventEmitter {
       reason,
       delayMs: 0,
       orderChunks: [],
+      childOrders: [],
+      algorithm: 'Blocked',
       chunkDelayMs: 0,
       preferredExchange: '',
       threatLevel,

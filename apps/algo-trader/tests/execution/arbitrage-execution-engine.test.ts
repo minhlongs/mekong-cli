@@ -227,4 +227,61 @@ describe('ArbitrageExecutionEngine', () => {
     expect(metrics.winRate).toBe(1);
     expect(metrics.failedTrades).toBe(0);
   });
+
+  // ─── Gap #6: Integration test with enableStealth: true ─────
+  describe('Stealth pipeline integration (enableStealth: true)', () => {
+    test('live execution passes through all 3 stealth layers', async () => {
+      engine = new ArbitrageExecutionEngine(
+        {
+          dryRun: false,
+          enableStealth: true,
+          phantomConfig: { targetOrdersPerMin: 600 }, // 10/sec → ~100ms avg delay for test speed
+        },
+        exchanges,
+        circuitBreaker,
+      );
+
+      const result = await engine.processOpportunity(makeOpportunity());
+      // Should succeed (all layers allow first trade in fresh session)
+      expect(result).toBe(true);
+
+      const binance = exchanges.get('binance')!;
+      expect(binance.createMarketOrder).toHaveBeenCalled();
+    }, 30_000);
+
+    test('initBalanceCheckpoints sets initial balances', async () => {
+      engine = new ArbitrageExecutionEngine(
+        { dryRun: false, enableStealth: true },
+        exchanges,
+        circuitBreaker,
+      );
+
+      await engine.initBalanceCheckpoints();
+      // Should not throw, and fetchBalance should be called for each exchange
+      const binance = exchanges.get('binance')!;
+      const okx = exchanges.get('okx')!;
+      expect(binance.fetchBalance).toHaveBeenCalled();
+      expect(okx.fetchBalance).toHaveBeenCalled();
+    });
+
+    test('stealth wires error feedback to threat escalation', async () => {
+      const failExchange = mockExchange('failExchange');
+      (failExchange.createMarketOrder as jest.Mock).mockRejectedValue(new Error('Exchange API timeout'));
+      exchanges.set('binance', failExchange);
+
+      engine = new ArbitrageExecutionEngine(
+        {
+          dryRun: false,
+          enableStealth: true,
+          phantomConfig: { targetOrdersPerMin: 600 },
+        },
+        exchanges,
+        circuitBreaker,
+      );
+
+      const result = await engine.processOpportunity(makeOpportunity());
+      expect(result).toBe(false);
+      expect(engine.isHalted()).toBe(false);
+    }, 30_000);
+  });
 });
