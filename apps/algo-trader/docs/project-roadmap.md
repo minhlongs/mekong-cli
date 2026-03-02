@@ -133,10 +133,28 @@
 - [x] Rate-limited message queue, injectable fetch for testing
 - [x] 13 tests
 
-### Phase 7.6+ (Planned)
-- [ ] Dry-run simulation mode (live data, paper orders)
-- [ ] Multi-region deployment (Cloudflare Workers edge)
+### Phase 7.6: Dry-Run Simulation (Completed ✅)
+- [x] live:dry-run CLI command: real WS feeds + paper orders
+- [x] Wires LiveExchangeManager, PaperTradingEngine, PositionManager, CircuitBreaker
+- [x] Graceful shutdown with final PnL report
+- [x] 4 tests
 
-**Current Status:** 1000+ tests, 0 TS errors, 210+ source files.
+**Status:** Phase 7 COMPLETE ✅
+
+## Phase 8: AGI Trade Go-Live (Completed ✅)
+- [x] AgiTradeOrchestrator — unified orchestrator wiring ALL Phase 7 components
+- [x] `agi:trade` CLI command: multi-exchange live trading with ML + traditional strategies
+- [x] --dry-run (default) + --live modes, multi-strategy confirmation, risk limits
+- [x] Auto Telegram alerts, graceful shutdown with PnL report
+- [x] 10 tests
+
+**Status:** Phase 8 COMPLETE ✅. AGI Trade ready for production go-live.
+
+### Future (Planned)
+- [ ] Multi-region deployment (Cloudflare Workers edge)
+- [ ] Advanced ML: ensemble strategies, online learning
+- [ ] Dashboard v2: real-time monitoring for AGI Trade
+
+**Current Status:** 1000+ tests, 0 TS errors, 220+ source files.
 
 Updated: 2026-03-02
