@@ -218,8 +218,17 @@ export default defineConfig({
     },
   },
   vite: {
+    resolve: {
+      alias: {
+        '@agencyos/i18n/astro': '@mekong/i18n/astro',
+        '@agencyos/i18n/locales': '@mekong/i18n/locales',
+        '@agencyos/i18n/types': '@mekong/i18n/types',
+        '@agencyos/i18n/hooks': '@mekong/i18n/hooks',
+        '@agencyos/i18n': '@mekong/i18n',
+      },
+    },
     ssr: {
-      noExternal: ['@agencyos/i18n'],
+      noExternal: ['@mekong/i18n'],
     },
   },
   output: 'server', // Server mode for dynamic API routes with query params
