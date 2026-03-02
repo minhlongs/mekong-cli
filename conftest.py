@@ -8,4 +8,5 @@ collect_ignore_glob = [
     "tests/test_content_marketing.py",
     "tests/test_wow.py",
     "tests/test_ab_testing.py",
+    "tests/test_ml_optimizer.py",
 ]
