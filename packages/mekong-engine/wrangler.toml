@@ -1,0 +1,33 @@
+name = "mekong-engine"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers Paid plan required for D1 + KV + R2
+# account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+
+[vars]
+ENVIRONMENT = "development"
+DEFAULT_LLM_MODEL = "gpt-4o-mini"
+
+# D1 Database (SQLite at the edge)
+[[d1_databases]]
+binding = "DB"
+database_name = "mekong-db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# KV Namespace (rate limiting, session cache)
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# R2 Bucket (recipe files, agent artifacts)
+[[r2_buckets]]
+binding = "RECIPES"
+bucket_name = "mekong-recipes"
+
+# Secrets (set via: wrangler secret put <NAME>)
+# LLM_API_KEY          — OpenAI/Anthropic API key
+# SERVICE_TOKEN        — internal service auth
+# POLAR_WEBHOOK_SECRET — Polar.sh billing webhook
