@@ -1,8 +1,6 @@
 """Tests for RaaS billing service — MCU quota, usage ledger, plan management."""
 from __future__ import annotations
 
-import pytest
-
 from src.api.raas_billing_service import (
     BillingService,
     PLAN_LIMITS,

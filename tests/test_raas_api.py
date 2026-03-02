@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from src.api.raas_task_models import TaskStatus, TaskRequest, TaskResponse, TaskStatusResponse
-from src.api.raas_task_store import TaskStore, TaskRecord
+from src.api.raas_task_store import TaskStore
 
 
 class TestTaskStore:
