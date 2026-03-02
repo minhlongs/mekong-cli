@@ -1,58 +1,47 @@
-# 🏯 Agency OS - Makefile
-# ========================
-# "Không đánh mà thắng" - Win Without Fighting
+.PHONY: all install dev test lint format server clean stats help
 
-.PHONY: all demo server test install clean help
-
-# Default target
 all: help
 
-# Install dependencies
 install:
-	@echo "📦 Installing dependencies..."
-	pip install -r requirements.txt
-	@echo "✅ Done!"
+	pip install -e .
 
-# Run unified demo
-demo:
-	@echo "🎮 Running Agency OS Demo..."
-	python3 demo.py
+dev:
+	pip install -e ".[dev]"
 
-# Run FastAPI server
-server:
-	@echo "🚀 Starting Agency OS API Server..."
-	@echo "📖 Swagger docs: http://localhost:8000/docs"
-	python3 -m uvicorn backend.api.main:app --reload --port 8000
-
-# Run tests
 test:
-	@echo "🧪 Running Test Suite..."
-	pytest tests/
+	python3 -m pytest tests/ -v
 
-# Clean cache
+lint:
+	python3 -m ruff check src/ tests/
+	python3 -m mypy src/ --ignore-missing-imports
+
+format:
+	python3 -m ruff format src/ tests/
+
+server:
+	python3 -m uvicorn src.core.gateway:app --reload --port 8000
+
 clean:
-	@echo "🧹 Cleaning cache..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@echo "✅ Clean!"
+	rm -rf .pytest_cache .mypy_cache .ruff_cache build dist *.egg-info
 
-# Show stats
 stats:
-	@echo "📊 Agency OS Stats:"
-	@echo "   Python files: $$(find . -name '*.py' | grep -v node_modules | wc -l)"
-	@echo "   Core Modules: $$(find core -maxdepth 1 -type d | wc -l)"
-	@git log --oneline | head -5
+	@echo "Python files: $$(find src -name '*.py' | wc -l | tr -d ' ')"
+	@echo "Test files: $$(find tests -name 'test_*.py' | wc -l | tr -d ' ')"
+	@echo "Lines of code: $$(find src -name '*.py' -exec cat {} + | wc -l | tr -d ' ')"
 
-# Help
 help:
 	@echo ""
-	@echo "🏯 AGENCY OS - COMMANDS"
-	@echo "========================"
+	@echo "Mekong CLI — Development Commands"
+	@echo "=================================="
 	@echo ""
-	@echo "  make install  - Install dependencies"
-	@echo "  make demo     - Run unified demo"
-	@echo "  make server   - Start API server (port 8000)"
-	@echo "  make test     - Run all tests"
-	@echo "  make clean    - Clean cache files"
-	@echo "  make stats    - Show project stats"
+	@echo "  make install  Install package (editable)"
+	@echo "  make dev      Install with dev dependencies"
+	@echo "  make test     Run test suite"
+	@echo "  make lint     Run linters (ruff + mypy)"
+	@echo "  make format   Auto-format code"
+	@echo "  make server   Start API gateway (port 8000)"
+	@echo "  make clean    Remove build artifacts"
+	@echo "  make stats    Show project statistics"
 	@echo ""

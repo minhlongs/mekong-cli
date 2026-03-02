@@ -1156,7 +1156,7 @@ def version() -> None:
     """Show version info"""
     console.print(
         Panel(
-            "[bold green]Mekong CLI[/bold green] v1.0.0\n"
+            "[bold green]Mekong CLI[/bold green] v3.0.0\n"
             "[dim]RaaS Agency Operating System[/dim]\n"
             "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
             "[dim]DNA: ClaudeKit v2.9.1+[/dim]",
