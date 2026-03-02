@@ -169,11 +169,36 @@
 
 **Status:** Phase 10 COMPLETE ✅. Real order book depth analysis for precise arb execution.
 
+## Phase 11: AGI Intelligence Suite (Completed ✅)
+
+### Phase 11.1: Market Regime Detector (Completed ✅)
+- [x] MarketRegimeDetector — 4 regimes (trending_up/down, ranging, volatile)
+- [x] Linear regression slope, volatility (std dev returns), ADX-like directional strength
+- [x] suggestArbParams: adaptive spread/cooldown/size multipliers per regime
+- [x] regime:change events on transitions
+- [x] 20 tests
+
+### Phase 11.2: Triangular Arbitrage Live Scanner (Completed ✅)
+- [x] TriangularArbitrageLiveScanner — 3-pair cycle detection on same exchange
+- [x] Currency graph builder, cycle enumeration (A→B→C→A)
+- [x] Real-time profit calculation with 3-leg fees
+- [x] Stale tick filtering, periodic scanning
+- [x] 14 tests
+
+### Phase 11.3: Funding Rate Arbitrage Scanner (Completed ✅)
+- [x] FundingRateArbitrageScanner — cross-exchange perpetual funding rate differentials
+- [x] Strategy: short high-rate exchange + long low-rate = collect both sides
+- [x] Annualized return calculation (8h interval → 1095x/year)
+- [x] Stale rate filtering, periodic scanning
+- [x] 16 tests
+
+**Status:** Phase 11 COMPLETE ✅. 50 new tests. Full AGI intelligence suite.
+
 ### Future (Planned)
 - [ ] Multi-region deployment (Cloudflare Workers edge)
 - [ ] Advanced ML: ensemble strategies, online learning
 - [ ] Dashboard v2: real-time monitoring for AGI Trade
 
-**Current Status:** 1035+ tests, 0 TS errors, 227+ source files.
+**Current Status:** 1085+ tests, 0 TS errors, 233+ source files.
 
 Updated: 2026-03-02
