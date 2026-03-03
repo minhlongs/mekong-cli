@@ -12,8 +12,8 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+" />
-  <img src="https://img.shields.io/badge/tests-1168%20passing-22c55e?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/version-3.0.0-orange?style=flat-square" alt="v3.0.0" />
+  <img src="https://img.shields.io/badge/tests-1121%20passing-22c55e?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/version-3.1.0-orange?style=flat-square" alt="v3.1.0" />
 </p>
 
 ---
