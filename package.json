@@ -28,10 +28,10 @@
     "dev": "npx turbo run dev",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
-    "build": "npx turbo run build",
-    "test": "npx turbo run test",
-    "lint": "npx turbo run lint",
-    "format": "npx turbo run format"
+    "build": "npx turbo run build --concurrency=4",
+    "test": "npx turbo run test --concurrency=5",
+    "lint": "npx turbo run lint --concurrency=10",
+    "format": "npx turbo run format --concurrency=10"
   },
   "devDependencies": {
     "@types/node": "25.3.3",
@@ -42,9 +42,7 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "dependencies": {
-    "sonner": "^2.0.7"
-  },
+  "dependencies": {},
   "pnpm": {
     "overrides": {
       "undici@<6.23.0": ">=6.23.0",
