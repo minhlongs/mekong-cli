@@ -181,9 +181,11 @@ tasks/archive/
 **/wins.jsonl
 dataset/
 
-# 🛡️ SECURITY: Never commit API keys
+# 🛡️ SECURITY: Never commit API keys or local dev vars
 .env
 *.env
+.dev.vars
+**/.dev.vars
 scripts/.env
 token.txt
 RULES_*.md
