@@ -3,10 +3,20 @@ import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { getBalance, getHistory, addCredits } from '../raas/credits'
+import { createTenant } from '../raas/tenant'
 
 type Variables = { tenant: Tenant }
 
 const billingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Create tenant — returns API key (one-time display)
+billingRoutes.post('/tenants', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const body = await c.req.json<{ name?: string }>()
+  if (!body.name?.trim()) return c.json({ error: 'Missing name' }, 400)
+  const { tenant, apiKey } = await createTenant(c.env.DB, body.name)
+  return c.json({ tenant_id: tenant.id, name: tenant.name, api_key: apiKey, tier: tenant.tier }, 201)
+})
 
 billingRoutes.post('/webhook', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)

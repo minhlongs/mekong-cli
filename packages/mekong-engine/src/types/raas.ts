@@ -48,7 +48,21 @@ export const CREDIT_TIERS = {
   complex: 5,
 } as const
 
+// BYOK — tenant LLM settings
+export const LLMProviderSchema = z.enum(['openai', 'google', 'anthropic', 'custom', 'workers-ai'])
+
+export const TenantSettingsSchema = z.object({
+  tenant_id: z.string().uuid(),
+  llm_provider: LLMProviderSchema.default('workers-ai'),
+  llm_api_key_encrypted: z.string().nullable().optional(),
+  llm_base_url: z.string().nullable().optional(),
+  llm_model: z.string().nullable().optional(),
+  updated_at: z.string(),
+})
+
 export type Tenant = z.infer<typeof TenantSchema>
 export type CreditEntry = z.infer<typeof CreditEntrySchema>
 export type MissionStatus = z.infer<typeof MissionStatusSchema>
 export type Mission = z.infer<typeof MissionSchema>
+export type LLMProvider = z.infer<typeof LLMProviderSchema>
+export type TenantSettings = z.infer<typeof TenantSettingsSchema>

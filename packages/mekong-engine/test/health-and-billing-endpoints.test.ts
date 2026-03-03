@@ -1,0 +1,79 @@
+import { describe, it, expect } from 'vitest'
+import app from '../src/index'
+
+// Minimal mock bindings for Hono app.request()
+const mockEnv = {}
+
+describe('Health endpoint', () => {
+  it('GET /health returns status ok without DB', async () => {
+    const res = await app.request('/health', {}, mockEnv)
+
+    expect(res.status).toBe(200)
+    const body = (await res.json()) as { status: string; version: string }
+    expect(body.status).toBe('ok')
+    expect(body.version).toBe('3.1.0')
+  })
+
+  it('GET /health reports bindings as false when none configured', async () => {
+    const res = await app.request('/health', {}, mockEnv)
+
+    const body = (await res.json()) as { bindings: Record<string, boolean> }
+    expect(body.bindings.d1).toBe(false)
+    expect(body.bindings.kv).toBe(false)
+    expect(body.bindings.ai).toBe(false)
+  })
+})
+
+describe('Billing endpoints', () => {
+  it('POST /billing/tenants returns 503 without D1', async () => {
+    const res = await app.request('/billing/tenants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'test' }),
+    }, mockEnv)
+
+    expect(res.status).toBe(503)
+  })
+
+  it('GET /billing/credits requires auth', async () => {
+    const res = await app.request('/billing/credits', {}, mockEnv)
+    expect(res.status).toBe(401)
+  })
+})
+
+describe('Settings endpoints', () => {
+  it('GET /v1/settings/llm returns 503 without DB', async () => {
+    const res = await app.request('/v1/settings/llm', {}, mockEnv)
+    expect(res.status).toBe(503)
+  })
+
+  it('POST /v1/settings/llm returns 503 without DB', async () => {
+    const res = await app.request('/v1/settings/llm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: 'openai', api_key: 'sk-test' }),
+    }, mockEnv)
+
+    expect(res.status).toBe(503)
+  })
+
+  it('DELETE /v1/settings/llm returns 503 without DB', async () => {
+    const res = await app.request('/v1/settings/llm', {
+      method: 'DELETE',
+    }, mockEnv)
+
+    expect(res.status).toBe(503)
+  })
+})
+
+describe('PEV endpoint', () => {
+  it('POST /cmd returns 503 without AI or LLM key', async () => {
+    const res = await app.request('/cmd', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal: 'test' }),
+    }, mockEnv)
+
+    expect(res.status).toBe(503)
+  })
+})
