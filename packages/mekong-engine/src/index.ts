@@ -89,7 +89,7 @@ app.post('/cmd', async (c) => {
 app.get('/ai/test', async (c) => {
   if (!c.env.AI) return c.json({ error: 'AI binding not available' }, 503)
   try {
-    const result = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+    const result = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct' as keyof AiModels, {
       messages: [{ role: 'user', content: 'Say hello in Vietnamese in one sentence' }],
       max_tokens: 100,
     })
