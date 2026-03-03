@@ -85,6 +85,8 @@ Thumbs.db
 .anthropic/
 .opencode/
 .ag_proxies/
+.warp_config.json
+.tom_hum_state.json
 
 # Open Core - Private Business Strategy (Binh Pháp)
 plans/internal/
