@@ -15,7 +15,6 @@ Run daily at 9:00 AM via cron:
 Binh Pháp: 💰 Tài (Wealth) - Automated revenue generation
 """
 
-import os
 import sys
 from datetime import datetime
 from pathlib import Path

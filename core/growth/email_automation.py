@@ -7,7 +7,6 @@ Please import from core.growth.email_opt instead.
 """
 import warnings
 
-from .email_opt import EmailAutomation, EmailSequence, EmailStatus, EmailTemplate, SequenceType
 
 # Issue a deprecation warning
 warnings.warn(

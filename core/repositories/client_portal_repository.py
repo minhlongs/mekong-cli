@@ -7,7 +7,6 @@ Please import from antigravity.core.repositories.client_portal instead.
 """
 import warnings
 
-from .client_portal import ClientPortalRepository
 
 # Issue a deprecation warning
 warnings.warn(

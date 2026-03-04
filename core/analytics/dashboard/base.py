@@ -7,7 +7,6 @@ from .entities_proxy import (
     AnalyticsCalculationEngine,
     AnalyticsPresenter,
     AnalyticsRepository,
-    MetricPeriod,
 )
 
 logger = logging.getLogger(__name__)

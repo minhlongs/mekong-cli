@@ -4,7 +4,6 @@
 Validates SQL injection prevention implementation.
 """
 
-from pathlib import Path
 
 from core.utils.vibe_ui import RED, RESET, check_status, print_header
 

@@ -6,7 +6,7 @@ import time
 from antigravity.core.agent_memory.blackboard import blackboard
 from antigravity.core.chains import AgentStep
 from antigravity.core.types import HookContextDict
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from .models import StepResult, StepStatus
 
@@ -76,7 +76,6 @@ class OrchestratorDelegator:
         self, steps: List[AgentStep], index: int, total: int, context: Optional[HookContextDict]
     ) -> StepResult:
         """Executes multiple agent steps in parallel using a thread pool."""
-        import threading
         from concurrent.futures import ThreadPoolExecutor
 
         start_time = time.time()

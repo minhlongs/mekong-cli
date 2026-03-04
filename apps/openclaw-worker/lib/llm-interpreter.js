@@ -14,8 +14,9 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
-const PROXY_PORT = config.PROXY_PORT || 20128;
-const MODEL = 'qwen3.5-plus';  // 🦞 Must match proxy routing table
+const DASHSCOPE_OPENAI_URL = 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic';
+const DASHSCOPE_KEY = process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67';
+const MODEL = process.env.CTO_LLM_MODEL || 'qwen3.5-plus';  // 🦞 CTO Brain = strongest model
 const TIMEOUT_MS = 8000;
 const CACHE_TTL_MS = 5000;
 const METRICS_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/llm-metrics.json');
@@ -61,23 +62,27 @@ function callLLM(prompt) {
     return new Promise((resolve) => {
         const payload = JSON.stringify({
             model: MODEL,
-            max_tokens: 300,  // 🚀 Gemini adds <thought> tags, need room for JSON after
+            max_tokens: 150,
+            system: SYSTEM_PROMPT.trim(),
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
                 { role: 'user', content: prompt }
             ]
         });
 
-        // 🦞 Route through Antigravity Proxy (already configured with Qwen key)
-        const targetPort = config.LLM_PROXY_PORT || 9191;
-        const req = http.request({
-            hostname: '127.0.0.1',
-            port: targetPort,
-            path: '/v1/chat/completions',
+        // 🦞 Route directly to DashScope (bypassing AG Proxy)
+        const url = new URL(`${DASHSCOPE_OPENAI_URL}/v1/messages`);
+        const isHttps = url.protocol === 'https:';
+        const transport = isHttps ? require('https') : http;
+        const req = transport.request({
+            hostname: url.hostname,
+            port: url.port || (isHttps ? 443 : 80),
+            path: url.pathname,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(payload)
+                'Content-Length': Buffer.byteLength(payload),
+                'x-api-key': DASHSCOPE_KEY,
+                'anthropic-version': '2023-06-01'
             },
             timeout: TIMEOUT_MS,
         }, (res) => {
@@ -92,9 +97,9 @@ function callLLM(prompt) {
                         resolve(null);
                         return;
                     }
-
-                    const content = json.choices?.[0]?.message?.content || '';
-                    if (!content) {
+                    const textBlock = json.content?.find(c => c.type === 'text');
+                    const rawContent = textBlock?.text || '';
+                    if (!rawContent) {
                         log(`Empty text in response. Raw: ${data.slice(0, 100)}...`);
                         resolve(null);
                         return;

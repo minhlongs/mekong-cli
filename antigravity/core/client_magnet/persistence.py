@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from .models import Client, Lead, LeadSource, LeadStatus
 

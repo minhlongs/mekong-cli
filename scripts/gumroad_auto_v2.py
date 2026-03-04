@@ -25,7 +25,6 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 
 try:
     from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright

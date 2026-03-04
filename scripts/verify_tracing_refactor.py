@@ -9,7 +9,6 @@ import time
 sys.path.insert(0, os.getcwd())
 
 from antigravity.core.tracing import (
-    SpanKind,
     SpanStatus,
     end_span,
     get_trace_id,

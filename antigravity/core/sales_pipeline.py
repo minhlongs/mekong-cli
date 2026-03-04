@@ -16,7 +16,7 @@ from typing import Dict, List, Union
 from .base import BaseEngine
 from .config import DealTier
 from .models.deal import DealStage, StartupDeal
-from .types import PipelineBreakdownDict, PipelineStatsDict
+from .types import PipelineBreakdownDict
 
 # Configure logging
 logger = logging.getLogger(__name__)

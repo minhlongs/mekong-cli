@@ -3,7 +3,7 @@ Competitor Analysis engine logic.
 """
 from typing import Dict, List
 
-from .models import Competitor, CompetitorSize, ThreatLevel
+from .models import Competitor
 
 
 class CompetitorEngine:

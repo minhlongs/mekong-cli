@@ -11,7 +11,7 @@ sys.path.insert(0, os.getcwd())
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.agent_crews import CREWS, CrewStatus, get_crew, list_crews, run_crew
+from antigravity.core.agent_crews import CrewStatus, get_crew, list_crews, run_crew
 
 
 def verify_agent_crews():

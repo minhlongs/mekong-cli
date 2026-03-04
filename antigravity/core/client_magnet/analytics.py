@@ -1,7 +1,7 @@
 """
 Sales pipeline analytics.
 """
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from typing_extensions import TypedDict
 

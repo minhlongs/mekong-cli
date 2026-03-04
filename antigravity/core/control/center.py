@@ -5,12 +5,12 @@ Unifies feature flags, circuit breakers, and rate limiting into a single control
 
 import logging
 import threading
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 from typing_extensions import TypedDict
 
-from .circuit_breaker import CircuitBreaker, CircuitState
-from .feature_flags import FeatureFlag, FeatureFlagManager
+from .circuit_breaker import CircuitBreaker
+from .feature_flags import FeatureFlagManager
 from .rate_governor import RateGovernor
 
 logger = logging.getLogger(__name__)

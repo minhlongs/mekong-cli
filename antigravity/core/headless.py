@@ -18,7 +18,7 @@ import argparse
 import json
 import logging
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from typing_extensions import TypedDict
 

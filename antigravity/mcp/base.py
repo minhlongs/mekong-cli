@@ -8,7 +8,7 @@ import logging
 import sys
 import traceback
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 from .types import JSONRPCError, MCPErrorCodes
 

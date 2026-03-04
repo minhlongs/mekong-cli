@@ -4,7 +4,6 @@ Verification script for Revenue Engine Refactor.
 import logging
 import os
 import sys
-from datetime import datetime, timedelta
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())

@@ -6,7 +6,6 @@ Please import from core.crm.ltv instead.
 """
 import warnings
 
-from .ltv import ClientLifetimeValue, ClientTier
 
 # Issue a deprecation warning
 warnings.warn(

@@ -1,6 +1,5 @@
 
 import asyncio
-import json
 import logging
 from antigravity.core.mcp_orchestrator import mcp_orchestrator
 from antigravity.core.registry.mcp_catalog import mcp_catalog

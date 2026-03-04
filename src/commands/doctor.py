@@ -67,7 +67,7 @@ def diagnose() -> None:
             console.print(f"  [red]✗[/red] {pip_name} (not installed)")
 
     if packages_missing:
-        console.print(f"\n  [yellow]Install missing packages:[/yellow]")
+        console.print("\n  [yellow]Install missing packages:[/yellow]")
         console.print(f"  [dim]pip3 install {' '.join(packages_missing)}[/dim]")
         all_passed = False
 
@@ -136,8 +136,8 @@ def diagnose() -> None:
     checks.append(("Environment Variables", "PASS" if not env_vars_missing else "FAIL", f"{len(env_vars_set)}/{len(required_env_vars)}"))
 
     if env_vars_missing:
-        console.print(f"\n  [yellow]Set missing env vars:[/yellow]")
-        console.print(f"  [dim]Create or update .env file[/dim]")
+        console.print("\n  [yellow]Set missing env vars:[/yellow]")
+        console.print("  [dim]Create or update .env file[/dim]")
         all_passed = False
 
     # Check 6: Network connectivity (API endpoint)
@@ -156,11 +156,11 @@ def diagnose() -> None:
                 checks.append(("API Connectivity", "WARN", base_url))
         except httpx.RequestError as e:
             console.print(f"  [red]✗[/red] {base_url} (unreachable: {e})")
-            console.print(f"  [dim]Make sure Antigravity Proxy is running on port 9191[/dim]")
+            console.print("  [dim]Make sure Antigravity Proxy is running on port 9191[/dim]")
             checks.append(("API Connectivity", "FAIL", base_url))
             all_passed = False
     else:
-        console.print(f"  [yellow]⚠[/yellow] ANTHROPIC_BASE_URL not set")
+        console.print("  [yellow]⚠[/yellow] ANTHROPIC_BASE_URL not set")
         checks.append(("API Connectivity", "WARN", "not configured"))
 
     # Summary table

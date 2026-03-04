@@ -6,7 +6,6 @@ Please import from core.legal.logic instead.
 """
 import warnings
 
-from .logic import ContractGenerator, ContractParty, ContractType, PaymentTerms, ServiceScope
 
 # Issue a deprecation warning
 warnings.warn(

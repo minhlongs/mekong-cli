@@ -5,7 +5,7 @@ import logging
 import re
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from .models import ClientOnboarding, OnboardingChecklist, OnboardingStep
 

@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import sys
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -13,7 +12,7 @@ sys.path.insert(0, os.getcwd())
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.agent_memory import AgentMemory, get_agent_memory
+from antigravity.core.agent_memory import AgentMemory
 
 
 def verify_agent_memory():

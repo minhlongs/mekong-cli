@@ -7,13 +7,6 @@ Please import from core.growth.outreach_opt instead.
 """
 import warnings
 
-from .outreach_opt import (
-    AutomatedOutreach,
-    EmailStatus,
-    OutreachEmail,
-    OutreachSequence,
-    OutreachTrigger,
-)
 
 # Issue a deprecation warning
 warnings.warn(

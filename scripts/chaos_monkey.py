@@ -26,7 +26,7 @@ from typing import Any, Dict
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from antigravity.core.swarm.engine import AgentSwarm
-from antigravity.core.swarm.enums import AgentRole, TaskPriority
+from antigravity.core.swarm.enums import AgentRole
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

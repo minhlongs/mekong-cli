@@ -11,9 +11,8 @@ Usage:
 
 import csv
 import json
-from pathlib import Path
+from core import search, DATA_DIR
 
-from core import DATA_DIR, search
 
 # ============ CONFIGURATION ============
 REASONING_FILE = "ui-reasoning.csv"
@@ -434,7 +433,8 @@ def format_markdown(design_system: dict) -> str:
     # Anti-patterns section
     if anti_patterns:
         lines.append("### Avoid (Anti-patterns)")
-        lines.append(f"- {anti_patterns.replace(' + ', '\n- ')}")
+        anti_list = anti_patterns.replace(' + ', '\n- ')
+        lines.append(f"- {anti_list}")
         lines.append("")
 
     # Pre-Delivery Checklist section
@@ -475,6 +475,12 @@ def generate_design_system(query: str, project_name: str = None, output_format: 
 # ============ CLI SUPPORT ============
 if __name__ == "__main__":
     import argparse
+    import sys
+
+    # Fix Windows cp1252 encoding: output contains Unicode chars from CSV data
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(description="Generate Design System")
     parser.add_argument("query", help="Search query (e.g., 'SaaS dashboard')")

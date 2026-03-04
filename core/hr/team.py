@@ -6,7 +6,6 @@ Please import from core.hr.performance instead.
 """
 import warnings
 
-from .performance import Role, TeamMember, TeamPerformance
 
 # Issue a deprecation warning
 warnings.warn(

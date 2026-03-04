@@ -17,7 +17,7 @@ from antigravity.mcp_servers.agency_server.handlers import AgencyHandler
 from antigravity.mcp_servers.coding_server.handlers import CodingHandler
 from antigravity.mcp_servers.marketing_server.handlers import MarketingHandler
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

@@ -9,7 +9,7 @@ import logging
 import warnings
 
 from .empire.engine import EmpireEngine
-from .empire.models import AgencyConfig, AgencyNiche, BrandIdentity, BrandStyle, LegalDocument
+from .empire.models import AgencyConfig, AgencyNiche, BrandStyle
 from .empire.utils import format_empire_summary
 
 # Issue a deprecation warning

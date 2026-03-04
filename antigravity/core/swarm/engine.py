@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, Callable, List, Optional
 
 if TYPE_CHECKING:
-    from .coordinator import SwarmCoordinator
+    pass
 
 from .enums import AgentRole, TaskPriority
 from .executor import TaskExecutor

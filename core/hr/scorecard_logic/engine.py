@@ -4,7 +4,7 @@ Agency Scorecard engine logic.
 import logging
 from typing import List, Optional
 
-from .models import KPI, Grade, MetricCategory
+from .models import KPI, Grade
 
 logger = logging.getLogger(__name__)
 

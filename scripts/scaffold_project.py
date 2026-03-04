@@ -6,7 +6,6 @@ Uses Antigravity Architect Service to generate project blueprints.
 import argparse
 import os
 import sys
-from typing import Optional
 
 # Add project root to path
 sys.path.append(os.getcwd())

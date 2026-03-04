@@ -4,9 +4,8 @@
 Base classes and utilities for security validation.
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
-from core.utils.vibe_ui import BLUE, BOLD, RESET, check_status, print_header
 
 
 class BaseSecurityValidator:

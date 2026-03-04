@@ -1,10 +1,7 @@
-import asyncio
-import json
 import logging
 from antigravity.mcp.base import BaseMCPServer
 from antigravity.mcp.types import MCPErrorCodes
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

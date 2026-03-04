@@ -7,7 +7,6 @@ Logic for Security Armor MCP.
 import asyncio
 import logging
 import subprocess
-import sys
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path

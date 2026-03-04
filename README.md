@@ -97,6 +97,7 @@ Pluggable agents extend Mekong with domain-specific capabilities:
 | `GitAgent` | Git operations (status, diff, commit, branch) | `mekong agent git status` |
 | `FileAgent` | File operations (find, read, tree, grep) | `mekong agent file find "*.py"` |
 | `ShellAgent` | Shell command execution | `mekong agent shell "ls -la"` |
+| `DatabaseAgent` | Database operations (connect, query, migrate, backup) | `mekong agent database query "SELECT * FROM users"` |
 | `RecipeCrawler` | Discover recipe files in the workspace | `mekong agent crawler scan` |
 | `LeadHunter` | Find CEO/decision-maker contacts | `mekong agent lead hunt` |
 | `ContentWriter` | Generate SEO content | `mekong agent content write` |

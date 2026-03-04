@@ -5,7 +5,7 @@ Analyzes user reviews for sentiment, issues, and feature requests.
 
 import re
 from collections import Counter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 
 class ReviewAnalyzer:

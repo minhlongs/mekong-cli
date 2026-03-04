@@ -6,7 +6,6 @@ Please import from core.finance.invoice_logic instead.
 """
 import warnings
 
-from .invoice_logic import InvoiceAutomation, InvoiceStatus, InvoiceType
 
 # Issue a deprecation warning
 warnings.warn(

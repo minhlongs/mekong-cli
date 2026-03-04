@@ -284,7 +284,7 @@ function isBusy(output) {
     if (match) {
       const key = pattern.toString();
       const weight = patternWeights.busy.get(key) || 1.0;
-      matchedPatterns.push({ pattern: key, weight });
+      matchedPatterns.push({ pattern: key, regexp: pattern, weight });
       totalWeight += weight;
     }
   });
@@ -295,7 +295,7 @@ function isBusy(output) {
   const interruptedIdx = lines.findLastIndex(l =>
     /Interrupted\.\s*What should Claude do instead\?/i.test(l) || /Interrupted/i.test(l)
   );
-  const busyIdx = lines.findLastIndex(l => matchedPatterns.some(p => p.pattern.test(l)));
+  const busyIdx = lines.findLastIndex(l => matchedPatterns.some(p => p.regexp.test(l)));
 
   if (interruptedIdx > busyIdx && interruptedIdx !== -1) {
     return { isBusy: false, confidence: 0.95, reason: 'interrupted' };

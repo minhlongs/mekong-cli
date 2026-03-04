@@ -19,7 +19,7 @@ from antigravity.core.types import AgentTaskDict, ChainMetricsDict, ChainResultD
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 # Configure logging
 logger = logging.getLogger(__name__)

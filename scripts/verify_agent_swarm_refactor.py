@@ -3,7 +3,6 @@ Verification script for Agent Swarm Refactor.
 """
 import os
 import sys
-import threading
 import time
 
 # Add project root to path
@@ -12,7 +11,6 @@ sys.path.insert(0, os.getcwd())
 from antigravity.core.agent_swarm import (
     AgentRole,
     TaskPriority,
-    TaskStatus,
     get_swarm,
     get_task_result,
     register_agent,

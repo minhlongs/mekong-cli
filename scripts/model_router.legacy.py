@@ -10,7 +10,6 @@ Antigravity Proxy → Model Router → quota_tracker.json
 """
 
 import json
-import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path

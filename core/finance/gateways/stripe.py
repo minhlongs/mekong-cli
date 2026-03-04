@@ -6,7 +6,7 @@ Python implementation of Stripe integration matching the TypeScript version.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 try:
     import stripe

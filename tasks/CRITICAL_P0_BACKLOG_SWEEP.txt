@@ -1,4 +1,0 @@
-MISSION: Rà soát và hoàn thành các task cũ của P0 cho mục tiêu Public Repo Mekong-CLI
-DISPATCH: Use '/cook' on P0 (mekong-cli workspace) to systematically sweep through the `.cleo/todo.json` or `.gemini/tasks/` logs. Find any incomplete, stalled, or pending tasks from previous sessions that are required before open-sourcing/publicizing the `mekong-cli` repo.
-PRIORITY: CRITICAL
-REQUIREMENT: Run all incomplete tasks to completion. Verify build, format, and documentation standards. Ensure no dangling issues remain. Execute full Binh Phap verification for mekong-cli.

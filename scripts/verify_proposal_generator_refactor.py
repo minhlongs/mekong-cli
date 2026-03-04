@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import sys
-from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -14,7 +13,7 @@ sys.path.insert(0, os.getcwd())
 logging.basicConfig(level=logging.INFO)
 
 from antigravity.core.money_maker import MoneyMaker, ServiceTier
-from antigravity.core.proposal_generator import Proposal, ProposalGenerator
+from antigravity.core.proposal_generator import ProposalGenerator
 
 
 def verify_proposal_generator():

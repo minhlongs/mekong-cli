@@ -4,7 +4,6 @@ Data models for Call Center support.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class CallType(Enum):

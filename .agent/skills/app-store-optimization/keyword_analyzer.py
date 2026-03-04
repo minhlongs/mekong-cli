@@ -5,7 +5,7 @@ Analyzes keyword search volume, competition, and relevance for app discovery.
 
 import re
 from collections import Counter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 class KeywordAnalyzer:

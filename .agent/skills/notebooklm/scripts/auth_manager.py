@@ -17,7 +17,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from patchright.sync_api import BrowserContext, sync_playwright
 

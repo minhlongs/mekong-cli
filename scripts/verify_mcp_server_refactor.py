@@ -3,15 +3,13 @@ Verification script for MCP Server Refactor.
 Tests the internal logic of AntigravityMCPServer without requiring the full MCP SDK transport.
 """
 import asyncio
-import json
 import os
 import sys
-from dataclasses import asdict
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
 
-from antigravity.mcp_server import AntigravityMCPServer, MCPResponse
+from antigravity.mcp_server import AntigravityMCPServer
 
 
 async def test_mcp_server_logic():

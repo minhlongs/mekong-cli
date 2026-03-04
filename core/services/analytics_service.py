@@ -7,14 +7,6 @@ Please import from antigravity.core.services.analytics instead.
 """
 import warnings
 
-from .analytics import (
-    AnalyticsCalculationEngine,
-    ClientMetrics,
-    MetricPeriod,
-    MetricSnapshot,
-    RevenueEntry,
-    RevenueType,
-)
 
 # Issue a deprecation warning
 warnings.warn(

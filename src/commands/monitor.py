@@ -6,7 +6,6 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress, BarColumn, TextColumn
 import subprocess
-import sys
 from pathlib import Path
 import time
 import os
@@ -193,11 +192,11 @@ def check_web_health(base_url: str, port: int, timeout: int):
         response_time = time.time() - start_time
 
         if response.getcode() < 400:
-            return (f"✅ Healthy", f"Response: {response.getcode()}, Time: {response_time:.2f}s")
+            return ("✅ Healthy", f"Response: {response.getcode()}, Time: {response_time:.2f}s")
         else:
-            return (f"❌ Unhealthy", f"Response: {response.getcode()}")
+            return ("❌ Unhealthy", f"Response: {response.getcode()}")
     except Exception as e:
-        return (f"❌ Unhealthy", f"Error: {str(e)}")
+        return ("❌ Unhealthy", f"Error: {str(e)}")
 
 
 def check_endpoint(url: str, timeout: int):
@@ -212,11 +211,11 @@ def check_endpoint(url: str, timeout: int):
         response_time = time.time() - start_time
 
         if response.getcode() < 400:
-            return (f"✅ Healthy", f"Response: {response.getcode()}, Time: {response_time:.2f}s")
+            return ("✅ Healthy", f"Response: {response.getcode()}, Time: {response_time:.2f}s")
         else:
-            return (f"❌ Unhealthy", f"Response: {response.getcode()}")
+            return ("❌ Unhealthy", f"Response: {response.getcode()}")
     except Exception as e:
-        return (f"❌ Unhealthy", f"Error: {str(e)}")
+        return ("❌ Unhealthy", f"Error: {str(e)}")
 
 
 @app.command()

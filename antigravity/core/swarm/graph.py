@@ -3,16 +3,13 @@ Swarm Graph Engine.
 Handles Directed Acyclic Graph (DAG) execution for complex agent workflows.
 """
 import logging
-import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from typing_extensions import TypedDict, Union
 
 from .engine import AgentSwarm
 from .enums import TaskPriority, TaskStatus
-from .models import SwarmTask
 
 logger = logging.getLogger(__name__)
 

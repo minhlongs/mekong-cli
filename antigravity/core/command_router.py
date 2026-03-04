@@ -3,7 +3,7 @@ Command Router for Antigravity CLI.
 Routes CLI slash commands to appropriate MCP Server tools.
 """
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 @dataclass

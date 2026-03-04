@@ -5,9 +5,7 @@ Analyzes TypeScript projects for configuration, performance, and common issues.
 """
 
 import json
-import os
 import subprocess
-import sys
 from pathlib import Path
 
 

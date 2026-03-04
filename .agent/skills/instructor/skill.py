@@ -2,7 +2,6 @@ import os
 import sys
 from typing import List
 
-import instructor
 from google import genai
 from pydantic import BaseModel, Field
 

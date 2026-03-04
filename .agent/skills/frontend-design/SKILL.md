@@ -1,42 +1,78 @@
 ---
-name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.
+name: ck:frontend-design
+description: Create polished frontend interfaces from designs/screenshots/videos. Use for web components, 3D experiences, replicating UI designs, quick prototypes, immersive interfaces, avoiding AI slop.
 license: Complete terms in LICENSE.txt
 ---
 
-This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+Create distinctive, production-grade frontend interfaces. Implement real working code with exceptional aesthetic attention.
 
-The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
+## Workflow Selection
 
-## Design Thinking
+Choose workflow based on input type:
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
+| Input | Workflow | Reference |
+|-------|----------|-----------|
+| Screenshot | Replicate exactly | `./references/workflow-screenshot.md` |
+| Video | Replicate with animations | `./references/workflow-video.md` |
+| Screenshot/Video (describe only) | Document for devs | `./references/workflow-describe.md` |
+| 3D/WebGL request | Three.js immersive | `./references/workflow-3d.md` |
+| Quick task | Rapid implementation | `./references/workflow-quick.md` |
+| Complex/award-quality | Full immersive | `./references/workflow-immersive.md` |
+| From scratch | Design Thinking below | - |
+
+**All workflows**: Activate `ck:ui-ux-pro-max` skill FIRST for design intelligence.
+
+## Screenshot/Video Replication (Quick Reference)
+
+1. **Analyze** with `ck:ai-multimodal` skill - extract colors, fonts, spacing, effects
+2. **Plan** with `ui-ux-designer` subagent - create phased implementation
+3. **Implement** - match source precisely
+4. **Verify** - compare to original
+5. **Document** - update `./docs/design-guidelines.md` if approved
+
+See specific workflow files for detailed steps.
+
+## Design Thinking (From Scratch)
+
+Before coding, commit to a BOLD aesthetic direction:
 - **Purpose**: What problem does this interface solve? Who uses it?
 - **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
 - **Constraints**: Technical requirements (framework, performance, accessibility).
 - **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+**CRITICAL**: Execute with precision. Bold maximalism and refined minimalism both work - intentionality is key.
 
-Then implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
+## Aesthetics Guidelines
 
-## Frontend Aesthetics Guidelines
+- **Typography**: Avoid Arial/Inter; use distinctive, characterful fonts. Pair display + body fonts.
+- **Color**: Commit to cohesive palette. CSS variables. Dominant colors with sharp accents.
+- **Motion**: CSS-first, anime.js for complex (`./references/animejs.md`). Orchestrated page loads > scattered micro-interactions.
+- **Spatial**: Unexpected layouts. Asymmetry. Overlap. Negative space OR controlled density.
+- **Backgrounds**: Atmosphere over solid colors. Gradients, noise, patterns, shadows, grain.
+- **Assets**: Generate with `ck:ai-multimodal`, process with `ck:media-processing`
 
-Focus on:
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for React when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
+## Asset & Analysis References
 
-NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
+| Task | Reference |
+|------|-----------|
+| Generate assets | `./references/asset-generation.md` |
+| Analyze quality | `./references/visual-analysis-overview.md` |
+| Extract guidelines | `./references/design-extraction-overview.md` |
+| Optimization | `./references/technical-overview.md` |
+| Animations | `./references/animejs.md` |
 
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+Quick start: `./references/ai-multimodal-overview.md`
 
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
+## Anti-Patterns (AI Slop)
 
-Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+NEVER use:
+- Overused fonts: Inter, Roboto, Arial, Space Grotesk
+- Cliched colors: purple gradients on white
+- Predictable layouts, cookie-cutter patterns
+
+DO:
+- Vary themes (light/dark), fonts, aesthetics per project
+- Match complexity to vision (maximalist = elaborate; minimalist = precise)
+- Make unexpected, context-specific choices
+
+Remember: Claude is capable of extraordinary creative work. Commit fully to distinctive visions.

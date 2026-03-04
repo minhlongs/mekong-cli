@@ -6,14 +6,6 @@ Please import from core.hr.gamification_logic instead.
 """
 import warnings
 
-from .gamification_logic import (
-    Achievement,
-    AchievementCategory,
-    AgencyLevel,
-    AgencyProgress,
-    GamificationEngine,
-    LevelConfig,
-)
 
 # Issue a deprecation warning
 warnings.warn(

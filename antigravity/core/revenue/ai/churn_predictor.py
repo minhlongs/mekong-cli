@@ -7,7 +7,7 @@ Churn prediction and retention action generation.
 
 import logging
 import time
-from typing import List, Optional
+from typing import List
 
 from ..models import (
     ChurnPrediction,

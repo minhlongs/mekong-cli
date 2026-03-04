@@ -3,12 +3,9 @@
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 import subprocess
-import sys
 from pathlib import Path
 import os
-import json
 
 app = typer.Typer()
 console = Console()
@@ -67,16 +64,16 @@ def deploy_vercel(env: str, verbose: bool):
         if verbose:
             cmd.append("--debug")
 
-        console.print(f"[blue]🌐 Deploying to Vercel...[/blue]")
+        console.print("[blue]🌐 Deploying to Vercel...[/blue]")
         result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         if result.stdout:
             console.print(Panel(result.stdout, title="Vercel Output"))
 
-        console.print(f"[green]✅ Deployed to Vercel successfully![/green]")
+        console.print("[green]✅ Deployed to Vercel successfully![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Vercel deployment failed![/red]")
+        console.print("[red]❌ Vercel deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -104,16 +101,16 @@ def deploy_netlify(env: str, verbose: bool):
         if verbose:
             cmd.append("--verbose")
 
-        console.print(f"[blue]🌐 Deploying to Netlify...[/blue]")
+        console.print("[blue]🌐 Deploying to Netlify...[/blue]")
         result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         if result.stdout:
             console.print(Panel(result.stdout, title="Netlify Output"))
 
-        console.print(f"[green]✅ Deployed to Netlify successfully![/green]")
+        console.print("[green]✅ Deployed to Netlify successfully![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Netlify deployment failed![/red]")
+        console.print("[red]❌ Netlify deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -144,10 +141,10 @@ def deploy_heroku(env: str, verbose: bool):
         if result.stdout:
             console.print(Panel(result.stdout, title="Heroku Output"))
 
-        console.print(f"[green]✅ Deployed to Heroku successfully![/green]")
+        console.print("[green]✅ Deployed to Heroku successfully![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Heroku deployment failed![/red]")
+        console.print("[red]❌ Heroku deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -185,7 +182,7 @@ def deploy_docker(env: str, verbose: bool):
             deploy_to_kubernetes(image_tag, verbose)
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Docker deployment failed![/red]")
+        console.print("[red]❌ Docker deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -234,10 +231,10 @@ def deploy_custom(env: str, verbose: bool):
         if result.stdout:
             console.print(Panel(result.stdout, title="Deployment Output"))
 
-        console.print(f"[green]✅ Custom deployment completed![/green]")
+        console.print("[green]✅ Custom deployment completed![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Custom deployment failed![/red]")
+        console.print("[red]❌ Custom deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:

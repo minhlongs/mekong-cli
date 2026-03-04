@@ -14,7 +14,16 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+# Fix Windows console encoding for Unicode output (emojis)
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        pass  # Python < 3.7
+
 from anthropic import Anthropic
+
 from connections import create_connection
 
 EVALUATION_PROMPT = """You are an AI assistant with access to tools.
@@ -362,7 +371,7 @@ Examples:
         report = await run_evaluation(args.eval_file, connection, args.model)
 
         if args.output:
-            args.output.write_text(report)
+            args.output.write_text(report, encoding='utf-8')
             print(f"\n✅ Report saved to {args.output}")
         else:
             print("\n" + report)

@@ -510,7 +510,18 @@ class CustomProvider(LLMProvider):
 | Verify + rollback | < 5s | ~2s |
 | Database query | < 100ms | ~50ms |
 
-## 8. Security Considerations
+## 8. Memory Architecture
+
+- **Context Management**: `src/core/context_manager.py` maintains conversation context across interactions
+- **Prompt Caching**: `src/core/prompt_cache.py` provides intelligent prompt caching with similarity matching
+- **Learning Tracking**: `src/core/learning_tracker.py` tracks AI learning patterns and identifies knowledge gaps
+- **Cross-Session Intelligence**: `src/core/cross_session_intelligence.py` maintains intelligence across different sessions
+- **Decision Making**: `src/core/decision_maker.py` enhances decision-making with historical context and precedents
+- **Fallback Mechanisms**: All modules implement dual storage (vector + local file backup) for robustness
+- **User Isolation**: Each module properly scopes data by user_id for tenant isolation
+- **Integration**: Seamlessly integrates with existing MemoryFacade system
+
+## 9. Security Considerations
 
 - **Secrets**: No API keys in source code (via env vars)
 - **Input Validation**: All inputs validated with Pydantic

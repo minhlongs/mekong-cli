@@ -2,7 +2,7 @@
 Content Scheduling Logic.
 """
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import List
 
 from typing_extensions import TypedDict
 

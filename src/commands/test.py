@@ -41,19 +41,19 @@ def run(
 
     try:
         result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=True, text=True)
-        console.print(f"[green]✅ Tests passed![/green]")
+        console.print("[green]✅ Tests passed![/green]")
         if result.stdout:
             console.print(Panel(result.stdout, title="Output"))
         return True
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Tests failed![/red]")
+        console.print("[red]❌ Tests failed![/red]")
         if e.stdout:
             console.print(Panel(e.stdout, title="Stdout"))
         if e.stderr:
             console.print(Panel(e.stderr, title="Stderr"))
         return False
     except FileNotFoundError:
-        console.print(f"[red]pytest not found. Install with: pip install pytest[/red]")
+        console.print("[red]pytest not found. Install with: pip install pytest[/red]")
         return False
 
 
@@ -66,11 +66,11 @@ def coverage_report():
         result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=True, text=True)
         console.print(Panel(result.stdout, title="Coverage Report"))
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]Coverage report failed![/red]")
+        console.print("[red]Coverage report failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:
-        console.print(f"[red]coverage not found. Install with: pip install coverage[/red]")
+        console.print("[red]coverage not found. Install with: pip install coverage[/red]")
 
 
 @app.command()
@@ -94,11 +94,11 @@ def list_tests():
             console.print(f"[dim]... and {len(lines)-20} more tests[/dim]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]Failed to list tests![/red]")
+        console.print("[red]Failed to list tests![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:
-        console.print(f"[red]pytest not found. Install with: pip install pytest[/red]")
+        console.print("[red]pytest not found. Install with: pip install pytest[/red]")
 
 
 @app.command()

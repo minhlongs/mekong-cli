@@ -9,9 +9,8 @@ import logging
 import subprocess
 
 # Import CommanderHandler to get system status
-from antigravity.mcp_servers.commander_server.handlers import CommanderHandler, InfraStatus
+from antigravity.mcp_servers.commander_server.handlers import CommanderHandler
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)

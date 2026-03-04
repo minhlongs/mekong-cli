@@ -3,7 +3,6 @@ Verify Specialization Phase (Vertical Engines)
 ==============================================
 Tests Healthcare, Fintech, and SaaS vertical engines.
 """
-import os
 import sys
 from pathlib import Path
 

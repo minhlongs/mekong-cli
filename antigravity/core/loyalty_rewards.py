@@ -15,7 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
-from .loyalty_tiers import TIERS, LoyaltyTier, get_tier_by_tenure
+from .loyalty_tiers import LoyaltyTier, get_tier_by_tenure
 from .loyalty_tiers import get_next_tier as _get_next_tier
 
 # Configure logging

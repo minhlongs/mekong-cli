@@ -24,7 +24,6 @@ from typing import Dict, List, Optional, Union
 
 from .base import BaseEngine
 from .models.workflow import CodeReviewResult, Task, TaskStatus, WorkflowStep
-from .types import VIBEWorkflowStatsDict
 from .workflow_steps import detect_active_plan, parse_plan_tasks, perform_file_review
 
 # Configure logging

@@ -6,14 +6,11 @@ import logging
 import re
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from .models import (
     Client,
     ClientStatus,
-    Invoice,
-    InvoiceStatus,
-    Message,
     Project,
     ProjectStatus,
     ProjectTask,

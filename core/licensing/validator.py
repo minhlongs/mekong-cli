@@ -7,7 +7,6 @@ Please import from core.licensing.validation instead.
 """
 import warnings
 
-from .validation import LicenseTier, LicenseValidator
 
 # Issue a deprecation warning
 warnings.warn(

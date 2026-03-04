@@ -3,7 +3,6 @@ Verify Marketing Engine.
 Tests Content Factory and Client Magnet via Marketing MCP Server.
 """
 import asyncio
-import json
 import sys
 from pathlib import Path
 

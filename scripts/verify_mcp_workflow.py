@@ -8,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path.cwd()))
 
 from antigravity.core.mcp_orchestrator import MCPOrchestrator
-from antigravity.core.registry.mcp_catalog import mcp_catalog
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

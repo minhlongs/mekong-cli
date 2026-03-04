@@ -1,7 +1,7 @@
 """
 Term Sheet Analyzer (Facade)
 """
-from .models import CapTableEntry, DealType, TermCategory, TermSheet, TermSheetTerm
+from .models import DealType, TermSheet
 from .presentation.dashboard import TermSheetPresenter
 
 

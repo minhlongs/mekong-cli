@@ -4,7 +4,7 @@ Call logging and reporting logic.
 import logging
 import re
 import uuid
-from typing import Any, Dict, List
+from typing import List
 
 from .models import CallLog, CallOutcome, CallType
 

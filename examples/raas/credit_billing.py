@@ -56,7 +56,7 @@ async def main():
 
     # Final balance
     final_balance = await credit_store.get_balance(user_id)
-    print(f"\n=== Final Balance ===")
+    print("\n=== Final Balance ===")
     print(f"Remaining: {final_balance} credits")
 
     # Get transaction history

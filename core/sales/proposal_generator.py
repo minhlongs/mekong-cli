@@ -6,7 +6,6 @@ Please import from core.sales.proposal_logic instead.
 """
 import warnings
 
-from .proposal_logic import ProjectTier, ProposalGenerator, ProposalStatus, ServiceType
 
 # Issue a deprecation warning
 warnings.warn(

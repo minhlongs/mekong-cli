@@ -6,7 +6,7 @@ Revenue metrics calculation.
 """
 
 import time
-from typing import Dict, List
+from typing import Dict
 
 from ..models import ChurnPrediction, ChurnRisk, CustomerProfile, RevenueMetrics
 

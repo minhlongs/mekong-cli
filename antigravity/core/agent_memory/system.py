@@ -11,7 +11,7 @@ from antigravity.core.mixins import StatsMixin
 from antigravity.core.patterns import singleton_factory
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 # Type alias for context values
 ContextValue = Union[str, int, float, bool, list, dict, None]

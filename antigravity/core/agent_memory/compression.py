@@ -1,7 +1,7 @@
 """
 Memory Compression Logic
 """
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 def compress_memory_data(data: Dict[str, Any]) -> Dict[str, Any]:

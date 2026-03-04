@@ -45,7 +45,7 @@ async def main():
     # Get results
     if status["state"] == "completed":
         result = await client.get_result(response["mission_id"])
-        print(f"\n=== Mission Results ===")
+        print("\n=== Mission Results ===")
         print(f"Files created: {len(result.get('files', []))}")
         print(f"Output: {result.get('output', '')[:500]}")
     else:

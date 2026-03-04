@@ -1,6 +1,6 @@
 import logging
 from antigravity.core.telemetry import agent_telemetry
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from ...rag.embedding import EmbeddingService
 from ...rag.vector_client import VectorClient

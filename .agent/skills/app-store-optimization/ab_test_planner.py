@@ -4,7 +4,7 @@ Plans and tracks A/B tests for metadata and visual assets.
 """
 
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class ABTestPlanner:

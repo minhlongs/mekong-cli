@@ -3,7 +3,6 @@ DSPy Signatures for AgencyOS Prompt Patterns
 Integrates with prompt-engineer.md patterns
 """
 
-from typing import List, Optional
 
 import dspy
 
@@ -168,7 +167,6 @@ def setup_dspy_litellm(model: str = "gemini/gemini-1.5-flash"):
 
 if __name__ == "__main__":
     # Test the modules
-    import sys
 
     print("🧠 DSPy AgencyOS Signatures loaded successfully!")
     print("\nAvailable Signatures:")

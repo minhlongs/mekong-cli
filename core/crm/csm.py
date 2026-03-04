@@ -6,7 +6,6 @@ Please import from core.crm.success instead.
 """
 import warnings
 
-from .success import CustomerSuccessManager, EngagementLevel, QBRRecord, SuccessPlan, SuccessStage
 
 # Issue a deprecation warning
 warnings.warn(

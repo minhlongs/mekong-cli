@@ -9,7 +9,6 @@ Usage:
     python scripts/setup/sync_paypal_plans.py
 """
 
-import os
 import sys
 from pathlib import Path
 

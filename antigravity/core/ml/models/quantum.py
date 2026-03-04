@@ -7,7 +7,7 @@ Quantum-inspired optimization algorithm for pricing.
 
 import hashlib
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Dict
 
 import numpy as np
 from typing_extensions import TypedDict

@@ -1,7 +1,6 @@
 """
 Data models for Career Development.
 """
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

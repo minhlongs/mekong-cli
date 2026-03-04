@@ -6,7 +6,6 @@ from rich.console import Console
 sys.path.append(os.getcwd())
 
 from src.agents import LeadHunter, ContentWriter, RecipeCrawler
-from src.core.agent_base import Task
 
 console = Console()
 

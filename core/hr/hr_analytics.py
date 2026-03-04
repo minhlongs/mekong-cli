@@ -6,7 +6,6 @@ Please import from core.hr.hr_analytics_logic instead.
 """
 import warnings
 
-from .hr_analytics_logic import AttritionRisk, Department, HRAnalytics
 
 # Issue a deprecation warning
 warnings.warn(

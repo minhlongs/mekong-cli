@@ -10,7 +10,7 @@ from antigravity.core.chains import AgentStep, Chain, ChainLoader, ChainValidato
 from pathlib import Path
 from typing import List, Optional
 
-from .inventory import AGENT_BASE_DIR, AGENT_INVENTORY
+from .inventory import AGENT_INVENTORY
 from .models import AgentCategory
 
 # Global chain loader (lazy init)

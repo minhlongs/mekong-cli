@@ -4,6 +4,7 @@ from .recipe_crawler import RecipeCrawler
 from .git_agent import GitAgent
 from .file_agent import FileAgent
 from .shell_agent import ShellAgent
+from .database_agent import DatabaseAgent
 from src.core.agent_registry import AgentRegistry
 
 # Global registry instance — single source of truth for agent lookup
@@ -11,6 +12,8 @@ registry = AgentRegistry()
 registry.register("git", GitAgent)
 registry.register("file", FileAgent)
 registry.register("shell", ShellAgent)
+registry.register("database", DatabaseAgent)
+registry.register("db", DatabaseAgent)  # Alias for convenience
 registry.register("lead", LeadHunter)
 registry.register("content", ContentWriter)
 registry.register("crawler", RecipeCrawler)
@@ -33,6 +36,7 @@ __all__ = [
     "GitAgent",
     "FileAgent",
     "ShellAgent",
+    "DatabaseAgent",
     "registry",
     "AGENT_REGISTRY",
 ]

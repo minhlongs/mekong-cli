@@ -7,7 +7,6 @@ Please import from antigravity.core.finance.investor instead.
 """
 import warnings
 
-from .investor import InteractionType, InvestorRelations, InvestorType, PipelineStage
 
 # Issue a deprecation warning
 warnings.warn(

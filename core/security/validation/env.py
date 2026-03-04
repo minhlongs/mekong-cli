@@ -6,7 +6,7 @@ Validates environment variable security implementation.
 
 import os
 
-from core.utils.vibe_ui import RED, RESET, YELLOW, check_status, print_header
+from core.utils.vibe_ui import RED, RESET, check_status, print_header
 
 from .base import BaseSecurityValidator
 

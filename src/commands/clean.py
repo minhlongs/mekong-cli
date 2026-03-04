@@ -9,7 +9,6 @@ from rich.table import Table
 from rich.prompt import Confirm
 from pathlib import Path
 import shutil
-import os
 
 app = typer.Typer(name="clean", help="Clean cache, temp files, build artifacts")
 console = Console()

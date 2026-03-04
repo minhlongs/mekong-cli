@@ -4,7 +4,7 @@ Cash Flow tracking and runway calculation logic.
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import List
 
 from .models import ExpenseCategory, IncomeCategory, Transaction, TransactionType
 

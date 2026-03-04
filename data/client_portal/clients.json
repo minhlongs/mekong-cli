@@ -130,5 +130,17 @@
     "notes": "",
     "monthly_retainer": 2000.0,
     "total_spent": 0.0
+  },
+  "CLI-A1AE5565": {
+    "id": "CLI-A1AE5565",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "company": "Test Corp",
+    "status": "active",
+    "created_at": "2026-03-04T22:35:03.745177",
+    "portal_code": "749BF326E764",
+    "notes": "",
+    "monthly_retainer": 2000.0,
+    "total_spent": 0.0
   }
 }

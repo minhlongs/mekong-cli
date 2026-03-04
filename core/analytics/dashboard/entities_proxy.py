@@ -21,10 +21,4 @@ except ImportError:
             RevenueType,
         )
     except ImportError:
-        from presenters.analytics_presenter import AnalyticsPresenter
-        from repositories.analytics_repository import AnalyticsRepository
-        from services.analytics_service import (
-            AnalyticsCalculationEngine,
-            MetricPeriod,
-            RevenueEntry,
-        )
+        pass

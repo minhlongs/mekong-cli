@@ -2,7 +2,6 @@
 Verify Command Router.
 Tests that commands map correctly to MCP servers.
 """
-import os
 import sys
 from pathlib import Path
 

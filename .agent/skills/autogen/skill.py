@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
 import autogen
 

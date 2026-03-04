@@ -2,9 +2,9 @@
 Term Sheet Analysis core logic.
 """
 import uuid
-from typing import Any, Dict, List
+from typing import Dict, List
 
-from .models import CapTableEntry, DealType, TermCategory, TermSheet, TermSheetTerm
+from .models import CapTableEntry, DealType, TermSheet
 
 
 class AnalyzerEngine:

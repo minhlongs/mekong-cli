@@ -5,7 +5,7 @@ Analyzes top competitors' ASO strategies and identifies opportunities.
 
 import re
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class CompetitorAnalyzer:

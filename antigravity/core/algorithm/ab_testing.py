@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional
 
 from typing_extensions import TypedDict
 
-from .types import ABTestConfig, ABTestVariant, ConversionData
+from .types import ABTestConfig, ConversionData
 
 
 class VariantPerformanceDict(TypedDict):

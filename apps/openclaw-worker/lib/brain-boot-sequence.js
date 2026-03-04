@@ -15,6 +15,7 @@ const config = require('../config');
 const { getHandForIntent } = require('./hands-registry');
 const { log } = require('./brain-logger');
 const { tmuxExec, isSessionAlive, capturePane } = require('./brain-tmux-controller');
+const { startHealthServer } = require('./brain-health-server');
 // Lazy-require to break circular: boot-sequence ↔ spawn-manager
 // SINGLE SOURCE OF TRUTH: generateClaudeCommand lives in brain-spawn-manager.js
 function generateClaudeCommand(intent) {
@@ -60,6 +61,7 @@ async function spawnBrain() {
   log(`BRAIN: Creating TRIPLE-PANE SANDWICH tmux session...`);
   _writeSandboxConfigs();
   _persistAuthCredentials();
+  startHealthServer();
 
   const cmdPro = generateClaudeCommand('PRO');
   const cmdApi = generateClaudeCommand('API');

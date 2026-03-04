@@ -4,7 +4,6 @@ Migrated from scripts/vibeos/solo_revenue_daemon.py
 """
 import json
 import logging
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum

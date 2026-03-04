@@ -7,7 +7,6 @@ Please import from core.portal.client_portal instead.
 """
 import warnings
 
-from .client_portal import ClientPortal
 
 # Issue a deprecation warning
 warnings.warn(

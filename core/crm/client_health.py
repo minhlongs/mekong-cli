@@ -7,7 +7,6 @@ Please import from core.crm.health instead.
 """
 import warnings
 
-from .health import ClientHealth, ClientHealthScore, HealthLevel, RiskFactor
 
 # Issue a deprecation warning
 warnings.warn(

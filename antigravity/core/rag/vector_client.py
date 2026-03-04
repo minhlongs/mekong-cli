@@ -1,9 +1,7 @@
 import logging
-import os
 from typing import Any, Dict, List, Optional
 
 import chromadb
-from chromadb.config import Settings
 from typing_extensions import TypedDict
 
 logger = logging.getLogger(__name__)

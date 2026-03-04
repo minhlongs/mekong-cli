@@ -7,15 +7,6 @@ Please import from core.growth.healthcare instead.
 """
 import warnings
 
-from .healthcare import (
-    CampaignType,
-    ComplianceStatus,
-    HealthcareCampaign,
-    HealthcareClient,
-    HealthcareMarketing,
-    HealthcareVertical,
-    HIPAAChecklist,
-)
 
 # Issue a deprecation warning
 warnings.warn(

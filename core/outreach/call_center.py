@@ -7,7 +7,6 @@ Please import from core.outreach.voice instead.
 """
 import warnings
 
-from .voice import CallCenterAgent, CallOutcome, CallType
 
 # Issue a deprecation warning
 warnings.warn(

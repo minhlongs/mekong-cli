@@ -7,7 +7,6 @@ Please import from core.presenters.portal instead.
 """
 import warnings
 
-from .portal import ClientPortalPresenter
 
 # Issue a deprecation warning
 warnings.warn(

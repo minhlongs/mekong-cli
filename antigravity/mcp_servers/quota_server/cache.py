@@ -13,11 +13,10 @@ Binh Pháp: Chương 7 (Quân Tranh) - Speed advantage through caching
 import json
 import logging
 import threading
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from .models import Client, Project, ProjectStatus, Report, ServiceType
+from .models import Client, Project, Report, ServiceType
 
 logger = logging.getLogger(__name__)
 

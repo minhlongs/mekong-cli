@@ -5,7 +5,6 @@ Validates command injection prevention implementation.
 """
 
 import re
-from pathlib import Path
 
 from core.utils.vibe_ui import GREEN, RED, RESET, YELLOW, print_header
 

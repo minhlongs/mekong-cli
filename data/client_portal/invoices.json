@@ -174,5 +174,21 @@
       }
     ],
     "notes": ""
+  },
+  "INV-202603-1755": {
+    "id": "INV-202603-1755",
+    "client_id": "CLI-A1AE5565",
+    "project_id": null,
+    "amount": 2500.0,
+    "status": "draft",
+    "due_date": "2026-04-03T22:35:03.747766",
+    "paid_date": null,
+    "items": [
+      {
+        "name": "Phase 1",
+        "amount": 2500.0
+      }
+    ],
+    "notes": ""
   }
 }

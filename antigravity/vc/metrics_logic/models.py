@@ -4,7 +4,6 @@ VC Readiness models and historical tracking.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 
 class FundingStage(Enum):

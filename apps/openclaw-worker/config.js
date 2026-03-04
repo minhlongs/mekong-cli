@@ -37,16 +37,16 @@ const config = {
   PROXY_PORT: process.env.PROXY_PORT ? parseInt(process.env.PROXY_PORT) : 20129,
   // Anthropic Adapter (translates /v1/messages → dual AG Proxy rotation)
   // 🦞 LOBSTER: Cân bằng tải 2 acc Ultra qua adapter
-  CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128',
+  CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic',
   QWEN_PROXY_PORT: 8081, // Qwen/VLLM dedicated port
-  MODEL_NAME: process.env.MODEL_NAME || 'claude-sonnet-4-6-20250514', // v2026.2.27: Model 4.6
+  MODEL_NAME: process.env.MODEL_NAME || 'qwen3-coder-plus', // DashScope direct
   // 虛實 Binh Phap Model Hierarchy
-  // 🔥LỬA (Complex) → claude-opus-4-5-20250514
-  OPUS_MODEL: 'claude-opus-4-6', // v2026.2.28: Upgraded to Opus 4.6 (match PRO pane)
+  // 🔥LỬA (Complex) → qwen3-max-2026-01-23
+  OPUS_MODEL: 'qwen3-max-2026-01-23', // DashScope strongest
   USE_GH_MODELS: false,
-  GH_MODEL_NAME: 'claude-sonnet-4-6-20250514',
-  WORKER_MODEL_NAME: 'claude-sonnet-4-6-20250514', // "Strongest" Local Model
-  FALLBACK_MODEL_NAME: 'gemini-3-pro', // v2026.3.1: Upgraded for Max x20 intelligence via proxy
+  GH_MODEL_NAME: 'qwen3-coder-plus',
+  WORKER_MODEL_NAME: 'qwen3-coder-plus', // DashScope worker model
+  FALLBACK_MODEL_NAME: 'qwen3.5-plus', // CTO Brain = strongest model
   QWEN_MODEL_NAME: process.env.QWEN_MODEL_NAME || 'qwen3-coder-next',
   // Engine selection: 'antigravity' (default, port 20128) or 'qwen' (port 8081)
   // 🔒 LOCKED — 'antigravity' uses port 20128 → upstream AG 9191 + Google fallback

@@ -6,7 +6,6 @@ Handles browser launching, stealth features, and common interactions
 import json
 import random
 import time
-from typing import List, Optional
 
 from patchright.sync_api import BrowserContext, Page, Playwright
 

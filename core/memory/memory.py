@@ -7,7 +7,6 @@ Please import from antigravity.core.memory.system instead.
 """
 import warnings
 
-from .system import Memory, Observation
 
 # Issue a deprecation warning
 warnings.warn(

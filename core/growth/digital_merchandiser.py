@@ -6,7 +6,6 @@ Please import from core.growth.merchandiser_logic instead.
 """
 import warnings
 
-from .merchandiser_logic import DigitalMerchandiser, DisplayStatus, DisplayType
 
 # Issue a deprecation warning
 warnings.warn(
