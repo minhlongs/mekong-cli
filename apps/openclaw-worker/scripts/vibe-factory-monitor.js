@@ -31,7 +31,7 @@ const FALLBACK_MODEL = 'gemini-3-pro';
 const PANES = [
     { idx: 0, project: 'mekong-cli', dir: path.join(process.env.HOME, 'mekong-cli'), focus: 'AGI agentic skills + ClaudeKit commands for all business domains' },
     { idx: 1, project: 'well', dir: path.join(process.env.HOME, 'mekong-cli/apps/well'), focus: 'RaaS platform, i18n, Supabase, PayOS integration' },
-    // { idx: 2, project: 'algo-trader', dir: path.join(process.env.HOME, 'mekong-cli/apps/algo-trader'), focus: 'Cross-exchange arbitrage engine (Binance/OKX/Bybit)' },
+    { idx: 2, project: 'algo-trader', dir: path.join(process.env.HOME, 'mekong-cli/apps/algo-trader'), focus: 'Cross-exchange arbitrage engine (Binance/OKX/Bybit)' },
     // { idx: 3, project: 'apex-os', dir: path.join(process.env.HOME, 'mekong-cli/apps/apex-os'), focus: 'SaaS-to-RaaS transformation, crypto zero-fee exchange' },
 ];
 
