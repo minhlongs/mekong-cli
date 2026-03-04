@@ -23,6 +23,7 @@ const { isOverheating, isSafeToScan } = require('./m1-cooling-daemon');
 const { tryStrategicMission } = require('./strategic-brain');
 const { scanRevenueHealth, generateRevenueMission } = require('./revenue-health-scanner');
 const { generateEconomicMission } = require('./clawwork-integration');
+const { dispatchDueTradingMissions } = require('./trading-cadence-scheduler');
 
 let intervalRef = null;
 let _questionLoopCount = 0; // 🧠 QUESTION loop detector (module-level to avoid 'state' TDZ)
@@ -46,10 +47,10 @@ function markMissionDispatched(errorKey) {
 const SCAN_RESULT_FILE = path.join(__dirname, '..', '.cto-scan-state.json');
 const MAX_FIX_CYCLES = 3;
 const MAX_FIXES_PER_SCAN = 3;  // 🔒 Ch.6 虛實: focus force on fewer targets
-// 🔒 Ch.2 作戰: 日費千金 — Phase-aware intervals (v2: 九變 adaptive speed)
-const SCAN_INTERVAL_MS = 120000;   // 120s — increased from 45s to prevent CC CLI interrupt spam
-const FIX_INTERVAL_MS = 15000;    // 15s — fix/verify: phản xạ nhanh, dispatch liên tục
-const DEFAULT_INTERVAL_MS = 45000; // 45s — fallback
+// 🔒 Ch.2 作戰: Balanced speed — fast enough to detect idle, slow enough to not spam
+const SCAN_INTERVAL_MS = 60000;    // 60s — dispatch only when pane truly idle
+const FIX_INTERVAL_MS = 15000;     // 15s — fix/verify: phản xạ nhanh
+const DEFAULT_INTERVAL_MS = 60000; // 60s — match scan speed
 
 // --- BUG #11: Per-project consecutive failure tracking ---
 const projectFailureCount = new Map();
@@ -336,24 +337,120 @@ function startAutoCTO() {
         if (!isBrainAlive()) { log('AUTO-CTO DEBUG: isBrainAlive() failed'); scheduleNext(); return; }
         if (isOverheating()) { log('AUTO-CTO DEBUG: isOverheating() failed'); scheduleNext(); return; }
 
+        // 🦞🦞🦞 DISPATCH FIRST — NO LLM DELAY! Fast regex-only idle check
+        log(`🦞 DISPATCH-CHECK: ${fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f)).length} tasks in queue`);
+        // P0 = mekong-cli (default), P1 = well/wellnexus, P2 = algo-trader
+        const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
+        if (tasks.length > 0) {
+          const sorted = tasks.sort((a, b) => {
+            const aCrit = a.startsWith('CRITICAL') ? 0 : 1;
+            const bCrit = b.startsWith('CRITICAL') ? 0 : 1;
+            if (aCrit !== bCrit) return aCrit - bCrit;
+            return fs.statSync(path.join(config.WATCH_DIR, a)).mtimeMs - fs.statSync(path.join(config.WATCH_DIR, b)).mtimeMs;
+          });
+
+          function getTargetPane(filename) {
+            const lower = filename.toLowerCase();
+            if (/well|wellnexus|84tea/.test(lower)) return 1;
+            if (/algo.?trader|algotrader|trading/.test(lower)) return 2;
+            return 0;
+          }
+
+          let dispatched = 0;
+          const dispatching = new Set();
+
+          for (const taskFile of sorted) {
+            const targetIdx = getTargetPane(taskFile);
+            if (dispatching.has(targetIdx)) continue;
+
+            const pane = `${config.TMUX_SESSION}:0.${targetIdx}`;
+            try {
+              const paneCheck = execSync(`tmux capture-pane -t ${pane} -p 2>/dev/null`, { encoding: 'utf-8', timeout: 8000 });
+              const pLines = paneCheck.split('\n').filter(l => l.trim());
+              const tail5 = pLines.slice(-5).join('\n');
+              const hasPrompt = /❯/.test(tail5);
+              const isBusy = /Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|thinking|Compacting|Ebbing|Hatching|queued messages|Press up to edit/i.test(tail5);
+              const isIdle = hasPrompt && !isBusy;
+
+              if (isIdle) {
+                const taskPath = path.join(config.WATCH_DIR, taskFile);
+                const taskContent = fs.readFileSync(taskPath, 'utf-8').trim();
+                const firstLine = taskContent.split('\n')[0].trim();
+                const command = firstLine.startsWith('/') ? firstLine : `/cook ${firstLine}`;
+
+                const MODEL_POOL = {
+                  0: 'qwen3-coder-plus',       // P0: fast coder (0.89s TTFB)
+                  1: 'qwen3-coder-plus',        // P1: code specialist
+                  2: 'kimi-k2.5'                // P2: reviewer
+                };
+                const paneModel = MODEL_POOL[targetIdx] || MODEL_POOL[0];
+
+                log(`🦞 DISPATCHING: "${taskFile}" → P${targetIdx} [${paneModel}]`);
+                log(`🦞 COMMAND: ${command.slice(0, 100)}`);
+
+                // Model set in settings.json — skip /model to save API calls
+                execSync(`tmux send-keys -t ${pane} "${command.replace(/"/g, '\\"')}"`, { timeout: 8000 });
+                execSync(`tmux send-keys -t ${pane} Enter`, { timeout: 3000 });
+
+                const doneDir = path.join(config.WATCH_DIR, '..', 'tasks-done');
+                if (!fs.existsSync(doneDir)) fs.mkdirSync(doneDir, { recursive: true });
+                fs.renameSync(taskPath, path.join(doneDir, `${Date.now()}_${taskFile}`));
+                log(`🦞 DISPATCHED + ARCHIVED: ${taskFile} → P${targetIdx}`);
+                dispatched++;
+                dispatching.add(targetIdx);
+              }
+            } catch (dispatchErr) {
+              log(`AUTO-CTO DISPATCH P${targetIdx} ERROR: ${dispatchErr.message}`);
+            }
+          }
+
+          if (dispatched > 0) {
+            log(`🦞 DISPATCHED ${dispatched} task(s) — skipping LLM Vision this cycle`);
+            scheduleNext(); return;
+          }
+          log(`AUTO-CTO: ${tasks.length} tasks pending, all target panes busy — falling through to LLM Vision`);
+        }
+
         // 🧠 LLM VISION: 知己知彼 — Use gemini-3-flash to READ CC CLI output
-        // Replaces fragile regex patterns that caused "blind CTO" bugs
+        // Only runs when NO tasks were dispatched (all panes busy or queue empty)
         let isApiBusy = false;
         try {
           const { interpretState, clearCache } = require('./llm-interpreter');
-          for (let pIdx = 0; pIdx < 2; pIdx++) {
+          for (let pIdx = 0; pIdx < 3; pIdx++) {
             try {
               const paneOutput = require('child_process').execSync(
-                `tmux capture-pane -t tom_hum:brain.${pIdx} -p -S -30 2>/dev/null`,
+                `tmux capture-pane -t tom_hum:0.${pIdx} -p -S -50 2>/dev/null`,
                 { encoding: 'utf-8', timeout: 3000 }
               );
+
+              // 🩺 AUTO-RESPAWN: Only trigger if shell prompt in LAST 3 lines AND no CC CLI running
+              const lastLines = paneOutput.trim().split('\n').slice(-3).join(' ');
+              const hasCCCLI = /❯|bypass permissions|✻|Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|thinking|Hatching|Ebbing/i.test(lastLines);
+              const isShellPrompt = /[$%]\s*$/.test(lastLines) && !hasCCCLI;
+
+              if (isShellPrompt) {
+                log(`[🩺 RESPAWN][P${pIdx}] Shell-only detected — auto-restarting CC CLI`);
+                try {
+                  require('child_process').execSync(
+                    `tmux send-keys -t tom_hum:0.${pIdx} "claude --dangerously-skip-permissions --continue"`,
+                    { timeout: 8000 }
+                  );
+                  require('child_process').execSync(
+                    `tmux send-keys -t tom_hum:0.${pIdx} Enter`,
+                    { timeout: 3000 }
+                  );
+                } catch (e) { log(`[🩺 RESPAWN][P${pIdx}] restart failed: ${e.message}`); }
+                isApiBusy = true;
+                continue; // Skip LLM interpretation for this pane
+              }
+
               const llmResult = await interpretState(paneOutput);
 
               if (pIdx === 1 && llmResult.state !== 'question') _questionLoopCount = 0;
 
               if (llmResult.state === 'busy') {
                 log(`[LLM-VISION][P${pIdx}] CC CLI BUSY: ${llmResult.summary}`);
-                if (pIdx === 1) isApiBusy = true;
+                isApiBusy = true;
               } else if (llmResult.state === 'question') {
                 log(`[LLM-VISION][P${pIdx}] CC CLI QUESTION: ${llmResult.summary}`);
                 if (pIdx === 1) _questionLoopCount++;
@@ -361,31 +458,31 @@ function startAutoCTO() {
                 if (llmResult.confidence >= 0.8) {
                   if (pIdx === 1 && _questionLoopCount >= 3) {
                     log(`[LLM-VISION][P${pIdx}] LOOP BREAK: ${_questionLoopCount} questions — sending Escape`);
-                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:brain.${pIdx} Escape`, { timeout: 2000 }); } catch (e) { }
+                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:0.${pIdx} Escape`, { timeout: 2000 }); } catch (e) { }
                     _questionLoopCount = 0;
                   } else {
                     log(`[LLM-VISION][P${pIdx}] AUTO-APPROVE: Sending Enter`);
-                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:brain.${pIdx} Enter`, { timeout: 2000 }); } catch (e) { }
+                    try { require('child_process').execSync(`tmux send-keys -t tom_hum:0.${pIdx} Enter`, { timeout: 2000 }); } catch (e) { }
                   }
                   clearCache();
                 }
-                if (pIdx === 1) isApiBusy = true;
+                isApiBusy = true;
               } else if (llmResult.state === 'error') {
                 log(`[LLM-VISION][P${pIdx}] CC CLI ERROR: ${llmResult.summary}`);
-                if (pIdx === 1) isApiBusy = true;
+                isApiBusy = true;
               } else if (llmResult.state !== 'idle' && llmResult.state !== 'complete' && llmResult.state !== 'unknown') {
                 log(`[LLM-VISION][P${pIdx}] CC CLI state: ${llmResult.state}`);
-                if (pIdx === 1) isApiBusy = true;
-              } else if (llmResult.state === 'unknown' && pIdx === 1) {
-                const hasIdlePrompt = paneOutput.includes('❯') || paneOutput.trim().split('\n').slice(-5).some(l => /^>\s*$/.test(l.trim()));
+                isApiBusy = true;
+              } else if (llmResult.state === 'unknown') {
+                const hasIdlePrompt = paneOutput.includes('❯') || paneOutput.includes('%') || paneOutput.trim().split('\n').slice(-5).some(l => /^>\s*$/.test(l.trim()));
                 if (!hasIdlePrompt) {
-                  log(`[LLM-VISION][P1] FALLBACK: No idle prompt detected`);
+                  log(`[LLM-VISION][P${pIdx}] FALLBACK: No idle prompt detected`);
                   isApiBusy = true;
                 }
               }
             } catch (innerE) {
               log(`[LLM-VISION][P${pIdx}] Capture failed: ${innerE.message}`);
-              if (pIdx === 1) isApiBusy = true;
+              isApiBusy = true;
             }
           }
         } catch (e) {
@@ -393,13 +490,11 @@ function startAutoCTO() {
           isApiBusy = true;
         }
 
+        // Old dispatch block removed — now runs BEFORE LLM Vision (line 342)
+
         if (isApiBusy) {
           scheduleNext(); return;
         }
-
-        // Check if queue has pending tasks — don't flood
-        const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
-        if (tasks.length > 0) { log('AUTO-CTO DEBUG: filesystem tasks pending'); scheduleNext(); return; }
 
         if (!isQueueEmpty()) { log('AUTO-CTO DEBUG: memory queue pending'); scheduleNext(); return; }
 
@@ -484,6 +579,16 @@ async function handleScan(state, project, projectDir) {
       advanceProject(state);
       return;
     }
+    // 🏢 TRADING COMPANY: algo-trader GREEN → check trading cadence schedule
+    if (project === 'algo-trader') {
+      const tradingDispatched = dispatchDueTradingMissions();
+      if (tradingDispatched > 0) {
+        log(`AUTO-CTO [🏢 TRADING COMPANY]: ${tradingDispatched} cadence mission(s) dispatched`);
+        advanceProject(state);
+        return;
+      }
+    }
+
     // 🚀 GREEN PATH: Open Source RaaS AGI — đích đến của mọi dự án
     // Khi project GREEN, đẩy hướng Open Source + RaaS AGI thay vì idle
     const RAAS_COOLDOWN_MS = 30 * 60 * 1000; // 30 phút giữa các lần dispatch cùng project

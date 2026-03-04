@@ -1,0 +1,247 @@
+- generic [ref=e8]:
+  - generic [ref=e13]:
+    - complementary [ref=e14]:
+      - generic [ref=e15]:
+        - link [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img [ref=e19]
+        - navigation [ref=e23]:
+          - generic [ref=e25]:
+            - link "Go back" [ref=e27] [cursor=pointer]:
+              - /url: /
+              - img "Go back" [ref=e28]
+            - button "My Profile" [ref=e31] [cursor=pointer]:
+              - heading "My Profile" [level=1] [ref=e33]
+          - generic [ref=e37]:
+            - button "Quick search..." [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]:
+                - img [ref=e41]
+                - generic [ref=e43]: Quick search...
+                - generic [ref=e44]: ⌘K
+            - list [ref=e45]:
+              - listitem [ref=e46]:
+                - link "Settings" [ref=e47] [cursor=pointer]:
+                  - /url: /profile/managed-profile
+                  - generic [ref=e48]:
+                    - img [ref=e49]
+                    - generic [ref=e51]: Settings
+              - listitem [ref=e52]:
+                - link "Authentication" [ref=e53] [cursor=pointer]:
+                  - /url: /profile/authentication
+                  - generic [ref=e54]:
+                    - img [ref=e55]
+                    - generic [ref=e57]: Authentication
+              - listitem [ref=e58]:
+                - link "API Tokens" [ref=e59] [cursor=pointer]:
+                  - /url: /profile/api-tokens
+                  - generic [ref=e60]:
+                    - img [ref=e61]
+                    - generic [ref=e63]: API Tokens
+              - listitem [ref=e64]:
+                - link "Active sessions" [ref=e65] [cursor=pointer]:
+                  - /url: /profile/sessions
+                  - generic [ref=e66]:
+                    - img [ref=e67]
+                    - generic [ref=e70]: Active sessions
+      - button "Collapse sidebar" [expanded] [ref=e73] [cursor=pointer]:
+        - img
+    - generic [ref=e74]:
+      - banner [ref=e75]:
+        - generic [ref=e76]:
+          - button "Add" [ref=e77] [cursor=pointer]:
+            - img [ref=e78]
+            - generic [ref=e80]: Add
+          - button "Support" [ref=e81] [cursor=pointer]:
+            - img [ref=e82]
+            - generic [ref=e84]: Support
+          - button "User menu" [ref=e85] [cursor=pointer]:
+            - img [ref=e86]
+      - main [ref=e88]:
+        - generic [ref=e90]:
+          - heading "User API Tokens" [level=1] [ref=e94]
+          - generic [ref=e247]:
+            - button "Back to view all tokens" [ref=e249] [cursor=pointer]:
+              - img [ref=e250]
+              - text: Back to view all tokens
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - heading "Create Custom Token" [level=4] [ref=e328]
+                - generic [ref=e329]:
+                  - generic [ref=e330]: Token name
+                  - generic [ref=e331]:
+                    - generic [ref=e332]: Give your API token a descriptive name.
+                    - textbox [ref=e333]: Mekong Full Infrastructure
+              - generic [ref=e334]:
+                - heading "Permissions" [level=4] [ref=e335]
+                - generic [ref=e336]: Select edit or read permissions to apply to your accounts or websites for this token.
+                - generic [ref=e337]:
+                  - generic [ref=e580]:
+                    - generic [ref=e581]:
+                      - generic [ref=e582]: Resources
+                      - button "Resources" [ref=e584] [cursor=pointer]: Account
+                    - generic [ref=e586]:
+                      - generic [ref=e587]: Permissions
+                      - combobox [ref=e588]:
+                        - textbox "Permissions" [ref=e589]:
+                          - /placeholder: Select
+                          - text: D1
+                        - button [ref=e590] [cursor=pointer]
+                    - generic [ref=e597]:
+                      - generic [ref=e598]: Edit
+                      - combobox "Permissions levels" [ref=e599]
+                    - button [ref=e739] [cursor=pointer]:
+                      - img [ref=e740]
+                  - generic [ref=e906]:
+                    - generic [ref=e907]:
+                      - generic [ref=e908]: Resources
+                      - button "Resources" [ref=e910] [cursor=pointer]: Account
+                    - generic [ref=e912]:
+                      - generic [ref=e913]: Permissions
+                      - combobox [ref=e914]:
+                        - textbox "Permissions" [ref=e915]:
+                          - /placeholder: Select
+                          - text: Workers KV Storage
+                        - button [ref=e916] [cursor=pointer]
+                    - generic [ref=e923]:
+                      - generic [ref=e924]: Edit
+                      - combobox "Permissions levels" [ref=e925]
+                    - button [ref=e929] [cursor=pointer]:
+                      - img [ref=e930]
+                  - generic [ref=e1096]:
+                    - generic [ref=e1097]:
+                      - generic [ref=e1098]: Resources
+                      - button "Resources" [ref=e1100] [cursor=pointer]: Account
+                    - generic [ref=e1102]:
+                      - generic [ref=e1103]: Permissions
+                      - combobox [ref=e1104]:
+                        - textbox "Permissions" [ref=e1105]:
+                          - /placeholder: Select
+                          - text: Workers R2 Storage
+                        - button [ref=e1106] [cursor=pointer]
+                    - generic [ref=e1113]:
+                      - generic [ref=e1114]: Edit
+                      - combobox "Permissions levels" [ref=e1115]
+                    - button [ref=e1119] [cursor=pointer]:
+                      - img [ref=e1120]
+                  - generic [ref=e1282]:
+                    - generic [ref=e1283]:
+                      - generic [ref=e1284]: Resources
+                      - button "Resources" [ref=e1286] [cursor=pointer]: Account
+                    - generic [ref=e1288]:
+                      - generic [ref=e1289]: Permissions
+                      - combobox [ref=e1290]:
+                        - textbox "Permissions" [ref=e1291]:
+                          - /placeholder: Select
+                          - text: Workers Scripts
+                        - button [ref=e1292] [cursor=pointer]
+                    - generic [ref=e1299]:
+                      - generic [ref=e1300]: Edit
+                      - combobox "Permissions levels" [ref=e1301]
+                    - button [ref=e1305] [cursor=pointer]:
+                      - img [ref=e1306]
+                  - generic [ref=e1309]:
+                    - generic [ref=e1310]:
+                      - generic [ref=e1311]: Resources
+                      - button "Resources" [ref=e1313] [cursor=pointer]: Account
+                    - generic [ref=e1315]:
+                      - generic [ref=e1316]: Permissions
+                      - combobox [ref=e1317]:
+                        - textbox "Permissions" [ref=e1318]:
+                          - /placeholder: Select
+                        - button [ref=e1319] [cursor=pointer]
+                    - generic [ref=e1321]:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: Select...
+                            - combobox "Permissions levels" [disabled]
+                    - button [ref=e1322] [cursor=pointer]:
+                      - img [ref=e1323]
+                  - button "Add more" [active] [ref=e352]:
+                    - img [ref=e353]
+                    - generic [ref=e355]: Add more
+              - generic [ref=e356]:
+                - heading "Account Resources" [level=4] [ref=e357]
+                - generic [ref=e358]: Select accounts to include or exclude.
+                - generic [ref=e359]:
+                  - generic [ref=e361]:
+                    - generic [ref=e368]:
+                      - generic [ref=e369]: Include
+                      - combobox [ref=e370]
+                    - generic [ref=e380]:
+                      - generic [ref=e381]: All accounts
+                      - combobox [ref=e382]
+                  - button "Add more" [ref=e386]:
+                    - img [ref=e387]
+                    - generic [ref=e389]: Add more
+              - generic [ref=e390]:
+                - heading "Client IP Address Filtering" [level=4] [ref=e391]
+                - generic [ref=e392]: Select IP addresses or ranges of IP addresses to filter. This filter limits the client IP addresses that can use the API token with Cloudflare. By default, this token will apply to all addresses.
+                - generic [ref=e393]:
+                  - generic [ref=e394]: Operator
+                  - generic [ref=e395]: Value
+                - generic [ref=e396]:
+                  - generic [ref=e398]:
+                    - generic [ref=e400]:
+                      - generic [ref=e401]: Select IP addresses or ranges of IP addresses to filter. This filter limits the client IP addresses that can use the API token with Cloudflare. By default, this token will apply to all addresses.
+                      - combobox [ref=e402]:
+                        - textbox "Select IP addresses or ranges of IP addresses to filter. This filter limits the client IP addresses that can use the API token with Cloudflare. By default, this token will apply to all addresses." [ref=e403]:
+                          - /placeholder: Select
+                        - button [ref=e404] [cursor=pointer]
+                    - generic [ref=e406]:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: e.g. 192.168.1.88
+                    - button "Use my IP" [disabled]
+                  - button "Add more" [ref=e407]:
+                    - img [ref=e408]
+                    - generic [ref=e410]: Add more
+              - generic [ref=e411]:
+                - heading "TTL" [level=4] [ref=e412]
+                - generic [ref=e413]: Define how long this token will stay active.
+                - generic [ref=e417]:
+                  - generic [ref=e418]:
+                    - textbox "Start Date" [ref=e419] [cursor=pointer]
+                    - paragraph [ref=e420]: Press the down arrow key to interact with the calendar and select a date. Press the question mark key to get the keyboard shortcuts for changing dates.
+                    - generic [ref=e421]: Start Date
+                  - img [ref=e423]
+                  - generic [ref=e425]:
+                    - textbox "End Date" [ref=e426] [cursor=pointer]
+                    - paragraph [ref=e427]: Press the down arrow key to interact with the calendar and select a date. Press the question mark key to get the keyboard shortcuts for changing dates.
+                    - generic [ref=e428]: End Date
+              - separator [ref=e429]
+              - generic [ref=e430]:
+                - button "Cancel" [ref=e431] [cursor=pointer]:
+                  - generic [ref=e432]: Cancel
+                - button "Continue to summary" [ref=e433] [cursor=pointer]:
+                  - generic [ref=e434]: Continue to summary
+      - contentinfo [ref=e227]:
+        - list [ref=e229]:
+          - listitem [ref=e230]:
+            - link "Support" [ref=e231] [cursor=pointer]:
+              - /url: https://support.cloudflare.com
+          - listitem [ref=e232]:
+            - link "System status" [ref=e233] [cursor=pointer]:
+              - /url: https://www.cloudflarestatus.com
+          - listitem [ref=e234]:
+            - link "Careers" [ref=e235] [cursor=pointer]:
+              - /url: https://www.cloudflare.com/careers/
+          - listitem [ref=e236]:
+            - link "Terms of Use" [ref=e237] [cursor=pointer]:
+              - /url: https://www.cloudflare.com/website-terms/
+          - listitem [ref=e238]:
+            - link "Report Security Issues" [ref=e239] [cursor=pointer]:
+              - /url: https://www.cloudflare.com/disclosure/
+          - listitem [ref=e240]:
+            - link "Privacy Policy" [ref=e241] [cursor=pointer]:
+              - /url: https://www.cloudflare.com/privacypolicy/
+          - listitem [ref=e242]:
+            - button "A blue and white pill with a checkmark and an x, representing privacy choices Cookie Preferences" [ref=e243] [cursor=pointer]:
+              - img "A blue and white pill with a checkmark and an x, representing privacy choices" [ref=e244]
+              - text: Cookie Preferences
+          - listitem [ref=e245]:
+            - generic [ref=e246]: © 2026 Cloudflare, Inc.
+  - generic:
+    - region "Notifications"
+  - status [ref=e435]

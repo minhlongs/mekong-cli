@@ -83,10 +83,10 @@ async function spawnBrain() {
   tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.0 -T "P0: mekong-cli ONLY"`, TMUX_SESSION);
 
   tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.1 'cd ${dirP1} && ${cmdApi}' Enter`, TMUX_SESSION);
-  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.1 -T "P1: algo-trader ONLY"`, TMUX_SESSION);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.1 -T "P1: well ONLY"`, TMUX_SESSION);
 
   tmuxExec(`tmux send-keys -t ${TMUX_SESSION}.2 'cd ${dirP2} && ${cmdApi}' Enter`, TMUX_SESSION);
-  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.2 -T "P2: well ONLY"`, TMUX_SESSION);
+  tmuxExec(`tmux select-pane -t ${TMUX_SESSION}.2 -T "P2: algo-trader ONLY"`, TMUX_SESSION);
 
   log(`BRAIN: Waiting for CC CLI bypass prompts...`);
   await new Promise(r => setTimeout(r, 10000));
@@ -99,15 +99,7 @@ async function spawnBrain() {
 
 function _buildMcpConfig() {
   return {
-    mcpServers: {
-      filesystem: {
-        command: 'node',
-        args: [
-          '/Users/macbookprom1/.npm/_npx/a3241bba59c344f5/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js',
-          '/Users/macbookprom1/mekong-cli',
-        ],
-      },
-    },
+    mcpServers: {}
   };
 }
 

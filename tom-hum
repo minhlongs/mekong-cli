@@ -1,0 +1,90 @@
+#!/bin/bash
+# tom-hum — Master ON/OFF switch for Tôm Hùm CTO
+# Usage: tom-hum on | tom-hum off | tom-hum status
+
+case "$1" in
+  off)
+    echo "🦞 NUCLEAR OFF — DIỆT SẠCH"
+    pm2 kill 2>/dev/null
+    # Kill ALL openclaw/CTO related node procs
+    pkill -f "task-watcher" 2>/dev/null
+    pkill -f "bridge-server" 2>/dev/null
+    pkill -f "vibe-factory" 2>/dev/null
+    pkill -f "auto-cto" 2>/dev/null
+    pkill -f "m1-cool" 2>/dev/null
+    pkill -f "night-monitor" 2>/dev/null
+    pkill -f "scribe-daemon" 2>/dev/null
+    pkill -f "brain-" 2>/dev/null
+    pkill -f "jules" 2>/dev/null
+    pkill -f "playwright-mcp" 2>/dev/null
+    pkill -f "9router" 2>/dev/null
+    pkill -f "antigravity-claude-proxy" 2>/dev/null
+    # Kill tmux cooler
+    tmux kill-session -t cooler 2>/dev/null
+    # Unload ALL LaunchAgents
+    for plist in ~/Library/LaunchAgents/cc.claudekit.* ~/Library/LaunchAgents/com.openclaw.* ~/Library/LaunchAgents/com.tomhum.*; do
+      launchctl unload "$plist" 2>/dev/null
+    done
+    echo "✅ SẠCH BONG. Chỉ còn tmux tom_hum + CC CLI cho sếp."
+    ;;
+  on)
+    echo "🦞 BẬT TÔM HÙM — AUTO MODE"
+    # Cooler
+    tmux new-session -d -s cooler "bash -c 'while true; do L=\$(sysctl -n vm.loadavg | awk \"{print \\\$2}\" | tr -d \"{\"); LI=\${L%%.*}; if [ \"\$LI\" -gt 30 ]; then echo \"🔥 OVERHEAT Load=\$L\"; sleep 30; elif [ \"\$LI\" -gt 15 ]; then echo \"🟡 WARM Load=\$L\"; sleep 15; else echo \"🧊 COOL Load=\$L\"; sleep 20; fi; done'" 2>/dev/null
+    echo "✅ Cooler ON"
+    # Respawn dead panes
+    for i in 0 1 2; do
+      STATE=$(tmux display-message -t "tom_hum:0.${i}" -p "#{pane_dead}" 2>/dev/null)
+      if [ "$STATE" = "1" ]; then
+        case $i in
+          0) DIR="/Users/macbookprom1/mekong-cli" ;;
+          1) DIR="/Users/macbookprom1/mekong-cli/apps/well" ;;
+          2) DIR="/Users/macbookprom1/mekong-cli/apps/algo-trader" ;;
+        esac
+        tmux respawn-pane -k -t "tom_hum:0.${i}" "bash -c 'cd $DIR && unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions'"
+        echo "✅ P${i} respawned ($DIR)"
+      else
+        echo "✅ P${i} already alive"
+      fi
+    done
+    echo "🦞 Tôm Hùm ON. Dùng 'tom-hum inject' để chọc task."
+    ;;
+  inject)
+    echo "🦞 INJECTING /bootstrap:auto:parallel..."
+    for i in 0 1 2; do
+      tmux send-keys -t "tom_hum:0.${i}" '/bootstrap:auto:parallel' Enter
+    done
+    echo "✅ Injected all 3 panes"
+    ;;
+  auto)
+    echo "🦞 AUTO MODE — BẬT VÒNG LẶP M1 VÔ TẬN (/bootstrap:auto:parallel)"
+    tmux kill-session -t cooler 2>/dev/null
+    tmux new-session -d -s cooler "bash /Users/macbookprom1/mekong-cli/factory-loop.sh"
+    echo "✅ Vòng lặp Factory đã chạy. Cứ để máy đó, M1 sẽ luôn được mát."
+    echo "Sếp xem log giám sát: tmux attach -t cooler"
+    ;;
+  status)
+    echo "🦞 TÔM HÙM STATUS"
+    echo "--- LOAD ---"
+    sysctl -n vm.loadavg
+    echo "--- PANES ---"
+    for i in 0 1 2; do
+      DEAD=$(tmux display-message -t "tom_hum:0.${i}" -p "#{pane_dead}" 2>/dev/null)
+      if [ "$DEAD" = "1" ]; then
+        echo "P${i}: ❌ DEAD"
+      else
+        echo -n "P${i}: ✅ "
+        tmux capture-pane -t "tom_hum:0.${i}" -p -S -3 | grep -E "bypass|agents|bashes|Error" | tail -1
+      fi
+    done
+    echo "--- COOLER ---"
+    tmux has-session -t cooler 2>/dev/null && echo "✅ Running" || echo "❌ Off"
+    ;;
+  *)
+    echo "Usage: tom-hum [on|off|inject|status]"
+    echo "  on     — Bật tất cả + respawn dead panes"  
+    echo "  off    — Tắt hết, giải phóng tmux cho sếp"
+    echo "  inject — Chọc /bootstrap:auto:parallel vào 3 panes"
+    echo "  status — Xem trạng thái"
+    ;;
+esac

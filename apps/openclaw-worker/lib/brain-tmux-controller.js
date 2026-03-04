@@ -115,7 +115,9 @@ function pasteText(text, workerIdx, sessionName = TMUX_SESSION_PRO) {
   const promptFile = `/tmp/tom_hum_prompt_P${idx}.txt`;
   fs.writeFileSync(promptFile, cleanText); // NO trailing newline in file
   tmuxExec(`tmux load-buffer ${promptFile}`, sessionName);
-  tmuxExec(`tmux paste-buffer -p -t ${target}`, sessionName);
+  // 🦞 FIX: Do NOT use `-p` (bracketed paste).
+  // Bracketed paste tells CC CLI to queue the messages visually.
+  tmuxExec(`tmux paste-buffer -d -t ${target}`, sessionName);
   try { fs.unlinkSync(promptFile); } catch (e) { }
 }
 

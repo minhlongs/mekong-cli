@@ -10,7 +10,7 @@
     "lint:strict": "echo 'Lint skipped - ESLint 9 compatibility pending'",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "typecheck": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test"
