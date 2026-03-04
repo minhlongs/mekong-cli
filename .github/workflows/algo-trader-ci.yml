@@ -167,6 +167,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx prisma generate
+
       - name: Build backend
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: pnpm run build
