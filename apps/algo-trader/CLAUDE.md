@@ -61,3 +61,28 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 | 火攻 | Verify trước khi báo cáo |
 
 **Combo:** BMAD planning → Agent Teams → Verify
+
+
+## 🔴 CẤM CI/CD POLLING LOOP (Added 2026-03-04)
+
+**TUYỆT ĐỐI CẤM chạy while loop poll CI/CD status!**
+
+Lý do: Vòng lặp `while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; gh run list...sleep 30; done` tốn ~12,500 tokens → context cháy 0% → crash.
+
+**LUẬT:**
+1. **CẤM** `while` loop poll `gh run list` hoặc bất kỳ CI/CD status check nào
+2. **CHỈ ĐƯỢC** check CI/CD status **MỘT LẦN** duy nhất: `gh run list -L1 --json status,conclusion`
+3. **SAU KHI** `git push`, báo cáo kết quả push và **DỪNG** — không poll
+4. **CẤM** `sleep` trong bất kỳ loop nào — mỗi giây sleep = tokens lãng phí
+
+```bash
+# ❌ CẤM (burns 12K+ tokens):
+MAX_ATTEMPTS=25; while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+  STATUS=$(gh run list -L 1 --json status,conclusion); sleep 30
+done
+
+# ✅ ĐÚNG (chỉ 1 lần):
+gh run list -L 1 --json status,conclusion -q ".[0]"
+# Báo cáo kết quả và tiếp tục task khác
+```
+
