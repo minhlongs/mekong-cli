@@ -52,6 +52,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx prisma generate
+
       - name: Lint
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: pnpm run lint
@@ -86,6 +90,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx prisma generate
+
       - name: Typecheck
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: pnpm run typecheck
@@ -119,6 +127,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: npx prisma generate
 
       - name: Run tests with coverage
         working-directory: ${{ env.WORKING_DIRECTORY }}
