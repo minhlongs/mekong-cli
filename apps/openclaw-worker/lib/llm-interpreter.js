@@ -15,9 +15,9 @@ const path = require('path');
 const config = require('../config');
 
 const PROXY_PORT = config.PROXY_PORT || 20128;
-const MODEL = 'gemini-3-flash';
-const TIMEOUT_MS = 15000;
-const CACHE_TTL_MS = 8000;
+const MODEL = 'qwen3.5-plus';  // 🦞 Must match proxy routing table
+const TIMEOUT_MS = 8000;
+const CACHE_TTL_MS = 5000;
 const METRICS_FILE = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/llm-metrics.json');
 
 // Ensure data dir exists
@@ -57,76 +57,82 @@ RULES:
 
 Return: {"state":"busy|idle|complete|error|question|context_limit","confidence":0.9,"summary":"brief","lastAction":"what finished","recommendation":"next step"}`;
 
-/**
- * Raw HTTP call to Antigravity Proxy
- */
 function callLLM(prompt) {
-    return new Promise(async (resolve) => {
-        const body = JSON.stringify({
+    return new Promise((resolve) => {
+        const payload = JSON.stringify({
             model: MODEL,
-            max_tokens: 1024,
-            system: SYSTEM_PROMPT,
-            messages: [{ role: 'user', content: prompt }]
+            max_tokens: 300,  // 🚀 Gemini adds <thought> tags, need room for JSON after
+            messages: [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content: prompt }
+            ]
         });
 
-        const controller = new AbortController();
-        const timer = setTimeout(() => {
-            log(`TIMEOUT after ${TIMEOUT_MS}ms`);
-            controller.abort();
-        }, TIMEOUT_MS);
+        // 🦞 Route through Antigravity Proxy (already configured with Qwen key)
+        const targetPort = config.LLM_PROXY_PORT || 9191;
+        const req = http.request({
+            hostname: '127.0.0.1',
+            port: targetPort,
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload)
+            },
+            timeout: TIMEOUT_MS,
+        }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
 
-        try {
-            const res = await fetch(`http://127.0.0.1:${PROXY_PORT}/v1/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'ollama',
-                    'anthropic-version': '2023-06-01'
-                },
-                body: body,
-                signal: controller.signal
-            });
-            clearTimeout(timer);
+                    if (json.error) {
+                        log(`API error: ${json.error.message || JSON.stringify(json.error)}`);
+                        resolve(null);
+                        return;
+                    }
 
-            const txt = await res.text();
+                    const content = json.choices?.[0]?.message?.content || '';
+                    if (!content) {
+                        log(`Empty text in response. Raw: ${data.slice(0, 100)}...`);
+                        resolve(null);
+                        return;
+                    }
 
-            try {
-                const response = JSON.parse(txt);
+                    // Parse JSON (strip thought tags and markdown fences)
+                    let jsonStr = content
+                        .replace(/<thought>[\s\S]*?<\/thought>/g, '') // Strip thinking blocks
+                        .replace(/```json?\n?/g, '')
+                        .replace(/```/g, '')
+                        .trim();
 
-                const textBlock = Array.isArray(response.content)
-                    ? response.content.find(c => c.type === 'text')
-                    : { text: typeof response.content === 'string' ? response.content : '' };
+                    // Fallback JSON extraction
+                    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) jsonStr = jsonMatch[0];
 
-                let text = textBlock?.text || '';
-
-                if (!text && response.error) {
-                    text = `{"state": "error", "summary": "${response.error.message}"}`;
-                }
-
-                if (!text) {
-                    const types = Array.isArray(response.content) ? response.content.map(c => c.type).join(',') : typeof response.content;
-                    log(`Empty text in response. Content types: ${types}. Raw: ${txt.slice(0, 100)}...`);
+                    const result = JSON.parse(jsonStr);
+                    resolve(result);
+                } catch (e) {
+                    log(`Parse error: ${e.message}. Raw: ${data.slice(0, 200)}`);
                     resolve(null);
-                    return;
                 }
+            });
+        });
 
-                // Parse JSON (strip thought tags and markdown fences)
-                const jsonStr = text
-                    .replace(/<thought>[\s\S]*?<\/thought>/g, '') // Strip thinking blocks
-                    .replace(/```json?\n?/g, '')
-                    .replace(/```/g, '')
-                    .trim();
-                const result = JSON.parse(jsonStr);
-                resolve(result);
-            } catch (e) {
-                log(`Parse error: ${e.message}. Raw: ${txt.slice(0, 200)}`);
-                resolve(null);
-            }
-        } catch (e) {
-            clearTimeout(timer);
-            log(`HTTP/Fetch error: ${e.message}`);
+        req.on('error', (e) => {
+            log(`HTTP network error: ${e.message}`);
             resolve(null);
-        }
+        });
+
+        req.on('timeout', () => {
+            req.destroy();
+            log(`TIMEOUT after ${TIMEOUT_MS}ms`);
+            resolve(null);
+        });
+
+        req.write(payload);
+        req.end();
     });
 }
 
@@ -141,12 +147,23 @@ async function interpretState(paneOutput) {
         return _cache.result;
     }
 
+    const lines = paneOutput.split('\n');
+    const lastLines = lines.slice(-10).join('\n');
+    const lastLine = lines.filter(l => l.trim()).slice(-1)[0] || '';
+
+    // 🚀 REGEX FAST-PATH: Skip LLM for obvious states (0ms vs 13s)
+    // This handles 80%+ of cases without burning API tokens
+    const fastResult = regexFastPath(lastLines, lastLine);
+    if (fastResult) {
+        _cache = { result: fastResult, timestamp: Date.now() };
+        return fastResult;
+    }
+
     _metrics.calls++;
     const startTime = Date.now();
 
-    // Truncate to last 40 lines to save tokens
-    const lines = paneOutput.split('\n');
-    const truncated = lines.slice(-40).join('\n');
+    // 🚀 Truncate to last 15 lines (was 40) — less tokens = faster response
+    const truncated = lines.slice(-15).join('\n');
     const prompt = `Analyze this CC CLI terminal output:\n\n${truncated}`;
 
     // Attempt 1
@@ -155,7 +172,6 @@ async function interpretState(paneOutput) {
     // Retry with simpler prompt if failed
     if (!result) {
         log(`Attempt 1 failed — retrying with simpler prompt`);
-        const lastLines = lines.slice(-10).join('\n');
         const simplePrompt = `Terminal last 10 lines:\n${lastLines}\n\nReturn JSON with state (busy/idle/complete/error/question).`;
         result = await callLLM(simplePrompt);
     }
@@ -253,4 +269,52 @@ function getMetrics() {
     return { ..._metrics };
 }
 
-module.exports = { interpretState, getMissionSummary, selectNextTask, clearCache, getMetrics };
+/**
+ * 🚀 Regex Fast-Path — detect obvious states without LLM call
+ * Handles ~80% of cases in 0ms instead of 13s
+ */
+function regexFastPath(lastLines, lastLine) {
+    // IDLE: prompt symbol visible in last 5 lines (status bar may be final line)
+    const hasPrompt = /❯/.test(lastLines);
+    const hasBusyIndicator = /Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|Hatching|thinking|Ebbing|Compacting/i.test(lastLines);
+    if (hasPrompt && !hasBusyIndicator) {
+        return { state: 'idle', confidence: 0.95, summary: 'CC CLI at prompt (regex)', lastAction: '', recommendation: 'dispatch_task' };
+    }
+
+    // QUESTION: compaction prompt or yes/no (MUST be before BUSY — Compacting matches both)
+    if (/Compacting conversation|Press Enter|compact or.*clear|\(y\/n\)/i.test(lastLines)) {
+        return { state: 'question', confidence: 0.9, summary: 'Needs user input (regex)', lastAction: '', recommendation: 'send_enter' };
+    }
+
+    // COMPLETE: "Cooked for Xm Ys" or "Brewed for Xs" (MUST be before BUSY)
+    const completeMatch = lastLines.match(/(Cooked|Brewed|Churned|Sautéed)\s+for\s+(\d+[ms].*?)$/im);
+    if (completeMatch) {
+        return { state: 'complete', confidence: 0.95, summary: `${completeMatch[1]} for ${completeMatch[2]} (regex)`, lastAction: completeMatch[0], recommendation: 'check_result' };
+    }
+
+    // BUSY: thinking/cooking status words
+    const busyMatch = lastLines.match(/(Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|Finagling|Blanching|Gitifying|thinking).*?\((\d+[ms].*?)\)/i);
+    if (busyMatch) {
+        return { state: 'busy', confidence: 0.95, summary: `Agent ${busyMatch[1]} (${busyMatch[2]}) (regex)`, lastAction: '', recommendation: 'wait' };
+    }
+
+    // Also catch "* Thinking..." or status bar patterns
+    if (/[✶·✻]\s*(Thinking|Implementing|Scanning)/i.test(lastLines)) {
+        return { state: 'busy', confidence: 0.9, summary: 'Agent working (regex)', lastAction: '', recommendation: 'wait' };
+    }
+
+    // CC CLI loading/initializing (bypass permissions visible but NO prompt anywhere)
+    if (/bypass permissions on/i.test(lastLines) && !hasPrompt) {
+        return { state: 'busy', confidence: 0.85, summary: 'CC CLI loading (regex)', lastAction: '', recommendation: 'wait' };
+    }
+
+    // SHELL: crashed to bash (% or $ prompt)
+    if (/(%|\$)\s*$/.test(lastLine) && !lastLine.includes('❯')) {
+        return { state: 'error', confidence: 0.9, summary: 'CC CLI exited to shell (regex)', lastAction: '', recommendation: 'respawn' };
+    }
+
+    // No match — fall through to LLM
+    return null;
+}
+
+module.exports = { interpretState, getMissionSummary, selectNextTask, clearCache, getMetrics, regexFastPath };

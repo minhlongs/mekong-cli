@@ -14,6 +14,8 @@ const { reflectOnMission } = require('./post-mortem-reflector');
 const { updateSessionStats } = require('./self-analyzer');
 const { recordEconomicCompletion } = require('./clawwork-integration');
 const { postMissionSummary } = require('./moltbook-integration');
+const { isTradingMission } = require('./trading-cadence-scheduler');
+const { handleTradingMissionCompletion } = require('./trading-post-mission-report-handler');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // 🧬 FIX Bug #3: Priority sorting CRITICAL > HIGH > MEDIUM > LOW > (no prefix)
@@ -231,6 +233,16 @@ async function processQueue() {
         content,
         resultCode: result ? (result.result || '') : ''  // 🧬 FIX: pass result code for accurate failure classification
       });
+
+      // 🏢 TRADING COMPANY: Post-mission report analysis → decision engine
+      if (isTradingMission(content)) {
+        try {
+          const tradingResult = handleTradingMissionCompletion(content, missionSuccess);
+          log(`[TRADING-PMH] /trading mission → ${tradingResult.action}: ${tradingResult.reason}${tradingResult.followUpDispatched ? ' [follow-up queued]' : ''}`);
+        } catch (e) {
+          log(`[TRADING-PMH] Error: ${e.message}`);
+        }
+      }
 
       // 🧠 OpenClaw-RL: Send reward signal for continuous learning
       sendRewardSignal({

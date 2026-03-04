@@ -29,4 +29,7 @@ export const logger = winston.createLogger({
       dirname: 'logs'
     })
   ]
-});
+}) as winston.Logger & { critical: (message: string) => void };
+
+// Add critical alias for emergencies
+(logger as any).critical = (message: string) => logger.error(`[CRITICAL] ${message}`);

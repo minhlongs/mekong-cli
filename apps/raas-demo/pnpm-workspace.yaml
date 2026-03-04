@@ -1,3 +1,6 @@
+# Local workspace config for raas-demo
+packages:
+  - '.'
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

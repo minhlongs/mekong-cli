@@ -1,118 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "eedaa7f5abee",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ cal-com/cal",
-      "dispatchedAt": 1772347288331
-    },
-    {
-      "hash": "2cb32585f4dd",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from mem0ai/m",
-      "dispatchedAt": 1772347315066
-    },
-    {
-      "hash": "48835c38313d",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ google",
-      "dispatchedAt": 1772347472732
-    },
-    {
-      "hash": "548462f096b3",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from upstash/q",
-      "dispatchedAt": 1772347657655
-    },
-    {
-      "hash": "6d70d5dac976",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ n8n-io",
-      "dispatchedAt": 1772347743052
-    },
-    {
-      "hash": "fb09864e3256",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from google/zx",
-      "dispatchedAt": 1772347770125
-    },
-    {
-      "hash": "d6a1b30cf439",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ vercel/ai & ",
-      "dispatchedAt": 1772347910978
-    },
-    {
-      "hash": "2fe07eaa5908",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN codebase algo-trader. 2/ Ánh xạ Berri",
-      "dispatchedAt": 1772348013195
-    },
-    {
-      "hash": "705d46291016",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN architecture & pattern from pulumi/pu",
-      "dispatchedAt": 1772348272959
-    },
-    {
-      "hash": "49aabd1c6d96",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from temporal-",
-      "dispatchedAt": 1772348542895
-    },
-    {
-      "hash": "23994a4bef01",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ grafana/graf",
-      "dispatchedAt": 1772348818060
-    },
-    {
-      "hash": "84d00f4e06c6",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from electron",
-      "dispatchedAt": 1772348844724
-    },
-    {
-      "hash": "3cde94df9c47",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ netdata/net",
-      "dispatchedAt": 1772349088588
-    },
-    {
-      "hash": "12185a51f757",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN architecture & pattern from formbric",
-      "dispatchedAt": 1772349115178
-    },
-    {
       "hash": "84ee81998ff0",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1487,118 @@
       "chapter": "TIER3-STRATEGIC: build",
       "preview": "/cook \"mekong-cli: Nâng build từ 5→10. Scan codebase, fix issues, add tests/docs",
       "dispatchedAt": 1772384392672
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772408352021
+    },
+    {
+      "hash": "51cbbedd2ac5",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-STRATEGIC: performance",
+      "preview": "/cook \"well: Nâng performance từ 3→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772409427471
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772409522510
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772409881832
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772413435897
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772413886881
+    },
+    {
+      "hash": "51cbbedd2ac5",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-STRATEGIC: performance",
+      "preview": "/cook \"well: Nâng performance từ 3→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772414065346
+    },
+    {
+      "hash": "e6db4650b1e8",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: build",
+      "preview": "/cook \"mekong-cli: Nâng build từ 5→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772414154000
+    },
+    {
+      "hash": "3c5bd9bb77f8",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"well: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/docs a",
+      "dispatchedAt": 1772414422992
+    },
+    {
+      "hash": "9ed19a06ae24",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: production",
+      "preview": "/cook \"mekong-cli: Nâng production từ 4→10. Scan codebase, fix issues, add tests",
+      "dispatchedAt": 1772414606975
+    },
+    {
+      "hash": "192cf124f6c3",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: resources",
+      "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
+      "dispatchedAt": 1772414678091
+    },
+    {
+      "hash": "51cbbedd2ac5",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-STRATEGIC: performance",
+      "preview": "/cook \"well: Nâng performance từ 3→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772414946322
+    },
+    {
+      "hash": "e6db4650b1e8",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: build",
+      "preview": "/cook \"mekong-cli: Nâng build từ 5→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772415042741
+    },
+    {
+      "hash": "58934708a1f1",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-STRATEGIC: tests",
+      "preview": "/cook \"mekong-cli: Nâng tests từ 5→10. Scan codebase, fix issues, add tests/docs",
+      "dispatchedAt": 1772415309549
     }
   ],
   "chapterIndex": 5

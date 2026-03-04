@@ -89,14 +89,32 @@ function killBrain(sessionName = config.TMUX_SESSION) {
  * isBrainAlive — checks if CC CLI is running in the given tmux pane.
  * paneTarget = full tmux pane address (e.g. tom_hum:brain.0).
  */
-function isBrainAlive(paneTarget = TMUX_SESSION_PRO) {
+function isBrainAlive(paneTarget = `${config.TMUX_SESSION}:0.0`) {
   if (!isSessionAlive(config.TMUX_SESSION)) return false;
   try {
     const output = execSync(
       `tmux capture-pane -t ${paneTarget} -p 2>/dev/null`,
-      { encoding: 'utf-8', timeout: 3000 }
+      { encoding: 'utf-8', timeout: 8000 }
     );
-    return [/❯/, /Claude Code/i, /bypass permissions/i, /claude-/i, /✻/].some(p => p.test(output));
+    // Only check LAST 5 lines for crash — old buffer may have stale "Resume" text
+    const tail5 = output.split('\n').filter(l => l.trim()).slice(-5).join('\n');
+
+    // Crashed = shell prompt at bottom AND no CC CLI indicators
+    const hasCCCLI = [/❯/, /bypass permissions/i, /✻/, /Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|thinking|Hatching|Ebbing/i].some(p => p.test(tail5));
+    const hasShellOnly = /[$%]\s*$/.test(tail5) && !hasCCCLI;
+
+    if (hasShellOnly) {
+      const pIdx = paneTarget.split('.').pop();
+      log(`[🩺 RESPAWN][P${pIdx}] Shell prompt detected — auto-restarting CC CLI`);
+      try {
+        execSync(`tmux send-keys -t ${paneTarget} "claude --dangerously-skip-permissions --continue"`, { timeout: 8000 });
+        execSync(`tmux send-keys -t ${paneTarget} Enter`, { timeout: 3000 });
+      } catch (e) {
+        log(`[🩺 RESPAWN][P${pIdx}] restart failed: ${e.message}`);
+      }
+      return false;
+    }
+    return hasCCCLI;
   } catch (e) { return false; }
 }
 
@@ -221,7 +239,7 @@ function parseContextUsage(output) {
  */
 function detectIdleWorkers(idleThresholdMs = 5 * 60 * 1000) {
   const idleWorkers = [];
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 2;
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 3;
 
   for (let idx = 0; idx < teamSize; idx++) {
     if (isWorkerBusy(idx)) continue; // Worker is busy, not idle
@@ -232,7 +250,7 @@ function detectIdleWorkers(idleThresholdMs = 5 * 60 * 1000) {
       if (fs.existsSync(lockPath)) continue; // Has lock = active
 
       // Check brain alive at this pane
-      const paneTarget = `${config.TMUX_SESSION}:brain.${idx}`;
+      const paneTarget = `${config.TMUX_SESSION}:0.${idx}`;
       if (!isBrainAlive(paneTarget)) continue; // Not alive = not idle, just dead
 
       // Calculate idle time from last lock removal (or process start)
@@ -257,10 +275,10 @@ function detectIdleWorkers(idleThresholdMs = 5 * 60 * 1000) {
  * @returns {{ workers: Array<{ idx: number, alive: boolean, busy: boolean, status: string }> }}
  */
 function getWorkerHealthSummary() {
-  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 2;
+  const teamSize = config.AGENT_TEAM_SIZE_DEFAULT || 3;
   const workers = [];
   for (let idx = 0; idx < teamSize; idx++) {
-    const paneTarget = `${config.TMUX_SESSION}:brain.${idx}`;
+    const paneTarget = `${config.TMUX_SESSION}:0.${idx}`;
     const alive = isBrainAlive(paneTarget);
     const busy = isWorkerBusy(idx);
     let status = 'unknown';

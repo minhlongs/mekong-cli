@@ -12,9 +12,9 @@ const MEKONG_DIR = process.env.MEKONG_DIR || path.join(process.env.HOME || '', '
 const config = {
   MEKONG_DIR,
   OPENCLAW_HOME: process.env.OPENCLAW_HOME || path.join(process.env.HOME || '', '.openclaw'),
-  WATCH_DIR: path.join(MEKONG_DIR, 'tasks'),
-  PROCESSED_DIR: path.join(MEKONG_DIR, 'tasks', 'processed'),
-  REJECTED_DIR: path.join(MEKONG_DIR, 'tasks', 'rejected'),
+  WATCH_DIR: path.join(MEKONG_DIR, 'apps', 'openclaw-worker', 'tasks'),
+  PROCESSED_DIR: path.join(MEKONG_DIR, 'apps', 'openclaw-worker', 'tasks', 'processed'),
+  REJECTED_DIR: path.join(MEKONG_DIR, 'apps', 'openclaw-worker', 'tasks', 'rejected'),
   LOG_FILE: process.env.TOM_HUM_LOG || path.join(process.env.HOME || '', 'tom_hum_cto.log'),
   THERMAL_LOG: process.env.TOM_HUM_THERMAL_LOG || path.join(process.env.HOME || '', 'tom_hum_thermal.log'),
   MISSION_FILE: '/tmp/tom_hum_next_mission.txt',
