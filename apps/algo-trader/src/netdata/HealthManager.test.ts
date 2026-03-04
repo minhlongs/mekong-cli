@@ -5,6 +5,7 @@ describe('HealthManager', () => {
     let mockSignalMesh: { emit: jest.Mock; publish: jest.Mock };
 
     beforeEach(() => {
+        jest.useFakeTimers();
         mockSignalMesh = {
             emit: jest.fn(),
             publish: jest.fn(),
@@ -15,6 +16,7 @@ describe('HealthManager', () => {
     afterEach(() => {
         healthManager.stopMonitoring();
         jest.clearAllTimers();
+        jest.useRealTimers();
     });
 
     it('should update metrics and trigger alert on transition from ok to non-ok', () => {

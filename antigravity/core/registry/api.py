@@ -2,7 +2,7 @@
 Registry API - Command resolution and lookup functions (Facade).
 """
 from .mcp_catalog import mcp_catalog
-from .metadata import list_subcommands, list_suites, get_agent_for_command
+from .metadata import list_subcommands, list_suites, get_agent_for_command, get_command_metadata
 from .store import COMMAND_REGISTRY, SHORTCUTS
 
 

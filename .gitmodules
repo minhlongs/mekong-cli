@@ -13,7 +13,7 @@
 	ignore = dirty
 
 [submodule "claudekit-engineer-dna"]
-	path = claudekit-engineer-dna
+	path = .archive/claudekit-engineer-dna
 	url = https://github.com/claudekit/claudekit-engineer.git
 	ignore = dirty
 
