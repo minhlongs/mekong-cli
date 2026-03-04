@@ -7,9 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-import os
 import sys
-from pathlib import Path
 
 app = typer.Typer(name="status", help="System health & API status")
 console = Console()
@@ -84,7 +82,7 @@ def api() -> None:
     # Provider info
     console.print(f"[bold]Base URL:[/bold] {llm_client.base_url}")
     console.print(f"[bold]Model:[/bold] {llm_client.model}")
-    console.print(f"[bold]Status:[/bold] [green]Connected[/green]")
+    console.print("[bold]Status:[/bold] [green]Connected[/green]")
 
     # Try to get provider quota info
     try:

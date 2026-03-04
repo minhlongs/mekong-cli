@@ -4,7 +4,7 @@ Alert Manager.
 
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from typing_extensions import TypedDict
 

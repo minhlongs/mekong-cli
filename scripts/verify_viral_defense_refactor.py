@@ -3,7 +3,6 @@ Verification script for Viral Defense Refactor.
 """
 import os
 import sys
-import time
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())

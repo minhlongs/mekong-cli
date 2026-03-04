@@ -6,7 +6,6 @@ Please import from core.security.keys_logic instead.
 """
 import warnings
 
-from .keys_logic import APIKeysManager, IntegrationType, KeyStatus
 
 # Issue a deprecation warning
 warnings.warn(

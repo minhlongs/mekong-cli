@@ -791,12 +791,26 @@ Missions được ủy thác cho các specialized "Hands" (từ `hands-registry.
 
 ---
 
+### 🔷 DNA #7: OPENCLAW V2026.3.2 INTELLIGENCE
+
+> **Ánh xạ:** Tinh hoa từ upstream v2026.3.2 release (Tháng 3/2026) vào Binh Pháp Tôm Hùm. Cập nhật không phá vỡ Kiến trúc lõi.
+
+| Tính năng Upstream | Binh Pháp Tôn Tử | Mapping Tôm Hùm CTO |
+|:---|:---|:---|
+| **Config Validate Gate** | 始計 Ch.1 — 多算勝 (Tính nhiều thắng) | Tự động validate `config.js` trước khi `checkAllPanes()`. Không cho phép cất quân nếu lỗi. |
+| **Secrets Fail-Fast** | 火攻 Ch.12 — Safety Gate (Mất nước không thể phục) | `process.exit(1)` ngay lập tức nếu thiếu `DASHSCOPE_API_KEY`. Tránh phá hủy Context. |
+| **Ollama Memory Fallback** | 九變 Ch.8 — Cửu Biến Adaptation | Khi DashScope/Proxy rớt, `llm-perception.js` lùi về local Ollama (qwen2) để giữ trí thông minh liên tục. |
+| **PDF Tool Analysis** | 用間 Ch.13 — Dụng Gián | Khai thác trinh sát tài liệu diện rộng. |
+
+---
+
 ## 📊 Tổng Kết Bộ Kinh Thư
 | Hệ Thống            | Số Lượng         | Nguồn                           | File                  |
 | :------------------ | :--------------- | :------------------------------ | :-------------------- |
 | 13 Chương           | 13               | Tôn Tử Binh Pháp gốc            | `BINH_PHAP_MASTER.md` |
 | 36 Kế               | 36 (6×6)         | Tam Thập Lục Kế (Nam Bắc Triều) | `36_KE.md`            |
 | DNA Fusion #6       | 12 Patterns      | OpenFang Agent OS (v0.1.0)       | `BINH_PHAP_MASTER.md` |
+| DNA Fusion #7       | 4 Features       | OpenClaw v2026.3.2               | `BINH_PHAP_MASTER.md` |
 | **TỔNG KIẾN THỨC**  | **212 concepts** |                                 |                       |
 
 ---

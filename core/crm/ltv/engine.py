@@ -1,8 +1,6 @@
 """
 Client LTV calculation engine logic.
 """
-import uuid
-from datetime import datetime, timedelta
 from typing import Dict
 
 from .models import ClientLTV, ClientTier

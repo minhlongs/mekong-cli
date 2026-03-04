@@ -4,7 +4,6 @@ License Key Validation
 Validates BizPlan Generator license keys and returns tier information.
 """
 
-import hashlib
 from typing import Optional, Tuple
 
 # Valid license key prefixes and their tiers

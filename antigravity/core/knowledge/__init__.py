@@ -9,14 +9,9 @@ Modular knowledge graph system with:
 """
 
 from .entity_extractor import EntityExtractor
-from .graph import (
-    KnowledgeGraph,
-    get_dependencies,
-    get_knowledge_graph,
-    index_codebase,
-    search_code,
-)
+from .graph import KnowledgeGraph
 from .manifest_generator import generate_manifest
+from .operations import get_dependencies, get_knowledge_graph, index_codebase, search_code
 from .rules import RuleRegistry, rule_registry
 from .search_engine import SearchEngine, SearchResult
 from .types import CodeEntity, EntityType, Relationship, RelationType

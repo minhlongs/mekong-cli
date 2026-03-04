@@ -4,7 +4,7 @@ Checkpoint Serializer - Logic for gathering and applying system state.
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from typing_extensions import TypedDict
 

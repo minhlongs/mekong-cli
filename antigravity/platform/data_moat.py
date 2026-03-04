@@ -6,7 +6,6 @@ Please import from antigravity.platform.data_moat instead.
 """
 import warnings
 
-from .data_moat import Benchmark, DataMoat, Insight, InsightType, data_moat
 
 # Issue a deprecation warning
 warnings.warn(

@@ -7,15 +7,6 @@ Please import from core.growth.marketing instead.
 """
 import warnings
 
-from .marketing import (
-    ChannelStrategy,
-    ContentCalendar,
-    ContentChannel,
-    ContentMarketingStrategy,
-    ContentPillar,
-    ContentStrategy,
-    ContentType,
-)
 
 # Issue a deprecation warning
 warnings.warn(

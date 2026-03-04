@@ -4,7 +4,6 @@ Product Extraction Script - Package .claude and .agencyos for Gumroad
 Nuclear Weaponization: Zero external dependencies, pure Python
 """
 
-import os
 import shutil
 import zipfile
 from datetime import datetime

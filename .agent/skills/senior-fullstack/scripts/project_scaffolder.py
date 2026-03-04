@@ -6,10 +6,9 @@ Automated tool for senior fullstack tasks
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 class ProjectScaffolder:

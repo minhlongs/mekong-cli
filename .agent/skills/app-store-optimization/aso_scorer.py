@@ -3,7 +3,7 @@ ASO scoring module for App Store Optimization.
 Calculates comprehensive ASO health score across multiple dimensions.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class ASOScorer:

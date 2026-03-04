@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 
 from .entity_extractor import EntityExtractor
 from .search_engine import SearchEngine, SearchResult
-from .types import CodeEntity, EntityType, Relationship, RelationType
+from .types import CodeEntity, EntityType, Relationship
 
 logger = logging.getLogger(__name__)
 
@@ -179,9 +179,3 @@ class KnowledgeGraph:
 
 
 # Re-export convenience functions for backward compatibility
-from .operations import (
-    get_dependencies,
-    get_knowledge_graph,
-    index_codebase,
-    search_code,
-)

@@ -2,9 +2,9 @@
 Business Plan Generator Engine logic.
 """
 import logging
-from typing import Dict, List
+from typing import Dict
 
-from .models import AgencyDNA, PlanSection
+from .models import AgencyDNA
 from .templates import QUESTIONS, SECTION_TEMPLATES
 
 logger = logging.getLogger(__name__)

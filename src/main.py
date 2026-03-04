@@ -26,6 +26,20 @@ from src.core.llm_client import get_client
 from src.agents import LeadHunter, ContentWriter, RecipeCrawler
 from src.cli.binh_phap_commands import app as binh_phap_app
 from src.commands.agi import app as agi_app
+from src.commands.status import app as status_app
+from src.commands.config import app as config_app
+from src.commands.doctor import app as doctor_app
+from src.commands.clean import app as clean_app
+from src.commands.test import app as test_app
+from src.commands.build import app as build_app
+from src.commands.deploy import app as deploy_app
+from src.commands.lint import app as lint_app
+from src.commands.docs import app as docs_app
+from src.commands.monitor import app as monitor_app
+from src.commands.security import app as security_app
+from src.commands.ci import app as ci_app
+from src.commands.env import app as env_app
+from src.commands.test_advanced import app as test_advanced_app
 from rich.prompt import Prompt
 
 # Import BMAD CLI (using dash naming convention)
@@ -76,6 +90,48 @@ app.add_typer(
 
 # AGI daemon sub-commands
 app.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
+
+# Status sub-commands
+app.add_typer(status_app, name="status", help="System health & API status")
+
+# Config sub-commands
+app.add_typer(config_app, name="config", help="Manage environment variables and API keys")
+
+# Doctor sub-commands
+app.add_typer(doctor_app, name="doctor", help="Diagnostic tool - check system requirements")
+
+# Clean sub-commands
+app.add_typer(clean_app, name="clean", help="Clean cache, temp files, build artifacts")
+
+# Test sub-commands
+app.add_typer(test_app, name="test", help="Run tests with various options")
+
+# Build sub-commands
+app.add_typer(build_app, name="build", help="Build project with various options")
+
+# Deploy sub-commands
+app.add_typer(deploy_app, name="deploy", help="Deploy applications to various platforms")
+
+# Lint sub-commands
+app.add_typer(lint_app, name="lint", help="Static analysis and code quality checks")
+
+# Docs sub-commands
+app.add_typer(docs_app, name="docs", help="Generate, serve, and manage documentation")
+
+# Monitor sub-commands
+app.add_typer(monitor_app, name="monitor", help="Monitor system resources, performance, and application health")
+
+# Security sub-commands
+app.add_typer(security_app, name="security", help="Audit, scan, and secure applications")
+
+# CI/CD sub-commands
+app.add_typer(ci_app, name="ci", help="CI/CD pipeline management")
+
+# Environment sub-commands
+app.add_typer(env_app, name="env", help="Environment management")
+
+# Advanced Testing sub-commands
+app.add_typer(test_advanced_app, name="test-advanced", help="Advanced testing strategies")
 
 console = Console()
 

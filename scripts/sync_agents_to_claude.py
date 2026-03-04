@@ -11,7 +11,6 @@ Strategy:
 4. If exists, skip (preserve .claude/agents as the "active" configuration).
 """
 
-import glob
 import os
 import shutil
 from pathlib import Path

@@ -16,12 +16,10 @@ The actual implementation has been moved to antigravity.core.knowledge package.
 
 from antigravity.core.knowledge import (
     CodeEntity,
-    EntityExtractor,
     EntityType,
     KnowledgeGraph,
     Relationship,
     RelationType,
-    SearchEngine,
     SearchResult,
     get_dependencies,
     get_knowledge_graph,

@@ -11,7 +11,7 @@ sys.path.insert(0, os.getcwd())
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.agency_dna import AgencyDNA, PricingTier, Service, Tone, create_starter_dna
+from antigravity.core.agency_dna import Tone, create_starter_dna
 
 
 def verify_agency_dna():

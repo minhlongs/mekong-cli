@@ -3,7 +3,6 @@ Ingestion Engine: Parses code and documentation to populate the Knowledge Graph.
 Uses AST for Python parsing.
 """
 import ast
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Union
 

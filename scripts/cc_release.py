@@ -16,14 +16,12 @@ License: MIT
 """
 
 import argparse
-import json
-import os
 import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 # ANSI color codes for terminal output

@@ -4,7 +4,7 @@ Rule Registry - Scalable rule management and semantic retrieval.
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 # Set up logging
 logger = logging.getLogger(__name__)

@@ -1,11 +1,10 @@
 """
 E-commerce Sales engine logic.
 """
-import logging
 import uuid
 from typing import List
 
-from .models import AbandonedCart, CartStatus, Sale, SaleStatus
+from .models import AbandonedCart, Sale, SaleStatus
 
 
 class EcommerceEngine:

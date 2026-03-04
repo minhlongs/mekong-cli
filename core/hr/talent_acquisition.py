@@ -7,15 +7,6 @@ Please import from antigravity.core.hr.recruiting instead.
 """
 import warnings
 
-from .recruiting import (
-    Candidate,
-    CandidateStage,
-    Interview,
-    JobPosting,
-    JobStatus,
-    JobType,
-    TalentAcquisition,
-)
 
 # Issue a deprecation warning
 warnings.warn(

@@ -7,9 +7,8 @@ specialized agents, manages their execution state, and tracks performance metric
 """
 
 import logging
-from antigravity.core.agent_chains import get_chain, get_chain_obj
+from antigravity.core.agent_chains import get_chain_obj
 from antigravity.core.algorithm.validation import validate_win3_logic
-from antigravity.core.chains import Chain
 from antigravity.core.mixins import StatsMixin
 from antigravity.core.telemetry import agent_telemetry
 from antigravity.core.types import HookContextDict, OrchestratorStatsDict

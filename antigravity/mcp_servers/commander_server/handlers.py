@@ -6,7 +6,6 @@ import asyncio
 import json
 import logging
 import subprocess
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

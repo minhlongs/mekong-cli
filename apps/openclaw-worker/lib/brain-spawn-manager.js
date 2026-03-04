@@ -61,7 +61,7 @@ function canRespawn() {
  */
 function generateClaudeCommand(intent = 'API') {
   // Binh Pháp: Triệt tiêu mọi proxy! Ép buộc dùng binary chuẩn
-  return `unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL` +
+  return `unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL` +
     ` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
     ` && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`;
 }

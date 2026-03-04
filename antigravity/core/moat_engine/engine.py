@@ -8,7 +8,7 @@ Calculates how "sticky" the platform has become for the user.
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Dict, Union
 
 from .dashboard import MoatDashboard
 from .definitions import get_default_moats

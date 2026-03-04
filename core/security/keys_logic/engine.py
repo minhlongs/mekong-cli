@@ -4,7 +4,7 @@ API Keys Manager logic and configuration.
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict
 
 from .models import APIKey, IntegrationType, KeyStatus
 

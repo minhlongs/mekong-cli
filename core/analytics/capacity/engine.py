@@ -1,7 +1,7 @@
 """
 Capacity calculation and logic.
 """
-from typing import Dict, List
+from typing import Dict
 
 from .models import CapacityLevel, DepartmentCapacity
 

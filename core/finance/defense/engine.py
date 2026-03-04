@@ -1,7 +1,6 @@
 """
 Mutual Defense engine logic.
 """
-import logging
 import uuid
 from typing import Dict, List
 

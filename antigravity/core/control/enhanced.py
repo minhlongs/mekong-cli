@@ -6,14 +6,7 @@ This file is now a facade for the modularized control orchestration logic.
 Please import from .orchestration.orchestrator instead.
 """
 import warnings
-from typing import Optional
 
-from .analytics import AnalyticsEvent, AnalyticsTracker
-from .circuit_breaker import CircuitBreaker
-from .feature_flags import FeatureFlag, FeatureFlagManager
-from .helpers import is_feature_enabled, set_feature_flag
-from .orchestration.orchestrator import EnhancedControlCenter, get_control_center
-from .redis_client import REDIS_AVAILABLE, RedisClient
 
 # Issue a deprecation warning
 warnings.warn(

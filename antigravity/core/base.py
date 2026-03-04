@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Type, TypeVar, Union, cast
+from typing import Dict, Optional, Type, TypeVar, Union, cast
 
 from .mixins import StatsMixin
 

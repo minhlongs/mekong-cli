@@ -6,7 +6,6 @@ Plugins can register custom commands, handle lifecycle events, and extend the CL
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import typer
 

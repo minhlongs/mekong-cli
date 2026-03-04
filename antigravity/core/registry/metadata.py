@@ -1,9 +1,9 @@
 """
 Registry Metadata - Command information and agent mapping.
 """
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from .mcp_catalog import MCPToolLookupResult, mcp_catalog
+from .mcp_catalog import mcp_catalog
 from .store import COMMAND_REGISTRY, SubcommandMetadataDict
 
 

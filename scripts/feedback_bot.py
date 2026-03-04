@@ -9,7 +9,6 @@ Bridges community insights directly into the AgencyOS roadmap.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

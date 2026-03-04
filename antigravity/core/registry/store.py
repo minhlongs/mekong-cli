@@ -1,7 +1,7 @@
 """
 Command Registry Store - Data Definitions.
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from typing_extensions import TypedDict
 

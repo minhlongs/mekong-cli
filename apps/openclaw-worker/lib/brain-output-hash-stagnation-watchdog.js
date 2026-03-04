@@ -149,7 +149,7 @@ async function autoRestartCCCLI(paneIdx, target, useContinue = false) {
 
     // Step 2: cd to correct project dir and start claude
     const continueFlag = useContinue ? ' --continue' : '';
-    const cmd = `cd ${dir} && unset ANTHROPIC_BASE_URL && command claude --dangerously-skip-permissions${continueFlag}`;
+    const cmd = `cd ${dir} && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE && unset ANTHROPIC_BASE_URL && command claude --dangerously-skip-permissions${continueFlag}`;
 
     log(`[WATCHDOG] P${paneIdx}: Restarting CC CLI in ${dir}${useContinue ? ' (with --continue)' : ''}`);
 

@@ -13,7 +13,7 @@ import argparse
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Optional
 
 from dotenv import load_dotenv
 

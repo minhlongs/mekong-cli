@@ -7,7 +7,6 @@ Prevents injection attacks and ensures data integrity.
 """
 
 from decimal import Decimal
-from typing import Optional
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, field_validator

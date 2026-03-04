@@ -5,7 +5,7 @@ import logging
 import uuid
 from datetime import datetime
 
-from .models import Franchisee, FranchiseStatus, FranchiseTier, Territory, TerritoryStatus
+from .models import Franchisee, FranchiseStatus, FranchiseTier, TerritoryStatus
 
 logger = logging.getLogger(__name__)
 

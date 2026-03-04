@@ -4,7 +4,6 @@ Environment Management Commands Module
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 
 app = typer.Typer(help="Environment management commands")
 

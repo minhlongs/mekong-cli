@@ -7,7 +7,6 @@ Uses ripgrep for performance when available.
 
 import logging
 import os
-import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path

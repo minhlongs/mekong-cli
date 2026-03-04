@@ -8,7 +8,6 @@ import subprocess
 import sys
 from pathlib import Path
 import shutil
-import os
 
 app = typer.Typer()
 console = Console()
@@ -103,7 +102,7 @@ def build_python_package(verbose: bool):
                 console.print(f"  {file.name} ({file.stat().st_size} bytes)")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Python build failed![/red]")
+        console.print("[red]❌ Python build failed![/red]")
         if not verbose and e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:
@@ -129,7 +128,7 @@ def build_js_frontend(verbose: bool):
         console.print("[green]✅ JS frontend built![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ JS build failed![/red]")
+        console.print("[red]❌ JS build failed![/red]")
         if not verbose and e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:
@@ -156,7 +155,7 @@ def build_docker_image(verbose: bool):
         console.print(f"[green]✅ Docker image built: {image_tag}[/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Docker build failed![/red]")
+        console.print("[red]❌ Docker build failed![/red]")
         if not verbose and e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:
@@ -228,7 +227,7 @@ def docker(
             console.print(f"[green]✅ Docker image pushed: {tag}[/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Docker operation failed![/red]")
+        console.print("[red]❌ Docker operation failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except FileNotFoundError:

@@ -2,14 +2,11 @@
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 import subprocess
 import sys
 from pathlib import Path
-import os
 import json
-import hashlib
 import secrets
 from datetime import datetime
 
@@ -359,7 +356,7 @@ def audit_config():
             })
 
         # Check for exposed credentials in compose files
-        if "docker-compose" in config_file.name and ("password:" in content or "secret:" in content) and not ("${" in content):
+        if "docker-compose" in config_file.name and ("password:" in content or "secret:" in content) and "${" not in content:
             findings.append({
                 "file": str(config_file),
                 "issue": "Credentials exposed in Docker Compose file",

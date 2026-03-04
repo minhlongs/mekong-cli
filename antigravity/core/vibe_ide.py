@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Union
 
 from .base import BaseEngine
 from .models.ide import Plan, TodoItem
-from .types import IDEStatsDict, PlanListItemDict
+from .types import PlanListItemDict
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -6,7 +6,6 @@ Please import from core.services.templates instead.
 """
 import warnings
 
-from .templates import DefaultTemplateProvider, TemplateEngine, TemplateProvider
 
 # Issue a deprecation warning
 warnings.warn(

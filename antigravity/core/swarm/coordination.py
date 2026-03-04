@@ -6,7 +6,7 @@ Helper functions for swarm status and metrics reporting.
 """
 
 import time
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
     from .messaging import TaskQueue

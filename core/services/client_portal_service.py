@@ -7,18 +7,6 @@ Please import from core.services.client_portal instead.
 """
 import warnings
 
-from .client_portal import (
-    Client,
-    ClientPortalService,
-    ClientStatus,
-    Invoice,
-    InvoiceStatus,
-    Message,
-    Project,
-    ProjectStatus,
-    ProjectTask,
-    TaskStatus,
-)
 
 # Issue a deprecation warning
 warnings.warn(

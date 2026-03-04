@@ -7,7 +7,7 @@ Extracts insights, patterns, and opportunities from user interviews
 import json
 import re
 from collections import Counter, defaultdict
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List
 
 
 class InterviewAnalyzer:

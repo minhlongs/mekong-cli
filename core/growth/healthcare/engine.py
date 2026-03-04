@@ -4,10 +4,9 @@ Healthcare Marketing Engine logic.
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from .models import (
-    CampaignType,
     ComplianceStatus,
     HealthcareCampaign,
     HealthcareClient,

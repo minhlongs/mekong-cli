@@ -158,7 +158,7 @@ def catch_all(path):
 # Keep the original function but remove route decorators to avoid conflict or just call it directly
 def messages():
     try:
-        print(f"🦙 MESSAGES HANDLER INVOKED", flush=True)
+        print("🦙 MESSAGES HANDLER INVOKED", flush=True)
         data = request.json
         print(f"🦙 PAYLOAD RECEIVED: {json.dumps(data)}", flush=True)
         oa_payload = anthropic_to_openai(data)

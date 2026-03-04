@@ -6,7 +6,6 @@ Please import from core.crm.experience instead.
 """
 import warnings
 
-from .experience import Client, ClientExperience, Project, ProjectStatus, Report, ServiceType
 
 # Issue a deprecation warning
 warnings.warn(

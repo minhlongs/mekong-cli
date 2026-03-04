@@ -4,7 +4,7 @@ Suggestion Management Logic.
 Handles filtering, sorting, and applying improvement suggestions.
 """
 import time
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from typing_extensions import TypedDict
 

@@ -6,12 +6,6 @@ Please import from core.crm.onboarding_logic instead.
 """
 import warnings
 
-from .onboarding_logic import (
-    ClientOnboarding,
-    ClientOnboardingFlow,
-    OnboardingChecklist,
-    OnboardingStep,
-)
 
 # Issue a deprecation warning
 warnings.warn(

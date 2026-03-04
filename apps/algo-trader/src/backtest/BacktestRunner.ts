@@ -3,6 +3,19 @@ import { IDataProvider } from '../interfaces/IDataProvider';
 import { ICandle } from '../interfaces/ICandle';
 
 import { logger } from '../utils/logger';
+import { AdvancedMetricsCalculator, AdvancedBacktestMetrics } from './AdvancedMetricsCalculator';
+import { SlippageModeler, SlippageConfig, OrderBookLevel } from './SlippageModeler';
+
+interface Trade {
+  entryPrice: number;
+  exitPrice: number;
+  entryTime: number;
+  exitTime: number;
+  profit: number;
+  profitPercent: number;
+  positionSize: number; // Units traded
+  fees: number; // Total fees (entry + exit)
+}
 
 export interface BacktestResult {
   strategyName: string;
@@ -17,6 +30,14 @@ export interface BacktestResult {
   winRate: number;
   avgProfit: number;
   sharpeRatio: number;
+  // Additional advanced metrics
+  advancedMetrics?: AdvancedBacktestMetrics;
+  slippageMetrics?: any;
+}
+
+export interface EnhancedBacktestConfig extends BacktestConfig {
+  slippageConfig?: SlippageConfig;
+  calculateAdvancedMetrics?: boolean;
 }
 
 interface Trade {
@@ -41,15 +62,17 @@ export class BacktestRunner {
   private dataProvider: IDataProvider;
   private initialBalance: number;
   private balance: number;
-  private trades: Trade[] = [];
+  private trades: Trade[] = []; // Using Trade interface from AdvancedMetricsCalculator
   private openPosition: { price: number; time: number; size: number } | null = null;
   private feeRate: number;
   private riskPercentage: number;
   private slippageBps: number;
   private peakBalance: number;
   private maxDrawdown = 0;
+  private equityCurve: number[] = [];
+  private slippageConfig?: SlippageConfig;
 
-  constructor(strategy: IStrategy, dataProvider: IDataProvider, initialBalance: number = 10000, config?: BacktestConfig) {
+  constructor(strategy: IStrategy, dataProvider: IDataProvider, initialBalance: number = 10000, config?: EnhancedBacktestConfig) {
     this.strategy = strategy;
     this.dataProvider = dataProvider;
     this.initialBalance = initialBalance;
@@ -58,6 +81,7 @@ export class BacktestRunner {
     this.feeRate = config?.feeRate ?? 0.001;
     this.riskPercentage = config?.riskPercentage ?? 2;
     this.slippageBps = config?.slippageBps ?? 5;
+    this.slippageConfig = config?.slippageConfig;
   }
 
   async run(days: number = 30, silent = false): Promise<BacktestResult> {
@@ -87,6 +111,9 @@ export class BacktestRunner {
             this.executeSell(candle);
           }
         }
+
+        // Update equity curve
+        this.equityCurve.push(this.balance);
       }
 
       if (!silent) this.printResults();
@@ -115,7 +142,8 @@ export class BacktestRunner {
       if (std > 0) sharpe = (mean * 252 - 0.05) / (std * Math.sqrt(252));
     }
 
-    return {
+    // Prepare result object
+    const result: BacktestResult = {
       strategyName: this.strategy.name,
       initialBalance: this.initialBalance,
       finalBalance: this.balance,
@@ -129,9 +157,34 @@ export class BacktestRunner {
       avgProfit,
       sharpeRatio: sharpe,
     };
+
+    // Calculate advanced metrics if requested
+    if (this.equityCurve.length > 0) {
+      result.advancedMetrics = AdvancedMetricsCalculator.calculateMetrics(
+        this.trades,
+        this.equityCurve,
+        0.02 // risk-free rate
+      );
+    }
+
+    return result;
   }
 
-  private applySlippage(price: number, side: 'buy' | 'sell'): number {
+  private applySlippage(price: number, side: 'buy' | 'sell', orderBook?: OrderBookLevel[]): number {
+    if (orderBook && this.slippageConfig) {
+      // Use the more sophisticated slippage model if order book data is provided
+      const slippageEstimate = SlippageModeler.calculateSlippage(
+        price,
+        1, // dummy size for relative calculation
+        side,
+        orderBook,
+        this.slippageConfig
+      );
+
+      return slippageEstimate.effectivePrice;
+    }
+
+    // Fall back to the original method
     const slippageMul = this.slippageBps / 10000;
     return side === 'buy' ? price * (1 + slippageMul) : price * (1 - slippageMul);
   }

@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import sys
-from datetime import datetime, timedelta
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -13,7 +12,7 @@ sys.path.insert(0, os.getcwd())
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.cashflow_engine import CashflowEngine, RevenueStream, get_cashflow_engine
+from antigravity.core.cashflow_engine import CashflowEngine, RevenueStream
 
 
 def verify_cashflow_engine():

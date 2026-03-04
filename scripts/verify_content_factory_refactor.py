@@ -4,7 +4,6 @@ Verification script for Content Factory Refactor.
 import logging
 import os
 import sys
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -13,10 +12,6 @@ sys.path.insert(0, os.getcwd())
 logging.basicConfig(level=logging.INFO)
 
 from antigravity.core.content_factory import (
-    ContentIdea,
-    ContentPiece,
-    ContentStatus,
-    ContentType,
     content_factory,
 )
 

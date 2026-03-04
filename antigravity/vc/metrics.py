@@ -6,7 +6,9 @@ Please import from antigravity.vc.metrics_logic instead.
 """
 import warnings
 
-from .metrics_logic import FundingStage, VCMetrics, calculate_readiness
+from .metrics_logic import FundingStage, MetricsSnapshot, VCMetrics, calculate_readiness
+
+__all__ = ["FundingStage", "MetricsSnapshot", "VCMetrics", "calculate_readiness"]
 
 # Issue a deprecation warning
 warnings.warn(

@@ -8,7 +8,7 @@ import time
 from typing import TYPE_CHECKING, Any, Optional
 
 from .enums import AgentRole, TaskStatus
-from .models import SwarmAgent, SwarmMetrics, SwarmTask
+from .models import SwarmAgent, SwarmTask
 
 if TYPE_CHECKING:
     from .engine import AgentSwarm

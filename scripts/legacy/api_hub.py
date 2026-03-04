@@ -13,10 +13,8 @@ Usage:
     python3 scripts/api_hub.py webhook test
 """
 
-import json
 import os
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import requests

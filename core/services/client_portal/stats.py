@@ -2,8 +2,8 @@
 Statistics and calculation logic for Client Portal.
 """
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict
 
 from .models import Invoice, InvoiceStatus, Project, TaskStatus
 

@@ -7,7 +7,6 @@ Please import from antigravity.core.repositories.analytics instead.
 """
 import warnings
 
-from .analytics import AnalyticsCache, AnalyticsRepository
 
 # Issue a deprecation warning
 warnings.warn(

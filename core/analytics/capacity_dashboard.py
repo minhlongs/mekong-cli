@@ -6,7 +6,6 @@ Please import from core.analytics.capacity instead.
 """
 import warnings
 
-from .capacity import CapacityDashboard, CapacityLevel
 
 # Issue a deprecation warning
 warnings.warn(

@@ -7,7 +7,7 @@ Manages cleanup of skill data and browser state
 import argparse
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 class CleanupManager:

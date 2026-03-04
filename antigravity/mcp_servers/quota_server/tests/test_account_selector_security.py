@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from antigravity.mcp_servers.quota_server.account_selector import AccountSelector, QuotaAccount
+from antigravity.mcp_servers.quota_server.account_selector import AccountSelector
 
 
 class TestAccountSelectorConfigLoading(unittest.TestCase):

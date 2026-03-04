@@ -1,7 +1,6 @@
 """
 Lead scoring logic (BANT).
 """
-from typing import Dict
 
 from .types import LeadData, LeadScore
 

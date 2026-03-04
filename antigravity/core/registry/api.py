@@ -1,10 +1,9 @@
 """
 Registry API - Command resolution and lookup functions (Facade).
 """
-from .discovery import resolve_command, search_capabilities
 from .mcp_catalog import mcp_catalog
-from .metadata import get_agent_for_command, get_command_metadata, list_subcommands, list_suites
-from .store import COMMAND_REGISTRY, SHORTCUTS, register_command, register_suite
+from .metadata import list_subcommands, list_suites, get_agent_for_command
+from .store import COMMAND_REGISTRY, SHORTCUTS
 
 
 def print_command_map():

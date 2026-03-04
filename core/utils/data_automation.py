@@ -6,15 +6,6 @@ Please import from core.utils.automation instead.
 """
 import warnings
 
-from .automation import (
-    AutomationWorkflow,
-    DataAutomationSpecialist,
-    DataImport,
-    DataSource,
-    IntegrationSync,
-    TriggerType,
-    WorkflowStatus,
-)
 
 # Issue a deprecation warning
 warnings.warn(

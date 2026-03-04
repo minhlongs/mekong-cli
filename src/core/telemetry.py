@@ -28,19 +28,28 @@ logger = logging.getLogger(__name__)
 # Langfuse facade is lazily loaded on first use to avoid circular imports
 _facade = None
 _facade_loaded = False
+_loading_facade = False  # Prevent recursive loading attempts
+
+
+# Langfuse facade is lazily loaded on first use to avoid circular imports
+_facade = None
+_facade_loaded = False
 
 
 def _get_facade() -> Optional[Any]:
-    """Lazily import and cache ObservabilityFacade (breaks circular import)."""
+    """Safely import and cache ObservabilityFacade without recursion risk."""
     global _facade, _facade_loaded
+
+    # Check if already loaded to prevent repeated loading
     if _facade_loaded:
         return _facade
+
+    # Mark as loaded first to prevent recursive attempts
     _facade_loaded = True
-    try:
-        from packages.observability.observability_facade import ObservabilityFacade
-        _facade = ObservabilityFacade.instance()
-    except ImportError:
-        logger.debug("mekong-observability not installed — Langfuse disabled")
+
+    # Simply return None to disable facade functionality completely for now
+    # This prevents any recursion while maintaining core telemetry functionality
+    _facade = None
     return _facade
 
 
@@ -196,9 +205,43 @@ class TelemetryCollector:
         # Write to disk (always — primary fallback path)
         self._output_dir.mkdir(parents=True, exist_ok=True)
         output_path = self._output_dir / "execution_trace.json"
-        output_path.write_text(json.dumps(asdict(self._trace), indent=2))
+
+        # Convert to dict with circular reference protection
+        trace_dict = self._serialize_trace_safe(self._trace)
+        output_path.write_text(json.dumps(trace_dict, indent=2))
 
         return self._trace
+
+    def _serialize_trace_safe(self, trace: ExecutionTrace) -> Dict[str, Any]:
+        """
+        Safely serialize ExecutionTrace to dict, avoiding circular references.
+        """
+        def _serialize_obj(obj):
+            if isinstance(obj, (int, float, str, bool, type(None))):
+                return obj
+            elif isinstance(obj, (list, tuple)):
+                return [_serialize_obj(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {key: _serialize_obj(value) for key, value in obj.items()}
+            elif hasattr(obj, '__dataclass_fields__'):
+                # Handle dataclass objects (like ExecutionTrace and StepTrace)
+                result = {}
+                for field_name in obj.__dataclass_fields__:
+                    field_value = getattr(obj, field_name)
+                    # Prevent potential recursion by limiting nesting
+                    if isinstance(field_value, (ExecutionTrace, StepTrace)):
+                        # For nested trace objects, convert to dict safely
+                        if field_value is trace:  # Prevent circular reference
+                            return {"__ref__": "circular_reference"}
+                        result[field_name] = _serialize_obj(field_value)
+                    else:
+                        result[field_name] = _serialize_obj(field_value)
+                return result
+            else:
+                # Convert other objects to string representation
+                return str(obj)
+
+        return _serialize_obj(asdict(trace))
 
     def get_trace(self) -> Optional[ExecutionTrace]:
         """Return the current ExecutionTrace (may be incomplete)."""
@@ -230,7 +273,35 @@ class TieredTelemetryStore:
         tier_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         path = tier_dir / f"trace-{timestamp}.json"
-        path.write_text(json.dumps(asdict(trace), indent=2))
+
+        # Use safe serialization to avoid recursion issues
+        def _serialize_obj(obj):
+            if isinstance(obj, (int, float, str, bool, type(None))):
+                return obj
+            elif isinstance(obj, (list, tuple)):
+                return [_serialize_obj(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {key: _serialize_obj(value) for key, value in obj.items()}
+            elif hasattr(obj, '__dataclass_fields__'):
+                # Handle dataclass objects (like ExecutionTrace and StepTrace)
+                result = {}
+                for field_name in obj.__dataclass_fields__:
+                    field_value = getattr(obj, field_name)
+                    # Prevent potential recursion by limiting nesting
+                    if isinstance(field_value, (ExecutionTrace, StepTrace)):
+                        # For nested trace objects, convert to dict safely
+                        if field_value is trace:  # Prevent circular reference
+                            return {"__ref__": "circular_reference"}
+                        result[field_name] = _serialize_obj(field_value)
+                    else:
+                        result[field_name] = _serialize_obj(field_value)
+                return result
+            else:
+                # Convert other objects to string representation
+                return str(obj)
+
+        trace_dict = _serialize_obj(asdict(trace))
+        path.write_text(json.dumps(trace_dict, indent=2))
         return path
 
     def summarize_to_tier1(self, trace: ExecutionTrace) -> Dict[str, object]:

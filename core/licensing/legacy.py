@@ -9,7 +9,7 @@ import logging
 import warnings
 
 from .legacy_logic.manager import LicenseEngine
-from .legacy_logic.models import License, LicenseStatus, LicenseTier
+from .legacy_logic.models import LicenseTier
 from .legacy_logic.utils import format_pricing_table
 
 # Issue a deprecation warning

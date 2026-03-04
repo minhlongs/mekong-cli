@@ -1,7 +1,7 @@
 """
 Registry Discovery - Command resolution and normalization.
 """
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from typing_extensions import TypedDict
 

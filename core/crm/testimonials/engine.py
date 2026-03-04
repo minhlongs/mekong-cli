@@ -3,7 +3,7 @@ Testimonial Generator engine and showcase logic.
 """
 from typing import List
 
-from .models import Rating, Testimonial
+from .models import Testimonial
 
 
 class TestimonialEngine:

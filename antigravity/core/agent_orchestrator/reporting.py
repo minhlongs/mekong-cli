@@ -2,9 +2,8 @@
 🏯 Agent Orchestrator Reporting Logic
 """
 from antigravity.core.chains import AgentStep
-from typing import Optional
 
-from .models import ChainResult, StepResult, StepStatus
+from .models import ChainResult, StepStatus
 
 
 class OrchestratorReporting:

@@ -1,6 +1,6 @@
 {
 	"name": "openclaw-worker",
-	"version": "2026.2.13",
+	"version": "2026.3.2",
 	"private": true,
 	"description": "Autonomous AI Swarm Daemon for Mekong CLI",
 	"author": "Binh Phap Venture Studio",

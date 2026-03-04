@@ -1084,3 +1084,93 @@
   recipe_used: ''
   status: success
   timestamp: 1772586266.444087
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1772620399.2711658
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1772620400.188811
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1772622114.327483
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1772622117.974206
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1772626125.8575191
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1772626126.2375512
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1772637688.2825458
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1772637688.731612
+- duration_ms: 0.0
+  error_summary: ''
+  goal: integration test
+  recipe_used: test-recipe
+  status: success
+  timestamp: 1772638031.971903
+- duration_ms: 0.0
+  error_summary: ''
+  goal: comprehensive integration test
+  recipe_used: test-all-modules
+  status: success
+  timestamp: 1772638386.335161
+- duration_ms: 0.0
+  error_summary: ''
+  goal: integration test
+  recipe_used: test-modules
+  status: success
+  timestamp: 1772638411.0809422
+- duration_ms: 0.0
+  error_summary: ''
+  goal: comprehensive test
+  recipe_used: test-all-modules
+  status: success
+  timestamp: 1772638734.445782
+- duration_ms: test
+  error_summary: ''
+  goal: final verification
+  recipe_used: ''
+  status: success
+  timestamp: ''
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: error
+  timestamp: 1772643332.480076
+- duration_ms: 0.0
+  error_summary: ''
+  goal: list files
+  recipe_used: ''
+  status: success
+  timestamp: 1772643334.367659

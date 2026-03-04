@@ -5,7 +5,7 @@ import logging
 import uuid
 from typing import Dict, List
 
-from .models import ProjectTier, Proposal, ProposalItem, ProposalStatus, ServicePackage, ServiceType
+from .models import ProjectTier, Proposal, ProposalItem, ServicePackage, ServiceType
 
 logger = logging.getLogger(__name__)
 

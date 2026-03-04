@@ -7,14 +7,6 @@ Please import from core.growth.nonprofit instead.
 """
 import warnings
 
-from .nonprofit import (
-    CampaignStatus,
-    CampaignType,
-    DonationCampaign,
-    NonprofitCategory,
-    NonprofitClient,
-    NonprofitMarketing,
-)
 
 # Issue a deprecation warning
 warnings.warn(

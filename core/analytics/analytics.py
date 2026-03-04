@@ -7,7 +7,6 @@ Please import from core.analytics.dashboard instead.
 """
 import warnings
 
-from .dashboard import AnalyticsDashboard
 
 # Issue a deprecation warning
 warnings.warn(

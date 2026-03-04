@@ -5,7 +5,7 @@ Brand Voice Analyzer - Analyzes content to establish and maintain brand voice co
 
 import json
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 
 class BrandVoiceAnalyzer:

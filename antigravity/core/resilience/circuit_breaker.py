@@ -13,7 +13,7 @@ Implementation based on Martin Fowler's Circuit Breaker pattern.
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from threading import Lock
 from typing import Any, Callable, Dict, Optional

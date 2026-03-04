@@ -8,7 +8,6 @@ Usage:
     python3 scripts/apply_migration.py supabase/migrations/20260127_advanced_webhooks.sql
 """
 
-import argparse
 import os
 import sys
 

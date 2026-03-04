@@ -7,7 +7,6 @@ Please import from core.strategy.plan_gen instead.
 """
 import warnings
 
-from .plan_gen import AgencyDNA, BusinessPlanGenerator, PlanSection
 
 # Issue a deprecation warning
 warnings.warn(

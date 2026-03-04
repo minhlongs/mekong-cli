@@ -4,8 +4,6 @@ Verification script for Code Guardian Refactor.
 import logging
 import os
 import sys
-import time
-from datetime import datetime
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -14,10 +12,7 @@ sys.path.insert(0, os.getcwd())
 logging.basicConfig(level=logging.INFO)
 
 from antigravity.core.code_guardian import (
-    CodeGuardian,
     GuardianAction,
-    SecurityThreat,
-    ThreatLevel,
     create_rollback_point,
     get_guardian,
     monitor_metric,

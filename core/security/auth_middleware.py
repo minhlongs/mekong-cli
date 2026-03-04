@@ -6,19 +6,6 @@ Please import from core.security.middleware instead.
 """
 import warnings
 
-from .middleware import (
-    AuthenticationError,
-    add_security_headers,
-    check_rate_limit,
-    decode_jwt_token,
-    generate_jwt_token,
-    get_cors_config,
-    get_rate_limit_headers,
-    require_auth,
-    security,
-    validate_api_key,
-    validate_security_environment,
-)
 
 # Issue a deprecation warning
 warnings.warn(

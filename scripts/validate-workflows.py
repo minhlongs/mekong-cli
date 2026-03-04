@@ -6,10 +6,9 @@ Generates broken commands list and fix recommendations
 """
 
 import json
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, Set, Tuple
 
 # Paths
 MEKONG_ROOT = Path("/Users/macbookprom1/mekong-cli")

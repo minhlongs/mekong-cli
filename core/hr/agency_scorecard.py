@@ -6,7 +6,6 @@ Please import from core.hr.scorecard_logic instead.
 """
 import warnings
 
-from .scorecard_logic import KPI, AgencyScorecard, Grade, MetricCategory
 
 # Issue a deprecation warning
 warnings.warn(

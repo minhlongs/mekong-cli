@@ -1,7 +1,7 @@
 """
 🏰 Moat Strategy Logic
 """
-from typing import Any, Dict
+from typing import Dict
 
 from typing_extensions import TypedDict
 

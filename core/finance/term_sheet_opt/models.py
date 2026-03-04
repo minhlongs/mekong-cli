@@ -1,7 +1,6 @@
 """
 Data models for Term Sheet Analysis.
 """
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

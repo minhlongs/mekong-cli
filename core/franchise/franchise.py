@@ -6,7 +6,6 @@ Please import from core.franchise.logic instead.
 """
 import warnings
 
-from .logic import FranchiseStatus, FranchiseSystem, FranchiseTier, TerritoryStatus
 
 # Issue a deprecation warning
 warnings.warn(

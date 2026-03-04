@@ -4,7 +4,7 @@ Gamification Engine core logic.
 import logging
 from typing import Dict, Optional
 
-from .models import Achievement, AchievementCategory, AgencyLevel, AgencyProgress, LevelConfig
+from .models import AgencyLevel, AgencyProgress, LevelConfig
 
 logger = logging.getLogger(__name__)
 

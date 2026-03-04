@@ -54,15 +54,15 @@ def test_bmad_loading():
         from packages.core.bmad.loader import BMADWorkflowLoader
 
         loader = BMADWorkflowLoader()
-        print(f"  ✅ Loader initialized")
+        print("  ✅ Loader initialized")
         print(f"  📊 Total workflows: {loader.catalog.total_count}")
         print(f"  🏷️  Agent types: {', '.join(loader.catalog.agent_types)}")
 
         if loader.catalog.total_count > 0:
-            print(f"  ✅ Workflows loaded successfully")
+            print("  ✅ Workflows loaded successfully")
             return True
         else:
-            print(f"  ⚠️  Warning: No workflows found (check _bmad directory)")
+            print("  ⚠️  Warning: No workflows found (check _bmad directory)")
             return True  # Not a critical failure
 
     except Exception as e:
@@ -82,10 +82,10 @@ def test_symlink():
         print(f"  🔗 Points to: {target}")
 
         if target.exists():
-            print(f"  ✅ Target exists")
+            print("  ✅ Target exists")
             return True
         else:
-            print(f"  ❌ Target does not exist")
+            print("  ❌ Target does not exist")
             return False
     else:
         print(f"  ❌ Symlink not found at {workflows_path}")

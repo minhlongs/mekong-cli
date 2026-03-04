@@ -1,7 +1,7 @@
 """
 Formatting logic for Client views in the portal.
 """
-from typing import Any, Dict, List
+from typing import List
 
 from .entities_proxy import Client, ClientStatus, Invoice, Project
 

@@ -6,7 +6,6 @@ Please import from core.strategy.competitor_opt instead.
 """
 import warnings
 
-from .competitor_opt import CompetitorAnalysis, CompetitorSize, ThreatLevel
 
 # Issue a deprecation warning
 warnings.warn(

@@ -6,6 +6,8 @@
 
 import { logger } from '../utils/logger';
 import type { IExchange, IOrder } from '../interfaces/IExchange';
+import { CircuitBreaker, CircuitBreakerConfig } from './circuit-breaker';
+import { RetryHandler, RetryConfig } from './retry-handler';
 
 export interface AtomicOrderParams {
   symbol: string;
@@ -24,6 +26,19 @@ export interface AtomicExecutionResult {
   netPnl: number;
   error?: string;
   rollbackPerformed: boolean;
+  retryMetrics?: {
+    attempts: number;
+    successfulRetries: number;
+    totalRetryDelayMs: number;
+  };
+  circuitBreakerMetrics?: {
+    state: string;
+    failureCount: number;
+    successCount: number;
+    totalRequests: number;
+    totalFailures: number;
+    totalSuccesses: number;
+  };
 }
 
 export interface AtomicExecutorConfig {
@@ -31,11 +46,26 @@ export interface AtomicExecutorConfig {
   enableRetry?: boolean;
   /** Fraction of original amount to retry with. Default 0.5 */
   retryAmountFraction?: number;
+  /** Retry configuration */
+  retryConfig?: RetryConfig;
+  /** Circuit breaker configuration */
+  circuitBreakerConfig?: CircuitBreakerConfig;
 }
 
 export class AtomicCrossExchangeOrderExecutor {
-  constructor(_config: AtomicExecutorConfig = {}) {
-    // Config reserved for future retry logic
+  private retryHandler?: RetryHandler;
+  private buyCircuitBreaker?: CircuitBreaker;
+  private sellCircuitBreaker?: CircuitBreaker;
+
+  constructor(private config: AtomicExecutorConfig = {}) {
+    if (config.retryConfig) {
+      this.retryHandler = new RetryHandler(config.retryConfig);
+    }
+
+    if (config.circuitBreakerConfig) {
+      this.buyCircuitBreaker = new CircuitBreaker(config.circuitBreakerConfig);
+      this.sellCircuitBreaker = new CircuitBreaker({...config.circuitBreakerConfig}); // Clone config for sell
+    }
   }
 
   /** Execute buy on buyExchange and sell on sellExchange simultaneously */
@@ -45,12 +75,119 @@ export class AtomicCrossExchangeOrderExecutor {
 
     logger.info(`[AtomicExec] Starting atomic execution: ${symbol} x${amount} | buy=${buyExchange.name} sell=${sellExchange.name}`);
 
+    let retryMetrics = this.retryHandler?.getMetrics();
+    let circuitBreakerMetrics: {
+      buyState: string;
+      sellState: string;
+      buyFailureCount: number;
+      sellFailureCount: number;
+      buyTotalRequests: number;
+      sellTotalRequests: number;
+      buyTotalFailures: number;
+      sellTotalFailures: number;
+      buyTotalSuccesses: number;
+      sellTotalSuccesses: number;
+    } | undefined;
+
+    try {
+      // Wrap the core execution logic in the retry handler if configured
+      let result: AtomicExecutionResult;
+
+      if (this.retryHandler) {
+        // Reset metrics before each execution
+        this.retryHandler.resetMetrics();
+
+        result = await this.retryHandler.execute(async () => {
+          // When using both retry and circuit breakers, circuit breaker errors should propagate
+          // and not be retried
+          if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
+            // Execute with both circuit breakers - if either is open, an error will be thrown
+            return await this.performAtomicExecutionWithCircuitBreakersCheck(params, startTime);
+          } else {
+            return await this.performAtomicExecution(params, startTime);
+          }
+        });
+
+        // Get updated metrics after execution
+        const updatedRetryMetrics = this.retryHandler.getMetrics();
+        result.retryMetrics = {
+          attempts: updatedRetryMetrics.attempts,
+          successfulRetries: updatedRetryMetrics.successfulRetries,
+          totalRetryDelayMs: updatedRetryMetrics.totalRetryDelayMs
+        };
+      } else if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
+        // No retry handler, but circuit breakers are configured
+        result = await this.performAtomicExecutionWithCircuitBreakersCheck(params, startTime);
+      } else {
+        // No retry or circuit breaker configured
+        result = await this.performAtomicExecution(params, startTime);
+      }
+
+      // Capture circuit breaker metrics if available
+      if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
+        const buyMetrics = this.buyCircuitBreaker.getMetrics();
+        const sellMetrics = this.sellCircuitBreaker.getMetrics();
+
+        circuitBreakerMetrics = {
+          buyState: buyMetrics.state,
+          sellState: sellMetrics.state,
+          buyFailureCount: buyMetrics.failureCount,
+          sellFailureCount: sellMetrics.failureCount,
+          buyTotalRequests: buyMetrics.totalRequests,
+          sellTotalRequests: sellMetrics.totalRequests,
+          buyTotalFailures: buyMetrics.totalFailures,
+          sellTotalFailures: sellMetrics.totalFailures,
+          buyTotalSuccesses: buyMetrics.totalSuccesses,
+          sellTotalSuccesses: sellMetrics.totalSuccesses
+        };
+
+        // Add circuit breaker metrics to result
+        result.circuitBreakerMetrics = {
+          state: `${circuitBreakerMetrics.buyState}/${circuitBreakerMetrics.sellState}`,
+          failureCount: circuitBreakerMetrics.buyFailureCount + circuitBreakerMetrics.sellFailureCount,
+          successCount: circuitBreakerMetrics.buyTotalSuccesses + circuitBreakerMetrics.sellTotalSuccesses,
+          totalRequests: circuitBreakerMetrics.buyTotalRequests + circuitBreakerMetrics.sellTotalRequests,
+          totalFailures: circuitBreakerMetrics.buyTotalFailures + circuitBreakerMetrics.sellTotalFailures,
+          totalSuccesses: circuitBreakerMetrics.buyTotalSuccesses + circuitBreakerMetrics.sellTotalSuccesses
+        };
+      }
+
+      return result;
+    } catch (error) {
+      // Check if this is a circuit breaker error that should be propagated
+      if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
+        // Re-throw circuit breaker errors so they can be caught by tests
+        throw error;
+      }
+
+      logger.error(`[AtomicExec] Failed with error: ${error instanceof Error ? error.message : String(error)}`);
+
+      const totalLatency = Date.now() - startTime;
+      return {
+        success: false,
+        buyLatency: 0,
+        sellLatency: 0,
+        totalLatency,
+        netPnl: 0,
+        error: error instanceof Error ? error.message : String(error),
+        rollbackPerformed: false
+      };
+    }
+  }
+
+  private async performAtomicExecution(params: AtomicOrderParams, startTime: number): Promise<AtomicExecutionResult> {
+    const { symbol, amount, buyExchange, sellExchange } = params;
+
     const buyStart = Date.now();
     const sellStart = Date.now();
 
+    // Execute buy and sell orders without circuit breakers
+    const buyResultPromise = buyExchange.createMarketOrder(symbol, 'buy', amount);
+    const sellResultPromise = sellExchange.createMarketOrder(symbol, 'sell', amount);
+
     const [buyResult, sellResult] = await Promise.allSettled([
-      buyExchange.createMarketOrder(symbol, 'buy', amount),
-      sellExchange.createMarketOrder(symbol, 'sell', amount),
+      buyResultPromise,
+      sellResultPromise,
     ]);
 
     const buyLatency = Date.now() - buyStart;
@@ -85,6 +222,83 @@ export class AtomicCrossExchangeOrderExecutor {
       success: false,
       buyOrder: buyFulfilled ? buyResult.value : undefined,
       sellOrder: sellFulfilled ? sellResult.value : undefined,
+      buyLatency,
+      sellLatency,
+      totalLatency,
+      netPnl: 0,
+      error: errorMsg,
+      rollbackPerformed,
+    };
+  }
+
+  private async performAtomicExecutionWithCircuitBreakersCheck(params: AtomicOrderParams, startTime: number): Promise<AtomicExecutionResult> {
+    const { symbol, amount, buyExchange, sellExchange } = params;
+
+    const buyStart = Date.now();
+    const sellStart = Date.now();
+
+    // Execute buy and sell orders with circuit breakers
+    // The circuit breaker will throw if the circuit is open, which we want to allow to propagate
+    let buyResult, sellResult;
+    let buyFulfilled = false;
+    let sellFulfilled = false;
+
+    try {
+      const buyResultPromise = this.buyCircuitBreaker!.execute(() =>
+        buyExchange.createMarketOrder(symbol, 'buy', amount)
+      );
+      const sellResultPromise = this.sellCircuitBreaker!.execute(() =>
+        sellExchange.createMarketOrder(symbol, 'sell', amount)
+      );
+
+      [buyResult, sellResult] = await Promise.allSettled([
+        buyResultPromise,
+        sellResultPromise,
+      ]);
+
+      buyFulfilled = buyResult.status === 'fulfilled';
+      sellFulfilled = sellResult.status === 'fulfilled';
+    } catch (error) {
+      // If the circuit breaker is OPEN, this error should propagate
+      if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
+        throw error;
+      }
+      // Otherwise, handle as a normal failure
+      buyFulfilled = false;
+      sellFulfilled = false;
+      buyResult = { status: 'rejected', reason: error };
+      sellResult = { status: 'rejected', reason: error };
+    }
+
+    const buyLatency = Date.now() - buyStart;
+    const sellLatency = Date.now() - sellStart;
+    const totalLatency = Date.now() - startTime;
+
+    // Both succeeded
+    if (buyFulfilled && sellFulfilled) {
+      const buyOrder = (buyResult as PromiseFulfilledResult<IOrder>).value;
+      const sellOrder = (sellResult as PromiseFulfilledResult<IOrder>).value;
+      const netPnl = this.estimateNetPnl(buyOrder, sellOrder);
+      logger.info(`[AtomicExec] Success: pnl≈${netPnl.toFixed(4)} USD, latency=${totalLatency}ms`);
+      return { success: true, buyOrder, sellOrder, buyLatency, sellLatency, totalLatency, netPnl, rollbackPerformed: false };
+    }
+
+    // Partial failure — attempt rollback
+    const rollbackPerformed = await this.handlePartialFailure(
+      buyFulfilled ? (buyResult as PromiseFulfilledResult<IOrder>).value : null,
+      sellFulfilled ? (sellResult as PromiseFulfilledResult<IOrder>).value : null,
+      symbol,
+      buyExchange,
+      sellExchange,
+    );
+
+    const errorMsg = this.extractError(buyResult as PromiseSettledResult<IOrder>, sellResult as PromiseSettledResult<IOrder>);
+    logger.error(`[AtomicExec] Failed: ${errorMsg} | rollback=${rollbackPerformed}`);
+
+    return {
+      success: false,
+      buyOrder: buyFulfilled ? (buyResult as PromiseFulfilledResult<IOrder>).value : undefined,
+      sellOrder: sellFulfilled ? (sellResult as PromiseFulfilledResult<IOrder>).value : undefined,
       buyLatency,
       sellLatency,
       totalLatency,

@@ -5,11 +5,9 @@ Run with: pytest test_shopify_init.py -v --cov=shopify_init --cov-report=term-mi
 """
 
 import json
-import os
-import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import pytest
 

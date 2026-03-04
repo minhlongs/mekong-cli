@@ -1,7 +1,6 @@
 """
 Revenue forecasting logic.
 """
-from typing import Any, Dict
 
 from typing_extensions import TypedDict, Union
 

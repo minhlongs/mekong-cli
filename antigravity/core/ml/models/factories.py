@@ -72,7 +72,6 @@ def create_pytorch_model():
     if not TORCH_AVAILABLE:
         return None
 
-    import torch
     import torch.nn as nn
 
     class PricingNetwork(nn.Module):

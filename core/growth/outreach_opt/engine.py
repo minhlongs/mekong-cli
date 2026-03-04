@@ -5,9 +5,9 @@ import logging
 import re
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
-from .models import EmailStatus, OutreachEmail, OutreachSequence, OutreachTrigger
+from .models import EmailStatus, OutreachEmail, OutreachSequence
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from antigravity.core.chains import AgentStep, Chain
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.agent_orchestrator import AgentOrchestrator, StepStatus, execute_chain
+from antigravity.core.agent_orchestrator import AgentOrchestrator, execute_chain
 
 
 def verify_agent_orchestrator():

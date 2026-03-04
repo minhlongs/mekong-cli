@@ -19,12 +19,11 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from antigravity.core.agent_orchestrator.engine import execute_chain
-from antigravity.core.telemetry import get_telemetry
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

@@ -3,14 +3,12 @@ Verification script for Distributed Queue Refactor.
 """
 import os
 import sys
-import time
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
 
 from antigravity.infrastructure.distributed_queue import (
     JobPriority,
-    JobStatus,
     complete_job,
     get_next_job,
     get_queue_stats,

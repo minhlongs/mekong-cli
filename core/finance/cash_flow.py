@@ -7,7 +7,6 @@ Please import from core.finance.cashflow_opt instead.
 """
 import warnings
 
-from .cashflow_opt import CashFlowTracker, ExpenseCategory, IncomeCategory, TransactionType
 
 # Issue a deprecation warning
 warnings.warn(

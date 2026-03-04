@@ -3,9 +3,8 @@
 SEO Content Optimizer - Analyzes and optimizes content for SEO
 """
 
-import json
 import re
-from typing import Dict, List, Set
+from typing import Dict, List
 
 
 class SEOOptimizer:

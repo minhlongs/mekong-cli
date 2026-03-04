@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 import sys
-from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -13,7 +12,7 @@ sys.path.insert(0, os.getcwd())
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-from antigravity.core.moat_engine import MoatEngine, get_moat_engine
+from antigravity.core.moat_engine import MoatEngine
 
 
 def verify_moat_engine():

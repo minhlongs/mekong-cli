@@ -2,7 +2,6 @@
 WIN-WIN-WIN validation logic.
 """
 import logging
-from typing import Dict, List
 
 from .types import WinResult, WinType
 

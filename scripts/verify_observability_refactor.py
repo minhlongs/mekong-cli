@@ -9,7 +9,6 @@ import time
 sys.path.insert(0, os.getcwd())
 
 from antigravity.core.observability import (
-    AlertSeverity,
     get_metrics,
     get_observability,
     get_prometheus,

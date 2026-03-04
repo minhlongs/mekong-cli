@@ -1,7 +1,7 @@
 """
 📄 Proposal Analytics Logic
 """
-from typing import Any, Dict, List
+from typing import List
 
 from typing_extensions import TypedDict
 

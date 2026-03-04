@@ -5,7 +5,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 import subprocess
-import sys
 from pathlib import Path
 import os
 import webbrowser
@@ -39,7 +38,7 @@ def generate(
             if result.returncode == 0:
                 console.print(f"[green]✅ {format_type.upper()} documentation generated at {output}[/green]")
             else:
-                console.print(f"[red]❌ Documentation generation failed[/red]")
+                console.print("[red]❌ Documentation generation failed[/red]")
                 if result.stderr:
                     console.print(Panel(result.stderr, title="Error"))
         else:
@@ -50,7 +49,7 @@ def generate(
         console.print("[yellow]⚠️  Sphinx not found, generating simple documentation[/yellow]")
         generate_simple_docs(format_type, source, output)
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Documentation generation failed![/red]")
+        console.print("[red]❌ Documentation generation failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
 
@@ -117,7 +116,7 @@ def generate_simple_docs(format_type: str, source: str, output: str):
 
     elif format_type == "md":
         # Create README-style documentation
-        md_content = f"# Project Documentation\n\n## Introduction\n\nYour project introduction goes here.\n\n## Installation\n\nInstructions for installing your project.\n\n## Usage\n\nInstructions for using your project.\n\n## API Reference\n\nAPI documentation for your project.\n\n## Contributing\n\nGuidelines for contributing to your project.\n\n## License\n\nYour project license information.\n"
+        md_content = "# Project Documentation\n\n## Introduction\n\nYour project introduction goes here.\n\n## Installation\n\nInstructions for installing your project.\n\n## Usage\n\nInstructions for using your project.\n\n## API Reference\n\nAPI documentation for your project.\n\n## Contributing\n\nGuidelines for contributing to your project.\n\n## License\n\nYour project license information.\n"
 
         with open(output_path / "README.md", "w") as f:
             f.write(md_content)
@@ -338,8 +337,6 @@ def publish_to_github_pages(source: str, verbose: bool):
         # Copy new documentation
         source_path = Path(source)
         if source_path.exists():
-            import distutils.dir_util
-            import distutils.file_util
 
             for item in source_path.rglob("*"):
                 if item.is_file():
@@ -364,7 +361,7 @@ def publish_to_github_pages(source: str, verbose: bool):
         subprocess.run(["git", "checkout", "-"], check=False, capture_output=not verbose)
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ GitHub Pages publishing failed![/red]")
+        console.print("[red]❌ GitHub Pages publishing failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -394,7 +391,7 @@ def publish_to_netlify(source: str, verbose: bool):
             console.print(Panel(result.stdout, title="Netlify Response"))
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Netlify publishing failed![/red]")
+        console.print("[red]❌ Netlify publishing failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
@@ -420,7 +417,7 @@ def publish_to_custom(source: str, verbose: bool):
             console.print(Panel(result.stdout, title="Publish Script Output"))
 
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]❌ Custom publishing failed![/red]")
+        console.print("[red]❌ Custom publishing failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:

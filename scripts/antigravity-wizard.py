@@ -12,7 +12,7 @@ import shutil
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List
+from typing import List
 
 # Third-party imports
 try:
@@ -33,12 +33,10 @@ except ImportError:
         import psutil
         import questionary
         import speedtest
-        from rich import print as rprint
         from rich.console import Console
-        from rich.markdown import Markdown
         from rich.panel import Panel
         from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
-        from rich.prompt import Confirm, Prompt
+        from rich.prompt import Confirm
         from rich.table import Table
     except Exception as e:
         print(f"Lỗi cài đặt thư viện: {e}")

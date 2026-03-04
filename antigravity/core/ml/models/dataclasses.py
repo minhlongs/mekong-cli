@@ -5,7 +5,7 @@ ML Models - Data Classes.
 Result dataclasses for ML operations.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 

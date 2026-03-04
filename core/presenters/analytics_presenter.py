@@ -6,7 +6,6 @@ Please import from core.presenters.analytics instead.
 """
 import warnings
 
-from .analytics import AnalyticsPresenter
 
 # Issue a deprecation warning
 warnings.warn(

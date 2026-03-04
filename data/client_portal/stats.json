@@ -1,8 +1,8 @@
 {
-  "total_clients": 10,
-  "active_clients": 10,
-  "total_projects": 10,
-  "active_projects": 10,
-  "total_invoiced": 25000.0,
+  "total_clients": 11,
+  "active_clients": 11,
+  "total_projects": 11,
+  "active_projects": 11,
+  "total_invoiced": 27500.0,
   "total_collected": 2500.0
 }

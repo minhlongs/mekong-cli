@@ -7,15 +7,6 @@ Please import from antigravity.core.hr.career instead.
 """
 import warnings
 
-from .career import (
-    CareerDevelopment,
-    CareerLevel,
-    CareerPath,
-    Skill,
-    SkillLevel,
-    Training,
-    TrainingType,
-)
 
 # Issue a deprecation warning
 warnings.warn(

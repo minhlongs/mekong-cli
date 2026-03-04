@@ -12,6 +12,11 @@ describe('HealthManager', () => {
         healthManager = new HealthManager(mockSignalMesh as any);
     });
 
+    afterEach(() => {
+        healthManager.stopMonitoring();
+        jest.clearAllTimers();
+    });
+
     it('should update metrics and trigger alert on transition from ok to non-ok', () => {
         // ok status — no alert
         healthManager.updateMetric('tenant-1', 'latency', 5, 10);

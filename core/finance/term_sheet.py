@@ -7,14 +7,6 @@ Please import from antigravity.core.finance.term_sheet_opt instead.
 """
 import warnings
 
-from .term_sheet_opt import (
-    CapTableEntry,
-    DealType,
-    TermCategory,
-    TermSheet,
-    TermSheetAnalyzer,
-    TermSheetTerm,
-)
 
 # Issue a deprecation warning
 warnings.warn(

@@ -6,7 +6,6 @@ Please import from core.crm.testimonials instead.
 """
 import warnings
 
-from .testimonials import Rating, Testimonial, TestimonialGenerator
 
 # Issue a deprecation warning
 warnings.warn(

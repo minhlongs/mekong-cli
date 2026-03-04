@@ -1,7 +1,6 @@
 """
 VC Metrics analysis engine logic.
 """
-from typing import List
 
 from .models import FundingStage
 
