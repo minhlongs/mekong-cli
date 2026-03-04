@@ -266,15 +266,18 @@ We believe contributors should share in the value they create. See [CONTRIBUTING
 - [ ] Community recipe registry
 - [ ] npm/pip package publishing
 
-## Powered By
+## Built With
 
-<p align="center">
-  <a href="https://claudekit.cc/?ref=B0DXGRIX"><img src="https://img.shields.io/badge/Powered%20by-ClaudeKit-7c3aed?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=" alt="ClaudeKit" /></a>
-</p>
+Mekong CLI stands on the shoulders of giants:
 
-Mekong CLI's agentic workflow system is built on [ClaudeKit](https://claudekit.cc/?ref=B0DXGRIX) — the industry-leading engineer toolkit with **50+ commands**, **80+ skills**, and **17+ specialized agents**. ClaudeKit provides the DNA for our Plan-Execute-Verify pipeline and multi-agent orchestration.
+- [AI Agent Toolkit](https://claudekit.cc/?ref=B0DXGRIX) — The engineer framework powering our PEV pipeline
+- [Multi-Agent Orchestration](https://claudekit.cc/?ref=B0DXGRIX) — 17+ specialized agents for parallel task execution
+- [Agentic Workflow Engine](https://claudekit.cc/?ref=B0DXGRIX) — 50+ commands and 80+ skills for autonomous coding
+- [OpenAI](https://openai.com) / [Anthropic](https://anthropic.com) / [Google](https://ai.google.dev) — LLM providers
+- [FastAPI](https://fastapi.tiangolo.com) — API gateway
+- [Polar.sh](https://polar.sh) — Open-source billing
 
-👉 **[Get ClaudeKit →](https://claudekit.cc/?ref=B0DXGRIX)**
+> 💡 **For developers building AI agents**: Check out the [engineer toolkit](https://claudekit.cc/?ref=B0DXGRIX) we use internally — it dramatically accelerates agent development with pre-built skills, commands, and orchestration patterns.
 
 ## License
 
