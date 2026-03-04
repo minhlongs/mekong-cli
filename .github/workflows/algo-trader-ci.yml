@@ -178,7 +178,7 @@ jobs:
       - name: Build dashboard
         working-directory: ${{ env.WORKING_DIRECTORY }}/dashboard
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install
           pnpm run build
 
       - name: Build summary
