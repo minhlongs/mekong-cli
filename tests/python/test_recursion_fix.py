@@ -5,7 +5,8 @@ Test script to verify the recursion depth issue is fixed in telemetry collection
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add src directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
 
 from core.telemetry import TelemetryCollector
 

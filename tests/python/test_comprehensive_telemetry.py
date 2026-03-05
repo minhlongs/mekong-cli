@@ -5,7 +5,8 @@ Comprehensive test for the telemetry recursion fix with more realistic scenario.
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add src directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
 
 from core.telemetry import TelemetryCollector
 

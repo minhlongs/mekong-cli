@@ -1,32 +1,51 @@
+#!/usr/bin/env python3
+"""
+Test JWT encoding/decoding with python-jose library.
+Verifies JWT functionality works correctly.
+"""
 
-import sys
+import pytest
 
-import jose.jws
-import jose.jwt
-from jose.constants import ALGORITHMS
+# Skip if python-jose not installed
+jose = pytest.importorskip("jose")
 
-print(f"Python version: {sys.version}")
-try:
-    import cryptography
-    print(f"Cryptography version: {cryptography.__version__}")
-except ImportError:
-    print("Cryptography not installed")
 
-try:
-    import jose
-    print(f"python-jose version: {jose.__version__}")
-except ImportError:
-    print("python-jose not installed")
+def test_jose_jwt_encode_decode():
+    """Test JWT encoding and decoding with python-jose."""
+    import jose.jwt
 
-key = "secret"
-payload = {"sub": "1234567890", "name": "John Doe", "iat": 1516239022}
+    key = "secret"
+    payload = {"sub": "1234567890", "name": "John Doe", "iat": 1516239022}
 
-try:
+    # Encode
     token = jose.jwt.encode(payload, key, algorithm="HS256")
-    print(f"Token encoded successfully: {token}")
+    assert token is not None
+    assert isinstance(token, str)
+
+    # Decode
     decoded = jose.jwt.decode(token, key, algorithms=["HS256"])
-    print(f"Token decoded successfully: {decoded}")
-except Exception as e:
-    print(f"Error: {e}")
-    import traceback
-    traceback.print_exc()
+    assert decoded is not None
+    assert decoded["sub"] == "1234567890"
+    assert decoded["name"] == "John Doe"
+
+
+def test_jose_jwt_invalid_token():
+    """Test JWT decoding with invalid token raises error."""
+    import jose.jwt
+
+    key = "secret"
+    wrong_key = "wrong_secret"
+    payload = {"sub": "1234567890"}
+
+    # Encode with one key
+    token = jose.jwt.encode(payload, key, algorithm="HS256")
+
+    # Decode with wrong key should fail
+    with pytest.raises(Exception):
+        jose.jwt.decode(token, wrong_key, algorithms=["HS256"])
+
+
+if __name__ == "__main__":
+    test_jose_jwt_encode_decode()
+    test_jose_jwt_invalid_token()
+    print("✓ All JOSE JWT tests passed!")
