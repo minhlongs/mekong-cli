@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Mekong CLI - Routing Strategy Engine.
 
 Portkey-inspired declarative routing for LLM provider selection.
@@ -9,7 +10,7 @@ import json
 import random
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, List, Optional
 
 
 class RoutingMode(Enum):
@@ -162,7 +163,7 @@ class StrategyRouter:
 
     def route(
         self,
-        exclude_providers: list[str] | None = None,
+        exclude_providers: Optional[List[str]] = None,
     ) -> RouteDecision:
         """Select a provider based on routing strategy.
 
