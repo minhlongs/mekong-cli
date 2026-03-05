@@ -12,6 +12,7 @@ import { timing } from 'hono/timing';
 import { poweredBy } from 'hono/powered-by';
 import { secureHeaders } from 'hono/secure-headers';
 import { licenseMiddleware, LicenseTier } from './middleware/license-auth-middleware';
+import { rateLimitMiddleware } from '../lib/rate-limiter-middleware';
 
 // Types for Cloudflare Workers environment
 export type Env = {
@@ -35,7 +36,7 @@ app.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Tenant-ID', 'X-Polar-Signature'],
-  exposeHeaders: ['X-Request-Id', 'X-RateLimit-Remaining'],
+  exposeHeaders: ['X-Request-Id', 'X-RateLimit-Remaining', 'X-RateLimit-Limit'],
   maxAge: 86400,
   credentials: false,
 }));
@@ -43,6 +44,8 @@ app.use('*', logger());
 app.use('*', timing());
 app.use('*', poweredBy());
 app.use('*', secureHeaders());
+// Rate limiting middleware - applies to all routes
+app.use('*', rateLimitMiddleware());
 
 // Health check endpoints (no auth required)
 app.get('/health', (c) => {
