@@ -7,7 +7,6 @@ Database connection, pooling, and async operations for license data.
 import os
 from typing import Optional, Any, Dict, List
 from contextlib import asynccontextmanager
-import asyncio
 
 try:
     import asyncpg
