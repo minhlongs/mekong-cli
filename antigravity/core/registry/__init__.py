@@ -21,7 +21,7 @@ from .api import (
     print_command_map,
     resolve_command,
 )
-from .commands import COMMAND_REGISTRY, SHORTCUTS
+from .store import COMMAND_REGISTRY, SHORTCUTS
 
 __all__ = [
     # Data
