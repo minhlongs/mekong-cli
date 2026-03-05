@@ -19,9 +19,9 @@ def scan(
     tool: str = typer.Option("auto", "--tool", "-t", help="Tool to use: bandit, semgrep, safety, auto"),
     format_output: str = typer.Option("table", "--format", "-f", help="Output format: table, json, sarif"),
     severity: str = typer.Option("all", "--severity", "-s", help="Severity level: low, medium, high, critical, all"),
-    exclude: str = typer.Option(None, "--exclude", "-e", help="Exclude patterns"),
-):
-    """Scan project for security vulnerabilities"""
+    exclude: str | None = typer.Option(None, "--exclude", "-e", help="Exclude patterns"),
+) -> None:
+    """Scan project for security vulnerabilities."""
 
     console.print(f"[bold]🔍 Scanning {path} for security vulnerabilities...[/bold]")
 
@@ -62,7 +62,7 @@ def scan(
         display_scan_results(scan_results)
 
 
-def scan_with_bandit(path, severity):
+def scan_with_bandit(path: str, severity: str) -> list[dict[str, str | int]]:
     """Scan with Bandit (Python security scanner)"""
     try:
         result = subprocess.run([
@@ -104,8 +104,8 @@ def scan_with_bandit(path, severity):
         return []
 
 
-def scan_with_safety(path):
-    """Scan dependencies with Safety (dependency vulnerability scanner)"""
+def scan_with_safety(path: str) -> list[dict[str, str | int]]:
+    """Scan dependencies with Safety (dependency vulnerability scanner)."""
     try:
         # First, try to generate a requirements.txt if none exists
         req_files = list(Path(path).glob("**/requirements*.txt")) + \
@@ -154,8 +154,8 @@ def scan_with_safety(path):
         return []
 
 
-def scan_with_semgrep(path, severity):
-    """Scan with Semgrep (static analysis tool)"""
+def scan_with_semgrep(path: str, severity: str) -> list[dict[str, str | int]]:
+    """Scan with Semgrep (static analysis tool)."""
     try:
         result = subprocess.run([
             "semgrep", "--config=auto",
@@ -194,8 +194,8 @@ def scan_with_semgrep(path, severity):
         return []
 
 
-def display_scan_results(results):
-    """Display scan results in a table"""
+def display_scan_results(results: list[dict[str, str | int]]) -> None:
+    """Display scan results in a table."""
     if not results:
         console.print("[green]✅ No security issues found![/green]")
         return
@@ -317,8 +317,8 @@ def scan_secrets(
 
 
 @app.command()
-def audit_config():
-    """Audit configuration files for security issues"""
+def audit_config() -> None:
+    """Audit configuration files for security issues."""
 
     console.print("[bold]🛡️  Auditing configuration files for security issues...[/bold]")
 

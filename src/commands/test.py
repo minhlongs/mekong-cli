@@ -18,7 +18,7 @@ def run(
     coverage: bool = typer.Option(False, "--coverage", help="Run with coverage"),
     specific: str = typer.Option(None, "--specific", "-s", help="Run specific test file or directory"),
     watch: bool = typer.Option(False, "--watch", "-w", help="Watch mode"),
-):
+) -> bool | None:
     """Run tests with various options"""
     cmd = [sys.executable, "-m", "pytest"]
 
@@ -58,7 +58,7 @@ def run(
 
 
 @app.command()
-def coverage_report():
+def coverage_report() -> None:
     """Generate and show coverage report"""
     cmd = [sys.executable, "-m", "coverage", "report"]
 
@@ -74,7 +74,7 @@ def coverage_report():
 
 
 @app.command()
-def list_tests():
+def list_tests() -> None:
     """List all available tests"""
     cmd = [sys.executable, "-m", "pytest", "--collect-only", "-q"]
 
@@ -102,7 +102,7 @@ def list_tests():
 
 
 @app.command()
-def benchmark():
+def benchmark() -> None:
     """Run performance benchmarks"""
     console.print(Panel("[bold]Running Performance Benchmarks...[/bold]", title="Benchmark"))
 
