@@ -2,19 +2,22 @@
 
 Coordinates Plan → Execute → Verify workflow.
 Implements ClaudeKit DNA's triadic pattern.
+
+Modular implementation with internal submodules.
 """
 
 from __future__ import annotations
 
+import subprocess
+import time
+import uuid
 from collections.abc import Callable
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
-import time
-import uuid
-from dataclasses import dataclass, field
-from enum import Enum
 
 from rich.console import Console
 from rich.panel import Panel
@@ -30,7 +33,7 @@ from .parser import Recipe, RecipeStep
 from .planner import PlanningContext, RecipePlanner
 from .retry_policy import RetryPolicy
 from .telemetry import TelemetryCollector
-from .verifier import ExecutionResult, RecipeVerifier, VerificationReport
+from .verifier import RecipeVerifier, VerificationReport
 from .workflow_state import StepStatus, WorkflowState, WorkflowStatus
 
 
@@ -48,7 +51,7 @@ class StepResult:
     """Result of executing and verifying a single step."""
 
     step: RecipeStep
-    execution: ExecutionResult
+    execution: Any  # ExecutionResult
     verification: VerificationReport
     retry_count: int = 0
     self_healed: bool = False
@@ -75,439 +78,86 @@ class OrchestrationResult:
         return (self.completed_steps / self.total_steps) * 100
 
 
-class RecipeOrchestrator:
-    """Coordinates Plan → Execute → Verify workflow.
-
-    This is the main entry point for executing goals with full
-    planning, execution, and verification pipeline.
-    """
+class StepExecutor:
+    """Executes and verifies individual recipe steps."""
 
     def __init__(
         self,
-        llm_client: Optional["LLMClient"] = None,
-        strict_verification: bool = True,
-        enable_rollback: bool = True,
-        use_swarm: bool = False,
-        retry_policy: RetryPolicy | None = None,
-    ) -> None:
-        """Initialize orchestrator.
-
-        Args:
-            llm_client: Optional LLM client for planning and execution
-            strict_verification: If True, warnings are treated as failures
-            enable_rollback: If True, failed steps trigger rollback
-            use_swarm: If True, route steps through SwarmDispatcher
-            retry_policy: Retry policy for step execution (Temporal-inspired)
-
-        """
-        self.planner = RecipePlanner(llm_client=llm_client)
-        self.verifier = RecipeVerifier(strict_mode=strict_verification)
-        self.console = Console()
-        self.enable_rollback = enable_rollback
-        self.telemetry = TelemetryCollector()
-        self.memory = MemoryStore()
-        self.nlu = IntentClassifier(llm_client=llm_client)
-        self.retry_policy = retry_policy or RetryPolicy()
-        self.history = ExecutionHistory()
-
-        # Swarm dispatcher (optional)
-        if use_swarm:
-            from .swarm import SwarmDispatcher, SwarmRegistry
-            self.dispatcher: Any | None = SwarmDispatcher(SwarmRegistry())
-        else:
-            self.dispatcher = None
-
-        # Initialize BMAD loader
-        self.bmad_loader: Any | None = None
-        try:
-            from packages.core.bmad.loader import BMADWorkflowLoader
-
-            self.bmad_loader = BMADWorkflowLoader()
-        except ImportError:
-            self.console.print("[yellow]Warning: BMAD loader not available[/yellow]")
-
-    def run_from_goal(
-        self,
-        goal: str,
-        context: PlanningContext | None = None,
-        progress_callback: Callable[..., None] | None = None,
-    ) -> OrchestrationResult:
-        """Execute complete workflow from high-level goal.
-
-        PLAN → EXECUTE → VERIFY
-
-        Args:
-            goal: User's high-level objective
-            context: Optional planning context
-            progress_callback: Optional callback for step progress
-
-        Returns:
-            OrchestrationResult with complete workflow results
-
-        """
-        self.console.print(
-            Panel(
-                f"[bold]Goal:[/bold] {goal}",
-                title="🎯 Mekong Orchestrator",
-                border_style="cyan",
-            ),
-        )
-
-        goal_start_time = time.time()
-
-        # Start telemetry trace
-        self.telemetry.start_trace(goal)
-
-        # NLU Phase (pre-planning) — classify intent and try direct recipe
-        intent_result = self.nlu.classify(goal)
-        if intent_result.confidence > 0.7 and intent_result.suggested_recipe:
-            from .smart_router import SmartRouter
-
-            router = SmartRouter(memory_store=self.memory)
-            route = router.route(intent_result)
-            if route.action == "recipe" and route.recipe_path:
-                from .parser import RecipeParser
-
-                try:
-                    from pathlib import Path as _Path
-                    recipe = RecipeParser().parse(_Path(route.recipe_path))
-                    self.console.print(
-                        f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'",
-                    )
-                    result = self.run_from_recipe(
-                        recipe, progress_callback=progress_callback,
-                    )
-                    self.telemetry.finish_trace()
-                    entry = MemoryEntry(
-                        goal=goal,
-                        status=result.status.value,
-                        duration_ms=(time.time() - goal_start_time) * 1000,
-                        error_summary="; ".join(result.errors[:3]) if result.errors else "",
-                        recipe_used=result.recipe.name if result.recipe else "",
-                    )
-                    self.memory.record(entry)
-                    return result
-                except Exception:
-                    pass  # Fall through to normal planning
-
-        # PHASE 1: PLAN
-        self.console.print("\n[bold yellow]📋 PHASE 1: PLANNING[/bold yellow]")
-
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=self.console,
-        ) as progress:
-            task = progress.add_task("Generating execution plan...", total=None)
-            recipe = self.planner.plan(goal, context)
-            progress.update(task, completed=True)
-
-        # Validate plan
-        plan_issues = self.planner.validate_plan(recipe)
-        if plan_issues:
-            self.console.print("[yellow]⚠️  Plan validation warnings:[/yellow]")
-            for issue in plan_issues:
-                self.console.print(f"  • {issue}")
-
-        self.console.print(f"[green]✓[/green] Generated {len(recipe.steps)} steps")
-
-        # PHASE 2 & 3: EXECUTE → VERIFY
-        result = self.run_from_recipe(recipe, progress_callback=progress_callback)
-
-        # Finalize telemetry
-        self.telemetry.finish_trace()
-
-        # Record to memory
-        entry = MemoryEntry(
-            goal=goal,
-            status=result.status.value,
-            duration_ms=(time.time() - goal_start_time) * 1000,
-            error_summary="; ".join(result.errors[:3]) if result.errors else "",
-            recipe_used=result.recipe.name if result.recipe else "",
-        )
-        self.memory.record(entry)
-
-        return result
-
-    def run_from_recipe(
-        self, recipe: Recipe, progress_callback: Callable[..., None] | None = None,
-    ) -> OrchestrationResult:
-        """Execute existing recipe with verification.
-
-        EXECUTE → VERIFY (with Temporal-inspired event sourcing & state machine)
-
-        Args:
-            recipe: Pre-planned recipe to execute
-
-        Returns:
-            OrchestrationResult
-
-        """
-        workflow_id = uuid.uuid4().hex[:12]
-        result = OrchestrationResult(
-            status=OrchestrationStatus.SUCCESS,
-            recipe=recipe,
-            total_steps=len(recipe.steps),
-        )
-
-        # Initialize workflow state machine
-        wf_state = WorkflowState(workflow_id=workflow_id)
-        wf_state.register_steps(len(recipe.steps))
-        wf_state.transition(WorkflowStatus.RUNNING)
-
-        # Record workflow start event
-        self.history.append(ExecutionEvent.create(
-            EventKind.WORKFLOW_STARTED, workflow_id,
-            data={"recipe": recipe.name, "steps": len(recipe.steps)},
-        ))
-
-        self.console.print(
-            "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]",
-        )
-
-        # Create executor
-        executor = RecipeExecutor(recipe)
-
-        # DAG parallel path: if steps have dependencies, use DAGScheduler
-        dag = DAGScheduler(recipe.steps)
-        if dag.has_dependencies():
-            cycle_err = validate_dag(recipe.steps)
-            if cycle_err:
-                result.status = OrchestrationStatus.FAILED
-                result.errors.append(cycle_err)
-                self._display_report(result)
-                return result
-
-            self.console.print("[dim]DAG mode: parallel execution enabled[/dim]")
-
-            def _dag_executor(step: RecipeStep) -> StepResult:
-                return self._execute_and_verify_step(
-                    executor, step, workflow_id, wf_state,
-                )
-
-            def _on_dag_complete(order: int, dag_result: Any) -> None:
-                if dag_result.success:
-                    result.completed_steps += 1
-                    self.console.print(f"[green]✓[/green] Step {order} passed")
-                else:
-                    result.failed_steps += 1
-                    self.console.print(f"[red]✗[/red] Step {order} failed")
-
-            dag_results = dag.execute_all(_dag_executor, _on_dag_complete)
-
-            # Collect results
-            for order in sorted(dag_results):
-                dr = dag_results[order]
-                if dr.result:
-                    result.step_results.append(dr.result)
-                if not dr.success:
-                    result.status = OrchestrationStatus.PARTIAL
-                    if dr.error:
-                        result.errors.append(f"Step {order}: {dr.error}")
-
-            for cancelled_order in dag.cancelled_steps:
-                result.errors.append(f"Step {cancelled_order}: cancelled (upstream failure)")
-
-            # Skip sequential loop — jump to finalize
-            # Finalize workflow state
-            if result.failed_steps == 0 and not dag.cancelled_steps:
-                result.status = OrchestrationStatus.SUCCESS
-                wf_state.transition(WorkflowStatus.COMPLETED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.WORKFLOW_COMPLETED, workflow_id,
-                    data={"success_rate": result.success_rate},
-                ))
-            else:
-                wf_state.transition(WorkflowStatus.FAILED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.WORKFLOW_FAILED, workflow_id,
-                    data={"errors": result.errors[:5]},
-                ))
-
-            self.history.persist(workflow_id)
-            self._display_report(result)
-            return result
-
-        # Sequential path: execute each step in order
-        for step in recipe.steps:
-            # Record step scheduled event
-            self.history.append(ExecutionEvent.create(
-                EventKind.STEP_SCHEDULED, workflow_id, step.order,
-            ))
-            wf_state.step_transition(step.order, StepStatus.STARTED)
-
-            step_result = self._execute_and_verify_step(
-                executor, step, workflow_id, wf_state,
-            )
-            result.step_results.append(step_result)
-
-            if step_result.verification.passed:
-                result.completed_steps += 1
-                wf_state.step_transition(step.order, StepStatus.COMPLETED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.STEP_COMPLETED, workflow_id, step.order,
-                ))
-                self.console.print(f"[green]✓[/green] Step {step.order} passed")
-            else:
-                result.failed_steps += 1
-                result.status = OrchestrationStatus.FAILED
-                wf_state.step_transition(step.order, StepStatus.FAILED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.STEP_FAILED, workflow_id, step.order,
-                    data={"errors": step_result.verification.errors[:3]},
-                ))
-                self.console.print(f"[red]✗[/red] Step {step.order} failed")
-
-                # Collect errors
-                for error in step_result.verification.errors:
-                    result.errors.append(f"Step {step.order}: {error}")
-
-            # Collect warnings
-            for warning in step_result.verification.warnings:
-                result.warnings.append(f"Step {step.order}: {warning}")
-
-            # Notify progress listener (used by WebSocket streaming)
-            if progress_callback:
-                progress_callback(step_result, result)
-
-            # Handle failure after callback so the listener sees the step
-            if not step_result.verification.passed:
-                if self.enable_rollback:
-                    self.history.append(ExecutionEvent.create(
-                        EventKind.ROLLBACK_STARTED, workflow_id, step.order,
-                    ))
-                    self._handle_failure(result, step)
-                    self.history.append(ExecutionEvent.create(
-                        EventKind.ROLLBACK_COMPLETED, workflow_id, step.order,
-                    ))
-                    break
-                result.status = OrchestrationStatus.PARTIAL
-
-        # Finalize workflow state
-        if result.status == OrchestrationStatus.SUCCESS:
-            wf_state.transition(WorkflowStatus.COMPLETED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_COMPLETED, workflow_id,
-                data={"success_rate": result.success_rate},
-            ))
-        elif result.status == OrchestrationStatus.FAILED:
-            wf_state.transition(WorkflowStatus.FAILED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_FAILED, workflow_id,
-                data={"errors": result.errors[:5]},
-            ))
-
-        # Persist execution history
-        self.history.persist(workflow_id)
-
-        # Display final report
-        self._display_report(result)
-
-        return result
-
-    def _execute_and_verify_step(
-        self,
         executor: RecipeExecutor,
+        verifier: RecipeVerifier,
+        llm_client: Any | None = None,
+        history: Any | None = None,
+        telemetry: Any | None = None,
+    ) -> None:
+        self.executor = executor
+        self.verifier = verifier
+        self.llm_client = llm_client
+        self.history = history
+        self.telemetry = telemetry
+
+    def execute_and_verify(
+        self,
         step: RecipeStep,
         workflow_id: str = "",
-        wf_state: WorkflowState | None = None,
+        step_order: int = 0,
     ) -> StepResult:
-        """Execute single step and verify results.
-        If a shell step fails and an LLM client is available, attempt
-        one self-healing retry with an LLM-suggested corrected command.
-
-        Args:
-            executor: Recipe executor instance
-            step: Step to execute
-
-        Returns:
-            StepResult with execution and verification data
-
-        """
+        """Execute single step and verify results."""
         step_start = time.time()
         self_healed = False
 
-        # Execute step
-        execution_result = executor.execute_step(step)
+        execution_result = self.executor.execute_step(step)
 
-        # Self-healing: retry failed shell steps with LLM correction
-        # Uses Temporal-inspired retry policy for backoff decisions
+        # Self-healing for failed shell commands
         step_type = step.params.get("type", "shell") if step.params else "shell"
         if (
             step_type == "shell"
             and execution_result.exit_code != 0
-            and self.retry_policy.is_retryable(
-                execution_result.stderr or "", execution_result.exit_code,
-            )
-            and self.planner.llm_client
-            and hasattr(self.planner.llm_client, "generate")
+            and self.llm_client
+            and hasattr(self.llm_client, "generate")
         ):
             command = step.description.strip()
             stderr = execution_result.stderr or ""
-            self.console.print(
-                "[yellow]🔧 Attempting AI self-correction...[/yellow]",
-            )
-            if workflow_id:
-                self.history.append(ExecutionEvent.create(
-                    EventKind.SELF_HEAL_ATTEMPTED, workflow_id, step.order,
-                    data={"error": stderr[:200]},
-                ))
+
+            if self.telemetry:
+                self.telemetry.record_llm_call()
 
             try:
-                self.telemetry.record_llm_call()
                 prompt = (
                     f"This shell command failed: `{command}`. "
                     f"Error: `{stderr[:500]}`. "
                     "Suggest a corrected command. "
                     "Reply with ONLY the corrected command, no explanation."
                 )
-                corrected = self.planner.llm_client.generate(prompt).strip()
+                corrected = self.llm_client.generate(prompt).strip()
 
                 if corrected and corrected != command:
-                    # Build a temporary step with corrected command
-                    from .parser import RecipeStep as _RS
-
-                    healed_step = _RS(
+                    healed_step = RecipeStep(
                         order=step.order,
                         title=f"{step.title} (healed)",
                         description=corrected,
                         agent=step.agent,
                         params=step.params,
                     )
-                    execution_result = executor.execute_step(healed_step)
+                    execution_result = self.executor.execute_step(healed_step)
                     if execution_result.exit_code == 0:
                         self_healed = True
-                        self.console.print(
-                            "[green]✓ Self-healing succeeded[/green]",
-                        )
-                        if workflow_id:
-                            self.history.append(ExecutionEvent.create(
-                                EventKind.SELF_HEAL_SUCCEEDED,
-                                workflow_id, step.order,
-                            ))
-                    else:
-                        self.telemetry.record_error(
-                            f"Self-heal retry also failed for step {step.order}",
-                        )
-            except Exception as e:
-                self.telemetry.record_error(f"Self-heal error: {e}")
 
-        # Extract verification criteria from step params
-        criteria = step.params.get("verification", {})
+            except Exception:
+                pass
 
-        # Verify results
+        criteria = step.params.get("verification", {}) if step.params else {}
         verification_report = self.verifier.verify(execution_result, criteria)
 
-        # Record telemetry
         duration = time.time() - step_start
-        self.telemetry.record_step(
-            step_order=step.order,
-            title=step.title,
-            duration=duration,
-            exit_code=execution_result.exit_code,
-            self_healed=self_healed,
-            agent=step.agent,
-        )
+        if self.telemetry:
+            self.telemetry.record_step(
+                step_order=step.order,
+                title=step.title,
+                duration=duration,
+                exit_code=execution_result.exit_code,
+                self_healed=self_healed,
+                agent=step.agent,
+            )
 
         return StepResult(
             step=step,
@@ -516,48 +166,42 @@ class RecipeOrchestrator:
             self_healed=self_healed,
         )
 
-    def _handle_failure(
-        self, result: OrchestrationResult, failed_step: RecipeStep,
+
+class RollbackHandler:
+    """Handles rollback of failed recipe steps."""
+
+    def __init__(self, enable_rollback: bool = True) -> None:
+        self.enable_rollback = enable_rollback
+        self.console = Console()
+
+    def rollback(
+        self,
+        result: OrchestrationResult,
+        failed_step: RecipeStep,
     ) -> None:
-        """Handle step failure with rollback.
-
-        Reverses completed steps in reverse order by executing their
-        rollback commands (if defined in step params).
-
-        Args:
-            result: Current orchestration result
-            failed_step: The step that failed
-
-        """
-        self.console.print(
-            f"\n[bold red]❌ Step {failed_step.order} failed verification[/bold red]",
-        )
-
+        """Rollback completed steps after failure."""
         if not self.enable_rollback:
             return
 
         self.console.print("[yellow]🔄 Rolling back completed steps...[/yellow]")
+        rollback_errors: list[str] = []
 
-        # Reverse through completed steps
-        rollback_errors = []
         for step_result in reversed(result.step_results):
             if not step_result.verification.passed:
-                continue  # Skip the failed step itself
+                continue
 
             step = step_result.step
             rollback_cmd = step.params.get("rollback") if step.params else None
 
             if not rollback_cmd:
                 self.console.print(
-                    f"  [dim]Step {step.order}: no rollback command — skipping[/dim]",
+                    f"  [dim]Step {step.order}: no rollback — skipping[/dim]",
                 )
                 continue
 
             self.console.print(f"  [yellow]↩ Rolling back step {step.order}...[/yellow]")
 
             try:
-                import subprocess
-
                 proc = subprocess.run(
                     rollback_cmd,
                     shell=True,
@@ -566,17 +210,17 @@ class RecipeOrchestrator:
                     timeout=30,
                 )
                 if proc.returncode == 0:
-                    self.console.print(
-                        f"  [green]✓ Step {step.order} rolled back[/green]",
-                    )
+                    self.console.print(f"  [green]✓ Step {step.order} rolled back[/green]")
                 else:
                     msg = f"Step {step.order} rollback failed: {proc.stderr.strip()}"
                     rollback_errors.append(msg)
                     self.console.print(f"  [red]✗ {msg}[/red]")
+
             except subprocess.TimeoutExpired:
                 msg = f"Step {step.order} rollback timed out"
                 rollback_errors.append(msg)
                 self.console.print(f"  [red]✗ {msg}[/red]")
+
             except Exception as e:
                 msg = f"Step {step.order} rollback error: {e}"
                 rollback_errors.append(msg)
@@ -588,18 +232,19 @@ class RecipeOrchestrator:
 
         result.status = OrchestrationStatus.ROLLED_BACK
 
-    def _display_report(self, result: OrchestrationResult) -> None:
-        """Display final orchestration report.
 
-        Args:
-            result: Orchestration result to display
+class ReportFormatter:
+    """Formats and displays orchestration reports."""
 
-        """
+    def __init__(self) -> None:
+        self.console = Console()
+
+    def display(self, result: OrchestrationResult) -> None:
+        """Display final orchestration report."""
         self.console.print("\n" + "=" * 60)
         self.console.print("[bold]📊 ORCHESTRATION REPORT[/bold]")
         self.console.print("=" * 60)
 
-        # Summary table
         table = Table(show_header=False, box=None)
         table.add_column("Metric", style="bold")
         table.add_column("Value")
@@ -612,13 +257,11 @@ class RecipeOrchestrator:
 
         self.console.print(table)
 
-        # Errors
         if result.errors:
             self.console.print("\n[bold red]❌ Errors:[/bold red]")
             for error in result.errors:
                 self.console.print(f"  • {error}")
 
-        # Warnings
         if result.warnings:
             self.console.print("\n[bold yellow]⚠️  Warnings:[/bold yellow]")
             for warning in result.warnings:
@@ -637,31 +280,380 @@ class RecipeOrchestrator:
         color = colors.get(status, "white")
         return f"[{color}]{status.value.upper()}[/{color}]"
 
-    def run_bmad_workflow(
-        self, workflow_id: str, context: dict[str, Any] | None = None,
+
+class RecipeOrchestrator:
+    """Main workflow coordinator for Plan → Execute → Verify."""
+
+    def __init__(
+        self,
+        llm_client: Optional["LLMClient"] = None,
+        strict_verification: bool = True,
+        enable_rollback: bool = True,
+        use_swarm: bool = False,
+        retry_policy: RetryPolicy | None = None,
+    ) -> None:
+        self.planner = RecipePlanner(llm_client=llm_client)
+        self.verifier = RecipeVerifier(strict_mode=strict_verification)
+        self.console = Console()
+        self.enable_rollback = enable_rollback
+        self.telemetry = TelemetryCollector()
+        self.memory = MemoryStore()
+        self.nlu = IntentClassifier(llm_client=llm_client)
+        self.retry_policy = retry_policy or RetryPolicy()
+        self.history = ExecutionHistory()
+
+        self.step_executor: StepExecutor | None = None
+        self.rollback_handler = RollbackHandler(enable_rollback=enable_rollback)
+        self.report_formatter = ReportFormatter()
+
+        if use_swarm:
+            from .swarm import SwarmDispatcher, SwarmRegistry
+
+            self.dispatcher: Any | None = SwarmDispatcher(SwarmRegistry())
+        else:
+            self.dispatcher = None
+
+        self.bmad_loader: Any | None = None
+        try:
+            from packages.core.bmad.parsers.python.loader import BMADWorkflowLoader
+
+            self.bmad_loader = BMADWorkflowLoader()
+        except ImportError:
+            self.console.print("[yellow]Warning: BMAD loader not available[/yellow]")
+
+    def _init_step_executor(self, executor: RecipeExecutor) -> StepExecutor:
+        self.step_executor = StepExecutor(
+            executor=executor,
+            verifier=self.verifier,
+            llm_client=self.planner.llm_client,
+            history=self.history,
+            telemetry=self.telemetry,
+        )
+        return self.step_executor
+
+    def run_from_goal(
+        self,
+        goal: str,
+        context: PlanningContext | None = None,
+        progress_callback: Callable[..., None] | None = None,
     ) -> OrchestrationResult:
-        """Execute a BMAD workflow by ID.
+        """Execute complete workflow from high-level goal."""
+        self.console.print(
+            Panel(
+                f"[bold]Goal:[/bold] {goal}",
+                title="🎯 Mekong Orchestrator",
+                border_style="cyan",
+            ),
+        )
 
-        Args:
-            workflow_id: BMAD workflow identifier
-            context: Optional execution context
+        goal_start_time = time.time()
+        self.telemetry.start_trace(goal)
 
-        Returns:
-            OrchestrationResult
+        # NLU Phase
+        intent_result = self.nlu.classify(goal)
+        if intent_result.confidence > 0.7 and intent_result.suggested_recipe:
+            from .smart_router import SmartRouter
 
-        """
+            router = SmartRouter(memory_store=self.memory)
+            route = router.route(intent_result)
+            if route.action == "recipe" and route.recipe_path:
+                from .parser import RecipeParser
+
+                try:
+                    from pathlib import Path as _Path
+
+                    recipe = RecipeParser().parse(_Path(route.recipe_path))
+                    self.console.print(
+                        f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'",
+                    )
+                    result = self.run_from_recipe(
+                        recipe,
+                        progress_callback=progress_callback,
+                    )
+                    self._finalize_workflow(result, goal, goal_start_time)
+                    return result
+                except Exception:
+                    pass
+
+        # PHASE 1: PLAN
+        self.console.print("\n[bold yellow]📋 PHASE 1: PLANNING[/bold yellow]")
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=self.console,
+        ) as progress:
+            task = progress.add_task("Generating execution plan...", total=None)
+            recipe = self.planner.plan(goal, context)
+            progress.update(task, completed=True)
+
+        plan_issues = self.planner.validate_plan(recipe)
+        if plan_issues:
+            self.console.print("[yellow]⚠️  Plan validation warnings:[/yellow]")
+            for issue in plan_issues:
+                self.console.print(f"  • {issue}")
+
+        self.console.print(f"[green]✓[/green] Generated {len(recipe.steps)} steps")
+
+        # PHASE 2 & 3: EXECUTE → VERIFY
+        result = self.run_from_recipe(recipe, progress_callback=progress_callback)
+        self._finalize_workflow(result, goal, goal_start_time)
+        return result
+
+    def _finalize_workflow(
+        self,
+        result: OrchestrationResult,
+        goal: str,
+        goal_start_time: float,
+    ) -> None:
+        self.telemetry.finish_trace()
+
+        entry = MemoryEntry(
+            goal=goal,
+            status=result.status.value,
+            duration_ms=(time.time() - goal_start_time) * 1000,
+            error_summary="; ".join(result.errors[:3]) if result.errors else "",
+            recipe_used=result.recipe.name if result.recipe else "",
+        )
+        self.memory.record(entry)
+
+    def run_from_recipe(
+        self,
+        recipe: Recipe,
+        progress_callback: Callable[..., None] | None = None,
+    ) -> OrchestrationResult:
+        """Execute existing recipe with verification."""
+        workflow_id = uuid.uuid4().hex[:12]
+        result = OrchestrationResult(
+            status=OrchestrationStatus.SUCCESS,
+            recipe=recipe,
+            total_steps=len(recipe.steps),
+        )
+
+        wf_state = WorkflowState(workflow_id=workflow_id)
+        wf_state.register_steps(len(recipe.steps))
+        wf_state.transition(WorkflowStatus.RUNNING)
+
+        self.history.append(
+            ExecutionEvent.create(
+                EventKind.WORKFLOW_STARTED,
+                workflow_id,
+                data={"recipe": recipe.name, "steps": len(recipe.steps)},
+            ),
+        )
+
+        self.console.print(
+            "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]",
+        )
+
+        executor = RecipeExecutor(recipe)
+        step_executor = self._init_step_executor(executor)
+
+        dag = DAGScheduler(recipe.steps)
+        if dag.has_dependencies():
+            return self._run_dag_workflow(dag, step_executor, result, workflow_id)
+
+        return self._run_sequential_workflow(
+            recipe,
+            step_executor,
+            result,
+            workflow_id,
+            wf_state,
+            progress_callback,
+        )
+
+    def _run_dag_workflow(
+        self,
+        dag: DAGScheduler,
+        step_executor: StepExecutor,
+        result: OrchestrationResult,
+        workflow_id: str,
+    ) -> OrchestrationResult:
+        """Run DAG-based parallel execution."""
+        cycle_err = validate_dag(dag.steps)
+        if cycle_err:
+            result.status = OrchestrationStatus.FAILED
+            result.errors.append(cycle_err)
+            self.report_formatter.display(result)
+            return result
+
+        self.console.print("[dim]DAG mode: parallel execution enabled[/dim]")
+
+        def _dag_executor(step: RecipeStep) -> StepResult:
+            return step_executor.execute_and_verify(step, workflow_id, step.order)
+
+        def _on_dag_complete(order: int, dag_result: Any) -> None:
+            if dag_result.success:
+                result.completed_steps += 1
+                self.console.print(f"[green]✓[/green] Step {order} passed")
+            else:
+                result.failed_steps += 1
+                self.console.print(f"[red]✗[/red] Step {order} failed")
+
+        dag_results = dag.execute_all(_dag_executor, _on_dag_complete)
+
+        for order in sorted(dag_results):
+            dr = dag_results[order]
+            if dr.result:
+                result.step_results.append(dr.result)
+            if not dr.success:
+                result.status = OrchestrationStatus.PARTIAL
+                if dr.error:
+                    result.errors.append(f"Step {order}: {dr.error}")
+
+        self._finalize_dag_workflow(result, dag.cancelled_steps, workflow_id)
+        self.report_formatter.display(result)
+        return result
+
+    def _finalize_dag_workflow(
+        self,
+        result: OrchestrationResult,
+        cancelled_steps: list[int],
+        workflow_id: str,
+    ) -> None:
+        if result.failed_steps == 0 and not cancelled_steps:
+            result.status = OrchestrationStatus.SUCCESS
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_COMPLETED,
+                    workflow_id,
+                    data={"success_rate": result.success_rate},
+                ),
+            )
+        else:
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_FAILED,
+                    workflow_id,
+                    data={"errors": result.errors[:5]},
+                ),
+            )
+
+        self.history.persist(workflow_id)
+
+    def _run_sequential_workflow(
+        self,
+        recipe: Recipe,
+        step_executor: StepExecutor,
+        result: OrchestrationResult,
+        workflow_id: str,
+        wf_state: WorkflowState,
+        progress_callback: Callable[..., None] | None,
+    ) -> OrchestrationResult:
+        """Run sequential step execution."""
+        for step in recipe.steps:
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.STEP_SCHEDULED,
+                    workflow_id,
+                    step.order,
+                ),
+            )
+            wf_state.step_transition(step.order, StepStatus.STARTED)
+
+            step_result = step_executor.execute_and_verify(
+                step,
+                workflow_id,
+                step.order,
+            )
+            result.step_results.append(step_result)
+
+            if step_result.verification.passed:
+                result.completed_steps += 1
+                wf_state.step_transition(step.order, StepStatus.COMPLETED)
+                self.history.append(
+                    ExecutionEvent.create(
+                        EventKind.STEP_COMPLETED,
+                        workflow_id,
+                        step.order,
+                    ),
+                )
+                self.console.print(f"[green]✓[/green] Step {step.order} passed")
+            else:
+                result.failed_steps += 1
+                result.status = OrchestrationStatus.FAILED
+                wf_state.step_transition(step.order, StepStatus.FAILED)
+                self.history.append(
+                    ExecutionEvent.create(
+                        EventKind.STEP_FAILED,
+                        workflow_id,
+                        step.order,
+                        data={"errors": step_result.verification.errors[:3]},
+                    ),
+                )
+                self.console.print(f"[red]✗[/red] Step {step.order} failed")
+
+                for error in step_result.verification.errors:
+                    result.errors.append(f"Step {step.order}: {error}")
+
+                for warning in step_result.verification.warnings:
+                    result.warnings.append(f"Step {step.order}: {warning}")
+
+                if progress_callback:
+                    progress_callback(step_result, result)
+
+                if not step_result.verification.passed:
+                    if self.enable_rollback:
+                        self.history.append(
+                            ExecutionEvent.create(
+                                EventKind.ROLLBACK_STARTED,
+                                workflow_id,
+                                step.order,
+                            ),
+                        )
+                        self.rollback_handler.rollback(result, step)
+                        self.history.append(
+                            ExecutionEvent.create(
+                                EventKind.ROLLBACK_COMPLETED,
+                                workflow_id,
+                                step.order,
+                            ),
+                        )
+                        break
+                    result.status = OrchestrationStatus.PARTIAL
+
+        self._finalize_sequential_workflow(result, workflow_id)
+        self.report_formatter.display(result)
+        return result
+
+    def _finalize_sequential_workflow(
+        self,
+        result: OrchestrationResult,
+        workflow_id: str,
+    ) -> None:
+        if result.status == OrchestrationStatus.SUCCESS:
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_COMPLETED,
+                    workflow_id,
+                    data={"success_rate": result.success_rate},
+                ),
+            )
+        elif result.status == OrchestrationStatus.FAILED:
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_FAILED,
+                    workflow_id,
+                    data={"errors": result.errors[:5]},
+                ),
+            )
+
+        self.history.persist(workflow_id)
+
+    def run_bmad_workflow(
+        self,
+        workflow_id: str,
+        context: dict[str, Any] | None = None,
+    ) -> OrchestrationResult:
+        """Execute a BMAD workflow by ID."""
         if not self.bmad_loader:
             msg = "BMAD loader not available"
             raise RuntimeError(msg)
 
-        # Load workflow
         workflow = self.bmad_loader.get_workflow(workflow_id)
         if not workflow:
             msg = f"Workflow not found: {workflow_id}"
             raise ValueError(msg)
-
-        # Convert BMAD workflow to Recipe format
-        from .parser import Recipe, RecipeStep
 
         step = RecipeStep(
             order=1,
@@ -685,4 +677,7 @@ __all__ = [
     "OrchestrationStatus",
     "RecipeOrchestrator",
     "StepResult",
+    "StepExecutor",
+    "RollbackHandler",
+    "ReportFormatter",
 ]
