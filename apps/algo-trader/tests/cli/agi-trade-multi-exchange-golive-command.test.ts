@@ -1,6 +1,38 @@
 import { Command } from 'commander';
 import { registerAgiTradeCommand, AgiTradeOrchestrator } from '../../src/cli/agi-trade-multi-exchange-golive-command';
 
+// Mock LicenseService to allow tests to pass without license
+jest.mock('../../src/lib/raas-gate', () => ({
+  LicenseService: {
+    getInstance: jest.fn(() => ({
+      hasTier: jest.fn(() => true),
+      getTier: jest.fn(() => 'pro'),
+      validate: jest.fn(() => ({ valid: true, tier: 'pro', features: ['ml_models', 'premium_data'] })),
+      requireTier: jest.fn(),
+      requireFeature: jest.fn(),
+      reset: jest.fn(),
+    })),
+  },
+  LicenseTier: {
+    FREE: 'free',
+    PRO: 'pro',
+    ENTERPRISE: 'enterprise',
+  },
+  LicenseError: class LicenseError extends Error {
+    constructor(message: string, public requiredTier: string, public feature: string) {
+      super(message);
+      this.name = 'LicenseError';
+    }
+  },
+  isPremium: jest.fn(() => true),
+  isEnterprise: jest.fn(() => false),
+  getLicenseTier: jest.fn(() => 'pro'),
+  validateLicense: jest.fn(() => ({ valid: true, tier: 'pro', features: [] })),
+  requireMLFeature: jest.fn(),
+  requirePremiumData: jest.fn(),
+  requireLicenseMiddleware: jest.fn(() => jest.fn()),
+}));
+
 jest.mock('ws', () => {
   return class MockWebSocket {
     static OPEN = 1;

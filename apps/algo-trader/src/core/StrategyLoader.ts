@@ -5,9 +5,12 @@ import { BollingerBandStrategy } from '../strategies/BollingerBandStrategy';
 import { MacdCrossoverStrategy } from '../strategies/MacdCrossoverStrategy';
 import { MacdBollingerRsiStrategy } from '../strategies/MacdBollingerRsiStrategy';
 import { CrossExchangeArbitrage, TriangularArbitrage, StatisticalArbitrage } from '@agencyos/vibe-arbitrage-engine/strategies';
-import { QLearningStrategy } from '../ml/tabular-q-learning-rl-trading-strategy';
-import { GruPredictionStrategy } from '../ml/gru-prediction-strategy';
-import { GruPricePredictionModel } from '../ml/gru-price-prediction-model';
+import { LicenseService, LicenseTier, LicenseError } from '../lib/raas-gate';
+
+// Deferred imports for ML strategies (only loaded when needed)
+import type { QLearningStrategy as QLearningStrategyType } from '../ml/tabular-q-learning-rl-trading-strategy';
+import type { GruPredictionStrategy as GruPredictionStrategyType } from '../ml/gru-prediction-strategy';
+import type { GruPricePredictionModel } from '../ml/gru-price-prediction-model';
 
 export class StrategyLoader {
   private static strategies: Map<string, new () => IStrategy> = new Map<string, new () => IStrategy>([
@@ -21,7 +24,7 @@ export class StrategyLoader {
     ['Statistical', StatisticalArbitrage],
   ]);
 
-  /** Factory functions for strategies that need config (ML strategies). */
+  /** Factory functions for strategies that need config (ML strategies - PREMIUM). */
   private static factories: Map<string, () => IStrategy> = new Map();
 
   static register(name: string, strategyClass: new () => IStrategy) {
@@ -33,10 +36,25 @@ export class StrategyLoader {
     this.factories.set(name, factory);
   }
 
+  /**
+   * Load strategy by name.
+   * ML strategies (QLearning, GruPrediction) require PRO license.
+   */
   static load(name: string): IStrategy {
-    // Check factories first (ML strategies)
+    // Check factories first (ML strategies - premium gated)
     const factory = this.factories.get(name);
-    if (factory) return factory();
+    if (factory) {
+      // Verify license for ML strategies
+      const licenseService = LicenseService.getInstance();
+      if (!licenseService.hasTier(LicenseTier.PRO)) {
+        throw new LicenseError(
+          `Strategy "${name}" requires PRO license`,
+          LicenseTier.PRO,
+          'ml_strategies'
+        );
+      }
+      return factory();
+    }
 
     const StrategyClass = this.strategies.get(name);
     if (!StrategyClass) {
@@ -59,8 +77,25 @@ export class StrategyLoader {
     return this.getNames().map(name => ({ name, strategy: this.load(name) }));
   }
 
-  /** Register ML strategies with default configs. */
+  /**
+   * Register ML strategies with default configs.
+   * PREMIUM FEATURE: Requires PRO license to register.
+   */
   static registerMLStrategies(): void {
+    const licenseService = LicenseService.getInstance();
+    if (!licenseService.hasTier(LicenseTier.PRO)) {
+      throw new LicenseError(
+        'Registering ML strategies requires PRO license',
+        LicenseTier.PRO,
+        'ml_strategies'
+      );
+    }
+
+    // Lazy load ML modules to avoid import errors when TF.js not available
+    const { QLearningStrategy } = require('../ml/tabular-q-learning-rl-trading-strategy');
+    const { GruPredictionStrategy } = require('../ml/gru-prediction-strategy');
+    const { GruPricePredictionModel } = require('../ml/gru-price-prediction-model');
+
     this.registerFactory('QLearning', () => new QLearningStrategy());
     this.registerFactory('GruPrediction', () => {
       const model = new GruPricePredictionModel({ gruUnits: 64, denseUnits: 32 });

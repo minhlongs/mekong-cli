@@ -11,6 +11,7 @@ import { logger } from 'hono/logger';
 import { timing } from 'hono/timing';
 import { poweredBy } from 'hono/powered-by';
 import { secureHeaders } from 'hono/secure-headers';
+import { licenseMiddleware, LicenseTier } from './middleware/license-auth-middleware';
 
 // Types for Cloudflare Workers environment
 export type Env = {
@@ -99,9 +100,9 @@ apiV1.get('/ready', (c) => {
   });
 });
 
-// Tenant CRUD routes placeholder
+// Tenant CRUD routes - PRO tier required
+apiV1.use('/tenants/*', licenseMiddleware(LicenseTier.PRO));
 apiV1.use('/tenants/*', async (c) => {
-  // Forward to main API server if needed
   return c.json({
     error: 'Not implemented in edge worker - forward to origin',
     path: c.req.path,
@@ -109,7 +110,8 @@ apiV1.use('/tenants/*', async (c) => {
   }, 501);
 });
 
-// Strategy marketplace routes placeholder
+// Strategy marketplace routes - PRO tier required
+apiV1.use('/strategies/*', licenseMiddleware(LicenseTier.PRO));
 apiV1.use('/strategies/*', async (c) => {
   return c.json({
     error: 'Not implemented in edge worker - forward to origin',
@@ -118,7 +120,8 @@ apiV1.use('/strategies/*', async (c) => {
   }, 501);
 });
 
-// Arbitrage routes placeholder
+// Arbitrage routes - ENTERPRISE tier required
+apiV1.use('/arb/*', licenseMiddleware(LicenseTier.ENTERPRISE));
 apiV1.use('/arb/*', async (c) => {
   return c.json({
     error: 'Not implemented in edge worker - forward to origin',
@@ -127,15 +130,41 @@ apiV1.use('/arb/*', async (c) => {
   }, 501);
 });
 
-// Billing routes placeholder (Polar webhook needs origin forwarding)
+// Optimization routes - PRO tier required
+apiV1.use('/optimization/*', licenseMiddleware(LicenseTier.PRO));
+apiV1.use('/optimization/*', async (c) => {
+  return c.json({
+    error: 'Not implemented in edge worker - forward to origin',
+    path: c.req.path,
+    method: c.req.method,
+  }, 501);
+});
+
+// Hyperparameter optimization - PRO tier required
+apiV1.use('/hyperparameter/*', licenseMiddleware(LicenseTier.PRO));
+apiV1.use('/hyperparameter/*', async (c) => {
+  return c.json({
+    error: 'Not implemented in edge worker - forward to origin',
+    path: c.req.path,
+    method: c.req.method,
+  }, 501);
+});
+
+// Backtest routes - FREE tier (open source, basic backtesting is free)
+apiV1.use('/backtest/*', async (c) => {
+  return c.json({
+    error: 'Not implemented in edge worker - forward to origin',
+    path: c.req.path,
+    method: c.req.method,
+  }, 501);
+});
+
+// Billing routes - FREE tier (public billing info)
 apiV1.post('/billing/webhook', async (c) => {
-  // In production, verify Polar webhook signature
   const signature = c.req.header('X-Polar-Signature');
   if (!signature) {
     return c.json({ error: 'Missing signature' }, 401);
   }
-
-  // Forward to origin for processing
   return c.json({
     received: true,
     signature: signature.substring(0, 20) + '...',
@@ -144,30 +173,11 @@ apiV1.post('/billing/webhook', async (c) => {
 });
 
 apiV1.get('/billing/products', async (c) => {
-  // Return cached product list or forward to origin
   return c.json({
     products: [
-      {
-        id: 'starter',
-        name: 'Starter Plan',
-        price: 29,
-        currency: 'USD',
-        interval: 'month',
-      },
-      {
-        id: 'growth',
-        name: 'Growth Plan',
-        price: 99,
-        currency: 'USD',
-        interval: 'month',
-      },
-      {
-        id: 'premium',
-        name: 'Premium Plan',
-        price: 299,
-        currency: 'USD',
-        interval: 'month',
-      },
+      { id: 'starter', name: 'Starter Plan', price: 29, currency: 'USD', interval: 'month' },
+      { id: 'growth', name: 'Growth Plan', price: 99, currency: 'USD', interval: 'month' },
+      { id: 'premium', name: 'Premium Plan', price: 299, currency: 'USD', interval: 'month' },
     ],
     cached: true,
   });
@@ -188,7 +198,6 @@ app.notFound((c) => {
 // Error handler
 app.onError((err, c) => {
   const status = err instanceof Error ? 500 : 400;
-
   return c.json({
     error: 'Internal Server Error',
     message: err instanceof Error ? err.message : 'Unknown error',

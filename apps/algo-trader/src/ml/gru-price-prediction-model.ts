@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import { LicenseService, LicenseTier, LicenseError } from '../lib/raas-gate';
 
 export interface GruModelConfig {
   windowSize?: number;      // lookback candle count (default 60)
@@ -28,6 +29,8 @@ export interface TrainResult {
  * GRU-based price direction prediction model.
  * Input: [windowSize, numFeatures] sliding window of normalized features.
  * Output: probability of price going UP (sigmoid).
+ *
+ * PREMIUM FEATURE: Requires PRO license to load model weights.
  */
 export class GruPricePredictionModel {
   private model: tf.Sequential | null = null;
@@ -124,14 +127,49 @@ export class GruPricePredictionModel {
     return probs;
   }
 
-  /** Save model weights to JSON-serializable format. */
+  /**
+   * Save model weights to JSON-serializable format.
+   * PREMIUM FEATURE: Requires PRO license.
+   */
   async saveWeights(): Promise<tf.io.ModelArtifacts> {
+    // Gate premium feature
+    const licenseService = LicenseService.getInstance();
+    if (!licenseService.hasTier(LicenseTier.PRO)) {
+      throw new LicenseError(
+        'Saving ML model weights requires PRO license',
+        LicenseTier.PRO,
+        'ml_model_weights'
+      );
+    }
+
     if (!this.model) throw new Error('Model not built.');
     return new Promise((resolve) => {
       this.model!.save(tf.io.withSaveHandler(async (modelArtifacts) => {
         resolve(modelArtifacts);
         return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: 'JSON' } };
       }));
+    });
+  }
+
+  /**
+   * Load model weights from saved artifacts.
+   * PREMIUM FEATURE: Requires PRO license.
+   */
+  async loadWeights(artifacts: tf.io.ModelArtifacts): Promise<void> {
+    // Gate premium feature
+    const licenseService = LicenseService.getInstance();
+    if (!licenseService.hasTier(LicenseTier.PRO)) {
+      throw new LicenseError(
+        'Loading ML model weights requires PRO license',
+        LicenseTier.PRO,
+        'ml_model_weights'
+      );
+    }
+
+    if (!this.model) this.build();
+
+    return new Promise((resolve, reject) => {
+      this.model!.loadWeights(artifacts).then(resolve).catch(reject);
     });
   }
 

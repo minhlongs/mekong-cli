@@ -7,7 +7,8 @@
 >
 > — Tôn Vũ (孫武), ~512 TCN, Thời Xuân Thu
 > Ánh xạ cho Doanh Trại Tôm Hùm (OpenClaw Swarm) | v4.0.0-DNA-FUSION | 2026-02-15
-> 🧬 DNA FUSION: Binh Pháp × ClaudeKit × BMAD-METHOD × Micro-Niche × Technical Co-Founder
+> 🧬 DNA FUSION: Binh Pháp × ClaudeKit × BMAD-METHOD × ROIaaS × Technical Co-Founder
+> 📜 CHIẾN LƯỢC TỐI THƯỢNG: [Hiến Pháp ROIaaS](file:///Users/macbookprom1/mekong-cli/docs/HIEN_PHAP_ROIAAS.md) (R = ROI = RaaS)
 
 ---
 
@@ -543,6 +544,7 @@ Task passes Micro-Niche Filter? ✅
   → Can it ship in 1 mission (15-60min)?
   → Does it solve ONE clear pain?
   → Is the outcome measurable?
+  → Does it satisfy the [ROIaaS Dual-Stream Strategy](file:///Users/macbookprom1/mekong-cli/docs/HIEN_PHAP_ROIAAS.md)?
   → Would a user pay $5/mo for this?
 If NO to any → SPLIT into smaller tasks or REJECT
 ```
