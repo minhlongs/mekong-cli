@@ -3,12 +3,15 @@ Cross-Session Intelligence for Mekong CLI
 Enables agents to remember and apply knowledge across different sessions for continuity.
 """
 
+import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import json
 import uuid
 from pathlib import Path
 from packages.memory.memory_facade import get_memory_facade
+
+logger = logging.getLogger(__name__)
 
 
 class UserProfile:
@@ -41,7 +44,8 @@ class CrossSessionStateManager:
         self.memory = get_memory_facade()
         self.memory.connect()
 
-        print(f"CrossSessionStateManager initialized for {user_id}, using {self.memory.get_provider_status()['active_provider']} storage")
+        logger.debug("CrossSessionStateManager initialized for %s, using %s storage",
+                     user_id, self.memory.get_provider_status()['active_provider'])
 
         # Initialize local storage as backup for YAML fallback
         self.local_storage_path = Path.home() / '.mekong' / 'cross_session_profiles'
@@ -120,7 +124,7 @@ class CrossSessionStateManager:
             with open(self.local_profile_file, 'w', encoding='utf-8') as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Warning: Could not save to local storage: {e}")
+            logger.warning("Could not save to local storage: %s", e)
 
     def _load_from_local_storage(self) -> List[Dict]:
         """Load data from local file storage"""
@@ -129,7 +133,7 @@ class CrossSessionStateManager:
                 with open(self.local_profile_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"Warning: Could not load from local storage: {e}")
+            logger.warning("Could not load from local storage: %s", e)
         return []
 
     def update_preferences(self, preferences: Dict[str, Any]) -> None:

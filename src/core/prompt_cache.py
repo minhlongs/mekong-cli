@@ -2,12 +2,15 @@
 Intelligent Prompt Caching System for Mekong CLI
 """
 
+import logging
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 import json
 import hashlib
 from pathlib import Path
 from packages.memory.memory_facade import get_memory_facade
+
+logger = logging.getLogger(__name__)
 
 
 class PromptCache:
@@ -27,7 +30,8 @@ class PromptCache:
         self.memory = get_memory_facade()
         self.memory.connect()
 
-        print(f"PromptCache initialized for {self.user_id}, using {self.memory.get_provider_status()['active_provider']} storage")
+        logger.debug("PromptCache initialized for %s, using %s storage",
+                     self.user_id, self.memory.get_provider_status()['active_provider'])
 
         # Initialize local storage as backup for YAML fallback
         self.local_storage_path = Path.home() / '.mekong' / 'prompt_cache'
@@ -51,7 +55,7 @@ class PromptCache:
             with open(self.local_cache_file, 'w', encoding='utf-8') as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Warning: Could not save to local storage: {e}")
+            logger.warning("Could not save to local storage: %s", e)
 
     def _load_from_local_storage(self) -> List[Dict]:
         """Load data from local file storage"""
@@ -60,7 +64,7 @@ class PromptCache:
                 with open(self.local_cache_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"Warning: Could not load from local storage: {e}")
+            logger.warning("Could not load from local storage: %s", e)
         return []
 
     def _generate_prompt_hash(self, prompt: str) -> str:
@@ -339,11 +343,11 @@ class IntelligentPromptManager:
 
         if cached_result:
             response, metadata = cached_result
-            print(f"Retrieved cached response with {metadata.get('similarity_score', 0):.2f} similarity")
+            logger.info("Retrieved cached response with %.2f similarity", metadata.get('similarity_score', 0))
             return response
 
         # Generate new response
-        print("No suitable cached response found, generating new response")
+        logger.debug("No suitable cached response found, generating new response")
         response = generator_func(prompt, *args, **kwargs)
 
         # Store the new prompt-response pair with default good score
