@@ -49,8 +49,12 @@ module.exports = {
     '^.+\\.ts$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
       diagnostics: false,
+      isolatedModules: true, // Faster compilation
     }],
   },
+  // Cache test results for faster re-runs
+  cache: true,
+  cacheDirectory: '<rootDir>/node_modules/.cache/jest',
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.test.ts',
