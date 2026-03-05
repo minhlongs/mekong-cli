@@ -31,7 +31,7 @@ export interface WebhookHandlerResult {
 /**
  * Input validation for license_key
  */
-function validateLicenseKey(licenseKey: unknown): { valid: boolean; error?: string } {
+export function validateLicenseKey(licenseKey: unknown): { valid: boolean; error?: string } {
   if (!licenseKey || typeof licenseKey !== 'string') {
     return { valid: false, error: 'license_key must be a string' };
   }
@@ -252,7 +252,7 @@ export async function handleWebhookEvent(
         return { success: false, message: `Invalid license_key: ${keyValidation.error}` };
       }
 
-      console.log('[Webhook] Payment failed for license:', license_key);
+      // Security: Removed console.log to prevent info disclosure//
 
       return { success: true, licenseKey: license_key as string, message: 'Payment failed warning recorded' };
     }

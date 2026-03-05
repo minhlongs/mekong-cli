@@ -10,7 +10,8 @@
  * - ENTERPRISE: 100,000 calls/month
  */
 
-import { createClient, RedisClientType } from 'redis';
+import Redis from 'ioredis';
+type RedisClientType = Redis;
 
 /**
  * Usage quota data structure
@@ -97,7 +98,7 @@ export class UsageQuotaService {
     if (this.redis) return;
 
     try {
-      this.redis = createClient({ url: this.redisUrl });
+      this.redis = new Redis(this.redisUrl);
       await this.redis.connect();
       console.log('[UsageQuota] Redis connected');
     } catch (error) {

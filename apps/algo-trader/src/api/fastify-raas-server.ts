@@ -28,6 +28,7 @@ import { PnlSnapshotService, InMemoryPnlStore } from '../core/pnl-realtime-snaps
 import { PolarSubscriptionService } from '../billing/polar-subscription-service';
 import { PolarWebhookEventHandler } from '../billing/polar-webhook-event-handler';
 import { buildPolarBillingRoutes } from './routes/polar-billing-subscription-routes';
+import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
 
 export interface RaasServerOptions {
   port?: number;
@@ -65,6 +66,14 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   // Plugins
   void server.register(errorHandlerPlugin);
   void server.register(corsPlugin);
+
+  // Idempotency middleware for webhooks
+  const idempotencyStore = new IdempotencyStore();
+  const idempotencyHook = idempotencyMiddleware(idempotencyStore);
+  const responseHandler = createIdempotencyResponseHandler(idempotencyStore);
+  
+  server.addHook('preHandler', idempotencyHook);
+  server.addHook('onSend', responseHandler);
 
   // Global Auth Middleware
   // Note: health routes should probably be excluded from auth if they are for external probes

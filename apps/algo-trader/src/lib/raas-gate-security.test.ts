@@ -22,57 +22,55 @@ describe('RAAS License Gate - Security Patches', () => {
   });
 
   describe('Rate Limiting on Validation Failures', () => {
-    test('should allow up to 5 validation attempts per minute', () => {
+    test('should allow up to 5 validation attempts per minute', async () => {
       const service = LicenseService.getInstance();
       const testIp = '192.168.1.100';
 
       // First 5 attempts should succeed (return FREE tier, not blocked)
       for (let i = 0; i < 5; i++) {
-        expect(() => service.validate('invalid-key', testIp)).not.toThrow();
+        await expect(service.validate('invalid-key', testIp)).resolves.not.toThrow();
       }
 
       expect(service.getValidationAttempts(testIp)).toBe(5);
     });
 
-    test('should block after 5 failed validation attempts', () => {
+    test('should block after 5 failed validation attempts', async () => {
       const service = LicenseService.getInstance();
       const testIp = '192.168.1.101';
 
       // Exhaust attempts
       for (let i = 0; i < 5; i++) {
-        service.validate('invalid-key', testIp);
+        await service.validate('invalid-key', testIp);
       }
 
       // 6th attempt should throw rate limit error
-      expect(() => {
-        service.validate('invalid-key', testIp);
-      }).toThrow('Too many validation attempts');
+      await expect(service.validate('invalid-key', testIp)).rejects.toThrow('Too many validation attempts');
     });
 
-    test('should track attempts per IP separately', () => {
+    test('should track attempts per IP separately', async () => {
       const service = LicenseService.getInstance();
       const ip1 = '192.168.1.102';
       const ip2 = '192.168.1.103';
 
       // Exhaust ip1
       for (let i = 0; i < 5; i++) {
-        service.validate('invalid-key', ip1);
+        await service.validate('invalid-key', ip1);
       }
 
       // ip1 should be blocked
-      expect(() => service.validate('invalid-key', ip1)).toThrow();
+      await expect(service.validate('invalid-key', ip1)).rejects.toThrow();
 
       // ip2 should still work
-      expect(() => service.validate('invalid-key', ip2)).not.toThrow();
+      await expect(service.validate('invalid-key', ip2)).resolves.not.toThrow();
     });
 
-    test('should reset attempts after window expires', () => {
+    test('should reset attempts after window expires', async () => {
       const service = LicenseService.getInstance();
       const testIp = '192.168.1.104';
 
       // Make some attempts
       for (let i = 0; i < 3; i++) {
-        service.validate('invalid-key', testIp);
+        await service.validate('invalid-key', testIp);
       }
 
       // Reset simulates window expiry
@@ -80,7 +78,7 @@ describe('RAAS License Gate - Security Patches', () => {
 
       // Should be able to make attempts again
       for (let i = 0; i < 5; i++) {
-        expect(() => service.validate('invalid-key', testIp)).not.toThrow();
+        await expect(service.validate('invalid-key', testIp)).resolves.not.toThrow();
       }
     });
   });
@@ -143,7 +141,7 @@ describe('RAAS License Gate - Security Patches', () => {
   describe('Audit Logging', () => {
     test('should log feature access checks', () => {
       const service = LicenseService.getInstance();
-      service.validate('raas-pro-test');
+      service.validateSync('raas-pro-test');
 
       // Spy on console.log
       const spy = jest.spyOn(console, 'log').mockImplementation();
@@ -179,20 +177,20 @@ describe('RAAS License Gate - Security Patches', () => {
       spy.mockRestore();
     });
 
-    test('should log validation failures', () => {
+    test('should log validation failures', async () => {
       const service = LicenseService.getInstance();
       const testIp = '192.168.1.200';
 
       // Exhaust attempts
       for (let i = 0; i < 5; i++) {
-        service.validate('invalid-key', testIp);
+        await service.validate('invalid-key', testIp);
       }
 
       const spy = jest.spyOn(console, 'log').mockImplementation();
 
       // This should trigger validation_failed log
       try {
-        service.validate('invalid-key', testIp);
+        await service.validate('invalid-key', testIp);
       } catch (e) {
         // Expected
       }
@@ -237,14 +235,14 @@ describe('RAAS License Gate - Security Patches', () => {
   });
 
   describe('IP-based Rate Limiting', () => {
-    test('should include IP in validation attempt tracking', () => {
+    test('should include IP in validation attempt tracking', async () => {
       const service = LicenseService.getInstance();
       const ip1 = '10.0.0.1';
       const ip2 = '10.0.0.2';
 
       // Make attempts from ip1
       for (let i = 0; i < 5; i++) {
-        service.validate('invalid-key', ip1);
+        await service.validate('invalid-key', ip1);
       }
 
       // ip1 should be blocked

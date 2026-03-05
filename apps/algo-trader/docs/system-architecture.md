@@ -204,3 +204,60 @@ All Opportunities →
 - **Binh Phap 6/6 fronts passing**
 
 Updated: 2026-03-03
+
+---
+
+## Security Middleware (Phase 13: ROIaaS Gate)
+
+### Idempotency Middleware
+**Location**: `src/middleware/idempotency-middleware.ts`
+
+Prevents duplicate webhook processing using event_id deduplication:
+
+- **IdempotencyStore** — In-memory Map với TTL 24h
+- **idempotencyMiddleware** — preHandler hook, kiểm tra event_id trước khi xử lý
+- **createIdempotencyResponseHandler** — onSend hook, cache kết quả sau khi xử lý
+
+**Security benefits**:
+- Prevent replay attacks
+- Guarantee exactly-once semantics
+- Handle webhook retries safely
+
+### Rate Limiting
+**Location**: `src/auth/sliding-window-rate-limiter.ts`
+
+Sliding window rate limiting per API key:
+
+- **100 requests/minute** per API key (default)
+- Per-user tracking with Map
+- Reset after window expires
+
+### RAAS License Gate
+**Location**: `src/lib/raas-gate.ts`
+
+Premium feature access control with license tiers:
+
+| Tier | Features | Quota |
+|------|----------|-------|
+| FREE | Basic strategies, live trading, basic backtest | 1,000/month |
+| PRO | + ML models, premium data, advanced optimization | 10,000/month |
+| ENTERPRISE | + Priority support, custom strategies, multi-exchange | 100,000/month |
+
+**Security features**:
+- JWT-based license validation (HS256)
+- Rate limiting on validation failures (5/min/IP)
+- Audit logging for compliance
+- Expiration enforcement
+- Timing-safe checksum validation
+
+### Usage Quota Tracking
+**Location**: `src/lib/usage-quota.ts`
+
+Monthly usage quota per license key:
+
+- Redis-backed storage (ioredis)
+- Memory fallback for dev/testing
+- Alert thresholds at 80%, 90%, 100%
+- 429 response when quota exceeded
+
+---

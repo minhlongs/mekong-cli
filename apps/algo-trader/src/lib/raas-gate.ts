@@ -128,7 +128,7 @@ export class LicenseService {
       );
     }
 
-    // No key = free tier
+    // No key = free tier (don't count as failed attempt)
     if (!licenseKey) {
       this.validatedLicense = {
         valid: false,
@@ -175,16 +175,18 @@ export class LicenseService {
       return this.validatedLicense;
     }
 
-    // Invalid key - track attempt
-    if (clientIp) {
-      this.recordValidationAttempt(clientIp);
-    }
-
+    // Invalid key - track attempt (count as failed validation)
     this.validatedLicense = {
       valid: false,
       tier: LicenseTier.FREE,
       features: ['basic_strategies', 'live_trading', 'basic_backtest'],
     };
+
+    // Track failed attempt AFTER setting validatedLicense
+    if (clientIp) {
+      this.recordValidationAttempt(clientIp);
+    }
+
     return this.validatedLicense;
   }
 
