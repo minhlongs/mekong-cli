@@ -367,23 +367,30 @@ def create_app() -> FastAPI:
     @gateway.post("/swarm/register", response_model=SwarmNodeInfo)
     def swarm_register(req: SwarmRegisterRequest) -> SwarmNodeInfo:
         """Register a remote Mekong node in the swarm."""
+        from datetime import datetime
         node = swarm_registry.register_node(
             name=req.name, host=req.host, port=req.port, token=req.token
         )
         return SwarmNodeInfo(
             id=node.id, name=node.name, host=node.host,
-            port=node.port, status=node.status,
-            last_heartbeat=node.last_heartbeat,
+            port=node.port, token=req.token,
+            registered_at=datetime.now().isoformat(),
+            last_seen=datetime.now().isoformat(),
+            status=node.status,
         )
 
     @gateway.get("/swarm/nodes", response_model=List[SwarmNodeInfo])
     def swarm_list_nodes() -> List[SwarmNodeInfo]:
         """List all registered swarm nodes with health status."""
         swarm_registry.check_all_health(timeout=2.0)
+        from datetime import datetime
         return [
             SwarmNodeInfo(
                 id=n.id, name=n.name, host=n.host, port=n.port,
-                status=n.status, last_heartbeat=n.last_heartbeat,
+                token=n.token,
+                registered_at=datetime.fromtimestamp(n.last_heartbeat).isoformat() if n.last_heartbeat > 0 else datetime.now().isoformat(),
+                last_seen=datetime.fromtimestamp(n.last_heartbeat).isoformat() if n.last_heartbeat > 0 else "never",
+                status=n.status,
             )
             for n in swarm_registry.list_nodes()
         ]
