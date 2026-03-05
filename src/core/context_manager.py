@@ -2,11 +2,14 @@
 Context Manager for Mekong CLI - Handles conversation context using the memory system
 """
 
+import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import json
 from pathlib import Path
 from packages.memory.memory_facade import get_memory_facade
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -30,7 +33,8 @@ class ContextManager:
         if ':' not in user_id:
             self.user_id = f"default:{user_id}"
 
-        print(f"ContextManager initialized for {self.user_id}, using {self.memory.get_provider_status()['active_provider']} storage")
+        logger.debug("ContextManager initialized for %s, using %s storage",
+                     self.user_id, self.memory.get_provider_status()['active_provider'])
 
         # Initialize local storage as backup for YAML fallback
         self.local_storage_path = Path.home() / '.mekong' / 'contexts'
@@ -54,7 +58,7 @@ class ContextManager:
             with open(self.local_context_file, 'w', encoding='utf-8') as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Warning: Could not save to local storage: {e}")
+            logger.warning("Could not save to local storage: %s", e)
 
     def _load_from_local_storage(self) -> List[Dict]:
         """Load data from local file storage"""
@@ -63,7 +67,7 @@ class ContextManager:
                 with open(self.local_context_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"Warning: Could not load from local storage: {e}")
+            logger.warning("Could not load from local storage: %s", e)
         return []
 
     def store_interaction(self, user_message: str, agent_response: str, metadata: Optional[Dict] = None) -> bool:
