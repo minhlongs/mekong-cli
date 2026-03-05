@@ -31,7 +31,8 @@
     "build": "npx turbo run build --concurrency=4",
     "test": "npx turbo run test --concurrency=5",
     "lint": "npx turbo run lint --concurrency=10",
-    "format": "npx turbo run format --concurrency=10"
+    "format": "npx turbo run format --concurrency=10",
+    "gws": "npx -y @googleworkspace/cli"
   },
   "devDependencies": {
     "@types/node": "25.3.3",

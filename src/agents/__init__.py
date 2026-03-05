@@ -5,6 +5,7 @@ from .git_agent import GitAgent
 from .file_agent import FileAgent
 from .shell_agent import ShellAgent
 from .database_agent import DatabaseAgent
+from .workspace_agent import WorkspaceAgent
 from src.core.agent_registry import AgentRegistry
 
 # Global registry instance — single source of truth for agent lookup
@@ -17,6 +18,8 @@ registry.register("db", DatabaseAgent)  # Alias for convenience
 registry.register("lead", LeadHunter)
 registry.register("content", ContentWriter)
 registry.register("crawler", RecipeCrawler)
+registry.register("workspace", WorkspaceAgent)
+registry.register("google", WorkspaceAgent)  # Alias
 
 # Backward-compatibility alias — keeps existing code working without changes
 AGENT_REGISTRY = registry._agents

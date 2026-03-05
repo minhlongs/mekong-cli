@@ -2,5 +2,14 @@
   "general": {
     "previewFeatures": true
   },
-  "mcpServers": {}
+  "mcpServers": {
+    "gws": {
+      "command": "gws",
+      "args": [
+        "mcp",
+        "-s",
+        "drive,gmail,calendar,sheets,docs,chat"
+      ]
+    }
+  }
 }
