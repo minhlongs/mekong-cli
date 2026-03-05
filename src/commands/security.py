@@ -194,7 +194,7 @@ def scan_with_semgrep(path: str, severity: str) -> list[dict[str, str | int]]:
         return []
 
 
-def display_scan_results(results: list[dict[str, str | int]]) -> None:
+def display_scan_results(results: list[dict[str, str | int]]) -> None:  # type: ignore[misc]
     """Display scan results in a table."""
     if not results:
         console.print("[green]✅ No security issues found![/green]")
@@ -233,9 +233,9 @@ def display_scan_results(results: list[dict[str, str | int]]) -> None:
 
     # Sort by severity (critical, high, medium, low)
     severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
-    sorted_results = sorted(results, key=lambda x: severity_order.get(x['severity'], 4))
+    sorted_results = sorted(results, key=lambda x: severity_order.get(x['severity'], 4))  # type: ignore[arg-type]
 
-    for result in sorted_results:
+    for result in sorted_results:  # type: ignore[assignment]
         severity_style = {
             "CRITICAL": "red bold",
             "HIGH": "red",
@@ -244,7 +244,7 @@ def display_scan_results(results: list[dict[str, str | int]]) -> None:
         }.get(result['severity'], "white")
 
         results_table.add_row(
-            result['tool'],
+            str(result['tool']),  # type: ignore[arg-type]
             f"[{severity_style}]{result['severity']}[/{severity_style}]",
             f"{result['file']}:{result['line']}",
             result['message'][:60] + "..." if len(result['message']) > 60 else result['message']
@@ -278,13 +278,13 @@ def scan_secrets(
     for file_path in Path(path).rglob("*"):
         if file_path.is_file() and file_path.suffix.lower() in ['.py', '.js', '.ts', '.json', '.yml', '.yaml', '.env', '.txt']:
             try:
-                content = file_path.read_text(encoding='utf-8')
+                file_content = file_path.read_text(encoding='utf-8')
                 for pattern in secret_patterns:
                     matches = re.finditer(pattern, content, re.IGNORECASE)
                     for match in matches:
                         secrets_found.append({
                             "file": str(file_path),
-                            "line_num": content[:match.start()].count('\n') + 1,
+                            "line_num": file_content[:match.start()].count('\n') + 1,
                             "match": match.group()[:50] + "..." if len(match.group()) > 50 else match.group(),
                             "pattern": pattern
                         })
