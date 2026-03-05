@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 import json
 from datetime import datetime
+from typing import Optional, List, Dict, Union
 
 app = typer.Typer()
 console = Console()
@@ -19,7 +20,7 @@ def scan(
     tool: str = typer.Option("auto", "--tool", "-t", help="Tool to use: bandit, semgrep, safety, auto"),
     format_output: str = typer.Option("table", "--format", "-f", help="Output format: table, json, sarif"),
     severity: str = typer.Option("all", "--severity", "-s", help="Severity level: low, medium, high, critical, all"),
-    exclude: str | None = typer.Option(None, "--exclude", "-e", help="Exclude patterns"),
+    exclude: Optional[str] = typer.Option(None, "--exclude", "-e", help="Exclude patterns"),
 ) -> None:
     """Scan project for security vulnerabilities."""
 
@@ -62,7 +63,7 @@ def scan(
         display_scan_results(scan_results)
 
 
-def scan_with_bandit(path: str, severity: str) -> list[dict[str, str | int]]:
+def scan_with_bandit(path: str, severity: str) -> List[Dict[str, Union[str, int]]]:
     """Scan with Bandit (Python security scanner)"""
     try:
         result = subprocess.run([
@@ -104,7 +105,7 @@ def scan_with_bandit(path: str, severity: str) -> list[dict[str, str | int]]:
         return []
 
 
-def scan_with_safety(path: str) -> list[dict[str, str | int]]:
+def scan_with_safety(path: str) -> List[Dict[str, Union[str, int]]]:
     """Scan dependencies with Safety (dependency vulnerability scanner)."""
     try:
         # First, try to generate a requirements.txt if none exists
@@ -154,7 +155,7 @@ def scan_with_safety(path: str) -> list[dict[str, str | int]]:
         return []
 
 
-def scan_with_semgrep(path: str, severity: str) -> list[dict[str, str | int]]:
+def scan_with_semgrep(path: str, severity: str) -> List[Dict[str, Union[str, int]]]:
     """Scan with Semgrep (static analysis tool)."""
     try:
         result = subprocess.run([
@@ -194,7 +195,7 @@ def scan_with_semgrep(path: str, severity: str) -> list[dict[str, str | int]]:
         return []
 
 
-def display_scan_results(results: list[dict[str, str | int]]) -> None:  # type: ignore[misc]
+def display_scan_results(results: List[Dict[str, Union[str, int]]]) -> None:  # type: ignore[misc]
     """Display scan results in a table."""
     if not results:
         console.print("[green]✅ No security issues found![/green]")
