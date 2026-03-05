@@ -73,8 +73,12 @@ describe('Smoke Tests — API Server Startup', () => {
     });
 
     test('API v1 routes are registered', async () => {
-      const routes = server.printRoutes();
-      expect(routes).toMatch(/api\/v1/);
+      // Verify API v1 routes exist by making actual requests
+      // printRoutes() doesn't show full tree, so test behavior instead
+      const billingRes = await server.inject({ method: 'GET', url: '/api/v1/billing/products' });
+      // Should get a response (401/403 is OK - means route exists)
+      expect(billingRes.statusCode).toBeDefined();
+      expect(billingRes.statusCode).not.toBe(404);
     });
   });
 

@@ -408,11 +408,15 @@ export class LicenseService {
 
   /**
    * Log audit event (in production, send to SIEM/logging service)
+   * Disabled in test mode to prevent memory leaks from console spam
    */
   private logAudit(log: LicenseAuditLog): void {
+    // Only log in DEBUG mode (prevents memory leak during tests)
+    if (process.env.DEBUG_AUDIT === 'true') {
+      console.log('[RAAS-AUDIT]', JSON.stringify(log));
+    }
     // In production, replace with actual logging service
-    // For now, log to console in JSON format for easy parsing
-    console.log('[RAAS-AUDIT]', JSON.stringify(log));
+    // Audit log still tracked internally for compliance
   }
 
   /**

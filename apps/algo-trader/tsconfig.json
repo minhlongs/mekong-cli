@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "jsx": "react",
     "types": ["node", "jest"],
     "typeRoots": ["./node_modules/@types", "../../node_modules/@types", "../../node_modules/.pnpm/node_modules/@types", "../../packages/trading-core/types"],
     "paths": {
