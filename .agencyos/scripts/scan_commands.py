@@ -14,7 +14,7 @@ def extract_frontmatter(content: str) -> Dict:
     if match:
         try:
             return yaml.safe_load(match.group(1))
-        except:
+        except yaml.YAMLError:
             return {}
     return {}
 
