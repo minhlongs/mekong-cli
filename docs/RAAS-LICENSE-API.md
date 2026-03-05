@@ -1,307 +1,235 @@
-# RaaS License API Documentation
+# 📜 RAAS License Gate API — ROIaaS Phase 1
+
+> **R = ROI = RaaS** — Gating premium features behind license key.
+> Ref: `docs/HIEN_PHAP_ROIAAS.md` - Dual-Stream Revenue Strategy
+
+---
 
 ## Overview
 
-RaaS (Revenue as a Service) Open Core licensing gates premium CLI agents and features behind a license key verification system.
+RAAS License Gate enables **Engineering ROI** by gating premium CLI agents and features behind `RAAS_LICENSE_KEY` environment variable.
 
-**Security Model:**
-- Core CLI, commands, skills: **Open Source** (always available)
-- Premium agents (CTO Auto-Pilot, Opus-gated): **License Required**
-- License validation: Environment variable + format verification + SHA-256 hashing
-- Rate limiting: Token bucket algorithm prevents abuse
-
----
-
-## Security Features
-
-### License Verification
-
-1. **Format Validation**: Pattern matching for standard/short/legacy formats
-2. **SHA-256 Hashing**: Keys hashed before comparison
-3. **Tier Enforcement**: FREE/PRO/ENTERPRISE access control
-4. **Safe Logging**: Masked keys in logs (`meko...5678`)
-
-### Rate Limiting
-
-Prevents brute-force license validation attacks:
-
-| Tier | Rate Limit | Burst |
-|------|------------|-------|
-| FREE | 10 req/min | 20 |
-| PRO | 100 req/min | 200 |
-| ENTERPRISE | 1000 req/min | 2000 |
-
-**Implementation:** Token bucket algorithm in `apps/algo-trader/src/lib/rate-limiter.ts`
+**Open Core Model:**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Core CLI commands | ✅ Free | Always available |
+| Open-source agents | ✅ Free | Community patterns |
+| Premium agents | 🔒 Licensed | CTO Auto-Pilot, Opus-gated |
+| Advanced workflows | 🔒 Licensed | Parallel execution, AGI loop |
 
 ---
 
-## Environment Variables
+## Quick Start
 
-### `RAAS_LICENSE_KEY`
-
-Required for premium features. Set in `.env` or environment:
+### 1. Set License Key
 
 ```bash
-# .env.example
-RAAS_LICENSE_KEY=mekong-ABCD-1234-EFGH-5678
+# .env or environment
+RAAS_LICENSE_KEY=raas_pro_abc123def456789
 ```
 
-**Accepted Formats:**
-| Format | Pattern | Example |
-|--------|---------|---------|
-| Standard | `mekong-XXXX-XXXX-XXXX-XXXX` | `mekong-ABCD-1234-EFGH-5678` |
-| Short | `mk_XXXXXXXXXXXXXXXX` | `mk_ABC123DEF456GH78` |
-| Legacy | Any string ≥16 chars | `your-license-key-here` |
+### 2. Check Status
 
----
-
-## API Functions
-
-### `hasValidLicense(): boolean`
-
-Check if a valid license is present.
-
-**Returns:** `boolean` - `true` if valid license key exists
-
-**Example:**
 ```typescript
-import { hasValidLicense } from 'lib/raas-gate';
+import { getLicenseStatus } from './src/lib/raas-gate';
 
-if (hasValidLicense()) {
-  // Enable premium features
+console.log(getLicenseStatus());
+// 💎 PRO License: raas_pr...6789
+//    Features: premium-agents, advanced-patterns, priority-support, custom-workflows
+```
+
+### 3. Gate Features
+
+```typescript
+import { hasFeature, requireFeature } from './src/lib/raas-gate';
+
+// Check before using premium feature
+if (hasFeature('agi-auto-pilot')) {
+  // Run AGI Auto-Pilot
 }
-```
 
----
-
-### `getLicenseValidation(): LicenseValidation`
-
-Get full license validation with metadata.
-
-**Returns:**
-```typescript
-interface LicenseValidation {
-  valid: boolean;
-  tier: LicenseTier;
-  expiresAt?: Date;
-  features: string[];
-  error?: string;
-}
-```
-
-**Example:**
-```typescript
-import { getLicenseValidation } from 'lib/raas-gate';
-
-const validation = getLicenseValidation();
-if (!validation.valid) {
-  console.error(validation.error); // "RAAS_LICENSE_KEY not set"
-}
-```
-
----
-
-### `requireLicense(featureName: string): void`
-
-Require valid license for a feature. Throws if invalid.
-
-**Throws:** `LicenseError` with code `LICENSE_REQUIRED` or `FEATURE_NOT_LICENSED`
-
-**Example:**
-```typescript
-import { requireLicense, LicenseError } from 'lib/raas-gate';
-
-try {
-  requireLicense('CTO Auto-Pilot');
-  // Proceed with premium feature
-} catch (error) {
-  if (error instanceof LicenseError) {
-    console.error(error.code, error.message);
-  }
-}
-```
-
----
-
-### `requirePremiumAgent(agentName: string): void`
-
-Gate access to premium agents with tier verification.
-
-**Throws:** `LicenseError` with codes:
-- `LICENSE_REQUIRED` - No valid license
-- `TIER_UPGRADE_REQUIRED` - Current tier insufficient
-
-**Example:**
-```typescript
-import { requirePremiumAgent } from 'lib/raas-gate';
-
-requirePremiumAgent('opus-strategy');
-// Now safe to use Opus Strategy agent
-```
-
----
-
-### `getAvailableAgents(): { available, premium, locked }`
-
-Get lists of available/premium/locked agents.
-
-**Returns:**
-```typescript
-{
-  available: string[];   // Accessible agents
-  premium: string[];     // All premium agents
-  locked: string[];      // Locked agents (empty if licensed)
-}
-```
-
-**Example:**
-```typescript
-import { getAvailableAgents } from 'lib/raas-gate';
-
-const agents = getAvailableAgents();
-console.log(`Unlocked: ${agents.available.length}`);
-console.log(`Locked: ${agents.locked.length}`);
-```
-
----
-
-### `getLicenseStatus(): SafeLicenseStatus`
-
-Get license status safe for logging (masks key).
-
-**Returns:**
-```typescript
-{
-  hasLicense: boolean;
-  tier: LicenseTier;
-  featureCount: number;
-  maskedKey?: string; // "mek...678"
-}
+// Or throw error if not licensed
+requireFeature('team-collaboration'); // Throws if no license
 ```
 
 ---
 
 ## License Tiers
 
-| Tier | Agents Available | Features |
+| Tier | Env Var Pattern | Features |
 |------|-----------------|----------|
-| `FREE` | Core agents only | None |
-| `PRO` | + All premium agents | CTO Auto-Pilot, Opus agents |
-| `ENTERPRISE` | + Custom agents | Priority support, custom models |
+| **FREE** | (none) | `basic-cli-commands`, `open-source-agents`, `community-patterns` |
+| **PRO** | `raas_pro_*` | + `premium-agents`, `advanced-patterns`, `priority-support`, `custom-workflows` |
+| **ENTERPRISE** | `raas_ent_*` | + `agi-auto-pilot`, `team-collaboration`, `audit-logs`, `sso-integration`, `dedicated-support` |
 
 ---
 
-## Premium Agents
+## API Reference
 
-| Agent Key | Name | Tier | Description |
-|-----------|------|------|-------------|
-| `auto-cto-pilot` | CTO Auto-Pilot | PRO | Tự động tạo tasks theo Binh Pháp |
-| `opus-strategy` | Opus Strategy | PRO | Strategic planning với Claude Opus 4.6 |
-| `opus-parallel` | Opus Parallel | PRO | Parallel agent orchestration |
-| `opus-review` | Opus Code Review | PRO | Security & quality review |
+### `validateLicense(): LicenseValidation`
 
----
-
-## Error Handling
-
-### LicenseError Class
+Returns full license validation result.
 
 ```typescript
-class LicenseError extends Error {
-  code: 'LICENSE_REQUIRED' | 'FEATURE_NOT_LICENSED' | 'TIER_UPGRADE_REQUIRED';
+interface LicenseValidation {
+  isValid: boolean;
+  licenseKey?: string;      // Masked
+  tier: 'free' | 'pro' | 'enterprise';
+  features: string[];
+  error?: string;
 }
 ```
 
-### Catch Pattern
+### `hasFeature(feature: string): boolean`
 
-```typescript
-import { LicenseError } from 'lib/raas-gate';
+Check if specific feature is available.
 
-try {
-  requirePremiumAgent('opus-strategy');
-} catch (error) {
-  if (error instanceof LicenseError) {
-    switch (error.code) {
-      case 'LICENSE_REQUIRED':
-        // Prompt user to get license
-        break;
-      case 'TIER_UPGRADE_REQUIRED':
-        // Prompt upgrade
-        break;
-    }
-  }
-}
-```
+### `requireFeature(feature: string): void`
 
----
+Require feature — throws `Error` if not available.
 
-## Security Considerations
+### `getLicenseStatus(): string`
 
-### Current Implementation
+Human-readable license status for CLI output.
 
-- License key stored in environment variable
-- Format validation (pattern matching)
-- SHA-256 hashing for key storage
-- Tier-based feature gating
+### `loadLicenseFromFile(filePath?: string): LicenseValidation`
 
-### Known Limitations
+Load license from `.raas-license` file alternative to env var.
 
-1. **No cryptographic signature** - Keys are not signed/verified
-2. **No expiration enforcement** - Expiration field exists but not populated
-3. **No online verification** - No phone-home to license server
-4. **No rate limiting** - Unlimited validation attempts
+### `cliLicenseCheck(): void`
 
-### Production Recommendations
-
-For production deployment:
-
-1. **Implement JWT licenses** with RSA signature verification
-2. **Add license server** for online verification
-3. **Implement rate limiting** for validation endpoints
-4. **Add telemetry** for license usage tracking
-5. **Use hardware fingerprinting** for license binding
+Print license status to console (for `mekong license` command).
 
 ---
 
-## Migration Guide
+## Premium Agents Matrix
 
-### From Legacy (v1.0)
+| Agent | Tier | Description |
+|-------|------|-------------|
+| `cto-auto-pilot` | PRO | Tự động tạo tasks theo Binh Pháp |
+| `opus-strategy` | PRO | Strategic planning với Claude Opus |
+| `opus-parallel` | PRO | Parallel agent orchestration |
+| `agi-loop` | ENTERPRISE | AGI self-improvement loop |
+| `team-collab` | ENTERPRISE | Multi-session coordination |
 
-```typescript
-// OLD (v1.0)
-import { hasValidLicense, requireLicense } from 'lib/raas-gate';
+---
 
-// NEW (v2.0) - Same API, enhanced security
-import { hasValidLicense, requireLicense, getLicenseValidation } from 'lib/raas-gate';
-```
+## Security Model
 
-Backward compatible - existing code continues to work.
+### Current Implementation (Phase 1)
+
+✅ Format validation (regex patterns)
+✅ Tier-based feature gating
+✅ Safe logging (masked keys)
+✅ File-based license fallback
+
+### Known Limitations (Phase 2 Roadmap)
+
+⚠️ No cryptographic signatures
+⚠️ No online verification
+⚠️ No rate limiting on validation
+⚠️ No expiration enforcement
+
+### Production Hardening (Future)
+
+1. JWT-based licenses with RSA signatures
+2. License server verification
+3. Rate limiting (token bucket)
+4. Hardware fingerprinting
+5. Telemetry & usage tracking
 
 ---
 
 ## Testing
 
+```bash
+# Run unit tests
+pnpm test src/lib/raas-gate.test.ts
+
+# Expected output
+# ✓ validateLicense - 6 tests
+# ✓ hasFeature - 4 tests
+# ✓ requireFeature - 2 tests
+# ✓ getLicenseStatus - 3 tests
+# Total: 15 tests
+```
+
+---
+
+## Troubleshooting
+
+### "No license key provided"
+
+**Fix:** Set `RAAS_LICENSE_KEY` in `.env`:
+```bash
+RAAS_LICENSE_KEY=raas_pro_your-key-here
+```
+
+### "License key too short"
+
+**Fix:** Keys must be ≥16 characters. Use format:
+- `raas_pro_XXXXXXXXXXXXXXXX`
+- `raas_ent_XXXXXXXXXXXXXXXX`
+- `sk-raas-XXXXXXXXXXXXXXXX`
+
+### "Feature not available"
+
+**Fix:** Upgrade license tier:
+- PRO: Contact sales@agencyos.network
+- ENTERPRISE: Custom deployment
+
+---
+
+## Code Examples
+
+### TypeScript/Node.js
+
 ```typescript
-import {
-  validateLicenseKeyFormat,
-  getLicenseValidation,
-  LicenseError
-} from 'lib/raas-gate';
+import { validateLicense, hasFeature } from '@mekong/vibe-analytics';
 
-describe('RaaS License Gate', () => {
-  test('validates standard format', () => {
-    expect(validateLicenseKeyFormat('mekong-ABCD-1234-EFGH-5678')).toBe(true);
-  });
+// Validate at startup
+const license = validateLicense();
+if (!license.isValid) {
+  console.log(`Running in ${license.tier} mode`);
+}
 
-  test('rejects invalid format', () => {
-    expect(validateLicenseKeyFormat('too-short')).toBe(false);
-  });
-
-  test('returns validation error', () => {
-    const validation = getLicenseValidation();
-    if (!validation.valid) {
-      expect(validation.error).toBeDefined();
-    }
-  });
+// Gate premium routes
+app.post('/api/agi-pilot', (req, res) => {
+  if (!hasFeature('agi-auto-pilot')) {
+    return res.status(403).json({ error: 'License required' });
+  }
+  // Handle AGI request
 });
 ```
+
+### Python
+
+```python
+import os
+from src.lib.raas_gate import validate_license, has_feature
+
+# Check license
+license = validate_license()
+if license['is_valid']:
+    print(f"Licensed: {license['tier']}")
+
+# Gate feature
+if has_feature('premium-agents'):
+    run_premium_agent()
+else:
+    print("Upgrade required")
+```
+
+---
+
+## Related Docs
+
+- `docs/HIEN_PHAP_ROIAAS.md` - ROIaaS Constitution
+- `docs/BINH_PHAP_MASTER.md` - Strategic Planning
+- `src/lib/raas-gate.ts` - Implementation
+- `src/lib/raas-gate.test.ts` - Unit Tests
+
+---
+
+_Last Updated: 2026-03-05_
+_Version: 1.0.0 (Phase 1)_
