@@ -37,13 +37,13 @@
   "devDependencies": {
     "@types/node": "25.3.3",
     "concurrently": "^9.2.1",
-    "turbo": "^2.8.12"
+    "turbo": "^2.8.12",
+    "vitest": "4.0.18"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "dependencies": {},
   "pnpm": {
     "overrides": {
       "esbuild": "0.24.2",

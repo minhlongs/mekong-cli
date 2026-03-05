@@ -68,7 +68,7 @@ describe('RAAS License Gate', () => {
       process.env.RAAS_LICENSE_KEY = 'raas_pro_abcdefghij123456';
       const result = validateLicense();
 
-      expect(result.licenseKey).toMatch(/^[a-z0-9]+\.\.\.[a-z0-9]+$/);
+      expect(result.licenseKey).toMatch(/^[a-z0-9_]+\.\.\.[a-z0-9]+$/);
       expect(result.licenseKey).not.toContain(process.env.RAAS_LICENSE_KEY);
     });
   });
