@@ -9,6 +9,17 @@ from src.db.database import (
     close_database,
 )
 from src.db.schema import SCHEMA_SQL, MIGRATION_001, MIGRATION_002
+from src.db.repository import (
+    LicenseRepository,
+    get_repository,
+    init_repository,
+)
+from src.db.migrate import (
+    migrate,
+    rollback,
+    status,
+    MigrationRunner,
+)
 
 __all__ = [
     "DatabaseConnection",
@@ -18,4 +29,11 @@ __all__ = [
     "SCHEMA_SQL",
     "MIGRATION_001",
     "MIGRATION_002",
+    "LicenseRepository",
+    "get_repository",
+    "init_repository",
+    "migrate",
+    "rollback",
+    "status",
+    "MigrationRunner",
 ]
