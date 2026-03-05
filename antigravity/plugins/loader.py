@@ -10,7 +10,7 @@ import inspect
 import logging
 from antigravity.plugins.base import CCPlugin
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import typer
 
@@ -52,7 +52,7 @@ class PluginLoader:
         >>> loader.startup_all()
     """
 
-    def __init__(self, plugin_dir: str | Path):
+    def __init__(self, plugin_dir: Union[str, Path]):
         """
         Initialize the plugin loader.
 
