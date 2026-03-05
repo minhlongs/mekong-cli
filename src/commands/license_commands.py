@@ -4,6 +4,7 @@ License Management Commands — ROIaaS Phase 2
 Commands for generating, validating, and managing license keys.
 """
 
+import os
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -234,8 +235,5 @@ def usage(
             console.print(f"[bold red]Error:[/bold red] {e}")
             raise typer.Exit(code=1)
 
-
-# Import os for status command
-import os
 
 __all__ = ["app"]

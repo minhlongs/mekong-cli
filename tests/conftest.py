@@ -93,7 +93,6 @@ def disable_redis() -> Generator[None, None, None]:
 
     Sets REDIS_URL to empty string and mocks all Redis imports.
     """
-    original_redis_url = os.environ.get("REDIS_URL", "")
     os.environ["REDIS_URL"] = ""
 
     with patch('redis.Redis', MagicMock()):

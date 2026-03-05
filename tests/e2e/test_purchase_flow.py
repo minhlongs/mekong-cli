@@ -12,18 +12,8 @@ Tests the complete purchase flow from webhook to customer verification:
 All external dependencies are mocked for test isolation.
 """
 
-# Skip all tests - requires full infrastructure
-import pytest
-pytestmark = pytest.mark.skip(reason="Requires full infrastructure setup - use unit tests instead")
-
 import json
 import os
-
-# Disable Redis for tests - MUST be set before any app imports
-os.environ['REDIS_URL'] = ''
-os.environ['REDIS_ENABLED'] = 'false'
-
-# Import the FastAPI app
 import sys
 from datetime import datetime
 from unittest.mock import MagicMock, patch
@@ -31,9 +21,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+# Disable Redis for tests - MUST be set before any app imports
+os.environ['REDIS_URL'] = ''
+os.environ['REDIS_ENABLED'] = 'false'
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.api.main import app
+
+# Skip all tests - requires full infrastructure
+pytestmark = pytest.mark.skip(reason="Requires full infrastructure setup - use unit tests instead")
 
 
 @pytest.fixture(autouse=True)
