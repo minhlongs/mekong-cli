@@ -3,6 +3,7 @@ Mekong CLI Library - Premium Features
 
 ROIaaS Phase 1: RaaS License Gate
 ROIaaS Phase 2: Remote Validation, Usage Metering, Key Generation
+ROIaaS Phase 3: PostgreSQL Backend
 """
 
 from src.lib.raas_gate import (
@@ -21,7 +22,6 @@ from src.lib.license_generator import (
 )
 from src.lib.usage_meter import (
     UsageMeter,
-    UsageRecord,
     get_meter,
     record_usage,
     get_usage_summary,
@@ -33,7 +33,7 @@ __all__ = [
     "get_license_gate",
     "require_license",
     "check_license",
-    # Phase 2
+    # Phase 2 & 3
     "LicenseKeyGenerator",
     "get_generator",
     "generate_license",
@@ -41,7 +41,6 @@ __all__ = [
     "get_tier_limits",
     "TIER_LIMITS",
     "UsageMeter",
-    "UsageRecord",
     "get_meter",
     "record_usage",
     "get_usage_summary",

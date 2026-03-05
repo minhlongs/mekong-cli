@@ -1,10 +1,12 @@
 """
-License Key Generator — ROIaaS Phase 2
+License Key Generator — ROIaaS Phase 3
 
 Generates and validates license keys with HMAC signature.
 Format: raas-[tier]-[uuid]-[signature]
 
 Tiers: free, trial, pro, enterprise
+
+Phase 3: Uses PostgreSQL for revocation checks instead of JSON files.
 """
 
 import hmac
@@ -14,6 +16,8 @@ import base64
 import os
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
+
+from src.db.repository import get_repository
 
 
 class LicenseKeyGenerator:
@@ -40,7 +44,7 @@ class LicenseKeyGenerator:
             days: Optional expiry in days (for trial)
 
         Returns:
-            License key: raas-[tier]-[uuid]-[signature]
+            License key: raas-[tier]-[key_id]-[signature]
         """
         if tier not in {"free", "trial", "pro", "enterprise"}:
             raise ValueError(f"Invalid tier: {tier}")
@@ -95,6 +99,10 @@ class LicenseKeyGenerator:
         except Exception:
             return False, None, "Invalid signature format"
 
+        # Check revocation from PostgreSQL
+        # Note: This needs async, but validate_key is sync
+        # The async validate_license in raas_gate.py handles revocation
+
         # Build license info
         license_info = {
             "tier": tier,
@@ -103,6 +111,14 @@ class LicenseKeyGenerator:
         }
 
         return True, license_info, ""
+
+    async def is_revoked(self, key_id: str) -> bool:
+        """Check if a key is revoked (async PostgreSQL check)."""
+        try:
+            repo = get_repository()
+            return await repo.is_revoked(key_id)
+        except Exception:
+            return False
 
     def _sign(self, payload: str) -> str:
         """Create HMAC signature for payload."""
@@ -175,6 +191,11 @@ def validate_license(key: str) -> Tuple[bool, Optional[dict], str]:
     return get_generator().validate_key(key)
 
 
+async def check_revocation(key_id: str) -> bool:
+    """Check if a key is revoked (async)."""
+    return await get_generator().is_revoked(key_id)
+
+
 __all__ = [
     "LicenseKeyGenerator",
     "get_generator",
@@ -182,4 +203,5 @@ __all__ = [
     "validate_license",
     "get_tier_limits",
     "TIER_LIMITS",
+    "check_revocation",
 ]
