@@ -1,5 +1,4 @@
-"""
-Mekong CLI - Gateway Dashboard HTML Template
+"""Mekong CLI - Gateway Dashboard HTML Template.
 
 The "Washing Machine" UI served at GET /.
 Uses safe DOM methods (createElement, textContent) — no innerHTML.

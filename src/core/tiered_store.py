@@ -1,22 +1,22 @@
-"""
-Mekong CLI - Tiered Telemetry Store
+"""Mekong CLI - Tiered Telemetry Store.
 
 Tiered storage for telemetry data with configurable retention.
 """
+
+from __future__ import annotations
 
 import json
 import time
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .telemetry_models import ExecutionTrace
 
 
 class TieredTelemetryStore:
-    """
-    Tiered telemetry storage with retention policies.
+    """Tiered telemetry storage with retention policies.
 
     Tier 0: Full step-level traces (retention: 14 days)
     Tier 1: Phase summaries (retention: 90 days)
@@ -25,7 +25,7 @@ class TieredTelemetryStore:
 
     TIER_RETENTION_DAYS = {0: 14, 1: 90, 2: 365}
 
-    def __init__(self, base_dir: Optional[str] = None) -> None:
+    def __init__(self, base_dir: str | None = None) -> None:
         """Initialize tiered store with base directory."""
         self._base = Path(base_dir) if base_dir else Path(".mekong/telemetry")
 
@@ -43,11 +43,11 @@ class TieredTelemetryStore:
         def _serialize_obj(obj: Any) -> Any:
             if isinstance(obj, (int, float, str, bool, type(None))):
                 return obj
-            elif isinstance(obj, (list, tuple)):
+            if isinstance(obj, (list, tuple)):
                 return [_serialize_obj(item) for item in obj]
-            elif isinstance(obj, dict):
+            if isinstance(obj, dict):
                 return {key: _serialize_obj(value) for key, value in obj.items()}
-            elif hasattr(obj, "__dataclass_fields__"):
+            if hasattr(obj, "__dataclass_fields__"):
                 result = {}
                 for field_name in obj.__dataclass_fields__:
                     field_value = getattr(obj, field_name)
@@ -55,16 +55,15 @@ class TieredTelemetryStore:
                         return {"__ref__": "circular_reference"}
                     result[field_name] = _serialize_obj(field_value)
                 return result
-            else:
-                return str(obj)
+            return str(obj)
 
         trace_dict = _serialize_obj(asdict(trace))
         path.write_text(json.dumps(trace_dict, indent=2))
         return path
 
-    def summarize_to_tier1(self, trace: ExecutionTrace) -> Dict[str, Any]:
+    def summarize_to_tier1(self, trace: ExecutionTrace) -> dict[str, Any]:
         """Compress trace to Tier 1 phase summary (strip step details)."""
-        summary: Dict[str, Any] = {
+        summary: dict[str, Any] = {
             "goal": trace.goal,
             "total_duration": trace.total_duration,
             "step_count": len(trace.steps),
@@ -126,13 +125,13 @@ class TieredTelemetryStore:
                     removed += 1
         return removed
 
-    def get_recent_summaries(self, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_recent_summaries(self, limit: int = 20) -> list[dict[str, Any]]:
         """Read recent Tier 1 summaries."""
         tier1_dir = self._tier_dir(1)
         if not tier1_dir.exists():
             return []
 
-        entries: List[Dict[str, Any]] = []
+        entries: list[dict[str, Any]] = []
         for f in sorted(tier1_dir.glob("summary-*.jsonl"), reverse=True):
             for line in reversed(f.read_text().strip().splitlines()):
                 if line.strip():

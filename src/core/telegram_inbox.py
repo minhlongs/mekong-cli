@@ -1,19 +1,20 @@
-"""
-Mekong CLI - Telegram Inbox
+"""Mekong CLI - Telegram Inbox.
 
 Task inbox for Telegram → Antigravity relay.
 """
+
+from __future__ import annotations
 
 import json
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 INBOX_PATH = Path(".mekong/inbox.json")
 
 
-def _load_inbox() -> List[Dict[str, Any]]:
+def _load_inbox() -> list[dict[str, Any]]:
     """Load inbox tasks from file."""
     if not INBOX_PATH.exists():
         return []
@@ -24,13 +25,13 @@ def _load_inbox() -> List[Dict[str, Any]]:
         return []
 
 
-def _save_inbox(tasks: List[Dict[str, Any]]) -> None:
+def _save_inbox(tasks: list[dict[str, Any]]) -> None:
     """Save inbox tasks to file."""
     INBOX_PATH.parent.mkdir(parents=True, exist_ok=True)
     INBOX_PATH.write_text(json.dumps(tasks, indent=2, ensure_ascii=False))
 
 
-def add_task(goal: str, project: Optional[str] = None, chat_id: int = 0) -> Dict[str, Any]:
+def add_task(goal: str, project: str | None = None, chat_id: int = 0) -> dict[str, Any]:
     """Add a new task to the inbox."""
     task = {
         "id": uuid.uuid4().hex[:8],
@@ -47,7 +48,7 @@ def add_task(goal: str, project: Optional[str] = None, chat_id: int = 0) -> Dict
     return task
 
 
-def get_pending_tasks() -> List[Dict[str, Any]]:
+def get_pending_tasks() -> list[dict[str, Any]]:
     """Get all pending tasks from inbox."""
     return [t for t in _load_inbox() if t.get("status") == "pending"]
 
@@ -74,17 +75,17 @@ def enrich_task(task_id: str, **metadata: Any) -> None:
     _save_inbox(inbox)
 
 
-def get_recent_tasks(limit: int = 10) -> List[Dict[str, Any]]:
+def get_recent_tasks(limit: int = 10) -> list[dict[str, Any]]:
     """Get recent tasks from inbox."""
     return _load_inbox()[-limit:]
 
 
 __all__ = [
-    "add_task",
-    "get_pending_tasks",
-    "mark_task",
-    "enrich_task",
-    "get_recent_tasks",
     "_load_inbox",
     "_save_inbox",
+    "add_task",
+    "enrich_task",
+    "get_pending_tasks",
+    "get_recent_tasks",
+    "mark_task",
 ]

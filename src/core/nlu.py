@@ -1,14 +1,15 @@
-"""
-Mekong CLI - Natural Language Understanding
+"""Mekong CLI - Natural Language Understanding.
 
 Keyword + regex intent classifier with Vietnamese support.
 Classifies goals into intents and extracts entities.
 """
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 class Intent(str, Enum):
@@ -29,13 +30,13 @@ class IntentResult:
 
     intent: Intent
     confidence: float  # 0.0-1.0
-    entities: Dict[str, str] = field(default_factory=dict)
+    entities: dict[str, str] = field(default_factory=dict)
     suggested_recipe: str = ""
     raw_goal: str = ""
 
 
 # Keyword mapping: intent -> list of trigger words (EN + VN)
-KEYWORD_MAP: Dict[Intent, List[str]] = {
+KEYWORD_MAP: dict[Intent, list[str]] = {
     Intent.DEPLOY: ["deploy", "ship", "push", "publish", "trien khai", "triển khai"],
     Intent.AUDIT: ["audit", "check", "scan", "inspect", "kiem tra", "kiểm tra"],
     Intent.CREATE: ["create", "new", "init", "generate", "tao", "tạo"],
@@ -69,24 +70,24 @@ _INTERVAL_MULTIPLIERS = {
 class IntentClassifier:
     """Keyword + regex intent classifier with optional LLM fallback."""
 
-    def __init__(self, llm_client: Optional[Any] = None) -> None:
-        """
-        Initialize classifier.
+    def __init__(self, llm_client: Any | None = None) -> None:
+        """Initialize classifier.
 
         Args:
             llm_client: Optional LLM client for fallback classification
+
         """
         self.llm_client = llm_client
 
     def classify(self, goal: str) -> IntentResult:
-        """
-        Classify a goal string into an intent with entities.
+        """Classify a goal string into an intent with entities.
 
         Args:
             goal: User's goal string
 
         Returns:
             IntentResult with intent, confidence, and extracted entities
+
         """
         intent, confidence = self._keyword_match(goal)
         entities = self._extract_entities(goal, intent)
@@ -107,7 +108,7 @@ class IntentClassifier:
 
         return result
 
-    def _keyword_match(self, goal: str) -> Tuple[Intent, float]:
+    def _keyword_match(self, goal: str) -> tuple[Intent, float]:
         """Match goal against keyword map."""
         goal_lower = goal.lower()
 
@@ -122,9 +123,9 @@ class IntentClassifier:
 
         return Intent.UNKNOWN, 0.1
 
-    def _extract_entities(self, goal: str, intent: Intent) -> Dict[str, str]:
+    def _extract_entities(self, goal: str, intent: Intent) -> dict[str, str]:
         """Extract entities from goal string."""
-        entities: Dict[str, str] = {}
+        entities: dict[str, str] = {}
 
         # Project name
         match = _PROJECT_RE.search(goal)
@@ -154,7 +155,7 @@ class IntentClassifier:
         """Use LLM to classify ambiguous goals."""
         prompt = (
             f"Classify this goal into one intent: DEPLOY, AUDIT, CREATE, FIX, STATUS, SCHEDULE, or UNKNOWN.\n"
-            f"Goal: \"{goal}\"\n"
+            f'Goal: "{goal}"\n'
             f"Reply with ONLY the intent name."
         )
         if self.llm_client is None or not hasattr(self.llm_client, "generate"):
@@ -180,8 +181,8 @@ class IntentClassifier:
 
 
 __all__ = [
-    "Intent",
-    "IntentResult",
-    "IntentClassifier",
     "KEYWORD_MAP",
+    "Intent",
+    "IntentClassifier",
+    "IntentResult",
 ]

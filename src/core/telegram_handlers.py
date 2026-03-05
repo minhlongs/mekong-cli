@@ -1,15 +1,16 @@
-"""
-Mekong CLI - Telegram Bot Command Handlers
+"""Mekong CLI - Telegram Bot Command Handlers.
 
 Handler functions for Telegram bot commands.
 """
+
+from __future__ import annotations
 
 from typing import Any
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from .telegram_inbox import add_task, get_pending_tasks, _load_inbox
+from .telegram_inbox import _load_inbox, add_task, get_pending_tasks
 
 
 async def cook_handler(
@@ -91,7 +92,7 @@ async def tasks_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     if not inbox:
         await update.message.reply_text(
-            "📭 Inbox trống.\nDùng /cook <goal> để gửi task."
+            "📭 Inbox trống.\nDùng /cook <goal> để gửi task.",
         )
         return
 
@@ -108,7 +109,7 @@ async def tasks_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         lines.append(
             f"{icon} `{t['id']}`{project_str}\n"
             f"   {t['goal'][:50]}\n"
-            f"   {t.get('created_at_iso', '')}"
+            f"   {t.get('created_at_iso', '')}",
         )
 
     await update.message.reply_text(
@@ -127,7 +128,7 @@ async def sessions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
         if not sessions:
             await update.message.reply_text(
-                "No CC CLI sessions.\nUse /cook <goal> to queue a task."
+                "No CC CLI sessions.\nUse /cook <goal> to queue a task.",
             )
             return
 
@@ -144,7 +145,7 @@ async def sessions_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             lines.append(
                 f"{icon} `{s.id}` — {s.status.value}\n"
                 f"   Goal: {s.goal[:40]}\n"
-                f"   Duration: {s.duration:.0f}s | Lines: {len(s.output_buffer)}"
+                f"   Duration: {s.duration:.0f}s | Lines: {len(s.output_buffer)}",
             )
 
         await update.message.reply_text(
@@ -238,8 +239,8 @@ async def memory_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def cmd_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /cmd <goal> — execute via orchestrator."""
-    from src.core.orchestrator import RecipeOrchestrator
     from src.core.llm_client import get_client
+    from src.core.orchestrator import RecipeOrchestrator
 
     goal = " ".join(context.args) if context.args else ""
     if not goal:
@@ -281,14 +282,14 @@ def _format_result(result: Any) -> str:
 
 
 __all__ = [
-    "cook_handler",
-    "spawn_handler",
-    "tasks_handler",
-    "sessions_handler",
-    "status_handler",
-    "schedule_handler",
-    "swarm_handler",
-    "memory_handler",
-    "cmd_handler",
     "_format_result",
+    "cmd_handler",
+    "cook_handler",
+    "memory_handler",
+    "schedule_handler",
+    "sessions_handler",
+    "spawn_handler",
+    "status_handler",
+    "swarm_handler",
+    "tasks_handler",
 ]

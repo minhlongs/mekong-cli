@@ -1,49 +1,49 @@
-"""
-Intelligent Prompt Caching System for Mekong CLI
-"""
+"""Intelligent Prompt Caching System for Mekong CLI."""
 
-import logging
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime
-import json
+from __future__ import annotations
+
 import hashlib
+import json
+import logging
+from datetime import datetime
 from pathlib import Path
+from typing import Any
+
 from packages.memory.memory_facade import get_memory_facade
 
 logger = logging.getLogger(__name__)
 
 
 class PromptCache:
-    """
-    Caches and retrieves effective prompts based on similarity matching,
+    """Caches and retrieves effective prompts based on similarity matching,
     improving efficiency and consistency of AI interactions.
     """
 
-    def __init__(self, user_id: str = "system:prompt_cache"):
-        """
-        Initialize the prompt cache
+    def __init__(self, user_id: str = "system:prompt_cache") -> None:
+        """Initialize the prompt cache.
 
         Args:
             user_id: Identifier for the prompt cache (format: agent:session)
+
         """
         self.user_id = user_id
         self.memory = get_memory_facade()
         self.memory.connect()
 
         logger.debug("PromptCache initialized for %s, using %s storage",
-                     self.user_id, self.memory.get_provider_status()['active_provider'])
+                     self.user_id, self.memory.get_provider_status()["active_provider"])
 
         # Initialize local storage as backup for YAML fallback
-        self.local_storage_path = Path.home() / '.mekong' / 'prompt_cache'
+        self.local_storage_path = Path.home() / ".mekong" / "prompt_cache"
         self.local_storage_path.mkdir(parents=True, exist_ok=True)
         self.local_cache_file = self.local_storage_path / f"{self.user_id.replace(':', '_').replace('/', '_')}.json"
 
-    def _save_to_local_storage(self, data: Dict) -> None:
-        """Save data to local file storage as backup"""
+    def _save_to_local_storage(self, data: dict) -> None:
+        """Save data to local file storage as backup."""
         try:
             all_data = []
             if self.local_cache_file.exists():
-                with open(self.local_cache_file, 'r', encoding='utf-8') as f:
+                with open(self.local_cache_file, encoding="utf-8") as f:
                     all_data = json.load(f)
 
             all_data.append(data)
@@ -52,42 +52,41 @@ class PromptCache:
             if len(all_data) > 200:
                 all_data = all_data[-200:]
 
-            with open(self.local_cache_file, 'w', encoding='utf-8') as f:
+            with open(self.local_cache_file, "w", encoding="utf-8") as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
             logger.warning("Could not save to local storage: %s", e)
 
-    def _load_from_local_storage(self) -> List[Dict]:
-        """Load data from local file storage"""
+    def _load_from_local_storage(self) -> list[dict]:
+        """Load data from local file storage."""
         try:
             if self.local_cache_file.exists():
-                with open(self.local_cache_file, 'r', encoding='utf-8') as f:
+                with open(self.local_cache_file, encoding="utf-8") as f:
                     return json.load(f)
         except Exception as e:
             logger.warning("Could not load from local storage: %s", e)
         return []
 
     def _generate_prompt_hash(self, prompt: str) -> str:
-        """
-        Generate a hash for a prompt to use as a unique identifier
+        """Generate a hash for a prompt to use as a unique identifier.
 
         Args:
             prompt: The prompt text
 
         Returns:
             SHA256 hash of the prompt
+
         """
-        return hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+        return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
     def store_prompt(
         self,
         prompt: str,
         response: str,
         outcome_score: float = 1.0,
-        metadata: Optional[Dict] = None
+        metadata: dict | None = None,
     ) -> bool:
-        """
-        Store a prompt and its outcome in the cache
+        """Store a prompt and its outcome in the cache.
 
         Args:
             prompt: The prompt text
@@ -97,6 +96,7 @@ class PromptCache:
 
         Returns:
             True if stored in vector backend, False if using YAML fallback
+
         """
         prompt_data = {
             "type": "cached_prompt",
@@ -105,7 +105,7 @@ class PromptCache:
             "outcome_score": outcome_score,
             "timestamp": datetime.now().isoformat(),
             "prompt_hash": self._generate_prompt_hash(prompt),
-            "session_id": self.user_id
+            "session_id": self.user_id,
         }
 
         if metadata:
@@ -121,8 +121,8 @@ class PromptCache:
                 "item_type": "cached_prompt",
                 "prompt_hash": prompt_data["prompt_hash"],
                 "timestamp": prompt_data["timestamp"],
-                "outcome_score": outcome_score
-            }
+                "outcome_score": outcome_score,
+            },
         )
 
         # Always save to local storage as backup
@@ -130,9 +130,8 @@ class PromptCache:
 
         return stored_in_memory
 
-    def find_similar_prompts(self, query_prompt: str, threshold: float = 0.7, limit: int = 5) -> List[Dict[str, Any]]:
-        """
-        Find prompts similar to the query prompt
+    def find_similar_prompts(self, query_prompt: str, threshold: float = 0.7, limit: int = 5) -> list[dict[str, Any]]:
+        """Find prompts similar to the query prompt.
 
         Args:
             query_prompt: The prompt to find similarities for
@@ -141,6 +140,7 @@ class PromptCache:
 
         Returns:
             List of similar prompt dictionaries
+
         """
         similar_prompts = []
 
@@ -148,15 +148,15 @@ class PromptCache:
         search_results = self.memory.search(
             query=query_prompt,
             user_id=self.user_id,
-            limit=limit * 2  # Get more results to account for filtering
+            limit=limit * 2,  # Get more results to account for filtering
         )
 
         query_lower = query_prompt.lower()
 
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "cached_prompt":
                         # Calculate similarity based on content overlap
@@ -186,7 +186,7 @@ class PromptCache:
 
                     if similarity >= threshold:
                         # Check if this prompt is already in our results
-                        if not any(sp.get('prompt_hash') == local_prompt.get('prompt_hash') for sp in similar_prompts):
+                        if not any(sp.get("prompt_hash") == local_prompt.get("prompt_hash") for sp in similar_prompts):
                             local_prompt["similarity_score"] = similarity
                             similar_prompts.append(local_prompt)
 
@@ -195,8 +195,7 @@ class PromptCache:
         return similar_prompts[:limit]
 
     def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity between two texts based on common words
+        """Calculate similarity between two texts based on common words.
 
         Args:
             text1: First text
@@ -204,6 +203,7 @@ class PromptCache:
 
         Returns:
             Similarity score between 0.0 and 1.0
+
         """
         # Simple word overlap similarity
         words1 = set(text1.split())
@@ -220,9 +220,8 @@ class PromptCache:
         # Jaccard similarity
         return len(intersection) / len(union)
 
-    def get_cached_response(self, query_prompt: str, min_outcome_score: float = 0.5) -> Optional[Tuple[str, Dict]]:
-        """
-        Get a cached response for a similar prompt
+    def get_cached_response(self, query_prompt: str, min_outcome_score: float = 0.5) -> tuple[str, dict] | None:
+        """Get a cached response for a similar prompt.
 
         Args:
             query_prompt: The prompt to find a cached response for
@@ -230,6 +229,7 @@ class PromptCache:
 
         Returns:
             Tuple of (cached_response, prompt_metadata) or None if no suitable match found
+
         """
         similar_prompts = self.find_similar_prompts(query_prompt, threshold=0.5, limit=3)
 
@@ -239,15 +239,15 @@ class PromptCache:
 
         return None
 
-    def get_top_prompts(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get the top performing prompts based on outcome score
+    def get_top_prompts(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Get the top performing prompts based on outcome score.
 
         Args:
             limit: Number of top prompts to return
 
         Returns:
             List of top performing prompt dictionaries
+
         """
         # Get from memory system
         all_prompts_memory = self.memory.get_all(user_id=self.user_id)
@@ -261,8 +261,8 @@ class PromptCache:
         # Process memory system results
         for result in all_prompts_memory:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "cached_prompt":
                         cached_prompts.append(parsed)
@@ -270,10 +270,10 @@ class PromptCache:
                 continue
 
         # Add unique entries from local storage
-        memory_hashes = {p.get('prompt_hash') for p in cached_prompts}
+        memory_hashes = {p.get("prompt_hash") for p in cached_prompts}
         for local_prompt in all_prompts_local:
             if local_prompt.get("type") == "cached_prompt":
-                local_hash = local_prompt.get('prompt_hash')
+                local_hash = local_prompt.get("prompt_hash")
                 if local_hash and local_hash not in memory_hashes:
                     cached_prompts.append(local_prompt)
                     memory_hashes.add(local_hash)
@@ -282,14 +282,14 @@ class PromptCache:
         cached_prompts.sort(key=lambda x: x.get("outcome_score", 0), reverse=True)
         return cached_prompts[:limit]
 
-    def update_prompt_outcome(self, prompt: str, new_outcome_score: float, additional_metadata: Optional[Dict] = None):
-        """
-        Update the outcome score of a previously stored prompt
+    def update_prompt_outcome(self, prompt: str, new_outcome_score: float, additional_metadata: dict | None = None) -> None:
+        """Update the outcome score of a previously stored prompt.
 
         Args:
             prompt: The original prompt text
             new_outcome_score: The new outcome score
             additional_metadata: Additional metadata to update
+
         """
         # In this implementation, we'll add a new record with the updated score
         # In a more complete implementation, we would update the existing record
@@ -307,28 +307,25 @@ class PromptCache:
                 prompt=original["prompt_text"],
                 response=original["response_text"],
                 outcome_score=new_outcome_score,
-                metadata=updated_metadata
+                metadata=updated_metadata,
             )
 
 
 class IntelligentPromptManager:
-    """
-    High-level manager for intelligent prompt caching and retrieval
-    """
+    """High-level manager for intelligent prompt caching and retrieval."""
 
-    def __init__(self, user_id: str = "system:intelligent_prompt_manager"):
-        """
-        Initialize the intelligent prompt manager
+    def __init__(self, user_id: str = "system:intelligent_prompt_manager") -> None:
+        """Initialize the intelligent prompt manager.
 
         Args:
             user_id: Identifier for the prompt manager
+
         """
         self.cache = PromptCache(user_id)
         self.user_id = user_id
 
     def get_response_or_generate(self, prompt: str, generator_func, *args, **kwargs) -> str:
-        """
-        Get a cached response if available, otherwise generate a new one and cache it
+        """Get a cached response if available, otherwise generate a new one and cache it.
 
         Args:
             prompt: The prompt to get or generate a response for
@@ -337,13 +334,14 @@ class IntelligentPromptManager:
 
         Returns:
             The response string (either from cache or newly generated)
+
         """
         # Try to get cached response first
         cached_result = self.cache.get_cached_response(prompt)
 
         if cached_result:
             response, metadata = cached_result
-            logger.info("Retrieved cached response with %.2f similarity", metadata.get('similarity_score', 0))
+            logger.info("Retrieved cached response with %.2f similarity", metadata.get("similarity_score", 0))
             return response
 
         # Generate new response
@@ -355,49 +353,48 @@ class IntelligentPromptManager:
 
         return response
 
-    def evaluate_and_update_cache(self, prompt: str, response: str, outcome_evaluation: float):
-        """
-        Evaluate the outcome of a prompt-response pair and update the cache
+    def evaluate_and_update_cache(self, prompt: str, response: str, outcome_evaluation: float) -> None:
+        """Evaluate the outcome of a prompt-response pair and update the cache.
 
         Args:
             prompt: The original prompt
             response: The response generated
             outcome_evaluation: Evaluation score (0.0 to 1.0) of how well the response worked
+
         """
         # Update the cached outcome score for this prompt
         self.cache.update_prompt_outcome(prompt, outcome_evaluation)
 
-    def get_suggestions_for_topic(self, topic: str) -> List[Dict[str, Any]]:
-        """
-        Get prompt suggestions for a specific topic based on past successful prompts
+    def get_suggestions_for_topic(self, topic: str) -> list[dict[str, Any]]:
+        """Get prompt suggestions for a specific topic based on past successful prompts.
 
         Args:
             topic: The topic to get prompt suggestions for
 
         Returns:
             List of prompt suggestion dictionaries
+
         """
         # Search for prompts related to the topic
         search_results = self.cache.find_similar_prompts(topic, threshold=0.3, limit=5)
 
         # Filter for only those with high outcome scores
-        good_prompts = [
+        return [
             prompt_data for prompt_data in search_results
             if prompt_data.get("outcome_score", 0) >= 0.7
         ]
 
-        return good_prompts
 
 
 # Convenience function for initialization
 def create_intelligent_prompt_manager(user_id: str = "system:default_prompt_manager") -> IntelligentPromptManager:
-    """
-    Create an intelligent prompt manager instance
+    """Create an intelligent prompt manager instance.
 
     Args:
         user_id: User identifier for the prompt manager
 
     Returns:
         IntelligentPromptManager instance
+
     """
     return IntelligentPromptManager(user_id)

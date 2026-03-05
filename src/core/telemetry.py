@@ -1,16 +1,15 @@
-"""
-Mekong CLI - Telemetry Module
+"""Mekong CLI - Telemetry Module.
 
 Backwards-compatible re-export of telemetry components.
 """
 
-from .telemetry_models import StepTrace, ExecutionTrace
 from .telemetry_collector import TelemetryCollector
+from .telemetry_models import ExecutionTrace, StepTrace
 from .tiered_store import TieredTelemetryStore
 
 __all__ = [
-    "TelemetryCollector",
-    "TieredTelemetryStore",
     "ExecutionTrace",
     "StepTrace",
+    "TelemetryCollector",
+    "TieredTelemetryStore",
 ]

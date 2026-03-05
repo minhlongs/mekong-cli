@@ -1,5 +1,4 @@
-"""
-Mekong CLI - Vector Memory Store
+"""Mekong CLI - Vector Memory Store.
 
 In-memory vector store for semantic search, inspired by Qdrant's architecture.
 Supports cosine similarity search with pure Python (no external vector DB).
@@ -8,7 +7,7 @@ Supports cosine similarity search with pure Python (no external vector DB).
 import math
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 @dataclass
@@ -16,8 +15,8 @@ class VectorEntry:
     """Single vector record with payload metadata."""
 
     id: str
-    vector: List[float]
-    payload: Dict[str, Any]
+    vector: list[float]
+    payload: dict[str, Any]
     created_at: float = field(default_factory=time.time)
 
 
@@ -27,13 +26,12 @@ class VectorCollection:
 
     name: str
     dimension: int
-    entries: Dict[str, VectorEntry] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    entries: dict[str, VectorEntry] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class VectorMemoryStore:
-    """
-    In-memory vector store with cosine similarity search.
+    """In-memory vector store with cosine similarity search.
 
     Inspired by Qdrant's collection/point model. Suitable for small-to-medium
     datasets (< 10k vectors). No persistence — use SnapshotManager for durability.
@@ -41,11 +39,10 @@ class VectorMemoryStore:
 
     def __init__(self) -> None:
         """Initialize an empty vector store."""
-        self._collections: Dict[str, VectorCollection] = {}
+        self._collections: dict[str, VectorCollection] = {}
 
     def create_collection(self, name: str, dimension: int) -> VectorCollection:
-        """
-        Create a new vector collection.
+        """Create a new vector collection.
 
         Args:
             name: Unique collection name.
@@ -56,36 +53,38 @@ class VectorMemoryStore:
 
         Raises:
             ValueError: If collection already exists.
+
         """
         if name in self._collections:
-            raise ValueError(f"Collection '{name}' already exists.")
+            msg = f"Collection '{name}' already exists."
+            raise ValueError(msg)
         collection = VectorCollection(name=name, dimension=dimension)
         self._collections[name] = collection
         return collection
 
     def delete_collection(self, name: str) -> None:
-        """
-        Delete a collection and all its entries.
+        """Delete a collection and all its entries.
 
         Args:
             name: Collection name to delete.
 
         Raises:
             KeyError: If collection does not exist.
+
         """
         if name not in self._collections:
-            raise KeyError(f"Collection '{name}' not found.")
+            msg = f"Collection '{name}' not found."
+            raise KeyError(msg)
         del self._collections[name]
 
     def upsert(
         self,
         collection: str,
         id: str,
-        vector: List[float],
-        payload: Optional[Dict[str, Any]] = None,
+        vector: list[float],
+        payload: dict[str, Any] | None = None,
     ) -> VectorEntry:
-        """
-        Insert or update a vector entry in a collection.
+        """Insert or update a vector entry in a collection.
 
         Args:
             collection: Target collection name.
@@ -99,11 +98,13 @@ class VectorMemoryStore:
         Raises:
             KeyError: If collection does not exist.
             ValueError: If vector dimension does not match collection.
+
         """
         col = self._get_collection(collection)
         if len(vector) != col.dimension:
+            msg = f"Vector dimension {len(vector)} != collection dimension {col.dimension}."
             raise ValueError(
-                f"Vector dimension {len(vector)} != collection dimension {col.dimension}."
+                msg,
             )
         entry = VectorEntry(id=id, vector=vector, payload=payload or {})
         col.entries[id] = entry
@@ -112,11 +113,10 @@ class VectorMemoryStore:
     def search(
         self,
         collection: str,
-        query_vector: List[float],
+        query_vector: list[float],
         top_k: int = 5,
-    ) -> List[Tuple[VectorEntry, float]]:
-        """
-        Find nearest neighbors using cosine similarity.
+    ) -> list[tuple[VectorEntry, float]]:
+        """Find nearest neighbors using cosine similarity.
 
         Args:
             collection: Collection name to search.
@@ -129,16 +129,18 @@ class VectorMemoryStore:
         Raises:
             KeyError: If collection does not exist.
             ValueError: If query vector dimension does not match.
+
         """
         col = self._get_collection(collection)
         if len(query_vector) != col.dimension:
+            msg = f"Query dimension {len(query_vector)} != collection dimension {col.dimension}."
             raise ValueError(
-                f"Query dimension {len(query_vector)} != collection dimension {col.dimension}."
+                msg,
             )
         if not col.entries:
             return []
 
-        scored: List[Tuple[VectorEntry, float]] = [
+        scored: list[tuple[VectorEntry, float]] = [
             (entry, self._cosine_similarity(query_vector, entry.vector))
             for entry in col.entries.values()
         ]
@@ -146,8 +148,7 @@ class VectorMemoryStore:
         return scored[:top_k]
 
     def delete_point(self, collection: str, id: str) -> None:
-        """
-        Remove a single entry from a collection.
+        """Remove a single entry from a collection.
 
         Args:
             collection: Collection name.
@@ -155,15 +156,16 @@ class VectorMemoryStore:
 
         Raises:
             KeyError: If collection or entry does not exist.
+
         """
         col = self._get_collection(collection)
         if id not in col.entries:
-            raise KeyError(f"Entry '{id}' not found in collection '{collection}'.")
+            msg = f"Entry '{id}' not found in collection '{collection}'."
+            raise KeyError(msg)
         del col.entries[id]
 
-    def get_collection_info(self, name: str) -> Dict[str, Any]:
-        """
-        Return stats for a collection.
+    def get_collection_info(self, name: str) -> dict[str, Any]:
+        """Return stats for a collection.
 
         Args:
             name: Collection name.
@@ -173,6 +175,7 @@ class VectorMemoryStore:
 
         Raises:
             KeyError: If collection does not exist.
+
         """
         col = self._get_collection(name)
         return {
@@ -182,9 +185,8 @@ class VectorMemoryStore:
             "metadata": col.metadata,
         }
 
-    def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
-        """
-        Compute cosine similarity between two vectors.
+    def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
+        """Compute cosine similarity between two vectors.
 
         Args:
             a: First vector.
@@ -192,8 +194,9 @@ class VectorMemoryStore:
 
         Returns:
             Similarity score in [-1.0, 1.0]. Returns 0.0 for zero-magnitude vectors.
+
         """
-        dot = sum(x * y for x, y in zip(a, b))
+        dot = sum(x * y for x, y in zip(a, b, strict=False))
         mag_a = math.sqrt(sum(x * x for x in a))
         mag_b = math.sqrt(sum(x * x for x in b))
         if mag_a == 0.0 or mag_b == 0.0:
@@ -203,12 +206,13 @@ class VectorMemoryStore:
     def _get_collection(self, name: str) -> VectorCollection:
         """Retrieve collection or raise KeyError."""
         if name not in self._collections:
-            raise KeyError(f"Collection '{name}' not found.")
+            msg = f"Collection '{name}' not found."
+            raise KeyError(msg)
         return self._collections[name]
 
 
 __all__ = [
-    "VectorEntry",
     "VectorCollection",
+    "VectorEntry",
     "VectorMemoryStore",
 ]

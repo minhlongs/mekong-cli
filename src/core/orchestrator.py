@@ -1,39 +1,41 @@
-"""
-Mekong CLI - Recipe Orchestrator
+"""Mekong CLI - Recipe Orchestrator.
 
 Coordinates Plan → Execute → Verify workflow.
 Implements ClaudeKit DNA's triadic pattern.
 """
 
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
+import time
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-import time
-import uuid
-
-from .planner import RecipePlanner, PlanningContext
-from .executor import RecipeExecutor
-from .verifier import RecipeVerifier, VerificationReport, ExecutionResult
-from .parser import Recipe, RecipeStep
-from .telemetry import TelemetryCollector
-from .memory import MemoryStore, MemoryEntry
-from .nlu import IntentClassifier
-from .execution_history import ExecutionHistory, ExecutionEvent, EventKind
-from .retry_policy import RetryPolicy
-from .workflow_state import WorkflowState, WorkflowStatus, StepStatus
 from .dag_scheduler import DAGScheduler, validate_dag
+from .execution_history import EventKind, ExecutionEvent, ExecutionHistory
+from .executor import RecipeExecutor
+from .memory import MemoryEntry, MemoryStore
+from .nlu import IntentClassifier
+from .parser import Recipe, RecipeStep
+from .planner import PlanningContext, RecipePlanner
+from .retry_policy import RetryPolicy
+from .telemetry import TelemetryCollector
+from .verifier import ExecutionResult, RecipeVerifier, VerificationReport
+from .workflow_state import StepStatus, WorkflowState, WorkflowStatus
 
 
 class OrchestrationStatus(Enum):
-    """Status of orchestration workflow"""
+    """Status of orchestration workflow."""
 
     SUCCESS = "success"
     FAILED = "failed"
@@ -43,7 +45,7 @@ class OrchestrationStatus(Enum):
 
 @dataclass
 class StepResult:
-    """Result of executing and verifying a single step"""
+    """Result of executing and verifying a single step."""
 
     step: RecipeStep
     execution: ExecutionResult
@@ -54,28 +56,27 @@ class StepResult:
 
 @dataclass
 class OrchestrationResult:
-    """Complete result of Plan → Execute → Verify workflow"""
+    """Complete result of Plan → Execute → Verify workflow."""
 
     status: OrchestrationStatus
     recipe: Recipe
-    step_results: List[StepResult] = field(default_factory=list)
+    step_results: list[StepResult] = field(default_factory=list)
     total_steps: int = 0
     completed_steps: int = 0
     failed_steps: int = 0
-    warnings: List[str] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def success_rate(self) -> float:
-        """Calculate success rate percentage"""
+        """Calculate success rate percentage."""
         if self.total_steps == 0:
             return 0.0
         return (self.completed_steps / self.total_steps) * 100
 
 
 class RecipeOrchestrator:
-    """
-    Coordinates Plan → Execute → Verify workflow.
+    """Coordinates Plan → Execute → Verify workflow.
 
     This is the main entry point for executing goals with full
     planning, execution, and verification pipeline.
@@ -87,10 +88,9 @@ class RecipeOrchestrator:
         strict_verification: bool = True,
         enable_rollback: bool = True,
         use_swarm: bool = False,
-        retry_policy: Optional[RetryPolicy] = None,
+        retry_policy: RetryPolicy | None = None,
     ) -> None:
-        """
-        Initialize orchestrator.
+        """Initialize orchestrator.
 
         Args:
             llm_client: Optional LLM client for planning and execution
@@ -98,6 +98,7 @@ class RecipeOrchestrator:
             enable_rollback: If True, failed steps trigger rollback
             use_swarm: If True, route steps through SwarmDispatcher
             retry_policy: Retry policy for step execution (Temporal-inspired)
+
         """
         self.planner = RecipePlanner(llm_client=llm_client)
         self.verifier = RecipeVerifier(strict_mode=strict_verification)
@@ -112,12 +113,12 @@ class RecipeOrchestrator:
         # Swarm dispatcher (optional)
         if use_swarm:
             from .swarm import SwarmDispatcher, SwarmRegistry
-            self.dispatcher: Optional[Any] = SwarmDispatcher(SwarmRegistry())
+            self.dispatcher: Any | None = SwarmDispatcher(SwarmRegistry())
         else:
             self.dispatcher = None
 
         # Initialize BMAD loader
-        self.bmad_loader: Optional[Any] = None
+        self.bmad_loader: Any | None = None
         try:
             from packages.core.bmad.loader import BMADWorkflowLoader
 
@@ -128,11 +129,10 @@ class RecipeOrchestrator:
     def run_from_goal(
         self,
         goal: str,
-        context: Optional[PlanningContext] = None,
-        progress_callback: Optional[Callable[..., None]] = None,
+        context: PlanningContext | None = None,
+        progress_callback: Callable[..., None] | None = None,
     ) -> OrchestrationResult:
-        """
-        Execute complete workflow from high-level goal.
+        """Execute complete workflow from high-level goal.
 
         PLAN → EXECUTE → VERIFY
 
@@ -143,13 +143,14 @@ class RecipeOrchestrator:
 
         Returns:
             OrchestrationResult with complete workflow results
+
         """
         self.console.print(
             Panel(
                 f"[bold]Goal:[/bold] {goal}",
                 title="🎯 Mekong Orchestrator",
                 border_style="cyan",
-            )
+            ),
         )
 
         goal_start_time = time.time()
@@ -171,7 +172,7 @@ class RecipeOrchestrator:
                     from pathlib import Path as _Path
                     recipe = RecipeParser().parse(_Path(route.recipe_path))
                     self.console.print(
-                        f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'"
+                        f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'",
                     )
                     result = self.run_from_recipe(
                         recipe, progress_callback=progress_callback,
@@ -229,10 +230,9 @@ class RecipeOrchestrator:
         return result
 
     def run_from_recipe(
-        self, recipe: Recipe, progress_callback: Optional[Callable[..., None]] = None,
+        self, recipe: Recipe, progress_callback: Callable[..., None] | None = None,
     ) -> OrchestrationResult:
-        """
-        Execute existing recipe with verification.
+        """Execute existing recipe with verification.
 
         EXECUTE → VERIFY (with Temporal-inspired event sourcing & state machine)
 
@@ -241,6 +241,7 @@ class RecipeOrchestrator:
 
         Returns:
             OrchestrationResult
+
         """
         workflow_id = uuid.uuid4().hex[:12]
         result = OrchestrationResult(
@@ -261,7 +262,7 @@ class RecipeOrchestrator:
         ))
 
         self.console.print(
-            "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]"
+            "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]",
         )
 
         # Create executor
@@ -380,8 +381,7 @@ class RecipeOrchestrator:
                         EventKind.ROLLBACK_COMPLETED, workflow_id, step.order,
                     ))
                     break
-                else:
-                    result.status = OrchestrationStatus.PARTIAL
+                result.status = OrchestrationStatus.PARTIAL
 
         # Finalize workflow state
         if result.status == OrchestrationStatus.SUCCESS:
@@ -410,10 +410,9 @@ class RecipeOrchestrator:
         executor: RecipeExecutor,
         step: RecipeStep,
         workflow_id: str = "",
-        wf_state: Optional[WorkflowState] = None,
+        wf_state: WorkflowState | None = None,
     ) -> StepResult:
-        """
-        Execute single step and verify results.
+        """Execute single step and verify results.
         If a shell step fails and an LLM client is available, attempt
         one self-healing retry with an LLM-suggested corrected command.
 
@@ -423,6 +422,7 @@ class RecipeOrchestrator:
 
         Returns:
             StepResult with execution and verification data
+
         """
         step_start = time.time()
         self_healed = False
@@ -437,7 +437,7 @@ class RecipeOrchestrator:
             step_type == "shell"
             and execution_result.exit_code != 0
             and self.retry_policy.is_retryable(
-                execution_result.stderr or "", execution_result.exit_code
+                execution_result.stderr or "", execution_result.exit_code,
             )
             and self.planner.llm_client
             and hasattr(self.planner.llm_client, "generate")
@@ -445,7 +445,7 @@ class RecipeOrchestrator:
             command = step.description.strip()
             stderr = execution_result.stderr or ""
             self.console.print(
-                "[yellow]🔧 Attempting AI self-correction...[/yellow]"
+                "[yellow]🔧 Attempting AI self-correction...[/yellow]",
             )
             if workflow_id:
                 self.history.append(ExecutionEvent.create(
@@ -478,7 +478,7 @@ class RecipeOrchestrator:
                     if execution_result.exit_code == 0:
                         self_healed = True
                         self.console.print(
-                            "[green]✓ Self-healing succeeded[/green]"
+                            "[green]✓ Self-healing succeeded[/green]",
                         )
                         if workflow_id:
                             self.history.append(ExecutionEvent.create(
@@ -487,7 +487,7 @@ class RecipeOrchestrator:
                             ))
                     else:
                         self.telemetry.record_error(
-                            f"Self-heal retry also failed for step {step.order}"
+                            f"Self-heal retry also failed for step {step.order}",
                         )
             except Exception as e:
                 self.telemetry.record_error(f"Self-heal error: {e}")
@@ -517,10 +517,9 @@ class RecipeOrchestrator:
         )
 
     def _handle_failure(
-        self, result: OrchestrationResult, failed_step: RecipeStep
+        self, result: OrchestrationResult, failed_step: RecipeStep,
     ) -> None:
-        """
-        Handle step failure with rollback.
+        """Handle step failure with rollback.
 
         Reverses completed steps in reverse order by executing their
         rollback commands (if defined in step params).
@@ -528,9 +527,10 @@ class RecipeOrchestrator:
         Args:
             result: Current orchestration result
             failed_step: The step that failed
+
         """
         self.console.print(
-            f"\n[bold red]❌ Step {failed_step.order} failed verification[/bold red]"
+            f"\n[bold red]❌ Step {failed_step.order} failed verification[/bold red]",
         )
 
         if not self.enable_rollback:
@@ -549,7 +549,7 @@ class RecipeOrchestrator:
 
             if not rollback_cmd:
                 self.console.print(
-                    f"  [dim]Step {step.order}: no rollback command — skipping[/dim]"
+                    f"  [dim]Step {step.order}: no rollback command — skipping[/dim]",
                 )
                 continue
 
@@ -567,7 +567,7 @@ class RecipeOrchestrator:
                 )
                 if proc.returncode == 0:
                     self.console.print(
-                        f"  [green]✓ Step {step.order} rolled back[/green]"
+                        f"  [green]✓ Step {step.order} rolled back[/green]",
                     )
                 else:
                     msg = f"Step {step.order} rollback failed: {proc.stderr.strip()}"
@@ -589,11 +589,11 @@ class RecipeOrchestrator:
         result.status = OrchestrationStatus.ROLLED_BACK
 
     def _display_report(self, result: OrchestrationResult) -> None:
-        """
-        Display final orchestration report.
+        """Display final orchestration report.
 
         Args:
             result: Orchestration result to display
+
         """
         self.console.print("\n" + "=" * 60)
         self.console.print("[bold]📊 ORCHESTRATION REPORT[/bold]")
@@ -627,7 +627,7 @@ class RecipeOrchestrator:
         self.console.print("\n" + "=" * 60)
 
     def _format_status(self, status: OrchestrationStatus) -> str:
-        """Format status with color"""
+        """Format status with color."""
         colors = {
             OrchestrationStatus.SUCCESS: "green",
             OrchestrationStatus.FAILED: "red",
@@ -638,10 +638,9 @@ class RecipeOrchestrator:
         return f"[{color}]{status.value.upper()}[/{color}]"
 
     def run_bmad_workflow(
-        self, workflow_id: str, context: Optional[Dict[str, Any]] = None
+        self, workflow_id: str, context: dict[str, Any] | None = None,
     ) -> OrchestrationResult:
-        """
-        Execute a BMAD workflow by ID.
+        """Execute a BMAD workflow by ID.
 
         Args:
             workflow_id: BMAD workflow identifier
@@ -649,14 +648,17 @@ class RecipeOrchestrator:
 
         Returns:
             OrchestrationResult
+
         """
         if not self.bmad_loader:
-            raise RuntimeError("BMAD loader not available")
+            msg = "BMAD loader not available"
+            raise RuntimeError(msg)
 
         # Load workflow
         workflow = self.bmad_loader.get_workflow(workflow_id)
         if not workflow:
-            raise ValueError(f"Workflow not found: {workflow_id}")
+            msg = f"Workflow not found: {workflow_id}"
+            raise ValueError(msg)
 
         # Convert BMAD workflow to Recipe format
         from .parser import Recipe, RecipeStep
@@ -679,8 +681,8 @@ class RecipeOrchestrator:
 
 
 __all__ = [
-    "RecipeOrchestrator",
     "OrchestrationResult",
     "OrchestrationStatus",
+    "RecipeOrchestrator",
     "StepResult",
 ]

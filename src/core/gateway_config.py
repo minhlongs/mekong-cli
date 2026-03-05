@@ -1,17 +1,16 @@
-"""
-Mekong CLI - Gateway Configuration
+"""Mekong CLI - Gateway Configuration.
 
 Reads .mekong/gateway.yaml for persistent gateway configuration.
 Falls back to hardcoded defaults when no config file exists.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
-
 
 # Default preset actions — the "Washing Machine" buttons
-DEFAULT_PRESETS: List[Dict[str, str]] = [
+DEFAULT_PRESETS: list[dict[str, str]] = [
     {"id": "deploy", "icon": "\U0001f680", "label": "Quick Deploy",
      "goal": "deploy all applications to production",
      "label_vi": "Tri\u1ec3n Khai Nhanh",
@@ -49,16 +48,16 @@ DEFAULT_PRESETS: List[Dict[str, str]] = [
 class GatewayConfig:
     """Persistent gateway configuration."""
 
-    presets: List[Dict[str, str]] = field(
-        default_factory=lambda: list(DEFAULT_PRESETS)
+    presets: list[dict[str, str]] = field(
+        default_factory=lambda: list(DEFAULT_PRESETS),
     )
     host: str = "127.0.0.1"
     port: int = 8000
-    project_paths: List[str] = field(default_factory=lambda: ["apps"])
+    project_paths: list[str] = field(default_factory=lambda: ["apps"])
     tunnel_name: str = ""
 
 
-def load_config(config_path: Optional[str] = None) -> GatewayConfig:
+def load_config(config_path: str | None = None) -> GatewayConfig:
     """Load gateway config from YAML file, falling back to defaults.
 
     Tries to import PyYAML; if unavailable, returns defaults.
@@ -96,4 +95,4 @@ def load_config(config_path: Optional[str] = None) -> GatewayConfig:
     return cfg
 
 
-__all__ = ["GatewayConfig", "load_config", "DEFAULT_PRESETS"]
+__all__ = ["DEFAULT_PRESETS", "GatewayConfig", "load_config"]
