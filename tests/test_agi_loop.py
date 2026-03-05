@@ -162,9 +162,11 @@ class TestExecuteStep:
         import asyncio
         mock_session = MagicMock()
         mock_session.status.value = "completed"
+        mock_session.exit_code = 0
+        mock_session.error = None
         async def mock_spawn(*args, **kwargs):
             return mock_session
-        with patch("src.core.agi_loop.get_spawner") as mock_get_spawner:
+        with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
             mock_spawner = MagicMock()
             mock_spawner.spawn = mock_spawn
             mock_get_spawner.return_value = mock_spawner
@@ -176,9 +178,10 @@ class TestExecuteStep:
         import asyncio
         mock_session = MagicMock()
         mock_session.status.value = "failed"
+        mock_session.error = "Session failed"
         async def mock_spawn(*args, **kwargs):
             return mock_session
-        with patch("src.core.agi_loop.get_spawner") as mock_get_spawner:
+        with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
             mock_spawner = MagicMock()
             mock_spawner.spawn = mock_spawn
             mock_get_spawner.return_value = mock_spawner
@@ -192,7 +195,7 @@ class TestMemorizeStep:
     def test_memorize_memory_unavailable(self, agi_loop, sample_improvement):
         """Test memorization when memory unavailable."""
         import asyncio
-        with patch("src.core.agi_loop.get_memory_client") as mock_get_mem:
+        with patch("src.core.memory_client.get_memory_client") as mock_get_mem:
             mock_mem = MagicMock()
             mock_mem.is_available = False
             mock_get_mem.return_value = mock_mem
