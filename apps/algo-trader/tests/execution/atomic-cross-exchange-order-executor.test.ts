@@ -282,9 +282,8 @@ describe('AtomicCrossExchangeOrderExecutor', () => {
 
     beforeEach(() => {
       const circuitBreakerConfig: CircuitBreakerConfig = {
-        failureThreshold: 2,
-        timeoutMs: 100,
-        successThreshold: 1
+        maxLossesInRow: 2,
+        cooldownMs: 100
       };
 
       config = { circuitBreakerConfig };
@@ -292,7 +291,19 @@ describe('AtomicCrossExchangeOrderExecutor', () => {
     });
 
     it('should open circuit after threshold exceeded', async () => {
-      buyExchange.createMarketOrder.mockRejectedValue(new Error('exchange down'));
+      // Mock createMarketOrder to return orders with loss (buy price > sell price)
+      let buyCallCount = 0;
+      let sellCallCount = 0;
+      
+      buyExchange.createMarketOrder.mockImplementation(() => {
+        buyCallCount++;
+        return Promise.resolve(makeOrder('ord-buy-' + buyCallCount, 'buy', 70000, 0.1));
+      });
+      
+      sellExchange.createMarketOrder.mockImplementation(() => {
+        sellCallCount++;
+        return Promise.resolve(makeOrder('ord-sell-' + sellCallCount, 'sell', 68000, 0.1));
+      });
 
       const result1 = await executor.executeAtomic({
         symbol: 'BTC/USDT',
@@ -300,7 +311,7 @@ describe('AtomicCrossExchangeOrderExecutor', () => {
         buyExchange,
         sellExchange,
       });
-      expect(result1.success).toBe(false);
+      expect(result1.success).toBe(true); // Trade executes but results in loss
 
       const result2 = await executor.executeAtomic({
         symbol: 'BTC/USDT',
@@ -308,8 +319,9 @@ describe('AtomicCrossExchangeOrderExecutor', () => {
         buyExchange,
         sellExchange,
       });
-      expect(result2.success).toBe(false);
+      expect(result2.success).toBe(true); // Second loss
 
+      // Third trade should fail due to circuit breaker (2 consecutive losses >= maxLossesInRow)
       const result3 = await executor.executeAtomic({
         symbol: 'BTC/USDT',
         amount: 0.1,
@@ -319,7 +331,9 @@ describe('AtomicCrossExchangeOrderExecutor', () => {
       expect(result3.success).toBe(false);
       expect(result3.error).toContain('Circuit breaker');
 
+      // Only 2 actual exchange calls were made (third was blocked by circuit breaker)
       expect(buyExchange.createMarketOrder).toHaveBeenCalledTimes(2);
+      expect(sellExchange.createMarketOrder).toHaveBeenCalledTimes(2);
     });
 
     it('should include circuit breaker metrics in result', async () => {

@@ -6,7 +6,7 @@
 
 import { logger } from '../utils/logger';
 import type { IExchange, IOrder } from '../interfaces/IExchange';
-import { CircuitBreakerLegacy as CircuitBreaker, CircuitBreakerConfig } from './circuit-breaker';
+import { CircuitBreakerLegacy, CircuitBreakerConfig } from './circuit-breaker';
 import { RetryHandler, RetryConfig } from './retry-handler';
 
 export interface AtomicOrderParams {
@@ -53,8 +53,8 @@ export interface AtomicExecutorConfig {
 export class AtomicCrossExchangeOrderExecutor {
   private retryHandler?: RetryHandler;
   private rollbackRetryHandler?: RetryHandler;
-  private buyCircuitBreaker?: CircuitBreaker;
-  private sellCircuitBreaker?: CircuitBreaker;
+  private buyCircuitBreaker?: CircuitBreakerLegacy;
+  private sellCircuitBreaker?: CircuitBreakerLegacy;
 
   constructor(private config: AtomicExecutorConfig = {}) {
     if (config.retryConfig) {
@@ -66,8 +66,8 @@ export class AtomicCrossExchangeOrderExecutor {
     }
 
     if (config.circuitBreakerConfig) {
-      this.buyCircuitBreaker = new CircuitBreaker(config.circuitBreakerConfig);
-      this.sellCircuitBreaker = new CircuitBreaker({...config.circuitBreakerConfig});
+      this.buyCircuitBreaker = new CircuitBreakerLegacy(config.circuitBreakerConfig);
+      this.sellCircuitBreaker = new CircuitBreakerLegacy({...config.circuitBreakerConfig});
     }
   }
 
@@ -249,13 +249,33 @@ export class AtomicCrossExchangeOrderExecutor {
       buyFulfilled = buyResult.status === 'fulfilled';
       sellFulfilled = sellResult.status === 'fulfilled';
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
+      if (error instanceof Error && error.message.includes('Circuit breaker is open')) {
         throw error;
       }
       buyFulfilled = false;
       sellFulfilled = false;
       buyResult = { status: 'rejected', reason: error };
       sellResult = { status: 'rejected', reason: error };
+    }
+
+    // Record results in circuit breaker
+    if (buyFulfilled && sellFulfilled) {
+      const buyOrder = (buyResult as PromiseFulfilledResult<IOrder>).value;
+      const sellOrder = (sellResult as PromiseFulfilledResult<IOrder>).value;
+      const pnl = (sellOrder.price - buyOrder.price) * buyOrder.amount;
+      this.buyCircuitBreaker!.recordTrade(pnl);
+      this.sellCircuitBreaker!.recordTrade(pnl);
+    } else {
+      if (buyFulfilled) {
+        this.buyCircuitBreaker!.recordTrade(0);
+      } else {
+        this.buyCircuitBreaker!.recordError(buyResult.reason instanceof Error ? buyResult.reason.message : String(buyResult.reason));
+      }
+      if (sellFulfilled) {
+        this.sellCircuitBreaker!.recordTrade(0);
+      } else {
+        this.sellCircuitBreaker!.recordError(sellResult.reason instanceof Error ? sellResult.reason.message : String(sellResult.reason));
+      }
     }
 
     const buyLatency = Date.now() - buyStart;
