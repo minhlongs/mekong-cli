@@ -143,11 +143,51 @@ Start the gateway: `mekong gateway --port 8000`
 | `/v1/tasks/{id}/stream` | GET | SSE real-time progress |
 | `/v1/agents` | GET | List available agents |
 | `/v1/agents/{name}/run` | POST | Invoke agent directly |
+| `/v1/license/validate` | POST | Validate RaaS license key |
+| `/v1/license/status` | GET | Get license status (masked) |
 | `/billing/webhook` | POST | Polar.sh webhook |
+
+### Security Middleware
+
+- **License Verification**: `/v1/license/*` endpoints require valid `RAAS_LICENSE_KEY`
+- **Rate Limiting**: Token bucket (100 req/min default, configurable per tier)
+- **CORS**: Configured for cross-origin requests
 
 ## RaaS
 
-**Revenue as a Service** — built-in credit billing to monetize AI agent work:
+**Revenue as a Service** — Open Core licensing with built-in credit billing:
+
+### Security Features
+
+- **License Gating**: Premium agents behind `RAAS_LICENSE_KEY` verification
+- **SHA-256 Hashing**: Secure license key storage
+- **Rate Limiting**: Token bucket algorithm prevents abuse
+- **Tier-based Access**: FREE / PRO / ENTERPRISE
+
+```python
+from lib.raas-gate import requireLicense, LicenseError
+
+try:
+    requireLicense('CTO Auto-Pilot')
+    # Premium feature unlocked
+except LicenseError as e:
+    print(f"License required: {e.code}")
+```
+
+### Premium Agents (License Required)
+
+| Agent | Tier | Description |
+|-------|------|-------------|
+| `auto-cto-pilot` | PRO | Tự động tạo tasks theo Binh Pháp |
+| `opus-strategy` | PRO | Strategic planning với Claude Opus |
+| `opus-parallel` | PRO | Parallel agent orchestration |
+| `opus-review` | PRO | Security & quality review |
+
+### Core Agents (Open Source)
+
+`planner`, `fullstack-developer`, `tester`, `code-reviewer`, `debugger`, `researcher`, `ui-ux-designer`, `docs-manager`, `project-manager`, `git-manager`
+
+### SDK Usage
 
 ```python
 from src.raas.sdk import MekongClient
