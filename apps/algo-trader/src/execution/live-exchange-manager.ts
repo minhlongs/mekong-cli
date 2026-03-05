@@ -10,7 +10,6 @@ import { WebSocketPriceFeedManager, PriceTick } from './websocket-multi-exchange
 import { ExchangeRouter } from './exchange-router-with-fallback';
 import { ExchangeHealthMonitor, ExchangeHealth } from './exchange-health-monitor';
 import { ExchangeRegistry } from './exchange-registry';
-import { createExchangeAdapter } from '../cli/exchange-factory';
 import { logger } from '../utils/logger';
 
 export interface LiveExchangeManagerConfig {
@@ -22,7 +21,7 @@ export interface LiveExchangeManagerConfig {
 
 export class LiveExchangeManager extends EventEmitter {
   private readonly registry: ExchangeRegistry;
-  private pool: ExchangeConnectionPool<unknown> | null = null;
+  private pool: ExchangeConnectionPool | null = null;
   private wsFeed: WebSocketPriceFeedManager | null = null;
   private router: ExchangeRouter;
   private healthMonitor: ExchangeHealthMonitor;
@@ -53,13 +52,8 @@ export class LiveExchangeManager extends EventEmitter {
     const pairs = this.registry.getAllPairs();
     const exchangeIds = enabled.map(e => e.id);
 
-    // 1. Connection pool
-    this.pool = new ExchangeConnectionPool(
-      (id: string) => {
-        const cfg = this.registry.get(id);
-        return createExchangeAdapter(id, cfg?.apiKey, cfg?.secret);
-      },
-    );
+    // 1. Connection pool — singleton pattern
+    this.pool = ExchangeConnectionPool.getInstance();
 
     // 2. WebSocket price feed
     this.wsFeed = new WebSocketPriceFeedManager({
@@ -96,7 +90,7 @@ export class LiveExchangeManager extends EventEmitter {
     const shutdown = async (): Promise<void> => {
       this.healthMonitor.stopChecks();
       this.wsFeed?.stop();
-      this.pool?.destroy();
+      this.pool?.reset();
       this.healthMonitor.removeAllListeners();
       this.wsFeed?.removeAllListeners();
     };
@@ -125,7 +119,7 @@ export class LiveExchangeManager extends EventEmitter {
     return this.router;
   }
 
-  getPool(): ExchangeConnectionPool<unknown> | null {
+  getPool(): ExchangeConnectionPool | null {
     return this.pool;
   }
 

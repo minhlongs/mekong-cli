@@ -8,7 +8,7 @@ import { LicenseService } from '../lib/raas-gate';
 describe('Analytics', () => {
   beforeEach(() => {
     metricsStore.reset();
-    (LicenseService as any).instance = null;
+    LicenseService.getInstance().reset();
   });
 
   describe('recordUsage', () => {

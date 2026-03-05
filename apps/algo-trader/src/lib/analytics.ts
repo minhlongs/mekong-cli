@@ -42,6 +42,10 @@ export class MetricsStore {
   incrementRateLimit(tenantId: string): void {
     const count = this.rateLimitHits.get(tenantId) || 0;
     this.rateLimitHits.set(tenantId, count + 1);
+    // Ensure tenant exists in usageData for getAllTenants()
+    if (!this.usageData.has(tenantId)) {
+      this.usageData.set(tenantId, { count: 0, endpoints: {} });
+    }
   }
 
   getUsage(tenantId: string): { count: number; endpoints: Record<string, number> } {

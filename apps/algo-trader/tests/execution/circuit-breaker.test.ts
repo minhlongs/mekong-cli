@@ -1,32 +1,30 @@
 /**
- * Circuit Breaker Tests
- * Lightweight unit tests for circuit breaker pattern
+ * Circuit Breaker Tests - CircuitBreakerLegacy
+ * Tests the legacy wrapper around CircuitBreaker
  */
 
-import { describe, test, expect, jest } from '@jest/globals';
-import {
-  CircuitBreaker,
-  CircuitBreakerState,
-  CircuitBreakerConfig
-} from '../../src/execution/circuit-breaker';
+import { describe, test, expect } from '@jest/globals';
+import { CircuitBreakerLegacy, CircuitBreakerConfig } from '../../src/execution/circuit-breaker';
 
-describe('Circuit Breaker', () => {
+describe('Circuit Breaker Legacy', () => {
   const defaultConfig: CircuitBreakerConfig = {
-    failureThreshold: 3,
-    timeoutMs: 1000,
-    successThreshold: 2
+    maxDrawdownPercent: 5,
+    maxErrorRate: 0.1,
+    maxLossesInRow: 3,
+    cooldownMs: 1000
   };
 
   describe('Initialization', () => {
     test('should start in CLOSED state', () => {
-      const cb = new CircuitBreaker(defaultConfig);
+      const cb = new CircuitBreakerLegacy(defaultConfig);
       const metrics = cb.getMetrics();
-      expect(metrics.state).toBe(CircuitBreakerState.CLOSED);
+      expect(metrics.state).toBe('CLOSED');
       expect(metrics.failureCount).toBe(0);
+      expect(metrics.totalTrades).toBe(0);
     });
 
     test('should have zero metrics on init', () => {
-      const cb = new CircuitBreaker(defaultConfig);
+      const cb = new CircuitBreakerLegacy(defaultConfig);
       const metrics = cb.getMetrics();
       expect(metrics.totalRequests).toBe(0);
       expect(metrics.totalFailures).toBe(0);
@@ -34,147 +32,89 @@ describe('Circuit Breaker', () => {
     });
   });
 
-  describe('Successful Execution', () => {
+  describe('Execute', () => {
     test('should pass through successful operation', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
+      const cb = new CircuitBreakerLegacy(defaultConfig);
       const result = await cb.execute(async () => 'success');
       expect(result).toBe('success');
     });
 
-    test('should increment success count', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      await cb.execute(async () => 'ok');
-      const metrics = cb.getMetrics();
-      expect(metrics.totalSuccesses).toBe(1);
-      expect(metrics.totalRequests).toBe(1);
+    test('should throw when circuit is halted', async () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
+      // Trigger halt by consecutive losses
+      for (let i = 0; i < 3; i++) {
+        cb.recordTrade(-100);
+      }
+      await expect(async () => cb.execute(async () => 'ok'))
+        .rejects.toThrow('Circuit breaker is open');
     });
-  });
 
-  describe('Failure Handling', () => {
-    test('should throw on failed operation', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
+    test('should handle async operation rejection', async () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
       await expect(cb.execute(async () => {
-        throw new Error('Test error');
-      })).rejects.toThrow('Test error');
-    });
-
-    test('should increment failure count', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      try {
-        await cb.execute(async () => { throw new Error('fail'); });
-      } catch {}
-      const metrics = cb.getMetrics();
-      expect(metrics.totalFailures).toBe(1);
-      expect(metrics.failureCount).toBe(1);
-    });
-
-    test('should track last failure time', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      const beforeFail = Date.now();
-      try {
-        await cb.execute(async () => { throw new Error('fail'); });
-      } catch {}
-      const metrics = cb.getMetrics();
-      expect(metrics.lastFailureTime).toBeDefined();
-      expect(metrics.lastFailureTime!).toBeGreaterThanOrEqual(beforeFail);
+        throw new Error('test error');
+      })).rejects.toThrow('test error');
     });
   });
 
-  describe('Circuit Opening', () => {
-    test('should open after threshold failures', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      for (let i = 0; i < 3; i++) {
-        try {
-          await cb.execute(async () => { throw new Error('fail'); });
-        } catch {}
-      }
-      const metrics = cb.getMetrics();
-      expect(metrics.state).toBe(CircuitBreakerState.OPEN);
+  describe('Trade Recording', () => {
+    test('should track consecutive losses', () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
+      cb.recordTrade(100); // win
+      cb.recordTrade(-50); // loss
+      cb.recordTrade(-50); // loss
+      const state = cb.getState();
+      expect(state.consecutiveLosses).toBe(2);
     });
 
-    test('should throw immediately when open', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      // Force open
-      for (let i = 0; i < 3; i++) {
-        try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      }
-      await expect(cb.execute(async () => 'ok'))
-        .rejects.toThrow('Circuit breaker is OPEN');
+    test('should reset consecutive losses on win', () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
+      cb.recordTrade(-50);
+      cb.recordTrade(-50);
+      cb.recordTrade(100); // win
+      const state = cb.getState();
+      expect(state.consecutiveLosses).toBe(0);
     });
 
-    test('should not increment failure count when already open', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      // Open circuit
+    test('should halt after max consecutive losses', () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
       for (let i = 0; i < 3; i++) {
-        try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
+        cb.recordTrade(-100);
       }
-      const failuresBefore = cb.getMetrics().totalFailures;
-      try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      // Should not increment because circuit is open
-      expect(cb.getMetrics().totalFailures).toBe(failuresBefore + 1);
+      expect(cb.canTrade()).toBe(false);
     });
   });
 
-  describe('Half-Open State', () => {
-    test('should transition to half-open after timeout', async () => {
-      const cb = new CircuitBreaker({ ...defaultConfig, timeoutMs: 50 });
-      // Open circuit
-      for (let i = 0; i < 3; i++) {
-        try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      }
-      expect(cb.getMetrics().state).toBe(CircuitBreakerState.OPEN);
+  describe('Get Metrics', () => {
+    test('should return metrics derived from state', async () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
+      cb.recordTrade(100);
+      cb.recordTrade(-50);
+      cb.recordTrade(-50);
 
-      // Wait for timeout
-      await new Promise(r => setTimeout(r, 60));
-
-      // Next call should trigger half-open check
-      try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      expect(cb.getMetrics().state).toBe(CircuitBreakerState.HALF_OPEN);
-    });
-
-    test('should close after success threshold in half-open', async () => {
-      const cb = new CircuitBreaker({ ...defaultConfig, timeoutMs: 50, successThreshold: 2 });
-      // Open circuit
-      for (let i = 0; i < 3; i++) {
-        try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      }
-      await new Promise(r => setTimeout(r, 60));
-
-      // Successful calls in half-open
-      await cb.execute(async () => 'ok');
-      await cb.execute(async () => 'ok');
-
-      expect(cb.getMetrics().state).toBe(CircuitBreakerState.CLOSED);
+      const metrics = cb.getMetrics();
+      expect(metrics.totalTrades).toBe(3);
+      expect(metrics.totalFailures).toBe(2); // losses
+      expect(metrics.totalSuccesses).toBe(1); // wins
+      expect(metrics.consecutiveLosses).toBe(2);
     });
   });
 
   describe('Reset', () => {
-    test('should reset all metrics', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      // Cause some failures
-      for (let i = 0; i < 3; i++) {
-        try { await cb.execute(async () => { throw new Error('fail'); }); } catch {}
-      }
+    test('should reset all metrics', () => {
+      const cb = new CircuitBreakerLegacy(defaultConfig);
+      cb.recordTrade(100);
+      cb.recordTrade(-50);
+      cb.recordTrade(-50);
+      cb.recordTrade(-50); // triggers halt
+
       cb.reset();
+
       const metrics = cb.getMetrics();
-      expect(metrics.state).toBe(CircuitBreakerState.CLOSED);
+      expect(metrics.state).toBe('CLOSED');
       expect(metrics.failureCount).toBe(0);
-      expect(metrics.totalRequests).toBe(0);
-    });
-  });
-
-  describe('Edge Cases', () => {
-    test('should handle async operation rejection', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      const rejectedPromise = cb.execute(async () => {
-        return await Promise.reject(new Error('async fail'));
-      });
-      await expect(rejectedPromise).rejects.toThrow('async fail');
-    });
-
-    test('should handle null error', async () => {
-      const cb = new CircuitBreaker(defaultConfig);
-      await expect(cb.execute(async () => { throw null; })).rejects.toBe(null);
+      expect(metrics.totalTrades).toBe(0);
+      expect(cb.canTrade()).toBe(true);
     });
   });
 });
