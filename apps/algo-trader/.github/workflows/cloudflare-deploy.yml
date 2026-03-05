@@ -18,20 +18,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: '**/package.json'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Type check
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
 
       - name: Build worker
-        run: npm run build:worker
+        run: pnpm run build:worker
 
       - name: Deploy to Cloudflare Staging
         if: github.event_name == 'pull_request'
