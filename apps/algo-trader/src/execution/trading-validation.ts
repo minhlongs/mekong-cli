@@ -53,7 +53,7 @@ export function validateSymbol(symbol: string): { valid: boolean; normalizedSymb
   }
 
   // Binance format: BTCUSDT
-  const binanceFormat = /^([A-Z0-9]{2,10})([A-Z0-9]{2,10})$/i;
+  const binanceFormat = /^([A-Z0-9]{2,10})(USDT|USDC|BUSD|BTC|ETH|BNB|USD|EUR)$/i;
   const binanceMatch = trimmed.match(binanceFormat);
 
   if (binanceMatch) {

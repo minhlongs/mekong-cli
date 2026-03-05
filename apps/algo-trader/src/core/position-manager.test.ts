@@ -50,13 +50,13 @@ describe('PositionManager', () => {
   });
 
   test('should throw for advanced analytics without PRO', () => {
-    await LicenseService.getInstance().validate();
+    LicenseService.getInstance().validateSync();
     const pm = PositionManager.getInstance();
     expect(() => pm.getAdvancedAnalytics()).toThrow('PRO');
   });
 
   test('should return advanced analytics with PRO', async () => {
-    await LicenseService.getInstance().validate('raas-pro-test');
+    LicenseService.getInstance().validateSync('raas-pro-test');
     const pm = PositionManager.getInstance();
     pm.openPosition({
       id: 'pos-3',
