@@ -2,14 +2,15 @@ export interface RetryConfig {
   maxRetries: number;
   baseDelayMs: number;
   maxDelayMs: number;
-  factor: number; // Exponential backoff factor
-  jitter: boolean; // Whether to add randomization to delays
-  retryableErrors?: string[]; // Specific error messages that should trigger retries
+  factor: number;
+  jitter: boolean;
+  retryableErrors?: string[];
 }
 
 export interface RetryMetrics {
   attempts: number;
   successfulRetries: number;
+  failedRetries: number;
   totalRetryDelayMs: number;
 }
 
@@ -17,6 +18,7 @@ export class RetryHandler {
   private metrics: RetryMetrics = {
     attempts: 0,
     successfulRetries: 0,
+    failedRetries: 0,
     totalRetryDelayMs: 0
   };
 
@@ -31,7 +33,6 @@ export class RetryHandler {
       try {
         const result = await operation();
 
-        // If not the first attempt, increment successful retries counter
         if (attempt > 0) {
           this.metrics.successfulRetries++;
         }
@@ -40,21 +41,19 @@ export class RetryHandler {
       } catch (error) {
         lastError = error;
 
-        // If this is the last attempt, don't retry
         if (attempt === this.config.maxRetries) {
+          this.metrics.failedRetries++;
           break;
         }
 
-        // Check if this error is retryable
         if (!this.shouldRetry(error)) {
+          this.metrics.failedRetries++;
           break;
         }
 
-        // Calculate delay with exponential backoff
         const delay = this.calculateDelay(attempt);
         this.metrics.totalRetryDelayMs += delay;
 
-        // Wait before retrying
         await this.sleep(delay);
       }
     }
@@ -64,20 +63,14 @@ export class RetryHandler {
 
   private calculateDelay(attempt: number): number {
     let delay = this.config.baseDelayMs * Math.pow(this.config.factor, attempt);
-
-    // Cap the delay at maxDelayMs
     delay = Math.min(delay, this.config.maxDelayMs);
-
-    // Add jitter if enabled
     if (this.config.jitter) {
-      delay = delay * (0.5 + Math.random() * 0.5); // Randomize between 50-100% of calculated delay
+      delay = delay * (0.5 + Math.random() * 0.5);
     }
-
     return delay;
   }
 
   private shouldRetry(error: any): boolean {
-    // If specific retryable errors are defined, check against them
     if (this.config.retryableErrors && this.config.retryableErrors.length > 0) {
       const errorMessage = error.message ? error.message.toLowerCase() : '';
       return this.config.retryableErrors.some(retryableError =>
@@ -85,7 +78,6 @@ export class RetryHandler {
       );
     }
 
-    // Default behavior: retry on network-related errors
     const errorMessage = error.message ? error.message.toLowerCase() : '';
     const retryableKeywords = [
       'network error',
@@ -99,9 +91,7 @@ export class RetryHandler {
       'service unavailable'
     ];
 
-    return retryableKeywords.some(keyword =>
-      errorMessage.includes(keyword)
-    );
+    return retryableKeywords.some(keyword => errorMessage.includes(keyword));
   }
 
   private sleep(ms: number): Promise<void> {
@@ -116,6 +106,7 @@ export class RetryHandler {
     this.metrics = {
       attempts: 0,
       successfulRetries: 0,
+      failedRetries: 0,
       totalRetryDelayMs: 0
     };
   }

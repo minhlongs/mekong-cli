@@ -3,7 +3,8 @@ import { IDataProvider } from '../interfaces/IDataProvider';
 import { ICandle } from '../interfaces/ICandle';
 
 import { logger } from '../utils/logger';
-import { AdvancedMetricsCalculator, AdvancedBacktestMetrics } from './AdvancedMetricsCalculator';
+import { AdvancedBacktestMetrics } from './backtest-types';
+import { AdvancedMetricsCalculator } from './AdvancedMetricsCalculator';
 import { SlippageModeler, SlippageConfig, OrderBookLevel } from './SlippageModeler';
 
 interface Trade {

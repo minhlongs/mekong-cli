@@ -4,7 +4,7 @@
  */
 
 import { IArbitrageOpportunity } from '../interfaces/IArbitrageOpportunity';
-import { MarketCorrelation, LatencyMetrics, RiskFactor } from './abi-trade-deep-scanner';
+import { MarketCorrelation, LatencyMetrics, RiskFactor } from './abi-trade-types';
 
 export interface FilterCriteria {
   minProfitPercent?: number;

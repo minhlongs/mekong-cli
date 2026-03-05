@@ -39,7 +39,7 @@ describe('AdvancedMetricsCalculator', () => {
       const equityCurve = [10000, 10100, 10200, 10000, 9900, 10300, 10100];
 
       // Call the private method by accessing it through the class prototype
-      const { maxDrawdown } = (AdvancedMetricsCalculator as any).calculateMaxDrawdown(equityCurve);
+      const maxDrawdown = (AdvancedMetricsCalculator as any).calculateMaxDrawdown(equityCurve);
 
       expect(maxDrawdown).toBeGreaterThan(0);
     });

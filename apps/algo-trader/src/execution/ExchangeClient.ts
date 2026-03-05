@@ -6,6 +6,7 @@
  */
 
 import { IOrder, IBalance } from '../interfaces/IExchange';
+import { logger } from '../utils/logger';
 
 export interface IExchangeConfig {
   apiKey: string;
@@ -16,7 +17,7 @@ export interface IExchangeConfig {
 }
 
 export class ExchangeClient {
-  private exchange: any; // CCXT exchange instance
+  private exchange: any; // CCXT exchange instance // CCXT exchange instance
   private exchangeId: string;
   private config: IExchangeConfig;
 
@@ -43,15 +44,11 @@ export class ExchangeClient {
    */
   async initialize(): Promise<void> {
     try {
-      // Test the connection by fetching the status
-      await this.exchange.loadMarkets(); // Load markets to verify connectivity
-      console.log(`Connected to ${this.exchangeId} exchange`);
+      await this.exchange.loadMarkets();
+      logger.info(`Connected to ${this.exchangeId} exchange`);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to initialize ${this.exchangeId} exchange: ${error.message}`);
-      } else {
-        throw new Error(`Failed to initialize ${this.exchangeId} exchange: Unknown error`);
-      }
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to initialize ${this.exchangeId} exchange: ${msg}`);
     }
   }
 

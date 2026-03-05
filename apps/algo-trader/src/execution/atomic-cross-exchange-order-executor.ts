@@ -29,6 +29,7 @@ export interface AtomicExecutionResult {
   retryMetrics?: {
     attempts: number;
     successfulRetries: number;
+    failedRetries: number;
     totalRetryDelayMs: number;
   };
   circuitBreakerMetrics?: {
@@ -42,18 +43,16 @@ export interface AtomicExecutionResult {
 }
 
 export interface AtomicExecutorConfig {
-  /** Allow one retry with reduced amount on partial fill */
   enableRetry?: boolean;
-  /** Fraction of original amount to retry with. Default 0.5 */
   retryAmountFraction?: number;
-  /** Retry configuration */
   retryConfig?: RetryConfig;
-  /** Circuit breaker configuration */
   circuitBreakerConfig?: CircuitBreakerConfig;
+  rollbackRetryConfig?: RetryConfig;
 }
 
 export class AtomicCrossExchangeOrderExecutor {
   private retryHandler?: RetryHandler;
+  private rollbackRetryHandler?: RetryHandler;
   private buyCircuitBreaker?: CircuitBreaker;
   private sellCircuitBreaker?: CircuitBreaker;
 
@@ -62,20 +61,22 @@ export class AtomicCrossExchangeOrderExecutor {
       this.retryHandler = new RetryHandler(config.retryConfig);
     }
 
+    if (config.rollbackRetryConfig) {
+      this.rollbackRetryHandler = new RetryHandler(config.rollbackRetryConfig);
+    }
+
     if (config.circuitBreakerConfig) {
       this.buyCircuitBreaker = new CircuitBreaker(config.circuitBreakerConfig);
-      this.sellCircuitBreaker = new CircuitBreaker({...config.circuitBreakerConfig}); // Clone config for sell
+      this.sellCircuitBreaker = new CircuitBreaker({...config.circuitBreakerConfig});
     }
   }
 
-  /** Execute buy on buyExchange and sell on sellExchange simultaneously */
   async executeAtomic(params: AtomicOrderParams): Promise<AtomicExecutionResult> {
     const { symbol, amount, buyExchange, sellExchange } = params;
     const startTime = Date.now();
 
     logger.info(`[AtomicExec] Starting atomic execution: ${symbol} x${amount} | buy=${buyExchange.name} sell=${sellExchange.name}`);
 
-    let retryMetrics = this.retryHandler?.getMetrics();
     let circuitBreakerMetrics: {
       buyState: string;
       sellState: string;
@@ -90,40 +91,32 @@ export class AtomicCrossExchangeOrderExecutor {
     } | undefined;
 
     try {
-      // Wrap the core execution logic in the retry handler if configured
       let result: AtomicExecutionResult;
 
       if (this.retryHandler) {
-        // Reset metrics before each execution
         this.retryHandler.resetMetrics();
 
         result = await this.retryHandler.execute(async () => {
-          // When using both retry and circuit breakers, circuit breaker errors should propagate
-          // and not be retried
           if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
-            // Execute with both circuit breakers - if either is open, an error will be thrown
             return await this.performAtomicExecutionWithCircuitBreakersCheck(params, startTime);
           } else {
             return await this.performAtomicExecution(params, startTime);
           }
         });
 
-        // Get updated metrics after execution
         const updatedRetryMetrics = this.retryHandler.getMetrics();
         result.retryMetrics = {
           attempts: updatedRetryMetrics.attempts,
           successfulRetries: updatedRetryMetrics.successfulRetries,
+          failedRetries: updatedRetryMetrics.failedRetries,
           totalRetryDelayMs: updatedRetryMetrics.totalRetryDelayMs
         };
       } else if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
-        // No retry handler, but circuit breakers are configured
         result = await this.performAtomicExecutionWithCircuitBreakersCheck(params, startTime);
       } else {
-        // No retry or circuit breaker configured
         result = await this.performAtomicExecution(params, startTime);
       }
 
-      // Capture circuit breaker metrics if available
       if (this.buyCircuitBreaker && this.sellCircuitBreaker) {
         const buyMetrics = this.buyCircuitBreaker.getMetrics();
         const sellMetrics = this.sellCircuitBreaker.getMetrics();
@@ -141,7 +134,6 @@ export class AtomicCrossExchangeOrderExecutor {
           sellTotalSuccesses: sellMetrics.totalSuccesses
         };
 
-        // Add circuit breaker metrics to result
         result.circuitBreakerMetrics = {
           state: `${circuitBreakerMetrics.buyState}/${circuitBreakerMetrics.sellState}`,
           failureCount: circuitBreakerMetrics.buyFailureCount + circuitBreakerMetrics.sellFailureCount,
@@ -154,9 +146,7 @@ export class AtomicCrossExchangeOrderExecutor {
 
       return result;
     } catch (error) {
-      // Check if this is a circuit breaker error that should be propagated
       if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
-        // Re-throw circuit breaker errors so they can be caught by tests
         throw error;
       }
 
@@ -181,7 +171,6 @@ export class AtomicCrossExchangeOrderExecutor {
     const buyStart = Date.now();
     const sellStart = Date.now();
 
-    // Execute buy and sell orders without circuit breakers
     const buyResultPromise = buyExchange.createMarketOrder(symbol, 'buy', amount);
     const sellResultPromise = sellExchange.createMarketOrder(symbol, 'sell', amount);
 
@@ -197,7 +186,6 @@ export class AtomicCrossExchangeOrderExecutor {
     const buyFulfilled = buyResult.status === 'fulfilled';
     const sellFulfilled = sellResult.status === 'fulfilled';
 
-    // Both succeeded
     if (buyFulfilled && sellFulfilled) {
       const buyOrder = buyResult.value;
       const sellOrder = sellResult.value;
@@ -206,7 +194,6 @@ export class AtomicCrossExchangeOrderExecutor {
       return { success: true, buyOrder, sellOrder, buyLatency, sellLatency, totalLatency, netPnl, rollbackPerformed: false };
     }
 
-    // Partial failure — attempt rollback
     const rollbackPerformed = await this.handlePartialFailure(
       buyFulfilled ? buyResult.value : null,
       sellFulfilled ? sellResult.value : null,
@@ -237,8 +224,6 @@ export class AtomicCrossExchangeOrderExecutor {
     const buyStart = Date.now();
     const sellStart = Date.now();
 
-    // Execute buy and sell orders with circuit breakers
-    // The circuit breaker will throw if the circuit is open, which we want to allow to propagate
     let buyResult, sellResult;
     let buyFulfilled = false;
     let sellFulfilled = false;
@@ -259,11 +244,9 @@ export class AtomicCrossExchangeOrderExecutor {
       buyFulfilled = buyResult.status === 'fulfilled';
       sellFulfilled = sellResult.status === 'fulfilled';
     } catch (error) {
-      // If the circuit breaker is OPEN, this error should propagate
       if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
         throw error;
       }
-      // Otherwise, handle as a normal failure
       buyFulfilled = false;
       sellFulfilled = false;
       buyResult = { status: 'rejected', reason: error };
@@ -274,7 +257,6 @@ export class AtomicCrossExchangeOrderExecutor {
     const sellLatency = Date.now() - sellStart;
     const totalLatency = Date.now() - startTime;
 
-    // Both succeeded
     if (buyFulfilled && sellFulfilled) {
       const buyOrder = (buyResult as PromiseFulfilledResult<IOrder>).value;
       const sellOrder = (sellResult as PromiseFulfilledResult<IOrder>).value;
@@ -283,7 +265,6 @@ export class AtomicCrossExchangeOrderExecutor {
       return { success: true, buyOrder, sellOrder, buyLatency, sellLatency, totalLatency, netPnl, rollbackPerformed: false };
     }
 
-    // Partial failure — attempt rollback
     const rollbackPerformed = await this.handlePartialFailure(
       buyFulfilled ? (buyResult as PromiseFulfilledResult<IOrder>).value : null,
       sellFulfilled ? (sellResult as PromiseFulfilledResult<IOrder>).value : null,
@@ -308,7 +289,6 @@ export class AtomicCrossExchangeOrderExecutor {
     };
   }
 
-  /** Rollback: if one side succeeded, reverse it with opposite market order */
   private async handlePartialFailure(
     buyOrder: IOrder | null,
     sellOrder: IOrder | null,
@@ -319,18 +299,28 @@ export class AtomicCrossExchangeOrderExecutor {
     let performed = false;
 
     if (buyOrder && !sellOrder) {
-      // Buy succeeded but sell failed — reverse the buy
       try {
-        await buyExchange.createMarketOrder(symbol, 'sell', buyOrder.amount);
+        if (this.rollbackRetryHandler) {
+          await this.rollbackRetryHandler.execute(async () =>
+            buyExchange.createMarketOrder(symbol, 'sell', buyOrder.amount)
+          );
+        } else {
+          await buyExchange.createMarketOrder(symbol, 'sell', buyOrder.amount);
+        }
         logger.info(`[AtomicExec] Rollback: reversed buy order ${buyOrder.id} on ${buyExchange.name}`);
         performed = true;
       } catch (err) {
         logger.error(`[AtomicExec] Rollback FAILED for buy order ${buyOrder.id}: ${err instanceof Error ? err.message : String(err)}`);
       }
     } else if (sellOrder && !buyOrder) {
-      // Sell succeeded but buy failed — reverse the sell
       try {
-        await sellExchange.createMarketOrder(symbol, 'buy', sellOrder.amount);
+        if (this.rollbackRetryHandler) {
+          await this.rollbackRetryHandler.execute(async () =>
+            sellExchange.createMarketOrder(symbol, 'buy', sellOrder.amount)
+          );
+        } else {
+          await sellExchange.createMarketOrder(symbol, 'buy', sellOrder.amount);
+        }
         logger.info(`[AtomicExec] Rollback: reversed sell order ${sellOrder.id} on ${sellExchange.name}`);
         performed = true;
       } catch (err) {

@@ -2323,3 +2323,53 @@
   goal: list files
   result: executed
   timestamp: 1772643334.545286
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772644363.104095
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772644365.0424478
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772644369.337218
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772644371.433931
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772644373.4191759
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772645123.398568
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772645125.578559
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772645130.5248902
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772645133.4722571
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772645136.0003998

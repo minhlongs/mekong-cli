@@ -1,174 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "30e75980f883",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN architecture & pattern from trigger-d",
-      "dispatchedAt": 1772349899083
-    },
-    {
-      "hash": "9d962e91d8f7",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN architecture & pattern from langchain",
-      "dispatchedAt": 1772349925984
-    },
-    {
-      "hash": "3a8aa99e2a19",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ google/zx & ",
-      "dispatchedAt": 1772350168071
-    },
-    {
-      "hash": "00903235ebff",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN architecture & pattern from vercel/ai",
-      "dispatchedAt": 1772350194792
-    },
-    {
-      "hash": "84064cb38933",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN architecture & pattern from portkey-a",
-      "dispatchedAt": 1772350437556
-    },
-    {
-      "hash": "224cdfc502d2",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN codebase algo-trader. 2/ Ánh xạ railw",
-      "dispatchedAt": 1772350449856
-    },
-    {
-      "hash": "7c5d47e3dbae",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ tempor",
-      "dispatchedAt": 1772355925949
-    },
-    {
-      "hash": "a84cdb903917",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ grafana/graf",
-      "dispatchedAt": 1772355958789
-    },
-    {
-      "hash": "88124972444f",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.10 地形 Địa Hình (Architecture)",
-      "preview": "/cook \"Binh Phap Ch.10 地形: 1/ DEEP 10x PLAN architecture & pattern from nicegui/",
-      "dispatchedAt": 1772355986091
-    },
-    {
-      "hash": "0d4c10536ff8",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.11 九地 Cửu Địa (Recovery)",
-      "preview": "/cook \"Binh Phap Ch.11 九地: 1/ DEEP 10x PLAN architecture & pattern from netdata/",
-      "dispatchedAt": 1772356121025
-    },
-    {
-      "hash": "05eb2e4211ad",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.12 火攻 Hỏa Công (Disruption)",
-      "preview": "/cook \"Binh Phap Ch.12 火攻: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ cal-com/cal",
-      "dispatchedAt": 1772356192678
-    },
-    {
-      "hash": "1d9a15d6dca3",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.13 用間 Dụng Gián (Intelligence)",
-      "preview": "/cook \"Binh Phap Ch.13 用間: 1/ DEEP 10x PLAN architecture & pattern from qdrant/q",
-      "dispatchedAt": 1772356219521
-    },
-    {
-      "hash": "602d50d4f06d",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "Ch.1 始計 Kế Sách (Planning)",
-      "preview": "/cook \"Binh Phap Ch.1 始計: 1/ DEEP 10x PLAN codebase mekong-cli. 2/ Ánh xạ google",
-      "dispatchedAt": 1772356376674
-    },
-    {
-      "hash": "91b967d2acff",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.2 作戰 Tác Chiến (Resources)",
-      "preview": "/cook \"Binh Phap Ch.2 作戰: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ upstash/qsta",
-      "dispatchedAt": 1772356409511
-    },
-    {
-      "hash": "396b5ea7e684",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.3 謀攻 Mưu Công (Win W/O Fight)",
-      "preview": "/cook \"Binh Phap Ch.3 謀攻: 1/ DEEP 10x PLAN codebase algo-trader. 2/ Ánh xạ n8n-i",
-      "dispatchedAt": 1772356436102
-    },
-    {
-      "hash": "95ef77e2d364",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.4 軍形 Quân Hình (CI/CD Gates)",
-      "preview": "/cook \"Binh Phap Ch.4 軍形: 1/ DEEP 10x PLAN architecture & pattern from biomejs/b",
-      "dispatchedAt": 1772356467897
-    },
-    {
-      "hash": "f2df4a3a33ae",
-      "project": "apex-os",
-      "pane": 3,
-      "chapter": "Ch.5 兵勢 Binh Thế (Momentum)",
-      "preview": "/cook \"Binh Phap Ch.5 兵勢: 1/ DEEP 10x PLAN architecture & pattern from vercel/ai",
-      "dispatchedAt": 1772356483247
-    },
-    {
-      "hash": "c5a2bf97cde9",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.6 虛實 Hư Thực (Smart Routing)",
-      "preview": "/cook \"Binh Phap Ch.6 虛實: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ BerriAI/lite",
-      "dispatchedAt": 1772356642700
-    },
-    {
-      "hash": "70a72497b6b3",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.7 軍爭 Quân Tranh (Execution)",
-      "preview": "/cook \"Binh Phap Ch.7 軍爭: 1/ DEEP 10x PLAN codebase algo-trader. 2/ Ánh xạ railw",
-      "dispatchedAt": 1772356670016
-    },
-    {
-      "hash": "b6a99172c318",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "Ch.8 九變 Cửu Biến (Adaptation)",
-      "preview": "/cook \"Binh Phap Ch.8 九變: 1/ DEEP 10x PLAN architecture & pattern from inngest/i",
-      "dispatchedAt": 1772356714922
-    },
-    {
-      "hash": "a7dabf9a03fc",
-      "project": "well",
-      "pane": 1,
-      "chapter": "Ch.9 行軍 Hành Quân (Observability)",
-      "preview": "/cook \"Binh Phap Ch.9 行軍: 1/ DEEP 10x PLAN codebase well. 2/ Ánh xạ grafana/graf",
-      "dispatchedAt": 1772356812806
-    },
-    {
       "hash": "b9c08dc8f276",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1431,174 @@
       "chapter": "TIER3-STRATEGIC: resources",
       "preview": "/cook \"mekong-cli: Nâng resources từ 5→10. Scan codebase, fix issues, add tests/",
       "dispatchedAt": 1772591623390
+    },
+    {
+      "hash": "519b20312496",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu production (4→10), bỏ ",
+      "dispatchedAt": 1772673919918
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772673921639
+    },
+    {
+      "hash": "519b20312496",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu production (4→10), bỏ ",
+      "dispatchedAt": 1772674988124
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772675165844
+    },
+    {
+      "hash": "9dc78a5a3628",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: build",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu build (5→10), bỏ qua p",
+      "dispatchedAt": 1772675300801
+    },
+    {
+      "hash": "7ecce0b36574",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: performance",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu performance (3→10), bỏ qua ph",
+      "dispatchedAt": 1772675509099
+    },
+    {
+      "hash": "45814c911863",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu production (4→10), bỏ qua phầ",
+      "dispatchedAt": 1772675686417
+    },
+    {
+      "hash": "31e73c42f497",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu production (4→10), bỏ q",
+      "dispatchedAt": 1772675841656
+    },
+    {
+      "hash": "3d22b94be62e",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu resources (5→10), bỏ qu",
+      "dispatchedAt": 1772675880655
+    },
+    {
+      "hash": "519b20312496",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu production (4→10), bỏ ",
+      "dispatchedAt": 1772676000772
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772676016681
+    },
+    {
+      "hash": "9dc78a5a3628",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: build",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu build (5→10), bỏ qua p",
+      "dispatchedAt": 1772676037558
+    },
+    {
+      "hash": "4e4160d71be0",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu resources (5→10), bỏ qua phần",
+      "dispatchedAt": 1772676207689
+    },
+    {
+      "hash": "7ecce0b36574",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: performance",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu performance (3→10), bỏ qua ph",
+      "dispatchedAt": 1772676802946
+    },
+    {
+      "hash": "31e73c42f497",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu production (4→10), bỏ q",
+      "dispatchedAt": 1772676926733
+    },
+    {
+      "hash": "45814c911863",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu production (4→10), bỏ qua phầ",
+      "dispatchedAt": 1772677077065
+    },
+    {
+      "hash": "3d22b94be62e",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu resources (5→10), bỏ qu",
+      "dispatchedAt": 1772677140757
+    },
+    {
+      "hash": "c6088ab46330",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: build",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu build (5→10), bỏ qua ph",
+      "dispatchedAt": 1772677142760
+    },
+    {
+      "hash": "85cd83d9185d",
+      "project": "mekong-cli",
+      "pane": 0,
+      "chapter": "TIER3-RỪNG-CHIẾN: tests",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu tests (5→10), bỏ qua ph",
+      "dispatchedAt": 1772677508921
+    },
+    {
+      "hash": "519b20312496",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu production (4→10), bỏ ",
+      "dispatchedAt": 1772677658457
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772677712275
     }
   ],
   "chapterIndex": 5

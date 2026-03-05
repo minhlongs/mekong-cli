@@ -3,7 +3,7 @@
  * Evaluates multiple risk factors to ensure safe and profitable trading
  */
 
-import { RiskFactor } from './abi-trade-deep-scanner';
+import { RiskFactor } from './abi-trade-types';
 
 export interface RiskConfig {
   volatilityThreshold: number;     // Threshold for volatility risk (0.02 = 2%)
