@@ -43,7 +43,7 @@ class ProviderHealth:
 
     failures: int = 0
     last_failure: float = 0.0
-    cooldown_secs: float = 60.0
+    cooldown_secs: float = 15.0  # Giảm từ 60 → 15s (nhanh recovery hơn)
 
     @property
     def is_healthy(self) -> bool:

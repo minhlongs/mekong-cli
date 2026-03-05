@@ -8,6 +8,7 @@ Vector backend (Mem0 + Qdrant) is used when available; falls back to YAML.
 
 from __future__ import annotations
 
+import threading
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -41,24 +42,32 @@ class MemoryStore:
 
     MAX_ENTRIES: int = 500
 
-    def __init__(self, store_path: str | None = None) -> None:
+    def __init__(self, store_path: str | None = None, sync_save: bool = False) -> None:
         """Initialize memory store.
 
         Args:
             store_path: Path to YAML file. Defaults to .mekong/memory.yaml
+            sync_save: If True, save synchronously (for testing).
 
         """
         self._path = Path(store_path) if store_path else Path(".mekong/memory.yaml")
+        self._sync_save = sync_save  # Flag for testing
         self._entries: list[MemoryEntry] = []
         self._load()
 
     def record(self, entry: MemoryEntry) -> None:
-        """Record an execution outcome and persist."""
+        """Record an execution outcome and persist (async I/O)."""
         self._entries.append(entry)
         self._evict()
-        self._save()
         bus = get_event_bus()
         bus.emit(EventType.MEMORY_RECORDED, asdict(entry))
+
+        # Async save — không block main thread (daemon thread)
+        # Unless sync_save flag is set (for testing)
+        if self._sync_save:
+            self._save()
+        else:
+            threading.Thread(target=self._save, daemon=True).start()
 
         # Mirror to vector backend when available (best-effort, non-blocking)
         if _FACADE_AVAILABLE:
@@ -80,6 +89,10 @@ class MemoryStore:
                 )
             except Exception:
                 pass  # Vector failure never disrupts YAML persistence
+
+    def flush(self) -> None:
+        """Force synchronous save (for testing)."""
+        self._save()
 
     def query(self, goal_pattern: str) -> list[MemoryEntry]:
         """Find entries matching goal pattern.
