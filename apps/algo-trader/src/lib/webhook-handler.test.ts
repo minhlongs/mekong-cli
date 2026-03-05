@@ -1,8 +1,7 @@
 /**
- * Webhook Handler Tests
+ * Webhook Handler Tests - Jest Format
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import { createHmac } from 'crypto';
 import {
   verifyWebhookSignature,
@@ -12,14 +11,14 @@ import {
 } from './webhook-handler';
 import { LicenseService, LicenseTier } from './raas-gate';
 
+const WEBHOOK_SECRET = 'whsec_test_secret';
+
+function generateSignature(payload: string): string {
+  const hmac = createHmac('sha256', WEBHOOK_SECRET);
+  return `whsec_${hmac.update(payload).digest('hex')}`;
+}
+
 describe('Webhook Handler', () => {
-  const WEBHOOK_SECRET = 'whsec_test_secret';
-
-  function generateSignature(payload: string): string {
-    const hmac = createHmac('sha256', WEBHOOK_SECRET);
-    return `whsec_${hmac.update(payload).digest('hex')}`;
-  }
-
   beforeEach(() => {
     LicenseService.getInstance().reset();
   });
@@ -39,7 +38,7 @@ describe('Webhook Handler', () => {
     it('rejects missing prefix', () => {
       const payload = '{"type":"payment.success"}';
       const hmac = createHmac('sha256', WEBHOOK_SECRET);
-      const signature = hmac.update(payload).digest('hex'); // No whsec_ prefix
+      const signature = hmac.update(payload).digest('hex');
       expect(verifyWebhookSignature(payload, signature, WEBHOOK_SECRET)).toBe(false);
     });
   });
@@ -58,7 +57,7 @@ describe('Webhook Handler', () => {
     it('rejects expired timestamp', () => {
       const payload = JSON.stringify({
         type: 'payment.success',
-        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString() // 10 min ago
+        timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString()
       });
       const signature = generateSignature(payload);
       expect(() => parseWebhookPayload(payload, signature, WEBHOOK_SECRET))
