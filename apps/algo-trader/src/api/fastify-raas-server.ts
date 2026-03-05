@@ -28,6 +28,7 @@ import { PnlSnapshotService, InMemoryPnlStore } from '../core/pnl-realtime-snaps
 import { PolarSubscriptionService } from '../billing/polar-subscription-service';
 import { PolarWebhookEventHandler } from '../billing/polar-webhook-event-handler';
 import { buildPolarBillingRoutes } from './routes/polar-billing-subscription-routes';
+import { subscriptionRoutes } from './routes/subscription';
 import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
 
 export interface RaasServerOptions {
@@ -108,6 +109,7 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   const subscriptionService = new PolarSubscriptionService();
   const webhookHandler = new PolarWebhookEventHandler(subscriptionService);
   void server.register(buildPolarBillingRoutes(subscriptionService, webhookHandler));
+  void server.register(subscriptionRoutes);
 
   // Dashboard static files (built by: cd dashboard && npm run build)
   const dashboardDir = path.join(__dirname, '..', '..', 'dist', 'dashboard');

@@ -43,11 +43,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance): Promise<void
       };
 
       reply.send(response);
-    } catch (error) {
-      request.log.error('Failed to get subscription status', error);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to get subscription status');
       reply.status(500).send({
         error: 'Failed to get subscription status',
-        message: error instanceof Error ? error.message : String(error),
+        message: error.message,
       });
     }
   });
@@ -76,11 +77,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance): Promise<void
         checkoutUrl: checkout.url,
         checkoutId: checkout.id,
       });
-    } catch (error) {
-      request.log.error('Failed to create checkout', error);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to create checkout');
       reply.status(500).send({
         error: 'Failed to create checkout session',
-        message: error instanceof Error ? error.message : String(error),
+        message: error.message,
       });
     }
   });
@@ -107,11 +109,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance): Promise<void
         tier: licenseTier,
         message: `Activated ${licenseTier} license`,
       });
-    } catch (error) {
-      request.log.error('Failed to activate license', error);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to activate license');
       reply.status(500).send({
         error: 'Failed to activate license',
-        message: error instanceof Error ? error.message : String(error),
+        message: error.message,
       });
     }
   });
@@ -129,11 +132,12 @@ export async function subscriptionRoutes(fastify: FastifyInstance): Promise<void
         tier: LicenseTier.FREE,
         message: 'Downgraded to FREE license',
       });
-    } catch (error) {
-      request.log.error('Failed to downgrade license', error);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to downgrade license');
       reply.status(500).send({
         error: 'Failed to downgrade license',
-        message: error instanceof Error ? error.message : String(error),
+        message: error.message,
       });
     }
   });
