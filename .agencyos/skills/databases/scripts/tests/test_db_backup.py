@@ -1,6 +1,7 @@
 """Tests for db_backup.py"""
 
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -332,8 +333,6 @@ class TestBackupManager:
         assert size > 0
 
 
-# Import os for cleanup test
-# import os  # Unused import removed
 
 
 if __name__ == "__main__":
