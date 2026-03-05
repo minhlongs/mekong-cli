@@ -6,16 +6,17 @@ Pluggable provider interface. Subclass LLMProvider to add new backends.
 Built-in: GeminiProvider, OpenAICompatibleProvider, OfflineProvider.
 """
 
-import json
-import logging
-import os
-import random
-import time
-import urllib.error
-import urllib.request
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Any, Optional
+from abc import ABC, abstractmethod  # noqa: E402
+from dataclasses import dataclass  # noqa: E402
+from typing import Any, Optional  # noqa: E402
+
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import random  # noqa: E402
+import time  # noqa: E402
+import urllib.error  # noqa: E402
+import urllib.request  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
