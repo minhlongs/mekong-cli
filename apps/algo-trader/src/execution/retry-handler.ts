@@ -25,7 +25,7 @@ export class RetryHandler {
   constructor(private config: RetryConfig) {}
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {
-    let lastError: any;
+    let lastError: unknown;
 
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       this.metrics.attempts++;
@@ -70,15 +70,15 @@ export class RetryHandler {
     return delay;
   }
 
-  private shouldRetry(error: any): boolean {
+  private shouldRetry(error: unknown): boolean {
     if (this.config.retryableErrors && this.config.retryableErrors.length > 0) {
-      const errorMessage = error.message ? error.message.toLowerCase() : '';
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
       return this.config.retryableErrors.some(retryableError =>
         errorMessage.includes(retryableError.toLowerCase())
       );
     }
 
-    const errorMessage = error.message ? error.message.toLowerCase() : '';
+    const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
     const retryableKeywords = [
       'network error',
       'timeout',

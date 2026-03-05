@@ -3,45 +3,82 @@
  *
  * Abstracts interaction with cryptocurrency exchanges using CCXT.
  * Provides a unified interface for trading operations across different exchanges.
+ *
+ * Security features:
+ * - Input validation (symbol, amount, price)
+ * - Max order size limits
+ * - Daily volume limits
+ * - Audit logging for all trades
  */
 
 import { IOrder, IBalance } from '../interfaces/IExchange';
 import { logger } from '../utils/logger';
+import type { CCXTExchange, CCXTOrder, CCXTTrade, OrderParams, Balances, Ticker, OrderBook } from '../types/trading.types';
+import {
+  validateSymbol,
+  validateAmount,
+  validatePrice,
+  validateSide,
+  TradingValidationError,
+} from './trading-validation';
+import {
+  AuditLogger,
+  createAuditLogger,
+  TradeExecutionMetadata,
+} from './audit-logger';
+import {
+  MaxOrderLimitsChecker,
+  createMaxOrderLimitsChecker,
+  OrderLimitsConfig,
+  DEFAULT_LIMITS,
+} from './max-order-limits';
 
 export interface IExchangeConfig {
   apiKey: string;
   secret: string;
-  password?: string; // Some exchanges require this
-  uid?: string;     // Some exchanges require this
+  password?: string;
+  uid?: string;
   sandbox?: boolean;
+  tenantId?: string;
+  orderLimits?: Partial<OrderLimitsConfig>;
+  auditWebhookUrl?: string;
 }
 
 export class ExchangeClient {
-  private exchange: any; // CCXT exchange instance // CCXT exchange instance
+  private exchange: CCXTExchange;
   private exchangeId: string;
   private config: IExchangeConfig;
+  private tenantId: string;
+  private auditLogger: AuditLogger;
+  private limitsChecker: MaxOrderLimitsChecker;
 
   constructor(exchangeId: string, config: IExchangeConfig) {
     this.exchangeId = exchangeId;
     this.config = config;
+    this.tenantId = config.tenantId || 'default-tenant';
 
-    // Dynamically import CCXT to avoid bundling issues
+    // Initialize security modules
+    this.limitsChecker = createMaxOrderLimitsChecker(
+      config.orderLimits ? { ...DEFAULT_LIMITS, ...config.orderLimits } : DEFAULT_LIMITS
+    );
+    this.auditLogger = createAuditLogger(
+      this.tenantId,
+      this.exchangeId,
+      config.auditWebhookUrl
+    );
+
     const ccxt = require('ccxt');
 
-    // Initialize the exchange with provided config
     this.exchange = new ccxt[exchangeId]({
       apiKey: config.apiKey,
       secret: config.secret,
       password: config.password,
       uid: config.uid,
       sandbox: config.sandbox || false,
-      enableRateLimit: true, // Essential for API compliance
+      enableRateLimit: true,
     });
   }
 
-  /**
-   * Initialize the exchange client (currently just verifies connection)
-   */
   async initialize(): Promise<void> {
     try {
       await this.exchange.loadMarkets();
@@ -52,19 +89,11 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Close the exchange connection
-   */
   async close(): Promise<void> {
-    // CCXT doesn't require explicit closing in most cases
-    // But we can set exchange to null to clean up
-    this.exchange = null;
+    // CCXT doesn't require explicit closing
   }
 
-  /**
-   * Get ticker for a symbol
-   */
-  async fetchTicker(symbol: string): Promise<any> {
+  async fetchTicker(symbol: string): Promise<Ticker> {
     try {
       return await this.exchange.fetchTicker(symbol);
     } catch (error: unknown) {
@@ -76,10 +105,7 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Get order book for a symbol
-   */
-  async fetchOrderBook(symbol: string, limit?: number) {
+  async fetchOrderBook(symbol: string, limit?: number): Promise<OrderBook> {
     try {
       return await this.exchange.fetchOrderBook(symbol, limit);
     } catch (error: unknown) {
@@ -91,16 +117,12 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Get balance for all currencies
-   */
   async getBalance(): Promise<Record<string, IBalance>> {
     try {
-      const rawBalance = await this.exchange.fetchBalance();
-      // Transform the raw balance to match our IBalance interface
+      const rawBalance: Balances = await this.exchange.fetchBalance();
       const transformedBalance: Record<string, IBalance> = {};
 
-      for (const [currency, amount] of Object.entries(rawBalance.total || rawBalance)) {
+      for (const [currency, amount] of Object.entries(rawBalance.total)) {
         transformedBalance[currency] = {
           currency: currency as string,
           free: rawBalance.free?.[currency as string] || 0,
@@ -119,78 +141,172 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Place a market order
-   */
-  async marketOrder(side: 'buy' | 'sell', symbol: string, amount: number, params: any = {}): Promise<IOrder> {
+  async marketOrder(side: 'buy' | 'sell', symbol: string, amount: number, params: OrderParams = {}): Promise<IOrder> {
+    // Step 1: Validate inputs
+    let validatedSide: 'buy' | 'sell';
+    let validatedSymbol: string;
+    let validatedAmount: number;
+
     try {
-      const order = await this.exchange.createMarketOrder(
-        symbol,
-        side,
-        amount,
-        undefined, // price not needed for market orders
+      validatedSide = validateSide(side);
+      validatedSymbol = validateSymbol(symbol).normalizedSymbol;
+      validatedAmount = validateAmount(amount);
+    } catch (error) {
+      if (error instanceof TradingValidationError) {
+        this.auditLogger.logTradeFailure(symbol, side, amount, error.message);
+      }
+      throw error;
+    }
+
+    // Step 2: Check max order limits
+    const limitsCheck = this.limitsChecker.validateOrder(
+      this.tenantId,
+      validatedSymbol,
+      validatedSide,
+      validatedAmount
+    );
+
+    if (!limitsCheck.passed) {
+      this.auditLogger.logMaxOrderSizeExceeded(
+        validatedSymbol,
+        validatedSide,
+        validatedAmount,
+        limitsCheck.rejectedReason || 'Unknown limit exceeded'
+      );
+      throw new Error(`Order rejected: ${limitsCheck.rejectedReason}`);
+    }
+
+    // Step 3: Execute order
+    try {
+      const order: CCXTOrder = await this.exchange.createMarketOrder(
+        validatedSymbol,
+        validatedSide,
+        validatedAmount,
+        undefined,
         params
       );
 
-      // Normalize the order response to match our IOrder interface
-      return {
+      const result: IOrder = {
         id: order.id || `order_${Date.now()}`,
-        symbol: order.symbol || symbol,
-        side: side,
-        amount: order.amount || amount,
-        price: order.price || order.average || order.lastTradePrice || 0,
+        symbol: order.symbol || validatedSymbol,
+        side: validatedSide,
+        amount: order.amount || validatedAmount,
+        price: order.price || order.average || 0,
         status: (order.status as 'open' | 'closed' | 'canceled') || 'closed',
         timestamp: order.timestamp || Date.now(),
       };
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to place ${side} market order for ${symbol} on ${this.exchangeId}: ${error.message}`);
-      } else {
-        throw new Error(`Failed to place ${side} market order for ${symbol} on ${this.exchangeId}: Unknown error`);
-      }
+
+      // Step 4: Record volume and log audit
+      this.limitsChecker.recordExecution(
+        this.tenantId,
+        validatedSymbol,
+        validatedSide,
+        result.amount,
+        result.price
+      );
+
+      const metadata: TradeExecutionMetadata = {
+        strategyId: params.strategyId as string | undefined,
+        signalId: params.signalId as string | undefined,
+      };
+
+      this.auditLogger.logTradeExecution(result, metadata);
+
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      this.auditLogger.logTradeFailure(validatedSymbol, validatedSide, validatedAmount, errorMsg);
+      throw new Error(`Failed to place ${validatedSide} market order for ${validatedSymbol} on ${this.exchangeId}: ${errorMsg}`);
     }
   }
 
-  /**
-   * Place a limit order
-   */
-  async limitOrder(side: 'buy' | 'sell', symbol: string, amount: number, price: number, params: any = {}): Promise<IOrder> {
+  async limitOrder(side: 'buy' | 'sell', symbol: string, amount: number, price: number, params: OrderParams = {}): Promise<IOrder> {
+    // Step 1: Validate inputs
+    let validatedSide: 'buy' | 'sell';
+    let validatedSymbol: string;
+    let validatedAmount: number;
+    let validatedPrice: number;
+
     try {
-      const order = await this.exchange.createLimitOrder(
-        symbol,
-        side,
-        amount,
-        price,
+      validatedSide = validateSide(side);
+      validatedSymbol = validateSymbol(symbol).normalizedSymbol;
+      validatedAmount = validateAmount(amount);
+      validatedPrice = validatePrice(price);
+    } catch (error) {
+      if (error instanceof TradingValidationError) {
+        this.auditLogger.logTradeFailure(symbol, side, amount, error.message);
+      }
+      throw error;
+    }
+
+    // Step 2: Check max order limits (with price for value calculation)
+    const limitsCheck = this.limitsChecker.validateOrder(
+      this.tenantId,
+      validatedSymbol,
+      validatedSide,
+      validatedAmount,
+      validatedPrice
+    );
+
+    if (!limitsCheck.passed) {
+      this.auditLogger.logMaxOrderSizeExceeded(
+        validatedSymbol,
+        validatedSide,
+        validatedAmount,
+        limitsCheck.rejectedReason || 'Unknown limit exceeded'
+      );
+      throw new Error(`Order rejected: ${limitsCheck.rejectedReason}`);
+    }
+
+    // Step 3: Execute order
+    try {
+      const order: CCXTOrder = await this.exchange.createLimitOrder(
+        validatedSymbol,
+        validatedSide,
+        validatedAmount,
+        validatedPrice,
         params
       );
 
-      // Normalize the order response to match our IOrder interface
-      return {
+      const result: IOrder = {
         id: order.id || `order_${Date.now()}`,
-        symbol: order.symbol || symbol,
-        side: side,
-        amount: order.amount || amount,
-        price: order.price || price,
+        symbol: order.symbol || validatedSymbol,
+        side: validatedSide,
+        amount: order.amount || validatedAmount,
+        price: order.price || validatedPrice,
         status: (order.status as 'open' | 'closed' | 'canceled') || 'open',
         timestamp: order.timestamp || Date.now(),
       };
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to place ${side} limit order for ${symbol} at $${price} on ${this.exchangeId}: ${error.message}`);
-      } else {
-        throw new Error(`Failed to place ${side} limit order for ${symbol} at $${price} on ${this.exchangeId}: Unknown error`);
-      }
+
+      // Step 4: Record volume and log audit
+      this.limitsChecker.recordExecution(
+        this.tenantId,
+        validatedSymbol,
+        validatedSide,
+        result.amount,
+        result.price
+      );
+
+      const metadata: TradeExecutionMetadata = {
+        strategyId: params.strategyId as string | undefined,
+        signalId: params.signalId as string | undefined,
+      };
+
+      this.auditLogger.logTradeExecution(result, metadata);
+
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      this.auditLogger.logTradeFailure(validatedSymbol, validatedSide, validatedAmount, errorMsg);
+      throw new Error(`Failed to place ${validatedSide} limit order for ${validatedSymbol} at $${validatedPrice} on ${this.exchangeId}: ${errorMsg}`);
     }
   }
 
-  /**
-   * Cancel an order
-   */
-  async cancelOrder(orderId: string, symbol: string, params: any = {}): Promise<IOrder> {
+  async cancelOrder(orderId: string, symbol: string, params: OrderParams = {}): Promise<IOrder> {
     try {
-      const order = await this.exchange.cancelOrder(orderId, symbol, params);
+      const order: CCXTOrder = await this.exchange.cancelOrder(orderId, symbol, params);
 
-      return {
+      const result: IOrder = {
         id: order.id || orderId,
         symbol: order.symbol || symbol,
         side: order.side as 'buy' | 'sell',
@@ -199,21 +315,21 @@ export class ExchangeClient {
         status: 'canceled',
         timestamp: order.timestamp || Date.now(),
       };
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to cancel order ${orderId} on ${this.exchangeId}: ${error.message}`);
-      } else {
-        throw new Error(`Failed to cancel order ${orderId} on ${this.exchangeId}: Unknown error`);
-      }
+
+      // Log cancellation for audit trail
+      this.auditLogger.logTradeCancellation(orderId, symbol, params.reason as string || 'User requested');
+
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      this.auditLogger.logTradeFailure(symbol, 'buy', 0, `Cancel failed: ${errorMsg}`);
+      throw new Error(`Failed to cancel order ${orderId} on ${this.exchangeId}: ${errorMsg}`);
     }
   }
 
-  /**
-   * Fetch an order by ID
-   */
-  async fetchOrder(orderId: string, symbol: string, params: any = {}): Promise<IOrder> {
+  async fetchOrder(orderId: string, symbol: string, params: OrderParams = {}): Promise<IOrder> {
     try {
-      const order = await this.exchange.fetchOrder(orderId, symbol, params);
+      const order: CCXTOrder = await this.exchange.fetchOrder(orderId, symbol, params);
 
       return {
         id: order.id || orderId,
@@ -233,14 +349,11 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Get all open orders
-   */
-  async fetchOpenOrders(symbol?: string, params: any = {}): Promise<IOrder[]> {
+  async fetchOpenOrders(symbol?: string, params: OrderParams = {}): Promise<IOrder[]> {
     try {
-      const orders = await this.exchange.fetchOpenOrders(symbol, undefined, undefined, params);
+      const orders: CCXTOrder[] = await this.exchange.fetchOpenOrders(symbol, undefined, undefined, params);
 
-      return orders.map((order: any) => ({
+      return orders.map((order) => ({
         id: order.id || `order_${Date.now()}`,
         symbol: order.symbol || symbol || '',
         side: order.side as 'buy' | 'sell',
@@ -258,10 +371,7 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Get recent trades
-   */
-  async fetchMyTrades(symbol?: string, params: any = {}): Promise<any[]> {
+  async fetchMyTrades(symbol?: string, params: OrderParams = {}): Promise<CCXTTrade[]> {
     try {
       return await this.exchange.fetchMyTrades(symbol, undefined, undefined, params);
     } catch (error: unknown) {
@@ -273,22 +383,44 @@ export class ExchangeClient {
     }
   }
 
-  /**
-   * Check if the exchange is online
-   */
   async checkHealth(): Promise<boolean> {
     try {
       await this.exchange.fetchStatus();
-      return this.exchange.has?.fetchTicker === true && this.exchange.healthCheck !== false;
+      return this.exchange.has?.fetchTicker === true;
     } catch {
       return false;
     }
   }
 
-  /**
-   * Get exchange ID
-   */
   getExchangeId(): string {
     return this.exchangeId;
+  }
+
+  /**
+   * Get audit logger for external access
+   */
+  getAuditLogger(): AuditLogger {
+    return this.auditLogger;
+  }
+
+  /**
+   * Get daily volume usage stats
+   */
+  getDailyUsage(): { volume: number; limit: number; percent: number } {
+    return this.limitsChecker.getDailyUsage(this.tenantId);
+  }
+
+  /**
+   * Update order limits configuration
+   */
+  updateOrderLimits(limits: Partial<OrderLimitsConfig>): void {
+    this.limitsChecker.updateConfig(limits);
+  }
+
+  /**
+   * Get recent audit events
+   */
+  getRecentAuditEvents(limit: number = 100): ReturnType<typeof this.auditLogger.getRecentEvents> {
+    return this.auditLogger.getRecentEvents(limit);
   }
 }

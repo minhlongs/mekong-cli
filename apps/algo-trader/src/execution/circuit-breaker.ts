@@ -6,9 +6,9 @@ export enum CircuitBreakerState {
 }
 
 export interface CircuitBreakerConfig {
-  failureThreshold: number; // Number of failures before opening circuit
-  timeoutMs: number; // Time to wait before trying again (ms)
-  successThreshold: number; // Successes needed to close circuit after half-open
+  failureThreshold: number;
+  timeoutMs: number;
+  successThreshold: number;
 }
 
 export interface CircuitBreakerMetrics {
@@ -37,24 +37,19 @@ export class CircuitBreaker {
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     this.totalRequests++;
 
-    // Check if we should attempt to reset the circuit
     if (this.state === CircuitBreakerState.OPEN && this.isTimeoutExceeded()) {
       this.halfOpen();
     }
 
-    // If circuit is open, fail fast
     if (this.state === CircuitBreakerState.OPEN) {
       throw new Error(`Circuit breaker is OPEN. Last failure: ${this.lastFailureTime}`);
     }
 
     try {
       const result = await operation();
-
-      // Operation succeeded
       this.onSuccess();
       return result;
     } catch (error) {
-      // Operation failed
       this.onFailure(error);
       throw error;
     }
@@ -67,32 +62,32 @@ export class CircuitBreaker {
       this.successCount++;
 
       if (this.successCount >= this.config.successThreshold) {
-        this.close(); // Close circuit after sufficient successes in half-open state
+        this.close();
       }
     } else if (this.state === CircuitBreakerState.CLOSED) {
-      this.successCount = 0; // Reset success count in closed state
+      this.successCount = 0;
     }
   }
 
-  private onFailure(error: any): void {
+  private onFailure(_error: unknown): void {
     this.totalFailures++;
     this.failureCount++;
     this.lastFailureTime = Date.now();
 
     if (this.failureCount >= this.config.failureThreshold) {
-      this.open(); // Open circuit after too many failures
+      this.open();
     }
   }
 
   private open(): void {
     this.state = CircuitBreakerState.OPEN;
     this.openedAt = Date.now();
-    this.successCount = 0; // Reset success count when opening
+    this.successCount = 0;
   }
 
   private halfOpen(): void {
     this.state = CircuitBreakerState.HALF_OPEN;
-    this.failureCount = 0; // Reset failure count when going half-open
+    this.failureCount = 0;
   }
 
   private close(): void {

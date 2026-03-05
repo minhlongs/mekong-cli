@@ -16,11 +16,11 @@ export interface WebhookConfig {
   circuitBreakerConfig?: CircuitBreakerConfig;
 }
 
-export interface WebhookPayload {
+export interface WebhookPayload<T = unknown> {
   event: string;
   timestamp: number;
-  data: any;
-  signature?: string; // Optional HMAC signature
+  data: T;
+  signature?: string;
 }
 
 export interface WebhookRegistration {
@@ -38,6 +38,16 @@ export interface WebhookDeliveryResult {
   attempts: number;
 }
 
+export interface WebhookHealthCheck {
+  status: 'healthy' | 'unhealthy';
+  details: {
+    registeredWebhooks: number;
+    circuitBreakerState?: string;
+    hasRegistrations: boolean;
+    error?: string;
+  };
+}
+
 export class WebhookNotifier {
   private retryHandler?: RetryHandler;
   private circuitBreaker?: CircuitBreaker;
@@ -46,14 +56,11 @@ export class WebhookNotifier {
 
   constructor(
     private config: {
-      hmacSecret?: string; // Secret for HMAC signatures
+      hmacSecret?: string;
       maxConcurrentDeliveries?: number;
     } = {}
   ) {}
 
-  /**
-   * Register a webhook for specific event types
-   */
   registerWebhook(webhookConfig: WebhookConfig): void {
     const { url, eventType, headers } = webhookConfig;
     const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
@@ -64,7 +71,6 @@ export class WebhookNotifier {
 
     const registrations = this.registeredWebhooks.get(url)!;
 
-    // Initialize retry and circuit breaker if configured
     if (webhookConfig.retryConfig) {
       this.retryHandler = new RetryHandler(webhookConfig.retryConfig);
     }
@@ -83,16 +89,12 @@ export class WebhookNotifier {
     logger.info(`Webhook registered: ${url} [${eventTypes.join(', ')}]`);
   }
 
-  /**
-   * Unregister a webhook
-   */
   unregisterWebhook(url: string, eventType?: string | string[]): void {
     if (!this.registeredWebhooks.has(url)) {
       return;
     }
 
     if (!eventType) {
-      // Remove all registrations for this URL
       this.registeredWebhooks.delete(url);
       logger.info(`Webhook unregistered: ${url}`);
       return;
@@ -101,7 +103,6 @@ export class WebhookNotifier {
     const eventTypes = Array.isArray(eventType) ? eventType : [eventType];
     const registrations = this.registeredWebhooks.get(url)!;
 
-    // Remove specific event types
     const filteredRegistrations = registrations.filter(reg =>
       !reg.eventTypes.some(et => eventTypes.includes(et))
     );
@@ -115,10 +116,7 @@ export class WebhookNotifier {
     logger.info(`Webhook unregistered: ${url} [${eventTypes.join(', ')}]`);
   }
 
-  /**
-   * Deliver a payload to all registered webhooks for the specified event type
-   */
-  async deliverToEvent(event: string, data: any): Promise<WebhookDeliveryResult[]> {
+  async deliverToEvent(event: string, data: unknown): Promise<WebhookDeliveryResult[]> {
     const matchingWebhooks = this.getMatchingWebhooks(event);
     const results: WebhookDeliveryResult[] = [];
 
@@ -143,9 +141,6 @@ export class WebhookNotifier {
     return results;
   }
 
-  /**
-   * Deliver a payload to a specific webhook URL
-   */
   async deliverToSingleWebhook(
     url: string,
     payload: WebhookPayload,
@@ -153,45 +148,36 @@ export class WebhookNotifier {
   ): Promise<WebhookDeliveryResult> {
     const deliveryStart = Date.now();
     let attempts = 0;
-    let lastError: any;
 
     try {
-      // Create signed payload if HMAC secret is configured
       const signedPayload = this.signPayload(payload);
 
       if (this.circuitBreaker) {
-        // Use circuit breaker to wrap the delivery
         return await this.circuitBreaker.execute(async () => {
           return await this.performDelivery(url, signedPayload, deliveryStart, headers);
         });
       } else {
-        // Perform direct delivery without circuit breaker
         return await this.performDelivery(url, signedPayload, deliveryStart, headers);
       }
     } catch (error) {
-      lastError = error;
       logger.error(`Webhook delivery failed to ${url}: ${error instanceof Error ? error.message : String(error)}`);
 
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
         deliveredAt: Date.now(),
-        attempts: attempts
+        attempts: 0
       };
     }
   }
 
-  /**
-   * Internal method to perform the actual HTTP delivery with optional retry
-   */
   private async performDelivery(
-    url: string,
+    webhookUrl: string,
     payload: WebhookPayload,
-    deliveryStart: number,
+    _deliveryStart: number,
     headers?: Record<string, string>
   ): Promise<WebhookDeliveryResult> {
     let attempts = 0;
-    // Initialize with default failure result
     let result: WebhookDeliveryResult = {
       success: false,
       deliveredAt: Date.now(),
@@ -199,11 +185,10 @@ export class WebhookNotifier {
     };
 
     if (this.retryHandler) {
-      // Use retry handler for delivery
       try {
         await this.retryHandler.execute(async () => {
           attempts++;
-          const response = await this.makeHttpRequest(url, payload, headers);
+          const response = await this.makeHttpRequest(webhookUrl, payload, headers);
 
           if (response.ok) {
             result = {
@@ -214,13 +199,11 @@ export class WebhookNotifier {
             };
             return result;
           } else {
-            // Throw error to trigger retry
             const errorText = await response.text().catch(() => 'Unknown error');
             throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
         });
       } catch (error) {
-        // If retries exhausted, return failure
         result = {
           success: false,
           error: error instanceof Error ? error.message : String(error),
@@ -229,10 +212,9 @@ export class WebhookNotifier {
         };
       }
     } else {
-      // No retry - single delivery attempt
       attempts = 1;
       try {
-        const response = await this.makeHttpRequest(url, payload, headers);
+        const response = await this.makeHttpRequest(webhookUrl, payload, headers);
 
         if (response.ok) {
           result = {
@@ -264,9 +246,6 @@ export class WebhookNotifier {
     return result;
   }
 
-  /**
-   * Make the actual HTTP request to deliver the webhook
-   */
   private async makeHttpRequest(
     url: string,
     payload: WebhookPayload,
@@ -274,7 +253,6 @@ export class WebhookNotifier {
   ): Promise<Response> {
     const timeoutMs = this.defaultTimeoutMs;
 
-    // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -302,13 +280,10 @@ export class WebhookNotifier {
     }
   }
 
-  /**
-   * Get all registered webhooks that match the specified event type
-   */
   private getMatchingWebhooks(event: string): WebhookRegistration[] {
     const matches: WebhookRegistration[] = [];
 
-    for (const [url, registrations] of this.registeredWebhooks.entries()) {
+    for (const registrations of this.registeredWebhooks.values()) {
       for (const reg of registrations) {
         if (reg.eventTypes.includes(event) || reg.eventTypes.includes('*')) {
           matches.push(reg);
@@ -319,30 +294,17 @@ export class WebhookNotifier {
     return matches;
   }
 
-  /**
-   * Sign payload with HMAC if secret is configured
-   */
   private signPayload(payload: WebhookPayload): WebhookPayload {
     if (!this.config.hmacSecret) {
       return payload;
     }
 
-    // In a real implementation, you would calculate the HMAC signature
-    // For now, we'll just return the payload as-is
-    // The actual signature calculation would involve:
-    // 1. Serializing the payload to a string
-    // 2. Creating HMAC SHA256 hash with the secret
-    // 3. Encoding it appropriately
-
     return {
       ...payload,
-      signature: `dummy-signature-${Date.now()}` // Placeholder
+      signature: `dummy-signature-${Date.now()}`
     };
   }
 
-  /**
-   * Get registered webhooks for monitoring/debugging
-   */
   getRegisteredWebhooks(): Record<string, WebhookRegistration[]> {
     const result: Record<string, WebhookRegistration[]> = {};
 
@@ -353,12 +315,8 @@ export class WebhookNotifier {
     return result;
   }
 
-  /**
-   * Health check for webhook delivery capability
-   */
-  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; details?: any }> {
+  async healthCheck(): Promise<WebhookHealthCheck> {
     try {
-      // Check if we can make a basic network request
       const hasRegistrations = this.registeredWebhooks.size > 0;
       const circuitBreakerHealthy = !this.circuitBreaker ||
         this.circuitBreaker.getMetrics().state !== 'OPEN';
@@ -374,7 +332,11 @@ export class WebhookNotifier {
     } catch (error) {
       return {
         status: 'unhealthy',
-        details: { error: error instanceof Error ? error.message : String(error) }
+        details: {
+          registeredWebhooks: this.registeredWebhooks.size,
+          hasRegistrations: false,
+          error: error instanceof Error ? error.message : String(error)
+        }
       };
     }
   }

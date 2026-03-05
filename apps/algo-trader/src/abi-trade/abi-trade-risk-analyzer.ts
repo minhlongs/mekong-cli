@@ -3,16 +3,17 @@
  * Evaluates multiple risk factors to ensure safe and profitable trading
  */
 
+import type { RiskFactor as RiskFactorType } from '../types/trading.types';
 import { RiskFactor } from './abi-trade-types';
 
 export interface RiskConfig {
-  volatilityThreshold: number;     // Threshold for volatility risk (0.02 = 2%)
-  liquidityThreshold: number;      // Threshold for liquidity risk (in USD volume)
-  volumeThreshold: number;         // Minimum trading volume
-  maxPositionSize: number;         // Maximum position size in USD
-  volatilityWindow: number;        // Window size for volatility calculation
-  correlationRiskThreshold: number; // Threshold for correlation risk
-  latencyRiskThreshold: number;    // Threshold for latency risk (in ms)
+  volatilityThreshold: number;
+  liquidityThreshold: number;
+  volumeThreshold: number;
+  maxPositionSize: number;
+  volatilityWindow: number;
+  correlationRiskThreshold: number;
+  latencyRiskThreshold: number;
 }
 
 export interface ExchangeRiskProfile {
@@ -24,6 +25,22 @@ export interface ExchangeRiskProfile {
   overallRiskScore: number;
 }
 
+interface ExchangePriceData {
+  exchange: string;
+  prices: number[];
+  orderBook?: {
+    bids: [number, number][];
+    asks: [number, number][];
+  };
+  ticker: {
+    quoteVolume?: number;
+    baseVolume?: number;
+    volume?: number;
+    last: number;
+  };
+  latency?: number;
+}
+
 export class AbiTradeRiskAnalyzer {
   private config: RiskConfig;
 
@@ -33,54 +50,38 @@ export class AbiTradeRiskAnalyzer {
 
   private mergeDefaultConfig(config?: Partial<RiskConfig>): RiskConfig {
     const defaults: RiskConfig = {
-      volatilityThreshold: 0.02, // 2% daily volatility threshold
-      liquidityThreshold: 100000, // $100K minimum liquidity
-      volumeThreshold: 10000, // $10K minimum volume
-      maxPositionSize: 5000, // $5K max position
-      volatilityWindow: 20, // 20 periods for volatility calc
-      correlationRiskThreshold: 0.9, // 90% correlation = high risk
-      latencyRiskThreshold: 1000, // 1 second max latency for arbitrage
+      volatilityThreshold: 0.02,
+      liquidityThreshold: 100000,
+      volumeThreshold: 10000,
+      maxPositionSize: 5000,
+      volatilityWindow: 20,
+      correlationRiskThreshold: 0.9,
+      latencyRiskThreshold: 1000,
     };
 
     return { ...defaults, ...config };
   }
 
-  /**
-   * Analyze risk factors for a given symbol across exchanges
-   */
-  analyzeRiskFactors(symbol: string, priceData: any[]): RiskFactor[] {
+  analyzeRiskFactors(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
-    // Analyze volatility risk
     riskFactors.push(...this.analyzeVolatilityRisk(symbol, priceData));
-
-    // Analyze liquidity risk
     riskFactors.push(...this.analyzeLiquidityRisk(symbol, priceData));
-
-    // Analyze volume risk
     riskFactors.push(...this.analyzeVolumeRisk(symbol, priceData));
-
-    // Analyze latency risk
     riskFactors.push(...this.analyzeLatencyRisk(symbol, priceData));
-
-    // Analyze correlation risk
     riskFactors.push(...this.analyzeCorrelationRisk(symbol, priceData));
 
     return riskFactors;
   }
 
-  /**
-   * Analyze volatility risk for each exchange
-   */
-  private analyzeVolatilityRisk(symbol: string, priceData: any[]): RiskFactor[] {
+  private analyzeVolatilityRisk(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
     for (const data of priceData) {
       const exchange = data.exchange;
-      const prices = data.prices || []; // Assuming price history is available
+      const prices = data.prices || [];
 
       if (prices.length >= this.config.volatilityWindow) {
-        // Calculate rolling volatility (standard deviation of returns)
         const returns = this.calculateReturns(prices.slice(-this.config.volatilityWindow));
         const volatility = this.calculateStdDev(returns);
 
@@ -99,10 +100,7 @@ export class AbiTradeRiskAnalyzer {
     return riskFactors;
   }
 
-  /**
-   * Analyze liquidity risk
-   */
-  private analyzeLiquidityRisk(symbol: string, priceData: any[]): RiskFactor[] {
+  private analyzeLiquidityRisk(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
     for (const data of priceData) {
@@ -110,9 +108,8 @@ export class AbiTradeRiskAnalyzer {
       const orderBook = data.orderBook;
 
       if (orderBook && orderBook.bids && orderBook.asks) {
-        // Calculate available liquidity in the order book
-        const bidVolume = orderBook.bids.slice(0, 5).reduce((sum: number, [price, amount]: [number, number]) => sum + (price * amount), 0);
-        const askVolume = orderBook.asks.slice(0, 5).reduce((sum: number, [price, amount]: [number, number]) => sum + (price * amount), 0);
+        const bidVolume = orderBook.bids.slice(0, 5).reduce((sum, [price, amount]) => sum + (price * amount), 0);
+        const askVolume = orderBook.asks.slice(0, 5).reduce((sum, [price, amount]) => sum + (price * amount), 0);
         const availableLiquidity = Math.min(bidVolume, askVolume);
 
         const severity = availableLiquidity < this.config.liquidityThreshold ? 'high' : 'low';
@@ -130,17 +127,13 @@ export class AbiTradeRiskAnalyzer {
     return riskFactors;
   }
 
-  /**
-   * Analyze volume risk
-   */
-  private analyzeVolumeRisk(symbol: string, priceData: any[]): RiskFactor[] {
+  private analyzeVolumeRisk(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
     for (const data of priceData) {
       const exchange = data.exchange;
       const ticker = data.ticker;
 
-      // Use quoteVolume if available (trading volume in USD/quote currency)
       const volume = ticker.quoteVolume || ticker.baseVolume || ticker.volume || 0;
 
       const severity = volume < this.config.volumeThreshold ? 'high' : 'low';
@@ -157,13 +150,9 @@ export class AbiTradeRiskAnalyzer {
     return riskFactors;
   }
 
-  /**
-   * Analyze latency risk between exchanges
-   */
-  private analyzeLatencyRisk(symbol: string, priceData: any[]): RiskFactor[] {
+  private analyzeLatencyRisk(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
-    // Get latency data for exchanges
     for (const data of priceData) {
       const exchange = data.exchange;
       const latency = data.latency || 0;
@@ -182,13 +171,9 @@ export class AbiTradeRiskAnalyzer {
     return riskFactors;
   }
 
-  /**
-   * Analyze correlation risk between exchanges
-   */
-  private analyzeCorrelationRisk(symbol: string, priceData: any[]): RiskFactor[] {
+  private analyzeCorrelationRisk(symbol: string, priceData: ExchangePriceData[]): RiskFactor[] {
     const riskFactors: RiskFactor[] = [];
 
-    // For correlation risk, we need to compare prices between exchanges
     const exchangePrices: { [exchange: string]: number } = {};
     for (const data of priceData) {
       exchangePrices[data.exchange] = data.ticker.last;
@@ -196,7 +181,6 @@ export class AbiTradeRiskAnalyzer {
 
     const exchanges = Object.keys(exchangePrices);
 
-    // Compare all pairs of exchanges
     for (let i = 0; i < exchanges.length; i++) {
       for (let j = i + 1; j < exchanges.length; j++) {
         const ex1 = exchanges[i];
@@ -204,11 +188,9 @@ export class AbiTradeRiskAnalyzer {
         const price1 = exchangePrices[ex1];
         const price2 = exchangePrices[ex2];
 
-        // Calculate price difference as percentage
         const priceDiffPercent = Math.abs((price1 - price2) / ((price1 + price2) / 2)) * 100;
 
-        // If prices are too similar (high correlation), it might indicate lack of arbitrage opportunity
-        const severity = priceDiffPercent < 0.1 ? 'high' : 'low'; // Less than 0.1% difference
+        const severity = priceDiffPercent < 0.1 ? 'high' : 'low';
 
         riskFactors.push({
           type: 'correlation',
@@ -223,9 +205,6 @@ export class AbiTradeRiskAnalyzer {
     return riskFactors;
   }
 
-  /**
-   * Calculate returns from a series of prices
-   */
   private calculateReturns(prices: number[]): number[] {
     const returns: number[] = [];
 
@@ -237,9 +216,6 @@ export class AbiTradeRiskAnalyzer {
     return returns;
   }
 
-  /**
-   * Calculate standard deviation
-   */
   private calculateStdDev(values: number[]): number {
     if (values.length === 0) return 0;
 
@@ -250,9 +226,6 @@ export class AbiTradeRiskAnalyzer {
     return Math.sqrt(variance);
   }
 
-  /**
-   * Determine severity based on value and threshold
-   */
   private getSeverityFromValue(value: number, threshold: number): 'low' | 'medium' | 'high' | 'critical' {
     if (value <= threshold * 0.5) {
       return 'low';
@@ -265,9 +238,6 @@ export class AbiTradeRiskAnalyzer {
     }
   }
 
-  /**
-   * Calculate overall risk profile for an exchange
-   */
   getExchangeRiskProfile(exchangeId: string, riskFactors: RiskFactor[]): ExchangeRiskProfile {
     const exchangeFactors = riskFactors.filter(factor => factor.description.includes(exchangeId));
 
@@ -296,7 +266,6 @@ export class AbiTradeRiskAnalyzer {
       }
     }
 
-    // Calculate average risk score (0-100, lower is better)
     const avgRiskScore = factorCount > 0
       ? (volatilityScore + liquidityScore + volumeScore + latencyScore) / factorCount
       : 0;
@@ -311,9 +280,6 @@ export class AbiTradeRiskAnalyzer {
     };
   }
 
-  /**
-   * Convert severity to numeric score (0-100, where lower is better)
-   */
   private severityToScore(severity: 'low' | 'medium' | 'high' | 'critical'): number {
     switch (severity) {
       case 'low': return 20;
@@ -323,12 +289,9 @@ export class AbiTradeRiskAnalyzer {
     }
   }
 
-  /**
-   * Get risk summary for all exchanges
-   */
   getRiskSummary(riskFactors: RiskFactor[]): { [exchangeId: string]: ExchangeRiskProfile } {
     const exchangeIds = [...new Set(riskFactors.map(f =>
-      f.description.split(' ')[0] // Get exchange ID from description
+      f.description.split(' ')[0]
     ))];
 
     const summary: { [exchangeId: string]: ExchangeRiskProfile } = {};
@@ -340,16 +303,11 @@ export class AbiTradeRiskAnalyzer {
     return summary;
   }
 
-  /**
-   * Assess if a position size is safe given the risk factors
-   */
   isPositionSafe(positionSize: number, riskFactors: RiskFactor[]): boolean {
-    // Check if position size is within limits
     if (positionSize > this.config.maxPositionSize) {
       return false;
     }
 
-    // Check if there are critical risk factors
     const criticalRisks = riskFactors.filter(factor => factor.severity === 'critical');
     return criticalRisks.length === 0;
   }

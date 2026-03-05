@@ -1,13 +1,11 @@
 /**
  * AbiTrade Deep Scanner — Advanced arbitrage opportunity detection
- * Implements comprehensive market analysis with deep scanning capabilities
  */
 
 import { EventEmitter } from 'events';
 import { ExchangeClientBase } from '@agencyos/trading-core/exchanges';
 import { IArbitrageOpportunity } from '../interfaces/IArbitrageOpportunity';
 import { ArbitrageProfitCalculator } from '../arbitrage/arbitrage-profit-calculator';
-import { ArbitrageConfig } from '../arbitrage/arbitrage-config';
 import { logger } from '../utils/logger';
 import { AbiTradeOpportunityFilter } from './abi-trade-opportunity-filter';
 import { AbiTradeRiskAnalyzer } from './abi-trade-risk-analyzer';
@@ -19,6 +17,41 @@ import {
   LatencyMetrics,
   RiskFactor,
 } from './abi-trade-types';
+
+interface PriceDataItem {
+  exchange: string;
+  ticker: unknown;
+  orderBook: unknown | null;
+  trades: unknown | null;
+  makerFee: number;
+  takerFee: number;
+}
+
+interface DeepScanAggregate {
+  totalOpportunities: number;
+  avgConfidence: number;
+  highestConfidence: number;
+  avgCorrelation: number;
+  riskSummary: {
+    low: number;
+    medium: number;
+    high: number;
+    critical: number;
+  };
+  timestamp: number;
+}
+
+interface PriceHistory {
+  exchange: string;
+  symbol: string;
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export class AbiTradeDeepScanner extends EventEmitter {
   private config: AbiTradeScanConfig;
   private calculator: ArbitrageProfitCalculator;
@@ -65,11 +98,8 @@ export class AbiTradeDeepScanner extends EventEmitter {
     return { ...defaults, ...config };
   }
 
-  /**
-   * Initialize exchange clients and prepare deep scan environment
-   */
   async initialize(): Promise<void> {
-    logger.info(`[AbiTradeDeepScanner] Initializing with ${this.config.exchanges.length} exchanges for deep scan`);
+    logger.info(`[AbiTradeDeepScanner] Initializing with ${this.config.exchanges.length} exchanges`);
 
     for (const exchangeId of this.config.exchanges) {
       try {
@@ -86,17 +116,11 @@ export class AbiTradeDeepScanner extends EventEmitter {
       throw new Error('No exchanges connected');
     }
 
-    // Initialize historical data for analysis
     await this.initializeHistoricalData();
   }
 
-  /**
-   * Initialize historical price data for analysis
-   */
   private async initializeHistoricalData(): Promise<void> {
-    if (!this.config.enableHistoricalAnalysis) {
-      return;
-    }
+    if (!this.config.enableHistoricalAnalysis) return;
 
     logger.info('[AbiTradeDeepScanner] Initializing historical data...');
 
@@ -105,23 +129,16 @@ export class AbiTradeDeepScanner extends EventEmitter {
 
       for (const [exchangeId, client] of this.exchangeClients.entries()) {
         try {
-          // Fetch recent OHLCV data for volatility analysis
-          // Note: Since ExchangeClientBase might not have fetchOHLCV, we'll skip this for now
-          // to make the code compatible with existing structure
-
-          // For now, just fetch the current ticker for basic data
           const ticker = await client.fetchTicker(symbol);
-
-          // Create a simplified history entry with current price data
           symbolHistory.push({
             exchange: exchangeId,
             symbol,
             timestamp: Date.now(),
-            open: typeof ticker === 'object' && ticker && 'open' in ticker ? (ticker as any).open : (typeof ticker === 'number' ? ticker : 0),
-            high: typeof ticker === 'object' && ticker && 'high' in ticker ? (ticker as any).high : (typeof ticker === 'number' ? ticker : 0),
-            low: typeof ticker === 'object' && ticker && 'low' in ticker ? (ticker as any).low : (typeof ticker === 'number' ? ticker : 0),
-            close: typeof ticker === 'object' && ticker && 'close' in ticker ? (ticker as any).close : (typeof ticker === 'number' ? ticker : 0),
-            volume: typeof ticker === 'object' && ticker && 'quoteVolume' in ticker ? (ticker as any).quoteVolume : 0,
+            open: this.getTickerNumber(ticker, 'open'),
+            high: this.getTickerNumber(ticker, 'high'),
+            low: this.getTickerNumber(ticker, 'low'),
+            close: this.getTickerNumber(ticker, 'close'),
+            volume: this.getTickerNumber(ticker, 'quoteVolume'),
           });
         } catch (error) {
           logger.warn(`[AbiTradeDeepScanner] Could not fetch data for ${exchangeId} ${symbol}: ${error}`);
@@ -132,9 +149,14 @@ export class AbiTradeDeepScanner extends EventEmitter {
     }
   }
 
-  /**
-   * Start scanning loop with both regular and deep scan capabilities
-   */
+  private getTickerNumber(ticker: unknown, prop: string): number {
+    if (typeof ticker === 'object' && ticker !== null && prop in ticker) {
+      const val = (ticker as Record<string, unknown>)[prop];
+      return typeof val === 'number' ? val : typeof val === 'string' ? parseFloat(val) : 0;
+    }
+    return typeof ticker === 'number' ? ticker : 0;
+  }
+
   start(): void {
     if (this.running) {
       logger.warn('[AbiTradeDeepScanner] Already running');
@@ -144,27 +166,21 @@ export class AbiTradeDeepScanner extends EventEmitter {
     this.running = true;
     logger.info(`[AbiTradeDeepScanner] Starting scan loop (interval: ${this.config.pollIntervalMs}ms)`);
 
-    // Initial scan
     this.scanLoop();
     if (this.config.deepScanEnabled) {
       this.deepScanLoop();
     }
 
-    // Schedule regular scans
     this.scanInterval = setInterval(() => this.scanLoop(), this.config.pollIntervalMs);
 
-    // Schedule deep scans if enabled
     if (this.config.deepScanEnabled) {
       this.deepScanInterval = setInterval(
         () => this.deepScanLoop(),
-        this.config.pollIntervalMs * 10 // Deep scan every 10 regular intervals
+        this.config.pollIntervalMs * 10
       );
     }
   }
 
-  /**
-   * Stop scanning loops
-   */
   stop(): void {
     this.running = false;
     if (this.scanInterval) {
@@ -178,13 +194,8 @@ export class AbiTradeDeepScanner extends EventEmitter {
     logger.info('[AbiTradeDeepScanner] Stopped');
   }
 
-  /**
-   * Perform graceful shutdown
-   */
   async shutdown(): Promise<void> {
     this.stop();
-
-    // Close all exchange connections
     for (const client of this.exchangeClients.values()) {
       await (client as any).close?.();
     }
@@ -192,29 +203,20 @@ export class AbiTradeDeepScanner extends EventEmitter {
     logger.info('[AbiTradeDeepScanner] Shutdown complete');
   }
 
-  /**
-   * Main scan loop for basic arbitrage detection
-   */
   private async scanLoop(): Promise<void> {
     if (!this.running) return;
 
     try {
       const startTime = Date.now();
-
       for (const symbol of this.config.symbols) {
         await this.scanSymbol(symbol);
       }
-
-      const duration = Date.now() - startTime;
-      logger.debug(`[AbiTradeDeepScanner] Regular scan completed in ${duration}ms`);
+      logger.debug(`[AbiTradeDeepScanner] Regular scan completed in ${Date.now() - startTime}ms`);
     } catch (error) {
       logger.error(`[AbiTradeDeepScanner] Regular scan error: ${error}`);
     }
   }
 
-  /**
-   * Deep scan loop with comprehensive analysis
-   */
   private async deepScanLoop(): Promise<void> {
     if (!this.running || !this.config.deepScanEnabled) return;
 
@@ -223,19 +225,14 @@ export class AbiTradeDeepScanner extends EventEmitter {
       logger.info('[AbiTradeDeepScanner] Starting deep scan...');
 
       const results: DeepScanResult[] = [];
-
       for (const symbol of this.config.symbols) {
         const result = await this.performDeepScan(symbol);
         results.push(result);
-
-        // Emit deep scan results
         this.emit('deepScanResult', result);
       }
 
-      const duration = Date.now() - startTime;
-      logger.info(`[AbiTradeDeepScanner] Deep scan completed in ${duration}ms`);
+      logger.info(`[AbiTradeDeepScanner] Deep scan completed in ${Date.now() - startTime}ms`);
 
-      // Aggregate and emit summary
       const aggregateResult = this.aggregateResults(results);
       this.emit('deepScanAggregate', aggregateResult);
 
@@ -244,37 +241,33 @@ export class AbiTradeDeepScanner extends EventEmitter {
     }
   }
 
-  /**
-   * Perform deep scan for a single symbol
-   */
   private async performDeepScan(symbol: string): Promise<DeepScanResult> {
     const clients = Array.from(this.exchangeClients.entries());
 
-    // Fetch detailed data from all exchanges in parallel
     const pricePromises = clients.map(async ([exchangeId, client]) => {
       try {
         const ticker = await client.fetchTicker(symbol);
-
-        // Since ExchangeClientBase might not have fetchOrderBook and fetchTrades,
-        // we'll work with the available data
         return {
           exchange: exchangeId,
           ticker,
-          orderBook: null, // Placeholder since it might not be available
-          trades: null,    // Placeholder since it might not be available
-          makerFee: 0.001, // Will be retrieved similar to base scanner
+          orderBook: null,
+          trades: null,
+          makerFee: 0.001,
           takerFee: 0.001,
         };
       } catch (error) {
-        logger.debug(`[AbiTradeDeepScanner] ${exchangeId} ${symbol} detailed fetch failed: ${error}`);
+        logger.debug(`[AbiTradeDeepScanner] ${exchangeId} ${symbol} fetch failed: ${error}`);
         return null;
       }
     });
 
     const results = await Promise.allSettled(pricePromises);
-    const priceData = results
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-      .map((r) => r.value);
+    const priceData: PriceDataItem[] = [];
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        priceData.push(result.value);
+      }
+    }
 
     if (priceData.length < 2) {
       return {
@@ -287,21 +280,13 @@ export class AbiTradeDeepScanner extends EventEmitter {
       };
     }
 
-    // Calculate correlations between exchanges
     const correlations = this.calculateCorrelations(symbol, priceData);
-
-    // Analyze risk factors
-    const riskFactors = this.riskAnalyzer.analyzeRiskFactors(symbol, priceData);
-
-    // Calculate latency metrics
+    const riskFactors = this.riskAnalyzer.analyzeRiskFactors(symbol, priceData as any);
     const latencyMetrics = this.getLatencyMetrics(symbol);
 
-    // Extract basic prices for opportunity calculation
     const basicPrices = priceData.map(pd => ({
       exchange: pd.exchange,
-      price: typeof pd.ticker === 'object' && 'last' in pd.ticker ? pd.ticker.last :
-             typeof pd.ticker === 'object' && 'close' in pd.ticker ? pd.ticker.close :
-             typeof pd.ticker === 'object' && 'price' in pd.ticker ? pd.ticker.price : pd.ticker,
+      price: this.getTickerNumber(pd.ticker, 'last'),
       makerFee: pd.makerFee,
       takerFee: pd.takerFee,
     }));
@@ -312,7 +297,6 @@ export class AbiTradeDeepScanner extends EventEmitter {
       this.config.minNetProfitPercent
     );
 
-    // Apply advanced filtering
     const filteredOpportunities = this.filter.filterOpportunities(opportunities, {
       correlations,
       latencyMetrics,
@@ -330,13 +314,9 @@ export class AbiTradeDeepScanner extends EventEmitter {
     };
   }
 
-  /**
-   * Calculate correlations between exchange prices for a symbol
-   */
-  private calculateCorrelations(symbol: string, priceData: any[]): MarketCorrelation[] {
+  private calculateCorrelations(symbol: string, priceData: PriceDataItem[]): MarketCorrelation[] {
     if (priceData.length < 2) return [];
 
-    // For simplicity, comparing all pairs
     const correlations: MarketCorrelation[] = [];
 
     for (let i = 0; i < priceData.length; i++) {
@@ -344,20 +324,24 @@ export class AbiTradeDeepScanner extends EventEmitter {
         const first = priceData[i];
         const second = priceData[j];
 
-        // Calculate price delta (simple difference for now)
-        const priceDelta = Math.abs(first.ticker.last - second.ticker.last);
-        const avgPrice = (first.ticker.last + second.ticker.last) / 2;
-        const normalizedDelta = (priceDelta / avgPrice) * 100; // percentage
+        const firstLast = this.getTickerNumber(first.ticker, 'last');
+        const secondLast = this.getTickerNumber(second.ticker, 'last');
 
-        // Correlation coefficient approximation (simplified)
-        const correlationCoeff = 1 - Math.min(normalizedDelta / 5, 1); // 5% spread = 0 correlation
+        const priceDelta = Math.abs(firstLast - secondLast);
+        const avgPrice = (firstLast + secondLast) / 2;
+        const normalizedDelta = avgPrice > 0 ? (priceDelta / avgPrice) * 100 : 0;
+
+        const correlationCoeff = 1 - Math.min(normalizedDelta / 5, 1);
 
         correlations.push({
           symbol,
           exchanges: [first.exchange, second.exchange],
           correlationCoefficient: correlationCoeff,
           priceDelta: normalizedDelta,
-          volumeDelta: Math.abs(first.ticker.quoteVolume - second.ticker.quoteVolume),
+          volumeDelta: Math.abs(
+            this.getTickerNumber(first.ticker, 'quoteVolume') -
+            this.getTickerNumber(second.ticker, 'quoteVolume')
+          ),
           timestamp: Date.now(),
         });
       }
@@ -366,9 +350,6 @@ export class AbiTradeDeepScanner extends EventEmitter {
     return correlations;
   }
 
-  /**
-   * Get recorded latency metrics
-   */
   private getLatencyMetrics(symbol: string): LatencyMetrics[] {
     const metrics: LatencyMetrics[] = [];
 
@@ -378,15 +359,12 @@ export class AbiTradeDeepScanner extends EventEmitter {
 
       if (history.length > 0) {
         const avgLatency = history.reduce((sum, val) => sum + val, 0) / history.length;
-        const minLatency = Math.min(...history);
-        const maxLatency = Math.max(...history);
-
         metrics.push({
           exchange: exchangeId,
           symbol,
           avgLatency,
-          minLatency,
-          maxLatency,
+          minLatency: Math.min(...history),
+          maxLatency: Math.max(...history),
           timestamp: Date.now(),
         });
       }
@@ -395,53 +373,26 @@ export class AbiTradeDeepScanner extends EventEmitter {
     return metrics;
   }
 
-  /**
-   * Record latency for optimization
-   */
-  private recordLatency(exchangeId: string, symbol: string, timestamp: number): void {
-    const key = `${exchangeId}_${symbol}`;
-    const history = this.latencyHistory.get(key) || [];
-
-    // Keep last 50 measurements
-    history.push(Date.now() - timestamp);
-    if (history.length > 50) {
-      history.shift();
-    }
-
-    this.latencyHistory.set(key, history);
-  }
-
-  /**
-   * Calculate confidence score based on various factors
-   */
   private calculateConfidenceScore(
     opportunities: IArbitrageOpportunity[],
     correlations: MarketCorrelation[],
     riskFactors: RiskFactor[]
   ): number {
-    let score = 50; // Base score
-
-    // Boost for opportunities found
+    let score = 50;
     score += opportunities.length * 10;
 
-    // Boost for high correlation (indicating market consistency)
     const avgCorrelation = correlations.length > 0
       ? correlations.reduce((sum, c) => sum + c.correlationCoefficient, 0) / correlations.length
       : 0;
     score += avgCorrelation * 30;
 
-    // Reduce score for high risk factors
     const highRiskCount = riskFactors.filter(r => r.severity === 'high' || r.severity === 'critical').length;
     score -= highRiskCount * 15;
 
-    return Math.max(0, Math.min(100, score)); // Clamp between 0-100
+    return Math.max(0, Math.min(100, score));
   }
 
-  /**
-   * Aggregate multiple deep scan results
-   */
-  private aggregateResults(results: DeepScanResult[]): any {
-    // Combine all results and calculate aggregates
+  private aggregateResults(results: DeepScanResult[]): DeepScanAggregate {
     const allOpportunities = results.flatMap(r => r.opportunities);
     const allCorrelations = results.flatMap(r => r.correlations);
     const allRiskFactors = results.flatMap(r => r.riskFactors);
@@ -449,7 +400,7 @@ export class AbiTradeDeepScanner extends EventEmitter {
 
     return {
       totalOpportunities: allOpportunities.length,
-      avgConfidence: avgConfidence,
+      avgConfidence,
       highestConfidence: Math.max(...results.map(r => r.confidenceScore)),
       avgCorrelation: allCorrelations.length > 0
         ? allCorrelations.reduce((sum, c) => sum + c.correlationCoefficient, 0) / allCorrelations.length
@@ -464,23 +415,13 @@ export class AbiTradeDeepScanner extends EventEmitter {
     };
   }
 
-  /**
-   * Scan single symbol across all exchanges (basic scan)
-   */
   private async scanSymbol(symbol: string): Promise<void> {
     const clients = Array.from(this.exchangeClients.entries());
 
-    // Fetch tickers from all exchanges in parallel
     const pricePromises = clients.map(async ([exchangeId, client]) => {
       try {
         const price = await client.fetchTicker(symbol);
-
-        // Extract price from ticker depending on its format
-        const numericPrice = typeof price === 'object' && price !== null ?
-            ('last' in price ? (price as any).last :
-             'close' in price ? (price as any).close :
-             'price' in price ? (price as any).price : price) : price;
-
+        const numericPrice = this.getTickerNumber(price, 'last');
         const fees = await this.getExchangeFees(client, exchangeId, symbol);
         return {
           exchange: exchangeId,
@@ -495,22 +436,21 @@ export class AbiTradeDeepScanner extends EventEmitter {
     });
 
     const results = await Promise.allSettled(pricePromises);
-    const prices = results
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-      .map((r) => r.value);
-
-    if (prices.length < 2) {
-      return; // Need at least 2 exchanges
+    const prices: { exchange: string; price: number; makerFee: number; takerFee: number }[] = [];
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        prices.push(result.value);
+      }
     }
 
-    // Find opportunities
+    if (prices.length < 2) return;
+
     const opportunities = this.calculator.findOpportunities(
       prices,
       symbol,
       this.config.minNetProfitPercent
     );
 
-    // Emit each opportunity
     for (const opp of opportunities) {
       logger.info(
         `[AbiTradeDeepScanner] Opportunity: ${opp.symbol} | Buy ${opp.buyExchange} @ ${opp.buyPrice} | Sell ${opp.sellExchange} @ ${opp.sellPrice} | Net: ${opp.netProfitPercent.toFixed(2)}% ($${opp.estimatedProfitUsd.toFixed(2)})`
@@ -519,22 +459,17 @@ export class AbiTradeDeepScanner extends EventEmitter {
     }
   }
 
-  /**
-   * Get exchange fees
-   */
   private async getExchangeFees(
     client: ExchangeClientBase,
-    exchangeId: string,
+    _exchangeId: string,
     symbol: string
   ): Promise<{ maker: number; taker: number }> {
     try {
-      // Try to fetch trading fees
       if (typeof (client as any).fetchTradingFee === 'function') {
         const fee = await (client as any).fetchTradingFee(symbol);
         return { maker: fee.maker, taker: fee.taker };
       }
 
-      // Fallback to default fees from CCXT
       const exchange = (client as any).exchange;
       if (exchange && exchange.fees) {
         return {
@@ -543,42 +478,21 @@ export class AbiTradeDeepScanner extends EventEmitter {
         };
       }
 
-      // Default fallback (0.1% each side)
       return { maker: 0.001, taker: 0.001 };
     } catch {
       return { maker: 0.001, taker: 0.001 };
     }
   }
 
-  /**
-   * Get connected exchanges
-   */
   getConnectedExchanges(): string[] {
     return Array.from(this.exchangeClients.keys());
   }
 
-  /**
-   * Check if scanner is running
-   */
   isRunning(): boolean {
     return this.running;
   }
 
-  /**
-   * Get deep scan configuration
-   */
   getConfig(): AbiTradeScanConfig {
     return { ...this.config };
   }
-}
-
-interface PriceHistory {
-  exchange: string;
-  symbol: string;
-  timestamp: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
 }

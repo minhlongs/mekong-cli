@@ -1860,3 +1860,63 @@ jobs:
     last_run: 0.0
     next_run: 1772638305.578927
     run_count: 0
+  - id: 73ee37f9
+    name: listed
+    goal: echo listed
+    job_type: interval
+    interval_seconds: 300
+    daily_time: "09:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772680582.841695
+    run_count: 0
+  - id: f37c8c31
+    name: daily-job
+    goal: backup db
+    job_type: daily
+    interval_seconds: 300
+    daily_time: "08:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772758800.0
+    run_count: 0
+  - id: bd1f4bbb
+    name: test-job
+    goal: echo test
+    job_type: interval
+    interval_seconds: 120
+    daily_time: "09:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772680403.4892328
+    run_count: 0
+  - id: ec52afd8
+    name: listed
+    goal: echo listed
+    job_type: interval
+    interval_seconds: 300
+    daily_time: "09:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772680759.742089
+    run_count: 0
+  - id: 6461ab64
+    name: daily-job
+    goal: backup db
+    job_type: daily
+    interval_seconds: 300
+    daily_time: "08:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772758800.0
+    run_count: 0
+  - id: 228c90b1
+    name: test-job
+    goal: echo test
+    job_type: interval
+    interval_seconds: 120
+    daily_time: "09:00"
+    enabled: true
+    last_run: 0.0
+    next_run: 1772680580.341046
+    run_count: 0
