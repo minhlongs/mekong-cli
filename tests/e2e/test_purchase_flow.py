@@ -15,6 +15,10 @@ All external dependencies are mocked for test isolation.
 import json
 import os
 
+# Disable Redis for tests - MUST be set before any app imports
+os.environ['REDIS_URL'] = 'memory://'
+os.environ['REDIS_ENABLED'] = 'false'
+
 # Import the FastAPI app
 import sys
 from datetime import datetime
@@ -30,9 +34,15 @@ from backend.api.main import app
 
 @pytest.fixture
 def client():
-    """FastAPI test client"""
-    with TestClient(app) as c:
-        yield c
+    """FastAPI test client with mocked Redis"""
+    # Mock Redis to avoid connection errors
+    with patch('redis.Redis'), \
+         patch('redis.from_url'), \
+         patch('redis.asyncio.Redis'), \
+         patch('redis.asyncio.from_url'), \
+         patch('backend.core.infrastructure.redis.redis_client'):
+        with TestClient(app) as c:
+            yield c
 
 
 @pytest.fixture

@@ -1,38 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "04e32b81b0fa",
-      "project": "well",
-      "pane": 1,
-      "chapter": "TIER3-RỪNG-CHIẾN: security",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu security (5→10), bỏ qua phần ",
-      "dispatchedAt": 1772691220024
-    },
-    {
-      "hash": "a6174fba3695",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "TIER3-RỪNG-CHIẾN: tests",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu tests (5→10), bỏ qua p",
-      "dispatchedAt": 1772691260066
-    },
-    {
-      "hash": "4372f8097df0",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "TIER3-RỪNG-CHIẾN: security",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu security (5→10), bỏ qu",
-      "dispatchedAt": 1772691273428
-    },
-    {
-      "hash": "7b117d8ae377",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "TIER3-RỪNG-CHIẾN: performance",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu performance (5→10), bỏ",
-      "dispatchedAt": 1772691692494
-    },
-    {
       "hash": "b7f68d91dc33",
       "project": "algo-trader",
       "pane": 2,
@@ -1599,6 +1567,38 @@
       "chapter": "TIER3-RỪNG-CHIẾN: performance",
       "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu performance (3→10), bỏ qua ph",
       "dispatchedAt": 1772724538055
+    },
+    {
+      "hash": "45814c911863",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu production (4→10), bỏ qua phầ",
+      "dispatchedAt": 1772725022052
+    },
+    {
+      "hash": "7ecce0b36574",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: performance",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu performance (3→10), bỏ qua ph",
+      "dispatchedAt": 1772725634003
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 2,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772725682587
+    },
+    {
+      "hash": "45814c911863",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu production (4→10), bỏ qua phầ",
+      "dispatchedAt": 1772725875088
     }
   ],
   "chapterIndex": 5
