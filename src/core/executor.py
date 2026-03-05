@@ -1,5 +1,4 @@
-"""
-Mekong CLI - Recipe Executor
+"""Mekong CLI - Recipe Executor.
 
 Executes recipes parsed from Markdown files.
 Returns ExecutionResult for orchestrator integration.
@@ -7,6 +6,7 @@ Returns ExecutionResult for orchestrator integration.
 
 import subprocess
 import time
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -23,17 +23,18 @@ class RecipeExecutor:
 
         Args:
             recipe: The Recipe object containing steps to execute.
+
         """
         self.recipe = recipe
         self.console = Console()
 
     def execute_step(self, step: RecipeStep) -> ExecutionResult:
-        """
-        Execute a single step.
-        Supports multiple execution modes: shell, llm, api
+        """Execute a single step.
+        Supports multiple execution modes: shell, llm, api.
 
         Returns:
             ExecutionResult with exit_code, stdout, stderr for verification
+
         """
         self.console.print(f"\n[bold blue]Step {step.order}:[/bold blue] {step.title}")
 
@@ -43,10 +44,9 @@ class RecipeExecutor:
         # Handle different execution types
         if step_type == "llm":
             return self._execute_llm_step(step)
-        elif step_type == "api":
+        if step_type == "api":
             return self._execute_api_step(step)
-        else:
-            return self._execute_shell_step(step)
+        return self._execute_shell_step(step)
 
     def _execute_llm_step(self, step: RecipeStep) -> ExecutionResult:
         """Execute LLM generation step via Antigravity Proxy or OpenAI."""
@@ -81,7 +81,7 @@ class RecipeExecutor:
                     title=f"LLM Output ({response.model})",
                     border_style="cyan",
                     expand=False,
-                )
+                ),
             )
             return ExecutionResult(
                 exit_code=0,
@@ -91,7 +91,7 @@ class RecipeExecutor:
             )
 
         except Exception as e:
-            self.console.print(f"[bold red]LLM Error:[/bold red] {str(e)}")
+            self.console.print(f"[bold red]LLM Error:[/bold red] {e!s}")
             return ExecutionResult(
                 exit_code=1,
                 stdout="",
@@ -111,7 +111,7 @@ class RecipeExecutor:
 
         if not url:
             self.console.print(
-                "[yellow]⚠️  No URL specified — skipping API step[/yellow]"
+                "[yellow]⚠️  No URL specified — skipping API step[/yellow]",
             )
             return ExecutionResult(
                 exit_code=0,
@@ -126,13 +126,13 @@ class RecipeExecutor:
             response = req.request(method, url, json=body, headers=headers, timeout=30)
             status_color = "green" if response.ok else "red"
             self.console.print(
-                f"[{status_color}]Status: {response.status_code}[/{status_color}]"
+                f"[{status_color}]Status: {response.status_code}[/{status_color}]",
             )
 
             preview = response.text[:1000] if response.text else ""
             if preview:
                 self.console.print(
-                    Panel(preview, title="Response", border_style="dim", expand=False)
+                    Panel(preview, title="Response", border_style="dim", expand=False),
                 )
 
             return ExecutionResult(
@@ -147,7 +147,7 @@ class RecipeExecutor:
             )
 
         except req.exceptions.RequestException as e:
-            self.console.print(f"[bold red]API Error:[/bold red] {str(e)}")
+            self.console.print(f"[bold red]API Error:[/bold red] {e!s}")
             return ExecutionResult(
                 exit_code=1,
                 stdout="",
@@ -175,7 +175,7 @@ class RecipeExecutor:
         for attempt in range(1, max_attempts + 1):
             if attempt > 1:
                 self.console.print(
-                    f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay}s...[/yellow]"
+                    f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay}s...[/yellow]",
                 )
                 time.sleep(retry_delay)
 
@@ -183,7 +183,7 @@ class RecipeExecutor:
 
             try:
                 process = subprocess.run(
-                    command, shell=True, check=True, text=True, capture_output=True
+                    command, shell=True, check=True, text=True, capture_output=True,
                 )
 
                 if process.stdout:
@@ -193,7 +193,7 @@ class RecipeExecutor:
                             title="Output",
                             border_style="green",
                             expand=False,
-                        )
+                        ),
                     )
 
                 if process.stderr:
@@ -203,7 +203,7 @@ class RecipeExecutor:
                             title="Stderr",
                             border_style="yellow",
                             expand=False,
-                        )
+                        ),
                     )
 
                 return ExecutionResult(
@@ -221,12 +221,12 @@ class RecipeExecutor:
                 # Retry if not on last attempt
                 if attempt < max_attempts:
                     self.console.print(
-                        f"[yellow]Step {step.order} failed (exit {e.returncode})[/yellow]"
+                        f"[yellow]Step {step.order} failed (exit {e.returncode})[/yellow]",
                     )
                     continue
 
                 self.console.print(
-                    f"[bold red]Error executing step {step.order}[/bold red]"
+                    f"[bold red]Error executing step {step.order}[/bold red]",
                 )
                 if e.stdout:
                     self.console.print(
@@ -235,7 +235,7 @@ class RecipeExecutor:
                             title="Output (Partial)",
                             border_style="yellow",
                             expand=False,
-                        )
+                        ),
                     )
                 if e.stderr:
                     self.console.print(
@@ -244,7 +244,7 @@ class RecipeExecutor:
                             title="Error Output",
                             border_style="red",
                             expand=False,
-                        )
+                        ),
                     )
                 return ExecutionResult(
                     exit_code=e.returncode,
@@ -258,7 +258,7 @@ class RecipeExecutor:
                     },
                 )
             except Exception as e:
-                self.console.print(f"[bold red]Unexpected error:[/bold red] {str(e)}")
+                self.console.print(f"[bold red]Unexpected error:[/bold red] {e!s}")
                 return ExecutionResult(
                     exit_code=1,
                     stdout="",
@@ -286,7 +286,7 @@ class RecipeExecutor:
                 Text(self.recipe.description, style="italic"),
                 title=f"🚀 Running: {self.recipe.name}",
                 border_style="cyan",
-            )
+            ),
         )
 
         for step in self.recipe.steps:
@@ -296,6 +296,6 @@ class RecipeExecutor:
                 return False
 
         self.console.print(
-            f"\n[bold green]✨ Recipe '{self.recipe.name}' completed successfully![/bold green]"
+            f"\n[bold green]✨ Recipe '{self.recipe.name}' completed successfully![/bold green]",
         )
         return True

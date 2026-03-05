@@ -1,54 +1,48 @@
-"""
-Cross-Session Intelligence for Mekong CLI
-Enables agents to remember and apply knowledge across different sessions for continuity.
-"""
+"""Cross-Session Intelligence for Mekong CLI."""
 
-import logging
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 import json
+import logging
 import uuid
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from packages.memory.memory_facade import get_memory_facade
 
 logger = logging.getLogger(__name__)
 
 
 class UserProfile:
-    """
-    Represents a persistent user profile that maintains information across sessions.
-    """
-    def __init__(self, user_id: str):
+    """Represents a persistent user profile that maintains information across sessions."""
+
+    def __init__(self, user_id: str) -> None:
         self.user_id = user_id
         self.created_at = datetime.now()
-        self.preferences: Dict[str, Any] = {}
-        self.interaction_history: List[Dict[str, Any]] = []
-        self.knowledge_base: Dict[str, Any] = {}
-        self.session_history: List[Dict[str, Any]] = []
+        self.preferences: dict[str, any] = {}
+        self.interaction_history: list[dict[str, any]] = []
+        self.knowledge_base: dict[str, any] = {}
+        self.session_history: list[dict[str, any]] = []
 
 
 class CrossSessionStateManager:
-    """
-    Manages state and knowledge that persists across multiple sessions for a user.
-    Enables agents to remember and apply knowledge across different sessions.
-    """
+    """Manages state and knowledge that persists across multiple sessions for a user."""
 
-    def __init__(self, user_id: str):
-        """
-        Initialize the cross-session state manager
+    def __init__(self, user_id: str) -> None:
+        """Initialize the cross-session state manager.
 
         Args:
             user_id: Identifier for the user
+
         """
         self.user_id = user_id
         self.memory = get_memory_facade()
         self.memory.connect()
 
         logger.debug("CrossSessionStateManager initialized for %s, using %s storage",
-                     user_id, self.memory.get_provider_status()['active_provider'])
+                     user_id, self.memory.get_provider_status()["active_provider"])
 
         # Initialize local storage as backup for YAML fallback
-        self.local_storage_path = Path.home() / '.mekong' / 'cross_session_profiles'
+        self.local_storage_path = Path.home() / ".mekong" / "cross_session_profiles"
         self.local_storage_path.mkdir(parents=True, exist_ok=True)
         self.local_profile_file = self.local_storage_path / f"{self.user_id.replace(':', '_').replace('/', '_')}.json"
 
@@ -56,19 +50,19 @@ class CrossSessionStateManager:
         self.profile = self._load_or_create_profile()
 
     def _load_or_create_profile(self) -> UserProfile:
-        """Load an existing user profile or create a new one"""
+        """Load an existing user profile or create a new one."""
         # Try to load from memory system first
         search_results = self.memory.search(
             query=f"profile for {self.user_id}",
             user_id=f"profiles:{self.user_id}",
-            limit=1
+            limit=1,
         )
 
         profile_data = None
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "user_profile":
                         profile_data = parsed
@@ -93,16 +87,15 @@ class CrossSessionStateManager:
             profile.knowledge_base = profile_data.get("knowledge_base", {})
             profile.session_history = profile_data.get("session_history", [])
             return profile
-        else:
-            # Create new profile
-            return UserProfile(self.user_id)
+        # Create new profile
+        return UserProfile(self.user_id)
 
-    def _save_to_local_storage(self, data: Dict) -> None:
-        """Save data to local file storage as backup"""
+    def _save_to_local_storage(self, data: dict) -> None:
+        """Save data to local file storage as backup."""
         try:
             all_data = []
             if self.local_profile_file.exists():
-                with open(self.local_profile_file, 'r', encoding='utf-8') as f:
+                with open(self.local_profile_file, encoding="utf-8") as f:
                     all_data = json.load(f)
 
             # Check if this is an update to existing profile data
@@ -121,27 +114,27 @@ class CrossSessionStateManager:
                 all_data = [item for item in all_data if item.get("type") != "user_profile"] + \
                           [item for item in all_data if item.get("type") == "user_profile"][-1:]  # Last profile
 
-            with open(self.local_profile_file, 'w', encoding='utf-8') as f:
+            with open(self.local_profile_file, "w", encoding="utf-8") as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
             logger.warning("Could not save to local storage: %s", e)
 
-    def _load_from_local_storage(self) -> List[Dict]:
-        """Load data from local file storage"""
+    def _load_from_local_storage(self) -> list[dict]:
+        """Load data from local file storage."""
         try:
             if self.local_profile_file.exists():
-                with open(self.local_profile_file, 'r', encoding='utf-8') as f:
+                with open(self.local_profile_file, encoding="utf-8") as f:
                     return json.load(f)
         except Exception as e:
             logger.warning("Could not load from local storage: %s", e)
         return []
 
-    def update_preferences(self, preferences: Dict[str, Any]) -> None:
-        """
-        Update user preferences that persist across sessions
+    def update_preferences(self, preferences: dict[str, any]) -> None:
+        """Update user preferences that persist across sessions.
 
         Args:
             preferences: Dictionary of user preferences to update
+
         """
         self.profile.preferences.update(preferences)
 
@@ -150,7 +143,7 @@ class CrossSessionStateManager:
             "type": "user_preference",
             "user_id": self.user_id,
             "preferences": preferences,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.memory.add(
@@ -159,16 +152,20 @@ class CrossSessionStateManager:
             metadata={
                 "item_type": "user_preference",
                 "user_id": self.user_id,
-                "timestamp": pref_data["timestamp"]
-            }
+                "timestamp": pref_data["timestamp"],
+            },
         )
 
         # Also save to local storage as backup
         self._save_to_local_storage(pref_data)
 
-    def add_interaction(self, interaction_type: str, content: str, metadata: Optional[Dict] = None) -> str:
-        """
-        Add an interaction to the user's history
+    def add_interaction(
+        self,
+        interaction_type: str,
+        content: str,
+        metadata: Optional[dict] = None,
+    ) -> str:
+        """Add an interaction to the user's history.
 
         Args:
             interaction_type: Type of interaction (e.g., 'query', 'feedback', 'command')
@@ -177,6 +174,7 @@ class CrossSessionStateManager:
 
         Returns:
             ID of the recorded interaction
+
         """
         interaction_id = str(uuid.uuid4())
 
@@ -185,7 +183,7 @@ class CrossSessionStateManager:
             "type": interaction_type,
             "content": content,
             "timestamp": datetime.now().isoformat(),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         self.profile.interaction_history.append(interaction)
@@ -195,7 +193,7 @@ class CrossSessionStateManager:
             "type": "user_interaction",
             "user_id": self.user_id,
             "interaction": interaction,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.memory.add(
@@ -205,8 +203,8 @@ class CrossSessionStateManager:
                 "item_type": "user_interaction",
                 "user_id": self.user_id,
                 "interaction_type": interaction_type,
-                "timestamp": interaction_data["timestamp"]
-            }
+                "timestamp": interaction_data["timestamp"],
+            },
         )
 
         # Also save to local storage as backup
@@ -214,14 +212,14 @@ class CrossSessionStateManager:
 
         return interaction_id
 
-    def add_to_knowledge_base(self, category: str, key: str, value: Any) -> None:
-        """
-        Add information to the user's persistent knowledge base
+    def add_to_knowledge_base(self, category: str, key: str, value: any) -> None:
+        """Add information to the user's persistent knowledge base.
 
         Args:
             category: Category of the knowledge (e.g., 'facts', 'preferences', 'history')
             key: Key for the knowledge item
             value: Value of the knowledge item
+
         """
         if category not in self.profile.knowledge_base:
             self.profile.knowledge_base[category] = {}
@@ -235,7 +233,7 @@ class CrossSessionStateManager:
             "category": category,
             "key": key,
             "value": value,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.memory.add(
@@ -246,22 +244,22 @@ class CrossSessionStateManager:
                 "user_id": self.user_id,
                 "category": category,
                 "key": key,
-                "timestamp": knowledge_data["timestamp"]
-            }
+                "timestamp": knowledge_data["timestamp"],
+            },
         )
 
         # Also save to local storage as backup
         self._save_to_local_storage(knowledge_data)
 
-    def record_session(self, session_data: Dict[str, Any]) -> str:
-        """
-        Record a session for this user
+    def record_session(self, session_data: dict[str, any]) -> str:
+        """Record a session for this user.
 
         Args:
             session_data: Data about the session
 
         Returns:
             ID of the recorded session
+
         """
         session_id = str(uuid.uuid4())
 
@@ -269,7 +267,7 @@ class CrossSessionStateManager:
             "id": session_id,
             "start_time": datetime.now().isoformat(),
             "session_data": session_data,
-            "user_id": self.user_id
+            "user_id": self.user_id,
         }
 
         self.profile.session_history.append(session_record)
@@ -279,7 +277,7 @@ class CrossSessionStateManager:
             "type": "session_record",
             "user_id": self.user_id,
             "session": session_record,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.memory.add(
@@ -288,8 +286,8 @@ class CrossSessionStateManager:
             metadata={
                 "item_type": "session_record",
                 "user_id": self.user_id,
-                "timestamp": session_data_record["timestamp"]
-            }
+                "timestamp": session_data_record["timestamp"],
+            },
         )
 
         # Also save to local storage as backup
@@ -298,23 +296,23 @@ class CrossSessionStateManager:
         return session_id
 
     def get_user_preferences(self) -> Dict[str, Any]:
-        """
-        Get user preferences
+        """Get user preferences.
 
         Returns:
             Dictionary of user preferences
+
         """
         # Try to refresh from memory system
         search_results = self.memory.search(
             query="user preferences",
             user_id=f"profiles:{self.user_id}",
-            limit=5  # Get recent preference updates
+            limit=5,  # Get recent preference updates
         )
 
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "user_preference":
                         # Update our local copy with newer preferences
@@ -325,27 +323,27 @@ class CrossSessionStateManager:
         return self.profile.preferences.copy()
 
     def get_interaction_history(self, limit: int = 20) -> List[Dict[str, Any]]:
-        """
-        Get user's interaction history
+        """Get user's interaction history.
 
         Args:
             limit: Maximum number of interactions to return
 
         Returns:
             List of interaction dictionaries
+
         """
         # Try to refresh from memory system
         search_results = self.memory.search(
             query="user interactions",
             user_id=f"interactions:{self.user_id}",
-            limit=limit
+            limit=limit,
         )
 
         interactions = []
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "user_interaction":
                         interactions.append(parsed.get("interaction"))
@@ -369,14 +367,14 @@ class CrossSessionStateManager:
         return interactions[:limit]
 
     def get_knowledge_base(self, category: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Get user's knowledge base
+        """Get user's knowledge base.
 
         Args:
             category: Optional category to filter by
 
         Returns:
             Dictionary of knowledge base items
+
         """
         # Try to refresh from memory system
         query = "user knowledge"
@@ -386,14 +384,14 @@ class CrossSessionStateManager:
         search_results = self.memory.search(
             query=query,
             user_id=f"knowledge:{self.user_id}",
-            limit=100  # Get all knowledge items
+            limit=100,  # Get all knowledge items
         )
 
         knowledge = {}
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "user_knowledge":
                         cat = parsed.get("category")
@@ -415,31 +413,30 @@ class CrossSessionStateManager:
 
         if category:
             return knowledge.get(category, {})
-        else:
-            return knowledge
+        return knowledge
 
     def get_session_history(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get user's session history
+        """Get user's session history.
 
         Args:
             limit: Maximum number of sessions to return
 
         Returns:
             List of session dictionaries
+
         """
         # Try to refresh from memory system
         search_results = self.memory.search(
             query="session history",
             user_id=f"sessions:{self.user_id}",
-            limit=limit
+            limit=limit,
         )
 
         sessions = []
         for result in search_results:
             try:
-                memory_content = result.get('memory', str(result))
-                if memory_content.startswith('{'):  # JSON string
+                memory_content = result.get("memory", str(result))
+                if memory_content.startswith("{"):  # JSON string
                     parsed = json.loads(memory_content)
                     if parsed.get("type") == "session_record":
                         sessions.append(parsed.get("session"))
@@ -463,14 +460,14 @@ class CrossSessionStateManager:
         return sessions[:limit]
 
     def recall_information(self, query: str) -> List[Dict[str, Any]]:
-        """
-        Recall relevant information from across sessions based on a query
+        """Recall relevant information from across sessions based on a query.
 
         Args:
             query: Query to search for relevant information
 
         Returns:
             List of relevant information items
+
         """
         results = []
 
@@ -480,7 +477,7 @@ class CrossSessionStateManager:
             results.append({
                 "type": "preferences",
                 "data": prefs,
-                "relevance": "high"
+                "relevance": "high",
             })
 
         # Search interaction history
@@ -490,7 +487,7 @@ class CrossSessionStateManager:
                 results.append({
                     "type": "interaction",
                     "data": interaction,
-                    "relevance": "medium"
+                    "relevance": "medium",
                 })
 
         # Search knowledge base
@@ -503,15 +500,13 @@ class CrossSessionStateManager:
                         "category": category,
                         "key": key,
                         "data": value,
-                        "relevance": "high"
+                        "relevance": "high",
                     })
 
         return results
 
     def save_profile(self) -> None:
-        """
-        Save the current user profile to persistent storage
-        """
+        """Save the current user profile to persistent storage."""
         profile_data = {
             "type": "user_profile",
             "user_id": self.profile.user_id,
@@ -519,7 +514,7 @@ class CrossSessionStateManager:
             "preferences": self.profile.preferences,
             "interaction_history": self.profile.interaction_history[-50:],  # Keep last 50 interactions
             "knowledge_base": self.profile.knowledge_base,
-            "session_history": self.profile.session_history[-20:]  # Keep last 20 sessions
+            "session_history": self.profile.session_history[-20:],  # Keep last 20 sessions
         }
 
         # Store in memory system
@@ -528,8 +523,8 @@ class CrossSessionStateManager:
             user_id=f"profiles:{self.user_id}",
             metadata={
                 "item_type": "user_profile",
-                "user_id": self.profile.user_id
-            }
+                "user_id": self.profile.user_id,
+            },
         )
 
         # Also save to local storage as backup
@@ -537,29 +532,27 @@ class CrossSessionStateManager:
 
 
 class CrossSessionIntelligenceEngine:
-    """
-    High-level engine for cross-session intelligence capabilities
-    """
-    def __init__(self):
+    """High-level engine for cross-session intelligence capabilities."""
+
+    def __init__(self) -> None:
         self.state_managers: Dict[str, CrossSessionStateManager] = {}
 
     def get_state_manager(self, user_id: str) -> CrossSessionStateManager:
-        """
-        Get or create a state manager for a user
+        """Get or create a state manager for a user.
 
         Args:
             user_id: Identifier for the user
 
         Returns:
             CrossSessionStateManager for the user
+
         """
         if user_id not in self.state_managers:
             self.state_managers[user_id] = CrossSessionStateManager(user_id)
         return self.state_managers[user_id]
 
     def personalize_response(self, user_id: str, response: str) -> str:
-        """
-        Personalize a response based on the user's cross-session data
+        """Personalize a response based on the user's cross-session data.
 
         Args:
             user_id: Identifier for the user
@@ -567,6 +560,7 @@ class CrossSessionIntelligenceEngine:
 
         Returns:
             Personalized response
+
         """
         manager = self.get_state_manager(user_id)
 
@@ -589,8 +583,7 @@ class CrossSessionIntelligenceEngine:
         return response
 
     def build_context_from_history(self, user_id: str, topic: str) -> str:
-        """
-        Build contextual information from the user's history for a specific topic
+        """Build contextual information from the user's history for a specific topic.
 
         Args:
             user_id: Identifier for the user
@@ -598,6 +591,7 @@ class CrossSessionIntelligenceEngine:
 
         Returns:
             Contextual information string
+
         """
         manager = self.get_state_manager(user_id)
 
@@ -612,7 +606,7 @@ class CrossSessionIntelligenceEngine:
             if item["type"] == "knowledge":
                 context_parts.append(f"- {item['category']}.{item['key']}: {item['data']}")
             elif item["type"] == "interaction":
-                content = item['data'].get('content', '')[:100]  # Limit length
+                content = item["data"].get("content", "")[:100]  # Limit length
                 context_parts.append(f"- Previous interaction: {content}...")
             elif item["type"] == "preferences":
                 # Don't add all preferences to context, just mention they exist
@@ -623,10 +617,10 @@ class CrossSessionIntelligenceEngine:
 
 # Convenience function for initialization
 def create_cross_session_engine() -> CrossSessionIntelligenceEngine:
-    """
-    Create a cross-session intelligence engine instance
+    """Create a cross-session intelligence engine instance.
 
     Returns:
         CrossSessionIntelligenceEngine instance
+
     """
     return CrossSessionIntelligenceEngine()

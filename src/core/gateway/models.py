@@ -1,6 +1,8 @@
-"""Gateway request/response models"""
+"""Gateway request/response models."""
 
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -8,13 +10,15 @@ VERSION = "1.0.0"
 
 
 class CommandRequest(BaseModel):
-    """Incoming command from the cloud brain"""
+    """Incoming command from the cloud brain."""
+
     goal: str = Field(..., min_length=1, description="High-level goal to execute")
     token: str = Field(..., min_length=1, description="API authentication token")
 
 
 class StepSummary(BaseModel):
-    """Summary of a single execution step"""
+    """Summary of a single execution step."""
+
     order: int
     title: str
     passed: bool
@@ -23,35 +27,39 @@ class StepSummary(BaseModel):
 
 
 class HumanSummary(BaseModel):
-    """Non-dev friendly summary in both languages"""
+    """Non-dev friendly summary in both languages."""
+
     en: str
     vi: str
 
 
 class CommandResponse(BaseModel):
-    """Response returned to the cloud caller"""
+    """Response returned to the cloud caller."""
+
     status: str
     goal: str
     total_steps: int
     completed_steps: int
     failed_steps: int
     success_rate: float
-    errors: List[str]
-    warnings: List[str]
-    steps: List[StepSummary]
-    trace: Optional[Dict[str, Any]] = None
-    human_summary: Optional[HumanSummary] = None
+    errors: list[str]
+    warnings: list[str]
+    steps: list[StepSummary]
+    trace: dict[str, Any] | None = None
+    human_summary: HumanSummary | None = None
 
 
 class HealthResponse(BaseModel):
-    """Health check response"""
+    """Health check response."""
+
     status: str = "ok"
     version: str = VERSION
     engine: str = "Plan-Execute-Verify"
 
 
 class PresetAction(BaseModel):
-    """A preset one-button action for the dashboard"""
+    """A preset one-button action for the dashboard."""
+
     id: str
     label: str
     description: str
@@ -61,14 +69,16 @@ class PresetAction(BaseModel):
 
 
 class ProjectInfo(BaseModel):
-    """A project discovered in the apps/ directory"""
+    """A project discovered in the apps/ directory."""
+
     name: str
     path: str
     has_git: bool
 
 
 class SwarmNodeInfo(BaseModel):
-    """Swarm node info returned by API"""
+    """Swarm node info returned by API."""
+
     id: str
     name: str
     host: str
@@ -80,7 +90,8 @@ class SwarmNodeInfo(BaseModel):
 
 
 class SwarmRegisterRequest(BaseModel):
-    """Request to register a new swarm node"""
+    """Request to register a new swarm node."""
+
     name: str = Field(..., min_length=1)
     host: str = Field(..., min_length=1)
     port: int = Field(8000, ge=1, le=65535)
@@ -88,13 +99,15 @@ class SwarmRegisterRequest(BaseModel):
 
 
 class SwarmDispatchRequest(BaseModel):
-    """Request to dispatch a goal to a remote node"""
+    """Request to dispatch a goal to a remote node."""
+
     node_id: str = Field(..., min_length=1)
     goal: str = Field(..., min_length=1)
 
 
 class ScheduleJobInfo(BaseModel):
-    """Schedule job info returned by API"""
+    """Schedule job info returned by API."""
+
     id: str
     name: str
     goal: str
@@ -102,13 +115,14 @@ class ScheduleJobInfo(BaseModel):
     interval_seconds: int = Field(300, ge=10)
     daily_time: str = Field("09:00")
     enabled: bool
-    last_run: Optional[float] = None
-    next_run: Optional[float] = None
+    last_run: float | None = None
+    next_run: float | None = None
     run_count: int = 0
 
 
 class ScheduleAddRequest(BaseModel):
-    """Request to add a new scheduled job"""
+    """Request to add a new scheduled job."""
+
     name: str = Field(..., min_length=1)
     goal: str = Field(..., min_length=1)
     job_type: str = Field("interval", pattern="^(interval|daily)$")
@@ -117,7 +131,8 @@ class ScheduleAddRequest(BaseModel):
 
 
 class MemoryEntryInfo(BaseModel):
-    """Memory entry returned by API"""
+    """Memory entry returned by API."""
+
     goal: str
     status: str
     timestamp: float
@@ -127,34 +142,39 @@ class MemoryEntryInfo(BaseModel):
 
 
 class MemoryStatsResponse(BaseModel):
-    """Memory aggregate statistics"""
+    """Memory aggregate statistics."""
+
     total: int
     success_rate: float
-    top_goals: List[str]
+    top_goals: list[str]
     recent_failures: int
 
 
 class NLUParseRequest(BaseModel):
-    """NLU parse request"""
+    """NLU parse request."""
+
     goal: str = Field(..., min_length=1)
 
 
 class NLUParseResponse(BaseModel):
-    """NLU parse response"""
+    """NLU parse response."""
+
     intent: str
     confidence: float
-    entities: Dict[str, str]
+    entities: dict[str, str]
     suggested_recipe: str
 
 
 class RecipeGenerateRequest(BaseModel):
-    """Recipe generation request"""
+    """Recipe generation request."""
+
     goal: str = Field(..., min_length=1)
-    steps: List[str] = Field(default_factory=list)
+    steps: list[str] = Field(default_factory=list)
 
 
 class RecipeGenerateResponse(BaseModel):
-    """Recipe generation response"""
+    """Recipe generation response."""
+
     name: str
     content: str
     source: str
@@ -163,27 +183,32 @@ class RecipeGenerateResponse(BaseModel):
 
 
 class RecipeValidateRequest(BaseModel):
-    """Recipe validation request"""
+    """Recipe validation request."""
+
     content: str = Field(..., min_length=1)
 
 
 class RecipeValidateResponse(BaseModel):
-    """Recipe validation response"""
+    """Recipe validation response."""
+
     valid: bool
-    errors: List[str]
+    errors: list[str]
 
 
 class AutoRecipeInfo(BaseModel):
-    """Auto-generated recipe info"""
+    """Auto-generated recipe info."""
+
     name: str
     path: str
 
 
 class GovernanceCheckRequest(BaseModel):
     """Request to check governance classification."""
+
     goal: str = Field(..., min_length=1)
 
 
 class HaltRequest(BaseModel):
     """Request to halt autonomous operations."""
+
     token: str = Field(..., min_length=1)

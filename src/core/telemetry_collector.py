@@ -1,16 +1,17 @@
-"""
-Mekong CLI - Telemetry Collector
+"""Mekong CLI - Telemetry Collector.
 
 Records execution traces for observability and debugging.
 Writes structured traces to .mekong/telemetry/ directory.
 """
+
+from __future__ import annotations
 
 import json
 import logging
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .telemetry_models import ExecutionTrace, StepTrace
 
@@ -21,7 +22,7 @@ _facade = None
 _facade_loaded = False
 
 
-def _get_facade() -> Optional[Any]:
+def _get_facade() -> Any | None:
     """Safely import and cache ObservabilityFacade without recursion risk."""
     global _facade, _facade_loaded
 
@@ -34,8 +35,7 @@ def _get_facade() -> Optional[Any]:
 
 
 class TelemetryCollector:
-    """
-    Collects execution telemetry and writes traces to disk.
+    """Collects execution telemetry and writes traces to disk.
 
     Usage:
         collector = TelemetryCollector()
@@ -45,19 +45,19 @@ class TelemetryCollector:
         collector.finish_trace()
     """
 
-    def __init__(self, output_dir: Optional[str] = None) -> None:
-        """
-        Initialize collector.
+    def __init__(self, output_dir: str | None = None) -> None:
+        """Initialize collector.
 
         Args:
             output_dir: Directory for trace files. Defaults to .mekong/telemetry/
+
         """
-        self._trace: Optional[ExecutionTrace] = None
+        self._trace: ExecutionTrace | None = None
         self._start_time: float = 0.0
         self._output_dir = Path(output_dir) if output_dir else Path(".mekong/telemetry")
         self._lock = threading.Lock()
 
-    def start_trace(self, goal: str, user_id: Optional[str] = None) -> None:
+    def start_trace(self, goal: str, user_id: str | None = None) -> None:
         """Begin a new execution trace."""
         self._trace = ExecutionTrace(goal=goal)
         self._start_time = time.time()
@@ -69,7 +69,7 @@ class TelemetryCollector:
         duration: float,
         exit_code: int,
         self_healed: bool = False,
-        agent: Optional[str] = None,
+        agent: str | None = None,
     ) -> None:
         """Record a completed step in the current trace (thread-safe)."""
         if self._trace is None:
@@ -84,11 +84,11 @@ class TelemetryCollector:
                     exit_code=exit_code,
                     self_healed=self_healed,
                     agent_used=agent,
-                )
+                ),
             )
 
     def record_llm_call(
-        self, model: str = "", input_tokens: int = 0, output_tokens: int = 0
+        self, model: str = "", input_tokens: int = 0, output_tokens: int = 0,
     ) -> None:
         """Increment LLM call counter."""
         if self._trace is not None:
@@ -99,7 +99,7 @@ class TelemetryCollector:
         if self._trace is not None:
             self._trace.errors.append(error_msg)
 
-    def finish_trace(self) -> Optional[ExecutionTrace]:
+    def finish_trace(self) -> ExecutionTrace | None:
         """Finalize trace and write to disk."""
         if self._trace is None:
             return None
@@ -114,19 +114,19 @@ class TelemetryCollector:
 
         return self._trace
 
-    def _serialize_trace_safe(self, trace: ExecutionTrace) -> Dict[str, Any]:
+    def _serialize_trace_safe(self, trace: ExecutionTrace) -> dict[str, Any]:
         """Safely serialize ExecutionTrace to dict, avoiding circular references."""
 
         def _serialize_obj(obj: Any) -> Any:
             if isinstance(obj, (int, float, str, bool, type(None))):
                 return obj
-            elif isinstance(obj, (list, tuple)):
+            if isinstance(obj, (list, tuple)):
                 return [_serialize_obj(item) for item in obj]
-            elif isinstance(obj, dict):
+            if isinstance(obj, dict):
                 return {
                     key: _serialize_obj(value) for key, value in obj.items()
                 }
-            elif hasattr(obj, "__dataclass_fields__"):
+            if hasattr(obj, "__dataclass_fields__"):
                 result = {}
                 for field_name in obj.__dataclass_fields__:
                     field_value = getattr(obj, field_name)
@@ -134,14 +134,13 @@ class TelemetryCollector:
                         return {"__ref__": "circular_reference"}
                     result[field_name] = _serialize_obj(field_value)
                 return result
-            else:
-                return str(obj)
+            return str(obj)
 
         from dataclasses import asdict
 
         return _serialize_obj(asdict(trace))
 
-    def get_trace(self) -> Optional[ExecutionTrace]:
+    def get_trace(self) -> ExecutionTrace | None:
         """Return the current ExecutionTrace (may be incomplete)."""
         return self._trace
 

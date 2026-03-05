@@ -1,5 +1,4 @@
-"""
-Mekong CLI - Execution History (Event Sourcing)
+"""Mekong CLI - Execution History (Event Sourcing).
 
 Temporal-inspired append-only event log for durable execution.
 Enables replay, audit trail, and crash recovery.
@@ -7,13 +6,15 @@ Enables replay, audit trail, and crash recovery.
 Pattern: Every state change is an immutable event appended to history.
 """
 
+from __future__ import annotations
+
 import json
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class EventKind(str, Enum):
@@ -43,15 +44,15 @@ class ExecutionEvent:
     kind: EventKind
     timestamp: float
     workflow_id: str
-    step_order: Optional[int] = None
-    data: Dict[str, Any] = field(default_factory=dict)
+    step_order: int | None = None
+    data: dict[str, Any] = field(default_factory=dict)
 
     @staticmethod
     def create(
         kind: EventKind,
         workflow_id: str,
-        step_order: Optional[int] = None,
-        data: Optional[Dict[str, Any]] = None,
+        step_order: int | None = None,
+        data: dict[str, Any] | None = None,
     ) -> "ExecutionEvent":
         """Factory method to create a new event with auto-generated ID and timestamp."""
         return ExecutionEvent(
@@ -65,21 +66,21 @@ class ExecutionEvent:
 
 
 class ExecutionHistory:
-    """
-    Append-only event log for workflow execution.
+    """Append-only event log for workflow execution.
 
     Inspired by Temporal's event sourcing: every state mutation
     is recorded as an immutable event. Supports replay and recovery.
     """
 
-    def __init__(self, storage_dir: Optional[str] = None) -> None:
+    def __init__(self, storage_dir: str | None = None) -> None:
         """Initialize history store.
 
         Args:
             storage_dir: Directory for history files. Defaults to .mekong/history/
+
         """
         self._storage_dir = Path(storage_dir) if storage_dir else Path(".mekong/history")
-        self._events: Dict[str, List[ExecutionEvent]] = {}
+        self._events: dict[str, list[ExecutionEvent]] = {}
 
     def append(self, event: ExecutionEvent) -> None:
         """Append an event to the workflow's history (immutable, never modified)."""
@@ -88,14 +89,14 @@ class ExecutionHistory:
             self._events[wf_id] = []
         self._events[wf_id].append(event)
 
-    def get_history(self, workflow_id: str) -> List[ExecutionEvent]:
+    def get_history(self, workflow_id: str) -> list[ExecutionEvent]:
         """Get all events for a workflow, ordered by timestamp."""
         return sorted(
             self._events.get(workflow_id, []),
             key=lambda e: e.timestamp,
         )
 
-    def get_last_checkpoint(self, workflow_id: str) -> Optional[int]:
+    def get_last_checkpoint(self, workflow_id: str) -> int | None:
         """Find the last successfully completed step order for crash recovery."""
         history = self.get_history(workflow_id)
         last_completed = 0
@@ -105,8 +106,8 @@ class ExecutionHistory:
         return last_completed if last_completed > 0 else None
 
     def get_step_events(
-        self, workflow_id: str, step_order: int
-    ) -> List[ExecutionEvent]:
+        self, workflow_id: str, step_order: int,
+    ) -> list[ExecutionEvent]:
         """Get all events for a specific step."""
         return [
             e for e in self.get_history(workflow_id)
@@ -130,12 +131,12 @@ class ExecutionHistory:
                 f.write(line + "\n")
         return filepath
 
-    def load(self, workflow_id: str) -> List[ExecutionEvent]:
+    def load(self, workflow_id: str) -> list[ExecutionEvent]:
         """Load workflow history from disk."""
         filepath = self._storage_dir / f"{workflow_id}.jsonl"
         if not filepath.exists():
             return []
-        events: List[ExecutionEvent] = []
+        events: list[ExecutionEvent] = []
         for line in filepath.read_text(encoding="utf-8").strip().split("\n"):
             if not line:
                 continue
@@ -145,7 +146,7 @@ class ExecutionHistory:
         self._events[workflow_id] = events
         return events
 
-    def workflow_ids(self) -> List[str]:
+    def workflow_ids(self) -> list[str]:
         """List all workflow IDs with persisted history."""
         if not self._storage_dir.exists():
             return []

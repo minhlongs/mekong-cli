@@ -1,5 +1,4 @@
-"""
-Mekong CLI - Memory Store
+"""Mekong CLI - Memory Store.
 
 Long-term execution memory with YAML persistence.
 Records goal outcomes, enables history queries and fix suggestions.
@@ -7,11 +6,14 @@ Records goal outcomes, enables history queries and fix suggestions.
 Vector backend (Mem0 + Qdrant) is used when available; falls back to YAML.
 """
 
+from __future__ import annotations
+
 import time
-import yaml  # type: ignore[import-untyped]
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+
+import yaml  # type: ignore[import-untyped]
 
 from .event_bus import EventType, get_event_bus
 
@@ -39,15 +41,15 @@ class MemoryStore:
 
     MAX_ENTRIES: int = 500
 
-    def __init__(self, store_path: Optional[str] = None) -> None:
-        """
-        Initialize memory store.
+    def __init__(self, store_path: str | None = None) -> None:
+        """Initialize memory store.
 
         Args:
             store_path: Path to YAML file. Defaults to .mekong/memory.yaml
+
         """
         self._path = Path(store_path) if store_path else Path(".mekong/memory.yaml")
-        self._entries: List[MemoryEntry] = []
+        self._entries: list[MemoryEntry] = []
         self._load()
 
     def record(self, entry: MemoryEntry) -> None:
@@ -79,7 +81,7 @@ class MemoryStore:
             except Exception:
                 pass  # Vector failure never disrupts YAML persistence
 
-    def query(self, goal_pattern: str) -> List[MemoryEntry]:
+    def query(self, goal_pattern: str) -> list[MemoryEntry]:
         """Find entries matching goal pattern.
 
         Prefers semantic vector search (Mem0/Qdrant) when available.
@@ -113,7 +115,7 @@ class MemoryStore:
         successes = sum(1 for e in entries if e.status == "success")
         return (successes / len(entries)) * 100
 
-    def get_last_failure(self, goal_pattern: str = "") -> Optional[MemoryEntry]:
+    def get_last_failure(self, goal_pattern: str = "") -> MemoryEntry | None:
         """Get most recent failed entry matching pattern."""
         entries = self.query(goal_pattern) if goal_pattern else self._entries
         failures = [e for e in entries if e.status != "success"]
@@ -131,13 +133,13 @@ class MemoryStore:
         unique_errors = list(dict.fromkeys(errors))
         return f"Common errors ({len(failures)} failures): " + "; ".join(unique_errors[:3])
 
-    def recent(self, limit: int = 20) -> List[MemoryEntry]:
+    def recent(self, limit: int = 20) -> list[MemoryEntry]:
         """Return most recent entries."""
         return self._entries[-limit:]
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Return aggregate statistics."""
-        goal_counts: Dict[str, int] = {}
+        goal_counts: dict[str, int] = {}
         for e in self._entries:
             goal_counts[e.goal] = goal_counts.get(e.goal, 0) + 1
         top_goals = sorted(goal_counts, key=lambda k: goal_counts[k], reverse=True)[:5]

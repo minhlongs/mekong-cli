@@ -1,8 +1,9 @@
-"""
-Mekong CLI - Telegram Bot AGI Handlers
+"""Mekong CLI - Telegram Bot AGI Handlers.
 
 Handler functions for AGI loop commands.
 """
+
+from __future__ import annotations
 
 import asyncio
 
@@ -27,7 +28,7 @@ async def agi_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await _agi_config(update)
     else:
         await update.message.reply_text(
-            "♾️ Usage: /agi <start|stop|status|history|config>"
+            "♾️ Usage: /agi <start|stop|status|history|config>",
         )
 
 
@@ -109,7 +110,7 @@ async def _agi_history(update: Update) -> None:
             icon = "✅" if d.get("success") else "❌"
             lines.append(f"{icon} `{d.get('id', '?')}` — {d.get('title', '?')}")
         await update.message.reply_text(
-            "\n".join(lines), parse_mode="Markdown"
+            "\n".join(lines), parse_mode="Markdown",
         )
     except Exception as e:
         await update.message.reply_text(f"❌ AGI history error: {e}")

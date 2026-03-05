@@ -1,12 +1,13 @@
-"""
-Mekong CLI - Autonomous Engine
+"""Mekong CLI - Autonomous Engine.
 
 Fully autonomous execution loop with Consciousness Score.
 Coordinates NLU, Memory, Router, Orchestrator, Learner, RecipeGen, Governance.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from .event_bus import EventType, get_event_bus
 from .governance import ActionClass, AuditEntry, Governance, GovernanceDecision
@@ -31,7 +32,7 @@ class CycleResult:
     """Result of one autonomous cycle."""
 
     goal: str = ""
-    governance_decision: Optional[GovernanceDecision] = None
+    governance_decision: GovernanceDecision | None = None
     executed: bool = False
     result_status: str = ""
     recipe_generated: bool = False
@@ -43,25 +44,25 @@ class AutonomousEngine:
 
     def __init__(
         self,
-        orchestrator: Optional[Any] = None,
-        governance: Optional[Governance] = None,
+        orchestrator: Any | None = None,
+        governance: Governance | None = None,
     ) -> None:
         """Initialize autonomous engine."""
         self.orchestrator = orchestrator
         self.governance = governance or Governance()
-        self._memory: Optional[Any] = None
-        self._nlu: Optional[Any] = None
-        self._router: Optional[Any] = None
-        self._learner: Optional[Any] = None
-        self._recipe_gen: Optional[Any] = None
+        self._memory: Any | None = None
+        self._nlu: Any | None = None
+        self._router: Any | None = None
+        self._learner: Any | None = None
+        self._recipe_gen: Any | None = None
         self._init_subsystems()
 
     def _init_subsystems(self) -> None:
         """Lazy load subsystems with LLM injection."""
-        from .llm_client import LLMClient
-
         # Inject the key from environment variable
         import os
+
+        from .llm_client import LLMClient
         gemini_key = os.getenv("GEMINI_API_KEY", "")
         llm = LLMClient(gemini_key=gemini_key)
 
@@ -119,7 +120,7 @@ class AutonomousEngine:
                     action_class="forbidden",
                     approved=False,
                     result="blocked",
-                )
+                ),
             )
             bus = get_event_bus()
             bus.emit(
@@ -141,7 +142,7 @@ class AutonomousEngine:
                         action_class="review_required",
                         approved=False,
                         result="rejected",
-                    )
+                    ),
                 )
                 result.result_status = "rejected"
                 return result
@@ -164,7 +165,7 @@ class AutonomousEngine:
                 MemoryEntry(
                     goal=goal,
                     status=result.result_status,
-                )
+                ),
             )
 
         # Learn from result
@@ -195,7 +196,7 @@ class AutonomousEngine:
                 action_class=decision.action_class.value,
                 approved=True,
                 result="executed" if result.executed else "skipped",
-            )
+            ),
         )
 
         # Emit cycle event
@@ -243,7 +244,7 @@ class AutonomousEngine:
             + report.executor_health * 20
             + report.learner_health * 10
             + report.evolution_health * 10
-            + report.governance_health * 20
+            + report.governance_health * 20,
         )
 
         return report

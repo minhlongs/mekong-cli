@@ -1,11 +1,9 @@
-"""
-Mekong CLI - Telegram Bot Models
+"""Mekong CLI - Telegram Bot Models.
 
 Data models for Telegram bot configuration.
 """
 
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -13,7 +11,7 @@ class BotConfig:
     """Telegram bot configuration."""
 
     token: str = ""
-    chat_ids: List[int] = field(default_factory=list)
+    chat_ids: list[int] = field(default_factory=list)
     enabled: bool = True
 
 
@@ -43,4 +41,4 @@ HELP_TEXT = """🦞 *Tôm Hùm — Telegram Commander*
 """
 
 
-__all__ = ["BotConfig", "HELP_TEXT"]
+__all__ = ["HELP_TEXT", "BotConfig"]

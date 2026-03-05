@@ -1,14 +1,15 @@
-"""
-Mekong CLI - Recipe Planner
+"""Mekong CLI - Recipe Planner.
 
 Converts high-level goals into executable task lists using LLM.
 Implements the PLAN phase of Plan-Execute-Verify pattern.
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaskComplexity(Enum):
-    """Task complexity levels"""
+    """Task complexity levels."""
 
     SIMPLE = "simple"
     MODERATE = "moderate"
@@ -28,36 +29,35 @@ class TaskComplexity(Enum):
 
 @dataclass
 class PlanningContext:
-    """Context for planning operations"""
+    """Context for planning operations."""
 
     goal: str
-    constraints: Dict[str, Any] = field(default_factory=dict)
-    project_info: Dict[str, Any] = field(default_factory=dict)
-    available_agents: List[str] = field(default_factory=list)
+    constraints: dict[str, Any] = field(default_factory=dict)
+    project_info: dict[str, Any] = field(default_factory=dict)
+    available_agents: list[str] = field(default_factory=list)
     complexity: TaskComplexity = TaskComplexity.MODERATE
 
 
 @dataclass
 class VerificationCriteria:
-    """Success criteria for a recipe step"""
+    """Success criteria for a recipe step."""
 
-    exit_code: Optional[int] = 0
-    file_exists: List[str] = field(default_factory=list)
-    file_not_exists: List[str] = field(default_factory=list)
-    output_contains: List[str] = field(default_factory=list)
-    output_not_contains: List[str] = field(default_factory=list)
-    custom_checks: List[str] = field(default_factory=list)
+    exit_code: int | None = 0
+    file_exists: list[str] = field(default_factory=list)
+    file_not_exists: list[str] = field(default_factory=list)
+    output_contains: list[str] = field(default_factory=list)
+    output_not_contains: list[str] = field(default_factory=list)
+    custom_checks: list[str] = field(default_factory=list)
 
 
 class RecipePlanner:
-    """
-    Converts high-level goals into executable recipes with verification criteria.
+    """Converts high-level goals into executable recipes with verification criteria.
 
     This is the PLAN phase of the Plan-Execute-Verify pattern.
     """
 
     # Keyword → agent mapping for smart routing
-    AGENT_KEYWORDS: Dict[str, List[str]] = {
+    AGENT_KEYWORDS: dict[str, list[str]] = {
         "git": ["git", "commit", "branch", "merge", "rebase", "diff", "log", "push", "pull", "clone", "stash"],
         "file": ["file", "read", "write", "copy", "move", "delete", "rename", "directory", "folder", "tree"],
         "shell": ["run", "execute", "script", "command", "install", "build", "compile"],
@@ -67,26 +67,26 @@ class RecipePlanner:
     }
 
     def __init__(self, llm_client: Optional["LLMClient"] = None) -> None:
-        """
-        Initialize planner.
+        """Initialize planner.
 
         Args:
             llm_client: Optional LLM client for AI-powered planning
+
         """
         self.llm_client = llm_client
 
-    def suggest_agent(self, goal: str) -> Optional[str]:
-        """
-        Suggest the best agent for a goal based on keyword matching.
+    def suggest_agent(self, goal: str) -> str | None:
+        """Suggest the best agent for a goal based on keyword matching.
 
         Args:
             goal: User's high-level objective
 
         Returns:
             Agent name from AGENT_REGISTRY or None
+
         """
         goal_lower = goal.lower()
-        scores: Dict[str, int] = {}
+        scores: dict[str, int] = {}
 
         for agent_name, keywords in self.AGENT_KEYWORDS.items():
             score = sum(1 for kw in keywords if kw in goal_lower)
@@ -99,10 +99,9 @@ class RecipePlanner:
         return max(scores, key=lambda k: scores[k])
 
     def decompose_goal(
-        self, goal: str, context: PlanningContext
-    ) -> List[Dict[str, Any]]:
-        """
-        Decompose high-level goal into atomic tasks.
+        self, goal: str, context: PlanningContext,
+    ) -> list[dict[str, Any]]:
+        """Decompose high-level goal into atomic tasks.
 
         Args:
             goal: User's high-level objective
@@ -110,6 +109,7 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries with title, description, dependencies
+
         """
         # If LLM client available, use AI decomposition
         if self.llm_client:
@@ -119,10 +119,9 @@ class RecipePlanner:
         return self._rule_based_decompose(goal, context)
 
     def _rule_based_decompose(
-        self, goal: str, context: PlanningContext
-    ) -> List[Dict[str, Any]]:
-        """
-        Rule-based task decomposition (fallback when no LLM).
+        self, goal: str, context: PlanningContext,
+    ) -> list[dict[str, Any]]:
+        """Rule-based task decomposition (fallback when no LLM).
 
         Args:
             goal: User's objective
@@ -130,8 +129,9 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries
+
         """
-        tasks: List[Dict[str, Any]] = []
+        tasks: list[dict[str, Any]] = []
         suggested_agent = self.suggest_agent(goal)
 
         # Simple heuristic: check for common patterns
@@ -161,7 +161,7 @@ class RecipePlanner:
                         "description": "Run tests and validate",
                         "dependencies": [2],
                     },
-                ]
+                ],
             )
 
         # Pattern: "fix X" or "debug X"
@@ -183,7 +183,7 @@ class RecipePlanner:
                         "description": "Test that issue is resolved",
                         "dependencies": [1],
                     },
-                ]
+                ],
             )
 
         # Pattern: shell commands (user typed something like "find ...", "ls ...", "git ...")
@@ -229,7 +229,7 @@ class RecipePlanner:
                     "description": shell_cmd,
                     "dependencies": [],
                     "type": "shell",
-                }
+                },
             )
 
         # Pattern: list/show/search → map to shell find/grep
@@ -242,29 +242,28 @@ class RecipePlanner:
             else:
                 cmd = "find . -maxdepth 2 -not -path '*/.git/*' | sort | head -30"
             tasks.append(
-                {"title": goal, "description": cmd, "dependencies": [], "type": "shell"}
+                {"title": goal, "description": cmd, "dependencies": [], "type": "shell"},
             )
 
         # Default: delegate to LLM if available, else echo the goal
         else:
             tasks.append(
-                {"title": goal, "description": goal, "dependencies": [], "type": "llm"}
+                {"title": goal, "description": goal, "dependencies": [], "type": "llm"},
             )
 
         # Attach suggested agent to all tasks that don't already have one
         if suggested_agent:
             for task in tasks:
-                task_dict: Dict[str, Any] = task
+                task_dict: dict[str, Any] = task
                 if "agent" not in task_dict:
                     task_dict["agent"] = suggested_agent
 
         return tasks
 
     def _llm_decompose(
-        self, goal: str, context: PlanningContext
-    ) -> List[Dict[str, Any]]:
-        """
-        LLM-powered task decomposition.
+        self, goal: str, context: PlanningContext,
+    ) -> list[dict[str, Any]]:
+        """LLM-powered task decomposition.
 
         Args:
             goal: User's objective
@@ -272,6 +271,7 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries from LLM
+
         """
         from src.core.llm_client import get_client
 
@@ -318,26 +318,26 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                             "title": task.get("title", "Untitled"),
                             "description": task.get("description", ""),
                             "dependencies": task.get("dependencies", []),
-                        }
+                        },
                     )
 
             return validated if validated else self._rule_based_decompose(goal, context)
 
         except Exception as e:
-            logger.error("[PLANNER] LLM decomposition failed: %s", e)
+            logger.exception("[PLANNER] LLM decomposition failed: %s", e)
             return self._rule_based_decompose(goal, context)
 
     def generate_verification_criteria(
-        self, task: Dict[str, Any]
+        self, task: dict[str, Any],
     ) -> VerificationCriteria:
-        """
-        Generate verification criteria for a task.
+        """Generate verification criteria for a task.
 
         Args:
             task: Task dictionary with title and description
 
         Returns:
             VerificationCriteria object
+
         """
         criteria = VerificationCriteria()
 
@@ -365,9 +365,8 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
         return criteria
 
-    def plan(self, goal: str, context: Optional[PlanningContext] = None) -> Recipe:
-        """
-        Create executable recipe from high-level goal.
+    def plan(self, goal: str, context: PlanningContext | None = None) -> Recipe:
+        """Create executable recipe from high-level goal.
 
         This is the main planning entry point.
 
@@ -377,6 +376,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
         Returns:
             Recipe with steps and verification criteria
+
         """
         if context is None:
             context = PlanningContext(goal=goal)
@@ -401,7 +401,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             steps.append(step)
 
         # Step 3: Create recipe
-        recipe = Recipe(
+        return Recipe(
             name=f"Plan: {goal}",
             description=f"Automated plan for: {goal}",
             steps=steps,
@@ -412,17 +412,16 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             },
         )
 
-        return recipe
 
-    def validate_plan(self, recipe: Recipe) -> List[str]:
-        """
-        Validate recipe for common issues.
+    def validate_plan(self, recipe: Recipe) -> list[str]:
+        """Validate recipe for common issues.
 
         Args:
             recipe: Recipe to validate
 
         Returns:
             List of validation warnings/errors
+
         """
         issues = []
 
@@ -444,8 +443,8 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
 
 __all__ = [
-    "RecipePlanner",
     "PlanningContext",
-    "VerificationCriteria",
+    "RecipePlanner",
     "TaskComplexity",
+    "VerificationCriteria",
 ]
