@@ -6,6 +6,8 @@ from .file_agent import FileAgent
 from .shell_agent import ShellAgent
 from .database_agent import DatabaseAgent
 from .workspace_agent import WorkspaceAgent
+from .monitor_agent import MonitorAgent
+from .network_agent import NetworkAgent
 from src.core.agent_registry import AgentRegistry
 
 # Global registry instance — single source of truth for agent lookup
@@ -20,6 +22,8 @@ registry.register("content", ContentWriter)
 registry.register("crawler", RecipeCrawler)
 registry.register("workspace", WorkspaceAgent)
 registry.register("google", WorkspaceAgent)  # Alias
+registry.register("monitor", MonitorAgent)
+registry.register("network", NetworkAgent)
 
 # Backward-compatibility alias — keeps existing code working without changes
 AGENT_REGISTRY = registry._agents
@@ -40,6 +44,9 @@ __all__ = [
     "FileAgent",
     "ShellAgent",
     "DatabaseAgent",
+    "WorkspaceAgent",
+    "MonitorAgent",
+    "NetworkAgent",
     "registry",
     "AGENT_REGISTRY",
 ]
