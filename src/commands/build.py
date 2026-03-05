@@ -63,11 +63,6 @@ def clean_build():
         "coverage.json",
     ]
 
-    files_to_clean = [
-        "*.pyc",
-        "*~",
-        ".coverage.*",
-    ]
 
     for pattern in dirs_to_clean:
         for path in Path('.').glob(pattern):
@@ -87,10 +82,7 @@ def build_python_package(verbose: bool):
 
     try:
         cmd = [sys.executable, "-m", "poetry", "build"]
-        if verbose:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=False)
-        else:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=True, text=True)
+        subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         console.print("[green]✅ Python package built![/green]")
 
@@ -120,10 +112,7 @@ def build_js_frontend(verbose: bool):
 
     try:
         cmd = ["npm", "run", "build"]
-        if verbose:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=False)
-        else:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=True, text=True)
+        subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         console.print("[green]✅ JS frontend built![/green]")
 
@@ -135,7 +124,7 @@ def build_js_frontend(verbose: bool):
         console.print("[yellow]npm not found, skipping JS build[/yellow]")
 
 
-def build_docker_image(verbose: bool):
+def build_docker_image(verbose: bool = False):
     """Build Docker image"""
     console.print("[bold blue]🐳 Building Docker image...[/bold blue]")
 
@@ -147,10 +136,7 @@ def build_docker_image(verbose: bool):
     try:
         image_tag = "mekong-cli:latest"
         cmd = ["docker", "build", "-t", image_tag, "."]
-        if verbose:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=False)
-        else:
-            result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=True, text=True)
+        subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         console.print(f"[green]✅ Docker image built: {image_tag}[/green]")
 
@@ -205,6 +191,7 @@ def docker(
     tag: str = typer.Option("mekong-cli:latest", "--tag", "-t", help="Image tag"),
     push: bool = typer.Option(False, "--push", help="Push image after building"),
     no_cache: bool = typer.Option(False, "--no-cache", help="Build without cache"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
     """Build Docker image specifically"""
     console.print(f"[bold blue]🐳 Building Docker image: {tag}[/bold blue]")
@@ -215,13 +202,13 @@ def docker(
             cmd.append("--no-cache")
         cmd.append(".")
 
-        result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
+        subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         console.print(f"[green]✅ Docker image built: {tag}[/green]")
 
         if push:
             console.print(f"[bold blue]⬆️  Pushing image: {tag}[/bold blue]")
-            push_result = subprocess.run(["docker", "push", tag],
+            subprocess.run(["docker", "push", tag],
                                        cwd=Path.cwd(), check=True,
                                        capture_output=not verbose, text=True)
             console.print(f"[green]✅ Docker image pushed: {tag}[/green]")

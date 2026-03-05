@@ -570,7 +570,7 @@ class CrossSessionIntelligenceEngine:
         preferences = manager.get_user_preferences()
 
         # Get user's knowledge base
-        knowledge = manager.get_knowledge_base()
+        # knowledge = manager.get_knowledge_base()  # Removed unused
 
         # Add personalization based on preferences
         if preferences:

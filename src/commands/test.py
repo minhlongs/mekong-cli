@@ -31,7 +31,7 @@ def run(
     if watch:
         # Check if pytest-watch is installed
         try:
-            import pytest_watch
+            # import pytest_watch  # Removed unused
             cmd.insert(1, "pytest-watch")
         except ImportError:
             console.print("[red]pytest-watch not installed. Install with: pip install pytest-watch[/red]")
@@ -117,7 +117,7 @@ def benchmark():
 
     # Benchmark computation
     start = time.time()
-    result = sum(i*i for i in range(10000))
+    # result = sum(i*i for i in range(10000))  # Removed unused
     comp_time = time.time() - start
 
     table = Table(title="Benchmark Results")

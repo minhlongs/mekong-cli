@@ -56,7 +56,7 @@ def generate(
 
 def generate_simple_docs(format_type: str, source: str, output: str):
     """Generate simple documentation for different formats"""
-    source_path = Path(source)
+# source_path = Path(source)  # Removed unused variable
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
 
