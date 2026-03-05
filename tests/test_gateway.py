@@ -115,7 +115,7 @@ class TestGatewayCommandExecution(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_returns_success(self, mock_orch_cls, mock_get_client):
         """Successful goal execution returns status=success"""
         # Setup mocks
@@ -146,7 +146,7 @@ class TestGatewayCommandExecution(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_response_structure(self, mock_orch_cls, mock_get_client):
         """Response must contain all required fields"""
         mock_client = MagicMock()
@@ -181,7 +181,7 @@ class TestGatewayCommandExecution(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_returns_goal_echo(self, mock_orch_cls, mock_get_client):
         """Response should echo back the original goal"""
         mock_client = MagicMock()
@@ -210,7 +210,7 @@ class TestGatewayCommandExecution(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_with_step_results(self, mock_orch_cls, mock_get_client):
         """Response should include step summaries when steps exist"""
         mock_client = MagicMock()
@@ -259,7 +259,7 @@ class TestGatewayCommandExecution(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_failed_goal(self, mock_orch_cls, mock_get_client):
         """Failed goal should return status=failed"""
         mock_client = MagicMock()
@@ -297,7 +297,7 @@ class TestGatewayTelemetry(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_trace_included_when_available(self, mock_orch_cls, mock_get_client):
         """Trace data should be included when telemetry has a trace"""
         mock_client = MagicMock()
@@ -328,7 +328,7 @@ class TestGatewayTelemetry(unittest.TestCase):
         mock_orch.telemetry.get_trace.return_value = mock_trace
         mock_orch_cls.return_value = mock_orch
 
-        with patch("src.core.gateway.asdict", return_value=trace_dict):
+        with patch("src.core.gateway.gateway_main.asdict", return_value=trace_dict):
             resp = self.client.post(
                 "/cmd",
                 json={"goal": "test goal", "token": "test-secret"},
@@ -339,7 +339,7 @@ class TestGatewayTelemetry(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_trace_null_when_unavailable(self, mock_orch_cls, mock_get_client):
         """Trace should be null when telemetry has no trace"""
         mock_client = MagicMock()
@@ -402,7 +402,7 @@ class TestGatewayEdgeCases(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_orchestrator_exception_returns_500(self, mock_orch_cls, mock_get_client):
         """Orchestrator exception should return 500"""
         mock_client = MagicMock()
@@ -563,7 +563,7 @@ class TestGatewayProjects(unittest.TestCase):
             os.makedirs(os.path.join(tmpdir, "project-b", ".git"))
             os.makedirs(os.path.join(tmpdir, ".hidden"))
 
-            with patch("src.core.gateway.GATEWAY_CONFIG") as mock_cfg:
+            with patch("src.core.gateway.gateway_main.GATEWAY_CONFIG") as mock_cfg:
                 mock_cfg.project_paths = [tmpdir]
                 projects = _scan_projects()
 
@@ -586,7 +586,7 @@ class TestGatewayWebSocket(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_ws_returns_complete_message(self, mock_orch_cls, mock_get_client):
         """WebSocket should return a complete message after execution"""
         mock_client = MagicMock()
@@ -644,7 +644,7 @@ class TestGatewayWebSocket(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_ws_complete_has_human_summary(self, mock_orch_cls, mock_get_client):
         """WebSocket complete message should include human_summary"""
         mock_client = MagicMock()
@@ -842,7 +842,7 @@ class TestHumanSummary(unittest.TestCase):
 
     @patch.dict(os.environ, {"MEKONG_API_TOKEN": "test-secret"})
     @patch("src.core.gateway.get_client")
-    @patch("src.core.gateway.RecipeOrchestrator")
+    @patch("src.core.gateway.gateway_main.RecipeOrchestrator")
     def test_cmd_includes_human_summary(self, mock_orch_cls, mock_get_client):
         """POST /cmd response should include human_summary field"""
         mock_client = MagicMock()

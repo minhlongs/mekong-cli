@@ -45,12 +45,14 @@ export interface WebhookResult {
 
 export class PolarWebhookEventHandler {
   private licenseService: LicenseService;
+  private subscriptionService: PolarSubscriptionService;
 
   constructor(
-    private subscriptionService: PolarSubscriptionService,
+    subscriptionService?: PolarSubscriptionService,
     private onTierChange?: (tenantId: string, newTier: TenantTier) => void,
   ) {
     this.licenseService = LicenseService.getInstance();
+    this.subscriptionService = subscriptionService ?? PolarSubscriptionService.getInstance();
   }
 
   /**
@@ -58,7 +60,10 @@ export class PolarWebhookEventHandler {
    * Returns true if signature valid or no secret configured (dev mode).
    */
   verifySignature(payload: string, signature: string): boolean {
-    if (!WEBHOOK_SECRET) return true; // Dev mode — no verification
+    if (!WEBHOOK_SECRET) {
+      // Dev mode: accept all webhooks when secret not configured
+      return true;
+    }
 
     const expected = createHmac('sha256', WEBHOOK_SECRET)
       .update(payload)

@@ -76,7 +76,6 @@ describe('Security Audit: License Validation', () => {
   describe('Input Validation & Sanitization', () => {
     test('should handle SQL injection attempts in license key', async () => {
       const maliciousKey = "'; DROP TABLE licenses; --";
-      // Should not throw, just handle gracefully
       await expect(licenseService.validate(maliciousKey)).resolves.toBeDefined();
     });
 
@@ -98,6 +97,14 @@ describe('Security Audit: License Validation', () => {
   });
 
   describe('Audit Logging', () => {
+    beforeEach(() => {
+      process.env.DEBUG_AUDIT = 'true';
+    });
+
+    afterEach(() => {
+      delete process.env.DEBUG_AUDIT;
+    });
+
     test('should log license check events', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 

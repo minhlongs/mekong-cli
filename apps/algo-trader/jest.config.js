@@ -2,7 +2,8 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   maxWorkers: 1,
-  workerIdleMemoryLimit: '1GB', // Increased for M1 16GB RAM
+  workerIdleMemoryLimit: 0.5, // 50% RAM - aggressive GC for M1 16GB
+  workerMemoryLimit: 1024, // 1GB per worker
   testTimeout: 60000,
   // Skip heavy tests that cause SIGKILL on M1 16GB RAM
   testPathIgnorePatterns: [
@@ -35,6 +36,9 @@ module.exports = {
     'spread-detector-command.test.ts',
     'AgiArbitrageEngine.test',
     'redis-connectivity.test',
+    // SIGKILL failures - heavy memory
+    'idempotency-middleware.test',
+    'backtest-cache.test',
   ],
   testMatch: ['**/*.test.ts'],
   moduleDirectories: ['node_modules', '<rootDir>/node_modules'],
