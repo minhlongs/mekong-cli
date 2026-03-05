@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # --- Widget Models ---
 
@@ -39,8 +39,7 @@ class DashboardWidget(DashboardWidgetBase):
     dashboard_id: UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Dashboard Config Models ---
@@ -72,8 +71,7 @@ class DashboardConfig(DashboardConfigBase):
     updated_at: datetime
     widgets: List[DashboardWidget] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # --- Data Models ---
