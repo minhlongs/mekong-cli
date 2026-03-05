@@ -1,19 +1,65 @@
 /**
  * Integration Tests: License Gating for Premium Features
+ *
+ * @jest-environment node
+ * @jest-environment-options {"memoryLimit": 512}
  */
+
+// Mock TensorFlow before any imports
+jest.mock('@tensorflow/tfjs', () => {
+  const mockHandler = jest.fn();
+  return {
+    sequential: jest.fn(() => ({
+      add: jest.fn(),
+      compile: jest.fn(),
+      fit: jest.fn(),
+      predict: jest.fn(),
+      save: jest.fn().mockImplementation(() => {
+        return mockHandler({ weightSpecs: [], weightData: new Uint8Array() });
+      }),
+      loadWeights: jest.fn(),
+      getWeights: jest.fn(() => []),
+      setWeights: jest.fn(),
+    })),
+    layers: {
+      dense: jest.fn(() => ({})),
+      gru: jest.fn(() => ({})),
+      dropout: jest.fn(() => ({})),
+    },
+    train: {
+      adam: jest.fn(() => ({})),
+      sgd: jest.fn(() => ({})),
+    },
+    metrics: {
+      meanSquaredError: jest.fn(),
+      accuracy: jest.fn(),
+    },
+    io: {
+      fromMemory: jest.fn(),
+      toMemory: jest.fn(),
+      withSaveHandler: jest.fn((handler) => {
+        return { save: () => handler({ weightSpecs: [], weightData: new Uint8Array() }) };
+      }),
+    },
+    memory: { gc: jest.fn() },
+    dispose: jest.fn(),
+    backend: 'cpu',
+  };
+});
 
 import { LicenseService, LicenseTier, LicenseError } from '../../src/lib/raas-gate';
 import { GruPricePredictionModel } from '../../src/ml/gru-price-prediction-model';
 import { BacktestEngine } from '../../src/backtest/BacktestEngine';
-import { IStrategy, SignalType } from '../../src/interfaces/IStrategy';
+import { IStrategy, SignalType, ISignal } from '../../src/interfaces/IStrategy';
 import { ICandle } from '../../src/interfaces/ICandle';
+import { DetailedTrade } from '../../src/backtest/backtest-engine-result-types';
 
 class MockStrategy implements IStrategy {
   name = 'MockStrategy';
-  signals = [SignalType.HOLD];
+  signals = [SignalType.NONE];
   async init(_candles: ICandle[]): Promise<void> {}
-  async onCandle(_candle: ICandle): Promise<{ type: SignalType }> {
-    return { type: SignalType.HOLD };
+  async onCandle(_candle: ICandle): Promise<ISignal | null> {
+    return { type: SignalType.NONE, price: 50000, timestamp: Date.now() };
   }
 }
 
@@ -38,7 +84,7 @@ describe('License Gating Integration', () => {
 
     test('should block loadWeights without PRO license', () => {
       const model = new GruPricePredictionModel();
-      const mockArtifacts = { weightSpecs: [], weightData: new Uint8Array([]) };
+      const mockArtifacts = { weightSpecs: [], weightData: [] };
       expect(() => model.loadWeights(mockArtifacts)).toThrow(LicenseError);
     });
 
@@ -54,7 +100,7 @@ describe('License Gating Integration', () => {
       licenseService.activateLicense('raas-pro-test', LicenseTier.PRO);
       const model = new GruPricePredictionModel();
       model.build();
-      const mockArtifacts = { weightSpecs: [], weightData: new Uint8Array([]) };
+      const mockArtifacts = { weightSpecs: [], weightData: [] };
       expect(() => model.loadWeights(mockArtifacts)).not.toThrow();
     });
   });
@@ -102,10 +148,10 @@ describe('License Gating Integration', () => {
 
     test('should allow monteCarlo with PRO license', () => {
       licenseService.activateLicense('raas-pro-test', LicenseTier.PRO);
-      const mockTrades = [
-        { profit: 100, exitTime: Date.now(), entryTime: Date.now() - 1000, mae: 0, mfe: 0 },
-        { profit: -50, exitTime: Date.now(), entryTime: Date.now() - 1000, mae: 0, mfe: 0 },
-        { profit: 200, exitTime: Date.now(), entryTime: Date.now() - 1000, mae: 0, mfe: 0 },
+      const mockTrades: DetailedTrade[] = [
+        { entryPrice: 100, exitPrice: 101, profit: 100, profitPercent: 1, positionSize: 1, fees: 0.1, entryTime: Date.now() - 1000, exitTime: Date.now(), holdingPeriodMs: 1000, maxAdverseExcursion: 99, maxFavorableExcursion: 102 },
+        { entryPrice: 100, exitPrice: 99, profit: -50, profitPercent: -0.5, positionSize: 1, fees: 0.1, entryTime: Date.now() - 1000, exitTime: Date.now(), holdingPeriodMs: 1000, maxAdverseExcursion: 98, maxFavorableExcursion: 101 },
+        { entryPrice: 100, exitPrice: 102, profit: 200, profitPercent: 2, positionSize: 1, fees: 0.1, entryTime: Date.now() - 1000, exitTime: Date.now(), holdingPeriodMs: 1000, maxAdverseExcursion: 99, maxFavorableExcursion: 103 },
       ];
       const result = engine.monteCarlo(mockTrades, 10000, 100);
       expect(result).toBeDefined();
