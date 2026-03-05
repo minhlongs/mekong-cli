@@ -3,7 +3,14 @@
  *
  * Gates ML model weights loading and premium backtest data behind RAAS_LICENSE_KEY.
  * Trading engine source and base strategies remain open source.
+ *
+ * Security patches applied (2026-03-05):
+ * - Audit logging for compliance
+ * - License expiration enforcement
+ * - Rate limit tracking for validation failures
  */
+
+import { createHash } from 'crypto';
 
 /**
  * License tier levels
@@ -25,6 +32,18 @@ export interface LicenseValidation {
 }
 
 /**
+ * Audit log entry for license checks
+ */
+interface LicenseAuditLog {
+  event: 'license_check' | 'license_expired' | 'validation_failed';
+  feature?: string;
+  success: boolean;
+  tier: string;
+  ip?: string;
+  timestamp: string;
+}
+
+/**
  * Custom error for license violations
  */
 export class LicenseError extends Error {
@@ -39,15 +58,34 @@ export class LicenseError extends Error {
 }
 
 /**
+ * Rate limit state for validation failures
+ */
+interface ValidationRateLimit {
+  attempts: number[];
+  blockedUntil?: number;
+}
+
+/**
  * RAAS License Service
  *
  * Validates license keys and gates premium features.
  * In production, this would call a license server.
  * For now, uses environment variable validation.
+ *
+ * Security features:
+ * - Audit logging for all license checks
+ * - Automatic expiration enforcement
+ * - Rate limiting on validation failures (max 5 per minute per IP)
  */
 export class LicenseService {
   private static instance: LicenseService;
   private validatedLicense: LicenseValidation | null = null;
+
+  // Rate limiting for validation failures (prevent brute force)
+  private validationAttempts: Map<string, ValidationRateLimit> = new Map();
+  private readonly MAX_VALIDATION_ATTEMPTS = 5;
+  private readonly VALIDATION_WINDOW_MS = 60 * 1000; // 1 minute
+  private readonly BLOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
   private constructor() {}
 
@@ -59,14 +97,31 @@ export class LicenseService {
   }
 
   /**
-   * Validate RAAS license key
+   * Validate RAAS license key with security patches
    *
-   * Free tier: No license key required (basic features only)
-   * Pro tier: Valid license key (ML models + premium data)
-   * Enterprise: Valid enterprise key (all features + priority)
+   * Security checks:
+   * 1. Rate limiting on validation failures (max 5/min)
+   * 2. Expiration enforcement
+   * 3. Audit logging
    */
-  validate(key?: string): LicenseValidation {
+  validate(key?: string, clientIp?: string): LicenseValidation {
     const licenseKey = key || process.env.RAAS_LICENSE_KEY;
+
+    // Check rate limit for validation attempts
+    if (clientIp && !this.checkValidationRateLimit(clientIp)) {
+      this.logAudit({
+        event: 'validation_failed',
+        success: false,
+        tier: 'blocked',
+        ip: clientIp,
+        timestamp: new Date().toISOString(),
+      });
+      throw new LicenseError(
+        'Too many validation attempts. Please try again later.',
+        LicenseTier.FREE,
+        'rate_limited'
+      );
+    }
 
     // No key = free tier
     if (!licenseKey) {
@@ -78,7 +133,7 @@ export class LicenseService {
       return this.validatedLicense;
     }
 
-    // Validate key format (in production, verify against license server)
+    // Validate key format
     if (licenseKey.startsWith('raas-pro-') || licenseKey.startsWith('RPP-')) {
       this.validatedLicense = {
         valid: true,
@@ -115,7 +170,11 @@ export class LicenseService {
       return this.validatedLicense;
     }
 
-    // Invalid key
+    // Invalid key - track attempt
+    if (clientIp) {
+      this.recordValidationAttempt(clientIp);
+    }
+
     this.validatedLicense = {
       valid: false,
       tier: LicenseTier.FREE,
@@ -125,11 +184,80 @@ export class LicenseService {
   }
 
   /**
-   * Check if current license has required tier
+   * Check validation rate limit for IP
+   */
+  private checkValidationRateLimit(ip: string): boolean {
+    const state = this.validationAttempts.get(ip);
+    if (!state) return true;
+
+    const now = Date.now();
+
+    // Check if currently blocked
+    if (state.blockedUntil && now < state.blockedUntil) {
+      return false;
+    }
+
+    // Clean old attempts outside window
+    const windowStart = now - this.VALIDATION_WINDOW_MS;
+    state.attempts = state.attempts.filter(ts => ts > windowStart);
+
+    // Reset block if window cleared
+    if (state.attempts.length < this.MAX_VALIDATION_ATTEMPTS) {
+      state.blockedUntil = undefined;
+    }
+
+    return state.blockedUntil === undefined;
+  }
+
+  /**
+   * Record failed validation attempt
+   */
+  private recordValidationAttempt(ip: string): void {
+    let state = this.validationAttempts.get(ip);
+    if (!state) {
+      state = { attempts: [] };
+      this.validationAttempts.set(ip, state);
+    }
+
+    state.attempts.push(Date.now());
+
+    // Block if too many attempts
+    if (state.attempts.length >= this.MAX_VALIDATION_ATTEMPTS) {
+      state.blockedUntil = Date.now() + this.BLOCK_DURATION_MS;
+    }
+  }
+
+  /**
+   * Check if license is expired
+   */
+  isExpired(): boolean {
+    if (!this.validatedLicense || !this.validatedLicense.expiresAt) {
+      return false;
+    }
+
+    const expiryDate = new Date(this.validatedLicense.expiresAt);
+    const now = new Date();
+
+    return expiryDate < now;
+  }
+
+  /**
+   * Check if current license has required tier with expiration check
    */
   hasTier(required: LicenseTier): boolean {
     if (!this.validatedLicense) {
       this.validate();
+    }
+
+    // Check expiration first
+    if (this.isExpired()) {
+      this.logAudit({
+        event: 'license_expired',
+        success: false,
+        tier: this.validatedLicense!.tier,
+        timestamp: new Date().toISOString(),
+      });
+      return false;
     }
 
     const tierOrder = {
@@ -142,14 +270,25 @@ export class LicenseService {
   }
 
   /**
-   * Check if specific feature is enabled
+   * Check if specific feature is enabled with audit logging
    */
   hasFeature(feature: string): boolean {
     if (!this.validatedLicense) {
       this.validate();
     }
 
-    return this.validatedLicense!.features.includes(feature);
+    const hasAccess = this.validatedLicense!.features.includes(feature);
+
+    // Log feature access check
+    this.logAudit({
+      event: 'license_check',
+      feature,
+      success: hasAccess,
+      tier: this.validatedLicense!.tier,
+      timestamp: new Date().toISOString(),
+    });
+
+    return hasAccess;
   }
 
   /**
@@ -163,12 +302,21 @@ export class LicenseService {
   }
 
   /**
-   * Require specific tier or throw LicenseError
+   * Require specific tier or throw LicenseError with expiration check
    */
   requireTier(required: LicenseTier, feature: string): void {
     if (!this.hasTier(required)) {
+      const reason = this.isExpired() ? 'expired' : 'insufficient';
+      this.logAudit({
+        event: 'license_check',
+        feature,
+        success: false,
+        tier: `${this.getTier()} (${reason})`,
+        timestamp: new Date().toISOString(),
+      });
+
       throw new LicenseError(
-        `Feature "${feature}" requires ${required.toUpperCase()} license. Current tier: ${this.getTier()}`,
+        `Feature "${feature}" requires ${required.toUpperCase()} license. Current tier: ${this.getTier()}${reason === 'expired' ? ' (EXPIRED)' : ''}`,
         required,
         feature
       );
@@ -189,10 +337,50 @@ export class LicenseService {
   }
 
   /**
-   * Reset cached license (for testing)
+   * Log audit event (in production, send to SIEM/logging service)
+   */
+  private logAudit(log: LicenseAuditLog): void {
+    // In production, replace with actual logging service
+    // For now, log to console in JSON format for easy parsing
+    console.log('[RAAS-AUDIT]', JSON.stringify(log));
+  }
+
+  /**
+   * Get validation attempts for an IP (for debugging)
+   */
+  getValidationAttempts(ip: string): number {
+    const state = this.validationAttempts.get(ip);
+    if (!state) return 0;
+
+    const now = Date.now();
+    const windowStart = now - this.VALIDATION_WINDOW_MS;
+    return state.attempts.filter(ts => ts > windowStart).length;
+  }
+
+  /**
+   * Reset cached license and rate limits (for testing)
    */
   reset(): void {
     this.validatedLicense = null;
+    this.validationAttempts.clear();
+  }
+
+  /**
+   * Generate license key checksum for validation
+   */
+  generateChecksum(key: string): string {
+    return createHash('sha256')
+      .update(key)
+      .digest('hex')
+      .slice(0, 4);
+  }
+
+  /**
+   * Validate license key with checksum
+   */
+  validateWithChecksum(key: string, checksum: string): boolean {
+    const expectedChecksum = this.generateChecksum(key);
+    return checksum === expectedChecksum;
   }
 }
 
@@ -222,8 +410,8 @@ export function getLicenseTier(): LicenseTier {
 /**
  * Validate license and return tier
  */
-export function validateLicense(key?: string): LicenseValidation {
-  return LicenseService.getInstance().validate(key);
+export function validateLicense(key?: string, clientIp?: string): LicenseValidation {
+  return LicenseService.getInstance().validate(key, clientIp);
 }
 
 /**
