@@ -7,7 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 import json
-import secrets
 from datetime import datetime
 
 app = typer.Typer()
@@ -255,7 +254,7 @@ def display_scan_results(results):
 
 
 @app.command()
-def secrets(
+def scan_secrets(
     path: str = typer.Argument(".", help="Path to scan for secrets"),
     include_filenames: bool = typer.Option(False, "--include-filenames", help="Include filenames in output"),
     entropy_threshold: float = typer.Option(4.5, "--entropy", help="Entropy threshold for detection"),
@@ -408,7 +407,7 @@ def generate_report(output_file: str = typer.Option("security-report.json", "--o
         result = subprocess.run([sys.executable, "-m", "pip", "freeze"],
                               capture_output=True, text=True, check=True)
         report_data["sections"]["dependencies"] = result.stdout.split('\n')
-    except:
+    except Exception:
         report_data["sections"]["dependencies"] = ["Could not retrieve dependency list"]
 
     # Add file permissions info
@@ -430,7 +429,7 @@ def generate_report(output_file: str = typer.Option("security-report.json", "--o
             result = subprocess.run(["git", "remote", "-v"],
                                   capture_output=True, text=True, check=True)
             report_data["sections"]["git_remotes"] = result.stdout
-        except:
+        except Exception:
             report_data["sections"]["git_remotes"] = "Could not retrieve git remotes"
 
     # Write report
