@@ -1,9 +1,8 @@
 /**
  * Circuit Breaker — Auto-halt on abnormal conditions
- * License-gated: PRO for advanced circuit breaker
  */
 
-import { LicenseService, LicenseTier, LicenseError } from '../lib/raas-gate';
+import { LicenseService, LicenseTier } from '../lib/raas-gate';
 
 export interface CircuitBreakerConfig {
   maxDrawdownPercent?: number;
@@ -22,16 +21,17 @@ export interface CircuitBreakerState {
   errorCount: number;
 }
 
+export type CircuitBreakerStateLegacy = 'OPEN' | 'CLOSED' | 'HALF_OPEN';
+
 export class CircuitBreaker {
-  private state: CircuitBreakerState = {
+  protected state: CircuitBreakerState = {
     isHalted: false,
     consecutiveLosses: 0,
     totalTrades: 0,
     totalLosses: 0,
     errorCount: 0,
   };
-  private config: Required<CircuitBreakerConfig>;
-  private licenseService: LicenseService;
+  protected config: Required<CircuitBreakerConfig>;
 
   constructor(config?: CircuitBreakerConfig) {
     this.config = {
@@ -40,7 +40,6 @@ export class CircuitBreaker {
       maxLossesInRow: config?.maxLossesInRow ?? 3,
       cooldownMs: config?.cooldownMs ?? 300000,
     };
-    this.licenseService = LicenseService.getInstance();
   }
 
   recordTrade(pnl: number): void {
@@ -68,11 +67,10 @@ export class CircuitBreaker {
     }
   }
 
-  private halt(reason: string): void {
+  protected halt(reason: string): void {
     this.state.isHalted = true;
     this.state.haltedAt = Date.now();
     this.state.reason = reason;
-    console.log(`[CircuitBreaker] HALTED: ${reason}`);
   }
 
   canTrade(): boolean {
@@ -85,7 +83,6 @@ export class CircuitBreaker {
       this.state.reason = undefined;
       this.state.errorCount = 0;
       this.state.consecutiveLosses = 0;
-      console.log('[CircuitBreaker] Resumed trading');
     }
     return !this.state.isHalted;
   }
@@ -105,23 +102,32 @@ export class CircuitBreaker {
   }
 }
 
-// Compatibility methods for existing code
-export type CircuitBreakerStateLegacy = 'OPEN' | 'CLOSED' | 'HALF_OPEN';
-
 export class CircuitBreakerLegacy extends CircuitBreaker {
+  private licenseService = LicenseService.getInstance();
+
   execute<T>(fn: () => Promise<T>): Promise<T> {
-    if (!this.canTrade()) {
-      throw new Error('Circuit breaker is open');
-    }
+    if (!this.canTrade()) throw new Error('Circuit breaker is open');
     return fn();
   }
 
-  getMetrics(): { state: CircuitBreakerStateLegacy; consecutiveLosses: number; totalTrades: number } {
-    const state = this.getState();
+  getMetrics(): {
+    state: CircuitBreakerStateLegacy;
+    consecutiveLosses: number;
+    totalTrades: number;
+    failureCount: number;
+    totalRequests: number;
+    totalFailures: number;
+    totalSuccesses: number;
+  } {
+    const s = this.getState();
     return {
-      state: state.isHalted ? 'OPEN' : 'CLOSED',
-      consecutiveLosses: state.consecutiveLosses,
-      totalTrades: state.totalTrades,
+      state: s.isHalted ? 'OPEN' : 'CLOSED',
+      consecutiveLosses: s.consecutiveLosses,
+      totalTrades: s.totalTrades,
+      failureCount: s.errorCount,
+      totalRequests: s.totalTrades,
+      totalFailures: s.totalLosses,
+      totalSuccesses: s.totalTrades - s.totalLosses,
     };
   }
 }

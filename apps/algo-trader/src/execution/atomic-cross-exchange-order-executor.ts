@@ -6,7 +6,7 @@
 
 import { logger } from '../utils/logger';
 import type { IExchange, IOrder } from '../interfaces/IExchange';
-import { CircuitBreaker, CircuitBreakerConfig } from './circuit-breaker';
+import { CircuitBreakerLegacy as CircuitBreaker, CircuitBreakerConfig } from './circuit-breaker';
 import { RetryHandler, RetryConfig } from './retry-handler';
 
 export interface AtomicOrderParams {

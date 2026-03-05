@@ -96,7 +96,7 @@ export class ExchangeConnectionPool {
   healthCheck(): Record<string, boolean> {
     const result: Record<string, boolean> = {};
     for (const [id, conn] of this.connections.entries()) {
-      result[id] = conn.connected && conn.lastPing && Date.now() - conn.lastPing < 30000;
+      result[id] = conn.connected && (conn.lastPing !== undefined) && (Date.now() - conn.lastPing < 30000);
     }
     return result;
   }
