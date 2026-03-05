@@ -140,7 +140,7 @@ describe('BacktestCache', () => {
     expect(key1).not.toBe(key2);
   });
 
-  it.skip('should respect TTL and expire old entries', async () => {
+  it('should respect TTL and expire old entries', async () => {
     const cache = new BacktestCache(1000, 0.05); // 50ms TTL
     const key = 'test:expiry';
 
@@ -168,7 +168,7 @@ describe('BacktestCache', () => {
 });
 
 describe('ParallelBacktestRunner', () => {
-  it.skip('should run tasks with concurrency limit', async () => {
+  it('should run tasks with concurrency limit', async () => {
     const cache = new BacktestCache();
     const runner = new ParallelBacktestRunner(cache, 2);
 
@@ -218,7 +218,7 @@ describe('ParallelBacktestRunner', () => {
     expect(maxConcurrent).toBeLessThanOrEqual(2); // Concurrency limit
   });
 
-  it.skip('should use cached results when available', async () => {
+  it('should use cached results when available', async () => {
     const cache = new BacktestCache();
     const runner = new ParallelBacktestRunner(cache, 2);
 
@@ -245,7 +245,7 @@ describe('ParallelBacktestRunner', () => {
     expect(callCount).toBe(1); // Should not call runBacktest again
   });
 
-  it.skip('should handle empty task list', async () => {
+  it('should handle empty task list', async () => {
     const runner = new ParallelBacktestRunner();
     const results = await runner.runAll([], []);
     expect(results).toEqual([]);

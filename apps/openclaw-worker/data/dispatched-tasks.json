@@ -1,14 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "9dc78a5a3628",
-      "project": "algo-trader",
-      "pane": 2,
-      "chapter": "TIER3-RỪNG-CHIẾN: build",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu build (5→10), bỏ qua p",
-      "dispatchedAt": 1772691156762
-    },
-    {
       "hash": "04e32b81b0fa",
       "project": "well",
       "pane": 1,
@@ -1599,6 +1591,14 @@
       "chapter": "TIER3-RỪNG-CHIẾN: tests",
       "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu tests (5→10), bỏ qua phần khá",
       "dispatchedAt": 1772724111451
+    },
+    {
+      "hash": "7ecce0b36574",
+      "project": "well",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: performance",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (well): Đánh thẳng điểm yếu performance (3→10), bỏ qua ph",
+      "dispatchedAt": 1772724538055
     }
   ],
   "chapterIndex": 5
