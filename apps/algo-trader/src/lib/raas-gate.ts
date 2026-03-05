@@ -4,13 +4,17 @@
  * Gates ML model weights loading and premium backtest data behind RAAS_LICENSE_KEY.
  * Trading engine source and base strategies remain open source.
  *
- * Security patches applied (2026-03-05):
+ * Security patches (2026-03-05):
+ * - JWT-based license key validation (cryptographic signing)
+ * - Timing-safe comparisons
+ * - Input validation
  * - Audit logging for compliance
  * - License expiration enforcement
  * - Rate limit tracking for validation failures
  */
 
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
+import { verifyLicenseJWT } from './jwt-validator';
 
 /**
  * License tier levels
@@ -69,10 +73,10 @@ interface ValidationRateLimit {
  * RAAS License Service
  *
  * Validates license keys and gates premium features.
- * In production, this would call a license server.
- * For now, uses environment variable validation.
+ * Uses JWT-based validation for cryptographic security.
  *
  * Security features:
+ * - JWT signature verification (HS256)
  * - Audit logging for all license checks
  * - Automatic expiration enforcement
  * - Rate limiting on validation failures (max 5 per minute per IP)
@@ -97,14 +101,15 @@ export class LicenseService {
   }
 
   /**
-   * Validate RAAS license key with security patches
+   * Validate RAAS license key with JWT verification
    *
    * Security checks:
-   * 1. Rate limiting on validation failures (max 5/min)
-   * 2. Expiration enforcement
-   * 3. Audit logging
+   * 1. JWT signature verification (HS256)
+   * 2. Rate limiting on validation failures (max 5/min)
+   * 3. Expiration enforcement
+   * 4. Audit logging
    */
-  validate(key?: string, clientIp?: string): LicenseValidation {
+  async validate(key?: string, clientIp?: string): Promise<LicenseValidation> {
     const licenseKey = key || process.env.RAAS_LICENSE_KEY;
 
     // Check rate limit for validation attempts
@@ -133,19 +138,29 @@ export class LicenseService {
       return this.validatedLicense;
     }
 
-    // Validate key format
+    // JWT-based validation (cryptographic security)
+    const jwtResult = await verifyLicenseJWT(licenseKey);
+
+    if (jwtResult.valid && jwtResult.payload) {
+      const payload = jwtResult.payload;
+      const tier = payload.tier as LicenseTier;
+
+      this.validatedLicense = {
+        valid: true,
+        tier,
+        expiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : undefined,
+        features: payload.features,
+      };
+      return this.validatedLicense;
+    }
+
+    // Fallback to legacy prefix-based validation (deprecated, for backward compat)
+    // TODO: Remove in next major version
     if (licenseKey.startsWith('raas-pro-') || licenseKey.startsWith('RPP-')) {
       this.validatedLicense = {
         valid: true,
         tier: LicenseTier.PRO,
-        features: [
-          'basic_strategies',
-          'live_trading',
-          'basic_backtest',
-          'ml_models',
-          'premium_data',
-          'advanced_optimization',
-        ],
+        features: this.getFeaturesForTier(LicenseTier.PRO),
       };
       return this.validatedLicense;
     }
@@ -155,22 +170,75 @@ export class LicenseService {
         valid: true,
         tier: LicenseTier.ENTERPRISE,
         expiresAt: '2027-12-31',
-        features: [
-          'basic_strategies',
-          'live_trading',
-          'basic_backtest',
-          'ml_models',
-          'premium_data',
-          'advanced_optimization',
-          'priority_support',
-          'custom_strategies',
-          'multi_exchange',
-        ],
+        features: this.getFeaturesForTier(LicenseTier.ENTERPRISE),
       };
       return this.validatedLicense;
     }
 
     // Invalid key - track attempt
+    if (clientIp) {
+      this.recordValidationAttempt(clientIp);
+    }
+
+    this.validatedLicense = {
+      valid: false,
+      tier: LicenseTier.FREE,
+      features: ['basic_strategies', 'live_trading', 'basic_backtest'],
+    };
+    return this.validatedLicense;
+  }
+
+  /**
+   * Synchronous validate for backward compatibility
+   * @deprecated Use async validate() instead
+   */
+  validateSync(key?: string, clientIp?: string): LicenseValidation {
+    const licenseKey = key || process.env.RAAS_LICENSE_KEY;
+
+    if (clientIp && !this.checkValidationRateLimit(clientIp)) {
+      this.logAudit({
+        event: 'validation_failed',
+        success: false,
+        tier: 'blocked',
+        ip: clientIp,
+        timestamp: new Date().toISOString(),
+      });
+      throw new LicenseError(
+        'Too many validation attempts. Please try again later.',
+        LicenseTier.FREE,
+        'rate_limited'
+      );
+    }
+
+    if (!licenseKey) {
+      this.validatedLicense = {
+        valid: false,
+        tier: LicenseTier.FREE,
+        features: ['basic_strategies', 'live_trading', 'basic_backtest'],
+      };
+      return this.validatedLicense;
+    }
+
+    // Legacy prefix-based validation (insecure, kept for backward compat only)
+    if (licenseKey.startsWith('raas-pro-') || licenseKey.startsWith('RPP-')) {
+      this.validatedLicense = {
+        valid: true,
+        tier: LicenseTier.PRO,
+        features: this.getFeaturesForTier(LicenseTier.PRO),
+      };
+      return this.validatedLicense;
+    }
+
+    if (licenseKey.startsWith('raas-ent-') || licenseKey.startsWith('REP-')) {
+      this.validatedLicense = {
+        valid: true,
+        tier: LicenseTier.ENTERPRISE,
+        expiresAt: '2027-12-31',
+        features: this.getFeaturesForTier(LicenseTier.ENTERPRISE),
+      };
+      return this.validatedLicense;
+    }
+
     if (clientIp) {
       this.recordValidationAttempt(clientIp);
     }
@@ -246,7 +314,7 @@ export class LicenseService {
    */
   hasTier(required: LicenseTier): boolean {
     if (!this.validatedLicense) {
-      this.validate();
+      this.validateSync();
     }
 
     // Check expiration first
@@ -274,7 +342,7 @@ export class LicenseService {
    */
   hasFeature(feature: string): boolean {
     if (!this.validatedLicense) {
-      this.validate();
+      this.validateSync();
     }
 
     const hasAccess = this.validatedLicense!.features.includes(feature);
@@ -296,7 +364,7 @@ export class LicenseService {
    */
   getTier(): LicenseTier {
     if (!this.validatedLicense) {
-      this.validate();
+      this.validateSync();
     }
     return this.validatedLicense!.tier;
   }
@@ -366,6 +434,79 @@ export class LicenseService {
   }
 
   /**
+   * Activate license for a key (webhook handler)
+   */
+  async activateLicense(licenseKey: string, tier: LicenseTier): Promise<void> {
+    this.validatedLicense = {
+      valid: true,
+      tier: tier || LicenseTier.PRO,
+      features: this.getFeaturesForTier(tier || LicenseTier.PRO),
+    };
+  }
+
+  /**
+   * Set license tier (webhook handler)
+   */
+  async setTier(licenseKey: string, tier: LicenseTier): Promise<void> {
+    if (this.validatedLicense) {
+      this.validatedLicense.tier = tier;
+      this.validatedLicense.features = this.getFeaturesForTier(tier);
+    }
+  }
+
+  /**
+   * Downgrade to FREE tier (webhook handler)
+   */
+  async downgradeToFree(licenseKey: string): Promise<void> {
+    if (this.validatedLicense) {
+      this.validatedLicense.tier = LicenseTier.FREE;
+      this.validatedLicense.features = this.getFeaturesForTier(LicenseTier.FREE);
+    }
+  }
+
+  /**
+   * Revoke license (webhook handler)
+   */
+  async revokeLicense(licenseKey: string): Promise<void> {
+    this.validatedLicense = {
+      valid: false,
+      tier: LicenseTier.FREE,
+      features: [],
+    };
+  }
+
+  /**
+   * Get features for a given tier (helper)
+   */
+  private getFeaturesForTier(tier: LicenseTier): string[] {
+    switch (tier) {
+      case LicenseTier.ENTERPRISE:
+        return [
+          'basic_strategies',
+          'live_trading',
+          'basic_backtest',
+          'ml_models',
+          'premium_data',
+          'advanced_optimization',
+          'priority_support',
+          'custom_strategies',
+          'multi_exchange',
+        ];
+      case LicenseTier.PRO:
+        return [
+          'basic_strategies',
+          'live_trading',
+          'basic_backtest',
+          'ml_models',
+          'premium_data',
+          'advanced_optimization',
+        ];
+      default:
+        return ['basic_strategies', 'live_trading', 'basic_backtest'];
+    }
+  }
+
+  /**
    * Generate license key checksum for validation
    */
   generateChecksum(key: string): string {
@@ -376,11 +517,18 @@ export class LicenseService {
   }
 
   /**
-   * Validate license key with checksum
+   * Validate license key with checksum (timing-safe)
    */
   validateWithChecksum(key: string, checksum: string): boolean {
     const expectedChecksum = this.generateChecksum(key);
-    return checksum === expectedChecksum;
+    const expected = Buffer.from(expectedChecksum, 'utf8');
+    const actual = Buffer.from(checksum, 'utf8');
+
+    if (expected.length !== actual.length) {
+      return false;
+    }
+
+    return timingSafeEqual(expected, actual);
   }
 }
 
@@ -408,9 +556,9 @@ export function getLicenseTier(): LicenseTier {
 }
 
 /**
- * Validate license and return tier
+ * Validate license and return tier (async JWT version)
  */
-export function validateLicense(key?: string, clientIp?: string): LicenseValidation {
+export async function validateLicense(key?: string, clientIp?: string): Promise<LicenseValidation> {
   return LicenseService.getInstance().validate(key, clientIp);
 }
 

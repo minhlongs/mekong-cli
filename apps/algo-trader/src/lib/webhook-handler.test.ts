@@ -83,7 +83,7 @@ describe('Webhook Handler', () => {
 
       expect(result.success).toBe(true);
       expect(result.licenseKey).toBe('test-key-123');
-      expect(result.newTier).toBe(LicenseTier.PRO);
+      expect(result.newTier).toBe('pro');
     });
 
     it('handles subscription.created event', async () => {
@@ -96,7 +96,7 @@ describe('Webhook Handler', () => {
       const result = await handleWebhookEvent(event);
 
       expect(result.success).toBe(true);
-      expect(result.newTier).toBe(LicenseTier.ENTERPRISE);
+      expect(result.newTier).toBe('enterprise');
     });
 
     it('handles subscription.cancelled event', async () => {
@@ -109,7 +109,7 @@ describe('Webhook Handler', () => {
       const result = await handleWebhookEvent(event);
 
       expect(result.success).toBe(true);
-      expect(result.newTier).toBe(LicenseTier.FREE);
+      expect(result.newTier).toBe('free');
     });
 
     it('handles subscription.refunded event', async () => {

@@ -51,9 +51,13 @@ module.exports = {
     '^.+\\.ts$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
       diagnostics: false,
-      isolatedModules: true, // Faster compilation
+      isolatedModules: true,
     }],
   },
+  // Transform ESM packages that cause syntax errors
+  transformIgnorePatterns: [
+    '/node_modules/(?!jose)',
+  ],
   // Cache test results for faster re-runs
   cache: true,
   cacheDirectory: '<rootDir>/node_modules/.cache/jest',
