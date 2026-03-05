@@ -68,9 +68,9 @@ export class ErrorTrackingService {
 
   getRecentErrors(limit = 10): TrackedError[] {
     const allErrors: TrackedError[] = [];
-    for (const bucket of this.errorBuckets.values()) {
+    Array.from(this.errorBuckets.values()).forEach((bucket) => {
       allErrors.push(...bucket.errors);
-    }
+    });
     return allErrors
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
