@@ -15,6 +15,7 @@ def register_all_commands(app: typer.Typer) -> None:
     # Import command modules
     from src.cli.binh_phap_commands import app as binh_phap_app
     from src.commands.core_commands import app as core_app
+    from src.commands.license_commands import app as license_app
     from src.commands.agi import app as agi_app
     from src.commands.status import app as status_app
     from src.commands.config import app as config_app
@@ -42,7 +43,8 @@ def register_all_commands(app: typer.Typer) -> None:
     # Register all subcommands
     app.add_typer(bmad_app, name="bmad", help="BMAD workflow management")
     app.add_typer(binh_phap_app, name="binh-phap", help="Binh Pháp Strategy: Infinite loops & Standards")
-    app.add_typer(core_app)  # Register core commands (cook, plan, ask, debug) at root level
+    app.add_typer(core_app)  # Register core commands
+    app.add_typer(license_app, name="license", help="RaaS License Management")
     app.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
     app.add_typer(status_app, name="status", help="System health & API status")
     app.add_typer(config_app, name="config", help="Manage environment variables and API keys")
