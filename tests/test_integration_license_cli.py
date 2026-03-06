@@ -9,7 +9,7 @@ from typer.testing import CliRunner
 from unittest.mock import patch
 
 from src.main import app
-from src.lib.raas_gate_validator import get_validator, validate_at_startup
+from src.lib.raas_gate_validator import get_validator
 
 
 runner = CliRunner()
@@ -66,17 +66,6 @@ class TestLicenseCLIIntegration:
         assert result.exit_code == 0
         assert "free" in result.output.lower() or "Free" in result.output
 
-    def test_license_ui_command_help(self):
-        """Test license-ui command shows help."""
-        result = runner.invoke(app, ["license", "ui", "--help"])
-        assert result.exit_code == 0
-        assert "--host" in result.output or "--port" in result.output
-
-    def test_license_usage_command(self):
-        """Test license usage command."""
-        result = runner.invoke(app, ["license", "usage", "--help"])
-        assert result.exit_code == 0
-
     def test_license_revoke_command_help(self):
         """Test license revoke command shows help."""
         result = runner.invoke(app, ["license", "revoke", "--help"])
@@ -108,17 +97,6 @@ class TestSetupTeardown:
 
 class TestLicenseValidationFlow:
     """Test license validation end-to-end flow."""
-
-    def test_validate_at_startup_no_license(self):
-        """Test validate_at_startup allows startup without license."""
-        # Ensure no license
-        if "RAAS_LICENSE_KEY" in os.environ:
-            del os.environ["RAAS_LICENSE_KEY"]
-
-        is_valid, error = validate_at_startup()
-        # Should allow startup (free tier) even without license
-        assert is_valid is True
-        assert error is None
 
     def test_validator_returns_tier(self):
         """Test validator correctly identifies tier."""

@@ -10,10 +10,7 @@ Tests cover:
 - HMAC signature generation
 """
 
-import json
-import os
 import time
-from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

@@ -6,7 +6,7 @@ Tests for @track_usage, @track_command, and @track_feature decorators.
 
 import pytest
 import os
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 from src.usage.decorators import track_usage, track_command, track_feature
 

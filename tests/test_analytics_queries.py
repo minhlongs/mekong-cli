@@ -4,7 +4,7 @@ Unit Tests for AnalyticsQueries
 Test suite for AnalyticsQueries class in src/db/queries/analytics_queries.py
 """
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from src.db.queries.analytics_queries import AnalyticsQueries
 

@@ -528,3 +528,230 @@ class CustomProvider(LLMProvider):
 - **Type Safety**: 100% type hints, zero `any` types
 - **Audit Trail**: All missions logged with tenant isolation
 - **Isolation**: Multi-tenant credit system prevents cross-tenant access
+
+## 10. Authentication Layer
+
+### 10.1 Overview
+
+The authentication layer implements OAuth2-based user authentication with JWT session management, RBAC for authorization, and Stripe integration for subscription-based role provisioning.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Authentication Layer                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌─────────────────────┐    ┌───────────────────────────┐   │
+│  │   OAuth2 Providers  │    │   JWT Session Manager     │   │
+│  │  - GoogleOAuth2     │    │   - Token generation      │   │
+│  │  - GitHubOAuth2     │    │   - Token validation      │   │
+│  │  - PKCE Support     │    │   - Cookie management     │   │
+│  └─────────┬───────────┘    └───────────────────────────┘   │
+│            │                                                  │
+│            │            ┌───────────────────────────┐       │
+│            └────────────►   User Repository        ────────┘
+│                         │   - User CRUD             │
+│                         │   - Session tracking      │
+│                         └───────────────────────────┘
+│
+│  ┌───────────────────────────────────────────────────────┐
+│  │              RBAC Middleware                          │
+│  │  - Role hierarchy enforcement                         │
+│  │  - Permission decorators                              │
+│  │  - Request context injection                          │
+│  └───────────────────────────────────────────────────────┘
+│
+│  ┌───────────────────────────────────────────────────────┐
+│  │         Stripe Webhook Integration                    │
+│  │  - Subscription event handling                        │
+│  │  - Role auto-provisioning                             │
+│  │  - Webhook signature verification                     │
+│  └───────────────────────────────────────────────────────┘
+│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 10.2 OAuth2 Providers
+
+#### Google OAuth2
+- Uses OAuth2 authorization code flow with PKCE
+- Scopes: `openid`, `email`, `profile`
+- Offline access for refresh tokens
+
+#### GitHub OAuth2
+- OAuth2 authorization code flow
+- Requests `user:email` scope
+- Primary email fallback if available
+
+### 10.3 Session Management
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Session Flow                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  1. User Authentication → 2. Generate JWT Tokens            │
+│     Users id, email, role →    - Access token (30min)       │
+│     → 3. Create UserSession                       →          │
+│     - Access token hash                           →          │
+│     - Expires at (7 days)                         →          │
+│     → 4. Store in DB + Set HTTPOnly Cookie                  │
+│                                                               │
+│  Token Format (JWT):                                         │
+│  {                                                            │
+│    "sub": "user-uuid",                                       │
+│    "email": "user@example.com",                              │
+│    "role": "member",                                         │
+│    "type": "access",                                         │
+│    "iat": timestamp,                                         │
+│    "exp": timestamp,                                         │
+│    "jti": "unique-token-id"                                  │
+│  }                                                            │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Session Features
+- **HTTPOnly Cookie**: Prevents XSS token theft
+- **JWT Signature**: Tamper-proof token validation
+- **Database Backed**: Revocable sessions
+- **Refresh Token**: Extend sessions without re-authentication
+
+### 10.4 RBAC Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    RBAC Layer                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  RoleHierarchy:                                              │
+│    owner ──► admin ──► member ──► viewer                    │
+│    (inherited permissions)                                   │
+│                                                               │
+│  PermissionMatrix:                                           │
+│    - VIEW_DASHBOARD (all roles)                              │
+│    - EXPORT_DATA (owner, admin, member)                     │
+│    - CREATE_RESOURCES (owner, admin, member)                │
+│    - UPDATE_RESOURCES (owner, admin, member)                │
+│    - DELETE_RESOURCES (owner, admin)                         │
+│    - MANAGE_USERS (owner, admin)                             │
+│    - MANAGE_BILLING (owner)                                  │
+│    - SYSTEM_CONFIG (owner)                                   │
+│                                                               │
+│  Decorators:                                                 │
+│    - @require_role(Role.ADMIN, Role.OWNER)                  │
+│    - @require_permission(Permission.MANAGE_USERS)           │
+│    - get_current_user(request) → user info                  │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Role Hierarchy
+| Role | Inherits | Max Permissions |
+|------|----------|-----------------|
+| owner | admin, member, viewer | All |
+| admin | member, viewer | Delete, Manage Users, Settings |
+| member | viewer | Create, Update, Export |
+| viewer | none | View only |
+
+### 10.5 Stripe Integration
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              Stripe Webhook Flow                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Stripe (Subscription Event)                                │
+│     ↓ (POST /webhooks/stripe + signature)                  │
+│  ┌────────────────────────────────┐                         │
+│  │  Verify Webhook Signature      │                         │
+│  └──────────────┬─────────────────┘                         │
+│                 ↓                                            │
+│  ┌────────────────────────────────┐                         │
+│  │  Parse Event Data              │                         │
+│  │  - event_type                  │                         │
+│  │  - price_id                    │                         │
+│  │  - customer_info               │                         │
+│  └──────────────┬─────────────────┘                         │
+│                 ↓                                            │
+│  ┌────────────────────────────────┐                         │
+│  │  Map Price ID → Role           │                         │
+│  │  price_pro → admin             │                         │
+│  │  price_trial → member          │                         │
+│  │  price_free → viewer           │                         │
+│  └──────────────┬─────────────────┘                         │
+│                 ↓                                            │
+│  ┌────────────────────────────────┐                         │
+│  │  Update User Role in DB        │                         │
+│  └──────────────┬─────────────────┘                         │
+│                 ↓                                            │
+│  ┌────────────────────────────────┐                         │
+│  │  Return 200 OK                 │                         │
+│  └────────────────────────────────┘                         │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Supported Events
+| Event | Action |
+|-------|--------|
+| `customer.subscription.created` | Provision role from price tier |
+| `customer.subscription.updated` | Update role if price tier changed |
+| `customer.subscription.deleted` | Downgrade to `viewer` |
+| `customer.deleted` | Revoke access |
+
+#### Webhook Verification
+- HMAC SHA-256 signature verification
+- Timestamp validation
+- Idempotency handling (prevent duplicate processing)
+
+### 10.6 Security Measures
+
+1. **OAuth2 Security**
+   - PKCE code challenge/verifier for public clients
+   - State parameter CSRF protection
+   - Redirect URI validation
+
+2. **JWT Security**
+   - HS256 signature with server-side secret
+   - Token blacklist via UserSession table
+   - Expiration enforcement
+
+3. **Cookie Security**
+   - `HttpOnly`: Prevents JavaScript access
+   - `Secure`: HTTPS-only in production
+   - `SameSite`: mitigates CSRF attacks
+
+4. **Stripe Security**
+   - Webhook signature verification
+   - Event type validation
+   - Idempotent webhook processing
+
+### 10.7 API Endpoints
+
+| Method | Path | Description | Auth Required |
+|--------|------|-------------|---------------|
+| GET | `/auth/login` | Render login page | No |
+| POST | `/auth/dev-login` | Dev mode quick login | Dev only |
+| GET | `/auth/google/login` | Initiate Google OAuth | No |
+| GET | `/auth/google/callback` | Google OAuth callback | No |
+| GET | `/auth/github/login` | Initiate GitHub OAuth | No |
+| GET | `/auth/github/callback` | GitHub OAuth callback | No |
+| POST | `/auth/logout` | Logout user | Yes |
+| GET | `/auth/me` | Get current user info | Yes |
+| GET | `/auth/refresh` | Refresh access token | Yes |
+| GET | `/auth/admin` | Admin dashboard (admin+) | Yes |
+| POST | `/auth/webhook/stripe` | Stripe webhook | Webhook secret |
+
+### 10.8 Configuration Reference
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `AUTH_ENVIRONMENT` | `dev` | `dev`, `staging`, `production` |
+| `JWT_SECRET=REDACTED` | (auto-generated) | JWT signing secret |
+| `JWT_ACCESS_EXPIRY_MINUTES` | `30` | Access token lifetime |
+| `JWT_REFRESH_EXPIRY_DAYS` | `7` | Refresh token lifetime |
+| `SESSION_MAX_AGE_SECONDS` | `604800` | Session cookie age |
+| `GOOGLE_CLIENT_ID` | (required) | Google OAuth client ID |
+| `GITHUB_CLIENT_ID` | (required) | GitHub OAuth client ID |
+| `STRIPE_SECRET_KEY` | (optional) | Stripe API key |
+| `STRIPE_WEBHOOK_SECRET` | (optional) | Stripe webhook secret |

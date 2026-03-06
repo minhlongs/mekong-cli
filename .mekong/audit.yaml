@@ -2953,3 +2953,28 @@
   goal: list files
   result: executed
   timestamp: 1772730211.948617
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772828282.4688551
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772828282.738389
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772828283.319905
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772828283.5773928
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772828283.91693

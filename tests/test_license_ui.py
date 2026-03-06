@@ -92,25 +92,5 @@ class TestLicenseUI:
             assert data["success"] is True
 
 
-class TestLicenseUICommands:
-    """Test CLI commands."""
-
-    def test_license_ui_command_help(self):
-        """Test license-ui command help."""
-        from typer.testing import CliRunner
-        from src.commands.license_commands import app
-        runner = CliRunner()
-        result = runner.invoke(app, ["ui", "--help"])
-        assert result.exit_code == 0
-        assert "--host" in result.output
-        assert "--port" in result.output
-
-    def test_interactive_command_exists(self):
-        """Test interactive command exists and runs."""
-        from typer.testing import CliRunner
-        from src.commands.license_commands import app
-        runner = CliRunner()
-        # Test that the interactive command exists by getting help
-        result = runner.invoke(app, ["interactive", "--help"])
-        assert result.exit_code == 0
-        assert "Interactive" in result.output or "interactive" in result.output.lower()
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

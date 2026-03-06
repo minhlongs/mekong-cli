@@ -4,7 +4,7 @@ CLI Tests for Dashboard/API Commands
 Test suite for dashboard-related CLI commands.
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from typer.testing import CliRunner
 import sys
 

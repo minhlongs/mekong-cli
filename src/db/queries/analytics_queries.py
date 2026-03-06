@@ -8,7 +8,6 @@ Query builders for dashboard metrics:
 - Revenue estimation
 """
 
-from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 
 from src.db.database import DatabaseConnection

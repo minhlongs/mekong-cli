@@ -6,9 +6,9 @@ Test suite for Dashboard API endpoints in src/api/dashboard/app.py
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from src.api.dashboard.app import app, dashboard_service
+from src.api.dashboard.app import app
 
 
 # Create test client

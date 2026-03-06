@@ -9,12 +9,22 @@ from typing import Optional
 
 from src.db.database import DatabaseConnection, init_database, close_database
 from src.db.schema import MIGRATION_001, MIGRATION_002, MIGRATION_003
+from src.db.migrations import (
+    MIGRATION_001_USERS,
+    MIGRATION_002_ROLES,
+    MIGRATION_003_SESSIONS,
+    MIGRATION_004_USER_ROLES,
+)
 
 
 MIGRATIONS = [
     ("001", "Initial schema", MIGRATION_001),
     ("002", "Webhook events table", MIGRATION_002),
     ("003", "Audit logs table", MIGRATION_003),
+    ("004", "OAuth2 users table", MIGRATION_001_USERS),
+    ("005", "Add roles to licenses", MIGRATION_002_ROLES),
+    ("006", "User sessions table", MIGRATION_003_SESSIONS),
+    ("007", "Add role to users table", MIGRATION_004_USER_ROLES),
 ]
 
 

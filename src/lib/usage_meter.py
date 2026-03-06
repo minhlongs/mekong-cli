@@ -30,7 +30,7 @@ class UsageMeter:
         commands_count: int = 1,
     ) -> tuple[bool, str]:
         """
-        Record a command usage.
+        Record a command usage with monthly and daily quota enforcement.
 
         Args:
             key_id: License key ID
@@ -40,20 +40,27 @@ class UsageMeter:
         Returns:
             Tuple of (allowed, error_message)
         """
-        # Check limits first
         limits = get_tier_limits(tier)
-        max_commands = limits["commands_per_day"]
 
-        # Get current usage
+        # Check monthly limit FIRST (30-day rolling window)
+        max_monthly = limits.get("monthly", 0)
+        if max_monthly > 0:
+            monthly_usage = await self._repo.get_usage_summary(key_id, days=30)
+            monthly_used = monthly_usage.get("total_commands", 0)
+
+            if monthly_used >= max_monthly:
+                return False, f"Monthly limit reached: {monthly_used}/{max_monthly}"
+
+        # Then check daily limit
+        max_daily = limits["commands_per_day"]
         usage = await self._repo.get_usage(key_id)
-        current_count = usage["commands_count"] if usage else 0
+        daily_used = usage["commands_count"] if usage else 0
 
-        if max_commands >= 0 and current_count >= max_commands:
-            return False, f"Daily limit reached: {current_count}/{max_commands}"
+        if max_daily >= 0 and daily_used >= max_daily:
+            return False, f"Daily limit reached: {daily_used}/{max_daily}"
 
         # Record usage
         await self._repo.record_usage(key_id, commands_count=commands_count)
-
         return True, ""
 
     async def get_usage(self, key_id: str) -> Optional[Dict]:
