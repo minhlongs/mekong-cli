@@ -9,7 +9,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import { PolarSubscriptionService, TenantTier } from './polar-subscription-service';
 import { LicenseService, LicenseTier } from '../lib/raas-gate';
-import { PolarAuditLogger } from './polar-audit-logger';
+import { WebhookAuditLogger } from './webhook-audit-logger';
 
 const getWebhookSecret = (): string => process.env.POLAR_WEBHOOK_SECRET ?? '';
 
@@ -51,7 +51,8 @@ export interface WebhookResult {
 export class PolarWebhookEventHandler {
   private licenseService: LicenseService;
   private subscriptionService: PolarSubscriptionService;
-  private auditLogger: PolarAuditLogger;
+  private auditLogger: WebhookAuditLogger;
+  private errorAlerted = false;
 
   constructor(
     subscriptionService?: PolarSubscriptionService,
@@ -59,7 +60,7 @@ export class PolarWebhookEventHandler {
   ) {
     this.licenseService = LicenseService.getInstance();
     this.subscriptionService = subscriptionService ?? PolarSubscriptionService.getInstance();
-    this.auditLogger = PolarAuditLogger.getInstance();
+    this.auditLogger = WebhookAuditLogger.getInstance();
   }
 
   /**
@@ -86,7 +87,7 @@ export class PolarWebhookEventHandler {
     const tenantId = this.extractTenantId(payload);
 
     // Idempotency check
-    if (eventId && this.auditLogger.isProcessed(eventId)) {
+    if (eventId && this.auditLogger.isDuplicate(eventId)) {
       return {
         handled: true,
         event: payload.type,
@@ -132,19 +133,22 @@ export class PolarWebhookEventHandler {
         };
     }
 
-    // Mark as processed and log
+    // Log event with unified audit logger
     if (eventId) {
-      this.auditLogger.markProcessed(eventId);
+      this.auditLogger.logEvent(eventId, payload.type, result.handled ? 'success' : 'ignored', {
+        provider: 'polar',
+        tenantId,
+        success: result.handled,
+        idempotencyKey: result.idempotencyKey || eventId,
+        extra: { action: result.action, tier: result.tier ?? undefined },
+      });
     }
-    this.auditLogger.log({
-      eventId: eventId || `unknown_${Date.now()}`,
-      eventType: payload.type,
-      tenantId,
-      timestamp: new Date().toISOString(),
-      action: result.action,
-      success: result.handled,
-      idempotencyKey: result.idempotencyKey || eventId || undefined,
-    });
+
+    // Error alerting via shouldAlert()
+    if (!result.handled && this.auditLogger.shouldAlert() && !this.errorAlerted) {
+      console.error('[PolarWebhook] Error threshold exceeded - immediate attention required');
+      this.errorAlerted = true;
+    }
 
     return result;
   }
@@ -224,7 +228,16 @@ export class PolarWebhookEventHandler {
 
     const licenseTier = mapTenantTierToLicenseTier(tier);
     this.licenseService.activateSubscription(tenantId, licenseTier, payload.data.id || payload.data.product_id);
-    this.auditLogger.logOrder(tenantId, payload.data.id, payload.data.product_id);
+
+    // Log order with unified audit logger
+    this.auditLogger.logEvent(payload.data.id || 'unknown_order', 'order.created', 'success', {
+      provider: 'polar',
+      tenantId,
+      success: true,
+      idempotencyKey: payload.data.id,
+      extra: { orderId: payload.data.id, productId: payload.data.product_id, action: 'activated', tier },
+    });
+
     this.onTierChange?.(tenantId, tier);
 
     return { handled: true, event: 'order.created', tenantId, tier, action: 'activated' };
@@ -242,9 +255,22 @@ export class PolarWebhookEventHandler {
     this.licenseService.deactivateSubscription(tenantId);
     this.onTierChange?.(tenantId, 'free');
 
-    // Log refund alert
+    // Log refund alert with unified audit logger
     const amount = payload.data.amount || 0;
-    this.auditLogger.logRefund(tenantId, subscriptionId || 'unknown', amount);
+    this.auditLogger.logEvent(payload.data.id || `refund_${subscriptionId}`, 'refund.created', 'success', {
+      provider: 'polar',
+      tenantId,
+      success: true,
+      idempotencyKey: subscriptionId,
+      extra: { subscriptionId, amount, refundEvent: true, action: 'refunded', tier: 'free' as TenantTier },
+    });
+
+    console.warn('[PolarWebhook] REFUND ALERT', JSON.stringify({
+      tenantId,
+      subscriptionId,
+      amount,
+      timestamp: new Date().toISOString(),
+    }));
 
     return { handled: true, event: 'refund.created', tenantId, tier: 'free', action: 'refunded' };
   }
