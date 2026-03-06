@@ -8,7 +8,7 @@ Aggregates query data, calculates metrics, formats for charts.
 import csv
 import io
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 

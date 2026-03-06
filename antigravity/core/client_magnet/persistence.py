@@ -33,19 +33,19 @@ class ClientMagnetPersistence:
             "metadata": {"last_updated": datetime.now().isoformat()},
             "leads": [
                 {
-                    "name": l.name,
-                    "company": l.company,
-                    "email": l.email,
-                    "phone": l.phone,
-                    "source": l.source.value,
-                    "status": l.status.value,
-                    "score": l.score,
-                    "budget": l.budget,
-                    "notes": l.notes,
-                    "created_at": l.created_at.isoformat(),
-                    "metadata": l.metadata,
+                    "name": lead.name,
+                    "company": lead.company,
+                    "email": lead.email,
+                    "phone": lead.phone,
+                    "source": lead.source.value,
+                    "status": lead.status.value,
+                    "score": lead.score,
+                    "budget": lead.budget,
+                    "notes": lead.notes,
+                    "created_at": lead.created_at.isoformat(),
+                    "metadata": lead.metadata,
                 }
-                for l in leads
+                for lead in leads
             ],
         }
         self.leads_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -55,17 +55,17 @@ class ClientMagnetPersistence:
             "metadata": {"last_updated": datetime.now().isoformat()},
             "clients": [
                 {
-                    "id": c.id,
-                    "name": c.name,
-                    "company": c.company,
-                    "email": c.email,
-                    "phone": c.phone,
-                    "zalo": c.zalo,
-                    "total_ltv": c.total_ltv,
-                    "active_projects": c.active_projects,
-                    "joined_at": c.joined_at.isoformat(),
+                    "id": client.id,
+                    "name": client.name,
+                    "company": client.company,
+                    "email": client.email,
+                    "phone": client.phone,
+                    "zalo": client.zalo,
+                    "total_ltv": client.total_ltv,
+                    "active_projects": client.active_projects,
+                    "joined_at": client.joined_at.isoformat(),
                 }
-                for c in clients
+                for client in clients
             ],
         }
         self.clients_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -81,20 +81,20 @@ class ClientMagnetPersistence:
         leads = []
         try:
             data = json.loads(self.leads_file.read_text(encoding="utf-8"))
-            for l in data.get("leads", []):
+            for lead_dict in data.get("leads", []):
                 leads.append(
                     Lead(
-                        name=l["name"],
-                        company=l.get("company", ""),
-                        email=l.get("email", ""),
-                        phone=l.get("phone", ""),
-                        source=LeadSource(l["source"]),
-                        status=LeadStatus(l["status"]),
-                        score=l.get("score", 50),
-                        budget=l.get("budget", 0.0),
-                        notes=l.get("notes", ""),
-                        created_at=datetime.fromisoformat(l["created_at"]),
-                        metadata=l.get("metadata", {}),
+                        name=lead_dict["name"],
+                        company=lead_dict.get("company", ""),
+                        email=lead_dict.get("email", ""),
+                        phone=lead_dict.get("phone", ""),
+                        source=LeadSource(lead_dict["source"]),
+                        status=LeadStatus(lead_dict["status"]),
+                        score=lead_dict.get("score", 50),
+                        budget=lead_dict.get("budget", 0.0),
+                        notes=lead_dict.get("notes", ""),
+                        created_at=datetime.fromisoformat(lead_dict["created_at"]),
+                        metadata=lead_dict.get("metadata", {}),
                     )
                 )
         except Exception as e:
@@ -108,18 +108,18 @@ class ClientMagnetPersistence:
         clients = []
         try:
             data = json.loads(self.clients_file.read_text(encoding="utf-8"))
-            for c in data.get("clients", []):
+            for client_dict in data.get("clients", []):
                 clients.append(
                     Client(
-                        id=c["id"],
-                        name=c["name"],
-                        company=c["company"],
-                        email=c["email"],
-                        phone=c.get("phone", ""),
-                        zalo=c.get("zalo", ""),
-                        total_ltv=c.get("total_ltv", 0.0),
-                        active_projects=c.get("active_projects", 0),
-                        joined_at=datetime.fromisoformat(c["joined_at"]),
+                        id=client_dict["id"],
+                        name=client_dict["name"],
+                        company=client_dict["company"],
+                        email=client_dict["email"],
+                        phone=client_dict.get("phone", ""),
+                        zalo=client_dict.get("zalo", ""),
+                        total_ltv=client_dict.get("total_ltv", 0.0),
+                        active_projects=client_dict.get("active_projects", 0),
+                        joined_at=datetime.fromisoformat(client_dict["joined_at"]),
                     )
                 )
         except Exception as e:

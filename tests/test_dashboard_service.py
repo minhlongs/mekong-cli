@@ -5,8 +5,7 @@ Test suite for DashboardService class in src/analytics/dashboard_service.py
 """
 import pytest
 import json
-from unittest.mock import AsyncMock, MagicMock, patch, AsyncMock as AsyncMockPatch
-from datetime import datetime, timedelta
+from unittest.mock import MagicMock
 
 from src.analytics.dashboard_service import DashboardService, DashboardMetrics
 

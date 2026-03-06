@@ -1,7 +1,7 @@
 """
 Dashboard FastAPI App — ROIaaS Phase 5
 
-REST API for analytics dashboard.
+REST API for analytics dashboard with authentication.
 """
 
 from datetime import datetime, timedelta
@@ -17,6 +17,10 @@ from starlette.requests import Request
 
 from src.analytics.dashboard_service import DashboardService
 from src.config.logging_config import get_logger
+from src.auth.middleware import SessionMiddleware
+from src.auth.config import AuthConfig
+from src.auth.rbac import require_role, require_permission, Role, Permission, get_current_user
+from src.auth.routes import router as auth_router
 
 logger = get_logger(__name__)
 
@@ -27,6 +31,9 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# Session middleware (authentication)
+app.add_middleware(SessionMiddleware)
+
 # CORS middleware (local dev only)
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +42,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include auth routes
+app.include_router(auth_router)
 
 # Service instance
 dashboard_service = DashboardService()
@@ -51,18 +61,32 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
     """Serve dashboard HTML."""
+    # Check authentication status
+    authenticated = getattr(request.state, "authenticated", False)
+    user = get_current_user(request)
+
     html_path = BASE_DIR / "templates" / "dashboard.html"
     if not html_path.exists():
         raise HTTPException(status_code=404, detail="Dashboard template not found")
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "authenticated": authenticated,
+            "user": user,
+        },
+    )
 
 
 @app.get("/api/metrics")
+@require_permission(Permission.VIEW_DASHBOARD)
 async def get_metrics(
+    request: Request,
     range_days: int = Query(default=30, ge=1, le=365),
     granularity: Literal["day", "week", "month"] = "day",
 ):
-    """Get all dashboard metrics."""
+    """Get all dashboard metrics (requires authentication)."""
     try:
         metrics = await dashboard_service.get_metrics(range_days)
         return {
@@ -127,13 +151,14 @@ async def get_endpoints(limit: int = Query(default=10, ge=1, le=50)):
 
 
 @app.get("/api/export")
+@require_permission(Permission.EXPORT_DATA)
 async def export_data(
     format: Literal["csv", "json"] = "json",
     start: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     end: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     license_key: Optional[str] = None,
 ):
-    """Export data to CSV or JSON."""
+    """Export data to CSV or JSON (requires export permission)."""
     try:
         # Default to last 30 days if not specified
         if not start or not end:
@@ -159,8 +184,14 @@ async def export_data(
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+    """Health check endpoint with auth config status."""
+    config = AuthConfig()
+    config_summary = config.get_config_summary()
+
+    return {
+        "status": "healthy",
+        "auth": config_summary,
+    }
 
 
 def run_dashboard(port: int = 8080, open_browser: bool = True):

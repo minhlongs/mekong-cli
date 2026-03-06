@@ -8,13 +8,9 @@ Tests cover:
 - Span context management
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import patch, MagicMock
 
 from src.core.tracing import (
     TraceContext,
-    SpanContext,
     generate_trace_id,
     start_trace,
     end_trace,

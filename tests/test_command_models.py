@@ -8,8 +8,6 @@ Tests cover:
 """
 
 import pytest
-from datetime import datetime, timedelta
-from pathlib import Path
 from pydantic import ValidationError
 
 from src.cli.command_models import (

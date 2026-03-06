@@ -15,7 +15,7 @@ import hashlib
 import hmac
 import json
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,8 +27,6 @@ from src.api.polar_webhook import (
     process_subscription_created,
     process_subscription_cancelled,
     process_order_created,
-    POLAR_WEBHOOK_SECRET,
-    WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS,
 )
 
 

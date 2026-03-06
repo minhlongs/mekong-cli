@@ -9,8 +9,6 @@ Tests cover:
 """
 
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from src.cli.validation_decorator import (
     validate_input,

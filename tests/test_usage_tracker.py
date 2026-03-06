@@ -5,9 +5,8 @@ Tests for UsageTracker class, idempotency, and event tracking.
 """
 
 import pytest
-import asyncio
-from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock
 
 from src.usage.usage_tracker import UsageTracker, UsageEvent, get_tracker
 from src.db.repository import LicenseRepository
@@ -133,6 +132,9 @@ class TestUsageTrackerTrackCommand:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_repo = AsyncMock(spec=LicenseRepository)
+        # Add required methods that may not be in spec
+        self.mock_repo.check_idempotency_key = AsyncMock(return_value=False)
+        self.mock_repo.create_usage_event = AsyncMock(return_value={"id": 1, "created_at": datetime.now(timezone.utc)})
         self.tracker = UsageTracker(repository=self.mock_repo)
 
     @pytest.mark.asyncio
@@ -187,6 +189,9 @@ class TestUsageTrackerTrackFeature:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_repo = AsyncMock(spec=LicenseRepository)
+        # Add required methods that may not be in spec
+        self.mock_repo.check_idempotency_key = AsyncMock(return_value=False)
+        self.mock_repo.create_usage_event = AsyncMock(return_value={"id": 1, "created_at": datetime.now(timezone.utc)})
         self.tracker = UsageTracker(repository=self.mock_repo)
 
     @pytest.mark.asyncio
@@ -225,6 +230,10 @@ class TestUsageTrackerGetSummary:
     def setup_method(self):
         """Set up test fixtures."""
         self.mock_repo = AsyncMock(spec=LicenseRepository)
+        # Add required methods that may not be in spec
+        self.mock_repo.check_idempotency_key = AsyncMock(return_value=False)
+        self.mock_repo.create_usage_event = AsyncMock(return_value={"id": 1, "created_at": datetime.now(timezone.utc)})
+        self.mock_repo.get_usage_events = AsyncMock(return_value=[])
         self.tracker = UsageTracker(repository=self.mock_repo)
 
     @pytest.mark.asyncio
