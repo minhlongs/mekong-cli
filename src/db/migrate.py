@@ -8,12 +8,13 @@ import sys
 from typing import Optional
 
 from src.db.database import DatabaseConnection, init_database, close_database
-from src.db.schema import MIGRATION_001, MIGRATION_002
+from src.db.schema import MIGRATION_001, MIGRATION_002, MIGRATION_003
 
 
 MIGRATIONS = [
     ("001", "Initial schema", MIGRATION_001),
     ("002", "Webhook events table", MIGRATION_002),
+    ("003", "Audit logs table", MIGRATION_003),
 ]
 
 
