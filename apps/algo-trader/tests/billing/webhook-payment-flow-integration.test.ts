@@ -287,7 +287,7 @@ describe('Webhook Integration — Circuit Breaker Scenarios', () => {
 
     // 1. Create subscription
     const created = handler.handleEvent(createWebhookPayload('subscription.created', {
-      id: 'sub_lifecycle',
+      id: 'sub_lifecycle_created',
       product_id: proProduct.polarProductId,
       metadata: { tenantId },
     }));
@@ -297,7 +297,7 @@ describe('Webhook Integration — Circuit Breaker Scenarios', () => {
 
     // 2. Update subscription (upgrade)
     const updated = handler.handleEvent(createWebhookPayload('subscription.updated', {
-      id: 'sub_lifecycle',
+      id: 'sub_lifecycle_updated',
       product_id: entProduct.polarProductId,
       metadata: { tenantId },
     }));
@@ -307,7 +307,7 @@ describe('Webhook Integration — Circuit Breaker Scenarios', () => {
 
     // 3. Cancel subscription
     const cancelled = handler.handleEvent(createWebhookPayload('subscription.canceled', {
-      id: 'sub_lifecycle',
+      id: 'sub_lifecycle_cancelled',
       metadata: { tenantId },
     }));
     expect(cancelled.handled).toBe(true);
@@ -558,7 +558,7 @@ describe('Webhook Integration — End-to-End Checkout Flow', () => {
       payload: {
         type: 'subscription.created',
         data: {
-          id: 'sub_failed_payment',
+          id: 'sub_fp_created_123',
           product_id: proProduct.polarProductId,
           metadata: { tenantId },
           current_period_end: '2026-04-01',
@@ -581,7 +581,7 @@ describe('Webhook Integration — End-to-End Checkout Flow', () => {
       payload: {
         type: 'subscription.canceled',
         data: {
-          id: 'sub_failed_payment',
+          id: 'sub_fp_cancelled_456',
           metadata: { tenantId },
         },
       },

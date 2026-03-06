@@ -5,6 +5,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { licenseQueries } from '../../db/queries/license-queries';
 import { logger } from '../../utils/logger';
+import { LicenseUsageAnalytics } from '../../lib/license-usage-analytics';
 
 interface CreateLicenseBody {
   key?: string;
@@ -16,6 +17,14 @@ interface CreateLicenseBody {
 
 interface RevokeLicenseParams {
   id: string;
+}
+
+interface AnalyticsResponse {
+  total: number;
+  byTier: { free: number; pro: number; enterprise: number };
+  byStatus: { active: number; revoked: number };
+  usage: { apiCalls: number; mlFeatures: number; premiumData: number };
+  recentActivity: Array<{ event: string; timestamp: string; licenseId: string }>;
 }
 
 /**
@@ -162,6 +171,45 @@ export async function licenseManagementRoutes(fastify: FastifyInstance) {
       } catch (error) {
         logger.error('Failed to get audit logs:', error);
         reply.code(500).send({ error: 'Failed to get audit logs' });
+      }
+    },
+  });
+
+  // Get license analytics (admin only)
+  fastify.get('/api/v1/licenses/analytics', {
+    preHandler: [requireAdmin],
+    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const analytics = LicenseUsageAnalytics.getInstance();
+        const allEvents = analytics.getEvents(undefined, 10);
+
+        const [licenseStats, recentActivity] = await Promise.all([
+          licenseQueries.getAnalytics(),
+          licenseQueries.getRecentActivity(10),
+        ]);
+
+        const usage = {
+          apiCalls: allEvents.filter((e) => e.event === 'api_call').length,
+          mlFeatures: allEvents.filter((e) => e.event === 'ml_prediction').length,
+          premiumData: allEvents.filter((e) => e.feature === 'premium_data').length,
+        };
+
+        const response: AnalyticsResponse = {
+          total: licenseStats.total,
+          byTier: licenseStats.byTier,
+          byStatus: licenseStats.byStatus,
+          usage,
+          recentActivity: recentActivity.map((log) => ({
+            event: log.event,
+            timestamp: log.createdAt.toISOString(),
+            licenseId: log.licenseId,
+          })),
+        };
+
+        reply.send(response);
+      } catch (error) {
+        logger.error('Failed to get license analytics:', error);
+        reply.code(500).send({ error: 'Failed to get license analytics' });
       }
     },
   });

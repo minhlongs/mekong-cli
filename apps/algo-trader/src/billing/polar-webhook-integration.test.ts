@@ -30,10 +30,10 @@ describe('Polar Webhook Integration', () => {
     );
   });
 
-  const makeWebhookPayload = (type: string, tenantId: string, productId: string): PolarWebhookPayload => ({
+  const makeWebhookPayload = (type: string, tenantId: string, productId: string, eventIdSuffix?: string): PolarWebhookPayload => ({
     type,
     data: {
-      id: `sub_${Date.now()}`,
+      id: `sub_${Date.now()}_${eventIdSuffix || type}`, // Unique event ID per event to avoid idempotency
       product_id: productId,
       metadata: { tenantId },
       current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -132,11 +132,11 @@ describe('Polar Webhook Integration', () => {
   describe('Subscription Cancellation Webhook', () => {
     test('should deactivate subscription on cancellation', () => {
       // First activate PRO
-      webhookHandler.handleEvent(makeWebhookPayload('subscription.active', 'tenant-123', 'prod_pro'));
+      webhookHandler.handleEvent(makeWebhookPayload('subscription.active', 'tenant-123', 'prod_pro', 'active1'));
       expect(licenseService.hasTier(LicenseTier.PRO)).toBe(true);
 
       // Then cancel
-      const payload = makeWebhookPayload('subscription.canceled', 'tenant-123', 'prod_pro');
+      const payload = makeWebhookPayload('subscription.canceled', 'tenant-123', 'prod_pro', 'cancel1');
       const result = webhookHandler.handleEvent(payload);
 
       expect(result.handled).toBe(true);
@@ -150,9 +150,9 @@ describe('Polar Webhook Integration', () => {
     });
 
     test('should handle subscription.revoked event', () => {
-      webhookHandler.handleEvent(makeWebhookPayload('subscription.active', 'tenant-123', 'prod_pro'));
+      webhookHandler.handleEvent(makeWebhookPayload('subscription.active', 'tenant-123', 'prod_pro', 'active2'));
 
-      const payload = makeWebhookPayload('subscription.revoked', 'tenant-123', 'prod_pro');
+      const payload = makeWebhookPayload('subscription.revoked', 'tenant-123', 'prod_pro', 'revoked1');
       const result = webhookHandler.handleEvent(payload);
 
       expect(result.handled).toBe(true);

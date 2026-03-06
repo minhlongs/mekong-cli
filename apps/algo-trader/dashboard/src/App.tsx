@@ -5,6 +5,7 @@ import { BacktestsPage } from './pages/backtests-page';
 import { MarketplacePage } from './pages/marketplace-page';
 import { SettingsPage } from './pages/settings-page';
 import { ReportingPage } from './pages/reporting-page';
+import { LicensePage } from './pages/license-page';
 
 export function App() {
   return (
@@ -13,6 +14,7 @@ export function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/backtests" element={<BacktestsPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/licenses" element={<LicensePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/reporting" element={<ReportingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

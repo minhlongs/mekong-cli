@@ -84,4 +84,40 @@ export const licenseQueries = {
       orderBy: { createdAt: 'desc' },
     });
   },
+
+  async getAnalytics() {
+    const licenses = await db.license.findMany({
+      select: {
+        id: true,
+        tier: true,
+        status: true,
+      },
+    });
+
+    const byTier = {
+      free: licenses.filter((l) => l.tier === 'FREE').length,
+      pro: licenses.filter((l) => l.tier === 'PRO').length,
+      enterprise: licenses.filter((l) => l.tier === 'ENTERPRISE').length,
+    };
+
+    const byStatus = {
+      active: licenses.filter((l) => l.status === 'active').length,
+      revoked: licenses.filter((l) => l.status === 'revoked').length,
+    };
+
+    return { total: licenses.length, byTier, byStatus };
+  },
+
+  async getRecentActivity(take = 10) {
+    return db.licenseAuditLog.findMany({
+      take,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        licenseId: true,
+        event: true,
+        createdAt: true,
+      },
+    });
+  },
 };

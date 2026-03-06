@@ -2,7 +2,7 @@
  * Integration Tests: License Gating for Premium Features
  *
  * @jest-environment node
- * @jest-environment-options {"memoryLimit": 512}
+ * @jest-environment-options {"memoryLimit": 1024}
  */
 
 // Mock TensorFlow before any imports
@@ -53,6 +53,18 @@ import { BacktestEngine } from '../../src/backtest/BacktestEngine';
 import { IStrategy, SignalType, ISignal } from '../../src/interfaces/IStrategy';
 import { ICandle } from '../../src/interfaces/ICandle';
 import { DetailedTrade } from '../../src/backtest/backtest-engine-result-types';
+
+// Helper to create mock candles with less memory
+function createMockCandles(count: number): ICandle[] {
+  return Array.from({ length: count }, (_, i) => ({
+    timestamp: Date.now() + i * 60000,
+    open: 50000 + Math.random() * 1000,
+    high: 51000 + Math.random() * 1000,
+    low: 49000 + Math.random() * 1000,
+    close: 50000 + Math.random() * 1000,
+    volume: Math.random() * 1000,
+  }));
+}
 
 class MockStrategy implements IStrategy {
   name = 'MockStrategy';

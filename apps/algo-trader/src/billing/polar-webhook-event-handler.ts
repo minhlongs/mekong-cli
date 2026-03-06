@@ -11,7 +11,7 @@ import { PolarSubscriptionService, TenantTier } from './polar-subscription-servi
 import { LicenseService, LicenseTier } from '../lib/raas-gate';
 import { PolarAuditLogger } from './polar-audit-logger';
 
-const WEBHOOK_SECRET = process.env.POLAR_WEBHOOK_SECRET ?? '';
+const getWebhookSecret = (): string => process.env.POLAR_WEBHOOK_SECRET ?? '';
 
 function mapTenantTierToLicenseTier(tenantTier: TenantTier): LicenseTier {
   switch (tenantTier) {
@@ -67,11 +67,11 @@ export class PolarWebhookEventHandler {
    * Returns true if signature valid or no secret configured (dev mode).
    */
   verifySignature(payload: string, signature: string): boolean {
-    if (!WEBHOOK_SECRET) {
+    if (!getWebhookSecret()) {
       return true;
     }
 
-    const expected = createHmac('sha256', WEBHOOK_SECRET)
+    const expected = createHmac('sha256', getWebhookSecret())
       .update(payload)
       .digest('hex');
 
