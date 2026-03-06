@@ -37,6 +37,7 @@ from src.commands.security import app as security_app
 from src.commands.ci import app as ci_app
 from src.commands.env import app as env_app
 from src.commands.test_advanced import app as test_advanced_app
+from src.commands.license_admin import app as license_admin_app
 
 console = Console()
 
@@ -50,7 +51,8 @@ app = typer.Typer(
 # Free commands that don't require license validation
 FREE_COMMANDS = {
     "init", "version", "list", "search", "status", "config",
-    "doctor", "help", "dash", "license", "clean", "test"
+    "doctor", "help", "dash", "license", "clean", "test",
+    "license-admin",  # Admin dashboard is free
 }
 
 
@@ -118,6 +120,7 @@ def _register_legacy_commands() -> None:
     app.add_typer(env_app, name="env", help="Environment")
     app.add_typer(test_advanced_app, name="test-advanced", help="Advanced testing")
     app.add_typer(license_app, name="license", help="License management")
+    app.add_typer(license_admin_app, name="license-admin", help="License Admin Dashboard")
 
 
 # Register all commands

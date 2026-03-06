@@ -83,4 +83,30 @@ CREATE INDEX IF NOT EXISTS idx_webhook_events_type ON webhook_events(event_type)
 CREATE INDEX IF NOT EXISTS idx_webhook_events_processed ON webhook_events(processed);
 """
 
-__all__ = ["SCHEMA_SQL", "MIGRATION_001", "MIGRATION_002"]
+MIGRATION_003 = """
+-- Phase 2: Add audit_logs table for admin actions
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    action VARCHAR(50) NOT NULL,        -- CREATE, REVOKE, UPDATE, VIEW
+    entity_type VARCHAR(50) NOT NULL,   -- LICENSE, KEY, USER
+    entity_id VARCHAR(255) NOT NULL,    -- key_id or license id
+    actor_email VARCHAR(255) NOT NULL,  -- Who performed action
+    actor_ip VARCHAR(45),               -- IP address
+    details JSONB DEFAULT '{}',         -- Action-specific details
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add created_by to licenses table
+ALTER TABLE licenses ADD COLUMN IF NOT EXISTS created_by VARCHAR(255);
+
+-- Add revoked_reason to revocations
+ALTER TABLE revocations ADD COLUMN IF NOT EXISTS revoked_reason TEXT;
+
+-- Indexes for audit_logs
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(actor_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+"""
+
+__all__ = ["SCHEMA_SQL", "MIGRATION_001", "MIGRATION_002", "MIGRATION_003"]
