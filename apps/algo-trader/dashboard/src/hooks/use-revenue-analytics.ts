@@ -78,7 +78,7 @@ export const TIME_RANGES: TimeRange[] = [
 ];
 
 export function useRevenueAnalytics() {
-  const { fetchApi, loading: apiLoading } = useApiClient();
+  const { fetchApi } = useApiClient();
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
