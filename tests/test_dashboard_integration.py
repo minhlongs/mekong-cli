@@ -15,7 +15,6 @@ import sys
 import os
 import json
 import tempfile
-from datetime import datetime, timedelta
 
 # Add src to path for imports
 sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + "/src")
@@ -472,7 +471,7 @@ class TestDashboardAPIEndpointInteractions:
     @patch("src.db.queries.analytics_queries.DatabaseConnection")
     def test_get_metrics_with_database(self, mock_db_class, mock_db_with_data):
         """Test metrics retrieval with database connection."""
-        from src.analytics.dashboard_service import DashboardService, DashboardMetrics
+        from src.analytics.dashboard_service import DashboardMetrics
         import asyncio
 
         # Create mock service that returns proper metrics

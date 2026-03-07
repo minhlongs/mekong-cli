@@ -9,7 +9,6 @@ Query builders for CLI telemetry analytics:
 """
 
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 
 from src.db.database import DatabaseConnection
 

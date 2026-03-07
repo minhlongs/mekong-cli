@@ -11,7 +11,6 @@ Reference: plans/260307-1602-telemetry-consent-opt-in/plan.md
 """
 
 import json
-import os
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone

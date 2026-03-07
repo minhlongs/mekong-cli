@@ -6,10 +6,8 @@ Uploads telemetry events to existing analytics backend.
 Reference: plans/260307-1602-telemetry-consent-opt-in/plan.md
 """
 
-import json
 import logging
 import os
-from pathlib import Path
 from typing import List, Optional
 
 import requests

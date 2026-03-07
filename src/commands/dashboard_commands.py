@@ -223,7 +223,6 @@ def dashboard_summary() -> None:
     Display key metrics without launching the web dashboard.
     """
     import asyncio
-    from datetime import timedelta
 
     console.print("[bold cyan]📊 Analytics Summary[/bold cyan]\n")
 

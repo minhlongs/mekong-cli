@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from src.core.telemetry_consent import ConsentManager, get_consent_manager
+from src.core.telemetry_consent import get_consent_manager
 
 console = Console()
 app = typer.Typer(name="telemetry", help="📊 Telemetry consent management")
@@ -58,7 +58,7 @@ def telemetry_enable():
     """Enable telemetry."""
     manager = get_consent_manager()
     preferences = manager.enable()
-    console.print(f"[green]✓ Telemetry enabled[/green]")
+    console.print("[green]✓ Telemetry enabled[/green]")
     console.print(f"Anonymous ID: {preferences.anonymous_id[:8]}...")
     console.print("\n[dim]Thank you for helping improve Mekong CLI![/dim]")
 
@@ -75,7 +75,6 @@ def telemetry_disable():
 @app.command("reset")
 def telemetry_reset():
     """Reset telemetry consent (show prompt again)."""
-    import os
     from pathlib import Path
 
     consent_file = Path.home() / ".mekong" / "telemetry-consent.json"
