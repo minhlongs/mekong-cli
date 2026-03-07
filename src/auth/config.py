@@ -36,7 +36,18 @@ class AuthConfig:
     AUTH_DISABLED = ENVIRONMENT == AuthEnvironment.DEV
 
     # JWT settings
-    JWT_SECRET=REDACTED_KEY = os.getenv("JWT_SECRET=REDACTED", "dev-secret-change-in-prod")
+    JWT_SECRET=REDACTED_KEY = os.getenv("JWT_SECRET=REDACTED")
+    if not JWT_SECRET=REDACTED_KEY:
+        import warnings
+        # Generate a random secret for dev mode only
+        if ENVIRONMENT == AuthEnvironment.DEV:
+            JWT_SECRET=REDACTED_KEY = "dev-secret-change-in-prod"
+        else:
+            # In staging/production, require JWT_SECRET=REDACTED_KEY
+            raise ValueError(
+                "JWT_SECRET=REDACTED_KEY environment variable is required for staging/production. "
+                "Generate a secure random string (min 32 characters) and set it."
+            )
     JWT_ALGORITHM = "HS256"
     JWT_ACCESS_EXPIRY_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
     JWT_REFRESH_EXPIRY_DAYS = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))
