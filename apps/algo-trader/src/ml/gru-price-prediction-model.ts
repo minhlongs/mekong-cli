@@ -155,11 +155,11 @@ export class GruPricePredictionModel {
     }
 
     if (!this.model) throw new Error('Model not built.');
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       this.model!.save(tf.io.withSaveHandler(async (modelArtifacts) => {
         resolve(modelArtifacts);
         return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: 'JSON' } };
-      }));
+      })).catch(reject);
     });
   }
 

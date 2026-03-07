@@ -14,8 +14,8 @@ jest.mock('@tensorflow/tfjs', () => {
       compile: jest.fn(),
       fit: jest.fn(),
       predict: jest.fn(),
-      save: jest.fn().mockImplementation(() => {
-        return mockHandler({ weightSpecs: [], weightData: new Uint8Array() });
+      save: jest.fn().mockImplementation((handler) => {
+        return Promise.resolve(handler.save({ weightSpecs: [], weightData: new Uint8Array() }));
       }),
       loadWeights: jest.fn(),
       getWeights: jest.fn(() => []),
@@ -38,7 +38,7 @@ jest.mock('@tensorflow/tfjs', () => {
       fromMemory: jest.fn(),
       toMemory: jest.fn(),
       withSaveHandler: jest.fn((handler) => {
-        return { save: () => handler({ weightSpecs: [], weightData: new Uint8Array() }) };
+        return { save: (artifacts: any) => handler(artifacts) };
       }),
     },
     memory: { gc: jest.fn() },
