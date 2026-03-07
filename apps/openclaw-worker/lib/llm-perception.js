@@ -13,14 +13,12 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-// DashScope OpenAI-compatible endpoint — CTO uses dedicated Key C (separate quota from CC CLI)
-const CTO_API_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-const CTO_DEDICATED_KEY = process.env.CTO_DASHSCOPE_KEY || 'sk-80d8537485d04f609c498f1881e67c6f'; // Key C — CTO only
-// Coding Plan keys kept as fallback
+// DashScope Anthropic-compatible endpoint (coding-intl only supports apps/anthropic)
+const CTO_API_URL = 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic/v1/messages';
+// DUAL-KEY FAILOVER: Key A fails (429) → Key B
 const DASHSCOPE_KEYS = [
-    CTO_DEDICATED_KEY,
-    process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67',  // Key A (Coding Plan)
-    'sk-sp-afce4429a10e41bb901d6012d7f525c8',  // Key B (Coding Plan)
+    process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67',  // Key A
+    'sk-sp-afce4429a10e41bb901d6012d7f525c8',  // Key B
 ];
 let _dsKeyIdx = 0;
 const getDashScopeKey = () => DASHSCOPE_KEYS[_dsKeyIdx];
@@ -94,12 +92,12 @@ function perceivePaneWithLLM(paneOutput, projectName, paneIdx) {
 
         const trimmedOutput = paneOutput.slice(-2000); // Max 2000 chars
 
-        // OpenAI-compatible format (DashScope compatible-mode) — Key C dedicated for CTO
+        // Anthropic messages format (DashScope apps/anthropic)
         const payload = JSON.stringify({
             model: process.env.CTO_LLM_MODEL || 'qwen3.5-plus',
             max_tokens: 512,
+            system: SYSTEM_PROMPT.trim(),
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT.trim() },
                 { role: 'user', content: `Pane: P${paneIdx} | Project: ${projectName}\n\n--- TERMINAL OUTPUT ---\n${trimmedOutput}\n--- END ---` }
             ]
         });
@@ -116,7 +114,7 @@ function perceivePaneWithLLM(paneOutput, projectName, paneIdx) {
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload),
-                'Authorization': `Bearer ${getDashScopeKey()}`
+                'x-api-key': getDashScopeKey(), 'anthropic-version': '2023-06-01'
             },
             timeout: LLM_TIMEOUT_MS,
         }, (res) => {
@@ -125,8 +123,8 @@ function perceivePaneWithLLM(paneOutput, projectName, paneIdx) {
             res.on('end', () => {
                 try {
                     const json = JSON.parse(data);
-                    // OpenAI format: choices[0].message.content (fallback to Anthropic format)
-                    const rawContent = json.choices?.[0]?.message?.content || json.content?.find(c => c.type === 'text')?.text || '';
+                    // Anthropic format: content[].text
+                    const rawContent = json.content?.find(c => c.type === 'text')?.text || '';
 
                     // Parse JSON from LLM response (may have markdown wrapping)
                     const cleaned = rawContent.replace(/```json\n?|\n?```/g, '').trim();

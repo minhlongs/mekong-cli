@@ -14,13 +14,11 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
-// DashScope OpenAI-compatible endpoint — CTO uses dedicated Key C
-const DASHSCOPE_OPENAI_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
-// Key C dedicated for CTO, Coding Plan keys as fallback
+const DASHSCOPE_OPENAI_URL = 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic';
+// DUAL-KEY FAILOVER: Key A fails (429) → Key B
 const DASHSCOPE_KEYS = [
-    process.env.CTO_DASHSCOPE_KEY || 'sk-80d8537485d04f609c498f1881e67c6f',  // Key C (CTO dedicated)
-    process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67',  // Key A (Coding Plan)
-    'sk-sp-afce4429a10e41bb901d6012d7f525c8',  // Key B (Coding Plan)
+    process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67',  // Key A
+    'sk-sp-afce4429a10e41bb901d6012d7f525c8',  // Key B
 ];
 let _dsKeyIdx = 0;
 const getDashScopeKey = () => DASHSCOPE_KEYS[_dsKeyIdx];
@@ -72,14 +70,14 @@ function callLLM(prompt) {
         const payload = JSON.stringify({
             model: MODEL,
             max_tokens: 150,
+            system: SYSTEM_PROMPT.trim(),
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT.trim() },
                 { role: 'user', content: prompt }
             ]
         });
 
-        // 🧠 Route directly to DashScope OpenAI-compatible (Key C)
-        const url = new URL(`${DASHSCOPE_OPENAI_URL}/chat/completions`);
+        // 🦞 Route directly to DashScope (bypassing AG Proxy)
+        const url = new URL(`${DASHSCOPE_OPENAI_URL}/v1/messages`);
         const isHttps = url.protocol === 'https:';
         const transport = isHttps ? require('https') : http;
         const req = transport.request({
@@ -90,7 +88,8 @@ function callLLM(prompt) {
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(payload),
-                'Authorization': `Bearer ${getDashScopeKey()}`
+                'x-api-key': getDashScopeKey(),
+                'anthropic-version': '2023-06-01'
             },
             timeout: TIMEOUT_MS,
         }, (res) => {
@@ -105,7 +104,8 @@ function callLLM(prompt) {
                         resolve(null);
                         return;
                     }
-                    const rawContent = json.choices?.[0]?.message?.content || json.content?.find(c => c.type === 'text')?.text || '';
+                    const textBlock = json.content?.find(c => c.type === 'text');
+                    const rawContent = textBlock?.text || '';
                     if (!rawContent) {
                         log(`Empty text in response. Raw: ${data.slice(0, 100)}...`);
                         resolve(null);
