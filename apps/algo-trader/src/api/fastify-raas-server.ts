@@ -27,7 +27,9 @@ import { buildPnlRoutes } from './routes/pnl-realtime-snapshot-history-routes';
 import { PnlSnapshotService, InMemoryPnlStore } from '../core/pnl-realtime-snapshot-service';
 import { PolarSubscriptionService } from '../billing/polar-subscription-service';
 import { PolarWebhookEventHandler } from '../billing/polar-webhook-event-handler';
+import { StripeWebhookHandler } from '../billing/stripe-webhook-handler';
 import { buildPolarBillingRoutes } from './routes/polar-billing-subscription-routes';
+import { buildStripeWebhookRoute } from './routes/webhooks/stripe-webhook';
 import { subscriptionRoutes } from './routes/subscription';
 import { licenseManagementRoutes } from './routes/license-management-routes';
 import { cacheStatsRoutes } from './routes/cache-stats-routes';
@@ -109,9 +111,13 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
 
   // Polar billing routes
   const subscriptionService = new PolarSubscriptionService();
-  const webhookHandler = new PolarWebhookEventHandler(subscriptionService);
-  void server.register(buildPolarBillingRoutes(subscriptionService, webhookHandler));
+  const polarWebhookHandler = new PolarWebhookEventHandler(subscriptionService);
+  void server.register(buildPolarBillingRoutes(subscriptionService, polarWebhookHandler));
   void server.register(subscriptionRoutes);
+
+  // Stripe billing routes
+  const stripeWebhookHandler = new StripeWebhookHandler(subscriptionService);
+  void server.register(buildStripeWebhookRoute(stripeWebhookHandler));
 
   // License management routes (admin only)
   void server.register(licenseManagementRoutes);

@@ -36,9 +36,9 @@ class DatabaseConnection:
         if not self._connection_string:
             logger.warning("DATABASE_URL not set. Using SQLite fallback.")
 
-    async def connect(self, min_size: int = 2, max_size: int = 10) -> None:
+    async def connect(self, min_size: int = 5, max_size: int = 20) -> None:
         """
-        Create connection pool.
+        Create connection pool (optimized for 10x concurrency).
 
         Args:
             min_size: Minimum connections in pool
@@ -58,6 +58,7 @@ class DatabaseConnection:
             min_size=min_size,
             max_size=max_size,
             command_timeout=60,
+            max_inactive_connection_lifetime=300,  # 5 minutes
         )
         self._initialized = True
         logger.info("PostgreSQL connected (pool: %d-%d connections)", min_size, max_size)

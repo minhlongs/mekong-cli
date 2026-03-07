@@ -111,7 +111,7 @@ export function AuditLogViewer({ licenseId }: AuditLogViewerProps) {
         {EVENT_TYPES.map((type) => (
           <button
             key={type.id}
-            onClick={() => setFilter(type.id)}
+            onClick={() => setFilter(type.id as 'all' | 'created' | 'activated' | 'revoked' | 'api_call' | 'ml_feature' | 'rate_limit')}
             className={`
               px-3 py-1.5 text-xs font-mono rounded border transition-colors
               ${
