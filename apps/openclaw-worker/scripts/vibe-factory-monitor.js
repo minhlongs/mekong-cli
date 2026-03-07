@@ -21,7 +21,7 @@ const path = require('path');
 // ══════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════
-const SESSION = 'tom_hum:brain';
+const SESSION = 'tom_hum:0'; // MUST be 0 since window name might change dynamically (e.g. 2.1.71)
 const LOG_FILE = path.join(process.env.HOME, 'tom_hum_cto.log');
 const CHECK_INTERVAL_MS = process.env.VIBE_INTERVAL || 30_000;
 
