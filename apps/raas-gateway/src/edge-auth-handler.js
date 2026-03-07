@@ -96,18 +96,18 @@ function validateApiKey(apiKey, env) {
  * Main auth handler — extracts and validates credentials from request
  * @param {Request} request
  * @param {object} env
- * @returns {{ authenticated: boolean, tenantId: string|null, role: string, error: string|null }}
+ * @returns {{ authenticated: boolean, tenantId: string|null, role: string, licenseKey: string|null, error: string|null }}
  */
 export function authenticate(request, env) {
   const authHeader = request.headers.get('Authorization') || '';
 
   if (!authHeader.startsWith('Bearer ')) {
-    return { authenticated: false, tenantId: null, role: 'anon', error: 'Missing Bearer token' };
+    return { authenticated: false, tenantId: null, role: 'anon', licenseKey: null, error: 'Missing Bearer token' };
   }
 
   const token = authHeader.slice(7).trim();
   if (!token) {
-    return { authenticated: false, tenantId: null, role: 'anon', error: 'Empty token' };
+    return { authenticated: false, tenantId: null, role: 'anon', licenseKey: null, error: 'Empty token' };
   }
 
   // mk_ API key takes priority over JWT
@@ -117,6 +117,7 @@ export function authenticate(request, env) {
       authenticated: result.valid,
       tenantId: result.tenantId,
       role: result.role,
+      licenseKey: result.valid ? token : null,
       error: result.error
     };
   }
@@ -124,7 +125,7 @@ export function authenticate(request, env) {
   // Try JWT decode
   const { payload, error: decodeError } = decodeJWT(token);
   if (decodeError || !payload) {
-    return { authenticated: false, tenantId: null, role: 'anon', error: decodeError || 'JWT decode failed' };
+    return { authenticated: false, tenantId: null, role: 'anon', licenseKey: null, error: decodeError || 'JWT decode failed' };
   }
 
   const { valid, tenantId, role, error: validError } = validateJWTPayload(payload);
@@ -132,6 +133,7 @@ export function authenticate(request, env) {
     authenticated: valid,
     tenantId,
     role,
+    licenseKey: null, // JWT tokens don't have mk_ license keys
     error: validError
   };
 }

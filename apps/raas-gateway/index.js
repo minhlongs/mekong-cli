@@ -6,6 +6,7 @@
 
 import { authenticate } from './src/edge-auth-handler.js';
 import { checkRateLimit, buildRateLimitHeaders } from './src/kv-rate-limiter-per-api-key.js';
+import { trackUsage, getUsageMetrics, getPayloadSize, getEndpointType } from './src/kv-usage-meter.js';
 
 const GATEWAY_VERSION = '2.0.0';
 
@@ -139,7 +140,7 @@ export default {
     }
 
     // --- AUTH: All /v1/* routes require Bearer token ---
-    const { authenticated, tenantId, role, error: authError } = authenticate(request, env);
+    const { authenticated, tenantId, role, licenseKey, error: authError } = authenticate(request, env);
 
     if (!authenticated) {
       return jsonResponse(
@@ -176,8 +177,72 @@ export default {
       );
     }
 
+    // --- ROUTE: GET /v1/usage (retrieve usage metrics) ---
+    if (path === '/v1/usage' && request.method === 'GET') {
+      // Only allow service accounts or authenticated users to get usage
+      if (role !== 'service' && !licenseKey) {
+        return jsonResponse({ error: 'Unauthorized to access usage data' }, 403, corsHeaders);
+      }
+
+      const targetLicenseKey = licenseKey; // For now, only allow getting your own usage
+
+      // Parse query parameters
+      const url = new URL(request.url);
+      const startHour = url.searchParams.get('start_hour');
+      const endHour = url.searchParams.get('end_hour');
+      const limit = parseInt(url.searchParams.get('limit')) || 100;
+      const offset = parseInt(url.searchParams.get('offset')) || 0;
+
+      return getUsageMetrics(env, targetLicenseKey, startHour, endHour, limit, offset).then(result => {
+        // Transform to billing-compatible format
+        const billingMetrics = result.metrics.map(metric => ({
+          license_key: metric.licenseKey,
+          tenant_id: metric.tenantId,
+          tier: metric.tier,
+          endpoint: metric.endpoint,
+          method: metric.method,
+          request_count: metric.requestCount,
+          payload_size: metric.payloadSize,
+          timestamp: metric.timestamp,
+          hour_bucket: metric.hourBucket,
+          // Billing-specific fields for Phase 3
+          metric_name: 'api_calls',
+          quantity: metric.requestCount,
+          unit: 'calls'
+        }));
+
+        return jsonResponse({
+          license_key: targetLicenseKey,
+          tenant_id: tenantId,
+          metrics: billingMetrics,
+          pagination: {
+            limit,
+            offset,
+            total: result.total,
+            has_more: result.hasMore
+          },
+          summary: {
+            total_requests: result.metrics.reduce((sum, m) => sum + m.requestCount, 0),
+            total_payload_size: result.metrics.reduce((sum, m) => sum + m.payloadSize, 0),
+            total_hours: result.metrics.length
+          }
+        }, 200, { ...corsHeaders, ...rlHeaders });
+      }).catch(err => {
+        return jsonResponse({ error: 'Failed to retrieve usage metrics', details: err.message }, 500, corsHeaders);
+      });
+    }
+
     // --- ROUTE: /v1/* → proxy to FastAPI backend ---
     if (path.startsWith('/v1/')) {
+      // Track usage if we have a valid license key (mk_ API key)
+      if (licenseKey) {
+        const payloadSize = await getPayloadSize(request);
+        const endpointType = getEndpointType(path);
+        trackUsage(env, licenseKey, tenantId, role, endpointType, request.method, payloadSize).catch(err => {
+          console.error('Usage tracking failed:', err);
+        });
+      }
+
       const backendUrl = (env.BACKEND_URL || env.BRIDGE_URL || env.OPENCLAW_URL || '')
         .replace(/\/$/, '');
 

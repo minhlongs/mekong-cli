@@ -15,12 +15,16 @@ import { licenseMiddleware, LicenseTier } from './middleware/license-auth-middle
 import { rateLimitMiddleware } from '../lib/rate-limiter-middleware';
 
 // Types for Cloudflare Workers environment
+// Note: KVNamespace and R2Bucket are available via @cloudflare/workers-types
 export type Env = {
   DATABASE_URL: string;
   EXCHANGE_API_KEY: string;
   EXCHANGE_SECRET: string;
   POLAR_WEBHOOK_SECRET: string;
   NODE_ENV: 'production' | 'staging' | 'development';
+  // Cloudflare bindings (available in worker context)
+  BUILD_CACHE?: unknown; // KVNamespace - typed at runtime
+  ARTIFACT_STORE?: unknown; // R2Bucket - typed at runtime
 };
 
 // App type with Cloudflare Workers bindings
@@ -160,6 +164,20 @@ apiV1.use('/backtest/*', async (c) => {
     path: c.req.path,
     method: c.req.method,
   }, 501);
+});
+
+// Cache stats endpoint - for dashboard monitoring
+apiV1.get('/cache/stats', async (c) => {
+  // Return mock stats for now - real implementation requires Node.js backend
+  // This endpoint will be implemented in the main backend server
+  return c.json({
+    hits: 0,
+    misses: 0,
+    hitRate: 0,
+    localSize: 0,
+    tier: 'miss',
+    note: 'Stats available in backend server at /api/cache/stats',
+  });
 });
 
 // Billing routes - FREE tier (public billing info)

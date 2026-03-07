@@ -9,6 +9,15 @@ command = "npm run build:worker"
 [vars]
 NODE_ENV = "production"
 
+[[kv_namespaces]]
+binding = "BUILD_CACHE"
+id = "temporary-id-12345"
+preview_id = "temporary-preview-id"
+
+[[r2_buckets]]
+binding = "ARTIFACT_STORE"
+bucket_name = "algo-trader-artifacts"
+
 [secrets]
 DATABASE_URL
 EXCHANGE_API_KEY

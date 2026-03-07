@@ -18,6 +18,14 @@ binding = "RATE_LIMIT_KV"
 id = "982a12a5ea414244988a51d743eb14e7"
 preview_id = "982a12a5ea414244988a51d743eb14e7"
 
+# KV namespace for RaaS usage metering (hourly aggregated metrics)
+# Create with: wrangler kv:namespace create "RAAS_USAGE_KV"
+# Then replace id below with the output id
+[[kv_namespaces]]
+binding = "RAAS_USAGE_KV"
+id = "placeholder_raas_usage_kv_id"
+preview_id = "placeholder_raas_usage_kv_id"
+
 # Secrets (set via: wrangler secret put <NAME>)
 # SERVICE_TOKEN       — internal service auth token
 # TELEGRAM_SECRET_TOKEN — Telegram webhook secret

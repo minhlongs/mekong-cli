@@ -111,12 +111,22 @@ jobs:
         run: npm install
         working-directory: .
 
+      - name: Check disk space
+        run: |
+          df -h
+          if [ $(df -h / | awk 'NR==2 {print $5}' | tr -d '%') -gt 80 ]; then
+            echo "WARNING: Disk usage >80%"
+          fi
+
       - name: Get version
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Build backend
-        run: npm run build
+      - name: Build backend with cache
+        run: npm run build:cached
+        env:
+          AGENCY_ID: ${{ secrets.AGENCY_ID }}
+          RAAS_API_KEY: ${{ secrets.RAAS_API_KEY }}
 
       - name: Install dashboard dependencies
         run: npm install
@@ -135,6 +145,16 @@ jobs:
             apps/algo-trader/dist
             apps/algo-trader/dashboard/dist
           retention-days: 7
+
+      # Cache stats report
+      - name: Cache stats report
+        run: |
+          if [ -f ".build-cache/metadata.json" ]; then
+            echo "=== Build Cache Stats ==="
+            cat .build-cache/metadata.json
+          else
+            echo "No cache metadata available"
+          fi
 
   # Smoke Tests - Post-Deploy Validation
   smoke-tests:

@@ -9,6 +9,7 @@ import { PriceTickerStrip } from '../components/price-ticker-strip';
 import { PositionsTableSortable } from '../components/positions-table-sortable';
 import { SpreadOpportunitiesCardGrid } from '../components/spread-opportunities-card-grid';
 import { EquityCurveChart } from '../components/equity-curve-pnl-chart';
+import { CacheStatus } from '../components/cache-status';
 
 function formatUsd(n: number): string {
   const abs = Math.abs(n);
@@ -49,6 +50,7 @@ export function DashboardPage() {
           <p className="text-muted text-xs mt-0.5">Real-time arbitrage monitor</p>
         </div>
         <div className="flex items-center gap-3">
+          <CacheStatus />
           <span className="text-muted text-xs">Updated {lastUpdate}</span>
           <div className={`
             flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold

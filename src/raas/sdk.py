@@ -78,6 +78,65 @@ class AgentResult:
 
 
 # ---------------------------------------------------------------------------
+# Marketing response dataclasses
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ContentTemplate:
+    """Content template fetched from RaaS Gateway."""
+
+    template_id: str
+    name: str
+    description: str
+    content_type: str
+    channel: str
+    template: str
+    placeholders: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class TemplateMetadata:
+    """Metadata about available templates."""
+
+    total: int
+    categories: List[str]
+    channels: List[str]
+    content_types: List[str]
+
+
+@dataclass
+class RenderedContent:
+    """Rendered content with injected analytics."""
+
+    content_id: str
+    template_id: str
+    channel: str
+    content_type: str
+    rendered_content: str
+    placeholders_used: Dict[str, Any]
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class PerformanceData:
+    """Performance metadata for published content."""
+
+    content_id: str
+    template_id: str
+    channel: str
+    impressions: int = 0
+    clicks: int = 0
+    conversions: int = 0
+    engagement_rate: float = 0.0
+    click_through_rate: float = 0.0
+    conversion_rate: float = 0.0
+    revenue: float = 0.0
+    published_at: str = ""
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -219,6 +278,160 @@ class MekongClient:
             output=data["output"], errors=data.get("errors", []),
         )
 
+    # -- Marketing -----------------------------------------------------------
+
+    def list_marketing_templates(
+        self,
+        category: Optional[str] = None,
+        channel: Optional[str] = None,
+        content_type: Optional[str] = None,
+    ) -> List[ContentTemplate]:
+        """
+        List available content templates from RaaS Gateway.
+
+        Args:
+            category: Filter by content category (e.g., "social", "email")
+            channel: Filter by distribution channel (e.g., "linkedin", "twitter")
+            content_type: Filter by content type (e.g., "thread", "blog_post")
+
+        Returns:
+            List of ContentTemplate objects
+        """
+        params = {}
+        if category:
+            params["category"] = category
+        if channel:
+            params["channel"] = channel
+        if content_type:
+            params["content_type"] = content_type
+
+        data = self._request("GET", "/v1/marketing/templates", params=params)
+        return [
+            ContentTemplate(
+                template_id=template["template_id"],
+                name=template["name"],
+                description=template["description"],
+                content_type=template["content_type"],
+                channel=template["channel"],
+                template=template["template"],
+                placeholders=template.get("placeholders", []),
+                metadata=template.get("metadata", {}),
+            )
+            for template in data.get("templates", [])
+        ]
+
+    def get_marketing_template(self, template_id: str) -> ContentTemplate:
+        """
+        Get a specific content template by ID.
+
+        Args:
+            template_id: ID of the template to retrieve
+
+        Returns:
+            ContentTemplate object
+        """
+        data = self._request("GET", f"/v1/marketing/templates/{template_id}")
+        return ContentTemplate(
+            template_id=data["template_id"],
+            name=data["name"],
+            description=data["description"],
+            content_type=data["content_type"],
+            channel=data["channel"],
+            template=data["template"],
+            placeholders=data.get("placeholders", []),
+            metadata=data.get("metadata", {}),
+        )
+
+    def get_marketing_template_metadata(self) -> TemplateMetadata:
+        """
+        Get metadata about available templates (categories, channels, content types).
+
+        Returns:
+            TemplateMetadata object
+        """
+        data = self._request("GET", "/v1/marketing/templates/metadata")
+        return TemplateMetadata(
+            total=data["total"],
+            categories=data["categories"],
+            channels=data["channels"],
+            content_types=data["content_types"],
+        )
+
+    def render_marketing_content(
+        self, template_id: str, placeholders: Dict[str, Any]
+    ) -> RenderedContent:
+        """
+        Render a content template with dynamic placeholders.
+
+        Args:
+            template_id: ID of the template to render
+            placeholders: Dictionary of placeholder values to inject
+
+        Returns:
+            RenderedContent object
+        """
+        payload = {"template_id": template_id, "placeholders": placeholders}
+        data = self._request("POST", "/v1/marketing/render", json=payload)
+        return RenderedContent(
+            content_id=data["content_id"],
+            template_id=data["template_id"],
+            channel=data["channel"],
+            content_type=data["content_type"],
+            rendered_content=data["rendered_content"],
+            placeholders_used=data["placeholders_used"],
+            metadata=data.get("metadata", {}),
+        )
+
+    def track_marketing_performance(self, performance: PerformanceData) -> Dict[str, Any]:
+        """
+        Track performance metadata for published content.
+
+        Args:
+            performance: PerformanceData object containing metrics
+
+        Returns:
+            API response
+        """
+        payload = {
+            "content_id": performance.content_id,
+            "template_id": performance.template_id,
+            "channel": performance.channel,
+            "impressions": performance.impressions,
+            "clicks": performance.clicks,
+            "conversions": performance.conversions,
+            "engagement_rate": performance.engagement_rate,
+            "click_through_rate": performance.click_through_rate,
+            "conversion_rate": performance.conversion_rate,
+            "revenue": performance.revenue,
+            "published_at": performance.published_at,
+        }
+        return self._request("POST", "/v1/marketing/performance", json=payload)
+
+    def get_marketing_performance(self, content_id: str) -> PerformanceData:
+        """
+        Get performance data for specific content.
+
+        Args:
+            content_id: ID of the content to get performance for
+
+        Returns:
+            PerformanceData object
+        """
+        data = self._request("GET", f"/v1/marketing/performance/{content_id}")
+        return PerformanceData(
+            content_id=data["content_id"],
+            template_id=data["template_id"],
+            channel=data["channel"],
+            impressions=data["impressions"],
+            clicks=data["clicks"],
+            conversions=data["conversions"],
+            engagement_rate=data["engagement_rate"],
+            click_through_rate=data["click_through_rate"],
+            conversion_rate=data["conversion_rate"],
+            revenue=data["revenue"],
+            published_at=data["published_at"],
+        )
+
 
 # ---------------------------------------------------------------------------
 # Async client
@@ -305,4 +518,158 @@ class MekongAsyncClient:
         return AgentResult(
             agent=data["agent"], status=data["status"],
             output=data["output"], errors=data.get("errors", []),
+        )
+
+    # -- Marketing -----------------------------------------------------------
+
+    async def list_marketing_templates(
+        self,
+        category: Optional[str] = None,
+        channel: Optional[str] = None,
+        content_type: Optional[str] = None,
+    ) -> List[ContentTemplate]:
+        """
+        List available content templates from RaaS Gateway.
+
+        Args:
+            category: Filter by content category (e.g., "social", "email")
+            channel: Filter by distribution channel (e.g., "linkedin", "twitter")
+            content_type: Filter by content type (e.g., "thread", "blog_post")
+
+        Returns:
+            List of ContentTemplate objects
+        """
+        params = {}
+        if category:
+            params["category"] = category
+        if channel:
+            params["channel"] = channel
+        if content_type:
+            params["content_type"] = content_type
+
+        data = await self._request("GET", "/v1/marketing/templates", params=params)
+        return [
+            ContentTemplate(
+                template_id=template["template_id"],
+                name=template["name"],
+                description=template["description"],
+                content_type=template["content_type"],
+                channel=template["channel"],
+                template=template["template"],
+                placeholders=template.get("placeholders", []),
+                metadata=template.get("metadata", {}),
+            )
+            for template in data.get("templates", [])
+        ]
+
+    async def get_marketing_template(self, template_id: str) -> ContentTemplate:
+        """
+        Get a specific content template by ID.
+
+        Args:
+            template_id: ID of the template to retrieve
+
+        Returns:
+            ContentTemplate object
+        """
+        data = await self._request("GET", f"/v1/marketing/templates/{template_id}")
+        return ContentTemplate(
+            template_id=data["template_id"],
+            name=data["name"],
+            description=data["description"],
+            content_type=data["content_type"],
+            channel=data["channel"],
+            template=data["template"],
+            placeholders=data.get("placeholders", []),
+            metadata=data.get("metadata", {}),
+        )
+
+    async def get_marketing_template_metadata(self) -> TemplateMetadata:
+        """
+        Get metadata about available templates (categories, channels, content types).
+
+        Returns:
+            TemplateMetadata object
+        """
+        data = await self._request("GET", "/v1/marketing/templates/metadata")
+        return TemplateMetadata(
+            total=data["total"],
+            categories=data["categories"],
+            channels=data["channels"],
+            content_types=data["content_types"],
+        )
+
+    async def render_marketing_content(
+        self, template_id: str, placeholders: Dict[str, Any]
+    ) -> RenderedContent:
+        """
+        Render a content template with dynamic placeholders.
+
+        Args:
+            template_id: ID of the template to render
+            placeholders: Dictionary of placeholder values to inject
+
+        Returns:
+            RenderedContent object
+        """
+        payload = {"template_id": template_id, "placeholders": placeholders}
+        data = await self._request("POST", "/v1/marketing/render", json=payload)
+        return RenderedContent(
+            content_id=data["content_id"],
+            template_id=data["template_id"],
+            channel=data["channel"],
+            content_type=data["content_type"],
+            rendered_content=data["rendered_content"],
+            placeholders_used=data["placeholders_used"],
+            metadata=data.get("metadata", {}),
+        )
+
+    async def track_marketing_performance(self, performance: PerformanceData) -> Dict[str, Any]:
+        """
+        Track performance metadata for published content.
+
+        Args:
+            performance: PerformanceData object containing metrics
+
+        Returns:
+            API response
+        """
+        payload = {
+            "content_id": performance.content_id,
+            "template_id": performance.template_id,
+            "channel": performance.channel,
+            "impressions": performance.impressions,
+            "clicks": performance.clicks,
+            "conversions": performance.conversions,
+            "engagement_rate": performance.engagement_rate,
+            "click_through_rate": performance.click_through_rate,
+            "conversion_rate": performance.conversion_rate,
+            "revenue": performance.revenue,
+            "published_at": performance.published_at,
+        }
+        return await self._request("POST", "/v1/marketing/performance", json=payload)
+
+    async def get_marketing_performance(self, content_id: str) -> PerformanceData:
+        """
+        Get performance data for specific content.
+
+        Args:
+            content_id: ID of the content to get performance for
+
+        Returns:
+            PerformanceData object
+        """
+        data = await self._request("GET", f"/v1/marketing/performance/{content_id}")
+        return PerformanceData(
+            content_id=data["content_id"],
+            template_id=data["template_id"],
+            channel=data["channel"],
+            impressions=data["impressions"],
+            clicks=data["clicks"],
+            conversions=data["conversions"],
+            engagement_rate=data["engagement_rate"],
+            click_through_rate=data["click_through_rate"],
+            conversion_rate=data["conversion_rate"],
+            revenue=data["revenue"],
+            published_at=data["published_at"],
         )

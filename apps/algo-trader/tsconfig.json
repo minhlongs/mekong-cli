@@ -18,8 +18,11 @@
       "@agencyos/vibe-billing-trading/*": ["../../packages/vibe-billing-trading/*"],
       "@agencyos/vibe-arbitrage-engine": ["../../packages/vibe-arbitrage-engine/index.ts"],
       "@agencyos/vibe-arbitrage-engine/*": ["../../packages/vibe-arbitrage-engine/*"]
-    }
+    },
+    "incremental": true,
+    "composite": false,
+    "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "exclude": ["node_modules", "**/*.test.ts", "node_modules/.cache"]
 }

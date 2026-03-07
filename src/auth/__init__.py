@@ -4,6 +4,11 @@ Authentication Module Initialization
 OAuth2 authentication with Google and GitHub providers,
 JWT session management, and RBAC access control.
 Includes rate limiting for auth endpoints.
+
+RaaS License Authentication:
+- Secure storage for license keys
+- Gateway verification
+- Login/logout commands
 """
 
 from src.auth.oauth2_providers import (
@@ -76,6 +81,21 @@ from src.auth.rate_limit_decorator import (
     create_rate_limit_response,
 )
 
+# RaaS License Authentication
+from src.auth.secure_storage import (
+    SecureStorage,
+    get_secure_storage,
+    SecureStorageError,
+)
+
+from src.auth.login_client import (
+    GatewayClient,
+    get_gateway_client,
+    verify_license_key,
+    LicenseInfo,
+    GatewayClientError,
+)
+
 __all__ = [
     # OAuth2
     "OAuth2Client",
@@ -133,4 +153,13 @@ __all__ = [
     "parse_rate_limit",
     "add_rate_limit_headers",
     "create_rate_limit_response",
+    # RaaS License Authentication
+    "SecureStorage",
+    "get_secure_storage",
+    "SecureStorageError",
+    "GatewayClient",
+    "get_gateway_client",
+    "verify_license_key",
+    "LicenseInfo",
+    "GatewayClientError",
 ]

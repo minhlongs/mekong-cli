@@ -3178,3 +3178,78 @@
   goal: list files
   result: executed
   timestamp: 1772860320.504533
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772887720.403627
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772887720.7209651
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772887721.5409799
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772887721.95059
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772887722.2797709
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772887743.639114
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772887744.160015
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772887746.4939342
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772887746.955474
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772887747.4599848
+- action_class: forbidden
+  approved: false
+  goal: rm -rf /important/data
+  result: blocked
+  timestamp: 1772888213.138946
+- action_class: forbidden
+  approved: false
+  goal: drop database prod
+  result: blocked
+  timestamp: 1772888214.36078
+- action_class: safe
+  approved: true
+  goal: list files
+  result: skipped
+  timestamp: 1772888215.621036
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772888216.049855
+- action_class: safe
+  approved: true
+  goal: list files
+  result: executed
+  timestamp: 1772888216.565515
