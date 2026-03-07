@@ -26,7 +26,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from .dag_scheduler import DAGScheduler, validate_dag
-from .event_bus import get_event_bus
+from .event_bus import EventType, get_event_bus
 from .execution_history import EventKind, ExecutionEvent, ExecutionHistory
 from .executor import RecipeExecutor
 from .health_endpoint import (
