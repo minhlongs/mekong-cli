@@ -23,7 +23,7 @@ packages = [{include = "mekong"}, {include = "src"}, {include = "api"}]
 mekong = "src.main:app"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.13"
 typer = ">=0.12.0"
 rich = "^13.7.0"
 fastapi = "^0.109.0"
@@ -60,12 +60,30 @@ ruff = "^0.1.11"
 mypy = "^1.8.0"
 httpx = ">=0.26.0,<0.28.0"
 
+[tool.poetry.group.build.dependencies]
+pyinstaller = "^6.0.0"
+pyinstaller-hooks-contrib = "^2024.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
+# Only scan mekong-cli core tests, not entire monorepo
 testpaths = ["tests"]
+# Exclude monorepo subdirectories that have their own tests
+norecursedirs = [
+    "node_modules",
+    ".archive",
+    "apps",
+    "packages",
+    "vendor",
+    ".git",
+    "__pycache__",
+    "dist",
+    "build",
+    "*.egg-info",
+]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
