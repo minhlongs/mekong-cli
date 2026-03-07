@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "jsx": "react",
     "types": ["node", "jest"],
+    "isolatedModules": true,
     "typeRoots": ["./node_modules/@types", "../../node_modules/@types", "../../node_modules/.pnpm/node_modules/@types", "../../packages/trading-core/types"],
     "paths": {
       "@agencyos/trading-core": ["../../packages/trading-core/index.ts"],

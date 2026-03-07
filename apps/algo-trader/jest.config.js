@@ -2,8 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   maxWorkers: 1,
-  workerIdleMemoryLimit: 0.5, // 50% RAM - aggressive GC for M1 16GB
-  workerMemoryLimit: 1024, // 1GB per worker
+  workerIdleMemoryLimit: '50%', // 50% RAM - aggressive GC for M1 16GB
   testTimeout: 60000,
   // Skip heavy tests that cause SIGKILL on M1 16GB RAM
   testPathIgnorePatterns: [
@@ -55,7 +54,6 @@ module.exports = {
     '^.+\\.ts$': ['ts-jest', {
       tsconfig: '<rootDir>/tsconfig.json',
       diagnostics: false,
-      isolatedModules: true,
     }],
   },
   // Transform ESM packages that cause syntax errors
