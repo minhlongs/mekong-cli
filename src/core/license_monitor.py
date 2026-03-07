@@ -329,7 +329,6 @@ class LicenseMonitor:
         Returns:
             Dictionary with failure statistics.
         """
-        now = time.time()
         recent = self.get_recent_failures()
 
         # Group by error code
