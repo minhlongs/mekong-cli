@@ -11,7 +11,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
-from cachetools import LRUCache
+from cachetools import TTLCache
 
 from src.db.queries.analytics_queries import AnalyticsQueries
 from src.db.database import DatabaseConnection
@@ -55,14 +55,14 @@ class DashboardService:
 
     def __init__(self, db: Optional[DatabaseConnection] = None) -> None:
         """Initialize service with database connection."""
+        self._cache_ttl: int = 300  # 5 minutes
         self._queries = AnalyticsQueries(db or DatabaseConnection())
         self._rate_limit_emitter = RateLimitMetricsEmitter(db or DatabaseConnection())
-        self._cache: LRUCache = LRUCache(maxsize=100, ttl=self._cache_ttl)  # LRU cache with max 100 entries and TTL
-        self._cache_ttl: int = 300  # 5 minutes
+        self._cache: TTLCache = TTLCache(maxsize=100, ttl=self._cache_ttl)
 
     def _get_cached(self, key: str) -> Optional[DashboardMetrics]:
         """Get cached data if exists."""
-        return self._cache.get(key)
+        return self._cache.get(key)  # type: ignore
 
     def _set_cache(self, key: str, data: DashboardMetrics) -> None:
         """Cache data with TTL."""
@@ -77,27 +77,41 @@ class DashboardService:
         else:
             self._cache.clear()
 
-    async def get_metrics(self, range_days: int = 30) -> DashboardMetrics:
+    async def get_metrics(
+        self,
+        range_days: int = 30,
+        license_key: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> DashboardMetrics:
         """
         Get all dashboard metrics.
 
         Args:
             range_days: Date range for usage data (default: 30 days)
+            license_key: Optional filter by license key
+            start_date: Optional start date (YYYY-MM-DD)
+            end_date: Optional end date (YYYY-MM-DD)
 
         Returns:
             DashboardMetrics object with all aggregated data
         """
         # Check cache
-        cache_key = f"metrics_{range_days}"
+        cache_key = f"metrics_{range_days}_{license_key}_{start_date}_{end_date}"
         cached = self._get_cached(cache_key)
         if cached:
             return cached
 
-        # Fetch all metrics in parallel
-        end_date = datetime.now().strftime('%Y-%m-%d')
-        start_date = (datetime.now() - timedelta(days=range_days)).strftime('%Y-%m-%d')
+        # Calculate date range
+        if start_date and end_date:
+            filter_start = start_date
+            filter_end = end_date
+        else:
+            filter_end = datetime.now().strftime('%Y-%m-%d')
+            filter_start = (datetime.now() - timedelta(days=range_days)).strftime('%Y-%m-%d')
 
-        daily_usage = await self._queries.get_daily_usage(start_date, end_date)
+        # Fetch all metrics in parallel
+        daily_usage = await self._queries.get_daily_usage(filter_start, filter_end)
         weekly_usage = await self._queries.get_weekly_usage()
         monthly_usage = await self._queries.get_monthly_usage()
         active_licenses = await self._queries.get_active_licenses()
@@ -185,6 +199,10 @@ class DashboardService:
         start_date, end_date = date_range
         daily_data = await self._queries.get_daily_usage(start_date, end_date)
 
+        # Filter by license_key if provided
+        if license_key:
+            daily_data = [d for d in daily_data if d.get('key_id') == license_key]
+
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(['date', 'api_calls', 'unique_licenses'])
@@ -223,9 +241,17 @@ class DashboardService:
         revenue = await self._queries.get_revenue_summary()
         tiers = await self._queries.get_license_tier_distribution()
 
+        # Filter by license_key if provided
+        if license_key:
+            daily = [d for d in daily if d.get('key_id') == license_key]
+            active = [a for a in active if a.get('key_id') == license_key]
+
         export_data = {
             'exported_at': datetime.now().isoformat(),
             'date_range': {'start': start_date, 'end': end_date},
+            'filters': {
+                'license_key': license_key,
+            },
             'usage': {
                 'daily': self._format_chart_data(daily, 'daily'),
                 'weekly': self._format_chart_data(weekly, 'weekly'),

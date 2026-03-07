@@ -412,7 +412,7 @@ class TestRoiCommands:
 
 Phase 6 đã hoàn thành với `mekong roi` unified command cung cấp:
 
-1. **Auth Subcommand** - Quản lý license keys (generate, validate, status)
+1. **Auth Subcommand** - Quản lý license keys (generate, validate, status, renew, info)
 2. **Usage Subcommand** - Báo cáo usage và quota (report, submit, quota)
 3. **Billing Subcommand** - Billing operations (status, reconcile, webhook, events)
 4. **Dashboard Subcommand** - Analytics (show, export, real-time, health)
@@ -424,8 +424,39 @@ Phase 6 đã hoàn thành với `mekong roi` unified command cung cấp:
 - Auto-update notifications (GitHub Releases polling)
 - Graceful error handling với Rich console output
 
-## Unresolved Questions
+## Deployment Status
 
-1. **Backend API URLs**: Production API endpoints cần được configure trong `.env`
-2. **Auto-update mechanism**: Implemented với GitHub Releases API, cần test với network
-3. **Session resume**: Inherited từ `src/core/graceful_shutdown.py` - auto cleanup khi crash
+- ✅ Committed: `5db9206c6`
+- ✅ Pushed to: `origin/master`
+- ✅ CI/CD: Pre-push passed
+
+## Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/cli/roi_commands.py` | Unified ROI CLI entry point |
+| `src/cli/roi_auth.py` | License authentication (5 commands) |
+| `src/cli/roi_usage.py` | Usage metering (3 commands) |
+| `src/cli/roi_billing.py` | Billing operations (4 commands) |
+| `src/cli/roi_dashboard.py` | Analytics dashboard (4 commands) |
+| `plans/260307-1545-phase6-unified-roi-cli/plan.md` | Phase 6 plan document |
+
+## Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/main.py` | Register roi command, add to FREE_COMMANDS |
+
+## Test Results
+
+```bash
+✓ mekong roi --help
+✓ mekong roi auth --help
+✓ mekong roi usage --help
+✓ mekong roi billing --help
+✓ mekong roi dashboard --help
+✓ mekong roi auth status
+✓ mekong roi auth generate --tier pro --email test@example.com
+✓ mekong roi quick-start
+✓ mekong roi dashboard health (fails gracefully if cachetools missing)
+```

@@ -85,10 +85,18 @@ async def get_metrics(
     request: Request,
     range_days: int = Query(default=30, ge=1, le=365),
     granularity: Literal["day", "week", "month"] = "day",
+    license_key: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
 ):
     """Get all dashboard metrics (requires authentication)."""
     try:
-        metrics = await dashboard_service.get_metrics(range_days)
+        metrics = await dashboard_service.get_metrics(
+            range_days=range_days,
+            license_key=license_key,
+            start_date=start_date,
+            end_date=end_date,
+        )
         return {
             "success": True,
             "data": {
@@ -160,14 +168,15 @@ async def export_data(
     format: Literal["csv", "json"] = "json",
     start: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
     end: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    license_key: Optional[str] = None,
+    license_key: Optional[str] = Query(None),
+    days: int = Query(default=30, ge=1, le=365),
 ):
     """Export data to CSV or JSON (requires export permission)."""
     try:
         # Default to last 30 days if not specified
         if not start or not end:
             end_date = datetime.now().strftime("%Y-%m-%d")
-            start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
         else:
             start_date, end_date = start, end
 
@@ -271,25 +280,130 @@ async def get_rate_limit_events(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def run_dashboard(port: int = 8080, open_browser: bool = True):
+@app.get("/api/filters/licenses")
+async def get_license_filters():
+    """Get list of license keys for filter dropdown."""
+    try:
+        licenses = await dashboard_service._queries.get_active_licenses()
+        # Return unique license keys with metadata
+        result = []
+        seen = set()
+        for lic in licenses:
+            key = lic.get("license_key", "")
+            if key and key not in seen:
+                result.append({
+                    "key_id": lic.get("key_id", ""),
+                    "license_key": key[:20] + "..." if len(key) > 20 else key,
+                    "tier": lic.get("tier", "unknown"),
+                    "email": lic.get("email", ""),
+                })
+                seen.add(key)
+        return {
+            "success": True,
+            "data": result[:100],  # Limit to 100 for dropdown performance
+        }
+    except Exception as e:
+        logger.error(f"License filters error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/telemetry/events")
+async def get_telemetry_events(
+    event_type: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    limit: int = Query(default=100, ge=1, le=1000),
+):
+    """Get telemetry events with optional filters."""
+    try:
+        from src.db.queries.analytics_queries import TelemetryQueries
+
+        queries = TelemetryQueries()
+        events = await queries.get_telemetry_events(
+            event_type=event_type,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
+        )
+        return {
+            "success": True,
+            "data": events,
+            "metadata": {
+                "total_count": len(events),
+                "filters": {
+                    "event_type": event_type,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                },
+            },
+        }
+    except Exception as e:
+        logger.error(f"Telemetry events error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/telemetry/cli-versions")
+async def get_cli_versions():
+    """Get CLI version distribution from telemetry data."""
+    try:
+        from src.db.queries.analytics_queries import TelemetryQueries
+
+        queries = TelemetryQueries()
+        distribution = await queries.get_cli_version_distribution()
+        return {
+            "success": True,
+            "data": distribution,
+        }
+    except Exception as e:
+        logger.error(f"CLI versions error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/telemetry/sessions")
+async def get_session_stats(
+    range_days: int = Query(default=30, ge=1),
+):
+    """Get session statistics from telemetry data."""
+    try:
+        from src.db.queries.analytics_queries import TelemetryQueries
+
+        queries = TelemetryQueries()
+        stats = await queries.get_session_statistics(range_days)
+        return {
+            "success": True,
+            "data": stats,
+        }
+    except Exception as e:
+        logger.error(f"Session stats error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def run_dashboard(
+    port: int = 8080,
+    open_browser: bool = True,
+    host: str = "0.0.0.0",
+) -> None:
     """
     Run dashboard server.
 
     Args:
         port: Server port (default: 8080)
         open_browser: Open browser on start
+        host: Bind host (default: 0.0.0.0)
     """
     import threading
     import webbrowser
 
     if open_browser:
-        threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
+        threading.Timer(
+            1.5, lambda: webbrowser.open(f"http://localhost:{port}")
+        ).start()
 
     import uvicorn
 
     uvicorn.run(
         "src.api.dashboard.app:app",
-        host="0.0.0.0",
+        host=host,
         port=port,
         reload=True,
     )

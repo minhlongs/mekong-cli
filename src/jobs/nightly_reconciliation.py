@@ -23,7 +23,7 @@ import os
 import sys
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -35,7 +35,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.db.repository import get_repository, LicenseRepository
 from src.billing.reconciliation import (
-    ReconciliationService,
     AuditResult,
     ReconciliationConfig,
     get_reconciliation_service,
@@ -317,7 +316,7 @@ class NightlyReconciliationService:
         if audit_date is None:
             audit_date = date.today() - timedelta(days=1)
 
-        console.print(f"\n[bold cyan]🔍 Nightly Reconciliation[/bold cyan]")
+        console.print("\n[bold cyan]🔍 Nightly Reconciliation[/bold cyan]")
         console.print(f"Audit Date: [cyan]{audit_date}[/cyan]")
         console.print(f"Dry Run: [yellow]{dry_run}[/yellow]\n")
 

@@ -1,148 +1,281 @@
-"""Mekong CLI - Telemetry Collector.
+"""
+Telemetry Collector — Usage Event Collection
 
-Records execution traces for observability and debugging.
-Writes structured traces to .mekong/telemetry/ directory.
+Collects anonymized usage events:
+- command_executed
+- session_started
+- session_ended
+- error_occurred
+
+Reference: plans/260307-1602-telemetry-consent-opt-in/plan.md
 """
 
-from __future__ import annotations
-
+import atexit
+import hashlib
 import json
-import logging
-import threading
+import os
 import time
+import uuid
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
-from .telemetry_models import ExecutionTrace, StepTrace
-
-logger = logging.getLogger(__name__)
-
-# Langfuse facade disabled to prevent recursion issues
-_facade = None
-_facade_loaded = False
+from .telemetry_consent import ConsentManager
 
 
-def _get_facade() -> Any | None:
-    """Safely import and cache ObservabilityFacade without recursion risk."""
-    global _facade, _facade_loaded
+@dataclass
+class TelemetryEvent:
+    """Telemetry event."""
 
-    if _facade_loaded:
-        return _facade
+    event_type: str
+    anonymous_id: str
+    timestamp: str
+    session_id: str
+    properties: Dict[str, Any] = field(default_factory=dict)
+    cli_version: str = "3.0.0"
 
-    _facade_loaded = True
-    _facade = None
-    return _facade
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 class TelemetryCollector:
-    """Collects execution telemetry and writes traces to disk.
+    """
+    Collect anonymized usage telemetry.
 
-    Usage:
-        collector = TelemetryCollector()
-        collector.start_trace("deploy app")
-        collector.record_step(1, "Install deps", 2.5, 0)
-        collector.record_llm_call()
-        collector.finish_trace()
+    Events are buffered and uploaded in batches.
     """
 
-    def __init__(self, output_dir: str | None = None) -> None:
-        """Initialize collector.
+    def __init__(self, consent_manager: Optional[ConsentManager] = None):
+        self._consent_manager = consent_manager or ConsentManager()
+        self._buffer: List[TelemetryEvent] = []
+        self._session_id: Optional[str] = None
+        self._session_start: Optional[float] = None
+        self._commands_count = 0
+        self._max_buffer_size = 50
+        self._storage_file = Path.home() / ".mekong" / "telemetry-buffer.json"
+        self._initialized = False
 
-        Args:
-            output_dir: Directory for trace files. Defaults to .mekong/telemetry/
+        atexit.register(self._flush_on_exit)
 
-        """
-        self._trace: ExecutionTrace | None = None
-        self._start_time: float = 0.0
-        self._output_dir = Path(output_dir) if output_dir else Path(".mekong/telemetry")
-        self._lock = threading.Lock()
+    def _ensure_anonymous_id(self) -> Optional[str]:
+        """Get anonymous ID (only if consent given)."""
+        if not self._consent_manager.has_consent():
+            return None
+        return self._consent_manager.get_anonymous_id()
 
-    def start_trace(self, goal: str, user_id: str | None = None) -> None:
-        """Begin a new execution trace."""
-        self._trace = ExecutionTrace(goal=goal)
-        self._start_time = time.time()
+    def _get_session_id(self) -> str:
+        """Get or create session ID."""
+        if not self._session_id:
+            self._session_id = str(uuid.uuid4())
+        return self._session_id
 
-    def record_step(
-        self,
-        step_order: int,
-        title: str,
-        duration: float,
-        exit_code: int,
-        self_healed: bool = False,
-        agent: str | None = None,
-    ) -> None:
-        """Record a completed step in the current trace (thread-safe)."""
-        if self._trace is None:
+    def _hash_error(self, error_message: str) -> str:
+        """Hash error message for anonymization."""
+        return hashlib.sha256(error_message.encode()).hexdigest()[:16]
+
+    def _get_python_version(self) -> str:
+        """Get Python version string."""
+        try:
+            import sys
+            return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        except Exception:
+            return "unknown"
+
+    def _get_os_info(self) -> str:
+        """Get OS information."""
+        try:
+            import platform
+            return platform.system()
+        except Exception:
+            return "unknown"
+
+    def session_start(self) -> None:
+        """Record session start event."""
+        if self._initialized:
             return
 
-        with self._lock:
-            self._trace.steps.append(
-                StepTrace(
-                    step_order=step_order,
-                    title=title,
-                    duration_seconds=round(duration, 3),
-                    exit_code=exit_code,
-                    self_healed=self_healed,
-                    agent_used=agent,
-                ),
-            )
+        anonymous_id = self._ensure_anonymous_id()
+        if not anonymous_id:
+            self._initialized = True
+            return
 
-    def record_llm_call(
-        self, model: str = "", input_tokens: int = 0, output_tokens: int = 0,
+        self._session_start = time.time()
+
+        event = TelemetryEvent(
+            event_type="session_started",
+            anonymous_id=anonymous_id,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            session_id=self._get_session_id(),
+            properties={
+                "cli_version": "3.0.0",
+                "python_version": self._get_python_version(),
+                "os": self._get_os_info(),
+            },
+        )
+        self._buffer.append(event)
+        self._initialized = True
+
+    def command_executed(
+        self,
+        command_name: str,
+        duration_ms: int,
+        exit_code: int,
+        error_type: Optional[str] = None,
     ) -> None:
-        """Increment LLM call counter."""
-        if self._trace is not None:
-            self._trace.llm_calls += 1
+        """Record command execution event."""
+        if not self._initialized:
+            self.session_start()
 
-    def record_error(self, error_msg: str) -> None:
-        """Record an error message in the trace."""
-        if self._trace is not None:
-            self._trace.errors.append(error_msg)
+        anonymous_id = self._ensure_anonymous_id()
+        if not anonymous_id:
+            return
 
-    def finish_trace(self) -> ExecutionTrace | None:
-        """Finalize trace and write to disk."""
-        if self._trace is None:
-            return None
+        self._commands_count += 1
 
-        self._trace.total_duration = round(time.time() - self._start_time, 3)
+        properties = {
+            "command": command_name,
+            "duration_ms": duration_ms,
+            "exit_code": exit_code,
+            "success": exit_code == 0,
+        }
 
-        self._output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = self._output_dir / "execution_trace.json"
+        if error_type:
+            properties["error_type_hash"] = self._hash_error(error_type)
 
-        trace_dict = self._serialize_trace_safe(self._trace)
-        output_path.write_text(json.dumps(trace_dict, indent=2))
+        event = TelemetryEvent(
+            event_type="command_executed",
+            anonymous_id=anonymous_id,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            session_id=self._get_session_id(),
+            properties=properties,
+        )
+        self._buffer.append(event)
+        self._check_buffer()
 
-        return self._trace
+    def error_occurred(
+        self,
+        error_type: str,
+        error_message: str,
+        command_name: Optional[str] = None,
+    ) -> None:
+        """Record error event."""
+        anonymous_id = self._ensure_anonymous_id()
+        if not anonymous_id:
+            return
 
-    def _serialize_trace_safe(self, trace: ExecutionTrace) -> dict[str, Any]:
-        """Safely serialize ExecutionTrace to dict, avoiding circular references."""
+        event = TelemetryEvent(
+            event_type="error_occurred",
+            anonymous_id=anonymous_id,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            session_id=self._get_session_id(),
+            properties={
+                "error_type": error_type,
+                "error_message_hash": self._hash_error(error_message),
+                "command": command_name,
+            },
+        )
+        self._buffer.append(event)
+        self._check_buffer()
 
-        def _serialize_obj(obj: Any) -> Any:
-            if isinstance(obj, (int, float, str, bool, type(None))):
-                return obj
-            if isinstance(obj, (list, tuple)):
-                return [_serialize_obj(item) for item in obj]
-            if isinstance(obj, dict):
-                return {
-                    key: _serialize_obj(value) for key, value in obj.items()
-                }
-            if hasattr(obj, "__dataclass_fields__"):
-                result = {}
-                for field_name in obj.__dataclass_fields__:
-                    field_value = getattr(obj, field_name)
-                    if field_value is trace:
-                        return {"__ref__": "circular_reference"}
-                    result[field_name] = _serialize_obj(field_value)
-                return result
-            return str(obj)
+    def session_end(self) -> None:
+        """Record session end event."""
+        anonymous_id = self._ensure_anonymous_id()
+        if not anonymous_id:
+            return
 
-        from dataclasses import asdict
+        duration_ms = 0
+        if self._session_start:
+            duration_ms = int((time.time() - self._session_start) * 1000)
 
-        return _serialize_obj(asdict(trace))
+        event = TelemetryEvent(
+            event_type="session_ended",
+            anonymous_id=anonymous_id,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            session_id=self._get_session_id(),
+            properties={
+                "duration_ms": duration_ms,
+                "commands_count": self._commands_count,
+            },
+        )
+        self._buffer.append(event)
 
-    def get_trace(self) -> ExecutionTrace | None:
-        """Return the current ExecutionTrace (may be incomplete)."""
-        return self._trace
+    def _check_buffer(self) -> None:
+        """Check if buffer needs upload."""
+        if len(self._buffer) >= self._max_buffer_size:
+            self._flush()
+
+    def _flush(self) -> None:
+        """Flush buffer to storage."""
+        if not self._buffer:
+            return
+
+        self._storage_file.parent.mkdir(parents=True, exist_ok=True)
+
+        existing = []
+        if self._storage_file.exists():
+            try:
+                with open(self._storage_file, "r") as f:
+                    existing = json.load(f)
+            except json.JSONDecodeError:
+                existing = []
+
+        existing.extend([e.to_dict() for e in self._buffer])
+
+        with open(self._storage_file, "w") as f:
+            json.dump(existing, f, indent=2)
+
+        self._buffer = []
+
+    def _flush_on_exit(self) -> None:
+        """Flush on program exit."""
+        self.session_end()
+        self._flush()
+
+    def get_pending_events(self) -> List[dict]:
+        """Get pending events from storage."""
+        if not self._storage_file.exists():
+            return []
+
+        try:
+            with open(self._storage_file, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return []
+
+    def clear_buffer(self) -> None:
+        """Clear local buffer."""
+        if self._storage_file.exists():
+            self._storage_file.unlink()
 
 
-__all__ = ["TelemetryCollector"]
+_collector: Optional[TelemetryCollector] = None
+
+
+def get_collector() -> TelemetryCollector:
+    """Get singleton TelemetryCollector instance."""
+    global _collector
+    if _collector is None:
+        _collector = TelemetryCollector()
+    return _collector
+
+
+def track_command(
+    command_name: str,
+    duration_ms: int = 0,
+    exit_code: int = 0,
+    error_type: Optional[str] = None,
+) -> None:
+    """Track command execution (convenience function)."""
+    collector = get_collector()
+    collector.command_executed(command_name, duration_ms, exit_code, error_type)
+
+
+def track_error(
+    error_type: str,
+    error_message: str,
+    command_name: Optional[str] = None,
+) -> None:
+    """Track error event (convenience function)."""
+    collector = get_collector()
+    collector.error_occurred(error_type, error_message, command_name)
