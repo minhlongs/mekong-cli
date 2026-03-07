@@ -22,6 +22,7 @@ from src.cli.commands_registry import register_all_commands
 from src.commands.license_commands import app as license_app
 from src.commands.license_renewal import app as renewal_app
 from src.commands.debug_rate_limits import app as debug_rate_limits_app
+from src.commands.compliance import app as compliance_app
 
 # Legacy command imports (not yet refactored)
 from src.commands.agi import app as agi_app
@@ -56,6 +57,7 @@ FREE_COMMANDS = {
     "init", "version", "list", "search", "status", "config",
     "doctor", "help", "dash", "license", "clean", "test",
     "license-admin", "analytics", "tier-admin", "debug-rate-limits",
+    "compliance",
 }
 
 
@@ -127,6 +129,7 @@ def _register_legacy_commands() -> None:
     app.add_typer(tier_admin_app, name="tier-admin", help="Tier rate limit configuration")
     app.add_typer(debug_rate_limits_app, name="debug-rate-limits", help="Debug rate limit issues")
     app.add_typer(renewal_app, name="renewal", help="License renewal flow")
+    app.add_typer(compliance_app, name="compliance", help="Compliance reporting & audit export")
 
 
 # Register all commands
