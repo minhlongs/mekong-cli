@@ -1,14 +1,86 @@
+'use client'
+
 import { Key, Plus } from 'lucide-react'
-import { fetchApiKeysForCurrentUser } from '@/lib/fetch-api-keys-from-supabase-user-metadata'
-import type { KeyStatus } from '@/lib/fetch-api-keys-from-supabase-user-metadata'
+import { useState, useCallback, useEffect } from 'react'
+import { createRaasClient } from '@/lib/raas-client'
+import { toast } from 'sonner'
+
+type KeyStatus = 'active' | 'revoked'
+
+interface ApiKeyRow {
+  id: string
+  name: string
+  maskedKey: string
+  status: KeyStatus
+  createdAt: string
+}
 
 const STATUS_STYLES: Record<KeyStatus, string> = {
   active:  'bg-green-500/20 text-green-400 border border-green-500/30',
   revoked: 'bg-zinc-700/60 text-zinc-500 border border-zinc-600/40',
 }
 
-export default async function ApiKeysPage() {
-  const keys = await fetchApiKeysForCurrentUser()
+export default function ApiKeysPage() {
+  const [keys, setKeys] = useState<ApiKeyRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load API keys on mount
+  useEffect(() => {
+    const loadKeys = async () => {
+      try {
+        const client = createRaasClient()
+        const remoteKeys = await client.listApiKeys()
+        setKeys(remoteKeys.map(k => ({
+          id: k.id,
+          name: k.name,
+          maskedKey: k.maskedKey,
+          status: k.status,
+          createdAt: k.createdAt,
+        })))
+      } catch (error) {
+        console.error('Failed to load API keys:', error)
+        toast.error('Failed to load API keys', {
+          description: (error as Error).message,
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadKeys()
+  }, [])
+
+  const handleCreateKey = useCallback(async () => {
+    const keyName = prompt('Enter a name for your new API key:', 'My API Key')
+    if (!keyName) return
+
+    setIsLoading(true)
+    try {
+      const client = createRaasClient()
+      const newKey = await client.createApiKey({ name: keyName })
+
+      setKeys(prev => [
+        ...prev,
+        {
+          id: newKey.id,
+          name: newKey.name,
+          maskedKey: newKey.maskedKey,
+          status: newKey.status,
+          createdAt: newKey.createdAt,
+        },
+      ])
+
+      toast.success('API key created', {
+        description: `Key: ${newKey.key}. Save it - you won't see it again!`,
+        duration: 10000,
+      })
+    } catch (error) {
+      toast.error('Failed to create API key', {
+        description: (error as Error).message,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -17,16 +89,15 @@ export default async function ApiKeysPage() {
           <h1 className="text-2xl font-bold text-white">API Keys</h1>
           <p className="mt-1 text-sm text-zinc-500">Manage your RaaS API credentials.</p>
         </div>
-        {/* New Key is a no-op until key creation backend is wired */}
         <button
           type="button"
-          disabled
-          aria-label="Create new API key (coming soon)"
-          title="Key creation coming soon"
-          className="flex items-center gap-2 rounded-lg bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white"
+          onClick={handleCreateKey}
+          disabled={isLoading}
+          aria-label="Create new API key"
+          className="flex items-center gap-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 text-sm font-medium text-white transition-colors"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          New Key
+          {isLoading ? 'Creating...' : 'New Key'}
         </button>
       </div>
 
@@ -38,7 +109,11 @@ export default async function ApiKeysPage() {
           </p>
         </div>
 
-        {keys.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 px-5" role="status">
+            <p className="text-sm text-zinc-500">Loading API keys...</p>
+          </div>
+        ) : keys.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-5 gap-3" role="status">
             <Key className="h-8 w-8 text-zinc-700" aria-hidden="true" />
             <p className="text-sm text-zinc-500">No API keys found.</p>

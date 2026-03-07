@@ -1,7 +1,10 @@
-import { Zap, TrendingUp, CreditCard } from 'lucide-react'
-import { getBillingData } from '@/lib/fetch-dashboard-data'
+'use client'
 
-type PlanTier = 'free' | 'pro' | 'enterprise'
+import { Zap, TrendingUp, CreditCard } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { createRaasClient, type TenantStatus, type UsageRecord } from '@/lib/raas-client'
+import { PRICING_PLANS, formatPrice, formatMcuLimit, type PlanTier } from '@/lib/pricing-plans'
+import { toast } from 'sonner'
 
 interface Plan {
   tier: PlanTier
@@ -10,15 +13,6 @@ interface Plan {
   priceLabel: string
   accentClass: string
 }
-
-const PLANS: Plan[] = [
-  { tier: 'free',       label: 'Free',       mcuLimit: 10_000,  priceLabel: '$0 / mo',  accentClass: 'text-zinc-400' },
-  { tier: 'pro',        label: 'Pro',        mcuLimit: 500_000, priceLabel: '$49 / mo', accentClass: 'text-purple-400' },
-  { tier: 'enterprise', label: 'Enterprise', mcuLimit: -1,      priceLabel: 'Custom',   accentClass: 'text-blue-400' },
-]
-
-const CURRENT_TIER: PlanTier = 'pro'
-const MCU_LIMIT = 500_000
 
 function UsageBar({ used, limit }: { used: number; limit: number }) {
   const pct = Math.min(100, Math.round((used / limit) * 100))
@@ -41,9 +35,63 @@ function UsageBar({ used, limit }: { used: number; limit: number }) {
   )
 }
 
-export default async function BillingPage() {
-  const { totalMcu, usageHistory } = await getBillingData()
-  const currentPlan = PLANS.find((p) => p.tier === CURRENT_TIER)!
+export default function BillingPage() {
+  const [tenantStatus, setTenantStatus] = useState<TenantStatus | null>(null)
+  const [usageHistory, setUsageHistory] = useState<UsageRecord[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadBillingData = async () => {
+      try {
+        const client = createRaasClient()
+        const [status, usage] = await Promise.all([
+          client.getTenantStatus(),
+          client.getUsageHistory(50),
+        ])
+        setTenantStatus(status)
+        setUsageHistory(usage)
+      } catch (error) {
+        console.error('Failed to load billing data:', error)
+        toast.error('Failed to load billing data', {
+          description: (error as Error).message,
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadBillingData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <p className="text-sm text-zinc-500">Loading billing data...</p>
+      </div>
+    )
+  }
+
+  if (!tenantStatus) {
+    return (
+      <div className="space-y-6 max-w-4xl">
+        <div className="rounded-xl border border-red-900/50 bg-red-900/10 p-6 text-center">
+          <p className="text-red-400 font-medium">Failed to load billing data</p>
+          <p className="text-sm text-zinc-500 mt-1">Please try again later</p>
+        </div>
+      </div>
+    )
+  }
+
+  const currentPlan = PRICING_PLANS.find((p) => p.tier === tenantStatus.tier) || PRICING_PLANS[0]
+  const mcuLimit = tenantStatus.mcuLimit === -1 ? 999_999_999 : tenantStatus.mcuLimit
+
+  // Convert to Plan interface for backward compatibility
+  const plans: Plan[] = PRICING_PLANS.map(p => ({
+    tier: p.tier,
+    label: p.label,
+    mcuLimit: p.mcuLimit,
+    priceLabel: formatPrice(p, false),
+    accentClass: p.accentClass,
+  }))
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -62,10 +110,10 @@ export default async function BillingPage() {
           </div>
           <div className="flex items-end justify-between">
             <span className={`text-2xl font-bold ${currentPlan.accentClass}`}>{currentPlan.label}</span>
-            <span className="text-sm text-zinc-400">{currentPlan.priceLabel}</span>
+            <span className="text-sm text-zinc-400">{formatPrice(currentPlan, false)}</span>
           </div>
           <a
-            href={process.env.NEXT_PUBLIC_BILLING_URL ?? 'https://agencyos.network/#pricing'}
+            href={process.env.NEXT_PUBLIC_BILLING_URL ?? '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full rounded-lg bg-purple-600 hover:bg-purple-500 px-4 py-2 text-sm font-medium text-white text-center transition-colors"
@@ -80,8 +128,8 @@ export default async function BillingPage() {
             <Zap className="h-4 w-4 text-yellow-400" aria-hidden="true" />
             <span className="text-xs text-zinc-500 uppercase tracking-wide">MCU Balance</span>
           </div>
-          <UsageBar used={totalMcu} limit={MCU_LIMIT} />
-          <p className="text-xs text-zinc-600">Resets on the 1st of each month.</p>
+          <UsageBar used={tenantStatus.mcuUsed} limit={mcuLimit} />
+          <p className="text-xs text-zinc-600">Resets on {new Date(tenantStatus.resetDate).toLocaleDateString()}.</p>
         </div>
       </div>
 
@@ -91,8 +139,8 @@ export default async function BillingPage() {
           <h2 className="text-sm font-semibold text-white">Available Plans</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
-          {PLANS.map((plan) => {
-            const isCurrent = plan.tier === CURRENT_TIER
+          {plans.map((plan) => {
+            const isCurrent = plan.tier === tenantStatus.tier
             return (
               <div key={plan.tier} className={`p-5 space-y-2 ${isCurrent ? 'bg-purple-900/10' : ''}`}>
                 <div className="flex items-center justify-between">
@@ -105,7 +153,7 @@ export default async function BillingPage() {
                 </div>
                 <p className="text-sm font-medium text-white">{plan.priceLabel}</p>
                 <p className="text-xs text-zinc-500">
-                  {plan.mcuLimit === -1 ? 'Unlimited MCU' : `${plan.mcuLimit.toLocaleString()} MCU / mo`}
+                  {formatMcuLimit(plan.mcuLimit)}
                 </p>
               </div>
             )
@@ -127,9 +175,9 @@ export default async function BillingPage() {
               <li key={row.id} className="flex items-center justify-between px-5 py-3 hover:bg-zinc-800/30 transition-colors gap-4">
                 <div className="min-w-0">
                   <p className="text-sm text-zinc-300 truncate">{row.description}</p>
-                  <p className="text-xs text-zinc-600 mt-0.5">{row.date}</p>
+                  <p className="text-xs text-zinc-600 mt-0.5">{new Date(row.timestamp).toLocaleDateString()}</p>
                 </div>
-                <span className="font-mono text-xs text-zinc-400 shrink-0">{row.mcu.toLocaleString()} MCU</span>
+                <span className="font-mono text-xs text-zinc-400 shrink-0">{row.mcuCost.toLocaleString()} MCU</span>
               </li>
             ))}
           </ul>

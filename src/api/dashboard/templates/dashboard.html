@@ -12,8 +12,27 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+            <!-- Filters Section -->
+            <div class="flex flex-wrap items-center gap-2 mr-4">
+                <!-- License Key Filter -->
+                <select id="licenseFilter" class="bg-card border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" title="Filter by License">
+                    <option value="">All Licenses</option>
+                    <!-- Populated by JS from /api/filters/licenses -->
+                </select>
+
+                <!-- Date Range Picker -->
+                <div class="flex items-center gap-2">
+                    <input type="date" id="startDate" class="bg-card border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                    <span class="text-gray-500">-</span>
+                    <input type="date" id="endDate" class="bg-card border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                    <button onclick="applyFilters()" class="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg text-sm transition">
+                        Apply
+                    </button>
+                </div>
+            </div>
+
             <!-- Range Selector -->
-            <select id="rangeSelect" class="bg-card border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary">
+            <select id="rangeSelect" onchange="loadMetrics()" class="bg-card border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary">
                 <option value="7">7 ngày</option>
                 <option value="30" selected>30 ngày</option>
                 <option value="90">90 ngày</option>
@@ -336,7 +355,7 @@
 {% block extra_scripts %}
 <script>
 /**
- * Dashboard JavaScript — Real-time Analytics
+ * Dashboard JavaScript — Real-time Analytics with Filters
  */
 
 const API_BASE = '/api';
@@ -344,11 +363,26 @@ let chart;
 let chartSeries;
 let currentGranularity = 'day';
 
+// Filter state
+let currentFilters = {
+    licenseKey: '',
+    startDate: '',
+    endDate: ''
+};
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
+    loadLicenseFilters();
     loadMetrics();
     setupAutoRefresh();
+
+    // Set default date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
 });
 
 // Initialize lightweight-charts
@@ -388,8 +422,24 @@ function initChart() {
 async function loadMetrics() {
     const rangeDays = document.getElementById('rangeSelect').value;
 
+    // Build query params with filters
+    const params = new URLSearchParams({
+        range_days: rangeDays,
+        granularity: currentGranularity,
+    });
+
+    if (currentFilters.licenseKey) {
+        params.append('license_key', currentFilters.licenseKey);
+    }
+    if (currentFilters.startDate) {
+        params.append('start_date', currentFilters.startDate);
+    }
+    if (currentFilters.endDate) {
+        params.append('end_date', currentFilters.endDate);
+    }
+
     try {
-        const response = await fetch(`${API_BASE}/metrics?range_days=${rangeDays}&granularity=${currentGranularity}`);
+        const response = await fetch(`${API_BASE}/metrics?${params.toString()}`);
         const result = await response.json();
 
         if (result.success) {
@@ -399,6 +449,37 @@ async function loadMetrics() {
         console.error('Failed to load metrics:', error);
     }
 }
+
+// Load license filters
+async function loadLicenseFilters() {
+    try {
+        const response = await fetch(`${API_BASE}/filters/licenses`);
+        const result = await response.json();
+
+        const select = document.getElementById('licenseFilter');
+        if (result.data && result.data.length > 0) {
+            result.data.forEach(lic => {
+                const option = document.createElement('option');
+                option.value = lic.key_id || lic.license_key;
+                option.textContent = `${lic.tier?.toUpperCase() || 'N/A'} - ${lic.email || lic.license_key}`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load license filters:', error);
+    }
+}
+
+// Apply filters
+function applyFilters() {
+    currentFilters.licenseKey = document.getElementById('licenseFilter').value;
+    currentFilters.startDate = document.getElementById('startDate').value;
+    currentFilters.endDate = document.getElementById('endDate').value;
+    loadMetrics();
+}
+
+// Listen for license filter changes
+document.getElementById('licenseFilter').addEventListener('change', applyFilters);
 
 // Update dashboard UI
 function updateDashboard(data) {

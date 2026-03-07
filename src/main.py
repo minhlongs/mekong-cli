@@ -33,6 +33,8 @@ from src.commands.debug_rate_limits import app as debug_rate_limits_app
 from src.commands.compliance import app as compliance_app
 from src.cli.billing_commands import app as billing_app
 from src.cli.roi_commands import app as roi_app
+from src.commands.telemetry_commands import app as telemetry_app
+from src.commands.dashboard_commands import app as dashboard_app
 
 # Legacy command imports (not yet refactored)
 from src.commands.agi import app as agi_app
@@ -67,7 +69,7 @@ FREE_COMMANDS = {
     "init", "version", "list", "search", "status", "config",
     "doctor", "help", "dash", "license", "clean", "test",
     "license-admin", "analytics", "tier-admin", "debug-rate-limits",
-    "compliance", "billing", "roi",
+    "compliance", "billing", "roi", "dashboard",
 }
 
 
@@ -116,6 +118,27 @@ def _validate_startup_license(ctx: typer.Context) -> None:
         raise SystemExit(1)
 
 
+def _check_telemetry_consent(ctx: typer.Context) -> None:
+    """
+    Check telemetry consent at CLI startup.
+
+    Shows consent prompt on first run if not set.
+    """
+    # Skip for telemetry commands themselves
+    command = _get_invoked_command(ctx)
+    if command == "telemetry":
+        return
+
+    from src.core.telemetry_consent import ConsentManager
+    manager = ConsentManager()
+
+    # Check if consent is set
+    if not manager.load_consent():
+        # Show prompt on first run (non-premium commands only)
+        if command in FREE_COMMANDS or ctx.invoked_subcommand is None:
+            manager.prompt_consent()
+
+
 def _register_legacy_commands() -> None:
     """Register legacy command modules."""
     app.add_typer(binh_phap_app, name="binh-phap", help="Binh Pháp Strategy")
@@ -142,6 +165,8 @@ def _register_legacy_commands() -> None:
     app.add_typer(compliance_app, name="compliance", help="Compliance reporting & audit export")
     app.add_typer(billing_app, name="billing", help="💰 Billing operations: usage, reconciliation, events")
     app.add_typer(roi_app, name="roi", help="🎯 ROI Unified Command - auth, usage, billing, dashboard")
+    app.add_typer(telemetry_app, name="telemetry", help="📊 Telemetry consent management")
+    app.add_typer(dashboard_app, name="dashboard", help="📊 Analytics Dashboard")
 
 
 # Register all commands
