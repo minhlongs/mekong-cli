@@ -21,7 +21,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.console import Group
 from pathlib import Path
 
 console = Console()
