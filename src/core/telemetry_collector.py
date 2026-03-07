@@ -13,7 +13,6 @@ Reference: plans/260307-1602-telemetry-consent-opt-in/plan.md
 import atexit
 import hashlib
 import json
-import os
 import time
 import uuid
 from dataclasses import asdict, dataclass, field
