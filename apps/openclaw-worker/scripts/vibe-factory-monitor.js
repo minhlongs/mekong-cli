@@ -360,16 +360,17 @@ async function checkAllPanes() {
         log(`CTO: ${cto ? '✅' : '❌'}`);
     } catch { log('CTO: ✅ (self)'); }
 
-    // DashScope API health (apps/anthropic format)
+    // DashScope API health (Key C on intl OpenAI-compatible endpoint)
     const DASHSCOPE_KEYS = [
+        'sk-80d8537485d04f609c498f1881e67c6f',  // Key C (CTO dedicated)
         process.env.DASHSCOPE_API_KEY || 'sk-sp-652cd51db1774704a992863926cd1f67',
         'sk-sp-afce4429a10e41bb901d6012d7f525c8'
     ];
     let isHealthy = false;
     for (const key of DASHSCOPE_KEYS) {
         try {
-            execSync(`curl -s -o /dev/null -w "%{http_code}" --max-time 8 -X POST https://coding-intl.dashscope.aliyuncs.com/apps/anthropic/v1/messages -H "x-api-key: ${key}" -H "anthropic-version: 2023-06-01" -H "Content-Type: application/json" -d '{"model":"qwen3.5-plus","max_tokens":1,"messages":[{"role":"user","content":"ping"}]}' 2>/dev/null | grep -q 200`, { timeout: 12000 });
-            log(`DASHSCOPE: ✅ (Ping OK)`);
+            execSync(`curl -s -o /dev/null -w "%{http_code}" --max-time 8 -X POST https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions -H "Authorization: Bearer ${key}" -H "Content-Type: application/json" -d '{"model":"qwen-plus","max_tokens":1,"messages":[{"role":"user","content":"ping"}]}' 2>/dev/null | grep -q 200`, { timeout: 12000 });
+            log(`DASHSCOPE: ✅ (Ping OK via intl)`);
             isHealthy = true;
             break;
         } catch { }
