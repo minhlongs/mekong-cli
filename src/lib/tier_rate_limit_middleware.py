@@ -9,7 +9,7 @@ import os
 import time
 import logging
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 
 from fastapi import Request
@@ -21,6 +21,10 @@ from src.lib.rate_limiter_factory import get_factory, TierRateLimiter
 from src.lib.jwt_license_generator import validate_jwt_license
 from src.db.tier_config_repository import TierConfigRepository
 from src.lib.tier_config import RateLimitConfig
+from src.services.license_enforcement import (
+    get_license_enforcement,
+    LicenseStatus,
+)
 
 # Setup structured logger for rate limiting
 logger = logging.getLogger("mekong.rate_limits")
@@ -55,6 +59,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         self._factory = get_factory()
         self._dev_mode = os.getenv("MEKONG_DEV_MODE", "false").lower() == "true"
         self._repo = TierConfigRepository()
+        self._license_service = get_license_enforcement()
 
         # In-memory rate limiters per tier/preset (for demo purposes)
         # Production should use Redis-backed limiting
@@ -215,22 +220,141 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
             logger.warning(f"Failed to get tenant override: {e}")
         return None
 
+    async def _check_license_status(self, license_key: Optional[str]) -> Tuple[LicenseStatus, Optional[str]]:
+        """
+        Check license status using LicenseEnforcementService.
+
+        Args:
+            license_key: License key to validate (None = anonymous/free)
+
+        Returns:
+            Tuple of (LicenseStatus, tenant_id)
+        """
+        if not license_key:
+            # No license key = anonymous access (free tier)
+            return LicenseStatus.ACTIVE, "anonymous"
+
+        # Check license status via service (with caching)
+        status = await self._license_service.check_license_status(license_key)
+
+        # Extract tenant_id from license key
+        tenant_id = license_key[:16] + "..." if len(license_key) > 16 else license_key
+
+        return status, tenant_id
+
+    def _license_blocked_response(
+        self,
+        status: LicenseStatus,
+        tenant_id: str,
+        path: str,
+    ) -> JSONResponse:
+        """
+        Build 403 response for blocked license.
+
+        Args:
+            status: License status that caused block
+            tenant_id: Tenant identifier for logging
+            path: Request path for logging
+
+        Returns:
+            JSONResponse with 403 status
+        """
+        # Map status to error type and message
+        status_messages = {
+            LicenseStatus.SUSPENDED: (
+                "license_suspended",
+                "License suspended - contact support to restore access",
+            ),
+            LicenseStatus.REVOKED: (
+                "license_revoked",
+                "License revoked - access denied",
+            ),
+            LicenseStatus.EXPIRED: (
+                "license_expired",
+                "License expired - please renew to continue",
+            ),
+            LicenseStatus.INVALID: (
+                "license_invalid",
+                "Invalid license key - please check your key and try again",
+            ),
+            LicenseStatus.INSUFFICIENT_TIER: (
+                "tier_insufficient",
+                "Current tier insufficient - upgrade to access this endpoint",
+            ),
+        }
+
+        error_type, error_message = status_messages.get(
+            status,
+            ("license_blocked", "Access denied due to license issue"),
+        )
+
+        # Log enforcement action
+        self._log_license_enforcement(
+            tenant_id=tenant_id,
+            status=status,
+            endpoint=path,
+            action="blocked",
+        )
+
+        return JSONResponse(
+            status_code=403,
+            content={
+                "error": error_type,
+                "message": error_message,
+                "license_status": status.value,
+            },
+            headers={
+                "X-License-Status": status.value,
+                "Content-Type": "application/json",
+            },
+        )
+
+    def _log_license_enforcement(
+        self,
+        tenant_id: str,
+        status: LicenseStatus,
+        endpoint: str,
+        action: str,
+    ) -> None:
+        """
+        Log license enforcement event.
+
+        Args:
+            tenant_id: Tenant identifier
+            status: License status
+            endpoint: Request endpoint
+            action: Enforcement action (allowed, blocked)
+        """
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": "INFO" if action == "allowed" else "WARNING",
+            "event": "license_enforcement_event",
+            "tenant_id": tenant_id,
+            "license_status": status.value,
+            "enforcement_action": action,
+            "endpoint": endpoint,
+        }
+
+        logger.info(json.dumps(log_entry))
+
     def _is_dev_mode(self) -> bool:
         """Check if running in development mode."""
         return self._dev_mode or os.getenv("DISABLE_RATE_LIMITING", "false").lower() == "true"
 
     async def dispatch(self, request: Request, call_next):
         """
-        Process request with tier-based rate limiting.
+        Process request with license enforcement and tier-based rate limiting.
 
         Flow:
         1. Extract license key from headers
-        2. Validate key and get tier + tenant_id
-        3. Check for tenant-specific override
-        4. Get rate limiter (tenant override or tier default)
-        5. Check rate limit
-        6. Add rate limit headers to response
-        7. Log rate limit event
+        2. Check license status (NEW - before rate limit)
+        3. Return 403 if license invalid/suspended/revoked
+        4. Validate key and get tier + tenant_id
+        5. Check for tenant-specific override
+        6. Get rate limiter (tenant override or tier default)
+        7. Check rate limit
+        8. Add rate limit headers to response
+        9. Log rate limit event
         """
         # Bypass rate limiting in dev mode
         if self._is_dev_mode():
@@ -239,8 +363,21 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
             response.headers[self.HEADER_LIMIT] = "unlimited"
             return response
 
-        # Extract license key and get tier
+        # Extract license key from headers
         license_key = self._extract_license_key(request)
+
+        # Check license status BEFORE rate limit
+        license_status, tenant_id = await self._check_license_status(license_key)
+
+        # Block if license is not active
+        if license_status != LicenseStatus.ACTIVE:
+            return self._license_blocked_response(
+                status=license_status,
+                tenant_id=tenant_id or "unknown",
+                path=request.url.path,
+            )
+
+        # License is active - proceed with rate limiting
         tier, jwt_payload = self._validate_and_get_tier(license_key)
 
         # Determine preset based on endpoint path
