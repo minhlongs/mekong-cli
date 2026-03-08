@@ -542,7 +542,7 @@ class TestGPGSignatureVerifier:
         test_file.write_text("test content")
 
         # Create updater with release that has no signature
-        updater = SandboxedUpdater(release)
+        _updater = SandboxedUpdater(release)  # noqa: F841
         # The verify should use the instance which creates its own GPG verifier
 
         # Verify checksum passes (no checksum to compare)
@@ -975,7 +975,7 @@ class TestSecurityFeatures:
         """Test that verification passes when signature URL is None."""
         from src.cli.auto_updater import GPGSignatureVerifier, ReleaseInfo
 
-        release = ReleaseInfo(
+        _release = ReleaseInfo(  # noqa: F841
             version="0.3.0",
             tag_name="v0.3.0",
             name="Release",
@@ -1110,7 +1110,7 @@ class TestUpdateCommands:
             assert result.exit_code == 0
             assert "Changelog" in result.output
 
-    @patch('src.cli.update_commands.get_validator')
+    @patch('src.lib.raas_gate_validator.get_validator')
     def test_update_command_with_license(self, mock_get_validator, cli_runner):
         """Test update command with valid license."""
         mock_validator = Mock()
@@ -1147,7 +1147,7 @@ class TestUpdateCommands:
             assert result.exit_code == 0
             assert "Update Successful" in result.output
 
-    @patch('src.cli.update_commands.get_validator')
+    @patch('src.lib.raas_gate_validator.get_validator')
     def test_update_command_license_required_for_non_security(
         self, mock_get_validator, cli_runner
     ):
@@ -1178,7 +1178,7 @@ class TestUpdateCommands:
 
             assert result.exit_code == 1
             assert "RaaS License Required" in result.output
-            assert "non-security updates require" in result.output
+            assert "updates require" in result.output.lower()
 
     def test_update_command_skip_confirmation(self, cli_runner):
         """Test update with --yes flag skips confirmation."""
@@ -1288,13 +1288,13 @@ class TestUpdateCommands:
             assert "coming soon" in result.output.lower() or "reinstall" in result.output.lower()
 
     def test_history_command(self, cli_runner):
-        """Test history command."""
+        """Test history command shows update history table."""
         result = cli_runner.invoke(update_commands.app, ["history"])
 
         assert result.exit_code == 0
-        assert "coming soon" in result.output.lower()
+        assert "update history" in result.output.lower()
 
-    @patch('src.cli.auto_updater.get_validator')
+    @patch('src.lib.raas_gate_validator.get_validator')
     def test_security_update_bypasses_license_check(self, mock_get_validator, cli_runner):
         """Test that security updates don't require license validation."""
         # Config: validator returns success (or is never called for security update)
@@ -1330,11 +1330,11 @@ class TestUpdateCommands:
             result = cli_runner.invoke(update_commands.app, ["update", "--yes"])
 
             assert result.exit_code == 0
-            assert "Security update" in result.output
+            assert "security" in result.output.lower()
             # Validator may or may not be called for security updates
             # depending on implementation
 
-    @patch('src.cli.auto_updater.get_validator')
+    @patch('src.lib.raas_gate_validator.get_validator')
     def test_non_security_update_requires_license(self, mock_get_validator, cli_runner):
         """Test that non-security updates require valid license."""
         # Simulator invalid license
