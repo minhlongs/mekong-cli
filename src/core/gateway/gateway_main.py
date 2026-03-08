@@ -16,6 +16,7 @@ from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from src.core.event_bus import EventType, get_event_bus
@@ -186,6 +187,15 @@ def create_app() -> FastAPI:
         description="OpenClaw Hybrid Commander — Cloud Ra Lenh, Local Thuc Thi",
         version=VERSION,
         lifespan=lifespan,
+    )
+
+    # CORS middleware - Configure allow_origins for production
+    gateway.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Update to specific origins in production
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     @gateway.get("/", response_class=HTMLResponse)
@@ -596,6 +606,11 @@ app.include_router(_raas_router)
 from src.api.tier_config_routes import router as _tier_config_router  # noqa: E402
 
 app.include_router(_tier_config_router)
+
+# Mount Quota Status API routes
+from src.api.quota_status_endpoints import quota_router as _quota_router  # noqa: E402
+
+app.include_router(_quota_router)
 
 
 __all__ = [
