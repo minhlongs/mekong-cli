@@ -36,6 +36,7 @@ const {
 } = require('./brain-spawn-manager');
 const { respawnBrain, compactIfNeeded } = require('./brain-respawn-controller');
 const { preDispatchGuard, autoApproveQuestion } = require('./brain-dispatch-helpers');
+const { raasLicenseMiddleware } = require('./raas-license-validator'); // RaaS Phase 1
 
 const MIN_MISSION_SECONDS = 60;
 const IDLE_CONFIRM_POLLS = 8;
@@ -69,6 +70,26 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride, complexi
     log(`DUPLICATE MISSION REJECTED: Hash ${promptHash.slice(0, 20)}...`);
     return { success: false, result: 'duplicate_rejected', elapsed: 0 };
   }
+
+  // ══════════════════════════════════════════════════════════════
+  // 🔒 RaaS LICENSE CHECK (Phase 1) — NEW
+  // Validate X-RaaS-License-Key before dispatch
+  // ══════════════════════════════════════════════════════════════
+  const licenseKey = process.env.RAAS_LICENSE_KEY;
+  if (licenseKey || process.env.RAAS_ENFORCE === 'true') {
+    const raasCheck = await raasLicenseMiddleware({ licenseKey }, {});
+    if (!raasCheck.allowed) {
+      log(`🔒 RaaS BLOCK: Mission rejected — ${raasCheck.reason}`, 'ERROR');
+      return { success: false, result: `raas_blocked_${raasCheck.error_code || 'unknown'}`, elapsed: 0 };
+    }
+    if (raasCheck.warning) {
+      log(`⚠️ RaaS WARNING: ${raasCheck.warning}`, 'WARN');
+    }
+    if (raasCheck.tenant) {
+      log(`✅ RaaS ALLOWED: tenant=${raasCheck.tenant.tenant_id}, tier=${raasCheck.tenant.tier}`, 'INFO');
+    }
+  }
+  // ══════════════════════════════════════════════════════════════
 
   const workerIdx = findIdleWorker(TMUX_SESSION, intent, projectDir);
   // P0 = mekong-cli, P1 = algo-trader, P2 = well (via sticky routing).
