@@ -480,14 +480,56 @@ async function checkAllPanes() {
             }
 
             case 'RATE_LIMITED': {
-                log(`P${pane.idx}: 🔶 RATE LIMITED on DashScope — FALLING BACK TO BYTEPLUS MODELARK 🚀`);
-                const byteplusKey = '5cee0d73-2a72-4f29-b001-c19f3e1c32ba';
-                const byteplusUrl = 'https://ark.ap-southeast.bytepluses.com/api/coding';
-                const byteplusModel = 'ark-code-latest';
+                // 🔄 BIDIRECTIONAL FAILOVER: BytePlus ↔ DashScope
+                const BYTEPLUS = {
+                    key: '5cee0d73-2a72-4f29-b001-c19f3e1c32ba',
+                    url: 'https://ark.ap-southeast.bytepluses.com/api/coding',
+                    model: 'kimi-k2.5', opus: 'kimi-k2-thinking', haiku: 'ark-code-latest',
+                    small: 'ark-code-latest', large: 'kimi-k2.5', name: 'BytePlus'
+                };
+                const DASHSCOPE = {
+                    key: 'sk-sp-afce4429a10e41bb901d6012d7f525c8',
+                    url: 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic',
+                    model: 'qwen3.5-plus', opus: 'qwen3.5-plus', haiku: 'qwen3-coder-next',
+                    small: 'qwen3-coder-plus', large: 'qwen3-coder-plus', name: 'DashScope'
+                };
+
+                // Detect current provider from settings.json
+                let currentProvider = 'unknown';
                 try {
-                    execSync(`tmux respawn-pane -k -t ${SESSION}.${pane.idx} "cd ${pane.dir} && unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE && export ANTHROPIC_API_KEY=\\"${byteplusKey}\\" && export ANTHROPIC_AUTH_TOKEN=\\"${byteplusKey}\\" && export ANTHROPIC_BASE_URL=\\"${byteplusUrl}\\" && export ANTHROPIC_MODEL=\\"${byteplusModel}\\" && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions --continue"`);
-                    log(`P${pane.idx}: ✅ Respawned with BytePlus ModelArk (${byteplusModel})`);
+                    const settings = JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.claude/settings.json'), 'utf-8'));
+                    currentProvider = (settings.env?.ANTHROPIC_BASE_URL || '').includes('bytepluses') ? 'byteplus' : 'dashscope';
                 } catch { }
+
+                const target = currentProvider === 'byteplus' ? DASHSCOPE : BYTEPLUS;
+                log(`P${pane.idx}: 🔶 RATE LIMITED on ${currentProvider === 'byteplus' ? 'BytePlus' : 'DashScope'} — SWITCHING TO ${target.name} 🚀`);
+
+                // Update settings.json for ALL panes (global switch)
+                try {
+                    const settingsPath = path.join(process.env.HOME, '.claude/settings.json');
+                    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+                    settings.env.ANTHROPIC_API_KEY = target.key;
+                    settings.env.ANTHROPIC_AUTH_TOKEN = target.key;
+                    settings.env.ANTHROPIC_BASE_URL = target.url;
+                    settings.env.ANTHROPIC_MODEL = target.model;
+                    settings.env.ANTHROPIC_DEFAULT_OPUS_MODEL = target.opus;
+                    settings.env.ANTHROPIC_DEFAULT_SONNET_MODEL = target.model;
+                    settings.env.ANTHROPIC_DEFAULT_HAIKU_MODEL = target.haiku;
+                    settings.model = target.model;
+                    settings.smallModelId = target.small;
+                    settings.largeModelId = target.large;
+                    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+                    log(`P${pane.idx}: 📝 settings.json updated → ${target.name} (${target.model})`);
+                } catch (e) { log(`P${pane.idx}: ⚠️ settings.json update failed: ${e.message}`); }
+
+                // Respawn ALL panes (not just this one) since settings changed globally
+                for (const p of PANES) {
+                    try {
+                        const realDir = detectRealProject(p.idx)?.dir || p.dir;
+                        execSync(`tmux respawn-pane -k -t ${SESSION}.${p.idx} "cd ${realDir} && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions"`);
+                        log(`P${p.idx}: ✅ Respawned on ${target.name} (${target.model})`);
+                    } catch { }
+                }
                 break;
             }
 
