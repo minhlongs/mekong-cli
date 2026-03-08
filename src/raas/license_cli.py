@@ -38,9 +38,15 @@ def _generate_key(tier: LicenseTier, tenant_id: str = None) -> str:
     # Create payload
     payload = f"{tier}_{timestamp}_{tenant_part}_{random_part}"
 
-    # Generate HMAC (using secret from env or default)
+    # Generate HMAC (using secret from env)
+    # SECURITY: No default secret - must be set explicitly
     import os
-    secret = os.getenv("RAAS_KEY_SECRET", "mekong-cli-default-secret-change-in-prod")
+    secret = os.getenv("RAAS_KEY_SECRET")
+    if not secret:
+        raise ValueError(
+            "RAAS_KEY_SECRET environment variable is required. "
+            "Generate a secure key: openssl rand -hex 32"
+        )
     hmac_sig = hashlib.sha256(f"{payload}{secret}".encode()).hexdigest()[:8]
 
     return f"raas_{payload}_{hmac_sig}"

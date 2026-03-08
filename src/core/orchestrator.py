@@ -41,6 +41,7 @@ from .retry_policy import RetryPolicy
 from .telemetry import TelemetryCollector
 from .verifier import RecipeVerifier, VerificationReport
 from .workflow_state import StepStatus, WorkflowState, WorkflowStatus
+from .command_sanitizer import CommandSanitizer
 
 # ROIaaS Phase Completion Handler
 from ..raas.phase_completion_detector import get_detector
@@ -196,6 +197,9 @@ class RollbackHandler:
         self.console.print("[yellow]🔄 Rolling back completed steps...[/yellow]")
         rollback_errors: list[str] = []
 
+        # SECURITY: Initialize command sanitizer for rollback commands
+        sanitizer = CommandSanitizer(strict_mode=True)
+
         for step_result in reversed(result.step_results):
             if not step_result.verification.passed:
                 continue
@@ -209,6 +213,17 @@ class RollbackHandler:
                 )
                 continue
 
+            # SECURITY: Sanitize rollback command before execution
+            sanitization = sanitizer.sanitize(rollback_cmd)
+            if not sanitization.is_safe:
+                error_msg = f"Rollback command blocked for security: {sanitization.blocked_reason}"
+                rollback_errors.append(f"Step {step.order}: {error_msg}")
+                self.console.print(f"  [red]✗ {error_msg}[/red]")
+                continue
+
+            # Use sanitized command
+            rollback_cmd = sanitization.sanitized_command
+
             self.console.print(f"  [yellow]↩ Rolling back step {step.order}...[/yellow]")
 
             try:
@@ -217,7 +232,7 @@ class RollbackHandler:
                     shell=True,
                     capture_output=True,
                     text=True,
-                    timeout=30,
+                    timeout=30,  # Security timeout
                 )
                 if proc.returncode == 0:
                     self.console.print(f"  [green]✓ Step {step.order} rolled back[/green]")
