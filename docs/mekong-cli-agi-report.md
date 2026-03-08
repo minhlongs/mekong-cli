@@ -32,7 +32,7 @@
 | JSDoc | ✅ FULL | 106/106 files have headers |
 | Exports | ✅ | 105/106 (1 standalone script) |
 | TODO/FIXME (src/) | ✅ | 1 placeholder (non-critical) |
-| TODO/FIXME (apps/) | ⚠️ | ~1198 across 35 apps (auto-generated scaffolds) |
+| TODO/FIXME (apps/) | ⚠️ | 1198 raw → 124 our code (vendor/n8n/venv excluded) |
 | Security | ✅ | No secrets in codebase |
 
 ## Thay Đổi Trong Session Này
@@ -59,8 +59,31 @@
 | Apps (35) | ⚠️ | TODO/FIXME từ scaffolds, cần cleanup per-project |
 | Packages (115) | ⚠️ | Hub SDKs mostly scaffolded, chưa full impl |
 
+### 3. Update History Implementation
+- **File:** `src/cli/update_commands.py` — replaced TODO placeholder with real git log history
+- **Tests:** Fixed 5 broken test mocks in `test_auto_updater.py`
+- **Result:** 121 core Python tests pass
+
+### 4. TODO/FIXME Audit (Batch 2)
+- **Raw count:** 1198 across apps/ + packages/
+- **Vendor/third-party:** 1074 (n8n_codebase, venv_new, .venv, skill-creator copies)
+- **Our code:** 124 (scaffold boilerplate in bizplan-cli-toolkit, cleo, wrangler tmp)
+- **Action needed:** Per-project cleanup campaigns, not monorepo-wide sweep
+
+## TODO Distribution (Our Code Only)
+
+| Source | Count | Type |
+|--------|-------|------|
+| bizplan-cli-toolkit agents | ~21 | Scaffold stubs |
+| openclaw-worker (cto/scanner) | ~13 | Functional TODOs in scanners |
+| cleo skill-creator | 7 | Template boilerplate |
+| well src/ | ~10 | Real implementation TODOs |
+| apex-os mobile/backend | ~15 | Feature stubs |
+| dashboard/api | ~8 | Route stubs |
+| Other scattered | ~50 | Various scaffolds |
+
 ## Unresolved
 
-- `src/cli/update_commands.py:181` — TODO placeholder cho update history feature (low priority)
-- apps/ TODO count cao do scaffold generation — cần cleanup campaign riêng per-project
-- Python tests skipped (pydantic_settings missing) — cần `pip install pydantic-settings`
+- 124 TODOs in our code — need per-project cleanup (not feasible in single sweep)
+- 2 pre-existing Python test failures (SSL cert + metering mock — env issues)
+- `apps/apex-os/backend/venv_new/` committed to git — should be gitignored
