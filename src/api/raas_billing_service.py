@@ -16,6 +16,8 @@ from typing import Dict, List, Optional
 # Default MCU limits per plan
 PLAN_LIMITS: dict[str, int] = {
     "free": 100,
+    "starter": 500,
+    "growth": 2000,
     "pro": 5000,
     "enterprise": 50000,
 }
@@ -49,6 +51,8 @@ class TenantLedger:
     mcu_used: int = 0
     mcu_limit: int = PLAN_LIMITS["free"]
     history: List[UsageEntry] = field(default_factory=list)
+    overage_credits: int = 0
+    overage_charges_usd: float = 0.0
 
     @property
     def mcu_remaining(self) -> int:
@@ -59,6 +63,11 @@ class TenantLedger:
     def quota_exceeded(self) -> bool:
         """True when mcu_used >= mcu_limit."""
         return self.mcu_used >= self.mcu_limit
+
+    @property
+    def in_overage(self) -> bool:
+        """True when usage exceeds plan limit."""
+        return self.mcu_used > self.mcu_limit
 
 
 class BillingService:
@@ -101,7 +110,18 @@ class BillingService:
         """
         with self._lock:
             ledger = self._get_or_create(tenant_id)
-            return not ledger.quota_exceeded
+            if not ledger.quota_exceeded:
+                return True
+            # Check if tier allows overage
+            from src.raas.credit_rate_limiter import get_overage_config
+            overage_cfg = get_overage_config(ledger.plan)
+            if overage_cfg.allow_overage:
+                # Check max overage cap
+                current_overage = ledger.mcu_used - ledger.mcu_limit
+                if overage_cfg.max_overage_credits > 0 and current_overage >= overage_cfg.max_overage_credits:
+                    return False  # Hit overage cap
+                return True  # Allow overage
+            return False  # Hard block
 
     def record_usage(self, tenant_id: str, mcu_cost: int, task_id: str) -> int:
         """Record MCU consumption for a completed task.
@@ -117,6 +137,16 @@ class BillingService:
         with self._lock:
             ledger = self._get_or_create(tenant_id)
             ledger.mcu_used += mcu_cost
+            # Track overage if usage exceeds limit
+            if ledger.mcu_used > ledger.mcu_limit:
+                from src.raas.credit_rate_limiter import get_overage_config
+                overage_cfg = get_overage_config(ledger.plan)
+                if overage_cfg.allow_overage:
+                    new_overage = ledger.mcu_used - ledger.mcu_limit
+                    ledger.overage_credits = new_overage
+                    ledger.overage_charges_usd = round(
+                        new_overage * overage_cfg.overage_rate_per_credit, 4
+                    )
             entry = UsageEntry(
                 entry_id=uuid.uuid4().hex,
                 task_id=task_id,
@@ -144,6 +174,9 @@ class BillingService:
                 "mcu_used": ledger.mcu_used,
                 "mcu_limit": ledger.mcu_limit,
                 "mcu_remaining": ledger.mcu_remaining,
+                "overage_credits": ledger.overage_credits,
+                "overage_charges_usd": ledger.overage_charges_usd,
+                "in_overage": ledger.in_overage,
             }
 
     def get_history(self, tenant_id: str, limit: int = 50) -> list:
