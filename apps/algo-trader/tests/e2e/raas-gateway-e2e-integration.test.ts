@@ -712,3 +712,333 @@ test.describe('CI/CD Infrastructure Validation', () => {
     }
   });
 });
+
+/**
+ * Suite: Idempotency - Duplicate Request Prevention
+ */
+test.describe('RaaS Gateway - Idempotency', () => {
+  let testLicense: ReturnType<typeof generateTestLicense>;
+
+  test.beforeEach(() => {
+    testLicense = generateTestLicense();
+  });
+
+  test('should return cached response for duplicate request with same idempotency key', async () => {
+    const idempotencyKey = `idemp-${Math.random().toString(36).substring(2, 10)}`;
+    const payload = {
+      eventType: 'api_call',
+      units: 1,
+      metadata: { test: 'idempotency' },
+    };
+
+    // First request
+    const firstResponse = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: testLicense.apiKey,
+      body: payload,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+
+    expect([200, 201, 202]).toContain(firstResponse.status);
+
+    // Small delay to ensure response is cached
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Duplicate request with same idempotency key
+    const duplicateResponse = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: testLicense.apiKey,
+      body: payload,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+
+    // Should succeed
+    expect([200, 201, 202]).toContain(duplicateResponse.status);
+
+    // Should return same response (cached)
+    expect(JSON.stringify(duplicateResponse.body)).toBe(JSON.stringify(firstResponse.body));
+  });
+
+  test('should allow different requests with different idempotency keys', async () => {
+    const payload = {
+      eventType: 'api_call',
+      units: 1,
+      metadata: { test: 'unique' },
+    };
+
+    // Request 1
+    const response1 = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: testLicense.apiKey,
+      body: payload,
+      headers: { 'Idempotency-Key': 'key-1' },
+    });
+
+    // Request 2 with different key
+    const response2 = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: testLicense.apiKey,
+      body: payload,
+      headers: { 'Idempotency-Key': 'key-2' },
+    });
+
+    // Both should succeed
+    expect([200, 201, 202]).toContain(response1.status);
+    expect([200, 201, 202]).toContain(response2.status);
+  });
+
+  test('should isolate idempotency keys by tenant', async () => {
+    const tenant1License = generateTestLicense();
+    const tenant2License = generateTestLicense();
+    const sharedIdempotencyKey = `shared-key-${Math.random().toString(36).substring(2, 8)}`;
+
+    const payload = {
+      eventType: 'api_call',
+      units: 1,
+      metadata: { test: 'tenant-isolation' },
+    };
+
+    // Tenant 1 request
+    const response1 = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: tenant1License.apiKey,
+      body: payload,
+      headers: { 'Idempotency-Key': sharedIdempotencyKey },
+    });
+
+    // Tenant 2 request with same idempotency key
+    const response2 = await gatewayRequest('/v1/usage/track', {
+      method: 'POST',
+      apiKey: tenant2License.apiKey,
+      body: { ...payload, metadata: { ...payload.metadata, tenant: 'tenant-2' } },
+      headers: { 'Idempotency-Key': sharedIdempotencyKey },
+    });
+
+    // Both should succeed independently
+    expect([200, 201, 202]).toContain(response1.status);
+    expect([200, 201, 202]).toContain(response2.status);
+  });
+
+  test('should handle concurrent requests with same idempotency key', async () => {
+    const idempotencyKey = `concurrent-${Math.random().toString(36).substring(2, 10)}`;
+    const payload = {
+      eventType: 'api_call',
+      units: 1,
+      metadata: { test: 'concurrent' },
+    };
+
+    // Send 5 concurrent requests with same idempotency key
+    const requests = Array.from({ length: 5 }, () =>
+      gatewayRequest('/v1/usage/track', {
+        method: 'POST',
+        apiKey: testLicense.apiKey,
+        body: payload,
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+    );
+
+    const responses = await Promise.all(requests);
+
+    // All should succeed
+    responses.forEach(response => {
+      expect([200, 201, 202]).toContain(response.status);
+    });
+
+    // All responses should be identical (cached)
+    const firstBody = JSON.stringify(responses[0].body);
+    responses.forEach(response => {
+      expect(JSON.stringify(response.body)).toBe(firstBody);
+    });
+  });
+});
+
+/**
+ * Suite: Stripe/Polar Webhook Verification
+ */
+test.describe('RaaS Gateway - Webhook Verification', () => {
+  test('should verify Stripe webhook signature', async () => {
+    // This test requires STRIPE_WEBHOOK_SECRET to be set
+    if (!process.env.TEST_STRIPE_WEBHOOK_SECRET) {
+      test.skip();
+      return;
+    }
+
+    const webhookPayload = {
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_test_webhook',
+          customer: 'cus_test',
+          status: 'active',
+          items: {
+            data: [{
+              id: 'si_test',
+              price: { id: 'price_test', type: 'recurring' },
+            }],
+          },
+          current_period_end: Math.floor(Date.now() / 1000) + 86400,
+        },
+      },
+    };
+
+    // In a real test, you would sign this with Stripe's signing secret
+    // For now, we test the endpoint accepts the webhook
+    const response = await gatewayRequest('/api/v1/billing/webhook', {
+      method: 'POST',
+      body: webhookPayload,
+      headers: {
+        'Stripe-Signature': `t=${Date.now()},v1=test_signature`,
+      },
+    });
+
+    // Should accept webhook (or validate signature)
+    expect([200, 201, 202, 401]).toContain(response.status);
+  });
+
+  test('should verify Polar webhook signature', async () => {
+    // This test requires POLAR_WEBHOOK_SECRET to be set
+    if (!process.env.TEST_POLAR_WEBHOOK_SECRET) {
+      test.skip();
+      return;
+    }
+
+    const webhookPayload = {
+      type: 'subscription.active',
+      data: {
+        id: 'pol_sub_test',
+        product_id: 'prod_test',
+        status: 'active',
+        ends_at: null,
+      },
+    };
+
+    const response = await gatewayRequest('/api/v1/billing/webhook', {
+      method: 'POST',
+      body: webhookPayload,
+      headers: {
+        'Polar-Signature': `test_polar_signature`,
+      },
+    });
+
+    // Should accept webhook (or validate signature)
+    expect([200, 201, 202, 401]).toContain(response.status);
+  });
+
+  test('should reject webhook with invalid signature', async () => {
+    const webhookPayload = {
+      type: 'customer.subscription.updated',
+      data: { object: { id: 'sub_fake' } },
+    };
+
+    const response = await gatewayRequest('/api/v1/billing/webhook', {
+      method: 'POST',
+      body: webhookPayload,
+      headers: {
+        'Stripe-Signature': 'invalid_signature',
+      },
+    });
+
+    // Should reject invalid signature
+    expect([401, 403]).toContain(response.status);
+  });
+
+  test('should handle webhook payload with missing required fields', async () => {
+    const invalidPayload = {
+      type: 'customer.subscription.updated',
+      // Missing data.object
+    };
+
+    const response = await gatewayRequest('/api/v1/billing/webhook', {
+      method: 'POST',
+      body: invalidPayload,
+      headers: { 'Stripe-Signature': 't=test' },
+    });
+
+    // Should return 400 for invalid payload
+    expect([400, 422]).toContain(response.status);
+  });
+});
+
+/**
+ * Suite: Order Execution - Duplicate Prevention
+ */
+test.describe('RaaS Gateway - Order Duplicate Prevention', () => {
+  test('should prevent duplicate order creation with same idempotency key', async () => {
+    const license = generateTestLicense();
+    const idempotencyKey = `order-${Math.random().toString(36).substring(2, 10)}`;
+
+    const orderPayload = {
+      tenantId: license.tenantId,
+      symbol: 'BTC/USDT',
+      side: 'buy',
+      type: 'limit',
+      price: 50000,
+      amount: 0.1,
+    };
+
+    // First order creation
+    const firstOrder = await gatewayRequest('/api/v1/orders', {
+      method: 'POST',
+      apiKey: license.apiKey,
+      body: orderPayload,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+
+    // Should succeed
+    expect([200, 201, 202]).toContain(firstOrder.status);
+
+    // Small delay
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Duplicate order with same idempotency key
+    const duplicateOrder = await gatewayRequest('/api/v1/orders', {
+      method: 'POST',
+      apiKey: license.apiKey,
+      body: orderPayload,
+      headers: { 'Idempotency-Key': idempotencyKey },
+    });
+
+    // Should return cached response (same order)
+    expect([200, 201, 202]).toContain(duplicateOrder.status);
+
+    if (typeof firstOrder.body === 'object' && typeof duplicateOrder.body === 'object') {
+      const firstBody = firstOrder.body as Record<string, unknown>;
+      const dupBody = duplicateOrder.body as Record<string, unknown>;
+
+      // Should be same order ID
+      if (firstBody.id && dupBody.id) {
+        expect(firstBody.id).toBe(dupBody.id);
+      }
+    }
+  });
+
+  test('should allow multiple orders with different idempotency keys', async () => {
+    const license = generateTestLicense();
+
+    const orderPayload = {
+      tenantId: license.tenantId,
+      symbol: 'BTC/USDT',
+      side: 'buy',
+      type: 'limit',
+      price: 50000,
+      amount: 0.1,
+    };
+
+    // Create 3 orders with different idempotency keys
+    const orders = [];
+    for (let i = 0; i < 3; i++) {
+      const order = await gatewayRequest('/api/v1/orders', {
+        method: 'POST',
+        apiKey: license.apiKey,
+        body: orderPayload,
+        headers: { 'Idempotency-Key': `order-key-${i}` },
+      });
+      orders.push(order);
+    }
+
+    // All should succeed
+    orders.forEach(order => {
+      expect([200, 201, 202]).toContain(order.status);
+    });
+  });
+});

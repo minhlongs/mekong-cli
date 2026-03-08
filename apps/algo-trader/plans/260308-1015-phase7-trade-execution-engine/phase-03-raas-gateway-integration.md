@@ -1,7 +1,7 @@
 ---
 title: "Phase 7.3: RaaS Gateway Integration"
 description: "JWT auth, rate limiting, usage events to Stripe/Polar"
-status: pending
+status: completed
 priority: P1
 effort: 3h
 ---

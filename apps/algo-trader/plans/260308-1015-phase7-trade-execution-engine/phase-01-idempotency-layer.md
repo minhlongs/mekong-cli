@@ -1,7 +1,7 @@
 ---
 title: "Phase 7.1: Idempotency Layer"
 description: "UUID-based order deduplication with Redis-backed store"
-status: pending
+status: completed
 priority: P1
 effort: 2h
 ---

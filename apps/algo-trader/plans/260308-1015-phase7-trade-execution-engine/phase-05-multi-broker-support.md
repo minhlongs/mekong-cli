@@ -1,7 +1,7 @@
 ---
 title: "Phase 7.5: Multi-Broker Support"
 description: "ExchangeClient refactor for 3+ brokers with unified order schema"
-status: pending
+status: paused
 priority: P2
 effort: 2h
 ---
