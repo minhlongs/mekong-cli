@@ -484,29 +484,45 @@ async function checkAllPanes() {
             }
 
             case 'RATE_LIMITED': {
-                // 🔄 BIDIRECTIONAL FAILOVER: BytePlus ↔ DashScope
-                const BYTEPLUS = {
-                    key: '5cee0d73-2a72-4f29-b001-c19f3e1c32ba',
-                    url: 'https://ark.ap-southeast.bytepluses.com/api/coding',
-                    model: 'kimi-k2.5', opus: 'kimi-k2-thinking', haiku: 'ark-code-latest',
-                    small: 'ark-code-latest', large: 'kimi-k2.5', name: 'BytePlus'
-                };
-                const DASHSCOPE = {
-                    key: 'sk-sp-afce4429a10e41bb901d6012d7f525c8',
-                    url: 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic',
-                    model: 'qwen3.5-plus', opus: 'qwen3.5-plus', haiku: 'qwen3-coder-next',
-                    small: 'qwen3-coder-plus', large: 'qwen3-coder-plus', name: 'DashScope'
-                };
+                // 🔄 TRI-PROVIDER FAILOVER: BytePlus → DashScope → Blackbox → BytePlus
+                const PROVIDERS = [
+                    {
+                        id: 'byteplus', name: 'BytePlus',
+                        key: '5cee0d73-2a72-4f29-b001-c19f3e1c32ba',
+                        url: 'https://ark.ap-southeast.bytepluses.com/api/coding',
+                        model: 'kimi-k2.5', opus: 'kimi-k2-thinking', haiku: 'ark-code-latest',
+                        small: 'ark-code-latest', large: 'kimi-k2.5'
+                    },
+                    {
+                        id: 'dashscope', name: 'DashScope',
+                        key: 'sk-sp-afce4429a10e41bb901d6012d7f525c8',
+                        url: 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic',
+                        model: 'qwen3.5-plus', opus: 'qwen3.5-plus', haiku: 'qwen3-coder-next',
+                        small: 'qwen3-coder-plus', large: 'qwen3-coder-plus'
+                    },
+                    {
+                        id: 'blackbox', name: 'Blackbox',
+                        key: 'sk-ELEERyI0MyROHMJY27q-Sg',
+                        url: 'https://api.blackbox.ai',
+                        model: 'blackboxai/moonshotai/kimi-k2.5', opus: 'blackboxai/moonshotai/kimi-k2-thinking',
+                        haiku: 'blackboxai/minimax/minimax-m2.5',
+                        small: 'blackboxai/minimax/minimax-m2.5', large: 'blackboxai/moonshotai/kimi-k2.5'
+                    }
+                ];
 
-                // Detect current provider from settings.json
-                let currentProvider = 'unknown';
+                // Detect current provider and rotate to next
+                let currentIdx = 0;
                 try {
                     const settings = JSON.parse(fs.readFileSync(path.join(process.env.HOME, '.claude/settings.json'), 'utf-8'));
-                    currentProvider = (settings.env?.ANTHROPIC_BASE_URL || '').includes('bytepluses') ? 'byteplus' : 'dashscope';
+                    const baseUrl = settings.env?.ANTHROPIC_BASE_URL || '';
+                    if (baseUrl.includes('bytepluses')) currentIdx = 0;
+                    else if (baseUrl.includes('dashscope')) currentIdx = 1;
+                    else if (baseUrl.includes('blackbox')) currentIdx = 2;
                 } catch { }
 
-                const target = currentProvider === 'byteplus' ? DASHSCOPE : BYTEPLUS;
-                log(`P${pane.idx}: 🔶 RATE LIMITED on ${currentProvider === 'byteplus' ? 'BytePlus' : 'DashScope'} — SWITCHING TO ${target.name} 🚀`);
+                const nextIdx = (currentIdx + 1) % PROVIDERS.length;
+                const target = PROVIDERS[nextIdx];
+                log(`P${pane.idx}: 🔶 RATE LIMITED on ${PROVIDERS[currentIdx].name} — ROTATING TO ${target.name} 🚀`);
 
                 // Update settings.json for ALL panes (global switch)
                 try {
