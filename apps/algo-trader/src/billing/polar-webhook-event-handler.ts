@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { PolarSubscriptionService, TenantTier } from './polar-subscription-service';
 import { LicenseService, LicenseTier } from '../lib/raas-gate';
 import { WebhookAuditLogger } from './webhook-audit-logger';
+import { restoreAccess } from '../api/middleware/hard-limits-middleware';
 
 const getWebhookSecret = (): string => process.env.POLAR_WEBHOOK_SECRET ?? '';
 
@@ -172,6 +173,10 @@ export class PolarWebhookEventHandler {
 
     const licenseTier = mapTenantTierToLicenseTier(tier);
     this.licenseService.activateSubscription(tenantId, licenseTier, payload.data.id || payload.data.product_id);
+
+    // Restore access if previously suspended due to quota exceeded
+    restoreAccess(tenantId);
+
     this.onTierChange?.(tenantId, tier);
 
     return { handled: true, event: payload.type, tenantId, tier, action: 'activated' };
@@ -196,6 +201,10 @@ export class PolarWebhookEventHandler {
 
     const licenseTier = mapTenantTierToLicenseTier(tier);
     this.licenseService.activateSubscription(tenantId, licenseTier, payload.data.id || payload.data.product_id);
+
+    // Restore access if previously suspended (e.g., payment succeeded after dunning)
+    restoreAccess(tenantId);
+
     this.onTierChange?.(tenantId, tier);
 
     return { handled: true, event: payload.type, tenantId, tier, action: 'updated' };
@@ -228,6 +237,9 @@ export class PolarWebhookEventHandler {
 
     const licenseTier = mapTenantTierToLicenseTier(tier);
     this.licenseService.activateSubscription(tenantId, licenseTier, payload.data.id || payload.data.product_id);
+
+    // Restore access if previously suspended
+    restoreAccess(tenantId);
 
     // Log order with unified audit logger
     this.auditLogger.logEvent(payload.data.id || 'unknown_order', 'order.created', 'success', {

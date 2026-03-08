@@ -35,6 +35,7 @@ import { licenseManagementRoutes } from './routes/license-management-routes';
 import { registerOverageRoutes } from './routes/overage-routes';
 import { cacheStatsRoutes } from './routes/cache-stats-routes';
 import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
+import { hardLimitsPlugin } from './middleware/hard-limits-middleware';
 
 export interface RaasServerOptions {
   port?: number;
@@ -128,6 +129,9 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
 
   // Cache stats routes (for dashboard monitoring)
   void server.register(cacheStatsRoutes);
+
+  // Hard limits middleware (quota enforcement)
+  void server.register(hardLimitsPlugin);
 
   // Dashboard static files (built by: cd dashboard && npm run build)
   const dashboardDir = path.join(__dirname, '..', '..', 'dist', 'dashboard');
