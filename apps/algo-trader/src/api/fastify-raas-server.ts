@@ -32,6 +32,7 @@ import { buildPolarBillingRoutes } from './routes/polar-billing-subscription-rou
 import { buildStripeWebhookRoute } from './routes/webhooks/stripe-webhook';
 import { subscriptionRoutes } from './routes/subscription';
 import { licenseManagementRoutes } from './routes/license-management-routes';
+import { registerOverageRoutes } from './routes/overage-routes';
 import { cacheStatsRoutes } from './routes/cache-stats-routes';
 import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
 
@@ -121,6 +122,9 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
 
   // License management routes (admin only)
   void server.register(licenseManagementRoutes);
+
+  // Overage billing routes
+  void server.register(registerOverageRoutes);
 
   // Cache stats routes (for dashboard monitoring)
   void server.register(cacheStatsRoutes);

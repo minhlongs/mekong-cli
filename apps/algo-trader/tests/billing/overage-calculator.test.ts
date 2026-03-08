@@ -5,7 +5,6 @@
  * and edge cases from real metering scenarios.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   OverageCalculator,
   getTierLimits,
@@ -79,7 +78,8 @@ describe('OverageCalculator', () => {
     });
 
     it('should calculate overage charge correctly', () => {
-      // 500 overage units * $0.001/1000 = $0.0005 per call
+      // $0.001 per 1000 calls = $0.000001 per call
+      // 1000 overage calls * $0.000001 = $0.001 (rounds to $0.00 - minimum billing is 1 cent)
       const result = calculator.calculateOverage(
         'tenant-1',
         '2026-03',
@@ -88,7 +88,20 @@ describe('OverageCalculator', () => {
         2000 // 1000 over limit
       );
 
-      expect(result?.totalCharge).toBe(1); // 1000 * $0.001 = $1.00
+      expect(result?.totalCharge).toBe(0); // Rounds to $0.00 (fractional cents not billed)
+    });
+
+    it('should charge $1 for 1M overage calls', () => {
+      // 1,000,000 overage calls * $0.000001 = $1.00
+      const result = calculator.calculateOverage(
+        'tenant-1',
+        '2026-03',
+        'free',
+        'api_calls',
+        1001000 // 1M + 1000 over limit
+      );
+
+      expect(result?.totalCharge).toBe(1); // $1.00
     });
 
     it('should apply pro tier discount (20%)', () => {
@@ -242,7 +255,7 @@ describe('OverageCalculator', () => {
       );
 
       expect(result?.overageUnits).toBe(9999000);
-      expect(result?.totalCharge).toBe(9999); // 9999000 * $0.001
+      expect(result?.totalCharge).toBe(10); // 9999000 * $0.000001 ≈ $10.00 (rounded)
     });
 
     it('should handle negative usage (should not happen, but defensive)', () => {

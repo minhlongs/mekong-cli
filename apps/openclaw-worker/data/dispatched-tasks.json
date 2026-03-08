@@ -1,30 +1,6 @@
 {
   "tasks": [
     {
-      "hash": "b408fc46d875",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "TIER3-RỪNG-CHIẾN: security",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu security (5→10), bỏ qua",
-      "dispatchedAt": 1772909513668
-    },
-    {
-      "hash": "78a807390d3f",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "TIER3-RỪNG-CHIẾN: ci_cd",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu ci_cd (6→10), bỏ qua ph",
-      "dispatchedAt": 1772909603448
-    },
-    {
-      "hash": "31e73c42f497",
-      "project": "mekong-cli",
-      "pane": 0,
-      "chapter": "TIER3-RỪNG-CHIẾN: production",
-      "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu production (4→10), bỏ q",
-      "dispatchedAt": 1772911320719
-    },
-    {
       "hash": "3d22b94be62e",
       "project": "mekong-cli",
       "pane": 0,
@@ -1599,6 +1575,30 @@
       "chapter": "TIER3-RỪNG-CHIẾN: production",
       "preview": "/cook \"RỪNG CHIẾN LƯỢC (mekong-cli): Đánh thẳng điểm yếu production (4→10), bỏ q",
       "dispatchedAt": 1772935997580
+    },
+    {
+      "hash": "46aa7365052c",
+      "project": "algo-trader",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: resources",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu resources (5→10), bỏ q",
+      "dispatchedAt": 1772937618282
+    },
+    {
+      "hash": "519b20312496",
+      "project": "algo-trader",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: production",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu production (4→10), bỏ ",
+      "dispatchedAt": 1772937917078
+    },
+    {
+      "hash": "9dc78a5a3628",
+      "project": "algo-trader",
+      "pane": 1,
+      "chapter": "TIER3-RỪNG-CHIẾN: build",
+      "preview": "/cook \"RỪNG CHIẾN LƯỢC (algo-trader): Đánh thẳng điểm yếu build (5→10), bỏ qua p",
+      "dispatchedAt": 1772938009619
     }
   ],
   "chapterIndex": 5

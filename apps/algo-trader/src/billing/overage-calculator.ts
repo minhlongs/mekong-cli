@@ -2,15 +2,37 @@
  * Overage Calculator Service
  *
  * Calculates overage charges when usage exceeds plan limits.
- * Supports multiple pricing models: tiered, volume-based, and flat-rate.
+ * Integrates with Stripe Billing for metered usage and subscription management.
+ * Compatible with RaaS Gateway JWT/mk_ API key authentication.
  *
- * @see https://docs.stripe.com/products-prices/billing/metered-usage#tiered-pricing
+ * Features:
+ * - Stripe subscription and plan limits lookup
+ * - Overage rate application from plan metadata
+ * - Idempotent calculation with request deduplication
+ * - RaaS Gateway auth context compatibility
+ *
+ * @see https://docs.stripe.com/products-prices/billing/metered-usage
+ * @see https://docs.stripe.com/api/usage_records
  */
 
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { UsageTrackerService } from '../metering/usage-tracker-service';
+import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
+
+// Stripe client initialization (lazy, only when STRIPE_SECRET_KEY is set)
+let stripeClient: Stripe | null = null;
+
+function getStripeClient(): Stripe | null {
+  if (!stripeClient && process.env.STRIPE_SECRET_KEY) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      // apiVersion will be provided by Stripe SDK types
+    });
+  }
+  return stripeClient;
+}
 
 /**
  * Pricing model types
@@ -39,6 +61,18 @@ export interface OveragePricing {
 }
 
 /**
+ * RaaS Gateway auth context (compatible with JWT/mk_ API key auth)
+ */
+export interface RaaSAuthContext {
+  tenantId: string;
+  licenseKey?: string;
+  apiKey?: string;
+  jwt?: string;
+  role?: string;
+  scopes?: string[];
+}
+
+/**
  * Overage charge calculation result
  */
 export interface OverageCharge {
@@ -51,6 +85,23 @@ export interface OverageCharge {
   pricePerUnit: number;
   totalCharge: number;
   metric: 'api_calls' | 'compute_minutes' | 'ml_inferences';
+  stripeSubscriptionItemId?: string;
+  stripeMeterId?: string;
+}
+
+/**
+ * Input parameters for overage calculation
+ */
+export interface OverageCalculationInput {
+  customerId: string; // Stripe customer ID or tenant ID
+  usageMetrics?: {
+    apiCalls?: number;
+    computeMinutes?: number;
+    mlInferences?: number;
+  };
+  authContext?: RaaSAuthContext;
+  period?: string; // YYYY-MM format
+  idempotencyKey?: string;
 }
 
 /**
@@ -67,6 +118,10 @@ export interface OverageSummary {
     computeMinutes?: OverageCharge;
     mlInferences?: OverageCharge;
   };
+  stripeCustomerId?: string;
+  subscriptionId?: string;
+  idempotencyKey?: string;
+  calculatedAt: Date;
 }
 
 /**
@@ -125,11 +180,14 @@ export function getOveragePricing(): OveragePricing {
  * Overage Calculator Service
  *
  * Singleton pattern for consistent pricing across the application.
+ * Integrates with Stripe Billing for subscription and usage record management.
  */
 export class OverageCalculator {
   private static instance: OverageCalculator;
   private tierLimits: TierLimits;
   private pricing: OveragePricing;
+  private calculatedCache: Map<string, { result: OverageSummary; timestamp: number }> = new Map();
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   private constructor() {
     this.tierLimits = getTierLimits();
@@ -286,6 +344,9 @@ export class OverageCalculator {
         computeMinutes: computeMinutesOverage || undefined,
         mlInferences: mlInferencesOverage || undefined,
       },
+      stripeCustomerId: undefined, // Will be populated when Stripe integration is enabled
+      subscriptionId: undefined,
+      calculatedAt: new Date(),
     };
   }
 
@@ -377,6 +438,256 @@ export class OverageCalculator {
   updateTierLimits(limits: Partial<TierLimits>): void {
     this.tierLimits = { ...this.tierLimits, ...limits };
     logger.info('[OverageCalculator] Tier limits updated', this.tierLimits);
+  }
+
+  /**
+   * Calculate overage with Stripe integration
+   *
+   * Features:
+   * - Fetches subscription and plan limits from Stripe
+   * - Applies overage rates from plan metadata
+   * - Returns structured overage charge object for invoicing
+   * - Idempotent calculation with caching
+   *
+   * @param input - Calculation input with customerId and optional usage metrics
+   * @returns Overage summary ready for invoicing or webhook updates
+   */
+  async calculateOverageWithStripe(input: OverageCalculationInput): Promise<OverageSummary> {
+    const { customerId, usageMetrics, authContext, period, idempotencyKey } = input;
+
+    // Check cache for idempotency
+    const cacheKey = idempotencyKey || `overage:${customerId}:${authContext?.tenantId || customerId}:${period || 'current'}`;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) {
+      logger.info('[OverageCalculator] Returning cached result', { cacheKey });
+      return cached;
+    }
+
+    // Use authContext tenantId if available (RaaS Gateway compatibility)
+    // If authContext is provided, use its tenantId; otherwise fall back to customerId
+    const effectiveTenantId = authContext?.tenantId || customerId;
+    logger.debug('[OverageCalculator] Calculating overage', {
+      customerId,
+      effectiveTenantId,
+      authContext: authContext ? 'provided' : 'not provided',
+    });
+
+    // Get tenant/subscription info from Stripe or database
+    let tenantTier: string = 'free';
+    let stripeCustomerId: string | undefined;
+    let subscriptionId: string | undefined;
+    let stripeSubscriptionItemId: string | undefined;
+
+    // Try to get from Stripe first
+    const stripe = getStripeClient();
+    if (stripe && customerId.startsWith('cus_')) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if (!customer.deleted) {
+          stripeCustomerId = customerId;
+
+          // Get active subscription
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'active',
+            limit: 1,
+          });
+
+          if (subscriptions.data.length > 0) {
+            const subscription = subscriptions.data[0];
+            subscriptionId = subscription.id;
+            tenantTier = subscription.metadata?.tier || 'free';
+            stripeSubscriptionItemId = subscription.items.data[0]?.id;
+          }
+        }
+      } catch (error) {
+        logger.warn('[OverageCalculator] Stripe lookup failed, using defaults', {
+          customerId,
+          error,
+        });
+      }
+    }
+
+    // Fallback to database lookup
+    if (!stripeSubscriptionItemId) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: effectiveTenantId },
+        select: { tier: true },
+      });
+      if (tenant) {
+        tenantTier = tenant.tier.toLowerCase();
+      }
+    }
+
+    // Get usage from tracker if not provided
+    const currentPeriod = period || new Date().toISOString().slice(0, 7);
+    const usage = usageMetrics || await this.fetchUsage(effectiveTenantId, currentPeriod);
+
+    // Calculate overage for each metric
+    const charges: OverageCharge[] = [];
+
+    const apiCallsOverage = this.calculateOverage(
+      effectiveTenantId,
+      currentPeriod,
+      tenantTier,
+      'api_calls',
+      usage.apiCalls || 0
+    );
+    if (apiCallsOverage) {
+      apiCallsOverage.stripeSubscriptionItemId = stripeSubscriptionItemId;
+      charges.push(apiCallsOverage);
+    }
+
+    const computeMinutesOverage = this.calculateOverage(
+      effectiveTenantId,
+      currentPeriod,
+      tenantTier,
+      'compute_minutes',
+      usage.computeMinutes || 0
+    );
+    if (computeMinutesOverage) {
+      computeMinutesOverage.stripeSubscriptionItemId = stripeSubscriptionItemId;
+      charges.push(computeMinutesOverage);
+    }
+
+    const mlInferencesOverage = this.calculateOverage(
+      effectiveTenantId,
+      currentPeriod,
+      tenantTier,
+      'ml_inferences',
+      usage.mlInferences || 0
+    );
+    if (mlInferencesOverage) {
+      mlInferencesOverage.stripeSubscriptionItemId = stripeSubscriptionItemId;
+      charges.push(mlInferencesOverage);
+    }
+
+    const totalOverage = Math.round(
+      charges.reduce((sum, c) => sum + c.totalCharge, 0) * 100
+    ) / 100;
+
+    const result: OverageSummary = {
+      tenantId: effectiveTenantId,
+      period: currentPeriod,
+      tier: tenantTier,
+      charges,
+      totalOverage,
+      breakdown: {
+        apiCalls: apiCallsOverage || undefined,
+        computeMinutes: computeMinutesOverage || undefined,
+        mlInferences: mlInferencesOverage || undefined,
+      },
+      stripeCustomerId,
+      subscriptionId,
+      idempotencyKey,
+      calculatedAt: new Date(),
+    };
+
+    // Cache the result
+    this.addToCache(cacheKey, result);
+
+    logger.info('[OverageCalculator] Overage calculated', {
+      customerId,
+      tier: tenantTier,
+      totalOverage,
+      chargesCount: charges.length,
+    });
+
+    return result;
+  }
+
+  /**
+   * Fetch usage from UsageTrackerService
+   */
+  private async fetchUsage(
+    customerId: string,
+    period: string
+  ): Promise<{ apiCalls: number; computeMinutes: number; mlInferences: number }> {
+    const tracker = UsageTrackerService.getInstance();
+    const aggregated = await tracker.getUsage(customerId, period);
+
+    return {
+      apiCalls: aggregated.byEventType['api_call'] || 0,
+      computeMinutes: aggregated.byEventType['compute_minute'] || 0,
+      mlInferences: aggregated.byEventType['ml_inference'] || 0,
+    };
+  }
+
+  /**
+   * Create Stripe usage records for overage billing
+   *
+   * @param summary - Overage summary from calculateOverageWithStripe
+   * @returns Array of created Stripe usage records
+   */
+  async createStripeUsageRecords(summary: OverageSummary): Promise<any[]> {
+    const stripe = getStripeClient();
+    // Get subscription item ID from first charge (all charges have the same subscription item)
+    const stripeSubscriptionItemId = summary.charges[0]?.stripeSubscriptionItemId;
+
+    if (!stripe || !stripeSubscriptionItemId) {
+      logger.warn('[OverageCalculator] Stripe not configured or no subscription item');
+      return [];
+    }
+
+    const records: any[] = [];
+    const now = Math.floor(Date.now() / 1000);
+
+    for (const charge of summary.charges) {
+      if (charge.overageUnits > 0) {
+        try {
+          // Stripe API: subscriptionItems.createUsageRecord
+          const record = await (stripe.subscriptionItems as any).createUsageRecord(
+            stripeSubscriptionItemId,
+            {
+              quantity: charge.overageUnits,
+              timestamp: now,
+              action: 'increment',
+            }
+          );
+          records.push(record);
+          logger.info('[OverageCalculator] Stripe usage record created', {
+            recordId: record.id,
+            quantity: charge.overageUnits,
+            metric: charge.metric,
+          });
+        } catch (error) {
+          logger.error('[OverageCalculator] Failed to create Stripe usage record', {
+            metric: charge.metric,
+            error,
+          });
+        }
+      }
+    }
+
+    return records;
+  }
+
+  /**
+   * Cache helpers for idempotency
+   */
+  private getFromCache(key: string): OverageSummary | null {
+    const cached = this.calculatedCache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.result;
+    }
+    if (cached) {
+      this.calculatedCache.delete(key);
+    }
+    return null;
+  }
+
+  private addToCache(key: string, result: OverageSummary): void {
+    this.calculatedCache.set(key, {
+      result,
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Clear cache (for testing)
+   */
+  clearCache(): void {
+    this.calculatedCache.clear();
   }
 }
 

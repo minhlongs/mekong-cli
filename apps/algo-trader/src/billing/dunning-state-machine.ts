@@ -16,6 +16,7 @@
 
 import { PrismaClient, DunningStatus } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { BillingNotificationService, BillingEventType } from '../notifications/billing-notification-service';
 
 const prisma = new PrismaClient();
 
@@ -38,6 +39,7 @@ interface DunningStateResult {
 export class DunningStateMachine {
   private static instance: DunningStateMachine;
   private config: DunningConfig;
+  private notificationService: BillingNotificationService;
 
   private constructor() {
     this.config = {
@@ -45,6 +47,7 @@ export class DunningStateMachine {
       suspensionDays: parseInt(process.env.DUNNING_SUSPENSION_DAYS || '14', 10),
       revocationDays: parseInt(process.env.DUNNING_REVOCATION_DAYS || '30', 10),
     };
+    this.notificationService = BillingNotificationService.getInstance();
   }
 
   static getInstance(): DunningStateMachine {
@@ -77,6 +80,16 @@ export class DunningStateMachine {
         lastPaymentFailedAt: now,
         status: DunningStatus.GRACE_PERIOD,
       },
+    });
+
+    // Send notification
+    await this.notificationService.sendNotification('payment_failed', tenantId, ['email', 'telegram'], {
+      tenantId,
+      amount: options?.amount,
+      currency: options?.currency,
+      gracePeriodDays: this.config.gracePeriodDays,
+      gracePeriodEndsAt: this.calculateGracePeriodEnd(state),
+      retryUrl: 'https://agencyos.network/billing/restore',
     });
 
     // Log dunning event
@@ -112,6 +125,13 @@ export class DunningStateMachine {
         lastPaymentRecoveredAt: new Date(),
         suspendedAt: null,
       },
+    });
+
+    // Send notification
+    await this.notificationService.sendNotification('payment_recovered', tenantId, ['email', 'telegram'], {
+      tenantId,
+      amount: options?.amount,
+      currency: options?.currency,
     });
 
     await this.logEvent(tenantId, 'payment_recovered', 'info', {
@@ -165,6 +185,12 @@ export class DunningStateMachine {
       },
     });
 
+    // Send notification (critical - use all channels including SMS)
+    await this.notificationService.sendNotification('account_suspended', tenantId, ['email', 'sms', 'telegram'], {
+      tenantId,
+      gracePeriodDays: this.config.gracePeriodDays,
+    });
+
     await this.logEvent(tenantId, 'suspended', 'critical', {
       failedPayments: state.failedPayments,
       gracePeriodDays: this.config.gracePeriodDays,
@@ -212,6 +238,11 @@ export class DunningStateMachine {
         status: DunningStatus.REVOKED,
         revokedAt: new Date(),
       },
+    });
+
+    // Send notification (critical - use all channels including SMS)
+    await this.notificationService.sendNotification('account_revoked', tenantId, ['email', 'sms', 'telegram'], {
+      tenantId,
     });
 
     await this.logEvent(tenantId, 'revoked', 'critical', {
@@ -347,12 +378,24 @@ export class DunningStateMachine {
     severity: 'info' | 'warning' | 'critical',
     metadata: Record<string, unknown>
   ): Promise<void> {
+    // Convert metadata to JSON-serializable format
+    const jsonMetadata: Record<string, string | number | boolean | null> = {};
+    for (const [key, value] of Object.entries(metadata)) {
+      if (value instanceof Date) {
+        jsonMetadata[key] = value.toISOString();
+      } else if (typeof value === 'object' && value !== null) {
+        jsonMetadata[key] = JSON.stringify(value);
+      } else {
+        jsonMetadata[key] = value as string | number | boolean | null;
+      }
+    }
+
     await prisma.dunningEvent.create({
       data: {
         tenantId,
         eventType,
         severity,
-        metadata,
+        metadata: jsonMetadata,
       },
     });
   }
