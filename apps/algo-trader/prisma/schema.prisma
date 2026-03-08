@@ -30,10 +30,11 @@ enum Side {
 model Tenant {
   id                String            @id
   name              String
+  email             String?
   tier              Tier              @default(FREE)
   maxStrategies     Int               @default(1)
   maxDailyLossUsd   Decimal           @default(100) @db.Decimal(12, 2)
-  maxPositionUsd     Decimal           @default(1000) @db.Decimal(12, 2)
+  maxPositionUsd    Decimal           @default(1000) @db.Decimal(12, 2)
   allowedExchanges  String[]          @default([])
   apiKeys           ApiKey[]
   strategies        Strategy[]

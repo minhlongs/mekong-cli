@@ -11,6 +11,8 @@ export {
   generateLicenseKey as generateLicenseJWT,
   decodeLicenseKey as decodeLicenseJWT,
   generateLicenseId,
+} from './license-crypto';
+export type {
   LicensePayload as LicenseJWTPayload,
   LicenseTierType,
   CryptoValidationResult as JWTValidationResult,

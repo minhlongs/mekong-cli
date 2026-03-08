@@ -4,8 +4,5 @@
  * Provides usage metering and aggregation for license-based billing.
  */
 
-export {
-  UsageTrackerService,
-  UsageEvent,
-  AggregatedUsage,
-} from './usage-tracker-service';
+export { UsageTrackerService } from './usage-tracker-service';
+export type { UsageEvent, AggregatedUsage } from './usage-tracker-service';

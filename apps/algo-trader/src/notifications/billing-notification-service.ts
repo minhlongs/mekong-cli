@@ -348,12 +348,14 @@ export class BillingNotificationService {
     // Get tenant email from database
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, email: true },
     });
 
     if (!tenant) {
       return { channel: 'email', success: false, error: 'Tenant not found' };
     }
+
+    const toEmail = tenant.email || 'customer@example.com';
 
     // Use Resend if available
     if (process.env.RESEND_API_KEY) {
@@ -365,7 +367,7 @@ export class BillingNotificationService {
         },
         body: JSON.stringify({
           from,
-          to: 'customer@example.com', // TODO: Get actual tenant email
+          to: toEmail,
           subject: template.subject,
           html: template.html,
         }),
@@ -389,7 +391,7 @@ export class BillingNotificationService {
           Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
         },
         body: JSON.stringify({
-          personalizations: [{ to: [{ email: 'customer@example.com' }] }], // TODO: Get actual tenant email
+          personalizations: [{ to: [{ email: toEmail }] }],
           from: { email: from.split('@')[0], name: from.split('@')[0] },
           subject: template.subject,
           content: [{ type: 'text/html', value: template.html }],
