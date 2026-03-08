@@ -164,11 +164,12 @@ class CCSpawner:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
                 cwd=session.cwd,
+                limit=1024 * 1024,  # 1MB buffer limit for security
             )
 
             session.pid = process.pid
 
-            # Read output line by line
+            # Read output line by line with timeout protection
             async def read_output() -> None:
                 """Read stdout lines from the CC CLI process into the session buffer."""
                 if process.stdout is None:
@@ -184,12 +185,16 @@ class CCSpawner:
                         session.output_buffer = session.output_buffer[-300:]
 
             try:
+                # SECURITY: Enforce timeout to prevent hanging sessions
                 await asyncio.wait_for(read_output(), timeout=timeout)
             except TimeoutError:
                 session.status = SessionStatus.TIMEOUT
                 session.error = f"Timed out after {timeout}s"
-                process.kill()
-                await process.wait()
+                try:
+                    process.kill()
+                    await process.wait()
+                except ProcessLookupError:
+                    pass  # Process already dead
                 session.exit_code = -1
                 session.end_time = time.time()
                 return

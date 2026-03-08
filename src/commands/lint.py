@@ -132,6 +132,8 @@ def run_formatter(fix: bool = True):
                         console.print(Panel(result.stdout, title="Black Diff"))
         except FileNotFoundError:
             console.print("[dim]Black not found. Install with: pip install black[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ Black error: {e}[/red]")
 
     # Check for and run Prettier for JS/TS
     if any(Path('.').glob('**/*.{js,jsx,ts,tsx}')):
@@ -155,6 +157,8 @@ def run_formatter(fix: bool = True):
                         console.print(Panel(result.stdout, title="Prettier Output"))
         except FileNotFoundError:
             console.print("[dim]Prettier not found. Install with: npm install -g prettier[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ Prettier error: {e}[/red]")
 
 
 def run_python_linter(fix: bool, verbose: bool):
@@ -174,6 +178,9 @@ def run_python_linter(fix: bool, verbose: bool):
                 console.print(Panel(result.stdout, title="Flake8 Output"))
     except FileNotFoundError:
         console.print("[dim]Flake8 not found. Install with: pip install flake8[/dim]")
+    except subprocess.SubprocessError as e:
+        console.print(f"[red]❌ Flake8 error: {e}[/red]")
+        issues_found = True
 
     # Run ruff (modern, fast linter)
     try:
@@ -190,6 +197,9 @@ def run_python_linter(fix: bool, verbose: bool):
                 console.print(Panel(result.stdout, title="Ruff Output"))
     except FileNotFoundError:
         console.print("[dim]Ruff not found. Install with: pip install ruff[/dim]")
+    except subprocess.SubprocessError as e:
+        console.print(f"[red]❌ Ruff error: {e}[/red]")
+        issues_found = True
 
     return issues_found
 
@@ -217,6 +227,9 @@ def run_js_linter(fix: bool, verbose: bool):
                 console.print(Panel(result.stdout, title="ESLint Output"))
     except FileNotFoundError:
         console.print("[dim]ESLint not found. Install with: npm install -g eslint[/dim]")
+    except subprocess.SubprocessError as e:
+        console.print(f"[red]❌ ESLint error: {e}[/red]")
+        issues_found = True
 
     # Run jshint if available
     try:
@@ -231,6 +244,9 @@ def run_js_linter(fix: bool, verbose: bool):
                 console.print(Panel(result.stdout, title="JSHint Output"))
     except FileNotFoundError:
         console.print("[dim]JSHint not found. Install with: npm install -g jshint[/dim]")
+    except subprocess.SubprocessError as e:
+        console.print(f"[red]❌ JSHint error: {e}[/red]")
+        issues_found = True
 
     return issues_found
 
@@ -257,6 +273,8 @@ def run_type_checker():
                     console.print(Panel(result.stdout, title="MyPy Output"))
         except FileNotFoundError:
             console.print("[dim]MyPy not found. Install with: pip install mypy[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ MyPy error: {e}[/red]")
 
     # Run TypeScript compiler for TS
     if any(Path('.').glob('**/*.ts')):
@@ -272,6 +290,8 @@ def run_type_checker():
                     console.print(Panel(output, title="TypeScript Output"))
         except FileNotFoundError:
             console.print("[dim]TypeScript compiler not found. Install with: npm install -g typescript[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ TypeScript error: {e}[/red]")
 
 
 def run_security_scan():
@@ -291,6 +311,8 @@ def run_security_scan():
                     console.print(Panel(result.stdout, title="Bandit Security Report"))
         except FileNotFoundError:
             console.print("[dim]Bandit not found. Install with: pip install bandit[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ Bandit error: {e}[/red]")
 
     # Run npm audit for JavaScript dependencies
     if Path("package-lock.json").exists() or Path("yarn.lock").exists():
@@ -305,6 +327,8 @@ def run_security_scan():
                     console.print(Panel(result.stdout, title="NPM Audit Report"))
         except FileNotFoundError:
             console.print("[dim]npm not found or package-lock.json/yarn.lock missing[/dim]")
+        except subprocess.SubprocessError as e:
+            console.print(f"[red]❌ NPM audit error: {e}[/red]")
 
 
 @app.command()
@@ -365,37 +389,49 @@ def report():
         try:
             result = subprocess.run([
                 sys.executable, "-m", "black", "--check"
-            ] + get_python_files(False), check=False, capture_output=True, text=True)
+            ] + get_python_files(False), check=False, capture_output=True, text=True, timeout=30)
             python_formatted = result.returncode == 0
             status = "✅ OK" if python_formatted else "❌ Needs fix"
             issues = "0" if python_formatted else "See black output"
             table.add_row("Python Format", status, issues)
         except FileNotFoundError:
             table.add_row("Python Format", "❌ Not available", "Install black")
+        except subprocess.TimeoutExpired:
+            table.add_row("Python Format", "❌ Timeout", "Check took > 30s")
+        except subprocess.SubprocessError as e:
+            table.add_row("Python Format", f"❌ Error: {e}", "")
 
     # Check Python linting
     try:
         result = subprocess.run([
             "ruff", "check"
-        ] + get_python_files(False), check=False, capture_output=True, text=True)
+        ] + get_python_files(False), check=False, capture_output=True, text=True, timeout=30)
         python_linted = result.returncode == 0
         status = "✅ OK" if python_linted else "❌ Issues found"
         issues = "0" if python_linted else f"{result.stdout.count('error') if result.stdout else '?'}"
         table.add_row("Python Lint", status, issues)
     except FileNotFoundError:
         table.add_row("Python Lint", "❌ Not available", "Install ruff")
+    except subprocess.TimeoutExpired:
+        table.add_row("Python Lint", "❌ Timeout", "Check took > 30s")
+    except subprocess.SubprocessError as e:
+        table.add_row("Python Lint", f"❌ Error: {e}", "")
 
     # Check type checking
     try:
         result = subprocess.run([
             sys.executable, "-m", "mypy", "."
-        ], check=False, capture_output=True, text=True)
+        ], check=False, capture_output=True, text=True, timeout=60)
         types_ok = result.returncode == 0
         status = "✅ OK" if types_ok else "❌ Type errors"
         issues = "0" if types_ok else f"{result.stdout.count('error') if result.stdout else '?'}"
         table.add_row("Type Check", status, issues)
     except FileNotFoundError:
         table.add_row("Type Check", "❌ Not available", "Install mypy")
+    except subprocess.TimeoutExpired:
+        table.add_row("Type Check", "❌ Timeout", "Check took > 60s")
+    except subprocess.SubprocessError as e:
+        table.add_row("Type Check", f"❌ Error: {e}", "")
 
     console.print(table)
 

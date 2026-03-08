@@ -13,6 +13,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from .command_sanitizer import CommandSanitizer
+
 
 class VerificationStatus(Enum):
     """Verification result status."""
@@ -357,13 +359,28 @@ class RecipeVerifier:
                 message="Empty custom check command",
             )
 
+        # SECURITY: Sanitize command before execution
+        sanitizer = CommandSanitizer(strict_mode=True)
+        sanitization = sanitizer.sanitize(command)
+
+        if not sanitization.is_safe:
+            return VerificationCheck(
+                name=f"custom:{command[:40]}",
+                status=VerificationStatus.FAILED,
+                message=f"Command blocked for security: {sanitization.blocked_reason}",
+            )
+
+        # Use sanitized command
+        command = sanitization.sanitized_command
+
         try:
+            # SECURITY: Enforce timeout on custom checks to prevent hangs
             proc = subprocess.run(
                 command,
                 shell=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=30,  # Hard timeout for security
             )
 
             if proc.returncode != 0:
@@ -395,7 +412,7 @@ class RecipeVerifier:
             return VerificationCheck(
                 name=f"custom:{command[:40]}",
                 status=VerificationStatus.FAILED,
-                message=f"Custom check timed out: {command[:60]}",
+                message=f"Custom check timed out after 30s: {command[:60]}",
             )
         except Exception as e:
             return VerificationCheck(
