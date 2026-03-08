@@ -141,6 +141,11 @@ function detectRealProject(paneIdx) {
 
 // 🔧 CENTRALIZED RESPAWN — uses -c flag for reliable cwd (fixes P0 wrong-project bug)
 function respawnPane(paneIdx, dir, flags = '') {
+    // 🔒 IRON GUARD: P0 = Chủ Tịch pane — CẤM respawn
+    if (paneIdx === 0) {
+        log(`P0: 🔒 IRON GUARD — BLOCKED respawnPane (Chủ Tịch pane protected)`);
+        return false;
+    }
     const realDir = detectRealProject(paneIdx)?.dir || dir;
     // P5 (paneIdx 4) is legally bound to Opus 4.6
     const isOpus = paneIdx === 4;
@@ -153,6 +158,11 @@ function respawnPane(paneIdx, dir, flags = '') {
 }
 
 function tmuxSendBuffer(paneIdx, text) {
+    // 🔒 IRON GUARD: P0 = Chủ Tịch pane — TUYỆT ĐỐI CẤM auto-inject
+    if (paneIdx === 0) {
+        log(`P0: 🔒 IRON GUARD — BLOCKED tmuxSendBuffer (Chủ Tịch pane protected)`);
+        return false;
+    }
     try {
         // Clear any half-written text just in case (Ctrl+U)
         execSync(`tmux send-keys -t ${SESSION}.${paneIdx} C-u`);
@@ -178,6 +188,8 @@ function tmuxSendBuffer(paneIdx, text) {
 }
 
 function tmuxSendKeys(paneIdx, keys) {
+    // 🔒 IRON GUARD: P0 = Chủ Tịch pane — CẤM send keys
+    if (paneIdx === 0) return;
     try { execSync(`tmux send-keys -t ${SESSION}.${paneIdx} ${keys}`); } catch { }
 }
 
