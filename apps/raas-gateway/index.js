@@ -7,6 +7,8 @@
 import { authenticate } from './src/edge-auth-handler.js';
 import { checkRateLimit, buildRateLimitHeaders } from './src/kv-rate-limiter-per-api-key.js';
 import { trackUsage, getUsageMetrics, getPayloadSize, getEndpointType, aggregateUsageForBilling, getCurrentHourBucket } from './src/kv-usage-meter.js';
+import { checkSuspensionStatus, syncSuspensionToKV, buildSuspensionStatusHeader } from './src/kv-suspension-checker.js';
+import { validateExtensionFlags, getExtensionStatus, trackExtensionUsage } from './src/extension-validator.js';
 
 const GATEWAY_VERSION = '2.0.0';
 
@@ -181,6 +183,45 @@ export default {
       return handleTelegramWebhook(request, env);
     }
 
+    // --- ROUTE: POST /internal/sync-suspension (internal service endpoint) ---
+    if (path === '/internal/sync-suspension' && request.method === 'POST') {
+      // Verify service token
+      const authHeader = request.headers.get('Authorization') || '';
+      const serviceToken = env.SERVICE_TOKEN || env.RAAS_SERVICE_TOKEN;
+
+      if (!authHeader.startsWith('Bearer ') || authHeader.slice(7) !== serviceToken) {
+        return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+      }
+
+      try {
+        const body = await request.json();
+        const { tenantId, status, since, reason } = body;
+
+        if (!tenantId || !status) {
+          return jsonResponse({ error: 'Missing tenantId or status' }, 400, corsHeaders);
+        }
+
+        // Use existing syncSuspensionToKV function from kv-suspension-checker.js
+        const success = await syncSuspensionToKV(env, tenantId, status, reason);
+
+        if (!success) {
+          return jsonResponse({ error: 'Failed to sync to KV' }, 500, corsHeaders);
+        }
+
+        return jsonResponse({
+          success: true,
+          tenantId,
+          status,
+          since: since || new Date().toISOString()
+        }, 200, corsHeaders);
+      } catch (error) {
+        return jsonResponse({
+          error: 'Invalid request',
+          details: error.message
+        }, 400, corsHeaders);
+      }
+    }
+
     // --- AUTH: All /v1/* routes require Bearer token ---
     const { authenticated, tenantId, role, licenseKey, error: authError } = authenticate(request, env);
 
@@ -190,6 +231,32 @@ export default {
         401,
         corsHeaders
       );
+    }
+
+    // --- SUSPENSION CHECK: Block suspended/revoked tenants ---
+    const suspensionResult = await checkSuspensionStatus(env, tenantId);
+
+    if (suspensionResult.blocked) {
+      return jsonResponse(
+        { error: 'account_suspended', reason: suspensionResult.reason, since: suspensionResult.since },
+        403,
+        corsHeaders
+      );
+    }
+
+    // --- EXTENSION CHECK: Validate extension eligibility for /v1/trade/* and /v1/extension/* ---
+    const isExtensionEndpoint = path.startsWith('/v1/trade') || path.startsWith('/v1/extension');
+    let extensionResult = null;
+
+    if (isExtensionEndpoint && role !== 'service') {
+      extensionResult = validateExtensionFlags(request, env, tenantId, role, 'algo-trader');
+      if (!extensionResult.allowed && extensionResult.required) {
+        return jsonResponse(
+          { error: 'extension_not_permitted', extension: extensionResult.required, reason: extensionResult.reason },
+          403,
+          corsHeaders
+        );
+      }
     }
 
     // --- RATE LIMIT: per tenant ---
@@ -215,6 +282,12 @@ export default {
           role,
           tier: role,
           features,
+          suspension: {
+            blocked: suspensionResult.blocked,
+            status: suspensionResult.status,
+            since: suspensionResult.since,
+            reason: suspensionResult.reason
+          },
           rateLimit: {
             remaining: rlResult.remaining,
             limit: rlResult.limit,
@@ -226,7 +299,7 @@ export default {
           }
         },
         200,
-        { ...corsHeaders, ...rlHeaders }
+        { ...corsHeaders, ...rlHeaders, ...buildSuspensionStatusHeader(suspensionResult) }
       );
     }
 
@@ -385,12 +458,43 @@ export default {
       });
     }
 
+    // --- ROUTE: GET /v1/extension/status (extension eligibility + usage) ---
+    if (path === '/v1/extension/status' && request.method === 'GET') {
+      const extensionStatus = await getExtensionStatus(env, tenantId, 'algo-trader');
+
+      return jsonResponse(
+        {
+          tenant_id: tenantId,
+          extensions: {
+            'algo-trader': {
+              permitted: extensionStatus.permitted,
+              status: extensionStatus.status,
+              usage: extensionStatus.usage,
+              limit: extensionStatus.limit,
+              resetAt: extensionStatus.resetAt
+            }
+          }
+        },
+        200,
+        corsHeaders
+      );
+    }
+
     // --- ROUTE: /v1/* → proxy to FastAPI backend ---
     if (path.startsWith('/v1/')) {
       // Track usage if we have a valid license key (mk_ API key)
       if (licenseKey) {
         const payloadSize = await getPayloadSize(request);
         const endpointType = getEndpointType(path);
+
+        // Track extension usage for trade endpoints
+        if (path.startsWith('/v1/trade')) {
+          const idempotencyKey = request.headers.get('X-Idempotency-Key');
+          trackExtensionUsage(env, tenantId, 'algo-trader', 1, idempotencyKey).catch(err => {
+            console.error('Extension usage tracking error:', err);
+          });
+        }
+
         trackUsage(env, licenseKey, tenantId, role, endpointType, request.method, payloadSize).catch(err => {
           console.error('Usage tracking failed:', err);
         });

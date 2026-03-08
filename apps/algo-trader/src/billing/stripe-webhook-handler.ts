@@ -71,6 +71,7 @@ export class StripeWebhookHandler {
   private licenseService: LicenseService;
   private subscriptionService: PolarSubscriptionService;
   private auditLogger: WebhookAuditLogger;
+  private dunningMachine: DunningStateMachine;
 
   constructor(
     subscriptionService?: PolarSubscriptionService,
@@ -79,6 +80,7 @@ export class StripeWebhookHandler {
     this.licenseService = LicenseService.getInstance();
     this.subscriptionService = subscriptionService ?? PolarSubscriptionService.getInstance();
     this.auditLogger = WebhookAuditLogger.getInstance();
+    this.dunningMachine = DunningStateMachine.getInstance();
   }
 
   /**
@@ -299,6 +301,14 @@ export class StripeWebhookHandler {
       return { handled: false, event, tenantId, tier: null, action: 'ignored' };
     }
 
+    // TRIGGER DUNNING MACHINE - suspend account on subscription deletion
+    try {
+      void this.dunningMachine.suspendAccount(tenantId);
+    } catch (error) {
+      console.error('[Dunning] Failed to process subscription deleted event:', error);
+      // Fail-open: don't block webhook processing
+    }
+
     this.subscriptionService.deactivateSubscription(tenantId);
     this.licenseService.deactivateSubscription(tenantId);
     this.onTierChange?.(tenantId, 'free');
@@ -313,6 +323,17 @@ export class StripeWebhookHandler {
 
     const invoiceObj = payload.data.object;
     const subscriptionId = invoiceObj.subscription;
+
+    // TRIGGER DUNNING MACHINE - recovery
+    try {
+      void this.dunningMachine.onPaymentRecovered(tenantId, {
+        amount: invoiceObj.amount_total,
+        currency: invoiceObj.currency,
+        invoiceId: invoiceObj.id,
+      });
+    } catch (error) {
+      console.error('[Dunning] Failed to process payment succeeded event:', error);
+    }
 
     // Log successful payment
     this.auditLogger.logEvent(
@@ -348,6 +369,18 @@ export class StripeWebhookHandler {
 
     const invoiceObj = payload.data.object;
     const subscriptionId = invoiceObj.subscription;
+
+    // TRIGGER DUNNING MACHINE
+    try {
+      void this.dunningMachine.onPaymentFailed(tenantId, {
+        amount: invoiceObj.amount_total,
+        currency: invoiceObj.currency,
+        invoiceId: invoiceObj.id,
+      });
+    } catch (error) {
+      console.error('[Dunning] Failed to process payment failed event:', error);
+      // Fail-open: don't block webhook processing
+    }
 
     // Log failed payment alert
     this.auditLogger.logEvent(

@@ -17,7 +17,7 @@ import sys
 # RaaS License Gate - Phase 2: Command-level validation
 
 # ROIaaS Phase Completion & Graceful Shutdown
-from src.raas.phase_completion_detector import get_detector
+from src.raas.phase_completion_detector import get_detector, PhaseStatus
 from src.core.graceful_shutdown import (
     get_shutdown_handler,
     register_shutdown_cleanup,
@@ -38,6 +38,7 @@ from src.commands.dashboard_commands import app as dashboard_app
 from src.commands.security_commands import app as security_commands_app
 from src.cli.update_commands import app as update_app
 from src.cli.raas_auth_commands import app as raas_auth_app
+from src.commands.raas_validate import app as raas_validate_app
 
 # Legacy command imports (not yet refactored)
 from src.commands.agi import app as agi_app
@@ -75,7 +76,9 @@ FREE_COMMANDS = {
     "compliance", "billing", "roi", "dashboard",
     "security-cmd", "security",  # Security commands are FREE (basic necessity)
     "update",  # Update check is FREE, but non-security updates require license
-    "raas-auth",  # RaaS auth is FREE (basic necessity)
+    "raas-auth", "auth",  # RaaS auth is FREE (basic necessity)
+    "validate-license", "license-status",  # License validation is FREE
+    "check-phases", "complete-phase6",  # Phase completion commands are FREE
 }
 
 
@@ -176,6 +179,9 @@ def _register_legacy_commands() -> None:
     app.add_typer(security_commands_app, name="security-cmd", help="🔒 Security hardening commands")
     app.add_typer(update_app, name="update", help="🔄 CLI auto-update")
     app.add_typer(raas_auth_app, name="raas-auth", help="🔐 RaaS Gateway auth (login/logout/status)")
+    app.add_typer(raas_auth_app, name="auth", help="🔐 RaaS Gateway auth (login/logout/status)")
+    app.add_typer(raas_validate_app, name="validate-license", help="✅ Validate RaaS license with certificate auth")
+    app.add_typer(raas_validate_app, name="license-status", help="📊 Show current license status")
 
 
 # Register all commands
@@ -336,6 +342,70 @@ async def check_phases() -> None:
     else:
         console.print("\n[yellow]⚠ Some phases are not yet operational[/yellow]")
         console.print("[dim]Continue development to complete all phases[/dim]\n")
+
+
+@app.command()
+async def complete_phase6(
+    export_cert: str = typer.Option(
+        None,
+        "--export-cert",
+        "-e",
+        help="Export completion certificate to path",
+    ),
+    no_browser: bool = typer.Option(False, "--no-browser", "-n", help="Don't open certificate in browser"),
+) -> None:
+    """🎯 Complete Phase 6: Terminal Validation + Completion Certificate.
+
+    Validates end-to-end RaaS integration and generates completion certificate.
+    """
+    from src.raas.final_phase_validator import get_validator
+    from src.raas.completion_certificate import generate_certificate, save_certificate
+
+    console.print("[bold cyan]🎯 ROIaaS Phase 6: Terminal Validation[/bold cyan]\n")
+
+    # Run Phase 6 validation
+    validator = get_validator()
+    validation_result = await validator.validate_all()
+
+    if validation_result.all_passed:
+        console.print("\n[bold green]✓ Phase 6 Validation Passed![/bold green]\n")
+
+        # Generate completion certificate
+        detector = get_detector()
+        phases_status = {
+            f"Phase {i}": info.status == PhaseStatus.OPERATIONAL
+            for i, (phase_id, info) in enumerate(detector.get_all_phases_status().items(), 1)
+        }
+
+        cert = generate_certificate(
+            validation_result,
+            phases_status=phases_status,
+        )
+
+        # Display certificate
+        cert.display(console)
+
+        # Export certificate if requested
+        if export_cert:
+            if save_certificate(cert, export_cert):
+                console.print(f"\n[green]✓ Certificate exported to:[/green] {export_cert}")
+            else:
+                console.print(f"\n[yellow]⚠ Failed to export certificate[/yellow]")
+        else:
+            # Save to default location
+            default_path = save_certificate(cert)
+            console.print(f"\n[dim]Certificate saved to: {default_path}[/dim]")
+
+        console.print("\n[bold green]🎉 ROIaaS Onboarding Lifecycle COMPLETE![/bold green]")
+        console.print("[dim]All 6 phases operational. System ready for production.[/dim]\n")
+    else:
+        console.print("\n[bold red]✗ Phase 6 Validation Failed[/bold red]")
+        if validation_result.errors:
+            console.print(f"[dim]Errors: {len(validation_result.errors)}[/dim]")
+            for error in validation_result.errors[:5]:
+                console.print(f"  [red]• {error}[/red]")
+        console.print("\n[yellow]Fix validation errors and re-run:[/yellow]")
+        console.print("  [cyan]mekong complete-phase6[/cyan]\n")
 
 
 @app.command()

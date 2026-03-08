@@ -1,12 +1,13 @@
 """
 Phase Completion Detector — ROIaaS Final Phase
 
-Detects when all five ROIaaS phases are fully operational:
+Detects when all six ROIaaS phases are fully operational:
 1. RAAS_LICENSE_KEY gate (License validation)
 2. License Management UI (Admin dashboard)
 3. Stripe/Polar webhook (Payment integration)
 4. Usage metering (Credit tracking)
 5. Analytics dashboard (Business intelligence)
+6. Terminal Validation (End-to-end integration + Completion Certificate)
 
 When all phases are operational, triggers graceful shutdown sequence.
 """
@@ -64,7 +65,7 @@ class PhaseCompletionDetector:
         self._initialize_phases()
 
     def _initialize_phases(self) -> None:
-        """Initialize all five ROIaaS phases."""
+        """Initialize all six ROIaaS phases."""
         self._phases = {
             "phase_1_license_gate": PhaseInfo(
                 name="Phase 1: RAAS_LICENSE_KEY Gate",
@@ -90,6 +91,11 @@ class PhaseCompletionDetector:
                 name="Phase 5: Analytics Dashboard",
                 status=PhaseStatus.NOT_STARTED,
                 description="Business intelligence and usage analytics",
+            ),
+            "phase_6_terminal_validation": PhaseInfo(
+                name="Phase 6: Terminal Validation",
+                status=PhaseStatus.NOT_STARTED,
+                description="End-to-end integration validation + Completion Certificate",
             ),
         }
 
@@ -388,14 +394,91 @@ class PhaseCompletionDetector:
         self._phases["phase_5_analytics_dashboard"] = phase
         return phase
 
+    async def check_phase_6_terminal_validation(self) -> PhaseInfo:
+        """
+        Check Phase 6: Terminal Validation status.
+
+        Validates end-to-end RaaS integration:
+        - License authentication
+        - Usage reporting sync
+        - Billing sync with RaaS backend
+        - RaaS Gateway JWT attestation
+        - Completion Certificate generated
+
+        On success, outputs completion certificate with:
+        - Project ID
+        - License key hash
+        - Total billed usage units
+        - Signed attestation from RaaS Gateway
+        """
+        phase = self._phases["phase_6_terminal_validation"]
+        phase.last_checked = datetime.now(timezone.utc).isoformat()
+        phase.status = PhaseStatus.INITIALIZING
+        phase.errors = []
+
+        try:
+            # Import Phase 6 validator
+            from src.raas.final_phase_validator import get_validator as get_phase6_validator
+            from src.raas.completion_certificate import generate_certificate, save_certificate
+
+            # Run terminal validation
+            validator = get_phase6_validator()
+            validation_result = await validator.validate_all()
+
+            phase.details["validation_passed"] = validation_result.all_passed
+            phase.details["project_id"] = validation_result.project_id
+            phase.details["license_key_hash"] = validation_result.license_key_hash
+            phase.details["total_billed_usage"] = validation_result.total_billed_usage
+            phase.details["gateway_issuer"] = validation_result.gateway_issuer
+            phase.details["attestation_hash"] = validation_result.attestation
+
+            if validation_result.all_passed:
+                # Generate completion certificate
+                cert = generate_certificate(
+                    validation_result,
+                    phases_status={
+                        "Phase 1: License Gate": self._phases["phase_1_license_gate"].status == PhaseStatus.OPERATIONAL,
+                        "Phase 2: License UI": self._phases["phase_2_license_ui"].status == PhaseStatus.OPERATIONAL,
+                        "Phase 3: Payment Webhook": self._phases["phase_3_payment_webhook"].status == PhaseStatus.OPERATIONAL,
+                        "Phase 4: Usage Metering": self._phases["phase_4_usage_metering"].status == PhaseStatus.OPERATIONAL,
+                        "Phase 5: Analytics Dashboard": self._phases["phase_5_analytics_dashboard"].status == PhaseStatus.OPERATIONAL,
+                        "Phase 6: Terminal Validation": True,
+                    },
+                )
+
+                # Save certificate
+                cert_path = save_certificate(cert)
+                phase.details["certificate_saved"] = cert_path
+                phase.details["certificate_id"] = cert.certificate_id
+
+                phase.status = PhaseStatus.OPERATIONAL
+                phase.errors.append(f"Certificate: {cert.certificate_id}")
+            else:
+                phase.status = PhaseStatus.DEGRADED
+                phase.errors.extend(validation_result.errors)
+
+            self.console.print(f"[dim]✓ Phase 6 check complete: {phase.status.value}[/dim]")
+
+        except ImportError as e:
+            phase.status = PhaseStatus.DEGRADED
+            phase.errors.append(f"Phase 6 validator not available: {e}")
+            phase.details["validation_passed"] = False
+        except Exception as e:
+            phase.status = PhaseStatus.FAILED
+            phase.errors.append(f"Phase 6 check failed: {e}")
+            phase.details["validation_passed"] = False
+
+        self._phases["phase_6_terminal_validation"] = phase
+        return phase
+
     async def check_all_phases(self) -> bool:
         """
-        Check all five phases and return True if all are operational.
+        Check all six phases and return True if all are operational.
 
         Returns:
             True if all phases are operational, False otherwise
         """
-        self.console.print("\n[bold cyan]=== ROIaaS Phase Completion Check ===[/bold cyan]")
+        self.console.print("\n[bold cyan]=== ROIaaS Phase Completion Check (6 Phases) ===[/bold cyan]")
 
         # Check all phases in parallel
         results = await asyncio.gather(
@@ -404,6 +487,7 @@ class PhaseCompletionDetector:
             self.check_phase_3_payment_webhook(),
             self.check_phase_4_usage_metering(),
             self.check_phase_5_analytics_dashboard(),
+            self.check_phase_6_terminal_validation(),
             return_exceptions=False,
         )
 

@@ -15,15 +15,11 @@
  */
 
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import {
-  TradeMonitorService,
-  getGlobalTradeMonitor,
-  type TradeMetrics,
-} from '../../monitoring/trade-monitor-service';
+import { getGlobalTradeMonitor } from '../../monitoring/trade-monitor-service';
 import { AnomalyDetector, type AnomalyEvent } from '../../monitoring/anomaly-detector';
-import { raasAuthMiddleware, getTenantId, isAuthenticated, type AuthContext } from '../../lib/raas-auth-middleware';
+import { raasAuthMiddleware, getTenantId } from '../../lib/raas-auth-middleware';
 import { RaasTier } from '../../lib/raas-auth-middleware';
-import { MonitoringTier } from '../../monitoring/anomaly-detector';
+import { monitoringRoutesExtension } from './monitoring-routes-extension';
 
 // Augment FastifyInstance with auth decorators from raasAuthMiddleware
 declare module 'fastify' {
@@ -350,6 +346,9 @@ export async function monitoringRoutes(fastify: FastifyInstance): Promise<void> 
       timestamp: new Date().toISOString(),
     });
   });
+
+  // Register Phase 7.5 extension routes
+  void fastify.register(monitoringRoutesExtension);
 }
 
 /**
