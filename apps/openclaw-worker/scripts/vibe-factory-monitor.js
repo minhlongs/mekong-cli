@@ -431,6 +431,7 @@ async function checkAllPanes() {
             if (usedG >= 14) { // > 14GB of 16GB
                 log(`🚨 RAM CRITICAL: ${usedG}GB used. Force compacting IDLE panes...`);
                 for (const p of PANES) {
+                    if (p.idx === 0) continue; // P0 = Chủ Tịch pane, SKIP auto-compact
                     const out = tmuxCapture(p.idx, 5);
                     if (out.includes('❯') && !out.includes('Cooking')) {
                         tmuxSendKeys(p.idx, 'Escape');
@@ -442,6 +443,11 @@ async function checkAllPanes() {
     } catch (e) { }
 
     for (const pane of PANES) {
+        // P0 = Chủ Tịch pane — SKIP auto-inject/compact, chỉ Chủ Tịch ra lệnh trực tiếp
+        if (pane.idx === 0) {
+            log(`P0: 👑 CHỦ TỊCH PANE — SKIP auto-inject`);
+            continue;
+        }
         // 🧠 DYNAMIC PROJECT DETECTION — override static config with real tmux path
         const realProject = detectRealProject(pane.idx);
         if (realProject && realProject.project !== pane.project) {
