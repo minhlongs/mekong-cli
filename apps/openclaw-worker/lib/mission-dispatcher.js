@@ -50,6 +50,15 @@ try {
   log(`WARN: mission-complexity-classifier not found: ${e.message}`);
 }
 
+// 🐉 105-Hands Specialist Registry — Safe import
+let matchRole = null;
+try {
+  const handsRegistry = require('./hands-registry');
+  matchRole = handsRegistry.matchRole;
+} catch (e) {
+  log(`WARN: hands-registry not found: ${e.message}`);
+}
+
 let getTopLessons = () => '';
 try {
   const pmr = require('./post-mortem-reflector');
@@ -341,34 +350,50 @@ function buildPrompt(taskContent, projectDir = null) {
   const intent = detectIntent(safe);
   const routingLog = (msg) => log(`[HYBRID ROUTING] ${isPro ? '' : '⚠️ FALLBACK: '}${msg}`);
 
+  // 🐉 105-HANDS ROLE INJECTION: Gắn context chuyên gia vào task (chỉ khi không có explicit command)
+  let roleInjectedText = safe;
+  if (matchRole) {
+    try {
+      const { role, score, fallback } = matchRole(safe, intent);
+      if (!fallback && role && role.systemPrompt) {
+        log(`🐉 [HANDS MATCH] ${role.displayName} (score:${score})`);
+        // Prepend role context vào task text để CC CLI hiểu ngữ cảnh chuyên gia
+        roleInjectedText = `[ROLE: ${role.displayName}] ${role.systemPrompt} | Nhiệm vụ: ${safe}`;
+      }
+    } catch (e) {
+      // Không để lỗi hands-registry phá vỡ routing chính
+      log(`WARN: hands matchRole error: ${e.message}`);
+    }
+  }
+
   // 1. CI Intent
   if (lowerSafe.includes('ci/cd') || lowerSafe.includes('pipeline') || lowerSafe.includes('build fail')) {
     routingLog(`CI/CD detected -> Routing to ${isPro ? 'Claude Pro (/plan:ci)' : '9Router API (/plan:ci)'}`);
-    return formatCmd('/plan:ci', safe);
+    return formatCmd('/plan:ci', roleInjectedText);
   }
 
   // 2. BOOTSTRAP Intent
   if (lowerSafe.includes('new project') || lowerSafe.includes('bootstrap') || lowerSafe.includes('khoi tao')) {
     routingLog(`Bootstrap detected -> Routing to ${isPro ? 'Claude Pro (/bootstrap)' : '9Router API (/bootstrap)'}`);
-    return formatCmd('/bootstrap', safe, isHanBangMode ? '--auto' : '--parallel --auto');
+    return formatCmd('/bootstrap', roleInjectedText, isHanBangMode ? '--auto' : '--parallel --auto');
   }
 
   // 3. TEST Intent
   if (lowerSafe.includes('test') || lowerSafe.includes('kiem thu')) {
     routingLog(`Testing task detected -> Routing to 9Router(/test)`);
-    return formatCmd('/test', safe);
+    return formatCmd('/test', roleInjectedText);
   }
 
   // MULTI_FIX: parallel bug fixing (2+ bug/error keywords detected)
   if (intent === 'MULTI_FIX') {
     routingLog(`Multi - bug detected -> Routing to 9Router(/cook --parallel)`);
-    return formatCmd('/cook', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ' PHẢI dùng đa luồng 10+ subagents.'), isHanBangMode ? '--auto' : '--parallel --auto');
+    return formatCmd('/cook', roleInjectedText + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ' PHẢI dùng đa luồng 10+ subagents.'), isHanBangMode ? '--auto' : '--parallel --auto');
   }
 
   // STRATEGIC: large-scale architecture/redesign → deep parallel planning
   if (intent === 'STRATEGIC') {
     routingLog(`Strategic mission detected -> Routing to ${isPro ? 'Claude Pro' : '9Router API'} (${isHanBangMode ? '/plan:hard' : '/plan:parallel'})`);
-    return formatCmd(isHanBangMode ? '/plan:hard' : '/plan:parallel', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Downgraded to /plan:hard]' : ''));
+    return formatCmd(isHanBangMode ? '/plan:hard' : '/plan:parallel', roleInjectedText + (isHanBangMode ? ' [HÀN BĂNG MODE: Downgraded to /plan:hard]' : ''));
   }
 
   if (isComplexRawMission(lowerSafe)) {
@@ -376,26 +401,26 @@ function buildPrompt(taskContent, projectDir = null) {
 
     routingLog(`Complex raw mission detected -> Routing to Claude Pro for strategic planning`);
 
-    if (intent === 'FIX') return formatCmd('/debug', safe, '--parallel');
-    if (intent === 'PLAN' || intent === 'RESEARCH') return formatCmd('/plan:hard', safe);
-    if (intent === 'REVIEW') return formatCmd('/review', safe, '--parallel');
+    if (intent === 'FIX') return formatCmd('/debug', roleInjectedText, '--parallel');
+    if (intent === 'PLAN' || intent === 'RESEARCH') return formatCmd('/plan:hard', roleInjectedText);
+    if (intent === 'REVIEW') return formatCmd('/review', roleInjectedText, '--parallel');
 
-    return formatCmd('/plan:parallel', safe + '\n\n' + decomposed);
+    return formatCmd('/plan:parallel', roleInjectedText + '\n\n' + decomposed);
   }
 
   if (intent === 'FIX') {
     routingLog(`Fix intent detected -> Routing to 9Router(/debug)`);
-    return formatCmd('/debug', safe, isHanBangMode ? '' : '--parallel');
+    return formatCmd('/debug', roleInjectedText, isHanBangMode ? '' : '--parallel');
   }
 
   if (intent === 'REVIEW') {
     routingLog(`Review intent detected -> Routing to 9Router(/review)`);
-    return formatCmd('/review', safe, isHanBangMode ? '' : '--parallel');
+    return formatCmd('/review', roleInjectedText, isHanBangMode ? '' : '--parallel');
   }
 
   // 🦞 FIX 2026-02-23: PLAN-FIRST — ClaudeKit workflow: /plan:hard → 100x DEEP PIPELINE auto-chains /cook
   routingLog(`Default Planning fallback -> Routing to ${isPro ? 'Claude Pro (/plan:hard)' : '9Router API (/plan:hard)'}`);
-  return formatCmd('/plan:hard', safe + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ''), isHanBangMode ? '' : '--parallel');
+  return formatCmd('/plan:hard', roleInjectedText + (isHanBangMode ? ' [HÀN BĂNG MODE: Minimal agents]' : ''), isHanBangMode ? '' : '--parallel');
 }
 
 const { preemptiveCool } = require('./m1-cooling-daemon');
