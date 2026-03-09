@@ -36,7 +36,8 @@
     "api:serve": "pnpm exec ts-node src/index.ts api:serve",
     "build:worker": "tsc -p tsconfig.worker.json && npm run disk:check",
     "dev:worker": "wrangler dev",
-    "sync-dunning-kv": "ts-node src/jobs/dunning-kv-sync.ts"
+    "sync-dunning-kv": "ts-node src/jobs/dunning-kv-sync.ts",
+    "audit": "pnpm exec ts-node src/audit/index.ts"
   },
   "dependencies": {
     "@agencyos/trading-core": "workspace:*",
