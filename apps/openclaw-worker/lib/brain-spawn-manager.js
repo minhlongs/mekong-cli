@@ -55,13 +55,14 @@ function canRespawn() {
 // --- Claude command generator ---
 
 /**
- * 虛實 — Intent-Aware Command Generator (SINGLE SOURCE OF TRUTH).
- * PRO intent → Opus thật (direct Anthropic API, NO proxy).
- * API intent → Proxy (port 9191, model default by proxy).
+ * 虛實 — DashScope Direct Command Generator (SINGLE SOURCE OF TRUTH).
+ * Model mapping: settings.json env → DashScope Anthropic-compatible API.
+ * NO proxy. CC CLI reads ~/.claude/settings.json for ANTHROPIC_BASE_URL + model aliases.
  */
 function generateClaudeCommand(intent = 'API') {
-  // Binh Pháp: Triệt tiêu mọi proxy! Ép buộc dùng binary chuẩn
-  return `unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL` +
+  // DashScope Direct: giữ nguyên ANTHROPIC_BASE_URL + ANTHROPIC_API_KEY từ settings.json
+  // CHỈ unset CLAUDE_CONFIG_DIR để tránh xung đột config giữa các pane
+  return `unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` +
     ` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
     ` && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`;
 }
@@ -134,35 +135,47 @@ function isShellPrompt(output) {
 // --- Worker routing ---
 
 /**
- * findIdleWorker — STRICT 1P1 Project Routing (Binh Phap Fix 2026-02-28):
- * Chairman Rule: "MỖI P 1 DỰ ÁN TỪ ĐẦU ĐẾN CUỐI"
- *   P0 ← mekong-cli ONLY
- *   P1 ← well ONLY
- *   P2 ← algo-trader (abitrade) ONLY
- * 
- * NO FALLBACK. NO OVERFLOW. NO EXCEPTIONS.
- * Unknown projects → REJECTED (-1)
+ * findIdleWorker — DYNAMIC PANE ROUTING (2026-03-09):
+ * Chairman Rule: "CTO phải nhìn đường dẫn thực tế, không fix cứng"
+ *
+ * Queries tmux for each pane's current working directory.
+ * Matches projectDir against live pane paths.
+ * If a pane is cd'ed into the requested project → route there.
+ * If no pane matches → REJECTED (-1).
+ *
+ * NO HARDCODED MAPPING. The CTO reads reality from tmux.
  */
 function findIdleWorker(sessionName = config.TMUX_SESSION, intent = 'EXECUTION', projectDir = '') {
   const projectName = projectDir ? require('path').basename(projectDir) : '';
 
-  // STRICT 1:1 Mapping — Chairman Decree
+  // Query tmux for live pane→project mapping
+  const { getActivePaneProjects } = require('./brain-tmux-controller');
+  const paneMap = getActivePaneProjects(sessionName);
+
+  // Find the pane that matches the requested project
   let targetPane = -1;
-  if (projectName === 'mekong-cli' || projectDir === config.MEKONG_DIR) {
-    targetPane = 0;
-  } else if (projectName === 'well' || projectName === '84tea') {
-    targetPane = 1;
-  } else if (projectName === 'algo-trader') {
-    targetPane = 2;
+  for (const [idxStr, info] of Object.entries(paneMap)) {
+    const idx = parseInt(idxStr, 10);
+    // Match by project name (basename) or full path
+    if (info.projectName === projectName || info.path === projectDir) {
+      targetPane = idx;
+      break;
+    }
+    // Also match if the pane path CONTAINS the project dir (e.g. monorepo sub-path)
+    if (projectDir && info.path.includes(projectDir)) {
+      targetPane = idx;
+      break;
+    }
   }
 
-  // Unknown project → REJECT (no fallback, no overflow)
+  // Unknown/unmatched project → REJECT (no fallback, no overflow)
   if (targetPane === -1) {
-    log(`DISPATCH: ❌ REJECTED unknown project="${projectName}" — only mekong-cli/algo-trader/well allowed`);
+    const discovered = Object.entries(paneMap).map(([k, v]) => `P${k}=${v.projectName}`).join(', ');
+    log(`DISPATCH: ❌ REJECTED project="${projectName}" — not found in live panes [${discovered}]`);
     return -1;
   }
 
-  // 🏭 2026-03-01 Vibe Coding Factory Lock
+  // 🏭 Vibe Coding Factory Lock check
   try {
     const factory = require('./factory-pipeline');
     if (factory.isPaneLocked(targetPane)) {
@@ -175,7 +188,7 @@ function findIdleWorker(sessionName = config.TMUX_SESSION, intent = 'EXECUTION',
 
   // Check if target pane is free
   if (!isWorkerBusy(targetPane)) {
-    log(`DISPATCH: → Worker P${targetPane} (strict 1:1) — project=${projectName}`);
+    log(`DISPATCH: → Worker P${targetPane} (dynamic routing) — project=${projectName}`);
     return targetPane;
   }
 

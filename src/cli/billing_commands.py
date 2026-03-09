@@ -13,17 +13,16 @@ import json
 import logging
 import os
 from datetime import datetime, date
-from decimal import Decimal
-from typing import Optional, List
+from typing import Optional
 from rich.console import Console
 from rich.table import Table
 
 from src.billing.engine import get_engine, BillingResult
-from src.billing.proration import get_calculator, ProrationResult
-from src.billing.idempotency import get_idempotency_manager, BatchResult
+from src.billing.idempotency import get_idempotency_manager
 from src.billing.reconciliation import get_reconciliation_service
 from src.billing.event_emitter import get_emitter
-from src.core.event_bus import get_event_bus, EventType, Event
+from src.core.event_bus import get_event_bus, EventType
+from src.raas.billing_sync import BillingSyncService, SyncConfig, get_service
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -184,7 +183,7 @@ def simulate_billing(
         print_billing_result(result)
 
         console.print(
-            f"\n[ydim]Simulation only — no charges applied[/ydim]"
+            "\n[ydim]Simulation only — no charges applied[/ydim]"
         )
 
     except Exception as e:
@@ -213,7 +212,6 @@ def submit_usage(
         mekong billing submit-usage -l lk_abc -t api_call -v 100
     """
     import asyncio
-    import hashlib
     from datetime import datetime, timezone
 
     console.print("[bold cyan]📤 Submitting Usage for Billing[/bold cyan]\n")
@@ -321,11 +319,11 @@ def submit_usage(
 
         if result.is_duplicate:
             console.print(
-                f"\n[yellow]⚠ Duplicate batch detected (already processed)[/yellow]"
+                "\n[yellow]⚠ Duplicate batch detected (already processed)[/yellow]"
             )
             console.print(f"Billing Record: {result.billing_record_id}")
         elif result.status == "completed":
-            print_success(f"Batch processed successfully")
+            print_success("Batch processed successfully")
             console.print(f"Billing Record ID: [green]{result.billing_record_id}[/green]")
             console.print(f"Total Charge: [green]${result.total_charge}[/green]")
         elif result.status == "failed":
@@ -353,7 +351,7 @@ def trigger_reconciliation(
         mekong billing reconcile -l lk_abc123 --date 2026-03-06
     """
     import asyncio
-    from datetime import date, timedelta
+    from datetime import timedelta
 
     console.print("[bold cyan]🔍 Running Reconciliation Audit[/bold cyan]\n")
 
@@ -596,7 +594,6 @@ def billing_sync(
         mekong billing sync --dry-run
         mekong billing sync --force --limit 50
     """
-    from src.raas.billing_sync import get_service, SyncConfig
 
     console.print("[bold cyan]🔄 Billing Sync - RaaS Gateway[/bold cyan]\n")
 
@@ -618,7 +615,7 @@ def billing_sync(
         )
         raise SystemExit(1)
 
-    console.print(f"Gateway: [cyan]https://raas.agencyos.network/v2/usage[/cyan]")
+    console.print("Gateway: [cyan]https://raas.agencyos.network/v2/usage[/cyan]")
     console.print(f"API Key: [cyan]mk_***{api_key[-4:] if len(api_key) > 4 else api_key}[/cyan]")
     console.print()
 
@@ -674,7 +671,6 @@ def billing_sync_status() -> None:
     - Last sync timestamp
     - Recent sync history
     """
-    from src.raas.billing_sync import get_service
 
     console.print("[bold cyan]📊 Billing Sync Status[/bold cyan]\n")
 

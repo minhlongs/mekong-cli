@@ -5,6 +5,7 @@ Secure auto-update mechanism with SHA256+GPG verification,
 RaaS entitlement gating, and usage metering.
 """
 
+import os
 import subprocess
 import typer
 from rich.console import Console
@@ -158,11 +159,82 @@ def rollback() -> None:
 
     Only available if last update was successful.
     """
-    console.print("[yellow]Rollback functionality coming soon...[/yellow]")
-    console.print("\nFor now, please reinstall the previous version manually:")
-    console.print("  [cyan]pip install mekong-cli==<version>[/cyan]")
+    from src.cli.auto_updater import get_updater
 
-    raise typer.Exit(0)
+    updater = get_updater()
+
+    console.print("[bold]Rolling back to previous version...[/bold]")
+    result = updater.rollback()
+
+    if result:
+        console.print("[bold green]✓ Rollback successful![/bold green]")
+    else:
+        console.print("[bold red]✗ Rollback failed[/bold red]")
+        console.print("[dim]No previous version available or rollback not supported[/dim]")
+        console.print("\nFor manual rollback:")
+        console.print("  [cyan]pip install mekong-cli==<version>[/cyan]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def status() -> None:
+    """
+    Show current update status.
+
+    Displays version, cache state, and critical update flags.
+    """
+    from src.cli.update_checker import get_update_checker
+    from src.cli.auto_updater import get_updater
+
+    checker = get_update_checker()
+    updater = get_updater()
+
+    current_version = updater.get_current_version()
+
+    table = Table(title="Update Status")
+    table.add_column("Property", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("Current Version", current_version)
+    table.add_row(
+        "Auto-Update Check",
+        "Enabled" if not os.getenv("MEKONG_NO_UPDATE_CHECK") else "Disabled (env var set)",
+    )
+
+    # Check cache status
+    cache_status = checker.get_cache_status()
+    table.add_row(
+        "Last Check",
+        cache_status.get("checked_at", "Never") if cache_status.get("checked_at") != "0001-01-01T00:00:00+00:00" else "Never",
+    )
+    table.add_row(
+        "Cache Status",
+        "[red]Expired[/red]" if cache_status.get("is_expired") else "[green]Valid[/green]",
+    )
+
+    # Check for critical updates
+    critical_update = checker.check_critical_update()
+    if critical_update:
+        table.add_row(
+            "Critical Update",
+            f"[bold red]{critical_update.latest_version} (REQUIRED)[/bold red]",
+        )
+        table.add_row("Action Required", "[bold red]Run 'mekong update install' immediately[/bold red]")
+    else:
+        table.add_row("Critical Update", "[green]None[/green]")
+
+    # Check for regular updates
+    update_available = cache_status.get("update_available", False)
+    if update_available and not critical_update:
+        table.add_row(
+            "Update Available",
+            f"[yellow]{cache_status.get('latest_version', 'unknown')}[/yellow]",
+        )
+        table.add_row("Action", "[yellow]Run 'mekong update install'[/yellow]")
+    else:
+        table.add_row("Update Available", "[green]No[/green]")
+
+    console.print(table)
 
 
 @app.command()

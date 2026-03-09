@@ -92,7 +92,7 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride, complexi
   // ══════════════════════════════════════════════════════════════
 
   const workerIdx = findIdleWorker(TMUX_SESSION, intent, projectDir);
-  // P0 = mekong-cli, P1 = algo-trader, P2 = well (via sticky routing).
+  // P0 = mekong-cli, P1 = algo-trader, P2 = sophia-ai-factory, P3 = well
   // If target pane is busy, it returns -1 to wait in queue.
   if (workerIdx === -1) {
     log(`MISSION BLOCKED: Worker busy — refusing dispatch`);
@@ -106,11 +106,13 @@ async function runMission(prompt, projectDir, timeoutMs, modelOverride, complexi
   // will REJECT any mission that tries to run wrong project on wrong pane.
   // ══════════════════════════════════════════════════════════════
   const _projName = projectDir ? require('path').basename(projectDir) : '';
-  const PANE_PROJECT_MAP = { 0: ['mekong-cli'], 1: ['well'], 2: ['algo-trader'], 3: ['apex-os'] };
-  const allowedProjects = PANE_PROJECT_MAP[workerIdx] || [];
+  // Dynamic HARD GUARD: query tmux pane's actual project (2026-03-09)
+  const { getActivePaneProjects } = require('./brain-tmux-controller');
+  const livePaneMap = getActivePaneProjects(TMUX_SESSION);
+  const paneInfo = livePaneMap[workerIdx];
   const isMekongRoot = projectDir === config.MEKONG_DIR;
-  if (!isMekongRoot && _projName && !allowedProjects.includes(_projName)) {
-    log(`🔒 HARD GUARD BLOCK: P${workerIdx} REJECTED project="${_projName}" — only [${allowedProjects.join(',')}] allowed!`);
+  if (!isMekongRoot && _projName && paneInfo && paneInfo.projectName !== _projName && !paneInfo.path.includes(_projName)) {
+    log(`🔒 HARD GUARD BLOCK: P${workerIdx} has project="${paneInfo.projectName}" but mission wants "${_projName}"`);
     return { success: false, result: `hard_guard_rejected_${_projName}_on_P${workerIdx}`, elapsed: 0 };
   }
   // ══════════════════════════════════════════════════════════════

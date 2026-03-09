@@ -12,27 +12,27 @@
 'use strict';
 
 const { execSync } = require('child_process');
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
 
 // ── Modules ───────────────────────────────────────────────────
-const { detectPaneState }    = require('../lib/cto-pane-state-detector');
+const { detectPaneState } = require('../lib/cto-pane-state-detector');
 const { tmuxCapture, detectRealProject, respawnPane, tmuxSendBuffer, tmuxSendKeys } = require('../lib/cto-tmux-helpers');
 const { trackRunning, trackCompleted } = require('../lib/cto-progress-tracker');
-const { resetEscalation, startEscalationTimer }   = require('../lib/cto-escalation');
-const { printDashboard }     = require('../lib/cto-dashboard-logger');
-const { handlePane }         = require('../lib/cto-pane-handler');
+const { resetEscalation, startEscalationTimer } = require('../lib/cto-escalation');
+const { printDashboard } = require('../lib/cto-dashboard-logger');
+const { handlePane } = require('../lib/cto-pane-handler');
 
 // ── Config ────────────────────────────────────────────────────
 const cfg = require('../config.js');
-const SESSION           = `${cfg.TMUX_SESSION}:0`;
-const LOG_FILE          = cfg.LOG_FILE;
+const SESSION = `${cfg.TMUX_SESSION}:0`;
+const LOG_FILE = cfg.LOG_FILE;
 const CHECK_INTERVAL_MS = Number(process.env.VIBE_INTERVAL) || 30_000;
-const FALLBACK_MODEL    = cfg.FALLBACK_MODEL_NAME;
+const FALLBACK_MODEL = cfg.FALLBACK_MODEL_NAME;
 
 // ── Logging ───────────────────────────────────────────────────
 function log(msg) {
-    const ts   = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
     const line = `[${ts}] [VIBE-FACTORY] ${msg}`;
     try { fs.appendFileSync(LOG_FILE, line + '\n'); } catch { }
 }
@@ -41,14 +41,12 @@ function log(msg) {
 function buildPanesConfig() {
     const H = process.env.HOME;
     const staticPanes = [
-        { idx: 0, project: 'mekong-cli',       dir: path.join(H, 'mekong-cli'),                        focus: 'Core packages, vibe SDK, scripts, infra' },
-        { idx: 1, project: 'sophia-ai-factory', dir: path.join(H, 'mekong-cli/apps/sophia-ai-factory'), focus: 'Sophia AI Video Factory' },
-        { idx: 2, project: 'well',              dir: path.join(H, 'mekong-cli/apps/well'),              focus: 'RaaS platform, i18n, Supabase, PayOS' },
-        { idx: 3, project: 'algo-trader',       dir: path.join(H, 'mekong-cli/apps/algo-trader'),       focus: 'Cross-exchange arbitrage engine' },
-        { idx: 4, project: 'strategic',         dir: path.join(H, 'mekong-cli'),                        focus: 'OPUS 4.6 STRATEGIC', isOpus: true },
+        { idx: 0, project: 'openclaw-worker', dir: path.join(H, 'mekong-cli/apps/openclaw-worker'), focus: 'CTO Task Execution' },
+        { idx: 1, project: 'well', dir: path.join(H, 'mekong-cli/apps/well'), focus: 'RaaS platform, i18n, Supabase, PayOS' },
+        { idx: 2, project: 'algo-trader', dir: path.join(H, 'mekong-cli/apps/algo-trader'), focus: 'Cross-exchange arbitrage engine' },
     ];
     try {
-        const lines   = execSync(`tmux list-panes -t ${SESSION} -F "#{pane_index}" 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
+        const lines = execSync(`tmux list-panes -t ${SESSION} -F "#{pane_index}" 2>/dev/null`, { encoding: 'utf-8' }).trim().split('\n');
         const validIdxs = new Set(lines.map(Number));
         return staticPanes.filter(p => validIdxs.has(p.idx));
     } catch {
@@ -58,9 +56,9 @@ function buildPanesConfig() {
 const PANES = buildPanesConfig();
 
 // ── In-process state ──────────────────────────────────────────
-const paneProgress  = {}; // paneIdx → { task, injectedAt, completed }
+const paneProgress = {}; // paneIdx → { task, injectedAt, completed }
 const lastInjection = {}; // paneIdx → { ts, type }
-const COOLDOWN_MS   = 300_000;
+const COOLDOWN_MS = 300_000;
 const COMPLETION_RE = /(?:Cooked|Worked|Crunched|Sautéed|Choreographed|Cogitated)\s+for\s+\d/i;
 
 function isPaneTaskComplete(paneIdx, output) {
@@ -104,16 +102,16 @@ function recordInjection(paneIdx, taskCmd) {
 }
 
 // ── Bound tmux helpers ────────────────────────────────────────
-const capture  = (idx, lines) => tmuxCapture(SESSION, idx, lines);
-const sendBuf  = (idx, text)  => tmuxSendBuffer(SESSION, idx, text, log);
-const sendKeys = (idx, keys)  => tmuxSendKeys(SESSION, idx, keys);
-const respawn  = (idx, dir, flags) => respawnPane(SESSION, idx, dir, flags, PANES.find(p => p.idx === idx)?.isOpus, log);
-const realProj = (idx)        => detectRealProject(SESSION, idx);
+const capture = (idx, lines) => tmuxCapture(SESSION, idx, lines);
+const sendBuf = (idx, text) => tmuxSendBuffer(SESSION, idx, text, log);
+const sendKeys = (idx, keys) => tmuxSendKeys(SESSION, idx, keys);
+const respawn = (idx, dir, flags) => respawnPane(SESSION, idx, dir, flags, PANES.find(p => p.idx === idx)?.isOpus, log);
+const realProj = (idx) => detectRealProject(SESSION, idx);
 
 // ── Shared handler context ────────────────────────────────────
 const handlerCtx = {
-    get session()      { return SESSION; },
-    get fallbackModel(){ return FALLBACK_MODEL; },
+    get session() { return SESSION; },
+    get fallbackModel() { return FALLBACK_MODEL; },
     lastInjection, paneProgress, log,
     capture, sendBuf, sendKeys, respawn,
     isPaneTaskComplete, recordTaskInjected, recordTaskCompleted,
@@ -132,7 +130,7 @@ async function checkAllPanes() {
             for (const file of intakeFiles) {
                 log(`INTAKE: ${file}`);
                 try {
-                    const filePath   = path.join(tasksDir, file);
+                    const filePath = path.join(tasksDir, file);
                     const intakeData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
                     if (!global.bootstrapProject) global.bootstrapProject = require('../lib/project-bootstrapper').bootstrapProject;
                     const result = global.bootstrapProject(intakeData);
@@ -158,7 +156,7 @@ async function checkAllPanes() {
 
     // 3. RAM guard — emergency compact idle panes when RAM critical
     try {
-        const memInfo   = execSync('top -l 1 -s 0 | grep PhysMem', { encoding: 'utf-8', timeout: 5000 });
+        const memInfo = execSync('top -l 1 -s 0 | grep PhysMem', { encoding: 'utf-8', timeout: 5000 });
         const usedMatch = memInfo.match(/(\d+)G used/);
         if (usedMatch && parseInt(usedMatch[1]) >= 14) {
             log(`RAM CRITICAL: ${usedMatch[1]}GB — compacting idle panes`);
@@ -182,11 +180,11 @@ async function checkAllPanes() {
         if (real && real.project !== pane.project) {
             log(`P${pane.idx}: PROJECT SYNC: ${pane.project} → ${real.project}`);
             pane.project = real.project;
-            pane.dir     = real.dir;
+            pane.dir = real.dir;
         }
 
         const output = capture(pane.idx);
-        const state  = detectPaneState(output);
+        const state = detectPaneState(output);
         await handlePane(pane, output, state, handlerCtx);
     }
 
@@ -211,5 +209,5 @@ log('CTO: NO LLM calls — regex + pool + smart detection');
 checkAllPanes();
 setInterval(checkAllPanes, CHECK_INTERVAL_MS);
 
-process.on('SIGINT',  () => { log('VIBE FACTORY stopped'); process.exit(0); });
+process.on('SIGINT', () => { log('VIBE FACTORY stopped'); process.exit(0); });
 process.on('SIGTERM', () => { log('VIBE FACTORY stopped'); process.exit(0); });

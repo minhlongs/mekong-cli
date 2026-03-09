@@ -88,6 +88,7 @@ class TelemetryReporter:
         payload_size: int,
         error: Optional[str] = None,
         tenant_id: Optional[str] = None,
+        gateway_url: Optional[str] = None,
     ) -> None:
         """
         Record API call usage.
@@ -99,6 +100,7 @@ class TelemetryReporter:
             payload_size: Request payload size in bytes
             error: Optional error message
             tenant_id: Optional tenant ID for attribution
+            gateway_url: Optional gateway URL for attribution
         """
         record = UsageRecord(
             endpoint=endpoint,

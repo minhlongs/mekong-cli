@@ -144,6 +144,43 @@ async function waitForPrompt(timeoutMs = 120000, workerIdx = 0, sessionName = TM
   return false;
 }
 
+/**
+ * 🎯 DYNAMIC PANE ROUTING — Live project discovery from tmux panes.
+ * Queries tmux for each pane's current working directory, extracts project name.
+ * Returns: { 0: { path: '/path/to/mekong-cli', projectName: 'mekong-cli' }, ... }
+ *
+ * This is the SINGLE SOURCE OF TRUTH for pane→project mapping.
+ * No more hardcoded PANE_PROJECT_MAP. The CTO reads reality.
+ */
+function getActivePaneProjects(sessionName = config.TMUX_SESSION) {
+  const paneMap = {};
+  try {
+    const raw = execSync(
+      `tmux list-panes -t ${sessionName}:0 -F "#{pane_index}:#{pane_current_path}" 2>/dev/null`,
+      { encoding: 'utf-8', timeout: 5000 }
+    ).trim();
+
+    if (!raw) return paneMap;
+
+    for (const line of raw.split('\n')) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      const idx = parseInt(line.slice(0, colonIdx), 10);
+      const panePath = line.slice(colonIdx + 1).trim();
+      if (isNaN(idx) || !panePath) continue;
+
+      // Extract project name = last segment of the path
+      const projectName = require('path').basename(panePath);
+      paneMap[idx] = { path: panePath, projectName };
+    }
+
+    log(`[DYNAMIC ROUTING] Discovered ${Object.keys(paneMap).length} panes: ${Object.entries(paneMap).map(([k, v]) => `P${k}=${v.projectName}`).join(', ')}`);
+  } catch (e) {
+    log(`[DYNAMIC ROUTING] Error querying tmux panes: ${e.message}`);
+  }
+  return paneMap;
+}
+
 module.exports = {
   TMUX_SESSION_PRO,
   TMUX_SESSION_API,
@@ -157,4 +194,5 @@ module.exports = {
   sendEnter,
   sendCtrlC,
   waitForPrompt,
+  getActivePaneProjects,
 };

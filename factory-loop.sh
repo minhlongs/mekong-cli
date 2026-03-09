@@ -88,7 +88,7 @@ while true; do
           3) DIR="/Users/macbookprom1/mekong-cli/apps/well" ;;
         esac
         echo "💀 [P${i}] DEAD — respawning..."
-        tmux respawn-pane -k -t "tom_hum:0.${i}" "bash -c 'cd $DIR && export CLAUDE_PROJECT_DIR=$DIR && unset CLAUDE_CONFIG_DIR && unset ANTHROPIC_API_KEY && unset ANTHROPIC_BASE_URL && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions'"
+        tmux respawn-pane -k -t "tom_hum:0.${i}" "bash -c 'cd $DIR && export CLAUDE_PROJECT_DIR=$DIR && unset CLAUDE_CONFIG_DIR && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions'"
         continue
       fi
 
@@ -103,7 +103,7 @@ while true; do
           2) DIR="/Users/macbookprom1/mekong-cli/apps/sophia-ai-factory" ;;
           3) DIR="/Users/macbookprom1/mekong-cli/apps/well" ;;
         esac
-        tmux send-keys -t "tom_hum:0.${i}" "cd $DIR && export CLAUDE_PROJECT_DIR=$DIR && unset ANTHROPIC_BASE_URL && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions --continue" Enter
+        tmux send-keys -t "tom_hum:0.${i}" "cd $DIR && export CLAUDE_PROJECT_DIR=$DIR && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions --continue" Enter
         sleep 10
         continue
       fi
@@ -153,7 +153,9 @@ while true; do
           advance_phase "$PROJECT"
           sleep 5
         else
-          echo "📝 [P${i}] Has pending input — SKIP"
+          echo "📝 [P${i}] Has pending input — submitting it..."
+          tmux send-keys -t "tom_hum:0.${i}" Enter
+          sleep 3
         fi
       fi
     done

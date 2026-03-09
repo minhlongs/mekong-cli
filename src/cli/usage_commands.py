@@ -5,6 +5,7 @@ Usage metering and reporting commands.
 
 Commands:
   mekong usage show      — Show current period usage
+  mekong usage report    — Comprehensive usage report with entitlements
   mekong usage sync      — Manually sync local metrics to RaaS Gateway
   mekong usage overage   — Calculate overage charges
   mekong usage export    — Export usage to CSV/JSON
@@ -17,7 +18,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import json
 
@@ -259,6 +260,346 @@ def _display_local_usage(license_key: str, period: str, verbose: bool) -> None:
                 f"{quota_pct:.1f}% of monthly limit used.",
                 title="Quota Warning",
                 border_style="yellow",
+            )
+        )
+
+
+@app.command("report")
+def report_usage(
+    license_key: Optional[str] = typer.Option(
+        None,
+        "--key",
+        "-k",
+        help="License key (defaults to RAAS_LICENSE_KEY env)",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Show detailed breakdown",
+    ),
+) -> None:
+    """
+    📊 Comprehensive usage report with entitlements.
+
+    Displays total requests, rate limit status, billing cycle details,
+    and tier information from RaaS Gateway.
+
+    Examples:
+        mekong usage report
+        mekong usage report -k mk_abc123
+        mekong usage report -v
+    """
+    import os
+    import requests
+    from src.core.gateway_client import GatewayClient
+    from src.core.raas_auth import get_auth_client
+
+    console.print("[bold cyan]📊 Usage Report[/bold cyan]\n")
+
+    # Resolve license key
+    if not license_key:
+        license_key = os.getenv("RAAS_LICENSE_KEY")
+
+    if not license_key:
+        auth_client = get_auth_client()
+        session = auth_client.get_session()
+        if session.authenticated and session.tenant:
+            license_key = session.tenant.license_key
+
+    if not license_key:
+        console.print("[yellow]No license key provided.[/yellow]")
+        console.print("Set RAAS_LICENSE_KEY env var or use [bold]-k[/bold] flag.\n")
+        return
+
+    # Mask display
+    masked_key = f"{license_key[:8]}...{license_key[-4:]}" if len(license_key) > 12 else "(hidden)"
+    console.print(f"License Key: [cyan]{masked_key}[/cyan]\n")
+
+    # Fetch usage and entitlements
+    try:
+        client = GatewayClient()
+        auth_client = get_auth_client()
+        session = auth_client.get_session()
+
+        # Build headers with JWT auth
+        headers = {}
+        if session.authenticated and session.token:
+            headers["Authorization"] = f"Bearer {session.token}"
+
+        # Fetch usage metrics
+        usage_url = f"{client.gateway_url}/v1/usage"
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        start_hour = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        end_hour = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        usage_params = {
+            "start_hour": start_hour.isoformat() + "Z",
+            "end_hour": end_hour.isoformat() + "Z",
+            "limit": 100,
+        }
+
+        usage_response = requests.get(
+            usage_url,
+            headers=headers,
+            params=usage_params,
+            timeout=10,
+        )
+
+        # Fetch entitlements
+        entitlements_url = f"{client.gateway_url}/v1/license/entitlements"
+        entitlements_response = requests.get(
+            entitlements_url,
+            headers=headers,
+            timeout=10,
+        )
+
+        # Parse responses
+        usage_data = usage_response.json() if usage_response.status_code == 200 else None
+        entitlements_data = entitlements_response.json() if entitlements_response.status_code == 200 else None
+
+        # Extract rate limit info from headers
+        rate_limit_remaining = int(usage_response.headers.get("X-RateLimit-Remaining", 0))
+        rate_limit_limit = int(usage_response.headers.get("X-RateLimit-Limit", 0))
+        rate_limit_reset = usage_response.headers.get("X-RateLimit-Reset", "")
+
+        _display_report_table(
+            usage_data=usage_data,
+            entitlements_data=entitlements_data,
+            rate_limit_remaining=rate_limit_remaining,
+            rate_limit_limit=rate_limit_limit,
+            rate_limit_reset=rate_limit_reset,
+            verbose=verbose,
+        )
+
+    except requests.RequestException as e:
+        console.print(f"[dim]Gateway error: {str(e)}[/dim]\n")
+        _display_local_usage(license_key, "current", verbose)
+    except Exception as e:
+        console.print(f"[dim]Error: {str(e)}[/dim]\n")
+        _display_local_usage(license_key, "current", verbose)
+
+
+def _display_report_table(
+    usage_data: Optional[dict],
+    entitlements_data: Optional[dict],
+    rate_limit_remaining: int,
+    rate_limit_limit: int,
+    rate_limit_reset: str,
+    verbose: bool,
+) -> None:
+    """Display comprehensive usage report table."""
+
+    # Extract data with defaults
+    metrics = usage_data.get("metrics", []) if usage_data else []
+    summary = usage_data.get("summary", {}) if usage_data else {}
+    _entitlements = entitlements_data.get("entitlements", {}) if entitlements_data else {}
+    tier_info = entitlements_data.get("tier", {}) if entitlements_data else {}
+
+    # Calculate totals from metrics
+    total_requests = summary.get("total_requests", 0)
+    if not total_requests and metrics:
+        total_requests = sum(m.get("request_count", 0) for m in metrics)
+
+    # Tier and quota info
+    tier_name = tier_info.get("name", "N/A")
+    tier_quota = tier_info.get("quota", 0)
+    quota_used = total_requests
+    quota_remaining = max(0, tier_quota - quota_used)
+    quota_pct = (quota_used / tier_quota * 100) if tier_quota > 0 else 0
+
+    # Determine quota status color
+    if quota_pct >= 95:
+        quota_color = "red"
+        quota_icon = "🚨"
+    elif quota_pct >= 80:
+        quota_color = "yellow"
+        quota_icon = "⚠️"
+    else:
+        quota_color = "green"
+        quota_icon = "✅"
+
+    # Rate limit status
+    _rate_limit_pct = (rate_limit_remaining / rate_limit_limit * 100) if rate_limit_limit > 0 else 0
+    if rate_limit_remaining < 10:
+        rate_color = "red"
+    elif rate_limit_remaining < 50:
+        rate_color = "yellow"
+    else:
+        rate_color = "green"
+
+    # Format reset time
+    reset_display = "N/A"
+    if rate_limit_reset:
+        try:
+            reset_ts = int(rate_limit_reset)
+            reset_dt = datetime.utcfromtimestamp(reset_ts)
+            reset_display = reset_dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+        except (ValueError, TypeError):
+            reset_display = rate_limit_reset
+
+    # Billing cycle info
+    cycle_start = entitlements_data.get("billing_cycle_start") if entitlements_data else None
+    cycle_end = entitlements_data.get("billing_cycle_end") if entitlements_data else None
+
+    if not cycle_start and usage_data:
+        # Infer from usage data period
+        if metrics:
+            first_metric = metrics[0] if metrics else {}
+            cycle_start = first_metric.get("timestamp", "N/A")[:10]
+
+    # Main summary table
+    console.print("\n[bold]📈 Usage Summary[/bold]\n")
+
+    summary_table = Table(show_header=True, header_style="bold cyan")
+    summary_table.add_column("Metric", style="dim", width=25)
+    summary_table.add_column("Value", justify="right", width=20)
+    summary_table.add_column("Details", style="green", width=30)
+
+    summary_table.add_row(
+        "Total Requests",
+        f"[bold]{total_requests:,}[/bold]",
+        f"of {tier_quota:,} quota" if tier_quota else "unlimited",
+    )
+
+    # Quota row with color
+    quota_display = f"[{quota_color}]{quota_icon} {quota_pct:.1f}%[/{quota_color}]"
+    summary_table.add_row(
+        "Quota Used",
+        quota_display,
+        f"{quota_remaining:,} remaining",
+    )
+
+    # Rate limit row
+    rate_display = f"[{rate_color}]{rate_limit_remaining:,}[/{rate_color}]"
+    summary_table.add_row(
+        "Rate Limit",
+        rate_display,
+        f"of {rate_limit_limit:,} (resets: {reset_display})",
+    )
+
+    # Tier row
+    summary_table.add_row(
+        "Tier",
+        f"[bold cyan]{tier_name}[/bold cyan]",
+        tier_info.get("description", ""),
+    )
+
+    console.print(summary_table)
+
+    # Billing cycle panel
+    if cycle_start or cycle_end:
+        console.print("\n[bold]📅 Billing Cycle[/bold]\n")
+
+        cycle_table = Table(show_header=False, box=None)
+        cycle_table.add_column("Label", style="dim")
+        cycle_table.add_column("Value", style="cyan")
+
+        if cycle_start:
+            cycle_table.add_row("Period Start:", str(cycle_start)[:10])
+        if cycle_end:
+            cycle_table.add_row("Period End:", str(cycle_end)[:10])
+
+        console.print(cycle_table)
+
+    # Detailed breakdown if verbose
+    if verbose and metrics:
+        console.print("\n[bold]📋 Detailed Breakdown[/bold]\n")
+
+        detail_table = Table(show_header=True, header_style="bold cyan")
+        detail_table.add_column("Endpoint", style="dim")
+        detail_table.add_column("Method", justify="center")
+        detail_table.add_column("Requests", justify="right")
+        detail_table.add_column("Payload Size", justify="right")
+
+        # Group by endpoint
+        by_endpoint = {}
+        for metric in metrics:
+            endpoint = metric.get("endpoint", "unknown")
+            method = metric.get("method", "N/A")
+            key = f"{endpoint}:{method}"
+
+            if key not in by_endpoint:
+                by_endpoint[key] = {"requests": 0, "payload": 0}
+
+            by_endpoint[key]["requests"] += metric.get("request_count", 1)
+            by_endpoint[key]["payload"] += metric.get("payload_size", 0)
+
+        for key, stats in sorted(by_endpoint.items()):
+            endpoint, method = key.split(":", 1)
+            detail_table.add_row(
+                endpoint,
+                method,
+                f"{stats['requests']:,}",
+                f"{stats['payload']:,} bytes",
+            )
+
+        console.print(detail_table)
+
+    # Warnings and alerts
+    _display_usage_warnings(quota_pct, rate_limit_remaining, rate_limit_limit)
+
+
+def _display_usage_warnings(
+    quota_pct: float,
+    rate_limit_remaining: int,
+    rate_limit_limit: int,
+) -> None:
+    """Display usage warnings if thresholds exceeded."""
+
+    warnings = []
+
+    if quota_pct >= 95:
+        warnings.append(
+            Panel(
+                "[bold red]🚨 Critical: Quota nearly exhausted![/bold red]\n"
+                f"{quota_pct:.1f}% of monthly limit used.\n"
+                "Immediate action required: upgrade tier or reduce usage.",
+                title="Critical Warning",
+                border_style="red",
+            )
+        )
+    elif quota_pct >= 80:
+        warnings.append(
+            Panel(
+                "[bold yellow]⚠️ Warning: High quota usage[/bold yellow]\n"
+                f"{quota_pct:.1f}% of monthly limit used.\n"
+                "Consider monitoring usage closely or upgrading tier.",
+                title="Quota Warning",
+                border_style="yellow",
+            )
+        )
+
+    if rate_limit_limit > 0 and rate_limit_remaining < 10:
+        warnings.append(
+            Panel(
+                "[bold red]🚨 Rate limit nearly exhausted![/bold red]\n"
+                f"Only {rate_limit_remaining} requests remaining.\n"
+                "Further requests may be throttled.",
+                title="Rate Limit Warning",
+                border_style="red",
+            )
+        )
+    elif rate_limit_limit > 0 and rate_limit_remaining < 50:
+        warnings.append(
+            Panel(
+                "[bold yellow]⚠️ Rate limit low[/bold yellow]\n"
+                f"{rate_limit_remaining} requests remaining this hour.",
+                title="Rate Limit Notice",
+                border_style="yellow",
+            )
+        )
+
+    for warning in warnings:
+        console.print(warning)
+
+    if not warnings:
+        console.print(
+            Panel(
+                "[bold green]✅ All systems nominal[/bold green]\n"
+                "Usage within healthy limits.",
+                title="Status",
+                border_style="green",
             )
         )
 

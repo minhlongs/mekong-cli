@@ -215,6 +215,54 @@ class KVStoreClient:
                 "error": str(e),
             }
 
+    def get_usage_state(self) -> dict[str, Any]:
+        """
+        Get usage metering state from KV store.
+
+        Returns:
+            Dict with usage info:
+            - cached_count: number of cached events
+            - last_sync: timestamp of last sync
+            - pending_events: events waiting to be synced
+        """
+        try:
+            response = self.gateway.get(f"{self.KV_ENDPOINT}/usage")
+            return {
+                "cached_count": response.data.get("cached_count", 0),
+                "last_sync": response.data.get("last_sync"),
+                "pending_events": response.data.get("pending_events", 0),
+            }
+        except Exception:
+            return {
+                "cached_count": 0,
+                "last_sync": None,
+                "pending_events": 0,
+            }
+
+    def clear_rate_limit_state(self) -> bool:
+        """
+        Clear rate limit state from KV store.
+
+        Returns:
+            True if clear successful
+        """
+        try:
+            creds = self.auth._load_credentials()
+            token = creds.get("token") or os.getenv("RAAS_LICENSE_KEY")
+
+            response = self.gateway.post(
+                f"{self.KV_ENDPOINT}/clear",
+                json={"license_key": token},
+            )
+
+            # Invalidate local cache
+            self._cache = None
+            self._cache_time = 0.0
+
+            return response.status_code == 200
+        except Exception:
+            return False
+
 
 # Global instance
 _kv_client: Optional[KVStoreClient] = None
