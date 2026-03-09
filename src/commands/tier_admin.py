@@ -370,8 +370,4 @@ def remove_override(
         raise typer.Exit(1)
 
 
-# Import Optional for type hints
-from typing import Optional
-
-
 __all__ = ["app"]

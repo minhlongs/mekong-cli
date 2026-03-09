@@ -27,7 +27,6 @@ from src.cli.binh_phap_commands import app as binh_phap_app
 from src.cli.commands_registry import register_all_commands
 from src.commands.license_commands import app as license_app
 from src.commands.license_renewal import app as renewal_app
-from src.commands.debug_rate_limits import app as debug_rate_limits_app
 from src.commands.compliance import app as compliance_app
 from src.cli.billing_commands import app as billing_app
 from src.cli.roi_commands import app as roi_app
@@ -165,7 +164,6 @@ def _register_legacy_commands() -> None:
     app.add_typer(license_app, name="license", help="License management")
     app.add_typer(license_admin_app, name="license-admin", help="License Admin Dashboard")
     app.add_typer(tier_admin_app, name="tier-admin", help="Tier rate limit configuration")
-    app.add_typer(debug_rate_limits_app, name="debug-rate-limits", help="Debug rate limit issues")
     app.add_typer(renewal_app, name="renewal", help="License renewal flow")
     app.add_typer(compliance_app, name="compliance", help="Compliance reporting & audit export")
     app.add_typer(billing_app, name="billing", help="💰 Billing operations: usage, reconciliation, events")

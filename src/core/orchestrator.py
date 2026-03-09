@@ -8,6 +8,7 @@ Modular implementation with internal submodules.
 
 from __future__ import annotations
 
+import asyncio
 import subprocess
 import time
 import uuid
