@@ -25,6 +25,8 @@
  */
 
 import { LicenseService, LicenseTier, LicenseError, LicenseValidation } from './raas-gate';
+import { raasKVClient } from './raas-gateway-kv-client';
+import { logger } from '../utils/logger';
 
 export interface MiddlewareContext {
   getHeader: (name: string) => string | undefined;
@@ -65,11 +67,26 @@ async function validateLicenseCore(
       return { valid: false, error: { type: 'insufficient_tier', validation, requiredTier } };
     }
 
+    // NEW: Check suspension flag from KV
+    const suspensionCheck = key ? await raasKVClient.isSuspended(key) : { suspended: false };
+    if (suspensionCheck.suspended) {
+      return {
+        valid: false,
+        error: {
+          type: 'suspended',
+          reason: suspensionCheck.reason,
+          suspendedAt: suspensionCheck.suspendedAt,
+        },
+      };
+    }
+
     return { valid: true, validation };
   } catch (error) {
     if (error instanceof LicenseError) {
       return { valid: false, error: { type: 'license_error', error } };
     }
+    // KV error or other unexpected error - log but don't block
+    logger.warn('[RaaS Middleware] License validation error', { error });
     throw error;
   }
 }
@@ -99,6 +116,17 @@ export function createLicenseMiddleware(requiredTier: LicenseTier = LicenseTier.
           requiredTier,
           currentTier: validation?.tier,
         };
+      } else if (error.type === 'suspended') {
+        // NEW: Handle suspended accounts
+        body = {
+          error: 'Account Suspended',
+          message: 'Access suspended due to payment failure',
+          reason: error.reason,
+          suspendedAt: error.suspendedAt,
+          retryUrl: 'https://agencyos.network/billing/restore',
+        };
+        ctx.deny(403, body);
+        return false;
       } else {
         body = {
           error: 'License Error',

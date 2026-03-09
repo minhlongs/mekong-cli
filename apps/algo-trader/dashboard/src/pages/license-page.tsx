@@ -3,9 +3,10 @@
  * Provides UI for managing RaaS licenses, viewing usage analytics, and audit trails.
  */
 import { useState } from 'react';
-import { useLicenses } from '../hooks/use-licenses';
+import { useLicenses, ActivateLicenseResult } from '../hooks/use-licenses';
 import { LicenseListTable } from '../components/license-list-table';
 import { CreateLicenseModal } from '../components/create-license-modal';
+import { ActivateLicenseModal } from '../components/activate-license-modal';
 import { AuditLogViewer } from '../components/audit-log-viewer';
 import { UsageAnalyticsDashboard } from '../components/usage-analytics-dashboard';
 
@@ -28,17 +29,29 @@ function Card({ children }: { children: React.ReactNode }) {
 export function LicensePage() {
   const [activeTab, setActiveTab] = useState<TabType>('licenses');
   const { licenses, loading, error, revokeLicense, deleteLicense, reload } = useLicenses();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [activateModalOpen, setActivateModalOpen] = useState(false);
   const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   function handleCreateLicense() {
-    setModalOpen(true);
+    setCreateModalOpen(true);
   }
 
-  function handleSuccess(generatedKey: string) {
+  function handleActivateLicense() {
+    setActivateModalOpen(true);
+  }
+
+  function handleCreateSuccess(generatedKey: string) {
     setSuccessMessage(`License key generated: ${generatedKey.slice(0, 16)}...`);
-    setModalOpen(false);
+    setCreateModalOpen(false);
+    setTimeout(() => setSuccessMessage(null), 5000);
+    reload();
+  }
+
+  function handleActivateSuccess(result: ActivateLicenseResult) {
+    setSuccessMessage(`License activated: ${result.tier}${result.domain ? ` (${result.domain})` : ''}`);
+    setActivateModalOpen(false);
     setTimeout(() => setSuccessMessage(null), 5000);
     reload();
   }
@@ -63,12 +76,21 @@ export function LicensePage() {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white text-sm font-semibold">License Keys</h3>
-          <button
-            onClick={handleCreateLicense}
-            className="px-4 py-2 bg-accent text-bg-primary text-sm font-semibold rounded hover:bg-accent/90 transition-colors"
-          >
-            Create License
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleActivateLicense}
+              className="px-4 py-2 bg-bg-border text-white text-sm font-semibold rounded hover:bg-white/10 transition-colors"
+              title="Activate a license key you already own"
+            >
+              Activate License
+            </button>
+            <button
+              onClick={handleCreateLicense}
+              className="px-4 py-2 bg-accent text-bg-primary text-sm font-semibold rounded hover:bg-accent/90 transition-colors"
+            >
+              Create License
+            </button>
+          </div>
         </div>
 
         {/* Success Toast */}
@@ -169,9 +191,16 @@ export function LicensePage() {
 
       {/* Create License Modal */}
       <CreateLicenseModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSuccess={handleSuccess}
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
+      {/* Activate License Modal */}
+      <ActivateLicenseModal
+        open={activateModalOpen}
+        onClose={() => setActivateModalOpen(false)}
+        onSuccess={handleActivateSuccess}
       />
     </div>
   );

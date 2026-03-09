@@ -33,8 +33,12 @@ import { buildStripeWebhookRoute } from './routes/webhooks/stripe-webhook';
 import { subscriptionRoutes } from './routes/subscription';
 import { licenseManagementRoutes } from './routes/license-management-routes';
 import { registerOverageRoutes } from './routes/overage-routes';
+import { analyticsRoutes } from './routes/analytics-routes';
+import { registerUsageEventsRoutes } from './routes/usage-events-routes';
 import { cacheStatsRoutes } from './routes/cache-stats-routes';
 import { registerUsageRoutes } from './routes/internal/usage-routes';
+import { buildPhase6Routes } from './routes/phase6-ghost-routes';
+import { usageTrackingPlugin } from './middleware/usage-tracking-middleware';
 import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
 import { hardLimitsPlugin } from './middleware/hard-limits-middleware';
 
@@ -128,14 +132,23 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   // Overage billing routes
   void server.register(registerOverageRoutes);
 
+  // Analytics routes (usage metrics)
+  void server.register(analyticsRoutes);
+
+  // Usage events routes (new - Phase 4)
+  void server.register(registerUsageEventsRoutes);
+
   // Internal usage routes for billing sync
   void server.register(registerUsageRoutes);
+
+  // Usage tracking middleware (auto-tracks API calls)
+  void server.register(usageTrackingPlugin);
 
   // Cache stats routes (for dashboard monitoring)
   void server.register(cacheStatsRoutes);
 
-  // Internal usage routes (for billing sync and admin dashboards)
-  void server.register(registerUsageRoutes);
+  // Phase 6 Ghost Protocol routes (ENTERPRISE-only)
+  void server.register(buildPhase6Routes());
 
   // Hard limits middleware (quota enforcement)
   void server.register(hardLimitsPlugin);

@@ -7,17 +7,20 @@
  * - Auto-flush every 30s OR 100 events
  * - Graceful shutdown hook to flush on exit
  * - Per-license, per-month aggregation
+ * - Cloudflare KV sync for RaaS Gateway compatibility
  *
  * Usage:
  * ```typescript
  * const tracker = UsageTrackerService.getInstance();
  * await tracker.track('lic_abc123', 'api_call', 1, { endpoint: '/v1/scan' });
+ * await tracker.trackWithKVSync('lic_abc123', 'api_call', 1, { endpoint: '/v1/scan' });
  * await tracker.flush(); // Force flush
  * const usage = await tracker.getUsage('lic_abc123', '2026-03');
  * ```
  */
 
-import { PolarAuditLogger } from '../billing/polar-audit-logger';
+import { raasKVClient } from '../lib/raas-gateway-kv-client';
+import { logger } from '../utils/logger';
 
 /**
  * Usage event structure
@@ -49,10 +52,35 @@ interface BufferEntry {
   addedAt: number; // epoch ms
 }
 
+/**
+ * Billable event types for usage metering
+ */
+export enum BillableEventType {
+  API_CALL = 'api_call',
+  BACKTEST_RUN = 'backtest_run',
+  TRADE_EXECUTION = 'trade_execution',
+  STRATEGY_EXECUTION = 'strategy_execution',
+  ML_INFERENCE = 'ml_inference',
+  COMPUTE_MINUTE = 'compute_minute',
+  WEBSOCKET_MESSAGE = 'websocket_message',
+}
+
+/**
+ * Event pricing per unit (USD)
+ */
+export const EVENT_PRICING: Record<BillableEventType, number> = {
+  [BillableEventType.API_CALL]: 0.001,        // Per call
+  [BillableEventType.BACKTEST_RUN]: 0.10,     // Per run
+  [BillableEventType.TRADE_EXECUTION]: 0.02,  // Per trade
+  [BillableEventType.STRATEGY_EXECUTION]: 0.05, // Per execution
+  [BillableEventType.ML_INFERENCE]: 0.01,     // Per inference
+  [BillableEventType.COMPUTE_MINUTE]: 0.05,   // Per minute
+  [BillableEventType.WEBSOCKET_MESSAGE]: 0.0001, // Per message
+};
+
 export class UsageTrackerService {
   private static instance: UsageTrackerService;
   private static shutdownHooksRegistered = false;
-  private auditLogger: PolarAuditLogger;
 
   // In-memory buffer for performance
   private buffer: BufferEntry[] = [];
@@ -66,7 +94,6 @@ export class UsageTrackerService {
   private usageStore = new Map<string, UsageEvent[]>();
 
   private constructor() {
-    this.auditLogger = PolarAuditLogger.getInstance();
     this.startAutoFlush();
     this.registerShutdownHookOnce();
   }
@@ -172,6 +199,104 @@ export class UsageTrackerService {
     if (this.buffer.length >= this.FLUSH_THRESHOLD && !this.isFlushing) {
       await this.flush();
     }
+  }
+
+  /**
+   * Track usage event with KV sync — RaaS Gateway compatible
+   *
+   * Tracks event in memory AND syncs to Cloudflare KV for persistence.
+   * Use this for billable events that need to survive restarts.
+   *
+   * @param licenseKey - License identifier
+   * @param eventType - Event type (e.g., 'api_call', 'backtest_run')
+   * @param units - Number of units consumed (default: 1)
+   * @param metadata - Optional metadata for the event
+   */
+  async trackWithKVSync(
+    licenseKey: string,
+    eventType: string,
+    units: number = 1,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
+    // 1. Track in memory (existing)
+    await this.track(licenseKey, eventType, units, metadata);
+
+    // 2. Sync to KV (new)
+    if (!raasKVClient.isConfigured()) {
+      logger.warn('[UsageTracker] KV not configured, skipping KV sync', { licenseKey, eventType });
+      return;
+    }
+
+    try {
+      const month = this.getMonthKey(new Date().toISOString());
+      const current = await raasKVClient.getCounter(licenseKey, eventType, month);
+      const newValue = (current?.value || 0) + units;
+      await raasKVClient.setCounter(licenseKey, eventType, newValue, month);
+      logger.debug('[UsageTracker] Synced to KV', { licenseKey, eventType, newValue, month });
+    } catch (error) {
+      logger.error('[UsageTracker] KV sync failed', { licenseKey, eventType, error });
+      // Fail gracefully - in-memory tracking still works
+    }
+  }
+
+  /**
+   * Get usage events filtered by time range and event type
+   *
+   * @param licenseKey - License identifier
+   * @param startTime - Start timestamp (ISO 8601)
+   * @param endTime - End timestamp (ISO 8601)
+   * @param eventType - Optional event type filter
+   * @returns Filtered usage events sorted chronologically
+   */
+  async getUsageFiltered(
+    licenseKey: string,
+    startTime?: string,
+    endTime?: string,
+    eventType?: string,
+  ): Promise<UsageEvent[]> {
+    // Ensure any pending events are flushed first
+    if (this.buffer.length > 0 && !this.isFlushing) {
+      await this.flush();
+    }
+
+    const allUsage = await this.getAllUsage(licenseKey);
+    const events = allUsage.flatMap(u => u.events);
+
+    const filtered = events.filter(e => {
+      const ts = new Date(e.timestamp).getTime();
+      if (startTime && ts < new Date(startTime).getTime()) return false;
+      if (endTime && ts > new Date(endTime).getTime()) return false;
+      if (eventType && e.eventType !== eventType) return false;
+      return true;
+    });
+
+    // Sort chronologically
+    return filtered.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }
+
+  /**
+   * Calculate cost estimate for usage
+   *
+   * @param licenseKey - License identifier
+   * @param month - Month in YYYY-MM format
+   * @returns Cost breakdown by event type and total
+   */
+  async getCostEstimate(licenseKey: string, month: string): Promise<{
+    byEventType: Record<string, { units: number; cost: number }>;
+    totalCost: number;
+  }> {
+    const usage = await this.getUsage(licenseKey, month);
+    const byEventType: Record<string, { units: number; cost: number }> = {};
+    let totalCost = 0;
+
+    for (const [eventType, units] of Object.entries(usage.byEventType)) {
+      const pricePerUnit = EVENT_PRICING[eventType as BillableEventType] || 0;
+      const cost = units * pricePerUnit;
+      byEventType[eventType] = { units, cost };
+      totalCost += cost;
+    }
+
+    return { byEventType, totalCost };
   }
 
   /**

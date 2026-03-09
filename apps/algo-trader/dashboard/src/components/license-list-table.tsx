@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import { License, LicenseFilters } from '../hooks/use-licenses';
 
-type SortKey = keyof Pick<License, 'name' | 'key' | 'tier' | 'status' | 'usageCount' | 'createdAt' | 'expiresAt'>;
+type SortKey = keyof Pick<License, 'name' | 'key' | 'domain' | 'tier' | 'status' | 'usageCount' | 'createdAt' | 'expiresAt'>;
 type SortDir = 'asc' | 'desc';
 
 interface LicenseListTableProps {
@@ -43,6 +43,7 @@ function SortIcon({ dir }: { dir: SortDir | null }) {
 const COLUMNS: { key: SortKey; label: string; align?: 'right' | 'center' }[] = [
   { key: 'name', label: 'Name' },
   { key: 'key', label: 'Key' },
+  { key: 'domain', label: 'Domain' },
   { key: 'tier', label: 'Tier', align: 'center' },
   { key: 'status', label: 'Status', align: 'center' },
   { key: 'usageCount', label: 'Usage', align: 'right' },
@@ -205,6 +206,9 @@ export function LicenseListTable({
                 >
                   <td className="px-3 py-3 text-white font-semibold">{license.name}</td>
                   <td className="px-3 py-3 text-muted font-mono text-[10px]">{license.key}</td>
+                  <td className="px-3 py-3 text-center text-muted">
+                    {license.domain || <span className="text-muted/40">—</span>}
+                  </td>
                   <td className="px-3 py-3 text-center">
                     <TierBadge tier={license.tier} />
                   </td>

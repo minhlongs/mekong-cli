@@ -16,6 +16,23 @@ export interface OrderLimitsConfig {
   volumeSpikeThreshold: number;
   /** Lookback period for baseline calculation (hours) */
   baselineLookbackHours: number;
+  /** Maximum allowed leverage (1x = spot only) */
+  maxLeverage?: number;
+}
+
+/** Tier-based leverage caps: FREE=1x, PRO=10x, ENTERPRISE=20x */
+export const TIER_LEVERAGE_CAPS: Record<string, number> = {
+  free: 1,
+  pro: 10,
+  enterprise: 20,
+};
+
+export interface LeverageCheckResult {
+  passed: boolean;
+  rejectedReason?: string;
+  requestedLeverage: number;
+  maxAllowed: number;
+  tier: string;
 }
 
 export interface VolumeRecord {
@@ -295,6 +312,35 @@ export class MaxOrderLimitsChecker {
 
     return checkVolumeSpike(newOrderValue, baselineHistory, this.config.volumeSpikeThreshold);
   }
+}
+
+/**
+ * Check leverage against tier-based caps
+ * Returns rejection if requested leverage exceeds tier maximum
+ */
+export function checkLeverageCap(
+  requestedLeverage: number,
+  tier: string
+): LeverageCheckResult {
+  const normalizedTier = tier.toLowerCase();
+  const maxAllowed = TIER_LEVERAGE_CAPS[normalizedTier] ?? TIER_LEVERAGE_CAPS.free;
+
+  if (requestedLeverage > maxAllowed) {
+    return {
+      passed: false,
+      rejectedReason: `Leverage ${requestedLeverage}x exceeds ${normalizedTier.toUpperCase()} tier maximum of ${maxAllowed}x`,
+      requestedLeverage,
+      maxAllowed,
+      tier: normalizedTier,
+    };
+  }
+
+  return {
+    passed: true,
+    requestedLeverage,
+    maxAllowed,
+    tier: normalizedTier,
+  };
 }
 
 /**

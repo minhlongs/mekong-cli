@@ -71,6 +71,17 @@ export interface OverageConfig {
 }
 
 /**
+ * Usage event structure for RaaS Gateway sync
+ */
+export interface UsageEvent {
+  licenseKey: string;
+  eventType: string;
+  units: number;
+  timestamp: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
  * KV key builder helpers
  */
 export class KVKeyBuilder {
@@ -103,6 +114,20 @@ export class KVKeyBuilder {
    */
   static overageStateKey(licenseKey: string): string {
     return `${this.PREFIX}:overage_state:${licenseKey}`;
+  }
+
+  /**
+   * Build event key: raas:event:{licenseKey}:{timestamp}:{eventType}
+   */
+  static eventKey(licenseKey: string, timestamp: string, eventType: string): string {
+    return `${this.PREFIX}:event:${licenseKey}:${timestamp}:${eventType}`;
+  }
+
+  /**
+   * List event keys for a license in a time range
+   */
+  static eventKeyPrefix(licenseKey: string): string {
+    return `${this.PREFIX}:event:${licenseKey}:`;
   }
 }
 
@@ -241,6 +266,37 @@ export class RaaSGatewayKVClient {
 
     const key = KVKeyBuilder.suspensionKey(licenseKey);
     return this.get<SuspensionState>(key);
+  }
+
+  /**
+   * Check if license is suspended (helper for middleware)
+   * Returns simplified suspension status for quick checks
+   */
+  async isSuspended(licenseKey: string): Promise<{
+    suspended: boolean;
+    reason?: SuspensionState['reason'];
+    suspendedAt?: string;
+  }> {
+    if (!this.isConfigured()) {
+      // KV not configured - assume not suspended (fail-open for local dev)
+      return { suspended: false };
+    }
+
+    try {
+      const state = await this.getSuspension(licenseKey);
+      if (!state || !state.suspended) {
+        return { suspended: false };
+      }
+      return {
+        suspended: true,
+        reason: state.reason,
+        suspendedAt: state.suspendedAt,
+      };
+    } catch (error) {
+      // KV error - log and fail-open (don't block legitimate users)
+      logger.error('[RaaSKV] isSuspended check failed', { licenseKey, error });
+      return { suspended: false };
+    }
   }
 
   /**
@@ -384,6 +440,133 @@ export class RaaSGatewayKVClient {
     } catch (error) {
       logger.error('[RaaSKV] Get failed', { key, error });
       return null;
+    }
+  }
+
+  /**
+   * Push usage event to KV for RaaS Gateway sync
+   *
+   * @param event - Usage event to store
+   * @returns Event key for reference
+   */
+  async pushUsageEvent(event: UsageEvent): Promise<string> {
+    if (!this.isConfigured()) {
+      logger.warn('[RaaSKV] Not configured, skipping pushUsageEvent', { licenseKey: event.licenseKey });
+      return '';
+    }
+
+    try {
+      // Use epoch timestamp for ordering
+      const timestamp = Date.now().toString();
+      const key = KVKeyBuilder.eventKey(event.licenseKey, timestamp, event.eventType);
+      await this.put(key, event);
+      logger.debug('[RaaSKV] Pushed usage event', { key, eventType: event.eventType });
+      return key;
+    } catch (error) {
+      logger.error('[RaaSKV] pushUsageEvent failed', { event, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Stream usage events in chronological order
+   *
+   * Note: Cloudflare KV doesn't support server-side filtering,
+   * so this lists all keys with the license prefix and filters client-side.
+   *
+   * @param licenseKey - License identifier
+   * @param startTime - Start epoch timestamp (default: 0)
+   * @param endTime - End epoch timestamp (default: now)
+   * @returns Usage events sorted chronologically
+   */
+  async streamUsageEvents(
+    licenseKey: string,
+    startTime?: number,
+    endTime?: number
+  ): Promise<UsageEvent[]> {
+    if (!this.isConfigured()) {
+      logger.warn('[RaaSKV] Not configured, skipping streamUsageEvents', { licenseKey });
+      return [];
+    }
+
+    try {
+      // List all keys with the license prefix
+      const prefix = KVKeyBuilder.eventKeyPrefix(licenseKey);
+      const url = `${this.baseUrl}/keys?prefix=${encodeURIComponent(prefix)}&limit=1000`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`KV list keys failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const keys = data.keys || [];
+
+      // Filter and fetch events
+      const events: UsageEvent[] = [];
+      const startTs = startTime || 0;
+      const endTs = endTime || Date.now();
+
+      for (const keyInfo of keys) {
+        // Extract timestamp from key: raas:event:{licenseKey}:{timestamp}:{eventType}
+        const parts = keyInfo.name.split(':');
+        if (parts.length >= 5) {
+          const timestamp = parseInt(parts[3], 10);
+          if (timestamp >= startTs && timestamp <= endTs) {
+            const event = await this.get<UsageEvent>(keyInfo.name);
+            if (event) {
+              events.push(event);
+            }
+          }
+        }
+      }
+
+      // Sort chronologically by timestamp
+      return events.sort((a, b) => {
+        const tsA = new Date(a.timestamp).getTime();
+        const tsB = new Date(b.timestamp).getTime();
+        return tsA - tsB;
+      });
+    } catch (error) {
+      logger.error('[RaaSKV] streamUsageEvents failed', { licenseKey, error });
+      return [];
+    }
+  }
+
+  /**
+   * Get usage events count for monitoring
+   */
+  async getUsageEventsCount(licenseKey: string): Promise<number> {
+    if (!this.isConfigured()) {
+      return 0;
+    }
+
+    try {
+      const prefix = KVKeyBuilder.eventKeyPrefix(licenseKey);
+      const url = `${this.baseUrl}/keys?prefix=${encodeURIComponent(prefix)}&limit=1`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        return 0;
+      }
+
+      const data = await response.json();
+      return data.count || 0;
+    } catch (error) {
+      logger.error('[RaaSKV] getUsageEventsCount failed', { licenseKey, error });
+      return 0;
     }
   }
 }

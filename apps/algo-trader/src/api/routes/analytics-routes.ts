@@ -13,6 +13,7 @@
 
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { revenueAnalytics, RevenueAnalyticsService } from '../../analytics/revenue-analytics';
+import { analyticsService, AnalyticsPeriod } from '../../analytics/analytics-service';
 import { licenseAuthPlugin } from '../middleware/license-auth-middleware';
 import { LicenseTier } from '../../lib/raas-gate';
 
@@ -246,6 +247,107 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ error: error.message }, 'Failed to get usage revenue');
       reply.status(500).send({
         error: 'Failed to get usage revenue',
+        message: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/v1/analytics/usage
+   * Get usage metrics for dashboard (API calls, active licenses, quota utilization)
+   *
+   * Query params:
+   * - period: 24h | 7d | 30d | 90d (default: 7d)
+   */
+  fastify.get('/usage', async (request, reply) => {
+    try {
+      const { period } = request.query as { period?: AnalyticsPeriod };
+      const targetPeriod = period || '7d';
+
+      const metrics = await analyticsService.getUsageMetrics(targetPeriod);
+
+      reply.send({
+        success: true,
+        ...metrics,
+      });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to get usage metrics');
+      reply.status(500).send({
+        error: 'Failed to get usage metrics',
+        message: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/v1/analytics/top-endpoints
+   * Get top consuming endpoints
+   *
+   * Query params:
+   * - limit: Max endpoints (default: 10)
+   */
+  fastify.get('/top-endpoints', async (request, reply) => {
+    try {
+      const { limit } = request.query as { limit?: string };
+      const targetLimit = parseInt(limit || '10', 10);
+
+      const endpoints = await analyticsService.getTopEndpoints(targetLimit);
+
+      reply.send({
+        success: true,
+        endpoints,
+      });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to get top endpoints');
+      reply.status(500).send({
+        error: 'Failed to get top endpoints',
+        message: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/v1/analytics/export
+   * Export usage data to CSV
+   *
+   * Query params:
+   * - period: 24h | 7d | 30d | 90d (default: 7d)
+   */
+  fastify.get('/export', async (request, reply) => {
+    try {
+      const { period } = request.query as { period?: AnalyticsPeriod };
+      const targetPeriod = period || '7d';
+
+      const metrics = await analyticsService.getUsageMetrics(targetPeriod);
+
+      // Generate CSV
+      const csvRows = [
+        ['Date', 'API Calls', 'Backtest Runs', 'Trade Executions', 'ML Inferences'],
+        ...metrics.dailyBreakdown.map(d => [
+          d.date,
+          d.apiCalls,
+          d.backtestRuns,
+          d.tradeExecutions,
+          d.mlInferences,
+        ]),
+      ];
+
+      const csv = csvRows.map(row => row.join(',')).join('\n');
+
+      reply.header('Content-Type', 'text/csv');
+      reply.header(
+        'Content-Disposition',
+        `attachment; filename="analytics-${targetPeriod}-${Date.now()}.csv"`
+      );
+
+      reply.send(csv);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to export analytics');
+      reply.status(500).send({
+        error: 'Failed to export analytics',
         message: error.message,
       });
     }

@@ -16,7 +16,8 @@
 
 import { PrismaClient, DunningStatus } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { BillingNotificationService, BillingEventType } from '../notifications/billing-notification-service';
+import { BillingNotificationService } from '../notifications/billing-notification-service';
+import { raasKVClient } from '../lib/raas-gateway-kv-client';
 
 const prisma = new PrismaClient();
 
@@ -127,6 +128,18 @@ export class DunningStateMachine {
       },
     });
 
+    // NEW: Clear suspension flag from KV (restore API access)
+    try {
+      await raasKVClient.setSuspension(tenantId, {
+        suspended: false,
+        reason: 'payment_failed',
+      });
+      logger.info('[Dunning] Suspension flag cleared in KV', { tenantId });
+    } catch (error) {
+      logger.error('[Dunning] Failed to clear KV suspension flag', { tenantId, error });
+      // Continue - DB state is source of truth
+    }
+
     // Send notification
     await this.notificationService.sendNotification('payment_recovered', tenantId, ['email', 'telegram'], {
       tenantId,
@@ -184,6 +197,19 @@ export class DunningStateMachine {
         suspendedAt: new Date(),
       },
     });
+
+    // NEW: Write suspension flag to KV (blocks API access)
+    try {
+      await raasKVClient.setSuspension(tenantId, {
+        suspended: true,
+        reason: 'payment_failed',
+        suspendedAt: new Date().toISOString(),
+      });
+      logger.info('[Dunning] Suspension flag written to KV', { tenantId });
+    } catch (error) {
+      logger.error('[Dunning] Failed to write KV suspension flag', { tenantId, error });
+      // Continue - DB state is source of truth
+    }
 
     // Send notification (critical - use all channels including SMS)
     await this.notificationService.sendNotification('account_suspended', tenantId, ['email', 'sms', 'telegram'], {

@@ -68,7 +68,7 @@ const DEFAULT_NS3_CONFIG: NeuralSymbolicSynthesizerConfig = {
  */
 export function initNeuralSymbolicSynthesizer(
   config: Partial<NeuralSymbolicSynthesizerConfig> = {},
-): EvolutionOrchestrator {
+): _EvolutionOrchestrator {
   const cfg: NeuralSymbolicSynthesizerConfig = { ...DEFAULT_NS3_CONFIG, ...config };
 
   const population = new _PopulationManager({ populationSize: cfg.populationSize });

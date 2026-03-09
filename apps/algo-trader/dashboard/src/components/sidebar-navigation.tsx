@@ -94,6 +94,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'Phase 11',
+    path: '/phase11',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+  },
+  {
     label: 'Reporting',
     path: '/reporting',
     icon: (

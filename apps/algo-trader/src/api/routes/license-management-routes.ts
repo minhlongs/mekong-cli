@@ -8,6 +8,8 @@ import { logger } from '../../utils/logger';
 import { LicenseUsageAnalytics } from '../../lib/license-usage-analytics';
 import { featureFlagService, CreateFeatureFlagInput } from '../../services/feature-flag-service';
 import { extensionEligibilityService } from '../../services/extension-eligibility-service';
+import { signToken } from '../../auth/jwt-token-service';
+import { raasKVClient } from '../../lib/raas-gateway-kv-client';
 
 interface CreateLicenseBody {
   key?: string;
@@ -15,6 +17,11 @@ interface CreateLicenseBody {
   tenantId?: string;
   expiresAt?: string;
   metadata?: Record<string, any>;
+}
+
+interface ActivateLicenseBody {
+  key: string;
+  domain?: string;
 }
 
 interface RevokeLicenseParams {
@@ -27,6 +34,17 @@ interface AnalyticsResponse {
   byStatus: { active: number; revoked: number };
   usage: { apiCalls: number; mlFeatures: number; premiumData: number };
   recentActivity: Array<{ event: string; timestamp: string; licenseId: string }>;
+}
+
+interface ActivateLicenseResponse {
+  license: {
+    id: string;
+    key: string;
+    tier: string;
+    domain?: string;
+    status: string;
+  };
+  jwt: string;
 }
 
 // Phase 6: Feature Flags interfaces
@@ -136,6 +154,88 @@ export async function licenseManagementRoutes(fastify: FastifyInstance) {
       } catch (error) {
         logger.error('Failed to create license:', error);
         reply.code(500).send({ error: 'Failed to create license' });
+      }
+    },
+  });
+
+  // Activate license (public - for user self-activation)
+  fastify.post('/api/v1/licenses/activate', {
+    handler: async (
+      request: FastifyRequest<{ Body: ActivateLicenseBody }>,
+      reply: FastifyReply
+    ) => {
+      try {
+        const { key, domain } = request.body;
+
+        if (!key) {
+          return reply.code(400).send({ error: 'License key is required' });
+        }
+
+        // 1. Find license by key
+        const license = await licenseQueries.findByKey(key);
+        if (!license) {
+          return reply.code(404).send({ error: 'Invalid license key' });
+        }
+
+        // 2. Check if already revoked
+        if (license.status === 'revoked') {
+          return reply.code(403).send({ error: 'License has been revoked' });
+        }
+
+        // 3. Check if expired
+        if (license.expiresAt && new Date(license.expiresAt) < new Date()) {
+          return reply.code(403).send({ error: 'License has expired' });
+        }
+
+        // 4. Check RaaS KV for suspension state
+        const suspension = await raasKVClient.getSuspension(key);
+        if (suspension?.suspended) {
+          return reply.code(403).send({
+            error: 'License suspended',
+            reason: suspension.reason,
+          });
+        }
+
+        // 5. Update license with domain if provided
+        const updatedLicense = domain
+          ? await licenseQueries.update(license.id, { domain })
+          : license;
+
+        // 6. Generate JWT token for this license
+        const jwtPayload = {
+          tenantId: license.tenantId || license.id,
+          scopes: ['license:read', 'license:use'], // Required by TenantToken type
+          keyId: license.id,
+        };
+        const jwt = signToken(jwtPayload, 86400); // 24 hours
+
+        // 7. Audit log
+        await licenseQueries.logAudit({
+          licenseId: license.id,
+          event: 'activated',
+          tier: license.tier,
+          ip: (request as any).ip,
+          metadata: { domain },
+        });
+
+        logger.info(`License activated: ${license.id} (${license.tier})`);
+
+        // Get domain from updated license or metadata
+        const licenseDomain = (updatedLicense as any).domain || (updatedLicense.metadata as any)?.domain as string || undefined;
+
+        reply.send({
+          license: {
+            id: updatedLicense.id,
+            key: updatedLicense.key,
+            tier: updatedLicense.tier,
+            domain: licenseDomain,
+            status: updatedLicense.status,
+          },
+          jwt,
+        } as ActivateLicenseResponse);
+      } catch (error) {
+        logger.error('Failed to activate license:', error);
+        reply.code(500).send({ error: 'Failed to activate license' });
       }
     },
   });

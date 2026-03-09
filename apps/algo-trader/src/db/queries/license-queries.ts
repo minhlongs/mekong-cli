@@ -10,6 +10,9 @@ export interface LicenseCreateInput {
   tenantId?: string;
   expiresAt?: Date;
   metadata?: Prisma.InputJsonValue;
+  domain?: string;              // NEW: Associated domain
+  overageUnits?: number;        // NEW: Overage units consumed
+  overageAllowed?: boolean;     // NEW: Whether overage is allowed
 }
 
 export interface LicenseAuditInput {
