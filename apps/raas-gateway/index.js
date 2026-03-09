@@ -11,6 +11,8 @@ import { checkSuspensionStatus, syncSuspensionToKV, buildSuspensionStatusHeader 
 import { validateExtensionFlags, getExtensionStatus, trackExtensionUsage } from './src/extension-validator.js';
 import { checkQuota, incrementUsage } from './src/kv-quota-enforcer.js';
 import { checkAndTriggerAlerts, buildQuotaHeaders } from './src/quota-alert-webhook.js';
+import { handleLicenseActivation } from './src/license-activation-handler.js';
+import { getCliVersionInfo } from './src/cli-version-handler.js';
 
 const GATEWAY_VERSION = '2.0.0';
 
@@ -180,6 +182,11 @@ export default {
       return jsonResponse({ status: 'ok', version: GATEWAY_VERSION }, 200, corsHeaders);
     }
 
+    // --- ROUTE: POST /v2/license/activate (license activation) ---
+    if (path === '/v2/license/activate' && request.method === 'POST') {
+      return handleLicenseActivation(request, env);
+    }
+
     // --- ROUTE: POST /telegram (Telegram secret token auth) ---
     if (path === '/telegram' && request.method === 'POST') {
       return handleTelegramWebhook(request, env);
@@ -347,6 +354,11 @@ export default {
         200,
         { ...corsHeaders, ...rlHeaders }
       );
+    }
+
+    // --- ROUTE: GET /v1/cli/version (CLI version check) ---
+    if (path === '/v1/cli/version' && request.method === 'GET') {
+      return getCliVersionInfo(env, tenantId, role);
     }
 
     // --- ROUTE: GET /v1/usage (retrieve usage metrics) ---
