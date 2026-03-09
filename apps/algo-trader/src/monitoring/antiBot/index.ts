@@ -14,7 +14,7 @@ import { PatternDetector } from './pattern-detector';
 import { ResponseEngine } from './response-engine';
 
 export {
-  AntiBotConfig,
+  type AntiBotConfig,
   DEFAULT_ANTIBOT_CONFIG,
 } from './antibot-config-types';
 export type {

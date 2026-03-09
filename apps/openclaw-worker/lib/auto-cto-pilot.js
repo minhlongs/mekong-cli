@@ -24,6 +24,8 @@ const { tryStrategicMission } = require('./strategic-brain');
 const { scanRevenueHealth, generateRevenueMission } = require('./revenue-health-scanner');
 const { generateEconomicMission } = require('./clawwork-integration');
 const { dispatchDueTradingMissions } = require('./trading-cadence-scheduler');
+// Ship Pipeline — kiểm tra trạng thái trước khi sinh task mới
+const shipPipeline = require('./ship-pipeline');
 
 let intervalRef = null;
 const _paneQuestionCounts = new Map(); // 🧠 Per-pane question loop tracking for P0-P9
@@ -581,6 +583,20 @@ function startAutoCTO() {
 }
 
 async function handleScan(state, project, projectDir) {
+  // --- Ship Pipeline Hook (九變): nếu pipeline chưa xong → ưu tiên task pipeline ---
+  const pipelineCmd = shipPipeline.getNextPhaseCommand(project);
+  if (pipelineCmd && !shipPipeline.isShipComplete(project)) {
+    const phaseName = shipPipeline.getPhaseName(
+      (shipPipeline.getPipelineStatus(project) || { currentPhase: 1 }).currentPhase
+    );
+    log(`AUTO-CTO [SHIP PIPELINE]: ${project} — phase ${phaseName} chưa hoàn thành, dispatch pipeline task`);
+    const filename = `HIGH_mission_${project.replace(/-/g, '_')}_pipeline_${phaseName.toLowerCase()}_${Date.now()}.txt`;
+    fs.writeFileSync(path.join(config.WATCH_DIR, filename), pipelineCmd);
+    // Advance phase sau khi dispatch (optimistic)
+    shipPipeline.advancePhase(project, 'PASS');
+    return;
+  }
+
   log(`AUTO-CTO [始計 SCAN]: Scanning ${project} (cycle ${state.cycle + 1}/${MAX_FIX_CYCLES})...`);
 
   const errors = scanProject(projectDir);

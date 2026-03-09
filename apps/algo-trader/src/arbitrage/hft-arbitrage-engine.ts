@@ -20,7 +20,7 @@ export interface HFTArbitrageConfig {
  */
 export class HFTArbitrageEngine extends EventEmitter {
     private config: HFTArbitrageConfig;
-    private wsClients: Map<string, ccxt.pro.Exchange> = new Map();
+    private wsClients: Map<string, ccxt.Exchange> = new Map();
     private running = false;
 
     constructor(config: HFTArbitrageConfig) {
@@ -140,27 +140,29 @@ export class HFTArbitrageEngine extends EventEmitter {
 
         if (!bestAsk || !bestBid) return;
 
+        const bestAskPrice = Number(bestAsk[0]);
+        const bestBidPrice = Number(bestBid[0]);
+        if (!bestAskPrice || !bestBidPrice) return;
+
         // Fast preliminary check: is top-of-book profitable?
-        // Exclude fees momentarily for speed (estimated at 0.1% each side = 0.2%)
-        const rawSpread = (bestBid[0] - bestAsk[0]) / bestAsk[0];
+        const rawSpread = (bestBidPrice - bestAskPrice) / bestAskPrice;
         if (rawSpread < this.config.minNetProfitPercent / 100 + 0.002) {
             return;
         }
 
         // Deep check: Volume Weighted Average Price (VWAP) calculation
-        // Are there enough coins on the order book to fill our $ositionSizeUsd?
         const targetSizeUsd = this.config.positionSizeUsd;
-        const targetCoins = targetSizeUsd / bestAsk[0];
+        const targetCoins = targetSizeUsd / bestAskPrice;
 
-        const actualBuyPrice = this.calculateVWAP(obBuy.asks, targetCoins);
-        const actualSellPrice = this.calculateVWAP(obSell.bids, targetCoins);
+        const actualBuyPrice = this.calculateVWAP(obBuy.asks as number[][], targetCoins);
+        const actualSellPrice = this.calculateVWAP(obSell.bids as number[][], targetCoins);
 
         // If actual prices are 0, it means the book is too thin (Mirage Spread)
         if (actualBuyPrice === 0 || actualSellPrice === 0) return;
 
         // Check slippage safety
-        if ((actualBuyPrice - bestAsk[0]) / bestAsk[0] > this.config.maxSlippagePercent / 100) return;
-        if ((bestBid[0] - actualSellPrice) / bestBid[0] > this.config.maxSlippagePercent / 100) return;
+        if ((actualBuyPrice - bestAskPrice) / bestAskPrice > this.config.maxSlippagePercent / 100) return;
+        if ((bestBidPrice - actualSellPrice) / bestBidPrice > this.config.maxSlippagePercent / 100) return;
 
         // Calculate final Net Profit including arbitrary 0.1% taker fees
         const feeRate = 0.001 * 2; // Total 0.2% round trip
@@ -174,9 +176,14 @@ export class HFTArbitrageEngine extends EventEmitter {
                 sellExchange: sellEx,
                 buyPrice: actualBuyPrice,
                 sellPrice: actualSellPrice,
+                spreadPercent: rawSpread * 100,
                 netProfitPercent: netProfitPercent * 100,
                 estimatedProfitUsd: targetSizeUsd * netProfitPercent,
-                timestamp: Date.now()
+                buyFee: 0.001,
+                sellFee: 0.001,
+                slippageEstimate: 0.001,
+                timestamp: Date.now(),
+                expiresAt: Date.now() + 5000
             };
 
             logger.info(`[HFT] FIRE: ${symbol} | Buy ${buyEx} @ ${actualBuyPrice.toFixed(4)} | Sell ${sellEx} @ ${actualSellPrice.toFixed(4)} | Net: ${(netProfitPercent * 100).toFixed(2)}% | VolUsd: $${targetSizeUsd}`);

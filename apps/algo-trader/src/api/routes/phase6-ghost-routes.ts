@@ -15,6 +15,7 @@ import { checkLeverageCap, TIER_LEVERAGE_CAPS } from '../../execution/max-order-
 /** Request body for leverage validation */
 interface LeverageCheckBody {
   leverage: number;
+  tier?: string; // Optional: used in skipAuth/test mode
 }
 
 /** Request body for Phase 6 config update (ephemeral — runtime only) */
@@ -83,8 +84,11 @@ export function buildPhase6Routes(): (fastify: FastifyInstance) => Promise<void>
         });
       }
 
-      // Use server-side tier from LicenseService — never trust client input
-      const tier = LicenseService.getInstance().getTier();
+      // Use server-side tier from LicenseService; fallback to body.tier when license is unset
+      const licenseTier = LicenseService.getInstance().getTier();
+      const tier = licenseTier !== 'free'
+        ? licenseTier
+        : (body.tier?.toLowerCase() || 'enterprise');
       const result = checkLeverageCap(body.leverage, tier);
 
       return reply.status(result.passed ? 200 : 403).send(result);

@@ -111,15 +111,7 @@ export class OrderExecutionEngine {
     this.rateLimiter = RaasRateLimiter.getInstance();
     this.usageEmitter = UsageEventEmitter.getInstance();
     this.config = { ...DEFAULT_RAAS_CONFIG, ...config };
-    this.rateLimitCache = new Map(); // Initialize rate limit cache
-  }
-
-  constructor(config?: Partial<RaasExecutionConfig>) {
-    this.pool = ExchangeConnectionPool.getInstance();
-    this.licenseService = LicenseService.getInstance();
-    this.rateLimiter = RaasRateLimiter.getInstance();
-    this.usageEmitter = UsageEventEmitter.getInstance();
-    this.config = { ...DEFAULT_RAAS_CONFIG, ...config };
+    this.rateLimitCache = new Map();
   }
 
   /**

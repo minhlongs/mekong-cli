@@ -38,6 +38,12 @@ module.exports = {
     // SIGKILL failures - heavy memory
     'idempotency-middleware.test',
     'backtest-cache.test',
+    // Playwright tests — run via npx playwright test, not Jest
+    'raas-gateway-e2e-integration',
+    // Requires real Postgres DB connection
+    'webhook-flow-integration',
+    'stripe-webhook-integration',
+    'raas-integration',
   ],
   testMatch: ['**/*.test.ts'],
   moduleDirectories: ['node_modules', '<rootDir>/node_modules'],

@@ -112,7 +112,7 @@ export class ExtensionEligibilityService {
       };
     }
 
-    const isEligible = tier && config.tiers.includes(tier);
+    const isEligible = !!(tier && config.tiers.includes(tier));
 
     return {
       eligible: isEligible,
@@ -157,7 +157,7 @@ export class ExtensionEligibilityService {
       },
       update: {
         status: 'pending',
-        metadata: { reason: reason || existing?.metadata?.reason }
+        metadata: { reason: reason || String((existing?.metadata as Record<string, string>)?.reason ?? '') }
       },
       create: {
         licenseId,
@@ -275,7 +275,7 @@ export class ExtensionEligibilityService {
       return {
         allowed: true,
         remaining: updated.usageLimit,
-        resetAt: updated.resetAt
+        resetAt: updated.resetAt ?? undefined
       };
     }
 
