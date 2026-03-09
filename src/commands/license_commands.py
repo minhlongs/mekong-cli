@@ -552,4 +552,28 @@ def _show_mock_usage_report(key: str, days: int) -> None:
     console.print("\n[yellow]⚠ This is mock data. Set RAAS_LOCAL_TEST=false for real data.[/yellow]")
 
 
+@app.command("features")
+def features() -> None:
+    """🔑 Show enabled features from JWT."""
+    from src.core.feature_gates import show_features_status
+
+    show_features_status()
+
+
+@app.command("permissions")
+def permissions() -> None:
+    """🔐 Show permission status and tier limits."""
+    from src.core.permission_registry import show_permissions_status
+
+    show_permissions_status()
+
+
+@app.command("entitlement")
+def entitlement() -> None:
+    """📊 Show entitlement status and usage caps."""
+    from src.core.entitlement_enforcer import show_entitlement_status
+
+    show_entitlement_status()
+
+
 __all__ = ["app"]
