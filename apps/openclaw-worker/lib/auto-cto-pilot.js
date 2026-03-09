@@ -341,7 +341,7 @@ function startAutoCTO() {
 
         // 🦞🦞🦞 DISPATCH FIRST — NO LLM DELAY! Fast regex-only idle check
         log(`🦞 DISPATCH-CHECK: ${fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f)).length} tasks in queue`);
-        // P0 = mekong-cli, P1 = well/wellnexus, P2 = algo-trader, P3-P9 = overflow/overflow/overflow/overflow/overflow/overflow/overflow
+        // P0 = mekong-cli, P1 = algo-trader, P2 = sophia-ai-factory, P3 = well, P4 = Opus strategic
         const tasks = fs.readdirSync(config.WATCH_DIR).filter(f => config.TASK_PATTERN.test(f));
         if (tasks.length > 0) {
           const sorted = tasks.sort((a, b) => {
@@ -355,21 +355,19 @@ function startAutoCTO() {
             const lower = filename.toLowerCase();
             // P0: mekong-cli core (fallback to early projects or openclaw-worker)
             if (/openclaw|brain|cto|factory/.test(lower)) return 0;
-            // P1: apps/well
-            if (/well|wellnexus/.test(lower)) return 1;
-            // P2: mekong-cli core packages
-            if (/vibe|core|package|mekong-cli/.test(lower)) return 2;
-            // P3: sophia-ai-factory
-            if (/sophia/.test(lower)) return 3;
+            // P1: algo-trader
+            if (/algo.?trader|algotrader|trading/.test(lower)) return 1;
+            // P2: sophia-ai-factory / mekong-cli
+            if (/sophia|vibe|core|package|mekong-cli/.test(lower)) return 2;
+            // P3: well / apex-os
+            if (/well|wellnexus|84tea|apex/.test(lower)) return 3;
             // P4: OPUS STRATEGIC LAYER - Must only receive high complexity / strategic tasks
             if (/strategic|binh_phap|roiaas|architecture|10x|complex|opus/i.test(lower)) return 4;
-            // P5: algo-trader
-            if (/algo.?trader|algotrader|trading/.test(lower)) return 5;
 
             // Fallback assignment based on file hash if no keywords match 
-            // Distribute specifically between 0, 1, 2, 3, 5 (NEVER default to 4/Opus)
+            // Distribute specifically between 0, 1, 2, 3 (NEVER default to 4/Opus)
             const hash = filename.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-            const safeIds = [0, 1, 2, 3, 5];
+            const safeIds = [0, 1, 2, 3];
             return safeIds[hash % safeIds.length];
           }
 
@@ -396,12 +394,11 @@ function startAutoCTO() {
                 const command = firstLine.startsWith('/') ? firstLine : `/cook ${firstLine}`;
 
                 const MODEL_POOL = {
-                  0: 'qwen3.5-plus',              // P0: openclaw
-                  1: 'qwen3.5-plus',              // P1: well
-                  2: 'qwen3.5-plus',              // P2: core
-                  3: 'qwen3.5-plus',              // P3: sophia
-                  4: 'claude-opus-4-6',           // P4: strategic
-                  5: 'qwen3.5-plus'               // P5: algo-trader
+                  0: 'qwen3.5-plus',              // P0: mekong-cli
+                  1: 'qwen3-coder-plus',          // P1: algo-trader
+                  2: 'qwen3.5-plus',              // P2: sophia-ai-factory
+                  3: 'qwen3.5-plus',              // P3: well
+                  4: 'claude-opus-4-6',           // P4: Opus strategic
                 };
                 const paneModel = MODEL_POOL[targetIdx] || MODEL_POOL[0];
 
@@ -526,7 +523,17 @@ function startAutoCTO() {
 
         const state = loadState();
         currentPhase = state.phase;
-        const project = config.PROJECTS[state.currentProjectIdx];
+
+        // 🎯 DYNAMIC PROJECT DISCOVERY — read live tmux pane directories
+        const { getActivePaneProjects } = require('./brain-tmux-controller');
+        const paneMap = getActivePaneProjects(config.TMUX_SESSION);
+        const liveProjects = Object.values(paneMap).map(p => p.projectName);
+        if (liveProjects.length === 0) {
+          log('AUTO-CTO: No live panes discovered. Sleeping...');
+          scheduleNext(); return;
+        }
+        const projectIdx = state.currentProjectIdx % liveProjects.length;
+        const project = liveProjects[projectIdx];
         if (!project) {
           state.currentProjectIdx = 0;
           saveState(state);
@@ -802,7 +809,15 @@ async function handleVerify(state, project, projectDir) {
 }
 
 function advanceProject(state) {
-  state.currentProjectIdx = (state.currentProjectIdx + 1) % config.PROJECTS.length;
+  // Dynamic: count live panes to wrap index properly
+  let totalProjects = config.PROJECTS.length;
+  try {
+    const { getActivePaneProjects } = require('./brain-tmux-controller');
+    const paneMap = getActivePaneProjects(config.TMUX_SESSION);
+    const liveCount = Object.keys(paneMap).length;
+    if (liveCount > 0) totalProjects = liveCount;
+  } catch (e) { /* fallback to config.PROJECTS.length */ }
+  state.currentProjectIdx = (state.currentProjectIdx + 1) % totalProjects;
   state.phase = 'scan';
   state.cycle = 0;
   state.errors = [];

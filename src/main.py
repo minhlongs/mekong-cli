@@ -12,9 +12,9 @@ from rich.console import Console
 import sys
 
 # Core imports
+from src.middleware.auth_middleware import get_middleware
 
-# RaaS License Gate - Phase 1: Startup Validation (TypeScript source of truth)
-# RaaS License Gate - Phase 2: Command-level validation
+# RaaS License Gate - Phase 6: Per-Command Authorization & Usage Metering
 
 # ROIaaS Phase Completion & Graceful Shutdown
 from src.raas.phase_completion_detector import get_detector, PhaseStatus
@@ -40,6 +40,10 @@ from src.cli.diagnostic_commands import app as diagnostic_app
 from src.cli.usage_commands import app as usage_app
 from src.commands.raas_validate import validate_license, license_status
 from src.cli.update_checker import check_for_updates_async
+from src.commands.sync_raas_commands import app as sync_raas_app
+from src.commands.raas_maintenance_commands import app as raas_maintenance_app
+from src.commands.license_activation import app as license_activation_app
+from src.cli.usage_auto_instrument import emit_usage_event
 
 # Legacy command imports (not yet refactored)
 from src.commands.agi import app as agi_app
@@ -69,20 +73,7 @@ app = typer.Typer(
     add_completion=False,
 )
 
-# Free commands that don't require license validation
-FREE_COMMANDS = {
-    "init", "version", "list", "search", "status", "config",
-    "doctor", "help", "dash", "license", "clean", "test",
-    "license-admin", "analytics", "tier-admin", "debug-rate-limits", "sync-raas",
-    "compliance", "billing", "roi", "dashboard",
-    "security-cmd", "security",  # Security commands are FREE (basic necessity)
-    "update",  # Update check is FREE, but non-security updates require license
-    "raas-auth", "auth",  # RaaS auth is FREE (basic necessity)
-    "validate-license", "license-status",  # License validation is FREE
-    "check-phases", "complete-phase6",  # Phase completion commands are FREE
-    "diagnostic",  # Diagnostic checks are FREE (basic necessity)
-    "usage",  # Usage reporting is FREE (basic necessity)
-}
+FREE_COMMANDS = set()  # Phase 6: Delegated to CommandAuthorizer
 
 
 def _get_invoked_command(ctx: typer.Context) -> str:
@@ -94,52 +85,17 @@ def _get_invoked_command(ctx: typer.Context) -> str:
 
 def _validate_startup_license(ctx: typer.Context) -> None:
     """
-    Validate license at CLI startup.
+    Phase 6: Validate license at CLI startup using Auth Middleware.
 
     Free commands skip validation.
     Premium commands require valid license.
     Critical updates block execution until installed.
     """
-    command = _get_invoked_command(ctx)
+    _get_invoked_command(ctx)
 
-    # Free commands don't need validation
-    if command in FREE_COMMANDS or ctx.invoked_subcommand is None:
-        return
-
-    # Check for --help flag
-    if "--help" in sys.argv or "-h" in sys.argv:
-        return
-
-    # CRITICAL: Check for blocking critical updates
-    from src.cli.update_checker import get_update_checker
-    checker = get_update_checker()
-
-    if checker.should_block_execution():
-        update_info = checker.get_critical_update_info()
-        if update_info:
-            console.print("[bold red]🚨 CRITICAL UPDATE REQUIRED[/bold red]")
-            console.print(f"Current version {update_info.current_version} has critical security issues.")
-            console.print(f"Please update to {update_info.latest_version} immediately.")
-            console.print("\n[yellow]Run: [cyan]mekong update install[/cyan][/yellow]\n")
-            console.print("[dim]Or use --skip-update-check to bypass (not recommended)[/dim]\n")
-            raise SystemExit(1)
-
-    # Validate license for premium commands using RaaS Gateway
-    from src.lib.raas_gate_validator import RaasGateValidator
-    validator = RaasGateValidator()
-    is_valid, error = validator.validate()
-
-    if not is_valid:
-        console.print(f"[bold red]License Error:[/bold red] {error}")
-        console.print(
-            "\n[yellow]Get a license key from RaaS Gateway:[/yellow]"
-        )
-        console.print("  [cyan]https://raas.agencyos.network[/cyan]")
-        console.print(
-            "\n[yellow]Or set environment variable:[/yellow]"
-        )
-        console.print("  [cyan]export RAAS_LICENSE_KEY=mk_your_key[/cyan]\n")
-        raise SystemExit(1)
+    # Phase 6: Use Auth Middleware for per-command authorization
+    middleware = get_middleware()
+    middleware.pre_command_check(ctx)
 
 
 def _check_telemetry_consent(ctx: typer.Context) -> None:
@@ -197,6 +153,9 @@ def _register_legacy_commands() -> None:
     app.add_typer(raas_auth_app, name="auth", help="🔐 RaaS Gateway auth (login/logout/status)")
     app.add_typer(diagnostic_app, name="diagnostic", help="🔍 Diagnostic connectivity checks")
     app.add_typer(usage_app, name="usage", help="📊 Usage metering and reporting")
+    app.add_typer(sync_raas_app, name="sync-raas", help="🔄 Sync with RaaS Gateway - usage metering & billing")
+    app.add_typer(raas_maintenance_app, name="raas-maintenance", help="🔧 RaaS Gateway maintenance operations")
+    app.add_typer(license_activation_app, name="license-activation", help="🔑 License activation and management")
 
     # Register validate commands directly (not via app to avoid nesting)
     app.command("validate-license")(validate_license)
@@ -506,6 +465,14 @@ def main(
             loop.create_task(check_for_updates_async())
         except Exception:
             pass  # Fail silently
+
+    # Phase 6: Emit usage event after command execution
+    command = _get_invoked_command(ctx)
+    if command and command not in ("version", "help"):
+        try:
+            emit_usage_event(command)
+        except Exception:
+            pass  # Fail silently, usage tracking is non-blocking
 
     if version_flag:
         version()

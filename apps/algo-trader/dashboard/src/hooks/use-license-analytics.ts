@@ -35,6 +35,11 @@ export interface AnalyticsData {
     monthly: number;
     projected: number;
   };
+  dailyBreakdown: Array<{
+    date: string;
+    apiCalls: number;
+    activeLicenses: number;
+  }>;
 }
 
 export interface TimeRange {
@@ -56,12 +61,17 @@ export function useLicenseAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange['value']>('30d');
+  const [selectedLicense, setSelectedLicense] = useState<string>('');
 
   const loadAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchApi<AnalyticsData>('/licenses/analytics');
+      const params = new URLSearchParams({ period: timeRange });
+      if (selectedLicense) {
+        params.append('licenseKey', selectedLicense);
+      }
+      const data = await fetchApi<AnalyticsData>(`/licenses/analytics?${params.toString()}`);
       if (data) {
         setAnalytics(data);
       } else {
@@ -72,7 +82,7 @@ export function useLicenseAnalytics() {
     } finally {
       setLoading(false);
     }
-  }, [fetchApi]);
+  }, [fetchApi, timeRange, selectedLicense]);
 
   const loadQuota = useCallback(async (tenantId: string) => {
     try {
@@ -87,7 +97,10 @@ export function useLicenseAnalytics() {
 
   useEffect(() => {
     loadAnalytics();
-  }, [loadAnalytics, timeRange]);
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadAnalytics, 30000);
+    return () => clearInterval(interval);
+  }, [loadAnalytics]);
 
   return {
     analytics,
@@ -96,6 +109,8 @@ export function useLicenseAnalytics() {
     error,
     timeRange,
     setTimeRange,
+    selectedLicense,
+    setSelectedLicense,
     reload: loadAnalytics,
     loadQuota,
   };

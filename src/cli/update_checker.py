@@ -24,8 +24,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -33,7 +32,6 @@ from typing import Any, Optional
 from rich.console import Console
 
 from src.core.gateway_client import get_gateway_client, GatewayClient
-from src.core.raas_auth import get_auth_client
 
 console = Console()
 
@@ -202,9 +200,98 @@ class UpdateChecker:
         except asyncio.TimeoutError:
             # Gateway timeout - fail silently
             return None
-        except Exception as e:
+        except Exception:
             # Gateway error - fail silently
             return None
+
+    def check_version_sync(self) -> Optional[UpdateAvailable]:
+        """
+        Synchronous version check for use in blocking contexts.
+
+        Returns:
+            UpdateAvailable if update available, None otherwise
+        """
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        return loop.run_until_complete(self.check_version())
+
+    def check_critical_update(self) -> Optional[UpdateAvailable]:
+        """
+        Check for critical update and return if blocking required.
+
+        Returns:
+            UpdateAvailable if critical update pending, None otherwise
+        """
+        update = self.check_version_sync()
+
+        if update and update.is_critical:
+            # Store critical update info for enforcement
+            self._mark_critical_update_pending(update)
+            return update
+
+        return None
+
+    def _mark_critical_update_pending(self, update: UpdateAvailable) -> None:
+        """Mark critical update as pending for enforcement."""
+        self.cache.update_info = {
+            **(self.cache.update_info or {}),
+            "is_critical": True,
+            "critical_pending": True,
+            "critical_version": update.latest_version,
+        }
+        self._save_cache(self.cache)
+
+    def should_block_execution(self) -> bool:
+        """
+        Check if CLI execution should be blocked due to critical update.
+
+        Returns:
+            True if current version has critical issues requiring update
+        """
+        if not self.cache.update_info:
+            return False
+
+        # Check if critical update is pending
+        if self.cache.update_info.get("critical_pending"):
+            return True
+
+        # Check if current version is in critical list
+        critical_versions = self.cache.update_info.get("critical_versions", [])
+        current_version = self.get_current_version()
+
+        return current_version in critical_versions
+
+    def get_critical_update_info(self) -> Optional[UpdateAvailable]:
+        """Get pending critical update info."""
+        if not self.cache.update_info:
+            return None
+
+        # Check if we have cached update info
+        if self.cache.update_info.get("critical_pending"):
+            return UpdateAvailable(
+                current_version=self.get_current_version(),
+                latest_version=self.cache.update_info.get("critical_version", ""),
+                download_url=self.cache.update_info.get("download_url", ""),
+                checksum_url=self.cache.update_info.get("checksum_url", ""),
+                signature_url=self.cache.update_info.get("signature_url", ""),
+                is_critical=True,
+                is_security_update=self.cache.update_info.get("is_security_update", False),
+                release_notes=self.cache.update_info.get("release_notes", ""),
+                released_at=self.cache.update_info.get("released_at", ""),
+                changelog_url=self.cache.update_info.get("changelog_url", ""),
+            )
+        return None
+
+    def get_current_version(self) -> str:
+        """Get current CLI version."""
+        try:
+            import importlib.metadata
+            return importlib.metadata.version("mekong-cli")
+        except importlib.metadata.PackageNotFoundError:
+            return "0.0.0"
 
     def _is_newer_version(self, latest: str, current: str) -> bool:
         """Compare version strings (semver-like)."""
@@ -242,7 +329,7 @@ class UpdateChecker:
         if update.release_notes:
             console.print(f"  {update.release_notes}")
 
-        console.print(f"  Run: [bold]mekong update install[/bold] to upgrade")
+        console.print("  Run: [bold]mekong update install[/bold] to upgrade")
         console.print(f"  Changelog: {update.changelog_url}\n")
 
         # Mark as notified

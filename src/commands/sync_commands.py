@@ -10,6 +10,7 @@ Usage:
 """
 
 import typer
+import json
 from typing import Any
 from rich.console import Console
 from rich.table import Table
@@ -373,3 +374,152 @@ def _display_rate_limit_state(state: Any) -> None:
     table.add_row("Synced At", state.synced_at.strftime("%H:%M:%S"))
 
     console.print(table)
+
+
+@app.command("encrypted")
+def sync_encrypted(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-n", help="Calculate but don't upload"
+    ),
+    no_billing: bool = typer.Option(
+        False, "--no-billing", help="Don't push to Stripe/Polar"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed metrics"
+    ),
+) -> None:
+    """
+    🔐 Synchronize with encrypted payload (Phase 5).
+
+    Uses AES-256-GCM encryption for payload security
+    and pushes to Stripe/Polar billing providers.
+    """
+    from src.raas.sync_client import get_sync_client
+
+    console.print("[bold cyan]🔐 Mekong Sync Encrypted - Phase 5[/bold cyan]\n")
+
+    client = get_sync_client()
+
+    # Step 1: Validate license
+    console.print("[dim]Step 1/4: Validating license...[/dim]")
+    is_valid, error = client.validate_license()
+
+    if not is_valid:
+        console.print("[bold red]✗ License validation failed[/bold red]")
+        console.print(f"[red]{error}[/red]\n")
+        console.print("[yellow]Get a license key:[/yellow]")
+        console.print("  [cyan]https://raas.agencyos.network[/cyan]\n")
+        raise SystemExit(1)
+
+    console.print("[green]✓ License valid[/green]\n")
+
+    # Step 2: Fetch entitlements
+    console.print("[dim]Step 2/4: Fetching entitlements...[/dim]")
+    entitlements = client.fetch_entitlements()
+
+    if "error" not in entitlements:
+        console.print(
+            f"[green]✓ Tier:[/green] {entitlements.get('tier', 'unknown')} | "
+            f"Rate limit: {entitlements.get('rate_limit', 60)}/min\n"
+        )
+    else:
+        console.print(f"[yellow]⚠ Entitlements: {entitlements.get('error')}[/yellow]\n")
+
+    # Step 3: Sync with encryption
+    if dry_run:
+        console.print("[dim]Step 3/4: Dry run (skipping upload)...[/dim]")
+        result = client.sync_metrics_encrypted(dry_run=True, push_to_billing=not no_billing)
+        console.print("[green]✓ Dry run complete[/green]\n")
+    else:
+        console.print("[dim]Step 3/4: Syncing encrypted payload...[/dim]")
+        result = client.sync_metrics_encrypted(push_to_billing=not no_billing)
+
+        if not result.success:
+            console.print("[bold red]✗ Sync failed[/bold red]")
+            console.print(f"[red]{result.error}[/red]\n")
+            raise SystemExit(1)
+
+        console.print(f"[green]✓ Synced {result.synced_count} events[/green]\n")
+
+    # Display summary
+    console.print(
+        Panel(
+            f"[green]✓ Sync completed![/green]\n\n"
+            f"Events: [bold]{result.synced_count}[/bold]\n"
+            f"Payload: [bold]{result.total_payload_size:,}[/bold] bytes\n"
+            f"Time: [bold]{result.elapsed_ms:.0f}[/bold]ms",
+            title="🔐 Encrypted Sync Status",
+            border_style="green",
+        )
+    )
+
+
+@app.command("entitlement")
+def show_entitlement(
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show full entitlement details"
+    ),
+) -> None:
+    """
+    📋 Show license entitlements from RaaS Gateway.
+
+    Fetches current license tier, features, rate limits,
+    and entitlements from the central billing system.
+    """
+    from src.raas.sync_client import get_sync_client
+
+    console.print("[bold cyan]📋 License Entitlements[/bold cyan]\n")
+
+    client = get_sync_client()
+
+    # Validate license first
+    console.print("[dim]Validating license...[/dim]")
+    is_valid, error = client.validate_license()
+
+    if not is_valid:
+        console.print("[bold red]✗ License invalid[/bold red]")
+        console.print(f"[red]{error}[/red]\n")
+        return
+
+    console.print("[green]✓ License valid[/green]\n")
+
+    # Fetch entitlements
+    console.print("[dim]Fetching entitlements from RaaS Gateway...[/dim]")
+    entitlements = client.fetch_entitlements()
+
+    if "error" in entitlements:
+        console.print(f"[bold red]✗ Failed: {entitlements['error']}[/bold red]\n")
+        raise SystemExit(1)
+
+    # Display entitlements
+    table = Table(title="License Entitlements", show_header=True)
+    table.add_column("Property", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("Tenant ID", str(entitlements.get("tenant_id", "N/A")))
+    table.add_row("Tier", entitlements.get("tier", "unknown").upper())
+    table.add_row(
+        "Features",
+        ", ".join(entitlements.get("features", [])) or "None",
+    )
+    table.add_row("Rate Limit", f"{entitlements.get('rate_limit', 60)} requests/min")
+    table.add_row(
+        "Max Payload",
+        f"{entitlements.get('max_payload_size', 1048576):,} bytes",
+    )
+    table.add_row("Retention", f"{entitlements.get('retention_days', 30)} days")
+
+    if entitlements.get("expires_at"):
+        table.add_row("Expires At", str(entitlements["expires_at"]))
+
+    console.print(table)
+    console.print()
+
+    # Verbose: show raw response
+    if verbose:
+        console.print("[dim]Raw response:[/dim]")
+        console.print(json.dumps(entitlements, indent=2))
+        console.print()
+
+
+# Import json for verbose output

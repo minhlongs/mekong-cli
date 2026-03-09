@@ -72,6 +72,49 @@ interface RevenueByTierResponse {
 }
 
 /**
+ * License analytics response schema
+ */
+interface LicenseAnalyticsResponse {
+  total: number;
+  byTier: { free: number; pro: number; enterprise: number };
+  byStatus: { active: number; revoked: number; expired: number };
+  usage: {
+    apiCalls: number;
+    mlFeatures: number;
+    premiumData: number;
+  };
+  revenue: {
+    monthly: number;
+    projected: number;
+  };
+  recentActivity: Array<{
+    event: string;
+    timestamp: string;
+    licenseId: string;
+    details?: string;
+  }>;
+  dailyBreakdown: Array<{
+    date: string;
+    apiCalls: number;
+    activeLicenses: number;
+  }>;
+}
+
+/**
+ * Quota response schema
+ */
+interface QuotaResponse {
+  tenantId: string;
+  apiCalls: number;
+  apiCallsLimit: number;
+  mlPredictions: number;
+  mlPredictionsLimit: number;
+  dataPoints: number;
+  dataPointsLimit: number;
+  resetDate: string;
+}
+
+/**
  * Register analytics routes
  */
 export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
@@ -348,6 +391,127 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ error: error.message }, 'Failed to export analytics');
       reply.status(500).send({
         error: 'Failed to export analytics',
+        message: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/v1/analytics/licenses/analytics
+   * Get comprehensive license analytics for dashboard
+   *
+   * Query params:
+   * - period: 7d | 30d | 90d (default: 30d)
+   * - licenseKey: Filter by specific license (optional)
+   */
+  fastify.get('/licenses/analytics', async (request, reply) => {
+    try {
+      const { period = '30d', licenseKey } = request.query as { period?: '7d' | '30d' | '90d'; licenseKey?: string };
+
+      // Get usage metrics
+      const metrics = await analyticsService.getUsageMetrics(period);
+
+      // Get revenue metrics
+      const currentMonth = getCurrentMonth();
+      const mrrData = await revenueAnalytics.getMRR(currentMonth);
+
+      // Build response
+      const response: LicenseAnalyticsResponse = {
+        total: metrics.activeLicenses,
+        byTier: {
+          free: metrics.byTier.find(t => t.tier === 'FREE')?.count || 0,
+          pro: metrics.byTier.find(t => t.tier === 'PRO')?.count || 0,
+          enterprise: metrics.byTier.find(t => t.tier === 'ENTERPRISE')?.count || 0,
+        },
+        byStatus: {
+          active: metrics.activeLicenses,
+          revoked: 0,
+          expired: 0,
+        },
+        usage: {
+          apiCalls: metrics.totalApiCalls,
+          mlFeatures: metrics.dailyBreakdown.reduce((sum, d) => sum + d.mlInferences, 0),
+          premiumData: 0,
+        },
+        revenue: {
+          monthly: mrrData.totalMRR,
+          projected: mrrData.totalMRR * (1 + (mrrData.growthRate || 0) / 100),
+        },
+        recentActivity: metrics.dailyBreakdown.slice(-10).map(d => ({
+          event: 'api_usage',
+          timestamp: `${d.date}T00:00:00Z`,
+          licenseId: licenseKey || 'system',
+          details: `${d.apiCalls} API calls`,
+        })),
+        dailyBreakdown: metrics.dailyBreakdown.map(d => ({
+          date: d.date,
+          apiCalls: d.apiCalls,
+          activeLicenses: Math.round(metrics.activeLicenses / metrics.dailyBreakdown.length),
+        })),
+      };
+
+      reply.send(response);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to get license analytics');
+      reply.status(500).send({
+        error: 'Failed to get license analytics',
+        message: error.message,
+      });
+    }
+  });
+
+  /**
+   * GET /api/v1/analytics/licenses/analytics/quota
+   * Get quota utilization for a specific tenant
+   *
+   * Query params:
+   * - tenantId: Tenant identifier (required)
+   */
+  fastify.get('/licenses/analytics/quota', async (request, reply) => {
+    try {
+      const { tenantId } = request.query as { tenantId: string };
+
+      if (!tenantId) {
+        return reply.status(400).send({
+          error: 'Missing tenantId parameter',
+        });
+      }
+
+      // Get usage from tracker
+      const tracker = (await import('../../metering/usage-tracker-service')).UsageTrackerService.getInstance();
+      const currentMonth = getCurrentMonth();
+      const usage = await tracker.getUsage(tenantId, currentMonth);
+
+      // Mock quota limits (in production, query subscription service)
+      const tierLimits = {
+        FREE: { apiCalls: 1000, mlPredictions: 100, dataPoints: 10000 },
+        PRO: { apiCalls: 10000, mlPredictions: 1000, dataPoints: 100000 },
+        ENTERPRISE: { apiCalls: 100000, mlPredictions: 10000, dataPoints: 1000000 },
+      };
+
+      // Determine tier from tenant ID (mock - in production, query subscription)
+      const tier = tenantId.includes('enterprise') ? 'ENTERPRISE' :
+                   tenantId.includes('pro') ? 'PRO' : 'FREE';
+      const limits = tierLimits[tier];
+
+      const response: QuotaResponse = {
+        tenantId,
+        apiCalls: usage.byEventType['api_call'] || 0,
+        apiCallsLimit: limits.apiCalls,
+        mlPredictions: usage.byEventType['ml_inference'] || 0,
+        mlPredictionsLimit: limits.mlPredictions,
+        dataPoints: usage.byEventType['data_point'] || 0,
+        dataPointsLimit: limits.dataPoints,
+        resetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString(),
+      };
+
+      reply.send(response);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      request.log.error({ error: error.message }, 'Failed to get quota');
+      reply.status(500).send({
+        error: 'Failed to get quota',
         message: error.message,
       });
     }

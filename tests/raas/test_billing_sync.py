@@ -11,9 +11,7 @@ Tests cover:
 
 import json
 import os
-import time
 from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,7 +19,6 @@ import pytest
 from src.raas.billing_sync import (
     BillingSyncService,
     SyncConfig,
-    SyncResult,
     UsageRecord,
     get_service,
     reset_service,

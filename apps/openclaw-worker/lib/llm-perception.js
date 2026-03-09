@@ -113,7 +113,7 @@ STATE DEFINITIONS:
 - rate_limited: Hit API rate limit, waiting`;
 
 /**
- * Call LLM via Antigravity Proxy to analyze tmux output.
+ * Call LLM via direct DashScope API to analyze tmux output.
  * @param {string} paneOutput - Last 30 lines of tmux capture
  * @param {string} projectName - Project being worked on
  * @param {number} paneIdx - Pane index (0-3)
@@ -196,7 +196,7 @@ function perceivePaneWithLLM(paneOutput, projectName, paneIdx) {
         // ✅ OLLAMA FALLBACK (九變 Ch.8 - Cửu Biến Adaptation)
         // Mapped from v2026.3.2 memorySearch.fallback="ollama"
         const attemptOllamaFallback = () => {
-            log(`P${paneIdx} ⚠️ Proxy failed. Executing local Ollama fallback...`);
+            log(`P${paneIdx} ⚠️ LLM failed. Executing local Ollama fallback...`);
             const fallbackReq = http.request({
                 hostname: 'localhost',
                 port: 11434,

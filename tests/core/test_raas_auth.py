@@ -120,14 +120,10 @@ class TestCredentialValidation:
     def test_validate_invalid_api_key_format(self, client):
         """Test validation with invalid API key format (too short)."""
         # mk_ key with length < 8 should fail
-        result = client.validate_credentials("mk_short")
+        # "mk_" has only 3 chars (needs at least 8)
+        result = client.validate_credentials("mk_")
         assert result.valid is False
-        # Note: Implementation checks length >= 8, "mk_short" has 7 chars total
-        # But "mk_" + 5 chars = 8 chars, so this actually passes format check
-        # Need a shorter key to trigger the error
-        result2 = client.validate_credentials("mk_")
-        assert result2.valid is False
-        assert result2.error_code == "invalid_api_key_format"
+        assert result.error_code == "invalid_api_key_format"
 
     @patch("src.core.raas_auth.requests.post")
     def test_validate_valid_api_key_format(self, mock_post, client):

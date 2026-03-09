@@ -16,36 +16,39 @@ const config = require('../config');
 const PIPELINE_STATE_FILE = config.STATE_FILE;
 
 // Định nghĩa 5 phase của ship pipeline
+// ⚠️ CRITICAL: Mỗi command PHẢI chứa tên project cụ thể
+// để CC CLI KHÔNG wander sang project khác trong monorepo!
 const PHASES = [
   {
     id: 1,
     name: 'SCOUT',
     // Quét sức khỏe project, tìm bugs nghiêm trọng
-    command: '/scout "scan project health, find all critical bugs and issues"',
+    // __PROJECT__ sẽ được thay bằng tên project thực tế
+    command: '/scout "scan __PROJECT__ project health ONLY within this directory, find all critical bugs and issues. DO NOT look at other projects in the monorepo."',
   },
   {
     id: 2,
     name: 'FIX',
     // Sửa tất cả vấn đề nghiêm trọng tìm được ở phase SCOUT
-    command: '/cook "fix all critical issues found by scout — no git commit yet" --auto',
+    command: '/cook "fix all critical issues found in __PROJECT__ — ONLY files in current directory. No git commit yet." --auto',
   },
   {
     id: 3,
     name: 'TEST',
     // Chạy toàn bộ test suite
-    command: '/test "run full test suite, report failures"',
+    command: '/test "run __PROJECT__ test suite, report failures. ONLY test files in current directory."',
   },
   {
     id: 4,
     name: 'REVIEW',
     // Kiểm tra chất lượng code và bảo mật
-    command: '/review:codebase "audit code quality, security, type safety"',
+    command: '/review:codebase "audit __PROJECT__ code quality, security, type safety. ONLY review current directory."',
   },
   {
     id: 5,
     name: 'SHIP',
     // Commit + push nếu tất cả GREEN
-    command: '/check-and-commit "all phases passed — commit and push to production"',
+    command: '/check-and-commit "__PROJECT__: all phases passed — commit and push to production"',
   },
 ];
 
@@ -92,7 +95,7 @@ function getNextPhaseCommand(projectName) {
 
   // Chưa có pipeline → bắt đầu phase 1
   if (!state) {
-    return PHASES[0].command;
+    return PHASES[0].command.replace(/__PROJECT__/g, projectName);
   }
 
   // Đã ship xong
@@ -101,8 +104,10 @@ function getNextPhaseCommand(projectName) {
   }
 
   // Phase chưa hoàn thành → trả về command của phase hiện tại
+  // ⚠️ CRITICAL: Replace __PROJECT__ với tên project thực tế
+  // để CC CLI KHÔNG đi lang thang sang project khác!
   const phase = PHASES.find(p => p.id === state.currentPhase);
-  return phase ? phase.command : null;
+  return phase ? phase.command.replace(/__PROJECT__/g, projectName) : null;
 }
 
 /**

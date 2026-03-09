@@ -558,6 +558,36 @@ class RaaSAuthClient:
                 error_code="missing_credentials",
             )
 
+        # Validate format (same as production)
+        if token.startswith("mk_"):
+            if len(token) < 8:
+                return AuthResult(
+                    valid=False,
+                    error="Invalid API key format (too short)",
+                    error_code="invalid_api_key_format",
+                )
+        elif "." in token:
+            # JWT format - basic validation
+            payload = self._decode_jwt(token)
+            if not payload:
+                return AuthResult(
+                    valid=False,
+                    error="Invalid JWT format",
+                    error_code="invalid_jwt_format",
+                )
+            if not self._validate_jwt_expiry(payload):
+                return AuthResult(
+                    valid=False,
+                    error="Token expired",
+                    error_code="token_expired",
+                )
+        else:
+            return AuthResult(
+                valid=False,
+                error="Unrecognized credential format",
+                error_code="unknown_format",
+            )
+
         # Generate mock tenant ID from token
         tenant_id = f"local_{hashlib.md5(token.encode()).hexdigest()[:8]}"
 

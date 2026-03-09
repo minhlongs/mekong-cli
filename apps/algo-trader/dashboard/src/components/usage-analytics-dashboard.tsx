@@ -12,7 +12,7 @@ import { useLicenseAnalytics, TIME_RANGES } from '../hooks/use-license-analytics
 import { QuotaGauge, CircularGauge } from './quota-gauge';
 
 export function UsageAnalyticsDashboard() {
-  const { analytics, quota, loading, error, timeRange, setTimeRange, reload } = useLicenseAnalytics();
+  const { analytics, quota, loading, error, timeRange, setTimeRange, selectedLicense, setSelectedLicense, reload } = useLicenseAnalytics();
 
   if (loading) {
     return (
@@ -43,25 +43,41 @@ export function UsageAnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Time Range Selector */}
-      <div className="flex items-center justify-between">
+      {/* Header with Time Range Selector & License Filter */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h3 className="text-white text-lg font-bold">License Analytics</h3>
-        <div className="flex items-center gap-2">
-          {TIME_RANGES.map((range) => (
-            <button
-              key={range.value}
-              onClick={() => setTimeRange(range.value)}
-              className={`
-                px-3 py-1.5 text-xs font-mono rounded border transition-colors
-                ${timeRange === range.value
-                  ? 'border-accent text-accent bg-accent/10'
-                  : 'border-bg-border text-muted hover:text-white hover:border-white/30'
-                }
-              `}
-            >
-              {range.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          {/* License Filter */}
+          <select
+            value={selectedLicense}
+            onChange={(e) => setSelectedLicense(e.target.value)}
+            className="px-3 py-1.5 text-xs font-mono rounded border border-bg-border bg-bg-card text-muted hover:text-white focus:border-accent focus:outline-none"
+          >
+            <option value="">All Licenses</option>
+            {/* In production, populate from active licenses API */}
+            <option value="license-pro-001">License PRO 001</option>
+            <option value="license-pro-002">License PRO 002</option>
+            <option value="license-enterprise-001">License ENT 001</option>
+          </select>
+
+          {/* Time Range Selector */}
+          <div className="flex items-center gap-2">
+            {TIME_RANGES.map((range) => (
+              <button
+                key={range.value}
+                onClick={() => setTimeRange(range.value)}
+                className={`
+                  px-3 py-1.5 text-xs font-mono rounded border transition-colors
+                  ${timeRange === range.value
+                    ? 'border-accent text-accent bg-accent/10'
+                    : 'border-bg-border text-muted hover:text-white hover:border-white/30'
+                  }
+                `}
+              >
+                {range.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
