@@ -37,7 +37,8 @@
     "build:worker": "tsc -p tsconfig.worker.json && npm run disk:check",
     "dev:worker": "wrangler dev",
     "sync-dunning-kv": "ts-node src/jobs/dunning-kv-sync.ts",
-    "audit": "pnpm exec ts-node src/audit/index.ts"
+    "audit": "pnpm exec ts-node src/audit/index.ts",
+    "chaos-test": "pnpm exec ts-node src/testing/chaos/index.ts"
   },
   "dependencies": {
     "@agencyos/trading-core": "workspace:*",
