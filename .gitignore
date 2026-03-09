@@ -323,3 +323,8 @@ poetry.lock.backup
 .mekong/
 .workflow-migration-backup-*/
 packages/cleo/
+
+# Additional excluded apps
+apps/raas-demo/
+apps/tasks/
+apps/worker/
