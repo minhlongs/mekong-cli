@@ -78,8 +78,26 @@ export interface BillingSummary {
     apiCalls: number;
     computeMinutes: number;
     mlInferences: number;
+    overageUnits?: number; // Overage units beyond quota
   };
   estimatedCost: EstimatedCost;
+  overageCost?: number; // Separate overage cost
+}
+
+/**
+ * Overage usage record for Stripe
+ */
+export interface OverageStripeRecord {
+  /** Stripe subscription item ID */
+  subscription_item: string;
+  /** Overage quantity consumed */
+  quantity: number;
+  /** Unix timestamp for when usage occurred */
+  timestamp: number;
+  /** How to record quantity: 'increment' adds to existing, 'set' overwrites */
+  action?: 'increment' | 'set';
+  /** Mark as overage record */
+  isOverage: true;
 }
 
 /**
@@ -222,6 +240,30 @@ export class UsageBillingAdapter {
     });
 
     return records;
+  }
+
+  /**
+   * Convert overage usage to Stripe format
+   *
+   * @param overageUnits - Number of overage units
+   * @param subscriptionItemId - Stripe subscription item ID
+   * @returns Overage Stripe record
+   */
+  toOverageStripeRecord(
+    overageUnits: number,
+    subscriptionItemId: string
+  ): OverageStripeRecord | null {
+    if (overageUnits <= 0) {
+      return null;
+    }
+
+    return {
+      subscription_item: subscriptionItemId,
+      quantity: overageUnits,
+      timestamp: Math.floor(Date.now() / 1000),
+      action: 'increment',
+      isOverage: true,
+    };
   }
 
   /**

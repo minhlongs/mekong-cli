@@ -326,3 +326,50 @@ def _reset_sync_client() -> None:
     from src.raas.sync_client import reset_sync_client as _reset
 
     _reset()
+
+
+@app.command("kv-sync")
+def kv_sync(
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Force refresh from KV"
+    ),
+) -> None:
+    """🔄 Sync rate limit state with KV store."""
+    from src.core.kv_store_client import get_kv_client
+
+    console.print("[bold cyan]🔄 KV Store Sync[/bold cyan]\n")
+
+    client = get_kv_client()
+    success, message = client.sync_state()
+
+    if success:
+        console.print(f"[green]✓ {message}[/green]\n")
+        state = client.get_rate_limit_state(force_refresh=force)
+        _display_rate_limit_state(state)
+    else:
+        console.print(f"[bold red]✗ {message}[/bold red]\n")
+        raise typer.Exit(code=1)
+
+
+@app.command("kv-status")
+def kv_status() -> None:
+    """📊 Show KV store health and rate limit state."""
+    from src.core.kv_store_client import show_kv_status
+
+    show_kv_status()
+
+
+def _display_rate_limit_state(state: Any) -> None:
+    """Display rate limit state in table."""
+    from rich.table import Table
+
+    table = Table(title="Rate Limit State")
+    table.add_column("Property", style="cyan")
+    table.add_column("Value", style="green")
+
+    table.add_row("Remaining", str(state.remaining))
+    table.add_row("Limit", str(state.limit))
+    table.add_row("Reset In", f"{state.seconds_until_reset}s")
+    table.add_row("Synced At", state.synced_at.strftime("%H:%M:%S"))
+
+    console.print(table)

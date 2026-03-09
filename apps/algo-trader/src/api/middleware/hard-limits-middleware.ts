@@ -50,12 +50,14 @@ export interface HardLimitsOptions {
   enabled?: boolean;
   excludePaths?: string[];
   gracePercent?: number; // Warning threshold (default: 90%)
+  overageMode?: boolean; // If true, allow overage instead of blocking (default: false)
 }
 
 const DEFAULT_OPTIONS: Required<HardLimitsOptions> = {
   enabled: true,
   excludePaths: ['/health', '/ready', '/metrics', '/internal', '/api/v1/billing/webhook'],
   gracePercent: 90,
+  overageMode: false,
 };
 
 /**
@@ -211,7 +213,15 @@ export function createHardLimitsMiddleware(
 
       // Check if quota exceeded
       if (currentUsage >= limit) {
-        // Trigger auto-suspend
+        // If overage mode enabled, skip blocking (overage middleware will handle)
+        if (opts.overageMode) {
+          // Add warning header but allow request
+          reply.header('X-Usage-Warning', `Quota exceeded: ${currentUsage}/${limit}`);
+          reply.header('X-Overage-Mode', 'enabled');
+          return;
+        }
+
+        // Trigger auto-suspend (legacy behavior)
         await triggerAutoSuspend(licenseKey, currentUsage, limit);
 
         // Set suspension state
