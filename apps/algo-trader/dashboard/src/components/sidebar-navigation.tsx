@@ -85,6 +85,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'Phase 10',
+    path: '/phase10',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      </svg>
+    ),
+  },
+  {
     label: 'Reporting',
     path: '/reporting',
     icon: (
