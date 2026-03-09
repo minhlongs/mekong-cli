@@ -6,26 +6,25 @@
 </p>
 
 <h1 align="center">
-  Autonomous AI Agent Framework
+  Mekong CLI
 </h1>
 
 <p align="center">
-  <em>Give it a goal. It plans. It executes. It verifies. Done.</em>
+  <strong>The AI agent that plans, executes & verifies — so you don't babysit.</strong>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square" alt="MIT" /></a>
   <a href="https://github.com/longtho638-jpg/mekong-cli/actions"><img src="https://img.shields.io/github/actions/workflow/status/longtho638-jpg/mekong-cli/ci.yml?style=flat-square&label=CI" alt="CI" /></a>
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node" />
   <img src="https://img.shields.io/badge/LLM-Any_Provider-8B5CF6?style=flat-square" alt="LLM" />
+  <img src="https://img.shields.io/badge/v0.2.0-blue?style=flat-square" alt="Version" />
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> •
   <a href="#how-it-works">How It Works</a> •
   <a href="#agents">Agents</a> •
-  <a href="#api">API</a> •
   <a href="#raas">RaaS</a> •
   <a href="CONTRIBUTING.md">Contribute</a>
 </p>
@@ -34,233 +33,247 @@
 
 ## Why Mekong?
 
-Most AI coding tools generate code and hope for the best. Mekong **plans**, **executes**, and **verifies** — then rolls back if anything breaks.
+Most AI tools generate code and hope it works. Mekong **plans**, **executes**, and **verifies** — then rolls back if anything breaks.
 
 ```
-You say:  "Create a FastAPI service with JWT auth and tests"
+You: "Create a FastAPI service with JWT auth and tests"
 
-Mekong:   ┌─ PLAN ────── LLM decomposes into 5 steps with dependencies
-          ├─ EXECUTE ── Runs each step (shell, API, code generation)
-          ├─ VERIFY ─── Validates: tests pass? types check? builds clean?
-          └─ DONE ───── All green. 3 credits deducted. Ship it.
+Mekong:
+  📋 PLAN     → LLM decomposes into 5 steps with dependency graph
+  ⚡ EXECUTE  → Runs each step (shell, code gen, API calls)
+  ✅ VERIFY   → Tests pass? Types clean? Builds green?
+  🏁 DONE     → All verified. Ship it.
+
+  ❌ FAILED?  → Auto-rollback → Retry with corrected approach.
 ```
 
-**Zero babysitting.** If verification fails, it auto-rolls back and retries.
+**Zero babysitting. Zero hallucination tolerance.**
 
 ## Quick Start
 
 ```bash
-# Clone & install
+# 1. Install
 git clone https://github.com/longtho638-jpg/mekong-cli.git
-cd mekong-cli
-pip install -e ".[dev]"
+cd mekong-cli && pip install -e ".[dev]"
 
-# Set your LLM (any OpenAI-compatible provider)
+# 2. Configure any OpenAI-compatible LLM
 export LLM_BASE_URL="https://api.openai.com/v1"
 export LLM_API_KEY="sk-..."
 
-# 🚀 Go
+# 3. Go
 mekong cook "Create a Python calculator with tests"
 ```
 
 ### Works with every LLM
 
-| Provider | Config |
-|----------|--------|
-| **OpenAI** | `LLM_BASE_URL=https://api.openai.com/v1` |
-| **Anthropic** | Via any compatible proxy |
-| **Google Gemini** | `LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai` |
-| **DashScope (Qwen)** 🎁 | `LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1` — [Free credits →](https://www.alibabacloud.com/campaign/benefits?referral_code=A9245T) |
-| **Local (Ollama)** | `LLM_BASE_URL=http://localhost:11434/v1` |
+| Provider | Base URL | Cost |
+|----------|----------|------|
+| **OpenAI** | `https://api.openai.com/v1` | Pay-per-use |
+| **Google Gemini** | `https://generativelanguage.googleapis.com/v1beta/openai` | Free tier |
+| **DashScope (Qwen)** | `https://dashscope.aliyuncs.com/compatible-mode/v1` | [Free $50 credits →](https://www.alibabacloud.com/campaign/benefits?referral_code=A9245T) |
+| **Ollama (Local)** | `http://localhost:11434/v1` | Free |
+| **Any proxy** | Your OpenAI-compatible endpoint | Custom |
 
 ## How It Works
 
 ### Plan → Execute → Verify (PEV)
 
-The core loop that makes Mekong reliable:
-
-```mermaid
-graph LR
-    A[🎯 Goal] --> B[📋 Plan]
-    B --> C[⚡ Execute]
-    C --> D{✅ Verify}
-    D -->|Pass| E[🏁 Done]
-    D -->|Fail| F[⏪ Rollback]
-    F --> B
+```
+┌──────────────────────────────────────────────┐
+│              🎯 Your Goal                     │
+└──────────────┬───────────────────────────────┘
+               │
+    ┌──────────▼──────────┐
+    │  📋 PLAN             │  LLM decomposes goal into
+    │  RecipePlanner       │  ordered steps + dependencies
+    └──────────┬──────────┘
+               │
+    ┌──────────▼──────────┐
+    │  ⚡ EXECUTE          │  Runs shell, code gen, API
+    │  RecipeExecutor      │  calls — parallel where safe
+    └──────────┬──────────┘
+               │
+    ┌──────────▼──────────┐
+    │  ✅ VERIFY           │  Exit codes, tests, types,
+    │  RecipeVerifier      │  file checks, LLM assessment
+    └──────────┬──────────┘
+               │
+       ┌───────┴───────┐
+       │               │
+    ✅ Pass         ❌ Fail
+       │               │
+    🏁 Done        ⏪ Rollback → Retry
 ```
 
-| Phase | What | Module |
-|-------|------|--------|
-| **Plan** | LLM decomposes goal into ordered steps with dependency graph | `src/core/planner.py` |
-| **Execute** | Runs shell commands, API calls, LLM prompts — in parallel where possible | `src/core/executor.py` |
-| **Verify** | Checks exit codes, file existence, test results, LLM assessment | `src/core/verifier.py` |
+| Phase | Module | What It Does |
+|-------|--------|-------------|
+| **Plan** | `src/core/planner.py` | LLM decomposes goal into steps with dependency graph |
+| **Execute** | `src/core/executor.py` | Runs shell/code/API tasks, parallel where possible |
+| **Verify** | `src/core/verifier.py` | Validates results against success criteria |
+| **Orchestrate** | `src/core/orchestrator.py` | Coordinates PEV loop, rollback, self-healing |
 
 ## Agents
 
-Pluggable agents extend Mekong with domain-specific capabilities:
+All agents follow the same `plan() → execute() → verify()` pattern:
 
 ```bash
-mekong agent git status          # Git operations
-mekong agent file find "*.py"    # File search & analysis
-mekong agent shell "npm test"    # Shell execution with safety
-mekong agent database query ...  # Database ops (connect, query, migrate)
-mekong agent crawler scan        # Recipe discovery
-mekong agent lead hunt           # Lead generation
-mekong agent content write       # SEO content generation
+mekong agent git status              # Git operations
+mekong agent git commit "feat: ..."  # Smart commits
+mekong agent file find "*.py"        # File search & analysis
+mekong agent file tree src/          # Directory tree
+mekong agent shell "npm test"        # Safe shell execution
+mekong agent lead hunt               # Lead generation
+mekong agent content write           # SEO content
+mekong agent crawler scan            # Recipe discovery
 ```
 
-All agents follow the same `plan() → execute() → verify()` pattern. [Build your own →](CONTRIBUTING.md)
+[Build your own agent →](CONTRIBUTING.md)
 
 ## CLI
 
 ```bash
-mekong cook  "Build a REST API"     # Full PEV pipeline
-mekong plan  "Add OAuth support"    # Plan only (dry run)
-mekong debug "Fix login bug"        # Debug analysis
-mekong run   recipe.md              # Execute recipe file
-mekong agent <name> <cmd>           # Run agent directly
-mekong gateway                      # Start API server
-mekong evolve                       # Self-improvement cycle
+mekong cook  "Build a REST API"      # Full PEV pipeline
+mekong plan  "Add OAuth support"     # Plan only (dry run)
+mekong run   recipe.md               # Execute recipe file
+mekong agent <name> <command>        # Run agent directly
+mekong gateway --port 8000           # Start API server
+mekong list                          # List available recipes
+mekong search "deploy"               # Search recipes
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--verbose` `-v` | Step-by-step execution details |
-| `--dry-run` `-n` | Plan only, no execution |
+| Flag | Effect |
+|------|--------|
+| `--verbose / -v` | Step-by-step execution details |
+| `--dry-run / -n` | Plan only, no execution |
 | `--strict` | Fail on first verification error |
-| `--json` `-j` | Machine-readable JSON output |
+| `--json / -j` | Machine-readable JSON output |
 
 ## API
 
 Start the gateway: `mekong gateway --port 8000`
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/cmd` | POST | Execute PEV pipeline |
-| `/v1/tasks` | POST | Submit task (credits deducted) |
-| `/v1/tasks/{id}` | GET | Poll task status |
-| `/v1/tasks/{id}/stream` | GET | SSE real-time progress |
-| `/v1/agents` | GET | List available agents |
-| `/v1/agents/{name}/run` | POST | Invoke agent directly |
-| `/v1/license/validate` | POST | Validate RaaS license key |
-| `/v1/license/status` | GET | Get license status (masked) |
-| `/billing/webhook` | POST | Polar.sh webhook |
+```
+POST   /v1/tasks              # Submit task (credits deducted)
+GET    /v1/tasks/{id}         # Task status
+GET    /v1/tasks/{id}/stream  # SSE real-time progress
+GET    /v1/agents             # List agents
+POST   /v1/agents/{name}/run  # Invoke agent
+POST   /v1/license/validate   # Validate license key
+GET    /health                # Health check
+POST   /billing/webhook       # Polar.sh webhook
+```
 
-### Security Middleware
-
-- **License Verification**: `/v1/license/*` endpoints require valid `RAAS_LICENSE_KEY`
-- **Rate Limiting**: Token bucket (100 req/min default, configurable per tier)
-- **CORS**: Configured for cross-origin requests
+```bash
+curl -X POST http://localhost:8000/v1/tasks \
+  -H "Authorization: Bearer mk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"goal": "Create a todo app with tests", "strict": false}'
+```
 
 ## RaaS
 
-**Revenue as a Service** — Open Core licensing with built-in credit billing:
+**Revenue as a Service** — Open Core model with built-in credit billing.
 
-### Security Features
+| Tier | Credits | Agents |
+|------|---------|--------|
+| **Free** | 10/month | Core agents |
+| **Pro** | 200/month | All agents |
+| **Enterprise** | Custom | Custom + API |
 
-- **License Gating**: Premium agents behind `RAAS_LICENSE_KEY` verification
-- **SHA-256 Hashing**: Secure license key storage
-- **Rate Limiting**: Token bucket algorithm prevents abuse
-- **Tier-based Access**: FREE / PRO / ENTERPRISE
-
-```python
-from lib.raas-gate import requireLicense, LicenseError
-
-try:
-    requireLicense('CTO Auto-Pilot')
-    # Premium feature unlocked
-except LicenseError as e:
-    print(f"License required: {e.code}")
-```
-
-### Premium Agents (License Required)
-
-| Agent | Tier | Description |
-|-------|------|-------------|
-| `auto-cto-pilot` | PRO | Tự động tạo tasks theo Binh Pháp |
-| `opus-strategy` | PRO | Strategic planning với Claude Opus |
-| `opus-parallel` | PRO | Parallel agent orchestration |
-| `opus-review` | PRO | Security & quality review |
-
-### Core Agents (Open Source)
-
-`planner`, `fullstack-developer`, `tester`, `code-reviewer`, `debugger`, `researcher`, `ui-ux-designer`, `docs-manager`, `project-manager`, `git-manager`
-
-### SDK Usage
+| Complexity | Credits | Example |
+|-----------|---------|---------|
+| Simple | 1 | File edit, git op |
+| Standard | 3 | Feature with tests |
+| Complex | 5 | Full-stack + deploy |
 
 ```python
 from src.raas.sdk import MekongClient
 
-client = MekongClient("https://api.your-raas.com", "mk_your_key")
+client = MekongClient("https://api.mekong.io", "mk_your_key")
+result = client.cook("Deploy a landing page")
 
-# Submit task → auto-deducts credits
-result = client.submit_task("Deploy a landing page")
-
-# Stream real-time progress
 for event in client.stream_task(result.task_id):
-    print(f"Step {event['order']}: {event['title']}")
+    print(f"Step {event['step']}: {event['title']}")
 ```
 
-| Complexity | Credits | Example |
-|-----------|---------|---------|
-| Simple | 1 | Single file edit, git operation |
-| Standard | 3 | Multi-step feature with tests |
-| Complex | 5 | Full-stack feature + deployment |
+### Premium Agents (License Required)
+
+| Agent | Description |
+|-------|-------------|
+| `auto-cto-pilot` | Autonomous daily task generation |
+| `opus-strategy` | Strategic planning with top-tier LLM |
+| `opus-parallel` | Multi-agent parallel orchestration |
+| `opus-review` | Security + quality code review |
 
 ## Architecture
 
 ```
 mekong-cli/
-├── src/                    # Core engine
-│   ├── core/               # PEV pipeline (planner, executor, verifier)
+├── src/                    # Core engine (Python)
+│   ├── core/               # PEV pipeline
+│   │   ├── planner.py      # LLM → recipe decomposition
+│   │   ├── executor.py     # Shell/code/API runner
+│   │   ├── verifier.py     # Quality gate validation
+│   │   └── orchestrator.py # PEV loop + rollback
 │   ├── agents/             # Pluggable agent system
-│   └── raas/               # Credit billing & SDK
-├── apps/                   # Production services
-│   ├── algo-trader/        # Trading engine (Fastify + BullMQ)
-│   ├── openclaw-worker/    # Autonomous CTO brain (Tôm Hùm 🦞)
-│   └── raas-gateway/       # Cloudflare Worker gateway
-├── packages/               # Shared libraries
-├── cli/                    # CLI entry point
+│   └── raas/               # Credit billing + SDK
+├── apps/                   # Services
+│   ├── openclaw-worker/    # Autonomous CTO daemon
+│   ├── raas-gateway/       # Cloudflare Worker API
+│   └── algo-trader/        # Trading engine
+├── packages/               # Shared TypeScript libraries
+├── tests/                  # Test suite (62 tests)
 ├── recipes/                # Built-in task templates
-├── docker/                 # Container configs
-├── tests/                  # Test suite
-├── docs/                   # Documentation
-└── examples/               # Usage examples
+└── docs/                   # Documentation
 ```
 
 ## Development
 
 ```bash
-pnpm install              # Install dependencies
-pnpm run build            # Build all packages
-pnpm run test             # Run test suite
-pnpm run lint             # Lint check
+# Python
+pip install -e ".[dev]"
+python3 -m pytest              # Run tests
+
+# Node.js (apps & packages)
+pnpm install
+pnpm run build
+pnpm run test
 ```
 
-## Contributing & Revenue Sharing
+## Mekong vs. Alternatives
 
-Contributors **share in the revenue** generated by AgencyOS usage of their code. This isn't charity — it's aligned incentives.
+| Feature | Mekong | Aider | Cursor | Copilot |
+|---------|--------|-------|--------|---------|
+| Plan → Execute → Verify | ✅ | ❌ | ❌ | ❌ |
+| Auto-rollback on failure | ✅ | ❌ | ❌ | ❌ |
+| Multiple agents | ✅ 12+ | ❌ | ❌ | ❌ |
+| Any LLM provider | ✅ | ✅ | ❌ | ❌ |
+| Built-in billing/RaaS | ✅ | ❌ | ❌ | ❌ |
+| REST API + WebSocket | ✅ | ⚠️ | ❌ | ⚠️ |
+| Self-hosted | ✅ | ✅ | ❌ | ❌ |
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- 💰 Revenue sharing program
-- 📐 Code standards & architecture patterns
-- 🔀 PR workflow
+## Contributing
+
+Contributors **share in revenue** generated by AgencyOS usage of their code.
+
+- **Agent submissions** → 10% of credits used
+- **Recipe contributions** → 5% of credits used
+- **Bug bounties** → $50–$500
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Roadmap
 
 - [x] PEV Engine (Plan → Execute → Verify)
 - [x] Agent System (Git, File, Shell, Database, Lead, Content)
 - [x] Credit Billing (SQLite + Polar.sh)
-- [x] Multi-tenant isolation
-- [x] Python SDK (sync + async)
-- [x] DAG scheduler (parallel execution)
 - [x] Multi-provider LLM support
-- [x] Plugin system
-- [ ] Plugin marketplace
+- [x] Python SDK (sync + async)
+- [x] FastAPI Gateway + WebSocket streaming
 - [ ] Web dashboard
-- [ ] Community recipe registry
-- [ ] npm/pip package publishing
+- [ ] Recipe marketplace
+- [ ] npm/PyPI packages
+- [ ] Plugin system
 
 ## License
 
@@ -270,5 +283,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 <p align="center">
   <sub>Built with 🐉 by <a href="https://binhphap.io">Binh Phap Venture Studio</a></sub><br/>
-  <sub><em>"Speed is the essence of war." — Sun Tzu, The Art of War</em></sub>
+  <sub><em>"Speed is the essence of war." — Sun Tzu</em></sub>
 </p>
