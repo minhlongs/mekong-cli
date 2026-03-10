@@ -308,9 +308,9 @@ configs/
 .claude-skills/
 .agencyos/
 .git_backup_sophia/
-# core/ ignored but src/core/ is tracked (core Python engine)
-src/core/
-core/
+# core/ at root level ignored, but src/core/ is tracked (core Python engine)
+# Commented out - was blocking src/core/ files
+# core/
 
 # Build/test artifacts (auto-generated)
 *.log
