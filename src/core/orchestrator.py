@@ -132,6 +132,28 @@ class StepExecutor:
         ):
             command = step.description.strip()
             stderr = execution_result.stderr or ""
+            self.console.print(
+                "[yellow]🔧 Attempting AI self-correction...[/yellow]"
+            )
+
+            # AGI v2: Consult reflection for past failure patterns
+            reflection_hint = ""
+            if self._reflection:
+                try:
+                    reflection_hint = self._reflection.get_strategy_suggestion(
+                        f"fix error: {stderr[:100]}",
+                    )
+                    if reflection_hint and "No prior data" not in reflection_hint:
+                        self.console.print(
+                            f"[dim]🪞 Reflection hint: {reflection_hint[:50]}[/dim]"
+                        )
+                except Exception:
+                    pass
+            if workflow_id:
+                self.history.append(ExecutionEvent.create(
+                    EventKind.SELF_HEAL_ATTEMPTED, workflow_id, step.order,
+                    data={"error": stderr[:200]},
+                ))
 
             if self.telemetry:
                 self.telemetry.record_llm_call()
@@ -470,6 +492,143 @@ class RecipeOrchestrator:
             telemetry=self.telemetry,
         )
         return self.step_executor
+
+    def _post_execution_agi(
+        self,
+        goal: str,
+        status: str,
+        duration_ms: float,
+        world_before: Any | None,
+        errors: list[str],
+    ) -> None:
+        """AGI v2: Post-execution pipeline — reflection + world diff +
+        code evolution + vector memory + collaboration review."""
+        # Reflection: learn from result
+        if self._reflection:
+            try:
+                reflection = self._reflection.reflect(
+                    goal=goal,
+                    status=status,
+                    duration_ms=duration_ms,
+                    error=errors[0] if errors else "",
+                )
+                if reflection.lesson_learned:
+                    self.console.print(
+                        f"\n[dim]🪞 Reflection: {reflection.lesson_learned[:80]}[/dim]"
+                    )
+                if reflection.strategy_change:
+                    self.console.print(
+                        f"[dim]🪞 Strategy change: {reflection.strategy_change[:60]}[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # World diff: track environment changes
+        if self._world_model and world_before:
+            try:
+                world_after = self._world_model.snapshot()
+                world_diff = self._world_model.diff(world_before, world_after)
+                diff_summary = world_diff.summary()
+                if diff_summary and diff_summary != "No changes detected":
+                    self.console.print(f"\n[dim]🌍 World changes: {diff_summary[:100]}[/dim]")
+            except Exception:
+                pass
+
+        # Code Evolution: log improvement hint after execution
+        if self._code_evolution:
+            try:
+                stats = self._code_evolution.get_stats()
+                if stats.get("total_attempts", 0) > 0:
+                    self.console.print(
+                        f"[dim]🧬 Evolution: {stats['total_attempts']} attempts, "
+                        f"{stats.get('success_rate', 0):.0%} success rate[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # Vector Memory: persist goal+result for future similarity search
+        if self._vector_memory:
+            try:
+                import hashlib as _hashlib
+                from .vector_memory_store import VectorMemoryStore
+                vec = VectorMemoryStore.text_to_hash_vector(goal)
+                goal_id = _hashlib.md5(goal.encode()).hexdigest()[:12]
+                self._vector_memory.get_or_create_collection("goal_history", 64)
+                self._vector_memory.upsert(
+                    collection="goal_history",
+                    id=goal_id,
+                    vector=vec,
+                    payload={
+                        "goal": goal,
+                        "status": status,
+                        "duration_ms": duration_ms,
+                        "errors": errors[:3] if errors else [],
+                    },
+                )
+            except Exception:
+                pass
+
+        # Collaboration: submit execution review
+        if self._collaboration:
+            try:
+                self._collaboration.submit_review(
+                    reviewer="orchestrator",
+                    target=goal[:30],
+                    approved=status == "success",
+                    feedback=[errors[0]] if errors else ["Completed successfully"],
+                )
+            except Exception:
+                pass
+
+    def _auto_save_recipe(
+        self, goal: str, recipe: Recipe,
+    ) -> None:
+        """AGI v2: Auto-save a successful recipe for future reuse."""
+        import hashlib as _hashlib
+        from pathlib import Path
+
+        try:
+            auto_dir = Path("recipes/auto")
+            auto_dir.mkdir(parents=True, exist_ok=True)
+
+            goal_hash = _hashlib.md5(goal.encode()).hexdigest()[:8]
+            recipe_path = auto_dir / f"auto_{goal_hash}.md"
+
+            if recipe_path.exists():
+                return
+
+            tags = getattr(recipe, "tags", []) or []
+            lines = [
+                f"# {recipe.name}",
+                "> Auto-generated recipe from successful execution",
+                "",
+                "## Description",
+                f"{recipe.description}",
+                "",
+                "## Tags",
+                f"auto, {', '.join(tags) if tags else 'general'}",
+                "",
+                "## Steps",
+            ]
+            for step in recipe.steps:
+                step_params = step.params or {}
+                step_type = step_params.get("type", "shell")
+                lines.extend([
+                    "",
+                    f"### {step.order}. {step.title}",
+                    f"Type: {step_type}",
+                    "```",
+                    step.description,
+                    "```",
+                ])
+
+            recipe_path.write_text("\n".join(lines))
+            self.console.print(f"[dim]💾 Auto-saved recipe: {recipe_path}[/dim]")
+            get_event_bus().emit(EventType.RECIPE_AUTO_SAVED, {
+                "path": str(recipe_path), "goal": goal,
+            })
+        except Exception:
+            pass
 
     def run_from_goal(
         self,

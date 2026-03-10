@@ -68,6 +68,11 @@ class EventType(str, Enum):
     BILLING_RECONCILIATION = "billing:reconciliation"
     BILLING_BATCH_PROCESSED = "billing:batch_processed"
     BILLING_IDEMPOTENCY_CONFLICT = "billing:idempotency_conflict"
+    # AGI v2: Module communication events
+    AGI_SCORE_COMPUTED = "agi_score_computed"
+    RECIPE_AUTO_SAVED = "recipe_auto_saved"
+    SELF_HEAL_REFLECTION = "self_heal_reflection"
+    VECTOR_MEMORY_UPDATED = "vector_memory_updated"
 
 
 @dataclass

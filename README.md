@@ -18,6 +18,12 @@
 </p>
 
 <p align="center">
+  <strong>Open-source AI agent framework for autonomous task execution.</strong><br/>
+  Plan → Execute → Verify — with built-in credit billing for RaaS.<br/>
+  <em>AGI v2: 9 subsystems • 97.6/100 score • Self-healing pipeline</em>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick Start</a> •
   <a href="#how-it-works">How It Works</a> •
   <a href="#commands">Commands</a> •
@@ -241,6 +247,174 @@ for event in client.stream_task(result.task_id):
 | Founder OS (idea → IPO) | ✅ | ❌ | ❌ | ❌ |
 | Self-hosted | ✅ | ✅ | ❌ | ❌ |
 
+| Complexity | Credits | Example |
+|-----------|---------|---------|
+| Simple | 1 | Single file edit, git operation |
+| Standard | 3 | Multi-step feature implementation |
+| Complex | 5 | Full-stack feature with tests |
+
+## CLI Commands
+
+```bash
+mekong cook "<goal>"           # Full PEV pipeline
+mekong cook "<goal>" --agi-dash # With AGI v2 dashboard
+mekong plan "<goal>"           # Plan only (dry run)
+mekong run <recipe.md>         # Execute existing recipe
+mekong agent <name> <cmd>      # Run agent directly
+mekong list                    # List available recipes
+mekong search <query>          # Search recipes
+mekong version                 # Show version + AGI health
+mekong agi status              # AGI score dashboard (0-100)
+mekong collab debate "<topic>" # Multi-agent debate
+mekong collab review <file>    # Peer code review
+mekong memory search "<query>" # Vector semantic search
+```
+
+### Flags
+
+| Flag | Description |
+|------|------------|
+| `--verbose` | Show step-by-step execution details |
+| `--dry-run` | Plan only, no execution |
+| `--strict` | Fail on first verification error |
+| `--no-rollback` | Skip rollback on failure |
+| `--agi-dash` | Show 9-subsystem AGI dashboard after cook |
+
+## Architecture
+
+```
+mekong-cli/
+├── src/
+│   ├── core/                      # PEV Engine + AGI v2
+│   │   ├── planner.py             # LLM task decomposition (5 step types)
+│   │   ├── executor.py            # Multi-mode runner (shell/llm/tool/browse/evolve)
+│   │   ├── verifier.py            # Result validation
+│   │   ├── orchestrator.py        # PEV coordination + self-healing + auto-recipe
+│   │   ├── nlu.py                 # 📡 Intent classification (NLU)
+│   │   ├── memory.py              # 💾 Persistent execution memory
+│   │   ├── reflection.py          # 🪞 Past failure analysis
+│   │   ├── world_model.py         # 🌍 Environment state tracking
+│   │   ├── tool_registry.py       # 🔧 Dynamic tool management
+│   │   ├── browser_agent.py       # 🌐 Web content extraction
+│   │   ├── collaboration.py       # 🤝 Multi-agent coordination
+│   │   ├── code_evolution.py      # 🧬 Code quality evolution
+│   │   ├── vector_memory_store.py # 🧠 Semantic vector search
+│   │   ├── agi_score.py           # 🏆 Real-time score engine (0-100)
+│   │   ├── event_bus.py           # ⚡ Reactive event system (22 events)
+│   │   ├── telemetry.py           # 📊 Tiered telemetry (T0/T1/T2)
+│   │   ├── smart_router.py        # Intent → recipe/tool/evolve router
+│   │   ├── llm_client.py          # OpenAI-compatible client
+│   │   └── gateway.py             # FastAPI server + WebSocket
+│   ├── agents/                    # Pluggable agent system
+│   └── raas/                      # Credit billing (RaaS)
+├── tests/                         # Test suite (197+ tests)
+├── recipes/                       # Built-in + auto-generated recipes
+│   └── auto/                      # Auto-saved from successful runs
+└── docs/                          # Documentation
+```
+
+## AGI v2 — 9-Subsystem Intelligence
+
+Mekong CLI integrates **9 AGI subsystems** into the core pipeline, scored in real-time via `mekong agi status`:
+
+```
+╭── 🧠 AGI v2 Score Dashboard ──╮
+│ Grade: S    Score: 97.6/100    │
+│ ███████████████████░           │
+│                                │
+│ Modules: 45/45  Wiring: 25/25 │
+│ Runtime: 13/15  Improve: 15/15│
+╰────────────────────────────────╯
+```
+
+### 17 Pipeline Touchpoints
+
+```
+PRE-EXEC (5):   World → Reflection → Tools → VecMem → Collab
+PLAN (3):       NLU classify → Decompose (5 types) → SmartRouter
+EXEC (3):       Execute → Self-heal (reflection+LLM) → Verify
+POST-EXEC (6):  Reflect → WorldDiff → CodeEvo → VecMem → Collab → AutoRecipe+Telemetry
+```
+
+### Key AGI Features
+
+| Feature | Description |
+|---------|-------------|
+| **Self-Healing** | Failed steps → reflection hint → LLM retry → auto-correct |
+| **Auto-Recipes** | Successful runs auto-save to `recipes/auto/` for future reuse |
+| **Score Engine** | 4-dimension scoring: modules (45) + wiring (25) + runtime (15) + improve (15) |
+| **EventBus** | 22 event types for reactive module communication |
+| **Tiered Telemetry** | T0 (full trace) → T1 (daily summary) → T2 (monthly archive) |
+
+## API Server
+
+```bash
+# Start the gateway
+uvicorn src.core.gateway:app --host 0.0.0.0 --port 8000
+```
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/cmd` | POST | Execute PEV pipeline |
+| `/missions` | POST | Create mission (credits deducted) |
+| `/missions` | GET | List missions |
+| `/missions/{id}` | GET | Get mission status |
+| `/missions/{id}/cancel` | POST | Cancel + refund credits |
+| `/billing/webhook` | POST | Polar.sh webhook receiver |
+| `/dashboard/summary` | GET | Tenant dashboard data |
+
+## RaaS Integration
+
+Mekong CLI is the open-source engine behind **Agency OS** — a managed platform where non-technical users submit tasks in natural language and pay per execution via credits.
+
+### How it works
+
+```
+Non-tech User → "Build me a landing page"
+    ↓
+Agency OS Dashboard (commercial)
+    ↓
+Mekong CLI API → Plan → Execute → Verify
+    ↓
+Credits deducted → Result delivered
+```
+
+### Build your own RaaS
+
+```python
+# 1. Create a tenant
+from src.raas.tenant import TenantStore
+store = TenantStore()
+tenant = store.create_tenant("Acme Corp")
+print(f"API Key: {tenant.api_key}")  # mk_... (shown once)
+
+# 2. Add credits
+from src.raas.credits import CreditStore
+credits = CreditStore()
+credits.add(tenant.id, 100, "initial_grant")
+
+# 3. Submit missions via API
+# POST /missions with Bearer token
+# Body: {"goal": "Create a REST API for users"}
+```
+
+## Configuration
+
+Copy `.env.example` and set:
+
+```bash
+# LLM Provider (any OpenAI-compatible API)
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=sk-...
+
+# Billing (optional, for RaaS)
+POLAR_WEBHOOK_SECRET=whsec_...
+
+# Database (default: ~/.mekong/raas/tenants.db)
+RAAS_DB_PATH=~/.mekong/raas/tenants.db
+```
+
 ## Development
 
 ```bash
@@ -255,6 +429,18 @@ pnpm install && pnpm run build
 ## Roadmap
 
 **v3.1.0 (current)** — 55 commands, Founder OS complete, AGI Score 97.6/100
+
+- [x] PEV Engine (Plan-Execute-Verify)
+- [x] Agent System (Git, File, Shell)
+- [x] Credit Billing (SQLite, Polar.sh)
+- [x] Multi-tenant isolation
+- [x] Python SDK
+- [x] AGI v2: 9 subsystems (NLU, Memory, Reflection, WorldModel, Tools, Browser, Collab, Evo, VecMem)
+- [x] Self-healing pipeline with reflection-guided retries
+- [x] Auto-recipe generation from successful runs
+- [x] AGI Score Engine (0-100) with agi status dashboard
+- [x] EventBus reactive module communication (22 events)
+- [x] Tiered telemetry (T0/T1/T2)
 
 - [ ] v4.0: Web dashboard + Recipe marketplace
 - [ ] Plugin system (custom agents)
