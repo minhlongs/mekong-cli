@@ -3,6 +3,7 @@
 const LAYERS = [
   {
     id: 'founder',
+    href: '/founder',
     icon: '👑',
     role: 'FOUNDER / CEO',
     desc: 'Lập kế hoạch, gọi vốn, OKR, dashboard',
@@ -13,6 +14,7 @@ const LAYERS = [
   },
   {
     id: 'business',
+    href: '/business',
     icon: '🏢',
     role: 'BUSINESS',
     desc: 'Sales, marketing, tài chính, nhân sự',
@@ -23,6 +25,7 @@ const LAYERS = [
   },
   {
     id: 'product',
+    href: '/product',
     icon: '📦',
     role: 'PRODUCT',
     desc: 'Lập kế hoạch sản phẩm, sprint, roadmap',
@@ -33,6 +36,7 @@ const LAYERS = [
   },
   {
     id: 'developer',
+    href: '/dev/quickstart',
     icon: '⚙️',
     role: 'DEVELOPER',
     desc: 'Code, test, deploy — bắt đầu trong 5 phút',
@@ -43,6 +47,7 @@ const LAYERS = [
   },
   {
     id: 'operations',
+    href: '/ops',
     icon: '🔧',
     role: 'OPERATIONS',
     desc: 'Monitor, audit, sync, recovery',
@@ -85,7 +90,7 @@ export default function PyramidHero() {
           {LAYERS.map((layer, i) => (
             <a
               key={layer.id}
-              href={`#${layer.id}`}
+              href={layer.href}
               className={[
                 'w-full glass-card rounded-2xl p-4 transition-all duration-300',
                 layer.width,
