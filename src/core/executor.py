@@ -4,6 +4,7 @@ Executes recipes parsed from Markdown files.
 Returns ExecutionResult for orchestrator integration.
 """
 
+import re
 import shlex
 import subprocess
 import time
@@ -15,6 +16,12 @@ from rich.text import Text
 from src.core.parser import Recipe, RecipeStep
 from src.core.verifier import ExecutionResult
 from src.security.command_sanitizer import CommandSanitizer
+
+DANGEROUS_PATTERNS = [
+    "rm -rf /", "mkfs", "dd if=", ": (){",
+    "chmod -R 777 /", "curl.*|.*sh", "wget.*|.*sh",
+    "eval ", "exec(", "> /dev/sd", "shutdown", "reboot", "init 0",
+]
 
 
 class RecipeExecutor:
@@ -29,6 +36,22 @@ class RecipeExecutor:
         """
         self.recipe = recipe
         self.console = Console()
+
+    def _is_safe_command(self, command: str) -> bool:
+        """Check command against dangerous patterns before execution.
+
+        Args:
+            command: Shell command string to validate.
+
+        Returns:
+            False if any dangerous pattern matches, True if safe.
+
+        """
+        lower = command.lower()
+        for pattern in DANGEROUS_PATTERNS:
+            if re.search(pattern, lower, re.IGNORECASE):
+                return False
+        return True
 
     def execute_step(self, step: RecipeStep) -> ExecutionResult:
         """Execute a single step.
@@ -169,6 +192,17 @@ class RecipeExecutor:
                 stdout="[SKIPPED] Empty command",
                 stderr="",
                 metadata={"mode": "shell", "skipped": True},
+            )
+
+        # SECURITY: Quick pattern check before full sanitization
+        if not self._is_safe_command(command):
+            error_msg = "Command blocked by safety filter — matched dangerous pattern"
+            self.console.print(f"[bold red]SECURITY ERROR:[/bold red] {error_msg}")
+            return ExecutionResult(
+                exit_code=1,
+                stdout="",
+                stderr=f"SECURITY_BLOCKED: {error_msg}",
+                metadata={"mode": "shell", "command": command, "security_blocked": True},
             )
 
         # SECURITY: Sanitize command before execution
