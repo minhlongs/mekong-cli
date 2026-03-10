@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from src.core.company_report import (
-    AGENT_ROLES,
     generate_report,
 )
 from src.core.mcu_gate import MCUGate
