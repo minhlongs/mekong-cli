@@ -7,6 +7,7 @@ Syncs license activation events to AgencyOS dashboard for real-time state displa
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from datetime import datetime, timezone
@@ -16,6 +17,8 @@ from typing import Any, Dict, Optional
 import requests
 
 from .raas_auth import RaaSAuthClient
+
+logger = logging.getLogger(__name__)
 
 
 class ActivationSync:
@@ -128,11 +131,11 @@ class ActivationSync:
                 return True
 
             # Log failure for retry
-            print(f"Dashboard sync failed: {response.status_code}")
+            logger.warning("Dashboard sync failed: %s", response.status_code)
             return False
 
         except requests.exceptions.RequestException as e:
-            print(f"Dashboard sync error: {e}")
+            logger.warning("Dashboard sync error: %s", e)
             return False
 
     def _queue_event(self, event: Dict[str, Any]) -> None:

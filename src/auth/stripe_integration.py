@@ -153,7 +153,7 @@ class StripeService:
             customer_data = customers.data[0]
             return StripeCustomer._from_stripe_object(customer_data)
         except Exception as e:
-            print(f"Error fetching customer: {e}")
+            logger.error("Error fetching customer: %s", e)
             return None
 
     async def get_subscription_status(self, customer_id: str) -> Optional[Dict[str, Any]]:
@@ -189,10 +189,7 @@ class StripeService:
                 "cancel_at_period_end": sub.cancel_at_period_end,
             }
         except Exception as e:
-            print(f"Stripe API error: {e}")
-            return None
-        except Exception as e:
-            print(f"Error fetching subscription: {e}")
+            logger.error("Error fetching subscription: %s", e)
             return None
 
     def map_tier_to_role(self, stripe_price_id: str) -> Optional[Role]:
@@ -235,7 +232,7 @@ class StripeService:
             user = await user_repo.find_by_id(user_id)
 
             if not user:
-                print(f"User {user_id} not found")
+                logger.warning("User %s not found", user_id)
                 return False
 
             # Get customer email
@@ -246,7 +243,7 @@ class StripeService:
             if not customer:
                 # No customer found - downgrade to viewer
                 await user_repo.update_user_role(user.id, Role.VIEWER.value)
-                print(f"No Stripe customer found for {email}, downgrading to viewer")
+                logger.info("No Stripe customer found for %s, downgrading to viewer", email)
                 return True
 
             # Get subscription status
@@ -262,11 +259,11 @@ class StripeService:
 
             # Update user role in database
             await user_repo.update_user_role(user.id, new_role.value)
-            print(f"Updated user {user_id} role to {new_role.value}")
+            logger.info("Updated user %s role to %s", user_id, new_role.value)
             return True
 
         except Exception as e:
-            print(f"Error syncing user role: {e}")
+            logger.error("Error syncing user role: %s", e)
             return False
 
     def verify_webhook_signature(
@@ -285,7 +282,7 @@ class StripeService:
             True if signature is valid, False otherwise
         """
         if not self.webhook_secret:
-            print("Warning: STRIPE_WEBHOOK_SECRET not configured")
+            logger.warning("STRIPE_WEBHOOK_SECRET not configured")
             return False
 
         try:
@@ -318,7 +315,7 @@ class StripeService:
             return hmac.compare_digest(signature, expected_sig)
 
         except Exception as e:
-            print(f"Error verifying webhook signature: {e}")
+            logger.error("Error verifying webhook signature: %s", e)
             return False
 
     async def handle_stripe_webhook(
@@ -434,7 +431,7 @@ class StripeService:
                 }
 
         except Exception as e:
-            print(f"Error handling webhook: {e}")
+            logger.error("Error handling webhook: %s", e)
             return {"success": False, "message": f"Error processing webhook: {e}"}
 
     async def _get_customer_by_id(self, customer_id: str) -> Optional[StripeCustomer]:
@@ -444,10 +441,7 @@ class StripeService:
             customer = await client.Customer.retrieve(customer_id)
             return StripeCustomer._from_stripe_object(customer)
         except Exception as e:
-            print(f"Stripe API error: {e}")
-            return None
-        except Exception as e:
-            print(f"Error fetching customer: {e}")
+            logger.error("Error fetching customer: %s", e)
             return None
 
 
