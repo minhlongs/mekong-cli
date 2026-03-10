@@ -278,6 +278,80 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 - [ ] npm/PyPI packages
 - [ ] Plugin system
 
+## Founder OS — Goldman Sachs Playbook as Code
+
+Complete founder lifecycle from Idea to Post-IPO, encoded as 24 executable commands across 11 stages.
+
+### Why This is a Moat
+
+1. **Information Asymmetry** — Institutional knowledge (term sheets, cap tables, S-1 filings) packaged as code. First-time founders get Goldman-grade analysis.
+2. **Operating System, Not Tools** — Not a calculator or template. A complete decision engine that connects bootstrapping → fundraising → IPO → public company.
+3. **Compounds Over Time** — Each module feeds the next. Cap table feeds term sheet analysis feeds negotiation strategy feeds IPO readiness.
+
+### 11-Stage Lifecycle
+
+```
+Idea → Validate → Brand → Pitch → Bootstrap → Raise (VC) → Grow → Secondary → Pre-IPO → IPO → Post-IPO
+```
+
+### 24 Commands
+
+| Stage | Command | Description |
+|-------|---------|-------------|
+| 1. Validate | `/founder:validate` | Market validation, PMF signals, pivot criteria |
+| 2. Brand | `/founder:brand` | Brand DNA, positioning, naming, voice |
+| 3. Pitch | `/founder:pitch` | Pitch deck, elevator pitch, investor materials |
+| 4. Metrics | `/founder:metrics` | KPI dashboard, cohort analysis, benchmarks |
+| 5. Hire | `/founder:hire` | Role definition, JD generation, interview scorecards |
+| 6. Legal | `/founder:legal` | Entity structure, IP protection, compliance |
+| 7. Weekly | `/founder:week` | Weekly review, OKR tracking, team updates |
+| 8. Bootstrap | `/founder:vc:bootstrap` | Ramen profitability, alternative funding, raise readiness |
+| 9. Term Sheet | `/founder:vc:term-sheet` | Red flag detection, clause analysis, exit simulation |
+| 10. Cap Table | `/founder:vc:cap-table` | Dilution modeling, SAFE conversion, exit waterfall |
+| 11. Negotiate | `/founder:vc:negotiate` | BATNA assessment, counter scripts, walk-away lines |
+| 12. VC Map | `/founder:vc-map` | VC database, warm intro finder, outreach intel |
+| 13. Grow | `/founder:grow` | Growth strategy, channel optimization |
+| 14. Secondary | `/founder:secondary` | Secondary market, tender offers, tax optimization |
+| 15. Pre-IPO | `/founder:ipo:pre-ipo-prep` | IPO readiness audit (5 categories, 100 points) |
+| 16. S-1 | `/founder:ipo:s1` | S-1 prospectus framework, risk factors, narrative |
+| 17. Roadshow | `/founder:ipo:roadshow` | 20-slide deck, Q&A bank, order book analysis |
+| 18. IPO Day | `/founder:ipo:ipo-day` | Pricing scenarios, T-minus timeline, bell ceremony |
+| 19. Public Co | `/founder:ipo:public-co` | Quarterly earnings, guidance, 10-Q/10-K filing |
+| 20. Insider | `/founder:ipo:insider` | Trading windows, 10b5-1 plans, lockup strategy |
+| 21. Succession | `/founder:ipo:succession` | CEO transition, buyback modeling, M&A screening |
+| 22. Emergency | `/founder:emergency` | Crisis playbook, board communication |
+| 23. Scale | `/founder:scale` | Scaling operations, team growth |
+| 24. Budget | `/founder:budget` | Financial planning, runway management |
+
+### Architecture
+
+```
+src/core/
+├── founder_vc/           # VC Layer (Stage 8-12)
+│   ├── founder_vc_bootstrap.py
+│   ├── founder_vc_term_sheet.py
+│   ├── founder_vc_cap_table.py
+│   ├── founder_vc_negotiate.py
+│   └── founder_vc_map.py
+├── founder_ipo/          # IPO Layer (Stage 15-21)
+│   ├── founder_pre_ipo.py
+│   ├── founder_s1.py
+│   ├── founder_roadshow.py
+│   ├── founder_ipo_day.py
+│   ├── founder_public_co.py
+│   ├── founder_insider.py
+│   └── founder_succession.py
+├── founder_secondary.py  # Growth Layer (Stage 14)
+├── founder_validate.py   # Stage 1
+├── founder_brand.py      # Stage 2
+├── founder_pitch.py      # Stage 3
+├── founder_metrics.py    # Stage 4
+├── founder_hire.py       # Stage 5
+├── founder_legal.py      # Stage 6
+├── founder_week.py       # Stage 7
+└── founder_grow.py       # Stage 13
+```
+
 ## License
 
 [MIT](LICENSE) — Use it, fork it, build on it.
