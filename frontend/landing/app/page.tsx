@@ -1,5 +1,10 @@
 import HeroSection from '@/components/hero-section'
+import PyramidHero from '@/components/pyramid-hero'
+import StatsBar from '@/components/stats-bar'
+import CascadeDemo from '@/components/cascade-demo'
+import ComparisonSection from '@/components/comparison-section'
 import FeaturesGrid from '@/components/features-grid'
+import QuickstartSection from '@/components/quickstart-section'
 import PricingTable from '@/components/pricing-table'
 import FooterSection from '@/components/footer-section'
 
@@ -7,7 +12,12 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-950">
       <HeroSection />
+      <PyramidHero />
+      <StatsBar />
+      <CascadeDemo />
+      <ComparisonSection />
       <FeaturesGrid />
+      <QuickstartSection />
       <PricingTable />
       <FooterSection />
     </main>
