@@ -133,6 +133,30 @@ class RecipeOrchestrator:
         except Exception:
             pass
 
+        # AGI v2: Collaboration Protocol (peer-review plans)
+        self._collaboration: Optional[Any] = None
+        try:
+            from .collaboration import CollaborationProtocol
+            self._collaboration = CollaborationProtocol(llm_client=llm_client)
+        except Exception:
+            pass
+
+        # AGI v2: Code Evolution Engine (post-execution analysis)
+        self._code_evolution: Optional[Any] = None
+        try:
+            from .code_evolution import CodeEvolutionEngine
+            self._code_evolution = CodeEvolutionEngine(llm_client=llm_client)
+        except Exception:
+            pass
+
+        # AGI v2: Vector Memory Store (semantic similarity search)
+        self._vector_memory: Optional[Any] = None
+        try:
+            from .vector_memory_store import VectorMemoryStore
+            self._vector_memory = VectorMemoryStore()
+        except Exception:
+            pass
+
         # Swarm dispatcher (optional)
         if use_swarm:
             from .swarm import SwarmDispatcher, SwarmRegistry
@@ -219,6 +243,35 @@ class RecipeOrchestrator:
                     self.console.print(
                         f"[bold yellow]⚠️  High-risk action detected: "
                         f"{'; '.join(prediction.warnings[:2])}[/bold yellow]"
+                    )
+            except Exception:
+                pass
+
+        # AGI v2: Search vector memory for similar past goals
+        if self._vector_memory:
+            try:
+                from .vector_memory_store import VectorMemoryStore
+                vec = VectorMemoryStore.text_to_hash_vector(goal)
+                results = self._vector_memory.search(
+                    "goal_history", vec, top_k=1,
+                )
+                if results and results[0].get("score", 0) > 0.85:
+                    prev = results[0].get("payload", {}).get("goal", "")
+                    self.console.print(
+                        f"[dim]🧠 Similar past goal: {prev[:50]} "
+                        f"({results[0]['score']:.0%} match)[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # AGI v2: Collaboration — assign roles for goal
+        if self._collaboration:
+            try:
+                roles = self._collaboration.assign_roles(goal)
+                if roles:
+                    assigned = [f"{r['agent']}: {r['role']}" for r in roles[:2]]
+                    self.console.print(
+                        f"[dim]🤝 Agents assigned: {', '.join(assigned)}[/dim]"
                     )
             except Exception:
                 pass
@@ -724,7 +777,8 @@ class RecipeOrchestrator:
         errors: List[str],
     ) -> None:
         """
-        AGI v2: Post-execution pipeline — reflection + world diff.
+        AGI v2: Post-execution pipeline — reflection + world diff +
+        code evolution + vector memory + collaboration review.
 
         Called after every goal execution to learn and track changes.
         """
@@ -756,6 +810,54 @@ class RecipeOrchestrator:
                 diff_summary = world_diff.summary()
                 if diff_summary and diff_summary != "No changes detected":
                     self.console.print(f"\n[dim]🌍 World changes: {diff_summary[:100]}[/dim]")
+            except Exception:
+                pass
+
+        # Code Evolution: log improvement hint after execution
+        if self._code_evolution:
+            try:
+                journal = self._code_evolution.get_journal(limit=1)
+                stats = self._code_evolution.get_stats()
+                if stats.get("total_attempts", 0) > 0:
+                    self.console.print(
+                        f"[dim]🧬 Evolution: {stats['total_attempts']} attempts, "
+                        f"{stats.get('success_rate', 0):.0%} success rate[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # Vector Memory: persist goal+result for future similarity search
+        if self._vector_memory:
+            try:
+                from .vector_memory_store import VectorMemoryStore
+                import hashlib
+
+                vec = VectorMemoryStore.text_to_hash_vector(goal)
+                goal_id = hashlib.md5(goal.encode()).hexdigest()[:12]
+                self._vector_memory.get_or_create_collection("goal_history")
+                self._vector_memory.upsert(
+                    collection="goal_history",
+                    id=goal_id,
+                    vector=vec,
+                    payload={
+                        "goal": goal,
+                        "status": status,
+                        "duration_ms": duration_ms,
+                        "errors": errors[:3] if errors else [],
+                    },
+                )
+            except Exception:
+                pass
+
+        # Collaboration: submit execution review
+        if self._collaboration:
+            try:
+                self._collaboration.submit_review(
+                    task_id=goal[:30],
+                    reviewer="orchestrator",
+                    passed=status == "success",
+                    feedback=errors[0] if errors else "Completed successfully",
+                )
             except Exception:
                 pass
 
