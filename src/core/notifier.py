@@ -6,6 +6,7 @@ Configurable via .mekong/notify.yaml.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,8 @@ from typing import Any
 import yaml  # type: ignore[import-untyped]
 
 from .event_bus import Event, EventBus, EventType
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -78,8 +81,8 @@ class Notifier:
                     self.bot.send_notification(chat_id, message),
                     asyncio.get_event_loop(),
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Notifier send error: %s", e)
 
     def _should_notify(self, event_type: EventType) -> bool:
         """Check if this event type is in the notification config."""
@@ -116,7 +119,8 @@ class Notifier:
                 events=data.get("events", NotifyConfig().events),
                 enabled=data.get("enabled", True),
             )
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load notify config: %s", e)
             return NotifyConfig()
 
 

@@ -27,6 +27,7 @@ import json
 from src.core.gateway_client import GatewayClient
 from src.core.machine_fingerprint import get_machine_fingerprint_hash
 
+logger = logging.getLogger(__name__)
 
 class EventStatus(Enum):
     """Event status."""
@@ -267,8 +268,9 @@ class TelemetryHooks:
         try:
             fingerprint = get_machine_fingerprint_hash()
             headers["X-Machine-Fingerprint"] = fingerprint
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
 
         return headers
 
@@ -326,13 +328,15 @@ class TelemetryHooks:
             try:
                 with open(cache_path, "w") as f:
                     json.dump(remaining_events, f, indent=2)
-            except Exception:
-                pass
+            except Exception as e:
+
+                logger.warning("Operation failed: %s", e)
         else:
             try:
                 cache_path.unlink()
-            except Exception:
-                pass
+            except Exception as e:
+
+                logger.warning("Operation failed: %s", e)
 
         return success_count
 

@@ -183,8 +183,9 @@ def collect_mcu_stats(
     if mcu_gate:
         try:
             stats["balance"] = mcu_gate.get_balance(tenant_id)
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
 
     return stats
 

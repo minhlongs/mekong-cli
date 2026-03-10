@@ -8,6 +8,7 @@ Vector backend (Mem0 + Qdrant) is used when available; falls back to YAML.
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from dataclasses import asdict, dataclass, field
@@ -23,6 +24,8 @@ try:
     _FACADE_AVAILABLE = True
 except ImportError:
     _FACADE_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -183,7 +186,8 @@ class MemoryStore:
         try:
             data = yaml.safe_load(self._path.read_text()) or []
             self._entries = [MemoryEntry(**item) for item in data]
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load memory entries: %s", e)
             self._entries = []
 
     def _save(self) -> None:

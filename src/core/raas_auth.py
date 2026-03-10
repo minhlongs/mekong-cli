@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -32,6 +33,8 @@ import requests
 
 from src.auth.secure_storage import get_secure_storage, SecureStorage
 from src.core.certificate_store import get_certificate_store, CertificateStore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -248,7 +251,8 @@ class RaaSAuthClient:
         if self.use_secure_storage:
             try:
                 self._secure_storage = get_secure_storage()
-            except Exception:
+            except Exception as e:
+                logger.debug("Secure storage initialization failed: %s", e)
                 self._secure_storage = None
 
         # Initialize certificate store if certificate auth enabled
@@ -257,7 +261,8 @@ class RaaSAuthClient:
                 self._certificate_store = get_certificate_store(
                     use_secure_storage=self.use_secure_storage
                 )
-            except Exception:
+            except Exception as e:
+                logger.debug("Certificate store initialization failed: %s", e)
                 self._certificate_store = None
 
         # Load session cache from disk on init
@@ -349,8 +354,8 @@ class RaaSAuthClient:
                 token = self._secure_storage.get_license()
                 if token:
                     return {"token": token, "uses_secure_storage": True}
-            except Exception:
-                pass  # Fallback to file-based storage
+            except Exception as e:
+                logger.debug("Secure storage get_license failed, falling back to file: %s", e)
 
         # Fallback to plaintext file (for backward compatibility)
         if not self.credentials_path.exists():
@@ -376,8 +381,8 @@ class RaaSAuthClient:
             try:
                 self._secure_storage.store_license(token)
                 return  # Success, don't write to file
-            except Exception:
-                pass  # Fallback to file-based storage
+            except Exception as e:
+                logger.debug("Secure storage store_license failed, falling back to file: %s", e)
 
         # Fallback to plaintext file
         self._ensure_credentials_dir()
@@ -408,8 +413,8 @@ class RaaSAuthClient:
                     # Delete plaintext file
                     os.remove(self.credentials_path)
                     return True
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Credential migration to secure storage failed: %s", e)
         return False
 
     def _decode_jwt(self, token: str) -> Optional[dict[str, Any]]:
@@ -431,7 +436,8 @@ class RaaSAuthClient:
                 payload_b64 += "=" * padding
             payload_json = base64.urlsafe_b64decode(payload_b64).decode("utf-8")
             return json.loads(payload_json)
-        except Exception:
+        except Exception as e:
+            logger.debug("JWT decode failed: %s", e)
             return None
 
     def _validate_jwt_expiry(self, payload: dict[str, Any]) -> bool:
@@ -700,8 +706,8 @@ class RaaSAuthClient:
             cert_headers = self._certificate_store.export_for_request()
             if cert_headers:
                 return cert_headers
-        except Exception:
-            pass  # Don't fail request if cert export fails
+        except Exception as e:
+            logger.debug("Certificate export for request failed: %s", e)
 
         return None
 

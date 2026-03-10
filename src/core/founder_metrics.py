@@ -237,10 +237,9 @@ def check_metrics(
         try:
             balance = mcu_gate.get_balance(tenant_id)
             metrics["mcu_balance"] = balance
-        except Exception:
-            pass
+        except Exception as e:
 
-    # Read memory for task stats
+            logger.warning("Operation failed: %s", e)
     memory_file = base / ".mekong" / "memory.json"
     if memory_file.exists():
         try:

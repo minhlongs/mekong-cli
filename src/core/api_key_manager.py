@@ -187,8 +187,8 @@ class ApiKeyManager:
         if self._storage:
             try:
                 return self._storage.encrypt(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("API key encrypt error: %s", e)
         # Fallback: base64 encode (not secure, but better than plaintext)
         return base64.b64encode(data.encode()).decode()
 
@@ -197,12 +197,13 @@ class ApiKeyManager:
         if self._storage:
             try:
                 return self._storage.decrypt(encrypted)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("API key decrypt error: %s", e)
         # Fallback: base64 decode
         try:
             return base64.b64decode(encrypted.encode()).decode()
-        except Exception:
+        except Exception as e:
+            logger.debug("API key base64 decode error: %s", e)
             return encrypted
 
     def generate_key(
@@ -322,7 +323,8 @@ class ApiKeyManager:
                         error="Invalid API key secret",
                         error_code="INVALID_SECRET",
                     )
-            except Exception:
+            except Exception as e:
+                logger.warning("API key secret verification error: %s", e)
                 return ValidationResult(
                     valid=False,
                     error="Failed to verify API key secret",
@@ -581,7 +583,8 @@ class ApiKeyManager:
             self._cache.clear()
             self._rate_limits.clear()
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning("API key clear error: %s", e)
             return False
 
 

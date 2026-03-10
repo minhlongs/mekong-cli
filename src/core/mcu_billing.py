@@ -12,9 +12,12 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable, Literal, Optional
+
+logger = logging.getLogger(__name__)
 
 
 # MCU cost per task complexity
@@ -291,8 +294,8 @@ class MCUBilling:
         }
         try:
             self._webhook_handler("credits.low", payload)
-        except Exception:
-            pass  # Log error in production
+        except Exception as e:
+            logger.warning("MCU billing error: %s", e)
 
     def reset_low_balance_notification(self, tenant_id: str) -> None:
         """Reset low balance notification for a tenant (allow re-trigger)."""

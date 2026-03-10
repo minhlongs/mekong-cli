@@ -7,12 +7,15 @@ on/send = fire-and-forget pub/sub. handle/invoke = async request/response.
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class IPCChannel(str, Enum):
@@ -57,8 +60,8 @@ class IPCBus:
         for handler in self._handlers.get(channel, []):
             try:
                 handler(message)
-            except Exception:
-                pass  # listeners must not crash the bus
+            except Exception as e:
+                logger.debug("Bus listener error: %s", e)
         return message
 
     def on(self, channel: IPCChannel, handler: IPCHandler) -> None:

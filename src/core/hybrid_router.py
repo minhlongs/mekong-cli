@@ -54,8 +54,8 @@ def _get_system_state() -> SystemState:
         local_available = adapter.health_check()
         if local_available:
             local_models = adapter.list_models()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Hybrid router init error: %s", e)
 
     api_keys = {
         "anthropic": bool(os.getenv("ANTHROPIC_API_KEY")),

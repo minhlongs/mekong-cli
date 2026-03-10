@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from packages.memory.memory_facade import get_memory_facade
+
+logger = logging.getLogger(__name__)
 
 
 class DecisionMaker:
@@ -49,8 +52,9 @@ class DecisionMaker:
 
             with open(self.local_decisions_file, "w", encoding="utf-8") as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
 
     def _load_from_local_storage(self) -> list[dict]:
         """Load data from local file storage."""
@@ -58,8 +62,9 @@ class DecisionMaker:
             if self.local_decisions_file.exists():
                 with open(self.local_decisions_file, encoding="utf-8") as f:
                     return json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
         return []
 
     def _generate_decision_hash(self, decision_context: str) -> str:

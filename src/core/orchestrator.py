@@ -9,6 +9,7 @@ Modular implementation with internal submodules.
 from __future__ import annotations
 
 import asyncio
+import logging
 import subprocess
 import time
 import uuid
@@ -47,6 +48,8 @@ from .command_sanitizer import CommandSanitizer
 # ROIaaS Phase Completion Handler
 from ..raas.phase_completion_detector import get_detector
 from ..core.graceful_shutdown import get_shutdown_handler, ShutdownReason, shutdown_on_all_phases_operational
+
+logger = logging.getLogger(__name__)
 
 
 class OrchestrationStatus(Enum):
@@ -154,8 +157,8 @@ class StepExecutor:
                     if execution_result.exit_code == 0:
                         self_healed = True
 
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Self-healing failed: %s", e)
 
         criteria = step.params.get("verification", {}) if step.params else {}
         verification_report = self.verifier.verify(execution_result, criteria)
@@ -509,10 +512,8 @@ class RecipeOrchestrator:
                     )
                     self._finalize_workflow(result, goal, goal_start_time)
                     return result
-                except Exception:
-                    pass
-
-        # PHASE 1: PLAN
+                except Exception as e:
+                    logger.warning("DAG execution failed: %s", e)
         self.console.print("\n[bold yellow]📋 PHASE 1: PLANNING[/bold yellow]")
 
         with Progress(

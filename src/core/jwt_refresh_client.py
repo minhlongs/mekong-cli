@@ -22,6 +22,8 @@ from enum import Enum
 from src.core.gateway_client import GatewayClient
 from src.core.machine_fingerprint import get_machine_fingerprint_hash
 
+logger = logging.getLogger(__name__)
+
 
 class RefreshStatus(Enum):
     """Token refresh status."""
@@ -137,8 +139,8 @@ class JwtRefreshClient:
                 from src.auth.secure_storage import get_secure_storage
                 storage = get_secure_storage()
                 self._api_key = storage.get_license()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("JWT refresh error loading secure storage: %s", e)
 
         return self._api_key
 
@@ -162,8 +164,8 @@ class JwtRefreshClient:
         try:
             fingerprint = get_machine_fingerprint_hash()
             headers["X-Machine-Fingerprint"] = fingerprint
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("JWT refresh error getting machine fingerprint: %s", e)
 
         return headers
 
@@ -365,7 +367,8 @@ class JwtRefreshClient:
                 headers=self._get_auth_headers()
             )
             return response.status_code == 200
-        except Exception:
+        except Exception as e:
+            logger.debug("JWT refresh error verifying token: %s", e)
             return False
 
     def get_cache(self) -> Optional[TokenCache]:
@@ -381,7 +384,8 @@ class JwtRefreshClient:
         try:
             from importlib.metadata import version
             return version("mekong-cli")
-        except Exception:
+        except Exception as e:
+            logger.debug("JWT refresh error getting CLI version: %s", e)
             return "0.2.0-dev"
 
 

@@ -6,6 +6,7 @@ Coordinates NLU, Memory, Router, Orchestrator, Learner, RecipeGen, Governance.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
 
 from .event_bus import EventType, get_event_bus
 from .governance import ActionClass, AuditEntry, Governance, GovernanceDecision
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -74,34 +77,32 @@ class AutonomousEngine:
                 from .memory import MemoryStore
 
                 self._memory = MemoryStore()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("MemoryStore unavailable: %s", e)
 
         if self._nlu is None:
             try:
                 from .nlu import IntentClassifier
 
                 self._nlu = IntentClassifier(llm_client=llm)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("IntentClassifier unavailable: %s", e)
 
         if self._recipe_gen is None:
             try:
                 from .recipe_gen import RecipeGenerator
 
                 self._recipe_gen = RecipeGenerator(llm_client=llm)
-            except Exception:
-                pass
-
-        # Router still depends on memory, not LLM directly
+            except Exception as e:
+                logger.debug("RecipeGenerator unavailable: %s", e)
         try:
             from .smart_router import SmartRouter
 
             self._router = (
                 SmartRouter(memory_store=self._memory) if self._memory else None
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("SmartRouter unavailable: %s", e)
 
     def process_goal(self, goal: str) -> CycleResult:
         """Run one full autonomous cycle for a goal."""
@@ -176,10 +177,8 @@ class AutonomousEngine:
             try:
                 patterns = self._learner.analyze_failures()
                 result.patterns_detected = len(patterns)
-            except Exception:
-                pass
-
-        # Generate recipe on success
+            except Exception as e:
+                logger.warning("Failure analysis error: %s", e)
         if self._recipe_gen and self._memory and result.result_status == "success":
             try:
                 from .memory import MemoryEntry
@@ -189,10 +188,8 @@ class AutonomousEngine:
                 if recipe.valid:
                     self._recipe_gen.save_recipe(recipe)
                     result.recipe_generated = True
-            except Exception:
-                pass
-
-        # Audit
+            except Exception as e:
+                logger.warning("Recipe generation error: %s", e)
         self.governance.record_audit(
             AuditEntry(
                 goal=goal,
