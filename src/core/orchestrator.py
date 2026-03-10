@@ -157,6 +157,14 @@ class RecipeOrchestrator:
         except Exception:
             pass
 
+        # AGI v2: EventBus for reactive module communication
+        self._event_bus: Optional[Any] = None
+        try:
+            from .event_bus import get_event_bus
+            self._event_bus = get_event_bus()
+        except Exception:
+            pass
+
         # Swarm dispatcher (optional)
         if use_swarm:
             from .swarm import SwarmDispatcher, SwarmRegistry

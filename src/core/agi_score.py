@@ -194,6 +194,14 @@ class AGIScoreEngine:
         except Exception:
             pass
 
+        # Check EventBus wiring in orchestrator
+        try:
+            if orch._event_bus is not None:
+                score += 2.5
+                wired.append("event_bus")
+        except Exception:
+            pass
+
         report.details["wired"] = wired
         return min(score, 25.0)
 
