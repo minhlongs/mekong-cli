@@ -9,10 +9,6 @@ from src.core.api_key_manager import (
     ApiKey,
     ApiKeyManager,
     KeyStatus,
-    ValidationResult,
-    generate_api_key,
-    validate_api_key,
-    revoke_api_key,
 )
 
 
@@ -137,7 +133,7 @@ class TestApiKeyManagerGenerate:
         assert key.rate_limit == 500
 
     def test_generate_key_persists_to_file(self, key_manager, temp_config_dir):
-        key = key_manager.generate_key(tenant_id="tenant_1")
+        key_manager.generate_key(tenant_id="tenant_1")
         keys_file = temp_config_dir / "api_keys.json"
         assert keys_file.exists()
 
@@ -186,7 +182,6 @@ class TestApiKeyManagerValidate:
         assert result.error_code == "KEY_REVOKED"
 
     def test_validate_expired_key(self, key_manager):
-        past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         key = key_manager.generate_key(tenant_id="tenant_1", expires_in_days=-1)
         result = key_manager.validate_key(key.key_id)
         assert result.valid is False
@@ -251,9 +246,9 @@ class TestApiKeyManagerGetKeys:
     """Test getting API keys."""
 
     def test_get_keys_for_tenant(self, key_manager):
-        key1 = key_manager.generate_key(tenant_id="tenant_1")
-        key2 = key_manager.generate_key(tenant_id="tenant_1")
-        key3 = key_manager.generate_key(tenant_id="tenant_2")
+        key_manager.generate_key(tenant_id="tenant_1")
+        key_manager.generate_key(tenant_id="tenant_1")
+        key_manager.generate_key(tenant_id="tenant_2")
 
         tenant1_keys = key_manager.get_keys_for_tenant("tenant_1")
         assert len(tenant1_keys) == 2
@@ -348,7 +343,7 @@ class TestGatewayIntegration:
 
     def test_validate_api_key_for_mission_valid(self, temp_config_dir, monkeypatch):
         from src.core import gateway_api
-        from src.core.api_key_manager import ApiKeyManager, get_api_key_manager
+        from src.core.api_key_manager import ApiKeyManager
 
         manager = ApiKeyManager(config_dir=temp_config_dir)
         key = manager.generate_key(tenant_id="tenant_1")
