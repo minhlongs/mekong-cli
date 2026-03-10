@@ -43,6 +43,7 @@ mekong-cli/
 | **Plugins** | Custom agent/provider discovery | `plugin_loader.py` |
 | **RaaS/Billing** | Multi-tenant credit system | `raas/*.py` |
 | **API** | FastAPI + WebSocket gateway | `gateway.py` |
+| **Founder Complete OS** | Full-stack founder toolkit (VC, IPO, ops) | `founder_*.py`, `founder_vc/`, `founder_ipo/` |
 
 ## 4. Key Features
 
@@ -90,8 +91,8 @@ mekong-cli/
 
 - **Framework:** pytest
 - **Coverage:** >80% of src/
-- **Total Tests:** 62+
-- **Runtime:** ~2.5 minutes
+- **Total Tests:** 200+ (62 core + 146 Founder OS)
+- **Runtime:** ~3 minutes
 
 ```bash
 python3 -m pytest tests/ -v
