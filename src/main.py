@@ -45,6 +45,11 @@ from src.commands.raas_maintenance_commands import app as raas_maintenance_app
 from src.commands.license_activation import app as license_activation_app
 from src.cli.usage_auto_instrument import emit_usage_event
 
+# Extracted command modules (P0-2 split)
+from src.commands.health_commands import app as health_app
+from src.commands.phase_commands import app as phase_app
+from src.commands.analytics_commands import app as analytics_app
+
 # Legacy command imports (not yet refactored)
 from src.commands.agi import app as agi_app
 from src.commands.status import app as status_app
@@ -84,27 +89,14 @@ def _get_invoked_command(ctx: typer.Context) -> str:
 
 
 def _validate_startup_license(ctx: typer.Context) -> None:
-    """
-    Phase 6: Validate license at CLI startup using Auth Middleware.
-
-    Free commands skip validation.
-    Premium commands require valid license.
-    Critical updates block execution until installed.
-    """
+    """Phase 6: Validate license at CLI startup using Auth Middleware."""
     _get_invoked_command(ctx)
-
-    # Phase 6: Use Auth Middleware for per-command authorization
     middleware = get_middleware()
     middleware.pre_command_check(ctx)
 
 
 def _check_telemetry_consent(ctx: typer.Context) -> None:
-    """
-    Check telemetry consent at CLI startup.
-
-    Shows consent prompt on first run if not set.
-    """
-    # Skip for telemetry commands themselves
+    """Check telemetry consent at CLI startup."""
     command = _get_invoked_command(ctx)
     if command == "telemetry":
         return
@@ -112,9 +104,7 @@ def _check_telemetry_consent(ctx: typer.Context) -> None:
     from src.core.telemetry_consent import ConsentManager
     manager = ConsentManager()
 
-    # Check if consent is set
     if not manager.load_consent():
-        # Show prompt on first run (non-premium commands only)
         if command in FREE_COMMANDS or ctx.invoked_subcommand is None:
             manager.prompt_consent()
 
@@ -142,20 +132,25 @@ def _register_legacy_commands() -> None:
     app.add_typer(tier_admin_app, name="tier-admin", help="Tier rate limit configuration")
     app.add_typer(renewal_app, name="renewal", help="License renewal flow")
     app.add_typer(compliance_app, name="compliance", help="Compliance reporting & audit export")
-    app.add_typer(billing_app, name="billing", help="💰 Billing operations: usage, reconciliation, events")
-    app.add_typer(roi_app, name="roi", help="🎯 ROI Unified Command - auth, usage, billing, dashboard")
-    app.add_typer(telemetry_app, name="telemetry", help="📊 Telemetry consent management")
-    app.add_typer(dashboard_app, name="dashboard", help="📊 Analytics Dashboard")
-    app.add_typer(security_commands_app, name="security-cmd", help="🔒 Security hardening commands")
-    app.add_typer(sync_app, name="sync", help="🔄 RaaS usage metrics sync")
-    app.add_typer(update_app, name="update", help="🔄 CLI auto-update")
-    app.add_typer(raas_auth_app, name="raas-auth", help="🔐 RaaS Gateway auth (login/logout/status)")
-    app.add_typer(raas_auth_app, name="auth", help="🔐 RaaS Gateway auth (login/logout/status)")
-    app.add_typer(diagnostic_app, name="diagnostic", help="🔍 Diagnostic connectivity checks")
-    app.add_typer(usage_app, name="usage", help="📊 Usage metering and reporting")
-    app.add_typer(sync_raas_app, name="sync-raas", help="🔄 Sync with RaaS Gateway - usage metering & billing")
-    app.add_typer(raas_maintenance_app, name="raas-maintenance", help="🔧 RaaS Gateway maintenance operations")
-    app.add_typer(license_activation_app, name="license-activation", help="🔑 License activation and management")
+    app.add_typer(billing_app, name="billing", help="Billing operations")
+    app.add_typer(roi_app, name="roi", help="ROI Unified Command")
+    app.add_typer(telemetry_app, name="telemetry", help="Telemetry consent management")
+    app.add_typer(dashboard_app, name="dashboard", help="Analytics Dashboard")
+    app.add_typer(security_commands_app, name="security-cmd", help="Security hardening commands")
+    app.add_typer(sync_app, name="sync", help="RaaS usage metrics sync")
+    app.add_typer(update_app, name="update", help="CLI auto-update")
+    app.add_typer(raas_auth_app, name="raas-auth", help="RaaS Gateway auth")
+    app.add_typer(raas_auth_app, name="auth", help="RaaS Gateway auth")
+    app.add_typer(diagnostic_app, name="diagnostic", help="Diagnostic connectivity checks")
+    app.add_typer(usage_app, name="usage", help="Usage metering and reporting")
+    app.add_typer(sync_raas_app, name="sync-raas", help="Sync with RaaS Gateway")
+    app.add_typer(raas_maintenance_app, name="raas-maintenance", help="RaaS Gateway maintenance")
+    app.add_typer(license_activation_app, name="license-activation", help="License activation")
+
+    # Extracted command modules
+    app.add_typer(health_app, name="health", help="Health endpoint server")
+    app.add_typer(phase_app, name="phase", help="ROIaaS phase validation")
+    app.add_typer(analytics_app, name="analytics-cmd", help="Analytics and debug trace")
 
     # Register validate commands directly (not via app to avoid nesting)
     app.command("validate-license")(validate_license)
@@ -171,113 +166,13 @@ _register_legacy_commands()
 
 @app.command()
 def init() -> None:
-    """🌱 Initialize Mekong CLI configuration."""
+    """Initialize Mekong CLI configuration."""
     from src.core.config import ConfigManager
 
     config = ConfigManager()
     config.initialize()
-    console.print("[green]✓ Mekong CLI initialized![/green]")
+    console.print("[green]Mekong CLI initialized![/green]")
     console.print("[dim]Config: ~/.mekong/config.ini[/dim]")
-
-
-@app.command()
-def health(
-    port: int = typer.Option(9192, "--port", "-p", help="Health endpoint port"),
-    host: str = typer.Option("127.0.0.1", "--host", "-h", help="Host to bind"),
-    no_browser: bool = typer.Option(False, "--no-browser", "-n", help="Don't open browser"),
-) -> None:
-    """🏥 Start health endpoint server (manual mode)."""
-    import time
-    from src.core.health_endpoint import (
-        get_health_url,
-        start_health_server,
-        register_component_check,
-    )
-    from src.core.crash_detector import get_crash_detector
-
-    # Register default component checks
-    def check_license() -> dict:
-        from src.core.health_endpoint import ComponentStatus
-        try:
-            from src.lib.raas_gate_validator import RaasGateValidator
-            validator = RaasGateValidator()
-            is_valid, _ = validator.validate()
-            return ComponentStatus(
-                status="healthy" if is_valid else "degraded",
-                message="License valid" if is_valid else "License invalid/expired",
-            )
-        except Exception as e:
-            return ComponentStatus(status="unhealthy", message=str(e))
-
-    def check_usage() -> dict:
-        from src.core.health_endpoint import ComponentStatus
-        try:
-            # Check if usage tracking is available
-            return ComponentStatus(status="healthy", message="Usage tracking ready")
-        except Exception as e:
-            return ComponentStatus(status="degraded", message=str(e))
-
-    def check_crash_detector() -> dict:
-        from src.core.health_endpoint import ComponentStatus
-        try:
-            detector = get_crash_detector()
-            freq = detector.get_frequency()
-            if freq.crashes_per_hour > 10:
-                return ComponentStatus(
-                    status="degraded",
-                    message=f"High crash rate: {freq.crashes_per_hour:.1f}/hour",
-                )
-            return ComponentStatus(
-                status="healthy",
-                message=f"{freq.crashes_last_hour} crashes in last hour",
-            )
-        except Exception as e:
-            return ComponentStatus(status="unhealthy", message=str(e))
-
-    def check_telegram() -> dict:
-        from src.core.health_endpoint import ComponentStatus
-        try:
-            # Check Telegram bot config
-            import os
-            if os.getenv("TELEGRAM_BOT_TOKEN"):
-                return ComponentStatus(status="healthy", message="Telegram configured")
-            return ComponentStatus(status="degraded", message="Telegram not configured")
-        except Exception as e:
-            return ComponentStatus(status="unhealthy", message=str(e))
-
-    def check_proxy() -> dict:
-        from src.core.health_endpoint import ComponentStatus
-        try:
-            import os
-            proxy_url = os.getenv("ANTHROPIC_BASE_URL", "http://localhost:9191")
-            return ComponentStatus(
-                status="healthy",
-                message=f"Proxy at {proxy_url}",
-            )
-        except Exception as e:
-            return ComponentStatus(status="unhealthy", message=str(e))
-
-    register_component_check("license", check_license)
-    register_component_check("usage", check_usage)
-    register_component_check("crash_detector", check_crash_detector)
-    register_component_check("telegram", check_telegram)
-    register_component_check("proxy", check_proxy)
-
-    console.print("[bold cyan]🏥 Health Endpoint[/bold cyan]")
-    console.print(f"[dim]Starting server at {get_health_url(host, port)}[/dim]")
-    console.print(f"[dim]Dashboard: {get_health_url(host, port).replace('/health', '/docs')}[/dim]")
-    console.print()
-    console.print("[dim]Press Ctrl+C to stop[/dim]\n")
-
-    start_health_server(host=host, port=port)
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        from src.core.health_endpoint import stop_health_server
-        stop_health_server()
-        console.print("\n[yellow]Health endpoint stopped[/yellow]")
 
 
 @app.command()
@@ -293,149 +188,6 @@ def version() -> None:
     console.print("[dim]RaaS Agency Operating System[/dim]")
 
 
-@app.command()
-async def check_phases() -> None:
-    """🔍 Check ROIaaS phase completion status."""
-    detector = get_detector()
-
-    console.print("[bold cyan]🔍 Checking ROIaaS Phase Completion...[/bold cyan]\n")
-
-    all_operational = await detector.check_all_phases()
-
-    if all_operational:
-        console.print("\n[bold green]✓ All phases operational![/bold green]")
-        console.print("[dim]Triggering graceful shutdown sequence...[/dim]\n")
-
-        handler = get_shutdown_handler()
-        await handler.initiate_shutdown(
-            reason="all_phases_operational",
-            details={
-                "phases_status": {
-                    phase_id: info.status.value
-                    for phase_id, info in detector.get_all_phases_status().items()
-                },
-            },
-        )
-        sys.exit(0)
-    else:
-        console.print("\n[yellow]⚠ Some phases are not yet operational[/yellow]")
-        console.print("[dim]Continue development to complete all phases[/dim]\n")
-
-
-@app.command()
-async def complete_phase6(
-    export_cert: str = typer.Option(
-        None,
-        "--export-cert",
-        "-e",
-        help="Export completion certificate to path",
-    ),
-    no_browser: bool = typer.Option(False, "--no-browser", "-n", help="Don't open certificate in browser"),
-) -> None:
-    """🎯 Complete Phase 6: Terminal Validation + Completion Certificate.
-
-    Validates end-to-end RaaS integration and generates completion certificate.
-    """
-    from src.raas.final_phase_validator import get_validator
-    from src.raas.completion_certificate import generate_certificate, save_certificate
-
-    console.print("[bold cyan]🎯 ROIaaS Phase 6: Terminal Validation[/bold cyan]\n")
-
-    # Run Phase 6 validation
-    validator = get_validator()
-    validation_result = await validator.validate_all()
-
-    if validation_result.all_passed:
-        console.print("\n[bold green]✓ Phase 6 Validation Passed![/bold green]\n")
-
-        # Generate completion certificate
-        detector = get_detector()
-        phases_status = {
-            f"Phase {i}": info.status == PhaseStatus.OPERATIONAL
-            for i, (phase_id, info) in enumerate(detector.get_all_phases_status().items(), 1)
-        }
-
-        cert = generate_certificate(
-            validation_result,
-            phases_status=phases_status,
-        )
-
-        # Display certificate
-        cert.display(console)
-
-        # Export certificate if requested
-        if export_cert:
-            if save_certificate(cert, export_cert):
-                console.print(f"\n[green]✓ Certificate exported to:[/green] {export_cert}")
-            else:
-                console.print("\n[yellow]⚠ Failed to export certificate[/yellow]")
-        else:
-            # Save to default location
-            default_path = save_certificate(cert)
-            console.print(f"\n[dim]Certificate saved to: {default_path}[/dim]")
-
-        console.print("\n[bold green]🎉 ROIaaS Onboarding Lifecycle COMPLETE![/bold green]")
-        console.print("[dim]All 6 phases operational. System ready for production.[/dim]\n")
-    else:
-        console.print("\n[bold red]✗ Phase 6 Validation Failed[/bold red]")
-        if validation_result.errors:
-            console.print(f"[dim]Errors: {len(validation_result.errors)}[/dim]")
-            for error in validation_result.errors[:5]:
-                console.print(f"  [red]• {error}[/red]")
-        console.print("\n[yellow]Fix validation errors and re-run:[/yellow]")
-        console.print("  [cyan]mekong complete-phase6[/cyan]\n")
-
-
-@app.command()
-def analytics(
-    port: int = typer.Option(8080, "--port", "-p", help="Server port"),
-    no_browser: bool = typer.Option(False, "--no-browser", "-n", help="Don't open browser"),
-) -> None:
-    """📊 Launch analytics dashboard (RaaS usage tracking)."""
-    from src.api.dashboard.app import run_dashboard
-
-    console.print("[bold cyan]🐉 Mekong Analytics Dashboard[/bold cyan]")
-    console.print(f"[dim]Starting server at http://localhost:{port}[/dim]")
-    console.print(f"[dim]API docs: http://localhost:{port}/api/docs[/dim]")
-    console.print()
-
-    run_dashboard(port=port, open_browser=not no_browser)
-
-
-@app.command()
-def raas_debug_export(
-    output: str = typer.Option(
-        "~/.mekong/raas-debug-trace.json",
-        "--output",
-        "-o",
-        help="Output path for trace export",
-    ),
-) -> None:
-    """🔍 Export RaaS interaction trace for debugging."""
-    from src.core.raas_audit_logger import get_audit_logger
-
-    logger = get_audit_logger(debug_mode=True)
-    trace_log = logger.get_trace_log()
-
-    if not trace_log:
-        console.print("[yellow]No RaaS interactions traced yet.[/yellow]")
-        console.print("[dim]Run commands with --raas-debug flag to enable tracing.[/dim]")
-        return
-
-    output_path = logger.export_trace(output)
-    console.print(f"[bold green]✓ Exported {len(trace_log)} RaaS interactions[/bold green]")
-    console.print(f"[dim]Path: {output_path}[/dim]")
-
-    # Show summary
-    console.print("\n[bold]Trace Summary:[/bold]")
-    for trace in trace_log[-5:]:  # Last 5 interactions
-        status_color = "green" if trace["status_code"] == 200 else "red"
-        console.print(
-            f"  [{status_color}]{trace['status_code']}[/] {trace['event_type']} "
-            f"→ {trace['elapsed_ms']:.0f}ms"
-        )
-
-
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -449,14 +201,11 @@ def main(
     """Mekong CLI - Autonomous AI Agent Framework"""
     import os
 
-    # Set RAAS_DEBUG env var for audit logger
     if raas_debug:
         os.environ["RAAS_DEBUG"] = "true"
 
-    # Validate license at startup
     _validate_startup_license(ctx)
 
-    # Phase 6: Check for updates (non-blocking, opt-out)
     if not os.getenv("MEKONG_NO_UPDATE_CHECK"):
         try:
             import asyncio
@@ -466,7 +215,6 @@ def main(
         except Exception:
             pass  # Fail silently
 
-    # Phase 6: Emit usage event after command execution
     command = _get_invoked_command(ctx)
     if command and command not in ("version", "help"):
         try:
@@ -478,10 +226,10 @@ def main(
         version()
     elif ctx.invoked_subcommand is None:
         console.print("""
-[bold cyan]🐉 Mekong CLI[/bold cyan] - RaaS Agency Operating System
+[bold cyan]Mekong CLI[/bold cyan] - RaaS Agency Operating System
 
 [dim]Quick Start:[/dim]
-  [bold]mekong cook[/bold] "[your goal]"    Plan → Execute → Verify
+  [bold]mekong cook[/bold] "[your goal]"    Plan -> Execute -> Verify
   [bold]mekong plan[/bold] "[your goal]"    Plan only (dry run)
   [bold]mekong analytics[/bold]             Analytics dashboard
   [bold]mekong dash[/bold]                  Action menu (Washing Machine)
@@ -494,7 +242,6 @@ def main(
 
 
 # ============= Legacy Entry Points =============
-# For backwards compatibility - will be removed in v1.0
 
 def run_cli() -> None:
     """Entry point for CLI execution."""
