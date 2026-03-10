@@ -211,7 +211,7 @@ class RecipeExecutor:
 
             try:
                 process = subprocess.run(
-                    shlex.split(command), check=True, text=True, capture_output=True,
+                    shlex.split(command), check=True, text=True, capture_output=True, timeout=300,
                 )
 
                 if process.stdout:
