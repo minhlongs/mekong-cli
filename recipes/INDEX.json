@@ -1,0 +1,84 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-03-10",
+  "recipes": [
+    {
+      "name": "Hello Mekong",
+      "path": "hello-mekong.md",
+      "description": "Hello world recipe for testing Mekong CLI",
+      "tags": ["hello", "test", "beginner"],
+      "category": "examples"
+    },
+    {
+      "name": "Python Dev Setup",
+      "path": "dev-setup.md",
+      "description": "Set up Python development environment",
+      "tags": ["python", "setup", "dev"],
+      "category": "setup"
+    },
+    {
+      "name": "Agency Box Setup",
+      "path": "agency-box-setup.md",
+      "description": "Set up Agency Box environment",
+      "tags": ["agency", "setup"],
+      "category": "setup"
+    },
+    {
+      "name": "Lead Generation",
+      "path": "lead_gen.md",
+      "description": "Automated lead generation workflow",
+      "tags": ["lead", "automation", "marketing"],
+      "category": "automation"
+    },
+    {
+      "name": "Code Review",
+      "path": "code-review.md",
+      "description": "Automated code review process",
+      "tags": ["review", "quality", "ci"],
+      "category": "devops"
+    },
+    {
+      "name": "FastAPI CRUD API",
+      "path": "web/fastapi-crud.md",
+      "description": "Build a FastAPI CRUD API with SQLAlchemy models, routes, and tests",
+      "tags": ["fastapi", "python", "api", "crud"],
+      "category": "web"
+    },
+    {
+      "name": "Next.js Landing Page",
+      "path": "web/nextjs-landing.md",
+      "description": "Create a modern landing page with Next.js and Tailwind CSS",
+      "tags": ["nextjs", "react", "landing", "tailwind"],
+      "category": "web"
+    },
+    {
+      "name": "Pandas Data Pipeline",
+      "path": "data/pandas-pipeline.md",
+      "description": "Build a data ETL pipeline with pandas for data processing",
+      "tags": ["pandas", "data", "etl", "python"],
+      "category": "data"
+    },
+    {
+      "name": "Docker Compose Setup",
+      "path": "devops/docker-compose.md",
+      "description": "Containerize applications with Docker Compose multi-service setup",
+      "tags": ["docker", "devops", "containers", "compose"],
+      "category": "devops"
+    },
+    {
+      "name": "OpenClaw Bridge",
+      "path": "openclaw-bridge.md",
+      "description": "Set up OpenClaw bridge for agent coordination",
+      "tags": ["openclaw", "bridge", "agents"],
+      "category": "automation"
+    },
+    {
+      "name": "Tunnel Setup",
+      "path": "tunnel-setup.md",
+      "description": "Set up secure tunnels for local development",
+      "tags": ["tunnel", "networking", "dev"],
+      "category": "devops"
+    }
+  ],
+  "categories": ["examples", "setup", "automation", "devops", "web", "data"]
+}
