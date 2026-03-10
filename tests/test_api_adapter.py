@@ -84,8 +84,9 @@ class TestFormatForGemini:
 
 
 class TestGetApiKey:
-    def test_missing_key_raises(self):
-        with pytest.raises(EnvironmentError, match="Missing API key"):
+    def test_missing_key_raises(self, monkeypatch):
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        with pytest.raises(OSError, match="Missing API key"):
             _get_api_key("anthropic")
 
     def test_with_key(self, monkeypatch):

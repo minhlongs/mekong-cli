@@ -171,7 +171,7 @@ def define_role(
             "Quality of output (peer review score)",
             "Communication responsiveness",
         ],
-        first_30_days=f"Onboard, understand codebase/product, deliver first {title.lower()} task",
+        first_30_days=f"Complete 30-day onboarding: understand codebase/product, deliver first {title.lower()} task",
         first_60_days=f"Own {title.lower()} pipeline, establish recurring processes",
         first_90_days="Measurable impact on key metric, propose improvements",
     )

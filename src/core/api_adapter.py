@@ -39,7 +39,7 @@ def _get_api_key(provider: str) -> str:
     env_var = key_map.get(provider, "")
     key = os.getenv(env_var, "")
     if not key:
-        raise EnvironmentError(f"Missing API key: {env_var}")
+        raise OSError(f"Missing API key: {env_var}")
     return key
 
 
