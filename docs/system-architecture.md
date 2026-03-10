@@ -29,10 +29,10 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 └──────────────────┬───────────────────────────────────────┘
                    │
 ┌──────────────────▼───────────────────────────────────────┐
-│        Agent & Provider System + RaaS Auth              │
+│        Agent & Provider System + Founder OS             │
 │  ┌──────────────┐ ┌──────────────┐ ┌─────────────────┐  │
-│  │ GitAgent     │ │ FileAgent    │ │ Custom Agents   │  │
-│  │ ShellAgent   │ │ RecipeCrawler│ │ (via plugins)   │  │
+│  │ GitAgent     │ │ FileAgent    │ │ Founder OS      │  │
+│  │ ShellAgent   │ │ RecipeCrawler│ │ (13 modules)    │  │
 │  └──────────────┘ └──────────────┘ └─────────────────┘  │
 │                                                          │
 │  ┌──────────────┐ ┌──────────────┐ ┌─────────────────┐  │
@@ -105,10 +105,10 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 └──────────────────┬───────────────────────────────────────┘
                    │
 ┌──────────────────▼───────────────────────────────────────┐
-│        Agent & Provider System + RaaS Auth              │
+│        Agent & Provider System + Founder OS             │
 │  ┌──────────────┐ ┌──────────────┐ ┌─────────────────┐  │
-│  │ GitAgent     │ │ FileAgent    │ │ Custom Agents   │  │
-│  │ ShellAgent   │ │ RecipeCrawler│ │ (via plugins)   │  │
+│  │ GitAgent     │ │ FileAgent    │ │ Founder OS      │  │
+│  │ ShellAgent   │ │ RecipeCrawler│ │ (13 modules)    │  │
 │  └──────────────┘ └──────────────┘ └─────────────────┘  │
 │                                                          │
 │  ┌──────────────┐ ┌──────────────┐ ┌─────────────────┐  │
@@ -403,7 +403,55 @@ Polar.sh payment completed
   → Return 200 (idempotent)
 ```
 
-### 2.12 Mekong Engine (`packages/mekong-engine/`)
+### 2.12 Founder Complete OS (`src/core/founder_*/`)
+
+End-to-end founder toolkit covering full company lifecycle from inception to post-IPO operations.
+
+**Components:**
+
+**A. VC Module** (`src/core/founder_vc/`) — 5 modules:
+- `founder_vc_bootstrap.py` — Pre-seed/seed deck creation, angel outreach, SAFEs
+- `founder_vc_term_sheet.py` — Term sheet analysis, valuation negotiation, equity modeling
+- `founder_vc_cap_table.py` — Cap table management, dilution modeling, ESOP allocation
+- `founder_vc_negotiate.py` — Deal negotiation strategies, investor relations
+- `founder_vc_map.py` — VC landscape mapping, fund discovery, pattern matching
+
+**B. Secondary Markets** (`src/core/founder_secondary.py`) — 1 module:
+- Secondary stock sales, liquidity events, employee buyback planning
+
+**C. IPO Module** (`src/core/founder_ipo/`) — 7 modules + 3 data files:
+- `founder_pre_ipo.py` + `founder_pre_ipo_data.py` — Pre-IPO prep, audit readiness
+- `founder_s1.py` + `founder_s1_data.py` — S-1 narrative, MD&A, risk disclosure
+- `founder_roadshow.py` + `founder_roadshow_data.py` — Investor roadshow planning
+- `founder_ipo_day.py` — IPO day logistics, lock-up periods
+- `founder_public_co.py` — Public company compliance (SOX, quarterly reporting)
+- `founder_insider.py` — Insider trading windows, Form 4 filings
+- `founder_succession.py` — CEO succession planning, board evolution
+
+**D. Operational Modules** (root level) — 6 modules:
+- `founder_validate.py` — Startup validation, PMF assessment
+- `founder_pitch.py` — Pitch deck generation, investor positioning
+- `founder_hire.py` — Hiring playbooks, comp benchmarking
+- `founder_grow.py` — Growth strategy, unit economics, LTV/CAC
+- `founder_brand.py` — Brand positioning, GTM narratives
+- `founder_week.py` — Weekly planning, KPI tracking, governance
+
+**Test Coverage:** 146 tests across all modules covering:
+- VC funding scenarios and term sheet negotiations
+- Cap table dilution and equity modeling
+- Pre-IPO compliance and disclosure requirements
+- IPO roadshow and pricing strategies
+- Post-IPO governance and investor relations
+- Hiring, growth, and operational KPIs
+
+**Key Features:**
+- LLM-powered analysis and recommendation generation
+- Real-world templates (term sheets, pitch decks, S-1 sections)
+- Interactive negotiation simulations
+- Compliance validation against SEC rules
+- Historical precedent matching for benchmarking
+
+### 2.13 Mekong Engine (`packages/mekong-engine/`)
 
 Serverless PEV engine running on Cloudflare Workers, exposing core Mekong functionality as a production-grade API.
 
