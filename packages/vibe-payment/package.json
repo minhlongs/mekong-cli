@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/vibe-payment",
+    "name": "@mekong/vibe-payment",
     "version": "1.0.0",
     "description": "Provider-agnostic payment SDK for Vietnamese gateways (PayOS, VNPay, MoMo)",
     "main": "index.ts",

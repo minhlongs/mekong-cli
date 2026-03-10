@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/tooling",
+    "name": "@mekong/tooling",
     "version": "0.1.0",
     "description": "AgencyOS dev tooling — linters, formatters, build scripts, code generators",
     "author": "Binh Phap Venture Studio",

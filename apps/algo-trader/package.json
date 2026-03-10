@@ -41,15 +41,14 @@
     "chaos-test": "pnpm exec ts-node src/testing/chaos/index.ts"
   },
   "dependencies": {
-    "@agencyos/trading-core": "workspace:*",
-    "@agencyos/vibe-arbitrage-engine": "workspace:*",
-    "@agencyos/vibe-billing-trading": "workspace:*",
+    "@aws-sdk/client-s3": "^3.0.0",
     "@fastify/cors": "^10.1.0",
     "@fastify/static": "9.0.0",
     "@hono/node-server": "^1.14.0",
+    "@mekong/trading-core": "workspace:*",
+    "@mekong/vibe-arbitrage-engine": "workspace:*",
     "@polar-sh/sdk": "^0.41.5",
     "@prisma/client": "5.21.1",
-    "@aws-sdk/client-s3": "^3.0.0",
     "@tensorflow/tfjs": "4.22.0",
     "bullmq": "^5.41.0",
     "ccxt": "^4.5.40",
@@ -86,5 +85,21 @@
     "typescript": "^5.9.3",
     "wrangler": "^3.101.0",
     "yaml": "^2.8.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild@<=0.24.2": ">=0.25.0",
+      "devalue@<5.3.2": ">=5.3.2",
+      "wrangler@>=2.0.15 <3.114.17": ">=3.114.17",
+      "devalue@<=5.6.2": ">=5.6.3",
+      "ajv@<6.14.0": ">=6.14.0",
+      "hono@<4.12.4": ">=4.12.4",
+      "dompurify@>=3.1.3 <=3.3.1": ">=3.3.2",
+      "svgo@=4.0.0": ">=4.0.1",
+      "fastify@>=5.7.2 <=5.8.0": ">=5.8.1",
+      "@hono/node-server@<1.19.10": ">=1.19.10",
+      "express-rate-limit@>=8.2.0 <8.2.2": ">=8.2.2",
+      "tar@<=7.5.9": ">=7.5.10"
+    }
   }
 }

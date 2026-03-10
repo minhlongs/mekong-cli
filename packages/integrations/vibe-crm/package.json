@@ -1,5 +1,5 @@
 {
-    "name": "@mekong/vibe-crm",
+    "name": "@mekong/integrations-vibe-crm",
     "sideEffects": false,
     "version": "1.0.0",
     "description": "🟠 Jupiter - Sales & CRM Layer",

@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/raas-core",
+    "name": "@mekong/raas-core",
     "version": "0.1.0",
     "description": "RaaS Core Engine — Recipe parser, supervisor loop, and agent orchestration for autonomous task execution",
     "author": "Binh Phap Venture Studio",

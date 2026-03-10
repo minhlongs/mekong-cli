@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/vibe-auth",
+    "name": "@mekong/vibe-auth",
     "version": "1.1.0",
     "description": "Provider-agnostic auth SDK — route guards, auto-logout, admin checks, Supabase provider, middleware, RBAC",
     "main": "index.ts",

@@ -70,8 +70,6 @@ module.exports = {
     '^@agencyos/trading-core$': '<rootDir>/../../packages/trading-core/index.ts',
     '^@agencyos/vibe-arbitrage-engine/(.*)$': '<rootDir>/../../packages/vibe-arbitrage-engine/$1',
     '^@agencyos/vibe-arbitrage-engine$': '<rootDir>/../../packages/vibe-arbitrage-engine/index.ts',
-    '^@agencyos/vibe-billing-trading/(.*)$': '<rootDir>/../../packages/vibe-billing-trading/$1',
-    '^@agencyos/vibe-billing-trading$': '<rootDir>/../../packages/vibe-billing-trading/index.ts',
   },
   transform: {
     '^.+\\.ts$': ['ts-jest', {

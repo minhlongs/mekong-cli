@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/vibe-analytics",
+    "name": "@mekong/vibe-analytics",
     "version": "1.0.0",
     "description": "VIBE Analytics - Growth Telemetry Engine",
     "main": "index.ts",
