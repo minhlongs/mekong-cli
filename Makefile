@@ -1,4 +1,6 @@
-.PHONY: all install dev test lint format server clean stats help setup health build
+.PHONY: all install dev test lint format server clean stats help setup health build \
+        generate-contracts validate-contracts self-test regenerate \
+        start-daemon stop-daemon daemon-status start-gateway
 
 all: help
 
@@ -58,6 +60,34 @@ clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache build dist *.egg-info
 	rm -rf .turbo node_modules/.cache
 
+# === Factory / Contracts ===
+generate-contracts:
+	python3 factory/generate_contracts.py
+
+validate-contracts:
+	python3 factory/validate_contracts.py
+
+self-test:
+	python3 factory/self_test.py
+
+regenerate: generate-contracts validate-contracts self-test
+
+# === Daemon ===
+start-daemon:
+	@echo "Starting Tôm Hùm daemon..."
+	@cd apps/openclaw-worker && node index.js &
+	@echo "Daemon started (PID $$!)"
+
+stop-daemon:
+	@pkill -f "openclaw-worker" 2>/dev/null && echo "Daemon stopped" || echo "Daemon not running"
+
+daemon-status:
+	@pgrep -f "openclaw-worker" > /dev/null && echo "Daemon: RUNNING" || echo "Daemon: STOPPED"
+
+# === Gateway ===
+start-gateway:
+	python3 -m uvicorn src.core.gateway:app --reload --port 8000
+
 # === Info ===
 stats:
 	@echo "Python files: $$(find src -name '*.py' | wc -l | tr -d ' ')"
@@ -95,4 +125,16 @@ help:
 	@echo "    make lint-full    Python + Node linting"
 	@echo "    make clean        Remove all build artifacts"
 	@echo "    make stats        Project statistics"
+	@echo ""
+	@echo "  Factory / Contracts:"
+	@echo "    make generate-contracts  Generate JSON contracts from commands"
+	@echo "    make validate-contracts  Validate contracts against schemas"
+	@echo "    make self-test           Run health check (score 0-100)"
+	@echo "    make regenerate          generate + validate + self-test"
+	@echo ""
+	@echo "  Daemon:"
+	@echo "    make start-daemon   Start Tôm Hùm autonomous daemon"
+	@echo "    make stop-daemon    Stop the daemon"
+	@echo "    make daemon-status  Check daemon status"
+	@echo "    make start-gateway  Start FastAPI gateway :8000"
 	@echo ""

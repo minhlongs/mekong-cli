@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "agents": [
+    {
+      "id": "brainstormer",
+      "name": "brainstormer",
+      "description": "Use this agent when you need to brainstorm software solutions, evaluate architectural approaches, or debate technical decisions before implementation. Examples: - <example>\n    Context: User wants to ",
+      "model": "sonnet",
+      "path": ".claude/agents/brainstormer.md"
+    },
+    {
+      "id": "code-reviewer",
+      "name": "code-reviewer",
+      "description": "Comprehensive code review with scout-based edge case detection. Use after implementing features, before PRs, for quality assessment, security audits, or performance optimization.",
+      "model": "sonnet",
+      "path": ".claude/agents/code-reviewer.md"
+    },
+    {
+      "id": "code-simplifier",
+      "name": "code-simplifier",
+      "description": "Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Focuses on recently modified code unless instructed otherwise.",
+      "model": "opus",
+      "path": ".claude/agents/code-simplifier.md"
+    },
+    {
+      "id": "debugger",
+      "name": "debugger",
+      "description": "Use this agent when you need to investigate issues, analyze system behavior, diagnose performance problems, examine database structures, collect and analyze logs from servers or CI/CD pipelines, run t",
+      "model": "sonnet",
+      "path": ".claude/agents/debugger.md"
+    },
+    {
+      "id": "docs-manager",
+      "name": "docs-manager",
+      "description": "Use this agent when you need to manage technical documentation, establish implementation standards, analyze and update existing documentation based on code changes, write or update Product Development",
+      "model": "haiku",
+      "path": ".claude/agents/docs-manager.md"
+    },
+    {
+      "id": "fullstack-developer",
+      "name": "fullstack-developer",
+      "description": "Execute implementation phases from parallel plans. Handles backend (Node.js, APIs, databases), frontend (React, TypeScript), and infrastructure tasks. Designed for parallel execution with strict file ",
+      "model": "sonnet",
+      "path": ".claude/agents/fullstack-developer.md"
+    },
+    {
+      "id": "git-manager",
+      "name": "git-manager",
+      "description": "Stage, commit, and push code changes with conventional commits. Use when user says \"commit\", \"push\", or finishes a feature/fix.",
+      "model": "haiku",
+      "path": ".claude/agents/git-manager.md"
+    },
+    {
+      "id": "journal-writer",
+      "name": "journal-writer",
+      "description": "Use this agent when:\\n- A test suite fails repeatedly despite multiple fix attempts\\n- A critical bug is discovered in production or staging\\n- An implementation approach proves fundamentally flawed a",
+      "model": "haiku",
+      "path": ".claude/agents/journal-writer.md"
+    },
+    {
+      "id": "mcp-manager",
+      "name": "mcp-manager",
+      "description": "Manage MCP (Model Context Protocol) server integrations - discover tools/prompts/resources, analyze relevance for tasks, and execute MCP capabilities. Use when need to work with MCP servers, discover ",
+      "model": "haiku",
+      "path": ".claude/agents/mcp-manager.md"
+    },
+    {
+      "id": "planner",
+      "name": "planner",
+      "description": "Use this agent when you need to research, analyze, and create comprehensive implementation plans for new features, system architectures, or complex technical solutions. This agent should be invoked be",
+      "model": "opus",
+      "path": ".claude/agents/planner.md"
+    },
+    {
+      "id": "project-manager",
+      "name": "project-manager",
+      "description": "Use this agent when you need comprehensive project oversight and coordination. Examples: <example>Context: User has completed a major feature implementation and needs to track progress against the imp",
+      "model": "haiku",
+      "path": ".claude/agents/project-manager.md"
+    },
+    {
+      "id": "researcher",
+      "name": "researcher",
+      "description": "Use this agent when you need to conduct comprehensive research on software development topics, including investigating new technologies, finding documentation, exploring best practices, or gathering i",
+      "model": "haiku",
+      "path": ".claude/agents/researcher.md"
+    },
+    {
+      "id": "tester",
+      "name": "tester",
+      "description": "Use this agent when you need to validate code quality through testing, including running unit and integration tests, analyzing test coverage, validating error handling, checking performance requiremen",
+      "model": "haiku",
+      "path": ".claude/agents/tester.md"
+    },
+    {
+      "id": "ui-ux-designer",
+      "name": "ui-ux-designer",
+      "description": "Use this agent when the user needs UI/UX design work including interface designs, wireframes, design systems, user research, responsive layouts, animations, or design documentation. Examples:\\n\\n<exam",
+      "model": "inherit",
+      "path": ".claude/agents/ui-ux-designer.md"
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mekong-cli/factory/contracts/missions.schema.json",
+  "title": "OpenClaw Mission Dispatch Contract",
+  "description": "Machine-readable schema for Tôm Hùm autonomous mission dispatch",
+  "type": "object",
+  "required": ["id", "created_at", "source", "priority", "command", "goal", "project", "layer"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique mission ID (UUID or prefixed slug)",
+      "pattern": "^[a-zA-Z0-9_-]+$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["cli", "dashboard", "telegram", "api", "daemon", "cascade"],
+      "description": "Origin of the mission dispatch"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      "description": "Execution priority for queue ordering"
+    },
+    "command": {
+      "type": "string",
+      "description": "Command ID from commands registry (e.g. cook, annual, sales)"
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Natural language goal description"
+    },
+    "project": {
+      "type": "string",
+      "description": "Target project path or identifier"
+    },
+    "layer": {
+      "type": "string",
+      "enum": ["founder", "business", "product", "engineering", "ops"],
+      "description": "Pyramid layer this mission executes in"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parent_mission": {
+          "type": ["string", "null"],
+          "description": "ID of parent mission if this is a sub-mission"
+        },
+        "cascade_origin": {
+          "type": ["string", "null"],
+          "description": "Command that triggered this via cascade"
+        },
+        "strategic_goal": {
+          "type": ["string", "null"],
+          "description": "Top-level OKR or strategic objective"
+        },
+        "previous_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "description": "Max execution time in milliseconds"
+        },
+        "credit_budget": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Max MCU credits to spend"
+        },
+        "files_scope": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Glob patterns restricting file access"
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Bash commands or actions not allowed"
+        },
+        "requires_approval": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Shell commands to run for verification"
+        },
+        "expected_exit_code": {
+          "type": "integer",
+          "default": 0
+        },
+        "success_criteria": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Strings that must appear in output"
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "notify_telegram": {
+          "type": "boolean",
+          "default": false
+        },
+        "log_to_telemetry": {
+          "type": "boolean",
+          "default": true
+        },
+        "update_dashboard": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  }
+}

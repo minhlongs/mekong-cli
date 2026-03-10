@@ -1,0 +1,69 @@
+{
+  "id": "sales",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": "作戰 — Waging War",
+  "display": {
+    "name_vi": "Chiến lược bán hàng",
+    "name_en": "Sales Strategy",
+    "icon": "💰",
+    "description_vi": "Xây dựng playbook bán hàng, pipeline, template outreach, và ICP",
+    "description_en": "Sales playbook, pipeline setup, outreach templates, ICP definition"
+  },
+  "execution": {
+    "agents": ["planner", "fullstack-developer"],
+    "hub": "business-hub",
+    "complexity": "standard",
+    "timeout_ms": 120000,
+    "credit_cost": 3,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": ["goal"],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Sales objective or target (e.g. close 10 enterprise deals)"
+      },
+      "project": {
+        "type": "string",
+        "description": "Company/product name"
+      },
+      "target_segment": {
+        "type": "string",
+        "description": "Target customer segment (SMB, mid-market, enterprise)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {"type": "string"},
+      "playbook": {"type": "string"},
+      "icp": {"type": "object"},
+      "outreach_templates": {"type": "array", "items": {"type": "string"}},
+      "files_modified": {"type": "array", "items": {"type": "string"}},
+      "credits_used": {"type": "integer"}
+    }
+  },
+  "cascade": {
+    "triggers": [
+      {
+        "pattern": "crm|pipeline|hubspot|salesforce",
+        "suggest": "crm",
+        "target_layer": "business"
+      },
+      {
+        "pattern": "proposal|demo|handoff",
+        "suggest": "proposal",
+        "target_layer": "product"
+      }
+    ]
+  },
+  "validation": {
+    "output_must_contain": ["ICP", "pipeline"],
+    "min_output_length": 200,
+    "max_credit_cost": 5
+  }
+}

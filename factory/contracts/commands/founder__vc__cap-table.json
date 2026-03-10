@@ -1,0 +1,65 @@
+{
+  "id": "founder/vc/cap-table",
+  "version": "1.0.0",
+  "layer": "ops",
+  "chapter": "九變 — Nine Variations",
+  "display": {
+    "name_vi": "Cap Table",
+    "name_en": "Cap Table",
+    "icon": "",
+    "description_vi": "Model dilution qua mọi round — biết chính xác mình còn bao nhiêu % trước khi ký",
+    "description_en": "Model dilution qua mi round  bit chnh xc mnh cn bao nhiu % trc khi k"
+  },
+  "execution": {
+    "agents": [
+      "planner",
+      "fullstack-developer"
+    ],
+    "hub": "ops-hub",
+    "complexity": "standard",
+    "timeout_ms": 120000,
+    "credit_cost": 3,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "goal"
+    ],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Natural language task description"
+      },
+      "project": {
+        "type": "string",
+        "description": "Target project path"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "files_modified": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "credits_used": {
+        "type": "integer"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": [],
+    "min_output_length": 50,
+    "max_credit_cost": 5
+  }
+}

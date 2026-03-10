@@ -1,0 +1,65 @@
+{
+  "id": "raas/bootstrap",
+  "version": "1.0.0",
+  "layer": "ops",
+  "chapter": "九變 — Nine Variations",
+  "display": {
+    "name_vi": "Bootstrap",
+    "name_en": "Bootstrap",
+    "icon": "",
+    "description_vi": "🤖 Bootstrap AGI RaaS service — research → plan → implement → verify",
+    "description_en": "Bootstrap AGI RaaS service  research  plan  implement  verify"
+  },
+  "execution": {
+    "agents": [
+      "planner",
+      "fullstack-developer"
+    ],
+    "hub": "ops-hub",
+    "complexity": "complex",
+    "timeout_ms": 300000,
+    "credit_cost": 5,
+    "requires_approval": true
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "goal"
+    ],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Natural language task description"
+      },
+      "project": {
+        "type": "string",
+        "description": "Target project path"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "files_modified": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "credits_used": {
+        "type": "integer"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": [],
+    "min_output_length": 50,
+    "max_credit_cost": 7
+  }
+}

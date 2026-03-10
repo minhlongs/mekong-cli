@@ -1,0 +1,65 @@
+{
+  "id": "founder/ipo/roadshow",
+  "version": "1.0.0",
+  "layer": "ops",
+  "chapter": "九變 — Nine Variations",
+  "display": {
+    "name_vi": "Roadshow",
+    "name_en": "Roadshow",
+    "icon": "",
+    "description_vi": "Roadshow preparation — 2-week sprint, Q&A simulation, pricing signal tracking",
+    "description_en": "Roadshow preparation  2-week sprint, Q&A simulation, pricing signal tracking"
+  },
+  "execution": {
+    "agents": [
+      "planner",
+      "fullstack-developer"
+    ],
+    "hub": "ops-hub",
+    "complexity": "complex",
+    "timeout_ms": 300000,
+    "credit_cost": 5,
+    "requires_approval": true
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "goal"
+    ],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Natural language task description"
+      },
+      "project": {
+        "type": "string",
+        "description": "Target project path"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "files_modified": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "credits_used": {
+        "type": "integer"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": [],
+    "min_output_length": 50,
+    "max_credit_cost": 7
+  }
+}

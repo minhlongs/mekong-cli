@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mekong-cli/factory/contracts/commands.schema.json",
+  "title": "OpenClaw Command Contract",
+  "description": "Machine-readable contract for every OpenClaw command",
+  "type": "object",
+  "required": ["id", "version", "layer", "chapter", "display", "execution", "input", "output"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique command identifier (kebab-case)",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this contract",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "layer": {
+      "type": "string",
+      "enum": ["founder", "business", "product", "engineering", "ops"],
+      "description": "Pyramid layer this command belongs to"
+    },
+    "chapter": {
+      "type": "string",
+      "description": "Art of War chapter reference (e.g. 始計)"
+    },
+    "display": {
+      "type": "object",
+      "required": ["name_vi", "name_en", "icon", "description_vi", "description_en"],
+      "additionalProperties": false,
+      "properties": {
+        "name_vi": {"type": "string"},
+        "name_en": {"type": "string"},
+        "icon": {"type": "string", "description": "Single emoji icon"},
+        "description_vi": {"type": "string"},
+        "description_en": {"type": "string"}
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["agents", "hub", "complexity", "timeout_ms", "credit_cost", "requires_approval"],
+      "additionalProperties": false,
+      "properties": {
+        "agents": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Agent roles involved in execution"
+        },
+        "hub": {"type": "string", "description": "Primary hub for this command"},
+        "complexity": {
+          "type": "string",
+          "enum": ["trivial", "simple", "standard", "complex"]
+        },
+        "timeout_ms": {"type": "integer", "minimum": 1000},
+        "credit_cost": {"type": "integer", "minimum": 0},
+        "requires_approval": {"type": "boolean"}
+      }
+    },
+    "input": {
+      "type": "object",
+      "description": "JSON Schema for command input parameters",
+      "properties": {
+        "type": {"type": "string"},
+        "required": {"type": "array", "items": {"type": "string"}},
+        "properties": {"type": "object"}
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "JSON Schema for command output",
+      "properties": {
+        "type": {"type": "string"},
+        "properties": {"type": "object"}
+      }
+    },
+    "cascade": {
+      "type": "object",
+      "description": "Downstream triggers after successful execution",
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["pattern", "suggest", "target_layer"],
+            "properties": {
+              "pattern": {"type": "string", "description": "Regex pattern matching output to trigger"},
+              "suggest": {"type": "string", "description": "Suggested next command"},
+              "target_layer": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "description": "Output quality gates",
+      "properties": {
+        "output_must_contain": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "min_output_length": {"type": "integer", "minimum": 0},
+        "max_credit_cost": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
