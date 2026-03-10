@@ -5,7 +5,7 @@ const TIERS = [
     period: '/mo',
     desc: 'Perfect for solo developers shipping AI-powered code.',
     cta: 'Get Starter',
-    ctaHref: '#',
+    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=starter',
     highlight: false,
     features: [
       '1,000 MCU / month',
@@ -21,7 +21,7 @@ const TIERS = [
     period: '/mo',
     desc: 'For teams shipping production code at scale.',
     cta: 'Get Growth',
-    ctaHref: '#',
+    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=growth',
     highlight: true,
     badge: 'Most Popular',
     features: [
@@ -39,7 +39,7 @@ const TIERS = [
     period: '/mo',
     desc: 'Unlimited AGI power for serious engineering teams.',
     cta: 'Get Premium',
-    ctaHref: '#',
+    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=premium',
     highlight: false,
     features: [
       'Unlimited MCU',
