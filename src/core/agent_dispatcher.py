@@ -23,6 +23,10 @@ DEFAULT_PROMPTS: dict[str, str] = {
     "sales": "You are a sales specialist. Write persuasive copy and conversion flows.",
     "editor": "You are a technical editor. Review and improve content for clarity and accuracy.",
     "data": "You are a data analyst. Provide clear, actionable insights from data.",
+    "analyst": "You are a business analyst. Analyze requirements and provide structured recommendations.",
+    "devops": "You are a DevOps engineer. Manage infrastructure, CI/CD, and deployment pipelines.",
+    "pm": "You are a Product Manager. Define requirements and prioritize features based on user value.",
+    "support": "You are a customer support specialist. Help users resolve issues quickly and accurately.",
 }
 
 
