@@ -1,33 +1,33 @@
 const FEATURES = [
   {
-    icon: '⚙️',
-    title: 'Plan-Execute-Verify',
-    desc: 'Mọi task qua 3 bước: lên kế hoạch, thực thi, kiểm tra. Tự rollback nếu thất bại.',
+    icon: '🧠',
+    title: 'Plan → Execute → Verify',
+    desc: 'AI tự lập kế hoạch, phân rã thành tasks, thực thi từng bước và tự kiểm tra chất lượng kết quả.',
+  },
+  {
+    icon: '🔄',
+    title: 'Self-Healing Pipeline',
+    desc: 'Nếu bước nào lỗi, AI tự phát hiện nguyên nhân gốc rễ và sửa — không cần can thiệp thủ công.',
+  },
+  {
+    icon: '🔓',
+    title: 'Open Source 100%',
+    desc: 'MIT License. Fork về chạy riêng, tuỳ chỉnh agents, không bị vendor lock-in bao giờ.',
+  },
+  {
+    icon: '💳',
+    title: 'Trả theo kết quả',
+    desc: '1 credit task đơn giản, 3 credits task trung bình, 5 credits task phức tạp. Chỉ trả khi thành công.',
   },
   {
     icon: '🏯',
-    title: 'Kim Tự Tháp 5 Tầng',
-    desc: 'Founder → Business → Product → Engineering → Ops. Commands cascade tự động.',
-  },
-  {
-    icon: '🤖',
-    title: '105 AI Agents',
-    desc: '18 hubs chuyên biệt. Mỗi agent chuyên một việc. Orchestrator phối hợp.',
-  },
-  {
-    icon: '🔑',
-    title: 'RaaS License',
-    desc: 'Xây AI agency riêng. Gate features bằng API key. Tính tiền bằng MCU.',
+    title: '5 tầng doanh nghiệp',
+    desc: 'Founder → Business → Product → Engineering → Ops. Mỗi tầng có agents chuyên biệt sẵn sàng.',
   },
   {
     icon: '🌊',
-    title: 'Antigravity Proxy',
-    desc: 'Route LLM calls qua proxy thông minh. Tự failover khi rate limit.',
-  },
-  {
-    icon: '🔌',
-    title: '464 Skills',
-    desc: 'Từ fundraise đến deploy. Auto-activate theo context. Fork và tùy biến.',
+    title: 'Cascade tự động',
+    desc: 'Kế hoạch cấp cao tự động phân rã thành tasks song song. Nhiều agents chạy đồng thời.',
   },
 ]
 
@@ -37,11 +37,11 @@ export default function FeaturesGrid() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Mọi thứ bạn cần để ship{' '}
-            <span className="gradient-text">nhanh hơn 10x</span>
+            Tại sao chọn{' '}
+            <span className="gradient-text">AgencyOS RaaS?</span>
           </h2>
           <p className="text-slate-400">
-            Binh Pháp strategy gặp AI tooling hiện đại. Tôn Tử sẽ đồng ý.
+            Infrastructure tự trị cho AI agents — open-source core, tính tiền theo kết quả thực tế.
           </p>
         </div>
 
