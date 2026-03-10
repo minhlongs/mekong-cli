@@ -247,6 +247,7 @@ jobs:
           EOF
 
           cat /tmp/security-attestation.json
+          mkdir -p ./plans/reports
           cp /tmp/security-attestation.json ./plans/reports/security-attestation-${{ steps.commit.outputs.sha }}.json
 
       - name: Generate SHA256 hash
