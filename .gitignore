@@ -271,6 +271,7 @@ claudedocs/
 backend/
 api/
 agents/
+!/agents/
 !packages/**/agents/
 !apps/algo-trader/src/api/
 !apps/algo-trader/src/jobs/workers/
