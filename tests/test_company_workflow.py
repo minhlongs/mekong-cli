@@ -8,7 +8,6 @@ import pytest
 
 from src.core.company_workflow import (
     WORKFLOW_BUILDERS,
-    WorkflowDef,
     WorkflowResult,
     WorkflowStep,
     add_custom_workflow,
