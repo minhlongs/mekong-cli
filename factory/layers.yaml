@@ -1,0 +1,187 @@
+# Vibe Coding Factory — 5-Layer Pyramid Configuration
+# Each layer maps to an Art of War chapter and cascades downstream.
+
+layers:
+  founder:
+    chapter: "始計 — Initial Calculations"
+    role: "Founder / CEO"
+    description: "Strategic vision, fundraising, OKRs, financial goals. The apex of the pyramid."
+    cascades_to: [business]
+    entry_prompt: "Bạn là founder. Hôm nay muốn làm gì? Chiến lược, tài chính, hay mục tiêu?"
+    hubs:
+      - founder-hub
+    commands:
+      - annual
+      - quarterly
+      - forecast
+      - fundraise
+      - swot
+      - okr
+      - kpi
+      - goal-dashboard
+      - portfolio
+      - tier-pricing
+      - branding
+      - muc-tieu
+      - bao-cao-tai-chinh
+
+  business:
+    chapter: "作戰 — Waging War"
+    role: "Business Lead / GTM"
+    description: "Sales, marketing, finance, HR, client ops. Revenue engine layer."
+    cascades_to: [product]
+    entry_prompt: "Layer kinh doanh. Sales, marketing, tài chính, hay nhân sự?"
+    hubs:
+      - business-hub
+    commands:
+      - sales
+      - marketing
+      - finance
+      - pipeline
+      - leadgen
+      - client
+      - crm
+      - invoice
+      - invoice-gen
+      - expense
+      - tax
+      - contract
+      - hr
+      - email
+      - close
+      - revenue
+      - cashflow
+      - ads
+      - social
+      - seo
+      - content
+      - affiliate
+      - nhan-su
+      - khach-hang
+      - doi-tac
+      - hop-dong
+      - chien-dich
+      - ke-hoach-tiep-thi
+      - ngan-sach
+      - lich-trinh
+      - phan-tich
+      - danh-gia
+
+  product:
+    chapter: "謀攻 — Attack by Stratagem"
+    role: "Product Manager / Designer"
+    description: "Roadmap, sprints, personas, proposals, demos. Bridge between biz and eng."
+    cascades_to: [engineering]
+    entry_prompt: "Layer sản phẩm. Roadmap, sprint, scope, hay brainstorm?"
+    hubs:
+      - product-hub
+    commands:
+      - plan
+      - brainstorm
+      - scope
+      - estimate
+      - sprint
+      - proposal
+      - demo
+      - competitor
+      - persona
+      - roadmap
+      - pricing
+      - feedback
+      - retrospective
+      - standup
+      - handoff
+      - du-an
+      - bao-cao
+
+  engineering:
+    chapter: "軍形 — Military Disposition"
+    role: "Engineer / Tech Lead"
+    description: "Code, build, test, deploy, review. The execution powerhouse."
+    cascades_to: [ops]
+    entry_prompt: "Layer kỹ thuật. Cook, fix, test, review, hay deploy?"
+    hubs:
+      - engineering-hub
+    commands:
+      - cook
+      - code
+      - fix
+      - debug
+      - refactor
+      - optimize
+      - test
+      - unit-test
+      - e2e-test
+      - integration-test
+      - review
+      - deploy
+      - deploy-staging
+      - deploy-prod
+      - ship
+      - arch
+      - docs
+      - docs-api
+      - docs-arch
+      - docs-changelog
+      - docs-deploy
+      - docs-onboard
+      - docs-readme
+      - api
+      - schema
+      - migrate
+      - seed
+      - component
+      - vibe-code
+      - vibe-cook
+      - coverage
+      - lint
+      - typecheck
+      - format
+      - git
+      - git-bisect
+      - git-branch
+      - git-cherry
+      - git-merge
+      - git-rebase
+      - git-squash
+      - git-stash
+      - git-tag
+      - pr
+      - kanban
+      - journal
+      - watzup
+
+  ops:
+    chapter: "兵勢 — Energy"
+    role: "DevOps / Platform"
+    description: "Audit, health, security, sync, environment. The foundation layer."
+    cascades_to: []
+    entry_prompt: "Layer vận hành. Audit, health check, security, hay sync?"
+    hubs:
+      - ops-hub
+    commands:
+      - audit
+      - health
+      - status
+      - report
+      - benchmark
+      - security
+      - env
+      - init
+      - install
+      - setup-mcp
+      - use-mcp
+      - update
+      - clean
+      - rollback
+      - smoke
+      - sync-agent
+      - sync-all
+      - sync-antigravity
+      - sync-artifacts
+      - sync-browser
+      - sync-editor
+      - sync-mcp
+      - sync-rules
+      - sync-tasks
+      - win-check
