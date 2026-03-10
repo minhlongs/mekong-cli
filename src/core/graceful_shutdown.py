@@ -19,6 +19,7 @@ Shutdown Sequence:
 import sys
 import atexit
 import glob
+import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -27,6 +28,8 @@ from typing import Optional, List, Callable, Awaitable, Dict, Any
 
 from rich.console import Console
 from rich.panel import Panel
+
+logger = logging.getLogger(__name__)
 
 
 class ShutdownReason(str, Enum):
@@ -269,8 +272,8 @@ async def shutdown_on_all_phases_operational() -> None:
                 try:
                     os.remove(filepath)
                     removed_count += 1
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Shutdown cleanup failed: %s", e)
         return True
 
     handler.register_cleanup_handler(cleanup_temp_files, "cleanup_temp_files")

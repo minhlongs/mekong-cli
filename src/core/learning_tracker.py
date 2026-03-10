@@ -5,12 +5,15 @@ Tracks and analyzes AI agent learning patterns and knowledge evolution over time
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from packages.memory.memory_facade import get_memory_facade
+
+logger = logging.getLogger(__name__)
 
 
 class LearningHistoryTracker:
@@ -52,8 +55,9 @@ class LearningHistoryTracker:
 
             with open(self.local_history_file, "w", encoding="utf-8") as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
 
     def _load_from_local_storage(self) -> list[dict]:
         """Load data from local file storage."""
@@ -61,8 +65,9 @@ class LearningHistoryTracker:
             if self.local_history_file.exists():
                 with open(self.local_history_file, encoding="utf-8") as f:
                     return json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+
+            logger.warning("Operation failed: %s", e)
         return []
 
     def log_learning_event(

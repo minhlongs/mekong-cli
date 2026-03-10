@@ -5,12 +5,15 @@ Handler functions for Telegram bot commands.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from .telegram_inbox import _load_inbox, add_task, get_pending_tasks
+
+logger = logging.getLogger(__name__)
 
 
 async def cook_handler(
@@ -174,8 +177,9 @@ async def status_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         active = len(spawner.active_sessions)
         total = len(spawner.all_sessions)
         cc_info = f"\n🤖 CC CLI: {active} active / {total} total"
-    except Exception:
-        pass
+    except Exception as e:
+
+        logger.warning("Operation failed: %s", e)
 
     text = (
         f"🟢 *Tôm Hùm Status*\n"

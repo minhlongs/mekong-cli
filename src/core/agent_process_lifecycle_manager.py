@@ -7,6 +7,7 @@ Enforces M1 16GB concurrency cap (default: 5 simultaneous agents).
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from collections.abc import Callable
@@ -15,6 +16,8 @@ from enum import Enum
 from typing import Any
 
 from .event_bus import EventBus, EventType, get_event_bus
+
+logger = logging.getLogger(__name__)
 
 
 class ProcessState(str, Enum):
@@ -137,8 +140,9 @@ class ProcessManager:
         for cb in self._crash_callbacks.get(agent_id, []):
             try:
                 cb(agent_id)
-            except Exception:
-                pass  # callbacks must not crash the manager
+            except Exception as e:
+
+                logger.warning("Operation failed: %s", e)
 
     def restart(self, agent_id: str) -> AgentProcess:
         """Kill and respawn with original config. Returns new AgentProcess.

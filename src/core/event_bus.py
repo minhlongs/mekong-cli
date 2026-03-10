@@ -7,12 +7,15 @@ real-time execution streaming (Netdata streaming pattern).
 
 from __future__ import annotations
 
+import logging
 import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class EventType(str, Enum):
@@ -105,8 +108,8 @@ class EventBus:
         for callback in self._subscribers.get(event_type, []):
             try:
                 callback(event)
-            except Exception:
-                pass  # Subscribers must not break the emitter
+            except Exception as e:
+                logger.debug("Event subscriber callback failed: %s", e)
         return event
 
     def clear(self) -> None:

@@ -6,6 +6,7 @@ Maintains evolution journal in .mekong/journal.yaml.
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -16,6 +17,8 @@ import yaml  # type: ignore[import-untyped]
 from .event_bus import EventType, get_event_bus
 from .memory import MemoryStore
 from .recipe_gen import RecipeGenerator
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -164,7 +167,8 @@ class SelfImprover:
                 )
                 for d in data
             ]
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load self-improve journal: %s", e)
             self._journal = []
 
     def _save_journal(self) -> None:

@@ -10,12 +10,15 @@ Fingerprint used for license binding and device identification.
 """
 
 import hashlib
+import logging
 import platform
 import subprocess
 import uuid
 from dataclasses import dataclass, field
 from typing import Optional, List
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -135,7 +138,8 @@ class FingerprintGenerator:
             else:
                 # Fallback: use UUID
                 mac_addresses = [str(uuid.uuid4())]
-        except Exception:
+        except Exception as e:
+            logger.debug("MAC address platform detection failed, using fallback: %s", e)
             # Ultimate fallback
             mac_addresses = [str(uuid.getnode())]
 
@@ -166,10 +170,8 @@ class FingerprintGenerator:
                     if "Ethernet Address:" in line:
                         mac = line.split(":")[1].strip()
                         mac_addresses.append(mac.lower())
-        except Exception:
-            pass
-
-        # Fallback: use ifconfig
+        except Exception as e:
+            logger.debug("networksetup MAC address detection failed: %s", e)
         if not mac_addresses:
             try:
                 result = subprocess.run(
@@ -183,8 +185,8 @@ class FingerprintGenerator:
                     if "ether" in line:
                         mac = line.split()[1].strip()
                         mac_addresses.append(mac.lower())
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("ifconfig MAC address detection failed: %s", e)
 
         return mac_addresses if mac_addresses else [str(uuid.getnode())]
 
@@ -205,10 +207,8 @@ class FingerprintGenerator:
                             mac = f.read().strip().lower()
                             if mac and mac != "00:00:00:00:00:00":
                                 mac_addresses.append(mac)
-        except Exception:
-            pass
-
-        # Fallback: use ip command
+        except Exception as e:
+            logger.debug("Linux /sys/class/net MAC address detection failed: %s", e)
         if not mac_addresses:
             try:
                 result = subprocess.run(
@@ -222,8 +222,8 @@ class FingerprintGenerator:
                     if "link/ether" in line:
                         mac = line.split()[1].strip().lower()
                         mac_addresses.append(mac)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("ip link MAC address detection failed: %s", e)
 
         return mac_addresses if mac_addresses else [str(uuid.getnode())]
 
@@ -247,10 +247,8 @@ class FingerprintGenerator:
                     mac = line.strip().replace("-", ":").lower()
                     if mac and mac != "00:00:00:00:00:00":
                         mac_addresses.append(mac)
-        except Exception:
-            pass
-
-        # Fallback: use ipconfig
+        except Exception as e:
+            logger.debug("PowerShell Get-NetAdapter MAC address detection failed: %s", e)
         if not mac_addresses:
             try:
                 result = subprocess.run(
@@ -266,8 +264,8 @@ class FingerprintGenerator:
                         mac = line.split(":")[1].strip().replace("-", ":").lower()
                         if mac:
                             mac_addresses.append(mac)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("ipconfig MAC address detection failed: %s", e)
 
         return mac_addresses if mac_addresses else [str(uuid.getnode())]
 
@@ -280,8 +278,8 @@ class FingerprintGenerator:
                 return self._get_disk_serial_linux()
             elif self.platform == "Windows":
                 return self._get_disk_serial_windows()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Disk serial platform dispatch failed: %s", e)
 
         return None
 
@@ -301,8 +299,8 @@ class FingerprintGenerator:
                         serial = line.split(":")[1].strip()
                         if serial:
                             return serial.lower()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("diskutil disk serial detection failed: %s", e)
 
         return None
 
@@ -331,18 +329,16 @@ class FingerprintGenerator:
                     if "Serial Number" in line:
                         serial = line.split(":")[1].strip()
                         return serial.lower()
-        except Exception:
-            pass
-
-        # Fallback: read from /sys/block
+        except Exception as e:
+            logger.debug("Linux disk-by-id/hdparm serial detection failed: %s", e)
         try:
             for disk in ["sda", "nvme0n1", "vda"]:
                 serial_file = Path(f"/sys/block/{disk}/device/serial")
                 if serial_file.exists():
                     with open(serial_file, "r") as f:
                         return f.read().strip().lower()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Linux /sys/block serial detection failed: %s", e)
 
         return None
 
@@ -360,10 +356,8 @@ class FingerprintGenerator:
 
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip().lower()
-        except Exception:
-            pass
-
-        # Fallback: use wmic
+        except Exception as e:
+            logger.debug("PowerShell Get-PhysicalDisk serial detection failed: %s", e)
         try:
             result = subprocess.run(
                 ["wmic", "diskdrive", "get", "serialnumber"],
@@ -377,8 +371,8 @@ class FingerprintGenerator:
                 lines = result.stdout.strip().split("\n")
                 if len(lines) > 1:
                     return lines[1].strip().lower()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("wmic disk serial detection failed: %s", e)
 
         return None
 
@@ -391,8 +385,8 @@ class FingerprintGenerator:
                 return self._get_machine_id_linux()
             elif self.platform == "Windows":
                 return self._get_machine_id_windows()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Machine ID platform dispatch failed: %s", e)
 
         return None
 
@@ -411,8 +405,8 @@ class FingerprintGenerator:
                     if "IOPlatformUUID" in line:
                         uuid = line.split('"')[1] if '"' in line else None
                         return uuid.lower() if uuid else None
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("ioreg IOPlatformUUID detection failed: %s", e)
 
         return None
 
@@ -430,8 +424,8 @@ class FingerprintGenerator:
             if dbus_machine_id.exists():
                 with open(dbus_machine_id, "r") as f:
                     return f.read().strip().lower()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Linux machine-id file read failed: %s", e)
 
         return None
 
@@ -450,8 +444,8 @@ class FingerprintGenerator:
 
             if result.returncode == 0 and result.stdout.strip():
                 return result.stdout.strip().lower()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Windows registry MachineGuid detection failed: %s", e)
 
         return None
 

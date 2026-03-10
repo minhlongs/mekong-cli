@@ -6,10 +6,13 @@ Classifies goals into intents and extracts entities.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class Intent(str, Enum):
@@ -103,8 +106,8 @@ class IntentClassifier:
         if confidence < 0.5 and self.llm_client and hasattr(self.llm_client, "generate"):
             try:
                 result = self._llm_fallback(goal)
-            except Exception:
-                pass  # Stick with keyword result
+            except Exception as e:
+                logger.warning("LLM fallback classification failed: %s", e)
 
         return result
 

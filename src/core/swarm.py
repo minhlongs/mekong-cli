@@ -6,6 +6,7 @@ Manages a registry of remote nodes with health checking.
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
 from dataclasses import dataclass
@@ -13,6 +14,8 @@ from pathlib import Path
 from typing import Any
 
 import requests  # type: ignore[import-untyped]
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -142,7 +145,8 @@ class SwarmRegistry:
 
         try:
             raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load swarm config: %s", e)
             return
 
         for entry in raw.get("nodes") or []:

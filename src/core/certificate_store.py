@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -30,6 +31,8 @@ from typing import Optional, Dict, Any
 
 from src.core.device_certificate import DeviceCertificate, CertificateSigner
 from src.auth.secure_storage import get_secure_storage, SecureStorage
+
+logger = logging.getLogger(__name__)
 
 
 class CertificateStoreError(Exception):
@@ -139,7 +142,8 @@ class CertificateStore:
         if self.use_secure_storage:
             try:
                 self._secure_storage = get_secure_storage()
-            except Exception:
+            except Exception as e:
+                logger.debug("Failed to initialize secure storage: %s", e)
                 self._secure_storage = None
 
         # Ensure certificate directory exists
@@ -215,8 +219,8 @@ class CertificateStore:
             try:
                 with open(self.cert_file, "r") as f:
                     existing_data = json.load(f)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to load existing cert data: %s", e)
 
         # Update metadata
         existing_data["metadata"] = metadata.to_dict()
@@ -245,8 +249,8 @@ class CertificateStore:
                 key = self._secure_storage.get_license()
                 if key:
                     return key.encode("utf-8")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to load private key from secure storage: %s", e)
 
         # Fallback: load from file
         key_file = self.cert_dir / "private_key.pem"
@@ -254,8 +258,8 @@ class CertificateStore:
             try:
                 with open(key_file, "rb") as f:
                     return f.read()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to load private key from file: %s", e)
 
         return None
 
@@ -270,8 +274,8 @@ class CertificateStore:
             try:
                 self._secure_storage.store_license(private_key_pem.decode("utf-8"))
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to save private key to secure storage: %s", e)
 
         # Fallback: save to file (less secure)
         key_file = self.cert_dir / "private_key.pem"
@@ -293,8 +297,8 @@ class CertificateStore:
             try:
                 if self._secure_storage.delete_license():
                     cleared = True
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to clear private key from secure storage: %s", e)
 
         # Clear from file fallback
         key_file = self.cert_dir / "private_key.pem"
@@ -321,7 +325,8 @@ class CertificateStore:
             with open(self.history_file, "r") as f:
                 history = json.load(f)
             return history if isinstance(history, list) else []
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load rotation history: %s", e)
             return []
 
     def _save_rotation_record(self, record: Dict[str, Any]) -> None:
@@ -388,7 +393,8 @@ class CertificateStore:
                 signature=bytes.fromhex(cert_data["signature"]) if cert_data.get("signature") else None,
             )
 
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load certificate: %s", e)
             return None
 
     def save_certificate(

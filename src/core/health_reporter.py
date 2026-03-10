@@ -143,8 +143,8 @@ class HealthReporter:
             version_file = Path(__file__).parent.parent / "VERSION"
             if version_file.exists():
                 return version_file.read_text().strip()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Version file read failed: %s", e)
         return os.getenv("MEKONG_VERSION", "unknown")
 
     def _get_session_id(self) -> str:

@@ -19,6 +19,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import os
 import time
 import uuid
@@ -27,6 +28,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml  # type: ignore[import-untyped]
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from telegram import InlineKeyboardMarkup, Update
@@ -724,7 +727,8 @@ class MekongBot:
                 chat_ids=data.get("chat_ids", []),
                 enabled=data.get("enabled", True),
             )
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to load bot config: %s", e)
             return BotConfig(token=self.token)
 
     def _save_config(self) -> None:
