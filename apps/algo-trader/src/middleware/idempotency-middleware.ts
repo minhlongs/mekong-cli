@@ -13,6 +13,7 @@
 
 import { RedisIdempotencyStore } from '../execution/idempotency-store';
 import { logger } from '../utils/logger';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 /**
  * Idempotency record for in-memory fallback
@@ -187,17 +188,17 @@ export function idempotencyMiddleware(
   const headerName = options?.headerName ?? DEFAULT_HEADER_NAME;
   const tenantIdHeader = options?.tenantIdHeader ?? DEFAULT_TENANT_ID_HEADER;
 
-  return async function idempotencyCheck(request: any, reply: any) {
+  return async function idempotencyCheck(request: FastifyRequest, reply: FastifyReply) {
     const idempotencyKey = request.headers?.[headerName.toLowerCase()] ||
                            request.headers?.[headerName];
 
-    if (!idempotencyKey) {
+    if (!idempotencyKey || Array.isArray(idempotencyKey)) {
       return;
     }
 
-    const tenantId = request.headers?.[tenantIdHeader.toLowerCase()] ||
-                     request.headers?.[tenantIdHeader] ||
-                     'default';
+    const tenantIdHeaderRaw = request.headers?.[tenantIdHeader.toLowerCase()] ||
+                              request.headers?.[tenantIdHeader];
+    const tenantId = (Array.isArray(tenantIdHeaderRaw) ? 'default' : tenantIdHeaderRaw) || 'default';
 
     const existingResult = await store.get(idempotencyKey, tenantId);
 
@@ -223,17 +224,17 @@ export function createIdempotencyResponseHandler(
   const headerName = options?.headerName ?? DEFAULT_HEADER_NAME;
   const tenantIdHeader = options?.tenantIdHeader ?? DEFAULT_TENANT_ID_HEADER;
 
-  return async function cacheResult(request: any, _reply: any, payload: any) {
+  return async function cacheResult(request: FastifyRequest, _reply: FastifyReply, payload: unknown) {
     const idempotencyKey = request.headers?.[headerName.toLowerCase()] ||
                            request.headers?.[headerName];
 
-    if (!idempotencyKey) {
+    if (!idempotencyKey || Array.isArray(idempotencyKey)) {
       return payload;
     }
 
-    const tenantId = request.headers?.[tenantIdHeader.toLowerCase()] ||
-                     request.headers?.[tenantIdHeader] ||
-                     'default';
+    const tenantIdHeaderRaw = request.headers?.[tenantIdHeader.toLowerCase()] ||
+                              request.headers?.[tenantIdHeader];
+    const tenantId = (Array.isArray(tenantIdHeaderRaw) ? 'default' : tenantIdHeaderRaw) || 'default';
 
     if (payload) {
       await store.set(idempotencyKey, tenantId, payload);

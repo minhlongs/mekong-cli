@@ -36,12 +36,10 @@ export class OmegaPointEngine {
     if (this.config.autopoieticEngine.enabled) active.push('autopoietic');
     if (this.config.energyArbitrage.enabled) active.push('energy');
     if (this.config.marketMorph.enabled) active.push('marketMorph');
-    console.log(`[Phase12:OmegaPoint] Started modules: ${active.join(', ') || 'none'}`);
   }
 
   async stop(): Promise<void> {
     this.running = false;
-    console.log('[Phase12:OmegaPoint] Stopped');
   }
 
   isRunning(): boolean { return this.running; }

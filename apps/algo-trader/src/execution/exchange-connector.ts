@@ -46,6 +46,7 @@ interface ConnectionConfig {
  */
 export class BinanceWebSocket extends EventEmitter {
   private exchange: binance;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private wsConnections: Map<string, any> = new Map();
   private reconnectAttempts: Map<string, number> = new Map();
   private readonly MAX_RECONNECT_ATTEMPTS = 5;
@@ -95,16 +96,20 @@ export class BinanceWebSocket extends EventEmitter {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ws: any = await this.exchange.watchOrderBook(symbol, depth);
       this.wsConnections.set(key, ws);
       this.reconnectAttempts.set(key, 0);
 
       if (ws && typeof ws.on === 'function') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.on('update', (update: any) => {
+          const bids = Array.isArray(update.bids) ? (update.bids as Array<[number, number]>) : [];
+          const asks = Array.isArray(update.asks) ? (update.asks as Array<[number, number]>) : [];
           this.emit('orderbook', {
             symbol,
-            bids: (update.bids as any[]).slice(0, depth).map(([price, amount]: any) => [Number(price), Number(amount)]),
-            asks: (update.asks as any[]).slice(0, depth).map(([price, amount]: any) => [Number(price), Number(amount)]),
+            bids: bids.slice(0, depth).map(([price, amount]) => [Number(price), Number(amount)]),
+            asks: asks.slice(0, depth).map(([price, amount]) => [Number(price), Number(amount)]),
             timestamp: Date.now(),
           } as OrderBookUpdate);
         });
@@ -132,18 +137,20 @@ export class BinanceWebSocket extends EventEmitter {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ws: any = await this.exchange.watchTrades(symbol);
       this.wsConnections.set(key, ws);
       this.reconnectAttempts.set(key, 0);
 
       if (ws && typeof ws.on === 'function') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.on('update', (trades: any[]) => {
           trades.forEach(trade => {
             this.emit('trade', {
               symbol,
               price: Number(trade.price),
               amount: Number(trade.amount),
-              side: trade.side,
+              side: trade.side as 'buy' | 'sell',
               timestamp: Number(trade.timestamp),
             } as TradeUpdate);
           });
@@ -172,11 +179,13 @@ export class BinanceWebSocket extends EventEmitter {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ws: any = await this.exchange.watchTicker(symbol);
       this.wsConnections.set(key, ws);
       this.reconnectAttempts.set(key, 0);
 
       if (ws && typeof ws.on === 'function') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.on('update', (ticker: any) => {
           this.emit('ticker', {
             symbol,
@@ -239,11 +248,12 @@ export class BinanceWebSocket extends EventEmitter {
    */
   async getOrderBook(symbol: string, limit: number = 20): Promise<OrderBookUpdate> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const orderbook: any = await this.exchange.fetchOrderBook(symbol, limit);
       return {
         symbol,
-        bids: (orderbook.bids as any[]).map(([price, amount]: any) => [Number(price), Number(amount)]),
-        asks: (orderbook.asks as any[]).map(([price, amount]: any) => [Number(price), Number(amount)]),
+        bids: orderbook.bids.map(([price, amount]: [number, number]) => [Number(price), Number(amount)]),
+        asks: orderbook.asks.map(([price, amount]: [number, number]) => [Number(price), Number(amount)]),
         timestamp: Number(orderbook.timestamp),
       };
     } catch (error) {
@@ -258,12 +268,13 @@ export class BinanceWebSocket extends EventEmitter {
    */
   async getRecentTrades(symbol: string, limit: number = 50): Promise<TradeUpdate[]> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const trades: any[] = await this.exchange.fetchTrades(symbol, undefined, limit);
       return trades.map(trade => ({
         symbol,
         price: Number(trade.price),
         amount: Number(trade.amount),
-        side: trade.side,
+        side: trade.side as 'buy' | 'sell',
         timestamp: Number(trade.timestamp),
       }));
     } catch (error) {
@@ -281,8 +292,10 @@ export class BinanceWebSocket extends EventEmitter {
 
     for (const [key, ws] of this.wsConnections.entries()) {
       try {
-        if (ws && typeof ws.close === 'function') {
-          ws.close();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (ws && typeof (ws as any).close === 'function') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (ws as any).close();
         }
       } catch (error) {
         this.emit('error', {
