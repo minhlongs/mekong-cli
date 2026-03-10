@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "description": "Telegram approval rules for layer transitions and high-risk commands",
+  "rules": [
+    {
+      "transition": "founder_to_business",
+      "from_layer": "founder",
+      "to_layer": "business",
+      "requires_approval": true,
+      "channel": "telegram",
+      "reason": "Strategic decisions cascade into revenue ops — founder must approve"
+    },
+    {
+      "transition": "business_to_product",
+      "from_layer": "business",
+      "to_layer": "product",
+      "requires_approval": false,
+      "channel": null,
+      "reason": "Business-to-product handoff is routine"
+    },
+    {
+      "transition": "product_to_engineering",
+      "from_layer": "product",
+      "to_layer": "engineering",
+      "requires_approval": false,
+      "channel": null,
+      "reason": "Scoped work — product approval already captured in sprint"
+    },
+    {
+      "transition": "engineering_to_ops",
+      "from_layer": "engineering",
+      "to_layer": "ops",
+      "requires_approval": false,
+      "channel": null,
+      "reason": "Ops tasks are automated; no human gate needed"
+    }
+  ],
+  "command_overrides": [
+    {
+      "command": "deploy",
+      "requires_approval": true,
+      "channel": "telegram",
+      "reason": "Production deploy always requires explicit approval"
+    },
+    {
+      "command": "founder/vc/cap-table",
+      "requires_approval": true,
+      "channel": "telegram",
+      "reason": "Cap table changes are irreversible"
+    },
+    {
+      "command": "founder/ipo/s1",
+      "requires_approval": true,
+      "channel": "telegram",
+      "reason": "S-1 filing prep requires founder sign-off"
+    },
+    {
+      "command": "raas/bootstrap",
+      "requires_approval": true,
+      "channel": "telegram",
+      "reason": "RaaS bootstrap initializes billing — high-stakes"
+    }
+  ]
+}

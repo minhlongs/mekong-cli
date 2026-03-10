@@ -1,0 +1,65 @@
+{
+  "id": "deploy",
+  "version": "1.0.0",
+  "layer": "engineering",
+  "chapter": "軍爭 — Military Contention",
+  "display": {
+    "name_vi": "Deploy",
+    "name_en": "Deploy",
+    "icon": "",
+    "description_vi": "Execute Deploy command",
+    "description_en": "Execute Deploy command"
+  },
+  "execution": {
+    "agents": [
+      "planner",
+      "fullstack-developer"
+    ],
+    "hub": "engineering-hub",
+    "complexity": "complex",
+    "timeout_ms": 300000,
+    "credit_cost": 5,
+    "requires_approval": true
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "goal"
+    ],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Natural language task description"
+      },
+      "project": {
+        "type": "string",
+        "description": "Target project path"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "files_modified": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "credits_used": {
+        "type": "integer"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": [],
+    "min_output_length": 50,
+    "max_credit_cost": 7
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "version": "1.0.0",
+  "skills": [
+    {
+      "id": "agent-browser",
+      "name": "ck:agent-browser",
+      "description": "AI-optimized browser automation CLI with context-efficient snapshots. Use for long autonomous sessions, self-verifying workflows, video recording, and cloud browser testing (Browserbase).",
+      "path": ".claude/skills/agent-browser/SKILL.md"
+    },
+    {
+      "id": "ai-artist",
+      "name": "ck:ai-artist",
+      "description": "Generate images via Nano Banana with 129 curated prompts. Mandatory validation interview refines style/mood/colors (use --skip to bypass). 3 modes: search, creative, wild. Styles: Ukiyo-e, Bento grid,",
+      "path": ".claude/skills/ai-artist/SKILL.md"
+    },
+    {
+      "id": "ai-multimodal",
+      "name": "ck:ai-multimodal",
+      "description": "Analyze images/audio/video with Gemini API (better vision than Claude). Generate images (Imagen 4), videos (Veo 3). Use for vision analysis, transcription, OCR, design extraction, multimodal AI.",
+      "path": ".claude/skills/ai-multimodal/SKILL.md"
+    },
+    {
+      "id": "ask",
+      "name": "ck:ask",
+      "description": "Answer technical and architectural questions with expert consultation.",
+      "path": ".claude/skills/ask/SKILL.md"
+    },
+    {
+      "id": "backend-development",
+      "name": "ck:backend-development",
+      "description": "Build backends with Node.js, Python, Go (NestJS, FastAPI, Django). Use for REST/GraphQL/gRPC APIs, auth (OAuth, JWT), databases, microservices, security (OWASP), Docker/K8s.",
+      "path": ".claude/skills/backend-development/SKILL.md"
+    },
+    {
+      "id": "better-auth",
+      "name": "ck:better-auth",
+      "description": "Add authentication with Better Auth (TypeScript). Use for email/password, OAuth providers (Google, GitHub), 2FA/MFA, passkeys/WebAuthn, sessions, RBAC, rate limiting.",
+      "path": ".claude/skills/better-auth/SKILL.md"
+    },
+    {
+      "id": "bootstrap",
+      "name": "ck:bootstrap",
+      "description": "Bootstrap new projects with research, tech stack, design, planning, and implementation. Modes: full (interactive), auto (default), fast (skip research), parallel (multi-agent).",
+      "path": ".claude/skills/bootstrap/SKILL.md"
+    },
+    {
+      "id": "brainstorm",
+      "name": "ck:brainstorm",
+      "description": "Brainstorm solutions with trade-off analysis and brutal honesty. Use for ideation, architecture decisions, technical debates, feature exploration, feasibility assessment, design discussions.",
+      "path": ".claude/skills/brainstorm/SKILL.md"
+    },
+    {
+      "id": "check-and-commit",
+      "name": "check-and-commit",
+      "description": "Run quality checks then commit and push changes",
+      "path": ".claude/skills/check-and-commit/SKILL.md"
+    },
+    {
+      "id": "chrome-devtools",
+      "name": "ck:chrome-devtools",
+      "description": "Automate browsers with Puppeteer CLI scripts and persistent sessions. Use for screenshots, performance analysis, network monitoring, web scraping, form automation, JavaScript debugging.",
+      "path": ".claude/skills/chrome-devtools/SKILL.md"
+    },
+    {
+      "id": "ck-help",
+      "name": "ck:ck-help",
+      "description": "ClaudeKit usage guide — discover commands, skills, workflows naturally.",
+      "path": ".claude/skills/ck-help/SKILL.md"
+    },
+    {
+      "id": "code-review",
+      "name": "ck:code-review",
+      "description": "Review code quality, receive feedback with technical rigor, verify completion claims. Use before PRs, after implementing features, when claiming task completion. Includes scout-based edge case detecti",
+      "path": ".claude/skills/code-review/SKILL.md"
+    },
+    {
+      "id": "coding-level",
+      "name": "ck:coding-level",
+      "description": "Set coding experience level for tailored explanations and output format.",
+      "path": ".claude/skills/coding-level/SKILL.md"
+    },
+    {
+      "id": "context-engineering",
+      "name": "ck:context-engineering",
+      "description": "Check context usage limits, monitor time remaining, optimize token consumption, debug context failures. Use when asking about context percentage, rate limits, usage warnings, context optimization, age",
+      "path": ".claude/skills/context-engineering/SKILL.md"
+    },
+    {
+      "id": "databases",
+      "name": "ck:databases",
+      "description": "Design schemas, write queries for MongoDB and PostgreSQL. Use for database design, SQL/NoSQL queries, aggregation pipelines, indexes, migrations, replication, performance optimization, psql CLI.",
+      "path": ".claude/skills/databases/SKILL.md"
+    },
+    {
+      "id": "debug",
+      "name": "ck:debug",
+      "description": "Debug systematically with root cause analysis before fixes. Use for bugs, test failures, unexpected behavior, performance issues, call stack tracing, multi-layer validation, log analysis, CI/CD failur",
+      "path": ".claude/skills/debug/SKILL.md"
+    },
+    {
+      "id": "devops",
+      "name": "ck:devops",
+      "description": "Deploy to Cloudflare (Workers, R2, D1), Docker, GCP (Cloud Run, GKE), Kubernetes (kubectl, Helm). Use for serverless, containers, CI/CD, GitOps, security audit.",
+      "path": ".claude/skills/devops/SKILL.md"
+    },
+    {
+      "id": "docs",
+      "name": "ck:docs",
+      "description": "Analyze codebase and manage project documentation — init, update, summarize.",
+      "path": ".claude/skills/docs/SKILL.md"
+    },
+    {
+      "id": "docs-seeker",
+      "name": "ck:docs-seeker",
+      "description": "Search library/framework documentation via llms.txt (context7.com). Use for API docs, GitHub repository analysis, technical documentation lookup, latest library features.",
+      "path": ".claude/skills/docs-seeker/SKILL.md"
+    },
+    {
+      "id": "find-skills",
+      "name": "ck:find-skills",
+      "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This sk",
+      "path": ".claude/skills/find-skills/SKILL.md"
+    },
+    {
+      "id": "fix",
+      "name": "ck:fix",
+      "description": "ALWAYS activate this skill before fixing ANY bug, error, test failure, CI/CD issue, type error, lint, log error, UI issue, code problem.",
+      "path": ".claude/skills/fix/SKILL.md"
+    },
+    {
+      "id": "frontend-development",
+      "name": "ck:frontend-development",
+      "description": "Build React/TypeScript frontends with modern patterns. Use for components, Suspense, lazy loading, useSuspenseQuery, MUI v7 styling, TanStack Router, performance optimization.",
+      "path": ".claude/skills/frontend-development/SKILL.md"
+    },
+    {
+      "id": "git",
+      "name": "ck:git",
+      "description": "Git operations with conventional commits. Use for staging, committing, pushing, PRs, merges. Auto-splits commits by type/scope. Security scans for secrets.",
+      "path": ".claude/skills/git/SKILL.md"
+    },
+    {
+      "id": "gkg",
+      "name": "ck:gkg",
+      "description": "Semantic code analysis with GitLab Knowledge Graph. Use for go-to-definition, find-usages, impact analysis, architecture visualization. Supports Ruby, Java, Kotlin, Python, TypeScript/JavaScript.",
+      "path": ".claude/skills/gkg/SKILL.md"
+    },
+    {
+      "id": "google-adk-python",
+      "name": "ck:google-adk-python",
+      "description": "Build AI agents with Google ADK Python. Multi-agent systems, A2A protocol, MCP tools, workflow agents, state/memory, callbacks/plugins, Vertex AI deployment, evaluation.",
+      "path": ".claude/skills/google-adk-python/SKILL.md"
+    },
+    {
+      "id": "journal",
+      "name": "ck:journal",
+      "description": "Write journal entries analyzing recent changes and session reflections.",
+      "path": ".claude/skills/journal/SKILL.md"
+    },
+    {
+      "id": "kanban",
+      "name": "ck:kanban",
+      "description": "AI agent orchestration board for task visualization and team coordination.",
+      "path": ".claude/skills/kanban/SKILL.md"
+    },
+    {
+      "id": "markdown-novel-viewer",
+      "name": "ck:markdown-novel-viewer",
+      "description": "View markdown files with calm, book-like reading experience via HTTP server. Use for long-form content, documentation preview, novel reading, report viewing, distraction-free reading.",
+      "path": ".claude/skills/markdown-novel-viewer/SKILL.md"
+    },
+    {
+      "id": "mcp-management",
+      "name": "ck:mcp-management",
+      "description": "Manage MCP servers - discover, analyze, execute tools/prompts/resources. Use for MCP integrations, intelligent tool selection, multi-server management, context-efficient capability discovery.",
+      "path": ".claude/skills/mcp-management/SKILL.md"
+    },
+    {
+      "id": "media-processing",
+      "name": "ck:media-processing",
+      "description": "Process media with FFmpeg (video/audio), ImageMagick (images), RMBG (AI background removal). Use for encoding, format conversion, filters, thumbnails, batch processing, HLS/DASH streaming.",
+      "path": ".claude/skills/media-processing/SKILL.md"
+    },
+    {
+      "id": "mermaidjs-v11",
+      "name": "ck:mermaidjs-v11",
+      "description": "Create diagrams with Mermaid.js v11 syntax. Use for flowcharts, sequence diagrams, class diagrams, ER diagrams, Gantt charts, state diagrams, architecture diagrams, timelines, user journeys.",
+      "path": ".claude/skills/mermaidjs-v11/SKILL.md"
+    },
+    {
+      "id": "mintlify",
+      "name": "ck:mintlify",
+      "description": "Build and deploy documentation sites with Mintlify. Use when creating API docs, developer portals, or knowledge bases. Covers docs.json configuration, MDX components (Cards, Steps, Tabs, Accordions, C",
+      "path": ".claude/skills/mintlify/SKILL.md"
+    },
+    {
+      "id": "mobile-development",
+      "name": "ck:mobile-development",
+      "description": "Build mobile apps with React Native, Flutter, Swift/SwiftUI, Kotlin/Jetpack Compose. Use for iOS/Android, mobile UX, performance optimization, offline-first, app store deployment.",
+      "path": ".claude/skills/mobile-development/SKILL.md"
+    },
+    {
+      "id": "payment-integration",
+      "name": "ck:payment-integration",
+      "description": "Integrate payments with SePay (VietQR), Polar, Stripe, Paddle (MoR subscriptions), Creem.io (licensing). Checkout, webhooks, subscriptions, QR codes, multi-provider orders.",
+      "path": ".claude/skills/payment-integration/SKILL.md"
+    },
+    {
+      "id": "plan",
+      "name": "ck:plan",
+      "description": "Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation",
+      "path": ".claude/skills/plan/SKILL.md"
+    },
+    {
+      "id": "plans-kanban",
+      "name": "ck:plans-kanban",
+      "description": "View plans dashboard with progress tracking and timeline visualization. Use for kanban boards, plan status overview, phase progress, milestone tracking, project visibility.",
+      "path": ".claude/skills/plans-kanban/SKILL.md"
+    },
+    {
+      "id": "preview",
+      "name": "ck:preview",
+      "description": "View files/directories OR generate visual explanations, slides, diagrams.",
+      "path": ".claude/skills/preview/SKILL.md"
+    },
+    {
+      "id": "problem-solving",
+      "name": "ck:problem-solving",
+      "description": "Apply systematic problem-solving techniques when stuck. Use for complexity spirals, innovation blocks, recurring patterns, assumption constraints, simplification cascades, scale uncertainty.",
+      "path": ".claude/skills/problem-solving/SKILL.md"
+    },
+    {
+      "id": "project-management",
+      "name": "ck:project-management",
+      "description": "Track progress, update plan statuses, manage Claude Tasks, generate reports, coordinate docs updates. Use for project oversight, status checks, plan completion, task hydration, cross-session continuit",
+      "path": ".claude/skills/project-management/SKILL.md"
+    },
+    {
+      "id": "remotion",
+      "name": "ck:remotion",
+      "description": "Best practices for Remotion - Video creation in React",
+      "path": ".claude/skills/remotion/SKILL.md"
+    },
+    {
+      "id": "repomix",
+      "name": "ck:repomix",
+      "description": "Pack repositories into AI-friendly files with Repomix (XML, Markdown, plain text). Use for codebase snapshots, LLM context preparation, security audits, third-party library analysis.",
+      "path": ".claude/skills/repomix/SKILL.md"
+    },
+    {
+      "id": "research",
+      "name": "ck:research",
+      "description": "Research technical solutions, analyze architectures, gather requirements thoroughly. Use for technology evaluation, best practices research, solution design, scalability/security/maintainability analy",
+      "path": ".claude/skills/research/SKILL.md"
+    },
+    {
+      "id": "review-codebase",
+      "name": "review-codebase",
+      "description": "Parallel codebase review - lint, security, quality, tests",
+      "path": ".claude/skills/review-codebase/SKILL.md"
+    },
+    {
+      "id": "scout",
+      "name": "ck:scout",
+      "description": "Fast codebase scouting using parallel agents. Use for file discovery, task context gathering, quick searches across directories. Supports internal (Explore) and external (Gemini/OpenCode) agents.",
+      "path": ".claude/skills/scout/SKILL.md"
+    },
+    {
+      "id": "sequential-thinking",
+      "name": "ck:sequential-thinking",
+      "description": "Apply step-by-step analysis for complex problems with revision capability. Use for multi-step reasoning, hypothesis verification, adaptive planning, problem decomposition, course correction.",
+      "path": ".claude/skills/sequential-thinking/SKILL.md"
+    },
+    {
+      "id": "shader",
+      "name": "ck:shader",
+      "description": "Write GLSL fragment shaders for procedural graphics. Topics: shapes (SDF), patterns, noise (Perlin/simplex/cellular), fBm, colors (HSB/RGB), matrices, gradients, animations. Use for generative art, te",
+      "path": ".claude/skills/shader/SKILL.md"
+    },
+    {
+      "id": "shopify",
+      "name": "ck:shopify",
+      "description": "Build Shopify apps, extensions, themes with Shopify CLI. Use for GraphQL/REST APIs, Polaris UI, Liquid templates, checkout customization, webhooks, billing integration.",
+      "path": ".claude/skills/shopify/SKILL.md"
+    },
+    {
+      "id": "tanstack",
+      "name": "ck:tanstack",
+      "description": "Build with TanStack Start (full-stack React framework), TanStack Form (headless form management), and TanStack AI (AI streaming/chat). Use when creating TanStack projects, routes, server functions, fo",
+      "path": ".claude/skills/tanstack/SKILL.md"
+    },
+    {
+      "id": "team",
+      "name": "ck:team",
+      "description": "Orchestrate Agent Teams for parallel multi-session collaboration. Use for research, implementation, review, and debug workflows requiring independent teammates.",
+      "path": ".claude/skills/team/SKILL.md"
+    },
+    {
+      "id": "template-skill",
+      "name": "ck:template-skill",
+      "description": "Replace with description of the skill and when Claude should use it.",
+      "path": ".claude/skills/template-skill/SKILL.md"
+    },
+    {
+      "id": "test",
+      "name": "ck:test",
+      "description": "Run unit, integration, e2e, and UI tests. Use for test execution, coverage analysis, build verification, visual regression, and QA reports.",
+      "path": ".claude/skills/test/SKILL.md"
+    },
+    {
+      "id": "threejs",
+      "name": "ck:threejs",
+      "description": "Build 3D web apps with Three.js (WebGL/WebGPU). 556 searchable examples, 60 API classes, 20 use cases. Actions: create 3D scene, load model, add animation, implement physics, build VR/XR. Topics: GLTF",
+      "path": ".claude/skills/threejs/SKILL.md"
+    },
+    {
+      "id": "ui-styling",
+      "name": "ck:ui-styling",
+      "description": "Style UIs with shadcn/ui components (Radix UI + Tailwind CSS). Use for accessible components, themes, dark mode, responsive layouts, design systems, color customization.",
+      "path": ".claude/skills/ui-styling/SKILL.md"
+    },
+    {
+      "id": "use-mcp",
+      "name": "ck:use-mcp",
+      "description": "Utilize MCP server tools with intelligent discovery and execution.",
+      "path": ".claude/skills/use-mcp/SKILL.md"
+    },
+    {
+      "id": "watzup",
+      "name": "ck:watzup",
+      "description": "Review recent changes and wrap up the current work session.",
+      "path": ".claude/skills/watzup/SKILL.md"
+    },
+    {
+      "id": "web-frameworks",
+      "name": "ck:web-frameworks",
+      "description": "Build with Next.js (App Router, RSC, SSR, ISR), Turborepo monorepos. Use for React apps, server rendering, build optimization, caching strategies, shared dependencies.",
+      "path": ".claude/skills/web-frameworks/SKILL.md"
+    },
+    {
+      "id": "web-testing",
+      "name": "ck:web-testing",
+      "description": "Web testing with Playwright, Vitest, k6. E2E/unit/integration/load/security/visual/a11y testing. Use for test automation, flakiness, Core Web Vitals, mobile gestures, cross-browser.",
+      "path": ".claude/skills/web-testing/SKILL.md"
+    },
+    {
+      "id": "worktree",
+      "name": "ck:worktree",
+      "description": "Create isolated git worktree for parallel development in monorepos.",
+      "path": ".claude/skills/worktree/SKILL.md"
+    }
+  ]
+}

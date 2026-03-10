@@ -1,0 +1,68 @@
+{
+  "id": "annual",
+  "version": "1.0.0",
+  "layer": "founder",
+  "chapter": "始計 — Initial Calculations",
+  "display": {
+    "name_vi": "Kế hoạch kinh doanh hàng năm",
+    "name_en": "Annual Business Plan",
+    "icon": "📅",
+    "description_vi": "Tạo kế hoạch kinh doanh toàn diện cho năm: OKRs, dự báo tài chính, lộ trình chiến lược",
+    "description_en": "Full annual strategy: OKRs, financial forecast, team roadmap, growth targets"
+  },
+  "execution": {
+    "agents": ["planner", "fullstack-developer", "researcher"],
+    "hub": "founder-hub",
+    "complexity": "standard",
+    "timeout_ms": 120000,
+    "credit_cost": 5,
+    "requires_approval": true
+  },
+  "input": {
+    "type": "object",
+    "required": ["goal"],
+    "properties": {
+      "goal": {
+        "type": "string",
+        "description": "Annual business objective or focus area"
+      },
+      "project": {
+        "type": "string",
+        "description": "Company/project identifier"
+      },
+      "year": {
+        "type": "integer",
+        "description": "Target year for the plan"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "summary": {"type": "string"},
+      "okrs": {"type": "array", "items": {"type": "string"}},
+      "financial_forecast": {"type": "object"},
+      "files_modified": {"type": "array", "items": {"type": "string"}},
+      "credits_used": {"type": "integer"}
+    }
+  },
+  "cascade": {
+    "triggers": [
+      {
+        "pattern": "revenue|sales|growth",
+        "suggest": "sales",
+        "target_layer": "business"
+      },
+      {
+        "pattern": "roadmap|product|feature",
+        "suggest": "roadmap",
+        "target_layer": "product"
+      }
+    ]
+  },
+  "validation": {
+    "output_must_contain": ["OKR", "forecast"],
+    "min_output_length": 500,
+    "max_credit_cost": 7
+  }
+}
