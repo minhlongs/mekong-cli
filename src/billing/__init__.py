@@ -1,10 +1,11 @@
 """
-Mekong CLI - Billing System
+Mekong CLI - Billing System (re-export shim)
 
-API usage billing with rate cards, proration, and reconciliation.
+All billing logic now lives in src/raas/billing_*.py.
+This module re-exports for backward compatibility.
 """
 
-from src.billing.engine import (
+from src.raas.billing_engine import (
     RateCard,
     LineItem,
     BillingResult,
@@ -14,7 +15,7 @@ from src.billing.engine import (
     get_rate_resolver,
     reset_engine,
 )
-from src.billing.proration import (
+from src.raas.billing_proration import (
     ProrationResult,
     OverageCalculation,
     ProrationCalculator,
@@ -22,7 +23,7 @@ from src.billing.proration import (
     get_calculator,
     reset_calculator,
 )
-from src.billing.idempotency import (
+from src.raas.billing_idempotency import (
     BatchStatus,
     BatchRecord,
     BatchResult,
@@ -30,12 +31,12 @@ from src.billing.idempotency import (
     get_idempotency_manager,
     reset_idempotency_manager,
 )
-from src.billing.event_emitter import (
+from src.raas.billing_event_emitter import (
     BillingEventEmitter,
     get_emitter,
     reset_emitter,
 )
-from src.billing.reconciliation import (
+from src.raas.billing_audit import (
     AuditResult,
     ReconciliationConfig,
     ReconciliationService,

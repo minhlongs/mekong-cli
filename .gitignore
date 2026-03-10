@@ -187,6 +187,8 @@ dataset/
 .env
 *.env
 .dev.vars
+update_secret.sh
+secrets/
 **/.dev.vars
 scripts/.env
 token.txt

@@ -31,7 +31,7 @@ import httpx
 
 from src.config.logging_config import get_logger
 from src.raas.billing_sync import BillingSyncService, get_service as get_sync_service
-from src.billing.event_emitter import get_emitter
+from src.raas.billing_event_emitter import get_emitter
 from src.core.event_bus import get_event_bus, EventType
 
 
