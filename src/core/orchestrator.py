@@ -109,6 +109,30 @@ class RecipeOrchestrator:
         self.retry_policy = retry_policy or RetryPolicy()
         self.history = ExecutionHistory()
 
+        # AGI v2: Reflection Engine
+        self._reflection: Optional[Any] = None
+        try:
+            from .reflection import ReflectionEngine
+            self._reflection = ReflectionEngine(llm_client=llm_client)
+        except Exception:
+            pass
+
+        # AGI v2: World Model
+        self._world_model: Optional[Any] = None
+        try:
+            from .world_model import WorldModel
+            self._world_model = WorldModel(llm_client=llm_client)
+        except Exception:
+            pass
+
+        # AGI v2: Tool Registry
+        self._tool_registry: Optional[Any] = None
+        try:
+            from .tool_registry import ToolRegistry
+            self._tool_registry = ToolRegistry()
+        except Exception:
+            pass
+
         # Swarm dispatcher (optional)
         if use_swarm:
             from .swarm import SwarmDispatcher, SwarmRegistry
@@ -157,6 +181,48 @@ class RecipeOrchestrator:
         # Start telemetry trace
         self.telemetry.start_trace(goal)
 
+        # AGI v2: Take world snapshot BEFORE execution
+        world_before = None
+        if self._world_model:
+            try:
+                world_before = self._world_model.snapshot()
+                self.console.print("[dim]🌍 World snapshot captured[/dim]")
+            except Exception:
+                pass
+
+        # AGI v2: Get strategy suggestion from reflection history
+        strategy_hint = ""
+        if self._reflection:
+            try:
+                strategy_hint = self._reflection.get_strategy_suggestion(goal)
+                if strategy_hint:
+                    self.console.print(f"[dim]🪞 Strategy hint: {strategy_hint[:60]}[/dim]")
+            except Exception:
+                pass
+
+        # AGI v2: Check if ToolRegistry has relevant tools
+        if self._tool_registry:
+            try:
+                suggested = self._tool_registry.suggest_tool(goal)
+                if suggested:
+                    self.console.print(
+                        f"[dim]🔧 Tool available: {suggested.name} — {suggested.description[:40]}[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # AGI v2: Predict side effects before execution
+        if self._world_model:
+            try:
+                prediction = self._world_model.predict_side_effects(goal)
+                if prediction.risk_level == "high":
+                    self.console.print(
+                        f"[bold yellow]⚠️  High-risk action detected: "
+                        f"{'; '.join(prediction.warnings[:2])}[/bold yellow]"
+                    )
+            except Exception:
+                pass
+
         # NLU Phase (pre-planning) — classify intent and try direct recipe
         intent_result = self.nlu.classify(goal)
         if intent_result.confidence > 0.7 and intent_result.suggested_recipe:
@@ -177,14 +243,20 @@ class RecipeOrchestrator:
                         recipe, progress_callback=progress_callback,
                     )
                     self.telemetry.finish_trace()
+                    duration_ms = (time.time() - goal_start_time) * 1000
                     entry = MemoryEntry(
                         goal=goal,
                         status=result.status.value,
-                        duration_ms=(time.time() - goal_start_time) * 1000,
+                        duration_ms=duration_ms,
                         error_summary="; ".join(result.errors[:3]) if result.errors else "",
                         recipe_used=result.recipe.name if result.recipe else "",
                     )
                     self.memory.record(entry)
+
+                    # AGI v2: Post-execution reflection + world diff
+                    self._post_execution_agi(
+                        goal, result.status.value, duration_ms, world_before, result.errors,
+                    )
                     return result
                 except Exception:
                     pass  # Fall through to normal planning
@@ -217,14 +289,20 @@ class RecipeOrchestrator:
         self.telemetry.finish_trace()
 
         # Record to memory
+        duration_ms = (time.time() - goal_start_time) * 1000
         entry = MemoryEntry(
             goal=goal,
             status=result.status.value,
-            duration_ms=(time.time() - goal_start_time) * 1000,
+            duration_ms=duration_ms,
             error_summary="; ".join(result.errors[:3]) if result.errors else "",
             recipe_used=result.recipe.name if result.recipe else "",
         )
         self.memory.record(entry)
+
+        # AGI v2: Post-execution reflection + world diff
+        self._post_execution_agi(
+            goal, result.status.value, duration_ms, world_before, result.errors,
+        )
 
         return result
 
@@ -636,6 +714,50 @@ class RecipeOrchestrator:
         }
         color = colors.get(status, "white")
         return f"[{color}]{status.value.upper()}[/{color}]"
+
+    def _post_execution_agi(
+        self,
+        goal: str,
+        status: str,
+        duration_ms: float,
+        world_before: Optional[Any],
+        errors: List[str],
+    ) -> None:
+        """
+        AGI v2: Post-execution pipeline — reflection + world diff.
+
+        Called after every goal execution to learn and track changes.
+        """
+        # Reflection: learn from result
+        if self._reflection:
+            try:
+                reflection = self._reflection.reflect(
+                    goal=goal,
+                    status=status,
+                    duration_ms=duration_ms,
+                    error=errors[0] if errors else "",
+                )
+                if reflection.lesson_learned:
+                    self.console.print(
+                        f"\n[dim]🪞 Reflection: {reflection.lesson_learned[:80]}[/dim]"
+                    )
+                if reflection.strategy_change:
+                    self.console.print(
+                        f"[dim]🪞 Strategy change: {reflection.strategy_change[:60]}[/dim]"
+                    )
+            except Exception:
+                pass
+
+        # World diff: track environment changes
+        if self._world_model and world_before:
+            try:
+                world_after = self._world_model.snapshot()
+                world_diff = self._world_model.diff(world_before, world_after)
+                diff_summary = world_diff.summary()
+                if diff_summary and diff_summary != "No changes detected":
+                    self.console.print(f"\n[dim]🌍 World changes: {diff_summary[:100]}[/dim]")
+            except Exception:
+                pass
 
     def run_bmad_workflow(
         self, workflow_id: str, context: Optional[Dict[str, Any]] = None
