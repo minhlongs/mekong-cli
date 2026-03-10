@@ -314,8 +314,13 @@ log "============================================="
 phase_scan
 
 CYCLE=0
+LAST_DISPATCH_1=0
+LAST_DISPATCH_2=0
+LAST_DISPATCH_3=0
+DISPATCH_COOLDOWN=90
 while true; do
   CYCLE=$((CYCLE + 1))
+  NOW=$(date +%s)
   log "--- CYCLE $CYCLE ---"
 
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
@@ -333,14 +338,20 @@ while true; do
       continue  # verify handled the worker
     fi
 
-    # If idle and not recently dispatched → DELEGATE new task
+    # If idle and not recently dispatched → DELEGATE new task (with cooldown)
     if is_idle "$output"; then
-      log "P${pane_idx} (${name}): IDLE → DELEGATING"
-      WORKER_RETRIES[$pane_idx]=0  # reset retries on new dispatch
-      dispatch_worker "$pane_idx"
+      eval last_dispatch=\$LAST_DISPATCH_${pane_idx}
+      elapsed=$((NOW - last_dispatch))
+      if [[ $elapsed -ge $DISPATCH_COOLDOWN ]]; then
+        log "P${pane_idx} (${name}): IDLE → DELEGATING"
+        WORKER_RETRIES[$pane_idx]=0
+        dispatch_worker "$pane_idx"
+        eval LAST_DISPATCH_${pane_idx}=$NOW
+      else
+        log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
+      fi
     else
       # Worker is active — extract status
-      local status_word
       status_word=$(echo "$output" | grep -oE "Running|thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading|Commit" | tail -1)
       log "P${pane_idx} (${name}): WORKING (${status_word:-active})"
     fi
