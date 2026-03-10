@@ -19,6 +19,8 @@ from typing import Optional, Dict, Any, List
 from src.core.event_bus import get_event_bus, EventType
 from src.core.auto_recovery import RecoveryType, attempt_recovery
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class LicenseFailure:
@@ -227,9 +229,8 @@ class LicenseMonitor:
         except RuntimeError:
             # No running loop - run asynchronously in background
             asyncio.run(self._trigger_recovery(recent_failures))
-        except Exception:
-            # Silently fail - don't break validation flow
-            pass
+        except Exception as e:
+            logger.warning("Recovery trigger failed: %s", e)
 
     async def _trigger_recovery(
         self,
