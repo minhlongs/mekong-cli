@@ -443,7 +443,7 @@ def cook(
 
 
 def _show_agi_dashboard(goal: str, result: "OrchestrationResult") -> None:
-    """AGI v2: Show subsystem activity dashboard after cook execution."""
+    """AGI v2: Show all 9 subsystem activity dashboard after cook execution."""
     panels = []
 
     # 1. Consciousness Score
@@ -452,9 +452,9 @@ def _show_agi_dashboard(goal: str, result: "OrchestrationResult") -> None:
         engine = AutonomousEngine()
         report = engine.get_consciousness()
         score_style = "green" if report.score >= 70 else "yellow" if report.score >= 40 else "red"
-        panels.append(f"[bold]Consciousness:[/bold] [{score_style}]{report.score}/100[/{score_style}]")
+        panels.append(f"[bold]🧠 Consciousness:[/bold] [{score_style}]{report.score}/100[/{score_style}]")
     except Exception:
-        panels.append("[bold]Consciousness:[/bold] [dim]unavailable[/dim]")
+        panels.append("[bold]🧠 Consciousness:[/bold] [dim]unavailable[/dim]")
 
     # 2. NLU Classification
     try:
@@ -463,20 +463,20 @@ def _show_agi_dashboard(goal: str, result: "OrchestrationResult") -> None:
         nlu = IntentClassifier(llm_client=get_client())
         intent = nlu.classify(goal)
         panels.append(
-            f"[bold]NLU:[/bold] {intent.intent.value} ({intent.confidence:.0%})"
-            + (f" | entities: {intent.entities}" if intent.entities else "")
+            f"[bold]📡 NLU:[/bold] {intent.intent.value} ({intent.confidence:.0%})"
+            + (f" | {intent.entities}" if intent.entities else "")
         )
     except Exception:
-        panels.append("[bold]NLU:[/bold] [dim]skipped[/dim]")
+        panels.append("[bold]📡 NLU:[/bold] [dim]skipped[/dim]")
 
     # 3. Tool Registry
     try:
         from src.core.tool_registry import ToolRegistry
         reg = ToolRegistry()
         stats = reg.get_stats()
-        panels.append(f"[bold]Tools:[/bold] {stats['total_tools']} registered, {stats['total_executions']} used")
+        panels.append(f"[bold]🔧 Tools:[/bold] {stats['total_tools']} registered, {stats['total_executions']} executed")
     except Exception:
-        panels.append("[bold]Tools:[/bold] [dim]unavailable[/dim]")
+        panels.append("[bold]🔧 Tools:[/bold] [dim]unavailable[/dim]")
 
     # 4. Reflection
     try:
@@ -484,32 +484,77 @@ def _show_agi_dashboard(goal: str, result: "OrchestrationResult") -> None:
         ref = ReflectionEngine()
         stats = ref.get_stats()
         panels.append(
-            f"[bold]Reflection:[/bold] {stats['total_reflections']} reflections, "
+            f"[bold]🪞 Reflection:[/bold] {stats['total_reflections']} reflections, "
             f"calibration {stats['calibration_error']:.2f}"
         )
     except Exception:
-        panels.append("[bold]Reflection:[/bold] [dim]unavailable[/dim]")
+        panels.append("[bold]🪞 Reflection:[/bold] [dim]unavailable[/dim]")
 
     # 5. World Model
     try:
         from src.core.world_model import WorldModel
         wm = WorldModel()
         summary = wm.get_context_summary()
-        panels.append(f"[bold]World:[/bold] {summary[:60]}")
+        panels.append(f"[bold]🌍 World:[/bold] {summary[:60]}")
     except Exception:
-        panels.append("[bold]World:[/bold] [dim]unavailable[/dim]")
+        panels.append("[bold]🌍 World:[/bold] [dim]unavailable[/dim]")
 
-    # 6. Execution result summary
+    # 6. Collaboration
+    try:
+        from src.core.collaboration import CollaborationProtocol
+        collab = CollaborationProtocol()
+        stats = collab.get_stats()
+        panels.append(
+            f"[bold]🤝 Collaboration:[/bold] {stats['registered_agents']} agents, "
+            f"{stats['total_reviews']} reviews"
+        )
+    except Exception:
+        panels.append("[bold]🤝 Collaboration:[/bold] [dim]unavailable[/dim]")
+
+    # 7. Code Evolution
+    try:
+        from src.core.code_evolution import CodeEvolutionEngine
+        evo = CodeEvolutionEngine()
+        stats = evo.get_stats()
+        panels.append(
+            f"[bold]🧬 Evolution:[/bold] {stats['total_attempts']} attempts, "
+            f"{stats.get('success_rate', 0):.0%} success"
+        )
+    except Exception:
+        panels.append("[bold]🧬 Evolution:[/bold] [dim]unavailable[/dim]")
+
+    # 8. Vector Memory
+    try:
+        from src.core.vector_memory_store import VectorMemoryStore
+        vmem = VectorMemoryStore()
+        collections = vmem.list_collections()
+        total_points = sum(vmem.count(c) for c in collections) if collections else 0
+        panels.append(
+            f"[bold]🧠 VectorMem:[/bold] {len(collections)} collections, "
+            f"{total_points} total vectors"
+        )
+    except Exception:
+        panels.append("[bold]🧠 VectorMem:[/bold] [dim]unavailable[/dim]")
+
+    # 9. Browser Agent
+    try:
+        from src.core.browser_agent import BrowserAgent
+        ba = BrowserAgent()
+        panels.append(f"[bold]🌐 Browser:[/bold] ready ({ba.user_agent[:30]}...)")
+    except Exception:
+        panels.append("[bold]🌐 Browser:[/bold] [dim]unavailable[/dim]")
+
+    # Execution modes used
     exec_modes = set()
     for sr in result.step_results:
         mode = sr.execution.metadata.get("mode", "shell") if sr.execution.metadata else "shell"
         exec_modes.add(mode)
-    panels.append(f"[bold]Modes used:[/bold] {', '.join(sorted(exec_modes))}")
+    panels.append(f"[bold]⚙️  Modes:[/bold] {', '.join(sorted(exec_modes))}")
 
     console.print(
         Panel(
             "\n".join(panels),
-            title="🧠 AGI v2 Dashboard",
+            title="🧠 AGI v2 Dashboard — 9/9 Subsystems",
             border_style="magenta",
         )
     )
