@@ -10,6 +10,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 import { getOrderLifecycleManager } from '../../execution/order-lifecycle-manager';
 import { OrderState } from '../../execution/order-state-machine';
 import { LicenseService, LicenseTier } from '../../lib/raas-gate';
@@ -77,8 +78,8 @@ export function createOrderRoutes() {
       // Get exchange ID from header or default
       const exchangeId = c.req.header('X-Exchange-ID') || 'binance';
 
-      // Generate order ID
-      const orderId = `order_${tenantId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Generate order ID with crypto-safe randomness
+      const orderId = `order_${tenantId}_${Date.now()}_${randomBytes(8).toString('hex')}`;
 
       // Create order
       const order = await lifecycleManager.submitOrder({

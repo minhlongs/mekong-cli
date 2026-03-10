@@ -118,8 +118,17 @@ export class CodeGenerator {
    * "Compile" the generated source by wrapping it in a Function constructor.
    * Returns the callable signal function, or throws on syntax error.
    * In production this would invoke the TS compiler; here we use JS eval path.
+   *
+   * SECURITY: Only safe because input is internally-generated AST (not user input).
+   * For user-provided strategies, use a proper TS compiler or sandboxed VM.
    */
   compile(generated: GeneratedStrategy): (bar: Record<string, number>, bars: Record<string, number>[], idx: number) => number {
+    // Security validation: ensure generated code only contains allowed patterns
+    const validationResult = this.validateGeneratedCode(generated.sourceCode);
+    if (!validationResult.valid) {
+      throw new Error(`Security validation failed: ${validationResult.error}`);
+    }
+
     // Strip TS type annotations for runtime eval
     const jsSource = generated.sourceCode
       .replace(/\/\/ .*\n/g, '')
@@ -142,9 +151,39 @@ export class CodeGenerator {
       atr: (_b: unknown[], _i: number, _p: number) => 0,
     };
 
-    // eslint-disable-next-line no-new-func
+    // eslint-disable-next-line no-new-func, @typescript-eslint/no-implied-eval
     const factory = new Function(jsSource) as () => (b: Record<string, number>, bars: Record<string, number>[], idx: number, ind: unknown) => number;
     const fn = factory();
     return (bar, bars, idx) => fn(bar, bars, idx, indicators);
+  }
+
+  /**
+   * Security validation for generated code.
+   * Ensures only allowed patterns are present in the generated source.
+   */
+  private validateGeneratedCode(sourceCode: string): { valid: boolean; error?: string } {
+    const bannedPatterns = [
+      /\beval\s*\(/i,
+      /\bnew\s+Function\s*\(/i,
+      /\brequire\s*\(/i,
+      /\bimport\s*\(/i,
+      /\bprocess\s*\./i,
+      /\bglobal\s*\./i,
+      /\bBuffer\b/i,
+      /\bsetTimeout\b/i,
+      /\bsetInterval\b/i,
+      /\bsetImmediate\b/i,
+      /\b__proto__\b/i,
+      /\bconstructor\b/i,
+      /\bprototype\b/i,
+    ];
+
+    for (const pattern of bannedPatterns) {
+      if (pattern.test(sourceCode)) {
+        return { valid: false, error: `Banned pattern detected: ${pattern.source}` };
+      }
+    }
+
+    return { valid: true };
   }
 }

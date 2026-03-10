@@ -17,6 +17,7 @@
 import { StripeUsageSyncService, SyncResult } from '../billing/stripe-usage-sync';
 import { UsageBillingAdapter, StripeUsageRecord } from '../billing/usage-billing-adapter';
 import { logger } from '../utils/logger';
+import { randomBytes } from 'crypto';
 
 /**
  * Usage event types
@@ -513,7 +514,7 @@ export function createUsageEvent(
   const pricing = USAGE_PRICING[eventType];
 
   return {
-    id: `usage_${eventType}_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+    id: `usage_${eventType}_${Date.now()}_${randomBytes(8).toString('hex')}`,
     tenantId,
     eventType,
     quantity: 1,

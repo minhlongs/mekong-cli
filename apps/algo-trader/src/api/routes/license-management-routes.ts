@@ -3,6 +3,7 @@
  * RBAC: Admin-only access for license CRUD operations
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { randomBytes } from 'crypto';
 import { licenseQueries } from '../../db/queries/license-queries';
 import { logger } from '../../utils/logger';
 import { LicenseUsageAnalytics } from '../../lib/license-usage-analytics';
@@ -57,11 +58,11 @@ interface ExtensionRequestParams { licenseId: string; extensionName: string }
 interface ExtensionApproveBody { usageLimit?: number; resetAt?: string }
 
 /**
- * Generate secure license key
+ * Generate secure license key using crypto-safe randomness
  * Format: raas-{tier}-{random}-{timestamp}
  */
 function generateLicenseKey(tier: string): string {
-  const random = Math.random().toString(36).substring(2, 10).toUpperCase();
+  const random = randomBytes(8).toString('hex').toUpperCase();
   const timestamp = Date.now().toString(36).toUpperCase();
   const tierPrefix = tier === 'PRO' ? 'RPP' : tier === 'ENTERPRISE' ? 'REP' : 'FREE';
   return `raas-${tierPrefix.toLowerCase()}-${random}-${timestamp}`;

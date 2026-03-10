@@ -10,7 +10,7 @@
 </h1>
 
 <p align="center">
-  <strong>The AI agent that plans, executes & verifies — so you don't babysit.</strong>
+  <strong>AGI Vibe Coding Factory — Plan, Execute & Verify autonomous engine.</strong>
 </p>
 
 <p align="center">
@@ -18,7 +18,7 @@
   <a href="https://github.com/longtho638-jpg/mekong-cli/actions"><img src="https://img.shields.io/github/actions/workflow/status/longtho638-jpg/mekong-cli/ci.yml?style=flat-square&label=CI" alt="CI" /></a>
   <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/LLM-Any_Provider-8B5CF6?style=flat-square" alt="LLM" />
-  <img src="https://img.shields.io/badge/v0.2.0-blue?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/v3.0.0-blue?style=flat-square" alt="Version" />
 </p>
 
 <p align="center">
@@ -70,7 +70,7 @@ mekong cook "Create a Python calculator with tests"
 |----------|----------|------|
 | **OpenAI** | `https://api.openai.com/v1` | Pay-per-use |
 | **Google Gemini** | `https://generativelanguage.googleapis.com/v1beta/openai` | Free tier |
-| **DashScope (Qwen)** | `https://dashscope.aliyuncs.com/compatible-mode/v1` | [Free $50 credits →](https://www.alibabacloud.com/campaign/benefits?referral_code=A9245T) |
+| **DashScope (Qwen)** | `https://dashscope.aliyuncs.com/compatible-mode/v1` | [Free credits →](https://www.alibabacloud.com/campaign/benefits?referral_code=A9245T) |
 | **Ollama (Local)** | `http://localhost:11434/v1` | Free |
 | **Any proxy** | Your OpenAI-compatible endpoint | Custom |
 
@@ -210,19 +210,20 @@ for event in client.stream_task(result.task_id):
 ```
 mekong-cli/
 ├── src/                    # Core engine (Python)
-│   ├── core/               # PEV pipeline
-│   │   ├── planner.py      # LLM → recipe decomposition
-│   │   ├── executor.py     # Shell/code/API runner
-│   │   ├── verifier.py     # Quality gate validation
-│   │   └── orchestrator.py # PEV loop + rollback
-│   ├── agents/             # Pluggable agent system
-│   └── raas/               # Credit billing + SDK
-├── apps/                   # Services
-│   ├── openclaw-worker/    # Autonomous CTO daemon
+│   ├── core/               # PEV pipeline (planner, executor, verifier, orchestrator)
+│   ├── agents/             # Pluggable agent system (git, file, shell, lead, content)
+│   ├── raas/               # Credit billing + SDK
+│   ├── commands/           # CLI subcommands (monitor, etc.)
+│   └── db/                 # Database layer (asyncpg)
+├── apps/                   # Monorepo services
+│   ├── openclaw-worker/    # Autonomous CTO daemon (Node.js)
 │   ├── raas-gateway/       # Cloudflare Worker API
-│   └── algo-trader/        # Trading engine
-├── packages/               # Shared TypeScript libraries
-├── tests/                  # Test suite (62 tests)
+│   ├── algo-trader/        # Trading engine (TypeScript)
+│   ├── well/               # Well platform
+│   └── ...                 # Other apps
+├── packages/               # Shared libraries (vibe-*, core, trading-core)
+├── frontend/               # Landing pages
+├── tests/                  # Python test suite (62 tests)
 ├── recipes/                # Built-in task templates
 └── docs/                   # Documentation
 ```
@@ -230,14 +231,15 @@ mekong-cli/
 ## Development
 
 ```bash
-# Python
+# Python core
 pip install -e ".[dev]"
-python3 -m pytest              # Run tests
+python3 -m pytest              # Run 62 tests (~2.5min)
 
-# Node.js (apps & packages)
+# Node.js monorepo (apps & packages)
 pnpm install
-pnpm run build
-pnpm run test
+pnpm run build                 # Build all workspaces
+pnpm run test                  # Test all workspaces
+pnpm run lint                  # Lint all workspaces
 ```
 
 ## Mekong vs. Alternatives
@@ -246,7 +248,7 @@ pnpm run test
 |---------|--------|-------|--------|---------|
 | Plan → Execute → Verify | ✅ | ❌ | ❌ | ❌ |
 | Auto-rollback on failure | ✅ | ❌ | ❌ | ❌ |
-| Multiple agents | ✅ 12+ | ❌ | ❌ | ❌ |
+| Multiple agents | ✅ 17+ | ❌ | ❌ | ❌ |
 | Any LLM provider | ✅ | ✅ | ❌ | ❌ |
 | Built-in billing/RaaS | ✅ | ❌ | ❌ | ❌ |
 | REST API + WebSocket | ✅ | ⚠️ | ❌ | ⚠️ |

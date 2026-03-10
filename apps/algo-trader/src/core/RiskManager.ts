@@ -43,6 +43,19 @@ export interface DynamicRiskParams {
   leverageAdjustment: number; // Adjustments to position leverage
 }
 
+/**
+ * Cache cho calculateDynamicRiskParams — key = volatility|trend|regime
+ * Giảm tính toán lặp khi market regime không đổi
+ */
+const dynamicRiskCache = new Map<string, DynamicRiskParams>();
+const DYNAMIC_RISK_TTL = 1000; // 1 second — đủ nhanh để theo market changes
+
+interface CachedRiskParam {
+  params: DynamicRiskParams;
+  timestamp: number;
+}
+const riskCache = new Map<string, CachedRiskParam>();
+
 export class RiskManager {
   /**
    * Calculate position size based on account balance and risk percentage

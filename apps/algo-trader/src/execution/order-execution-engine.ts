@@ -104,6 +104,8 @@ export class OrderExecutionEngine {
   private config: RaasExecutionConfig;
   private rateLimitCache: Map<string, { allowed: boolean; remaining: number; limit: number; resetAt: number; timestamp: number }>;
   private readonly CACHE_TTL = 1000; // 1 second cache TTL
+  private readonly CACHE_MAX_SIZE = 1000; // Prevent unbounded growth
+  private cacheCleanupInterval?: NodeJS.Timeout;
 
   constructor(config?: Partial<RaasExecutionConfig>) {
     this.pool = ExchangeConnectionPool.getInstance();
@@ -112,6 +114,21 @@ export class OrderExecutionEngine {
     this.usageEmitter = UsageEventEmitter.getInstance();
     this.config = { ...DEFAULT_RAAS_CONFIG, ...config };
     this.rateLimitCache = new Map();
+    this.startCacheCleanup();
+  }
+
+  /**
+   * Start periodic cache cleanup — prevents memory leak
+   * Runs every 5 seconds, removes entries older than CACHE_TTL
+   */
+  private startCacheCleanup(): void {
+    this.cacheCleanupInterval = setInterval(() => {
+      this.clearExpiredCache();
+    }, 5000);
+    // Don't block process exit
+    if (this.cacheCleanupInterval.unref) {
+      this.cacheCleanupInterval.unref();
+    }
   }
 
   /**
@@ -367,6 +384,11 @@ export class OrderExecutionEngine {
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
+    // Stop cache cleanup interval
+    if (this.cacheCleanupInterval) {
+      clearInterval(this.cacheCleanupInterval);
+    }
+
     await this.usageEmitter.shutdown();
     await this.rateLimiter.shutdown();
 
@@ -378,12 +400,32 @@ export class OrderExecutionEngine {
 
   /**
    * Clear expired cache entries to prevent memory leaks
+   * Optimized: batch delete to minimize Map operations
    */
   private clearExpiredCache(): void {
     const now = Date.now();
+    const expiredKeys: string[] = [];
+
+    // First pass: collect expired keys
     for (const [key, value] of this.rateLimitCache.entries()) {
       if (now - value.timestamp >= this.CACHE_TTL) {
-        this.rateLimitCache.delete(key);
+        expiredKeys.push(key);
+      }
+    }
+
+    // Batch delete — more efficient than deleting one-by-one
+    for (const key of expiredKeys) {
+      this.rateLimitCache.delete(key);
+    }
+
+    // Enforce max size — evict oldest if over limit
+    if (this.rateLimitCache.size > this.CACHE_MAX_SIZE) {
+      const entries = Array.from(this.rateLimitCache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      // Remove oldest 10%
+      const toRemove = Math.floor(this.CACHE_MAX_SIZE * 0.1);
+      for (let i = 0; i < toRemove; i++) {
+        this.rateLimitCache.delete(entries[i][0]);
       }
     }
   }
@@ -393,5 +435,16 @@ export class OrderExecutionEngine {
    */
   getCacheSize(): number {
     return this.rateLimitCache.size;
+  }
+
+  /**
+   * Get cache stats for monitoring
+   */
+  getCacheStats(): { size: number; maxSize: number; ttl: number } {
+    return {
+      size: this.rateLimitCache.size,
+      maxSize: this.CACHE_MAX_SIZE,
+      ttl: this.CACHE_TTL,
+    };
   }
 }

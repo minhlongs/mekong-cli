@@ -25,6 +25,7 @@
  */
 
 import { logger } from '../utils/logger';
+import { randomBytes } from 'crypto';
 
 /**
  * Stripe Usage Record format
@@ -222,8 +223,9 @@ export class StripeBillingClient {
 
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
-        // Add jitter to retry delay
-        const delay = this.retryDelay * Math.pow(2, attempt) * (0.5 + Math.random());
+        // Add jitter to retry delay using crypto-safe randomness
+        const jitter = 0.5 + (randomBytes(1)[0] / 255);
+        const delay = this.retryDelay * Math.pow(2, attempt) * jitter;
         if (attempt > 0) {
           logger.info('[StripeBilling] Retrying request', { attempt, delay });
           await this.sleep(delay);
