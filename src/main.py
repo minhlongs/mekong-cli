@@ -67,6 +67,18 @@ app.add_typer(telegram_app, name="telegram")
 autonomous_app = typer.Typer(help="Autonomous: AGI loop control")
 app.add_typer(autonomous_app, name="autonomous")
 
+# AGI v2: Tool Registry sub-commands
+tools_app = typer.Typer(help="Tools: dynamic tool registry & discovery")
+app.add_typer(tools_app, name="tools")
+
+# AGI v2: Browser Agent sub-commands
+browse_app = typer.Typer(help="Browse: web automation & page analysis")
+app.add_typer(browse_app, name="browse")
+
+# AGI v2: Multi-Agent Collaboration sub-commands
+collab_app = typer.Typer(help="Collab: multi-agent collaboration & debate")
+app.add_typer(collab_app, name="collab")
+
 # Binh Pháp sub-commands
 app.add_typer(
     binh_phap_app,
@@ -1019,33 +1031,54 @@ def halt() -> None:
 
 @autonomous_app.command(name="status")
 def autonomous_status() -> None:
-    """Show Consciousness Score and subsystem health."""
+    """Show Consciousness Score and subsystem health (AGI v2: all 9 subsystems)."""
     from src.core.autonomous import AutonomousEngine
 
     engine = AutonomousEngine()
     report = engine.get_consciousness()
 
+    # Color code score
+    score_style = "green" if report.score >= 70 else "yellow" if report.score >= 40 else "red"
+
     console.print(
         Panel(
-            f"[bold]Consciousness Score:[/bold] {report.score}/100\n\n"
-            f"[bold]Memory:[/bold]     {report.memory_health:.0%}\n"
-            f"[bold]NLU:[/bold]        {report.nlu_health:.0%}\n"
-            f"[bold]Router:[/bold]     {report.router_health:.0%}\n"
-            f"[bold]Executor:[/bold]   {report.executor_health:.0%}\n"
-            f"[bold]Learner:[/bold]    {report.learner_health:.0%}\n"
-            f"[bold]Evolution:[/bold]  {report.evolution_health:.0%}\n"
-            f"[bold]Governance:[/bold] {report.governance_health:.0%}",
-            title="🧠 AGI Consciousness",
+            f"[bold]Consciousness Score:[/bold] [{score_style}]{report.score}/100[/{score_style}]\n\n"
+            f"[bold]Memory:[/bold]      {report.memory_health:.0%}\n"
+            f"[bold]NLU:[/bold]         {report.nlu_health:.0%}\n"
+            f"[bold]Router:[/bold]      {report.router_health:.0%}\n"
+            f"[bold]Executor:[/bold]    {report.executor_health:.0%}\n"
+            f"[bold]Learner:[/bold]     {report.learner_health:.0%}\n"
+            f"[bold]Evolution:[/bold]   {report.evolution_health:.0%}\n"
+            f"[bold]Governance:[/bold]  {report.governance_health:.0%}\n"
+            f"[bold cyan]Reflection:[/bold cyan]  {report.reflection_health:.0%}\n"
+            f"[bold cyan]World Model:[/bold cyan] {report.world_model_health:.0%}",
+            title="🧠 AGI Consciousness (v2)",
             border_style="magenta",
         )
     )
+
+    # Show trend
+    trend = engine.get_consciousness_trend(10)
+    if len(trend) > 1:
+        direction = "📈" if trend[-1] >= trend[0] else "📉"
+        console.print(f"\n[dim]Trend: {direction} {' → '.join(str(s) for s in trend)}[/dim]")
+
+    # Show recent decision traces
+    traces = engine.get_decision_traces(3)
+    if traces:
+        console.print("\n[bold]Recent Decision Traces:[/bold]")
+        for t in traces:
+            console.print(
+                f"  • [cyan]{t.goal[:40]}[/cyan] → {t.intent_classified or '?'} "
+                f"({t.confidence:.0%}) → {t.result}"
+            )
 
 
 @autonomous_app.command(name="run")
 def autonomous_run(
     goal: str = typer.Argument(..., help="Goal to process autonomously"),
 ) -> None:
-    """Run a single autonomous cycle for a goal."""
+    """Run a single autonomous cycle with full AGI v2 pipeline."""
     from src.core.autonomous import AutonomousEngine
 
     engine = AutonomousEngine()
@@ -1075,6 +1108,34 @@ def autonomous_run(
         console.print(
             f"[dim]Governance: {result.governance_decision.action_class.value} "
             f"— {result.governance_decision.reason}[/dim]"
+        )
+
+    # AGI v2: Show reflection summary
+    if result.reflection_summary:
+        console.print(
+            Panel(
+                result.reflection_summary,
+                title="🪞 Reflection",
+                border_style="cyan",
+            )
+        )
+
+    # AGI v2: Show world diff
+    if result.world_diff_summary:
+        console.print(
+            Panel(
+                result.world_diff_summary,
+                title="🌍 World Changes",
+                border_style="blue",
+            )
+        )
+
+    # AGI v2: Show decision trace
+    if result.decision_trace:
+        t = result.decision_trace
+        console.print(
+            f"\n[dim]Decision Trace: intent={t.intent_classified} "
+            f"confidence={t.confidence:.0%} strategy={t.strategy_used[:40] if t.strategy_used else 'none'}[/dim]"
         )
 
     if result.result_status in ("blocked", "rejected"):
@@ -1151,14 +1212,362 @@ def evolve() -> None:
     )
 
 
+# === AGI v2: Tool Registry CLI Commands ===
+
+
+@tools_app.command(name="list")
+def tools_list(
+    tool_type: str = typer.Option("", "--type", "-t", help="Filter by type: builtin|cli|api|mcp|custom"),
+) -> None:
+    """List all registered tools."""
+    from src.core.tool_registry import ToolRegistry, ToolType
+
+    reg = ToolRegistry()
+    type_filter = None
+    if tool_type:
+        try:
+            type_filter = ToolType(tool_type)
+        except ValueError:
+            pass
+
+    tools = reg.list_tools(type_filter)
+    if not tools:
+        console.print("[yellow]No tools registered.[/yellow]")
+        return
+
+    table = Table(title=f"Tools ({len(tools)})")
+    table.add_column("Name", style="cyan")
+    table.add_column("Type", style="dim")
+    table.add_column("Description")
+    table.add_column("Reliability")
+    table.add_column("Uses", justify="right")
+
+    for t in tools:
+        rel_style = {"high": "green", "medium": "yellow", "low": "red"}.get(t.reliability, "dim")
+        uses = t.success_count + t.failure_count
+        table.add_row(
+            t.name, t.tool_type.value, t.description[:50],
+            f"[{rel_style}]{t.reliability}[/{rel_style}]", str(uses),
+        )
+
+    console.print(table)
+
+
+@tools_app.command(name="discover")
+def tools_discover(
+    command: str = typer.Argument(..., help="CLI command to discover tools from (e.g. git, docker)"),
+) -> None:
+    """Auto-discover tools from a CLI's --help output."""
+    from src.core.tool_registry import ToolRegistry
+
+    reg = ToolRegistry()
+    discovered = reg.discover_from_cli(command)
+
+    if not discovered:
+        console.print(f"[yellow]No tools discovered from '{command}'[/yellow]")
+        return
+
+    console.print(f"[green]Discovered {len(discovered)} tools from '{command}':[/green]")
+    for t in discovered:
+        console.print(f"  • [cyan]{t.name}[/cyan] — {t.description[:60]}")
+
+
+@tools_app.command(name="run")
+def tools_run(
+    name: str = typer.Argument(..., help="Tool name to execute"),
+    args: str = typer.Argument("", help="Arguments to pass"),
+) -> None:
+    """Execute a registered tool."""
+    from src.core.tool_registry import ToolRegistry
+
+    reg = ToolRegistry()
+    result = reg.execute(name, {"args": args} if args else {})
+
+    status_style = "green" if result["success"] else "red"
+    console.print(
+        Panel(
+            f"[bold]Tool:[/bold] {name}\n"
+            f"[bold]Status:[/bold] [{status_style}]{'SUCCESS' if result['success'] else 'FAILED'}[/{status_style}]\n"
+            f"[bold]Duration:[/bold] {result['duration_ms']:.0f}ms\n\n"
+            f"{result['output'][:500]}",
+            title="Tool Execution",
+            border_style=status_style,
+        )
+    )
+
+
+@tools_app.command(name="stats")
+def tools_stats() -> None:
+    """Show tool registry statistics."""
+    from src.core.tool_registry import ToolRegistry
+
+    reg = ToolRegistry()
+    stats = reg.get_stats()
+    console.print(
+        Panel(
+            f"[bold]Total Tools:[/bold] {stats['total_tools']}\n"
+            f"[bold]Types:[/bold] {stats['type_counts']}\n"
+            f"[bold]Total Executions:[/bold] {stats['total_executions']}\n"
+            f"[bold]Success Rate:[/bold] {stats['overall_success_rate']:.0%}",
+            title="🔧 Tool Registry Stats",
+            border_style="cyan",
+        )
+    )
+
+
+# === AGI v2: Browser Agent CLI Commands ===
+
+
+@browse_app.command(name="check")
+def browse_check(
+    url: str = typer.Argument(..., help="URL to check status"),
+) -> None:
+    """Check HTTP status of a URL."""
+    from src.core.browser_agent import BrowserAgent
+
+    agent = BrowserAgent()
+    result = agent.check_status(url)
+
+    status_style = "green" if result.success else "red"
+    console.print(
+        f"[{status_style}]HTTP {result.status_code}[/{status_style}] — {url}"
+        f"  ({result.duration_ms:.0f}ms)"
+    )
+
+
+@browse_app.command(name="analyze")
+def browse_analyze(
+    url: str = typer.Argument(..., help="URL to analyze"),
+) -> None:
+    """Full page analysis: title, links, meta tags."""
+    from src.core.browser_agent import BrowserAgent
+
+    agent = BrowserAgent()
+    info = agent.analyze_page(url)
+
+    console.print(
+        Panel(
+            f"[bold]URL:[/bold] {info.url}\n"
+            f"[bold]Title:[/bold] {info.title}\n"
+            f"[bold]Status:[/bold] {info.status_code}\n"
+            f"[bold]Links:[/bold] {len(info.links)}\n"
+            f"[bold]Load Time:[/bold] {info.load_time_ms:.0f}ms\n\n"
+            f"[bold]Content Preview:[/bold]\n{info.text_content[:300]}",
+            title="🌐 Page Analysis",
+            border_style="cyan",
+        )
+    )
+
+    if info.meta_tags:
+        console.print("\n[bold]Meta Tags:[/bold]")
+        for k, v in list(info.meta_tags.items())[:5]:
+            console.print(f"  [dim]{k}:[/dim] {v[:80]}")
+
+
+@browse_app.command(name="links")
+def browse_links(
+    url: str = typer.Argument(..., help="URL to extract links from"),
+) -> None:
+    """Extract all links from a page."""
+    from src.core.browser_agent import BrowserAgent
+
+    agent = BrowserAgent()
+    result = agent.get_links(url)
+
+    if not result.links:
+        console.print("[yellow]No links found.[/yellow]")
+        return
+
+    console.print(f"[bold]Found {len(result.links)} links:[/bold]")
+    for link in result.links[:20]:
+        console.print(f"  • {link}")
+    if len(result.links) > 20:
+        console.print(f"  [dim]... and {len(result.links) - 20} more[/dim]")
+
+
+# === AGI v2: Multi-Agent Collaboration CLI Commands ===
+
+
+@collab_app.command(name="agents")
+def collab_agents() -> None:
+    """List registered collaboration agents."""
+    from src.core.collaboration import CollaborationProtocol
+
+    proto = CollaborationProtocol()
+    stats = proto.get_stats()
+
+    if stats["total_agents"] == 0:
+        console.print("[yellow]No agents registered.[/yellow]")
+        console.print("[dim]Agents are auto-registered during autonomous cycles.[/dim]")
+        return
+
+    table = Table(title=f"Collaboration Agents ({stats['active_agents']} active)")
+    table.add_column("Agent", style="cyan")
+    table.add_column("Role", style="bold")
+
+    for name, role in stats.get("agent_roles", {}).items():
+        table.add_row(name, role)
+
+    console.print(table)
+
+
+@collab_app.command(name="stats")
+def collab_stats() -> None:
+    """Show collaboration statistics."""
+    from src.core.collaboration import CollaborationProtocol
+
+    proto = CollaborationProtocol()
+    stats = proto.get_stats()
+    console.print(
+        Panel(
+            f"[bold]Agents:[/bold] {stats['active_agents']}/{stats['total_agents']}\n"
+            f"[bold]Messages:[/bold] {stats['total_messages']}\n"
+            f"[bold]Reviews:[/bold] {stats['total_reviews']}\n"
+            f"[bold]Debates:[/bold] {stats['active_debates']}\n"
+            f"[bold]Review Approval Rate:[/bold] {stats['review_approval_rate']:.0%}",
+            title="🤝 Collaboration Stats",
+            border_style="cyan",
+        )
+    )
+
+
+# === AGI v2: Code Evolution CLI Commands ===
+
+
+@app.command(name="evolve-code")
+def evolve_code(
+    target: str = typer.Option("src/core", "--target", "-t", help="Directory to analyze"),
+) -> None:
+    """🧬 Analyze source code for self-improvement opportunities."""
+    from src.core.code_evolution import CodeEvolutionEngine
+
+    engine = CodeEvolutionEngine()
+    report = engine.analyze_source(target)
+
+    if "error" in report:
+        console.print(f"[red]{report['error']}[/red]")
+        raise typer.Exit(code=1)
+
+    console.print(
+        Panel(
+            f"[bold]Target:[/bold] {report['target']}\n"
+            f"[bold]Files:[/bold] {len(report['files'])}\n"
+            f"[bold]Total Lines:[/bold] {report['total_lines']}\n"
+            f"[bold]Functions:[/bold] {report['total_functions']}\n"
+            f"[bold]Issues Found:[/bold] {len(report['issues'])}",
+            title="🧬 Code Analysis",
+            border_style="magenta",
+        )
+    )
+
+    if report["issues"]:
+        console.print("\n[bold yellow]Issues:[/bold yellow]")
+        for issue in report["issues"]:
+            console.print(f"  ⚠️  {issue}")
+
+    # Show file breakdown
+    if report["files"]:
+        table = Table(title="File Breakdown")
+        table.add_column("File", style="cyan")
+        table.add_column("Lines", justify="right")
+        table.add_column("Functions", justify="right")
+
+        for f in sorted(report["files"], key=lambda x: x["lines"], reverse=True)[:15]:
+            table.add_row(f["path"], str(f["lines"]), str(f["functions"]))
+
+        console.print(table)
+
+    # Show evolution journal stats
+    stats = engine.get_stats()
+    if stats["total_attempts"] > 0:
+        console.print(
+            f"\n[dim]Evolution Journal: {stats['total_attempts']} attempts, "
+            f"{stats['applied']} applied, {stats['success_rate']:.0%} success[/dim]"
+        )
+
+
+# === AGI v2: Reflection CLI Commands ===
+
+
+@autonomous_app.command(name="reflect")
+def autonomous_reflect() -> None:
+    """Show reflection engine stats and recent reflections."""
+    from src.core.reflection import ReflectionEngine
+
+    engine = ReflectionEngine()
+    stats = engine.get_stats()
+    recent = engine.get_recent(5)
+
+    console.print(
+        Panel(
+            f"[bold]Total Reflections:[/bold] {stats['total_reflections']}\n"
+            f"[bold]Calibration Error:[/bold] {stats['calibration_error']:.2f}\n"
+            f"[bold]Strategy Changes:[/bold] {stats['strategy_changes_suggested']}",
+            title="🪞 Reflection Engine",
+            border_style="cyan",
+        )
+    )
+
+    if recent:
+        console.print("\n[bold]Recent Reflections:[/bold]")
+        for r in recent:
+            status_style = "green" if r.status == "success" else "red"
+            console.print(
+                f"  • [{status_style}]{r.status}[/{status_style}] {r.goal[:40]} — {r.lesson_learned[:60]}"
+            )
+
+
+# === AGI v2: World Model CLI Commands ===
+
+
+@autonomous_app.command(name="world")
+def autonomous_world() -> None:
+    """Show current world model snapshot."""
+    from src.core.world_model import WorldModel
+
+    model = WorldModel()
+    summary = model.get_context_summary()
+
+    console.print(
+        Panel(
+            summary,
+            title="🌍 World Model",
+            border_style="blue",
+        )
+    )
+
+
+@autonomous_app.command(name="predict")
+def autonomous_predict(
+    action: str = typer.Argument(..., help="Action to predict side effects for"),
+) -> None:
+    """Predict side effects of an action before executing."""
+    from src.core.world_model import WorldModel
+
+    model = WorldModel()
+    pred = model.predict_side_effects(action)
+
+    risk_style = {"high": "red", "medium": "yellow", "low": "green"}.get(pred.risk_level, "dim")
+    console.print(
+        Panel(
+            f"[bold]Action:[/bold] {pred.action}\n"
+            f"[bold]Risk Level:[/bold] [{risk_style}]{pred.risk_level.upper()}[/{risk_style}]\n"
+            + (f"\n[bold]Warnings:[/bold]\n" + "\n".join(f"  ⚠️  {w}" for w in pred.warnings) if pred.warnings else ""),
+            title="🔮 Side Effect Prediction",
+            border_style=risk_style,
+        )
+    )
+
+
 @app.command()
 def version() -> None:
     """Show version info"""
     console.print(
         Panel(
-            "[bold green]Mekong CLI[/bold green] v1.0.0\n"
+            "[bold green]Mekong CLI[/bold green] v2.0.0-agi\n"
             "[dim]RaaS Agency Operating System[/dim]\n"
             "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
+            "[dim]AGI: NLU + Memory + DAG + Reflection + WorldModel + Tools + Browser + Collab + Evolution[/dim]\n"
             "[dim]DNA: ClaudeKit v2.9.1+[/dim]",
             title="Version",
             border_style="blue",
