@@ -638,9 +638,10 @@ function loadMission(missionFile) {
 			parsed = JSON.parse(raw);
 		} catch (e) {
 			log(`WARN: loadMission failed to parse JSON ${missionFile}: ${e.message} — falling back to legacy`);
-			return { _legacy: true, goal: raw, id: path.basename(missionFile, '.json') };
+			return { type: 'text', _legacy: true, goal: raw, id: path.basename(missionFile, '.json') };
 		}
 		return {
+			type: 'json',
 			id: parsed.id || path.basename(missionFile, '.json'),
 			command: parsed.command || null,
 			goal: parsed.goal || parsed.description || raw,
@@ -657,6 +658,7 @@ function loadMission(missionFile) {
 
 	// .txt legacy format
 	return {
+		type: 'text',
 		_legacy: true,
 		id: path.basename(missionFile, '.txt'),
 		goal: raw,
