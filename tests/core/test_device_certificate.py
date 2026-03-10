@@ -330,7 +330,7 @@ class TestCertificateStore:
 
     def test_store_initialization(self, temp_cert_dir):
         """Test store initialization creates directory."""
-        store = CertificateStore(certificate_dir=temp_cert_dir)
+        _store = CertificateStore(certificate_dir=temp_cert_dir)  # noqa: F841
 
         assert Path(temp_cert_dir).exists()
         assert os.access(temp_cert_dir, os.R_OK | os.W_OK | os.X_OK)
@@ -389,10 +389,10 @@ class TestCertificateStore:
 
     def test_rotate_certificate_not_due(self, store):
         """Test rotation when not due returns None."""
-        cert = store.generate_and_save(valid_days=30)
+        store.generate_and_save(valid_days=30)
 
         # Should not rotate yet
-        result = store.rotate_certificate()
+        store.rotate_certificate()
         # First rotation is always "initial" so may succeed
         # Check rotation history
         history = store.get_rotation_history()
