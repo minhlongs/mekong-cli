@@ -12,6 +12,8 @@ import typer
 from src.cli.commands_registry import register_all_commands
 from src.cli.command_registry_legacy import register_legacy_commands
 from src.cli.core_commands import register_core_commands
+from src.cli.start_command import register_start_command
+from src.cli.trace_command import register_trace_command
 
 app = typer.Typer(
     name="mekong",
@@ -22,6 +24,8 @@ app = typer.Typer(
 register_all_commands(app)
 register_legacy_commands(app)
 register_core_commands(app)
+register_start_command(app)
+register_trace_command(app)
 
 
 def run_cli() -> None:

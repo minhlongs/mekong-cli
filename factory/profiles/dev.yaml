@@ -1,0 +1,29 @@
+# Vibe Coding Factory — Developer Role Profile
+# Loaded by EntryPointRouter when user selects the engineering layer.
+
+profile:
+  name: dev
+  display: "Engineer / Tech Lead"
+  layer: engineering
+  chapter: "軍形 — Military Disposition"
+  tagline: "Build, ship, and keep systems healthy."
+
+  quick_start:
+    - command: cook
+      description: "Full PEV pipeline — Plan, Execute, Verify"
+    - command: fix
+      description: "Debug and fix issues"
+    - command: review
+      description: "Code quality review"
+
+  recommended_flow:
+    - cook
+    - test
+    - review
+    - deploy
+
+  persona:
+    focus: execution
+    time_horizon: sprint
+    primary_metric: velocity
+    risk_tolerance: low

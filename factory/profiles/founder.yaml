@@ -1,0 +1,29 @@
+# Vibe Coding Factory — Founder Role Profile
+# Loaded by EntryPointRouter when user selects the founder layer.
+
+profile:
+  name: founder
+  display: "Founder / CEO"
+  layer: founder
+  chapter: "始計 — Initial Calculations"
+  tagline: "Vision, strategy, and capital allocation."
+
+  quick_start:
+    - command: okr
+      description: "Set and track quarterly objectives"
+    - command: forecast
+      description: "Revenue and burn forecast"
+    - command: fundraise
+      description: "Fundraising playbook"
+
+  recommended_flow:
+    - okr
+    - swot
+    - goal-dashboard
+    - bao-cao-tai-chinh
+
+  persona:
+    focus: strategic
+    time_horizon: quarterly
+    primary_metric: ARR
+    risk_tolerance: high

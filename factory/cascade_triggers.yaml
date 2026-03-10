@@ -1,0 +1,76 @@
+# Vibe Coding Factory — Cascade Trigger Keywords
+# Defines keyword signals that indicate a layer transition should be suggested.
+
+triggers:
+  founder_to_business:
+    description: "Founder output mentions revenue, growth, or team ops → suggest Business layer"
+    keywords:
+      - revenue
+      - sales
+      - marketing
+      - hiring
+      - customers
+      - growth
+      - churn
+      - pipeline
+      - leads
+      - GTM
+      - go-to-market
+      - partnerships
+      - pricing
+      - ARR
+      - MRR
+
+  business_to_product:
+    description: "Business output mentions features or product needs → suggest Product layer"
+    keywords:
+      - features
+      - product
+      - MVP
+      - launch
+      - roadmap
+      - user story
+      - backlog
+      - scope
+      - prototype
+      - spec
+      - requirements
+      - persona
+      - feedback
+      - sprint
+
+  product_to_engineering:
+    description: "Product output mentions implementation or build → suggest Engineering layer"
+    keywords:
+      - implement
+      - build
+      - code
+      - API
+      - database
+      - schema
+      - component
+      - frontend
+      - backend
+      - endpoint
+      - architecture
+      - develop
+      - engineer
+      - technical
+
+  engineering_to_ops:
+    description: "Engineering output mentions deployment or monitoring → suggest Ops layer"
+    keywords:
+      - deploy
+      - ship
+      - monitor
+      - production
+      - CI/CD
+      - health
+      - uptime
+      - rollback
+      - environment
+      - security
+      - audit
+      - infrastructure
+      - release
+      - smoke test
