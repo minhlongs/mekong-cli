@@ -117,7 +117,14 @@ def calculate_guidance(
     churn_rate: float,
     signed_contracts: float,
 ) -> GuidanceModel:
-    """Quarterly-compounded guidance with 50% pipeline credit and 5% safety margin."""
+    """Quarterly-compounded guidance with 50% pipeline credit and 5% safety margin.
+
+    Math: annualize growth/churn via 4th root for quarterly compounding.
+    quarterly_growth = (1 + annual_growth)^0.25 - 1
+    quarterly_churn  = 1 - (1 - annual_churn)^0.25
+    base = current * (1 + qtr_growth - qtr_churn)
+    """
+    # Quarterly compound: 4th root of annual rates
     base = current_revenue * (1 + (1 + growth_rate) ** 0.25 - 1 - (1 - (1 - churn_rate) ** 0.25))
     base += signed_contracts * 0.50
     mid = base * 0.95

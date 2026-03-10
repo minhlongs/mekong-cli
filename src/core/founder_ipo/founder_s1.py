@@ -105,7 +105,8 @@ def generate_risk_factors(
 def check_narrative_quality(framework: S1Framework) -> list[NarrativeCheck]:
     """Run 6 narrative quality checks on the S-1 framework."""
     all_content = " ".join(s.content_template for s in framework.sections)
-    get = lambda name: next((s for s in framework.sections if s.name == name), None)  # noqa: E731
+    def get(name: str) -> "S1Section | None":
+        return next((s for s in framework.sections if s.name == name), None)
     summary, biz, metrics = get("Prospectus Summary"), get("Business Description"), get("Key Metrics")
 
     return [
