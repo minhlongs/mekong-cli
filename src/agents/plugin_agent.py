@@ -5,7 +5,6 @@ Agent for plugin management: list, install, remove, update plugins.
 """
 
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
