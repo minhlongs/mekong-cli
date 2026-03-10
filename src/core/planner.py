@@ -64,6 +64,24 @@ class RecipePlanner:
         "lead": ["lead", "prospect", "ceo", "email", "company", "hunt", "outreach"],
         "content": ["content", "article", "blog", "seo", "write", "copywriting"],
         "crawler": ["crawl", "scrape", "recipe", "discover"],
+        # AGI v2: Tool and Browse agents
+        "tool": ["tool", "registry", "suggest", "discover tool"],
+        "browse": ["browse", "url", "http", "website", "page", "link", "web"],
+        "evolve": ["refactor", "optimize", "improve", "clean", "evolve"],
+    }
+
+    # AGI v2: URL patterns for auto-detecting browse steps
+    _URL_PREFIXES = ("http://", "https://", "www.")
+
+    # AGI v2: Tool keyword → tool name mapping
+    _TOOL_KEYWORDS: Dict[str, str] = {
+        "git status": "git:status",
+        "git diff": "git:diff",
+        "git log": "git:log",
+        "npm install": "npm:install",
+        "npm test": "npm:test",
+        "pip install": "pip:install",
+        "docker build": "docker:build",
     }
 
     def __init__(self, llm_client: Optional["LLMClient"] = None) -> None:
@@ -97,6 +115,43 @@ class RecipePlanner:
             return None
 
         return max(scores, key=lambda k: scores[k])
+
+    def _detect_step_type(self, goal: str) -> str:
+        """AGI v2: Detect the best step type for a goal."""
+        goal_lower = goal.lower()
+
+        # URL detected → browse step
+        if any(goal_lower.startswith(p) or f" {p}" in goal_lower for p in self._URL_PREFIXES):
+            return "browse"
+
+        # Known tool keyword → tool step
+        for kw in self._TOOL_KEYWORDS:
+            if kw in goal_lower:
+                return "tool"
+
+        # Refactor/optimize → evolve
+        if any(w in goal_lower for w in ["refactor", "optimize", "improve code", "clean code"]):
+            return "evolve"
+
+        # Browse keywords
+        if any(w in goal_lower for w in ["browse", "check website", "analyze page", "crawl", "scrape"]):
+            return "browse"
+
+        return ""  # No special type detected
+
+    def _get_tool_name(self, goal: str) -> str:
+        """AGI v2: Map a goal to a ToolRegistry tool name."""
+        goal_lower = goal.lower()
+        for kw, tool_name in self._TOOL_KEYWORDS.items():
+            if kw in goal_lower:
+                return tool_name
+        return ""
+
+    def _extract_url(self, goal: str) -> str:
+        """AGI v2: Extract URL from a goal string."""
+        import re as _re
+        match = _re.search(r'https?://\S+|www\.\S+', goal)
+        return match.group(0) if match else ""
 
     def decompose_goal(
         self, goal: str, context: PlanningContext
@@ -137,8 +192,52 @@ class RecipePlanner:
         # Simple heuristic: check for common patterns
         goal_lower = goal.lower()
 
+        # AGI v2: Detect special step type first
+        detected_type = self._detect_step_type(goal)
+
+        # AGI v2: URL/browse pattern → generate browse step
+        if detected_type == "browse":
+            url = self._extract_url(goal)
+            tasks.append({
+                "title": goal,
+                "description": f"Browse and analyze: {url or goal}",
+                "dependencies": [],
+                "type": "browse",
+                "url": url or "https://example.com",
+                "action": "analyze" if "analyze" in goal_lower else "check",
+            })
+
+        # AGI v2: Tool pattern → generate tool step
+        elif detected_type == "tool":
+            tool_name = self._get_tool_name(goal)
+            tasks.append({
+                "title": goal,
+                "description": f"Execute tool: {tool_name}",
+                "dependencies": [],
+                "type": "tool",
+                "tool_name": tool_name,
+                "tool_args": {},
+            })
+
+        # AGI v2: Evolve pattern → generate evolve step (shell with evolve command)
+        elif detected_type == "evolve":
+            tasks.extend([
+                {
+                    "title": f"Analyze: {goal}",
+                    "description": "Scan source code for improvement opportunities",
+                    "dependencies": [],
+                    "type": "shell",
+                },
+                {
+                    "title": f"Apply: {goal}",
+                    "description": goal,
+                    "dependencies": [0],
+                    "type": "llm",
+                },
+            ])
+
         # Pattern: "implement X" or "create X"
-        if any(word in goal_lower for word in ["implement", "create", "build"]):
+        elif any(word in goal_lower for word in ["implement", "create", "build"]):
             tasks.extend(
                 [
                     {
