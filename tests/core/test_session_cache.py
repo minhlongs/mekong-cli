@@ -482,7 +482,7 @@ class TestAutoRefresh:
         )
         client._session_cache = cache
 
-        session = client.get_session()
+        client.get_session()
 
         # Gateway should be called for refresh
         assert mock_post.called
