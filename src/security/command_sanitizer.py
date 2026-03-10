@@ -34,10 +34,12 @@ class CommandSanitizer:
         "wget_pipe_bash": r"wget.*\|\s*(?:bash|sh)",  # wget | bash
         "python_eval": r"python.*-c\s+['\"]eval",  # python -c 'eval
         "rm_rf_root": r"rm\s+(-rf|-fr)\s+/",  # rm -rf /
-        "chmod_recursive": r"chmod\s+-R\s+777",  # chmod -R 777
-        "dd_dangerous": r"\bdd\s+.*if=/dev/zero",  # dd if=/dev/zero
-        "mkfs_dangerous": r"\bmkfs\.",  # mkfs.*
-        "fork_bomb": r":\(\){:|:&\};:",  # :(){:|:&};:
+        "chmod_recursive": r"chmod\s+-R\s+777\s*/",  # chmod -R 777 /
+        "dd_dangerous": r"\bdd\s+if=",  # dd if=...
+        "mkfs_dangerous": r"\bmkfs\b",  # mkfs
+        "fork_bomb": r":\s*\(\s*\)\s*\{",  # :(){:|:&};:
+        "write_block_device": r">\s*/dev/sd",  # > /dev/sd*
+        "shutdown": r"\b(shutdown|reboot|init\s+0|poweroff|halt)\b",  # system shutdown
     }
 
     # Suspicious but not always malicious
