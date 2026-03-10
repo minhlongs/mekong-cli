@@ -4,7 +4,7 @@ Backwards-compatible re-export of telemetry components.
 """
 
 from .telemetry_collector import TelemetryCollector
-from .telemetry_models import ExecutionTrace, StepTrace
+from .telemetry_models import ExecutionTrace, StepTrace, SubsystemHealth, SubsystemHealthReport
 from .tiered_store import TieredTelemetryStore
 from .event_bus import EventType
 
@@ -31,6 +31,8 @@ from .usage_metering import (
 __all__ = [
     "ExecutionTrace",
     "StepTrace",
+    "SubsystemHealth",
+    "SubsystemHealthReport",
     "TelemetryCollector",
     "TieredTelemetryStore",
     "EventType",
