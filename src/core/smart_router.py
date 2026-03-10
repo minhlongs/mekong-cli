@@ -180,13 +180,14 @@ class SmartRouter:
         return rate >= self.MIN_SUCCESS_RATE
 
     def _scan_recipes(self) -> Dict[str, str]:
-        """Scan recipes/ directory for .md files. Returns {name: path}."""
+        """Scan recipes/ directory recursively for .md files. Returns {name: path}."""
         if self._recipe_cache is not None:
             return self._recipe_cache
         recipes: Dict[str, str] = {}
         recipe_dir = Path("recipes")
         if recipe_dir.is_dir():
-            for f in recipe_dir.glob("*.md"):
+            # AGI v2: rglob to discover auto-recipes in subdirectories
+            for f in recipe_dir.rglob("*.md"):
                 recipes[f.stem] = str(f)
         self._recipe_cache = recipes
         return recipes
