@@ -5,6 +5,7 @@ Models live in :mod:`src.raas.mission_models`.
 """
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
 
 _SHELL_META = re.compile(r"[;&|`$<>()\\\'\"]")
 _COMPLEXITY_THRESHOLDS = (50, 150)  # (simple_max_chars, standard_max_chars)
@@ -116,8 +119,8 @@ class MissionService:
         except RuntimeError as exc:
             try:
                 self._credits.add(tenant_id, cost, reason="refund:mission_store_error")
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                logger.warning("Refund failed for tenant %s: %s", tenant_id, e)
             raise HTTPException(status_code=500, detail=f"Mission store error: {exc}") from exc
 
         try:
@@ -165,8 +168,8 @@ class MissionService:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
         try:
             self._credits.add(tenant_id, record.credits_cost, reason=f"refund:cancel:{mission_id}")
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Refund failed on cancel for mission %s: %s", mission_id, e)
         record.status = MissionStatus.cancelled
         return self._to_response(record)
 
