@@ -1,28 +1,46 @@
+import SiteNav from '@/components/site-nav'
+
+const HEADLINE = 'AGI Vibe Coding Factory'
+const SUB = 'Mekong CLI — 55 commands, Plan-Execute-Verify engine, Tôm Hùm autonomous CTO daemon.'
+
 export default function HeroSection() {
   return (
-    <header className="relative px-6 pt-6 pb-2">
-      <nav className="relative mx-auto flex max-w-5xl items-center justify-between rounded-2xl glass px-6 py-3">
-        <span className="text-lg font-bold tracking-tight text-white">
-          <span className="text-cyan-400">Agency</span>OS
-        </span>
-        <div className="flex items-center gap-6 text-sm text-slate-400">
-          <a href="#features" className="transition-colors hover:text-white">Tính năng</a>
-          <a href="#cascade" className="transition-colors hover:text-white">Cascade</a>
-          <a href="#pricing" className="transition-colors hover:text-white">Giá</a>
-          <a
-            href="https://github.com/agencyos/mekong-cli"
-            className="transition-colors hover:text-white"
-          >
-            GitHub
-          </a>
-          <a
-            href="#quickstart"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-500"
-          >
-            Bắt đầu
-          </a>
+    <div>
+      <SiteNav />
+      <section className="relative px-6 pb-16 pt-16 text-center">
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-800/40 bg-cyan-950/30 px-4 py-1.5 text-xs text-cyan-400">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
+            OpenClaw v2026.3 · 55 Commands · Live
+          </div>
+
+          <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <span className="gradient-text">Agency</span>
+            <span className="text-white">OS</span>
+            <br />
+            <span className="text-2xl font-bold text-slate-300 sm:text-3xl">{HEADLINE}</span>
+          </h1>
+
+          <p className="mx-auto mb-8 max-w-xl text-base text-slate-400 sm:text-lg">
+            {SUB}
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="#quickstart"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-7 py-3 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
+            >
+              Bắt đầu miễn phí →
+            </a>
+            <a
+              href="/pricing"
+              className="rounded-xl border border-slate-700 px-7 py-3 font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+            >
+              Xem giá
+            </a>
+          </div>
         </div>
-      </nav>
-    </header>
+      </section>
+    </div>
   )
 }

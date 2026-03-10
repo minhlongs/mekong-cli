@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SiteNav from '@/components/site-nav'
 
 const STEPS = [
   {
@@ -54,8 +55,10 @@ Chọn provider:
 
 export default function QuickstartPage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-16 sm:px-6">
-      <div className="mx-auto max-w-3xl">
+    <main className="min-h-screen bg-slate-950">
+      <SiteNav />
+      <div className="px-4 pb-16 pt-8 sm:px-6">
+        <div className="mx-auto max-w-3xl">
         {/* Back nav */}
         <Link
           href="/"
@@ -141,6 +144,7 @@ export default function QuickstartPage() {
           >
             Architecture →
           </Link>
+        </div>
         </div>
       </div>
     </main>

@@ -1,5 +1,6 @@
 import LayerPageHero from '@/components/layer-page-hero'
 import CommandGrid from '@/components/command-grid'
+import SiteNav from '@/components/site-nav'
 import { COMMANDS } from '@/data/commands'
 import { LAYERS } from '@/data/layers'
 import Link from 'next/link'
@@ -12,6 +13,7 @@ const FLOW_STEPS = ['plan', 'brainstorm', 'scope', 'sprint', 'roadmap']
 export default function ProductPage() {
   return (
     <main className="min-h-screen bg-slate-950">
+      <SiteNav />
       <LayerPageHero
         icon={productLayer.icon}
         title="Product Management"
