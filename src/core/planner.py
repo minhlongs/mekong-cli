@@ -367,26 +367,34 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
     def plan(self, goal: str, context: Optional[PlanningContext] = None) -> Recipe:
         """
-        Create executable recipe from high-level goal.
+        Create executable recipe from high-level goal (AGI v2).
 
-        This is the main planning entry point.
+        Produces a DAG-aware recipe. Steps include dependency metadata
+        enabling the DAGScheduler to run independent steps concurrently.
 
         Args:
             goal: User's high-level objective
             context: Optional planning context
 
         Returns:
-            Recipe with steps and verification criteria
+            Recipe with steps, verification criteria, and DAG metadata
         """
         if context is None:
             context = PlanningContext(goal=goal)
 
-        # Step 1: Decompose goal into tasks
+        # Step 1: Decompose goal into tasks (now with dependency graph)
         tasks = self.decompose_goal(goal, context)
 
         # Step 2: Convert tasks to recipe steps with verification
         steps = []
+        has_deps = False
         for idx, task in enumerate(tasks):
+            deps = task.get("dependencies", [])
+            # Map dependency indices (0-based) to step orders (1-based)
+            step_deps = [d + 1 for d in deps if isinstance(d, int)]
+            if step_deps:
+                has_deps = True
+
             step = RecipeStep(
                 order=idx + 1,
                 title=task["title"],
@@ -394,13 +402,28 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 agent=task.get("agent"),
                 params={
                     "type": task.get("type", "shell"),
-                    "dependencies": task.get("dependencies", []),
+                    "dependencies": step_deps,
                     "verification": self.generate_verification_criteria(task).__dict__,
                 },
             )
+            # Attach dependencies as attribute for DAGScheduler
+            step.dependencies = step_deps  # type: ignore[attr-defined]
             steps.append(step)
 
-        # Step 3: Create recipe
+        # Step 3: Validate DAG (no circular deps)
+        if has_deps:
+            from .dag_scheduler import validate_dag
+
+            dag_error = validate_dag(steps)
+            if dag_error:
+                logger.warning("[PLANNER] %s — falling back to sequential", dag_error)
+                # Remove dependencies to force sequential
+                for step in steps:
+                    step.dependencies = []  # type: ignore[attr-defined]
+                    step.params["dependencies"] = []
+                has_deps = False
+
+        # Step 4: Create recipe
         recipe = Recipe(
             name=f"Plan: {goal}",
             description=f"Automated plan for: {goal}",
@@ -409,8 +432,95 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 "planned_by": "RecipePlanner",
                 "complexity": context.complexity.value,
                 "goal": goal,
+                "dag_enabled": has_deps,
             },
         )
+
+        return recipe
+
+    def replan_failed_branch(
+        self,
+        recipe: Recipe,
+        failed_step_order: int,
+        error_context: str = "",
+    ) -> Recipe:
+        """
+        Re-plan only the failed branch of a DAG.
+
+        Instead of re-planning the entire recipe, re-decomposes only the
+        failed step and its downstream dependents.
+
+        Args:
+            recipe: Original recipe.
+            failed_step_order: Order of the step that failed.
+            error_context: Error message or context from the failure.
+
+        Returns:
+            New recipe with the failed branch re-planned.
+        """
+        # Identify downstream steps that depend on the failed step
+        failed_and_downstream = {failed_step_order}
+        changed = True
+        while changed:
+            changed = False
+            for step in recipe.steps:
+                deps = step.params.get("dependencies", [])
+                if step.order not in failed_and_downstream:
+                    if any(d in failed_and_downstream for d in deps):
+                        failed_and_downstream.add(step.order)
+                        changed = True
+
+        # Find the failed step
+        failed_step = next(
+            (s for s in recipe.steps if s.order == failed_step_order), None,
+        )
+        if not failed_step:
+            return recipe
+
+        # Re-decompose the failed step's goal
+        goal = failed_step.description
+        if error_context:
+            goal = (
+                f"{goal} (previous attempt failed: {error_context}. "
+                f"Try a different approach.)"
+            )
+
+        context = PlanningContext(
+            goal=goal,
+            constraints={"retry": True, "previous_error": error_context},
+        )
+        new_tasks = self.decompose_goal(goal, context)
+
+        # Build new step list: keep successful steps, replace failed branch
+        kept_steps = [
+            s for s in recipe.steps
+            if s.order not in failed_and_downstream
+        ]
+
+        next_order = max((s.order for s in kept_steps), default=0) + 1
+        for idx, task in enumerate(new_tasks):
+            step = RecipeStep(
+                order=next_order + idx,
+                title=task["title"],
+                description=task["description"],
+                agent=task.get("agent"),
+                params={
+                    "type": task.get("type", "shell"),
+                    "dependencies": [
+                        next_order + d for d in task.get("dependencies", [])
+                        if isinstance(d, int)
+                    ],
+                    "verification": self.generate_verification_criteria(
+                        task,
+                    ).__dict__,
+                },
+            )
+            step.dependencies = step.params["dependencies"]  # type: ignore[attr-defined]
+            kept_steps.append(step)
+
+        recipe.steps = sorted(kept_steps, key=lambda s: s.order)
+        recipe.metadata["replanned"] = True
+        recipe.metadata["replanned_step"] = failed_step_order
 
         return recipe
 
