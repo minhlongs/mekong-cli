@@ -1,0 +1,148 @@
+import Link from 'next/link'
+
+const STEPS = [
+  {
+    num: 1,
+    title: 'Prerequisites',
+    desc: 'Đảm bảo máy có Python và Node.js',
+    code: `$ python --version  # Python 3.9+
+$ node --version    # Node 18+ (cho OpenClaw worker)`,
+    copyText: null,
+  },
+  {
+    num: 2,
+    title: 'Install',
+    desc: 'Cài Mekong CLI qua pip',
+    code: `$ pip install mekong-cli
+$ mekong version
+→ Mekong CLI v3.1.0 | OpenClaw v2026.3`,
+    copyText: 'pip install mekong-cli',
+  },
+  {
+    num: 3,
+    title: 'Configure LLM Provider',
+    desc: 'Chọn provider — Antigravity Proxy miễn phí, không cần API key',
+    code: `$ mekong init
+Chọn provider:
+  1. Claude (Anthropic API key)
+  2. Google Gemini (API key)
+  3. Antigravity Proxy (local, free)
+  4. Ollama (local, free)
+> 3
+✓ Configured Antigravity Proxy on :9191`,
+    copyText: 'mekong init',
+  },
+  {
+    num: 4,
+    title: 'First Command',
+    desc: 'Chạy lệnh đầu tiên với PEV pipeline',
+    code: `$ mekong cook "Create a Python calculator with tests"
+📋 Planning 3 tasks...
+⚡ Executing...
+✅ Verified. 2 files created, 100% test pass.`,
+    copyText: 'mekong cook "Create a Python calculator with tests"',
+  },
+  {
+    num: 5,
+    title: 'Explore Commands',
+    desc: '176 lệnh sẵn có — khám phá toàn bộ command catalog',
+    code: null,
+    copyText: null,
+    isLast: true,
+  },
+]
+
+export default function QuickstartPage() {
+  return (
+    <main className="min-h-screen bg-slate-950 px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-3xl">
+        {/* Back nav */}
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+        >
+          ← Trang chủ
+        </Link>
+
+        {/* Hero */}
+        <div className="mb-12 text-center">
+          <div className="mb-4 text-4xl">⚙️</div>
+          <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
+            <span className="gradient-text">Developer Quickstart</span>
+          </h1>
+          <p className="text-lg text-slate-400">Setup trong 5 phút</p>
+        </div>
+
+        {/* Steps */}
+        <div className="space-y-4">
+          {STEPS.map((step) => (
+            <div key={step.num} className="glass-card rounded-xl p-6">
+              {/* Step header */}
+              <div className="mb-4 flex items-start gap-4">
+                <span className="glass-highlight flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-cyan-400">
+                  {step.num}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-lg font-semibold text-slate-100">
+                      {step.title}
+                    </h2>
+                    <span className="text-xs text-slate-500">
+                      {step.num}/5
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-400">{step.desc}</p>
+                </div>
+              </div>
+
+              {/* Terminal block */}
+              {step.code && (
+                <div className="glass rounded-lg p-4">
+                  <pre className="overflow-x-auto font-mono text-xs text-cyan-400 sm:text-sm whitespace-pre-wrap break-words">
+                    {step.code}
+                  </pre>
+                </div>
+              )}
+
+              {/* Copy hint */}
+              {step.copyText && (
+                <p className="mt-3 text-xs text-slate-500">
+                  Copy:{' '}
+                  <code className="rounded bg-slate-800 px-2 py-0.5 text-cyan-300">
+                    {step.copyText}
+                  </code>
+                </p>
+              )}
+
+              {/* CTA for last step */}
+              {step.isLast && (
+                <Link
+                  href="/dev/commands"
+                  className="glass-highlight mt-2 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-cyan-400 transition-all hover:text-cyan-300"
+                >
+                  Khám phá 176 Commands →
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Footer nav */}
+        <div className="mt-10 flex flex-wrap gap-4 justify-center">
+          <Link
+            href="/dev/commands"
+            className="glass-card rounded-lg px-5 py-2.5 text-sm text-slate-300 hover:text-cyan-400 transition-colors"
+          >
+            Command Explorer →
+          </Link>
+          <Link
+            href="/dev/architecture"
+            className="glass-card rounded-lg px-5 py-2.5 text-sm text-slate-300 hover:text-cyan-400 transition-colors"
+          >
+            Architecture →
+          </Link>
+        </div>
+      </div>
+    </main>
+  )
+}
