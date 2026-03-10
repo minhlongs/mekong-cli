@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.dylib
+*.map
+*.dist-info/
 .Python
 build/
 develop-eggs/
@@ -66,6 +69,18 @@ products/paid/*.zip
 !products/paid/README.md
 .archive/
 *.log
+
+# Media (use CDN/LFS for large assets)
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Stale monorepo configs
+fly.toml
+pnpm-lock.yaml
+pnpm-workspace.yaml
+turbo.json
 
 # OS
 .DS_Store
