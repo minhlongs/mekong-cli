@@ -3,21 +3,18 @@
 import { useState } from 'react'
 
 const TERMINAL_LINES = [
-  { text: '$ pip install mekong-cli', color: 'text-cyan-300' },
-  { text: '$ mekong start', color: 'text-cyan-300' },
+  { text: '$ mekong cook "Tạo landing page cho quán cà phê"', color: 'text-cyan-300' },
   { text: '', color: '' },
-  { text: '🏯 Chào mừng! Bạn là ai?', color: 'text-white' },
-  { text: '  1. 👑 Founder / CEO', color: 'text-yellow-400' },
-  { text: '  2. 🏢 Business Manager', color: 'text-blue-400' },
-  { text: '  3. 📦 Product Manager', color: 'text-purple-400' },
-  { text: '  4. ⚙️  Developer', color: 'text-cyan-400' },
-  { text: '  5. 🔧 Operations', color: 'text-green-400' },
-  { text: '> 1', color: 'text-slate-300' },
+  { text: '  🎯 Goal: Landing page cho quán cà phê', color: 'text-white' },
+  { text: '  🤖 Agent: cto via claude-sonnet-4-6', color: 'text-slate-300' },
+  { text: '  📋 Steps:', color: 'text-slate-300' },
+  { text: '    1. Research café landing best practices', color: 'text-slate-400' },
+  { text: '    2. Generate responsive HTML/CSS', color: 'text-slate-400' },
+  { text: '    3. Deploy to Cloudflare Pages', color: 'text-slate-400' },
+  { text: '  ⚡ Executing...', color: 'text-yellow-400' },
   { text: '', color: '' },
-  { text: '👑 Founder commands:', color: 'text-yellow-400' },
-  { text: '  /annual    — Kế hoạch kinh doanh năm', color: 'text-slate-300' },
-  { text: '  /okr       — Đặt mục tiêu OKR', color: 'text-slate-300' },
-  { text: '  /fundraise — Chuẩn bị gọi vốn', color: 'text-slate-300' },
+  { text: '  ✅ Done: https://cafe-landing.pages.dev', color: 'text-green-400' },
+  { text: '  💳 MCU: -3 (balance: 197)', color: 'text-purple-400' },
 ]
 
 const INSTALL_CMD = 'pip install mekong-cli'
