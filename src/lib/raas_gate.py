@@ -11,9 +11,8 @@ import asyncio
 import time
 import logging
 import requests
-from typing import Optional, Tuple, Dict, Any, Coroutine, TypeVar
-
-logger = logging.getLogger(__name__)
+from typing import Optional, Tuple, Dict, Any, Coroutine, TypeVar, List
+from dataclasses import dataclass, field
 
 from src.lib.raas_gate_utils import get_upgrade_message, format_license_preview
 from src.lib.license_generator import validate_license
@@ -37,6 +36,8 @@ from src.raas.quota_cache import get_cached_quota, cache_quota, GRACE_PERIOD_SEC
 from src.raas.validation_logger import ValidationLog, get_logger as get_validation_logger
 from src.lib.jwt_license_generator import validate_jwt_license
 from src.core.license_monitor import record_failure as record_license_failure
+
+logger = logging.getLogger(__name__)
 
 
 # Fix 3: Async Refactor - Helper to run async operations from sync context
@@ -795,4 +796,86 @@ def check_license(command: str) -> bool:
     return allowed
 
 
-__all__ = ["RaasLicenseGate", "get_license_gate", "require_license", "check_license"]
+# ---------------------------------------------------------------------------
+# Backward-compat aliases used by license_cli.py, roi_auth.py, roi_commands.py
+# ---------------------------------------------------------------------------
+
+@dataclass
+class _ValidationResult:
+    valid: bool
+    tier: str
+    features: List[str] = field(default_factory=list)
+
+
+# Feature catalogue keyed by tier
+PREMIUM_FEATURES: Dict[str, List[str]] = {
+    "free": [
+        "init", "version", "list", "search", "status", "config", "doctor", "help", "dash",
+    ],
+    "pro": [
+        "init", "version", "list", "search", "status", "config", "doctor", "help", "dash",
+        "cook", "gateway", "binh-phap", "telegram", "agi",
+        "recipe_library", "llm_routing", "usage_analytics",
+    ],
+    "enterprise": [
+        "init", "version", "list", "search", "status", "config", "doctor", "help", "dash",
+        "cook", "gateway", "binh-phap", "telegram", "agi",
+        "swarm", "schedule", "autonomous",
+        "recipe_library", "llm_routing", "usage_analytics",
+        "multi_tenant", "sso", "audit_logs", "priority_support",
+    ],
+}
+
+
+class LicenseTier(str):
+    """License tier constants."""
+
+    FREE = "free"
+    PRO = "pro"
+    ENTERPRISE = "enterprise"
+
+
+class LicenseService:
+    """Compatibility shim — thin wrapper around RaasLicenseGate with singleton."""
+
+    _instance: Optional["LicenseService"] = None
+
+    @classmethod
+    def getInstance(cls) -> "LicenseService":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def __init__(self) -> None:
+        self._gate = get_license_gate()
+
+    def validateSync(self, key: Optional[str] = None) -> _ValidationResult:
+        """Validate a license key synchronously and return structured result."""
+        import os
+
+        check_key = key or os.getenv("RAAS_LICENSE_KEY", "")
+        if not check_key:
+            return _ValidationResult(valid=False, tier="free", features=PREMIUM_FEATURES["free"])
+
+        valid, _msg = self._gate.validate_license_format(check_key)
+        if not valid:
+            return _ValidationResult(valid=False, tier="free", features=PREMIUM_FEATURES["free"])
+
+        # Derive tier from key
+        parts = check_key.split("-")
+        tier = parts[1].lower() if len(parts) >= 2 else "free"
+        if tier not in PREMIUM_FEATURES:
+            tier = "free"
+        return _ValidationResult(valid=True, tier=tier, features=PREMIUM_FEATURES[tier])
+
+
+__all__ = [
+    "RaasLicenseGate",
+    "get_license_gate",
+    "require_license",
+    "check_license",
+    # compat aliases
+    "LicenseService",
+    "LicenseTier",
+    "PREMIUM_FEATURES",
+]
