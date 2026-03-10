@@ -205,3 +205,64 @@ class TestVersionHealthCheck:
         import importlib
         m = importlib.import_module(module)
         assert hasattr(m, cls), f"{module}.{cls} not found"
+
+
+# === AGI Score Engine ===
+
+
+class TestAGIScoreEngine:
+    """Test that AGI Score Engine computes correct scores."""
+
+    def test_score_report_structure(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert hasattr(report, "total_score")
+        assert hasattr(report, "grade")
+        assert hasattr(report, "subsystems")
+        assert hasattr(report, "module_score")
+        assert hasattr(report, "wiring_score")
+
+    def test_all_9_modules_online(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert report.module_score == 45.0
+        assert len(report.subsystems) == 9
+        assert all(s.available for s in report.subsystems)
+
+    def test_wiring_score_at_least_20(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert report.wiring_score >= 20.0
+
+    def test_improvement_score_at_least_10(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert report.improvement_score >= 10.0
+
+    def test_total_score_above_80(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert report.total_score >= 80.0
+
+    def test_grade_is_s_or_a(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert report.grade in ("S", "A")
+
+    def test_event_bus_wired(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert "event_bus" in report.details.get("wired", [])
+
+    def test_wiring_10_of_10(self):
+        from src.core.agi_score import AGIScoreEngine
+        engine = AGIScoreEngine()
+        report = engine.calculate()
+        assert len(report.details.get("wired", [])) == 10
