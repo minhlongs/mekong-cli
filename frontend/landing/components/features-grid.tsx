@@ -1,33 +1,33 @@
 const FEATURES = [
   {
     icon: '⚙️',
-    title: 'Plan-Execute-Verify Engine',
-    desc: 'Every task goes through LLM-powered planning, atomic execution, and automated verification with quality gates before committing.',
+    title: 'Plan-Execute-Verify',
+    desc: 'Mọi task qua 3 bước: lên kế hoạch, thực thi, kiểm tra. Tự rollback nếu thất bại.',
   },
   {
-    icon: '🧠',
-    title: '80+ AI Skills',
-    desc: 'Modular skill library covering frontend, backend, DevOps, testing, SEO, copywriting, and more. Auto-activated by context.',
+    icon: '🏯',
+    title: 'Kim Tự Tháp 5 Tầng',
+    desc: 'Founder → Business → Product → Engineering → Ops. Commands cascade tự động.',
   },
   {
     icon: '🤖',
-    title: 'Multi-Agent Orchestration',
-    desc: 'Spawn parallel agents — planner, developer, tester, reviewer — each owning distinct files. No conflicts, maximum velocity.',
+    title: '105 AI Agents',
+    desc: '18 hubs chuyên biệt. Mỗi agent chuyên một việc. Orchestrator phối hợp.',
   },
   {
     icon: '🔑',
-    title: 'RaaS License Gating',
-    desc: 'Engineering ROI built-in. Gate premium features with RAAS_LICENSE_KEY. Monetize your AI workflows from day one.',
+    title: 'RaaS License',
+    desc: 'Xây AI agency riêng. Gate features bằng API key. Tính tiền bằng MCU.',
   },
   {
-    icon: '☁️',
-    title: 'Cloudflare Edge Gateway',
-    desc: 'FastAPI local gateway + Cloudflare Workers for global edge deployment. Antigravity Proxy routes all LLM calls with zero rate limits.',
+    icon: '🌊',
+    title: 'Antigravity Proxy',
+    desc: 'Route LLM calls qua proxy thông minh. Tự failover khi rate limit.',
   },
   {
     icon: '🔌',
-    title: 'Community Plugins',
-    desc: 'Extend with community skills and commands. Share, fork, and remix workflows. Open ecosystem, closed moat.',
+    title: '464 Skills',
+    desc: 'Từ fundraise đến deploy. Auto-activate theo context. Fork và tùy biến.',
   },
 ]
 
@@ -37,20 +37,17 @@ export default function FeaturesGrid() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Everything you need to ship{' '}
-            <span className="gradient-text">10x faster</span>
+            Mọi thứ bạn cần để ship{' '}
+            <span className="gradient-text">nhanh hơn 10x</span>
           </h2>
           <p className="text-slate-400">
-            Binh Pháp strategy meets modern AI tooling. Sun Tzu would approve.
+            Binh Pháp strategy gặp AI tooling hiện đại. Tôn Tử sẽ đồng ý.
           </p>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl glass-card p-6"
-            >
+            <div key={f.title} className="rounded-2xl glass-card p-6">
               <div className="mb-3 text-3xl">{f.icon}</div>
               <h3 className="mb-2 font-semibold text-white">{f.title}</h3>
               <p className="text-sm leading-relaxed text-slate-400">{f.desc}</p>

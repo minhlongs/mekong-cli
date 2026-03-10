@@ -2,53 +2,56 @@ const TIERS = [
   {
     name: 'Starter',
     price: '$49',
-    period: '/mo',
-    desc: 'Perfect for solo developers shipping AI-powered code.',
-    cta: 'Get Starter',
+    period: '/tháng',
+    desc: 'Dành cho solo founder và developer mới bắt đầu.',
+    cta: 'Bắt đầu Starter',
     ctaHref: 'https://polar.sh/mekong-cli/checkout?product=starter',
     highlight: false,
+    badge: undefined,
     features: [
-      '1,000 MCU / month',
+      '100 credits / tháng',
+      'Các task đơn giản (1 credit)',
       'Core CLI commands',
-      'Community plugins',
       'Plan-Execute-Verify engine',
       'Email support',
     ],
   },
   {
-    name: 'Growth',
+    name: 'Pro',
     price: '$149',
-    period: '/mo',
-    desc: 'For teams shipping production code at scale.',
-    cta: 'Get Growth',
-    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=growth',
+    period: '/tháng',
+    desc: 'Cho team ship production code ở quy mô lớn.',
+    cta: 'Bắt đầu Pro',
+    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=pro',
     highlight: true,
-    badge: 'Most Popular',
+    badge: 'Phổ biến nhất',
     features: [
-      '10,000 MCU / month',
-      'Premium AI agents',
+      '1,000 credits / tháng',
+      'Tất cả mức độ phức tạp',
+      'Tôm Hùm daemon tự động',
       'RaaS license gating',
       'Priority support (24h)',
       'Antigravity Proxy access',
-      'All 80+ skills unlocked',
+      'Tất cả 464 skills',
     ],
   },
   {
-    name: 'Premium',
+    name: 'Enterprise',
     price: '$499',
-    period: '/mo',
-    desc: 'Unlimited AGI power for serious engineering teams.',
-    cta: 'Get Premium',
-    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=premium',
+    period: '/tháng',
+    desc: 'Unlimited AI power cho engineering team nghiêm túc.',
+    cta: 'Liên hệ Enterprise',
+    ctaHref: 'https://polar.sh/mekong-cli/checkout?product=enterprise',
     highlight: false,
+    badge: undefined,
     features: [
-      'Unlimited MCU',
-      'AGI auto-pilot mode',
-      'Team collaboration',
+      'Unlimited credits',
+      'Custom AI agents',
       'SLA 99.9% uptime',
-      'Custom skill development',
+      'Team collaboration',
       'Dedicated onboarding',
       'White-label options',
+      'Hỗ trợ ưu tiên 24/7',
     ],
   },
 ]
@@ -59,11 +62,11 @@ export default function PricingTable() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Simple, transparent{' '}
-            <span className="gradient-text">pricing</span>
+            Giá minh bạch,{' '}
+            <span className="gradient-text">không phí ẩn</span>
           </h2>
           <p className="text-slate-400">
-            Scale as you ship. No hidden fees. Cancel anytime.
+            Trả theo credit. Scale khi cần. Hủy bất kỳ lúc nào.
           </p>
         </div>
 
@@ -116,8 +119,8 @@ export default function PricingTable() {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-600">
-          MCU = Mekong Compute Units. 1 MCU ≈ 1 agent task execution.
-          All prices in USD. Cancel anytime.
+          MCU = Mekong Credit Unit. 1 credit ≈ 1 agent task execution.
+          Giá tính bằng USD. Hủy bất kỳ lúc nào.
         </p>
       </div>
     </section>

@@ -1,0 +1,58 @@
+import type { CommandData } from "./commands"
+
+export const COMMANDS_ENGINEERING_C: CommandData[] = [
+  {
+    id: "test",
+    layer: "engineering",
+    displayName: "Test",
+    description: "Execute Test command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+  {
+    id: "typecheck",
+    layer: "engineering",
+    displayName: "Typecheck",
+    description: "Execute Typecheck command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+  {
+    id: "unit-test",
+    layer: "engineering",
+    displayName: "Unit Test",
+    description: "Execute Unit Test command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+  {
+    id: "vibe-code",
+    layer: "engineering",
+    displayName: "Vibe Code",
+    description: "Execute Vibe Code command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+  {
+    id: "vibe-cook",
+    layer: "engineering",
+    displayName: "Vibe Cook",
+    description: "Execute Vibe Cook command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+  {
+    id: "watzup",
+    layer: "engineering",
+    displayName: "Watzup",
+    description: "Execute Watzup command",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner", "fullstack-developer"],
+  },
+]
