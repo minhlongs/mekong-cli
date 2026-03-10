@@ -1,5 +1,5 @@
 {
-  "name": "@agencyos/vibe",
+  "name": "@mekong/vibe",
   "version": "1.0.0",
   "description": "\ud83c\udf10 Unified VIBE Ecosystem - 8 Planets, 1 Package",
   "main": "index.ts",
@@ -16,14 +16,13 @@
     "./revenue": "../vibe-revenue/index.ts"
   },
   "dependencies": {
-    "@agencyos/shared": "workspace:*",
-    "@agencyos/vibe-ui": "workspace:*",
-    "@agencyos/vibe-analytics": "workspace:*",
-    "@agencyos/vibe-agents": "workspace:*",
-    "@agencyos/vibe-crm": "workspace:*",
-    "@agencyos/vibe-ops": "workspace:*",
-    "@agencyos/vibe-dev": "workspace:*",
-    "@agencyos/vibe-marketing": "workspace:*",
-    "@agencyos/vibe-revenue": "workspace:*"
+    "@mekong/vibe-ui": "workspace:*",
+    "@mekong/vibe-analytics": "workspace:*",
+    "@mekong/vibe-agents": "workspace:*",
+    "@mekong/vibe-crm": "workspace:*",
+    "@mekong/vibe-ops": "workspace:*",
+    "@mekong/vibe-dev": "workspace:*",
+    "@mekong/vibe-marketing": "workspace:*",
+    "@mekong/vibe-revenue": "workspace:*"
   }
 }

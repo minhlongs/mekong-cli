@@ -1,5 +1,5 @@
 {
-    "name": "@agencyos/agents",
+    "name": "@mekong/agents",
     "version": "0.1.0",
     "description": "Agent templates for autonomous task orchestration — planner, builder, reviewer patterns",
     "author": "Binh Phap Venture Studio",

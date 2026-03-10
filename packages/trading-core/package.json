@@ -1,5 +1,5 @@
 {
-  "name": "@agencyos/trading-core",
+  "name": "@mekong/trading-core",
   "version": "0.1.0",
   "description": "Reusable algorithmic trading primitives — interfaces, risk management, signal processing, technical indicators, cross-exchange arbitrage monitoring & execution",
   "main": "index.ts",

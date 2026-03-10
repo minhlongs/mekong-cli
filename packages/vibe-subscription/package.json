@@ -1,5 +1,5 @@
 {
-  "name": "@agencyos/vibe-subscription",
+  "name": "@mekong/vibe-subscription",
   "version": "0.1.0",
   "description": "Subscription lifecycle SDK \u2014 plan management, trials, upgrades, churn prevention, usage metering",
   "main": "index.ts",
@@ -7,14 +7,10 @@
   "license": "MIT",
   "dependencies": {},
   "peerDependencies": {
-    "@agencyos/billing": "workspace:*",
-    "@agencyos/vibe-payment": "workspace:*"
+    "@mekong/vibe-payment": "workspace:*"
   },
   "peerDependenciesMeta": {
-    "@agencyos/billing": {
-      "optional": true
-    },
-    "@agencyos/vibe-payment": {
+    "@mekong/vibe-payment": {
       "optional": true
     }
   }

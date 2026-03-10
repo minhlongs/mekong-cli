@@ -1,5 +1,5 @@
 {
-    "name": "@mekong/vibe-analytics",
+    "name": "@mekong/tooling-vibe-analytics",
     "sideEffects": false,
     "version": "1.0.0",
     "description": "VIBE Analytics - Growth Telemetry Engine",

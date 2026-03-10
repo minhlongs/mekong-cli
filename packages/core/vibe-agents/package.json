@@ -1,5 +1,5 @@
 {
-    "name": "@mekong/vibe-agents",
+    "name": "@mekong/core-vibe-agents",
     "sideEffects": false,
     "version": "1.0.0",
     "description": "🟣 Saturn - AI Agent Orchestration Layer",
