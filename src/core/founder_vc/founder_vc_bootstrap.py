@@ -111,13 +111,15 @@ BOOTSTRAP_MILESTONES = [
     MilestoneTarget(12, 83_000, 1_700, "$1M ARR achieved"),
 ]
 
+# Heuristic proxies: MRR/growth used as signals for readiness criteria.
+# Real assessment requires manual evaluation beyond these thresholds.
 RAISE_CRITERIA = [
     ("MRR > $25K", lambda mrr, growth: mrr > 25_000),
     ("Growth > 15% MoM", lambda mrr, growth: growth > 15),
-    ("Specific use for capital", lambda mrr, growth: mrr > 10_000),
-    ("Valuation > $10M pre", lambda mrr, growth: mrr > 20_000),
-    ("Hit organic growth ceiling", lambda mrr, growth: mrr > 50_000),
-    ("Have BATNA", lambda mrr, growth: mrr > 15_000),
+    ("Specific use for capital", lambda mrr, growth: mrr > 10_000),  # proxy: has revenue
+    ("Valuation > $10M pre", lambda mrr, growth: mrr > 20_000),  # proxy: ARR supports
+    ("Hit organic growth ceiling", lambda mrr, growth: mrr > 50_000),  # proxy: scale signal
+    ("Have BATNA", lambda mrr, growth: mrr > 15_000),  # proxy: negotiation leverage
 ]
 
 ALTERNATIVE_FUNDING_DB: list[dict] = [

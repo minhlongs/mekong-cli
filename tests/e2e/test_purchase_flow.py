@@ -27,10 +27,13 @@ os.environ['REDIS_ENABLED'] = 'false'
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from backend.api.main import app
-
 # Skip all tests - requires full infrastructure
 pytestmark = pytest.mark.skip(reason="Requires full infrastructure setup - use unit tests instead")
+
+try:
+    from backend.api.main import app
+except ImportError:
+    app = None
 
 
 @pytest.fixture(autouse=True)
