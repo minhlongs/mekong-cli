@@ -1,5 +1,6 @@
 import LayerPageHero from '@/components/layer-page-hero'
 import CommandGrid from '@/components/command-grid'
+import SiteNav from '@/components/site-nav'
 import { COMMANDS } from '@/data/commands'
 import { LAYERS } from '@/data/layers'
 import Link from 'next/link'
@@ -10,6 +11,7 @@ const founderCommands = COMMANDS.filter((c) => c.layer === 'founder')
 export default function FounderPage() {
   return (
     <main className="min-h-screen bg-slate-950">
+      <SiteNav />
       <LayerPageHero
         icon={founderLayer.icon}
         title="Founder Command Center"

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SiteNav from '@/components/site-nav'
 
 const TECH_STACK = [
   { layer: 'CLI', tech: 'Python / Typer / Rich', desc: 'Giao diện dòng lệnh, Rich UI, type hints' },
@@ -34,7 +35,9 @@ const AGENT_ASCII = `              ┌──────────────
 
 export default function ArchitecturePage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-16 sm:px-6">
+    <main className="min-h-screen bg-slate-950">
+      <SiteNav />
+      <div className="px-4 pb-16 pt-8 sm:px-6">
       <div className="mx-auto max-w-4xl">
         {/* Back nav */}
         <Link
@@ -176,6 +179,7 @@ export default function ArchitecturePage() {
             ← Command Explorer
           </Link>
         </div>
+      </div>
       </div>
     </main>
   )

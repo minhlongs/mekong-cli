@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/components/site-nav'
 import { COMMANDS } from '@/data/commands'
 import { LAYERS } from '@/data/layers'
 
@@ -51,7 +52,9 @@ export default function CommandsPage() {
   }, [search, activeLayer])
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-16 sm:px-6">
+    <main className="min-h-screen bg-slate-950">
+      <SiteNav />
+      <div className="px-4 pb-16 pt-8 sm:px-6">
       <div className="mx-auto max-w-6xl">
         {/* Back nav */}
         <Link
@@ -169,6 +172,7 @@ export default function CommandsPage() {
             Architecture →
           </Link>
         </div>
+      </div>
       </div>
     </main>
   )

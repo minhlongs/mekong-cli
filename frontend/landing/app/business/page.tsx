@@ -1,5 +1,6 @@
 import LayerPageHero from '@/components/layer-page-hero'
 import CommandGrid from '@/components/command-grid'
+import SiteNav from '@/components/site-nav'
 import { COMMANDS } from '@/data/commands'
 import { LAYERS } from '@/data/layers'
 import Link from 'next/link'
@@ -33,6 +34,7 @@ const DEPARTMENTS = [
 export default function BusinessPage() {
   return (
     <main className="min-h-screen bg-slate-950">
+      <SiteNav />
       <LayerPageHero
         icon={businessLayer.icon}
         title="Business Operations"
