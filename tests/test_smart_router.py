@@ -34,18 +34,19 @@ class TestSmartRouter(unittest.TestCase):
         self.assertEqual(result.action, "plan")
 
     def test_route_with_no_recipes(self):
-        """No recipes directory -> action='plan'."""
+        """No recipes directory -> action='plan' or 'tool' (AGI v2 tool fallback)."""
         ir = IntentResult(intent=Intent.DEPLOY, confidence=0.9)
         result = self.router.route(ir)
-        self.assertEqual(result.action, "plan")
+        # AGI v2: may suggest a tool instead of falling back to plan
+        self.assertIn(result.action, ["plan", "tool"])
 
     def test_route_no_memory(self):
         """Works without memory store."""
         router = SmartRouter(memory_store=None)
         ir = IntentResult(intent=Intent.DEPLOY, confidence=0.9)
         result = router.route(ir)
-        # No recipes dir -> plan
-        self.assertEqual(result.action, "plan")
+        # AGI v2: may suggest a tool or plan when no recipes dir
+        self.assertIn(result.action, ["plan", "tool"])
 
     def test_memory_check_viable(self):
         """Recipe with >50% success rate is viable."""

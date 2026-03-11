@@ -142,7 +142,8 @@ class TestMonitorAgentPortCheck:
 
     @patch('subprocess.run')
     def test_port_closed(self, mock_run):
-        mock_run.return_value = MagicMock(stdout="closed", returncode=0)
+        # nc returns exit code 1 when port is closed
+        mock_run.return_value = MagicMock(stdout="", stderr="", returncode=1)
         agent = MonitorAgent()
         task = Task(id="port", description="Port check", input={"type": "port_check", "query": "check port 9999"})
         result = agent._execute_port_check(task)
@@ -172,9 +173,9 @@ class TestMonitorAgentSystemResources:
     def test_system_resources_healthy(self, mock_run):
         mock_run.side_effect = [
             MagicMock(stdout="CPU usage: 25.5% user", returncode=0),
-            MagicMock(stdout="12345", returncode=0),
+            MagicMock(stdout="Pages active:      12345.\nPages inactive:     4321.\n", returncode=0),
             MagicMock(stdout="17179869184", returncode=0),
-            MagicMock(stdout="45", returncode=0),
+            MagicMock(stdout="Filesystem  Size  Used Avail Use% Mounted\n/dev/disk1  500G  275G  225G  45% /\n", returncode=0),
         ]
         agent = MonitorAgent()
         task = Task(id="system", description="System check", input={"type": "system_resources", "query": "check system"})
@@ -185,9 +186,9 @@ class TestMonitorAgentSystemResources:
     def test_system_resources_high_cpu(self, mock_run):
         mock_run.side_effect = [
             MagicMock(stdout="CPU usage: 95.0% user", returncode=0),
-            MagicMock(stdout="12345", returncode=0),
+            MagicMock(stdout="Pages active:      12345.\nPages inactive:     4321.\n", returncode=0),
             MagicMock(stdout="17179869184", returncode=0),
-            MagicMock(stdout="45", returncode=0),
+            MagicMock(stdout="Filesystem  Size  Used Avail Use% Mounted\n/dev/disk1  500G  275G  225G  45% /\n", returncode=0),
         ]
         agent = MonitorAgent()
         task = Task(id="system", description="System check", input={"type": "system_resources", "query": "check system"})
@@ -199,9 +200,9 @@ class TestMonitorAgentSystemResources:
     def test_system_resources_high_disk(self, mock_run):
         mock_run.side_effect = [
             MagicMock(stdout="CPU usage: 25.0% user", returncode=0),
-            MagicMock(stdout="12345", returncode=0),
+            MagicMock(stdout="Pages active:      12345.\nPages inactive:     4321.\n", returncode=0),
             MagicMock(stdout="17179869184", returncode=0),
-            MagicMock(stdout="95", returncode=0),
+            MagicMock(stdout="Filesystem  Size  Used Avail Use% Mounted\n/dev/disk1  500G  475G   25G  95% /\n", returncode=0),
         ]
         agent = MonitorAgent()
         task = Task(id="system", description="System check", input={"type": "system_resources", "query": "check system"})

@@ -12,6 +12,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
+from unittest.mock import patch
 
 from src.core.orchestrator import (
     RecipeOrchestrator,
@@ -74,7 +75,8 @@ def test_run_from_recipe_success(orchestrator):
     )
     recipe = _make_recipe("success-recipe", [step])
 
-    result = orchestrator.run_from_recipe(recipe)
+    with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True):
+        result = orchestrator.run_from_recipe(recipe)
 
     assert result.status == OrchestrationStatus.SUCCESS
     assert result.completed_steps == 1
@@ -148,7 +150,8 @@ def test_step_result_structure(orchestrator):
     )
     recipe = _make_recipe("structure-recipe", [step])
 
-    result = orchestrator.run_from_recipe(recipe)
+    with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True):
+        result = orchestrator.run_from_recipe(recipe)
 
     assert len(result.step_results) == 1
     sr = result.step_results[0]

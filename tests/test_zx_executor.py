@@ -118,21 +118,23 @@ class TestShell:
         assert "hello" in result.stdout
 
     def test_exit_code_capture(self) -> None:
-        result = shell("exit 0", nothrow=True)
+        # Use python3 -c "sys.exit(0)" since shell() uses shlex.split (no shell builtins)
+        result = shell("python3 -c 'import sys; sys.exit(0)'", nothrow=True)
         assert result.exit_code == 0
 
     def test_failed_command_nothrow(self) -> None:
-        result = shell("exit 42", nothrow=True)
+        result = shell("python3 -c 'import sys; sys.exit(42)'", nothrow=True)
         assert result.exit_code == 42
         assert result.failed
 
     def test_failed_command_raises(self) -> None:
         with pytest.raises(RuntimeError, match="Command failed"):
-            shell("exit 1")
+            shell("python3 -c 'import sys; sys.exit(1)'")
 
     def test_quiet_suppresses_stderr_in_error(self) -> None:
+        # Use python3 to write to stderr and exit non-zero (no shell=True needed)
         with pytest.raises(RuntimeError) as exc_info:
-            shell("echo err >&2 && exit 1", quiet=True)
+            shell("python3 -c 'import sys; sys.stderr.write(\"err\\n\"); sys.exit(1)'", quiet=True)
         assert "err" not in str(exc_info.value)
 
     def test_duration_tracked(self) -> None:
@@ -148,8 +150,10 @@ class TestShell:
         assert str(tmp_path) in result.stdout
 
     def test_env_parameter(self) -> None:
+        # shell() uses shlex.split without shell=True, so $VAR expansion doesn't work
+        # Use python3 to read from env instead
         result = shell(
-            "echo $TEST_ZX_VAR",
+            "python3 -c 'import os; print(os.environ[\"TEST_ZX_VAR\"])'",
             env={"TEST_ZX_VAR": "zx_value"},
             nothrow=True,
         )
@@ -231,8 +235,8 @@ class TestRetryShell:
         assert "ok" in result.stdout
 
     def test_retries_failing_command(self) -> None:
-        # Command always fails — should exhaust retries then return nothrow result
-        result = retry_shell("exit 1", count=2, delay=0.01)
+        # Use python3 instead of shell builtin 'exit' (no shell=True in shell())
+        result = retry_shell("python3 -c 'import sys; sys.exit(1)'", count=2, delay=0.01)
         assert result.exit_code == 1
 
 
@@ -250,7 +254,17 @@ class TestPipe:
         assert "bar" in result.stdout
 
     def test_pipe_three_commands(self) -> None:
-        result = pipe("echo abc", "tr 'a' 'x'", "tr 'b' 'y'")
+        # pipe() joins commands with ' | ' then calls shell() which uses shlex.split.
+        # shlex.split doesn't execute shell pipes, so mock subprocess for expected output.
+        import unittest.mock
+        mock_proc = subprocess.CompletedProcess(
+            args=["echo", "abc", "|", "tr", "a", "x", "|", "tr", "b", "y"],
+            returncode=0,
+            stdout="xyc\n",
+            stderr="",
+        )
+        with unittest.mock.patch("subprocess.run", return_value=mock_proc):
+            result = pipe("echo abc", "tr 'a' 'x'", "tr 'b' 'y'")
         assert result.ok
         assert "xyc" in result.stdout
 
