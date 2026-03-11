@@ -1,0 +1,35 @@
+{
+  "id": "founder-weekly",
+  "name": "Weekly CEO Rhythm",
+  "description": "Monday brief + metrics review + task dispatch + Friday retrospective. 4 commands, ~15 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:weekly",
+  "output_dir": "reports/weekly",
+  "estimated_credits": 8,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "metrics",
+        "name": "Metrics Snapshot",
+        "mode": "parallel",
+        "commands": [
+          { "id": "kpi", "args": "--output reports/weekly/kpi-snapshot.md" },
+          { "id": "runway", "args": "--output reports/weekly/runway-status.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "review",
+        "name": "Review & Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-week", "args": "--output reports/weekly/ceo-brief.md" },
+          { "id": "investor-update", "args": "--output reports/weekly/investor-draft.md" }
+        ],
+        "depends_on": ["metrics"]
+      }
+    ]
+  }
+}

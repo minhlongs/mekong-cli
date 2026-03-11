@@ -1,0 +1,41 @@
+{
+  "id": "founder-validate",
+  "name": "Business Validation Sprint",
+  "description": "Validate business model before spending money — PMF, economics, market, moat. 5 commands, ~25 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:validate-sprint",
+  "output_dir": "reports/validation",
+  "estimated_credits": 20,
+  "estimated_minutes": 25,
+  "dag": {
+    "groups": [
+      {
+        "id": "research",
+        "name": "Market & Customer Research",
+        "mode": "parallel",
+        "commands": [
+          { "id": "founder-validate", "args": "--output reports/validation/customer-discovery.md" },
+          { "id": "tam", "args": "--output reports/validation/market-sizing.md" },
+          { "id": "swot", "args": "--output reports/validation/swot.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "economics",
+        "name": "Economic Viability",
+        "mode": "parallel",
+        "commands": [
+          { "id": "unit-economics", "args": "--output reports/validation/unit-economics.md" },
+          { "id": "moat-audit", "args": "--output reports/validation/moat-analysis.md" }
+        ],
+        "depends_on": ["research"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/validation/VALIDATION-VERDICT.md",
+      "template": "Based on all reports: Is this business investable? Score 1-100. List top 3 strengths, top 3 risks, and recommended next step (pivot/proceed/kill)."
+    }
+  }
+}

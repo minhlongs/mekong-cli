@@ -57,6 +57,12 @@ layers:
       - founder-ipo-public-co
       - founder-ipo-insider
       - founder-ipo-succession
+      - founder-raise
+      - founder-validate-sprint
+      - founder-launch
+      - founder-weekly
+      - founder-negotiate
+      - founder-ipo
 
   business:
     chapter: "作戰 — Waging War"
