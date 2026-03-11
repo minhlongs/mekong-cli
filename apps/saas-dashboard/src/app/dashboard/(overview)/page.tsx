@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { StatCard } from '@/components/analytics/stat-card';
 import { RevenueChart } from '@/components/charts/revenue-chart';
 import { MetricsChart } from '@/components/charts/metrics-chart';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const mockRevenueData = [
   { date: 'Mon', value: 4000 },
@@ -38,13 +41,26 @@ export default function DashboardOverview() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Dashboard Overview
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Welcome to your SaaS dashboard
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard Overview
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Welcome to your SaaS dashboard
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Current Plan</p>
+            <Badge variant="secondary" className="text-sm">
+              Free Plan
+            </Badge>
+          </div>
+          <Button asChild size="sm">
+            <Link href="/dashboard/subscription">Upgrade</Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
