@@ -231,10 +231,13 @@ class ToolRegistry:
                 result = tool._handler(**params)
                 output = str(result)
             elif tool.command_template:
-                # Shell command
-                cmd = tool.command_template.format(**params)
+                # Shell command — use shlex.split to avoid shell injection
+                import shlex
+                cmd = tool.command_template.format(**{
+                    k: shlex.quote(str(v)) for k, v in params.items()
+                })
                 proc = subprocess.run(
-                    cmd, shell=True, capture_output=True, text=True,
+                    shlex.split(cmd), capture_output=True, text=True,
                     timeout=30,
                 )
                 output = proc.stdout or proc.stderr

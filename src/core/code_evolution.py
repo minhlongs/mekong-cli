@@ -431,9 +431,10 @@ class CodeEvolutionEngine:
         )
 
     def _git_cmd(self, cmd: str) -> str:
-        """Run a git command."""
+        """Run a git command safely without shell injection."""
+        import shlex
         result = subprocess.run(
-            f"git {cmd}", shell=True,
+            ["git"] + shlex.split(cmd),
             capture_output=True, text=True, timeout=30,
             cwd=str(self.project_root),
         )
