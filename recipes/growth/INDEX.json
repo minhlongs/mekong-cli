@@ -1,0 +1,6 @@
+{
+  "role": "growth",
+  "name": "Growth Hacker Workflows",
+  "description": "Growth hacker IC super commands for experiment design, metrics frameworks, and channel optimization",
+  "commands": ["growth-experiment.json", "channel-optimize.json"]
+}

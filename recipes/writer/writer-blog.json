@@ -1,0 +1,37 @@
+{
+  "id": "writer-blog",
+  "name": "Blog Pipeline",
+  "description": "Keyword research → outline → draft → SEO optimize. 3 commands, ~15 min.",
+  "trigger": "/writer:blog",
+  "output_dir": "reports/writer/blog",
+  "estimated_credits": 8,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "research",
+        "name": "Keyword Research",
+        "mode": "sequential",
+        "commands": [
+          { "id": "seo", "args": "--keywords $ARGUMENTS --output reports/writer/blog/keyword-research.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "create",
+        "name": "Draft & Optimize",
+        "mode": "parallel",
+        "commands": [
+          { "id": "content", "args": "--blog $ARGUMENTS --output reports/writer/blog/blog-draft.md" },
+          { "id": "seo", "args": "--optimize $ARGUMENTS --output reports/writer/blog/seo-recommendations.md" }
+        ],
+        "depends_on": ["research"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/writer/blog/BLOG-SUMMARY.md",
+      "template": "Compile keyword research, blog draft, and SEO recommendations into a publish-ready blog post with meta title, meta description, target keywords, and inline SEO notes."
+    }
+  }
+}

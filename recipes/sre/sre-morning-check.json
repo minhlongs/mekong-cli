@@ -1,0 +1,24 @@
+{
+  "id": "sre-morning-check",
+  "name": "Morning Check",
+  "description": "All services health → alert review → performance baseline. 3 parallel commands, ~5 min.",
+  "trigger": "/sre:morning-check",
+  "output_dir": "reports/sre/morning-check",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "check",
+        "name": "Parallel Health Check",
+        "mode": "parallel",
+        "commands": [
+          { "id": "health", "args": "--all" },
+          { "id": "status", "args": "" },
+          { "id": "benchmark", "args": "--quick" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

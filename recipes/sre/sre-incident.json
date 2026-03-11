@@ -1,0 +1,24 @@
+{
+  "id": "sre-incident",
+  "name": "Incident Response",
+  "description": "Triage → mitigate → verify → report. 3 commands, ~10 min.",
+  "trigger": "/sre:incident",
+  "output_dir": "reports/sre/incident",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "respond",
+        "name": "Triage and Mitigate",
+        "mode": "sequential",
+        "commands": [
+          { "id": "debug", "args": "$ARGUMENTS" },
+          { "id": "fix", "args": "--hotfix $ARGUMENTS" },
+          { "id": "smoke", "args": "" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

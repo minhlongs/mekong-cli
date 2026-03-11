@@ -1,0 +1,23 @@
+{
+  "id": "analyst-forecast-update",
+  "name": "Forecast Update",
+  "description": "Pull actuals → compare → update model → variance report. 2 commands, ~8 min.",
+  "trigger": "/analyst:forecast-update",
+  "output_dir": "reports/analyst/forecast-update",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Forecast & Variance",
+        "mode": "sequential",
+        "commands": [
+          { "id": "forecast", "args": "--update --output reports/analyst/forecast-update/forecast-model.md" },
+          { "id": "financial-report", "args": "--variance --output reports/analyst/forecast-update/variance-report.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

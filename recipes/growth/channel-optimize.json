@@ -1,0 +1,36 @@
+{
+  "id": "growth-channel-optimize",
+  "name": "Channel Optimization",
+  "description": "Channel audit → performance analysis → optimization plan. 3 commands, ~12 min.",
+  "trigger": "/growth:channel-optimize",
+  "output_dir": "reports/growth/channel-optimize",
+  "estimated_credits": 8,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "audit",
+        "name": "Channel Audit",
+        "mode": "parallel",
+        "commands": [
+          { "id": "ads", "args": "--audit --output reports/growth/channel-optimize/ads-audit.md" },
+          { "id": "seo", "args": "--audit --output reports/growth/channel-optimize/seo-audit.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "optimize",
+        "name": "Optimization Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "marketing-plan", "args": "--optimize --output reports/growth/channel-optimize/optimization-plan.md" }
+        ],
+        "depends_on": ["audit"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/growth/channel-optimize/CHANNEL-OPTIMIZE-SUMMARY.md"
+    }
+  }
+}

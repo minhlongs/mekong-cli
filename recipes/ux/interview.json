@@ -1,0 +1,23 @@
+{
+  "id": "ux-interview",
+  "name": "UX Interview",
+  "description": "Interview script → discussion guide → insight synthesis. 2 commands, ~10 min.",
+  "trigger": "/ux:interview",
+  "output_dir": "reports/ux/interview",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Script & Synthesize",
+        "mode": "sequential",
+        "commands": [
+          { "id": "persona", "args": "--interview-guide --output reports/ux/interview/interview-script.md" },
+          { "id": "brainstorm", "args": "--output reports/ux/interview/insight-synthesis.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

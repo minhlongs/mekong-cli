@@ -1,0 +1,23 @@
+{
+  "id": "frontend-responsive-fix",
+  "name": "Responsive Fix",
+  "description": "Audit breakpoints → fix issues → test viewports. 2 commands, ~8 min.",
+  "trigger": "/frontend:responsive-fix",
+  "output_dir": "reports/frontend/responsive-fix",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "fix",
+        "name": "Fix and Test Responsive",
+        "mode": "sequential",
+        "commands": [
+          { "id": "fix", "args": "--responsive $ARGUMENTS" },
+          { "id": "e2e-test", "args": "--viewports" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

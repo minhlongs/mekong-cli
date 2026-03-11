@@ -1,0 +1,4 @@
+{
+  "role": "sre",
+  "commands": ["sre-morning-check.json", "sre-incident.json"]
+}

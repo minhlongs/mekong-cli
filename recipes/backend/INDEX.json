@@ -1,0 +1,4 @@
+{
+  "role": "backend",
+  "commands": ["backend-api-build.json", "backend-db-task.json"]
+}

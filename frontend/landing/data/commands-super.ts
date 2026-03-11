@@ -455,4 +455,362 @@ export const COMMANDS_SUPER: CommandData[] = [
     creditCost: 10,
     agents: ["debugger", "fullstack-developer"],
   },
+
+  // --- IC Super Commands (40) ---
+
+  // SDR (3)
+  {
+    id: "sdr-prospect",
+    layer: "business",
+    displayName: "Prospecting Sprint",
+    description: "2 commands — ICP match, lead research, contact list in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["researcher"],
+  },
+  {
+    id: "sdr-outreach-blast",
+    layer: "business",
+    displayName: "Outreach Blast",
+    description: "2 commands — personalized emails + LinkedIn messages in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["copywriter"],
+  },
+  {
+    id: "sdr-lead-qualify",
+    layer: "business",
+    displayName: "Lead Qualification",
+    description: "2 commands — score leads, research company, prep handoff in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["researcher"],
+  },
+
+  // Account Exec (3)
+  {
+    id: "ae-deal-prep",
+    layer: "business",
+    displayName: "Deal Preparation",
+    description: "3 commands — company research, competitive positioning, deck points in 12 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["researcher", "planner"],
+  },
+  {
+    id: "ae-follow-up",
+    layer: "business",
+    displayName: "Follow-Up Package",
+    description: "2 commands — meeting summary, action items, follow-up email in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["copywriter"],
+  },
+  {
+    id: "ae-close-report",
+    layer: "business",
+    displayName: "Close Report",
+    description: "2 commands — win/loss analysis, lessons, CRM update in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["data-analyst"],
+  },
+
+  // Content Writer (3)
+  {
+    id: "writer-blog",
+    layer: "business",
+    displayName: "Blog Post Pipeline",
+    description: "3 commands — keyword research, draft, SEO optimize in 15 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["copywriter", "researcher"],
+  },
+  {
+    id: "writer-social-batch",
+    layer: "business",
+    displayName: "Social Media Batch",
+    description: "2 commands — 7 days of posts, hashtags, schedule in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["copywriter"],
+  },
+  {
+    id: "writer-newsletter",
+    layer: "business",
+    displayName: "Newsletter Draft",
+    description: "2 commands — topic curation, draft, subject lines in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["copywriter"],
+  },
+
+  // Growth Hacker (2)
+  {
+    id: "growth-experiment",
+    layer: "business",
+    displayName: "Growth Experiment",
+    description: "2 commands — hypothesis, experiment design, metrics in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["planner"],
+  },
+  {
+    id: "growth-channel-optimize",
+    layer: "business",
+    displayName: "Channel Optimization",
+    description: "3 commands — channel audit, performance analysis, playbook in 12 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["data-analyst", "planner"],
+  },
+
+  // Accountant (2)
+  {
+    id: "accounting-daily",
+    layer: "business",
+    displayName: "Daily Bookkeeping",
+    description: "2 commands — transaction review, reconcile, flag anomalies in 8 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["data-analyst"],
+  },
+  {
+    id: "accounting-invoice-batch",
+    layer: "business",
+    displayName: "Invoice Batch",
+    description: "2 commands — generate invoices, send reminders in 8 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner"],
+  },
+
+  // Financial Analyst (2)
+  {
+    id: "analyst-report",
+    layer: "business",
+    displayName: "Analysis Report",
+    description: "2 commands — data analysis, executive summary in 12 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["data-analyst"],
+  },
+  {
+    id: "analyst-forecast-update",
+    layer: "business",
+    displayName: "Forecast Update",
+    description: "2 commands — pull actuals, update model, variance report in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["data-analyst"],
+  },
+
+  // Recruiter (2)
+  {
+    id: "recruiter-source",
+    layer: "business",
+    displayName: "Candidate Sourcing",
+    description: "2 commands — search criteria, candidate list, outreach in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["researcher"],
+  },
+  {
+    id: "recruiter-screen",
+    layer: "business",
+    displayName: "Candidate Screening",
+    description: "2 commands — resume analysis, score, interview questions in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["planner"],
+  },
+
+  // People Ops (2)
+  {
+    id: "people-onboard",
+    layer: "business",
+    displayName: "New Hire Onboarding",
+    description: "2 commands — welcome email, access setup, day-1 schedule in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner"],
+  },
+  {
+    id: "people-offboard",
+    layer: "business",
+    displayName: "Employee Offboarding",
+    description: "2 commands — exit checklist, access revocation, knowledge transfer in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner"],
+  },
+
+  // UI Designer (2)
+  {
+    id: "ui-design-component",
+    layer: "product",
+    displayName: "Component Design",
+    description: "2 commands — spec, design, implement, responsive check in 12 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["ui-ux-designer"],
+  },
+  {
+    id: "ui-design-review",
+    layer: "product",
+    displayName: "Design Review",
+    description: "2 commands — audit components, check consistency, flag issues in 8 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["ui-ux-designer"],
+  },
+
+  // UX Researcher (2)
+  {
+    id: "ux-interview",
+    layer: "product",
+    displayName: "User Interview Sprint",
+    description: "2 commands — interview script, discussion guide, insights in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["researcher", "ui-ux-designer"],
+  },
+  {
+    id: "ux-usability",
+    layer: "product",
+    displayName: "Usability Report",
+    description: "2 commands — test plan, task scenarios, findings in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["researcher"],
+  },
+
+  // Senior Dev (3)
+  {
+    id: "dev-feature",
+    layer: "engineering",
+    displayName: "Feature Build",
+    description: "3 commands — plan, code, test, PR in 15 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["fullstack-developer", "tester"],
+  },
+  {
+    id: "dev-bug-sprint",
+    layer: "engineering",
+    displayName: "Bug Sprint",
+    description: "3 commands — debug, fix, test batch bug fixes in 15 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["debugger", "fullstack-developer"],
+  },
+  {
+    id: "dev-pr-review",
+    layer: "engineering",
+    displayName: "PR Review Batch",
+    description: "2 commands — code review, security check, feedback in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["code-reviewer"],
+  },
+
+  // Junior Dev (2)
+  {
+    id: "junior-first-task",
+    layer: "engineering",
+    displayName: "First Task Guide",
+    description: "3 commands — codebase overview, starter task, guided implementation in 15 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["planner"],
+  },
+  {
+    id: "junior-learn",
+    layer: "engineering",
+    displayName: "Codebase Learning",
+    description: "2 commands — architecture overview, module deep dive in 10 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["planner"],
+  },
+
+  // Backend Dev (2)
+  {
+    id: "backend-api-build",
+    layer: "engineering",
+    displayName: "API Build",
+    description: "3 commands — schema, implement, test API endpoint in 12 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["fullstack-developer", "tester"],
+  },
+  {
+    id: "backend-db-task",
+    layer: "engineering",
+    displayName: "Database Task",
+    description: "3 commands — migration, seed, verify in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["fullstack-developer"],
+  },
+
+  // Frontend Dev (2)
+  {
+    id: "frontend-ui-build",
+    layer: "engineering",
+    displayName: "UI Build",
+    description: "3 commands — component, styling, responsive, test in 12 min",
+    complexity: "standard",
+    creditCost: 8,
+    agents: ["fullstack-developer", "ui-ux-designer"],
+  },
+  {
+    id: "frontend-responsive-fix",
+    layer: "engineering",
+    displayName: "Responsive Fix",
+    description: "2 commands — audit breakpoints, fix issues, test viewports in 8 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["fullstack-developer"],
+  },
+
+  // SRE (2)
+  {
+    id: "sre-morning-check",
+    layer: "ops",
+    displayName: "Morning Health Check",
+    description: "3 commands — all services health, alert review, performance in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["debugger"],
+  },
+  {
+    id: "sre-incident",
+    layer: "ops",
+    displayName: "Incident Response",
+    description: "3 commands — triage, mitigate, verify, report in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["debugger", "fullstack-developer"],
+  },
+
+  // Release Engineer (2)
+  {
+    id: "releng-pre-release",
+    layer: "ops",
+    displayName: "Pre-Release Checks",
+    description: "3 commands — full test suite, changelog, version bump in 10 min",
+    complexity: "standard",
+    creditCost: 5,
+    agents: ["tester"],
+  },
+  {
+    id: "releng-post-release",
+    layer: "ops",
+    displayName: "Post-Release Verification",
+    description: "3 commands — smoke test prod, health check, announce in 5 min",
+    complexity: "standard",
+    creditCost: 3,
+    agents: ["debugger"],
+  },
 ]

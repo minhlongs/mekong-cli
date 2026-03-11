@@ -1,0 +1,28 @@
+{
+  "id": "ae-follow-up",
+  "name": "Meeting Follow-Up",
+  "description": "Meeting summary → action items → follow-up email + next steps scheduled. 2 commands, ~5 min.",
+  "trigger": "/ae:follow-up",
+  "output_dir": "reports/ae/follow-up",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "follow-up",
+        "name": "Draft Follow-Up",
+        "mode": "parallel",
+        "commands": [
+          { "id": "email", "args": "--follow-up $ARGUMENTS --output reports/ae/follow-up/follow-up-email.md" },
+          { "id": "schedule", "args": "--next-steps $ARGUMENTS --output reports/ae/follow-up/next-steps.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/ae/follow-up/FOLLOW-UP-SUMMARY.md",
+      "template": "Compile follow-up email draft and next-steps schedule into a single post-meeting action package with send-ready email and calendar action items."
+    }
+  }
+}

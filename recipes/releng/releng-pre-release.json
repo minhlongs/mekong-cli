@@ -1,0 +1,32 @@
+{
+  "id": "releng-pre-release",
+  "name": "Pre-Release",
+  "description": "Full test suite → changelog → version bump → tag. 3 commands, ~10 min.",
+  "trigger": "/releng:pre-release",
+  "output_dir": "reports/releng/pre-release",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "prepare",
+        "name": "Parallel Prep",
+        "mode": "parallel",
+        "commands": [
+          { "id": "test", "args": "--all" },
+          { "id": "docs-changelog", "args": "" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "tag",
+        "name": "Version and Tag",
+        "mode": "sequential",
+        "commands": [
+          { "id": "git-tag", "args": "$ARGUMENTS" }
+        ],
+        "depends_on": ["prepare"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "dev-pr-review",
+  "name": "PR Review",
+  "description": "Code review → security check → feedback. 2 parallel commands, ~10 min.",
+  "trigger": "/dev:pr-review",
+  "output_dir": "reports/dev/pr-review",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "review",
+        "name": "Parallel Review",
+        "mode": "parallel",
+        "commands": [
+          { "id": "review", "args": "$ARGUMENTS" },
+          { "id": "security", "args": "--pr $ARGUMENTS" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

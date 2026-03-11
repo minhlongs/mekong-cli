@@ -1,0 +1,4 @@
+{
+  "role": "releng",
+  "commands": ["releng-pre-release.json", "releng-post-release.json"]
+}

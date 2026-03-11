@@ -1,0 +1,24 @@
+{
+  "id": "dev-bug-sprint",
+  "name": "Bug Sprint",
+  "description": "Debug → fix → test. Batch bug fixes. 3 commands, ~15 min.",
+  "trigger": "/dev:bug-sprint",
+  "output_dir": "reports/dev/bug-sprint",
+  "estimated_credits": 8,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "fix",
+        "name": "Debug and Fix",
+        "mode": "sequential",
+        "commands": [
+          { "id": "debug", "args": "$ARGUMENTS" },
+          { "id": "fix", "args": "$ARGUMENTS" },
+          { "id": "test", "args": "--all" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

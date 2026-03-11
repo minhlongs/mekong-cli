@@ -1,0 +1,23 @@
+{
+  "id": "analyst-report",
+  "name": "Analyst Report",
+  "description": "Data pull → analysis → executive summary. 2 commands, ~12 min.",
+  "trigger": "/analyst:report",
+  "output_dir": "reports/analyst/report",
+  "estimated_credits": 5,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Analysis & Report",
+        "mode": "sequential",
+        "commands": [
+          { "id": "market-analysis", "args": "--output reports/analyst/report/market-data.md" },
+          { "id": "general-report", "args": "--executive --output reports/analyst/report/executive-summary.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

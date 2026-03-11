@@ -125,6 +125,25 @@ layers:
       - hr-onboard
       - legal-contract-review
       - legal-compliance-check
+      - sdr-prospect
+      - sdr-outreach-blast
+      - sdr-lead-qualify
+      - ae-deal-prep
+      - ae-follow-up
+      - ae-close-report
+      - writer-blog
+      - writer-social-batch
+      - writer-newsletter
+      - growth-experiment
+      - growth-channel-optimize
+      - accounting-daily
+      - accounting-invoice-batch
+      - analyst-report
+      - analyst-forecast-update
+      - recruiter-source
+      - recruiter-screen
+      - people-onboard
+      - people-offboard
 
   product:
     chapter: "謀攻 — Attack by Stratagem"
@@ -159,6 +178,10 @@ layers:
       - product-retrospective
       - design-user-research
       - design-sprint
+      - ui-design-component
+      - ui-design-review
+      - ux-interview
+      - ux-usability
 
   engineering:
     chapter: "軍爭 — Military Contention"
@@ -226,6 +249,15 @@ layers:
       - tech-architecture-review
       - tech-api-design
       - tech-migration
+      - dev-feature
+      - dev-bug-sprint
+      - dev-pr-review
+      - junior-first-task
+      - junior-learn
+      - backend-api-build
+      - backend-db-task
+      - frontend-ui-build
+      - frontend-responsive-fix
 
   ops:
     chapter: "九變 — Nine Variations"
@@ -273,3 +305,7 @@ layers:
       - platform-environment-setup
       - release-ship
       - release-hotfix
+      - sre-morning-check
+      - sre-incident
+      - releng-pre-release
+      - releng-post-release

@@ -1,0 +1,23 @@
+{
+  "id": "ui-design-review",
+  "name": "Design Review",
+  "description": "Audit components → check consistency → flag issues. 2 commands, ~8 min.",
+  "trigger": "/ui:design-review",
+  "output_dir": "reports/ui/design-review",
+  "estimated_credits": 3,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Review & Lint",
+        "mode": "sequential",
+        "commands": [
+          { "id": "review", "args": "--design --output reports/ui/design-review/design-audit.md" },
+          { "id": "lint", "args": "--css --output reports/ui/design-review/css-issues.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

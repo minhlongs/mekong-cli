@@ -1,0 +1,28 @@
+{
+  "id": "writer-social-batch",
+  "name": "Social Batch",
+  "description": "Content themes → 7 days of posts → schedule. 2 commands, ~10 min.",
+  "trigger": "/writer:social-batch",
+  "output_dir": "reports/writer/social",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "batch",
+        "name": "Create & Schedule",
+        "mode": "parallel",
+        "commands": [
+          { "id": "social", "args": "--batch 7 $ARGUMENTS --output reports/writer/social/7-day-posts.md" },
+          { "id": "schedule", "args": "--social $ARGUMENTS --output reports/writer/social/posting-schedule.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/writer/social/SOCIAL-BATCH-SUMMARY.md",
+      "template": "Compile 7-day post drafts and posting schedule into a content calendar with copy, hashtags, and optimal post times for each platform."
+    }
+  }
+}

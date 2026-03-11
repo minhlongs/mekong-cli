@@ -1,0 +1,28 @@
+{
+  "id": "ae-close-report",
+  "name": "Close Report",
+  "description": "Win/loss analysis → lessons → CRM update. 2 commands, ~5 min.",
+  "trigger": "/ae:close-report",
+  "output_dir": "reports/ae/close",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "analyze",
+        "name": "Analyze & Update",
+        "mode": "sequential",
+        "commands": [
+          { "id": "close", "args": "$ARGUMENTS --output reports/ae/close/win-loss-analysis.md" },
+          { "id": "crm", "args": "--update $ARGUMENTS --output reports/ae/close/crm-update.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/ae/close/CLOSE-REPORT-SUMMARY.md",
+      "template": "Compile win/loss analysis and CRM update into a deal close report with key lessons learned, contributing factors, and CRM field updates ready to paste."
+    }
+  }
+}

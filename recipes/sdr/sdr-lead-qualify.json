@@ -1,0 +1,28 @@
+{
+  "id": "sdr-lead-qualify",
+  "name": "Lead Qualify & Handoff",
+  "description": "Score leads → research company → prep handoff to AE. 2 commands, ~8 min.",
+  "trigger": "/sdr:lead-qualify",
+  "output_dir": "reports/sdr/qualify",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "qualify",
+        "name": "Qualify Lead",
+        "mode": "sequential",
+        "commands": [
+          { "id": "customer-research", "args": "--qualify $ARGUMENTS --output reports/sdr/qualify/qualification-scorecard.md" },
+          { "id": "pipeline", "args": "--handoff $ARGUMENTS --output reports/sdr/qualify/ae-handoff-brief.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/sdr/qualify/QUALIFY-SUMMARY.md",
+      "template": "Compile qualification scorecard and AE handoff brief into a single lead package with BANT analysis, company research, and recommended next steps for the account executive."
+    }
+  }
+}

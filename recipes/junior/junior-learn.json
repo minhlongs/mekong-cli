@@ -1,0 +1,23 @@
+{
+  "id": "junior-learn",
+  "name": "Learn Codebase",
+  "description": "Architecture overview → module deep dive → key patterns. 2 commands, ~10 min.",
+  "trigger": "/junior:learn",
+  "output_dir": "reports/junior/learn",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "learn",
+        "name": "Architecture and Docs",
+        "mode": "sequential",
+        "commands": [
+          { "id": "arch", "args": "--explain $ARGUMENTS" },
+          { "id": "docs", "args": "" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}
