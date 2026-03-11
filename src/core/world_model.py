@@ -140,17 +140,18 @@ class WorldModel:
         # Open ports
         state.open_ports = self._get_open_ports()
 
-        # Relevant environment variables
-        state.env_vars = {
-            k: v for k, v in os.environ.items()
-            if any(
-                pat in k.upper()
-                for pat in [
-                    "API", "KEY", "URL", "PORT", "HOST",
-                    "DATABASE", "REDIS", "MEKONG", "LLM",
-                ]
-            )
-        }
+        # Relevant environment variables — mask sensitive values
+        _SENSITIVE = {"KEY", "SECRET", "TOKEN", "PASSWORD", "CREDENTIAL"}
+        state.env_vars = {}
+        for k, v in os.environ.items():
+            if any(pat in k.upper() for pat in [
+                "API", "KEY", "URL", "PORT", "HOST",
+                "DATABASE", "REDIS", "MEKONG", "LLM",
+            ]):
+                if any(s in k.upper() for s in _SENSITIVE):
+                    state.env_vars[k] = v[:4] + "****" if len(v) > 4 else "****"
+                else:
+                    state.env_vars[k] = v
 
         # Store snapshot
         self._snapshots.append(state)
