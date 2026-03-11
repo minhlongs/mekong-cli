@@ -98,7 +98,7 @@ class MissionLifecycle:
         ok = self._credits.deduct(
             tenant_id=tenant_id,
             amount=cost,
-            reason=f"reserve:submit",
+            reason="reserve:submit",
         )
         if not ok:
             raise InsufficientCreditsError(

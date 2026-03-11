@@ -12,7 +12,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -21,11 +21,10 @@ from src.raas.credits import CreditStore
 from src.raas.mission_lifecycle import InsufficientCreditsError, MissionLifecycle
 from src.raas.mission_models import (
     CreateMissionRequest,
-    MissionRecord,
     MissionResponse,
 )
 from src.raas.mission_store import MissionStore
-from src.raas.usage_analytics import TenantUsageSummary, UsageAnalytics
+from src.raas.usage_analytics import UsageAnalytics
 
 logger = logging.getLogger(__name__)
 
