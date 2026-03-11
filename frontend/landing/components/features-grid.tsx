@@ -6,7 +6,7 @@ const FEATURES = [
       </svg>
     ),
     color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
-    title: '101 Super Commands',
+    title: '89 Super Workflows',
     desc: 'One command triggers parallel AI agents. CEO to intern, every role has workflows that orchestrate multiple agents simultaneously.',
   },
   {

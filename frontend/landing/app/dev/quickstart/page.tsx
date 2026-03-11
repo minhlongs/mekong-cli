@@ -46,7 +46,7 @@ Select provider:
   {
     num: 5,
     title: 'Explore Commands',
-    desc: '289 commands available — explore the full command catalog',
+    desc: '319 commands available — explore the full command catalog',
     code: null,
     copyText: null,
     isLast: true,
@@ -123,7 +123,7 @@ export default function QuickstartPage() {
                   href="/dev/commands"
                   className="glass-highlight mt-2 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-cyan-400 transition-all hover:text-cyan-300"
                 >
-                  Explore 289 Commands →
+                  Explore 319 Commands →
                 </Link>
               )}
             </div>

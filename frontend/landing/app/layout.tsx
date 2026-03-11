@@ -2,15 +2,15 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'AgencyOS — AI-Operated Business Platform',
+  title: 'Mekong CLI — AI-Operated Business Platform',
   description:
-    '289 commands, 216 skills, 127 AI agents. 5-layer pyramid from Founder to Ops.',
+    '319 commands, 463 skills, 127 AI agents. 5-layer pyramid from Founder to Ops.',
   keywords: ['AI agency', 'CLI', 'founder tools', 'multi-agent', 'mekong-cli'],
   openGraph: {
-    title: 'AgencyOS — AI-Operated Business Platform',
-    description: '289 commands, 216 skills, 127 AI agents. 5-layer pyramid from Founder to Ops.',
-    url: 'https://agencyos.network',
-    siteName: 'AgencyOS',
+    title: 'Mekong CLI — AI-Operated Business Platform',
+    description: '319 commands, 463 skills, 127 AI agents. 5-layer pyramid from Founder to Ops.',
+    url: 'https://mekong.cli.dev',
+    siteName: 'Mekong CLI',
   },
 }
 
