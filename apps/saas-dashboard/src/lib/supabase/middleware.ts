@@ -20,14 +20,14 @@ export async function checkAdminRole(
   accessToken: string
 ): Promise<{ isAdmin: boolean; error?: string }> {
   try {
-    const result = await withRLS(accessToken, async (client) => {
+    const result = await withRLS<{ role?: string } | null>(accessToken, async (client) => {
       const { data, error } = await client
         .from('profiles')
         .select('role')
         .single();
 
       if (error) throw error;
-      return data;
+      return data as { role?: string } | null;
     });
 
     return { isAdmin: result?.role === 'admin' };
@@ -55,7 +55,7 @@ export async function createSubscription(
       status: 'active',
       plan,
       current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    });
+    } as any);
 
     if (error) throw error;
     return { success: true };

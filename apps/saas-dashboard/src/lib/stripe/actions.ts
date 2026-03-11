@@ -2,7 +2,6 @@
 
 import { stripe, STRIPE_PRICES } from './server';
 import { auth } from '@/lib/auth/config';
-import { cookies } from 'next/headers';
 
 export async function createCheckoutSession(plan: 'PRO' | 'ENTERPRISE') {
   try {
@@ -45,7 +44,7 @@ export async function createCheckoutSession(plan: 'PRO' | 'ENTERPRISE') {
   }
 }
 
-export async function createCustomerPortalSession() {
+export async function createCustomerPortalSession(): Promise<{ url?: string; error?: string }> {
   try {
     const session = await auth.api.getSession({
       headers: new Headers(),

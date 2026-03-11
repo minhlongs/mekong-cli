@@ -44,7 +44,7 @@ export async function register(
       body: {
         email,
         password,
-        name: fullName,
+        name: fullName || email.split('@')[0], // Use email username as default name
       },
     });
 
@@ -53,15 +53,15 @@ export async function register(
     }
 
     // Auto sign in after registration
-    const session = await auth.api.getSession({
+    const sessionData = await auth.api.getSession({
       headers: new Headers({
         cookie: `better-auth.session_token=${user.token}`,
       }),
     });
 
-    if (session?.token) {
+    if (sessionData?.session?.token) {
       const cookieStore = await cookies();
-      cookieStore.set('better-auth.session_token', session.token, {
+      cookieStore.set('better-auth.session_token', sessionData.session.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -81,28 +81,28 @@ export async function register(
 }
 
 export async function signInWithGoogle() {
-  const url = await auth.api.signInSocial({
+  const result = await auth.api.signInSocial({
     body: {
       provider: 'google',
       callbackURL: '/dashboard',
     },
   });
 
-  if (url) {
-    redirect(url);
+  if (result.url) {
+    redirect(result.url);
   }
 }
 
 export async function signInWithGithub() {
-  const url = await auth.api.signInSocial({
+  const result = await auth.api.signInSocial({
     body: {
       provider: 'github',
       callbackURL: '/dashboard',
     },
   });
 
-  if (url) {
-    redirect(url);
+  if (result.url) {
+    redirect(result.url);
   }
 }
 

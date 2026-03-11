@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe/server';
 import Stripe from 'stripe';
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+
+// Lazy init Stripe to avoid build-time execution
+function getStripe(): Stripe {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2025-02-24.acacia',
+    typescript: true,
+  });
+}
 
 async function buffer(readable: ReadableStream<Uint8Array>) {
   const chunks: Uint8Array[] = [];
@@ -17,6 +24,7 @@ async function buffer(readable: ReadableStream<Uint8Array>) {
 }
 
 export async function POST(request: Request) {
+  const stripe = getStripe();
   const body = await buffer(request.body!);
   const headersList = await headers();
   const signature = headersList.get('stripe-signature')!;
@@ -92,9 +100,12 @@ export async function POST(request: Request) {
 
     case 'invoice.payment_failed': {
       const invoice = event.data.object as Stripe.Invoice;
+      const paymentIntent = typeof invoice.payment_intent === 'string'
+        ? null
+        : invoice.payment_intent;
       console.log('Payment failed:', {
         invoiceId: invoice.id,
-        reason: invoice.payment_intent?.last_payment_error?.message,
+        reason: paymentIntent?.last_payment_error?.message,
       });
 
       // TODO: Handle failed payment (notify user, retry logic)
