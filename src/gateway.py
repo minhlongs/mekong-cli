@@ -39,6 +39,7 @@ from src.core.gateway_api import (
 from src.core.mcu_billing import MCUBilling, MCU_COSTS
 from src.core.webhook_events import WEBHOOK_EVENT_PAYLOADS
 from src.core.api_key_manager import validate_api_key
+from src.raas.missions_api_router import router as raas_router
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,9 @@ app = FastAPI(
     docs_url="/api-docs",
     redoc_url="/api-redoc",
 )
+
+# Mount RaaS API router
+app.include_router(raas_router)
 
 # CORS for AgencyOS frontend
 app.add_middleware(
