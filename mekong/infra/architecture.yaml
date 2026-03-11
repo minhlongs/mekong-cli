@@ -1,0 +1,67 @@
+# Mekong CLI — 4-Layer Deploy Architecture
+# User chọn layers phù hợp quy mô. Không bắt buộc dùng tất cả.
+
+layers:
+  frontend:
+    platform: "cloudflare-pages"
+    purpose: "Static HTML, landing pages, docs"
+    cost: "Free"
+    template: "mekong/infra/templates/cf-pages/"
+    when: "Mọi dự án đều cần"
+    deploy: "git push → auto build"
+    limits: "Unlimited sites, 500 builds/month free"
+
+  edge-api:
+    platform: "cloudflare-workers"
+    purpose: "Serverless API, webhooks, rate limiting, KV cache"
+    cost: "Free (100K req/day)"
+    template: "mekong/infra/templates/cf-workers/"
+    when: "Cần API nhẹ, webhooks, hoặc middleware"
+    deploy: "wrangler deploy"
+    limits: "100K req/day free, 10ms CPU/req"
+
+  app:
+    platform: "vercel OR cloudflare-pages-ssr"
+    purpose: "Next.js SSR/ISR, dashboards, admin panels"
+    cost: "Free (Vercel hobby) or CF Pages"
+    template: "mekong/infra/templates/vercel-app/"
+    when: "Cần SSR, real-time data, auth"
+    deploy: "git push → auto deploy"
+    limits: "Vercel: 100GB bandwidth/month free"
+
+  backend:
+    platform: "fly-io"
+    purpose: "Python FastAPI, database, LLM gateway, daemon"
+    cost: "Free (3 shared VMs)"
+    template: "mekong/infra/templates/fly-backend/"
+    when: "Cần persistent storage, background jobs, heavy compute"
+    deploy: "fly deploy"
+    limits: "3 VMs, 256MB RAM each, 3GB volume free"
+
+scales:
+  solo:
+    description: "1 người, side project"
+    layers: ["frontend"]
+    estimated_cost: "$0/month"
+
+  startup:
+    description: "MVP, 2-5 người"
+    layers: ["frontend", "edge-api"]
+    estimated_cost: "$0/month"
+
+  growth:
+    description: "Product-market fit, 5-20 người"
+    layers: ["frontend", "edge-api", "app"]
+    estimated_cost: "$0-20/month"
+
+  scale:
+    description: "Scaling, 20+ người, revenue"
+    layers: ["frontend", "edge-api", "app", "backend"]
+    estimated_cost: "$20-100/month"
+
+benefits:
+  - "Không 1 điểm chết — 1 provider down, các cái khác vẫn chạy"
+  - "Free tier x4 — mỗi provider 1 free tier riêng"
+  - "Đúng tool đúng việc — CF cho static/edge, Fly cho backend nặng"
+  - "Scale độc lập — chỉ scale cái cần thiết"
+  - "Deploy từ CLI — không cần dashboard"

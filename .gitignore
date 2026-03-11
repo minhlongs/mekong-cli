@@ -390,7 +390,7 @@ config/
 docker/
 lib/
 locales/
-mekong/
+# mekong/ — tracked (core namespace)
 templates/
 plans/
 tasks/
