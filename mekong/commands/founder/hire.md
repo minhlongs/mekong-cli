@@ -1,5 +1,5 @@
 ---
-description: Tuyển dụng agentic — JD tự viết, interview kit tự generate, contractor brief tự tạo
+description: Agentic recruiting — auto-generate JDs, interview kits, contractor briefs
 allowed-tools: Read, Write
 ---
 

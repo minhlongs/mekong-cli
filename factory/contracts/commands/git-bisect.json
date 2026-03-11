@@ -7,8 +7,8 @@
     "name_vi": "Git Bisect",
     "name_en": "Git Bisect",
     "icon": "",
-    "description_vi": "Execute Git Bisect command",
-    "description_en": "Execute Git Bisect command"
+    "description_vi": "Find bug commit",
+    "description_en": "Find bug commit"
   },
   "execution": {
     "agents": [

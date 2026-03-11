@@ -1,5 +1,5 @@
 ---
-description: Phân tích term sheet — tìm mọi trap, tính impact thực, so sánh với market standard
+description: Term sheet analyzer — find traps, calculate real impact, compare to market standard
 allowed-tools: Read, Write
 ---
 

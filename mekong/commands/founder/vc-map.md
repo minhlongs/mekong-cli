@@ -1,5 +1,5 @@
 ---
-description: Map toàn bộ VC landscape — tier, sector, style, founder-friendliness score
+description: VC landscape mapping — tier, sector focus, check size, founder-friendliness score
 allowed-tools: Read, Write
 ---
 

@@ -7,8 +7,8 @@
     "name_vi": "Kpi",
     "name_en": "Kpi",
     "icon": "",
-    "description_vi": "Execute Kpi command",
-    "description_en": "Execute Kpi command"
+    "description_vi": "Define KPIs",
+    "description_en": "Define KPIs"
   },
   "execution": {
     "agents": [

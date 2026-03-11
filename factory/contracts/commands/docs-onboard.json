@@ -7,8 +7,8 @@
     "name_vi": "Docs Onboard",
     "name_en": "Docs Onboard",
     "icon": "",
-    "description_vi": "Execute Docs Onboard command",
-    "description_en": "Execute Docs Onboard command"
+    "description_vi": "Onboarding documentation",
+    "description_en": "Onboarding documentation"
   },
   "execution": {
     "agents": [

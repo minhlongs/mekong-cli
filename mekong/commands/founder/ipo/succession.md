@@ -1,5 +1,5 @@
 ---
-description: Post-IPO power moves — share buybacks, M&A as public company, CEO succession
+description: Succession planning — CEO transition, board evolution, M&A as public company
 allowed-tools: Read, Write
 ---
 

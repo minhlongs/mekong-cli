@@ -1,5 +1,5 @@
 ---
-description: Legal checklist — incorporation, IP protection, contracts, privacy policy, terms of service
+description: Legal checklist — incorporation, IP protection, contracts, privacy, terms
 allowed-tools: Read, Write
 ---
 

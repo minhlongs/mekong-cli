@@ -7,8 +7,8 @@
     "name_vi": "Sync Rules",
     "name_en": "Sync Rules",
     "icon": "",
-    "description_vi": "Execute Sync Rules command",
-    "description_en": "Execute Sync Rules command"
+    "description_vi": "Sync Rules & Workflows documentation from Antigravity",
+    "description_en": "Sync Rules & Workflows documentation from Antigravity"
   },
   "execution": {
     "agents": [

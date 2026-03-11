@@ -7,8 +7,8 @@
     "name_vi": "Leadgen",
     "name_en": "Leadgen",
     "icon": "",
-    "description_vi": "Execute Leadgen command",
-    "description_en": "Execute Leadgen command"
+    "description_vi": "Lead generation strategy",
+    "description_en": "Lead generation strategy"
   },
   "execution": {
     "agents": [

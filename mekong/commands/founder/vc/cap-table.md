@@ -1,5 +1,5 @@
 ---
-description: Model dilution qua mọi round — biết chính xác mình còn bao nhiêu % trước khi ký
+description: Cap table modeling — dilution across rounds, ownership %, ESOP impact
 allowed-tools: Read, Write, Bash
 ---
 

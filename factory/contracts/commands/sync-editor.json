@@ -7,8 +7,8 @@
     "name_vi": "Sync Editor",
     "name_en": "Sync Editor",
     "icon": "",
-    "description_vi": "Execute Sync Editor command",
-    "description_en": "Execute Sync Editor command"
+    "description_vi": "Sync Editor documentation from Antigravity (Tab, Command, Side Panel, etc.)",
+    "description_en": "Sync Editor documentation from Antigravity (Tab, Command, Side Panel, etc.)"
   },
   "execution": {
     "agents": [

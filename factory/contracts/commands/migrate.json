@@ -7,8 +7,8 @@
     "name_vi": "Migrate",
     "name_en": "Migrate",
     "icon": "",
-    "description_vi": "Execute Migrate command",
-    "description_en": "Execute Migrate command"
+    "description_vi": "Database migration",
+    "description_en": "Database migration"
   },
   "execution": {
     "agents": [

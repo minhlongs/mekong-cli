@@ -7,8 +7,8 @@
     "name_vi": "Forecast",
     "name_en": "Forecast",
     "icon": "",
-    "description_vi": "Execute Forecast command",
-    "description_en": "Execute Forecast command"
+    "description_vi": "Financial forecast",
+    "description_en": "Financial forecast"
   },
   "execution": {
     "agents": [

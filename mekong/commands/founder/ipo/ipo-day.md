@@ -1,5 +1,5 @@
 ---
-description: IPO Day execution — từ đêm trước pricing đến khi chuông rung
+description: IPO day execution — pricing night to bell ringing, first-trade ops
 allowed-tools: Read, Write
 ---
 

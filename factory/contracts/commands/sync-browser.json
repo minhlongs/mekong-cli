@@ -7,8 +7,8 @@
     "name_vi": "Sync Browser",
     "name_en": "Sync Browser",
     "icon": "",
-    "description_vi": "Execute Sync Browser command",
-    "description_en": "Execute Sync Browser command"
+    "description_vi": "Sync Browser Subagent & Browser Recordings from Antigravity",
+    "description_en": "Sync Browser Subagent & Browser Recordings from Antigravity"
   },
   "execution": {
     "agents": [

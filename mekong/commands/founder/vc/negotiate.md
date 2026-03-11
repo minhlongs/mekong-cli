@@ -1,5 +1,5 @@
 ---
-description: VC negotiation playbook — BATNA tactics, counter-offers, pressure responses, closing
+description: VC negotiation playbook — BATNA tactics, counter-offers, pressure responses
 allowed-tools: Read, Write
 ---
 

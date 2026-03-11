@@ -7,8 +7,8 @@
     "name_vi": "Health",
     "name_en": "Health",
     "icon": "",
-    "description_vi": "Execute Health command",
-    "description_en": "Execute Health command"
+    "description_vi": "System health",
+    "description_en": "System health"
   },
   "execution": {
     "agents": [

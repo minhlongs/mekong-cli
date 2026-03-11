@@ -7,8 +7,8 @@
     "name_vi": "Seed",
     "name_en": "Seed",
     "icon": "",
-    "description_vi": "Execute Seed command",
-    "description_en": "Execute Seed command"
+    "description_vi": "Seed database",
+    "description_en": "Seed database"
   },
   "execution": {
     "agents": [

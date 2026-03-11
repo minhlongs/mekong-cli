@@ -7,8 +7,8 @@
     "name_vi": "Social",
     "name_en": "Social",
     "icon": "",
-    "description_vi": "Execute Social command",
-    "description_en": "Execute Social command"
+    "description_vi": "Social media strategy",
+    "description_en": "Social media strategy"
   },
   "execution": {
     "agents": [

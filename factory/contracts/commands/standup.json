@@ -7,8 +7,8 @@
     "name_vi": "Standup",
     "name_en": "Standup",
     "icon": "",
-    "description_vi": "Execute Standup command",
-    "description_en": "Execute Standup command"
+    "description_vi": "Standup notes",
+    "description_en": "Standup notes"
   },
   "execution": {
     "agents": [

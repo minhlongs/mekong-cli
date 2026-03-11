@@ -7,8 +7,8 @@
     "name_vi": "Api",
     "name_en": "Api",
     "icon": "",
-    "description_vi": "Execute Api command",
-    "description_en": "Execute Api command"
+    "description_vi": "Build API endpoints",
+    "description_en": "Build API endpoints"
   },
   "execution": {
     "agents": [

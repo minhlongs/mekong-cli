@@ -7,8 +7,8 @@
     "name_vi": "Vc Map",
     "name_en": "Vc Map",
     "icon": "",
-    "description_vi": "Map toàn bộ VC landscape — tier, sector, style, founder-friendliness score",
-    "description_en": "Map ton b VC landscape  tier, sector, style, founder-friendliness score"
+    "description_vi": "VC landscape mapping — tier, sector focus, check size, founder-friendliness score",
+    "description_en": "VC landscape mapping  tier, sector focus, check size, founder-friendliness score"
   },
   "execution": {
     "agents": [

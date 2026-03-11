@@ -7,8 +7,8 @@
     "name_vi": "Benchmark",
     "name_en": "Benchmark",
     "icon": "",
-    "description_vi": "Execute Benchmark command",
-    "description_en": "Execute Benchmark command"
+    "description_vi": "Benchmark performance",
+    "description_en": "Benchmark performance"
   },
   "execution": {
     "agents": [

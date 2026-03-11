@@ -1,5 +1,5 @@
 ---
-description: Weekly CEO rhythm — Monday brief, priorities, agent tasklist, Friday review. Human does 20%.
+description: Weekly CEO rhythm — Monday brief, priorities, agent tasklist, Friday review
 allowed-tools: Read, Write, Bash
 ---
 

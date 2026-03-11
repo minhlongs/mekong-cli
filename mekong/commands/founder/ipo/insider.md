@@ -1,5 +1,5 @@
 ---
-description: Insider trading compliance + investor relations + lockup expiry — post-IPO protection
+description: Post-IPO compliance — insider trading rules, lockup expiry, investor relations
 allowed-tools: Read, Write
 ---
 

@@ -7,8 +7,8 @@
     "name_vi": "Tax",
     "name_en": "Tax",
     "icon": "",
-    "description_vi": "Execute Tax command",
-    "description_en": "Execute Tax command"
+    "description_vi": "Tax planning",
+    "description_en": "Tax planning"
   },
   "execution": {
     "agents": [

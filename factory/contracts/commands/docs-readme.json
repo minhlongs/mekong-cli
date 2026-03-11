@@ -7,8 +7,8 @@
     "name_vi": "Docs Readme",
     "name_en": "Docs Readme",
     "icon": "",
-    "description_vi": "Execute Docs Readme command",
-    "description_en": "Execute Docs Readme command"
+    "description_vi": "README generator",
+    "description_en": "README generator"
   },
   "execution": {
     "agents": [

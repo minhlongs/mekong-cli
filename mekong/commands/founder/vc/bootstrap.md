@@ -1,5 +1,5 @@
 ---
-description: Path to $1M ARR không cần VC — ramen profitable calculator, bootstrap playbook
+description: Bootstrap vs raise decision — ramen profitability calculator, bootstrap playbook
 allowed-tools: Read, Write, Bash
 ---
 

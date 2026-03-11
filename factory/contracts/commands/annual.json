@@ -7,8 +7,8 @@
     "name_vi": "Annual",
     "name_en": "Annual",
     "icon": "",
-    "description_vi": "Execute Annual command",
-    "description_en": "Execute Annual command"
+    "description_vi": "Annual plan",
+    "description_en": "Annual plan"
   },
   "execution": {
     "agents": [

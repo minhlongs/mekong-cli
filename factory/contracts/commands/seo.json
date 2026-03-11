@@ -7,8 +7,8 @@
     "name_vi": "Seo",
     "name_en": "Seo",
     "icon": "",
-    "description_vi": "Execute Seo command",
-    "description_en": "Execute Seo command"
+    "description_vi": "Phân tích và tối ưu SEO",
+    "description_en": "Phn tch v ti u SEO"
   },
   "execution": {
     "agents": [

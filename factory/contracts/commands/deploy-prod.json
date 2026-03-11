@@ -7,8 +7,8 @@
     "name_vi": "Deploy Prod",
     "name_en": "Deploy Prod",
     "icon": "",
-    "description_vi": "Execute Deploy Prod command",
-    "description_en": "Execute Deploy Prod command"
+    "description_vi": "Deploy to production",
+    "description_en": "Deploy to production"
   },
   "execution": {
     "agents": [

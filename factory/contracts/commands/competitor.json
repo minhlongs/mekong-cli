@@ -7,8 +7,8 @@
     "name_vi": "Competitor",
     "name_en": "Competitor",
     "icon": "",
-    "description_vi": "Execute Competitor command",
-    "description_en": "Execute Competitor command"
+    "description_vi": "Analyze competitors",
+    "description_en": "Analyze competitors"
   },
   "execution": {
     "agents": [

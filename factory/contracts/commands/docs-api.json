@@ -7,8 +7,8 @@
     "name_vi": "Docs Api",
     "name_en": "Docs Api",
     "icon": "",
-    "description_vi": "Execute Docs Api command",
-    "description_en": "Execute Docs Api command"
+    "description_vi": "API documentation",
+    "description_en": "API documentation"
   },
   "execution": {
     "agents": [

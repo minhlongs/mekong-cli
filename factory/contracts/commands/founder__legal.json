@@ -7,8 +7,8 @@
     "name_vi": "Legal",
     "name_en": "Legal",
     "icon": "",
-    "description_vi": "Legal checklist — incorporation, IP protection, contracts, privacy policy, terms of service",
-    "description_en": "Legal checklist  incorporation, IP protection, contracts, privacy policy, terms of service"
+    "description_vi": "Legal checklist — incorporation, IP protection, contracts, privacy, terms",
+    "description_en": "Legal checklist  incorporation, IP protection, contracts, privacy, terms"
   },
   "execution": {
     "agents": [

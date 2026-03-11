@@ -7,8 +7,8 @@
     "name_vi": "S1",
     "name_en": "S1",
     "icon": "",
-    "description_vi": "S-1 / Prospectus drafting framework — narrative, metrics, risk factors, story arc",
-    "description_en": "S-1 / Prospectus drafting framework  narrative, metrics, risk factors, story arc"
+    "description_vi": "S-1 drafting framework — narrative arc, key metrics, risk factors, prospectus structure",
+    "description_en": "S-1 drafting framework  narrative arc, key metrics, risk factors, prospectus structure"
   },
   "execution": {
     "agents": [

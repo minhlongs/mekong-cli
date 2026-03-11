@@ -1,5 +1,5 @@
 ---
-description: Setup KPIs, metrics dashboard, anomaly detection, weekly tracking — no spreadsheet needed
+description: Investor-grade metrics dashboard — KPIs, anomaly detection, weekly tracking
 allowed-tools: Read, Write, Bash
 ---
 

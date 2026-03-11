@@ -7,8 +7,8 @@
     "name_vi": "Expense",
     "name_en": "Expense",
     "icon": "",
-    "description_vi": "Execute Expense command",
-    "description_en": "Execute Expense command"
+    "description_vi": "Expense tracking",
+    "description_en": "Expense tracking"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Code",
     "name_en": "Code",
     "icon": "",
-    "description_vi": "Execute Code command",
-    "description_en": "Execute Code command"
+    "description_vi": "⚡⚡⚡ Start coding & testing an existing plan",
+    "description_en": "Start coding & testing an existing plan"
   },
   "execution": {
     "agents": [

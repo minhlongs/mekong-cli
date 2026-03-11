@@ -7,8 +7,8 @@
     "name_vi": "Crm",
     "name_en": "Crm",
     "icon": "",
-    "description_vi": "Execute Crm command",
-    "description_en": "Execute Crm command"
+    "description_vi": "CRM setup & automation",
+    "description_en": "CRM setup & automation"
   },
   "execution": {
     "agents": [

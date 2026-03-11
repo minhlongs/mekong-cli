@@ -7,8 +7,8 @@
     "name_vi": "Insider",
     "name_en": "Insider",
     "icon": "",
-    "description_vi": "Insider trading compliance + investor relations + lockup expiry — post-IPO protection",
-    "description_en": "Insider trading compliance + investor relations + lockup expiry  post-IPO protection"
+    "description_vi": "Post-IPO compliance — insider trading rules, lockup expiry, investor relations",
+    "description_en": "Post-IPO compliance  insider trading rules, lockup expiry, investor relations"
   },
   "execution": {
     "agents": [

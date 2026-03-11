@@ -7,8 +7,8 @@
     "name_vi": "Validate",
     "name_en": "Validate",
     "icon": "",
-    "description_vi": "Customer discovery — interview scripts, PMF survey, hypothesis testing, insight synthesis",
-    "description_en": "Customer discovery  interview scripts, PMF survey, hypothesis testing, insight synthesis"
+    "description_vi": "Customer discovery — interview scripts, PMF survey, hypothesis testing, insights",
+    "description_en": "Customer discovery  interview scripts, PMF survey, hypothesis testing, insights"
   },
   "execution": {
     "agents": [

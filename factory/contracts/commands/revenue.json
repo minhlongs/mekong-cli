@@ -7,8 +7,8 @@
     "name_vi": "Revenue",
     "name_en": "Revenue",
     "icon": "",
-    "description_vi": "Execute Revenue command",
-    "description_en": "Execute Revenue command"
+    "description_vi": "Revenue analysis",
+    "description_en": "Revenue analysis"
   },
   "execution": {
     "agents": [

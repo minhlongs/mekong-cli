@@ -7,8 +7,8 @@
     "name_vi": "Hire",
     "name_en": "Hire",
     "icon": "",
-    "description_vi": "Tuyển dụng agentic — JD tự viết, interview kit tự generate, contractor brief tự tạo",
-    "description_en": "Tuyn dng agentic  JD t vit, interview kit t generate, contractor brief t to"
+    "description_vi": "Agentic recruiting — auto-generate JDs, interview kits, contractor briefs",
+    "description_en": "Agentic recruiting  auto-generate JDs, interview kits, contractor briefs"
   },
   "execution": {
     "agents": [

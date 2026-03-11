@@ -7,8 +7,8 @@
     "name_vi": "Branding",
     "name_en": "Branding",
     "icon": "",
-    "description_vi": "Execute Branding command",
-    "description_en": "Execute Branding command"
+    "description_vi": "Brand identity guide",
+    "description_en": "Brand identity guide"
   },
   "execution": {
     "agents": [

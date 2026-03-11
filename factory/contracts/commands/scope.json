@@ -7,8 +7,8 @@
     "name_vi": "Scope",
     "name_en": "Scope",
     "icon": "",
-    "description_vi": "Execute Scope command",
-    "description_en": "Execute Scope command"
+    "description_vi": "Define scope",
+    "description_en": "Define scope"
   },
   "execution": {
     "agents": [

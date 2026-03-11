@@ -7,8 +7,8 @@
     "name_vi": "Metrics",
     "name_en": "Metrics",
     "icon": "",
-    "description_vi": "Setup KPIs, metrics dashboard, anomaly detection, weekly tracking — no spreadsheet needed",
-    "description_en": "Setup KPIs, metrics dashboard, anomaly detection, weekly tracking  no spreadsheet needed"
+    "description_vi": "Investor-grade metrics dashboard — KPIs, anomaly detection, weekly tracking",
+    "description_en": "Investor-grade metrics dashboard  KPIs, anomaly detection, weekly tracking"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Git Squash",
     "name_en": "Git Squash",
     "icon": "",
-    "description_vi": "Execute Git Squash command",
-    "description_en": "Execute Git Squash command"
+    "description_vi": "Squash commits",
+    "description_en": "Squash commits"
   },
   "execution": {
     "agents": [

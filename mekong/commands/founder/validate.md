@@ -1,5 +1,5 @@
 ---
-description: Customer discovery — interview scripts, PMF survey, hypothesis testing, insight synthesis
+description: Customer discovery — interview scripts, PMF survey, hypothesis testing, insights
 allowed-tools: Read, Write, Bash
 ---
 

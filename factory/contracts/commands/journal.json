@@ -7,8 +7,8 @@
     "name_vi": "Journal",
     "name_en": "Journal",
     "icon": "",
-    "description_vi": "Execute Journal command",
-    "description_en": "Execute Journal command"
+    "description_vi": "⚡ Write some journal entries.",
+    "description_en": "Write some journal entries."
   },
   "execution": {
     "agents": [

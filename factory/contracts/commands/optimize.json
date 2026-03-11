@@ -7,8 +7,8 @@
     "name_vi": "Optimize",
     "name_en": "Optimize",
     "icon": "",
-    "description_vi": "Execute Optimize command",
-    "description_en": "Execute Optimize command"
+    "description_vi": "Optimize performance",
+    "description_en": "Optimize performance"
   },
   "execution": {
     "agents": [

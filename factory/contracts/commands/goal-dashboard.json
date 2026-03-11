@@ -7,8 +7,8 @@
     "name_vi": "Goal Dashboard",
     "name_en": "Goal Dashboard",
     "icon": "",
-    "description_vi": "Execute Goal Dashboard command",
-    "description_en": "Execute Goal Dashboard command"
+    "description_vi": "📊 $1M 2026 ARR goal dashboard",
+    "description_en": "$1M 2026 ARR goal dashboard"
   },
   "execution": {
     "agents": [

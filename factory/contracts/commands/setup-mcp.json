@@ -7,8 +7,8 @@
     "name_vi": "Setup Mcp",
     "name_en": "Setup Mcp",
     "icon": "",
-    "description_vi": "Execute Setup Mcp command",
-    "description_en": "Execute Setup Mcp command"
+    "description_vi": "Setup MCP servers automatically - Zero effort required",
+    "description_en": "Setup MCP servers automatically - Zero effort required"
   },
   "execution": {
     "agents": [

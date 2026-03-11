@@ -7,8 +7,8 @@
     "name_vi": "Invoice",
     "name_en": "Invoice",
     "icon": "",
-    "description_vi": "Execute Invoice command",
-    "description_en": "Execute Invoice command"
+    "description_vi": "Invoice generation",
+    "description_en": "Invoice generation"
   },
   "execution": {
     "agents": [

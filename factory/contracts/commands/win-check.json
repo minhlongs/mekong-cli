@@ -7,8 +7,8 @@
     "name_vi": "Win Check",
     "name_en": "Win Check",
     "icon": "",
-    "description_vi": "Execute Win Check command",
-    "description_en": "Execute Win Check command"
+    "description_vi": "🏯 Quick WIN-WIN-WIN alignment check",
+    "description_en": "Quick WIN-WIN-WIN alignment check"
   },
   "execution": {
     "agents": [

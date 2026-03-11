@@ -7,8 +7,8 @@
     "name_vi": "Estimate",
     "name_en": "Estimate",
     "icon": "",
-    "description_vi": "Execute Estimate command",
-    "description_en": "Execute Estimate command"
+    "description_vi": "Estimate work",
+    "description_en": "Estimate work"
   },
   "execution": {
     "agents": [
