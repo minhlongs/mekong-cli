@@ -1,45 +1,75 @@
 import SiteNav from '@/components/site-nav'
 import { STATS } from '@/data/stats'
 
-const HEADLINE = 'AI-Operated Business Platform'
-const SUB = `Mekong CLI — ${STATS.commands} commands across 5 business layers. Universal LLM. Open source.`
-
 export default function HeroSection() {
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      {/* Background radial glows */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/4 rounded-full bg-blue-600/8 blur-3xl" />
+        <div className="absolute left-1/3 top-1/2 h-[400px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/6 blur-3xl" />
+        <div className="absolute right-1/4 top-1/3 h-[300px] w-[400px] rounded-full bg-cyan-500/5 blur-3xl" />
+      </div>
+
       <SiteNav />
-      <section className="relative px-6 pb-16 pt-16 text-center">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-800/40 bg-cyan-950/30 px-4 py-1.5 text-xs text-cyan-400">
+
+      <section className="relative px-6 pb-20 pt-12 text-center">
+        <div className="mx-auto max-w-4xl">
+
+          {/* Badge */}
+          <div className="mb-6 inline-flex animate-fade-in-down items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-950/30 px-4 py-1.5 text-xs font-medium text-cyan-400 shadow-lg shadow-cyan-500/5 backdrop-blur-sm">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
-            Mekong CLI v5.0 · Open Source · MIT
+            Mekong CLI v5.0 &nbsp;·&nbsp; Open Source &nbsp;·&nbsp; MIT License
           </div>
 
-          <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-            <span className="gradient-text">Agency</span>
-            <span className="text-white">OS</span>
+          {/* Headline */}
+          <h1 className="animate-fade-in-up mb-6 text-5xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <span className="gradient-text">AI runs</span>
             <br />
-            <span className="text-2xl font-bold text-slate-300 sm:text-3xl">{HEADLINE}</span>
+            <span className="text-white">your entire company</span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-xl text-base text-slate-400 sm:text-lg">
-            {SUB}
+          {/* Sub-headline */}
+          <p className="animate-fade-in-up delay-100 mx-auto mb-4 max-w-2xl text-lg leading-relaxed text-slate-400 sm:text-xl">
+            <span className="font-mono text-cyan-300">{STATS.commands} commands</span> across 5 business layers.
+            Plan &rarr; Execute &rarr; Verify — fully automated.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          {/* Social proof line */}
+          <p className="animate-fade-in-up delay-200 mb-10 text-sm text-slate-500">
+            Universal LLM &nbsp;&middot;&nbsp; {STATS.agents} AI agents &nbsp;&middot;&nbsp; {STATS.skills} skills &nbsp;&middot;&nbsp; {STATS.commits.toLocaleString()}+ commits
+          </p>
+
+          {/* CTAs */}
+          <div className="animate-fade-in-up delay-300 flex flex-wrap items-center justify-center gap-4">
             <a
               href="#quickstart"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-7 py-3 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-8 py-3.5 font-semibold text-white shadow-xl shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:scale-105"
             >
-              Get started free →
+              <svg className="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Get started free
             </a>
             <a
               href="/pricing"
-              className="rounded-xl border border-slate-700 px-7 py-3 font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-8 py-3.5 font-semibold text-slate-300 backdrop-blur-sm transition-all hover:border-slate-500 hover:text-white hover:bg-slate-800/60"
             >
               View pricing
             </a>
+            <a
+              href="https://github.com/longtho638-jpg/mekong-cli"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-8 py-3.5 font-semibold text-slate-300 backdrop-blur-sm transition-all hover:border-slate-500 hover:text-white"
+            >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              </svg>
+              Star on GitHub
+            </a>
           </div>
+
         </div>
       </section>
     </div>
