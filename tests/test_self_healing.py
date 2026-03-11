@@ -39,8 +39,22 @@ class TestSelfHealing(unittest.TestCase):
         fail_result = ExecutionResult(exit_code=1, stdout="", stderr="No such file")
         ok_result = ExecutionResult(exit_code=0, stdout="success", stderr="")
 
-        # Mock the executor's execute_step method directly
-        with patch("src.core.executor.RecipeExecutor.execute_step") as mock_exec:
+        # Patch StepExecutor._init to inject missing console + _reflection attrs
+        # (production code references them but doesn't set them in __init__)
+        from rich.console import Console as _Console
+        import src.core.orchestrator as _orch_mod
+
+        _orig_init_step_executor = _orch_mod.RecipeOrchestrator._init_step_executor
+
+        def _patched_init_step_executor(self_orch, executor):
+            step_exec = _orig_init_step_executor(self_orch, executor)
+            step_exec.console = _Console(quiet=True)
+            step_exec._reflection = None
+            return step_exec
+
+        with patch("src.core.executor.RecipeExecutor.execute_step") as mock_exec, \
+             patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True), \
+             patch.object(_orch_mod.RecipeOrchestrator, "_init_step_executor", _patched_init_step_executor):
             mock_exec.side_effect = [fail_result, ok_result]
             result = orch.run_from_recipe(recipe)
 

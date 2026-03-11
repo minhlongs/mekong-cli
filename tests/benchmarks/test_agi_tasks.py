@@ -26,10 +26,15 @@ import pytest
 
 logger = logging.getLogger(__name__)
 
-# Skip benchmarks in CI/CD - they require LLM configuration
+# Skip benchmarks in CI/CD or when no LLM key is configured
+# These are integration tests that call mekong cook via subprocess
+_has_llm = any(
+    os.getenv(k)
+    for k in ("OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY")
+)
 pytestmark = pytest.mark.skipif(
-    os.getenv("CI") == "true",
-    reason="Skip AGI benchmarks in CI/CD - requires LLM configuration",
+    os.getenv("CI") == "true" or not _has_llm,
+    reason="Skip AGI benchmarks in CI/CD or without LLM key - requires LLM configuration",
 )
 
 # Root path for mekong CLI
@@ -151,6 +156,12 @@ def run_mekong_cook(goal: str, work_dir: Path, timeout: int = 300) -> tuple[bool
         "--auto",
     ]
 
+    env = os.environ.copy()
+    # Ensure project root is in PYTHONPATH for subprocess
+    env["PYTHONPATH"] = str(MEKONG_ROOT) + (
+        os.pathsep + env["PYTHONPATH"] if "PYTHONPATH" in env else ""
+    )
+
     try:
         result = subprocess.run(
             cmd,
@@ -158,6 +169,7 @@ def run_mekong_cook(goal: str, work_dir: Path, timeout: int = 300) -> tuple[bool
             capture_output=True,
             text=True,
             timeout=timeout,
+            env=env,
         )
         success = result.returncode == 0
         output = result.stdout + result.stderr

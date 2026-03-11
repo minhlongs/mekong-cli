@@ -73,7 +73,8 @@ class TestExecuteShellStep:
         recipe = Recipe(name="test", description="Test")
         step = RecipeStep(order=1, title="Test", description="echo hello")
         executor = RecipeExecutor(recipe)
-        with patch("subprocess.run") as mock_run:
+        with patch.object(executor, "_is_safe_command", return_value=True), \
+             patch("subprocess.run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(
                 args=["echo", "hello"], returncode=0, stdout="hello\n", stderr="",
             )
@@ -87,7 +88,8 @@ class TestExecuteShellStep:
         recipe = Recipe(name="test", description="Test")
         step = RecipeStep(order=1, title="Test", description="exit 1")
         executor = RecipeExecutor(recipe)
-        with patch("subprocess.run") as mock_run:
+        with patch.object(executor, "_is_safe_command", return_value=True), \
+             patch("subprocess.run") as mock_run:
             exc = subprocess.CalledProcessError(1, "exit 1")
             exc.stdout = "output"
             exc.stderr = "error"
@@ -120,7 +122,8 @@ class TestExecuteShellStep:
                 exc.stderr = ""
                 raise exc
             return subprocess.CompletedProcess(args=["cmd"], returncode=0, stdout="ok", stderr="")
-        with patch("subprocess.run", side_effect=side_effect):
+        with patch.object(executor, "_is_safe_command", return_value=True), \
+             patch("subprocess.run", side_effect=side_effect):
             result = executor._execute_shell_step(step)
         assert result.exit_code == 0
         assert call_count == 3
@@ -215,7 +218,8 @@ class TestRunFullRecipe:
         ]
         recipe = Recipe(name="success-recipe", description="Success test", steps=steps)
         executor = RecipeExecutor(recipe)
-        with patch("subprocess.run") as mock_run:
+        with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True), \
+             patch("subprocess.run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(args=["echo"], returncode=0, stdout="out", stderr="")
             result = executor.run()
             assert result is True
@@ -230,7 +234,8 @@ class TestRunFullRecipe:
         ]
         recipe = Recipe(name="fail-recipe", description="Fail test", steps=steps)
         executor = RecipeExecutor(recipe)
-        with patch("subprocess.run") as mock_run:
+        with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True), \
+             patch("subprocess.run") as mock_run:
             exc = subprocess.CalledProcessError(1, "fail")
             exc.stdout = ""
             exc.stderr = ""
