@@ -2,8 +2,8 @@ import SiteNav from '@/components/site-nav'
 import FooterSection from '@/components/footer-section'
 
 export const metadata = {
-  title: 'Terms of Service — AgencyOS',
-  description: 'Terms of Service for AgencyOS platform and Mekong CLI.',
+  title: 'Terms of Service — Mekong CLI',
+  description: 'Terms of Service for Mekong CLI platform.',
 }
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
 
         <h2>1. Service Description</h2>
         <p>
-          AgencyOS is an AI-powered command-line platform (&quot;Mekong CLI&quot;) that helps
+          Mekong CLI is an AI-powered command-line platform that helps
           founders and developers build, deploy, and operate software companies using autonomous
           AI agents. The platform operates on a Bring-Your-Own-Key (BYOK) model — you provide
           your own LLM API keys.
@@ -47,7 +47,7 @@ export default function TermsPage() {
 
         <h2>5. Limitation of Liability</h2>
         <p>
-          AgencyOS is provided &quot;as is&quot; without warranties of any kind. We are not liable
+          Mekong CLI is provided &quot;as is&quot; without warranties of any kind. We are not liable
           for any damages arising from your use of AI-generated code or autonomous agent actions.
           You are responsible for reviewing and testing all generated output.
         </p>

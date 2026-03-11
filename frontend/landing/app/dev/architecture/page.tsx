@@ -53,7 +53,7 @@ export default function ArchitecturePage() {
           <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
             <span className="gradient-text">Architecture</span>
           </h1>
-          <p className="text-lg text-slate-400">AgencyOS system architecture</p>
+          <p className="text-lg text-slate-400">Mekong CLI system architecture</p>
         </div>
 
         {/* Section 1: PEV Pipeline */}

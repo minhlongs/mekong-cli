@@ -2,8 +2,8 @@ import SiteNav from '@/components/site-nav'
 import FooterSection from '@/components/footer-section'
 
 export const metadata = {
-  title: 'Privacy Policy — AgencyOS',
-  description: 'Privacy Policy for AgencyOS platform and Mekong CLI.',
+  title: 'Privacy Policy — Mekong CLI',
+  description: 'Privacy Policy for Mekong CLI platform.',
 }
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
 
         <h2>1. Data We Collect</h2>
         <p>
-          AgencyOS collects minimal data. The CLI runs locally on your machine. We collect:
+          Mekong CLI collects minimal data. The CLI runs locally on your machine. We collect:
         </p>
         <ul>
           <li>Account email and billing information (via Polar.sh)</li>
