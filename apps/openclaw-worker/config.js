@@ -122,6 +122,18 @@ const config = {
   // 💰 Budget Enforcement (作戰 Ch.2) — 日費千金
   AG_HOURLY_BUDGET: 30,
 
+  // BYOK LLM Configuration (user's own key — platform pays $0)
+  // Priority: openrouter → direct → ollama → legacy
+  LLM_MODE: process.env.LLM_MODE || 'byok',
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
+  OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || 'anthropic/claude-sonnet-4',
+  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
+  OLLAMA_MODEL: process.env.OLLAMA_MODEL || 'llama3.2',
+
+  // Legacy proxy (backward compat — set LLM_MODE=legacy to activate)
+  PROXY_PORT: process.env.PROXY_PORT ? parseInt(process.env.PROXY_PORT) : 20129,
+  CLOUD_BRAIN_URL: process.env.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128',
+
   // 🧠 OpenClaw-RL Integration (Continuous Reinforcement Learning)
   // Connect to remote GPU server running OpenClaw-RL for self-improving CTO
   OPENCLAW_RL_HOST: process.env.OPENCLAW_RL_HOST || null, // e.g. 'http://<GPU_IP>:30000/v1'

@@ -17,8 +17,8 @@ Language: Vietnamese (ĐIỀU 55) — always respond in Vietnamese except code/t
 | CLI Engine | Python 3.11+ / Typer / Rich / Pydantic |
 | API Gateway | FastAPI (local) / Cloudflare Workers (cloud) |
 | PEV Engine | `src/core/` planner → executor → verifier → orchestrator |
-| LLM Router | Claude (opus/sonnet/haiku) + Gemini + Qwen (DashScope) + Ollama |
-| Proxy | Antigravity on port 9191 (`ANTHROPIC_BASE_URL=http://localhost:9191`) |
+| LLM Router | BYOK — OpenRouter / Direct API / Ollama (user's own key, ĐIỀU 56) |
+| Proxy | Legacy only — Antigravity port 9191 (`LLM_MODE=legacy`, deprecated) |
 | DB | Supabase (prod) / SQLite (dev) |
 | Billing | Polar.sh webhooks → `src/raas/credits.py` |
 | MCU | Mekong Credit Unit — 1 MCU = 1 credit |
@@ -200,20 +200,42 @@ Layers:
 - ĐIỀU 50: Mission success is the supreme priority
 
 **Infrastructure:**
-- ĐIỀU 51: Proxy down → `scripts/proxy-recovery.sh` → retry
-- ĐIỀU 52: `RESOURCE_EXHAUSTED` → wait 2s → proxy auto-failover
+- ĐIỀU 51: Proxy down → `scripts/proxy-recovery.sh` → retry (legacy mode only)
+- ĐIỀU 52: `RESOURCE_EXHAUSTED` → wait 2s → provider auto-failover
 - ĐIỀU 53: M1 thermal protection (`m1-cooling-daemon.js`)
 - ĐIỀU 54: Tôm Hùm autonomous dispatch (`apps/openclaw-worker/`)
 - ĐIỀU 55: Vietnamese language mandatory for all output
+- ĐIỀU 56: BYOK — user chọn LLM provider, platform KHÔNG proxy, KHÔNG trả tiền LLM
 
 ---
 
 ## 6. ACTIVE INTEGRATIONS
 
-**Antigravity Proxy:**
+## ĐIỀU 56 — LLM PROVIDER CONFIGURATION (BYOK)
+
+> **User tự chọn LLM provider. Platform KHÔNG proxy, KHÔNG trả tiền LLM.**
+
+### Provider Priority (auto-detect từ env vars):
+1. `OPENROUTER_API_KEY` → OpenRouter (200+ models, recommended)
+2. `ANTHROPIC_API_KEY` → Direct Anthropic API
+3. `OPENAI_API_KEY` → Direct OpenAI API
+4. `GOOGLE_API_KEY` → Google Gemini
+5. `OLLAMA_BASE_URL` → Local Ollama (free, offline)
+6. `LLM_BASE_URL` → Custom endpoint
+7. Fallback → OfflineProvider
+
+### Tại sao BYOK thay vì Proxy:
+- Proxy rớt = toàn hệ thống chết (5 lần debug mất 2 tiếng)
+- Platform trả tiền LLM cho tất cả users = không scale
+- User locked vào 1 model = không linh hoạt
+- BYOK: user trả tiền, chọn model, platform cost = $0
+
+### Legacy mode (deprecated):
+Nếu vẫn muốn dùng Antigravity Proxy: set `LLM_MODE=legacy`
 ```
+LLM_MODE=legacy
 ANTHROPIC_BASE_URL=http://localhost:9191
-PROXY_PORT=9191  # DO NOT CHANGE
+PROXY_PORT=9191
 Fallback: direct API if proxy down → scripts/proxy-recovery.sh
 ```
 

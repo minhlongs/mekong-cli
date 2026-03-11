@@ -2,14 +2,22 @@
 
 Thin router over pluggable LLMProvider backends.
 Priority (auto-detected from env vars when no providers passed):
-1. GEMINI_API_KEY  → GeminiProvider
-2. ANTIGRAVITY_PROXY_URL / LLM_BASE_URL  → OpenAICompatibleProvider
-3. OPENAI_API_KEY  → OpenAICompatibleProvider
-4. Fallback  → OfflineProvider
+1. OPENROUTER_API_KEY    → OpenRouter (200+ models, recommended)
+2. ANTHROPIC_API_KEY     → Direct Anthropic API
+3. OPENAI_API_KEY        → Direct OpenAI API
+4. GOOGLE_API_KEY        → Google Gemini (direct)
+5. GEMINI_API_KEY        → GeminiProvider (SDK-based, legacy)
+6. OLLAMA_BASE_URL       → Local Ollama (free, offline)
+7. LLM_BASE_URL          → Custom endpoint (backward compat)
+8. ANTIGRAVITY_PROXY_URL → Legacy Antigravity Proxy (deprecated)
+9. Fallback              → OfflineProvider
 
+NO PROXY by default. User's key hits provider directly (BYOK).
 Runtime failover: if one provider fails, tries the next in priority order.
 Circuit breaker: after 3 consecutive failures, provider cools down for 60s.
 Portkey-inspired: status-code based failover, hooks pipeline, LRU cache.
+
+Legacy mode: set LLM_MODE=legacy to restore proxy-first behaviour.
 """
 
 from __future__ import annotations
@@ -163,39 +171,121 @@ class LLMClient:
     # ------------------------------------------------------------------
 
     def _build_providers_from_env(self) -> list[LLMProvider]:
-        """Auto-detect providers from environment variables (priority order)."""
+        """Auto-detect providers from environment variables (BYOK priority order).
+
+        Priority:
+        1. OPENROUTER_API_KEY  → OpenRouter (recommended)
+        2. ANTHROPIC_API_KEY   → Direct Anthropic (skip if pointing to local proxy)
+        3. OPENAI_API_KEY      → Direct OpenAI
+        4. GOOGLE_API_KEY      → Gemini (direct)
+        5. GEMINI_API_KEY      → GeminiProvider SDK (legacy)
+        6. OLLAMA_BASE_URL     → Local Ollama
+        7. LLM_BASE_URL        → Custom endpoint
+        8. Legacy proxy        → Only when LLM_MODE=legacy
+        """
         built: list[LLMProvider] = []
+        llm_mode = os.getenv("LLM_MODE", "byok").lower()
 
-        gemini_key = self.gemini_key
-        if gemini_key:
-            built.append(GeminiProvider(api_key=gemini_key, model=self.model))
+        # --- Legacy proxy mode (opt-in) ---
+        if llm_mode == "legacy":
+            proxy_url = self.proxy_url
+            if proxy_url:
+                built.append(
+                    OpenAICompatibleProvider(
+                        base_url=proxy_url,
+                        api_key=self.api_key or "",
+                        model=self.model,
+                        provider_name="proxy",
+                        timeout=self.timeout,
+                    ),
+                )
+            built.append(OfflineProvider())
+            return built
 
-        proxy_url = self.proxy_url
-        if proxy_url:
+        # --- BYOK mode (default) ---
+
+        # 1. OpenRouter (200+ models, single key, recommended)
+        openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
+        if openrouter_key:
             built.append(
                 OpenAICompatibleProvider(
-                    base_url=proxy_url,
-                    api_key=self.api_key or "",
-                    model=self.model,
-                    provider_name="proxy",
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=openrouter_key,
+                    model=os.getenv("OPENROUTER_MODEL", "anthropic/claude-sonnet-4"),
+                    provider_name="openrouter",
                     timeout=self.timeout,
                 ),
             )
 
+        # 2. Direct Anthropic (skip if ANTHROPIC_BASE_URL points to local proxy)
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+        anthropic_base = os.getenv("ANTHROPIC_BASE_URL", "")
+        if anthropic_key and not anthropic_base.startswith("http://localhost"):
+            built.append(
+                OpenAICompatibleProvider(
+                    base_url="https://api.anthropic.com/v1",
+                    api_key=anthropic_key,
+                    model="claude-sonnet-4-6-20250514",
+                    provider_name="anthropic-direct",
+                    timeout=self.timeout,
+                ),
+            )
+
+        # 3. Direct OpenAI
         openai_key = self.api_key
-        if openai_key and not proxy_url:
+        if openai_key:
             built.append(
                 OpenAICompatibleProvider(
                     base_url="https://api.openai.com/v1",
                     api_key=openai_key,
                     model=self.model,
-                    provider_name="openai",
+                    provider_name="openai-direct",
+                    timeout=self.timeout,
+                ),
+            )
+
+        # 4. Google Gemini (direct key — SDK-based provider)
+        google_key = os.getenv("GOOGLE_API_KEY", "") or self.gemini_key
+        if google_key:
+            built.append(GeminiProvider(api_key=google_key, model=self.model))
+
+        # 5. Local Ollama (no key needed — check env or probe port)
+        ollama_url = os.getenv("OLLAMA_BASE_URL", "")
+        if ollama_url or self._check_ollama_running():
+            built.append(
+                OpenAICompatibleProvider(
+                    base_url=ollama_url or "http://localhost:11434/v1",
+                    api_key="ollama",
+                    model=os.getenv("OLLAMA_MODEL", "llama3.2"),
+                    provider_name="ollama-local",
+                    timeout=self.timeout,
+                ),
+            )
+
+        # 6. Custom endpoint (backward compat: LLM_BASE_URL / ANTIGRAVITY_PROXY_URL)
+        custom_url = os.getenv("LLM_BASE_URL", "") or os.getenv("ANTIGRAVITY_PROXY_URL", "")
+        custom_key = os.getenv("LLM_API_KEY", "") or self.api_key
+        if custom_url and not any(p.name == "proxy" for p in built):
+            built.append(
+                OpenAICompatibleProvider(
+                    base_url=custom_url,
+                    api_key=custom_key or "",
+                    model=os.getenv("LLM_MODEL", self.model),
+                    provider_name="custom",
                     timeout=self.timeout,
                 ),
             )
 
         built.append(OfflineProvider())
         return built
+
+    def _check_ollama_running(self) -> bool:
+        """Probe Ollama health endpoint (port 11434). Returns False on any error."""
+        try:
+            resp = requests.get("http://localhost:11434/api/tags", timeout=2)
+            return resp.status_code == 200
+        except Exception:
+            return False
 
     @staticmethod
     def _build_providers_from_config(config_path: str) -> list[LLMProvider]:
