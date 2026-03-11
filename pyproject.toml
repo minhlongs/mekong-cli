@@ -93,6 +93,7 @@ exclude = [
     "apps/sophia-proposal/.claude/",
     "apps/*/.claude/skills/",
     ".claude/skills/",
+    "mekong/skills/",
 ]
 
 [tool.coverage.run]
