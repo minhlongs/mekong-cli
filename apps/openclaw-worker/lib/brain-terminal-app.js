@@ -81,9 +81,9 @@ function runAppleScriptFile(script) {
 function spawnBrain() {
 	log('BRAIN MODE: Terminal.app — CC CLI interactive in native macOS Terminal');
 
-	const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
-	const proxyPort = new URL(proxyUrl).port || '20128';
-	const configDir = `/Users/macbookprom1/.claude_antigravity_${proxyPort}`;
+	const proxyUrl = config.CLOUD_BRAIN_URL || process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
+	const proxyPort = proxyUrl ? (new URL(proxyUrl).port || '') : '';
+	const configDir = proxyPort ? `/Users/macbookprom1/.claude_config_${proxyPort}` : `/Users/macbookprom1/.claude`;
 
 	// DashScope Direct: giữ ANTHROPIC_* env vars từ settings.json
 	const envSetup = [`unset CLAUDE_CONFIG_DIR`, `unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`].join(' && ');

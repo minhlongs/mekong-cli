@@ -6,8 +6,12 @@
       "icon": "👑",
       "role": "Founder / CEO",
       "description": "Strategic vision, fundraising, OKRs, financial goals. The apex of the pyramid.",
-      "cascades_to": ["business"],
-      "hubs": ["founder-hub"],
+      "cascades_to": [
+        "business"
+      ],
+      "hubs": [
+        "founder-hub"
+      ],
       "commands": [
         "annual",
         "quarterly",
@@ -33,8 +37,12 @@
       "icon": "💼",
       "role": "Business Lead / GTM",
       "description": "Sales, marketing, finance, HR, client ops. Revenue engine layer.",
-      "cascades_to": ["product"],
-      "hubs": ["business-hub"],
+      "cascades_to": [
+        "product"
+      ],
+      "hubs": [
+        "business-hub"
+      ],
       "commands": [
         "sales",
         "marketing",
@@ -75,8 +83,12 @@
       "icon": "🎯",
       "role": "Product Manager / Designer",
       "description": "Roadmap, sprints, personas, proposals, demos. Bridge between biz and eng.",
-      "cascades_to": ["engineering"],
-      "hubs": ["product-hub"],
+      "cascades_to": [
+        "engineering"
+      ],
+      "hubs": [
+        "product-hub"
+      ],
       "commands": [
         "plan",
         "brainstorm",
@@ -102,8 +114,12 @@
       "icon": "⚙️",
       "role": "Engineer / Tech Lead",
       "description": "Code, build, test, deploy, review. The execution powerhouse.",
-      "cascades_to": ["ops"],
-      "hubs": ["engineering-hub"],
+      "cascades_to": [
+        "ops"
+      ],
+      "hubs": [
+        "engineering-hub"
+      ],
       "commands": [
         "cook",
         "code",
@@ -160,7 +176,9 @@
       "role": "DevOps / Platform",
       "description": "Audit, health, security, sync, environment. The foundation layer.",
       "cascades_to": [],
-      "hubs": ["ops-hub"],
+      "hubs": [
+        "ops-hub"
+      ],
       "commands": [
         "audit",
         "health",
@@ -179,7 +197,7 @@
         "smoke",
         "sync-agent",
         "sync-all",
-        "sync-antigravity",
+        "sync-providers",
         "sync-artifacts",
         "sync-browser",
         "sync-editor",

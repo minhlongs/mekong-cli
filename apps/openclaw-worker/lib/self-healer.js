@@ -410,7 +410,8 @@ function isTmuxAlive() {
 
 function isProxyAlive() {
 	try {
-		const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
+		const proxyUrl = config.CLOUD_BRAIN_URL || process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
+		if (!proxyUrl) return false;
 		execSync(`curl -sf -m 3 ${proxyUrl}/health`, { timeout: 5000, stdio: 'pipe' });
 		return true;
 	} catch (e) {
@@ -419,18 +420,29 @@ function isProxyAlive() {
 }
 
 /**
- * Check proxy health for a specific port
+ * Check LLM provider health via LLM_BASE_URL or ANTHROPIC_BASE_URL
  */
-async function checkProxyHealth(port = 9191) {
+async function checkLLMHealth() {
 	return new Promise((resolve) => {
-		const req = http.get(`http://localhost:${port}/health`, (res) => {
-			resolve(res.statusCode === 200);
-		});
-		req.on('error', () => resolve(false));
-		req.setTimeout(3000, () => {
-			req.destroy();
+		const baseUrl = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
+		if (!baseUrl) {
 			resolve(false);
-		});
+			return;
+		}
+		try {
+			const url = new URL('/health', baseUrl);
+			const mod = url.protocol === 'https:' ? require('https') : http;
+			const req = mod.get(url.href, (res) => {
+				resolve(res.statusCode === 200);
+			});
+			req.on('error', () => resolve(false));
+			req.setTimeout(3000, () => {
+				req.destroy();
+				resolve(false);
+			});
+		} catch (e) {
+			resolve(false);
+		}
 	});
 }
 
@@ -448,25 +460,22 @@ async function restartProxy() {
 		}
 	}
 
-	const port9191 = await checkProxyHealth(9191);
-	const port20128 = await checkProxyHealth(20128);
+	const llmHealthy = await checkLLMHealth();
 
-	if (!port9191) log('[SELF-HEALER] ⚠️ Proxy 9191 (CC CLI) UNHEALTHY');
-	if (!port20128) log('[SELF-HEALER] ⚠️ Proxy 20128 (Engine) UNHEALTHY');
+	if (!llmHealthy) log('[SELF-HEALER] ⚠️ LLM provider UNHEALTHY — check LLM_BASE_URL');
 
-	const anyHealthy = port9191 || port20128;
-	if (anyHealthy) {
+	if (llmHealthy) {
 		consecutiveRecoveryFailures = 0;
-		log(`[SELF-HEALER] Proxy status: 9191=${port9191 ? '✅' : '❌'} 20128=${port20128 ? '✅' : '❌'}`);
+		log(`[SELF-HEALER] LLM provider status: ${llmHealthy ? '✅' : '❌'}`);
 	} else {
 		consecutiveRecoveryFailures++;
-		log(`[SELF-HEALER] ALL proxies DOWN — recovery fail ${consecutiveRecoveryFailures}/${MAX_RECOVERY_FAILURES}`);
+		log(`[SELF-HEALER] LLM provider DOWN — recovery fail ${consecutiveRecoveryFailures}/${MAX_RECOVERY_FAILURES}`);
 		if (consecutiveRecoveryFailures >= MAX_RECOVERY_FAILURES) {
-			sendTelegram('🚨 ALL PROXIES DOWN after 3 recovery attempts — manual intervention required');
+			sendTelegram('🚨 LLM PROVIDER DOWN after 3 recovery attempts — check LLM_BASE_URL, manual intervention required');
 		}
 	}
 
-	return anyHealthy;
+	return llmHealthy;
 }
 
 function isProcessStuck() {
@@ -525,12 +534,12 @@ async function preFlightCheck() {
 	}
 
 	if (!isProxyAlive()) {
-		issues.push('Proxy 20128 is down');
+		issues.push('LLM provider is down');
 		await restartProxy();
 	}
-	const proxy9191 = await checkProxyHealth(9191);
-	if (!proxy9191) {
-		issues.push('Proxy 9191 (CC CLI) is down');
+	const llmOk = await checkLLMHealth();
+	if (!llmOk) {
+		issues.push('LLM provider health check failed — check LLM_BASE_URL');
 	}
 
 	if (isProcessStuck()) {
@@ -595,14 +604,14 @@ async function healthCheck() {
 		clearStaleLocks();
 	}
 
-	// Check 2: Proxy health
+	// Check 2: LLM provider health
 	if (!isProxyAlive()) {
-		log('🩺 Proxy 20128 DOWN — attempting recovery');
+		log('🩺 LLM provider DOWN — attempting recovery');
 		await restartProxy();
 	}
-	const proxy9191ok = await checkProxyHealth(9191);
-	if (!proxy9191ok) {
-		log('🩺 Proxy 9191 DOWN — attempting recovery');
+	const llmOk = await checkLLMHealth();
+	if (!llmOk) {
+		log('🩺 LLM provider health check failed — attempting recovery');
 		await restartProxy();
 	}
 

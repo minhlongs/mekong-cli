@@ -1,6 +1,6 @@
 """Mekong CLI - Telegram Inbox.
 
-Task inbox for Telegram → Antigravity relay.
+Task inbox for Telegram → Mekong CLI relay.
 """
 
 from __future__ import annotations

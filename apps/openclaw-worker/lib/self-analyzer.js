@@ -18,7 +18,7 @@ const config = require('../config');
 const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data');
 const MEMORY_FILE = path.join(DATA_DIR, 'cross-session-memory.json');
 const SELF_ANALYSIS_FILE = path.join(DATA_DIR, 'self-analysis.json');
-const PROXY_PORT = config.PROXY_PORT || 20128;
+const LLM_BASE_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || config.CLOUD_BRAIN_URL || '';
 
 function log(msg) {
 	const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
@@ -173,11 +173,11 @@ Return JSON: {"analysis": "brief summary", "prioritize": ["task_ids"], "deprecat
 			resolve(null);
 		}, 15000);
 
+		const reqUrl = LLM_BASE_URL ? `${LLM_BASE_URL}/v1/messages` : null;
+		if (!reqUrl) { clearTimeout(timer); resolve(null); return; }
 		const req = http.request(
+			reqUrl,
 			{
-				hostname: '127.0.0.1',
-				port: PROXY_PORT,
-				path: '/v1/messages',
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'x-api-key': 'ollama', 'anthropic-version': '2023-06-01' },
 			},

@@ -16,12 +16,12 @@ const { log } = require('./brain-process-manager');
 
 let scannerInterval = null;
 
-// --- BUG #9: Replace Ollama (localhost:11436) with Antigravity Proxy ---
-const PROXY_URL = process.env.ANTHROPIC_BASE_URL || 'http://localhost:9191';
+const LLM_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
 
 async function callLLM(prompt) {
 	try {
-		const response = await fetch(`${PROXY_URL}/v1/messages`, {
+		if (!LLM_URL) throw new Error('LLM_BASE_URL not configured');
+		const response = await fetch(`${LLM_URL}/v1/messages`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

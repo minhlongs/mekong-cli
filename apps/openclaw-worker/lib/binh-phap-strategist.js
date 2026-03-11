@@ -15,7 +15,7 @@ const path = require('path');
 const http = require('http');
 const config = require('../config');
 
-const PROXY_PORT = config.PROXY_PORT || 20128;
+const LLM_BASE_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || config.CLOUD_BRAIN_URL || '';
 const MODEL = 'gemini-3-pro'; // Wisdom requires depth (9router)
 const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data');
 const STRATEGY_HISTORY_FILE = path.join(DATA_DIR, 'strategy-history.json');
@@ -83,11 +83,11 @@ Format your response as a valid JSON object:
 			resolve(fallbackStrategy(task));
 		}, 30000); // 30s timeout for wisdom
 
+		const reqUrl = LLM_BASE_URL ? `${LLM_BASE_URL}/v1/messages` : null;
+		if (!reqUrl) { clearTimeout(timer); resolve(fallbackStrategy(task)); return; }
 		const req = http.request(
+			reqUrl,
 			{
-				hostname: '127.0.0.1',
-				port: PROXY_PORT,
-				path: '/v1/messages',
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

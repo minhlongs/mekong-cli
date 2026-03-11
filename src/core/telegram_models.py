@@ -17,8 +17,8 @@ class BotConfig:
 
 HELP_TEXT = """🦞 *Tôm Hùm — Telegram Commander*
 
-*Autonomous Coding (via Antigravity):*
-/cook <goal> — Queue task → Antigravity executes
+*Autonomous Coding (via Mekong CLI):*
+/cook <goal> — Queue task → Mekong CLI executes
 /spawn <project> <goal> — Task for specific app
 /tasks — View pending inbox
 /sessions — Active CC CLI terminals

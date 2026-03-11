@@ -145,7 +145,7 @@ function extractHint(missionResult) {
 	return 'approached the problem differently';
 }
 
-// --- RL-Aware Routing (for Antigravity Proxy integration) ---
+// --- RL-Aware Routing (for LLM provider integration) ---
 /**
  * Check if a mission should be routed through OpenClaw-RL model
  * instead of the default Anthropic/Gemini models.

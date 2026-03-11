@@ -20,10 +20,10 @@ export const COMMANDS_OPS_C: CommandData[] = [
     agents: ["tester"],
   },
   {
-    id: "sync-antigravity",
+    id: "sync-providers",
     layer: "ops",
-    displayName: "Sync Antigravity",
-    description: "Sync Antigravity proxy — update proxy configs",
+    displayName: "Sync Providers",
+    description: "Sync LLM provider configs — validate API keys and endpoints",
     complexity: "simple",
     creditCost: 1,
     agents: ["fullstack-developer"],

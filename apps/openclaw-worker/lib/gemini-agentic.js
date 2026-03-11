@@ -18,7 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
-const PROXY_PORT = config.PROXY_PORT || 20128;
+const LLM_BASE_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || config.CLOUD_BRAIN_URL || '';
 const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data');
 const RESEARCH_DIR = path.join(DATA_DIR, 'gemini-research');
 
@@ -32,7 +32,7 @@ function log(msg) {
 }
 
 // ═══════════════════════════════════════════════════
-// Core: Qwen via Antigravity Proxy (port 9191)
+// Core: Qwen via configured LLM provider (LLM_BASE_URL)
 // ═══════════════════════════════════════════════════
 
 function callGemini(prompt, options = {}) {
@@ -53,14 +53,13 @@ function callGemini(prompt, options = {}) {
 			],
 		});
 
-		const timer = setTimeout(() => reject(new Error('Qwen proxy timeout')), timeout);
-		const targetPort = config.LLM_PROXY_PORT || 9191;
+		const timer = setTimeout(() => reject(new Error('LLM provider timeout')), timeout);
+		const reqUrl = LLM_BASE_URL ? `${LLM_BASE_URL}/v1/chat/completions` : null;
+		if (!reqUrl) { clearTimeout(timer); reject(new Error('LLM_BASE_URL not configured')); return; }
 
 		const req = http.request(
+			reqUrl,
 			{
-				hostname: '127.0.0.1',
-				port: targetPort,
-				path: '/v1/chat/completions',
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

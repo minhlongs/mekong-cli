@@ -18,7 +18,7 @@ const config = require('../config');
 
 const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data');
 const RESEARCH_DIR = path.join(DATA_DIR, 'research');
-const PROXY_PORT = config.PROXY_PORT || 20128;
+const LLM_BASE_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || config.CLOUD_BRAIN_URL || '';
 
 if (!fs.existsSync(RESEARCH_DIR)) fs.mkdirSync(RESEARCH_DIR, { recursive: true });
 
@@ -138,11 +138,11 @@ Return JSON: {"rootCause": "...", "bestSolution": "...", "codeExample": "...", "
 			resolve(null);
 		}, 20000);
 
+		const reqUrl = LLM_BASE_URL ? `${LLM_BASE_URL}/v1/messages` : null;
+		if (!reqUrl) { resolve(null); return; }
 		const req = http.request(
+			reqUrl,
 			{
-				hostname: '127.0.0.1',
-				port: PROXY_PORT,
-				path: '/v1/messages',
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', 'x-api-key': 'ollama', 'anthropic-version': '2023-06-01' },
 			},

@@ -66,7 +66,7 @@ export const LAYERS: LayerData[] = [
     description: "Audit, health, security, sync, environment. The foundation layer.",
     icon: "🔧",
     // prettier-ignore
-    commands: ["audit","benchmark","bootstrap-auto","bootstrap-auto-fast","bootstrap-auto-parallel","clean","company-agent","company-billing","company-init","company-report","company-run","company-workflow","env","health","help","init","install","raas","raas-billing","raas-bootstrap","raas-bootstrap-auto","raas-bootstrap-auto-parallel","raas-bootstrap-parallel","raas-deploy","raas-mission","raas-status","report","rollback","security","setup-mcp","smoke","status","sync-agent","sync-all","sync-antigravity","sync-artifacts","sync-browser","sync-editor","sync-mcp","sync-rules","sync-tasks","update","use-mcp","win-check"],
+    commands: ["audit","benchmark","bootstrap-auto","bootstrap-auto-fast","bootstrap-auto-parallel","clean","company-agent","company-billing","company-init","company-report","company-run","company-workflow","env","health","help","init","install","raas","raas-billing","raas-bootstrap","raas-bootstrap-auto","raas-bootstrap-auto-parallel","raas-bootstrap-parallel","raas-deploy","raas-mission","raas-status","report","rollback","security","setup-mcp","smoke","status","sync-agent","sync-all","sync-providers","sync-artifacts","sync-browser","sync-editor","sync-mcp","sync-rules","sync-tasks","update","use-mcp","win-check"],
     cascadesTo: [],
     entryPrompt: "Ops layer. Audit, health check, security, or sync?",
     color: "orange-400",

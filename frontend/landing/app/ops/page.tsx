@@ -24,7 +24,7 @@ const GROUPS = [
     title: 'Sync & Deploy',
     ids: [
       'init', 'install', 'setup-mcp', 'use-mcp', 'update', 'clean',
-      'rollback', 'smoke', 'sync-agent', 'sync-all', 'sync-antigravity',
+      'rollback', 'smoke', 'sync-agent', 'sync-all', 'sync-providers',
       'sync-artifacts', 'sync-browser', 'sync-editor', 'sync-mcp',
       'sync-rules', 'sync-tasks', 'win-check', 'help', 'raas',
     ],
@@ -33,7 +33,7 @@ const GROUPS = [
 
 const TERMINAL_LINES = [
   { prompt: '$', cmd: 'mekong health', delay: 0 },
-  { prompt: '>', output: 'Proxy    ✓  localhost:9191', delay: 300 },
+  { prompt: '>', output: 'LLM      ✓  provider connected', delay: 300 },
   { prompt: '>', output: 'Supabase ✓  connected', delay: 500 },
   { prompt: '>', output: 'Credits  ✓  42 MCU remaining', delay: 700 },
   { prompt: '>', output: 'Status   ✓  All systems operational', delay: 900 },

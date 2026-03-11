@@ -181,7 +181,7 @@ layers:
       - smoke
       - sync-agent
       - sync-all
-      - sync-antigravity
+      - sync-providers
       - sync-artifacts
       - sync-browser
       - sync-editor

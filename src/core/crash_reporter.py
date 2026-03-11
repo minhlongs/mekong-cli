@@ -50,7 +50,7 @@ _ERROR_PATTERNS: dict[str, tuple] = {
     "PermissionError": (CrashSeverity.MEDIUM, "Insufficient permissions. Check file ownership or run with elevated privileges."),
     "ValueError": (CrashSeverity.MEDIUM, "Invalid input. Review arguments and configuration values."),
     "KeyError": (CrashSeverity.MEDIUM, "Missing key in data structure. Check config or recipe file format."),
-    "ConnectionError": (CrashSeverity.HIGH, "Network failed. Verify internet access and proxy settings (port 9191)."),
+    "ConnectionError": (CrashSeverity.HIGH, "Network failed. Verify internet access and LLM_BASE_URL configuration."),
     "TimeoutError": (CrashSeverity.HIGH, "Operation timed out. Check network stability and increase timeout limits."),
     "MemoryError": (CrashSeverity.CRITICAL, "Out of memory. Free system resources or reduce batch size."),
     "RecursionError": (CrashSeverity.CRITICAL, "Infinite recursion. Check for circular dependencies in recipe definitions."),

@@ -69,13 +69,17 @@ function perceive() {
 		alerts.push({ type: 'memory_warn', severity: 'medium', message: 'Memory pressure WARNING' });
 	}
 
-	// 4. Proxy ports alive — both 9191 (CC CLI) and 20128 (Engine) are critical
-	for (const port of [9191, 20128]) {
-		const alive = safeExec(`curl -sf http://127.0.0.1:${port}/health 2>/dev/null | head -c 10`);
-		metrics[`port_${port}`] = alive.length > 0;
+	// 4. LLM provider health check via LLM_BASE_URL
+	const llmUrl = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
+	if (llmUrl) {
+		const alive = safeExec(`curl -sf "${llmUrl}/health" 2>/dev/null | head -c 10`);
+		metrics['llm_provider'] = alive.length > 0;
 		if (!alive) {
-			alerts.push({ type: 'proxy_down', severity: 'high', message: `Proxy port ${port} is DOWN` });
+			alerts.push({ type: 'llm_provider_down', severity: 'high', message: `LLM provider at ${llmUrl} is DOWN` });
 		}
+	} else {
+		metrics['llm_provider'] = false;
+		alerts.push({ type: 'llm_not_configured', severity: 'medium', message: 'LLM_BASE_URL not configured' });
 	}
 
 	// 5. tmux brain session alive

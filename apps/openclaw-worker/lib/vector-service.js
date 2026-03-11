@@ -5,7 +5,7 @@
  *    "Foreknowledge cannot be gotten from spirits... it must be obtained from men who know the enemy's condition"
  *
  * This service provides:
- * 1. Semantic Embedding via Antigravity Proxy (port 20128)
+ * 1. Semantic Embedding via configured LLM provider
  * 2. Persistent Vector Store via LanceDB (Columnar Disk-based)
  * 3. SQL-style metadata filtering for RAG
  */
@@ -17,7 +17,7 @@ const config = require('../config');
 const lancedb = require('@lancedb/lancedb');
 
 const DATA_DIR = path.join(config.MEKONG_DIR, 'apps/openclaw-worker/data/vector_db');
-const PROXY_PORT = config.PROXY_PORT || 20128;
+const LLM_BASE_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || config.CLOUD_BRAIN_URL || '';
 
 // Ensure data dir
 if (!fs.existsSync(DATA_DIR)) {
@@ -85,11 +85,11 @@ function _getProxyEmbedding(text) {
 			model: 'text-embedding-3-small',
 		});
 
+		const embedUrl = LLM_BASE_URL ? `${LLM_BASE_URL}/v1/embeddings` : null;
+		if (!embedUrl) { reject(new Error('LLM_BASE_URL not configured')); return; }
 		const req = http.request(
+			embedUrl,
 			{
-				hostname: '127.0.0.1',
-				port: PROXY_PORT,
-				path: '/v1/embeddings',
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

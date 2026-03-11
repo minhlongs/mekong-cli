@@ -5,7 +5,7 @@ const TECH_STACK = [
   { layer: 'CLI', tech: 'Python / Typer / Rich', desc: 'Command-line interface, Rich UI, type hints' },
   { layer: 'API', tech: 'FastAPI / Cloudflare Workers', desc: 'Local gateway + edge deployment' },
   { layer: 'PEV', tech: 'src/core/ planner→executor→verifier', desc: 'Plan–Execute–Verify orchestration loop' },
-  { layer: 'LLM', tech: 'Claude + Gemini + Qwen + Ollama', desc: 'Multi-model router via Antigravity Proxy :9191' },
+  { layer: 'LLM', tech: 'Claude + Gemini + Qwen + Ollama', desc: 'Universal LLM endpoint — any OpenAI-compatible provider' },
   { layer: 'DB', tech: 'Supabase (prod) / SQLite (dev)', desc: 'Persistent state, credits, mission log' },
   { layer: 'Billing', tech: 'Polar.sh + MCU credits', desc: '1 MCU = 1 credit, webhooks → src/raas/credits.py' },
 ]

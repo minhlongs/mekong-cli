@@ -208,8 +208,8 @@ class ProviderRegistry:
 # Built-in provider specs
 
 
-class AntigravityProvider:
-    """Provider for Antigravity Proxy (OpenAI-compatible, port 9191)."""
+class OpenAICompatProvider:
+    """Provider for any OpenAI-compatible endpoint (LLM_BASE_URL configured)."""
 
     @property
     def provider_name(self) -> str:
@@ -290,7 +290,7 @@ def create_default_registry() -> ProviderRegistry:
 
     registry.register(
         "proxy",
-        factory=AntigravityProvider,
+        factory=OpenAICompatProvider,
         default_model="gemini-3-pro-high",
         aliases={"fast": "gemini-2.0-flash", "best": "gemini-3-pro-high"},
     )
@@ -311,7 +311,7 @@ def create_default_registry() -> ProviderRegistry:
 
 
 __all__ = [
-    "AntigravityProvider",
+    "OpenAICompatProvider",
     "GeminiProvider",
     "OpenAIProvider",
     "ProviderConfig",

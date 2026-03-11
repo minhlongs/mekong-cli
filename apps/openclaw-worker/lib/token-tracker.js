@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROXY_LOG = '/tmp/proxy_20128.log';
+const PROXY_LOG = '/tmp/llm_provider.log';
 const USAGE_FILE = path.join(__dirname, '..', '.token-usage.json');
 const DAILY_BUDGET = 50000; // 🔒 Alert threshold
 
