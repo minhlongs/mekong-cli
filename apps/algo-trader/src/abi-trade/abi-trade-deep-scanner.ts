@@ -18,15 +18,6 @@ import {
   RiskFactor,
 } from './abi-trade-types';
 
-interface PriceDataItem {
-  exchange: string;
-  ticker: unknown;
-  orderBook: unknown | null;
-  trades: unknown | null;
-  makerFee: number;
-  takerFee: number;
-}
-
 interface DeepScanAggregate {
   totalOpportunities: number;
   avgConfidence: number;
@@ -50,6 +41,15 @@ interface PriceHistory {
   low: number;
   close: number;
   volume: number;
+}
+
+export interface PriceDataItem {
+  exchange: string;
+  ticker: unknown;
+  orderBook: unknown | null;
+  trades: unknown | null;
+  makerFee: number;
+  takerFee: number;
 }
 
 export class AbiTradeDeepScanner extends EventEmitter {
@@ -496,3 +496,17 @@ export class AbiTradeDeepScanner extends EventEmitter {
     return { ...this.config };
   }
 }
+
+// Re-export types for CLI usage
+export {
+  AbiTradeScanConfig,
+  DeepScanResult,
+  MarketCorrelation,
+  LatencyMetrics,
+  RiskFactor,
+  IArbitrageOpportunity,
+} from './abi-trade-types';
+
+// Export local interfaces
+export { DeepScanAggregate, PriceHistory };
+

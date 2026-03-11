@@ -5,6 +5,8 @@
 
 import { IArbitrageOpportunity } from '../interfaces/IArbitrageOpportunity';
 
+export { IArbitrageOpportunity } from '../interfaces/IArbitrageOpportunity';
+
 export interface AbiTradeScanConfig {
   exchanges: string[];
   symbols: string[];
