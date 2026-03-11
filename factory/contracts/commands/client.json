@@ -7,8 +7,8 @@
     "name_vi": "Client",
     "name_en": "Client",
     "icon": "",
-    "description_vi": "Execute Client command",
-    "description_en": "Execute Client command"
+    "description_vi": "Manage client",
+    "description_en": "Manage client"
   },
   "execution": {
     "agents": [

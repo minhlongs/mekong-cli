@@ -7,8 +7,8 @@
     "name_vi": "Debug",
     "name_en": "Debug",
     "icon": "",
-    "description_vi": "Execute Debug command",
-    "description_en": "Execute Debug command"
+    "description_vi": "⚡⚡ Debugging technical issues and providing solutions.",
+    "description_en": "Debugging technical issues and providing solutions."
   },
   "execution": {
     "agents": [

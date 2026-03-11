@@ -7,8 +7,8 @@
     "name_vi": "Component",
     "name_en": "Component",
     "icon": "",
-    "description_vi": "Execute Component command",
-    "description_en": "Execute Component command"
+    "description_vi": "Create UI component",
+    "description_en": "Create UI component"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Pitch",
     "name_en": "Pitch",
     "icon": "",
-    "description_vi": "Pitch deck practice với AI investor — brutal feedback, YC-style questions, improve deck",
-    "description_en": "Pitch deck practice vi AI investor  brutal feedback, YC-style questions, improve deck"
+    "description_vi": "AI investor simulation — brutal feedback, YC-style questions, deck iteration",
+    "description_en": "AI investor simulation  brutal feedback, YC-style questions, deck iteration"
   },
   "execution": {
     "agents": [

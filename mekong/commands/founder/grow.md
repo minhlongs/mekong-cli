@@ -1,5 +1,5 @@
 ---
-description: GTM playbook execution — cold outreach, content, SEO, community, partnerships
+description: GTM playbook — cold outreach, content, SEO, community, partnerships
 allowed-tools: Read, Write, Bash
 ---
 

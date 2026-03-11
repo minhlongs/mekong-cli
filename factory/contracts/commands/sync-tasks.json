@@ -7,8 +7,8 @@
     "name_vi": "Sync Tasks",
     "name_en": "Sync Tasks",
     "icon": "",
-    "description_vi": "Execute Sync Tasks command",
-    "description_en": "Execute Sync Tasks command"
+    "description_vi": "Sync Task Groups & Task List documentation from Antigravity",
+    "description_en": "Sync Task Groups & Task List documentation from Antigravity"
   },
   "execution": {
     "agents": [

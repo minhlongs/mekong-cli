@@ -7,8 +7,8 @@
     "name_vi": "Rollback",
     "name_en": "Rollback",
     "icon": "",
-    "description_vi": "Execute Rollback command",
-    "description_en": "Execute Rollback command"
+    "description_vi": "Rollback deployment",
+    "description_en": "Rollback deployment"
   },
   "execution": {
     "agents": [

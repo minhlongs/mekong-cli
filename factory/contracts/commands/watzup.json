@@ -7,8 +7,8 @@
     "name_vi": "Watzup",
     "name_en": "Watzup",
     "icon": "",
-    "description_vi": "Execute Watzup command",
-    "description_en": "Execute Watzup command"
+    "description_vi": "⚡ Review recent changes and wrap up the work",
+    "description_en": "Review recent changes and wrap up the work"
   },
   "execution": {
     "agents": [

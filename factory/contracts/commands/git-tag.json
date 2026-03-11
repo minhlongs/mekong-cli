@@ -7,8 +7,8 @@
     "name_vi": "Git Tag",
     "name_en": "Git Tag",
     "icon": "",
-    "description_vi": "Execute Git Tag command",
-    "description_en": "Execute Git Tag command"
+    "description_vi": "Create release tag",
+    "description_en": "Create release tag"
   },
   "execution": {
     "agents": [

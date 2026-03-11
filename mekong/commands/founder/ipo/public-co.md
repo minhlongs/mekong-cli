@@ -1,5 +1,5 @@
 ---
-description: Public company operating rhythm — earnings prep, 10-Q/10-K, guidance, quarterly cadence
+description: Public company operations — earnings prep, 10-Q/10-K, guidance, quarterly cadence
 allowed-tools: Read, Write, Bash
 ---
 

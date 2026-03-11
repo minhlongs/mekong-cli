@@ -7,8 +7,8 @@
     "name_vi": "Cap Table",
     "name_en": "Cap Table",
     "icon": "",
-    "description_vi": "Model dilution qua mọi round — biết chính xác mình còn bao nhiêu % trước khi ký",
-    "description_en": "Model dilution qua mi round  bit chnh xc mnh cn bao nhiu % trc khi k"
+    "description_vi": "Cap table modeling — dilution across rounds, ownership %, ESOP impact",
+    "description_en": "Cap table modeling  dilution across rounds, ownership %, ESOP impact"
   },
   "execution": {
     "agents": [

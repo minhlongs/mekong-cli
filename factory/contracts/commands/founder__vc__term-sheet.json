@@ -7,8 +7,8 @@
     "name_vi": "Term Sheet",
     "name_en": "Term Sheet",
     "icon": "",
-    "description_vi": "Phân tích term sheet — tìm mọi trap, tính impact thực, so sánh với market standard",
-    "description_en": "Phn tch term sheet  tm mi trap, tnh impact thc, so snh vi market standard"
+    "description_vi": "Term sheet analyzer — find traps, calculate real impact, compare to market standard",
+    "description_en": "Term sheet analyzer  find traps, calculate real impact, compare to market standard"
   },
   "execution": {
     "agents": [

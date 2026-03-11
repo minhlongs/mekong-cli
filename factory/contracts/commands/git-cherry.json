@@ -7,8 +7,8 @@
     "name_vi": "Git Cherry",
     "name_en": "Git Cherry",
     "icon": "",
-    "description_vi": "Execute Git Cherry command",
-    "description_en": "Execute Git Cherry command"
+    "description_vi": "Cherry pick commits",
+    "description_en": "Cherry pick commits"
   },
   "execution": {
     "agents": [

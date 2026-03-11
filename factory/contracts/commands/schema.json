@@ -7,8 +7,8 @@
     "name_vi": "Schema",
     "name_en": "Schema",
     "icon": "",
-    "description_vi": "Execute Schema command",
-    "description_en": "Execute Schema command"
+    "description_vi": "Design database schema",
+    "description_en": "Design database schema"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Git Rebase",
     "name_en": "Git Rebase",
     "icon": "",
-    "description_vi": "Execute Git Rebase command",
-    "description_en": "Execute Git Rebase command"
+    "description_vi": "Rebase branch",
+    "description_en": "Rebase branch"
   },
   "execution": {
     "agents": [

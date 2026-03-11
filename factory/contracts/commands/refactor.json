@@ -7,8 +7,8 @@
     "name_vi": "Refactor",
     "name_en": "Refactor",
     "icon": "",
-    "description_vi": "Execute Refactor command",
-    "description_en": "Execute Refactor command"
+    "description_vi": "Code refactoring",
+    "description_en": "Code refactoring"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Arch",
     "name_en": "Arch",
     "icon": "",
-    "description_vi": "Execute Arch command",
-    "description_en": "Execute Arch command"
+    "description_vi": "List top-tier architecture references for agents",
+    "description_en": "List top-tier architecture references for agents"
   },
   "execution": {
     "agents": [

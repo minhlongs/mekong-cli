@@ -7,8 +7,8 @@
     "name_vi": "Handoff",
     "name_en": "Handoff",
     "icon": "",
-    "description_vi": "Execute Handoff command",
-    "description_en": "Execute Handoff command"
+    "description_vi": "Handoff deliverables",
+    "description_en": "Handoff deliverables"
   },
   "execution": {
     "agents": [

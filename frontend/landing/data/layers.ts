@@ -18,7 +18,7 @@ export const LAYERS: LayerData[] = [
     description: "Strategic vision, fundraising, OKRs, financial goals. The apex of the pyramid.",
     icon: "👑",
     // prettier-ignore
-    commands: ["annual","financial-report","branding","cofounder","credits","forecast","fundraise","goal-dashboard","kpi","launch","goals","okr","portfolio","pricing","quarterly","raise","swot","tier-pricing","founder-brand","founder-grow","founder-hire","founder-legal","founder-metrics","founder-pitch","founder-secondary","founder-validate","founder-vc-map","founder-week","founder-vc-bootstrap","founder-vc-cap-table","founder-vc-negotiate","founder-vc-term-sheet","founder-ipo-pre-ipo-prep","founder-ipo-s1","founder-ipo-roadshow","founder-ipo-ipo-day","founder-ipo-public-co","founder-ipo-insider","founder-ipo-succession"],
+    commands: ["annual","quarterly","okr","goals","goal-dashboard","kpi","forecast","financial-report","branding","cofounder","credits","launch","tier-pricing","swot","portfolio","founder-validate","founder-metrics","founder-week","founder-brand","founder-legal","unit-economics","tam","moat-audit","founder-pitch","founder-vc-map","raise","fundraise","data-room","financial-model","founder-vc-cap-table","founder-vc-term-sheet","founder-vc-negotiate","founder-vc-bootstrap","dilution-sim","founder-grow","founder-hire","runway","investor-update","founder-secondary","founder-ipo-pre-ipo-prep","founder-ipo-s1","founder-ipo-roadshow","founder-ipo-ipo-day","founder-ipo-public-co","founder-ipo-insider","founder-ipo-succession"],
     cascadesTo: ["business"],
     entryPrompt: "You're the founder. Strategy, finance, or goals today?",
     color: "yellow-400",

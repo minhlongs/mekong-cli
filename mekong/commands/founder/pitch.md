@@ -1,5 +1,5 @@
 ---
-description: Pitch deck practice với AI investor — brutal feedback, YC-style questions, improve deck
+description: AI investor simulation — brutal feedback, YC-style questions, deck iteration
 allowed-tools: Read, Write
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Founder liquidity mechanics — secondary sales, tender offers, SPV, tax optimization
+description: Founder liquidity — secondary sales, tender offers, SPV structures, tax optimization
 allowed-tools: Read, Write
 ---
 

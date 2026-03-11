@@ -13,21 +13,50 @@ layers:
     commands:
       - annual
       - quarterly
-      - forecast
-      - fundraise
-      - swot
       - okr
-      - kpi
-      - goal-dashboard
-      - portfolio
-      - tier-pricing
-      - branding
       - goals
+      - goal-dashboard
+      - kpi
+      - forecast
       - financial-report
+      - branding
       - cofounder
-      - raise
       - credits
       - launch
+      - tier-pricing
+      - swot
+      - portfolio
+      - founder-validate
+      - founder-metrics
+      - founder-week
+      - founder-brand
+      - founder-legal
+      - unit-economics
+      - tam
+      - moat-audit
+      - founder-pitch
+      - founder-vc-map
+      - raise
+      - fundraise
+      - data-room
+      - financial-model
+      - founder-vc-cap-table
+      - founder-vc-term-sheet
+      - founder-vc-negotiate
+      - founder-vc-bootstrap
+      - dilution-sim
+      - founder-grow
+      - founder-hire
+      - runway
+      - investor-update
+      - founder-secondary
+      - founder-ipo-pre-ipo-prep
+      - founder-ipo-s1
+      - founder-ipo-roadshow
+      - founder-ipo-ipo-day
+      - founder-ipo-public-co
+      - founder-ipo-insider
+      - founder-ipo-succession
 
   business:
     chapter: "作戰 — Waging War"

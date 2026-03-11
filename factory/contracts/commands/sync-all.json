@@ -7,8 +7,8 @@
     "name_vi": "Sync All",
     "name_en": "Sync All",
     "icon": "",
-    "description_vi": "Execute Sync All command",
-    "description_en": "Execute Sync All command"
+    "description_vi": "Sync ALL Antigravity documentation - One command, full sync",
+    "description_en": "Sync ALL Antigravity documentation - One command, full sync"
   },
   "execution": {
     "agents": [

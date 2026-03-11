@@ -7,8 +7,8 @@
     "name_vi": "Test",
     "name_en": "Test",
     "icon": "",
-    "description_vi": "Execute Test command",
-    "description_en": "Execute Test command"
+    "description_vi": "⚡ Run tests locally and analyze the summary report.",
+    "description_en": "Run tests locally and analyze the summary report."
   },
   "execution": {
     "agents": [

@@ -2,10 +2,52 @@
   "version": "1.0.0",
   "skills": [
     {
+      "id": "a2ui-renderer",
+      "name": "a2ui-renderer",
+      "description": "",
+      "path": ".claude/skills/a2ui-renderer/SKILL.md"
+    },
+    {
+      "id": "accounting-agent",
+      "name": "accounting-agent",
+      "description": "",
+      "path": ".claude/skills/accounting-agent/SKILL.md"
+    },
+    {
+      "id": "administrative-agent",
+      "name": "administrative-agent",
+      "description": "",
+      "path": ".claude/skills/administrative-agent/SKILL.md"
+    },
+    {
       "id": "agent-browser",
       "name": "ck:agent-browser",
       "description": "AI-optimized browser automation CLI with context-efficient snapshots. Use for long autonomous sessions, self-verifying workflows, video recording, and cloud browser testing (Browserbase).",
       "path": ".claude/skills/agent-browser/SKILL.md"
+    },
+    {
+      "id": "agentic-ai-frameworks",
+      "name": "agentic-ai-frameworks",
+      "description": "Expert in multi-agent AI frameworks for 2026. Covers LangGraph (graph-based, production-grade), CrewAI (role-based, 44k GitHub stars), AG2/AutoGen (conversational multi-agent), OpenAI Agents SDK (buil",
+      "path": ".claude/skills/agentic-ai-frameworks/SKILL.md"
+    },
+    {
+      "id": "agentic-commerce",
+      "name": "agentic-commerce",
+      "description": "",
+      "path": ".claude/skills/agentic-commerce/SKILL.md"
+    },
+    {
+      "id": "agri-tech-precision-farming",
+      "name": "agri-tech-precision-farming",
+      "description": "Precision agriculture — crop monitoring, soil sensors, drone mapping, yield prediction, farm management APIs. Activate when building agri dashboards, farm IoT pipelines, or crop analytics platforms.",
+      "path": ".claude/skills/agri-tech-precision-farming/SKILL.md"
+    },
+    {
+      "id": "agriculture-agent",
+      "name": "agriculture-agent",
+      "description": "",
+      "path": ".claude/skills/agriculture-agent/SKILL.md"
     },
     {
       "id": "ai-artist",
@@ -14,16 +56,88 @@
       "path": ".claude/skills/ai-artist/SKILL.md"
     },
     {
+      "id": "ai-drug-discovery-biotech",
+      "name": "ai-drug-discovery-biotech",
+      "description": "AI-powered drug discovery — molecular simulation, protein folding, clinical trial optimization, biomarker discovery, ADMET prediction. Activate when building biotech research platforms, computational ",
+      "path": ".claude/skills/ai-drug-discovery-biotech/SKILL.md"
+    },
+    {
+      "id": "ai-governance-compliance",
+      "name": "ai-governance-compliance",
+      "description": "",
+      "path": ".claude/skills/ai-governance-compliance/SKILL.md"
+    },
+    {
+      "id": "ai-hub-sdk",
+      "name": "ai-hub-sdk",
+      "description": "Unified AI SDK — safety guardrails, agent orchestration, video intelligence, media trust, digital twins. Use for AI safety, multi-agent systems, content verification.",
+      "path": ".claude/skills/ai-hub-sdk/SKILL.md"
+    },
+    {
       "id": "ai-multimodal",
       "name": "ck:ai-multimodal",
       "description": "Analyze images/audio/video with Gemini API (better vision than Claude). Generate images (Imagen 4), videos (Veo 3). Use for vision analysis, transcription, OCR, design extraction, multimodal AI.",
       "path": ".claude/skills/ai-multimodal/SKILL.md"
     },
     {
+      "id": "ai-safety-alignment-governance",
+      "name": "ai-safety-alignment-governance",
+      "description": "AI safety, alignment research, responsible AI, model governance, bias detection, EU AI Act compliance — activate when building AI systems requiring safety guardrails, regulatory compliance, or bias au",
+      "path": ".claude/skills/ai-safety-alignment-governance/SKILL.md"
+    },
+    {
+      "id": "ai-safety-red-teaming",
+      "name": "ai-safety-red-teaming",
+      "description": "",
+      "path": ".claude/skills/ai-safety-red-teaming/SKILL.md"
+    },
+    {
+      "id": "ambient-computing",
+      "name": "ambient-computing",
+      "description": "",
+      "path": ".claude/skills/ambient-computing/SKILL.md"
+    },
+    {
+      "id": "arbitrage",
+      "name": "arbitrage",
+      "description": "Cross-exchange crypto arbitrage — spread detection, signal scoring, orderbook validation, auto-execution on Binance/OKX/Bybit. Uses @agencyos/vibe-arbitrage-engine + @agencyos/trading-core.",
+      "path": ".claude/skills/arbitrage/SKILL.md"
+    },
+    {
       "id": "ask",
       "name": "ck:ask",
       "description": "Answer technical and architectural questions with expert consultation.",
       "path": ".claude/skills/ask/SKILL.md"
+    },
+    {
+      "id": "automotive-hub-sdk",
+      "name": "automotive-hub-sdk",
+      "description": "Unified Automotive SDK — fleet management, EV charging, mobility-as-a-service, vehicle tracking. Use for fleet ops, ride-sharing, EV infrastructure, connected vehicles.",
+      "path": ".claude/skills/automotive-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "automotive-mobility",
+      "name": "automotive-mobility",
+      "description": "Connected vehicles, EV charging, fleet management, ADAS, telematics, dealer systems. Use for automotive tech, mobility platforms, EV infrastructure, vehicle diagnostics.",
+      "path": ".claude/skills/automotive-mobility/SKILL.md"
+    },
+    {
+      "id": "autonomous-drone-uav",
+      "name": "autonomous-drone-uav",
+      "description": "Autonomous drones & UAV fleet management — aerial mapping, delivery drones, inspection automation, flight planning, BVLOS operations. Activate when building drone dispatch systems, aerial analytics pi",
+      "path": ".claude/skills/autonomous-drone-uav/SKILL.md"
+    },
+    {
+      "id": "autonomous-supply-chain",
+      "name": "autonomous-supply-chain",
+      "description": "",
+      "path": ".claude/skills/autonomous-supply-chain/SKILL.md"
+    },
+    {
+      "id": "autonomous-supply-chain-ai",
+      "name": "autonomous-supply-chain-ai",
+      "description": "",
+      "path": ".claude/skills/autonomous-supply-chain-ai/SKILL.md"
     },
     {
       "id": "backend-development",
@@ -38,16 +152,46 @@
       "path": ".claude/skills/better-auth/SKILL.md"
     },
     {
+      "id": "billing-orchestration",
+      "name": "billing-orchestration",
+      "description": "",
+      "path": ".claude/skills/billing-orchestration/SKILL.md"
+    },
+    {
       "id": "bootstrap",
       "name": "ck:bootstrap",
       "description": "Bootstrap new projects with research, tech stack, design, planning, and implementation. Modes: full (interactive), auto (default), fast (skip research), parallel (multi-agent).",
       "path": ".claude/skills/bootstrap/SKILL.md"
     },
     {
+      "id": "brain-computer-interface",
+      "name": "brain-computer-interface",
+      "description": "Brain-computer interface development — neural signal processing, EEG/fNIRS, neurofeedback apps, prosthetics control, cognitive workload monitoring. Activate when building BCI applications, neural data",
+      "path": ".claude/skills/brain-computer-interface/SKILL.md"
+    },
+    {
       "id": "brainstorm",
       "name": "ck:brainstorm",
       "description": "Brainstorm solutions with trade-off analysis and brutal honesty. Use for ideation, architecture decisions, technical debates, feature exploration, feasibility assessment, design discussions.",
       "path": ".claude/skills/brainstorm/SKILL.md"
+    },
+    {
+      "id": "business-operations-agent",
+      "name": "business-operations-agent",
+      "description": "",
+      "path": ".claude/skills/business-operations-agent/SKILL.md"
+    },
+    {
+      "id": "carbon-accounting-api",
+      "name": "carbon-accounting-api",
+      "description": "Expert in Carbon Accounting API integration and CSRD/ESRS compliance automation. Covers Climatiq REST API (ISO 14067 certified), GHG Protocol Scope 1/2/3 calculations, EU CSRD double materiality, ESRS",
+      "path": ".claude/skills/carbon-accounting-api/SKILL.md"
+    },
+    {
+      "id": "carbon-credit-trading",
+      "name": "carbon-credit-trading",
+      "description": "Carbon credit marketplace — carbon offset verification, MRV (measurement, reporting, verification), registry integration, voluntary carbon markets. Activate when building carbon accounting platforms, ",
+      "path": ".claude/skills/carbon-credit-trading/SKILL.md"
     },
     {
       "id": "check-and-commit",
@@ -62,10 +206,34 @@
       "path": ".claude/skills/chrome-devtools/SKILL.md"
     },
     {
+      "id": "circular-economy-waste-tech",
+      "name": "circular-economy-waste-tech",
+      "description": "Circular economy platforms — waste management, recycling optimization, EPR compliance, material passports, reverse logistics. Activate when building waste tracking, sustainability reporting, or circul",
+      "path": ".claude/skills/circular-economy-waste-tech/SKILL.md"
+    },
+    {
       "id": "ck-help",
       "name": "ck:ck-help",
       "description": "ClaudeKit usage guide — discover commands, skills, workflows naturally.",
       "path": ".claude/skills/ck-help/SKILL.md"
+    },
+    {
+      "id": "climate-carbon-accounting",
+      "name": "climate-carbon-accounting",
+      "description": "",
+      "path": ".claude/skills/climate-carbon-accounting/SKILL.md"
+    },
+    {
+      "id": "climate-tech",
+      "name": "climate-tech",
+      "description": "",
+      "path": ".claude/skills/climate-tech/SKILL.md"
+    },
+    {
+      "id": "coaching-mentor-agent",
+      "name": "coaching-mentor-agent",
+      "description": "",
+      "path": ".claude/skills/coaching-mentor-agent/SKILL.md"
     },
     {
       "id": "code-review",
@@ -74,16 +242,148 @@
       "path": ".claude/skills/code-review/SKILL.md"
     },
     {
+      "id": "coding-cafe-agent",
+      "name": "coding-cafe-agent",
+      "description": "",
+      "path": ".claude/skills/coding-cafe-agent/SKILL.md"
+    },
+    {
       "id": "coding-level",
       "name": "ck:coding-level",
       "description": "Set coding experience level for tailored explanations and output format.",
       "path": ".claude/skills/coding-level/SKILL.md"
     },
     {
+      "id": "commerce-hub-sdk",
+      "name": "commerce-hub-sdk",
+      "description": "Unified commerce SDK — e-commerce, POS, F&B, composable commerce. Use for online stores, restaurant systems, point-of-sale, multi-channel retail, MACH architecture.",
+      "path": ".claude/skills/commerce-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "community-platform-social",
+      "name": "community-platform-social",
+      "description": "Community building platforms, forums, member management, content moderation, gamification — activate when building online communities, membership sites, discussion forums, or social features within Sa",
+      "path": ".claude/skills/community-platform-social/SKILL.md"
+    },
+    {
+      "id": "compliance-automation",
+      "name": "compliance-automation",
+      "description": "",
+      "path": ".claude/skills/compliance-automation/SKILL.md"
+    },
+    {
+      "id": "composable-commerce-mach",
+      "name": "composable-commerce-mach",
+      "description": "",
+      "path": ".claude/skills/composable-commerce-mach/SKILL.md"
+    },
+    {
+      "id": "construction-agent",
+      "name": "construction-agent",
+      "description": "",
+      "path": ".claude/skills/construction-agent/SKILL.md"
+    },
+    {
+      "id": "construction-hub-sdk",
+      "name": "construction-hub-sdk",
+      "description": "Unified Construction SDK — BIM, project management, safety compliance, cost estimation, RFI/submittal tracking. Use for ConTech, BIM platforms, construction project management.",
+      "path": ".claude/skills/construction-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "construction-tech",
+      "name": "construction-tech",
+      "description": "Expert in Construction Technology & BIM integration. Covers Procore REST API v2, Autodesk Construction Cloud (ACC) API, BIM 360, IFC/openBIM standards, agentic AI for construction (Datagrid acquisitio",
+      "path": ".claude/skills/construction-tech/SKILL.md"
+    },
+    {
+      "id": "consulting-agent",
+      "name": "consulting-agent",
+      "description": "",
+      "path": ".claude/skills/consulting-agent/SKILL.md"
+    },
+    {
       "id": "context-engineering",
       "name": "ck:context-engineering",
       "description": "Check context usage limits, monitor time remaining, optimize token consumption, debug context failures. Use when asking about context percentage, rate limits, usage warnings, context optimization, age",
       "path": ".claude/skills/context-engineering/SKILL.md"
+    },
+    {
+      "id": "contract-lifecycle-management",
+      "name": "contract-lifecycle-management",
+      "description": "Expert in Contract Lifecycle Management (CLM) with AI. Covers automated contract drafting, AI-powered clause extraction/redlining (95% accuracy), negotiation playbooks, zero-touch contracting, DocuSig",
+      "path": ".claude/skills/contract-lifecycle-management/SKILL.md"
+    },
+    {
+      "id": "cook",
+      "name": "cook",
+      "description": "ALWAYS activate this skill before implementing EVERY feature, plan, or fix.",
+      "path": ".claude/skills/cook/SKILL.md"
+    },
+    {
+      "id": "creative-agent",
+      "name": "creative-agent",
+      "description": "",
+      "path": ".claude/skills/creative-agent/SKILL.md"
+    },
+    {
+      "id": "creator-economy",
+      "name": "creator-economy",
+      "description": "",
+      "path": ".claude/skills/creator-economy/SKILL.md"
+    },
+    {
+      "id": "creator-marketing-hub-sdk",
+      "name": "creator-marketing-hub-sdk",
+      "description": "Unified creator & marketing SDK — content monetization, audience analytics, campaigns, SEO, social media. Use for creator economy, marketing automation.",
+      "path": ".claude/skills/creator-marketing-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "crypto-web3",
+      "name": "crypto-web3",
+      "description": "Smart contracts, wallet SDKs, DeFi protocols, NFT infrastructure, blockchain data indexing, cross-chain bridges, Web3 auth. Use for dApps, DeFi, NFT platforms, crypto payments.",
+      "path": ".claude/skills/crypto-web3/SKILL.md"
+    },
+    {
+      "id": "customer-data-unification",
+      "name": "customer-data-unification",
+      "description": "",
+      "path": ".claude/skills/customer-data-unification/SKILL.md"
+    },
+    {
+      "id": "customer-service-agent",
+      "name": "customer-service-agent",
+      "description": "",
+      "path": ".claude/skills/customer-service-agent/SKILL.md"
+    },
+    {
+      "id": "customer-success-agent",
+      "name": "customer-success-agent",
+      "description": "",
+      "path": ".claude/skills/customer-success-agent/SKILL.md"
+    },
+    {
+      "id": "customer-success-platform",
+      "name": "customer-success-platform",
+      "description": "",
+      "path": ".claude/skills/customer-success-platform/SKILL.md"
+    },
+    {
+      "id": "cybersecurity-ops-agent",
+      "name": "cybersecurity-ops-agent",
+      "description": "",
+      "path": ".claude/skills/cybersecurity-ops-agent/SKILL.md"
+    },
+    {
+      "id": "data-analyst-agent",
+      "name": "data-analyst-agent",
+      "description": "",
+      "path": ".claude/skills/data-analyst-agent/SKILL.md"
+    },
+    {
+      "id": "data-privacy-engineering",
+      "name": "data-privacy-engineering",
+      "description": "",
+      "path": ".claude/skills/data-privacy-engineering/SKILL.md"
     },
     {
       "id": "databases",
@@ -98,10 +398,46 @@
       "path": ".claude/skills/debug/SKILL.md"
     },
     {
+      "id": "decentralized-identity",
+      "name": "decentralized-identity",
+      "description": "",
+      "path": ".claude/skills/decentralized-identity/SKILL.md"
+    },
+    {
+      "id": "defense-govtech-ai",
+      "name": "defense-govtech-ai",
+      "description": "",
+      "path": ".claude/skills/defense-govtech-ai/SKILL.md"
+    },
+    {
       "id": "devops",
       "name": "ck:devops",
       "description": "Deploy to Cloudflare (Workers, R2, D1), Docker, GCP (Cloud Run, GKE), Kubernetes (kubectl, Helm). Use for serverless, containers, CI/CD, GitOps, security audit.",
       "path": ".claude/skills/devops/SKILL.md"
+    },
+    {
+      "id": "devops-agent",
+      "name": "devops-agent",
+      "description": "",
+      "path": ".claude/skills/devops-agent/SKILL.md"
+    },
+    {
+      "id": "devtools-hub-sdk",
+      "name": "devtools-hub-sdk",
+      "description": "Unified developer tools SDK — Supabase helpers, dev workflow, scaffolding, environment management. Use for developer tooling and database utilities.",
+      "path": ".claude/skills/devtools-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "digital-therapeutics",
+      "name": "digital-therapeutics",
+      "description": "",
+      "path": ".claude/skills/digital-therapeutics/SKILL.md"
+    },
+    {
+      "id": "digital-twin-simulation",
+      "name": "digital-twin-simulation",
+      "description": "",
+      "path": ".claude/skills/digital-twin-simulation/SKILL.md"
     },
     {
       "id": "docs",
@@ -116,10 +452,124 @@
       "path": ".claude/skills/docs-seeker/SKILL.md"
     },
     {
+      "id": "ecommerce-agent",
+      "name": "ecommerce-agent",
+      "description": "",
+      "path": ".claude/skills/ecommerce-agent/SKILL.md"
+    },
+    {
+      "id": "edge-ai-tinyml",
+      "name": "edge-ai-tinyml",
+      "description": "",
+      "path": ".claude/skills/edge-ai-tinyml/SKILL.md"
+    },
+    {
+      "id": "edtech",
+      "name": "edtech",
+      "description": "LMS platforms, course creation, AI tutoring, assessment, proctoring, learning analytics, credentials, xAPI/LTI standards. Use for education platforms, e-learning, training systems.",
+      "path": ".claude/skills/edtech/SKILL.md"
+    },
+    {
+      "id": "education-agent",
+      "name": "education-agent",
+      "description": "",
+      "path": ".claude/skills/education-agent/SKILL.md"
+    },
+    {
+      "id": "education-hub-sdk",
+      "name": "education-hub-sdk",
+      "description": "Unified education SDK — LMS, assessment, student analytics. Use for learning platforms, course management, grading systems, student progress tracking.",
+      "path": ".claude/skills/education-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "eldercare-aging-tech",
+      "name": "eldercare-aging-tech",
+      "description": "AgeTech, remote patient monitoring for seniors, fall detection, medication adherence, social isolation tools — activate when building senior care platforms, RPM devices, caregiver apps, or aging-in-pl",
+      "path": ".claude/skills/eldercare-aging-tech/SKILL.md"
+    },
+    {
+      "id": "embedded-finance-baas",
+      "name": "embedded-finance-baas",
+      "description": "",
+      "path": ".claude/skills/embedded-finance-baas/SKILL.md"
+    },
+    {
+      "id": "energy-esg",
+      "name": "energy-esg",
+      "description": "Energy management, carbon accounting, ESG reporting, smart grid, EV charging, renewable energy. Use for sustainability platforms, emissions tracking, green tech compliance.",
+      "path": ".claude/skills/energy-esg/SKILL.md"
+    },
+    {
+      "id": "energy-hub-sdk",
+      "name": "energy-hub-sdk",
+      "description": "Unified Energy SDK — smart grid management, renewable energy, carbon trading, energy billing, IoT meter integration. Use for energy platforms, utility companies, carbon markets, smart home apps.",
+      "path": ".claude/skills/energy-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "entrepreneur-agent",
+      "name": "entrepreneur-agent",
+      "description": "",
+      "path": ".claude/skills/entrepreneur-agent/SKILL.md"
+    },
+    {
+      "id": "event-management",
+      "name": "event-management",
+      "description": "Event platforms, ticketing APIs, virtual/hybrid events, sponsorship, venue management, networking. Use for conferences, meetups, festivals, corporate events, webinars.",
+      "path": ".claude/skills/event-management/SKILL.md"
+    },
+    {
+      "id": "events-hub-sdk",
+      "name": "events-hub-sdk",
+      "description": "Unified Events SDK — event creation, ticketing, attendee management, virtual events, sponsorship. Use for event platforms, conference management, hybrid event apps, venue booking.",
+      "path": ".claude/skills/events-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "fashion-hub-sdk",
+      "name": "fashion-hub-sdk",
+      "description": "Unified Fashion SDK — AI styling, product catalog, size recommendation, supply chain, trend analytics. Use for fashion retail, D2C brands, styling apps, fashion marketplaces.",
+      "path": ".claude/skills/fashion-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "fashion-retail",
+      "name": "fashion-retail",
+      "description": "E-commerce platforms, PIM, visual AI, virtual try-on, demand forecasting, OMS, returns, sizing tech. Use for fashion brands, retail platforms, D2C commerce.",
+      "path": ".claude/skills/fashion-retail/SKILL.md"
+    },
+    {
+      "id": "femtech",
+      "name": "femtech",
+      "description": "",
+      "path": ".claude/skills/femtech/SKILL.md"
+    },
+    {
+      "id": "finance-agent",
+      "name": "finance-agent",
+      "description": "",
+      "path": ".claude/skills/finance-agent/SKILL.md"
+    },
+    {
       "id": "find-skills",
       "name": "ck:find-skills",
       "description": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This sk",
       "path": ".claude/skills/find-skills/SKILL.md"
+    },
+    {
+      "id": "fintech-agent",
+      "name": "fintech-agent",
+      "description": "",
+      "path": ".claude/skills/fintech-agent/SKILL.md"
+    },
+    {
+      "id": "fintech-banking",
+      "name": "fintech-banking",
+      "description": "Banking-as-a-Service, payment processing, KYC/AML, lending, treasury, crypto rails. Use for fintech products, neobanks, payment platforms, regulatory compliance.",
+      "path": ".claude/skills/fintech-banking/SKILL.md"
+    },
+    {
+      "id": "fintech-hub-sdk",
+      "name": "fintech-hub-sdk",
+      "description": "Unified fintech SDK — billing, payments, subscriptions, revenue, embedded finance, Stripe. Use for payment processing, subscription management, revenue analytics, metered billing.",
+      "path": ".claude/skills/fintech-hub-sdk/SKILL.md"
     },
     {
       "id": "fix",
@@ -128,10 +578,40 @@
       "path": ".claude/skills/fix/SKILL.md"
     },
     {
+      "id": "flower-marketplace-agent",
+      "name": "flower-marketplace-agent",
+      "description": "",
+      "path": ".claude/skills/flower-marketplace-agent/SKILL.md"
+    },
+    {
+      "id": "fnb-hub-sdk",
+      "name": "fnb-hub-sdk",
+      "description": "Unified F&B SDK — restaurant management, food delivery, kitchen display, recipe database, table reservations. Use for restaurant tech, food delivery platforms, kitchen management.",
+      "path": ".claude/skills/fnb-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "food-beverage",
+      "name": "food-beverage",
+      "description": "Restaurant POS, food delivery, kitchen management, menu engineering, food safety, CPG. Use for restaurant tech, ghost kitchens, food manufacturing, recipe costing.",
+      "path": ".claude/skills/food-beverage/SKILL.md"
+    },
+    {
       "id": "frontend-development",
       "name": "ck:frontend-development",
       "description": "Build React/TypeScript frontends with modern patterns. Use for components, Suspense, lazy loading, useSuspenseQuery, MUI v7 styling, TanStack Router, performance optimization.",
       "path": ".claude/skills/frontend-development/SKILL.md"
+    },
+    {
+      "id": "gaming-esports",
+      "name": "gaming-esports",
+      "description": "Game engines, BaaS, multiplayer networking, monetization, esports tournaments, analytics, anti-cheat, cloud gaming. Use for game dev, esports platforms, gaming infrastructure.",
+      "path": ".claude/skills/gaming-esports/SKILL.md"
+    },
+    {
+      "id": "gaming-hub-sdk",
+      "name": "gaming-hub-sdk",
+      "description": "Unified Gaming SDK — esports tournament management, matchmaking, in-game economy, leaderboards, player progression. Use for gaming platforms, esports apps, game studios.",
+      "path": ".claude/skills/gaming-hub-sdk/SKILL.md"
     },
     {
       "id": "git",
@@ -152,6 +632,108 @@
       "path": ".claude/skills/google-adk-python/SKILL.md"
     },
     {
+      "id": "government-govtech",
+      "name": "government-govtech",
+      "description": "Digital government services, civic tech, public sector platforms, e-government, open data, identity verification. Use for govtech apps, citizen portals, government compliance.",
+      "path": ".claude/skills/government-govtech/SKILL.md"
+    },
+    {
+      "id": "govtech-hub-sdk",
+      "name": "govtech-hub-sdk",
+      "description": "Unified GovTech SDK — citizen services, digital identity, government procurement, regulatory compliance, audit trails. Use for e-government, civic tech, procurement platforms.",
+      "path": ".claude/skills/govtech-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "gpu-as-service",
+      "name": "gpu-as-service",
+      "description": "",
+      "path": ".claude/skills/gpu-as-service/SKILL.md"
+    },
+    {
+      "id": "grant-writing",
+      "name": "grant-writing",
+      "description": "",
+      "path": ".claude/skills/grant-writing/SKILL.md"
+    },
+    {
+      "id": "healthcare-agent",
+      "name": "healthcare-agent",
+      "description": "",
+      "path": ".claude/skills/healthcare-agent/SKILL.md"
+    },
+    {
+      "id": "healthcare-hub-sdk",
+      "name": "healthcare-hub-sdk",
+      "description": "Unified healthcare SDK — digital therapeutics, telehealth, patient data. Use for health platforms, telemedicine, patient management, clinical workflows.",
+      "path": ".claude/skills/healthcare-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "hospitality-agent",
+      "name": "hospitality-agent",
+      "description": "",
+      "path": ".claude/skills/hospitality-agent/SKILL.md"
+    },
+    {
+      "id": "hospitality-hub-sdk",
+      "name": "hospitality-hub-sdk",
+      "description": "Unified Hospitality SDK — hotel booking, guest experience, loyalty programs, housekeeping, revenue management. Use for hotel PMS, travel platforms, resort systems.",
+      "path": ".claude/skills/hospitality-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "hr-agent",
+      "name": "hr-agent",
+      "description": "",
+      "path": ".claude/skills/hr-agent/SKILL.md"
+    },
+    {
+      "id": "identity-compliance-sdk",
+      "name": "identity-compliance-sdk",
+      "description": "Unified identity & compliance SDK — DID, verifiable credentials, KYC/AML, consent management, GDPR/CCPA. Use for digital identity, compliance automation, privacy engineering.",
+      "path": ".claude/skills/identity-compliance-sdk/SKILL.md"
+    },
+    {
+      "id": "industry-hub-sdk",
+      "name": "industry-hub-sdk",
+      "description": "Unified industry verticals SDK — construction, climate/ESG, robotics, logistics, physical AI, space tech. Use for industry-specific solutions.",
+      "path": ".claude/skills/industry-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "infra-hub-sdk",
+      "name": "infra-hub-sdk",
+      "description": "Unified infrastructure SDK — auth, identity, compliance, consent, edge computing, bridge connectors. Use for authentication, SSO, GDPR/SOC2 compliance, edge functions.",
+      "path": ".claude/skills/infra-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "insurance-agent",
+      "name": "insurance-agent",
+      "description": "",
+      "path": ".claude/skills/insurance-agent/SKILL.md"
+    },
+    {
+      "id": "insurtech",
+      "name": "insurtech",
+      "description": "Insurance technology — claims automation, underwriting AI, parametric insurance, risk modeling. Activate when building insurance platforms, claims pipelines, or embedded insurance products.",
+      "path": ".claude/skills/insurtech/SKILL.md"
+    },
+    {
+      "id": "insurtech-hub-sdk",
+      "name": "insurtech-hub-sdk",
+      "description": "Unified InsurTech SDK — insurance policy management, claims processing, underwriting automation, risk assessment, premium calculation. Use for insurance platforms, claims systems, broker portals.",
+      "path": ".claude/skills/insurtech-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "ip-patent",
+      "name": "ip-patent",
+      "description": "",
+      "path": ".claude/skills/ip-patent/SKILL.md"
+    },
+    {
+      "id": "it-agent",
+      "name": "it-agent",
+      "description": "",
+      "path": ".claude/skills/it-agent/SKILL.md"
+    },
+    {
       "id": "journal",
       "name": "ck:journal",
       "description": "Write journal entries analyzing recent changes and session reflections.",
@@ -164,16 +746,118 @@
       "path": ".claude/skills/kanban/SKILL.md"
     },
     {
+      "id": "last-mile-delivery-logistics",
+      "name": "last-mile-delivery-logistics",
+      "description": "Last-mile delivery optimization, route planning, real-time tracking, proof of delivery, crowd-sourced delivery — activate when building delivery management platforms, courier apps, or logistics optimi",
+      "path": ".claude/skills/last-mile-delivery-logistics/SKILL.md"
+    },
+    {
+      "id": "legal-agent",
+      "name": "legal-agent",
+      "description": "",
+      "path": ".claude/skills/legal-agent/SKILL.md"
+    },
+    {
+      "id": "legal-hub-sdk",
+      "name": "legal-hub-sdk",
+      "description": "Unified legal SDK — contracts, compliance, IP management. Use for contract lifecycle, compliance automation, intellectual property tracking.",
+      "path": ".claude/skills/legal-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "legaltech-contract-intelligence",
+      "name": "legaltech-contract-intelligence",
+      "description": "",
+      "path": ".claude/skills/legaltech-contract-intelligence/SKILL.md"
+    },
+    {
+      "id": "llm-fine-tuning-mlops",
+      "name": "llm-fine-tuning-mlops",
+      "description": "LLM fine-tuning (LoRA/QLoRA), RLHF, dataset curation, model evaluation, deployment — activate when customizing foundation models for domain-specific tasks, building PEFT pipelines, or operationalizing",
+      "path": ".claude/skills/llm-fine-tuning-mlops/SKILL.md"
+    },
+    {
+      "id": "llmops-ai-observability",
+      "name": "llmops-ai-observability",
+      "description": "",
+      "path": ".claude/skills/llmops-ai-observability/SKILL.md"
+    },
+    {
+      "id": "logistics-ai-agent",
+      "name": "logistics-ai-agent",
+      "description": "",
+      "path": ".claude/skills/logistics-ai-agent/SKILL.md"
+    },
+    {
+      "id": "logistics-hub-sdk",
+      "name": "logistics-hub-sdk",
+      "description": "Unified logistics SDK — supply chain, autonomous delivery, warehouse operations. Use for fleet management, route optimization, inventory tracking, last-mile delivery.",
+      "path": ".claude/skills/logistics-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "logistics-supply-chain",
+      "name": "logistics-supply-chain",
+      "description": "Supply chain management, warehouse ops, last-mile delivery, freight, inventory optimization. Use for logistics platforms, 3PL integration, shipping automation, demand forecasting.",
+      "path": ".claude/skills/logistics-supply-chain/SKILL.md"
+    },
+    {
+      "id": "longevity-biotech",
+      "name": "longevity-biotech",
+      "description": "",
+      "path": ".claude/skills/longevity-biotech/SKILL.md"
+    },
+    {
+      "id": "manufacturing-hub-sdk",
+      "name": "manufacturing-hub-sdk",
+      "description": "Unified Manufacturing SDK — MES, production scheduling, quality control (SPC), supply chain, BOM management. Use for IIoT, smart factory, MES, quality systems.",
+      "path": ".claude/skills/manufacturing-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "manufacturing-iiot",
+      "name": "manufacturing-iiot",
+      "description": "MES, predictive maintenance, digital twins, SCADA, OPC-UA, robotics, computer vision inspection, supply chain visibility. Use for smart factories, Industry 4.0, manufacturing platforms.",
+      "path": ".claude/skills/manufacturing-iiot/SKILL.md"
+    },
+    {
+      "id": "manufacturing-iiot-agent",
+      "name": "manufacturing-iiot-agent",
+      "description": "",
+      "path": ".claude/skills/manufacturing-iiot-agent/SKILL.md"
+    },
+    {
       "id": "markdown-novel-viewer",
       "name": "ck:markdown-novel-viewer",
       "description": "View markdown files with calm, book-like reading experience via HTTP server. Use for long-form content, documentation preview, novel reading, report viewing, distraction-free reading.",
       "path": ".claude/skills/markdown-novel-viewer/SKILL.md"
     },
     {
+      "id": "marketing-agent",
+      "name": "marketing-agent",
+      "description": "",
+      "path": ".claude/skills/marketing-agent/SKILL.md"
+    },
+    {
       "id": "mcp-management",
       "name": "ck:mcp-management",
       "description": "Manage MCP servers - discover, analyze, execute tools/prompts/resources. Use for MCP integrations, intelligent tool selection, multi-server management, context-efficient capability discovery.",
       "path": ".claude/skills/mcp-management/SKILL.md"
+    },
+    {
+      "id": "media-agent",
+      "name": "media-agent",
+      "description": "",
+      "path": ".claude/skills/media-agent/SKILL.md"
+    },
+    {
+      "id": "media-entertainment",
+      "name": "media-entertainment",
+      "description": "Streaming platforms, content distribution, digital asset management, rights management, OTT video, podcast, music tech. Use for media apps, streaming services, content platforms.",
+      "path": ".claude/skills/media-entertainment/SKILL.md"
+    },
+    {
+      "id": "media-hub-sdk",
+      "name": "media-hub-sdk",
+      "description": "Unified media SDK — content verification, synthetic media detection, media trust. Use for content authenticity, deepfake detection, media provenance tracking.",
+      "path": ".claude/skills/media-hub-sdk/SKILL.md"
     },
     {
       "id": "media-processing",
@@ -200,10 +884,82 @@
       "path": ".claude/skills/mobile-development/SKILL.md"
     },
     {
+      "id": "multi-org-billing-sdk",
+      "name": "multi-org-billing-sdk",
+      "description": "Multi-org billing SDK — tenant-scoped webhook orchestration, subdomain routing, org-aware subscription activation. Use for multi-tenant SaaS billing, B2B subscriptions.",
+      "path": ".claude/skills/multi-org-billing-sdk/SKILL.md"
+    },
+    {
+      "id": "neuroscience-bci",
+      "name": "neuroscience-bci",
+      "description": "",
+      "path": ".claude/skills/neuroscience-bci/SKILL.md"
+    },
+    {
+      "id": "nonprofit-agent",
+      "name": "nonprofit-agent",
+      "description": "",
+      "path": ".claude/skills/nonprofit-agent/SKILL.md"
+    },
+    {
+      "id": "operations-agent",
+      "name": "operations-agent",
+      "description": "",
+      "path": ".claude/skills/operations-agent/SKILL.md"
+    },
+    {
+      "id": "ops-hub-sdk",
+      "name": "ops-hub-sdk",
+      "description": "Unified operations SDK — analytics, observability, notifications, newsletter. Use for event tracking, metrics, alerting, multi-channel notifications.",
+      "path": ".claude/skills/ops-hub-sdk/SKILL.md"
+    },
+    {
       "id": "payment-integration",
       "name": "ck:payment-integration",
       "description": "Integrate payments with SePay (VietQR), Polar, Stripe, Paddle (MoR subscriptions), Creem.io (licensing). Checkout, webhooks, subscriptions, QR codes, multi-provider orders.",
       "path": ".claude/skills/payment-integration/SKILL.md"
+    },
+    {
+      "id": "people-hub-sdk",
+      "name": "people-hub-sdk",
+      "description": "Unified people SDK — HR, CRM, customer success, wellbeing, longevity. Use for employee management, sales pipelines, customer health scores, wellness tracking.",
+      "path": ".claude/skills/people-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "personal-development-agent",
+      "name": "personal-development-agent",
+      "description": "",
+      "path": ".claude/skills/personal-development-agent/SKILL.md"
+    },
+    {
+      "id": "pet-care-tech",
+      "name": "pet-care-tech",
+      "description": "",
+      "path": ".claude/skills/pet-care-tech/SKILL.md"
+    },
+    {
+      "id": "pet-tech-veterinary",
+      "name": "pet-tech-veterinary",
+      "description": "Pet health platforms, veterinary telemedicine, pet insurance, GPS tracking, smart feeders — activate when building pet care applications, vet practice management software, or pet IoT device integratio",
+      "path": ".claude/skills/pet-tech-veterinary/SKILL.md"
+    },
+    {
+      "id": "pharma-biotech",
+      "name": "pharma-biotech",
+      "description": "Clinical trials CTMS, AI drug discovery, FHIR interoperability, pharmacovigilance, LIMS, regulatory submissions. Use for pharma platforms, biotech R&D, life sciences compliance.",
+      "path": ".claude/skills/pharma-biotech/SKILL.md"
+    },
+    {
+      "id": "pharma-hub-sdk",
+      "name": "pharma-hub-sdk",
+      "description": "Unified Pharma SDK — drug discovery pipeline, clinical trials, regulatory submission, pharmaceutical distribution, pharmacovigilance. Use for pharma platforms, CROs, drug distribution networks.",
+      "path": ".claude/skills/pharma-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "physical-ai-robotics",
+      "name": "physical-ai-robotics",
+      "description": "",
+      "path": ".claude/skills/physical-ai-robotics/SKILL.md"
     },
     {
       "id": "plan",
@@ -218,6 +974,18 @@
       "path": ".claude/skills/plans-kanban/SKILL.md"
     },
     {
+      "id": "pr-agent",
+      "name": "pr-agent",
+      "description": "",
+      "path": ".claude/skills/pr-agent/SKILL.md"
+    },
+    {
+      "id": "precision-food-tech",
+      "name": "precision-food-tech",
+      "description": "",
+      "path": ".claude/skills/precision-food-tech/SKILL.md"
+    },
+    {
       "id": "preview",
       "name": "ck:preview",
       "description": "View files/directories OR generate visual explanations, slides, diagrams.",
@@ -230,10 +998,94 @@
       "path": ".claude/skills/problem-solving/SKILL.md"
     },
     {
+      "id": "procurement-agent",
+      "name": "procurement-agent",
+      "description": "",
+      "path": ".claude/skills/procurement-agent/SKILL.md"
+    },
+    {
+      "id": "product-manager-agent",
+      "name": "product-manager-agent",
+      "description": "",
+      "path": ".claude/skills/product-manager-agent/SKILL.md"
+    },
+    {
       "id": "project-management",
       "name": "ck:project-management",
       "description": "Track progress, update plan statuses, manage Claude Tasks, generate reports, coordinate docs updates. Use for project oversight, status checks, plan completion, task hydration, cross-session continuit",
       "path": ".claude/skills/project-management/SKILL.md"
+    },
+    {
+      "id": "prop-tech",
+      "name": "prop-tech",
+      "description": "",
+      "path": ".claude/skills/prop-tech/SKILL.md"
+    },
+    {
+      "id": "property-proptech",
+      "name": "property-proptech",
+      "description": "Property management, real estate listings, PropTech platforms, rental management, property valuation, smart buildings. Use for PropTech apps, real estate marketplaces, property management systems.",
+      "path": ".claude/skills/property-proptech/SKILL.md"
+    },
+    {
+      "id": "proptech-agent",
+      "name": "proptech-agent",
+      "description": "",
+      "path": ".claude/skills/proptech-agent/SKILL.md"
+    },
+    {
+      "id": "proptech-hub-sdk",
+      "name": "proptech-hub-sdk",
+      "description": "Unified PropTech SDK — property management, real estate listings, smart buildings, valuation, tenant screening. Use for PropTech apps, real estate marketplaces, property platforms.",
+      "path": ".claude/skills/proptech-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "qa-testing-agent",
+      "name": "qa-testing-agent",
+      "description": "",
+      "path": ".claude/skills/qa-testing-agent/SKILL.md"
+    },
+    {
+      "id": "quantum-computing",
+      "name": "quantum-computing",
+      "description": "",
+      "path": ".claude/skills/quantum-computing/SKILL.md"
+    },
+    {
+      "id": "raas-core-engine",
+      "name": "raas-core-engine",
+      "description": "",
+      "path": ".claude/skills/raas-core-engine/SKILL.md"
+    },
+    {
+      "id": "raas-gateway-agent",
+      "name": "raas-gateway-agent",
+      "description": "",
+      "path": ".claude/skills/raas-gateway-agent/SKILL.md"
+    },
+    {
+      "id": "real-estate-agent",
+      "name": "real-estate-agent",
+      "description": "",
+      "path": ".claude/skills/real-estate-agent/SKILL.md"
+    },
+    {
+      "id": "real-time-intelligence",
+      "name": "real-time-intelligence",
+      "description": "",
+      "path": ".claude/skills/real-time-intelligence/SKILL.md"
+    },
+    {
+      "id": "regtech",
+      "name": "regtech",
+      "description": "Regulatory technology — KYC/AML automation, compliance monitoring, sanctions screening, transaction surveillance. Activate when building fintech onboarding, compliance pipelines, or regulated financia",
+      "path": ".claude/skills/regtech/SKILL.md"
+    },
+    {
+      "id": "regtech-compliance",
+      "name": "regtech-compliance",
+      "description": "",
+      "path": ".claude/skills/regtech-compliance/SKILL.md"
     },
     {
       "id": "remotion",
@@ -254,10 +1106,40 @@
       "path": ".claude/skills/research/SKILL.md"
     },
     {
+      "id": "research-agent",
+      "name": "research-agent",
+      "description": "",
+      "path": ".claude/skills/research-agent/SKILL.md"
+    },
+    {
       "id": "review-codebase",
       "name": "review-codebase",
       "description": "Parallel codebase review - lint, security, quality, tests",
       "path": ".claude/skills/review-codebase/SKILL.md"
+    },
+    {
+      "id": "robotics-automation",
+      "name": "robotics-automation",
+      "description": "",
+      "path": ".claude/skills/robotics-automation/SKILL.md"
+    },
+    {
+      "id": "robotics-warehouse-automation",
+      "name": "robotics-warehouse-automation",
+      "description": "Warehouse robotics, AMR (autonomous mobile robots), pick-and-place, WMS integration — activate when building warehouse management systems, robot fleet orchestration, or fulfillment center automation s",
+      "path": ".claude/skills/robotics-warehouse-automation/SKILL.md"
+    },
+    {
+      "id": "saas-plg",
+      "name": "saas-plg",
+      "description": "Product-led growth, subscription billing, usage metering, feature flags, PLG CRM, onboarding. Use for SaaS products, self-serve growth, activation optimization, expansion revenue.",
+      "path": ".claude/skills/saas-plg/SKILL.md"
+    },
+    {
+      "id": "sales-agent",
+      "name": "sales-agent",
+      "description": "",
+      "path": ".claude/skills/sales-agent/SKILL.md"
     },
     {
       "id": "scout",
@@ -284,6 +1166,84 @@
       "path": ".claude/skills/shopify/SKILL.md"
     },
     {
+      "id": "smart-city-urban-tech",
+      "name": "smart-city-urban-tech",
+      "description": "Smart city infrastructure — digital twin cities, urban mobility, smart grid, IoT sensor networks, public safety analytics. Activate when building city data platforms, mobility apps, or urban infrastru",
+      "path": ".claude/skills/smart-city-urban-tech/SKILL.md"
+    },
+    {
+      "id": "space-tech-ops",
+      "name": "space-tech-ops",
+      "description": "",
+      "path": ".claude/skills/space-tech-ops/SKILL.md"
+    },
+    {
+      "id": "spatial-computing",
+      "name": "spatial-computing",
+      "description": "",
+      "path": ".claude/skills/spatial-computing/SKILL.md"
+    },
+    {
+      "id": "spatial-web-xr",
+      "name": "spatial-web-xr",
+      "description": "",
+      "path": ".claude/skills/spatial-web-xr/SKILL.md"
+    },
+    {
+      "id": "sports-analytics-platform",
+      "name": "sports-analytics-platform",
+      "description": "Sports data analytics, player performance tracking, betting odds, fantasy sports, computer vision for sports — activate when building sports data applications, betting platforms, fantasy sports engine",
+      "path": ".claude/skills/sports-analytics-platform/SKILL.md"
+    },
+    {
+      "id": "stealth-engine-agent",
+      "name": "stealth-engine-agent",
+      "description": "",
+      "path": ".claude/skills/stealth-engine-agent/SKILL.md"
+    },
+    {
+      "id": "supply-chain-agent",
+      "name": "supply-chain-agent",
+      "description": "",
+      "path": ".claude/skills/supply-chain-agent/SKILL.md"
+    },
+    {
+      "id": "support-agent",
+      "name": "support-agent",
+      "description": "",
+      "path": ".claude/skills/support-agent/SKILL.md"
+    },
+    {
+      "id": "sustainability-esg-agent",
+      "name": "sustainability-esg-agent",
+      "description": "",
+      "path": ".claude/skills/sustainability-esg-agent/SKILL.md"
+    },
+    {
+      "id": "sustainability-hub-sdk",
+      "name": "sustainability-hub-sdk",
+      "description": "Unified sustainability SDK — carbon accounting, ESG reporting, climate risk. Use for emissions tracking, sustainability dashboards, climate compliance, ESG scoring.",
+      "path": ".claude/skills/sustainability-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "synthetic-biology",
+      "name": "synthetic-biology",
+      "description": "",
+      "path": ".claude/skills/synthetic-biology/SKILL.md"
+    },
+    {
+      "id": "synthetic-data-generation",
+      "name": "synthetic-data-generation",
+      "description": "",
+      "path": ".claude/skills/synthetic-data-generation/SKILL.md"
+    },
+    {
+      "id": "synthetic-media-trust",
+      "name": "synthetic-media-trust",
+      "description": "",
+      "path": ".claude/skills/synthetic-media-trust/SKILL.md"
+    },
+    {
       "id": "tanstack",
       "name": "ck:tanstack",
       "description": "Build with TanStack Start (full-stack React framework), TanStack Form (headless form management), and TanStack AI (AI streaming/chat). Use when creating TanStack projects, routes, server functions, fo",
@@ -294,6 +1254,24 @@
       "name": "ck:team",
       "description": "Orchestrate Agent Teams for parallel multi-session collaboration. Use for research, implementation, review, and debug workflows requiring independent teammates.",
       "path": ".claude/skills/team/SKILL.md"
+    },
+    {
+      "id": "telecom-hub-sdk",
+      "name": "telecom-hub-sdk",
+      "description": "Unified Telecom SDK — network management, IoT device fleets, subscriber billing, 5G, LoRaWAN. Use for telco platforms, IoT hubs, device management, network ops.",
+      "path": ".claude/skills/telecom-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "telecom-iot",
+      "name": "telecom-iot",
+      "description": "IoT platforms, communication APIs, MQTT, edge computing, device management, 5G. Use for connected devices, smart infrastructure, telco apps, sensor networks.",
+      "path": ".claude/skills/telecom-iot/SKILL.md"
+    },
+    {
+      "id": "telecom-iot-agent",
+      "name": "telecom-iot-agent",
+      "description": "",
+      "path": ".claude/skills/telecom-iot-agent/SKILL.md"
     },
     {
       "id": "template-skill",
@@ -314,6 +1292,36 @@
       "path": ".claude/skills/threejs/SKILL.md"
     },
     {
+      "id": "tokenized-real-world-assets",
+      "name": "tokenized-real-world-assets",
+      "description": "RWA tokenization, security tokens, fractional ownership, on-chain real estate/art/commodities — activate when building tokenization platforms, security token offerings, or DeFi integrations with physi",
+      "path": ".claude/skills/tokenized-real-world-assets/SKILL.md"
+    },
+    {
+      "id": "trading",
+      "name": "trading",
+      "description": "Algorithmic trading — strategies, risk management, signal processing, technical indicators, backtesting. Use for crypto/stock bots, arbitrage, quant strategies, exchange integration.",
+      "path": ".claude/skills/trading/SKILL.md"
+    },
+    {
+      "id": "travel-hub-sdk",
+      "name": "travel-hub-sdk",
+      "description": "Unified Travel SDK — flight/hotel booking, itinerary planning, loyalty programs, travel insurance, GDS integration. Use for OTAs, corporate travel, travel agent portals.",
+      "path": ".claude/skills/travel-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "travel-tourism",
+      "name": "travel-tourism",
+      "description": "Travel booking APIs, GDS systems, property management, experience platforms, loyalty programs. Use for OTAs, travel tech, booking engines, hospitality systems.",
+      "path": ".claude/skills/travel-tourism/SKILL.md"
+    },
+    {
+      "id": "trust-safety-content-moderation",
+      "name": "trust-safety-content-moderation",
+      "description": "",
+      "path": ".claude/skills/trust-safety-content-moderation/SKILL.md"
+    },
+    {
       "id": "ui-styling",
       "name": "ck:ui-styling",
       "description": "Style UIs with shadcn/ui components (Radix UI + Tailwind CSS). Use for accessible components, themes, dark mode, responsive layouts, design systems, color customization.",
@@ -326,10 +1334,64 @@
       "path": ".claude/skills/use-mcp/SKILL.md"
     },
     {
+      "id": "vector-database-engineering",
+      "name": "vector-database-engineering",
+      "description": "Vector DB selection, embedding strategies, similarity search, hybrid search, RAG pipelines — activate when building semantic search, recommendation engines, or any LLM-powered retrieval system",
+      "path": ".claude/skills/vector-database-engineering/SKILL.md"
+    },
+    {
+      "id": "venture-capital",
+      "name": "venture-capital",
+      "description": "",
+      "path": ".claude/skills/venture-capital/SKILL.md"
+    },
+    {
+      "id": "vertical-saas",
+      "name": "vertical-saas",
+      "description": "",
+      "path": ".claude/skills/vertical-saas/SKILL.md"
+    },
+    {
+      "id": "vertical-saas-orchestration",
+      "name": "vertical-saas-orchestration",
+      "description": "",
+      "path": ".claude/skills/vertical-saas-orchestration/SKILL.md"
+    },
+    {
+      "id": "vibe-ecosystem-sdk",
+      "name": "vibe-ecosystem-sdk",
+      "description": "",
+      "path": ".claude/skills/vibe-ecosystem-sdk/SKILL.md"
+    },
+    {
+      "id": "vibe-subscription-webhooks",
+      "name": "vibe-subscription-webhooks",
+      "description": "Subscription lifecycle webhook SDK — event routing, status transitions, grace period, dunning. Use for subscription webhook processing, lifecycle management, churn prevention.",
+      "path": ".claude/skills/vibe-subscription-webhooks/SKILL.md"
+    },
+    {
+      "id": "video-saas-agent",
+      "name": "video-saas-agent",
+      "description": "",
+      "path": ".claude/skills/video-saas-agent/SKILL.md"
+    },
+    {
+      "id": "video-understanding",
+      "name": "video-understanding",
+      "description": "",
+      "path": ".claude/skills/video-understanding/SKILL.md"
+    },
+    {
       "id": "watzup",
       "name": "ck:watzup",
       "description": "Review recent changes and wrap up the current work session.",
       "path": ".claude/skills/watzup/SKILL.md"
+    },
+    {
+      "id": "wearable-health-iot",
+      "name": "wearable-health-iot",
+      "description": "Wearable health devices — continuous glucose monitors, ECG patches, sleep tracking, biometric auth, HealthKit/Health Connect integration. Activate when building health apps ingesting wearable data, re",
+      "path": ".claude/skills/wearable-health-iot/SKILL.md"
     },
     {
       "id": "web-frameworks",
@@ -342,6 +1404,42 @@
       "name": "ck:web-testing",
       "description": "Web testing with Playwright, Vitest, k6. E2E/unit/integration/load/security/visual/a11y testing. Use for test automation, flakiness, Core Web Vitals, mobile gestures, cross-browser.",
       "path": ".claude/skills/web-testing/SKILL.md"
+    },
+    {
+      "id": "web3-hub-sdk",
+      "name": "web3-hub-sdk",
+      "description": "Unified Web3 SDK — crypto wallets, DeFi protocols, NFT minting, smart contracts, token economics. Use for blockchain apps, DeFi platforms, NFT marketplaces, DAO tooling.",
+      "path": ".claude/skills/web3-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "wellness-fitness",
+      "name": "wellness-fitness",
+      "description": "Health tech, wearable integration, fitness platforms, wellness apps, mental health, nutrition tracking. Use for health & wellness products, fitness SaaS, wearable-connected apps.",
+      "path": ".claude/skills/wellness-fitness/SKILL.md"
+    },
+    {
+      "id": "wellness-hub-sdk",
+      "name": "wellness-hub-sdk",
+      "description": "Unified Wellness SDK — fitness tracking, nutrition planning, mental health tools, wearable integration, coaching. Use for health apps, fitness platforms, corporate wellness programs.",
+      "path": ".claude/skills/wellness-hub-sdk/SKILL.md"
+    },
+    {
+      "id": "wellness-tcm-agent",
+      "name": "wellness-tcm-agent",
+      "description": "",
+      "path": ".claude/skills/wellness-tcm-agent/SKILL.md"
+    },
+    {
+      "id": "workforce-management",
+      "name": "workforce-management",
+      "description": "",
+      "path": ".claude/skills/workforce-management/SKILL.md"
+    },
+    {
+      "id": "workplace-wellbeing-tech",
+      "name": "workplace-wellbeing-tech",
+      "description": "",
+      "path": ".claude/skills/workplace-wellbeing-tech/SKILL.md"
     },
     {
       "id": "worktree",

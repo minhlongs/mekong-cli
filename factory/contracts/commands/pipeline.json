@@ -7,8 +7,8 @@
     "name_vi": "Pipeline",
     "name_en": "Pipeline",
     "icon": "",
-    "description_vi": "Execute Pipeline command",
-    "description_en": "Execute Pipeline command"
+    "description_vi": "Sales pipeline optimization",
+    "description_en": "Sales pipeline optimization"
   },
   "execution": {
     "agents": [

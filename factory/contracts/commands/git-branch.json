@@ -7,8 +7,8 @@
     "name_vi": "Git Branch",
     "name_en": "Git Branch",
     "icon": "",
-    "description_vi": "Execute Git Branch command",
-    "description_en": "Execute Git Branch command"
+    "description_vi": "Manage branches",
+    "description_en": "Manage branches"
   },
   "execution": {
     "agents": [

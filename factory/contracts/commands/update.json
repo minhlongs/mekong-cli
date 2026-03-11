@@ -7,8 +7,8 @@
     "name_vi": "Update",
     "name_en": "Update",
     "icon": "",
-    "description_vi": "Execute Update command",
-    "description_en": "Execute Update command"
+    "description_vi": "Update all deps",
+    "description_en": "Update all deps"
   },
   "execution": {
     "agents": [

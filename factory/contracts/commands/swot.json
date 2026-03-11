@@ -7,8 +7,8 @@
     "name_vi": "Swot",
     "name_en": "Swot",
     "icon": "",
-    "description_vi": "Execute Swot command",
-    "description_en": "Execute Swot command"
+    "description_vi": "SWOT analysis",
+    "description_en": "SWOT analysis"
   },
   "execution": {
     "agents": [

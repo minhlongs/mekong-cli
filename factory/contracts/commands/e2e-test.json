@@ -7,8 +7,8 @@
     "name_vi": "E2E Test",
     "name_en": "E2E Test",
     "icon": "",
-    "description_vi": "Execute E2E Test command",
-    "description_en": "Execute E2E Test command"
+    "description_vi": "Run E2E tests",
+    "description_en": "Run E2E tests"
   },
   "execution": {
     "agents": [

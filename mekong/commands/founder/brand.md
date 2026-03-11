@@ -1,5 +1,5 @@
 ---
-description: Naming, positioning, tagline, domain check, brand voice — full brand identity từ CLI
+description: Build brand identity — naming, positioning, tagline, domain check, voice guide
 allowed-tools: Read, Write, Bash
 ---
 

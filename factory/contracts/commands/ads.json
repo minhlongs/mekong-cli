@@ -7,8 +7,8 @@
     "name_vi": "Ads",
     "name_en": "Ads",
     "icon": "",
-    "description_vi": "Execute Ads command",
-    "description_en": "Execute Ads command"
+    "description_vi": "Paid advertising strategy",
+    "description_en": "Paid advertising strategy"
   },
   "execution": {
     "agents": [

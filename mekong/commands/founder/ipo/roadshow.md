@@ -1,5 +1,5 @@
 ---
-description: Roadshow preparation — 2-week sprint, Q&A simulation, pricing signal tracking
+description: IPO roadshow prep — 2-week sprint, Q&A simulation, pricing signal tracking
 allowed-tools: Read, Write
 ---
 

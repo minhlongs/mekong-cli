@@ -7,8 +7,8 @@
     "name_vi": "Docs Deploy",
     "name_en": "Docs Deploy",
     "icon": "",
-    "description_vi": "Execute Docs Deploy command",
-    "description_en": "Execute Docs Deploy command"
+    "description_vi": "Deployment guide",
+    "description_en": "Deployment guide"
   },
   "execution": {
     "agents": [

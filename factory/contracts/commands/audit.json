@@ -7,8 +7,8 @@
     "name_vi": "Audit",
     "name_en": "Audit",
     "icon": "",
-    "description_vi": "Execute Audit command",
-    "description_en": "Execute Audit command"
+    "description_vi": "Audit dependencies",
+    "description_en": "Audit dependencies"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Unit Test",
     "name_en": "Unit Test",
     "icon": "",
-    "description_vi": "Execute Unit Test command",
-    "description_en": "Execute Unit Test command"
+    "description_vi": "Run unit tests",
+    "description_en": "Run unit tests"
   },
   "execution": {
     "agents": [

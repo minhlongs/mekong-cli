@@ -7,8 +7,8 @@
     "name_vi": "Clean",
     "name_en": "Clean",
     "icon": "",
-    "description_vi": "Execute Clean command",
-    "description_en": "Execute Clean command"
+    "description_vi": "Clean build artifacts",
+    "description_en": "Clean build artifacts"
   },
   "execution": {
     "agents": [

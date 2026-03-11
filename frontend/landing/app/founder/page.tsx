@@ -15,7 +15,7 @@ export default function FounderPage() {
       <LayerPageHero
         icon={founderLayer.icon}
         title="Founder Command Center"
-        subtitle="Strategic command center. AI agents handle the rest."
+        subtitle="46 commands to build an investable company. VC-grade tools from Day 1."
         commandCount={founderCommands.length}
         color={founderLayer.color}
       />

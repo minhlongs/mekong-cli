@@ -7,8 +7,8 @@
     "name_vi": "Git Merge",
     "name_en": "Git Merge",
     "icon": "",
-    "description_vi": "Execute Git Merge command",
-    "description_en": "Execute Git Merge command"
+    "description_vi": "Merge branches",
+    "description_en": "Merge branches"
   },
   "execution": {
     "agents": [

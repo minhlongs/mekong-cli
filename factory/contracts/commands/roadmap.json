@@ -7,8 +7,8 @@
     "name_vi": "Roadmap",
     "name_en": "Roadmap",
     "icon": "",
-    "description_vi": "Execute Roadmap command",
-    "description_en": "Execute Roadmap command"
+    "description_vi": "Create roadmap",
+    "description_en": "Create roadmap"
   },
   "execution": {
     "agents": [

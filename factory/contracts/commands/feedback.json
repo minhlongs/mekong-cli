@@ -7,8 +7,8 @@
     "name_vi": "Feedback",
     "name_en": "Feedback",
     "icon": "",
-    "description_vi": "Execute Feedback command",
-    "description_en": "Execute Feedback command"
+    "description_vi": "Feedback collection",
+    "description_en": "Feedback collection"
   },
   "execution": {
     "agents": [

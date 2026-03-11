@@ -7,8 +7,8 @@
     "name_vi": "Content",
     "name_en": "Content",
     "icon": "",
-    "description_vi": "Execute Content command",
-    "description_en": "Execute Content command"
+    "description_vi": "Content strategy & calendar",
+    "description_en": "Content strategy & calendar"
   },
   "execution": {
     "agents": [

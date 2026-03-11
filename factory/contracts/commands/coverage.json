@@ -7,8 +7,8 @@
     "name_vi": "Coverage",
     "name_en": "Coverage",
     "icon": "",
-    "description_vi": "Execute Coverage command",
-    "description_en": "Execute Coverage command"
+    "description_vi": "Analyze coverage",
+    "description_en": "Analyze coverage"
   },
   "execution": {
     "agents": [

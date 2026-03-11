@@ -7,8 +7,8 @@
     "name_vi": "Deploy Staging",
     "name_en": "Deploy Staging",
     "icon": "",
-    "description_vi": "Execute Deploy Staging command",
-    "description_en": "Execute Deploy Staging command"
+    "description_vi": "Deploy to staging",
+    "description_en": "Deploy to staging"
   },
   "execution": {
     "agents": [

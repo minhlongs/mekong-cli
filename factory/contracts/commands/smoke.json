@@ -7,8 +7,8 @@
     "name_vi": "Smoke",
     "name_en": "Smoke",
     "icon": "",
-    "description_vi": "Execute Smoke command",
-    "description_en": "Execute Smoke command"
+    "description_vi": "Run smoke tests",
+    "description_en": "Run smoke tests"
   },
   "execution": {
     "agents": [

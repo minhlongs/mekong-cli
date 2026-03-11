@@ -7,8 +7,8 @@
     "name_vi": "Format",
     "name_en": "Format",
     "icon": "",
-    "description_vi": "Execute Format command",
-    "description_en": "Execute Format command"
+    "description_vi": "Format codebase",
+    "description_en": "Format codebase"
   },
   "execution": {
     "agents": [

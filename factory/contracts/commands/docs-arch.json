@@ -7,8 +7,8 @@
     "name_vi": "Docs Arch",
     "name_en": "Docs Arch",
     "icon": "",
-    "description_vi": "Execute Docs Arch command",
-    "description_en": "Execute Docs Arch command"
+    "description_vi": "Architecture documentation",
+    "description_en": "Architecture documentation"
   },
   "execution": {
     "agents": [

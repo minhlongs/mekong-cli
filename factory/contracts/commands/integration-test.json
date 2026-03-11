@@ -7,8 +7,8 @@
     "name_vi": "Integration Test",
     "name_en": "Integration Test",
     "icon": "",
-    "description_vi": "Execute Integration Test command",
-    "description_en": "Execute Integration Test command"
+    "description_vi": "Run integration tests",
+    "description_en": "Run integration tests"
   },
   "execution": {
     "agents": [

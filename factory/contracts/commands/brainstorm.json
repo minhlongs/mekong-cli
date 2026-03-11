@@ -7,8 +7,8 @@
     "name_vi": "Brainstorm",
     "name_en": "Brainstorm",
     "icon": "",
-    "description_vi": "Execute Brainstorm command",
-    "description_en": "Execute Brainstorm command"
+    "description_vi": "⚡⚡ Brainstorm a feature",
+    "description_en": "Brainstorm a feature"
   },
   "execution": {
     "agents": [

@@ -7,8 +7,8 @@
     "name_vi": "Lint",
     "name_en": "Lint",
     "icon": "",
-    "description_vi": "Execute Lint command",
-    "description_en": "Execute Lint command"
+    "description_vi": "Lint codebase",
+    "description_en": "Lint codebase"
   },
   "execution": {
     "agents": [

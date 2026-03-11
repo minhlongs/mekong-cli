@@ -7,8 +7,8 @@
     "name_vi": "Close",
     "name_en": "Close",
     "icon": "",
-    "description_vi": "Execute Close command",
-    "description_en": "Execute Close command"
+    "description_vi": "Deal closing tactics",
+    "description_en": "Deal closing tactics"
   },
   "execution": {
     "agents": [

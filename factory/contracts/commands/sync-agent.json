@@ -7,8 +7,8 @@
     "name_vi": "Sync Agent",
     "name_en": "Sync Agent",
     "icon": "",
-    "description_vi": "Execute Sync Agent command",
-    "description_en": "Execute Sync Agent command"
+    "description_vi": "Sync Agent documentation from Antigravity - Core AI functionality, Models, Modes",
+    "description_en": "Sync Agent documentation from Antigravity - Core AI functionality, Models, Modes"
   },
   "execution": {
     "agents": [
