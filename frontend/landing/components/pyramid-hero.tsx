@@ -6,7 +6,7 @@ const LAYERS = [
     href: '/founder',
     icon: '👑',
     role: 'FOUNDER / CEO',
-    desc: 'Lập kế hoạch, gọi vốn, OKR, dashboard',
+    desc: 'Strategy, fundraising, OKRs, dashboard',
     width: 'max-w-xs',
     delay: 'animation-delay-0',
     color: 'border-yellow-500/40 hover:border-yellow-400/60',
@@ -17,7 +17,7 @@ const LAYERS = [
     href: '/business',
     icon: '🏢',
     role: 'BUSINESS',
-    desc: 'Sales, marketing, tài chính, nhân sự',
+    desc: 'Sales, marketing, finance, HR',
     width: 'max-w-sm',
     delay: 'animation-delay-200',
     color: 'border-blue-500/40 hover:border-blue-400/60',
@@ -28,7 +28,7 @@ const LAYERS = [
     href: '/product',
     icon: '📦',
     role: 'PRODUCT',
-    desc: 'Lập kế hoạch sản phẩm, sprint, roadmap',
+    desc: 'Product planning, sprints, roadmap',
     width: 'max-w-md',
     delay: 'animation-delay-400',
     color: 'border-purple-500/40 hover:border-purple-400/60',
@@ -39,7 +39,7 @@ const LAYERS = [
     href: '/dev/quickstart',
     icon: '⚙️',
     role: 'DEVELOPER',
-    desc: 'Code, test, deploy — bắt đầu trong 5 phút',
+    desc: 'Code, test, deploy — get started in 5 minutes',
     width: 'max-w-lg',
     delay: 'animation-delay-600',
     color: 'border-cyan-500/40 hover:border-cyan-400/60',
@@ -70,19 +70,19 @@ export default function PyramidHero() {
         {/* Headline */}
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-1.5 text-xs text-slate-400">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
-          Kim Tự Tháp 5 Tầng — Từ Founder đến Operations
+          5-Layer Pyramid — Founder to Operations
         </div>
 
         <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl pyramid-fade-in">
-          Vận hành doanh nghiệp bằng AI —{' '}
-          <span className="gradient-text">Từ chiến lược đến code</span>
+          Run your business with AI —{' '}
+          <span className="gradient-text">from strategy to code</span>
         </h1>
 
         <p className="mx-auto mb-14 max-w-2xl text-base text-slate-400 sm:text-lg pyramid-fade-in">
-          <span className="font-mono text-cyan-400">167 commands.</span>{' '}
-          <span className="font-mono text-indigo-400">464 skills.</span>{' '}
-          <span className="font-mono text-purple-400">105 AI agents.</span>{' '}
-          Một hệ thống thống nhất từ Founder đến Developer.
+          <span className="font-mono text-cyan-400">289 commands.</span>{' '}
+          <span className="font-mono text-indigo-400">216 skills.</span>{' '}
+          <span className="font-mono text-purple-400">127 AI agents.</span>{' '}
+          One unified system from Founder to Operations.
         </p>
 
         {/* Pyramid layers */}
@@ -120,10 +120,10 @@ export default function PyramidHero() {
             href="#quickstart"
             className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
           >
-            Bắt đầu miễn phí
+            Get started free
           </a>
           <a
-            href="https://github.com/agencyos/mekong-cli"
+            href="https://github.com/longtho638-jpg/mekong-cli"
             className="rounded-xl border border-slate-700 bg-slate-900 px-8 py-3.5 font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
           >
             ★ GitHub

@@ -2,10 +2,10 @@ import Link from 'next/link'
 import SiteNav from '@/components/site-nav'
 
 const TECH_STACK = [
-  { layer: 'CLI', tech: 'Python / Typer / Rich', desc: 'Giao diện dòng lệnh, Rich UI, type hints' },
+  { layer: 'CLI', tech: 'Python / Typer / Rich', desc: 'Command-line interface, Rich UI, type hints' },
   { layer: 'API', tech: 'FastAPI / Cloudflare Workers', desc: 'Local gateway + edge deployment' },
   { layer: 'PEV', tech: 'src/core/ planner→executor→verifier', desc: 'Plan–Execute–Verify orchestration loop' },
-  { layer: 'LLM', tech: 'Claude + Gemini + Qwen + Ollama', desc: 'Multi-model router qua Antigravity Proxy :9191' },
+  { layer: 'LLM', tech: 'Claude + Gemini + Qwen + Ollama', desc: 'Multi-model router via Antigravity Proxy :9191' },
   { layer: 'DB', tech: 'Supabase (prod) / SQLite (dev)', desc: 'Persistent state, credits, mission log' },
   { layer: 'Billing', tech: 'Polar.sh + MCU credits', desc: '1 MCU = 1 credit, webhooks → src/raas/credits.py' },
 ]
@@ -31,7 +31,7 @@ const AGENT_ASCII = `              ┌──────────────
     │ (LLM dec.)│ │ (shell)  │ │ (gates)  │
     └───────────┘ └──────────┘ └──────────┘
 
-18 hubs · 105 agents · LLM Router: Claude / Gemini / Qwen / Ollama`
+18 hubs · 127 agents · LLM Router: Claude / Gemini / Qwen / Ollama`
 
 export default function ArchitecturePage() {
   return (
@@ -44,7 +44,7 @@ export default function ArchitecturePage() {
           href="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
         >
-          ← Trang chủ
+          ← Home
         </Link>
 
         {/* Hero */}
@@ -53,7 +53,7 @@ export default function ArchitecturePage() {
           <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
             <span className="gradient-text">Architecture</span>
           </h1>
-          <p className="text-lg text-slate-400">Kiến trúc hệ thống AgencyOS</p>
+          <p className="text-lg text-slate-400">AgencyOS system architecture</p>
         </div>
 
         {/* Section 1: PEV Pipeline */}
@@ -62,10 +62,10 @@ export default function ArchitecturePage() {
             1. PEV Pipeline
           </h2>
           <p className="mb-4 text-sm text-slate-400">
-            Mọi lệnh đều chạy qua 3 giai đoạn:{' '}
+            Every command runs through 3 phases:{' '}
             <span className="text-cyan-400">Plan → Execute → Verify</span>.
-            Orchestrator điều phối toàn bộ vòng lặp, tự động rollback khi
-            verification thất bại.
+            The Orchestrator manages the full loop and auto-rolls back on
+            verification failure.
           </p>
           <div className="glass-card rounded-xl p-5">
             <pre className="overflow-x-auto font-mono text-xs text-cyan-400 sm:text-sm">
@@ -77,11 +77,11 @@ export default function ArchitecturePage() {
         {/* Section 2: 5-Layer Cascade */}
         <section className="mb-10">
           <h2 className="mb-4 text-xl font-semibold text-slate-100">
-            2. Kim Tự Tháp 5 Tầng
+            2. 5-Layer Pyramid
           </h2>
           <p className="mb-4 text-sm text-slate-400">
-            Chiến lược từ Founder cascade xuống Ops. Mỗi tầng nhận output từ
-            tầng trên và cung cấp input cho tầng dưới.
+            Strategy cascades from Founder down to Ops. Each layer receives output from
+            the layer above and provides input to the layer below.
           </p>
           <div className="glass-card rounded-xl p-5">
             <pre className="overflow-x-auto font-mono text-xs text-cyan-400 sm:text-sm whitespace-pre">
@@ -90,7 +90,7 @@ export default function ArchitecturePage() {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
             {[
-              { icon: '👑', label: 'Founder', color: 'text-cyan-400' },
+              { icon: '👑', label: 'Founder', color: 'text-yellow-400' },
               { icon: '🏢', label: 'Business', color: 'text-blue-400' },
               { icon: '📦', label: 'Product', color: 'text-purple-400' },
               { icon: '⚙️', label: 'Engineering', color: 'text-green-400' },
@@ -112,8 +112,8 @@ export default function ArchitecturePage() {
             3. Agent Hierarchy
           </h2>
           <p className="mb-4 text-sm text-slate-400">
-            Orchestrator sinh ra các sub-agent chuyên biệt. 18 hub điều phối
-            105 agent, mỗi agent chạy trên LLM phù hợp nhất.
+            The Orchestrator spawns specialized sub-agents. 18 hubs coordinate
+            127 agents, each running on the most suitable LLM.
           </p>
           <div className="glass-card rounded-xl p-5">
             <pre className="overflow-x-auto font-mono text-xs text-cyan-400 sm:text-sm">
@@ -138,7 +138,7 @@ export default function ArchitecturePage() {
                     Technology
                   </th>
                   <th className="hidden px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
-                    Mô tả
+                    Description
                   </th>
                 </tr>
               </thead>

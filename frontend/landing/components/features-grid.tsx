@@ -2,32 +2,32 @@ const FEATURES = [
   {
     icon: '🧠',
     title: 'Plan → Execute → Verify',
-    desc: 'AI tự lập kế hoạch, phân rã thành tasks, thực thi từng bước và tự kiểm tra chất lượng kết quả.',
+    desc: 'AI plans, decomposes into tasks, executes step-by-step, and self-verifies quality.',
   },
   {
     icon: '🔄',
     title: 'Self-Healing Pipeline',
-    desc: 'Nếu bước nào lỗi, AI tự phát hiện nguyên nhân gốc rễ và sửa — không cần can thiệp thủ công.',
+    desc: 'Failed steps are auto-diagnosed and corrected — no manual intervention needed.',
   },
   {
     icon: '🔓',
     title: 'Open Source 100%',
-    desc: 'MIT License. Fork về chạy riêng, tuỳ chỉnh agents, không bị vendor lock-in bao giờ.',
+    desc: 'MIT License. Fork and run your own instance, customize agents, zero vendor lock-in.',
   },
   {
     icon: '💳',
-    title: 'Trả theo kết quả',
-    desc: '1 credit task đơn giản, 3 credits task trung bình, 5 credits task phức tạp. Chỉ trả khi thành công.',
+    title: 'Pay per result',
+    desc: '1 credit for simple tasks, 3 for standard, 5 for complex. Pay only on success.',
   },
   {
     icon: '🏯',
-    title: '5 tầng doanh nghiệp',
-    desc: 'Founder → Business → Product → Engineering → Ops. Mỗi tầng có agents chuyên biệt sẵn sàng.',
+    title: '5 business layers',
+    desc: 'Founder → Business → Product → Engineering → Ops. Each layer has specialized agents ready.',
   },
   {
     icon: '🌊',
-    title: 'Cascade tự động',
-    desc: 'Kế hoạch cấp cao tự động phân rã thành tasks song song. Nhiều agents chạy đồng thời.',
+    title: 'Automatic cascade',
+    desc: 'High-level goals automatically decompose into parallel tasks across multiple agents.',
   },
 ]
 
@@ -37,11 +37,11 @@ export default function FeaturesGrid() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Tại sao chọn{' '}
-            <span className="gradient-text">AgencyOS RaaS?</span>
+            Why choose{' '}
+            <span className="gradient-text">Mekong CLI?</span>
           </h2>
           <p className="text-slate-400">
-            Infrastructure tự trị cho AI agents — open-source core, tính tiền theo kết quả thực tế.
+            Self-governing infrastructure for AI agents — open-source core, pay-per-result.
           </p>
         </div>
 

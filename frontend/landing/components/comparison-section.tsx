@@ -1,27 +1,27 @@
 const ROWS = [
   {
     role: '👑 Founder',
-    single: 'Spreadsheet riêng',
+    single: 'Spreadsheet silo',
     mekong: '/annual → auto cascade',
   },
   {
     role: '🏢 Sales',
-    single: 'CRM riêng',
+    single: 'Standalone CRM',
     mekong: '/sales → linked to OKR',
   },
   {
     role: '📦 Product',
     single: 'Jira / Linear',
-    mekong: '/sprint → từ founder goal',
+    mekong: '/sprint → from founder goal',
   },
   {
     role: '⚙️ Dev',
-    single: 'Code không context',
-    mekong: '/cook → biết phục vụ goal nào',
+    single: 'Code without context',
+    mekong: '/cook → knows which goal it serves',
   },
   {
     role: '🔧 Ops',
-    single: 'Monitor riêng',
+    single: 'Separate monitoring',
     mekong: '/health → full lineage trace',
   },
 ]
@@ -32,20 +32,19 @@ export default function ComparisonSection() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Tại sao không dùng{' '}
-            <span className="text-slate-500 line-through">tool đơn lẻ</span>?
+            Why not use{' '}
+            <span className="text-slate-500 line-through">separate tools</span>?
           </h2>
           <p className="text-slate-400">
-            Mỗi tầng dùng tool riêng = không ai hiểu context của nhau.
-            Mekong CLI nối liền tất cả.
+            Each layer using its own tool = nobody understands each other's context. Mekong CLI connects everything.
           </p>
         </div>
 
         <div className="glass-card overflow-hidden rounded-2xl">
           {/* Table header */}
           <div className="grid grid-cols-3 border-b border-slate-800 bg-slate-900/60 px-6 py-3 text-xs font-semibold uppercase tracking-wider">
-            <span className="text-slate-500">Vai trò</span>
-            <span className="text-slate-500">Tool đơn lẻ</span>
+            <span className="text-slate-500">Role</span>
+            <span className="text-slate-500">Separate tools</span>
             <span className="gradient-text">Mekong CLI</span>
           </div>
 
@@ -65,7 +64,7 @@ export default function ComparisonSection() {
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-600">
-          Tất cả commands chia sẻ cùng context — không bao giờ lạc mục tiêu.
+          All commands share context — never lose sight of the goal.
         </p>
       </div>
     </section>

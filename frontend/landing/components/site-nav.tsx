@@ -28,7 +28,7 @@ export default function SiteNav() {
             </a>
           ))}
           <a
-            href="https://github.com/agencyos/mekong-cli"
+            href="https://github.com/longtho638-jpg/mekong-cli"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors hover:text-white"
@@ -42,7 +42,7 @@ export default function SiteNav() {
             href="#quickstart"
             className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-500"
           >
-            Bắt đầu
+            Get started
           </a>
         </div>
 
@@ -68,7 +68,7 @@ export default function SiteNav() {
                 </a>
               ))}
               <a
-                href="https://github.com/agencyos/mekong-cli"
+                href="https://github.com/longtho638-jpg/mekong-cli"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-lg px-3 py-2 transition-colors hover:bg-slate-800 hover:text-white"

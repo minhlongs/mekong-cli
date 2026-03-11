@@ -8,7 +8,7 @@ const LAYER_LINKS = [
 ]
 
 const EXTERNAL_LINKS = [
-  { label: 'GitHub', href: 'https://github.com/agencyos/mekong-cli' },
+  { label: 'GitHub', href: 'https://github.com/longtho638-jpg/mekong-cli' },
   { label: 'Docs', href: 'https://docs.agencyos.network' },
   { label: 'Discord', href: 'https://discord.gg/agencyos' },
   { label: 'Terms', href: '/terms' },
@@ -25,9 +25,9 @@ export default function FooterSection() {
             <div className="mb-1 text-lg font-bold text-white">
               <span className="text-cyan-400">Agency</span>OS
             </div>
-            <p className="mb-3 text-xs text-slate-600">AGI Vibe Coding Factory</p>
+            <p className="mb-3 text-xs text-slate-600">AI-Operated Business Platform</p>
             <a
-              href="https://github.com/agencyos/mekong-cli"
+              href="https://github.com/longtho638-jpg/mekong-cli"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"

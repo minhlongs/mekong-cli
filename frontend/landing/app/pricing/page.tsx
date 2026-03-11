@@ -10,11 +10,11 @@ export default function PricingPage() {
       <section className="px-6 pb-8 pt-12 text-center">
         <div className="mx-auto max-w-2xl">
           <h1 className="mb-4 text-4xl font-extrabold text-white sm:text-5xl">
-            Bảng giá —{' '}
-            <span className="gradient-text">Trả theo credit, không phí ẩn</span>
+            Pricing —{' '}
+            <span className="gradient-text">pay per credit, no hidden fees</span>
           </h1>
           <p className="text-lg text-slate-400">
-            Scale khi cần. Hủy bất kỳ lúc nào. Không cam kết dài hạn.
+            Scale when you need to. Cancel anytime. No long-term commitment.
           </p>
         </div>
       </section>
@@ -69,7 +69,7 @@ export default function PricingPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-600">
-            Giá tính bằng USD. Hủy bất kỳ lúc nào.
+            Priced in USD. Cancel anytime.
           </p>
         </div>
       </section>
@@ -78,7 +78,7 @@ export default function PricingPage() {
       <section className="px-6 pb-16">
         <div className="mx-auto max-w-3xl">
           <div className="glass-card rounded-2xl p-8">
-            <h2 className="mb-6 text-xl font-bold text-white">Cách tính credit</h2>
+            <h2 className="mb-6 text-xl font-bold text-white">How credits work</h2>
             <div className="space-y-4">
               {CREDIT_TIERS.map((ct) => (
                 <div key={ct.complexity} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
@@ -100,7 +100,7 @@ export default function PricingPage() {
       <section className="px-6 pb-20">
         <div className="mx-auto max-w-3xl">
           <h2 className="mb-8 text-center text-2xl font-bold text-white">
-            Câu hỏi thường gặp
+            Frequently asked questions
           </h2>
           <div className="space-y-4">
             {FAQS.map((faq) => (

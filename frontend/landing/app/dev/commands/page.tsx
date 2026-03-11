@@ -7,7 +7,7 @@ import { COMMANDS } from '@/data/commands'
 import { LAYERS } from '@/data/layers'
 
 const CREDIT_DOTS: Record<number, string> = {
-  0: 'Miễn phí',
+  0: 'Free',
   1: '●',
   2: '●●',
   3: '●●●',
@@ -61,7 +61,7 @@ export default function CommandsPage() {
           href="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
         >
-          ← Trang chủ
+          ← Home
         </Link>
 
         {/* Hero */}
@@ -70,7 +70,7 @@ export default function CommandsPage() {
             <span className="gradient-text">Command Explorer</span>
           </h1>
           <p className="text-slate-400">
-            {COMMANDS.length} lệnh — tìm kiếm theo tên, mô tả hoặc layer
+            {COMMANDS.length} commands — search by name, description, or layer
           </p>
         </div>
 
@@ -78,7 +78,7 @@ export default function CommandsPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Tìm lệnh... (cook, deploy, fundraise...)"
+            placeholder="Search commands... (cook, deploy, fundraise...)"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full glass rounded-xl px-5 py-3 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-400/40 border border-transparent transition-colors"
@@ -105,13 +105,13 @@ export default function CommandsPage() {
 
         {/* Count */}
         <p className="mb-4 text-xs text-slate-500">
-          Hiển thị {filtered.length} / {COMMANDS.length} lệnh
+          Showing {filtered.length} / {COMMANDS.length} commands
         </p>
 
         {/* Grid */}
         {filtered.length === 0 ? (
           <div className="glass-card rounded-xl p-10 text-center text-slate-500">
-            Không tìm thấy lệnh phù hợp — thử từ khóa khác
+            No matching commands found — try a different keyword
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

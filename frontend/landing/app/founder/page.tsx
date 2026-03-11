@@ -15,7 +15,7 @@ export default function FounderPage() {
       <LayerPageHero
         icon={founderLayer.icon}
         title="Founder Command Center"
-        subtitle="13 commands để vận hành chiến lược. AI agents làm phần còn lại."
+        subtitle="Strategic command center. AI agents handle the rest."
         commandCount={founderCommands.length}
         color={founderLayer.color}
       />
@@ -24,7 +24,7 @@ export default function FounderPage() {
       <section className="px-6 pb-16">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-6 text-xl font-bold text-white">
-            Tất cả Founder Commands
+            All Founder Commands
           </h2>
           <CommandGrid commands={founderCommands} columns={3} />
         </div>
@@ -38,7 +38,7 @@ export default function FounderPage() {
               Cascade Intelligence
             </h2>
             <p className="mb-6 text-slate-400">
-              Khi bạn chạy <code className="font-mono text-cyan-300">/annual</code>, AI cascade xuống toàn bộ công ty — không cần giao việc thủ công.
+              When you run <code className="font-mono text-cyan-300">/annual</code>, AI cascades across the entire company — no manual delegation needed.
             </p>
             <div className="flex flex-wrap items-center gap-3 font-mono text-sm">
               {['👑 /annual', '→', '🏢 Business', '→', '📦 Product', '→', '⚙️ Engineering', '→', '🔧 Ops'].map(
@@ -66,7 +66,7 @@ export default function FounderPage() {
           href="/#quickstart"
           className="inline-block rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
         >
-          Bắt đầu ngay →
+          Get started →
         </Link>
       </section>
     </main>

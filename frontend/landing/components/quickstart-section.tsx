@@ -3,9 +3,10 @@
 import { useState } from 'react'
 
 const TERMINAL_LINES = [
-  { text: '$ mekong cook "Tạo landing page cho quán cà phê"', color: 'text-cyan-300' },
+  { text: '$ mekong cook "Create a landing page for a café"', color: 'text-cyan-300' },
   { text: '', color: '' },
-  { text: '  🎯 Goal: Landing page cho quán cà phê', color: 'text-white' },
+  { text: '  💡 Using: LLM_BASE_URL=openrouter.ai', color: 'text-slate-500' },
+  { text: '  🎯 Goal: Landing page for a café', color: 'text-white' },
   { text: '  🤖 Agent: cto via claude-sonnet-4-6', color: 'text-slate-300' },
   { text: '  📋 Steps:', color: 'text-slate-300' },
   { text: '    1. Research café landing best practices', color: 'text-slate-400' },
@@ -34,11 +35,11 @@ export default function QuickstartSection() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Bắt đầu trong{' '}
-            <span className="gradient-text">30 giây</span>
+            Get started in{' '}
+            <span className="gradient-text">30 seconds</span>
           </h2>
           <p className="text-slate-400">
-            Cài đặt, chọn vai trò, bắt đầu. Không cần config phức tạp.
+            Install, pick a role, start. No complex configuration.
           </p>
         </div>
 
@@ -71,7 +72,7 @@ export default function QuickstartSection() {
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-600">
-          Python 3.11+ required. Works on macOS, Linux, Windows (WSL).
+          Python 3.9+ required. Works on macOS, Linux, Windows (WSL).
         </p>
       </div>
     </section>
