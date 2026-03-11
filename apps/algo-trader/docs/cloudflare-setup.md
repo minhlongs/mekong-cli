@@ -2,7 +2,23 @@
 
 ## Configure Secrets
 
-### 1. Cloudflare API Token
+### Option 1: Automated Scripts (Recommended)
+
+```bash
+# Setup secrets interactively
+./scripts/setup-secrets.sh
+
+# Create R2 buckets (after dashboard enable)
+./scripts/create-r2-buckets.sh
+```
+
+Scripts include:
+- Pre-flight authentication check
+- Input validation (min 8 chars, confirmation)
+- Error handling with rollback
+- Security best practices
+
+### Option 2: Manual CLI Commands
 
 Tạo API token tại: https://dash.cloudflare.com/profile/api-tokens
 
