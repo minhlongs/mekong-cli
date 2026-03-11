@@ -78,6 +78,14 @@ def register_all_commands(app: typer.Typer) -> None:
     telegram_app = typer.Typer(help="Telegram: remote commander bot")
     app.add_typer(telegram_app, name="telegram")
 
+    # Auth commands
+    from src.commands.auth_commands import app as auth_app
+    app.add_typer(auth_app, name="auth", help="Authentication: login, logout, status, verify")
+
+    # OCOP commands
+    from src.commands.ocop_commands import app as ocop_app
+    app.add_typer(ocop_app, name="ocop", help="OCOP: AI-powered agricultural export tools")
+
     # RaaS Integration Commands
     app.add_typer(sync_raas_app, name="sync-raas", help="RaaS Gateway synchronization: validate, register, track usage")
 

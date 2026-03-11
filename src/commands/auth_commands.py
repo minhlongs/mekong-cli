@@ -12,8 +12,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 
-from .secure_storage import get_secure_storage, SecureStorageError
-from .login_client import get_gateway_client, GatewayClientError
+from src.auth.secure_storage import get_secure_storage, SecureStorageError
+from src.auth.login_client import get_gateway_client, GatewayClientError
 
 console = Console()
 
