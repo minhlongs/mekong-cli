@@ -182,6 +182,9 @@ layers:
       - ui-design-review
       - ux-interview
       - ux-usability
+      - ocop-analyze
+      - ocop-export
+      - ocop-list
 
   engineering:
     chapter: "軍爭 — Military Contention"
