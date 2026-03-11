@@ -42,11 +42,11 @@ export default function CascadeDemo() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Chiến lược{' '}
-            <span className="gradient-text">cascade tự động</span>
+            Automatic strategy{' '}
+            <span className="gradient-text">cascade</span>
           </h2>
           <p className="text-slate-400">
-            Mục tiêu Founder tự động lan xuống từng tầng — không cần họp, không cần email.
+            Founder goals automatically flow down each layer — no meetings, no emails.
           </p>
         </div>
 

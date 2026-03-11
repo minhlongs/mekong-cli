@@ -5,26 +5,26 @@ const STEPS = [
   {
     num: 1,
     title: 'Prerequisites',
-    desc: 'Đảm bảo máy có Python và Node.js',
+    desc: 'Ensure Python and Node.js are installed',
     code: `$ python --version  # Python 3.9+
-$ node --version    # Node 18+ (cho OpenClaw worker)`,
+$ node --version    # Node 18+ (for OpenClaw worker)`,
     copyText: null,
   },
   {
     num: 2,
     title: 'Install',
-    desc: 'Cài Mekong CLI qua pip',
+    desc: 'Install Mekong CLI via pip',
     code: `$ pip install mekong-cli
 $ mekong version
-→ Mekong CLI v3.1.0 | OpenClaw v2026.3`,
+→ Mekong CLI v5.0.0`,
     copyText: 'pip install mekong-cli',
   },
   {
     num: 3,
     title: 'Configure LLM Provider',
-    desc: 'Chọn provider — Antigravity Proxy miễn phí, không cần API key',
+    desc: 'Choose a provider — Antigravity Proxy is free, no API key needed',
     code: `$ mekong init
-Chọn provider:
+Select provider:
   1. Claude (Anthropic API key)
   2. Google Gemini (API key)
   3. Antigravity Proxy (local, free)
@@ -36,7 +36,7 @@ Chọn provider:
   {
     num: 4,
     title: 'First Command',
-    desc: 'Chạy lệnh đầu tiên với PEV pipeline',
+    desc: 'Run your first command with the PEV pipeline',
     code: `$ mekong cook "Create a Python calculator with tests"
 📋 Planning 3 tasks...
 ⚡ Executing...
@@ -46,7 +46,7 @@ Chọn provider:
   {
     num: 5,
     title: 'Explore Commands',
-    desc: '176 lệnh sẵn có — khám phá toàn bộ command catalog',
+    desc: '289 commands available — explore the full command catalog',
     code: null,
     copyText: null,
     isLast: true,
@@ -64,7 +64,7 @@ export default function QuickstartPage() {
           href="/"
           className="mb-8 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
         >
-          ← Trang chủ
+          ← Home
         </Link>
 
         {/* Hero */}
@@ -73,7 +73,7 @@ export default function QuickstartPage() {
           <h1 className="mb-3 text-3xl font-bold sm:text-4xl">
             <span className="gradient-text">Developer Quickstart</span>
           </h1>
-          <p className="text-lg text-slate-400">Setup trong 5 phút</p>
+          <p className="text-lg text-slate-400">Setup in 5 minutes</p>
         </div>
 
         {/* Steps */}
@@ -123,7 +123,7 @@ export default function QuickstartPage() {
                   href="/dev/commands"
                   className="glass-highlight mt-2 inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-cyan-400 transition-all hover:text-cyan-300"
                 >
-                  Khám phá 176 Commands →
+                  Explore 289 Commands →
                 </Link>
               )}
             </div>

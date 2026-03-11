@@ -4,7 +4,7 @@ const STAT_ITEMS = [
   { value: STATS.commands.toString(), label: 'Commands' },
   { value: STATS.skills.toString(), label: 'AI Skills' },
   { value: STATS.agents.toString(), label: 'Agents' },
-  { value: STATS.layers.toString(), label: 'Tầng' },
+  { value: STATS.layers.toString(), label: 'Layers' },
   { value: STATS.commits.toLocaleString(), label: 'Commits' },
 ]
 

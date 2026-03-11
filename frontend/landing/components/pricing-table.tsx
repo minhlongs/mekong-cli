@@ -6,11 +6,11 @@ export default function PricingTable() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Bảng giá credits,{' '}
-            <span className="gradient-text">không phí ẩn</span>
+            Credit pricing,{' '}
+            <span className="gradient-text">no hidden fees</span>
           </h2>
           <p className="text-slate-400">
-            Trả theo kết quả thực tế. Huỷ bất kỳ lúc nào.
+            Pay per result. Cancel anytime.
           </p>
         </div>
 
@@ -65,8 +65,7 @@ export default function PricingTable() {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-600">
-          MCU = Mekong Credit Unit. 1 credit ≈ 1 agent task execution.
-          Giá tính bằng USD. Huỷ bất kỳ lúc nào.
+          MCU = Mekong Credit Unit. 1 credit ≈ 1 agent task execution. Priced in USD. Cancel anytime.
         </p>
       </div>
     </section>

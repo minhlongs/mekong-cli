@@ -17,7 +17,7 @@ export default function ProductPage() {
       <LayerPageHero
         icon={productLayer.icon}
         title="Product Management"
-        subtitle="Lập kế hoạch, sprint, roadmap — từ idea đến delivery."
+        subtitle="Planning, sprints, roadmap — from idea to delivery."
         commandCount={productCommands.length}
         color={productLayer.color}
       />
@@ -49,7 +49,7 @@ export default function ProductPage() {
       <section className="px-6 pb-16">
         <div className="mx-auto max-w-5xl">
           <h2 className="mb-6 text-xl font-bold text-white">
-            Tất cả Product Commands
+            All Product Commands
           </h2>
           <CommandGrid commands={productCommands} columns={3} />
         </div>
@@ -61,7 +61,7 @@ export default function ProductPage() {
           href="/#quickstart"
           className="inline-block rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
         >
-          Bắt đầu ngay →
+          Get started →
         </Link>
       </section>
     </main>

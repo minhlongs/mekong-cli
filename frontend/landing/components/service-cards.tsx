@@ -1,8 +1,8 @@
 import { SERVICES } from '@/data/services'
 
 const CATEGORY_LABELS = {
-  business: 'Kinh doanh',
-  tech: 'Kỹ thuật',
+  business: 'Business',
+  tech: 'Technical',
   marketing: 'Marketing',
 }
 
@@ -18,11 +18,11 @@ export default function ServiceCards() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Dịch vụ{' '}
-            <span className="gradient-text">đóng gói sẵn</span>
+            Pre-packaged{' '}
+            <span className="gradient-text">services</span>
           </h2>
           <p className="text-slate-400">
-            Chọn dịch vụ, trả credits, nhận kết quả. Không setup, không chờ đợi.
+            Pick a service, pay credits, get results. No setup, no waiting.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function ServiceCards() {
                   <span className="ml-1 text-slate-500">(~${service.priceUsd})</span>
                 </div>
                 <div className="text-xs text-slate-500">
-                  ⏱ {service.durationMin} phút
+                  ⏱ {service.durationMin} min
                 </div>
               </div>
             </div>

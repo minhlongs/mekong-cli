@@ -38,7 +38,7 @@ export default function BusinessPage() {
       <LayerPageHero
         icon={businessLayer.icon}
         title="Business Operations"
-        subtitle="Sales, marketing, tài chính, nhân sự — revenue engine của bạn."
+        subtitle="Sales, marketing, finance, HR — your revenue engine."
         commandCount={allBiz.length}
         color={businessLayer.color}
       />
@@ -83,7 +83,7 @@ export default function BusinessPage() {
           href="/#quickstart"
           className="inline-block rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
         >
-          Bắt đầu ngay →
+          Get started →
         </Link>
       </section>
     </main>
