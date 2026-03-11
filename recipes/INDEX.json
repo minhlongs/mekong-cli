@@ -80,5 +80,17 @@
       "category": "devops"
     }
   ],
-  "categories": ["examples", "setup", "automation", "devops", "web", "data"]
+  "categories": ["examples", "setup", "automation", "devops", "web", "data", "founder"],
+  "founder": {
+    "name": "VC Studio Workflows",
+    "description": "Founder super commands — parallel pipelines for each investment stage",
+    "recipes": [
+      "founder/raise.json",
+      "founder/validate.json",
+      "founder/launch.json",
+      "founder/weekly.json",
+      "founder/negotiate.json",
+      "founder/ipo.json"
+    ]
+  }
 }

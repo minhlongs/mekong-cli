@@ -1,0 +1,53 @@
+{
+  "id": "founder-raise",
+  "name": "Fundraise Pipeline",
+  "description": "Complete fundraise preparation — from unit economics to investor targeting. 8 commands, ~45 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:raise",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/raise-ready-kit",
+  "estimated_credits": 30,
+  "estimated_minutes": 45,
+  "dag": {
+    "groups": [
+      {
+        "id": "validate",
+        "name": "Validate Fundamentals",
+        "mode": "parallel",
+        "commands": [
+          { "id": "unit-economics", "args": "--output reports/raise-ready-kit/unit-economics.md" },
+          { "id": "tam", "args": "--output reports/raise-ready-kit/market-sizing.md" },
+          { "id": "moat-audit", "args": "--output reports/raise-ready-kit/moat-analysis.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "prepare",
+        "name": "Prepare Materials",
+        "mode": "parallel",
+        "commands": [
+          { "id": "financial-model", "args": "--output reports/raise-ready-kit/financial-model.md" },
+          { "id": "data-room", "args": "--output reports/raise-ready-kit/data-room/" }
+        ],
+        "depends_on": ["validate"]
+      },
+      {
+        "id": "position",
+        "name": "Position & Target",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-vc-cap-table", "args": "--output reports/raise-ready-kit/cap-table.md" },
+          { "id": "founder-pitch", "args": "--output reports/raise-ready-kit/pitch-feedback.md" },
+          { "id": "founder-vc-map", "args": "--output reports/raise-ready-kit/investor-targets.md" }
+        ],
+        "depends_on": ["prepare"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/raise-ready-kit/RAISE-SUMMARY.md",
+      "template": "Compile all reports into a single investor-ready summary with: executive summary, market opportunity, unit economics, financial projections, cap table, and target investor list."
+    }
+  }
+}

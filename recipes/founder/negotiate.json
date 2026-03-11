@@ -1,0 +1,35 @@
+{
+  "id": "founder-negotiate",
+  "name": "Deal Negotiation Kit",
+  "description": "Analyze term sheet + model dilution + plan negotiation strategy. 4 commands, ~20 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:negotiate",
+  "output_dir": "reports/negotiation",
+  "estimated_credits": 15,
+  "estimated_minutes": 20,
+  "dag": {
+    "groups": [
+      {
+        "id": "analyze",
+        "name": "Analyze Terms",
+        "mode": "parallel",
+        "commands": [
+          { "id": "founder-vc-term-sheet", "args": "--output reports/negotiation/term-analysis.md" },
+          { "id": "dilution-sim", "args": "--output reports/negotiation/dilution-scenarios.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "strategize",
+        "name": "Counter-Strategy",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-vc-cap-table", "args": "--output reports/negotiation/cap-table-impact.md" },
+          { "id": "founder-vc-negotiate", "args": "--output reports/negotiation/negotiation-playbook.md" }
+        ],
+        "depends_on": ["analyze"]
+      }
+    ]
+  }
+}

@@ -3,7 +3,7 @@
 // commits: approximate, updated periodically
 
 export const STATS = {
-  commands: 297,
+  commands: 303,
   agents: 127,
   skills: 216,
   layers: 5,

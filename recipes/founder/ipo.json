@@ -1,0 +1,46 @@
+{
+  "id": "founder-ipo",
+  "name": "IPO Preparation Pipeline",
+  "description": "18-month IPO readiness — audit, S-1, roadshow, day-of execution. 7 commands, ~60 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:ipo",
+  "output_dir": "reports/ipo",
+  "estimated_credits": 45,
+  "estimated_minutes": 60,
+  "dag": {
+    "groups": [
+      {
+        "id": "readiness",
+        "name": "Readiness Audit",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-ipo-pre-ipo-prep", "args": "--output reports/ipo/readiness-audit.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "filing",
+        "name": "S-1 & Roadshow",
+        "mode": "parallel",
+        "commands": [
+          { "id": "founder-ipo-s1", "args": "--output reports/ipo/s1-framework.md" },
+          { "id": "founder-ipo-roadshow", "args": "--output reports/ipo/roadshow-prep.md" }
+        ],
+        "depends_on": ["readiness"]
+      },
+      {
+        "id": "execution",
+        "name": "Execution Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-ipo-ipo-day", "args": "--output reports/ipo/ipo-day-runbook.md" },
+          { "id": "founder-ipo-insider", "args": "--output reports/ipo/compliance-guide.md" },
+          { "id": "founder-ipo-public-co", "args": "--output reports/ipo/public-co-playbook.md" },
+          { "id": "founder-ipo-succession", "args": "--output reports/ipo/succession-plan.md" }
+        ],
+        "depends_on": ["filing"]
+      }
+    ]
+  }
+}

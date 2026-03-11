@@ -1,0 +1,45 @@
+{
+  "id": "founder-launch",
+  "name": "Product Launch Pipeline",
+  "description": "End-to-end launch — brand, landing page, content, distribution. 6 commands, ~35 min.",
+  "version": "1.0.0",
+  "layer": "founder",
+  "trigger": "/founder:launch",
+  "output_dir": "reports/launch",
+  "estimated_credits": 25,
+  "estimated_minutes": 35,
+  "dag": {
+    "groups": [
+      {
+        "id": "foundation",
+        "name": "Brand & Positioning",
+        "mode": "parallel",
+        "commands": [
+          { "id": "founder-brand", "args": "--output reports/launch/brand-identity.md" },
+          { "id": "founder-validate", "args": "--output reports/launch/positioning.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "build",
+        "name": "Build Assets",
+        "mode": "parallel",
+        "commands": [
+          { "id": "launch", "args": "--output reports/launch/launch-copy.md" },
+          { "id": "content", "args": "--output reports/launch/content-calendar.md" }
+        ],
+        "depends_on": ["foundation"]
+      },
+      {
+        "id": "distribute",
+        "name": "Distribution Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "founder-grow", "args": "--output reports/launch/gtm-playbook.md" },
+          { "id": "marketing-plan", "args": "--output reports/launch/marketing-plan.md" }
+        ],
+        "depends_on": ["build"]
+      }
+    ]
+  }
+}

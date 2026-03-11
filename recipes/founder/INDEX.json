@@ -1,0 +1,12 @@
+{
+  "name": "VC Studio Workflows",
+  "description": "Super commands that chain founder commands into investment-stage pipelines",
+  "recipes": [
+    { "id": "founder-raise", "file": "raise.json", "stage": "prepare" },
+    { "id": "founder-validate-sprint", "file": "validate.json", "stage": "validate" },
+    { "id": "founder-launch", "file": "launch.json", "stage": "grow" },
+    { "id": "founder-weekly", "file": "weekly.json", "stage": "grow" },
+    { "id": "founder-negotiate", "file": "negotiate.json", "stage": "negotiate" },
+    { "id": "founder-ipo", "file": "ipo.json", "stage": "exit" }
+  ]
+}
