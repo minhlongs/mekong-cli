@@ -9,7 +9,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 _DB_PATH = Path.home() / ".mekong" / "raas" / "tenants.db"
 
