@@ -3,19 +3,21 @@
 import { useState } from 'react'
 
 const TERMINAL_LINES = [
+  { text: '$ pip install mekong-cli', color: 'text-slate-400' },
+  { text: '$ export LLM_API_KEY=sk-...', color: 'text-slate-400' },
+  { text: '', color: '' },
   { text: '$ mekong cook "Create a landing page for a café"', color: 'text-cyan-300' },
   { text: '', color: '' },
-  { text: '  💡 Using: LLM_BASE_URL=openrouter.ai', color: 'text-slate-500' },
+  { text: '  💡 LLM: openrouter/claude-sonnet-4-6', color: 'text-slate-500' },
   { text: '  🎯 Goal: Landing page for a café', color: 'text-white' },
-  { text: '  🤖 Agent: cto via claude-sonnet-4-6', color: 'text-slate-300' },
-  { text: '  📋 Steps:', color: 'text-slate-300' },
+  { text: '  📋 Plan:', color: 'text-slate-300' },
   { text: '    1. Research café landing best practices', color: 'text-slate-400' },
   { text: '    2. Generate responsive HTML/CSS', color: 'text-slate-400' },
   { text: '    3. Deploy to Cloudflare Pages', color: 'text-slate-400' },
   { text: '  ⚡ Executing...', color: 'text-yellow-400' },
   { text: '', color: '' },
-  { text: '  ✅ Done: https://cafe-landing.pages.dev', color: 'text-green-400' },
-  { text: '  💳 MCU: -3 (balance: 197)', color: 'text-purple-400' },
+  { text: '  ✅ Done: https://cafe-landing.pages.dev', color: 'text-emerald-400' },
+  { text: '  💳 MCU: -3  (balance: 197)', color: 'text-purple-400' },
 ]
 
 const INSTALL_CMD = 'pip install mekong-cli'
@@ -33,37 +35,58 @@ export default function QuickstartSection() {
   return (
     <section id="quickstart" className="px-6 py-20">
       <div className="mx-auto max-w-2xl">
+
+        {/* Header */}
         <div className="mb-12 text-center">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-cyan-400">
+            Quick start
+          </p>
           <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl">
-            Get started in{' '}
+            Up and running in{' '}
             <span className="gradient-text">30 seconds</span>
           </h2>
           <p className="text-slate-400">
-            Install, pick a role, start. No complex configuration.
+            Install, set your LLM key, start building. No complex configuration.
           </p>
         </div>
 
-        <div className="glass glow-blue overflow-hidden rounded-2xl">
-          {/* Terminal title bar */}
-          <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+        {/* Terminal window */}
+        <div className="overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-950 shadow-2xl shadow-black/40 glow-blue">
+
+          {/* Title bar */}
+          <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-900/80 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-red-500/80" />
               <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
-              <span className="h-3 w-3 rounded-full bg-green-500/80" />
-              <span className="ml-2 text-xs text-slate-500">mekong-cli — zsh</span>
+              <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+              <span className="ml-3 text-xs text-slate-500">mekong-cli — zsh</span>
             </div>
             <button
               onClick={handleCopy}
-              className="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-400 transition-colors hover:border-slate-500 hover:text-white"
+              className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800/60 px-3 py-1.5 text-xs text-slate-400 transition-all hover:border-slate-500 hover:text-white"
             >
-              {copied ? '✓ Copied' : 'Copy install'}
+              {copied ? (
+                <>
+                  <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  <span className="text-emerald-400">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                  </svg>
+                  Copy install
+                </>
+              )}
             </button>
           </div>
 
           {/* Terminal body */}
-          <div className="p-5 font-mono text-sm">
+          <div className="p-5 font-mono text-sm leading-6">
             {TERMINAL_LINES.map((line, i) => (
-              <div key={i} className={`leading-6 ${line.color}`}>
+              <div key={i} className={line.color}>
                 {line.text || '\u00A0'}
               </div>
             ))}
@@ -71,9 +94,10 @@ export default function QuickstartSection() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-600">
-          Python 3.9+ required. Works on macOS, Linux, Windows (WSL).
+        <p className="mt-5 text-center text-xs text-slate-600">
+          Python 3.9+ required &nbsp;&middot;&nbsp; macOS, Linux, Windows (WSL)
         </p>
+
       </div>
     </section>
   )
