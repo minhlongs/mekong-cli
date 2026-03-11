@@ -1,0 +1,24 @@
+{
+  "id": "backend-api-build",
+  "name": "API Build",
+  "description": "Schema → implement → test → docs. Full API cycle. 3 commands, ~12 min.",
+  "trigger": "/backend:api-build",
+  "output_dir": "reports/backend/api-build",
+  "estimated_credits": 8,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "build",
+        "name": "Build API",
+        "mode": "sequential",
+        "commands": [
+          { "id": "schema", "args": "$ARGUMENTS" },
+          { "id": "cook", "args": "--api $ARGUMENTS" },
+          { "id": "test", "args": "--api" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

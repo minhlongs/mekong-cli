@@ -1,0 +1,23 @@
+{
+  "id": "accounting-daily",
+  "name": "Daily Bookkeeping",
+  "description": "Transaction review → categorize → reconcile → flag anomalies. 2 commands, ~8 min.",
+  "trigger": "/accounting:daily",
+  "output_dir": "reports/accounting/daily",
+  "estimated_credits": 3,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Process Transactions",
+        "mode": "sequential",
+        "commands": [
+          { "id": "expense", "args": "--review --output reports/accounting/daily/transactions.md" },
+          { "id": "cashflow", "args": "--daily --output reports/accounting/daily/reconciliation.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

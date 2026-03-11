@@ -1,0 +1,24 @@
+{
+  "id": "frontend-ui-build",
+  "name": "UI Build",
+  "description": "Component → styling → responsive → test. 3 commands, ~12 min.",
+  "trigger": "/frontend:ui-build",
+  "output_dir": "reports/frontend/ui-build",
+  "estimated_credits": 8,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "build",
+        "name": "Build UI",
+        "mode": "sequential",
+        "commands": [
+          { "id": "component", "args": "$ARGUMENTS" },
+          { "id": "cook", "args": "--frontend $ARGUMENTS" },
+          { "id": "e2e-test", "args": "" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

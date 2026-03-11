@@ -1,0 +1,6 @@
+{
+  "role": "writer",
+  "name": "Content Writer Workflows",
+  "description": "Content writer IC super commands for blog, social batch, and newsletter pipelines",
+  "commands": ["writer-blog.json", "writer-social-batch.json", "writer-newsletter.json"]
+}

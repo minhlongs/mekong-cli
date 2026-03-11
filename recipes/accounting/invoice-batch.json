@@ -1,0 +1,23 @@
+{
+  "id": "accounting-invoice-batch",
+  "name": "Invoice Batch Processing",
+  "description": "Generate invoices → send reminders → update AR. 2 commands, ~8 min.",
+  "trigger": "/accounting:invoice-batch",
+  "output_dir": "reports/accounting/invoice-batch",
+  "estimated_credits": 3,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Invoice Generation & Reminders",
+        "mode": "sequential",
+        "commands": [
+          { "id": "invoice-gen", "args": "--output reports/accounting/invoice-batch/invoices.md" },
+          { "id": "email", "args": "--invoice-reminders --output reports/accounting/invoice-batch/reminders-sent.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "role": "ui",
+  "name": "UI Designer Workflows",
+  "description": "UI designer super commands for component design and design review",
+  "commands": ["design-component.json", "design-review.json"]
+}

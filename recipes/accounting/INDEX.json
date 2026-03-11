@@ -1,0 +1,6 @@
+{
+  "role": "accounting",
+  "name": "Accountant Workflows",
+  "description": "Accountant super commands for daily bookkeeping and invoice batch processing",
+  "commands": ["daily.json", "invoice-batch.json"]
+}

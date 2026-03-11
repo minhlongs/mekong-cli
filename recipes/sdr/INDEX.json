@@ -1,0 +1,6 @@
+{
+  "role": "sdr",
+  "name": "SDR Workflows",
+  "description": "SDR IC super commands for prospecting, outreach, and lead qualification",
+  "commands": ["sdr-prospect.json", "sdr-outreach-blast.json", "sdr-lead-qualify.json"]
+}

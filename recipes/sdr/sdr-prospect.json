@@ -1,0 +1,28 @@
+{
+  "id": "sdr-prospect",
+  "name": "Prospecting Sprint",
+  "description": "ICP match → lead research → contact list. 2 commands, ~10 min.",
+  "trigger": "/sdr:prospect",
+  "output_dir": "reports/sdr/prospect",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "find",
+        "name": "Find Prospects",
+        "mode": "parallel",
+        "commands": [
+          { "id": "customer-research", "args": "--icp $ARGUMENTS --output reports/sdr/prospect/icp-matches.md" },
+          { "id": "leadgen", "args": "--output reports/sdr/prospect/lead-list.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/sdr/prospect/PROSPECT-SUMMARY.md",
+      "template": "Compile ICP match profile and lead list into a prioritized prospecting summary with contact details, fit scores, and outreach priority order."
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "writer-newsletter",
+  "name": "Newsletter Pipeline",
+  "description": "Topic curation → draft → subject lines. 2 commands, ~8 min.",
+  "trigger": "/writer:newsletter",
+  "output_dir": "reports/writer/newsletter",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "draft",
+        "name": "Draft Newsletter",
+        "mode": "sequential",
+        "commands": [
+          { "id": "content", "args": "--newsletter $ARGUMENTS --output reports/writer/newsletter/newsletter-draft.md" },
+          { "id": "email", "args": "--newsletter $ARGUMENTS --output reports/writer/newsletter/subject-lines.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/writer/newsletter/NEWSLETTER-SUMMARY.md",
+      "template": "Compile newsletter draft and subject line variants into a send-ready newsletter package with body copy, 5 subject line options ranked by predicted open rate, and preview text."
+    }
+  }
+}

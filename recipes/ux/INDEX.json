@@ -1,0 +1,6 @@
+{
+  "role": "ux",
+  "name": "UX Researcher Workflows",
+  "description": "UX researcher super commands for usability testing and user interviews",
+  "commands": ["ux-usability.json", "interview.json"]
+}

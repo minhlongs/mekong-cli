@@ -80,7 +80,7 @@
       "category": "devops"
     }
   ],
-  "categories": ["examples", "setup", "automation", "devops", "web", "data", "founder", "business", "product", "engineering", "ops", "sales", "marketing", "finance", "hr", "legal", "design", "eng", "tech", "platform", "release"],
+  "categories": ["examples", "setup", "automation", "devops", "web", "data", "founder", "business", "product", "engineering", "ops", "sales", "marketing", "finance", "hr", "legal", "design", "eng", "tech", "platform", "release", "sdr", "ae", "writer", "growth", "accounting", "analyst", "recruiter", "people", "ui", "ux", "dev", "junior", "backend", "frontend", "sre", "releng"],
   "founder": {
     "name": "VC Studio Workflows",
     "description": "Founder super commands — parallel pipelines for each investment stage",
@@ -206,6 +206,138 @@
     "recipes": [
       "release/ship.json",
       "release/hotfix.json"
+    ]
+  },
+  "sdr": {
+    "name": "SDR Workflows",
+    "description": "SDR IC super commands for prospecting, outreach, and lead qualification",
+    "recipes": [
+      "sdr/sdr-prospect.json",
+      "sdr/sdr-outreach-blast.json",
+      "sdr/sdr-lead-qualify.json"
+    ]
+  },
+  "ae": {
+    "name": "Account Executive Workflows",
+    "description": "AE IC super commands for deal prep, follow-up, and close reporting",
+    "recipes": [
+      "ae/ae-deal-prep.json",
+      "ae/ae-follow-up.json",
+      "ae/ae-close-report.json"
+    ]
+  },
+  "writer": {
+    "name": "Content Writer Workflows",
+    "description": "Content writer IC super commands for blog, social batch, and newsletter pipelines",
+    "recipes": [
+      "writer/writer-blog.json",
+      "writer/writer-social-batch.json",
+      "writer/writer-newsletter.json"
+    ]
+  },
+  "growth": {
+    "name": "Growth Hacker Workflows",
+    "description": "Growth hacker IC super commands for experiment design, metrics frameworks, and channel optimization",
+    "recipes": [
+      "growth/growth-experiment.json",
+      "growth/channel-optimize.json"
+    ]
+  },
+  "accounting": {
+    "name": "Accountant Workflows",
+    "description": "Accountant IC super commands for daily bookkeeping and invoice batch processing",
+    "recipes": [
+      "accounting/daily.json",
+      "accounting/invoice-batch.json"
+    ]
+  },
+  "analyst": {
+    "name": "Financial Analyst Workflows",
+    "description": "Financial analyst IC super commands for executive reports and forecast updates",
+    "recipes": [
+      "analyst/report.json",
+      "analyst/forecast-update.json"
+    ]
+  },
+  "recruiter": {
+    "name": "Recruiter Workflows",
+    "description": "Recruiter IC super commands for candidate sourcing and screening",
+    "recipes": [
+      "recruiter/source.json",
+      "recruiter/screen.json"
+    ]
+  },
+  "people": {
+    "name": "People Ops Workflows",
+    "description": "People ops IC super commands for employee onboarding and offboarding",
+    "recipes": [
+      "people/onboard.json",
+      "people/offboard.json"
+    ]
+  },
+  "ui": {
+    "name": "UI Designer Workflows",
+    "description": "UI designer IC super commands for component design and design review",
+    "recipes": [
+      "ui/design-component.json",
+      "ui/design-review.json"
+    ]
+  },
+  "ux": {
+    "name": "UX Researcher Workflows",
+    "description": "UX researcher IC super commands for user interviews, usability testing, and insight synthesis",
+    "recipes": [
+      "ux/interview.json",
+      "ux/ux-usability.json"
+    ]
+  },
+  "dev": {
+    "name": "Senior Dev Workflows",
+    "description": "Senior dev IC super commands for feature builds, bug sprints, and PR reviews",
+    "recipes": [
+      "dev/dev-feature.json",
+      "dev/dev-bug-sprint.json",
+      "dev/dev-pr-review.json"
+    ]
+  },
+  "junior": {
+    "name": "Junior Dev Workflows",
+    "description": "Junior dev IC super commands for onboarding, first tasks, and learning",
+    "recipes": [
+      "junior/junior-first-task.json",
+      "junior/junior-learn.json"
+    ]
+  },
+  "backend": {
+    "name": "Backend Dev Workflows",
+    "description": "Backend dev IC super commands for API builds and database tasks",
+    "recipes": [
+      "backend/backend-api-build.json",
+      "backend/backend-db-task.json"
+    ]
+  },
+  "frontend": {
+    "name": "Frontend Dev Workflows",
+    "description": "Frontend dev IC super commands for UI builds and responsive fixes",
+    "recipes": [
+      "frontend/frontend-ui-build.json",
+      "frontend/frontend-responsive-fix.json"
+    ]
+  },
+  "sre": {
+    "name": "SRE Workflows",
+    "description": "SRE IC super commands for morning health checks and incident response",
+    "recipes": [
+      "sre/sre-morning-check.json",
+      "sre/sre-incident.json"
+    ]
+  },
+  "releng": {
+    "name": "Release Engineer Workflows",
+    "description": "Release engineer IC super commands for pre-release and post-release pipelines",
+    "recipes": [
+      "releng/releng-pre-release.json",
+      "releng/releng-post-release.json"
     ]
   }
 }

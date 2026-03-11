@@ -1,0 +1,24 @@
+{
+  "id": "junior-first-task",
+  "name": "First Task",
+  "description": "Codebase overview → find starter task → guided implementation. 3 commands, ~15 min.",
+  "trigger": "/junior:first-task",
+  "output_dir": "reports/junior/first-task",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "onboard",
+        "name": "Onboard and Implement",
+        "mode": "sequential",
+        "commands": [
+          { "id": "docs-readme", "args": "" },
+          { "id": "kanban", "args": "--good-first-issue" },
+          { "id": "cook", "args": "--guided $ARGUMENTS" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

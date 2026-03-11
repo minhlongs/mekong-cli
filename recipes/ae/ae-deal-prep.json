@@ -1,0 +1,37 @@
+{
+  "id": "ae-deal-prep",
+  "name": "Deal Prep",
+  "description": "Company research → competitive positioning → deck talking points. 3 commands, ~12 min.",
+  "trigger": "/ae:deal-prep",
+  "output_dir": "reports/ae/deal-prep",
+  "estimated_credits": 8,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "research",
+        "name": "Research & Position",
+        "mode": "parallel",
+        "commands": [
+          { "id": "customer-research", "args": "--deep $ARGUMENTS --output reports/ae/deal-prep/company-research.md" },
+          { "id": "competitor", "args": "--vs $ARGUMENTS --output reports/ae/deal-prep/competitive-positioning.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "build",
+        "name": "Build Proposal",
+        "mode": "sequential",
+        "commands": [
+          { "id": "proposal", "args": "--output reports/ae/deal-prep/proposal-talking-points.md" }
+        ],
+        "depends_on": ["research"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/ae/deal-prep/DEAL-PREP-SUMMARY.md",
+      "template": "Compile company research, competitive positioning, and proposal talking points into a pre-meeting battle card with key pain points, differentiation angles, and objection handlers."
+    }
+  }
+}

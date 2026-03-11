@@ -1,0 +1,24 @@
+{
+  "id": "dev-feature",
+  "name": "Feature Build",
+  "description": "Plan → code → test → PR. Full feature cycle. 3 commands, ~15 min.",
+  "trigger": "/dev:feature",
+  "output_dir": "reports/dev/feature",
+  "estimated_credits": 8,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "build",
+        "name": "Build Feature",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cook", "args": "$ARGUMENTS" },
+          { "id": "test", "args": "--all" },
+          { "id": "pr", "args": "" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

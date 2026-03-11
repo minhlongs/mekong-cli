@@ -1,0 +1,23 @@
+{
+  "id": "people-onboard",
+  "name": "Employee Onboarding",
+  "description": "Welcome email → access setup → day-1 schedule. 2 commands, ~5 min.",
+  "trigger": "/people:onboard",
+  "output_dir": "reports/people/onboard",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Welcome & Schedule",
+        "mode": "parallel",
+        "commands": [
+          { "id": "email", "args": "--welcome --output reports/people/onboard/welcome-email.md" },
+          { "id": "schedule", "args": "--first-week --output reports/people/onboard/day-1-schedule.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

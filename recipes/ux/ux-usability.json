@@ -1,0 +1,23 @@
+{
+  "id": "ux-usability",
+  "name": "Usability Test",
+  "description": "Test plan → task scenarios → findings → recommendations. 2 commands, ~10 min.",
+  "trigger": "/ux:usability",
+  "output_dir": "reports/ux/usability",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "test",
+        "name": "Run Usability Test",
+        "mode": "sequential",
+        "commands": [
+          { "id": "feedback", "args": "--usability $ARGUMENTS" },
+          { "id": "general-report", "args": "--output reports/ux/usability/findings.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "ui-design-component",
+  "name": "Component Design & Build",
+  "description": "Spec → design → implement → responsive check. 2 commands, ~12 min.",
+  "trigger": "/ui:design-component",
+  "output_dir": "reports/ui/design-component",
+  "estimated_credits": 5,
+  "estimated_minutes": 12,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Design & Implement",
+        "mode": "sequential",
+        "commands": [
+          { "id": "component", "args": "--output reports/ui/design-component/component-spec.md" },
+          { "id": "cook", "args": "--component --output reports/ui/design-component/implementation.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

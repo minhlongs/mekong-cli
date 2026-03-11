@@ -1,0 +1,23 @@
+{
+  "id": "recruiter-screen",
+  "name": "Candidate Screening",
+  "description": "Resume analysis → score → interview questions. 2 commands, ~8 min.",
+  "trigger": "/recruiter:screen",
+  "output_dir": "reports/recruiter/screen",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Screen & Schedule",
+        "mode": "sequential",
+        "commands": [
+          { "id": "performance-review", "args": "--candidate --output reports/recruiter/screen/candidate-scores.md" },
+          { "id": "schedule", "args": "--interviews --output reports/recruiter/screen/interview-schedule.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

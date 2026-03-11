@@ -1,0 +1,32 @@
+{
+  "id": "releng-post-release",
+  "name": "Post-Release",
+  "description": "Smoke test prod → health check → announce. 3 commands, ~5 min.",
+  "trigger": "/releng:post-release",
+  "output_dir": "reports/releng/post-release",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "verify",
+        "name": "Parallel Verify",
+        "mode": "parallel",
+        "commands": [
+          { "id": "smoke", "args": "--prod" },
+          { "id": "health", "args": "--all" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "announce",
+        "name": "Announce Release",
+        "mode": "sequential",
+        "commands": [
+          { "id": "email", "args": "--release-notes $ARGUMENTS" }
+        ],
+        "depends_on": ["verify"]
+      }
+    ]
+  }
+}

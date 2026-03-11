@@ -1,0 +1,28 @@
+{
+  "id": "growth-experiment",
+  "name": "Growth Experiment",
+  "description": "Hypothesis → experiment design → metrics framework. 2 commands, ~10 min.",
+  "trigger": "/growth:experiment",
+  "output_dir": "reports/growth/experiment",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "design",
+        "name": "Design Experiment",
+        "mode": "sequential",
+        "commands": [
+          { "id": "plan", "args": "--experiment $ARGUMENTS --output reports/growth/experiment/experiment-design.md" },
+          { "id": "kpi", "args": "--experiment $ARGUMENTS --output reports/growth/experiment/metrics-framework.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/growth/experiment/EXPERIMENT-SUMMARY.md",
+      "template": "Compile experiment design and metrics framework into a growth experiment brief with hypothesis, control/variant definition, success metrics, sample size estimate, and decision criteria."
+    }
+  }
+}

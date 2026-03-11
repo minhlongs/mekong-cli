@@ -1,0 +1,6 @@
+{
+  "role": "recruiter",
+  "name": "Recruiter Workflows",
+  "description": "Recruiter super commands for candidate sourcing and screening",
+  "commands": ["source.json", "screen.json"]
+}

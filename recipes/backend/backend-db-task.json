@@ -1,0 +1,24 @@
+{
+  "id": "backend-db-task",
+  "name": "DB Task",
+  "description": "Schema change → migration → seed → verify. 3 commands, ~10 min.",
+  "trigger": "/backend:db-task",
+  "output_dir": "reports/backend/db-task",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "db",
+        "name": "Database Operations",
+        "mode": "sequential",
+        "commands": [
+          { "id": "migrate", "args": "$ARGUMENTS" },
+          { "id": "seed", "args": "" },
+          { "id": "test", "args": "--db" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

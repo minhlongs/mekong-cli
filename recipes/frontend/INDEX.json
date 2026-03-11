@@ -1,0 +1,4 @@
+{
+  "role": "frontend",
+  "commands": ["frontend-ui-build.json", "frontend-responsive-fix.json"]
+}

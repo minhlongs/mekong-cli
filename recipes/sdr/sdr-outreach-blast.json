@@ -1,0 +1,28 @@
+{
+  "id": "sdr-outreach-blast",
+  "name": "Outreach Blast",
+  "description": "Lead list → personalized emails + LinkedIn messages. 2 commands, ~8 min.",
+  "trigger": "/sdr:outreach-blast",
+  "output_dir": "reports/sdr/outreach",
+  "estimated_credits": 5,
+  "estimated_minutes": 8,
+  "dag": {
+    "groups": [
+      {
+        "id": "compose",
+        "name": "Compose Outreach",
+        "mode": "parallel",
+        "commands": [
+          { "id": "email", "args": "--cold-outreach $ARGUMENTS --output reports/sdr/outreach/cold-emails.md" },
+          { "id": "social", "args": "--linkedin $ARGUMENTS --output reports/sdr/outreach/linkedin-messages.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/sdr/outreach/OUTREACH-SUMMARY.md",
+      "template": "Compile cold email sequences and LinkedIn message templates into a ready-to-send outreach package with personalization tokens and send schedule."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "role": "ae",
+  "name": "Account Executive Workflows",
+  "description": "AE IC super commands for deal prep, follow-up, and close reporting",
+  "commands": ["ae-deal-prep.json", "ae-follow-up.json", "ae-close-report.json"]
+}

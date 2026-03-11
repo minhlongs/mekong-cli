@@ -1,0 +1,6 @@
+{
+  "role": "analyst",
+  "name": "Financial Analyst Workflows",
+  "description": "Financial analyst super commands for executive reports and forecast updates",
+  "commands": ["report.json", "forecast-update.json"]
+}

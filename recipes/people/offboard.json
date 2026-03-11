@@ -1,0 +1,23 @@
+{
+  "id": "people-offboard",
+  "name": "Employee Offboarding",
+  "description": "Exit checklist → access revocation → knowledge transfer. 2 commands, ~5 min.",
+  "trigger": "/people:offboard",
+  "output_dir": "reports/people/offboard",
+  "estimated_credits": 3,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Offboard & Handoff",
+        "mode": "sequential",
+        "commands": [
+          { "id": "hr-management", "args": "--offboard --output reports/people/offboard/exit-checklist.md" },
+          { "id": "handoff", "args": "--output reports/people/offboard/knowledge-transfer.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

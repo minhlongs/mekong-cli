@@ -1,0 +1,23 @@
+{
+  "id": "recruiter-source",
+  "name": "Candidate Sourcing",
+  "description": "Job requirements → search → candidate list → outreach. 2 commands, ~10 min.",
+  "trigger": "/recruiter:source",
+  "output_dir": "reports/recruiter/source",
+  "estimated_credits": 5,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "process",
+        "name": "Source & Outreach",
+        "mode": "sequential",
+        "commands": [
+          { "id": "leadgen", "args": "--talent --output reports/recruiter/source/candidate-list.md" },
+          { "id": "email", "args": "--recruit --output reports/recruiter/source/outreach-sent.md" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}
