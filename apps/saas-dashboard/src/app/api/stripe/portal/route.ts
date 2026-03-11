@@ -5,8 +5,8 @@ export async function POST() {
   try {
     const result = await createCustomerPortalSession();
 
-    if (result.error) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
+    if (result.error || !result.url) {
+      return NextResponse.json({ error: result?.error || 'No URL available' }, { status: 400 });
     }
 
     return NextResponse.json({ url: result.url });
