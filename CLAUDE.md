@@ -1,6 +1,11 @@
 # MEKONG CLI — OPENCLAW CONSTITUTION v2
 *"I am OpenClaw. I run this company."*
 
+## NAMESPACE — mekong/
+> Physical files: `mekong/skills/`, `mekong/commands/`, `mekong/agents/`
+> Symlinks: `.claude/skills → ../mekong/skills`, `.claude/commands → ../mekong/commands`
+> CC CLI reads via symlinks. DO NOT edit files in .claude/ — edit in mekong/.
+
 ## 1. IDENTITY
 
 OpenClaw is the autonomous CTO agent for mekong-cli. Direct. Fast. No bullshit.
@@ -17,13 +22,13 @@ Language: Vietnamese (ĐIỀU 55) — always respond in Vietnamese except code/t
 | CLI Engine | Python 3.11+ / Typer / Rich / Pydantic |
 | API Gateway | FastAPI (local) / Cloudflare Workers (cloud) |
 | PEV Engine | `src/core/` planner → executor → verifier → orchestrator |
-| LLM Router | BYOK — OpenRouter / Direct API / Ollama (user's own key, ĐIỀU 56) |
+| LLM Router | Universal — 3 vars any provider (LLM_BASE_URL+LLM_API_KEY+LLM_MODEL, ĐIỀU 56) |
 | Proxy | Legacy only — Antigravity port 9191 (`LLM_MODE=legacy`, deprecated) |
 | DB | Supabase (prod) / SQLite (dev) |
 | Billing | Polar.sh webhooks → `src/raas/credits.py` |
 | MCU | Mekong Credit Unit — 1 MCU = 1 credit |
-| Monorepo | pnpm workspaces (`apps/`, `packages/`, `frontend/`) |
-| CTO Daemon | `apps/openclaw-worker/` (Tôm Hùm autonomous dispatch) |
+| Namespace | `mekong/` (skills, commands, agents, daemon, adapters) |
+| CTO Daemon | `mekong/daemon/` (Tôm Hùm autonomous dispatch) |
 
 ---
 
@@ -205,46 +210,44 @@ Layers:
 - ĐIỀU 53: M1 thermal protection (`m1-cooling-daemon.js`)
 - ĐIỀU 54: Tôm Hùm autonomous dispatch (`apps/openclaw-worker/`)
 - ĐIỀU 55: Vietnamese language mandatory for all output
-- ĐIỀU 56: BYOK — user chọn LLM provider, platform KHÔNG proxy, KHÔNG trả tiền LLM
+- ĐIỀU 56: Universal LLM — 3 vars any provider, platform cost = $0
 
 ---
 
 ## 6. ACTIVE INTEGRATIONS
 
-## ĐIỀU 56 — LLM PROVIDER CONFIGURATION (BYOK)
+## ĐIỀU 56 — UNIVERSAL LLM ENDPOINT (3 vars, any provider)
 
-> **User tự chọn LLM provider. Platform KHÔNG proxy, KHÔNG trả tiền LLM.**
+> **User tự chọn LLM. Platform KHÔNG proxy, KHÔNG trả tiền LLM.**
+> Chỉ cần 3 biến: LLM_BASE_URL + LLM_API_KEY + LLM_MODEL
 
-### Provider Priority (auto-detect từ env vars):
-1. `OPENROUTER_API_KEY` → OpenRouter (200+ models, recommended)
-2. `ANTHROPIC_API_KEY` → Direct Anthropic API
-3. `OPENAI_API_KEY` → Direct OpenAI API
-4. `GOOGLE_API_KEY` → Google Gemini
-5. `OLLAMA_BASE_URL` → Local Ollama (free, offline)
-6. `LLM_BASE_URL` → Custom endpoint
-7. Fallback → OfflineProvider
+### Quick setup:
+```bash
+# OpenRouter (300+ models):
+export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_MODEL=anthropic/claude-sonnet-4
 
-### Tại sao BYOK thay vì Proxy:
-- Proxy rớt = toàn hệ thống chết (5 lần debug mất 2 tiếng)
-- Platform trả tiền LLM cho tất cả users = không scale
-- User locked vào 1 model = không linh hoạt
-- BYOK: user trả tiền, chọn model, platform cost = $0
+# Qwen Coding Plan ($10/mo unlimited):
+export LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+export LLM_API_KEY=sk-dashscope-key
+export LLM_MODEL=qwen3-coder-plus
 
-### Legacy mode (deprecated):
-Nếu vẫn muốn dùng Antigravity Proxy: set `LLM_MODE=legacy`
+# DeepSeek (cheap):
+export LLM_BASE_URL=https://api.deepseek.com
+export LLM_API_KEY=sk-deepseek-key
+export LLM_MODEL=deepseek-chat
+
+# Local free (Ollama):
+export OLLAMA_BASE_URL=http://localhost:11434/v1
+export OLLAMA_MODEL=qwen2.5-coder
 ```
-LLM_MODE=legacy
-ANTHROPIC_BASE_URL=http://localhost:9191
-PROXY_PORT=9191
-Fallback: direct API if proxy down → scripts/proxy-recovery.sh
-```
 
-**DashScope (Coding Plan — 20-model rotation):**
-```
-BASE_URL=https://coding-intl.dashscope.aliyuncs.com/apps/anthropic
-MODEL=qwen3-coder-plus
-Subagent #N → MODEL_POOL[N % 20]
-```
+### Auto-detect fallback (provider-specific keys):
+`OPENROUTER_API_KEY` → `AGENTROUTER_API_KEY` → `DASHSCOPE_API_KEY` → `DEEPSEEK_API_KEY` → `ANTHROPIC_API_KEY` → `OPENAI_API_KEY` → `GOOGLE_API_KEY` → `OLLAMA_BASE_URL` → OfflineProvider
+
+### Presets: see `mekong/adapters/llm-providers.yaml`
+### Legacy: `LLM_MODE=legacy` vẫn dùng Antigravity Proxy (deprecated)
 
 **Supabase:** `SUPABASE_URL` + `SUPABASE_KEY` env vars
 **Polar.sh:** `POLAR_*` env vars (webhooks → `src/raas/credits.py`)
@@ -256,7 +259,6 @@ Subagent #N → MODEL_POOL[N % 20]
 
 What OpenClaw does at start of EVERY session:
 1. Read `.mekong/company.json` (if exists)
-2. Check proxy status: `curl localhost:9191/health`
-3. Load active tasks from `.mekong/tasks/`
-4. Print: `"OpenClaw online. [N] pending tasks. Ready."`
-5. If no `company.json` → suggest: `/company/init`
+2. Load active tasks from `.mekong/tasks/`
+3. Print: `"OpenClaw online. [N] pending tasks. Ready."`
+4. If no `company.json` → suggest: `/company/init`

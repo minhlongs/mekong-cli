@@ -1,22 +1,24 @@
 """Mekong CLI - LLM Client.
 
-Thin router over pluggable LLMProvider backends.
+Universal LLM endpoint — 3 vars, any provider.
 Priority (auto-detected from env vars when no providers passed):
-1. OPENROUTER_API_KEY    → OpenRouter (200+ models, recommended)
-2. ANTHROPIC_API_KEY     → Direct Anthropic API
-3. OPENAI_API_KEY        → Direct OpenAI API
-4. GOOGLE_API_KEY        → Google Gemini (direct)
-5. GEMINI_API_KEY        → GeminiProvider (SDK-based, legacy)
-6. OLLAMA_BASE_URL       → Local Ollama (free, offline)
-7. LLM_BASE_URL          → Custom endpoint (backward compat)
-8. ANTIGRAVITY_PROXY_URL → Legacy Antigravity Proxy (deprecated)
+0. LLM_BASE_URL+LLM_API_KEY+LLM_MODEL → ANY provider (universal, recommended)
+1. OPENROUTER_API_KEY    → OpenRouter (300+ models)
+2. AGENTROUTER_API_KEY   → AgentRouter ($200 free credits)
+3. DASHSCOPE_API_KEY     → Qwen Coding Plan (~$10/mo unlimited)
+4. DEEPSEEK_API_KEY      → DeepSeek ($0.27/100K tokens)
+5. ANTHROPIC_API_KEY     → Direct Anthropic API
+6. OPENAI_API_KEY        → Direct OpenAI API
+7. GOOGLE_API_KEY        → Google Gemini (direct)
+8. OLLAMA_BASE_URL       → Local Ollama (free, offline)
 9. Fallback              → OfflineProvider
 
 NO PROXY by default. User's key hits provider directly (BYOK).
 Runtime failover: if one provider fails, tries the next in priority order.
-Circuit breaker: after 3 consecutive failures, provider cools down for 60s.
+Circuit breaker: after 3 consecutive failures, provider cools down for 15s.
 Portkey-inspired: status-code based failover, hooks pipeline, LRU cache.
 
+Presets: see mekong/adapters/llm-providers.yaml
 Legacy mode: set LLM_MODE=legacy to restore proxy-first behaviour.
 """
 
@@ -171,17 +173,23 @@ class LLMClient:
     # ------------------------------------------------------------------
 
     def _build_providers_from_env(self) -> list[LLMProvider]:
-        """Auto-detect providers from environment variables (BYOK priority order).
+        """Universal LLM provider detection — 3 env vars, any provider.
 
-        Priority:
-        1. OPENROUTER_API_KEY  → OpenRouter (recommended)
-        2. ANTHROPIC_API_KEY   → Direct Anthropic (skip if pointing to local proxy)
-        3. OPENAI_API_KEY      → Direct OpenAI
-        4. GOOGLE_API_KEY      → Gemini (direct)
-        5. GEMINI_API_KEY      → GeminiProvider SDK (legacy)
-        6. OLLAMA_BASE_URL     → Local Ollama
-        7. LLM_BASE_URL        → Custom endpoint
-        8. Legacy proxy        → Only when LLM_MODE=legacy
+        PRIMARY (explicit, top priority):
+          LLM_BASE_URL + LLM_API_KEY + LLM_MODEL → ANY provider
+
+        FALLBACK (legacy compat, auto-detect from provider-specific keys):
+          OPENROUTER_API_KEY → OpenRouter
+          AGENTROUTER_API_KEY → AgentRouter
+          DASHSCOPE_API_KEY → Qwen/DashScope
+          DEEPSEEK_API_KEY → DeepSeek
+          ANTHROPIC_API_KEY → Direct Anthropic (skip localhost proxy)
+          OPENAI_API_KEY → Direct OpenAI
+          GOOGLE_API_KEY → Gemini
+          OLLAMA_BASE_URL → Local Ollama
+
+        User only needs to set 3 vars. All providers are compatible.
+        Presets: see mekong/adapters/llm-providers.yaml
         """
         built: list[LLMProvider] = []
         llm_mode = os.getenv("LLM_MODE", "byok").lower()
@@ -204,23 +212,59 @@ class LLMClient:
 
         # --- BYOK mode (default) ---
 
-        # 1. OpenRouter (200+ models, single key, recommended)
-        openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-        if openrouter_key:
+        # 0. Universal endpoint (highest priority — works with ANY provider)
+        base_url = os.getenv("LLM_BASE_URL", "")
+        api_key = os.getenv("LLM_API_KEY", "")
+        llm_model = os.getenv("LLM_MODEL", "")
+        if base_url and api_key:
             built.append(
                 OpenAICompatibleProvider(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=openrouter_key,
-                    model=os.getenv("OPENROUTER_MODEL", "anthropic/claude-sonnet-4"),
-                    provider_name="openrouter",
+                    base_url=base_url,
+                    api_key=api_key,
+                    model=llm_model or self.model,
+                    provider_name="primary",
                     timeout=self.timeout,
                 ),
             )
 
-        # 2. Direct Anthropic (skip if ANTHROPIC_BASE_URL points to local proxy)
+        # --- Auto-detect from provider-specific env vars ---
+
+        # Routers (multi-model, recommended)
+        _router_providers = [
+            ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "anthropic/claude-sonnet-4", "openrouter"),
+            ("AGENTROUTER_API_KEY", "https://agentrouter.org/v1", "claude-sonnet-4-6-20250514", "agentrouter"),
+        ]
+        for env_key, url, default_model, name in _router_providers:
+            key = os.getenv(env_key, "")
+            if key:
+                built.append(
+                    OpenAICompatibleProvider(
+                        base_url=url, api_key=key,
+                        model=default_model, provider_name=name,
+                        timeout=self.timeout,
+                    ),
+                )
+
+        # Direct providers (Chinese + US)
+        _direct_providers = [
+            ("DASHSCOPE_API_KEY", "https://dashscope.aliyuncs.com/compatible-mode/v1", "qwen3-coder-plus", "qwen"),
+            ("DEEPSEEK_API_KEY", "https://api.deepseek.com", "deepseek-chat", "deepseek"),
+        ]
+        for env_key, url, default_model, name in _direct_providers:
+            key = os.getenv(env_key, "")
+            if key:
+                built.append(
+                    OpenAICompatibleProvider(
+                        base_url=url, api_key=key,
+                        model=default_model, provider_name=name,
+                        timeout=self.timeout,
+                    ),
+                )
+
+        # Anthropic (skip if ANTHROPIC_BASE_URL points to local proxy)
         anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
         anthropic_base = os.getenv("ANTHROPIC_BASE_URL", "")
-        if anthropic_key and not anthropic_base.startswith("http://localhost"):
+        if anthropic_key and "localhost" not in anthropic_base and "127.0.0.1" not in anthropic_base:
             built.append(
                 OpenAICompatibleProvider(
                     base_url="https://api.anthropic.com/v1",
@@ -231,7 +275,7 @@ class LLMClient:
                 ),
             )
 
-        # 3. Direct OpenAI
+        # OpenAI direct
         openai_key = self.api_key
         if openai_key:
             built.append(
@@ -244,12 +288,12 @@ class LLMClient:
                 ),
             )
 
-        # 4. Google Gemini (direct key — SDK-based provider)
+        # Google Gemini (SDK-based provider)
         google_key = os.getenv("GOOGLE_API_KEY", "") or self.gemini_key
         if google_key:
             built.append(GeminiProvider(api_key=google_key, model=self.model))
 
-        # 5. Local Ollama (no key needed — check env or probe port)
+        # Local Ollama (no key needed)
         ollama_url = os.getenv("OLLAMA_BASE_URL", "")
         if ollama_url or self._check_ollama_running():
             built.append(
@@ -258,20 +302,6 @@ class LLMClient:
                     api_key="ollama",
                     model=os.getenv("OLLAMA_MODEL", "llama3.2"),
                     provider_name="ollama-local",
-                    timeout=self.timeout,
-                ),
-            )
-
-        # 6. Custom endpoint (backward compat: LLM_BASE_URL / ANTIGRAVITY_PROXY_URL)
-        custom_url = os.getenv("LLM_BASE_URL", "") or os.getenv("ANTIGRAVITY_PROXY_URL", "")
-        custom_key = os.getenv("LLM_API_KEY", "") or self.api_key
-        if custom_url and not any(p.name == "proxy" for p in built):
-            built.append(
-                OpenAICompatibleProvider(
-                    base_url=custom_url,
-                    api_key=custom_key or "",
-                    model=os.getenv("LLM_MODEL", self.model),
-                    provider_name="custom",
                     timeout=self.timeout,
                 ),
             )

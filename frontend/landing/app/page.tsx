@@ -4,6 +4,7 @@ import StatsBar from '@/components/stats-bar'
 import CascadeDemo from '@/components/cascade-demo'
 import ComparisonSection from '@/components/comparison-section'
 import FeaturesGrid from '@/components/features-grid'
+import SocialProof from '@/components/social-proof'
 import QuickstartSection from '@/components/quickstart-section'
 import PricingTable from '@/components/pricing-table'
 import FooterSection from '@/components/footer-section'
@@ -17,6 +18,7 @@ export default function HomePage() {
       <CascadeDemo />
       <ComparisonSection />
       <FeaturesGrid />
+      <SocialProof />
       <QuickstartSection />
       <PricingTable />
       <FooterSection />
