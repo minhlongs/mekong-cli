@@ -1,0 +1,69 @@
+# LLM Provider Configuration — BYOK (Bring Your Own Key)
+# User chọn 1 trong 3 modes. Platform KHÔNG proxy, KHÔNG trả tiền LLM.
+
+providers:
+  openrouter:
+    name: "OpenRouter"
+    description: "API gateway cho 200+ models (Claude, GPT, Gemini, Llama, Mistral)"
+    base_url: "https://openrouter.ai/api/v1"
+    env_key: "OPENROUTER_API_KEY"
+    default_model: "anthropic/claude-sonnet-4"
+    fallback_models:
+      - "anthropic/claude-haiku-4"
+      - "google/gemini-2.5-flash"
+      - "meta-llama/llama-4-scout"
+    setup_guide: |
+      1. Vào https://openrouter.ai → Sign up
+      2. Add $5 credits (hoặc dùng free models)
+      3. Copy API key → paste vào .env
+    pros: ["200+ models", "auto-fallback", "pay-per-token", "free tier available"]
+    cons: ["cần internet", "cần API key"]
+
+  ollama:
+    name: "Ollama (Local)"
+    description: "LLM chạy local, miễn phí, offline, privacy 100%"
+    base_url: "http://localhost:11434/v1"
+    env_key: "OLLAMA_BASE_URL"
+    default_model: "llama3.2"
+    recommended_models:
+      - model: "llama3.2"
+        ram: "8GB"
+        quality: "Good — general tasks"
+      - model: "qwen2.5-coder"
+        ram: "8GB"
+        quality: "Best — coding tasks"
+      - model: "deepseek-coder-v2"
+        ram: "16GB"
+        quality: "Excellent — complex coding"
+    setup_guide: |
+      1. curl -fsSL https://ollama.ai/install.sh | sh
+      2. ollama pull llama3.2
+      3. Ollama tự chạy trên port 11434
+    pros: ["miễn phí", "offline", "privacy", "không cần API key"]
+    cons: ["cần GPU/RAM", "chất lượng thấp hơn cloud"]
+
+  direct:
+    name: "Direct API"
+    description: "Kết nối trực tiếp Anthropic, OpenAI, hoặc Google"
+    providers:
+      anthropic:
+        base_url: "https://api.anthropic.com/v1"
+        env_key: "ANTHROPIC_API_KEY"
+        default_model: "claude-sonnet-4-6-20250514"
+      openai:
+        base_url: "https://api.openai.com/v1"
+        env_key: "OPENAI_API_KEY"
+        default_model: "gpt-4o"
+      google:
+        base_url: "https://generativelanguage.googleapis.com/v1beta"
+        env_key: "GOOGLE_API_KEY"
+        default_model: "gemini-2.5-flash"
+    setup_guide: |
+      1. Lấy API key từ provider bạn chọn
+      2. Set vào .env: ANTHROPIC_API_KEY=sk-ant-...
+    pros: ["hiệu năng tốt nhất", "direct connection"]
+    cons: ["cần API key", "locked vào 1 provider"]
+
+# Hybrid mode: user có thể set NHIỀU provider
+# System sẽ failover: OpenRouter → Direct → Ollama
+failover_order: ["openrouter", "direct", "ollama"]
