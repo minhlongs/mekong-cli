@@ -1,11 +1,11 @@
 """Mekong CLI - Telegram Commander Bot (Tôm Hùm Edition).
 
-Remote command center via Telegram → Antigravity relay.
-Commands received on Telegram are saved to inbox for Antigravity to pick up
+Remote command center via Telegram → LLM provider relay.
+Commands received on Telegram are saved to inbox for Mekong CLI to process
 and coordinate CC CLI execution.
 
 Commands:
-  /cook <goal>          — Queue task for Antigravity to execute
+  /cook <goal>          — Queue task for Mekong CLI to execute
   /spawn <project> <g>  — Queue task targeting apps/<project>
   /tasks                — View pending tasks in inbox
   /sessions             — List active CC CLI terminals
@@ -51,8 +51,8 @@ class BotConfig:
 
 HELP_TEXT = """🦞 *Tôm Hùm — Telegram Commander*
 
-*Autonomous Coding (via Antigravity):*
-/cook <goal> — Queue task → Antigravity executes
+*Autonomous Coding (via Mekong CLI):*
+/cook <goal> — Queue task → Mekong CLI executes
 /spawn <project> <goal> — Task for specific app
 /tasks — View pending inbox
 /sessions — Active CC CLI terminals
@@ -129,7 +129,7 @@ def mark_task(task_id: str, status: str, result: str = "") -> None:
 
 
 class MekongBot:
-    """Telegram bot — relay commands to Antigravity for CC CLI coordination."""
+    """Telegram bot — relay commands to Mekong CLI for CC CLI coordination."""
 
     CONFIG_PATH = ".mekong/telegram.yaml"
 
@@ -272,7 +272,7 @@ class MekongBot:
             await thinking_msg.edit_text(
                 f"{confirmation}\n\n"
                 f"📨 Task `{inbox_task['id']}` queued!\n"
-                f"Antigravity sẽ pick up ngay.",
+                f"Mekong CLI will process shortly.",
                 parse_mode="Markdown",
             )
 
@@ -282,11 +282,11 @@ class MekongBot:
             )
 
     # ============================================================
-    # 🦞 TÔM HÙM: Task Relay (Telegram → Inbox → Antigravity)
+    # 🦞 TÔM HÙM: Task Relay (Telegram → Inbox → Mekong CLI)
     # ============================================================
 
     async def cook_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /cook <goal> — queue task for Antigravity."""
+        """Handle /cook <goal> — queue task for Mekong CLI."""
         goal = " ".join(context.args) if context.args else ""
         if not goal:
             await update.message.reply_text(
@@ -301,17 +301,17 @@ class MekongBot:
         chat_id = update.effective_chat.id
         task = add_task(goal=goal, chat_id=chat_id)
 
-        # Save chat_id to config for Antigravity to reply back
+        # Save chat_id to config for Mekong CLI to reply back
         if chat_id not in self.config.chat_ids:
             self.config.chat_ids.append(chat_id)
             self._save_config()
 
         await update.message.reply_text(
-            f"📨 *Task Queued for Antigravity!*\n\n"
+            f"📨 *Task Queued for Mekong CLI!*\n\n"
             f"🆔 `{task['id']}`\n"
             f"🎯 Goal: _{goal}_\n"
             f"⏰ {task['created_at_iso']}\n\n"
-            f"Antigravity sẽ pick up và điều phối CC CLI.\n"
+            f"Mekong CLI will process and coordinate CC CLI.\n"
             f"Use /tasks to check status.",
             parse_mode="Markdown",
         )
@@ -343,7 +343,7 @@ class MekongBot:
             f"🆔 `{task['id']}`\n"
             f"🎯 Goal: _{goal}_\n"
             f"📂 Project: `apps/{project}`\n\n"
-            f"Antigravity sẽ pick up và điều phối CC CLI.",
+            f"Mekong CLI will process and coordinate CC CLI.",
             parse_mode="Markdown",
         )
 

@@ -3,7 +3,7 @@
 /**
  * 🔨 Work Order Decomposer
  *
- * Uses LLM (Antigravity Proxy) to break down a project intake/contract
+ * Uses LLM provider to break down a project intake/contract
  * into atomic Work Orders with 5W1H metadata.
  */
 
@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const productionBoard = require('./production-board');
 
-const PROXY_URL = 'http://127.0.0.1:9191';
+const PROXY_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
 
 const DECOMPOSE_PROMPT = `You are a Senior Project Manager. Break down a project into atomic Work Orders.
 

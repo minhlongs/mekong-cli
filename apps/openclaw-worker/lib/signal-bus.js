@@ -19,7 +19,7 @@
  *   Diplomat ──DOCS_OUTDATED──→ Builder
  *   Architect ──ARCH_ISSUE──→ Builder
  *   Artist ──UI_ISSUE──→ Builder
- *   Sage ──INTEL──→ Antigravity
+ *   Sage ──INTEL──→ Mekong CLI
  *
  * Usage:
  *   const { bus, SIGNALS, emit } = require('./signal-bus');
@@ -53,7 +53,7 @@ const SIGNALS = Object.freeze({
 	// 📚 Tham Mưu signals
 	ARCH_ISSUE: 'ARCH_ISSUE', // Architect → Builder
 	MEMORY_UPDATED: 'MEMORY_UPDATED', // Scribe → Sage
-	INTEL: 'INTEL', // Sage → Antigravity
+	INTEL: 'INTEL', // Sage → Mekong CLI
 });
 
 // ═══════════════════════════════════════════════════════════════

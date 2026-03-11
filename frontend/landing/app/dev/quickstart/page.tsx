@@ -22,15 +22,15 @@ $ mekong version
   {
     num: 3,
     title: 'Configure LLM Provider',
-    desc: 'Choose a provider — Antigravity Proxy is free, no API key needed',
+    desc: 'Set LLM_BASE_URL — works with OpenRouter, Qwen, DeepSeek, Ollama, or any provider',
     code: `$ mekong init
 Select provider:
-  1. Claude (Anthropic API key)
-  2. Google Gemini (API key)
-  3. Antigravity Proxy (local, free)
+  1. OpenRouter (300+ models, $5 free)
+  2. Qwen Coding Plan ($10/mo unlimited)
+  3. DeepSeek (cheapest cloud)
   4. Ollama (local, free)
-> 3
-✓ Configured Antigravity Proxy on :9191`,
+> 1
+✓ Configured LLM provider (OpenRouter)`,
     copyText: 'mekong init',
   },
   {

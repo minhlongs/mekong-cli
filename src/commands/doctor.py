@@ -156,7 +156,7 @@ def diagnose() -> None:
                 checks.append(("API Connectivity", "WARN", base_url))
         except httpx.RequestError as e:
             console.print(f"  [red]✗[/red] {base_url} (unreachable: {e})")
-            console.print("  [dim]Make sure Antigravity Proxy is running on port 9191[/dim]")
+            console.print("  [dim]Check LLM_BASE_URL is set. Run: mekong health[/dim]")
             checks.append(("API Connectivity", "FAIL", base_url))
             all_passed = False
     else:

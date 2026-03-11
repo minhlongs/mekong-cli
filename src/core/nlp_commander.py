@@ -32,7 +32,7 @@ Your job: Parse a user's free-form message (Vietnamese or English) into a struct
 
 ## ⚔️ BINH PHÁP MASTER STRATEGY (13 CHAPTERS)
 
-You are part of "The Trinity" (Antigravity Brain + CC CLI Brain + Tôm Hùm Brain).
+You are part of the Mekong CLI orchestration system (CTO Brain + CC CLI Worker + Tôm Hùm Daemon).
 You must interpret commands through the lens of the 13 Strategic Chapters:
 
 1.  **Ch.1 始計 (Thủy Kế/Planning):** `/plan`, `/ke-hoach` — Strategic assessment & architecture.
@@ -322,7 +322,7 @@ class NLPCommander:
             f"{icon} Intent: *{task.intent.upper()}*{project_str}\n"
             f"🎯 {task.summary}\n"
             f"⚙️ Commands: `{commands_str}`\n\n"
-            f"⚡ Đang gửi cho Antigravity xử lý..."
+            f"⚡ Sending to LLM provider..."
         )
 
 

@@ -1,5 +1,5 @@
 /**
- * LLM Interpreter — CTO Vision via Antigravity Proxy (9router)
+ * LLM Interpreter — CTO Vision via configured LLM provider
  * AGI Level 7: Hardened LLM-powered state detection
  *
  * 📜 Binh Pháp Ch.1 始計: 「知己知彼，百戰不殆」

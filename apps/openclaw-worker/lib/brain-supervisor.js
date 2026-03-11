@@ -263,7 +263,7 @@ function supervisionCycle() {
 			return;
 		}
 
-		// NOTE: Context % is FAKE via Antigravity Proxy — removed per Chairman decree
+		// NOTE: Context % monitoring removed — use native CC CLI compact signals
 
 		// === Monitor 2: CC CLI Stuck Detection ===
 		if (!isBusy(output) && !isAtPrompt(output)) {

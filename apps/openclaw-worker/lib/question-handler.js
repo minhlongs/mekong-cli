@@ -3,7 +3,7 @@
  *
  * Khi CC CLI hỏi câu hỏi (không phải pattern cứng), module này:
  * 1. Capture nội dung câu hỏi từ tmux pane
- * 2. Gửi cho LLM (Antigravity Proxy) phân tích
+ * 2. Send to LLM provider for analysis
  * 3. Nhận quyết định: approve / reject / custom answer
  * 4. Gửi response phù hợp cho CC CLI
  *
@@ -13,7 +13,7 @@
 const http = require('http');
 const { log } = require('./brain-process-manager');
 
-const PROXY_URL = 'http://127.0.0.1:20128';
+const PROXY_URL = process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
 const TIMEOUT_MS = 15_000; // 15s max for LLM decision
 const MODEL = 'claude-sonnet-4-6-20250514';
 
@@ -46,7 +46,7 @@ const SAFE_PATTERNS = [
 ];
 
 /**
- * Analyze a question using LLM via Antigravity Proxy
+ * Analyze a question using LLM via configured LLM provider
  * Returns: { action: 'approve'|'reject'|'answer', response: string, reason: string }
  */
 function analyzeLLM(questionText) {

@@ -1,8 +1,8 @@
 /**
- * Brain VS Code Terminal — CC CLI visible in Terminal.app alongside Antigravity
+ * Brain VS Code Terminal — CC CLI visible in Terminal.app alongside Mekong CLI
  *
  * Architecture:
- *   - CC CLI runs in Terminal.app with full TUI (drag tab into Antigravity)
+ *   - CC CLI runs in Terminal.app with full TUI (drag tab into workspace)
  *   - Prompts dispatched via Terminal.app `do script` (no Accessibility needed)
  *   - Task-watcher runs in background, monitors CC CLI process state
  *   - Falls back to headless `claude -p` if Terminal.app unavailable
@@ -54,18 +54,18 @@ function runAppleScriptFile(script) {
 
 // --- CC CLI config ---
 function getProxyConfig() {
-	const proxyUrl = config.CLOUD_BRAIN_URL || 'http://127.0.0.1:20128';
-	const proxyPort = new URL(proxyUrl).port || '20128';
+	const proxyUrl = config.CLOUD_BRAIN_URL || process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
+	const proxyPort = proxyUrl ? (new URL(proxyUrl).port || '') : '';
 	return {
 		proxyUrl,
-		configDir: `/Users/macbookprom1/.claude_antigravity_${proxyPort}`,
+		configDir: proxyPort ? `/Users/macbookprom1/.claude_config_${proxyPort}` : `/Users/macbookprom1/.claude`,
 	};
 }
 
 // --- Brain lifecycle ---
 
 function spawnBrain() {
-	log('BRAIN MODE: Antigravity Terminal — CC CLI in Terminal.app');
+	log('BRAIN MODE: Mekong CLI Terminal — CC CLI in Terminal.app');
 
 	const { proxyUrl, configDir } = getProxyConfig();
 
@@ -93,7 +93,7 @@ end tell
 `);
 
 	log('BRAIN: CC CLI launched in Terminal.app');
-	log('TIP: Drag Terminal tab into Antigravity for integrated view');
+	log('TIP: Drag Terminal tab into your workspace for integrated view');
 }
 
 function killBrain() {
@@ -215,7 +215,7 @@ async function runMission(prompt, projectDir, timeoutMs) {
 	const startTime = Date.now();
 
 	log(`MISSION #${num}: ${prompt.slice(0, 150)}...`);
-	log(`PROJECT: ${projectDir} | MODE: Antigravity Terminal`);
+	log(`PROJECT: ${projectDir} | MODE: Mekong CLI Terminal`);
 
 	// If CC CLI not running, spawn it
 	if (!isBrainAlive()) {
@@ -236,7 +236,7 @@ async function runMission(prompt, projectDir, timeoutMs) {
 
 	// Dispatch to Terminal.app
 	typeInTerminal(fullPrompt);
-	log(`DISPATCHED: Mission #${num} sent to Antigravity terminal`);
+	log(`DISPATCHED: Mission #${num} sent to Mekong CLI terminal`);
 
 	// Monitor CC CLI process state
 	const deadline = Date.now() + timeoutMs;

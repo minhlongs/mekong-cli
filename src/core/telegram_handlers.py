@@ -22,7 +22,7 @@ async def cook_handler(
     config: Any,
     save_config: Any,
 ) -> None:
-    """Handle /cook <goal> — queue task for Antigravity."""
+    """Handle /cook <goal> — queue task for Mekong CLI."""
     goal = " ".join(context.args) if context.args else ""
     if not goal:
         await update.message.reply_text(
@@ -42,11 +42,11 @@ async def cook_handler(
         save_config()
 
     await update.message.reply_text(
-        f"📨 *Task Queued for Antigravity!*\n\n"
+        f"📨 *Task Queued for Mekong CLI!*\n\n"
         f"🆔 `{task['id']}`\n"
         f"🎯 Goal: _{goal}_\n"
         f"⏰ {task['created_at_iso']}\n\n"
-        f"Antigravity sẽ pick up và điều phối CC CLI.\n"
+        f"Mekong CLI will process and coordinate CC CLI.\n"
         f"Use /tasks to check status.",
         parse_mode="Markdown",
     )
@@ -84,7 +84,7 @@ async def spawn_handler(
         f"🆔 `{task['id']}`\n"
         f"🎯 Goal: _{goal}_\n"
         f"📂 Project: `apps/{project}`\n\n"
-        f"Antigravity sẽ pick up và điều phối CC CLI.",
+        f"Mekong CLI will process and coordinate CC CLI.",
         parse_mode="Markdown",
     )
 

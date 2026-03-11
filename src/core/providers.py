@@ -223,7 +223,7 @@ class GeminiProvider(LLMProvider):
 class OpenAICompatibleProvider(LLMProvider):
     """OpenAI-compatible REST provider.
 
-    Works with: OpenAI, Anthropic proxy, Ollama, vLLM, Antigravity Proxy,
+    Works with: OpenAI, Anthropic proxy, Ollama, vLLM, any OpenAI-compatible,
     and any endpoint that implements /chat/completions.
     Uses urllib (stdlib) — no requests dependency.
     """
