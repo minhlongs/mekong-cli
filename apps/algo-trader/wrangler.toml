@@ -7,18 +7,18 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "algo-trader-prod"
-database_id = "placeholder-prod-db-id"
+database_id = "472e48f7-2196-4fb5-9a26-180ad134e15b"
 
 [[d1_databases]]
 binding = "DB_STAGING"
 database_name = "algo-trader-staging"
-database_id = "placeholder-staging-db-id"
+database_id = "943fd11e-c81a-4342-afa6-7e80aa7a18df"
 
 # KV Namespaces
 [[kv_namespaces]]
 binding = "KV"
-id = "placeholder-kv-id"
-preview_id = "placeholder-kv-preview-id"
+id = "ba8c93a931524b7e97027dbad43b31c0"
+preview_id = "ba8c93a931524b7e97027dbad43b31c0"
 
 [[kv_namespaces]]
 binding = "BUILD_CACHE"
@@ -56,14 +56,14 @@ max_batch_size = 20
 max_retries = 5
 dead_letter_queue = "webhook-dlq"
 
-# R2 Buckets
-[[r2_buckets]]
-binding = "R2"
-bucket_name = "algo-trader-artifacts"
+# R2 Buckets (DISABLED - enable R2 in dashboard)
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "algo-trader-artifacts"
 
-[[r2_buckets]]
-binding = "AUDIT_R2"
-bucket_name = "algo-trader-audit-logs"
+# [[r2_buckets]]
+# binding = "AUDIT_R2"
+# bucket_name = "algo-trader-audit-logs"
 
 # Cron Triggers (keep Workers warm)
 [triggers]
@@ -86,11 +86,11 @@ API_VERSION = "1.0.0-staging"
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "algo-trader-staging"
-database_id = "placeholder-staging-db-id"
+database_id = "943fd11e-c81a-4342-afa6-7e80aa7a18df"
 
 [[env.staging.kv_namespaces]]
 binding = "KV"
-id = "placeholder-staging-kv-id"
+id = "f2cf595dec5543dc96f6370bebbc8754"
 
 [[env.staging.kv_namespaces]]
 binding = "BUILD_CACHE"
@@ -104,6 +104,6 @@ binding = "BACKTEST_QUEUE"
 queue = "scan-queue-staging"
 binding = "SCAN_QUEUE"
 
-[[env.staging.r2_buckets]]
-binding = "R2"
-bucket_name = "algo-trader-staging-artifacts"
+# [[env.staging.r2_buckets]]
+# binding = "R2"
+# bucket_name = "algo-trader-staging-artifacts"
