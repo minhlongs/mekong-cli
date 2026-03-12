@@ -64,7 +64,10 @@ export class PolarClient {
     return ok(result.value.items ?? []);
   }
 
-  /** Get a specific subscription by ID */
+  /**
+   * Get a specific subscription by ID.
+   * @param subscriptionId - Polar subscription ID
+   */
   async getSubscription(subscriptionId: string): Promise<Result<PolarSubscription, Error>> {
     return this.fetchWithRetry<PolarSubscription>(
       `/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
@@ -118,7 +121,10 @@ export class PolarClient {
   }
 }
 
-/** Create a PolarClient from environment variables */
+/**
+ * Create a PolarClient from environment variables.
+ * @returns error if `POLAR_API_KEY` is not set
+ */
 export function createPolarClientFromEnv(baseUrl?: string): Result<PolarClient, Error> {
   const apiKey = process.env['POLAR_API_KEY'];
   if (!apiKey) {

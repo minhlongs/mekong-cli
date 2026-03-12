@@ -77,7 +77,7 @@ export class ReportGenerator {
     ].join('\n');
   }
 
-  /** CLI summary (all sections combined) */
+  /** Render all analytics sections as a single CLI string. */
   toCliSummary(bundle: AnalyticsBundle): string {
     return [
       this.roiSection(bundle.roi),

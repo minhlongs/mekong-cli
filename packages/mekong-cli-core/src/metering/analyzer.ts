@@ -107,7 +107,12 @@ export class UsageAnalyzer {
     return { period: resolvedPeriod, readings, totals, byCategory, topModels, topTools };
   }
 
-  /** Detect overages vs a quota. Returns one OverageInfo per exceeded category. */
+  /**
+   * Detect quota overages for a single day's reading.
+   * @param dailyReading - aggregated meter reading for one day
+   * @param quota - tier quota limits to compare against
+   * @returns one OverageInfo per exceeded category
+   */
   detectOverages(dailyReading: MeterReading, quota: UsageQuota): OverageInfo[] {
     const overages: OverageInfo[] = [];
 
@@ -134,7 +139,7 @@ export class UsageAnalyzer {
     return overages;
   }
 
-  /** Estimate cost from events using a simple per-token rate */
+  /** Estimate total cost (USD) by summing estimatedCost on each LLM event. */
   estimateCost(events: UsageEvent[]): number {
     return events.reduce((sum, e) => sum + (e.estimatedCost ?? 0), 0);
   }

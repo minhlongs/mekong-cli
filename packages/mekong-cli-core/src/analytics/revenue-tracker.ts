@@ -73,7 +73,8 @@ export class RevenueTracker {
   }
 
   /**
-   * Build report from raw MRR inputs (for testing / direct injection).
+   * Build report from raw MRR inputs (for testing or direct injection).
+   * @param opts - pre-computed MRR, customer count, tier distribution and period
    */
   buildFromMRR(opts: {
     mrr: number;

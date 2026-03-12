@@ -58,14 +58,17 @@ export class CostCalculator {
     return (inputTokens / 1_000_000) * pricing[0] + (outputTokens / 1_000_000) * pricing[1];
   }
 
-  /** Get the pricing entry for a provider/model pair, or null if unknown */
+  /**
+   * Get pricing for a provider/model pair.
+   * @returns [inputCostPerMToken, outputCostPerMToken] in USD, or null if unknown
+   */
   getPricing(provider: string, model: string): [number, number] | null {
     if (FREE_PROVIDERS.has(provider.toLowerCase())) return [0, 0];
     const key = `${provider.toLowerCase()}/${model}`;
     return PRICING[key] ?? PRICING[model] ?? null;
   }
 
-  /** List all known model keys */
+  /** List all known provider/model keys in the pricing table. */
   knownModels(): string[] {
     return Object.keys(PRICING);
   }

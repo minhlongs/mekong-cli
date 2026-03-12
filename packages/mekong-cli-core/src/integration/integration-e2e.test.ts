@@ -16,9 +16,6 @@ import { LicenseAdmin } from '../license/admin.js';
 import { verifyLicense } from '../license/verifier.js';
 import { WebhookHandler } from '../payments/webhook-handler.js';
 import { MeteringStore } from '../metering/store.js';
-import { MeteringCollector } from '../metering/collector.js';
-import { UsageLimiter } from '../metering/limiter.js';
-import { ROICalculator, currentMonthPeriod } from '../analytics/roi-calculator.js';
 import type { UsageEvent } from '../metering/types.js';
 
 // ── helpers ───────────────────────────────────────────────────────────────────

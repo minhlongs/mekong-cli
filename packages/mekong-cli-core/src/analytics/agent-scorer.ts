@@ -98,7 +98,10 @@ export class AgentScorer {
     };
   }
 
-  /** Score multiple agents, sort by agiScore descending */
+  /**
+   * Score multiple agents and sort by AGI score descending.
+   * @param inputs - array of per-agent performance inputs
+   */
   scoreAll(inputs: AgentScoreInputs[]): AgentPerformance[] {
     return inputs
       .map((i) => this.score(i))

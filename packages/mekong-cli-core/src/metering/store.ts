@@ -105,11 +105,20 @@ export class MeteringStore {
   private async readFile(path: string): Promise<Result<UsageEvent[], Error>> {
     try {
       const content = await readFile(path, 'utf-8');
-      const events = content
-        .trim()
-        .split('\n')
-        .filter((l) => l.trim())
-        .map((l) => JSON.parse(l) as UsageEvent);
+      const events: UsageEvent[] = [];
+      let start = 0;
+      const len = content.length;
+      for (let i = 0; i <= len; i++) {
+        if (i === len || content[i] === '\n') {
+          if (i > start) {
+            const line = content.slice(start, i);
+            if (line.length > 0 && line.charCodeAt(0) !== 32) {
+              events.push(JSON.parse(line) as UsageEvent);
+            }
+          }
+          start = i + 1;
+        }
+      }
       return ok(events);
     } catch (e: unknown) {
       if ((e as NodeJS.ErrnoException).code === 'ENOENT') return ok([]);

@@ -53,7 +53,10 @@ export class UsageLimiter {
     }
   }
 
-  /** Get remaining quota for a category today */
+  /**
+   * Get remaining quota for a category today.
+   * @returns remaining count, or Infinity for enterprise tier
+   */
   async getRemaining(category: UsageCategory, tier: LicenseTier): Promise<number> {
     const quota = TIER_QUOTAS[tier];
     const limit = this.limitForCategory(category, quota);

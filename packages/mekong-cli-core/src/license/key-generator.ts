@@ -6,10 +6,12 @@ import { randomBytes } from 'node:crypto';
 import type { LicenseTier, LicenseKey } from './types.js';
 import { computeSignature } from './verifier.js';
 
+/** Options for generating a new license key. */
 export interface KeyGenOptions {
   tier: LicenseTier;
   owner: string;
-  expiryDays?: number; // default 365
+  /** Days until expiry; defaults to 365. */
+  expiryDays?: number;
 }
 
 /**

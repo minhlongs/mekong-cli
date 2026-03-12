@@ -106,7 +106,11 @@ export class MeteringCollector {
 
   /** Count events by category in buffer (for testing) */
   countByCategory(category: UsageCategory): number {
-    return this.buffer.filter((e) => e.category === category).length;
+    let count = 0;
+    for (const e of this.buffer) {
+      if (e.category === category) count++;
+    }
+    return count;
   }
 
   private scheduleFlush(): void {
