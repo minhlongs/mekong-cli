@@ -769,9 +769,9 @@ describe('Phase 7 — integration end-to-end', () => {
     expect(DEFAULT_CONFIG.payments.receipt_store_path).toContain('receipts.jsonl');
   });
 
-  it('VERSION bumped to 0.7.0 in cli/index.ts', async () => {
+  it('VERSION bumped to 0.8.0 in cli/index.ts', async () => {
     const indexPath = join(__dirname, '..', 'cli', 'index.ts');
     const content = await readFile(indexPath, 'utf-8');
-    expect(content).toContain("'0.7.0'");
+    expect(content).toContain("'0.8.0'");
   });
 });

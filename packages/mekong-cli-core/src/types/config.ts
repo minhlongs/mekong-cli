@@ -103,6 +103,11 @@ export const ConfigSchema = z.object({
     flush_threshold: z.number().default(50),
     flush_interval_seconds: z.number().default(30),
   }).default({}),
+  analytics: z.object({
+    enabled: z.boolean().default(true),
+    hourly_rate: z.number().default(100),
+    data_dir: z.string().default('~/.mekong/analytics'),
+  }).default({}),
 });
 
 export type MekongConfig = z.infer<typeof ConfigSchema>;
