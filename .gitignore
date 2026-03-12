@@ -118,7 +118,7 @@ apps/84tea/
 apps/anima119/
 apps/apex-os/
 apps/sophia-ai-factory/
-apps/sophia-proposal/
+# apps/sophia-proposal/  # TEMP: Allow for CF migration
 apps/sa-dec-flower-hunt/
 apps/com-anh-duong/
 apps/com-anh-duong-10x/
