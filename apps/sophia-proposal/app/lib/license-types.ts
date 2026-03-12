@@ -1,6 +1,6 @@
 // License Types for Sophia ROIaaS Phase 2
 
-export type LicenseTier = 'FREE' | 'PRO' | 'ENTERPRISE'
+export type LicenseTier = 'FREE' | 'PRO' | 'ENTERPRISE' | 'MASTER'
 
 export type LicenseStatus = 'active' | 'revoked' | 'expired'
 

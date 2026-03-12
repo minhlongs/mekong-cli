@@ -6,7 +6,9 @@ import type {
   LicenseTier,
   LicenseStats,
   CreateLicenseInput,
-} from './license-types.js'
+} from './license-types'
+import { UsageMetering } from './usage-metering'
+import type { UsageSummary } from './usage-metering'
 
 /**
  * Generate unique license key
@@ -33,6 +35,17 @@ function getDefaultFeatures(tier: LicenseTier): string[] {
       'priority-support',
       'sla',
       'dedicated-account',
+    ],
+    MASTER: [
+      '4k-video',
+      'no-watermark',
+      'custom-branding',
+      'api-access',
+      'priority-support',
+      'sla',
+      'dedicated-account',
+      'white-glove-service',
+      'custom-integrations',
     ],
   }
   return features[tier]
@@ -166,7 +179,7 @@ class LicenseServiceClass {
 
     const stats: LicenseStats = {
       total: licenses.length,
-      byTier: { FREE: 0, PRO: 0, ENTERPRISE: 0 },
+      byTier: { FREE: 0, PRO: 0, ENTERPRISE: 0, MASTER: 0 },
       byStatus: { active: 0, revoked: 0, expired: 0 },
     }
 
@@ -202,6 +215,31 @@ class LicenseServiceClass {
    */
   clear(): void {
     this.licenses.clear()
+  }
+
+  /**
+   * Get usage statistics for a license (ROIaaS Phase 4)
+   * Integrates with UsageMetering service
+   */
+  getUsageStats(licenseId: string): {
+    license: License | undefined
+    usage: UsageSummary | null
+    stats: {
+      tier: string
+      apiCalls: { used: number; limit: number; percent: number }
+      transferMb: { used: number; limit: number; percent: number }
+      status: 'normal' | 'warning' | 'critical' | 'exceeded'
+    } | null
+  } {
+    const license = this.getById(licenseId)
+    if (!license) {
+      return { license: undefined, usage: null, stats: null }
+    }
+
+    const usage = UsageMetering.getUsage(licenseId)
+    const stats = UsageMetering.getUsageStats(licenseId)
+
+    return { license, usage, stats }
   }
 }
 
