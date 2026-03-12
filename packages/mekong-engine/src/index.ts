@@ -55,10 +55,11 @@ app.get('/health', async (c) => {
 })
 
 // PEV Engine routes — BYOK: tenant key → global key → Workers AI
+// Uses MekongEngineAdapter from @mekong/cli-core
 app.post('/cmd', async (c) => {
   if (!c.env.AI && !c.env.LLM_API_KEY) return c.json({ error: 'No LLM provider configured (need AI binding or LLM_API_KEY)' }, 503)
 
-  const { RecipeOrchestrator } = await import('./core/recipe-orchestrator')
+  const { MekongEngineAdapter } = await import('./core/mekong-engine-adapter')
   const body = await c.req.json<{ goal: string }>()
   if (!body.goal) return c.json({ error: 'Missing goal' }, 400)
 
@@ -82,14 +83,15 @@ app.post('/cmd', async (c) => {
     }
   }
 
-  const orchestrator = new RecipeOrchestrator({
-    ai: c.env.AI,
-    llmApiKey,
-    llmBaseUrl,
-    model,
+  const adapter = new MekongEngineAdapter({
+    AI: c.env.AI,
+    LLM_API_KEY: llmApiKey,
+    LLM_BASE_URL: llmBaseUrl,
+    DEFAULT_LLM_MODEL: model,
   })
 
-  const result = await orchestrator.runFromGoal(body.goal)
+  await adapter.init()
+  const result = await adapter.run(body.goal)
   return c.json(result)
 })
 
