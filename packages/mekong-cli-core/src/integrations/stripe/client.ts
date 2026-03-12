@@ -1,0 +1,2 @@
+/** Stripe API wrapper */
+export {};

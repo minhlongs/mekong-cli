@@ -1,0 +1,2 @@
+/** Telegram bot sender */
+export {};

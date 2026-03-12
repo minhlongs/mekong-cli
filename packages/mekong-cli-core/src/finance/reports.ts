@@ -1,0 +1,2 @@
+/** Financial reports generator */
+export {};
