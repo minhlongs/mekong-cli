@@ -69,6 +69,90 @@ curl -X POST https://api.algo-trader.com/api/v1/licenses \
 
 ---
 
+## Phase 3: Polar.sh Webhook Integration
+
+**ROIaaS Phase 3** — Automated license management via Polar.sh payment webhooks.
+
+### Webhook Endpoint
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/webhooks/polar` | Polar.sh webhook handler |
+
+### Supported Webhook Events
+
+| Event | Action | License Impact |
+|-------|--------|----------------|
+| `subscription.created` | Create subscription record | Activate PRO/ENTERPRISE license |
+| `subscription.active` | Update subscription status | Set/upgrade license tier |
+| `subscription.updated` | Update tier/period | Update license tier |
+| `subscription.cancelled` | Mark as cancelled | Downgrade to FREE license |
+| `checkout.created` | Track checkout session | No license change (pending) |
+| `payment.success` | Record payment | Maintain current tier |
+| `payment.failed` | Record failed payment | Flag for review |
+
+### Webhook Payload Example
+
+```json
+{
+  "type": "subscription.active",
+  "data": {
+    "object": {
+      "id": "sub_2JZ9X8Y7W6V5U4T3",
+      "product_id": "pro-monthly",
+      "customer_email": "user@example.com",
+      "status": "active",
+      "current_period_start": "2026-03-01T00:00:00Z",
+      "current_period_end": "2026-04-01T00:00:00Z"
+    }
+  }
+}
+```
+
+### Webhook Signature Verification
+
+Polar.sh webhooks are signed using HMAC-SHA256. Verify signatures using:
+
+```typescript
+import { PolarService } from '../payment/polar-service';
+
+const polarService = PolarService.getInstance();
+const isValid = await polarService.verifyWebhook(payload, signature);
+```
+
+### Configuration
+
+Add to `.env`:
+
+```bash
+# Polar.sh Configuration
+POLAR_API_KEY=sk_polar_...
+POLAR_WEBHOOK_SECRET=whsec_...
+POLAR_SUCCESS_URL=https://algo-trader.com/upgrade/success
+```
+
+### Payment-License Sync
+
+The `LicensePaymentSync` service tracks:
+
+- **Payment records**: Order ID, amount, currency, status
+- **Subscription records**: Subscription ID, tier, interval, period dates
+- **Revenue metrics**: MRR, total revenue, average license value
+- **Payment status distribution**: Success/failed/pending/refunded counts
+
+### Revenue Analytics
+
+Dashboard analytics include:
+
+| Metric | Description |
+|--------|-------------|
+| **MRR** | Monthly Recurring Revenue from active subscriptions |
+| **Total Revenue** | Sum of all successful payments |
+| **Avg License Value** | Total revenue / active licenses |
+| **Payment Success Rate** | Successful payments / total payments |
+
+---
+
 ## Related Docs
 
 | File | Purpose |
@@ -79,4 +163,4 @@ curl -X POST https://api.algo-trader.com/api/v1/licenses \
 
 ---
 
-*Last updated: 2026-03-06*
+*Last updated: 2026-03-12*

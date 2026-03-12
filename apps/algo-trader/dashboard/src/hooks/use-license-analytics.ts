@@ -34,6 +34,15 @@ export interface AnalyticsData {
   revenue: {
     monthly: number;
     projected: number;
+    mrr: number;
+    totalRevenue: number;
+    avgLicenseValue: number;
+  };
+  paymentStatus: {
+    successful: number;
+    failed: number;
+    pending: number;
+    refunded: number;
   };
   dailyBreakdown: Array<{
     date: string;
