@@ -104,7 +104,8 @@ SEO implementation:
 - International SEO
 
 Deployment strategies:
-- Vercel deployment
+- Cloudflare Pages deployment
+- Cloudflare Workers (edge API)
 - Self-hosting
 - Docker setup
 - Edge deployment
