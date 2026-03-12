@@ -1,5 +1,5 @@
 ---
-description: Quản lý MCU balance, Polar subscription, billing history và reconciliation
+description: Manage MCU balance, Polar subscription, billing history and reconciliation
 allowed-tools: Read, Write, Bash
 ---
 

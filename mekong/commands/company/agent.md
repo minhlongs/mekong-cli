@@ -1,5 +1,5 @@
 ---
-description: Quản lý 8 agents — list, ask, train, handoff, pause, resume
+description: Manage 8 agents — list, ask, train, handoff, pause, resume
 allowed-tools: Read, Write, Edit, Bash
 ---
 

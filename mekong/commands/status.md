@@ -1,5 +1,5 @@
 ---
-description: Kiểm tra sức khỏe toàn bộ hệ thống AgencyOS/Mekong
+description: Health check the entire AgencyOS/Mekong system
 allowed-tools: Bash, Read
 ---
 

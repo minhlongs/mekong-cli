@@ -1,5 +1,5 @@
 ---
-description: Chuẩn bị fundraising — pitch deck checklist, story arc, investor targeting, data room
+description: Prepare fundraising — pitch deck checklist, story arc, investor targeting, data room
 allowed-tools: Read, Write, Bash
 ---
 

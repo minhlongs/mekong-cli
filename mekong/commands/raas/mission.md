@@ -1,5 +1,5 @@
 ---
-description: 🦞 Dispatch AGI mission qua Tôm Hùm — autonomous task execution
+description: 🦞 Dispatch AGI mission via Tom Hum — autonomous task execution
 argument-hint: [mission-description]
 ---
 

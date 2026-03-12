@@ -1,5 +1,5 @@
 ---
-description: Tìm và filter startup credits/programs phù hợp với tech stack, tính tổng ROI
+description: Find and filter startup credits/programs matching your tech stack, calculate total ROI
 allowed-tools: Read, Write, Bash
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Debug và fix bug với mandatory SCAN phase + Jidoka safety gate
+description: Debug and fix bugs with mandatory SCAN phase + Jidoka safety gate
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Tạo marketing plan toàn diện
+description: Create a comprehensive marketing plan
 ---
 
 # Command: /ke-hoach-tiep-thi

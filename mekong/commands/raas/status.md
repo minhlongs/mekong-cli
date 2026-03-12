@@ -1,5 +1,5 @@
 ---
-description: 📊 Health check toàn bộ AGI RaaS stack
+description: 📊 Health check the entire AGI RaaS stack
 argument-hint: [target: all|gateway|engine|worker|queues]
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Wizard khởi tạo solo agentic company — 8 agents + hybrid LLM routing config
+description: Setup wizard for solo agentic company — 8 agents + hybrid LLM routing config
 allowed-tools: Read, Write, Bash
 ---
 

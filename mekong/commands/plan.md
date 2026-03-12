@@ -1,5 +1,5 @@
 ---
-description: Decompose goal thành subtasks với agent assignment, model routing, MCU estimate
+description: Decompose goal into subtasks with agent assignment, model routing, MCU estimate
 allowed-tools: Read, Glob, Grep
 ---
 

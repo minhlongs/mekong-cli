@@ -1,5 +1,5 @@
 ---
-description: Trigger và quản lý automated workflows — onboard, upsell, bug-pipeline, weekly-brief, deploy
+description: Trigger and manage automated workflows — onboard, upsell, bug-pipeline, weekly-brief, deploy
 allowed-tools: Read, Write, Bash
 ---
 
