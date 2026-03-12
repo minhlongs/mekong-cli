@@ -2,22 +2,34 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { SopDefinition, SopRun, SopStep, StepState } from '../types/sop.js';
 import type { ToolRegistry } from '../tools/registry.js';
+import type { LlmRouter } from '../llm/router.js';
+import type { OrchestratorAgent } from '../agents/orchestrator.js';
 import { buildDag, topoSort } from './dag.js';
 import { generateId } from '../utils/hash.js';
 import { emit } from '../core/events.js';
 
 const execAsync = promisify(exec);
 
+/** Resolver function that loads a SOP definition by name */
+export type SopResolver = (sopName: string) => Promise<SopDefinition | undefined>;
+
 export interface ExecutorDeps {
   tools?: ToolRegistry;
+  llm?: LlmRouter;
+  orchestrator?: OrchestratorAgent;
+  sopResolver?: SopResolver;
   askUser?: (question: string) => Promise<string>;
 }
 
+const MAX_SOP_DEPTH = 10;
+
 export class SopExecutor {
   private deps: ExecutorDeps;
+  private depth: number;
 
-  constructor(deps: ExecutorDeps = {}) {
+  constructor(deps: ExecutorDeps = {}, depth: number = 0) {
     this.deps = deps;
+    this.depth = depth;
   }
 
   /** Run a SOP definition with resolved inputs */
@@ -178,11 +190,54 @@ export class SopExecutor {
       }
       case 'condition':
         return this.evaluateCondition(step.condition ?? 'true', context);
-      case 'llm':
-      case 'agent':
-      case 'sop':
-        // Deeper integration deferred — return placeholder
-        return `[${step.action}] not yet wired`;
+      case 'llm': {
+        if (!this.deps.llm) throw new Error('LlmRouter not provided');
+        if (!step.prompt) throw new Error('LLM step missing prompt');
+        const prompt = this.interpolate(step.prompt, context);
+        const response = await this.deps.llm.chat({
+          messages: [{ role: 'user', content: prompt }],
+          maxTokens: 2048,
+        });
+        return response.content;
+      }
+      case 'agent': {
+        if (!this.deps.orchestrator) throw new Error('OrchestratorAgent not provided');
+        if (!step.prompt) throw new Error('Agent step missing prompt');
+        const taskPrompt = this.interpolate(step.prompt, context);
+        const agentType = step.tool ?? 'default';
+        const task = {
+          id: generateId('task'),
+          description: taskPrompt,
+          agentId: agentType,
+          priority: 'normal' as const,
+          inputs: step.inputs ?? {},
+          expectedOutputs: [],
+          timeout: (step.timeout_seconds ?? 300) * 1000,
+          retryCount: 0,
+          maxRetries: step.retry?.max ?? 0,
+        };
+        const plan = this.deps.orchestrator.plan([task]);
+        const orchResult = await this.deps.orchestrator.execute(plan, agentType);
+        if (!orchResult.success) {
+          throw new Error(`Agent task failed: ${orchResult.failedCount} failures`);
+        }
+        return orchResult.results.map(r => r.payload.content).join('\n');
+      }
+      case 'sop': {
+        if (!step.sop) throw new Error('SOP step missing sop name');
+        if (!this.deps.sopResolver) throw new Error('SopResolver not provided');
+        if (this.depth >= MAX_SOP_DEPTH) {
+          throw new Error(`SOP recursion depth exceeded (max ${MAX_SOP_DEPTH})`);
+        }
+        const nestedSop = await this.deps.sopResolver(step.sop);
+        if (!nestedSop) throw new Error(`SOP "${step.sop}" not found`);
+        const childExecutor = new SopExecutor(this.deps, this.depth + 1);
+        const nestedRun = await childExecutor.run(nestedSop, step.inputs ?? {});
+        if (nestedRun.status === 'failed') {
+          throw new Error(`Nested SOP "${step.sop}" failed: ${nestedRun.error}`);
+        }
+        return nestedRun.outputs;
+      }
       default:
         throw new Error(`Unknown action: ${step.action}`);
     }
