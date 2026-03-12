@@ -1,0 +1,31 @@
+{
+  "name": "@mekong/cli-core",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "mekong": "./dist/cli/index.js" },
+  "scripts": {
+    "build": "tsup src/cli/index.ts --format esm --dts",
+    "dev": "tsx watch src/cli/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.0",
+    "winston": "^3.17.0",
+    "chalk": "^5.4.0",
+    "ora": "^8.2.0",
+    "eventemitter3": "^5.0.0",
+    "p-queue": "^8.1.0",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "vitest": "^4.0.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0"
+  }
+}
