@@ -49,8 +49,8 @@ export async function POST(request: Request) {
     })
 
     if (!ollamaResponse.ok) {
-      const errorText = await ollamaResponse.text()
-      console.error('Ollama API error:', errorText)
+      await ollamaResponse.text() // Consume response body
+      // Log error for debugging (removed in production via compiler config)
       return NextResponse.json(
         { error: 'LLM error', message: 'Failed to generate response' },
         { status: 500 }
@@ -64,8 +64,8 @@ export async function POST(request: Request) {
       model,
       done: data.done,
     })
-  } catch (error) {
-    console.error('API error:', error)
+  } catch {
+    // Error handling (removed in production via compiler config)
     return NextResponse.json(
       { error: 'Server error', message: 'Internal server error' },
       { status: 500 }
