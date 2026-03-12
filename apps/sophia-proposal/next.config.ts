@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Cloudflare Pages compatibility
-  output: 'export',
+  output: 'standalone',
   images: {
     unoptimized: true,
     disableStaticImages: true

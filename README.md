@@ -2,12 +2,13 @@
 
 **AI-operated business platform. Open source. Universal LLM.**
 
-Giao việc cho AI → AI lập kế hoạch → thực thi → kiểm tra → giao kết quả.
-289 commands • 245 skills • 176 contracts • 5-tầng doanh nghiệp.
+Describe your goal → AI plans → executes → verifies → delivers results.
+319 commands • 463 skills • 410 contracts • 5 business layers.
 
 ## Quick Start
 
-### Cho user có API key (OpenRouter / Qwen / DeepSeek / bất kỳ):
+### With API key (OpenRouter / Qwen / DeepSeek / any provider):
+
 ```bash
 pip install mekong-cli
 export LLM_BASE_URL=https://openrouter.ai/api/v1
@@ -16,142 +17,90 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 mekong cook "Create a REST API with auth"
 ```
 
-### Cho user dùng LLM local (free):
+### With local LLM (free):
+
 ```bash
 pip install mekong-cli
 # Install Ollama: curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull qwen2.5-coder
-export OLLAMA_BASE_URL=http://localhost:11434/v1
+export LLM_BASE_URL=http://localhost:11434/v1
 mekong cook "Create a Python calculator"
 ```
 
-### Cho founder (non-tech):
+### For founders (non-tech):
+
 ```bash
-pip install mekong-cli
-mekong annual "Kế hoạch kinh doanh 2026"
+mekong annual "2026 business plan"
+mekong founder:raise "Pre-seed for AI platform"   # 8 agents parallel
+mekong founder:validate-sprint "Is this investable?"  # PMF verdict in 25 min
 ```
+
+## 5 Business Layers
+
+```
+👑 Founder    /annual /okr /fundraise /swot         — Strategy & fundraising
+💼 Business   /sales /marketing /finance /hr         — Revenue & operations
+🎯 Product    /plan /sprint /roadmap /brainstorm     — Product management
+⚙️ Engineering /cook /code /test /deploy /review      — Build & ship
+🔧 Ops        /audit /health /security /status       — Monitor & maintain
+```
+
+## 101 Super Commands
+
+One command triggers parallel AI agents via DAG recipes:
+
+```bash
+$ mekong founder:raise "Series A for AI platform"
+  ⚡ Group 1 (parallel): /unit-economics + /tam + /moat-audit
+  ⚡ Group 2 (parallel): /financial-model + /data-room
+  ⚡ Group 3 (sequential): /cap-table → /pitch → /vc-map
+  ✅ Output: reports/raise-ready-kit/ (investor-ready)
+```
+
+32 roles from CEO to intern. 85 DAG workflow recipes. [See full list →](docs/COMMANDS.md)
 
 ## Architecture
 
 ```
-👑 Founder    /annual /okr /fundraise /swot        — Chiến lược
-🏢 Business   /sales /marketing /finance /hr        — Vận hành
-📦 Product    /plan /sprint /roadmap /brainstorm    — Sản phẩm
-⚙️ Engineer   /cook /code /test /deploy /review     — Kỹ thuật
-🔧 Ops        /audit /health /security /status      — Vận hành
-```
-
-## How It Works
-
-```
-Goal → PLAN (LLM decompose) → EXECUTE (multi-mode) → VERIFY (quality gates)
+Plan → Execute → Verify (PEV Engine)
        ↓ failed?             ↓ self-heal              ↓ auto-retry
-       Strategy hint          LLM correction           Rollback
+     Debug → Fix → Retest   Learn → Adapt            Escalate → Human
 ```
 
-| Phase | Module | What It Does |
-|-------|--------|-------------|
-| **Plan** | `src/core/planner.py` | LLM decomposes goal into ordered steps |
-| **Execute** | `src/core/executor.py` | Runs shell/code/API tasks in parallel |
-| **Verify** | `src/core/verifier.py` | Exit codes, tests, types, LLM assessment |
-| **Orchestrate** | `src/core/orchestrator.py` | PEV loop, rollback, self-healing |
+- **Universal LLM**: 3 env vars, any OpenAI-compatible provider
+- **DAG Scheduler**: Parallel execution with dependency graphs
+- **Self-healing**: Failed steps auto-diagnosed and corrected
+- **100% Cloudflare**: Pages (frontend) + Workers (backend) + D1 + KV + R2
 
-## LLM Provider (Universal — 3 vars, any provider)
+## Deploy
 
-```bash
-# OpenRouter (300+ models):
-export LLM_BASE_URL=https://openrouter.ai/api/v1
+All infrastructure runs on Cloudflare:
 
-# Qwen Coding Plan ($10/mo unlimited):
-export LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-
-# DeepSeek (cheapest):
-export LLM_BASE_URL=https://api.deepseek.com
-
-# Ollama (free, local):
-export OLLAMA_BASE_URL=http://localhost:11434/v1
-
-# Any OpenAI-compatible endpoint works.
-```
-
-## Deploy (3-layer, Cloudflare-only)
-
-| Layer | Platform | Cost | When |
-|-------|----------|------|------|
-| Frontend | Cloudflare Pages | $0 | Every project |
-| Edge API | Cloudflare Workers | $0 | Need API/webhooks |
-| Backend | CF Workers + D1 + KV + R2 | $0 | Need DB/storage/daemon |
-
-```bash
-# Scaffold by scale:
-bash mekong/infra/scaffold.sh myproject startup  # frontend + API
-bash mekong/infra/scaffold.sh myproject scale     # all 3 layers
-```
-
-## Commands (Top 10)
-
-| Command | What It Does | MCU |
-|---------|-------------|-----|
-| `mekong cook` | Full PEV pipeline | 3 |
-| `mekong fix` | Debug & fix bugs | 3 |
-| `mekong plan` | Create implementation plan | 1 |
-| `mekong review` | Code quality review | 1 |
-| `mekong deploy` | Deployment orchestration | 5 |
-| `mekong company/init` | Initialize agentic company | 3 |
-| `mekong founder/validate` | Customer discovery & PMF | 3 |
-| `mekong founder/pitch` | Pitch deck practice | 3 |
-| `mekong founder/vc/cap-table` | Dilution modeling | 5 |
-| `mekong founder/ipo/ipo-day` | IPO Day execution | 5 |
-
-Full command list: 289 commands across 5 layers. Run `mekong help` for details.
-
-## For Developers (Fork Guide)
-
-```bash
-git clone https://github.com/longtho638-jpg/mekong-cli.git
-cd mekong-cli
-make setup       # Install deps + validate factory
-make self-test   # Should show 100/100
-# Set LLM key in .env
-mekong cook "hello world"
-```
-
-## RaaS (Revenue as a Service)
-
-Customer submit goal → pay credits → OpenClaw executes → deliver result.
-
-| Tier | Credits/mo | Price |
-|------|-----------|-------|
-| Starter | 200 | $49 |
-| Pro | 1,000 | $149 |
-| Enterprise | Unlimited | $499 |
-
-## CLI Flags
-
-| Flag | Effect |
-|------|--------|
-| `--verbose / -v` | Step-by-step execution details |
-| `--dry-run / -n` | Plan only, no execution |
-| `--strict` | Fail on first verification error |
-| `--json / -j` | Machine-readable JSON output |
+| Layer | Platform | Cost |
+|-------|----------|------|
+| Frontend | Cloudflare Pages | $0 |
+| Edge API | Cloudflare Workers | $0 |
+| Database | Cloudflare D1 | $0 |
+| Storage | Cloudflare R2 | $0 |
+| Cache | Cloudflare KV | $0 |
 
 ## Project Structure
 
 ```
-mekong-cli/
-├── src/core/           # PEV Engine (planner, executor, verifier, orchestrator)
-├── src/agents/         # Pluggable agent modules
-├── src/raas/           # Credit billing (RaaS)
-├── mekong/             # Namespace (skills, adapters, infra, daemon)
-├── .agencyos/commands/ # 245 command definitions
-├── factory/contracts/  # 176 JSON machine contracts
-├── apps/openclaw-worker/ # Tôm Hùm autonomous daemon
-├── frontend/landing/   # AgencyOS storefront
-└── tests/              # Test suite
+├── src/                   # Python CLI core (PEV engine)
+├── apps/openclaw-worker/  # Tôm Hùm autonomous daemon
+├── frontend/landing/      # Next.js 16 landing (agencyos.network)
+├── .agencyos/commands/    # 319 command definitions
+├── factory/contracts/     # 410 JSON machine contracts
+├── recipes/               # 85 DAG workflow recipes
+├── mekong/                # Namespace (skills, adapters, config)
+└── reports/               # Self-dogfood analysis (242 reports)
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [QUICKSTART.md](QUICKSTART.md).
 
 ## License
 
-MIT — Use it, fork it, build your AI agency on it.
-
-**Mekong CLI** © 2026 Binh Phap Venture Studio
+**Mekong CLI** © 2026 Binh Phap Venture Studio — [MIT License](LICENSE)
