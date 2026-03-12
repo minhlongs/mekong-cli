@@ -1,0 +1,2 @@
+/** Sales pipeline tracker */
+export {};

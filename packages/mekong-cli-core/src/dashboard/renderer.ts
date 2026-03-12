@@ -1,0 +1,2 @@
+/** CLI dashboard rendering */
+export {};
