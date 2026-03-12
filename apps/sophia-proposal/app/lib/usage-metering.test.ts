@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { UsageMetering } from '../app/lib/usage-metering'
-import { OverageAlertEngine } from '../app/lib/overage-alert-engine'
-import { USAGE_LIMITS, getLimit, getAlertLevel, isUnlimited } from '../app/lib/usage-limits'
-import { LicenseService } from '../app/lib/license-service'
+import { UsageMetering } from './usage-metering'
+import { OverageAlertEngine } from './overage-alert-engine'
+import { USAGE_LIMITS, getLimit, getAlertLevel, isUnlimited } from './usage-limits'
+import { LicenseService } from './license-service'
 
 describe('Usage Limits', () => {
   it('should have correct limits for each tier', () => {
