@@ -76,4 +76,9 @@ export const DEFAULT_CONFIG: MekongConfig = {
     flush_threshold: 50,
     flush_interval_seconds: 30,
   },
+  analytics: {
+    enabled: true,
+    hourly_rate: 100,
+    data_dir: '~/.mekong/analytics',
+  },
 };

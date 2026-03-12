@@ -14,10 +14,11 @@ import { registerLicenseCommand } from './commands/license.js';
 import { registerLicenseAdminCommand } from './commands/license-admin.js';
 import { registerBillingCommand } from './commands/billing.js';
 import { registerUsageCommand } from './commands/usage.js';
+import { registerAnalyticsCommand } from './commands/analytics.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
-const VERSION = '0.7.0';
+const VERSION = '0.8.0';
 
 export async function main(argv?: string[]): Promise<void> {
   const program = new Command();
@@ -58,6 +59,7 @@ export async function main(argv?: string[]): Promise<void> {
   registerLicenseAdminCommand(program);
   registerBillingCommand(program);
   registerUsageCommand(program);
+  registerAnalyticsCommand(program);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
