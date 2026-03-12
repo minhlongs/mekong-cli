@@ -1,10 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { parseSopYaml, parseSopFile } from '../../src/sops/parser.js';
 import { buildDag, topoSort, validateDag } from '../../src/sops/dag.js';
 import { SopExecutor } from '../../src/sops/executor.js';
 import { rollback } from '../../src/sops/rollback.js';
 import { collectMetrics, compareRuns } from '../../src/sops/metrics.js';
 import type { SopDefinition, SopStep, StepState, SopRun } from '../../src/types/sop.js';
+import type { LlmRouter } from '../../src/llm/router.js';
+import type { OrchestratorAgent } from '../../src/agents/orchestrator.js';
+import type { SopResolver } from '../../src/sops/executor.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -409,6 +412,260 @@ sop:
     const run = await executor.run(result.value, { greeting: 'world' });
     expect(run.status).toBe('success');
     expect(run.steps[0].output).toBe('world');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LLM / Agent / SOP action wiring tests
+// ---------------------------------------------------------------------------
+
+describe('SopExecutor — llm action', () => {
+  it('calls LlmRouter.chat with interpolated prompt', async () => {
+    const mockLlm = {
+      chat: vi.fn().mockResolvedValue({ content: 'LLM says hello' }),
+    } as unknown as LlmRouter;
+
+    const executor = new SopExecutor({ llm: mockLlm });
+    const yaml = `
+sop:
+  name: llm-test
+  version: "1.0.0"
+  steps:
+    - id: ask
+      name: "Ask LLM"
+      action: llm
+      prompt: "Translate {word} to French"
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const run = await executor.run(result.value, { word: 'hello' });
+    expect(run.status).toBe('success');
+    expect(run.steps[0].output).toBe('LLM says hello');
+    expect(mockLlm.chat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [{ role: 'user', content: 'Translate hello to French' }],
+      }),
+    );
+  });
+
+  it('fails when LlmRouter not provided', async () => {
+    const executor = new SopExecutor();
+    const yaml = `
+sop:
+  name: llm-no-dep
+  version: "1.0.0"
+  steps:
+    - id: ask
+      name: "Ask LLM"
+      action: llm
+      prompt: "Hello"
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('LlmRouter not provided');
+  });
+
+  it('fails when llm step has no prompt', async () => {
+    const mockLlm = { chat: vi.fn() } as unknown as LlmRouter;
+    const executor = new SopExecutor({ llm: mockLlm });
+    const yaml = `
+sop:
+  name: llm-no-prompt
+  version: "1.0.0"
+  steps:
+    - id: ask
+      name: "Ask LLM"
+      action: llm
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('missing prompt');
+  });
+});
+
+describe('SopExecutor — agent action', () => {
+  it('delegates to OrchestratorAgent and returns results', async () => {
+    const mockOrch = {
+      plan: vi.fn().mockReturnValue({ pattern: 'sequential', tasks: [] }),
+      execute: vi.fn().mockResolvedValue({
+        success: true,
+        results: [{ payload: { content: 'agent result' } }],
+        completedCount: 1,
+        failedCount: 0,
+      }),
+    } as unknown as OrchestratorAgent;
+
+    const executor = new SopExecutor({ orchestrator: mockOrch });
+    const yaml = `
+sop:
+  name: agent-test
+  version: "1.0.0"
+  steps:
+    - id: delegate
+      name: "Delegate"
+      action: agent
+      prompt: "Do something"
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('success');
+    expect(run.steps[0].output).toBe('agent result');
+    expect(mockOrch.plan).toHaveBeenCalled();
+    expect(mockOrch.execute).toHaveBeenCalled();
+  });
+
+  it('fails when orchestrator returns failures', async () => {
+    const mockOrch = {
+      plan: vi.fn().mockReturnValue({ pattern: 'sequential', tasks: [] }),
+      execute: vi.fn().mockResolvedValue({
+        success: false,
+        results: [],
+        completedCount: 0,
+        failedCount: 1,
+      }),
+    } as unknown as OrchestratorAgent;
+
+    const executor = new SopExecutor({ orchestrator: mockOrch });
+    const yaml = `
+sop:
+  name: agent-fail
+  version: "1.0.0"
+  steps:
+    - id: delegate
+      name: "Delegate"
+      action: agent
+      prompt: "Do something"
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('Agent task failed');
+  });
+});
+
+describe('SopExecutor — sop action (nested)', () => {
+  it('recursively runs a nested SOP via sopResolver', async () => {
+    const nestedSopDef: SopDefinition = {
+      sop: {
+        name: 'nested-sop',
+        version: '1.0.0',
+        tags: [],
+        inputs: [],
+        preconditions: [],
+        steps: [
+          { id: 'inner', name: 'Inner step', action: 'shell', command: 'echo nested-output', on_failure: 'stop' },
+        ],
+      },
+    };
+
+    const resolver: SopResolver = vi.fn().mockResolvedValue(nestedSopDef);
+    const executor = new SopExecutor({ sopResolver: resolver });
+    const yaml = `
+sop:
+  name: parent-sop
+  version: "1.0.0"
+  steps:
+    - id: run-nested
+      name: "Run nested"
+      action: sop
+      sop: nested-sop
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('success');
+    expect(resolver).toHaveBeenCalledWith('nested-sop');
+    const output = run.steps[0].output as Record<string, unknown>;
+    expect(output['inner']).toBe('nested-output');
+  });
+
+  it('fails when nested SOP not found', async () => {
+    const resolver: SopResolver = vi.fn().mockResolvedValue(undefined);
+    const executor = new SopExecutor({ sopResolver: resolver });
+    const yaml = `
+sop:
+  name: parent-sop
+  version: "1.0.0"
+  steps:
+    - id: run-nested
+      name: "Run nested"
+      action: sop
+      sop: nonexistent-sop
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('not found');
+  });
+
+  it('fails when recursion depth exceeded', async () => {
+    const selfRef: SopDefinition = {
+      sop: {
+        name: 'self-ref',
+        version: '1.0.0',
+        tags: [],
+        inputs: [],
+        preconditions: [],
+        steps: [
+          { id: 'recurse', name: 'Recurse', action: 'sop', sop: 'self-ref', on_failure: 'stop' },
+        ],
+      },
+    };
+    const resolver: SopResolver = vi.fn().mockResolvedValue(selfRef);
+    const executor = new SopExecutor({ sopResolver: resolver });
+    const run = await executor.run(selfRef);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('recursion depth exceeded');
+  });
+
+  it('fails when nested SOP execution fails', async () => {
+    const failingSop: SopDefinition = {
+      sop: {
+        name: 'failing-sop',
+        version: '1.0.0',
+        tags: [],
+        inputs: [],
+        preconditions: [],
+        steps: [
+          { id: 'bad', name: 'Bad step', action: 'shell', command: 'exit 1', on_failure: 'stop' },
+        ],
+      },
+    };
+
+    const resolver: SopResolver = vi.fn().mockResolvedValue(failingSop);
+    const executor = new SopExecutor({ sopResolver: resolver });
+    const yaml = `
+sop:
+  name: parent-sop
+  version: "1.0.0"
+  steps:
+    - id: run-nested
+      name: "Run nested"
+      action: sop
+      sop: failing-sop
+      on_failure: stop
+`;
+    const result = parseSopYaml(yaml);
+    if (!result.ok) return;
+    const run = await executor.run(result.value);
+    expect(run.status).toBe('failed');
+    expect(run.error).toContain('Nested SOP');
   });
 });
 
