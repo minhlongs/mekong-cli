@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@mekong/observability": "file:../observability",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
     "cron": "^4.4.0",

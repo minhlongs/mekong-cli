@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { MekongEngine } from '../core/engine.js';
+import { MekongEngine, attachObservability } from '../core/index.js';
 import { registerRunCommand } from './commands/run.js';
 import { registerSopCommand } from './commands/sop.js';
 import { registerStatusCommand } from './commands/status.js';
@@ -16,9 +16,10 @@ export async function main(argv?: string[]): Promise<void> {
     .description('AI-operated business platform CLI')
     .version(VERSION);
 
-  // Init engine before any command action runs
+  // Attach observability + init engine before any command action runs
   program.hook('preAction', async () => {
     try {
+      attachObservability();
       await engine.init({
         askUser: async (q) => {
           process.stdout.write(q + ' ');
