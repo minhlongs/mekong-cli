@@ -1,6 +1,6 @@
 ---
 name: binh-phap-hub
-description: Invoke when user needs strategic advice using Sun Tzu's Art of War applied to business. Activates on mentions of WIN-WIN-WIN, Binh Pháp, fundraising strategy, competitive positioning, anti-dilution, or crisis management.
+description: Invoke when user needs strategic advice using Sun Tzu's Art of War applied to business. Activates on mentions of WIN-WIN-WIN, Binh Phap, fundraising strategy, competitive positioning, anti-dilution, or crisis management.
 tools: Read, Write, Edit, Glob, Grep, WebSearch
 ---
 

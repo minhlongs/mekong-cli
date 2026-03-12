@@ -1,5 +1,5 @@
 ---
-description: 💰 Show Binh Pháp tier pricing matrix
+description: 💰 Show Binh Phap tier pricing matrix
 ---
 
 ## Tier Pricing Matrix
