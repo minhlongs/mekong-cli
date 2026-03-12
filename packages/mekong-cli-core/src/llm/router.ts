@@ -7,6 +7,9 @@ import type { MekongConfig } from '../types/config.js';
 import { CostTracker } from './cost-tracker.js';
 import { OpenAICompatProvider } from './providers/openai-compatible.js';
 import { OllamaProvider } from './providers/ollama.js';
+import { AnthropicProvider } from './providers/anthropic.js';
+import { OpenAIProvider } from './providers/openai.js';
+import { LocalProvider } from './providers/local.js';
 import { MekongError } from '../types/common.js';
 import { emit } from '../core/events.js';
 
@@ -123,7 +126,7 @@ export class LlmRouter {
       }));
     }
 
-    // Register configured providers
+    // Register configured providers using native implementations
     for (const [name, providerConfig] of Object.entries(config.llm.providers)) {
       const apiKey = providerConfig.api_key
         ?? (providerConfig.api_key_env ? process.env[providerConfig.api_key_env] : undefined);
@@ -131,18 +134,8 @@ export class LlmRouter {
 
       const defaults = PROVIDER_DEFAULTS[name] ?? { baseUrl: '', defaultModel: '' };
       const baseUrl = providerConfig.base_url ?? defaults.baseUrl;
-      if (!baseUrl) continue;
 
-      if (name === 'ollama') {
-        this.providers.set(name, new OllamaProvider(baseUrl, providerConfig.default_model));
-      } else {
-        this.providers.set(name, new OpenAICompatProvider({
-          name,
-          baseUrl,
-          apiKey,
-          defaultModel: providerConfig.default_model ?? defaults.defaultModel,
-        }));
-      }
+      this.providers.set(name, this.createProvider(name, apiKey, baseUrl, providerConfig.default_model ?? defaults.defaultModel));
     }
 
     // Auto-detect from env vars if no providers configured yet
@@ -151,18 +144,39 @@ export class LlmRouter {
         const key = process.env[envKey];
         if (key) {
           const defaults = PROVIDER_DEFAULTS[providerName]!;
-          this.providers.set(providerName, new OpenAICompatProvider({
-            name: providerName,
-            baseUrl: defaults.baseUrl,
-            apiKey: key,
-            defaultModel: defaults.defaultModel,
-          }));
+          this.providers.set(providerName, this.createProvider(providerName, key, defaults.baseUrl, defaults.defaultModel));
         }
+      }
+
+      // CF Workers AI from env
+      const cfAccount = process.env.CF_ACCOUNT_ID;
+      const cfToken = process.env.CF_API_TOKEN;
+      if (cfAccount && cfToken) {
+        this.providers.set('cloudflare', new LocalProvider({
+          backend: 'cloudflare-workers-ai',
+          accountId: cfAccount,
+          apiToken: cfToken,
+        }));
       }
 
       // Always add Ollama as last-resort local fallback
       const ollamaUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
       this.providers.set('ollama', new OllamaProvider(ollamaUrl));
+    }
+  }
+
+  /** Create the best provider implementation for a given name */
+  private createProvider(name: string, apiKey: string, baseUrl: string, defaultModel: string): LlmProvider {
+    switch (name) {
+      case 'anthropic':
+        return new AnthropicProvider({ apiKey, baseUrl: baseUrl || undefined, defaultModel });
+      case 'openai':
+        return new OpenAIProvider({ apiKey, baseUrl: baseUrl || undefined, defaultModel });
+      case 'ollama':
+        return new OllamaProvider(baseUrl, defaultModel);
+      default:
+        if (!baseUrl) throw new MekongError(`Provider "${name}" requires a base URL`, 'PROVIDER_CONFIG_ERROR', false);
+        return new OpenAICompatProvider({ name, baseUrl, apiKey, defaultModel });
     }
   }
 }

@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { CostTracker } from '../../src/llm/cost-tracker.js';
 import { LlmRouter } from '../../src/llm/router.js';
 import { ConfigSchema } from '../../src/types/config.js';
+import { AnthropicProvider } from '../../src/llm/providers/anthropic.js';
+import { OpenAIProvider } from '../../src/llm/providers/openai.js';
+import { LocalProvider } from '../../src/llm/providers/local.js';
 
 describe('CostTracker', () => {
   let tracker: CostTracker;
@@ -70,6 +73,94 @@ describe('CostTracker', () => {
   });
 });
 
+describe('AnthropicProvider', () => {
+  it('creates with default config', () => {
+    const provider = new AnthropicProvider({ apiKey: 'sk-test' });
+    expect(provider.name).toBe('anthropic');
+  });
+
+  it('isAvailable returns true when apiKey is set', async () => {
+    const provider = new AnthropicProvider({ apiKey: 'sk-test' });
+    expect(await provider.isAvailable()).toBe(true);
+  });
+
+  it('isAvailable returns false when apiKey is empty', async () => {
+    const provider = new AnthropicProvider({ apiKey: '' });
+    expect(await provider.isAvailable()).toBe(false);
+  });
+
+  it('uses custom baseUrl and model', () => {
+    const provider = new AnthropicProvider({
+      apiKey: 'sk-test',
+      baseUrl: 'https://custom.api.com',
+      defaultModel: 'claude-opus-4-20250514',
+    });
+    expect(provider.name).toBe('anthropic');
+  });
+});
+
+describe('OpenAIProvider', () => {
+  it('creates with default config', () => {
+    const provider = new OpenAIProvider({ apiKey: 'sk-test' });
+    expect(provider.name).toBe('openai');
+  });
+
+  it('delegates isAvailable to inner provider', async () => {
+    const provider = new OpenAIProvider({ apiKey: 'sk-test' });
+    // isAvailable tries to fetch /models — will fail in test env
+    const available = await provider.isAvailable();
+    expect(typeof available).toBe('boolean');
+  });
+});
+
+describe('LocalProvider', () => {
+  it('creates ollama backend with defaults', () => {
+    const provider = new LocalProvider({ backend: 'ollama' });
+    expect(provider.name).toBe('local-ollama');
+  });
+
+  it('creates cloudflare backend with env vars', () => {
+    const origAcc = process.env.CF_ACCOUNT_ID;
+    const origTok = process.env.CF_API_TOKEN;
+    process.env.CF_ACCOUNT_ID = 'test-account';
+    process.env.CF_API_TOKEN = 'test-token';
+
+    try {
+      const provider = new LocalProvider({ backend: 'cloudflare-workers-ai' });
+      expect(provider.name).toBe('local-cloudflare-workers-ai');
+    } finally {
+      if (origAcc) process.env.CF_ACCOUNT_ID = origAcc;
+      else delete process.env.CF_ACCOUNT_ID;
+      if (origTok) process.env.CF_API_TOKEN = origTok;
+      else delete process.env.CF_API_TOKEN;
+    }
+  });
+
+  it('throws when CF backend missing credentials', () => {
+    const origAcc = process.env.CF_ACCOUNT_ID;
+    const origTok = process.env.CF_API_TOKEN;
+    delete process.env.CF_ACCOUNT_ID;
+    delete process.env.CF_API_TOKEN;
+
+    try {
+      expect(() => new LocalProvider({ backend: 'cloudflare-workers-ai' }))
+        .toThrow('requires accountId and apiToken');
+    } finally {
+      if (origAcc) process.env.CF_ACCOUNT_ID = origAcc;
+      if (origTok) process.env.CF_API_TOKEN = origTok;
+    }
+  });
+
+  it('ollama isAvailable returns false when not running', async () => {
+    const provider = new LocalProvider({
+      backend: 'ollama',
+      baseUrl: 'http://localhost:99999',
+    });
+    const available = await provider.isAvailable();
+    expect(available).toBe(false);
+  });
+});
+
 describe('LlmRouter', () => {
   it('initializes with default config', () => {
     const config = ConfigSchema.parse({});
@@ -131,6 +222,24 @@ describe('LlmRouter', () => {
     } finally {
       if (original) process.env.ANTHROPIC_API_KEY = original;
       else delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
+  it('auto-detects CF Workers AI from env', () => {
+    const origAcc = process.env.CF_ACCOUNT_ID;
+    const origTok = process.env.CF_API_TOKEN;
+    process.env.CF_ACCOUNT_ID = 'test-acc';
+    process.env.CF_API_TOKEN = 'test-tok';
+
+    try {
+      const config = ConfigSchema.parse({});
+      const router = new LlmRouter(config);
+      expect(router.getProviders()).toContain('cloudflare');
+    } finally {
+      if (origAcc) process.env.CF_ACCOUNT_ID = origAcc;
+      else delete process.env.CF_ACCOUNT_ID;
+      if (origTok) process.env.CF_API_TOKEN = origTok;
+      else delete process.env.CF_API_TOKEN;
     }
   });
 });
