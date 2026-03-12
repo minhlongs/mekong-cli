@@ -70,4 +70,10 @@ export const DEFAULT_CONFIG: MekongConfig = {
     receipt_store_path: '~/.mekong/payments/receipts.jsonl',
     product_tier_map: {},
   },
+  metering: {
+    enabled: true,
+    store_dir: '~/.mekong/metering',
+    flush_threshold: 50,
+    flush_interval_seconds: 30,
+  },
 };

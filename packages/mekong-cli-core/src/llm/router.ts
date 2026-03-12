@@ -12,6 +12,7 @@ import { OpenAIProvider } from './providers/openai.js';
 import { LocalProvider } from './providers/local.js';
 import { MekongError } from '../types/common.js';
 import { emit } from '../core/events.js';
+import type { MeteringCollector } from '../metering/collector.js';
 
 /** Provider factory configs */
 const PROVIDER_DEFAULTS: Record<string, { baseUrl: string; defaultModel: string }> = {
@@ -34,12 +35,18 @@ export class LlmRouter {
   private defaultProvider: string;
   private defaultModel: string;
   readonly costTracker: CostTracker;
+  private meteringCollector: MeteringCollector | null = null;
 
   constructor(config: MekongConfig) {
     this.costTracker = new CostTracker();
     this.defaultProvider = config.llm.default_provider;
     this.defaultModel = config.llm.default_model;
     this.initProviders(config);
+  }
+
+  /** Attach a MeteringCollector to auto-record every LLM call */
+  attachMetering(collector: MeteringCollector): void {
+    this.meteringCollector = collector;
   }
 
   /** Send a chat request, with automatic fallback */
@@ -53,11 +60,19 @@ export class LlmRouter {
           ...request,
           model: request.model ?? this.defaultModel,
         });
-        this.costTracker.record(
+        const costRecord = this.costTracker.record(
           response.provider, response.model,
           response.usage.inputTokens, response.usage.outputTokens,
           response.latencyMs,
         );
+        this.meteringCollector?.recordLlmCall({
+          provider: response.provider,
+          model: response.model,
+          inputTokens: response.usage.inputTokens,
+          outputTokens: response.usage.outputTokens,
+          durationMs: response.latencyMs,
+          estimatedCost: costRecord.cost,
+        });
         return response;
       } catch (error) {
         return this.fallback(request, providerName, error);
@@ -91,11 +106,19 @@ export class LlmRouter {
           ...request,
           model: request.model ?? this.defaultModel,
         });
-        this.costTracker.record(
+        const fallbackCost = this.costTracker.record(
           response.provider, response.model,
           response.usage.inputTokens, response.usage.outputTokens,
           response.latencyMs,
         );
+        this.meteringCollector?.recordLlmCall({
+          provider: response.provider,
+          model: response.model,
+          inputTokens: response.usage.inputTokens,
+          outputTokens: response.usage.outputTokens,
+          durationMs: response.latencyMs,
+          estimatedCost: fallbackCost.cost,
+        });
         emit('engine:started', { fallbackFrom: failedProvider, fallbackTo: providerName });
         return response;
       } catch {

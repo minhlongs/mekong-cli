@@ -97,6 +97,12 @@ export const ConfigSchema = z.object({
     receipt_store_path: z.string().default('~/.mekong/payments/receipts.jsonl'),
     product_tier_map: z.record(z.string()).default({}),
   }).default({}),
+  metering: z.object({
+    enabled: z.boolean().default(true),
+    store_dir: z.string().default('~/.mekong/metering'),
+    flush_threshold: z.number().default(50),
+    flush_interval_seconds: z.number().default(30),
+  }).default({}),
 });
 
 export type MekongConfig = z.infer<typeof ConfigSchema>;
