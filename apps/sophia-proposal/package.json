@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "analyze": "ANALYZE=true npm run build",
     "deploy:cf": "wrangler pages deploy .next",
     "dev:cf": "wrangler pages dev .next"
   },
@@ -15,7 +14,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.563.0",
-    "next": "15.1.0",
+    "next": "^15.3.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.5.0"
