@@ -45,7 +45,7 @@ describe('loadConfig', () => {
 
   it('returns defaults when no config files exist', async () => {
     const config = await loadConfig();
-    expect(config.version).toBe('1');
+    expect(config.version).toBe('1.0.0');
     expect(config.llm.default_provider).toBe('anthropic');
   });
 
