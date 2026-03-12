@@ -34,12 +34,19 @@ export const FEATURE_MAP: FeatureEntry[] = [
   { command: 'self-improve', minTier: 'enterprise', description: 'AI self-improvement' },
 ];
 
-/** Returns true if `current` meets or exceeds `required`. */
+/**
+ * Returns true if `current` meets or exceeds `required` tier.
+ * @param current - the user's current license tier
+ * @param required - the minimum tier needed
+ */
 export function tierMeetsMinimum(current: LicenseTier, required: LicenseTier): boolean {
   return TIER_ORDER.indexOf(current) >= TIER_ORDER.indexOf(required);
 }
 
-/** Returns the minimum tier required for a command, or 'free' if unknown. */
+/**
+ * Returns the minimum tier required for a command, or 'free' if unknown.
+ * @param command - CLI command name (e.g. 'kaizen', 'crm')
+ */
 export function getRequiredTier(command: string): LicenseTier {
   const entry = FEATURE_MAP.find(f => f.command === command);
   return entry?.minTier ?? 'free';

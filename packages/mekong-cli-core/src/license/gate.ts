@@ -73,13 +73,13 @@ export class LicenseGate {
     );
   }
 
-  /** Return current tier (free if no valid license). */
+  /** Return current license tier; falls back to 'free' on error or missing license. */
   async getCurrentTier(): Promise<LicenseTier> {
     const validation = await this.validate();
     return validation.ok ? validation.value.tier : 'free';
   }
 
-  /** Return quotas for the current tier. */
+  /** Return daily usage quotas for the current tier. */
   async getQuotas(): Promise<UsageQuota> {
     const tier = await this.getCurrentTier();
     return TIER_QUOTAS[tier];

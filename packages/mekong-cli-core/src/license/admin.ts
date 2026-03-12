@@ -51,6 +51,12 @@ export class LicenseAdmin {
 
   // ── Public API ────────────────────────────────────────────────────────────
 
+  /**
+   * Create a new signed license key and persist it to the registry.
+   * @param tier - license tier to assign
+   * @param owner - owner identifier (email or ID)
+   * @param expiryDays - validity period in days (default 365)
+   */
   async createKey(
     tier: LicenseTier,
     owner: string,
@@ -70,6 +76,7 @@ export class LicenseAdmin {
     return ok(key);
   }
 
+  /** Revoke an existing key by ID; returns error if key not found. */
   async revokeKey(keyId: string): Promise<Result<void, Error>> {
     const reg = await this.loadRegistry();
     const idx = reg.keys.findIndex((k) => k.key === keyId);
@@ -81,11 +88,13 @@ export class LicenseAdmin {
     return ok(undefined);
   }
 
+  /** List all keys in the registry (active and revoked). */
   async listKeys(): Promise<Result<LicenseKey[], Error>> {
     const reg = await this.loadRegistry();
     return ok(reg.keys);
   }
 
+  /** Revoke old key and issue a new one with the same tier/owner and prorated expiry. */
   async rotateKey(keyId: string): Promise<Result<LicenseKey, Error>> {
     const reg = await this.loadRegistry();
     const old = reg.keys.find((k) => k.key === keyId);
@@ -117,6 +126,7 @@ export class LicenseAdmin {
 
   // ── Phase 6 enhancements ──────────────────────────────────────────────────
 
+  /** Validate all keys in the registry; returns per-key validity status. */
   async validateAll(): Promise<Result<Array<{ key: LicenseKey; valid: boolean; message?: string }>, Error>> {
     const reg = await this.loadRegistry();
     const results = reg.keys.map((k) => {
@@ -126,6 +136,10 @@ export class LicenseAdmin {
     return ok(results);
   }
 
+  /**
+   * List active keys expiring within the given number of days.
+   * @param withinDays - lookahead window in days
+   */
   async listExpiring(withinDays: number): Promise<Result<LicenseKey[], Error>> {
     const reg = await this.loadRegistry();
     const cutoff = Date.now() + withinDays * 86_400_000;

@@ -155,12 +155,12 @@ export class WebhookHandler {
     }
   }
 
-  /** Expose receipt store for queries */
+  /** Expose receipt store for querying processed events. */
   getReceiptStore(): ReceiptStore {
     return this.receipts;
   }
 
-  /** Expose subscription manager for queries */
+  /** Expose subscription manager for direct license queries. */
   getSubscriptionManager(): SubscriptionManager {
     return this.subscriptions;
   }

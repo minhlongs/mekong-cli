@@ -42,7 +42,7 @@ describe('load tests — metering & payments', () => {
     await Promise.all(Array.from({ length: 100 }, () => store.append(makeEvent())));
     const r = await store.readToday();
     expect(r.ok).toBe(true);
-    expect(r.value!.length).toBe(100);
+    if (r.ok) expect(r.value.length).toBe(100);
   }, 10_000);
 
   it('50 concurrent license store read/writes maintain data integrity', async () => {
@@ -72,7 +72,7 @@ describe('load tests — metering & payments', () => {
     await Promise.all(collectors.map((c) => c.shutdown()));
     const r = await store.readToday();
     expect(r.ok).toBe(true);
-    expect(r.value!.length).toBe(100);
+    if (r.ok) expect(r.value.length).toBe(100);
   }, 10_000);
 
   it('200 concurrent limiter.checkLimit() returns consistent results', async () => {
@@ -81,9 +81,12 @@ describe('load tests — metering & payments', () => {
     const limiter = new UsageLimiter(store);
     const results = await Promise.all(Array.from({ length: 200 }, () => limiter.checkLimit('llm_call', 'pro')));
     expect(results.every((r) => r.ok)).toBe(true);
-    const first = results[0]!.value!.used;
-    expect(results.every((r) => r.value!.used === first)).toBe(true);
-    expect(results[0]!.value!.allowed).toBe(true);
+    const first = results[0]!;
+    if (first.ok) {
+      const used = first.value.used;
+      expect(results.every((r) => r.ok && r.value.used === used)).toBe(true);
+      expect(first.value.allowed).toBe(true);
+    }
   }, 10_000);
 
   it('stress: 1000 events rapid fire — analyzer aggregation correct', async () => {
@@ -111,7 +114,7 @@ describe('load tests — metering & payments', () => {
     await Promise.all(receipts.map((r) => store.append(r)));
     const result = await store.readAll();
     expect(result.ok).toBe(true);
-    expect(result.value!.length).toBe(80);
+    if (result.ok) expect(result.value.length).toBe(80);
     const checks = await Promise.all(receipts.slice(0, 20).map((r) => store.hasEvent(r.id)));
     expect(checks.every(Boolean)).toBe(true);
   }, 10_000);
@@ -125,7 +128,7 @@ describe('load tests — metering & payments', () => {
     await Promise.all(collectors.map((c) => c.shutdown()));
     const r = await store.readToday();
     expect(r.ok).toBe(true);
-    expect(r.value!.length).toBe(100);
+    if (r.ok) expect(r.value.length).toBe(100);
   }, 10_000);
 
   it('rapid create+revoke license cycles — audit log integrity', async () => {
@@ -135,17 +138,17 @@ describe('load tests — metering & payments', () => {
     for (let i = 0; i < 10; i++) {
       const r = await admin.createKey('pro', `owner-${i}`, 30);
       expect(r.ok).toBe(true);
-      created.push(r.value!.key);
+      if (r.ok) created.push(r.value.key);
     }
     // Sequential: registry is read-modify-write (not concurrency-safe)
     for (const keyId of created) await admin.revokeKey(keyId);
     const list = await admin.listKeys();
     expect(list.ok).toBe(true);
-    expect(list.value!.every((k) => k.status === 'revoked')).toBe(true);
+    if (list.ok) expect(list.value.every((k) => k.status === 'revoked')).toBe(true);
     const { AuditLog } = await import('../license/audit-log.js');
     const audit = await new AuditLog(join(dir, 'audit.jsonl')).readAll();
     expect(audit.ok).toBe(true);
-    expect(audit.value!.length).toBeGreaterThanOrEqual(20);
+    if (audit.ok) expect(audit.value.length).toBeGreaterThanOrEqual(20);
   }, 15_000);
 
   it('appendBatch 200 events across 2 periods — all retrievable', async () => {
@@ -157,8 +160,8 @@ describe('load tests — metering & payments', () => {
     expect((await store.appendBatch(events)).ok).toBe(true);
     const feb = await store.queryRange('2026-02-01T00:00:00Z', '2026-02-28T23:59:59Z');
     const mar = await store.queryRange('2026-03-01T00:00:00Z', '2026-03-31T23:59:59Z');
-    expect(feb.value!.length).toBe(100);
-    expect(mar.value!.length).toBe(100);
+    if (feb.ok) expect(feb.value.length).toBe(100);
+    if (mar.ok) expect(mar.value.length).toBe(100);
   }, 10_000);
 
   it('enterprise tier — unlimited across 100 concurrent limit checks', async () => {
@@ -166,7 +169,7 @@ describe('load tests — metering & payments', () => {
     await store.appendBatch(Array.from({ length: 999 }, () => makeEvent({ category: 'llm_call' })));
     const limiter = new UsageLimiter(store);
     const results = await Promise.all(Array.from({ length: 100 }, () => limiter.checkLimit('llm_call', 'enterprise')));
-    expect(results.every((r) => r.ok && r.value!.allowed && r.value!.remaining === Infinity)).toBe(true);
+    expect(results.every((r) => r.ok && r.value.allowed && r.value.remaining === Infinity)).toBe(true);
   }, 10_000);
 
   it('receipt store concurrent findByCustomer — correct filtering under load', async () => {
@@ -177,9 +180,13 @@ describe('load tests — metering & payments', () => {
       ...Array.from({ length: 40 }, () => store.append(makeReceipt({ customerId: cB }))),
     ]);
     const [resA, resB] = await Promise.all([store.findByCustomer(cA!), store.findByCustomer(cB!)]);
-    expect(resA.value!.length).toBe(40);
-    expect(resB.value!.length).toBe(40);
-    expect(resA.value!.every((e) => e.customerId === cA)).toBe(true);
-    expect(resB.value!.every((e) => e.customerId === cB)).toBe(true);
+    if (resA.ok) {
+      expect(resA.value.length).toBe(40);
+      expect(resA.value.every((e) => e.customerId === cA)).toBe(true);
+    }
+    if (resB.ok) {
+      expect(resB.value.length).toBe(40);
+      expect(resB.value.every((e) => e.customerId === cB)).toBe(true);
+    }
   }, 10_000);
 });

@@ -127,6 +127,8 @@ export class SubscriptionManager {
 
   /**
    * Get subscription status for a customer (by email or ID).
+   * @param customerId - Polar customer email or ID
+   * @returns latest active subscription record or null if none found
    */
   async getSubscription(customerId: string): Promise<Result<SubscriptionRecord | null, Error>> {
     const listResult = await this.admin.listKeys();

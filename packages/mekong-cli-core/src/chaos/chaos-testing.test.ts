@@ -1,17 +1,11 @@
 /**
  * chaos-testing.test.ts — adversarial inputs: invalid keys, expired tokens, malformed webhooks.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { describe, it, expect } from 'vitest';
 import { createHmac } from 'node:crypto';
 
 import { verifyLicense, computeSignature } from '../license/verifier.js';
-import { LicenseStore } from '../license/store.js';
-import { LicenseAdmin } from '../license/admin.js';
 import { verifyWebhookSignature, parseWebhookPayload } from '../payments/webhook-verifier.js';
-import { ReceiptStore } from '../payments/receipt-store.js';
 import type { LicenseKey, LicenseTier } from '../license/types.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

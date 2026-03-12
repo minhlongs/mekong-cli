@@ -38,7 +38,10 @@ export function changeTier(existing: LicenseKey, newTier: LicenseTier): Result<T
   return ok({ newKey, oldKey: revokedOld, direction, remainingDays });
 }
 
-/** Convenience: upgrade only — returns error if new tier is not higher */
+/**
+ * Convenience: upgrade only.
+ * @returns error if `newTier` is not higher than existing tier
+ */
 export function upgradeTier(existing: LicenseKey, newTier: LicenseTier): Result<TierChangeResult, Error> {
   const oldIdx = TIER_ORDER.indexOf(existing.tier);
   const newIdx = TIER_ORDER.indexOf(newTier);
@@ -48,7 +51,10 @@ export function upgradeTier(existing: LicenseKey, newTier: LicenseTier): Result<
   return changeTier(existing, newTier);
 }
 
-/** Convenience: downgrade only — returns error if new tier is not lower */
+/**
+ * Convenience: downgrade only.
+ * @returns error if `newTier` is not lower than existing tier
+ */
 export function downgradeTier(existing: LicenseKey, newTier: LicenseTier): Result<TierChangeResult, Error> {
   const oldIdx = TIER_ORDER.indexOf(existing.tier);
   const newIdx = TIER_ORDER.indexOf(newTier);

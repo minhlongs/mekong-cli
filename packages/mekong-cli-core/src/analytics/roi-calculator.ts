@@ -67,7 +67,7 @@ export class ROICalculator {
   }
 }
 
-/** Build period for current month */
+/** Build an AnalyticsPeriod for the current UTC calendar month. */
 export function currentMonthPeriod(): AnalyticsPeriod {
   const now = new Date();
   const year = now.getUTCFullYear();
@@ -79,7 +79,10 @@ export function currentMonthPeriod(): AnalyticsPeriod {
   return { label, startDate, endDate };
 }
 
-/** Build period for a specific month offset (0 = current, -1 = last month) */
+/**
+ * Build an AnalyticsPeriod for a relative month.
+ * @param offsetMonths - 0 = current month, -1 = last month, etc.
+ */
 export function monthPeriod(offsetMonths: number = 0): AnalyticsPeriod {
   const now = new Date();
   // Use UTC to stay consistent with currentMonthPeriod

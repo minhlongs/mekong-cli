@@ -9,15 +9,26 @@ const GRACE_PERIOD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 /** Signing secret — in production this comes from env or build-time injection */
 const SIGNING_SECRET = process.env['MEKONG_LICENSE_SECRET'] ?? 'mekong-license-v1-secret';
 
+/** Pre-converted secret Buffer to avoid repeated string→buffer conversion on every HMAC call */
+let _cachedSecretBuf: Buffer | null = null;
+let _cachedSecretStr: string | null = null;
+
+function getSecretBuffer(secret: string): Buffer {
+  if (_cachedSecretStr === secret && _cachedSecretBuf) return _cachedSecretBuf;
+  _cachedSecretBuf = Buffer.from(secret, 'utf-8');
+  _cachedSecretStr = secret;
+  return _cachedSecretBuf;
+}
+
 /** Build the canonical message that was signed */
 function buildMessage(lic: Omit<LicenseKey, 'signature'>): string {
-  return [lic.key, lic.tier, lic.issuedAt, lic.expiresAt, lic.owner].join('|');
+  return `${lic.key}|${lic.tier}|${lic.issuedAt}|${lic.expiresAt}|${lic.owner}`;
 }
 
 /** Compute expected HMAC-SHA256 signature */
 export function computeSignature(lic: Omit<LicenseKey, 'signature'>, secret?: string): string {
   const s = secret ?? SIGNING_SECRET;
-  return createHmac('sha256', s).update(buildMessage(lic)).digest('hex');
+  return createHmac('sha256', getSecretBuffer(s)).update(buildMessage(lic)).digest('hex');
 }
 
 export interface VerifyResult {

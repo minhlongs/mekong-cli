@@ -10,8 +10,10 @@ import { ok, err } from '../types/common.js';
 import type { WebhookEvent } from './types.js';
 
 export class ReceiptStore {
+  /** @param storePath - path to the JSONL receipts file */
   constructor(private readonly storePath: string) {}
 
+  /** Append a webhook event to the receipt log. */
   async append(event: WebhookEvent): Promise<Result<void, Error>> {
     try {
       await mkdir(dirname(this.storePath), { recursive: true });
@@ -22,6 +24,7 @@ export class ReceiptStore {
     }
   }
 
+  /** Read all persisted webhook events from disk. */
   async readAll(): Promise<Result<WebhookEvent[], Error>> {
     try {
       const content = await readFile(this.storePath, 'utf-8');
@@ -44,7 +47,10 @@ export class ReceiptStore {
     return result.value.some((e) => e.id === eventId);
   }
 
-  /** Query events by customer ID */
+  /**
+   * Query events by customer ID.
+   * @param customerId - Polar customer ID or email
+   */
   async findByCustomer(customerId: string): Promise<Result<WebhookEvent[], Error>> {
     const all = await this.readAll();
     if (!all.ok) return all;
