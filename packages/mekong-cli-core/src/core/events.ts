@@ -42,3 +42,8 @@ export function removeAllListeners(event?: MekongEvent): void {
     eventBus.removeAllListeners();
   }
 }
+
+/** Attach observability hooks (no-op placeholder for future instrumentation) */
+export function attachObservability(): void {
+  // Reserved for future APM/tracing integration
+}
