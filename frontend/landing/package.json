@@ -9,7 +9,7 @@
     "lint": "next lint",
     "preview": "npx wrangler pages dev out/",
     "deploy": "npx wrangler pages deploy out/ --project-name agencyos-landing",
-    "deploy:prod": "npx wrangler pages deploy out/ --project-name agencyos-landing --branch main"
+    "deploy:prod": "npx wrangler pages deploy out/ --project-name agencyos-landing --branch master"
   },
   "dependencies": {
     "next": "^16.0.10",
