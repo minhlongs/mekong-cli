@@ -53,7 +53,7 @@ export async function executeGraph(
     if (ready.length === 0 && pending.size > 0) {
       // Circular dependency deadlock
       for (const taskId of pending) {
-        results.set(taskId, makeError(`deadlock-${taskId}`, 'graph-pattern', 'Deadlock: circular dependency detected', {}, 'medium'));
+        results.set(taskId, makeError(`deadlock-${taskId}`, 'graph-pattern', 'Deadlock: circular dependency detected', {}, 'normal'));
         failedCount++;
       }
       break;
