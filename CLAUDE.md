@@ -2,7 +2,7 @@
 *"I am OpenClaw. I run this company."*
 
 **Mekong CLI** — AI-operated business platform. Open source. Universal LLM.
-**Version:** 5.0.0 | **License:** MIT | **Language:** Vietnamese (ĐIỀU 55)
+**Version:** 5.0.0 | **License:** MIT | **Language:** English
 
 ---
 
@@ -11,12 +11,12 @@
 | Location | Content |
 |----------|---------|
 | `.claude/skills/` | 542 skill definitions (SKILL.md) |
-| `.claude/commands/` | 176 command definitions (.md) |
+| `.claude/commands/` | 319 command definitions (.md) |
 | `mekong/agents/` | Agent definitions |
 | `mekong/adapters/` | LLM provider configs |
 | `mekong/infra/` | 3-layer deploy templates (CF-only) |
 | `mekong/daemon/` | Tôm Hùm autonomous dispatch |
-| `factory/contracts/` | 176 JSON machine contracts |
+| `factory/contracts/` | 410 JSON machine contracts |
 | `mekong/` | Adapters, infra, daemon (NOT skills/commands) |
 
 CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
@@ -59,11 +59,11 @@ CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
 ### 5 Layers
 
 ```
-👑 Founder    /annual /okr /fundraise /swot         — Chiến lược
-🏢 Business   /sales /marketing /finance /hr         — Vận hành
-📦 Product    /plan /sprint /roadmap /brainstorm     — Sản phẩm
-⚙️ Engineer   /cook /code /test /deploy /review      — Kỹ thuật
-🔧 Ops        /audit /health /security /status       — Vận hành
+👑 Founder    /annual /okr /fundraise /swot         — Strategy & fundraising (46 cmds)
+💼 Business   /sales /marketing /finance /hr         — Revenue & operations (32 cmds)
+🎯 Product    /plan /sprint /roadmap /brainstorm     — Product management (17 cmds)
+⚙️ Engineering /cook /code /test /deploy /review      — Build & ship (47 cmds)
+🔧 Ops        /audit /health /security /status       — Monitor & maintain (27 cmds)
 ```
 
 ---
@@ -86,12 +86,12 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | Layer | Commands | MCU |
 |-------|----------|-----|
 | 👑 Founder | `annual`, `okr`, `swot`, `fundraise`, `pitch`, `vc/cap-table`, `ipo/*` | 1-5 |
-| 🏢 Business | `sales`, `marketing`, `finance`, `hr`, `pricing`, `brand` | 1-5 |
-| 📦 Product | `plan`, `sprint`, `roadmap`, `brainstorm`, `scope` | 1-3 |
-| ⚙️ Engineer | `cook`, `fix`, `code`, `test`, `deploy`, `review` | 1-5 |
+| 💼 Business | `sales`, `marketing`, `finance`, `hr`, `pricing`, `brand` | 1-5 |
+| 🎯 Product | `plan`, `sprint`, `roadmap`, `brainstorm`, `scope` | 1-3 |
+| ⚙️ Engineering | `cook`, `fix`, `code`, `test`, `deploy`, `review` | 1-5 |
 | 🔧 Ops | `audit`, `health`, `security`, `status`, `clean` | 0-3 |
 
-Total: 289 commands. Run `mekong help` for full list.
+Total: 319 commands (230 base + 89 super). Run `mekong help` for full list.
 
 ---
 
@@ -108,16 +108,16 @@ Total: 289 commands. Run `mekong help` for full list.
 | Commits | Conventional: `feat/fix/refactor/docs/test/chore` |
 | No AI refs | Clean commit messages |
 
-### Binh Pháp Quality Fronts (孫子兵法)
+### Binh Phap Quality Fronts
 
 | Front | Target |
 |-------|--------|
-| 始計 Tech Debt | 0 TODO/FIXME, 0 console.log |
-| 作戰 Type Safety | 0 `any` types, strict mode |
-| 謀攻 Performance | Build < 10s, LCP < 2.5s |
-| 軍形 Security | Input validation, no secrets |
-| 兵勢 UX | Loading states, error boundaries |
-| 虛實 Documentation | Self-documenting code |
+| Tech Debt | 0 TODO/FIXME, 0 console.log |
+| Type Safety | 0 `any` types, strict mode |
+| Performance | Build < 10s, LCP < 2.5s |
+| Security | Input validation, no secrets |
+| UX | Loading states, error boundaries |
+| Documentation | Self-documenting code |
 
 ---
 
@@ -188,4 +188,4 @@ Every session:
 3. Print: `"OpenClaw online. [N] pending tasks. Ready."`
 4. If no `company.json` → suggest: `mekong company/init`
 
-**Language:** Vietnamese (ĐIỀU 55) — always respond in Vietnamese except code/tech terms.
+**Language:** English for all documentation and code. Vietnamese for user-facing content when configured.

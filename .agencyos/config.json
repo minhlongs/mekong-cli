@@ -7,12 +7,6 @@
     "ws_path": "/ws/missions",
     "health_path": "/health"
   },
-  "proxy": {
-    "anthropic_base_url": "http://localhost:9191",
-    "port": 9191,
-    "recovery_script": "scripts/proxy-recovery.sh",
-    "fallback_direct": true
-  },
   "pev_engine": {
     "max_retries": 3,
     "retry_backoff_seconds": 2,
@@ -40,10 +34,9 @@
     "m1_ram_floor_mb": 200,
     "m1_load_ceiling": 8
   },
-  "language": "vi",
+  "language": "en",
   "session_bootstrap": [
     "read_company_json",
-    "check_proxy_health",
     "load_active_tasks",
     "print_ready_message"
   ]

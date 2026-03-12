@@ -15,7 +15,7 @@ AgencyOS Dashboard (cloud)
 ## Prerequisites
 
 1. mekong-cli installed and running: `mekong status`
-2. Antigravity Proxy running on port 9191: `curl localhost:9191/health`
+2. LLM provider configured via `LLM_BASE_URL` environment variable
 3. Environment variables set (see below)
 
 ## Environment Setup
@@ -23,6 +23,11 @@ AgencyOS Dashboard (cloud)
 Copy `.env.example` to `.env` at project root and fill in:
 
 ```bash
+# LLM Provider (any OpenAI-compatible endpoint)
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=sk-or-v1-yourkey
+LLM_MODEL=anthropic/claude-sonnet-4
+
 # Supabase (database)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key
@@ -35,9 +40,6 @@ POLAR_ORGANIZATION_ID=your-org-id
 
 # RaaS licensing
 RAAS_LICENSE_KEY=your-license-key
-
-# Antigravity Proxy
-ANTHROPIC_BASE_URL=http://localhost:9191
 
 # AgencyOS API
 AGENCYOS_API_URL=https://api.agencyos.network
@@ -73,6 +75,6 @@ mekong company/agent enable <agent-name>
 
 ## Troubleshooting
 
-- **Proxy down**: run `scripts/proxy-recovery.sh`
+- **LLM not responding**: verify `LLM_BASE_URL` is reachable with `curl $LLM_BASE_URL/models`
 - **402 errors**: check MCU balance with `mekong company/billing`
 - **Mission stuck**: check `~/tom_hum_cto.log`
