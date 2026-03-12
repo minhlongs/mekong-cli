@@ -1,5 +1,5 @@
 ---
-description: Phân tích và tối ưu SEO
+description: Analyze and optimize SEO
 ---
 
 # Command: /seo
