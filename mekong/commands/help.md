@@ -1,5 +1,5 @@
 ---
-description: Hiển thị command reference — tự detect dev vs non-tech persona
+description: Display command reference — auto-detects dev vs non-tech persona
 allowed-tools: Read
 ---
 

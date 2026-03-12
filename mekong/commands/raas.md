@@ -1,5 +1,5 @@
 ---
-description: 🤖 AGI RaaS Command Router — chọn đúng command cho từng tình huống
+description: 🤖 AGI RaaS Command Router — select the right command for each situation
 argument-hint: [action-or-description]
 ---
 

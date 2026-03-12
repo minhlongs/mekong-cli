@@ -1,5 +1,5 @@
 ---
-description: Universal task runner — dev và non-tech đều dùng được, auto-route đến đúng agent
+description: Universal task runner — usable by dev and non-tech alike, auto-routes to the right agent
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 

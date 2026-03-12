@@ -1,5 +1,5 @@
 ---
-description: Code/content review với domain-specific checklist
+description: Code/content review with domain-specific checklist
 allowed-tools: Read, Glob, Grep, Bash
 ---
 

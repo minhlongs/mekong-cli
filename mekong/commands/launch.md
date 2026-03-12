@@ -1,5 +1,5 @@
 ---
-description: Tạo launch copy cho Product Hunt, Hacker News, Reddit và các platform khác
+description: Create launch copy for Product Hunt, Hacker News, Reddit and other platforms
 allowed-tools: Read, Write, Bash
 ---
 

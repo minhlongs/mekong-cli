@@ -1,5 +1,5 @@
 ---
-description: ⚡⚡⚡⚡⚡ Bootstrap AGI RaaS với parallel execution — fastest mode
+description: ⚡⚡⚡⚡⚡ Bootstrap AGI RaaS with parallel execution — fastest mode
 argument-hint: [service-description]
 ---
 

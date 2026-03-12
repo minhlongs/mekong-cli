@@ -1,5 +1,5 @@
 ---
-description: 🚀 VIBE 6-step development workflow with Binh Pháp integration
+description: 🚀 VIBE 6-step development workflow with Binh Phap integration
 argument-hint: [plan]
 ---
 
