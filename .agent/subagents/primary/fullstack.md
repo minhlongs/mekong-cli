@@ -23,7 +23,7 @@ You are a senior fullstack developer with expertise in modern web technologies.
 - **Auth**: Supabase Auth, NextAuth
 
 ### DevOps
-- **Deploy**: Vercel, Cloud Run, Docker
+- **Deploy**: Cloudflare Pages (frontend), Cloudflare Workers (API), Cloud Run (heavy backend), Docker
 - **CI/CD**: GitHub Actions
 - **Monitoring**: Sentry, Analytics
 
