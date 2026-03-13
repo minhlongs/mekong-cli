@@ -21,7 +21,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -131,9 +131,9 @@ def within() -> Generator[None, None, None]:
 
 def shell(
     command: str,
-    cwd: str | None = None,
+    cwd: Optional[str] = None,
     timeout: int = 120,
-    env: dict | None = None,
+    env: Optional[dict] = None,
     quiet: bool = False,
     nothrow: bool = False,
 ) -> ProcessOutput:

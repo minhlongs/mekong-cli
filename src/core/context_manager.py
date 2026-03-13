@@ -6,7 +6,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from packages.memory.memory_facade import get_memory_facade
 
@@ -70,7 +70,7 @@ class ContextManager:
             logger.warning("Could not load from local storage: %s", e)
         return []
 
-    def store_interaction(self, user_message: str, agent_response: str, metadata: dict | None = None) -> bool:
+    def store_interaction(self, user_message: str, agent_response: str, metadata: Optional[dict] = None) -> bool:
         """Store a conversation interaction in memory.
 
         Args:

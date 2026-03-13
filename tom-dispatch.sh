@@ -16,7 +16,8 @@ fi
 # Map P0-P3 to tmux pane index
 case "$TARGET" in
     P0) PANE=0 ;; P1) PANE=1 ;; P2) PANE=2 ;; P3) PANE=3 ;;
-    *) echo "❌ Invalid target: $TARGET (use P0-P3)"; exit 1 ;;
+    P4) PANE=4 ;; P5) PANE=5 ;;
+    *) echo "❌ Invalid target: $TARGET (use P0-P5)"; exit 1 ;;
 esac
 
 TMUX_BIN="/opt/homebrew/bin/tmux"

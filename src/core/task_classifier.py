@@ -7,7 +7,7 @@ The Brain of the Hybrid LLM Router.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
 
 
 @dataclass
@@ -191,7 +191,7 @@ def _determine_tier(
     return "api_best"
 
 
-def classify_task(goal: str, context: dict | None = None) -> TaskProfile:
+def classify_task(goal: str, context: Optional[dict] = None) -> TaskProfile:
     """Classify a goal into a TaskProfile.
 
     Args:

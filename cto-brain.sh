@@ -7,6 +7,8 @@
 # ═══════════════════════════════════════════════════════════
 
 PROJECT="${1:-/Users/mac/mekong-cli}"
+# ═══ ACTIVE PROJECT (injected — all workers must use this path) ═══
+PROJECT_APP="/Users/mac/mekong-cli/apps/sadec-marketing-hub"
 TMUX_BIN="/opt/homebrew/bin/tmux"
 DISPATCH="$HOME/mekong-cli/tom-dispatch.sh"
 OLLAMA_URL="http://localhost:11434/api/generate"
@@ -15,7 +17,7 @@ PLAN_INBOX="$REPORT_DIR/plan.md"
 PLAN_PROCESSED="$REPORT_DIR/plan_processed"
 SESSION="tom_hum"
 
-NAMES=("📋 W0:PLANNER" "⚡ W1:BUILDER" "🔍 W2:TESTER" "🎨 W3:DESIGNER")
+NAMES=("📋 W0:PLANNER" "⚡ W1:BUILDER" "🔍 W2:TESTER" "🎨 W3:DESIGNER" "🚀 W4:SCOUT" "🔧 W5:FIXER")
 CYCLE=0
 ALERT_COUNT=0
 DISPATCHED_TASKS=0
@@ -28,17 +30,19 @@ AGENT_CONFIGS=(
     "$HOME/.claude-developer"
     "$HOME/.claude-tester"
     "$HOME/.claude-planner"
+    "$HOME/.claude-developer"
+    "$HOME/.claude-tester"
 )
 
 # Cooldown: skip redispatch for N cycles after worker completes
 declare -A WORKER_COOLDOWN
-WORKER_COOLDOWN=([0]=0 [1]=0 [2]=0 [3]=0)
-COOLDOWN_CYCLES=3  # Skip this many cycles before redispatching
+WORKER_COOLDOWN=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
+COOLDOWN_CYCLES=3
 
 # Track heal attempts to avoid infinite restart loops
 declare -A HEAL_ATTEMPTS
-HEAL_ATTEMPTS=([0]=0 [1]=0 [2]=0 [3]=0)
-MAX_HEAL_ATTEMPTS=3  # Max restarts per worker per session
+HEAL_ATTEMPTS=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
+MAX_HEAL_ATTEMPTS=3
 
 # Auto-detect best model
 detect_model() {
@@ -87,21 +91,22 @@ except: print('❌ AI parse error')
 action_to_command() {
     local action="$1"
     local desc="$2"
+    local target="${3:-$PROJECT_APP}"  # Always use PROJECT_APP as default target
     case "$(echo $action | tr '[:lower:]' '[:upper:]' | xargs)" in
-        SCOUT)    echo "/cook \"scan project: $desc\"" ;;
-        COOK)     echo "/cook \"$desc\"" ;;
-        FIX)      echo "/dev-bug-sprint \"$desc\"" ;;
-        TEST)     echo "/dev-bug-sprint \"write tests: $desc\"" ;;
-        REFACTOR) echo "/eng-tech-debt \"$desc\"" ;;
-        REVIEW)   echo "/dev-pr-review \"$desc\"" ;;
-        COMMIT)   echo "/release-ship \"commit and tag: $desc\"" ;;
-        PLAN)     echo "/cook \"plan: $desc\"" ;;
-        SHIP)     echo "/release-ship \"deploy production\"" ;;
-        BUILD)    echo "/dev-feature \"$desc\"" ;;
-        UI)       echo "/frontend-ui-build \"$desc\"" ;;
-        API)      echo "/backend-api-build \"$desc\"" ;;
-        RESPONSIVE) echo "/frontend-responsive-fix \"$desc\"" ;;
-        *)        echo "/cook \"$desc\"" ;;
+        SCOUT)    echo "/cook \"scan project: $desc in $target\"" ;;
+        COOK)     echo "/cook \"$desc in $target\"" ;;
+        FIX)      echo "/dev-bug-sprint \"$desc in $target\"" ;;
+        TEST)     echo "/dev-bug-sprint \"write tests: $desc in $target\"" ;;
+        REFACTOR) echo "/eng-tech-debt \"$desc in $target\"" ;;
+        REVIEW)   echo "/dev-pr-review \"$desc in $target\"" ;;
+        COMMIT)   echo "/release-ship \"commit and tag: $desc in $target\"" ;;
+        PLAN)     echo "/cook \"plan: $desc in $target\"" ;;
+        SHIP)     echo "/release-ship \"deploy production $target\"" ;;
+        BUILD)    echo "/dev-feature \"$desc in $target\"" ;;
+        UI)       echo "/frontend-ui-build \"$desc in $target\"" ;;
+        API)      echo "/backend-api-build \"$desc in $target\"" ;;
+        RESPONSIVE) echo "/frontend-responsive-fix \"$desc in $target\"" ;;
+        *)        echo "/cook \"$desc in $target\"" ;;
     esac
 }
 
@@ -190,14 +195,17 @@ check_plan_inbox() {
 
 # ═══ AUTO-UNBLOCK: phát hiện prompts treo → tự giải quyết ═══
 auto_unblock_prompts() {
-    for i in 0 1 2 3; do
+    for i in 0 1 2 3 4 5; do
         local pout=$(get_pane_output $i 15)
         
-        # "Do you want to proceed?" → option 2 (session-wide)
-        if echo "$pout" | grep -q "Do you want to proceed"; then
-            echo "🔓 P$i: Auto-approve proceed (session-wide)"
-            $TMUX_BIN send-keys -t "$SESSION:0.$i" Down C-m
-            echo "[$(date +%H:%M:%S)] UNBLOCK P$i: proceed-session" >> "$REPORT_DIR/unblock_log.txt"
+        # "Do you want to proceed?" / "Enter to confirm" / "allow reading" → option 2 (session-wide)
+        if echo "$pout" | grep -qE "Do you want to proceed|Enter to confirm|allow reading from" && echo "$pout" | grep -qE "❯|Yes"; then
+            if ! echo "$pout" | grep -qE "thinking|Perusing|Running|Writing|Forging"; then
+                echo "🔓 P$i: Auto-approve (session-wide)"
+                $TMUX_BIN send-keys -t "$SESSION:0.$i" Down Enter
+                sleep 0.5
+                echo "[$(date +%H:%M:%S)] UNBLOCK P$i: auto-approve" >> "$REPORT_DIR/unblock_log.txt"
+            fi
         fi
 
         # Fetch permission
@@ -225,6 +233,38 @@ auto_unblock_prompts() {
         if echo "$pout" | grep -q "dangerously-skip-permissions"; then
             echo "🔓 P$i: Skip permissions"
             $TMUX_BIN send-keys -t "$SESSION:0.$i" Enter
+        fi
+
+        # ═══ AUTO-SELECT MULTI-CHOICE PROMPTS ═══
+        # Detects CC CLI checkbox prompts: "[ ] option" + "Enter to select"
+        # Strategy: select all options (Space+Down), then navigate to Next/Submit and Enter
+        if echo "$pout" | grep -qE "Enter to select.*navigate|Tab.*navigate.*Esc" && echo "$pout" | grep -qE "\[ \]|\[✔\]"; then
+            if ! echo "$pout" | grep -qE "thinking|Precipitating|Clauding|Crunching"; then
+                echo "🎯 P$i: Auto-select features (selecting all options)"
+                # Count unchecked items and select them
+                local unchecked=$(echo "$pout" | grep -c "\[ \]")
+                if [ "$unchecked" -gt 0 ]; then
+                    for ((j=0; j<unchecked; j++)); do
+                        $TMUX_BIN send-keys -t "$SESSION:0.$i" " "
+                        sleep 0.3
+                        $TMUX_BIN send-keys -t "$SESSION:0.$i" Down
+                        sleep 0.3
+                    done
+                fi
+                # Navigate to Next/Submit and press Enter
+                $TMUX_BIN send-keys -t "$SESSION:0.$i" Down
+                sleep 0.3
+                $TMUX_BIN send-keys -t "$SESSION:0.$i" Enter
+                echo "[$(date +%H:%M:%S)] AUTO-SELECT P$i: selected all ($unchecked items)" >> "$REPORT_DIR/unblock_log.txt"
+            fi
+        fi
+
+        # ═══ AUTO-SELECT SINGLE-CHOICE PROMPTS ═══
+        # Detects "1. No, exit" "2. Yes, I accept" → select 2
+        if echo "$pout" | grep -qE "1\.\s*No.*exit" && echo "$pout" | grep -qE "2\.\s*Yes.*accept"; then
+            echo "🎯 P$i: Auto-accept (option 2)"
+            $TMUX_BIN send-keys -t "$SESSION:0.$i" "2" Enter
+            echo "[$(date +%H:%M:%S)] AUTO-ACCEPT P$i: bypass accept" >> "$REPORT_DIR/unblock_log.txt"
         fi
 
         # License/config file prompt → option 3 (gitignore)
@@ -306,15 +346,27 @@ auto_unblock_prompts() {
     done
 }
 
-# ═══ AUTO-REDISPATCH: giao task mới cho IDLE workers ═══
-auto_redispatch_idle() {
-    # Skip redispatch entirely if no plan has been received
-    if [ -z "$CURRENT_PLAN" ]; then
-        return
-    fi
+# ═══ AUTO-REDISPATCH: NEVER STOP — self-scan codebase when idle ═══
+# Rotating task queue for continuous improvement
+SELF_SCAN_INDEX=0
+SELF_SCAN_TASKS=(
+    '/cook "Quet broken links meta tags accessibility issues trong /Users/mac/mekong-cli/apps/sadec-marketing-hub"'
+    '/dev-feature "Them features moi va cai thien UX trong /Users/mac/mekong-cli/apps/sadec-marketing-hub"'
+    '/dev-bug-sprint "Viet tests cho /Users/mac/mekong-cli/apps/sadec-marketing-hub cover untested pages"'
+    '/dev-pr-review "Review code quality /Users/mac/mekong-cli/apps/sadec-marketing-hub check patterns dead code"'
+    '/frontend-responsive-fix "Fix responsive 375px 768px 1024px trong /Users/mac/mekong-cli/apps/sadec-marketing-hub/portal va admin"'
+    '/cook "Toi uu performance /Users/mac/mekong-cli/apps/sadec-marketing-hub minify CSS JS lazy load cache"'
+    '/dev-bug-sprint "Debug fix bugs /Users/mac/mekong-cli/apps/sadec-marketing-hub kiem tra console errors broken imports"'
+    '/frontend-ui-build "Nang cap UI /Users/mac/mekong-cli/apps/sadec-marketing-hub micro-animations loading states hover effects"'
+    '/eng-tech-debt "Refactor /Users/mac/mekong-cli/apps/sadec-marketing-hub consolidate duplicate code cai thien structure"'
+    '/release-ship "Git commit push thay doi trong /Users/mac/mekong-cli/apps/sadec-marketing-hub viet release notes"'
+    '/cook "Them SEO metadata og tags title description vao HTML pages /Users/mac/mekong-cli/apps/sadec-marketing-hub"'
+    '/frontend-ui-build "Build dashboard widgets charts KPIs alerts /Users/mac/mekong-cli/apps/sadec-marketing-hub/admin"'
+)
 
+auto_redispatch_idle() {
     local idle_workers=""
-    for i in 0 1 2 3; do
+    for i in 0 1 2 3 4 5; do
         # Check cooldown
         local cd=${WORKER_COOLDOWN[$i]:-0}
         if [ "$cd" -gt 0 ]; then
@@ -329,46 +381,69 @@ auto_redispatch_idle() {
     
     [ -z "$idle_workers" ] && return
     
-    echo "🔄 IDLE workers:$idle_workers — auto-dispatching..."
+    echo "🔄 IDLE workers:$idle_workers — reading context before dispatch..."
     
-    local git_log=$(cd $PROJECT && git log --oneline -3 2>/dev/null)
-    local git_status=$(cd $PROJECT && git status --short 2>/dev/null | head -5)
-    
-    for widx in $idle_workers; do
-        local default_action=""
-        case $widx in
-            0) default_action="SCOUT" ;; 1) default_action="FIX" ;;
-            2) default_action="TEST" ;;  3) default_action="REVIEW" ;;
-        esac
+    for widx in ${=idle_workers}; do
+        # ═══ STEP 1: READ 45-line context from completed worker ═══
+        echo "📖 P$widx: Reading 45 lines of context..."
+        local context=$($TMUX_BIN capture-pane -t "$SESSION:0.$widx" -p -S -45 2>/dev/null | grep -v '^$' | tail -40)
         
-        local task_result=$(ai_call "Worker P$widx (${NAMES[$((widx+1))]}) IDLE, cần task mới.
-Git: $git_log
-Changed: $git_status
-Plan: $CURRENT_PLAN
-Output 1 dòng: P$widx|ACTION|description
-ACTION: SCOUT,COOK,FIX,TEST,REFACTOR,REVIEW,COMMIT" 80)
+        # Log context to report
+        echo "" >> "$REPORT_DIR/context_log.txt"
+        echo "═══ [$(date '+%H:%M:%S')] P$widx CONTEXT (45 lines) ═══" >> "$REPORT_DIR/context_log.txt"
+        echo "$context" >> "$REPORT_DIR/context_log.txt"
+        echo "═══ END P$widx ═══" >> "$REPORT_DIR/context_log.txt"
         
+        # Extract key info from context
+        local files_created=$(echo "$context" | grep -oE "apps/sadec[^ \"]*\.(html|ts|sql|css|js|md)" | sort -u | head -5)
+        local last_action=$(echo "$context" | grep -E "Worked on|✅|Searched|Read|Bash|Write" | tail -3)
+        local errors=$(echo "$context" | grep -iE "error|failed|Unknown|cannot" | tail -2)
+        
+        echo "  📄 Files: $(echo $files_created | tr '\n' ', ')"
+        echo "  📝 Last: $(echo "$last_action" | tail -1 | head -c 80)"
+        [ -n "$errors" ] && echo "  ⚠️ Errors: $(echo "$errors" | head -1 | head -c 80)"
+        
+        # ═══ STEP 2: DISPATCH based on context ═══
+        # Try AI-aware dispatch first (Ollama reads context)
+        local cmd=""
+        local ai_context="Worker P$widx (${NAMES[$((widx+1))]}) vừa HOÀN THÀNH.
+Context 45 dòng cuối:
+$(echo "$context" | tail -20)
+
+Files đã tạo/sửa: $files_created
+Lỗi: ${errors:-không có}
+
+Dựa vào context, giao task mới PHÙ HỢP cho worker này.
+Output CHÍNH XÁC 1 dòng: P$widx|ACTION|mô tả task rõ ràng
+ACTION: COOK,FIX,TEST,REVIEW,BUILD,UI,API,RESPONSIVE,REFACTOR,COMMIT"
+
+        local task_result=$(ai_call "$ai_context" 100)
         local parsed=$(echo "$task_result" | grep "^P[0-3]|" | head -1)
+        
         if [ -n "$parsed" ]; then
             echo "$parsed" | IFS='|' read -r target action desc
-            local cmd=$(action_to_command "$action" "$desc")
-            echo "  🚀 P$widx ← $cmd"
-            $DISPATCH "P$widx" "$cmd" 2>/dev/null
-            DISPATCHED_TASKS=$((DISPATCHED_TASKS + 1))
-            WORKER_COOLDOWN[$widx]=$COOLDOWN_CYCLES
-            echo "[$(date +%H:%M:%S)] REDISPATCH P$widx: $cmd" >> "$REPORT_DIR/dispatch_log.txt"
+            cmd=$(action_to_command "$action" "$desc")
+            echo "  🧠 P$widx ← $cmd (AI context-aware)"
+            echo "[$(date +%H:%M:%S)] AI-DISPATCH P$widx: $cmd | context: $(echo "$last_action" | tail -1 | head -c 60)" >> "$REPORT_DIR/dispatch_log.txt"
         else
-            # No valid AI response — set cooldown, do NOT fallback
-            echo "  ⏸️ P$widx — no task, cooldown $COOLDOWN_CYCLES cycles"
-            WORKER_COOLDOWN[$widx]=$COOLDOWN_CYCLES
+            # Fallback: smart queue based on worker role + what it just did
+            local queue_size=${#SELF_SCAN_TASKS[@]}
+            cmd=${SELF_SCAN_TASKS[$(( (SELF_SCAN_INDEX % queue_size) + 1 ))]}
+            SELF_SCAN_INDEX=$((SELF_SCAN_INDEX + 1))
+            echo "  🔄 P$widx ← $cmd (queue #$SELF_SCAN_INDEX, context logged)"
+            echo "[$(date +%H:%M:%S)] QUEUE P$widx: $cmd | prev: $(echo "$last_action" | tail -1 | head -c 60)" >> "$REPORT_DIR/dispatch_log.txt"
         fi
+        
+        $DISPATCH "P$widx" "$cmd" 2>/dev/null
+        DISPATCHED_TASKS=$((DISPATCHED_TASKS + 1))
+        WORKER_COOLDOWN[$widx]=$COOLDOWN_CYCLES
         sleep 2
     done
 }
 
 # ═══ AUTO-HEAL: detect crashed workers → restart CCC ═══
 auto_heal_workers() {
-    for i in 0 1 2 3; do
+    for i in 0 1 2 3 4 5; do
         local pout=$(get_pane_output $i 10)
         local pstatus=$(get_pane_status "$pout")
         
@@ -407,7 +482,7 @@ auto_heal_workers() {
             
             # Respawn pane with fresh CCC
             $TMUX_BIN respawn-pane -k -t "$SESSION:0.$i" \
-                "cd $PROJECT && CLAUDE_CONFIG_DIR=$config claude; zsh" 2>/dev/null
+                "cd $PROJECT && CLAUDE_CONFIG_DIR=$config claude --dangerously-skip-permissions; zsh" 2>/dev/null
             
             echo "[$(date +%H:%M:%S)] HEAL P$i: restart CCC (attempt $((attempts+1)))" >> "$REPORT_DIR/heal_log.txt"
             
@@ -430,7 +505,7 @@ get_pane_output() {
 get_pane_status() {
     local pout="$1"
     if echo "$pout" | grep -q "esc to interrupt"; then echo "WORKING"
-    elif echo "$pout" | grep -q "? for shortcuts"; then echo "DONE"
+    elif echo "$pout" | grep -qE '\? for shortcuts|⏵⏵ byp|Try "'; then echo "DONE"
     elif echo "$pout" | grep -qE "sadec-marketing-hub %|mekong-cli %"; then echo "EXITED"
     else echo "UNKNOWN"; fi
 }
@@ -488,7 +563,7 @@ write_report() {
     {
         echo "# 🧠 CTO Brain Report — $(date '+%Y-%m-%d %H:%M')"
         echo "## Model: $MODEL | Dispatched: $DISPATCHED_TASKS | Alerts: $ALERT_COUNT"
-        for i in 0 1 2 3; do
+        for i in 0 1 2 3 4 5; do
             local pout=$(get_pane_output $i 15)
             echo "### ${NAMES[$((i+1))]} — $(get_pane_status "$pout")"
             echo '```'
@@ -538,7 +613,7 @@ while true; do
     echo ""
 
     # 4. SCAN WORKERS
-    for i in 0 1 2 3; do
+    for i in 0 1 2 3 4 5; do
         pout=$(get_pane_output $i 20)
         pstatus=$(get_pane_status "$pout")
         clean=$(clean_log "$pout" | tail -4)
@@ -571,10 +646,8 @@ while true; do
         auto_heal_workers
     fi
 
-    # 6. AUTO-REDISPATCH IDLE (every 5 cycles = ~1 min)
-    if [ $((CYCLE % 5)) -eq 0 ]; then
-        auto_redispatch_idle
-    fi
+    # 6. AUTO-REDISPATCH IDLE (EVERY cycle = ~12s — read context first, NEVER STOP)
+    auto_redispatch_idle
 
     # 7. REPORT (every 15 cycles = ~3 min)
     if [ $((CYCLE % 15)) -eq 0 ]; then

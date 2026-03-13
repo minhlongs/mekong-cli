@@ -35,7 +35,7 @@ AGENT_CONFIGS=(
 
 # ═══ Create session with P0 ═══
 tmux new-session -d -s $SESSION -x 220 -y 55 -c "$PROJECT" \
-  "echo '${AGENT_ICONS[1]} [P0: ${AGENT_NAMES[1]}] — bypass on'; CLAUDE_CONFIG_DIR=${AGENT_CONFIGS[1]} claude; zsh"
+  "echo '${AGENT_ICONS[1]} [P0: ${AGENT_NAMES[1]}] — bypass on'; CLAUDE_CONFIG_DIR=${AGENT_CONFIGS[1]} claude --dangerously-skip-permissions; zsh"
 
 # ═══ Create remaining panes ═══
 for ((i=1; i<NUM_AGENTS; i++)); do
@@ -44,7 +44,7 @@ for ((i=1; i<NUM_AGENTS; i++)); do
     local_config="${AGENT_CONFIGS[$((i+1))]:-$HOME/.claude-planner}"
 
     tmux split-window -t $SESSION -c "$PROJECT" \
-      "echo '${local_icon} [P${i}: ${local_name}] — bypass on'; CLAUDE_CONFIG_DIR=${local_config} claude; zsh"
+      "echo '${local_icon} [P${i}: ${local_name}] — bypass on'; CLAUDE_CONFIG_DIR=${local_config} claude --dangerously-skip-permissions; zsh"
 
     # After each split, re-tile to keep equal
     tmux select-layout -t $SESSION tiled 2>/dev/null || true

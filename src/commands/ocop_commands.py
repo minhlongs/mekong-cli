@@ -10,6 +10,7 @@ Commands:
 """
 
 import json
+from typing import Optional
 from pathlib import Path
 
 import typer
@@ -262,7 +263,7 @@ def _display_listing(listing: dict, target: str, dry_run: bool) -> None:
     console.print(table)
 
 
-def _generate_listing_stub(target: str, product_data: dict | None) -> dict:
+def _generate_listing_stub(target: str, product_data: Optional[dict]) -> dict:
     """Generate stub listing. Replace with LLM integration."""
     return {
         "title": "Premium Vietnamese Robusta Coffee Beans — Grade A, VietGAP Certified",

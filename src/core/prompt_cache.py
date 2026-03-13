@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from packages.memory.memory_facade import get_memory_facade
 
@@ -84,7 +84,7 @@ class PromptCache:
         prompt: str,
         response: str,
         outcome_score: float = 1.0,
-        metadata: dict | None = None,
+        metadata: Optional[dict] = None,
     ) -> bool:
         """Store a prompt and its outcome in the cache.
 

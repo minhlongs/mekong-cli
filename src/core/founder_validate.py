@@ -11,7 +11,7 @@ import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +436,7 @@ def save_validation_kit(
     framework: ValidationFramework,
     script: dict,
     outreach: list[dict],
-    pmf_survey: dict | None = None,
+    pmf_survey: Optional[dict] = None,
 ) -> list[str]:
     """Save all validation artifacts to .mekong/validate/."""
     validate_dir = Path(base_dir) / ".mekong" / "validate"
