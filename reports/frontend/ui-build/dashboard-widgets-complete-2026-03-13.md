@@ -226,22 +226,33 @@
 
 ### E2E Tests (Playwright)
 
-**File:** `tests/dashboard-widgets.spec.ts`
+**Files:**
+- `tests/dashboard-widgets.spec.ts` (31 tests)
+- `tests/dashboard-widgets-comprehensive.spec.ts` (184 tests)
 
-| Test Suite | Tests | Status |
-|------------|-------|--------|
-| KPI Card Widget | 6 | ⏳ Pending |
-| Bar Chart Component | 4 | ⏳ Pending |
-| Line Chart Component | 3 | ⏳ Pending |
-| Pie Chart Component | 4 | ⏳ Pending |
-| Alert System | 5 | ⏳ Pending |
-| Loading States | 4 | ⏳ Pending |
-| Accessibility | 3 | ⏳ Pending |
-| Responsive Design | 2 | ⏳ Pending |
+**Results:**
 
-**Total:** 31 tests
+| Test File | Total | Passed | Failed | Reason |
+|-----------|-------|--------|--------|--------|
+| dashboard-widgets.spec.ts | 30 | 2 | 28 | Timeout (server not running) |
+| dashboard-widgets-comprehensive.spec.ts | 184 | 0 | 184 | Timeout (server not running) |
 
-**Note:** Tests cần chạy với production URL thay vì localhost.
+**Root Cause:** Tests configured for `http://localhost:5502` but dev server was not running.
+
+**Solution Options:**
+1. Run `npx http-server -p 5502` before tests
+2. Update tests to use production URL: `https://sadec-marketing-hub.vercel.app`
+3. Run tests with `--headed` flag for debugging
+
+**Quick Fix:**
+```bash
+# Option 1: Run local server then tests
+npx http-server -p 5502 -c-1 . &
+npx playwright test
+
+# Option 2: Run against production
+BASE_URL=https://sadec-marketing-hub.vercel.app npx playwright test
+```
 
 ---
 
