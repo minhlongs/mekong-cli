@@ -24,7 +24,7 @@ VIEWPORTS = {
 
 
 @pytest.fixture(scope="function")
-def page(page: Page) -> Page:
+def test_page(page: Page) -> Page:
     """Setup page for responsive tests"""
     page.set_viewport_size(VIEWPORTS["desktop"])
     return page
