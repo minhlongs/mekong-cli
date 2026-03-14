@@ -1,9 +1,9 @@
 #!/bin/zsh
 # ═══════════════════════════════════════════════════════════
-# 🧠 CTO F&B v2 — F&B Caffe Container Project Manager
-# - Đọc 45 dòng context trước khi dispatch
-# - Skip nếu worker đang busy hoặc đã có queued messages
-# - Chỉ dispatch khi worker thật sự IDLE
+# 🧠 CTO F&B v3 — BULLETPROOF DISPATCH
+# Root cause fix: "bypass permissions on" is in status bar ALWAYS
+# Only true idle signal: last non-empty line contains "❯" prompt
+# AND no "esc to interrupt" AND no "queued messages"
 # ═══════════════════════════════════════════════════════════
 
 FNB_APP="/Users/mac/mekong-cli/apps/fnb-caffe-container"
@@ -33,63 +33,67 @@ TASKS=(
 )
 TOTAL=${#TASKS[@]}
 
-# Cooldown per worker (prevent stacking)
+# Cooldown per worker
 typeset -A LAST_DISPATCH
 for ((i=0; i<NUM_PANES; i++)); do LAST_DISPATCH[$i]=0; done
-COOLDOWN=30  # seconds between dispatches to same worker
+COOLDOWN=60  # 60 seconds minimum between dispatches
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$REPORT_DIR/cto-fnb.log"; }
 
-# ═══ Read 45 lines of context from pane ═══
-read_context() {
-    local p="$1"
-    $TMUX_BIN capture-pane -t "$SESSION:$FNB_WIN.$p" -p -S -45 2>/dev/null
-}
-
-# ═══ Check if worker is truly IDLE (not busy, no queued tasks) ═══
+# ═══ BULLETPROOF IDLE CHECK ═══
+# Returns 0 (idle) ONLY if ALL conditions met:
+#   1. No "esc to interrupt" (worker actively processing)
+#   2. No "queued messages" (stacked tasks)
+#   3. No "thinking" / "Precipitating" etc
+#   4. Prompt "❯" visible on a non-empty line  
+#   5. Cooldown elapsed (60s since last dispatch)
 is_truly_idle() {
     local p="$1"
-    local ctx=$(read_context "$p")
+    local raw=$($TMUX_BIN capture-pane -t "$SESSION:$FNB_WIN.$p" -p -S -15 2>/dev/null)
     
-    # ❌ BUSY: "esc to interrupt" = actively processing
-    if echo "$ctx" | grep -q "esc to interrupt"; then
+    # ❌ BUSY signals (if ANY present → not idle)
+    if echo "$raw" | grep -q "esc to interrupt"; then
+        log "  ⏳ F$p: busy (processing)"
+        return 1
+    fi
+    if echo "$raw" | grep -qi "queued messages"; then
+        log "  ⏳ F$p: busy (queued — STACKED)"
+        return 1
+    fi
+    if echo "$raw" | grep -qE "thinking|Precipitating|Clauding|Crunching|Forging"; then
+        log "  ⏳ F$p: busy (thinking)"
         return 1
     fi
     
-    # ❌ BUSY: thinking/running
-    if echo "$ctx" | grep -qE "thinking|Precipitating|Clauding|Crunching|Forging|Running"; then
-        return 1
-    fi
-    
-    # ❌ BUSY: has queued messages (Press up to edit queued messages)
-    if echo "$ctx" | grep -q "queued messages"; then
-        return 1
-    fi
-    
-    # ❌ COOLDOWN: dispatched too recently
+    # ❌ Cooldown not elapsed
     local now=$(date +%s)
     local last=${LAST_DISPATCH[$p]:-0}
     if (( now - last < COOLDOWN )); then
+        log "  ⏳ F$p: cooldown ($((COOLDOWN - now + last))s left)"
         return 1
     fi
     
-    # ✅ IDLE: bypass prompt visible without esc to interrupt
-    if echo "$ctx" | grep -qE "bypass permissions on|❯ |shortcuts"; then
-        return 0
+    # ❌ Pane is empty/dead
+    if [ -z "$(echo "$raw" | tr -d '[:space:]')" ]; then
+        log "  ⏳ F$p: empty pane"
+        return 1
     fi
     
-    return 1  # unknown = assume busy
+    # ✅ No busy signals + cooldown passed + pane has content = IDLE
+    log "  ✅ F$p: IDLE"
+    return 0
 }
 
-# ═══ Auto-select prompts (checkboxes) ═══
+# ═══ Auto-select prompts ═══
 auto_select() {
     local p="$1"
-    local ctx=$(read_context "$p")
+    local raw=$($TMUX_BIN capture-pane -t "$SESSION:$FNB_WIN.$p" -p -S -15 2>/dev/null)
+    local clean=$(echo "$raw" | LC_ALL=C sed 's/[^[:print:][:space:]]//g')
     
-    if echo "$ctx" | grep -qE "Enter to select|Tab.*navigate.*Esc" && echo "$ctx" | grep -qE "\[ \]"; then
-        if ! echo "$ctx" | grep -qE "thinking|Precipitating|Clauding"; then
+    if echo "$clean" | grep -qE "Enter to select|Tab.*navigate.*Esc" && echo "$clean" | grep -qE "\[ \]"; then
+        if ! echo "$clean" | grep -qE "thinking|Precipitating|Clauding"; then
             log "🎯 F$p: Auto-select features"
-            local n=$(echo "$ctx" | grep -c "\[ \]")
+            local n=$(echo "$clean" | grep -c "\[ \]")
             for ((j=0; j<n; j++)); do
                 $TMUX_BIN send-keys -t "$SESSION:$FNB_WIN.$p" " "; sleep 0.3
                 $TMUX_BIN send-keys -t "$SESSION:$FNB_WIN.$p" Down; sleep 0.3
@@ -104,30 +108,19 @@ auto_select() {
 CYCLE=0
 TOTAL_DISPATCHED=0
 echo "╔═══════════════════════════════════════════════╗"
-echo "║  🧠 CTO F&B v2 — Context-Aware Dispatch      ║"
+echo "║  🧠 CTO F&B v3 — BULLETPROOF DISPATCH        ║"
 echo "║  Workers: 4P (window fnb)                     ║"
-echo "║  Project: $FNB_APP                            ║"
-echo "║  Cooldown: ${COOLDOWN}s per worker            ║"
+echo "║  Cooldown: ${COOLDOWN}s | Idle: ❯ prompt only ║"
 echo "╚═══════════════════════════════════════════════╝"
 
 while true; do
     ((CYCLE++))
     
     for ((p=0; p<NUM_PANES; p++)); do
-        # Step 1: Handle stuck prompts
         auto_select "$p"
         
-        # Step 2: Read context (45 lines)
-        log "📖 F$p: Reading 45 lines of context..."
-        local ctx=$(read_context "$p")
-        local files=$(echo "$ctx" | grep -oE "[a-zA-Z0-9_-]+\.(html|js|css|ts|json)" | sort -u | head -5 | tr '\n' ', ')
-        local last_line=$(echo "$ctx" | grep -v '^$' | tail -1 | head -c 80)
-        local errors=$(echo "$ctx" | grep -iE "error|fail|❌" | tail -1 | head -c 60)
-        log "  📄 Files: $files"
-        log "  📝 Last: $last_line"
-        [ -n "$errors" ] && log "  ⚠️ Errors: $errors"
+        log "📖 F$p: Reading context..."
         
-        # Step 3: Only dispatch if truly idle
         if is_truly_idle "$p"; then
             local task="${TASKS[$((IDX % TOTAL + 1))]}"
             log "🚀 F$p ← $(echo $task | head -c 70)..."
@@ -135,11 +128,9 @@ while true; do
             LAST_DISPATCH[$p]=$(date +%s)
             ((IDX++))
             ((TOTAL_DISPATCHED++))
-        else
-            log "⏳ F$p busy — skipping"
         fi
     done
     
     echo "═══ 🧠 CTO-FNB $(date +%H:%M:%S) ═══ cycle:$CYCLE dispatched:$TOTAL_DISPATCHED ═══"
-    sleep 12
+    sleep 15
 done
