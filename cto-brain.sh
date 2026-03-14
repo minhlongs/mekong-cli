@@ -37,7 +37,7 @@ AGENT_CONFIGS=(
 # Cooldown: skip redispatch for N cycles after worker completes
 declare -A WORKER_COOLDOWN
 WORKER_COOLDOWN=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
-COOLDOWN_CYCLES=0  # No artificial delay — rely on strict busy detection (esc to interrupt = SKIP)
+COOLDOWN_CYCLES=3  # 3 cycles × 12s = 36s — content-based detection handles overlap
 
 # Track heal attempts to avoid infinite restart loops
 declare -A HEAL_ATTEMPTS
@@ -418,7 +418,7 @@ Output CHÍNH XÁC 1 dòng: P$widx|ACTION|mô tả task rõ ràng
 ACTION: COOK,FIX,TEST,REVIEW,BUILD,UI,API,RESPONSIVE,REFACTOR,COMMIT"
 
         local task_result=$(ai_call "$ai_context" 100)
-        local parsed=$(echo "$task_result" | grep "^P[0-3]|" | head -1)
+        local parsed=$(echo "$task_result" | grep "^P[0-5]|" | head -1)
         
         if [ -n "$parsed" ]; then
             echo "$parsed" | IFS='|' read -r target action desc
@@ -499,13 +499,20 @@ auto_heal_workers() {
 # ═══ PANE FUNCTIONS ═══
 get_pane_output() {
     local pane=$1; local lines=${2:-20}
-    $TMUX_BIN capture-pane -t "$SESSION:0.$pane" -p -S -$lines 2>/dev/null
+    $TMUX_BIN capture-pane -t "$SESSION:0.$pane" -p 2>/dev/null | tail -$lines
 }
 
 get_pane_status() {
     local pout="$1"
-    if echo "$pout" | grep -q "esc to interrupt"; then echo "WORKING"
-    elif echo "$pout" | grep -qE '\? for shortcuts|⏵⏵ byp|Try "'; then echo "DONE"
+    # CONTENT-BASED detection (panes 44 chars wide = 'esc to interrupt' TRUNCATED)
+    # Check task activity signals that ARE visible in narrow panes
+    if echo "$pout" | grep -qE "thinking|Unfurling|Precipitating|Stewing|Pondering|Whirlpooling|Crunching|Clauding"; then echo "WORKING"
+    elif echo "$pout" | grep -qE "queued messages|Press up to edit"; then echo "WORKING"
+    elif echo "$pout" | grep -qE "◻|◼|pending|completed"; then echo "WORKING"
+    elif echo "$pout" | grep -qE "Read.*file|Write\(|Bash\(|Searched|Created|Updated|ctrl\+o"; then echo "WORKING"
+    elif echo "$pout" | grep -qE "approve edit|confirm|Enter to select|navigate.*Esc"; then echo "WORKING"
+    elif echo "$pout" | grep -qE "esc to"; then echo "WORKING"
+    elif echo "$pout" | grep -qE 'shortcuts|⏵⏵ byp|Try "'; then echo "DONE"
     elif echo "$pout" | grep -qE "sadec-marketing-hub %|mekong-cli %"; then echo "EXITED"
     else echo "UNKNOWN"; fi
 }

@@ -1,23 +1,21 @@
 #!/bin/zsh
 # ═══════════════════════════════════════════════════════════
-# 🧠 CTO F&B FINAL — LOCK FILE BASED (NO PANE DETECTION)
+# 🧠 CTO F&B v4 — NARROW PANE SAFE
 #
-# HOW IT WORKS:
-#   1. Before dispatch: check /tmp/cto-lock-fnb-P
-#   2. If lock < 3 min old → SKIP (worker definitely busy)
-#   3. If lock >= 3 min old → check "queued messages" only
-#   4. If queued → SKIP
-#   5. Otherwise → DISPATCH + create new lock
+# ROOT CAUSE FIX: panes are 44 chars wide.
+# "esc to interrupt" needs 67+ chars → ALWAYS TRUNCATED.
+# grep for "esc to interrupt" NEVER works in tiled layout.
 #
-# WHY: pane content detection ALWAYS fails in narrow panes.
-#       Lock files CANNOT be truncated or misread.
+# NEW APPROACH: detect BUSY from task content signals,
+# not from status bar text that gets cut off.
 # ═══════════════════════════════════════════════════════════
 
 FNB_APP="/Users/mac/mekong-cli/apps/fnb-caffe-container"
-T="/opt/homebrew/bin/tmux"; S="tom_hum"; W="fnb"; NP=4
+T="/opt/homebrew/bin/tmux"
+S="tom_hum"
+W="fnb"
+NP=4
 LOG="/Users/mac/mekong-cli/.cto-reports/fnb/cto-fnb.log"
-LOCK_DIR="/tmp"
-LOCK_TTL=30  # 30s — just enough for CC CLI to start, then rely on 'esc to interrupt' check
 
 mkdir -p /Users/mac/mekong-cli/.cto-reports/fnb "$FNB_APP"
 
@@ -36,40 +34,77 @@ TASKS=(
     '/eng-tech-debt "Refactor '$FNB_APP' optimize performance minify assets"'
     '/release-ship "Git commit push '$FNB_APP' viet release notes deploy"'
 )
-TL=${#TASKS[@]}; CYCLE=0; DIS=0
+TL=${#TASKS[@]}
+CYCLE=0
+DIS=0
+
+typeset -A LAST_DISPATCH
+LAST_DISPATCH=([0]=0 [1]=0 [2]=0 [3]=0)
+LOCK_SEC=45  # 45s — content-based detection handles overlap
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG"; }
 
-can_dispatch() {
+is_worker_busy() {
     local p=$1
-    local lock="$LOCK_DIR/cto-lock-fnb-$p"
-    local now=$(date +%s)
-    local raw=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null)
+    local raw=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null | tail -5)
 
-    # RULE 1: If worker shows "esc to interrupt" → BUSY, never dispatch
-    if echo "$raw" | grep -q "esc to interrupt"; then
-        return 1
+    # ANY of these patterns = DEFINITELY BUSY
+    if echo "$raw" | grep -qE \
+        "thinking|Unfurling|Precipitating|Stewing|Pondering|Whirlpooling|Crunching|Clauding"; then
+        return 0  # busy
+    fi
+    if echo "$raw" | grep -qE \
+        "queued messages|Press up to edit"; then
+        return 0  # busy — tasks already stacked!
+    fi
+    if echo "$raw" | grep -qE \
+        "◻|◼|pending|completed"; then
+        return 0  # busy — task checklist visible
+    fi
+    if echo "$raw" | grep -qE \
+        "Read.*file|Write\(|Bash\(|Searched|Created|Updated|ctrl\+o"; then
+        return 0  # busy — CC CLI operations in progress
+    fi
+    if echo "$raw" | grep -qE \
+        "approve edit|confirm|Enter to select|navigate.*Esc"; then
+        return 0  # busy — prompt waiting
+    fi
+    if echo "$raw" | grep -qE \
+        "esc to"; then
+        return 0  # busy — partial match works in narrow panes
     fi
 
-    # RULE 2: Check lock file (brief delay after last dispatch)
-    if [ -f "$lock" ]; then
-        local lock_time=$(cat "$lock" 2>/dev/null)
-        local age=$((now - lock_time))
-        if (( age < LOCK_TTL )); then
-            return 1
-        fi
-    fi
-
-    # RULE 3: Check for queued messages
-    if echo "$raw" | grep -qi "queued messages"; then
-        echo "$now" > "$lock"
-        return 1
-    fi
-
-    return 0  # Worker idle, safe to dispatch
+    return 1  # not busy
 }
 
-# Auto-select checkboxes
+can_dispatch() {
+    local p=$1
+    local now=$(date +%s)
+
+    # CHECK 1: lock timer
+    local last=${LAST_DISPATCH[$p]:-0}
+    local age=$((now - last))
+    if (( age < LOCK_SEC )); then
+        return 1
+    fi
+
+    # CHECK 2: worker must NOT be busy
+    if is_worker_busy "$p"; then
+        # Renew lock — worker still working
+        LAST_DISPATCH[$p]=$now
+        return 1
+    fi
+
+    # CHECK 3: must see bypass or shortcuts = CC CLI idle prompt
+    local raw=$($T capture-pane -t "$S:$W.$p" -p -S -3 2>/dev/null)
+    if echo "$raw" | grep -qE "bypass permissions|shortcuts"; then
+        return 0  # TRULY IDLE
+    fi
+
+    return 1  # unknown = skip
+}
+
+# Auto-select checkboxes and confirms
 do_auto_select() {
     local p=$1
     local raw=$($T capture-pane -t "$S:$W.$p" -p -S -15 2>/dev/null)
@@ -81,13 +116,17 @@ do_auto_select() {
         done
         $T send-keys -t "$S:$W.$p" Down; sleep 0.3
         $T send-keys -t "$S:$W.$p" Enter
-        log "  🎯 F$p: Auto-select"
+        log "🎯 F$p: Auto-select"
+    fi
+    if echo "$raw" | grep -qE "Yes, clear context.*bypass|Yes, and bypass"; then
+        $T send-keys -t "$S:$W.$p" "1" Enter
+        log "🎯 F$p: Auto-confirm"
     fi
 }
 
 echo "╔══════════════════════════════════════════╗"
-echo "║ 🧠 CTO F&B FINAL — LOCK FILE BASED     ║"
-echo "║ Lock TTL: ${LOCK_TTL}s | Cycle: 15s     ║"
+echo "║ 🧠 CTO F&B v4 — NARROW PANE SAFE       ║"
+echo "║ Lock: ${LOCK_SEC}s | Busy: content-based ║"
 echo "╚══════════════════════════════════════════╝"
 
 while true; do
@@ -98,13 +137,14 @@ while true; do
 
         if can_dispatch "$p"; then
             local task="${TASKS[$((IDX % TL + 1))]}"
-            log "  ✅ F$p → 🚀 $(echo $task | head -c 55)..."
+            log "✅ F$p → $(echo $task | head -c 55)..."
             $T send-keys -t "$S:$W.$p" "$task" Enter
-            echo "$(date +%s)" > "$LOCK_DIR/cto-lock-fnb-$p"
-            ((IDX++)); ((DIS++))
+            LAST_DISPATCH[$p]=$(date +%s)
+            ((IDX++))
+            ((DIS++))
         fi
     done
 
-    echo "═══ 🧠 FNB $(date +%H:%M:%S) cy:$CYCLE dis:$DIS ═══"
+    echo "═══ 🧠 FNB-v4 $(date +%H:%M:%S) cy:$CYCLE dis:$DIS ═══"
     sleep 15
 done
