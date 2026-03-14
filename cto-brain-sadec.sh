@@ -1,13 +1,15 @@
 #!/bin/zsh
-# ═══════════════════════════════════════════════════
-# 🧠 CTO SADEC v8 — CONTEXT-DRIVEN FAST DISPATCH
-# Same logic as CTO-FNB v8
-# ═══════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
+# 🧠 CTO SADEC FINAL — LOCK FILE BASED (NO PANE DETECTION)
+# Same architecture as CTO-FNB FINAL
+# ═══════════════════════════════════════════════════════════
 
 SADEC_APP="/Users/mac/mekong-cli/apps/sadec-marketing-hub"
-T="/opt/homebrew/bin/tmux"
-S="tom_hum"; W="0"; NP=6
+T="/opt/homebrew/bin/tmux"; S="tom_hum"; W="0"; NP=6
 LOG="/Users/mac/mekong-cli/.cto-reports/sadec/cto-sadec.log"
+LOCK_DIR="/tmp"
+LOCK_TTL=180
+
 mkdir -p /Users/mac/mekong-cli/.cto-reports/sadec
 
 IDX=0
@@ -25,50 +27,69 @@ TASKS=(
     '/dev-bug-sprint "Debug fix bugs '$SADEC_APP' console errors broken imports"'
     '/frontend-ui-build "Nang cap UI '$SADEC_APP' micro-animations loading states"'
 )
-TL=${#TASKS[@]}
-CYCLE=0; DIS=0
+TL=${#TASKS[@]}; CYCLE=0; DIS=0
 
-echo "╔═════════════════════════════════════════╗"
-echo "║ 🧠 CTO SADEC v8 — CONTEXT-DRIVEN FAST ║"
-echo "╚═════════════════════════════════════════╝"
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG"; }
+
+can_dispatch() {
+    local p=$1
+    local lock="$LOCK_DIR/cto-lock-sadec-$p"
+    local now=$(date +%s)
+
+    if [ -f "$lock" ]; then
+        local lock_time=$(cat "$lock" 2>/dev/null)
+        local age=$((now - lock_time))
+        if (( age < LOCK_TTL )); then
+            log "  🔒 S$p: locked ($((LOCK_TTL - age))s left)"
+            return 1
+        fi
+    fi
+
+    local raw=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null)
+    if echo "$raw" | grep -qi "queued messages"; then
+        echo "$now" > "$lock"
+        log "  ❌ S$p: queued (lock renewed)"
+        return 1
+    fi
+
+    return 0
+}
+
+do_auto_select() {
+    local p=$1
+    local raw=$($T capture-pane -t "$S:$W.$p" -p -S -15 2>/dev/null)
+    if echo "$raw" | grep -qE "Enter to select|Tab.*navigate" && echo "$raw" | grep -qE "\[ \]"; then
+        local n=$(echo "$raw" | grep -c "\[ \]")
+        for ((j=0; j<n; j++)); do
+            $T send-keys -t "$S:$W.$p" " "; sleep 0.3
+            $T send-keys -t "$S:$W.$p" Down; sleep 0.3
+        done
+        $T send-keys -t "$S:$W.$p" Down; sleep 0.3
+        $T send-keys -t "$S:$W.$p" Enter
+        log "  🎯 S$p: Auto-select"
+    fi
+}
+
+echo "╔══════════════════════════════════════════╗"
+echo "║ 🧠 CTO SADEC FINAL — LOCK FILE BASED   ║"
+echo "║ Lock TTL: ${LOCK_TTL}s | Cycle: 15s     ║"
+echo "╚══════════════════════════════════════════╝"
 
 while true; do
     ((CYCLE++))
 
     for ((p=0; p<NP; p++)); do
-        RAW=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null)
+        do_auto_select "$p"
 
-        if echo "$RAW" | grep -qE "Enter to select|Tab.*navigate" && echo "$RAW" | grep -qE "\[ \]"; then
-            N=$(echo "$RAW" | grep -c "\[ \]")
-            for ((j=0; j<N; j++)); do $T send-keys -t "$S:$W.$p" " "; sleep 0.3; $T send-keys -t "$S:$W.$p" Down; sleep 0.3; done
-            $T send-keys -t "$S:$W.$p" Down; sleep 0.3; $T send-keys -t "$S:$W.$p" Enter
-            echo "[$(date +%H:%M:%S)] 🎯 S$p: Auto-select" | tee -a "$LOG"
-            continue
+        if can_dispatch "$p"; then
+            local task="${TASKS[$((IDX % TL + 1))]}"
+            log "  ✅ S$p → 🚀 $(echo $task | head -c 55)..."
+            $T send-keys -t "$S:$W.$p" "$task" Enter
+            echo "$(date +%s)" > "$LOCK_DIR/cto-lock-sadec-$p"
+            ((IDX++)); ((DIS++))
         fi
-
-        STATUS_LINE=$(echo "$RAW" | grep "bypass permissions on" | tail -1)
-
-        if [ -z "$STATUS_LINE" ]; then
-            echo "[$(date +%H:%M:%S)] ⚠️ S$p: no status line" | tee -a "$LOG"
-            continue
-        fi
-
-        if echo "$RAW" | grep -qi "queued messages"; then
-            echo "[$(date +%H:%M:%S)] ❌ S$p: STACKED" | tee -a "$LOG"
-            continue
-        fi
-
-        if echo "$STATUS_LINE" | grep -q "esc to interrupt"; then
-            echo "[$(date +%H:%M:%S)] 🔥 S$p: WORKING" | tee -a "$LOG"
-            continue
-        fi
-
-        TASK="${TASKS[$((IDX % TL + 1))]}"
-        echo "[$(date +%H:%M:%S)] ✅ S$p: DONE → 🚀 $(echo $TASK | head -c 60)..." | tee -a "$LOG"
-        $T send-keys -t "$S:$W.$p" "$TASK" Enter
-        ((IDX++)); ((DIS++))
     done
 
-    echo "═══ 🧠 CTO-SADEC $(date +%H:%M:%S) ═══ cy:$CYCLE dis:$DIS ═══"
+    echo "═══ 🧠 SADEC $(date +%H:%M:%S) cy:$CYCLE dis:$DIS ═══"
     sleep 15
 done
