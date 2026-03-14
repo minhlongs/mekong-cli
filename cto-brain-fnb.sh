@@ -17,7 +17,7 @@ FNB_APP="/Users/mac/mekong-cli/apps/fnb-caffe-container"
 T="/opt/homebrew/bin/tmux"; S="tom_hum"; W="fnb"; NP=4
 LOG="/Users/mac/mekong-cli/.cto-reports/fnb/cto-fnb.log"
 LOCK_DIR="/tmp"
-LOCK_TTL=180  # 3 minutes minimum between dispatches
+LOCK_TTL=30  # 30s — just enough for CC CLI to start, then rely on 'esc to interrupt' check
 
 mkdir -p /Users/mac/mekong-cli/.cto-reports/fnb "$FNB_APP"
 
@@ -44,27 +44,29 @@ can_dispatch() {
     local p=$1
     local lock="$LOCK_DIR/cto-lock-fnb-$p"
     local now=$(date +%s)
+    local raw=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null)
 
-    # Step 1: Check lock file
+    # RULE 1: If worker shows "esc to interrupt" → BUSY, never dispatch
+    if echo "$raw" | grep -q "esc to interrupt"; then
+        return 1
+    fi
+
+    # RULE 2: Check lock file (brief delay after last dispatch)
     if [ -f "$lock" ]; then
         local lock_time=$(cat "$lock" 2>/dev/null)
         local age=$((now - lock_time))
         if (( age < LOCK_TTL )); then
-            log "  🔒 F$p: locked ($((LOCK_TTL - age))s left)"
             return 1
         fi
     fi
 
-    # Step 2: Lock expired or doesn't exist — check for queued messages ONLY
-    local raw=$($T capture-pane -t "$S:$W.$p" -p 2>/dev/null)
+    # RULE 3: Check for queued messages
     if echo "$raw" | grep -qi "queued messages"; then
-        # Renew lock — worker still processing queue
         echo "$now" > "$lock"
-        log "  ❌ F$p: queued (lock renewed)"
         return 1
     fi
 
-    return 0  # Safe to dispatch
+    return 0  # Worker idle, safe to dispatch
 }
 
 # Auto-select checkboxes

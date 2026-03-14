@@ -37,7 +37,7 @@ AGENT_CONFIGS=(
 # Cooldown: skip redispatch for N cycles after worker completes
 declare -A WORKER_COOLDOWN
 WORKER_COOLDOWN=([0]=0 [1]=0 [2]=0 [3]=0 [4]=0 [5]=0)
-COOLDOWN_CYCLES=3
+COOLDOWN_CYCLES=0  # No artificial delay — rely on strict busy detection (esc to interrupt = SKIP)
 
 # Track heal attempts to avoid infinite restart loops
 declare -A HEAL_ATTEMPTS
