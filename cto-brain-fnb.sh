@@ -21,18 +21,18 @@ mkdir -p /Users/mac/mekong-cli/.cto-reports/fnb "$FNB_APP"
 
 IDX=0
 TASKS=(
-    '/cook "Tao project F&B Caffe Container website tai '$FNB_APP' voi landing page hero about contact menu order system responsive dark mode"'
-    '/dev-feature "Build menu page voi categories drinks food prices images gallery tai '$FNB_APP'"'
-    '/dev-feature "Build order system cart checkout thanh toan tai '$FNB_APP'"'
-    '/frontend-ui-build "Build admin dashboard quan ly don hang doanh thu thong ke tai '$FNB_APP'"'
-    '/cook "Build responsive landing page hero section about us contact form tai '$FNB_APP'"'
-    '/dev-feature "Build customer loyalty rewards point system tai '$FNB_APP'"'
-    '/frontend-ui-build "Build kitchen display order queue real-time status tai '$FNB_APP'"'
-    '/cook "Them SEO metadata og tags favicon manifest PWA support cho '$FNB_APP'"'
-    '/dev-bug-sprint "Viet tests cho '$FNB_APP' cover tat ca pages va components"'
-    '/frontend-responsive-fix "Fix responsive 375px 768px 1024px cho '$FNB_APP'"'
-    '/eng-tech-debt "Refactor '$FNB_APP' optimize performance minify assets"'
-    '/release-ship "Git commit push '$FNB_APP' viet release notes deploy"'
+    '/dev-feature "Them dark mode toggle va theme switching cho '$FNB_APP' tat ca pages"'
+    '/dev-feature "Build online payment integration QR code VNPay MoMo cho '$FNB_APP'/checkout.html"'
+    '/frontend-ui-build "Nang cap UI animations micro-interactions skeleton loading cho '$FNB_APP'"'
+    '/dev-feature "Build real-time order tracking WebSocket notification cho '$FNB_APP'"'
+    '/cook "Toi uu Core Web Vitals LCP FCP CLS performance cho '$FNB_APP' dat 90+ Lighthouse"'
+    '/dev-bug-sprint "Fix tat ca console errors broken links accessibility issues trong '$FNB_APP'"'
+    '/frontend-responsive-fix "Fix responsive 375px 768px 1024px cho '$FNB_APP' tat ca pages"'
+    '/eng-tech-debt "Refactor '$FNB_APP' DRY code shared components optimize bundle size"'
+    '/dev-feature "Build customer reviews rating system cho '$FNB_APP'/menu.html"'
+    '/dev-feature "Them i18n da ngon ngu Vietnamese English cho '$FNB_APP'"'
+    '/release-ship "Git commit push '$FNB_APP' viet release notes deploy Cloudflare"'
+    '/cook "Audit security headers CSP CORS HTTPS cho '$FNB_APP' production ready"'
 )
 TL=${#TASKS[@]}
 CYCLE=0
