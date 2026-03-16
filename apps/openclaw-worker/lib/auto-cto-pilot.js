@@ -398,7 +398,9 @@ function startAutoCTO() {
 								/Cooking|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|thinking|Compacting|Ebbing|Hatching|queued messages|Press up to edit/i.test(
 									tail5,
 								);
-							const isIdle = hasPrompt && !isBusy;
+							// 🧹 Detect context full — don't dispatch, let auto-compact handle it
+							const needsCompact = /until auto-compact|0%\s*until|auto-compact will|context.*(full|limit|exceeded)/i.test(paneCheck);
+							const isIdle = hasPrompt && !isBusy && !needsCompact;
 
 							if (isIdle) {
 								const taskPath = path.join(config.WATCH_DIR, taskFile);
@@ -413,7 +415,15 @@ function startAutoCTO() {
 								log(`🦞 COMMAND: ${command.slice(0, 100)}`);
 
 								// Model set in settings.json — skip /model to save API calls
-								execSync(`tmux send-keys -t ${pane} "${command.replace(/"/g, '\\"')}"`, { timeout: 8000 });
+								// 🦞 FIX 2026-03-16: Use temp file + tmux load-buffer to avoid ALL shell escaping
+								const tmpCmdFile = path.join(require('os').tmpdir(), `.cto-cmd-${Date.now()}.txt`);
+								fs.writeFileSync(tmpCmdFile, command);
+								try {
+								        execSync(`tmux load-buffer ${tmpCmdFile}`, { timeout: 5000 });
+								        execSync(`tmux paste-buffer -t ${pane}`, { timeout: 5000 });
+								} finally {
+								        try { fs.unlinkSync(tmpCmdFile); } catch (e) {}
+								}
 								execSync(`tmux send-keys -t ${pane} Enter`, { timeout: 3000 });
 
 								const doneDir = path.join(config.WATCH_DIR, '..', 'tasks-done');
@@ -469,6 +479,20 @@ function startAutoCTO() {
 								}
 								isApiBusy = true;
 								continue; // Skip LLM interpretation for this pane
+							}
+
+							// 🧹 AUTO-COMPACT: Detect full context (200k) and send /compact
+							// Triggers on: "until auto-compact", "0% until", "auto-compact will"
+							const needsCompact = /until auto-compact|0%\s*until|auto-compact will|context.*(full|limit|exceeded)/i.test(paneOutput);
+							if (needsCompact) {
+								log(`[🧹 COMPACT][P${pIdx}] Context full detected — sending /compact`);
+								try {
+									require('child_process').execSync(`tmux send-keys -t tom_hum:0.${pIdx} "/compact" Enter`, { timeout: 5000 });
+								} catch (e) {
+									log(`[🧹 COMPACT][P${pIdx}] /compact failed: ${e.message}`);
+								}
+								isApiBusy = true;
+								continue; // Skip LLM — wait for compact to finish
 							}
 
 							const llmResult = await interpretState(paneOutput);
