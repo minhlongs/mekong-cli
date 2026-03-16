@@ -307,8 +307,9 @@ function regexFastPath(lastLines, lastLine) {
 		return { state: 'idle', confidence: 0.95, summary: 'CC CLI at prompt (regex)', lastAction: '', recommendation: 'dispatch_task' };
 	}
 
-	// QUESTION: compaction prompt or yes/no (MUST be before BUSY — Compacting matches both)
-	if (/Compacting conversation|Press Enter|compact or.*clear|\(y\/n\)/i.test(lastLines)) {
+	// QUESTION: compaction prompt, yes/no, Vietnamese questions, numbered menus, permission prompts
+	// (MUST be before BUSY — Compacting matches both)
+	if (/Compacting conversation|Press Enter|compact or.*clear|\(y\/n\)|\(yes\/no\)|\[Y\/n\]|\[y\/N\]|Chọn.*\?|Xác nhận.*\?|Tiếp tục.*\?|muốn.*\?|mission.*\?|option.*\?|Continue\?|Approve\?|Allow\s|Select.*[:?]|\d+\.\s+.*\n.*\d+\.\s+|\d+\)\s+.*\n.*\d+\)\s+/i.test(lastLines)) {
 		return { state: 'question', confidence: 0.9, summary: 'Needs user input (regex)', lastAction: '', recommendation: 'send_enter' };
 	}
 
