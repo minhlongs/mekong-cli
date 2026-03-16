@@ -94,6 +94,7 @@ export class PolymarketBotEngine {
     this.ws.on('user:trade', (d: any) => {
       console.log(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
       this.license.recordTrade();
+      this.tradeCount++;
 
       // P0-5: Update risk manager with trade PnL
       const tradeValue = parseFloat(d.size || '0') * parseFloat(d.price || '0');
@@ -213,20 +214,25 @@ export class PolymarketBotEngine {
     }, msUntilMidnight);
   }
 
-  // For dashboard bridge compatibility
+  private startTime = Date.now();
+  private tradeCount = 0;
+
+  // For dashboard bridge — returns real data instead of hardcoded zeros
   getStatus(): any {
+    const uptime = Date.now() - this.startTime;
     return {
       running: this.running,
-      uptimeMs: 0,
-      uptimeHuman: '',
+      uptimeMs: uptime,
+      uptimeHuman: `${Math.floor(uptime / 60000)}m ${Math.floor((uptime % 60000) / 1000)}s`,
       mode: ENV.DRY_RUN ? 'DRY_RUN' : 'LIVE',
-      totalSignals: 0,
-      executedTrades: 0,
+      totalSignals: this.tradeCount,
+      executedTrades: this.tradeCount,
       rejectedTrades: 0,
-      dailyPnL: 0,
+      dailyPnL: this.risk.getDailyPnl?.() ?? 0,
       dailyVolume: 0,
       totalPnL: 0,
-      strategies: [{ name: 'MarketMaker', enabled: true, signalCount: 0 }],
+      strategies: [{ name: 'MarketMaker', enabled: this.running, signalCount: this.tradeCount }],
+      markets: this.markets.length,
     };
   }
 

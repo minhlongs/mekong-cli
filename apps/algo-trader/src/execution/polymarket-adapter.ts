@@ -367,13 +367,23 @@ export class PolymarketAdapter extends EventEmitter {
   }
 
   private handleBestBidAsk(event: BestBidAskEvent): void {
+    const bid = parseFloat(event.best_bid);
+    const ask = parseFloat(event.best_ask);
+    const spread = parseFloat(event.spread);
+
+    // NaN guard: reject corrupted price data instead of propagating to strategies
+    if (isNaN(bid) || isNaN(ask)) {
+      logger.warn(`[Polymarket] NaN price for ${event.asset_id}: bid=${event.best_bid} ask=${event.best_ask}`);
+      return;
+    }
+
     const tick: PolymarketTick = {
       exchange: 'polymarket',
       symbol: event.market,
       tokenId: event.asset_id,
-      bid: parseFloat(event.best_bid),
-      ask: parseFloat(event.best_ask),
-      spread: parseFloat(event.spread),
+      bid,
+      ask,
+      spread: isNaN(spread) ? ask - bid : spread,
       timestamp: Date.now(),
     };
 
