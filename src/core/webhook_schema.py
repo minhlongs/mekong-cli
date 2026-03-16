@@ -11,7 +11,7 @@ Usage:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 
@@ -265,16 +265,16 @@ WEBHOOK_EVENT_SCHEMAS: list[WebhookEventSchema] = [
 # TYPE ALIASES FOR EASE OF USE
 # =============================================================================
 
-MissionEventPayload = (
-    MissionCreatedPayload
-    | MissionPlanningPayload
-    | MissionStepStartedPayload
-    | MissionStepCompletedPayload
-    | MissionStepFailedPayload
-    | MissionCompletedPayload
-    | MissionFailedPayload
-    | CreditsLowPayload
-)
+MissionEventPayload = Union[
+    MissionCreatedPayload,
+    MissionPlanningPayload,
+    MissionStepStartedPayload,
+    MissionStepCompletedPayload,
+    MissionStepFailedPayload,
+    MissionCompletedPayload,
+    MissionFailedPayload,
+    CreditsLowPayload,
+]
 
 
 def get_payload_class(event_type: str) -> type[BaseWebhookPayload] | None:
