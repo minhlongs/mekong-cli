@@ -570,13 +570,28 @@ while true; do
 
     # JUST FINISHED — mark previous command as done, log success
     if echo "$LAST_5" | grep -qE "✅ Done|✔|Sautéed for|Brewed for|Baked for|Cogitated for|Crunched for"; then
-      # Calculate duration and record learning outcome
+      # Calculate duration, classify output, and record learning
       if [ -f "/tmp/cto_dispatch_ts_P${PANE}" ]; then
         DISPATCH_TS=$(cat "/tmp/cto_dispatch_ts_P${PANE}" 2>/dev/null || echo "0")
         DURATION=$(( $(date +%s) - DISPATCH_TS ))
-        log_metric "command_complete" "success" "$DURATION" "$PANE" "$PROJECT"
         LAST_CMD=$(cat "/tmp/cto_last_cmd_P${PANE}" 2>/dev/null || echo "unknown")
         LAST_STATE=$(cat "/tmp/cto_last_state_P${PANE}" 2>/dev/null || echo "deployed")
+
+        # OUTPUT INTELLIGENCE: classify what the command actually produced
+        OUTPUT_CLASS=$(timeout 5 node -e "
+          try {
+            const oi = require('$HOME/mekong-cli/apps/openclaw-worker/lib/output-intelligence');
+            const output = require('fs').readFileSync('$PANE_STATE_DIR/pane_${PANE}_output', 'utf-8');
+            const r = oi.classifyOutput(output);
+            console.log(r.primary + '|' + oi.summarize(output));
+          } catch(e) { console.log('unknown|error'); }
+        " 2>/dev/null || echo "unknown|error")
+
+        OUTPUT_TYPE=$(echo "$OUTPUT_CLASS" | cut -d'|' -f1)
+        OUTPUT_SUMMARY=$(echo "$OUTPUT_CLASS" | cut -d'|' -f2)
+        echo "   🧠 Output: ${OUTPUT_TYPE} [${OUTPUT_SUMMARY}]"
+
+        log_metric "command_complete" "$OUTPUT_TYPE" "$DURATION" "$PANE" "$PROJECT" "$LAST_CMD"
         record_outcome "$PROJECT" "$LAST_STATE" "$LAST_CMD" "true" "$DURATION"
         mark_dispatch_done "$PANE"
       fi
