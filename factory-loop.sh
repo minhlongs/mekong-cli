@@ -577,6 +577,9 @@ while true; do
         LAST_CMD=$(cat "/tmp/cto_last_cmd_P${PANE}" 2>/dev/null || echo "unknown")
         LAST_STATE=$(cat "/tmp/cto_last_state_P${PANE}" 2>/dev/null || echo "deployed")
 
+        # Save current output FIRST so intelligence reads fresh data
+        save_pane_output "$PANE" "$LAST_45"
+
         # OUTPUT INTELLIGENCE: classify what the command actually produced
         OUTPUT_CLASS=$(timeout 5 node -e "
           try {
