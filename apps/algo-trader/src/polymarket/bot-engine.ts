@@ -500,9 +500,16 @@ export class PolymarketBotEngine extends EventEmitter {
       const kellyBet = Math.max(0, edge * kellyFraction);
       const kellySizeUsd = this.config.maxBankroll * Math.min(kellyBet, 0.05); // Cap at 5%
 
-      if (notionalValue > kellySizeUsd && kellySizeUsd > 0) {
+      if (notionalValue > kellySizeUsd && kellySizeUsd > 0 && signal.price > 0) {
         // Resize signal to Kelly-recommended size
-        signal.size = Math.floor(kellySizeUsd / signal.price);
+        const kellyShares = Math.floor(kellySizeUsd / signal.price);
+        if (kellyShares <= 0) {
+          logger.warn('[BotEngine] Kelly size too small — rejecting');
+          this.state.rejectedTrades++;
+          this.emit('signal:rejected', { signal, reason: 'kelly_too_small' });
+          return;
+        }
+        signal.size = kellyShares;
         logger.info(`[BotEngine] Kelly sized: ${signal.size} shares (${(kellyBet * 100).toFixed(1)}% of bankroll)`);
       }
     }

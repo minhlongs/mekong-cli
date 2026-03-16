@@ -206,12 +206,12 @@ export class PolymarketGammaClient {
       conditionId: raw.conditionId,
       slug: raw.slug,
       outcomes,
-      outcomePrices: prices.map((p) => parseFloat(p)),
+      outcomePrices: prices.map((p) => parseFloat(p) || 0),
       clobTokenIds: tokenIds,
       yesTokenId: tokenIds[0], // index 0 = YES
       noTokenId: tokenIds[1], // index 1 = NO
-      yesPrice: parseFloat(prices[0]),
-      noPrice: parseFloat(prices[1]),
+      yesPrice: parseFloat(prices[0]) || 0,
+      noPrice: parseFloat(prices[1]) || 0,
       active: raw.active,
       closed: raw.closed,
       volume: raw.volumeNum,
