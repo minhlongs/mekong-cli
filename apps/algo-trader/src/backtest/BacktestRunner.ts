@@ -176,7 +176,15 @@ export class BacktestRunner {
   private executeBuy(candle: ICandle) {
     const fillPrice = this.applySlippage(candle.close, 'buy');
     const riskAmount = this.balance * (this.riskPercentage / 100);
-    const positionSize = riskAmount / fillPrice;
+    let positionSize = riskAmount / fillPrice;
+
+    // Market impact cap: limit to 5% of candle volume (if available)
+    // Prevents unrealistic fills on thin prediction market books
+    if (candle.volume && candle.volume > 0) {
+      const maxShares = candle.volume * 0.05;
+      if (positionSize > maxShares) positionSize = maxShares;
+    }
+
     const fee = positionSize * fillPrice * this.feeRate;
 
     if (riskAmount <= 0 || positionSize <= 0) return;
