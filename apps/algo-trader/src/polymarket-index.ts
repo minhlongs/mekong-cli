@@ -19,6 +19,15 @@ async function main() {
   await bot.start();
 }
 
+// Crash safety: catch unhandled rejections and exceptions — log + halt
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION — halting bot:", reason);
+  bot.stop().finally(() => process.exit(1));
+});
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION — halting bot:", err);
+  bot.stop().finally(() => process.exit(1));
+});
 process.on("SIGINT", async () => { await bot.stop(); dashboard.stop(); process.exit(0); });
 process.on("SIGTERM", async () => { await bot.stop(); dashboard.stop(); process.exit(0); });
 main().catch(e => { console.error("Fatal:", e); process.exit(1); });

@@ -86,7 +86,9 @@ export class PolymarketBotEngine {
     this.ws.on('best_bid_ask', (d: any) => {
       this.updatePrice(d);
       if (this.license.canWsRequote && this.mm.hasToken(d.asset_id)) {
-        this.mm.requote(this.client, d.asset_id).catch(() => {});
+        this.mm.requote(this.client, d.asset_id).catch((e: any) => {
+          console.warn('[MM] Requote failed:', e?.message || e);
+        });
       }
     });
 
