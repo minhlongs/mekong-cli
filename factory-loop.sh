@@ -204,6 +204,84 @@ else
   echo "🧠 Brain: fresh start (no learning data yet)"
 fi
 
+# ═══════════════════════════════════════════════════════════════
+# PRE-FLIGHT CHECK — Verify all systems before main loop
+# ═══════════════════════════════════════════════════════════════
+preflight() {
+  echo "🛫 PRE-FLIGHT CHECK..."
+  local PASS=0 FAIL=0
+
+  # 1. Tmux session
+  if tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
+    echo "   ✅ Tmux session '$TMUX_SESSION' exists"
+    PASS=$((PASS + 1))
+  else
+    echo "   ❌ Tmux session '$TMUX_SESSION' not found"
+    FAIL=$((FAIL + 1))
+    if [ "$DRY_RUN" != true ]; then
+      echo "   Cannot proceed without tmux session. Exiting."
+      exit 1
+    fi
+  fi
+
+  # 2. Check each pane + auto-recovery
+  for i in "${!PANES[@]}"; do
+    local P=${PANES[$i]}
+    local PROJ=${PANE_PROJECTS[$i]}
+    if tmux capture-pane -t "$TMUX_SESSION:0.$P" -p > /dev/null 2>&1; then
+      local TAIL=$(tmux capture-pane -t "$TMUX_SESSION:0.$P" -p 2>/dev/null | tail -3)
+      if echo "$TAIL" | grep -qE "❯|bypass|thinking|Cooking"; then
+        echo "   ✅ P$P ($PROJ): CC CLI alive"
+        PASS=$((PASS + 1))
+      elif echo "$TAIL" | grep -qE "bash-5|% $"; then
+        echo "   ⚠️  P$P ($PROJ): shell only — auto-respawning CC CLI"
+        tmux send-keys -t "$TMUX_SESSION:0.$P" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions" 2>/dev/null || true
+        sleep 0.5
+        tmux send-keys -t "$TMUX_SESSION:0.$P" Enter 2>/dev/null || true
+        PASS=$((PASS + 1))
+      else
+        echo "   ✅ P$P ($PROJ): pane active"
+        PASS=$((PASS + 1))
+      fi
+    else
+      echo "   ❌ P$P ($PROJ): pane dead"
+      FAIL=$((FAIL + 1))
+    fi
+  done
+
+  # 3. Disk space (warn if < 1GB free)
+  local DISK_FREE=$(df -g / 2>/dev/null | tail -1 | awk '{print $4}' || echo "?")
+  if [ "$DISK_FREE" != "?" ] && [ "$DISK_FREE" -lt 1 ] 2>/dev/null; then
+    echo "   ⚠️  Disk: ${DISK_FREE}GB free (< 1GB)"
+  else
+    echo "   ✅ Disk: ${DISK_FREE}GB free"
+    PASS=$((PASS + 1))
+  fi
+
+  # 4. RAM check
+  local RAM_FREE=$(vm_stat 2>/dev/null | awk '/free/ {print int($3/256)}' || echo "?")
+  echo "   ✅ RAM: ~${RAM_FREE}MB free pages"
+  PASS=$((PASS + 1))
+
+  # 5. Dedup stats
+  if [ -f "$DISPATCH_HISTORY" ]; then
+    local HISTORY_LINES=$(wc -l < "$DISPATCH_HISTORY" 2>/dev/null | xargs)
+    echo "   📊 Dedup history: ${HISTORY_LINES} entries"
+  else
+    echo "   📊 Dedup history: empty (first run)"
+  fi
+
+  echo "🛫 PRE-FLIGHT: ${PASS} passed, ${FAIL} failed"
+  log_metric "preflight" "pass=${PASS},fail=${FAIL}" "0"
+}
+
+# Run pre-flight (skip in dry-run without tmux)
+if [ "$DRY_RUN" != true ]; then
+  preflight
+else
+  echo "🧪 DRY-RUN: skipping pre-flight"
+fi
+
 # Save/load previous command output per pane (for A→B chaining)
 save_pane_output() {
   local PANE=$1
