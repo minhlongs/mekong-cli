@@ -2,7 +2,7 @@
 # FACTORY LOOP v13.1 — CTO Brain v3 + watchdog + daily digest
 # State-aware dispatch + cascade bridge + ROI learning + auto-restart
 # Date: 2026-03-16 | agencyos.network architecture
-set -euo pipefail
+set -uo pipefail
 
 TMUX_SESSION="tom_hum"
 PANES=(0 1)
