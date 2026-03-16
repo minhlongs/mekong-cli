@@ -68,7 +68,9 @@ export class BacktestRunner {
     this.initialBalance = initialBalance;
     this.balance = initialBalance;
     this.peakBalance = initialBalance;
-    this.feeRate = config?.feeRate ?? 0.001;
+    // Default fee rate: 0.25% (25 BPS) matching Polymarket actual fees
+    // Previously was 0.1% which understated fees by 2.5x
+    this.feeRate = config?.feeRate ?? 0.0025;
     this.riskPercentage = config?.riskPercentage ?? 2;
     this.slippageBps = config?.slippageBps ?? 5;
     this.slippageConfig = config?.slippageConfig;

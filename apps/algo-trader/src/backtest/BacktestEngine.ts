@@ -47,7 +47,8 @@ export class BacktestEngine {
   private licenseService: LicenseService;
 
   constructor(config?: BacktestConfig) {
-    this.feeRate = config?.feeRate ?? 0.001;
+    // Default 0.25% (25 BPS) matching Polymarket actual fees
+    this.feeRate = config?.feeRate ?? 0.0025;
     this.riskPercentage = config?.riskPercentage ?? 2;
     this.slippageBps = config?.slippageBps ?? 5;
     this.licenseService = LicenseService.getInstance();

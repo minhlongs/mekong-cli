@@ -18,6 +18,19 @@ import {
 } from '../polymarket';
 import { logger } from '../utils/logger';
 
+/** Wrap a promise with a timeout to prevent indefinite hangs on API calls */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`[Timeout] ${label} exceeded ${ms}ms`)), ms),
+    ),
+  ]);
+}
+
+/** Default API call timeout (10 seconds) */
+const API_TIMEOUT_MS = 10_000;
+
 export interface PolymarketOrder {
   orderId: string;
   tokenId: string;
@@ -146,13 +159,10 @@ export class PolymarketAdapter extends EventEmitter {
       throw new Error('Polymarket client not authenticated - provide API credentials');
     }
 
-    const response = await this.clobClient.createAndPostLimitOrder(
-      tokenId,
-      price,
-      size,
-      side,
-      orderType,
-      expiration,
+    const response = await withTimeout(
+      this.clobClient.createAndPostLimitOrder(tokenId, price, size, side, orderType, expiration),
+      API_TIMEOUT_MS,
+      'placeLimitOrder',
     );
 
     const order: PolymarketOrder = {
@@ -184,11 +194,10 @@ export class PolymarketAdapter extends EventEmitter {
       throw new Error('Polymarket client not authenticated');
     }
 
-    const response = await this.clobClient.createAndPostMarketOrder(
-      tokenId,
-      amount,
-      side,
-      orderType,
+    const response = await withTimeout(
+      this.clobClient.createAndPostMarketOrder(tokenId, amount, side, orderType),
+      API_TIMEOUT_MS,
+      'placeMarketOrder',
     );
 
     const order: PolymarketOrder = {
