@@ -39,6 +39,7 @@ import { CircuitBreaker } from '../risk/circuit-breaker';
 import { DrawdownTracker } from '../risk/drawdown-tracker';
 import { PnLTracker, PnLAlerts, AlertRules, type TradeRecord } from '../risk';
 import { saveState, loadState, type BotPersistentState } from '../core/state-manager';
+import { PortfolioRiskManager } from '../core/PortfolioRiskManager';
 
 interface BotStatus {
   running: boolean;
@@ -488,18 +489,35 @@ export class PolymarketBotEngine extends EventEmitter {
       return;
     }
 
-    // Risk check 2: Position size
-    const maxPosition = this.config.maxBankroll * this.config.maxPositionPct;
+    // Risk check 2: Kelly-based position sizing (half-Kelly, max 5% portfolio)
     const notionalValue = signal.price * signal.size;
-    if (notionalValue > maxPosition) {
-      logger.warn('[BotEngine] Position size exceeded - rejecting signal');
+    const maxPosition = this.config.maxBankroll * this.config.maxPositionPct;
+
+    // Use Kelly if confidence/win data available, else fall back to fixed cap
+    if (signal.confidence && signal.confidence > 0) {
+      const kellyFraction = 0.5; // Half-Kelly for safety
+      const edge = signal.confidence - (1 - signal.confidence); // Simplified binary Kelly
+      const kellyBet = Math.max(0, edge * kellyFraction);
+      const kellySizeUsd = this.config.maxBankroll * Math.min(kellyBet, 0.05); // Cap at 5%
+
+      if (notionalValue > kellySizeUsd && kellySizeUsd > 0) {
+        // Resize signal to Kelly-recommended size
+        signal.size = Math.floor(kellySizeUsd / signal.price);
+        logger.info(`[BotEngine] Kelly sized: ${signal.size} shares (${(kellyBet * 100).toFixed(1)}% of bankroll)`);
+      }
+    }
+
+    // Hard cap: reject if still exceeds max position after Kelly
+    if (signal.price * signal.size > maxPosition) {
+      logger.warn('[BotEngine] Position size exceeded after Kelly - rejecting');
       this.state.rejectedTrades++;
       this.emit('signal:rejected', { signal, reason: 'position_size' });
       return;
     }
 
     // Risk check 3: Minimum edge
-    if (signal.expectedValue && signal.expectedValue < notionalValue * this.config.minEdgeThreshold) {
+    const finalNotional = signal.price * signal.size;
+    if (signal.expectedValue && signal.expectedValue < finalNotional * this.config.minEdgeThreshold) {
       logger.warn('[BotEngine] Edge too small - rejecting signal');
       this.state.rejectedTrades++;
       this.emit('signal:rejected', { signal, reason: 'insufficient_edge' });
