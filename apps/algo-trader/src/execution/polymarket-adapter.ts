@@ -30,6 +30,8 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 
 /** Default API call timeout (10 seconds) */
 const API_TIMEOUT_MS = 10_000;
+/** Max slippage allowed (0.5% = 50 BPS) — reject if mid-price deviates more */
+const MAX_SLIPPAGE_BPS = 50;
 
 export interface PolymarketOrder {
   orderId: string;
@@ -159,6 +161,26 @@ export class PolymarketAdapter extends EventEmitter {
       throw new Error('Polymarket client not authenticated - provide API credentials');
     }
 
+    // Slippage protection: verify price is within MAX_SLIPPAGE_BPS of current market
+    const tick = this.latestTicks.get(tokenId);
+    if (tick) {
+      const midPrice = (tick.bid + tick.ask) / 2;
+      if (midPrice > 0) {
+        const slippageBps = Math.abs(price - midPrice) / midPrice * 10000;
+        if (slippageBps > MAX_SLIPPAGE_BPS) {
+          throw new Error(
+            `Slippage ${slippageBps.toFixed(0)} BPS exceeds max ${MAX_SLIPPAGE_BPS} BPS ` +
+            `(price=${price}, mid=${midPrice.toFixed(4)}, token=${tokenId})`
+          );
+        }
+      }
+    }
+
+    // Validate order parameters
+    if (price <= 0 || price >= 1) throw new Error(`Invalid price ${price}: must be (0, 1)`);
+    if (size <= 0) throw new Error(`Invalid size ${size}: must be > 0`);
+    if (isNaN(price) || isNaN(size)) throw new Error('Price or size is NaN');
+
     const response = await withTimeout(
       this.clobClient.createAndPostLimitOrder(tokenId, price, size, side, orderType, expiration),
       API_TIMEOUT_MS,
@@ -192,6 +214,16 @@ export class PolymarketAdapter extends EventEmitter {
   ): Promise<PolymarketOrder> {
     if (!this.clobClient.isReady()) {
       throw new Error('Polymarket client not authenticated');
+    }
+
+    // Validate market order parameters
+    if (amount <= 0) throw new Error(`Invalid amount ${amount}: must be > 0`);
+    if (isNaN(amount)) throw new Error('Amount is NaN');
+
+    // Slippage warning for market orders: log spread check
+    const tick = this.latestTicks.get(tokenId);
+    if (tick && tick.spread > 0.01) {
+      logger.warn(`[Polymarket] Wide spread ${(tick.spread * 100).toFixed(1)}% on market order for ${tokenId}`);
     }
 
     const response = await withTimeout(
@@ -312,6 +344,42 @@ export class PolymarketAdapter extends EventEmitter {
     const tick = this.latestTicks.get(tokenId);
     if (!tick) return null;
     return { bid: tick.bid, ask: tick.ask, spread: tick.spread };
+  }
+
+  /**
+   * Check orderbook depth — verify enough liquidity for order size
+   * Returns estimated fill price and slippage for given size
+   */
+  async checkDepth(tokenId: string, size: number, side: 'BUY' | 'SELL'): Promise<{
+    hasSufficientDepth: boolean;
+    estimatedFillPrice: number;
+    estimatedSlippageBps: number;
+    availableSize: number;
+  }> {
+    const book = await this.getOrderBook(tokenId);
+    const levels = side === 'BUY' ? book.asks : book.bids;
+
+    let filled = 0;
+    let cost = 0;
+
+    for (const level of levels) {
+      const fillQty = Math.min(level.size, size - filled);
+      cost += fillQty * level.price;
+      filled += fillQty;
+      if (filled >= size) break;
+    }
+
+    const midTick = this.latestTicks.get(tokenId);
+    const midPrice = midTick ? (midTick.bid + midTick.ask) / 2 : (levels[0]?.price || 0);
+    const avgFillPrice = filled > 0 ? cost / filled : 0;
+    const slippageBps = midPrice > 0 ? Math.abs(avgFillPrice - midPrice) / midPrice * 10000 : 0;
+
+    return {
+      hasSufficientDepth: filled >= size,
+      estimatedFillPrice: avgFillPrice,
+      estimatedSlippageBps: slippageBps,
+      availableSize: filled,
+    };
   }
 
   /**
