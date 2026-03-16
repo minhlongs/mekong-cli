@@ -311,7 +311,7 @@ export class SpreadDetectorEngine {
       for (const [name, client] of clients) {
         for (const symbol of this.config.symbols) {
           try {
-            const rawBook = await client.fetchOrderBook(symbol, 20);
+            const rawBook = await client.fetchOrderBook(symbol);
             if (rawBook) {
               this.orderbook.updateOrderBook({
                 exchange: name, symbol,
