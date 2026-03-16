@@ -1,8 +1,6 @@
 #!/bin/bash
-# FACTORY LOOP v12.0 — STATE-AWARE DISPATCH + RAAS SCAFFOLD
-# Detects project state (empty/scaffolded/built/deployed) before dispatching.
-# Empty projects get /raas-scaffold FIRST, not /marketing-content-engine.
-# State machine: empty → scaffold → build features → deploy → operate
+# FACTORY LOOP v12.1 — HARDENED: trap, timeout, health check, metrics
+# State-aware dispatch + error recovery + metrics logging
 # Date: 2026-03-16 | agencyos.network architecture
 set -euo pipefail
 
@@ -12,14 +10,117 @@ PANE_PROJECTS=("sophia-proposal" "well")
 PANE_DIRS=("apps/sophia-proposal" "apps/well")
 PANE_NAMES=("Sophia AI Video Factory" "WellNexus Healthcare B2B")
 SLEEP_INTERVAL=120
+COMMAND_TIMEOUT=600  # 10 min max per command before considered hung
+METRICS_LOG="/tmp/factory-metrics.log"
 
 # CASCADE STATE FILES
 PANE_STATE_DIR="/tmp/pane_state"
 mkdir -p "$PANE_STATE_DIR"
 
-echo "🏭 FACTORY v12.0 — STATE-AWARE DISPATCH — $(date) — PID: $$"
-echo "👑 Detects project state → dispatches correct command for that state"
+# ═══════════════════════════════════════════════════════════════
+# TRAP + CLEANUP — Kill zombie processes on exit
+# ═══════════════════════════════════════════════════════════════
+cleanup() {
+  echo "🧹 [$(date +%T)] FACTORY SHUTDOWN — cleaning up zombies..."
+  pkill -f "node.*jest" 2>/dev/null || true
+  pkill -f "node.*vitest" 2>/dev/null || true
+  pkill -f "tsserver.js" 2>/dev/null || true
+  # Remove stale state files
+  rm -f /tmp/cto_cooldown_P* 2>/dev/null || true
+  rm -f /tmp/cto_dispatch_ts_P* 2>/dev/null || true
+  log_metric "factory_shutdown" "clean" "0"
+  echo "🏭 FACTORY STOPPED — $(date)"
+}
+trap cleanup EXIT INT TERM HUP
+
+# ═══════════════════════════════════════════════════════════════
+# METRICS LOGGING — Append to /tmp/factory-metrics.log
+# Format: ISO_TIMESTAMP | event | pane | project | status | duration_s | command
+# ═══════════════════════════════════════════════════════════════
+log_metric() {
+  local EVENT=$1 STATUS=$2 DURATION=${3:-0} PANE=${4:-"-"} PROJECT=${5:-"-"} CMD=${6:-"-"}
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) | ${EVENT} | P${PANE} | ${PROJECT} | ${STATUS} | ${DURATION}s | ${CMD:0:80}" >> "$METRICS_LOG"
+}
+
+# ═══════════════════════════════════════════════════════════════
+# HEALTH CHECK — Verify pane is responsive before dispatch
+# Returns 0 if healthy, 1 if unhealthy
+# ═══════════════════════════════════════════════════════════════
+check_pane_health() {
+  local PANE=$1
+
+  # 1. Verify tmux pane exists
+  if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
+    echo "💀 [P$PANE] tmux session '$TMUX_SESSION' not found"
+    log_metric "health_check" "session_dead" "0" "$PANE"
+    return 1
+  fi
+
+  # 2. Verify pane is alive (can capture output)
+  local CAPTURE
+  CAPTURE=$(tmux capture-pane -t "$TMUX_SESSION:0.$PANE" -p 2>/dev/null) || {
+    echo "💀 [P$PANE] pane capture failed — pane dead"
+    log_metric "health_check" "pane_dead" "0" "$PANE"
+    return 1
+  }
+
+  # 3. Check for known fatal states
+  local TAIL3=$(echo "$CAPTURE" | tail -n 3)
+  if echo "$TAIL3" | grep -qE "Segmentation fault|killed|SIGKILL|core dumped"; then
+    echo "💀 [P$PANE] fatal crash detected"
+    log_metric "health_check" "fatal_crash" "0" "$PANE"
+    return 1
+  fi
+
+  return 0
+}
+
+# ═══════════════════════════════════════════════════════════════
+# HUNG COMMAND DETECTION — Kill commands stuck >10 min
+# ═══════════════════════════════════════════════════════════════
+check_command_timeout() {
+  local PANE=$1 PROJECT=$2
+  local TS_FILE="/tmp/cto_dispatch_ts_P${PANE}"
+  local NOW=$(date +%s)
+
+  if [ ! -f "$TS_FILE" ]; then
+    return 0  # No active command
+  fi
+
+  local DISPATCH_TS=$(cat "$TS_FILE" 2>/dev/null || echo "0")
+  local ELAPSED=$((NOW - DISPATCH_TS))
+
+  if [ "$ELAPSED" -gt "$COMMAND_TIMEOUT" ]; then
+    echo "⏰ [P$PANE] TIMEOUT: command hung for ${ELAPSED}s (>${COMMAND_TIMEOUT}s) — sending Escape+Enter"
+    log_metric "command_timeout" "hung" "$ELAPSED" "$PANE" "$PROJECT"
+    # Send Escape to cancel, then Enter to get back to prompt
+    tmux send-keys -t "$TMUX_SESSION:0.$PANE" Escape
+    sleep 1
+    tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
+    rm -f "$TS_FILE"
+    return 1
+  fi
+
+  return 0
+}
+
+# Mark command dispatched (start timer)
+mark_dispatch_start() {
+  local PANE=$1
+  date +%s > "/tmp/cto_dispatch_ts_P${PANE}"
+}
+
+# Mark command completed (clear timer)
+mark_dispatch_done() {
+  local PANE=$1
+  rm -f "/tmp/cto_dispatch_ts_P${PANE}"
+}
+
+echo "🏭 FACTORY v12.1 — HARDENED DISPATCH — $(date) — PID: $$"
+echo "👑 State-aware + trap + timeout(${COMMAND_TIMEOUT}s) + health check + metrics"
 echo "🏛️ P0=${PANE_PROJECTS[0]}, P1=${PANE_PROJECTS[1]}"
+echo "📊 Metrics: $METRICS_LOG"
+log_metric "factory_start" "ok" "0"
 
 # Save/load previous command output per pane (for A→B chaining)
 save_pane_output() {
@@ -270,11 +371,15 @@ get_next_command() {
   esac
 }
 
+CYCLE_COUNT=0
+
 while true; do
+  CYCLE_COUNT=$((CYCLE_COUNT + 1))
   LOAD=$(sysctl -n vm.loadavg | awk '{print $2}')
   RAM=$(vm_stat | awk '/free/ {print $3}' | tr -d '.')
-  echo "🧊 [$(date +%T)] Load=$LOAD RAM_free=$RAM"
+  echo "🧊 [$(date +%T)] Cycle=$CYCLE_COUNT Load=$LOAD RAM_free=$RAM"
 
+  # Periodic zombie cleanup (every cycle)
   pkill -f "node.*jest" 2>/dev/null || true
   pkill -f "node.*vitest" 2>/dev/null || true
   pkill -f "tsserver.js" 2>/dev/null || true
@@ -285,6 +390,22 @@ while true; do
     DIR=${PANE_DIRS[$i]}
     NAME=${PANE_NAMES[$i]}
 
+    # HEALTH CHECK — verify pane is alive before anything else
+    if ! check_pane_health "$PANE"; then
+      echo "🔄 [P$PANE] Attempting respawn..."
+      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions" 2>/dev/null || true
+      sleep 0.5
+      tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter 2>/dev/null || true
+      log_metric "respawn" "triggered" "0" "$PANE" "$PROJECT"
+      continue
+    fi
+
+    # TIMEOUT CHECK — kill hung commands >10 min
+    if ! check_command_timeout "$PANE" "$PROJECT"; then
+      mark_dispatch_done "$PANE"
+      continue
+    fi
+
     PANE_OUTPUT=$(tmux capture-pane -t "$TMUX_SESSION:0.$PANE" -p 2>/dev/null || echo "")
     LAST_45=$(echo "$PANE_OUTPUT" | tail -n 45)
     LAST_5=$(echo "$PANE_OUTPUT" | tail -n 5)
@@ -292,9 +413,11 @@ while true; do
     # CRASHED
     if echo "$LAST_5" | grep -qE "bash-5|% $"; then
       echo "☠️ [P$PANE] CRASHED — Restarting CC CLI..."
+      log_metric "crash" "detected" "0" "$PANE" "$PROJECT"
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions"
       sleep 0.5
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
+      mark_dispatch_done "$PANE"
       continue
     fi
 
@@ -307,25 +430,33 @@ while true; do
     fi
 
     # WORKING — check LAST 5 lines ONLY (active animation near prompt)
-    # Old output in scroll buffer must NOT trigger this
     if echo "$LAST_5" | grep -qE "Bash\(|Read [0-9]|Write\(|Edit\(|Running|thinking|Hashing|Blanching|Creating|Hatching|Puttering|Generating|Tempering|Crunching|Bloviating|Actioning|Manifesting|Stewing|Billowing|Cogitated|Dilly-dallying|Infusing|Churned|Sautéed|Composting|Baked|Warping|Newspapering|Prestidigitating|Channeling|Metamorphosing|Propagating|Scampering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Orbiting|Compacting|Ebbing|Pondering|Crystallizing|Precipitating|Mulling|Searching for|thought for|Harmonizing"; then
       echo "⚙️ [P$PANE] WORKING on $PROJECT — SKIP"
       continue
     fi
 
-    # JUST FINISHED — check LAST 5 lines only (same as WORKING)
+    # JUST FINISHED — mark previous command as done, log success
     if echo "$LAST_5" | grep -qE "✅ Done|✔|Sautéed for|Brewed for|Baked for|Cogitated for|Crunched for"; then
-      # Only if pane is at prompt (idle after finishing)
+      # Calculate duration if we have a dispatch timestamp
+      if [ -f "/tmp/cto_dispatch_ts_P${PANE}" ]; then
+        DISPATCH_TS=$(cat "/tmp/cto_dispatch_ts_P${PANE}" 2>/dev/null || echo "0")
+        DURATION=$(( $(date +%s) - DISPATCH_TS ))
+        log_metric "command_complete" "success" "$DURATION" "$PANE" "$PROJECT"
+        mark_dispatch_done "$PANE"
+      fi
+
       if echo "$LAST_5" | grep -qE "❯"; then
-        : # Not truly just-finished, it's idle — fall through to dispatch
+        : # idle — fall through to dispatch
       else
         echo "🏁 [P$PANE] JUST FINISHED — cooldown"
         continue
       fi
     fi
 
-    # TRULY IDLE → dispatch VC-level command with cascade logic
+    # TRULY IDLE → dispatch command with cascade logic
     if echo "$LAST_5" | grep -qE "❯|bypass permissions"; then
+      mark_dispatch_done "$PANE"  # Clear any stale dispatch timer
+
       COOLDOWN_FILE="/tmp/cto_cooldown_P${PANE}"
       NOW=$(date +%s)
       LAST_DISPATCH=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo "0")
@@ -336,7 +467,7 @@ while true; do
         continue
       fi
 
-      # Save current output for chaining (A→B) — CC CLI reads from file
+      # Save current output for chaining (A→B)
       save_pane_output "$PANE" "$LAST_45"
 
       # CASCADE LOGIC: analyze + get command
@@ -360,16 +491,18 @@ while true; do
       echo "$LAYER [P$PANE] CASCADE DISPATCH for $PROJECT:"
       echo "   📌 $CASCADE_CMD"
 
-      # SEND CLEAN /command — NO inline context (was garbling)
-      # CC CLI gets /command as proper slash command
+      # DISPATCH + start timeout timer
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$CASCADE_CMD"
       sleep 0.5
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
       echo "$NOW" > "$COOLDOWN_FILE"
+      mark_dispatch_start "$PANE"
+      log_metric "dispatch" "sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
       continue
     fi
 
     echo "❓ [P$PANE] UNKNOWN STATE"
+    log_metric "unknown_state" "detected" "0" "$PANE" "$PROJECT"
   done
 
   echo "💤 [$(date +%T)] Sleeping ${SLEEP_INTERVAL}s..."
