@@ -470,7 +470,7 @@ function startAutoCTO() {
 								log(`[🩺 RESPAWN][P${pIdx}] Shell-only detected — auto-restarting CC CLI`);
 								try {
 									require('child_process').execSync(
-										`tmux send-keys -t tom_hum:0.${pIdx} "unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE && claude --dangerously-skip-permissions --continue"`,
+										`tmux send-keys -t tom_hum:0.${pIdx} "export CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50 && claude --dangerously-skip-permissions --continue"`,
 										{ timeout: 8000 },
 									);
 									require('child_process').execSync(`tmux send-keys -t tom_hum:0.${pIdx} Enter`, { timeout: 3000 });
