@@ -293,16 +293,16 @@ export class PolymarketWebSocket {
 
     switch (eventType) {
       case "book":
-        this.onBook?.(msg as BookEvent);
+        this.onBook?.(msg as unknown as BookEvent);
         break;
       case "price_change":
-        this.onPriceChange?.(msg as PriceChangeEvent);
+        this.onPriceChange?.(msg as unknown as PriceChangeEvent);
         break;
       case "last_trade_price":
-        this.onLastTradePrice?.(msg as LastTradePriceEvent);
+        this.onLastTradePrice?.(msg as unknown as LastTradePriceEvent);
         break;
       case "best_bid_ask":
-        this.onBestBidAsk?.(msg as BestBidAskEvent);
+        this.onBestBidAsk?.(msg as unknown as BestBidAskEvent);
         break;
       case "tick_size_change":
         // Handle tick size changes if needed
@@ -314,10 +314,10 @@ export class PolymarketWebSocket {
         // Market resolution notification
         break;
       case "trade":
-        this.onTrade?.(msg as TradeEvent);
+        this.onTrade?.(msg as unknown as TradeEvent);
         break;
       case "order":
-        this.onOrder?.(msg as OrderEvent);
+        this.onOrder?.(msg as unknown as OrderEvent);
         break;
       default:
         console.log("[PolyWS] Unknown event:", eventType);

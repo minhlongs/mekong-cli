@@ -124,7 +124,8 @@ export class WhaleTrackingStrategy extends BasePolymarketStrategy {
   /**
    * Generate copy signal
    */
-  generateSignal(tick: IMarketTick): IPolymarketSignal | null {
+  async generateSignal(_tokenId: string, _marketId: string, tick?: IMarketTick): Promise<IPolymarketSignal | null> {
+    if (!tick) return null;
     const pendingTrade = this.pendingTrades.get(tick.tokenId);
     if (!pendingTrade) return null;
 
@@ -186,8 +187,8 @@ export class WhaleTrackingStrategy extends BasePolymarketStrategy {
     return null;
   }
 
-  processTick(tick: IMarketTick): IPolymarketSignal | null {
+  async processTick(tick: IMarketTick): Promise<IPolymarketSignal | null> {
     this.onMarketTick(tick);
-    return this.generateSignal(tick);
+    return this.generateSignal(tick.tokenId, tick.marketId, tick);
   }
 }

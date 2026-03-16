@@ -27,11 +27,10 @@ export type { WhaleTrackingConfig, WhaleData, WhaleTrade } from './WhaleTracking
 
 // Cross-platform strategies
 export { CrossPlatformArbStrategy } from '../CrossPlatformArbStrategy';
-export type { CrossPlatformArbConfig, ArbOpportunity } from '../CrossPlatformArbStrategy';
+export type { ArbOpportunity } from '../CrossPlatformArbStrategy';
 
 export { MarketMakerStrategy } from '../MarketMakerStrategy';
 export type { MMConfig, MMPosition, MMOrder } from '../MarketMakerStrategy';
 
 // Event-driven strategies
 export { ListingArbStrategy } from '../ListingArbStrategy';
-export type { ListingArbConfig } from '../interfaces/IBinance';

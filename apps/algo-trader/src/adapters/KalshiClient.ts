@@ -1,6 +1,8 @@
 // src/adapters/KalshiClient.ts
 // Spec-aligned: RSA-PSS auth via axios interceptor (Section 6.1)
-import axios, { AxiosInstance } from "axios";
+// @ts-ignore
+import axios from "axios";
+type AxiosInstance = ReturnType<typeof axios.create>;
 import crypto from "crypto";
 import { ENV } from "../config/env";
 
@@ -9,7 +11,7 @@ export class KalshiClient {
 
   constructor() {
     this.http = axios.create({ baseURL: ENV.KALSHI_BASE, timeout: 10000 });
-    this.http.interceptors.request.use(config => {
+    this.http.interceptors.request.use((config: any) => {
       const method = (config.method || "GET").toUpperCase();
       const path = (config.url || "").split("?")[0]; // CRITICAL: strip query params
       const ts = Date.now().toString();

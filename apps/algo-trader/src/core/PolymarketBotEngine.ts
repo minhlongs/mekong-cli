@@ -7,7 +7,6 @@ import { Wallet } from 'ethers';
 import { PolymarketWS } from '../adapters/PolymarketWS';
 import { GammaClient, ParsedMarket } from '../adapters/GammaClient';
 import { MarketMakerStrategy } from '../strategies/MarketMakerStrategy';
-import { RiskManager } from './RiskManager';
 import { saveState, loadState, clearState } from './StateManager';
 import { LicenseGate } from './LicenseGate';
 import { ENV } from '../config/env';
@@ -18,7 +17,16 @@ export class PolymarketBotEngine {
   private ws!: PolymarketWS;
   private gamma = new GammaClient();
   private mm = new MarketMakerStrategy();
-  private risk = new RiskManager();
+  private risk = {
+    _maxBankroll: 0,
+    _dailyLoss: 0,
+    _lastReset: Date.now(),
+    initDailyLoss(max: number) { this._maxBankroll = max; this._dailyLoss = 0; },
+    recordTrade(pnl: number) { if (pnl < 0) this._dailyLoss += Math.abs(pnl); },
+    canTrade() { return this._dailyLoss < this._maxBankroll * 0.1; },
+    resetDaily() { this._dailyLoss = 0; this._lastReset = Date.now(); },
+    getDailyPnl() { return -this._dailyLoss; },
+  };
   private license = new LicenseGate();
   private markets: ParsedMarket[] = [];
   private running = false;
@@ -231,7 +239,7 @@ export class PolymarketBotEngine {
       totalSignals: this.tradeCount,
       executedTrades: this.tradeCount,
       rejectedTrades: 0,
-      dailyPnL: this.risk.getDailyPnl?.() ?? 0,
+      dailyPnL: this.risk.getDailyPnl() ?? 0,
       dailyVolume: 0,
       totalPnL: 0,
       strategies: [{ name: 'MarketMaker', enabled: this.running, signalCount: this.tradeCount }],

@@ -104,7 +104,7 @@ export abstract class BasePolymarketStrategy implements IStrategy {
    * Call this from bot engine instead of calling processTick directly.
    * Returns exit signals first (stop-loss), then strategy entry signal if any.
    */
-  processTickSafe(tick: IMarketTick): IPolymarketSignal[] {
+  async processTickSafe(tick: IMarketTick): Promise<IPolymarketSignal[]> {
     this.onMarketTick(tick);
 
     const signals: IPolymarketSignal[] = [];
@@ -114,7 +114,7 @@ export abstract class BasePolymarketStrategy implements IStrategy {
     signals.push(...exitSignals);
 
     // Then run strategy-specific logic
-    const entrySignal = this.generateSignal(tick.tokenId, tick.marketId, tick);
+    const entrySignal = await this.generateSignal(tick.tokenId, tick.marketId, tick);
     if (entrySignal && entrySignal.action === 'BUY') {
       // Auto-track new positions for stop-loss monitoring
       this.trackPosition(tick.tokenId, tick.marketId, entrySignal.side, entrySignal.price, entrySignal.size);
@@ -135,7 +135,7 @@ export abstract class BasePolymarketStrategy implements IStrategy {
    * Generate signal based on price vs fair value
    * Subclasses can override with additional params
    */
-  protected generateSignal(_tokenId: string, _marketId: string, _tick?: IMarketTick): IPolymarketSignal | null {
+  protected async generateSignal(_tokenId: string, _marketId: string, _tick?: IMarketTick): Promise<IPolymarketSignal | null> {
     return null;
   }
 
@@ -163,7 +163,7 @@ export abstract class BasePolymarketStrategy implements IStrategy {
       const tick = this.getTick(tokenId);
       if (!tick) continue;
 
-      const currentPrice = pos.side === 'YES' ? tick.bestBid : tick.bestAsk;
+      const currentPrice = pos.side === 'YES' ? tick.yesBid : tick.yesAsk;
       if (!currentPrice || currentPrice <= 0) continue;
 
       const pnlPct = (currentPrice - pos.entryPrice) / pos.entryPrice;

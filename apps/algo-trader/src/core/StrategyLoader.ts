@@ -19,9 +19,9 @@ export class StrategyLoader {
     ['Bollinger', BollingerBandStrategy],
     ['MacdCrossover', MacdCrossoverStrategy],
     ['MacdBollingerRsi', MacdBollingerRsiStrategy],
-    ['CrossExchange', CrossExchangeArbitrage],
-    ['Triangular', TriangularArbitrage],
-    ['Statistical', StatisticalArbitrage],
+    ['CrossExchange', CrossExchangeArbitrage as unknown as new () => IStrategy],
+    ['Triangular', TriangularArbitrage as unknown as new () => IStrategy],
+    ['Statistical', StatisticalArbitrage as unknown as new () => IStrategy],
   ]);
 
   /** Factory functions for strategies that need config (ML strategies - PREMIUM). */

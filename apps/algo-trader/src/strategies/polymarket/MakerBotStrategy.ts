@@ -17,7 +17,7 @@ import { BasePolymarketStrategy } from './BasePolymarketStrategy';
 import { ICandle } from '../../interfaces/ICandle';
 import { ISignal } from '../../interfaces/ISignal';
 import { IPolymarketSignal, PolymarketSignalType, IMarketTick } from '../../interfaces/IPolymarket';
-import { logger } from '../../../utils/logger';
+import { logger } from '../../utils/logger';
 
 export interface MakerBotConfig {
   spreadBps: number;         // Target spread in bps (default 200 = 2%)

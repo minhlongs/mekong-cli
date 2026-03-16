@@ -198,8 +198,10 @@ export class SignalOrderPipeline extends EventEmitter {
         async (exchangeId: string) => {
           logger.info(`[Pipeline] ${side.toUpperCase()} ${amount.toFixed(6)} ${this.symbol} on ${exchangeId} @ ~$${price.toFixed(2)}`);
           // Route order through exchange manager's connected exchange
-          const exchange = this.manager.getExchange(exchangeId);
-          if (!exchange) throw new Error(`Exchange ${exchangeId} not connected`);
+          const pool = this.manager.getPool();
+          const connection = pool?.getConnection(exchangeId);
+          if (!connection) throw new Error(`Exchange ${exchangeId} not connected`);
+          const exchange = connection as unknown as { createOrder: (...args: unknown[]) => Promise<{ id?: string }> };
           const order = await exchange.createOrder(this.symbol, 'limit', side, amount, price);
           return { exchangeId, side, amount, price, orderId: order?.id, timestamp: Date.now() };
         },

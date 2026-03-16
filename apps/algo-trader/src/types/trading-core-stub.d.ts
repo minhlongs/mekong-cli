@@ -17,7 +17,7 @@ declare module '@agencyos/trading-core/exchanges' {
   }
 
   export class ExchangeClientBase {
-    constructor(config?: any);
+    constructor(exchangeIdOrConfig?: any, apiKey?: any, secret?: any);
     name: string;
     fetchTicker(symbol: string): Promise<any>;
     fetchOrderBook(symbol: string): Promise<any>;
@@ -207,7 +207,8 @@ declare module '@agencyos/trading-core/interfaces' {
 
   export interface IStrategy {
     name: string;
-    execute(): Promise<any>;
+    onCandle(candle: ICandle): Promise<ISignal | null>;
+    init(history: ICandle[]): Promise<void>;
     [key: string]: any;
   }
 

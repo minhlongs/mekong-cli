@@ -93,13 +93,13 @@ export class PolymarketGammaClient {
       ...params,
     };
 
-    const response = await this.client.get<any, { data: GammaMarket[] }>("/markets", { params: defaultParams });
+    const response = await this.client.get("/markets", { params: defaultParams }) as { data: GammaMarket[] };
     return response.data.map((m: GammaMarket) => this.parseMarket(m));
   }
 
   async getMarket(id: string): Promise<ParsedMarket | null> {
     try {
-      const response = await this.client.get<any, { data: GammaMarket }>(`/markets/${id}`);
+      const response = await this.client.get(`/markets/${id}`) as { data: GammaMarket };
       return this.parseMarket(response.data);
     } catch {
       return null;
@@ -110,9 +110,7 @@ export class PolymarketGammaClient {
    * Search markets by keyword
    */
   async search(query: string, limit = 50): Promise<ParsedMarket[]> {
-    const response = await this.client.get<any, { data: GammaMarket[] }>("/search", {
-      params: { q: query, limit },
-    });
+    const response = await this.client.get("/search", { params: { q: query, limit } }) as { data: GammaMarket[] };
     return response.data.map((m: GammaMarket) => this.parseMarket(m));
   }
 
@@ -123,7 +121,7 @@ export class PolymarketGammaClient {
     limit?: number;
     offset?: number;
   }): Promise<GammaEvent[]> {
-    const response = await this.client.get<any, { data: GammaEvent[] }>("/events", { params });
+    const response = await this.client.get("/events", { params }) as { data: GammaEvent[] };
     return response.data;
   }
 
@@ -131,7 +129,7 @@ export class PolymarketGammaClient {
    * Get single event by ID
    */
   async getEvent(id: string): Promise<GammaEvent> {
-    const response = await this.client.get<any, { data: GammaEvent }>(`/events/${id}`);
+    const response = await this.client.get(`/events/${id}`) as { data: GammaEvent };
     return response.data;
   }
 

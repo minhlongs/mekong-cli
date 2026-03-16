@@ -82,7 +82,7 @@ export class OrderBookDepthAnalyzer {
       return this.emptyAnalysis(exchange, orderBook.symbol, side, amount);
     }
 
-    const bestPrice = entries[0].price;
+    const bestPrice = entries[0][0];
     let remaining = amount;
     let totalQuote = 0;
     let levelsConsumed = 0;
@@ -92,9 +92,9 @@ export class OrderBookDepthAnalyzer {
       if (remaining <= 0) break;
       levelsConsumed++;
 
-      const fillAmount = Math.min(remaining, entry.amount);
-      totalQuote += fillAmount * entry.price;
-      maxFillableAmount += entry.amount;
+      const fillAmount = Math.min(remaining, entry[1]);
+      totalQuote += fillAmount * entry[0];
+      maxFillableAmount += entry[1];
       remaining -= fillAmount;
     }
 
@@ -195,13 +195,13 @@ export class OrderBookDepthAnalyzer {
 
     if (entries.length === 0) return 0;
 
-    const bestPrice = entries[0].price;
+    const bestPrice = entries[0][0];
     let totalAmount = 0;
     let totalQuote = 0;
 
     for (const entry of entries) {
-      const newTotal = totalAmount + entry.amount;
-      const newQuote = totalQuote + entry.amount * entry.price;
+      const newTotal = totalAmount + entry[1];
+      const newQuote = totalQuote + entry[1] * entry[0];
       const avgPrice = newQuote / newTotal;
       const slippage = Math.abs(avgPrice - bestPrice) / bestPrice;
 

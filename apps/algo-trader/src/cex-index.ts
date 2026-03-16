@@ -46,9 +46,9 @@ async function main() {
 
   // 3. Initialize stealth engine
   const stealth = new BinhPhapStealthStrategy({
-    defaultMode: 'split',
+    defaultExecutionMode: 'split',
     minConfidenceScore: 70,
-    enableExchangeRotation: true,
+    exchangeRotationEnabled: true,
   });
 
   // 4. Start scanners
@@ -64,7 +64,7 @@ async function main() {
     if (!dryRun) {
       const plan = stealth.planExecution(opp.spread.buyExchange, opp.spread.netSpreadPct / 100, opp.spread.symbol);
       if (plan.shouldProceed) {
-        logger.info(`[Stealth] Executing ${plan.mode} with ${plan.sizes.length} chunks`);
+        logger.info(`[Stealth] Executing ${plan.algorithm} with ${plan.orderChunks.length} chunks`);
       }
     }
   });
@@ -100,13 +100,12 @@ async function main() {
           const perpSymbol = symbol.replace('/', ':');
           const rate = await client.fetchFundingRate(perpSymbol);
           if (rate) {
-            fundingScanner.updateRate({
-              exchange: id,
-              symbol: symbol,
-              rate: rate.fundingRate || 0,
-              nextFundingTime: rate.fundingTimestamp || Date.now() + 28800000,
-              updatedAt: Date.now(),
-            });
+            fundingScanner.updateRate(
+              id,
+              symbol,
+              rate.fundingRate || 0,
+              rate.fundingTimestamp || Date.now() + 28800000,
+            );
           }
         } catch {} // not all exchanges/symbols support funding
       }

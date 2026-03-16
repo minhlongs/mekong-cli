@@ -446,7 +446,9 @@ export class PolymarketBotEngine extends EventEmitter {
       try {
         const signals = this.runStrategy(strategy, tick);
         for (const signal of signals) {
-          this.processSignal(signal);
+          this.processSignal(signal).catch(err =>
+            logger.error(`[BotEngine] processSignal error:`, err instanceof Error ? err.message : String(err))
+          );
         }
       } catch (err) {
         logger.error(`[BotEngine] Strategy error (${strategy.name}):`, err instanceof Error ? err.message : String(err));
@@ -473,7 +475,7 @@ export class PolymarketBotEngine extends EventEmitter {
   /**
    * Process signal through risk checks
    */
-  private processSignal(signal: IPolymarketSignal): void {
+  private async processSignal(signal: IPolymarketSignal): Promise<void> {
     this.state.totalSignals++;
 
     // Risk check 0: Circuit breaker (NEW)
@@ -619,7 +621,7 @@ export class PolymarketBotEngine extends EventEmitter {
         );
         logger.info(`[BotEngine] SELL order placed: ${order.orderId} (${signal.side} token)`);
 
-        trade.realizedPnl = (signal.price - (trade.entryPrice || signal.price)) * signal.size;
+        trade.realizedPnl = 0; // Realized PnL calculated separately via PnLTracker
         this.pnlTracker.recordTrade(trade);
 
         // Update portfolio value after sell

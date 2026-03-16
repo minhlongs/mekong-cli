@@ -299,8 +299,8 @@ export class PolymarketAdapter extends EventEmitter {
       orderId: o.id,
       tokenId: o.asset_id,
       side: o.side as 'BUY' | 'SELL',
-      price: parseFloat(o.price),
-      size: parseFloat(o.original_size),
+      price: typeof o.price === 'string' ? parseFloat(o.price) : o.price,
+      size: typeof o.original_size === 'string' ? parseFloat(o.original_size) : o.original_size,
       status: o.status as PolymarketOrder['status'],
       createdAt: new Date(o.created_at).getTime(),
     }));
@@ -326,11 +326,11 @@ export class PolymarketAdapter extends EventEmitter {
   }> {
     const book = await this.clobClient.getOrderBook(tokenId);
     return {
-      bids: book.bids.map(b => ({
+      bids: book.bids.map((b: { price: string; size: string }) => ({
         price: parseFloat(b.price),
         size: parseFloat(b.size),
       })),
-      asks: book.asks.map(a => ({
+      asks: book.asks.map((a: { price: string; size: string }) => ({
         price: parseFloat(a.price),
         size: parseFloat(a.size),
       })),

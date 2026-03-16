@@ -34,8 +34,8 @@ export function registerPortfolioDashboardRoutes(
         totalPnl: summary.totalPnl,
         realizedPnl: summary.realizedPnl,
         unrealizedPnl: summary.unrealizedPnl,
-        openPositions: summary.openPositions,
-        closedPositions: summary.closedPositions,
+        openPositions: summary.totalPositions,
+        closedPositions: 0,
       },
       risk: {
         anyTripped: riskStatus.anyTripped,

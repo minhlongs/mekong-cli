@@ -202,7 +202,7 @@ export class ExchangeClient {
         validatedSymbol,
         validatedSide,
         result.amount,
-        result.price
+        result.price ?? 0
       );
 
       const metadata: TradeExecutionMetadata = {
@@ -284,7 +284,7 @@ export class ExchangeClient {
         validatedSymbol,
         validatedSide,
         result.amount,
-        result.price
+        result.price ?? 0
       );
 
       const metadata: TradeExecutionMetadata = {

@@ -136,7 +136,7 @@ export class PortfolioManager {
 
     // Persist to Prisma
     try {
-      await this.prisma.polymarketPosition.create({
+      await (this.prisma as any).polymarketPosition.create({
         data: {
           id: positionId,
           tenantId: position.tenantId,
@@ -229,7 +229,7 @@ export class PortfolioManager {
 
     // Update Prisma
     try {
-      await this.prisma.polymarketPosition.update({
+      await (this.prisma as any).polymarketPosition.update({
         where: { id: positionId },
         data: {
           realizedPnl: finalPnl,
@@ -320,14 +320,14 @@ export class PortfolioManager {
   async syncFromDatabase(tenantId?: string): Promise<Position[]> {
     try {
       const where = tenantId ? { tenantId } : {};
-      const dbPositions = await this.prisma.polymarketPosition.findMany({
+      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
         where,
         orderBy: { openedAt: 'desc' },
       });
 
       const synced: Position[] = [];
 
-      for (const dbPos of dbPositions) {
+      for (const dbPos of dbPositions as any[]) {
         const isClosed = !!dbPos.closedAt;
         const position: Position = {
           id: dbPos.id,
@@ -366,7 +366,7 @@ export class PortfolioManager {
     const end = new Date(year + 1, 0, 0, 23, 59, 59);
 
     try {
-      const dbPositions = await this.prisma.polymarketPosition.findMany({
+      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
         where: {
           tenantId,
           closedAt: {
@@ -377,7 +377,7 @@ export class PortfolioManager {
         orderBy: { closedAt: 'asc' },
       });
 
-      return dbPositions.map((dbPos) => {
+      return dbPositions.map((dbPos: any) => {
         const costBasis = Number(dbPos.size) * Number(dbPos.avgPrice);
         const proceeds = costBasis + Number(dbPos.realizedPnl);
         const openedAt = dbPos.openedAt;
@@ -409,13 +409,13 @@ export class PortfolioManager {
    */
   async getPnLHistory(tenantId: string, limit: number = 100): Promise<Position[]> {
     try {
-      const dbPositions = await this.prisma.polymarketPosition.findMany({
+      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
         where: { tenantId, closedAt: { not: null } },
         orderBy: { closedAt: 'desc' },
         take: limit,
       });
 
-      return dbPositions.map((dbPos) => ({
+      return dbPositions.map((dbPos: any) => ({
         id: dbPos.id,
         tenantId: dbPos.tenantId,
         tokenId: dbPos.tokenId,

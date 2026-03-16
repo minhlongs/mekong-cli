@@ -61,13 +61,19 @@ export class PaperTradingEngine implements IExchange {
 
   async connect(): Promise<void> { /* no-op for paper */ }
 
+  async disconnect(): Promise<void> { /* no-op for paper */ }
+
+  async createOrder(symbol: string, _type: string, side: string, amount: number, price?: number): Promise<IOrder> {
+    return this.createMarketOrder(symbol, side as 'buy' | 'sell', amount);
+  }
+
   async fetchTicker(symbol: string): Promise<number> {
     return this.lastPrices.get(symbol) ?? 0;
   }
 
   async fetchOrderBook(symbol: string): Promise<IOrderBook> {
     const price = this.lastPrices.get(symbol) ?? 0;
-    return { symbol, bids: [{ price, amount: 1 }], asks: [{ price, amount: 1 }], timestamp: Date.now() };
+    return { symbol, bids: [[price, 1] as [number, number]], asks: [[price, 1] as [number, number]], timestamp: Date.now() };
   }
 
   async fetchBalance(): Promise<Record<string, IBalance>> {

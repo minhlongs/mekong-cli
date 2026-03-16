@@ -103,7 +103,7 @@ export class PolymarketClobClient {
     if (!this.wallet) {
       throw new Error("Wallet required for L1 auth - provide privateKey in config");
     }
-    this.creds = await this.client.createOrDeriveApiKey();
+    this.creds = await this.client.createOrDeriveApiKey() as ApiKeyCreds;
     return this.creds;
   }
 
