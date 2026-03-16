@@ -116,11 +116,23 @@ mark_dispatch_done() {
   rm -f "/tmp/cto_dispatch_ts_P${PANE}"
 }
 
-echo "🏭 FACTORY v12.1 — HARDENED DISPATCH — $(date) — PID: $$"
-echo "👑 State-aware + trap + timeout(${COMMAND_TIMEOUT}s) + health check + metrics"
+echo "🏭 FACTORY v13.0 — CTO BRAIN v3 + CASCADE + PRIORITY — $(date) — PID: $$"
+echo "👑 Brain learning + analysis→code cascade + ROI priority queue"
 echo "🏛️ P0=${PANE_PROJECTS[0]}, P1=${PANE_PROJECTS[1]}"
 echo "📊 Metrics: $METRICS_LOG"
 log_metric "factory_start" "ok" "0"
+
+# Load brain learning state on startup
+BRAIN_STATE_FILE="$HOME/mekong-cli/apps/openclaw-worker/brain-learning-state.json"
+if [ -f "$BRAIN_STATE_FILE" ]; then
+  LEARNED_CMDS=$(timeout 3 node -e "
+    const s = JSON.parse(require('fs').readFileSync('$BRAIN_STATE_FILE','utf-8'));
+    console.log(Object.keys(s.commandEffectiveness || {}).length);
+  " 2>/dev/null || echo "0")
+  echo "🧠 Brain loaded: ${LEARNED_CMDS} commands learned from past sessions"
+else
+  echo "🧠 Brain: fresh start (no learning data yet)"
+fi
 
 # Save/load previous command output per pane (for A→B chaining)
 save_pane_output() {
@@ -155,14 +167,19 @@ set_pane_state() {
 }
 
 # Analyze last 45 lines for cascade triggers
-# Returns: "bootstrap" | "portfolio" | "fix" | "continue" | "error"
+# Returns: "bootstrap" | "fix" | "analysis_done" | "continue"
 analyze_output() {
   local OUTPUT="$1"
   local OUTPUT_LOWER=$(echo "$OUTPUT" | tr '[:upper:]' '[:lower:]')
 
   # Priority 1: SUCCESS signals → project is ready, continue rotation
-  # Check this FIRST so "Bootstrap complete" overrides old "empty" keywords
   if echo "$OUTPUT_LOWER" | grep -qE "✅|bootstrap complete|ready for|initialized|success|completed|saved|created|done|finished|launched|deployed|operational"; then
+    # CASCADE BRIDGE: detect if output is analysis/report (not code)
+    # If last command produced analysis → trigger engineering /cook next
+    if echo "$OUTPUT_LOWER" | grep -qE "report saved|analysis complete|terrain.*score|thesis.*updated|momentum.*score|five.factor|market.*analysis|content.*plan"; then
+      echo "analysis_done"
+      return
+    fi
     echo "continue"
     return
   fi
@@ -173,7 +190,7 @@ analyze_output() {
     return
   fi
 
-  # Priority 3: Not initialized → needs bootstrap (only if no success above)
+  # Priority 3: Not initialized → needs bootstrap
   if echo "$OUTPUT_LOWER" | grep -qE "not initialized|does not exist|not configured|no studio found|missing portfolio|missing studio"; then
     echo "bootstrap"
     return
@@ -197,7 +214,7 @@ get_cascade_command() {
   # Log analysis to stderr (not captured in command output)
   echo "   📊 State='$CURRENT_STATE' Analysis='$ANALYSIS'" >&2
 
-  # OVERRIDE: If analysis says fix/bootstrap, do it regardless of state
+  # OVERRIDE: If analysis says fix/bootstrap/analysis_done, handle immediately
   if [ "$ANALYSIS" = "fix" ]; then
     set_pane_state "$PANE" "needs_fix"
     echo "/cook [CHỈ project: ${PROJECT}] [DIR: ${DIR}] Fix errors in $NAME — KHÔNG đụng project khác"
@@ -207,6 +224,29 @@ get_cascade_command() {
   if [ "$ANALYSIS" = "bootstrap" ]; then
     set_pane_state "$PANE" "needs_bootstrap"
     echo "/studio-bootstrap [CHỈ project: ${PROJECT}] [DIR: ${DIR}] $NAME — KHÔNG đụng project khác"
+    return
+  fi
+
+  # CASCADE BRIDGE: analysis → code. This is the missing link!
+  # When Studio/Business output analysis, AUTO-TRIGGER /cook to produce real code
+  if [ "$ANALYSIS" = "analysis_done" ]; then
+    echo "   🌉 CASCADE: analysis → engineering /cook" >&2
+    # Try brain learning for best command
+    local BEST_CMD
+    BEST_CMD=$(timeout 3 node -e "
+      try {
+        const r = require('$HOME/mekong-cli/apps/openclaw-worker/lib/factory-roi-calculator');
+        const cmd = r.getBestCommand('$PROJECT', 'deployed');
+        if (cmd) console.log(cmd); else console.log('');
+      } catch(e) { console.log(''); }
+    " 2>/dev/null || echo "")
+
+    if [ -n "$BEST_CMD" ] && [ ${#BEST_CMD} -gt 3 ]; then
+      echo "${BEST_CMD} [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+    else
+      # Default cascade: build feature based on analysis context
+      echo "/cook Build the next feature for ${NAME} based on latest analysis. Read plans/reports/ for context. Write TypeScript code to src/. [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+    fi
     return
   fi
 
@@ -408,7 +448,20 @@ while true; do
   pkill -f "node.*vitest" 2>/dev/null || true
   pkill -f "tsserver.js" 2>/dev/null || true
 
+  # PRIORITY QUEUE: Sort panes by project state
+  # Projects with code (src/) get dispatched before empty projects
+  SORTED_PANES=()
   for i in "${!PANES[@]}"; do
+    STATE=$(detect_project_state "${PANE_DIRS[$i]}" 2>/dev/null || echo "empty")
+    case "$STATE" in
+      "deployed")       SORTED_PANES=("$i" "${SORTED_PANES[@]}") ;;  # highest priority
+      "scaffolded")     SORTED_PANES=("$i" "${SORTED_PANES[@]}") ;;
+      "needs_install")  SORTED_PANES=("$i" "${SORTED_PANES[@]}") ;;
+      *)                SORTED_PANES+=("$i") ;;  # empty = lowest priority
+    esac
+  done
+
+  for i in "${SORTED_PANES[@]}"; do
     PANE=${PANES[$i]}
     PROJECT=${PANE_PROJECTS[$i]}
     DIR=${PANE_DIRS[$i]}
