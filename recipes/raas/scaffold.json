@@ -1,0 +1,22 @@
+{
+  "id": "raas-scaffold",
+  "name": "RaaS Scaffold",
+  "description": "Scaffold new RaaS SaaS project with Next.js + Cloudflare. 1 command, ~15 min.",
+  "trigger": "/raas:scaffold",
+  "output_dir": "apps/$ARGUMENTS",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "scaffold",
+        "name": "Generate SaaS Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "raas-scaffold", "args": "$ARGUMENTS" }
+        ],
+        "depends_on": []
+      }
+    ]
+  }
+}

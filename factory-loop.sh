@@ -1,11 +1,9 @@
 #!/bin/bash
-# FACTORY LOOP v11.0 — CTO THƯỢNG TẦNG: CASCADE LOGIC + VC-LEVEL DISPATCH
-# CTO dispatches REAL VC/Studio/Founder/Business commands from mekong CLI.
-# Commands defined in .claude/commands/ — CC CLI executes via DAG recipes.
-# 5 Business Layers: Founder → Business → Product → Engineering → Ops
-# CTO NEVER dispatches /cook. That's layer 4/5. CTO dispatches layer 1-3.
-# CASCADE LOGIC: Reads CC CLI output, chains commands logically (bootstrap→operate)
-# Date: 2026-03-15 | agencyos.network architecture
+# FACTORY LOOP v12.0 — STATE-AWARE DISPATCH + RAAS SCAFFOLD
+# Detects project state (empty/scaffolded/built/deployed) before dispatching.
+# Empty projects get /raas-scaffold FIRST, not /marketing-content-engine.
+# State machine: empty → scaffold → build features → deploy → operate
+# Date: 2026-03-16 | agencyos.network architecture
 set -euo pipefail
 
 TMUX_SESSION="tom_hum"
@@ -19,8 +17,8 @@ SLEEP_INTERVAL=120
 PANE_STATE_DIR="/tmp/pane_state"
 mkdir -p "$PANE_STATE_DIR"
 
-echo "🏭 FACTORY v11.2 — CASCADE CTO + OUTPUT CHAINING — $(date) — PID: $$"
-echo "👑 CTO reads output A → feeds into command B → chains results"
+echo "🏭 FACTORY v12.0 — STATE-AWARE DISPATCH — $(date) — PID: $$"
+echo "👑 Detects project state → dispatches correct command for that state"
 echo "🏛️ P0=${PANE_PROJECTS[0]}, P1=${PANE_PROJECTS[1]}"
 
 # Save/load previous command output per pane (for A→B chaining)
@@ -142,43 +140,72 @@ get_cascade_command() {
 }
 
 # ═══════════════════════════════════════════════════════════════
-# THƯỢNG TẦNG COMMAND ROTATION — VC/Studio/Founder/Business
-# These are REAL .claude/commands/*.md files. CC CLI knows them.
-# Each cascades: Founder→Business→Product→Engineering→Ops
+# PROJECT STATE DETECTION — Checks actual files on disk
+# States: empty → scaffolded → built → deployed → operating
 # ═══════════════════════════════════════════════════════════════
 
-# 🏯 Studio commands — highest level, portfolio-wide
-STUDIO_CMDS=(
+detect_project_state() {
+  local DIR=$1
+  local FULL_DIR="$HOME/mekong-cli/${DIR}"
+
+  # Directory doesn't exist at all
+  if [ ! -d "$FULL_DIR" ]; then
+    echo "empty"
+    return
+  fi
+
+  # No src/ or app/ = empty project (only config files)
+  if [ ! -d "${FULL_DIR}/src" ] && [ ! -d "${FULL_DIR}/app" ]; then
+    echo "empty"
+    return
+  fi
+
+  # Has src but no node_modules = needs install
+  if [ ! -d "${FULL_DIR}/node_modules" ]; then
+    echo "needs_install"
+    return
+  fi
+
+  # Has build output = deployed/built
+  if [ -d "${FULL_DIR}/out" ] || [ -d "${FULL_DIR}/.next" ] || [ -d "${FULL_DIR}/dist" ]; then
+    echo "deployed"
+    return
+  fi
+
+  # Has src + node_modules but no build = scaffolded, needs features
+  echo "scaffolded"
+}
+
+# ═══════════════════════════════════════════════════════════════
+# OPERATE COMMANDS — Only used when project is deployed/live
+# ═══════════════════════════════════════════════════════════════
+
+# Feature build commands for scaffolded projects
+FEATURE_CMDS_TEMPLATE=(
+  "Build landing page with hero section, features grid, and pricing tiers"
+  "Build user dashboard with authentication and stats cards"
+  "Build billing integration with Polar.sh webhooks and credit system"
+  "Build API routes for core product functionality"
+)
+
+# Operate commands for deployed projects (business/studio layer)
+OPERATE_CMDS_TEMPLATE=(
   "/studio-operate-daily"
-  "/studio-sprint-weekly"
-  "/portfolio-status"
-  "/portfolio-report"
-)
-
-# 👑 Founder commands — strategy & fundraise
-FOUNDER_CMDS=(
-  "/founder-validate"
-  "/venture-thesis"
-  "/venture-terrain"
-  "/venture-momentum"
-  "/venture-five-factors"
-)
-
-# 💼 Business commands — revenue & growth
-BUSINESS_CMDS=(
-  "/business-revenue-engine"
-  "/sales-pipeline-build"
   "/marketing-content-engine"
+  "/sales-pipeline-build"
+  "/portfolio-status"
 )
 
-# 🎯 Product commands — plan & roadmap (falls through to engineering)
-PRODUCT_CMDS=(
-  "/product-discovery"
-  "/product-sprint-plan"
+# Code generation commands for deployed projects wanting new algorithms
+ALGO_CMDS=(
+  "/cook Implement a scoring algorithm. Write TypeScript to src/algorithms/scoring-engine.ts with: interface, scoring logic, unit tests, and export."
+  "/cook Implement a pricing engine. Write TypeScript to src/algorithms/pricing-engine.ts with: tiered pricing, discount calc, bundle pricing."
+  "/cook Implement a recommendation algorithm. Write TypeScript to src/algorithms/recommendation-engine.ts with: collaborative filtering, content matching."
+  "/cook Build a revenue forecasting model. Write TypeScript to src/algorithms/revenue-forecast.ts with: MRR projection, cohort analysis."
+  "/cook Build a unit economics calculator. Write TypeScript to src/algorithms/unit-economics.ts with: LTV, CAC payback, gross margin."
+  "/cook Build an A/B test engine. Write TypeScript to src/algorithms/ab-test-engine.ts with: significance calculator, sample size estimator."
+  "/cook Build a feature prioritizer (RICE/ICE). Write TypeScript to src/algorithms/feature-prioritizer.ts with: multi-framework scorer."
 )
-
-# Combine all into rotation — top layers first
-ALL_CMDS=("${STUDIO_CMDS[@]}" "${FOUNDER_CMDS[@]}" "${BUSINESS_CMDS[@]}" "${PRODUCT_CMDS[@]}")
 
 get_next_command() {
   local PANE=$1
@@ -186,19 +213,61 @@ get_next_command() {
   local DIR=$3
   local NAME=$4
 
-  # Track rotation per pane
-  local IDX_FILE="/tmp/cto_cmd_idx_P${PANE}"
-  local IDX=$(cat "$IDX_FILE" 2>/dev/null || echo "0")
-  local TOTAL=${#ALL_CMDS[@]}
+  # Detect actual project state from filesystem
+  local PROJECT_STATE=$(detect_project_state "$DIR")
+  echo "   🔍 Project state: $PROJECT_STATE" >&2
 
-  # Get command from rotation
-  local CMD="${ALL_CMDS[$((IDX % TOTAL))]}"
+  case "$PROJECT_STATE" in
+    "empty")
+      # Project has no code — scaffold first!
+      echo "/raas-scaffold ${PROJECT} --type saas --stack next+cf [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+      ;;
+    "needs_install")
+      # Has code but no deps — install and build
+      echo "/cook Install dependencies and build: cd ${DIR} && pnpm install && pnpm build [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+      ;;
+    "scaffolded")
+      # Has code + deps but no build — build features one by one
+      local FEATURE_IDX_FILE="/tmp/feature_idx_${PROJECT}"
+      local FEATURE_IDX=$(cat "$FEATURE_IDX_FILE" 2>/dev/null || echo "0")
+      local TOTAL=${#FEATURE_CMDS_TEMPLATE[@]}
 
-  # Advance rotation
-  echo $(( (IDX + 1) % TOTAL )) > "$IDX_FILE"
+      if [ "$FEATURE_IDX" -lt "$TOTAL" ]; then
+        local FEATURE="${FEATURE_CMDS_TEMPLATE[$FEATURE_IDX]}"
+        echo $((FEATURE_IDX + 1)) > "$FEATURE_IDX_FILE"
+        echo "/cook ${FEATURE} for ${NAME} [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+      else
+        # All features built — try to build/deploy
+        echo "/cook Run pnpm build and verify no errors [CHỈ project: ${PROJECT}] [DIR: ${DIR}]"
+      fi
+      ;;
+    "deployed")
+      # Project is live — NOW use business/studio/algo commands
+      local AI_CMD=""
+      local STATE_FILE="$PANE_STATE_DIR/pane_${PANE}_output"
 
-  # Append project context with EXPLICIT scoping + OpenClaw RaaS Quality Directive
-  echo "${CMD} [CHỈ project: ${PROJECT}] [DIR: ${DIR}] ${NAME} — KHÔNG đụng project khác. [OPENCLAW FAST-RAAS: DƯỚI 500 CHỮ, KHÔNG PHÂN TÍCH SÂU, CHỐT LUÔN BUSINESS VALUE, PHẢI NHANH CHÓNG DƯỚI 1 PHÚT]"
+      # Try BytePlus brain first
+      AI_CMD=$(timeout 10 node ~/mekong-cli/byteplus-cto-brain.js "$PROJECT" "$STATE_FILE" 2>/dev/null || true)
+
+      # Fallback: alternate between operate cmds and algo cmds
+      if [ -z "$AI_CMD" ] || [ ${#AI_CMD} -lt 3 ]; then
+        local IDX_FILE="/tmp/cto_cmd_idx_P${PANE}"
+        local IDX=$(cat "$IDX_FILE" 2>/dev/null || echo "0")
+
+        # Even iterations: operate commands, odd: algo commands
+        if [ $((IDX % 2)) -eq 0 ]; then
+          local OP_IDX=$(( (IDX / 2) % ${#OPERATE_CMDS_TEMPLATE[@]} ))
+          AI_CMD="${OPERATE_CMDS_TEMPLATE[$OP_IDX]} ${NAME}"
+        else
+          local ALGO_IDX=$(( (IDX / 2) % ${#ALGO_CMDS[@]} ))
+          AI_CMD="${ALGO_CMDS[$ALGO_IDX]}"
+        fi
+        echo $(( (IDX + 1) )) > "$IDX_FILE"
+      fi
+
+      echo "${AI_CMD} [CHỈ project: ${PROJECT}] [DIR: ${DIR}] — KHÔNG đụng project khác."
+      ;;
+  esac
 }
 
 while true; do
@@ -279,11 +348,12 @@ while true; do
       # Determine layer
       LAYER="?"
       case "$CASCADE_CMD" in
+        /raas*) LAYER="🏗️ Scaffold" ;;
         /studio*|/portfolio*) LAYER="🏯 Studio" ;;
         /founder*|/venture*) LAYER="👑 Founder" ;;
         /business*|/sales*|/marketing*) LAYER="💼 Business" ;;
         /plan*|/design*) LAYER="🎯 Product" ;;
-        /cook*) LAYER="⚙️ Engineering (fix)" ;;
+        /cook*) LAYER="⚙️ Engineering" ;;
         *) LAYER="🏯 Studio" ;;
       esac
 
