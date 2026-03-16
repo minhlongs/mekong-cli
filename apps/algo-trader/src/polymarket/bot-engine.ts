@@ -551,17 +551,40 @@ export class PolymarketBotEngine extends EventEmitter {
       if (signal.action === 'CANCEL') {
         await this.adapter.cancelOrder(signal.tokenId);
       } else if (signal.action === 'BUY') {
+        // FIX: Use correct token_id for side — BUY on YES token or BUY on NO token
+        // Polymarket CLOB: buying NO = BUY order on the no_token_id, not SELL on yes_token_id
         const order = await this.adapter.placeLimitOrder(
           signal.tokenId,
           signal.price,
           signal.size,
-          signal.side === 'YES' ? 'BUY' : 'SELL',
+          'BUY',
         );
-        logger.info(`[BotEngine] Order placed: ${order.orderId}`);
+        logger.info(`[BotEngine] BUY order placed: ${order.orderId} (${signal.side} token)`);
 
-        // Record trade on fill
-        trade.realizedPnl = 0; // Will be updated on sell
+        trade.realizedPnl = 0;
         this.pnlTracker.recordTrade(trade);
+
+        // Update portfolio value after trade execution
+        const portfolioValue = this.config.maxBankroll - this.dailyLoss + this.pnlTracker.getTotalPnL();
+        this.updatePortfolioValue(portfolioValue);
+
+        this.emit('order:placed', { ...order, trade });
+      } else if (signal.action === 'SELL') {
+        // P0-4: Handle SELL signals (previously silently dropped)
+        const order = await this.adapter.placeLimitOrder(
+          signal.tokenId,
+          signal.price,
+          signal.size,
+          'SELL',
+        );
+        logger.info(`[BotEngine] SELL order placed: ${order.orderId} (${signal.side} token)`);
+
+        trade.realizedPnl = (signal.price - (trade.entryPrice || signal.price)) * signal.size;
+        this.pnlTracker.recordTrade(trade);
+
+        // Update portfolio value after sell
+        const portfolioValue = this.config.maxBankroll - this.dailyLoss + this.pnlTracker.getTotalPnL();
+        this.updatePortfolioValue(portfolioValue);
 
         this.emit('order:placed', { ...order, trade });
       }

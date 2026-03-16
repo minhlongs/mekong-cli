@@ -90,10 +90,15 @@ export class PolymarketBotEngine {
       }
     });
 
-    // Fill tracking + license trade counter
+    // Fill tracking + license trade counter + risk update
     this.ws.on('user:trade', (d: any) => {
       console.log(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
       this.license.recordTrade();
+
+      // P0-5: Update risk manager with trade PnL
+      const tradeValue = parseFloat(d.size || '0') * parseFloat(d.price || '0');
+      this.risk.recordTrade(tradeValue);
+
       if (d.market) {
         this.mm.onFill(d.market, d.side, parseFloat(d.size));
       }
@@ -137,9 +142,31 @@ export class PolymarketBotEngine {
 
   // MM fallback tick: every 10s (WS requote handles fast updates)
   private async loopMM(): Promise<void> {
+    let consecutiveErrors = 0;
+    const MAX_CONSECUTIVE_ERRORS = 10;
+
     while (this.running) {
-      try { await this.mm.tick(this.client); }
-      catch (e: any) { console.error('[MM]', e.message); }
+      // P0-5: Check risk before every MM tick
+      if (!this.risk.canTrade()) {
+        console.warn('[Safety] RiskManager blocked trading — pausing MM loop');
+        await sleep(30000);
+        continue;
+      }
+
+      try {
+        await this.mm.tick(this.client);
+        consecutiveErrors = 0; // Reset on success
+      } catch (e: any) {
+        consecutiveErrors++;
+        console.error(`[MM] Error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, e.message);
+
+        // P0-5: Halt on sustained errors instead of infinite spam
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+          console.error('[MM] HALTED: Too many consecutive errors — stopping bot');
+          await this.stop();
+          return;
+        }
+      }
       await sleep(10000);
     }
   }
