@@ -2,6 +2,7 @@ import { BaseStrategy } from './BaseStrategy';
 import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators } from '../analysis/indicators';
+import { TECHNICAL_ANALYSIS } from '../utils/constants';
 
 export interface MacdBollingerRsiConfig {
   macdFastPeriod?: number;
@@ -40,9 +41,9 @@ export class MacdBollingerRsiStrategy extends BaseStrategy {
       macdSignalPeriod: config.macdSignalPeriod || 9,
       bbPeriod: config.bbPeriod || 20,
       bbStdDev: config.bbStdDev || 2,
-      rsiPeriod: config.rsiPeriod || 14,
-      rsiOversold: config.rsiOversold || 30,
-      rsiOverbought: config.rsiOverbought || 70,
+      rsiPeriod: config.rsiPeriod || TECHNICAL_ANALYSIS.RSI_PERIOD,
+      rsiOversold: config.rsiOversold || TECHNICAL_ANALYSIS.RSI_OVERSOLD,
+      rsiOverbought: config.rsiOverbought || TECHNICAL_ANALYSIS.RSI_OVERBOUGHT,
     };
 
     // Ensure we keep enough history for the longest period (MACD slow period or BB/RSI period)

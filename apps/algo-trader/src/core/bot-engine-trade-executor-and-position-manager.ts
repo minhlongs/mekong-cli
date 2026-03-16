@@ -15,6 +15,7 @@ import {
   AgentEventType,
 } from '../a2ui';
 import { BotConfig, BotPositionState } from './bot-engine-config-and-state-types';
+import { alertNotificationSystem } from '../notifications/alert-system';
 
 export class BotTradeExecutor {
   private exchange: IExchange;
@@ -85,6 +86,7 @@ export class BotTradeExecutor {
   /**
    * Checks if current balance has breached the max drawdown threshold.
    * Returns true if drawdown protection triggered (bot should stop).
+   * Phase 18: Safety & Resilience — Drawdown Protection with Telegram Alert
    */
   async checkDrawdown(): Promise<boolean> {
     if (this.config.maxDrawdownPercent === undefined) return false;
@@ -101,6 +103,17 @@ export class BotTradeExecutor {
     const drawdown = ((this.state.peakBalance - currentBalance) / this.state.peakBalance) * 100;
     if (drawdown >= this.config.maxDrawdownPercent) {
       logger.warn(`[DRAWDOWN] ${drawdown.toFixed(2)}% drawdown hit (limit: ${this.config.maxDrawdownPercent}%). Stopping bot.`);
+
+      // Send Telegram alert via notification system (Phase 18)
+      alertNotificationSystem.sendDrawdownAlert(
+        this.config.tenantId,
+        drawdown,
+        this.config.maxDrawdownPercent,
+        currentBalance,
+        this.state.peakBalance,
+      ).catch(err => logger.error(`[DRAWDOWN] Failed to send alert: ${err instanceof Error ? err.message : String(err)}`));
+
+      // Emit risk alert for UI/dashboard
       this.eventBus.emit({
         type: AgentEventType.RISK_ALERT,
         tenantId: this.config.tenantId,
@@ -110,6 +123,8 @@ export class BotTradeExecutor {
         threshold: this.config.maxDrawdownPercent,
         message: `Drawdown ${drawdown.toFixed(2)}% exceeded limit ${this.config.maxDrawdownPercent}%`,
       });
+
+      // Emit escalation for autonomy controller
       this.eventBus.emit({
         type: AgentEventType.ESCALATION,
         tenantId: this.config.tenantId,
@@ -119,7 +134,9 @@ export class BotTradeExecutor {
         suggestedAction: 'Bot halted. Review positions and risk parameters.',
         autoHalted: true,
       });
+
       this.autonomyController.escalate(this.config.symbol, 'Drawdown limit breached');
+
       return true;
     }
 

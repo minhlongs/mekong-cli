@@ -2,14 +2,15 @@ import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators } from '../analysis/indicators';
 import { BaseStrategy } from './BaseStrategy';
+import { TECHNICAL_ANALYSIS } from '../utils/constants';
 
 export class RsiCrossoverStrategy extends BaseStrategy {
   name = 'RSI Crossover Strategy';
   private prevRsi: number | null = null;
 
-  private readonly rsiPeriod = 14;
-  private readonly rsiOverbought = 70;
-  private readonly rsiOversold = 30;
+  private readonly rsiPeriod = TECHNICAL_ANALYSIS.RSI_PERIOD;
+  private readonly rsiOverbought = TECHNICAL_ANALYSIS.RSI_OVERBOUGHT;
+  private readonly rsiOversold = TECHNICAL_ANALYSIS.RSI_OVERSOLD;
 
   constructor() {
     super();

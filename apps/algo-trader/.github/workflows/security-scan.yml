@@ -1,0 +1,601 @@
+name: Algo Trader Security Scan
+
+# Comprehensive security scanning workflow with multiple security tools
+# Includes OWASP Dependency-Check, Trivy container scanning, Snyk code scanning, and gitleaks secret detection
+# Posts results to PR comments for immediate feedback
+
+on:
+  push:
+    branches: [main, master, staging]
+    paths:
+      - 'apps/algo-trader/**'
+      - 'packages/trading-core/**'
+      - 'packages/vibe-arbitrage-engine/**'
+      - 'packages/vibe-billing-trading/**'
+  pull_request:
+    branches: [main, master, staging]
+    paths:
+      - 'apps/algo-trader/**'
+      - 'packages/trading-core/**'
+      - 'packages/vibe-arbitrage-engine/**'
+      - 'packages/vibe-billing-trading/**'
+  # Manual trigger for comprehensive security scan
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to perform'
+        required: true
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - dependency-check
+          - container-scan
+          - code-scan
+          - secret-scan
+
+env:
+  NODE_VERSION: '20'
+
+defaults:
+  run:
+    working-directory: apps/algo-trader
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: .
+
+      - name: Cache dependency directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+  dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: github.event.inputs.scan_type == 'comprehensive' || github.event.inputs.scan_type == 'dependency-check' || github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java for OWASP Dependency-Check
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Run OWASP Dependency-Check
+        uses: jeremylong/Dependency-Check-Action@main
+        with:
+          project: "algo-trader"
+          path: "."
+          format: "HTML,JSON"
+          out: "dependency-check-results"
+          failOnCVSS: "7" # Fail on high severity (CVSS >= 7)
+          args: --disableNodeJS --disableYarnAudit
+
+      - name: Upload dependency check results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-check-results
+          path: dependency-check-results
+          retention-days: 30
+
+      - name: Comment on PR with dependency check results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              const jsonPath = path.join(process.env.GITHUB_WORKSPACE, 'dependency-check-results', 'dependency-check-report.json');
+              if (fs.existsSync(jsonPath)) {
+                const report = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                let comment = '## 🔒 OWASP Dependency-Check Results\n\n';
+
+                if (report.dependencies && report.dependencies.length > 0) {
+                  const vulnerableDeps = report.dependencies.filter(dep => dep.vulnerabilities && dep.vulnerabilities.length > 0);
+                  if (vulnerableDeps.length > 0) {
+                    comment += `⚠️ Found ${vulnerableDeps.length} vulnerable dependencies:\n\n`;
+                    vulnerableDeps.forEach(dep => {
+                      if (dep.vulnerabilities && dep.vulnerabilities.length > 0) {
+                        const critical = dep.vulnerabilities.filter(v => v.cvssScore >= 9.0).length;
+                        const high = dep.vulnerabilities.filter(v => v.cvssScore >= 7.0 && v.cvssScore < 9.0).length;
+                        const medium = dep.vulnerabilities.filter(v => v.cvssScore >= 4.0 && v.cvssScore < 7.0).length;
+
+                        comment += `- **${dep.fileName}** (${dep.dependencies ? dep.dependencies.length : 0} vulnerabilities)\n`;
+                        if (critical > 0) comment += `  - Critical: ${critical}\n`;
+                        if (high > 0) comment += `  - High: ${high}\n`;
+                        if (medium > 0) comment += `  - Medium: ${medium}\n`;
+                      }
+                    });
+                    comment += '\nPlease address these vulnerabilities before merging.';
+                  } else {
+                    comment += '✅ No vulnerable dependencies found.';
+                  }
+                } else {
+                  comment += '✅ No dependencies scanned or no vulnerabilities found.';
+                }
+              } else {
+                comment += '❌ Dependency check report not found.';
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating PR comment:', error);
+              // Don't fail the job if commenting fails
+            }
+
+  container-scan:
+    name: Trivy Container Scan
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: github.event.inputs.scan_type == 'comprehensive' || github.event.inputs.scan_type == 'container-scan' || github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image (if Dockerfile exists)
+        run: |
+          if [ -f "Dockerfile" ]; then
+            docker build -t algo-trader:${{ github.sha }} .
+          else
+            echo "No Dockerfile found, skipping container build"
+            exit 0
+          fi
+        working-directory: .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        if: success() || failure()
+        with:
+          image-ref: 'algo-trader:${{ github.sha }}'
+          format: 'table'
+          output: 'trivy-results.txt'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          timeout: '10m0s'
+
+      - name: Save Trivy results
+        if: always()
+        run: |
+          mkdir -p trivy-results
+          if [ -f "trivy-results.txt" ]; then
+            mv trivy-results.txt trivy-results/
+          else
+            echo "No Trivy results file found" > trivy-results/no-results.txt
+          fi
+
+      - name: Upload Trivy results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-container-scan-results
+          path: trivy-results
+          retention-days: 30
+
+      - name: Comment on PR with Trivy results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              const resultsPath = path.join(process.env.GITHUB_WORKSPACE, 'trivy-results', 'trivy-results.txt');
+              let comment = '## 🐳 Trivy Container Scan Results\n\n';
+
+              if (fs.existsSync(resultsPath)) {
+                const results = fs.readFileSync(resultsPath, 'utf8');
+                if (results.includes('Total:')) {
+                  const totalLine = results.split('\n').find(line => line.includes('Total:'));
+                  if (totalLine && totalLine.includes('0')) {
+                    comment += '✅ No vulnerabilities found in container image.';
+                  } else {
+                    comment += '⚠️ Vulnerabilities detected in container image:\n\n```\n' + results + '\n```';
+                    comment += '\nPlease address these container vulnerabilities before merging.';
+                  }
+                } else {
+                  comment += '✅ Container scan completed successfully.';
+                }
+              } else {
+                comment += 'ℹ️ No Dockerfile found, container scan skipped.';
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating PR comment:', error);
+            }
+
+  code-scan:
+    name: Snyk Code Scan
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: github.event.inputs.scan_type == 'comprehensive' || github.event.inputs.scan_type == 'code-scan' || github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: .
+
+      - name: Run Snyk code test
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif --json-file-output=snyk.json --severity-threshold=high
+
+      - name: Upload Snyk results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snyk-code-scan-results
+          path: |
+            snyk.sarif
+            snyk.json
+          retention-days: 30
+
+      - name: Comment on PR with Snyk results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              const jsonPath = path.join(process.env.GITHUB_WORKSPACE, 'snyk.json');
+              let comment = '## 🧪 Snyk Code Scan Results\n\n';
+
+              if (fs.existsSync(jsonPath)) {
+                const results = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                if (results.vulnerabilities && results.vulnerabilities.length > 0) {
+                  const highVulns = results.vulnerabilities.filter(v => v.severity === 'high');
+                  const mediumVulns = results.vulnerabilities.filter(v => v.severity === 'medium');
+                  const lowVulns = results.vulnerabilities.filter(v => v.severity === 'low');
+
+                  comment += `⚠️ Found ${results.vulnerabilities.length} code vulnerabilities:\n\n`;
+                  if (highVulns.length > 0) comment += `- High: ${highVulns.length}\n`;
+                  if (mediumVulns.length > 0) comment += `- Medium: ${mediumVulns.length}\n`;
+                  if (lowVulns.length > 0) comment += `- Low: ${lowVulns.length}\n`;
+
+                  comment += '\nPlease review and fix these code vulnerabilities before merging.';
+                } else {
+                  comment += '✅ No code vulnerabilities found.';
+                }
+              } else {
+                comment += 'ℹ️ Snyk scan completed but no results file found.';
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating PR comment:', error);
+            }
+
+  secret-scan:
+    name: Gitleaks Secret Detection
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: github.event.inputs.scan_type == 'comprehensive' || github.event.inputs.scan_type == 'secret-scan' || github.event_name != 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for comprehensive scanning
+
+      - name: Run Gitleaks secret scanner
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --verbose --redact --report-path gitleaks-report.json --report-format json
+        continue-on-error: true
+
+      - name: Process Gitleaks results
+        run: |
+          mkdir -p gitleaks-results
+          if [ -f "gitleaks-report.json" ]; then
+            mv gitleaks-report.json gitleaks-results/
+            # Count findings
+            FINDINGS=$(jq '.[].Description | length' gitleaks-results/gitleaks-report.json 2>/dev/null | wc -l)
+            echo "GITLEAKS_FINDINGS=$FINDINGS" >> $GITHUB_ENV
+          else
+            echo "GITLEAKS_FINDINGS=0" >> $GITHUB_ENV
+            echo "[]" > gitleaks-results/gitleaks-report.json
+          fi
+
+      - name: Upload Gitleaks results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gitleaks-secret-scan-results
+          path: gitleaks-results
+          retention-days: 30
+
+      - name: Comment on PR with Gitleaks results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              const jsonPath = path.join(process.env.GITHUB_WORKSPACE, 'gitleaks-results', 'gitleaks-report.json');
+              let comment = '## 🔍 Gitleaks Secret Detection Results\n\n';
+
+              if (fs.existsSync(jsonPath)) {
+                const results = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                if (Array.isArray(results) && results.length > 0) {
+                  comment += `🚨 **${results.length} potential secrets detected!**\n\n`;
+                  comment += 'Please review these findings immediately:\n\n';
+                  results.slice(0, 5).forEach((finding, index) => {
+                    comment += `${index + 1}. **${finding.Description}** in \`${finding.File}\` (line ${finding.StartLine})\n`;
+                  });
+                  if (results.length > 5) {
+                    comment += `\n... and ${results.length - 5} more findings. See full report for details.`;
+                  }
+                  comment += '\n\n**Action Required:** Remove any actual secrets and add false positives to `.gitleaks.toml`.';
+                } else {
+                  comment += '✅ No secrets detected in the codebase.';
+                }
+              } else {
+                comment += '✅ Secret scan completed successfully.';
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating PR comment:', error);
+            }
+
+      - name: Fail on secrets found
+        if: env.GITLEAKS_FINDINGS != '0'
+        run: |
+          echo "❌ Secrets detected! Please remove them before merging."
+          exit 1
+
+  npm-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    needs: [setup]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: .
+
+      - name: Run npm audit
+        run: |
+          mkdir -p npm-audit-results
+          npm audit --audit-level=high --json > npm-audit-results/npm-audit.json
+          npm audit --audit-level=high > npm-audit-results/npm-audit.txt
+
+      - name: Upload npm audit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-results
+          path: npm-audit-results
+          retention-days: 30
+
+      - name: Comment on PR with npm audit results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            try {
+              const jsonPath = path.join(process.env.GITHUB_WORKSPACE, 'npm-audit-results', 'npm-audit.json');
+              let comment = '## 📦 NPM Security Audit Results\n\n';
+
+              if (fs.existsSync(jsonPath)) {
+                const results = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+                if (results.metadata && results.metadata.vulnerabilities) {
+                  const total = results.metadata.total;
+                  const high = results.metadata.high || 0;
+                  const critical = results.metadata.critical || 0;
+
+                  if (total > 0) {
+                    comment += `⚠️ Found ${total} vulnerabilities (${critical} critical, ${high} high)\n\n`;
+                    comment += 'Run `npm audit fix` to automatically fix some issues.\n';
+                    comment += 'Review `npm audit` output for manual fixes.';
+                  } else {
+                    comment += '✅ No vulnerabilities found in dependencies.';
+                  }
+                } else {
+                  comment += '✅ NPM audit completed successfully.';
+                }
+              } else {
+                comment += 'ℹ️ NPM audit completed but no results file found.';
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Error creating PR comment:', error);
+            }
+
+  summary-report:
+    name: Security Scan Summary Report
+    runs-on: ubuntu-latest
+    needs: [dependency-check, container-scan, code-scan, secret-scan, npm-audit]
+    if: always()
+    steps:
+      - name: Download all security scan results
+        uses: actions/download-artifact@v4
+        with:
+          path: security-results
+
+      - name: Generate comprehensive security report
+        run: |
+          mkdir -p security-summary
+
+          cat > security-summary/security-scan-summary.md << 'EOF'
+          # 🔒 Algo Trader Security Scan Summary
+
+          ## Scan Information
+          - **Repository**: ${{ github.repository }}
+          - **Branch**: ${{ github.ref_name }}
+          - **Commit**: ${{ github.sha }}
+          - **Scan Time**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - **Trigger**: ${{ github.event_name }}
+
+          ## Security Tools Results
+
+          ### OWASP Dependency-Check
+          - Status: ${{ needs.dependency-check.result }}
+          - Findings: Check dependency-check-results artifact
+
+          ### Trivy Container Scan
+          - Status: ${{ needs.container-scan.result }}
+          - Findings: Check trivy-container-scan-results artifact
+
+          ### Snyk Code Scan
+          - Status: ${{ needs.code-scan.result }}
+          - Findings: Check snyk-code-scan-results artifact
+
+          ### Gitleaks Secret Detection
+          - Status: ${{ needs.secret-scan.result }}
+          - Findings: Check gitleaks-secret-scan-results artifact
+
+          ### NPM Security Audit
+          - Status: ${{ needs.npm-audit.result }}
+          - Findings: Check npm-audit-results artifact
+
+          ## Overall Assessment
+          EOF
+
+          # Determine overall status
+          if [[ "${{ needs.dependency-check.result }}" == "failure" || \
+                "${{ needs.container-scan.result }}" == "failure" || \
+                "${{ needs.code-scan.result }}" == "failure" || \
+                "${{ needs.secret-scan.result }}" == "failure" || \
+                "${{ needs.npm-audit.result }}" == "failure" ]]; then
+            echo "## ❌ SECURITY SCAN FAILED" >> security-summary/security-scan-summary.md
+            echo "One or more security scans failed. Please address the issues before proceeding." >> security-summary/security-scan-summary.md
+          else
+            echo "## ✅ SECURITY SCAN PASSED" >> security-summary/security-scan-summary.md
+            echo "All security scans completed successfully. No critical issues detected." >> security-summary/security-scan-summary.md
+          fi
+
+          echo "" >> security-summary/security-scan-summary.md
+          echo "## Recommendations" >> security-summary/security-scan-summary.md
+          echo "- Review all security scan artifacts for detailed findings" >> security-summary/security-scan-summary.md
+          echo "- Address any high/critical vulnerabilities immediately" >> security-summary/security-scan-summary.md
+          echo "- Consider implementing automated dependency updates" >> security-summary/security-scan-summary.md
+          echo "- Regularly update security tool configurations" >> security-summary/security-scan-summary.md
+
+          cat security-summary/security-scan-summary.md
+
+      - name: Upload security summary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-summary
+          path: security-summary
+          retention-days: 90
+
+      - name: Create GitHub comment with summary (for PRs)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('security-summary/security-scan-summary.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## 🔒 Security Scan Summary\n\n' + summary.split('\n').slice(2).join('\n')
+            });
+
+  notify:
+    name: Notify Security Scan Completion
+    runs-on: ubuntu-latest
+    needs: [summary-report]
+    if: always()
+    steps:
+      - name: Notify success
+        if: needs.summary-report.result == 'success'
+        run: |
+          echo "✅ Security scan completed successfully!"
+          echo "All security checks passed for commit ${{ github.sha }}"
+
+      - name: Notify failure
+        if: needs.summary-report.result == 'failure'
+        run: |
+          echo "❌ Security scan failed!"
+          echo "Security vulnerabilities detected in commit ${{ github.sha }}"
+          echo "Please review the security scan summary report for details."
+
+      - name: Send webhook notification (optional)
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.SECURITY_WEBHOOK_URL }}" ]; then
+            status="${{ needs.summary-report.result }}"
+            curl -X POST "${{ secrets.SECURITY_WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"status\": \"$status\",
+                \"commit\": \"${{ github.sha }}\",
+                \"build_id\": \"${{ github.run_id }}\",
+                \"repository\": \"${{ github.repository }}\",
+                \"scan_type\": \"security\",
+                \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+              }" || echo "Webhook notification failed"
+          fi

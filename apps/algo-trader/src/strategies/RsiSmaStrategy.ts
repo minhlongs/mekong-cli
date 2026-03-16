@@ -2,15 +2,16 @@ import { ISignal, SignalType } from '../interfaces/IStrategy';
 import { ICandle } from '../interfaces/ICandle';
 import { Indicators } from '../analysis/indicators';
 import { BaseStrategy } from './BaseStrategy';
+import { TECHNICAL_ANALYSIS } from '../utils/constants';
 
 export class RsiSmaStrategy extends BaseStrategy {
   name = 'RSI + SMA Strategy';
 
-  private readonly rsiPeriod = 14;
-  private readonly smaFastPeriod = 20;
-  private readonly smaSlowPeriod = 50;
-  private readonly rsiOverbought = 70;
-  private readonly rsiOversold = 30;
+  private readonly rsiPeriod = TECHNICAL_ANALYSIS.RSI_PERIOD;
+  private readonly smaFastPeriod = TECHNICAL_ANALYSIS.SMA_SHORT_PERIOD;
+  private readonly smaSlowPeriod = TECHNICAL_ANALYSIS.SMA_LONG_PERIOD;
+  private readonly rsiOverbought = TECHNICAL_ANALYSIS.RSI_OVERBOUGHT;
+  private readonly rsiOversold = TECHNICAL_ANALYSIS.RSI_OVERSOLD;
 
   constructor() {
     super();
