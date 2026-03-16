@@ -681,6 +681,34 @@ while true; do
     evolve_brain
   fi
 
+  # ANOMALY DETECTION: check every 5 cycles
+  if [ $((CYCLE_COUNT % 5)) -eq 0 ] && [ "$DRY_RUN" != true ]; then
+    ANOMALY=$(timeout 5 node -e "
+      try {
+        const ad = require('$HOME/mekong-cli/apps/openclaw-worker/lib/cto-anomaly-detector');
+        const r = ad.detectAnomalies();
+        console.log(r.severity);
+        if (r.anomalies.length > 0) r.anomalies.forEach(a => console.error('  ' + a.type + ': ' + a.message));
+      } catch(e) { console.log('ok'); }
+    " 2>&1)
+    SEVERITY=$(echo "$ANOMALY" | head -1)
+    if [ "$SEVERITY" = "critical" ]; then
+      echo "🚨 ANOMALY CRITICAL — pausing dispatch for 1 cycle"
+      echo "$ANOMALY" | tail -n +2
+      log_metric "anomaly" "critical" "0"
+      sleep $SLEEP_INTERVAL
+      continue
+    elif [ "$SEVERITY" = "warn" ]; then
+      echo "⚠️ ANOMALY WARNING:"
+      echo "$ANOMALY" | tail -n +2
+      log_metric "anomaly" "warn" "0"
+    fi
+    # Generate telemetry snapshot
+    timeout 5 node -e "
+      try { require('$HOME/mekong-cli/apps/openclaw-worker/lib/cto-telemetry').generateTelemetry(); } catch(e) {}
+    " 2>/dev/null || true
+  fi
+
   # Periodic zombie cleanup (every cycle)
   pkill -f "node.*jest" 2>/dev/null || true
   pkill -f "node.*vitest" 2>/dev/null || true
