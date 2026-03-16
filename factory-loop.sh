@@ -786,9 +786,8 @@ while true; do
       continue
     fi
 
-    # WORKING — check LAST 15 lines (CC CLI shows prompt between tool calls)
-    LAST_15=$(echo "$PANE_OUTPUT" | tail -n 15)
-    if echo "$LAST_15" | grep -qE "Bash\(|Read [0-9]|Write\(|Edit\(|Running|thinking|Hashing|Blanching|Creating|Hatching|Puttering|Generating|Tempering|Crunching|Bloviating|Actioning|Manifesting|Stewing|Billowing|Cogitated|Dilly-dallying|Infusing|Churned|Sautéed|Composting|Baked|Warping|Newspapering|Prestidigitating|Channeling|Metamorphosing|Propagating|Scampering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Orbiting|Compacting|Ebbing|Pondering|Crystallizing|Precipitating|Mulling|Searching for|thought for|Harmonizing|auto-compact"; then
+    # WORKING — check LAST 5 lines (dispatch lock guard handles longer tasks)
+    if echo "$LAST_5" | grep -qE "Bash\(|Read [0-9]|Write\(|Edit\(|Running|thinking|Hashing|Blanching|Creating|Hatching|Puttering|Generating|Tempering|Crunching|Bloviating|Actioning|Manifesting|Stewing|Billowing|Cogitated|Dilly-dallying|Infusing|Churned|Sautéed|Composting|Baked|Warping|Newspapering|Prestidigitating|Channeling|Metamorphosing|Propagating|Scampering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Orbiting|Compacting|Ebbing|Pondering|Crystallizing|Precipitating|Mulling|Searching for|thought for|Harmonizing"; then
       echo "⚙️ [P$PANE] WORKING on $PROJECT — SKIP"
       continue
     fi
