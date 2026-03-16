@@ -125,10 +125,14 @@ export class PolymarketBotEngine {
       this.stateInterval = setInterval(() => {
         try {
           saveState({
+            openOrders: [],
+            positions: Object.fromEntries(
+              [...(this.mm.getInventories?.() || new Map())].map(([k, v]) => [k, v.yesInventory || 0])
+            ),
             processedSignalKeys: Array.from(this.processedSignals).slice(-200),
             lastHeartbeatId: this.heartbeatId,
+            dailyPnl: 0,
             lastSaveTime: Date.now(),
-            inventories: Object.fromEntries(this.mm.getInventories()),
           });
         } catch {}
       }, 30000);

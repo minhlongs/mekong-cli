@@ -80,8 +80,20 @@ export class PortfolioManager {
   private positions: Map<string, Position> = new Map();
   private prisma: PrismaClient;
 
+  /** Exposure limits — configurable via setLimits() */
+  private maxTotalExposure: number = 50000; // $50K default
+  private maxPerPositionExposure: number = 5000; // 10% of $50K
+  private maxOpenPositions: number = 20;
+
   private constructor() {
     this.prisma = getPrisma();
+  }
+
+  /** Configure exposure limits (call before trading) */
+  setLimits(opts: { maxTotalExposure?: number; maxPerPositionExposure?: number; maxOpenPositions?: number }): void {
+    if (opts.maxTotalExposure) this.maxTotalExposure = opts.maxTotalExposure;
+    if (opts.maxPerPositionExposure) this.maxPerPositionExposure = opts.maxPerPositionExposure;
+    if (opts.maxOpenPositions) this.maxOpenPositions = opts.maxOpenPositions;
   }
 
   static getInstance(): PortfolioManager {
@@ -95,6 +107,21 @@ export class PortfolioManager {
    * Track a new position (in-memory + Prisma)
    */
   async trackPosition(position: Omit<Position, 'id' | 'unrealizedPnl' | 'realizedPnl'>): Promise<Position> {
+    // Enforce position limits before tracking
+    const positionValue = position.size * position.avgPrice;
+    const currentExposure = this.getExposure(position.tenantId);
+    const openCount = this.getOpenPositions(position.tenantId).length;
+
+    if (positionValue > this.maxPerPositionExposure) {
+      throw new Error(`Position $${positionValue.toFixed(2)} exceeds per-position limit $${this.maxPerPositionExposure}`);
+    }
+    if (currentExposure + positionValue > this.maxTotalExposure) {
+      throw new Error(`Total exposure $${(currentExposure + positionValue).toFixed(2)} would exceed limit $${this.maxTotalExposure}`);
+    }
+    if (openCount >= this.maxOpenPositions) {
+      throw new Error(`Max open positions (${this.maxOpenPositions}) reached`);
+    }
+
     const positionId = `pm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const newPosition: Position = {
