@@ -849,8 +849,8 @@ while true; do
       LAST_DISPATCH=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo "0")
       ELAPSED=$((NOW - LAST_DISPATCH))
 
-      if [ "$ELAPSED" -lt 180 ]; then
-        echo "⏳ [P$PANE] COOLDOWN (${ELAPSED}s < 180s) — skip"
+      if [ "$ELAPSED" -lt 600 ]; then
+        echo "⏳ [P$PANE] COOLDOWN (${ELAPSED}s < 600s) — skip"
         continue
       fi
 
