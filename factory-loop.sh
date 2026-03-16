@@ -833,7 +833,16 @@ while true; do
 
     # TRULY IDLE → dispatch command with cascade logic
     if echo "$LAST_5" | grep -qE "❯|bypass permissions"; then
-      mark_dispatch_done "$PANE"  # Clear any stale dispatch timer
+      # GUARD: if dispatch timestamp exists and < 10min old, pane may still be processing
+      if [ -f "/tmp/cto_dispatch_ts_P${PANE}" ]; then
+        ACTIVE_TS=$(cat "/tmp/cto_dispatch_ts_P${PANE}" 2>/dev/null || echo "0")
+        ACTIVE_AGE=$(( $(date +%s) - ACTIVE_TS ))
+        if [ "$ACTIVE_AGE" -lt "$COMMAND_TIMEOUT" ]; then
+          echo "🔒 [P$PANE] DISPATCH LOCK: task sent ${ACTIVE_AGE}s ago, waiting for completion"
+          continue
+        fi
+      fi
+      mark_dispatch_done "$PANE"  # Clear stale dispatch timer
 
       COOLDOWN_FILE="/tmp/cto_cooldown_P${PANE}"
       NOW=$(date +%s)
