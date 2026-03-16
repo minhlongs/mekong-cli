@@ -414,6 +414,25 @@ export class PolymarketAdapter extends EventEmitter {
   }
 
   /**
+   * Purge stale orders from activeOrders map (older than maxAgeMs)
+   * Call periodically to prevent memory leak from unfilled/expired orders
+   */
+  purgeStaleOrders(maxAgeMs: number = 3600000): number {
+    const now = Date.now();
+    let purged = 0;
+    for (const [id, order] of this.activeOrders) {
+      if (now - order.createdAt > maxAgeMs) {
+        this.activeOrders.delete(id);
+        purged++;
+      }
+    }
+    if (purged > 0) {
+      logger.info(`[Polymarket] Purged ${purged} stale orders (older than ${maxAgeMs / 1000}s)`);
+    }
+    return purged;
+  }
+
+  /**
    * Check if client is ready for trading
    */
   isReady(): boolean {

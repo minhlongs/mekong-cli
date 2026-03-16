@@ -200,6 +200,11 @@ export class PolymarketGammaClient {
     const prices = JSON.parse(raw.outcomePrices) as string[];
     const tokenIds = JSON.parse(raw.clobTokenIds) as string[];
 
+    // Guard: skip markets with missing price/token data
+    if (prices.length < 2 || tokenIds.length < 2) {
+      throw new Error(`Malformed market ${raw.id}: prices=${prices.length} tokens=${tokenIds.length}`);
+    }
+
     return {
       id: raw.id,
       question: raw.question,
@@ -208,8 +213,8 @@ export class PolymarketGammaClient {
       outcomes,
       outcomePrices: prices.map((p) => parseFloat(p) || 0),
       clobTokenIds: tokenIds,
-      yesTokenId: tokenIds[0], // index 0 = YES
-      noTokenId: tokenIds[1], // index 1 = NO
+      yesTokenId: tokenIds[0],
+      noTokenId: tokenIds[1],
       yesPrice: parseFloat(prices[0]) || 0,
       noPrice: parseFloat(prices[1]) || 0,
       active: raw.active,

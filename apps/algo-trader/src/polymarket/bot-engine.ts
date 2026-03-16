@@ -114,6 +114,9 @@ export class PolymarketBotEngine extends EventEmitter {
   // FIX 3: Idempotency — prevent duplicate signals
   private processedSignals = new Set<string>();
 
+  // Execution lock — prevents concurrent order placement
+  private isExecuting = false;
+
   // FIX 4: Periodic state save interval
   private stateSaveInterval: NodeJS.Timeout | null = null;
 
@@ -531,8 +534,19 @@ export class PolymarketBotEngine extends EventEmitter {
       return;
     }
 
-    // Execute signal
-    this.executeSignal(signal);
+    // Execute signal with lock — prevent concurrent order placement
+    if (this.isExecuting) {
+      logger.warn('[BotEngine] Execution lock active — queuing signal');
+      this.state.rejectedTrades++;
+      this.emit('signal:rejected', { signal, reason: 'execution_lock' });
+      return;
+    }
+    this.isExecuting = true;
+    try {
+      await this.executeSignal(signal);
+    } finally {
+      this.isExecuting = false;
+    }
   }
 
   /**
