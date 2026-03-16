@@ -107,20 +107,26 @@ export class WeatherBotStrategy extends BasePolymarketStrategy {
   }
 
   private calculatePrecipitationProb(condition: MarketCondition, weather: WeatherData): number {
-    if (!weather.precipitation) return 0;
-    const prob = weather.precipitation > 0 ? 1 : 0;
+    if (weather.precipitation == null) return 0;
+    // Continuous sigmoid instead of binary 0/1 — avoids all-in on any drizzle
+    const diff = weather.precipitation - condition.threshold;
+    const prob = 1 / (1 + Math.exp(-diff * 2));
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
   private calculateSnowProb(condition: MarketCondition, weather: WeatherData): number {
-    if (!weather.snowDepth) return 0;
-    const prob = weather.snowDepth >= condition.threshold ? 1 : 0;
+    if (weather.snowDepth == null) return 0;
+    // Continuous sigmoid: gradual confidence as snow depth approaches threshold
+    const diff = weather.snowDepth - condition.threshold;
+    const prob = 1 / (1 + Math.exp(-diff * 0.5));
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
   private calculateWindProb(condition: MarketCondition, weather: WeatherData): number {
-    if (!weather.windSpeed) return 0.5;
-    const prob = weather.windSpeed >= condition.threshold ? 1 : 0;
+    if (weather.windSpeed == null) return 0.5;
+    // Continuous sigmoid instead of binary threshold
+    const diff = weather.windSpeed - condition.threshold;
+    const prob = 1 / (1 + Math.exp(-diff * 0.3));
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
