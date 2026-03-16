@@ -42,7 +42,9 @@ cleanup() {
   pkill -f "tsserver.js" 2>/dev/null || true
   rm -f /tmp/cto_cooldown_P* 2>/dev/null || true
   rm -f /tmp/cto_dispatch_ts_P* 2>/dev/null || true
+  rm -f /tmp/cto_last_cmd_P* /tmp/cto_last_state_P* 2>/dev/null || true
   rm -f "$PID_FILE" 2>/dev/null || true
+  # Keep dispatch history (survives restart for dedup across sessions)
   log_metric "factory_shutdown" "clean" "0"
   # Write daily digest on shutdown
   write_daily_digest
@@ -504,6 +506,41 @@ should_avoid() {
 }
 
 # ═══════════════════════════════════════════════════════════════
+# CROSS-PANE DEDUP — Prevent same command dispatched to multiple panes
+# ═══════════════════════════════════════════════════════════════
+DISPATCH_HISTORY="/tmp/factory-dispatch-history.log"
+DEDUP_TTL=7200  # 2 hours in seconds
+
+# Record a dispatched command
+record_dispatch() {
+  local PANE=$1 CMD=$2
+  local CMD_HASH=$(echo "$CMD" | head -c 80 | md5 2>/dev/null || echo "$CMD" | head -c 80 | md5sum 2>/dev/null | cut -d' ' -f1)
+  echo "$(date +%s)|P${PANE}|${CMD_HASH}|$(echo "$CMD" | head -c 60)" >> "$DISPATCH_HISTORY"
+  # Prune entries older than TTL
+  if [ -f "$DISPATCH_HISTORY" ]; then
+    local CUTOFF=$(( $(date +%s) - DEDUP_TTL ))
+    local TMP="${DISPATCH_HISTORY}.tmp"
+    awk -F'|' -v cutoff="$CUTOFF" '$1 >= cutoff' "$DISPATCH_HISTORY" > "$TMP" 2>/dev/null && mv "$TMP" "$DISPATCH_HISTORY" || true
+  fi
+}
+
+# Check if command was already dispatched to ANY pane in last 2h
+# Returns 0 if duplicate (should skip), 1 if unique (safe to dispatch)
+is_duplicate_dispatch() {
+  local CMD=$1
+  if [ ! -f "$DISPATCH_HISTORY" ]; then
+    return 1  # No history = not duplicate
+  fi
+  local CMD_HASH=$(echo "$CMD" | head -c 80 | md5 2>/dev/null || echo "$CMD" | head -c 80 | md5sum 2>/dev/null | cut -d' ' -f1)
+  local CUTOFF=$(( $(date +%s) - DEDUP_TTL ))
+  # Check if this hash exists in recent history
+  if awk -F'|' -v cutoff="$CUTOFF" -v hash="$CMD_HASH" '$1 >= cutoff && $3 == hash { found=1; exit } END { exit !found }' "$DISPATCH_HISTORY" 2>/dev/null; then
+    return 0  # Duplicate found
+  fi
+  return 1  # Unique
+}
+
+# ═══════════════════════════════════════════════════════════════
 # BRAIN EVOLUTION — Review learning state every 10 cycles
 # Promotes high-ROI commands, demotes low-ROI ones
 # ═══════════════════════════════════════════════════════════════
@@ -703,6 +740,13 @@ while true; do
       # CASCADE LOGIC: analyze + get command
       CASCADE_CMD=$(get_cascade_command "$PANE" "$PROJECT" "$DIR" "$NAME" "$LAST_45" 2>/dev/null)
 
+      # DEDUP CHECK: prevent same command dispatched to multiple panes
+      if is_duplicate_dispatch "$CASCADE_CMD"; then
+        echo "🔄 [P$PANE] DEDUP: command already dispatched to another pane — skipping"
+        log_metric "dedup_skip" "duplicate" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
+        continue
+      fi
+
       # Save context file for CC CLI to reference
       echo "$LAST_45" | grep -v "^$" | grep -v "^─" | grep -v "bypass" | grep -v "qwen" | tail -15 > "/tmp/cto_context_P${PANE}.txt"
 
@@ -731,6 +775,7 @@ while true; do
       fi
       echo "$NOW" > "$COOLDOWN_FILE"
       mark_dispatch_start "$PANE"
+      record_dispatch "$PANE" "$CASCADE_CMD"
       echo "$CASCADE_CMD" | head -c 60 > "/tmp/cto_last_cmd_P${PANE}"
       detect_project_state "$DIR" > "/tmp/cto_last_state_P${PANE}" 2>/dev/null || true
       log_metric "dispatch" "${DRY_RUN:+dry_}sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
