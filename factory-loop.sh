@@ -10,7 +10,7 @@ PANE_PROJECTS=("sophia-proposal" "well")
 PANE_DIRS=("apps/sophia-proposal" "apps/well")
 PANE_NAMES=("Sophia AI Video Factory" "WellNexus Healthcare B2B")
 SLEEP_INTERVAL=120
-COMMAND_TIMEOUT=600  # 10 min max per command before considered hung
+COMMAND_TIMEOUT=3600  # 60 min — CC CLI tasks can run 30-60 min
 METRICS_LOG="/tmp/factory-metrics.log"
 PID_FILE="/tmp/factory.pid"
 DAILY_DIGEST_DIR="$HOME/mekong-cli/plans/reports"
@@ -786,8 +786,9 @@ while true; do
       continue
     fi
 
-    # WORKING — check LAST 5 lines ONLY (active animation near prompt)
-    if echo "$LAST_5" | grep -qE "Bash\(|Read [0-9]|Write\(|Edit\(|Running|thinking|Hashing|Blanching|Creating|Hatching|Puttering|Generating|Tempering|Crunching|Bloviating|Actioning|Manifesting|Stewing|Billowing|Cogitated|Dilly-dallying|Infusing|Churned|Sautéed|Composting|Baked|Warping|Newspapering|Prestidigitating|Channeling|Metamorphosing|Propagating|Scampering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Orbiting|Compacting|Ebbing|Pondering|Crystallizing|Precipitating|Mulling|Searching for|thought for|Harmonizing"; then
+    # WORKING — check LAST 15 lines (CC CLI shows prompt between tool calls)
+    LAST_15=$(echo "$PANE_OUTPUT" | tail -n 15)
+    if echo "$LAST_15" | grep -qE "Bash\(|Read [0-9]|Write\(|Edit\(|Running|thinking|Hashing|Blanching|Creating|Hatching|Puttering|Generating|Tempering|Crunching|Bloviating|Actioning|Manifesting|Stewing|Billowing|Cogitated|Dilly-dallying|Infusing|Churned|Sautéed|Composting|Baked|Warping|Newspapering|Prestidigitating|Channeling|Metamorphosing|Propagating|Scampering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Orbiting|Compacting|Ebbing|Pondering|Crystallizing|Precipitating|Mulling|Searching for|thought for|Harmonizing|auto-compact"; then
       echo "⚙️ [P$PANE] WORKING on $PROJECT — SKIP"
       continue
     fi
