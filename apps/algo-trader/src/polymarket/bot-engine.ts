@@ -121,9 +121,9 @@ export class PolymarketBotEngine extends EventEmitter {
     super();
     this.config = {
       dryRun: config.dryRun ?? true,
-      maxBankroll: config.maxBankroll ?? 10000,
-      maxPositionPct: config.maxPositionPct ?? 0.06,
-      maxDailyLoss: config.maxDailyLoss ?? 0.05,
+      maxBankroll: config.maxBankroll ?? parseFloat(process.env.MAX_BANKROLL || '5000'),
+      maxPositionPct: config.maxPositionPct ?? parseFloat(process.env.MAX_POSITION_PCT || '0.05'),
+      maxDailyLoss: config.maxDailyLoss ?? parseFloat(process.env.MAX_DAILY_LOSS_PCT || '0.03'),
       minEdgeThreshold: config.minEdgeThreshold ?? 0.03,
       enabledStrategies: config.enabledStrategies ?? [
         'ComplementaryArb',
