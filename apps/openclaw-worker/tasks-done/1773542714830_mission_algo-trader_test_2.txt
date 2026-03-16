@@ -1,0 +1,1 @@
+/cook 'Execute Bash pwd command right now and verify you are in apps/algo-trader. Do nothing else.' --auto
