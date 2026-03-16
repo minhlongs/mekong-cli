@@ -312,9 +312,8 @@ function generateFixMission(error, project) {
 			prompt = `Fix: ${error.message}`;
 	}
 
-	// Wrap with safety constraints + thượng tầng context
-	const thuongTang = config.THUONG_TANG_PREFIX || '';
-	const fullPrompt = `/cook ${thuongTang} Dự án: ${project}. ${prompt} Fix at most 5 files per mission. CRITICAL: DO NOT run git commit, git push, or /check-and-commit. The CI/CD gate handles git operations.`;
+	// Wrap with safety constraints
+	const fullPrompt = `/cook "${prompt} Fix at most 5 files per mission. CRITICAL: DO NOT run git commit, git push, or /check-and-commit. The CI/CD gate handles git operations." --auto`;
 
 	const severity = error.severity === 'critical' ? 'HIGH' : 'MEDIUM';
 	const filename = `${severity}_mission_${project.replace(/-/g, '_')}_fix_${error.type}_${Date.now()}.txt`;
@@ -366,13 +365,15 @@ function startAutoCTO() {
 					function getTargetPane(filename) {
 						const lower = filename.toLowerCase();
 						// P0: Sophia RaaS
-						if (/sophia|vibe|proposal|mekong|core|raas|algo|trader|trading/.test(lower)) return 0;
+						if (/sophia|vibe|proposal/.test(lower)) return 0;
 						// P1: Well RaaS
 						if (/well|wellnexus|84tea|apex/.test(lower)) return 1;
+						// P2: Algo-trader RaaS
+						if (/algo.?trader|algotrader|trading/.test(lower)) return 2;
 
-						// Fallback: round-robin P0/P1 only (2 panes)
+						// Fallback: round-robin P0/P1/P2 (NEVER hardcode pane 3/4)
 						const hash = filename.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-						const safeIds = [0, 1];
+						const safeIds = [0, 1, 2];
 						return safeIds[hash % safeIds.length];
 					}
 
@@ -435,7 +436,7 @@ function startAutoCTO() {
 				// Only runs when NO tasks were dispatched (all panes busy or queue empty)
 				// Scan only existing panes (P0-P3)
 				let isApiBusy = false;
-				const TOTAL_PANES = 2; // P0-P1 (2 active panes — M1 16GB optimized)
+				const TOTAL_PANES = 4; // P0-P3 (4 active panes)
 				try {
 					const { interpretState, clearCache } = require('./llm-interpreter');
 					for (let pIdx = 0; pIdx < TOTAL_PANES; pIdx++) {
