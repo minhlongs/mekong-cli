@@ -546,10 +546,11 @@ export class PolymarketBotEngine extends EventEmitter {
       return;
     }
     this.processedSignals.add(key);
-    // Evict old keys when cache grows too large
+    // Bulk evict when cache grows — keep newest 500 instead of deleting 1-at-a-time
     if (this.processedSignals.size > 1000) {
-      const oldest = this.processedSignals.values().next().value;
-      if (oldest !== undefined) this.processedSignals.delete(oldest);
+      const keep = Array.from(this.processedSignals).slice(-500);
+      this.processedSignals.clear();
+      keep.forEach(k => this.processedSignals.add(k));
     }
 
     // Record trade for PnL tracking

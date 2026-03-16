@@ -11,6 +11,7 @@ import { RiskManager } from './RiskManager';
 import { saveState, loadState, clearState } from './StateManager';
 import { LicenseGate } from './LicenseGate';
 import { ENV } from '../config/env';
+import { logger } from '../utils/logger';
 
 export class PolymarketBotEngine {
   private client!: ClobClient;
@@ -29,7 +30,7 @@ export class PolymarketBotEngine {
   private stateInterval: NodeJS.Timeout | null = null;
 
   async start(): Promise<void> {
-    console.log(`=== MM BOT START (${ENV.DRY_RUN ? 'DRY RUN' : 'LIVE'}) === [tier: ${this.license.tier.toUpperCase()}]`);
+    logger.info(`=== MM BOT START (${ENV.DRY_RUN ? 'DRY RUN' : 'LIVE'}) === [tier: ${this.license.tier.toUpperCase()}]`);
 
     // 1. Init Polymarket client
     const wallet = new Wallet(ENV.PRIVATE_KEY);
@@ -40,26 +41,26 @@ export class PolymarketBotEngine {
     } else {
       const l1 = new ClobClient(ENV.POLY_HOST, ENV.CHAIN_ID, wallet);
       const c = await l1.createOrDeriveApiKey();
-      console.log(`Save these to .env:\nPOLYMARKET_API_KEY=${c.key}\nPOLYMARKET_API_SECRET=${c.secret}\nPOLYMARKET_API_PASSPHRASE=${c.passphrase}`);
+      logger.info(`Save these to .env:\nPOLYMARKET_API_KEY=${c.key}\nPOLYMARKET_API_SECRET=${c.secret}\nPOLYMARKET_API_PASSPHRASE=${c.passphrase}`);
       this.client = new ClobClient(ENV.POLY_HOST, ENV.CHAIN_ID, wallet, c, ENV.SIG_TYPE, ENV.FUNDER);
     }
 
     const bal = await this.client.getBalanceAllowance({ asset_type: 'COLLATERAL' as any });
-    console.log(`Balance: $${bal.balance}`);
+    logger.info(`Balance: $${bal.balance}`);
 
     // 2. Crash recovery (PRO/ENTERPRISE only)
     if (this.license.canRecover) {
       const prevState = loadState();
       if (prevState) {
-        console.log(`[Recovery] Restoring state from ${new Date(prevState.lastSaveTime).toISOString()}`);
+        logger.info(`[Recovery] Restoring state from ${new Date(prevState.lastSaveTime).toISOString()}`);
         try { await this.client.cancelAll(); } catch {}
-        console.log('[Recovery] Cancelled all stale orders');
+        logger.info('[Recovery] Cancelled all stale orders');
         this.heartbeatId = prevState.lastHeartbeatId || '';
         prevState.processedSignalKeys.forEach(k => this.processedSignals.add(k));
         clearState();
       }
     } else {
-      console.log('[License] Crash recovery skipped (FREE tier)');
+      logger.info('[License] Crash recovery skipped (FREE tier)');
     }
 
     // 3. Init daily loss tracking
@@ -78,7 +79,7 @@ export class PolymarketBotEngine {
 
     // Cancel-all-on-disconnect
     this.ws.onDisconnect(async () => {
-      console.warn('[Safety] WS disconnected — cancelling all orders');
+      logger.warn('[Safety] WS disconnected — cancelling all orders');
       try { await this.client.cancelAll(); } catch {}
     });
 
@@ -87,14 +88,14 @@ export class PolymarketBotEngine {
       this.updatePrice(d);
       if (this.license.canWsRequote && this.mm.hasToken(d.asset_id)) {
         this.mm.requote(this.client, d.asset_id).catch((e: any) => {
-          console.warn('[MM] Requote failed:', e?.message || e);
+          logger.warn('[MM] Requote failed:', e?.message || e);
         });
       }
     });
 
     // Fill tracking + license trade counter + risk update
     this.ws.on('user:trade', (d: any) => {
-      console.log(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
+      logger.info(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
       this.license.recordTrade();
       this.tradeCount++;
 
@@ -113,10 +114,10 @@ export class PolymarketBotEngine {
         const resp = await this.client.postHeartbeat(this.heartbeatId);
         this.heartbeatId = (resp as any)?.heartbeat_id || this.heartbeatId;
       } catch (e: any) {
-        console.error('[Heartbeat] FAILED:', e.message);
+        logger.error('[Heartbeat] FAILED:', e.message);
       }
     }, 5000);
-    console.log('[Safety] Heartbeat active (5s)');
+    logger.info('[Safety] Heartbeat active (5s)');
 
     // 8. Start loops
     this.running = true;
@@ -144,7 +145,7 @@ export class PolymarketBotEngine {
     // 10. Midnight PnL reset
     this.scheduleMidnightReset();
 
-    console.log('=== MM RUNNING ===');
+    logger.info('=== MM RUNNING ===');
   }
 
   // MM fallback tick: every 10s (WS requote handles fast updates)
@@ -155,7 +156,7 @@ export class PolymarketBotEngine {
     while (this.running) {
       // P0-5: Check risk before every MM tick
       if (!this.risk.canTrade()) {
-        console.warn('[Safety] RiskManager blocked trading — pausing MM loop');
+        logger.warn('[Safety] RiskManager blocked trading — pausing MM loop');
         await sleep(30000);
         continue;
       }
@@ -165,11 +166,11 @@ export class PolymarketBotEngine {
         consecutiveErrors = 0; // Reset on success
       } catch (e: any) {
         consecutiveErrors++;
-        console.error(`[MM] Error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, e.message);
+        logger.error(`[MM] Error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, e.message);
 
         // P0-5: Halt on sustained errors instead of infinite spam
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-          console.error('[MM] HALTED: Too many consecutive errors — stopping bot');
+          logger.error('[MM] HALTED: Too many consecutive errors — stopping bot');
           await this.stop();
           return;
         }
@@ -186,16 +187,16 @@ export class PolymarketBotEngine {
         await this.scanMarkets();
         await this.mm.refreshMarkets(this.markets, this.client);
         this.ws?.subscribe(this.markets.flatMap(m => [m.yesTokenId, m.noTokenId]));
-        console.log(`[Scan] Rotated markets: ${this.markets.length} total`);
+        logger.info(`[Scan] Rotated markets: ${this.markets.length} total`);
       } catch (e: any) {
-        console.error('[Scan]', e.message);
+        logger.error('[Scan]', e.message);
       }
     }
   }
 
   private async scanMarkets(): Promise<void> {
     this.markets = await this.gamma.getActiveMarkets(200);
-    console.log(`[Scan] ${this.markets.length} active markets`);
+    logger.info(`[Scan] ${this.markets.length} active markets`);
   }
 
   private updatePrice(d: any): void {
@@ -250,7 +251,7 @@ export class PolymarketBotEngine {
     try { await this.client.cancelAll(); } catch {}
     this.ws?.shutdown();
     clearState();
-    console.log('=== STOPPED ===');
+    logger.info('=== STOPPED ===');
   }
 }
 
