@@ -25,6 +25,7 @@ from src.cli.schedule_commands import schedule_app
 from src.cli.memory_commands import memory_app
 from src.cli.autonomous_commands import register_agi_commands
 from src.cli.studio_commands import register_studio_commands
+from src.cli.health_metrics_commands import register_health_metrics_commands
 from src.cli.pev_commands import pev_app
 from src.cli.setup_wizard import app as setup_app
 
@@ -45,6 +46,7 @@ register_cook_command(app)
 register_workflow_commands(app)
 register_agi_commands(app)
 register_studio_commands(app)
+register_health_metrics_commands(app)
 
 # Register sub-typers
 app.add_typer(swarm_app, name="swarm")
