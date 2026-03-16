@@ -147,6 +147,10 @@ export class HedgeDiscoveryStrategy extends BasePolymarketStrategy {
     if (!result.hasOpportunity) return signals;
 
     const now = Date.now();
+    // Atomic pair ID for hedge execution — both legs must fill or neither
+    const atomicPairId = `hedge_${now}_${Math.random().toString(36).slice(2, 6)}`;
+    let legIndex = 0;
+    const totalLegs = result.signals.length;
 
     for (const signal of result.signals) {
       if (signal === 'BUY_A') {
@@ -162,7 +166,7 @@ export class HedgeDiscoveryStrategy extends BasePolymarketStrategy {
           expectedValue: result.edge * this.config.maxPositionSize,
           confidence: Math.min(result.edge / 0.05, 1.0),
           catalyst: `Hedge: ${pair.marketA.question}`,
-          metadata: { pair: pair.relationship, edge: result.edge },
+          metadata: { pair: pair.relationship, edge: result.edge, atomicPairId, legIndex: legIndex++, totalLegs },
         });
       } else if (signal === 'BUY_B') {
         signals.push({
@@ -177,10 +181,9 @@ export class HedgeDiscoveryStrategy extends BasePolymarketStrategy {
           expectedValue: result.edge * this.config.maxPositionSize,
           confidence: Math.min(result.edge / 0.05, 1.0),
           catalyst: `Hedge: ${pair.marketB.question}`,
-          metadata: { pair: pair.relationship, edge: result.edge },
+          metadata: { pair: pair.relationship, edge: result.edge, atomicPairId, legIndex: legIndex++, totalLegs },
         });
       }
-      // Add SELL signals if needed (when sum > 1)
     }
 
     return signals;
