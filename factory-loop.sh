@@ -14,6 +14,7 @@ COMMAND_TIMEOUT=600  # 10 min max per command before considered hung
 METRICS_LOG="/tmp/factory-metrics.log"
 PID_FILE="/tmp/factory.pid"
 DAILY_DIGEST_DIR="$HOME/mekong-cli/plans/reports"
+DISPATCH_HISTORY="/tmp/factory-dispatch-history.log"
 DRY_RUN=false
 MAX_CYCLES=0  # 0 = infinite
 
@@ -586,7 +587,6 @@ should_avoid() {
 # ═══════════════════════════════════════════════════════════════
 # CROSS-PANE DEDUP — Prevent same command dispatched to multiple panes
 # ═══════════════════════════════════════════════════════════════
-DISPATCH_HISTORY="/tmp/factory-dispatch-history.log"
 DEDUP_TTL=7200  # 2 hours in seconds
 
 # Record a dispatched command
