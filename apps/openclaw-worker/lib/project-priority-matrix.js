@@ -7,21 +7,24 @@
  * Higher score = higher priority for CTO dispatch.
  *
  * Score formula:
- *   maturity_score (0-40) + roi_score (0-30) + activity_score (0-30)
+ *   maturity_score (0-30) + roi_score (0-25) + activity_score (0-25) + algo_score (0-20)
  *
- * Maturity: deployed=40, scaffolded=25, needs_install=15, empty=5
- * ROI: success_rate * 30
- * Activity: min(dispatches, 30) — more activity = more investment
+ * Maturity: deployed=30, scaffolded=20, needs_install=10, empty=5
+ * ROI: success_rate * 25
+ * Activity: min(dispatches, 25)
+ * Algorithms: coverage(0-10) + test coverage(0-10)
  */
 
 const path = require('path');
 const { detectProjectState } = require('./factory-throughput-optimizer');
 const { calculateProjectROI } = require('./factory-roi-calculator');
+let getAlgoScore = () => 0;
+try { getAlgoScore = require('./algo-orchestrator').getAlgoScore; } catch (e) {}
 
 const MATURITY_SCORES = {
-  deployed: 40,
-  scaffolded: 25,
-  needs_install: 15,
+  deployed: 30,
+  scaffolded: 20,
+  needs_install: 10,
   empty: 5,
 };
 
@@ -49,8 +52,9 @@ function scoreProject(name, dir) {
   const allROI = calculateProjectROI();
   const projROI = allROI[name] || { roi: 0, dispatches: 0, successes: 0 };
 
-  const roi = Math.round((projROI.roi / 100) * 30); // 0-30
-  const activity = Math.min(projROI.dispatches, 30); // 0-30
+  const roi = Math.round((projROI.roi / 100) * 25); // 0-25
+  const activity = Math.min(projROI.dispatches, 25); // 0-25
+  const algo = getAlgoScore(dir); // 0-20
 
   return {
     name,
@@ -60,7 +64,8 @@ function scoreProject(name, dir) {
     maturity,
     roi,
     activity,
-    total: maturity + roi + activity,
+    algo,
+    total: maturity + roi + activity + algo,
     dispatches: projROI.dispatches,
     successRate: projROI.roi,
   };
