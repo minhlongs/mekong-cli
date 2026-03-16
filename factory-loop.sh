@@ -14,6 +14,16 @@ COMMAND_TIMEOUT=600  # 10 min max per command before considered hung
 METRICS_LOG="/tmp/factory-metrics.log"
 PID_FILE="/tmp/factory.pid"
 DAILY_DIGEST_DIR="$HOME/mekong-cli/plans/reports"
+DRY_RUN=false
+MAX_CYCLES=0  # 0 = infinite
+
+# Parse flags
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=true; SLEEP_INTERVAL=2 ;;
+    --cycles=*) MAX_CYCLES=${arg#--cycles=} ;;
+  esac
+done
 
 # Write PID file for watchdog
 echo $$ > "$PID_FILE"
@@ -59,11 +69,13 @@ write_daily_digest() {
     return
   fi
 
-  local DISPATCHES=$(echo "$TODAY_LINES" | grep -c "dispatch" || echo "0")
-  local SUCCESSES=$(echo "$TODAY_LINES" | grep -c "command_complete.*success" || echo "0")
-  local TIMEOUTS=$(echo "$TODAY_LINES" | grep -c "command_timeout" || echo "0")
-  local CRASHES=$(echo "$TODAY_LINES" | grep -c "crash" || echo "0")
-  local UNKNOWNS=$(echo "$TODAY_LINES" | grep -c "unknown_state" || echo "0")
+  local DISPATCHES=$(echo "$TODAY_LINES" | grep -c "dispatch" 2>/dev/null || true)
+  local SUCCESSES=$(echo "$TODAY_LINES" | grep -c "command_complete.*success" 2>/dev/null || true)
+  local TIMEOUTS=$(echo "$TODAY_LINES" | grep -c "command_timeout" 2>/dev/null || true)
+  local CRASHES=$(echo "$TODAY_LINES" | grep -c "crash" 2>/dev/null || true)
+  local UNKNOWNS=$(echo "$TODAY_LINES" | grep -c "unknown_state" 2>/dev/null || true)
+  DISPATCHES=${DISPATCHES:-0}; SUCCESSES=${SUCCESSES:-0}; TIMEOUTS=${TIMEOUTS:-0}
+  CRASHES=${CRASHES:-0}; UNKNOWNS=${UNKNOWNS:-0}
 
   cat > "$DIGEST_FILE" << DIGEST
 # Factory Daily Digest — ${TODAY_ISO}
@@ -523,7 +535,16 @@ while true; do
     DIR=${PANE_DIRS[$i]}
     NAME=${PANE_NAMES[$i]}
 
-    # HEALTH CHECK — verify pane is alive before anything else
+    # HEALTH CHECK — verify pane is alive before anything else (skip in dry-run)
+    if [ "$DRY_RUN" = true ]; then
+      # In dry-run, simulate idle pane and skip to dispatch
+      echo "🧪 [P$PANE] DRY-RUN: simulating idle pane for $PROJECT"
+      PROJ_STATE=$(detect_project_state "$DIR" 2>/dev/null || echo "empty")
+      CASCADE_CMD=$(get_next_command "$PANE" "$PROJECT" "$DIR" "$NAME" 2>/dev/null || echo "/cook dry-run test")
+      echo "   🔍 State: $PROJ_STATE → Command: $(echo "$CASCADE_CMD" | head -c 60)"
+      log_metric "dispatch" "dry_sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
+      continue
+    fi
     if ! check_pane_health "$PANE"; then
       echo "🔄 [P$PANE] Attempting respawn..."
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions" 2>/dev/null || true
@@ -646,20 +667,30 @@ while true; do
       echo "   📌 $CASCADE_CMD"
 
       # DISPATCH + start timeout timer + save for learning
-      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$CASCADE_CMD"
-      sleep 0.5
-      tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
+      if [ "$DRY_RUN" = true ]; then
+        echo "   🧪 DRY-RUN: would send → $CASCADE_CMD"
+      else
+        tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$CASCADE_CMD"
+        sleep 0.5
+        tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
+      fi
       echo "$NOW" > "$COOLDOWN_FILE"
       mark_dispatch_start "$PANE"
       echo "$CASCADE_CMD" | head -c 60 > "/tmp/cto_last_cmd_P${PANE}"
       detect_project_state "$DIR" > "/tmp/cto_last_state_P${PANE}" 2>/dev/null || true
-      log_metric "dispatch" "sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
+      log_metric "dispatch" "${DRY_RUN:+dry_}sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
       continue
     fi
 
     echo "❓ [P$PANE] UNKNOWN STATE"
     log_metric "unknown_state" "detected" "0" "$PANE" "$PROJECT"
   done
+
+  # Cycle limit check (for --cycles=N flag)
+  if [ "$MAX_CYCLES" -gt 0 ] && [ "$CYCLE_COUNT" -ge "$MAX_CYCLES" ]; then
+    echo "🏁 Reached max cycles ($MAX_CYCLES) — exiting"
+    break
+  fi
 
   echo "💤 [$(date +%T)] Sleeping ${SLEEP_INTERVAL}s..."
   sleep $SLEEP_INTERVAL
