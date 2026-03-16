@@ -369,5 +369,13 @@
       "releng/releng-pre-release.json",
       "releng/releng-post-release.json"
     ]
+  },
+  "raas": {
+    "name": "RaaS Product Workflows",
+    "description": "Robot-as-a-Service product commands — scaffold SaaS projects and full create pipeline",
+    "recipes": [
+      "raas/scaffold.json",
+      "raas/create.json"
+    ]
   }
 }
