@@ -676,6 +676,11 @@ while true; do
   RAM=$(vm_stat | awk '/free/ {print $3}' | tr -d '.')
   echo "🧊 [$(date +%T)] Cycle=$CYCLE_COUNT Load=$LOAD RAM_free=$RAM"
 
+  # HEALTH DASHBOARD: every 50 cycles
+  if [ $((CYCLE_COUNT % 50)) -eq 0 ] && [ "$DRY_RUN" != true ]; then
+    bash "$HOME/mekong-cli/scripts/cto-health-check.sh" 2>/dev/null || true
+  fi
+
   # BRAIN EVOLUTION: review every 10 cycles
   if [ $((CYCLE_COUNT % EVOLUTION_INTERVAL)) -eq 0 ] && [ "$DRY_RUN" != true ]; then
     evolve_brain
