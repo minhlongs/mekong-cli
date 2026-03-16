@@ -100,6 +100,33 @@ export abstract class BasePolymarketStrategy implements IStrategy {
   }
 
   /**
+   * Process tick with automatic stop-loss checking.
+   * Call this from bot engine instead of calling processTick directly.
+   * Returns exit signals first (stop-loss), then strategy entry signal if any.
+   */
+  processTickSafe(tick: IMarketTick): IPolymarketSignal[] {
+    this.onMarketTick(tick);
+
+    const signals: IPolymarketSignal[] = [];
+
+    // Check stop-loss on all open positions first
+    const exitSignals = this.checkStopLoss();
+    signals.push(...exitSignals);
+
+    // Then run strategy-specific logic
+    const entrySignal = this.generateSignal(tick.tokenId, tick.marketId, tick);
+    if (entrySignal && entrySignal.action === 'BUY') {
+      // Auto-track new positions for stop-loss monitoring
+      this.trackPosition(tick.tokenId, tick.marketId, entrySignal.side, entrySignal.price, entrySignal.size);
+      signals.push(entrySignal);
+    } else if (entrySignal) {
+      signals.push(entrySignal);
+    }
+
+    return signals;
+  }
+
+  /**
    * Calculate fair value - to be implemented by subclasses
    */
   abstract calculateFairValue(tokenId: string): Promise<number | null>;
