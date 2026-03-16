@@ -503,6 +503,56 @@ should_avoid() {
   " 2>/dev/null
 }
 
+# ═══════════════════════════════════════════════════════════════
+# BRAIN EVOLUTION — Review learning state every 10 cycles
+# Promotes high-ROI commands, demotes low-ROI ones
+# ═══════════════════════════════════════════════════════════════
+EVOLUTION_INTERVAL=10
+
+evolve_brain() {
+  echo "🧬 [EVOLUTION] Reviewing brain-learning-state.json..."
+  timeout 10 node -e "
+    try {
+      const fs = require('fs');
+      const roiCalc = require('$HOME/mekong-cli/apps/openclaw-worker/lib/factory-roi-calculator');
+      const state = roiCalc.loadBrainState();
+      const ce = state.commandEffectiveness || {};
+      const entries = Object.entries(ce);
+      if (entries.length < 3) { console.log('   Not enough data yet (' + entries.length + ' commands)'); return; }
+
+      // Sort by success rate
+      const sorted = entries.sort((a,b) => {
+        const rA = a[1].total > 0 ? a[1].success / a[1].total : 0;
+        const rB = b[1].total > 0 ? b[1].success / b[1].total : 0;
+        return rB - rA;
+      });
+
+      // Log evolution insights
+      const top = sorted.slice(0,3).map(([c,d]) => c.slice(0,30) + '(' + Math.round(d.success/d.total*100) + '%)');
+      const bottom = sorted.slice(-2).filter(([,d]) => d.total > 1).map(([c,d]) => c.slice(0,30) + '(' + Math.round(d.success/d.total*100) + '%)');
+
+      console.log('   Top: ' + top.join(', '));
+      if (bottom.length) console.log('   Demote: ' + bottom.join(', '));
+
+      // Record evolution event
+      if (!state.evolutionLog) state.evolutionLog = [];
+      state.evolutionLog.push({
+        ts: new Date().toISOString(),
+        commandsLearned: entries.length,
+        topCommand: sorted[0] ? sorted[0][0].slice(0,40) : 'none',
+        topRate: sorted[0] && sorted[0][1].total > 0 ? Math.round(sorted[0][1].success/sorted[0][1].total*100) : 0,
+        worstCommand: sorted.length > 2 && sorted[sorted.length-1][1].total > 1 ? sorted[sorted.length-1][0].slice(0,40) : 'none',
+      });
+      // Keep last 50 evolution events
+      if (state.evolutionLog.length > 50) state.evolutionLog = state.evolutionLog.slice(-50);
+
+      roiCalc.saveBrainState(state);
+      console.log('   Evolution logged (' + state.evolutionLog.length + ' events)');
+    } catch(e) { console.log('   Evolution skip: ' + e.message); }
+  " 2>/dev/null || true
+  log_metric "brain_evolution" "complete" "0"
+}
+
 CYCLE_COUNT=0
 
 while true; do
@@ -510,6 +560,11 @@ while true; do
   LOAD=$(sysctl -n vm.loadavg | awk '{print $2}')
   RAM=$(vm_stat | awk '/free/ {print $3}' | tr -d '.')
   echo "🧊 [$(date +%T)] Cycle=$CYCLE_COUNT Load=$LOAD RAM_free=$RAM"
+
+  # BRAIN EVOLUTION: review every 10 cycles
+  if [ $((CYCLE_COUNT % EVOLUTION_INTERVAL)) -eq 0 ] && [ "$DRY_RUN" != true ]; then
+    evolve_brain
+  fi
 
   # Periodic zombie cleanup (every cycle)
   pkill -f "node.*jest" 2>/dev/null || true
