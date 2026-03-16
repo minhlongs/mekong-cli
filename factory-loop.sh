@@ -371,6 +371,30 @@ get_next_command() {
   esac
 }
 
+# ═══════════════════════════════════════════════════════════════
+# ROI-AWARE LEARNING — Record outcomes, learn what works
+# ═══════════════════════════════════════════════════════════════
+record_outcome() {
+  local PROJECT=$1 STATE=$2 CMD=$3 SUCCESS=$4 DURATION=$5
+  timeout 5 node -e "
+    try {
+      const r = require('$HOME/mekong-cli/apps/openclaw-worker/lib/factory-roi-calculator');
+      r.recordCommandOutcome('$PROJECT', '$STATE', '$(echo "$CMD" | head -c 60)', $SUCCESS, $DURATION);
+    } catch(e) {}
+  " 2>/dev/null || true
+}
+
+# Check if a command should be avoided based on past failures
+should_avoid() {
+  local PROJECT=$1 STATE=$2 CMD=$3
+  timeout 3 node -e "
+    try {
+      const r = require('$HOME/mekong-cli/apps/openclaw-worker/lib/factory-roi-calculator');
+      process.exit(r.shouldAvoidCommand('$PROJECT', '$STATE', '$(echo "$CMD" | head -c 60)') ? 0 : 1);
+    } catch(e) { process.exit(1); }
+  " 2>/dev/null
+}
+
 CYCLE_COUNT=0
 
 while true; do
@@ -437,11 +461,14 @@ while true; do
 
     # JUST FINISHED — mark previous command as done, log success
     if echo "$LAST_5" | grep -qE "✅ Done|✔|Sautéed for|Brewed for|Baked for|Cogitated for|Crunched for"; then
-      # Calculate duration if we have a dispatch timestamp
+      # Calculate duration and record learning outcome
       if [ -f "/tmp/cto_dispatch_ts_P${PANE}" ]; then
         DISPATCH_TS=$(cat "/tmp/cto_dispatch_ts_P${PANE}" 2>/dev/null || echo "0")
         DURATION=$(( $(date +%s) - DISPATCH_TS ))
         log_metric "command_complete" "success" "$DURATION" "$PANE" "$PROJECT"
+        LAST_CMD=$(cat "/tmp/cto_last_cmd_P${PANE}" 2>/dev/null || echo "unknown")
+        LAST_STATE=$(cat "/tmp/cto_last_state_P${PANE}" 2>/dev/null || echo "deployed")
+        record_outcome "$PROJECT" "$LAST_STATE" "$LAST_CMD" "true" "$DURATION"
         mark_dispatch_done "$PANE"
       fi
 
@@ -491,12 +518,14 @@ while true; do
       echo "$LAYER [P$PANE] CASCADE DISPATCH for $PROJECT:"
       echo "   📌 $CASCADE_CMD"
 
-      # DISPATCH + start timeout timer
+      # DISPATCH + start timeout timer + save for learning
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$CASCADE_CMD"
       sleep 0.5
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
       echo "$NOW" > "$COOLDOWN_FILE"
       mark_dispatch_start "$PANE"
+      echo "$CASCADE_CMD" | head -c 60 > "/tmp/cto_last_cmd_P${PANE}"
+      detect_project_state "$DIR" > "/tmp/cto_last_state_P${PANE}" 2>/dev/null || true
       log_metric "dispatch" "sent" "0" "$PANE" "$PROJECT" "$CASCADE_CMD"
       continue
     fi
