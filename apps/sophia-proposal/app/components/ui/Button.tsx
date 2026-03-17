@@ -1,14 +1,24 @@
 import React from 'react';
-import { motion, HTMLMotionProps } from 'framer-motion';
+import { motion } from 'framer-motion';
 
-interface ButtonProps extends HTMLMotionProps<"button"> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonSize = 'sm' | 'md' | 'lg';
+
+interface ButtonProps {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   glow?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+// Pick only the props we need from motion.button to avoid type conflicts
+type MotionButtonProps = Pick<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'onClick' | 'onMouseEnter' | 'onMouseLeave' | 'disabled' | 'title'
+>;
+
+export const Button: React.FC<ButtonProps & MotionButtonProps> = ({
   variant = 'primary',
   size = 'md',
   glow = false,
@@ -39,9 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       {...props}
-    >
-      {/* Glossy sheen effect on hover could be added here if needed, but keeping it simple for now */}
-      {children}
-    </motion.button>
+      children={children as any}
+    />
   );
 };

@@ -29,8 +29,7 @@ export const FloatingElement = ({
         ease: "easeInOut",
         delay: delay,
       }}
-    >
-      {children}
-    </motion.div>
+      children={children as any}
+    />
   );
 };

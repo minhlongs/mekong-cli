@@ -20,9 +20,9 @@ vi.mock('../ui/Button', () => ({
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  Mail: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-mail" />),
-  Phone: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-phone" />),
-  Calendar: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-calendar" />),
+  Mail: vi.fn((props: any) => <svg {...props} data-testid="icon-mail" />),
+  Phone: vi.fn((props: any) => <svg {...props} data-testid="icon-phone" />),
+  Calendar: vi.fn((props: any) => <svg {...props} data-testid="icon-calendar" />),
 }))
 
 // Mock window.open

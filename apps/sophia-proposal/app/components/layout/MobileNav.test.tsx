@@ -30,9 +30,9 @@ vi.mock('../ui/Button', () => ({
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  Menu: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-menu" />),
-  X: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-x" />),
-  ArrowRight: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-arrow" />),
+  Menu: vi.fn((props: any) => <svg {...props} data-testid="icon-menu" />),
+  X: vi.fn((props: any) => <svg {...props} data-testid="icon-x" />),
+  ArrowRight: vi.fn((props: any) => <svg {...props} data-testid="icon-arrow" />),
 }))
 
 // Mock scrollIntoView

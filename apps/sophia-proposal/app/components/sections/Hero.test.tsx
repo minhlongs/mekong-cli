@@ -93,13 +93,13 @@ vi.mock('../ui/FloatingElement', () => ({
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
-  ArrowRight: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-arrow" />),
-  Zap: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-zap" />),
-  TrendingUp: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-trending" />),
-  Clock: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-clock" />),
-  Bot: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-bot" />),
-  Cpu: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-cpu" />),
-  Workflow: vi.fn((props: React.SVGProps<SVGSVGElement>) => <svg {...props} data-testid="icon-workflow" />),
+  ArrowRight: vi.fn((props: any) => <svg {...props} data-testid="icon-arrow" />),
+  Zap: vi.fn((props: any) => <svg {...props} data-testid="icon-zap" />),
+  TrendingUp: vi.fn((props: any) => <svg {...props} data-testid="icon-trending" />),
+  Clock: vi.fn((props: any) => <svg {...props} data-testid="icon-clock" />),
+  Bot: vi.fn((props: any) => <svg {...props} data-testid="icon-bot" />),
+  Cpu: vi.fn((props: any) => <svg {...props} data-testid="icon-cpu" />),
+  Workflow: vi.fn((props: any) => <svg {...props} data-testid="icon-workflow" />),
 }))
 
 // Mock document.getElementById
