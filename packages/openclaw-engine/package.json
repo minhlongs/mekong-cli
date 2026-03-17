@@ -1,9 +1,14 @@
 {
   "name": "@mekong/openclaw-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "OpenClaw orchestration engine — promoted from apps/openclaw-worker",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./raas": "./src/raas/index.ts",
+    "./raas/*": "./src/raas/*.ts"
+  },
   "scripts": {
     "build": "node --check index.js && echo '✅ openclaw-engine syntax OK'",
     "test": "echo 'no tests yet'"

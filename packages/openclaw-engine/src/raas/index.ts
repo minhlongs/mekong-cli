@@ -30,3 +30,14 @@ export {
   handleGetUsage,
   handleListTiers,
 } from './raas-api.js';
+
+export {
+  type OnboardingRequest,
+  type OnboardingResult,
+  type ApiKeyRecord,
+  generateApiKey,
+  handleOnboardTenant,
+  validateApiKey,
+  revokeApiKey,
+  listTenantApiKeys,
+} from './raas-onboarding.js';

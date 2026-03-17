@@ -31,6 +31,13 @@ import {
   handleListTiers,
 } from '../../../openclaw-engine/src/raas/raas-api.js';
 
+import {
+  handleOnboardTenant,
+  validateApiKey,
+  revokeApiKey,
+  listTenantApiKeys,
+} from '../../../openclaw-engine/src/raas/raas-onboarding.js';
+
 // --- Gateway Delegation Tests ---
 describe('Gateway ROIaaS Delegation', () => {
   let gateway: Gateway;
@@ -236,5 +243,71 @@ describe('RaaS API Handlers', () => {
     const res = handleListTiers();
     expect(res.ok).toBe(true);
     expect(Object.keys(res.data!)).toEqual(['starter', 'pro', 'enterprise']);
+  });
+});
+
+// --- RaaS Onboarding Tests ---
+describe('RaaS Onboarding', () => {
+  it('handleOnboardTenant — full onboarding flow', () => {
+    const res = handleOnboardTenant({
+      tenantId: 'onboard-test-1',
+      tier: 'pro',
+      email: 'test@example.com',
+    });
+    expect(res.ok).toBe(true);
+    expect(res.status).toBe(201);
+    expect(res.data?.apiKey).toMatch(/^mk_/);
+    expect(res.data?.creditsPerMonth).toBe(1000);
+  });
+
+  it('handleOnboardTenant — rejects duplicate tenant', () => {
+    handleOnboardTenant({ tenantId: 'dup-tenant', tier: 'starter', email: 'a@b.com' });
+    const res = handleOnboardTenant({ tenantId: 'dup-tenant', tier: 'starter', email: 'a@b.com' });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(409);
+  });
+
+  it('handleOnboardTenant — rejects invalid tier', () => {
+    const res = handleOnboardTenant({ tenantId: 'bad-tier', tier: 'mega' as any, email: 'a@b.com' });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(400);
+  });
+
+  it('handleOnboardTenant — rejects missing email', () => {
+    const res = handleOnboardTenant({ tenantId: 'no-email', tier: 'starter', email: '' });
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(400);
+  });
+
+  it('validateApiKey — validates generated key', () => {
+    const onboard = handleOnboardTenant({ tenantId: 'key-test-1', tier: 'pro', email: 'k@t.com' });
+    const res = validateApiKey(onboard.data!.apiKey);
+    expect(res.ok).toBe(true);
+    expect(res.data?.tenantId).toBe('key-test-1');
+    expect(res.data?.tier).toBe('pro');
+  });
+
+  it('validateApiKey — rejects invalid key', () => {
+    const res = validateApiKey('mk_invalid_key');
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(401);
+  });
+
+  it('revokeApiKey — revokes and blocks subsequent validation', () => {
+    const onboard = handleOnboardTenant({ tenantId: 'revoke-test', tier: 'starter', email: 'r@t.com' });
+    const revoke = revokeApiKey(onboard.data!.apiKey);
+    expect(revoke.ok).toBe(true);
+
+    const validate = validateApiKey(onboard.data!.apiKey);
+    expect(validate.ok).toBe(false);
+    expect(validate.status).toBe(403);
+  });
+
+  it('listTenantApiKeys — lists keys for tenant', () => {
+    const onboard = handleOnboardTenant({ tenantId: 'list-keys-test', tier: 'pro', email: 'l@t.com' });
+    const res = listTenantApiKeys('list-keys-test');
+    expect(res.ok).toBe(true);
+    expect(res.data!.length).toBe(1);
+    expect(res.data![0].apiKey).toBe(onboard.data!.apiKey);
   });
 });

@@ -44,3 +44,6 @@ exports.m1CoolingDaemon = require('./src/safety/m1-cooling-daemon');
 exports.resourceGovernor = require('./src/safety/resource-governor');
 exports.selfHealer = require('./src/safety/self-healer');
 
+// raas (ROIaaS-as-a-Service)
+exports.raas = require('./src/raas/index');
+
