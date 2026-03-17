@@ -1,4 +1,0 @@
-/plan:hard "MISSION TUYỆT ĐỐI: KIẾN TRÚC LẠI HỆ THỐNG MAPPING VÀ ORCHESTRATION CỦA QWEN API.
-Scope: Rà soát lại toàn bộ openclaw-worker và tom-hum-factory.
-Mục tiêu: Đảm bảo cơ chế phân bổ task cho các Panes (P1, P2, P3...) khớp 100% với file config.js và các api connector (đặc biệt là QWen DashScope API).
-Yêu cầu đanh thép: Tất cả script phải đồng nhất tên project dựa vào biến config chung, KHÔNG được để hardcode string lọt vào ship-pipeline. Hoàn thiện xong thì review lại cơ chế task dispatch để chắc chắn P2 chỉ chạy Sophia và P3 chỉ chạy WellNexus."

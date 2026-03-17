@@ -1,1 +1,0 @@
-/cook "Scan mekong-cli monorepo: run npm run build, check for errors, fix at most 5 files. Focus on TypeScript errors and build failures. Run npm run build after fixing to verify. CRITICAL: DO NOT git commit/push." --auto
