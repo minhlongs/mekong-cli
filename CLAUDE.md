@@ -119,12 +119,40 @@ Total: 319 commands (230 base + 89 super). Run `mekong help` for full list.
 | UX | Loading states, error boundaries |
 | Documentation | Self-documenting code |
 
+## 🚨 PUBLIC REPO BOUNDARY — KHÔNG ĐƯỢC VI PHẠM
+
+**mekong-cli là PUBLIC repo.** Bất kỳ ai trên internet đều thấy.
+
+### ❌ CẤM TUYỆT ĐỐI commit/push:
+| Path | Lý do |
+|------|-------|
+| `apps/` | Dự án khách hàng PRIVATE (algo-trader, sophia, well...) |
+| `mekong/daemon/` | Internal CTO brain, API keys, secrets |
+| `mekong/hooks/` | Internal automation hooks |
+| `.env`, `.env.*` | Secrets, API keys |
+| `*.pem`, `*.key` | Certificates |
+
+### ✅ CHỈ commit/push:
+| Path | Nội dung |
+|------|----------|
+| `packages/` | openclaw-engine, mekong-cli-core (PUBLIC SDK) |
+| `recipes/` | Command recipes (PUBLIC) |
+| `.claude/skills/` | Skill definitions (PUBLIC) |
+| `.claude/commands/` | Command definitions (PUBLIC) |
+| `factory/contracts/` | Machine contracts (PUBLIC) |
+| Root files | package.json, tsconfig, README, CLAUDE.md |
+
+### Khi `git add -A` hoặc `git commit`:
+1. **LUÔN kiểm tra** `git diff --cached --name-only` trước khi commit
+2. Nếu thấy `apps/` hoặc `mekong/daemon/` → **DỪNG LẠI**, chạy `git reset HEAD -- apps/ mekong/daemon/`
+3. Pre-commit hook sẽ block, nhưng **đừng dùng --no-verify**
+
 ---
 
 ## GIT PROTOCOL
 
 ```bash
-# Pre-commit: lint + type check
+# Pre-commit: blocks apps/ + secrets + runs tsc
 # Pre-push: pytest must pass
 # Commit format:
 feat: add new command
@@ -132,7 +160,7 @@ fix: resolve billing edge case
 refactor: simplify PEV orchestrator
 ```
 
-Never commit: `.env`, API keys, `node_modules`, `__pycache__`, `.pyc`
+Never commit: `.env`, API keys, `node_modules`, `__pycache__`, `.pyc`, `apps/`, `mekong/daemon/`
 
 ---
 
