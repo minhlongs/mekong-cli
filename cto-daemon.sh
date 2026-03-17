@@ -94,7 +94,7 @@ done
 
 # ---- TMUX HELPERS ----
 capture_pane() {
-  tmux capture-pane -t "${CTO_SESSION}:0.${1}" -p -S -20 2>/dev/null || echo ""
+  tmux capture-pane -t "${CTO_SESSION}:0.${1}" -p -S -50 2>/dev/null || echo ""
 }
 
 send_to_pane() {
@@ -145,30 +145,64 @@ phase_scan() {
 
 # ---- DETECTION FUNCTIONS ----
 
+# CC CLI activity patterns — if ANY of these appear in recent output, pane is BUSY
+# Covers all known CC CLI spinner/status words + interactive prompts
+BUSY_PATTERNS="thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading|Running|Searching|Bootstrapping|Wandering|Swooping|Pondering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|Compacting|Ebbing|Hatching|Committing"
+STUCK_PATTERNS="queued messages|Press up to edit queued"
+QUESTION_PATTERNS="Do you want to proceed|Would you like"
+
 is_idle() {
   local output="$1"
-  echo "$output" | tail -5 | grep -qE "^❯|⏵⏵ bypass" && \
-  ! echo "$output" | tail -5 | grep -qE "Running|thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading"
+  local tail_lines
+  tail_lines=$(echo "$output" | tail -15)
+
+  # STUCK: queued messages means pane is jammed, not idle
+  if echo "$tail_lines" | grep -qE "$STUCK_PATTERNS"; then
+    return 1
+  fi
+
+  # BUSY: any activity indicator in last 15 lines → not idle
+  if echo "$tail_lines" | grep -qE "$BUSY_PATTERNS"; then
+    return 1
+  fi
+
+  # QUESTION: interactive prompt waiting → not idle (needs answer, not new task)
+  if echo "$tail_lines" | grep -qE "$QUESTION_PATTERNS"; then
+    return 1
+  fi
+
+  # IDLE: must see CC CLI prompt (❯) or bypass indicator in last 5 lines
+  # with NO activity patterns above it
+  echo "$tail_lines" | tail -5 | grep -qE "^❯|⏵⏵ bypass"
+}
+
+# Check if pane is actively working (inverse of idle, but also catches stuck state)
+is_busy() {
+  local output="$1"
+  local tail_lines
+  tail_lines=$(echo "$output" | tail -15)
+  echo "$tail_lines" | grep -qE "$BUSY_PATTERNS|$STUCK_PATTERNS|$QUESTION_PATTERNS"
 }
 
 has_question() {
   local output="$1"
-  echo "$output" | tail -10 | grep -vE "🔋|⏰|📁|🌿|bypass|auto-compact|compact|model" | grep -q "?"
+  echo "$output" | tail -15 | grep -vE "🔋|⏰|📁|🌿|bypass|auto-compact|compact|model" | grep -qE "\?|Do you want|Would you like|proceed"
 }
 
 get_question() {
   local output="$1"
-  echo "$output" | tail -10 | grep -vE "🔋|⏰|📁|🌿|bypass|auto-compact|compact|model" | grep "?" | tail -1
+  echo "$output" | tail -15 | grep -vE "🔋|⏰|📁|🌿|bypass|auto-compact|compact|model" | grep -E "\?|Do you want|Would you like" | tail -1
 }
 
 has_error() {
   local output="$1"
-  echo "$output" | tail -15 | grep -qiE "error|failed|FAILED|Error:|SyntaxError|TypeError|ImportError|ModuleNotFoundError"
+  # Exclude CC CLI meta lines (✶ ◼ ⏺ ✻ ▸ ⎿ ●) which contain task titles with error-like words
+  echo "$output" | tail -20 | grep -vE "^[[:space:]]*(✶|◼|⏺|✻|▸|⎿|●|⏵⏵|🤖|🔋|⏰|📁|🌿|Cooked|Worked|Crunched|Cogitated|bypass|auto-compact)" | grep -qiE "Error:|SyntaxError|TypeError|ImportError|ModuleNotFoundError|FAILED|exit code [1-9]|Build failed|Compilation failed"
 }
 
 get_error() {
   local output="$1"
-  echo "$output" | tail -15 | grep -iE "error|failed|FAILED|Error:|SyntaxError" | tail -1
+  echo "$output" | tail -15 | grep -vE "^[[:space:]]*(✶|◼|⏺|✻|▸|⎿|●|⏵⏵)" | grep -iE "Error:|SyntaxError|TypeError|FAILED|exit code|Build failed" | tail -1
 }
 
 # Jidoka: detect stop-the-line conditions (per spec)
@@ -184,59 +218,184 @@ check_jidoka() {
   return 1  # no jidoka
 }
 
-# ---- PHASE 2: PLAN — Build delegation task ----
-# Per spec: specific title, definition of done, constraints
+# ---- COMMAND CATALOG (config/cto-command-catalog.json) ----
+CATALOG_FILE="${PROJECT_ROOT}/config/cto-command-catalog.json"
+
+# Read a field from the command catalog via python3 (cached per cycle)
+_catalog_cache=""
+catalog_query() {
+  local query="$1"
+  if [[ -z "$_catalog_cache" && -f "$CATALOG_FILE" ]]; then
+    _catalog_cache=$(cat "$CATALOG_FILE" 2>/dev/null || echo "{}")
+  fi
+  if [[ -n "$_catalog_cache" ]]; then
+    python3 -c "
+import json, sys
+c = json.loads(sys.stdin.read())
+keys = '${query}'.split('.')
+v = c
+for k in keys:
+    if isinstance(v, dict):
+        v = v.get(k, '')
+    elif isinstance(v, list):
+        v = v[int(k)] if k.isdigit() and int(k) < len(v) else ''
+    else:
+        v = ''
+        break
+if isinstance(v, list): print(' '.join(v))
+else: print(v)
+" <<< "$_catalog_cache" 2>/dev/null || echo ""
+  fi
+}
+
+# Get project profile field from catalog
+get_project_profile() {
+  local project="$1" field="$2"
+  catalog_query "project_profiles.${project}.${field}"
+}
+
+# ---- PHASE 2: PLAN — Analyze pane state and build proper mekong-cli command ----
+
+# Classify pane state from captured output
+# Returns: error|test_fail|lint_error|complete|fresh
+detect_pane_state() {
+  local output="$1"
+  local tail20
+  tail20=$(echo "$output" | tail -20)
+
+  # Test failures
+  if echo "$tail20" | grep -qiE "FAIL\s|tests? failed|✕|✗|test.*error"; then
+    echo "test_fail"
+    return
+  fi
+
+  # Lint errors (distinct from build errors)
+  if echo "$tail20" | grep -qiE "lint.*error|eslint|prettier.*error"; then
+    echo "lint_error"
+    return
+  fi
+
+  # Build/runtime errors
+  if echo "$tail20" | grep -qiE "error|failed|SyntaxError|TypeError|Cannot find"; then
+    echo "error"
+    return
+  fi
+
+  # Completed work (success indicators from CC CLI)
+  if echo "$tail20" | grep -qiE "Cooked|Sautéed|Baked|Brewed|Stewed|Done|committed|pushed|✅"; then
+    echo "complete"
+    return
+  fi
+
+  echo "fresh"
+}
+
+# Extract error context from pane output for targeted debugging
+extract_error_context() {
+  local output="$1"
+  echo "$output" | tail -20 | grep -iE "error|failed|FAIL|Cannot|TypeError|SyntaxError" | head -3 | tr '\n' ' ' | cut -c1-200
+}
+
+# Build the right mekong-cli command based on pane state + project profile from catalog
 build_delegation_task() {
   local pane_idx=$1
+  local pane_output="${2:-}"
   local name="${WORKER_NAME[$pane_idx]}"
   local dir="${WORKER_DIR[$pane_idx]}"
   local deploy="${WORKER_DEPLOY[$pane_idx]}"
   local retries="${WORKER_RETRIES[$pane_idx]}"
 
-  local task_prefix=""
-  if [[ "$retries" -gt 0 ]]; then
-    task_prefix="RETRY #${retries}: Previous attempt had errors. "
+  local state="fresh"
+  if [[ -n "$pane_output" ]]; then
+    state=$(detect_pane_state "$pane_output")
   fi
 
-  # Per spec: CONTEXT + TASK + DEFINITION OF DONE + CONSTRAINTS
-  cat << EOF
-/cook "${task_prefix}[CONTEXT] Project: ${name}, Dir: ${dir}, Stack: auto-detect.
-[TASK] Deploy ${name}: cd ${dir} && ${deploy} 2>&1 | tail -20. Fix ALL errors found.
-[DEFINITION OF DONE] (1) Build passes with zero errors (2) All tests pass (3) No linting errors (4) Code committed and pushed.
-[CONSTRAINTS] (1) Do NOT touch files outside ${dir} (2) Follow existing patterns (3) File size < 200 lines (4) NO QUESTIONS — auto-approve all." --auto
-EOF
+  # Read project profile from catalog
+  local layer idle_cmd error_cmd
+  layer=$(get_project_profile "$name" "layer")
+  idle_cmd=$(get_project_profile "$name" "idle_command")
+  error_cmd=$(get_project_profile "$name" "error_command")
+  # Defaults if catalog missing
+  layer="${layer:-engineering}"
+  idle_cmd="${idle_cmd:-/cook}"
+  error_cmd="${error_cmd:-/debug}"
+
+  local ctx="Project: ${name}, Dir: ${dir}"
+  local constraints="Do NOT touch files outside ${dir}. Follow existing patterns."
+
+  case "$state" in
+    error)
+      local error_ctx
+      error_ctx=$(extract_error_context "$pane_output")
+      if [[ "$retries" -ge 3 ]]; then
+        # Escalate: switch to /plan:hard after 3 failed retries
+        echo "/plan:hard \"${ctx}. ESCALATION: ${retries} retries failed. Error: ${error_ctx}. Analyze root cause deeply, create plan before fixing.\""
+      elif [[ "$retries" -gt 0 ]]; then
+        echo "${error_cmd} \"RETRY #${retries}. ${ctx}. Error: ${error_ctx}. Analyze root cause, fix, verify: ${deploy}\""
+      else
+        echo "${error_cmd} \"${ctx}. Error: ${error_ctx}. Fix all errors then verify: ${deploy}\""
+      fi
+      ;;
+    test_fail)
+      echo "/test \"${ctx}. Tests failing. Analyze failures, fix source or tests. ${constraints}\""
+      ;;
+    lint_error)
+      echo "/fix \"${ctx}. Lint errors detected. Fix all lint issues. ${constraints}\""
+      ;;
+    complete)
+      echo "/check-and-commit"
+      ;;
+    fresh|*)
+      # Use project-specific idle command from catalog
+      echo "${idle_cmd} \"${ctx}. Run: ${deploy}. Fix ALL errors. ${constraints}\" --auto"
+      ;;
+  esac
 }
 
 # ---- PHASE 3: DELEGATE ----
+# Accepts: pane_idx [pane_output]
 dispatch_worker() {
   local pane_idx=$1
+  local pane_output="${2:-}"
   local name="${WORKER_NAME[$pane_idx]}"
 
-  # Check for pending mission files matching this worker's project
+  # Priority 1: Check for pending mission files matching this worker's project
   local mission_dir="${MEKONG_DIR}/missions"
   if [[ -d "$mission_dir" ]]; then
     for mf in "$mission_dir"/*.json; do
       [[ -f "$mf" ]] || continue
-      local m_project
-      m_project=$(python3 -c "import json,sys; d=json.load(open('$mf')); print(d.get('project',''))" 2>/dev/null || echo "")
-      if [[ "$m_project" == "$name" || "$m_project" == "${WORKER_NAME[$pane_idx]}" ]]; then
-        local m_goal
-        m_goal=$(python3 -c "import json,sys; d=json.load(open('$mf')); print(d.get('goal',''))" 2>/dev/null || echo "")
-        if [[ -n "$m_goal" ]]; then
-          log "MISSION FILE: $mf → P${pane_idx} (${name})"
-          send_to_pane "$pane_idx" "/cook $m_goal"
-          mv "$mf" "${mf}.done"
-          log "DELEGATED P${pane_idx} (${name}) — MISSION from file"
-          return
+      local m_parsed
+      m_parsed=$(python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('project','')); print(d.get('goal',''))" < "$mf" 2>/dev/null || echo "")
+      local m_project m_goal
+      m_project=$(echo "$m_parsed" | head -1)
+      m_goal=$(echo "$m_parsed" | tail -n +2)
+      if [[ "$m_project" == "$name" && -n "$m_goal" ]]; then
+        # Mission files may contain explicit commands (/cook, /debug, etc.)
+        local m_first_word
+        m_first_word=$(echo "$m_goal" | awk '{print $1}')
+        local cmd
+        if [[ "$m_first_word" == /* ]]; then
+          cmd="$m_goal"  # Already a command
+        else
+          cmd="/cook \"$m_goal\""  # Wrap in /cook
         fi
+        log "MISSION FILE: $mf → P${pane_idx} (${name}) [${m_first_word}]"
+        send_to_pane "$pane_idx" "$cmd"
+        mv "$mf" "${mf}.done"
+        log "DELEGATED P${pane_idx} (${name}) — MISSION from file"
+        return
       fi
     done
   fi
 
+  # Priority 2: State-aware command selection
   local task
-  task=$(build_delegation_task "$pane_idx")
+  task=$(build_delegation_task "$pane_idx" "$pane_output")
+  local chosen_cmd
+  chosen_cmd=$(echo "$task" | awk '{print $1}')
+  log "P${pane_idx} (${name}): STATE=$(detect_pane_state "$pane_output") → CMD=${chosen_cmd}"
   send_to_pane "$pane_idx" "$task"
-  log "DELEGATED P${pane_idx} (${name}) — task with CONTEXT+DOD+CONSTRAINTS"
+  log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
 }
 
 # ---- PHASE 4: VERIFY ----
@@ -254,8 +413,8 @@ verify_worker() {
     return 0
   fi
 
-  # Check for errors → re-delegate with error context (spec: re-delegation template)
-  if has_error "$output" && is_idle "$output"; then
+  # Check for errors → only re-delegate if pane is IDLE (not busy/stuck)
+  if has_error "$output" && is_idle "$output" && ! is_busy "$output"; then
     local error_msg
     error_msg=$(get_error "$output")
     WORKER_RETRIES[$pane_idx]=$((${WORKER_RETRIES[$pane_idx]} + 1))
@@ -263,7 +422,7 @@ verify_worker() {
     if [[ ${WORKER_RETRIES[$pane_idx]} -le 3 ]]; then
       log "VERIFY P${pane_idx}: ERROR DETECTED — re-delegating (retry ${WORKER_RETRIES[$pane_idx]})"
       log "  Error: $error_msg"
-      dispatch_worker "$pane_idx"
+      dispatch_worker "$pane_idx" "$output"
       save_memory "RE-DELEGATE" "P${pane_idx} retry ${WORKER_RETRIES[$pane_idx]}: ${error_msg}"
     else
       log "VERIFY P${pane_idx}: MAX RETRIES REACHED — escalating"
@@ -327,9 +486,14 @@ health_check() {
 
 # ============================================================
 # MAIN LOOP — P→D→V→S forever
+# Hardened: trap errors so daemon never exits
 # ============================================================
+
+# Safety net: log but don't exit on errors
+trap 'log "TRAP: Error at line $LINENO (ignored — daemon continues)"' ERR
+
 log "============================================="
-log "CTO DAEMON v2.0 — P→D→V→S Full Implementation"
+log "CTO DAEMON v2.1 — P→D→V→S + Command Catalog"
 log "Session: ${CTO_SESSION} | Poll: ${POLL_INTERVAL}s"
 log "Project: ${PROJECT_ROOT}"
 log "Workers: P1=${WORKER_NAME[1]} P2=${WORKER_NAME[2]} P3=${WORKER_NAME[3]}"
@@ -347,53 +511,58 @@ DISPATCH_COOLDOWN=90
 while true; do
   CYCLE=$((CYCLE + 1))
   NOW=$(date +%s)
+  _catalog_cache=""  # Clear catalog cache each cycle (pick up config changes)
   log "--- CYCLE $CYCLE ---"
 
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
   for pane_idx in 1 2 3; do
-    output=$(capture_pane "$pane_idx")
-    name="${WORKER_NAME[$pane_idx]}"
+    # Guard: any failure in per-pane logic must not kill the loop
+    {
+      output=$(capture_pane "$pane_idx") || output=""
+      name="${WORKER_NAME[$pane_idx]:-Worker-${pane_idx}}"
 
-    if [[ -z "$output" ]]; then
-      log "P${pane_idx} (${name}): NO OUTPUT (pane dead?)"
-      continue
-    fi
-
-    # PHASE 4: VERIFY — check questions, errors, jidoka
-    if verify_worker "$pane_idx" "$output"; then
-      continue  # verify handled the worker
-    fi
-
-    # If idle and not recently dispatched → DELEGATE new task (with cooldown)
-    if is_idle "$output"; then
-      eval last_dispatch=\$LAST_DISPATCH_${pane_idx}
-      elapsed=$((NOW - last_dispatch))
-      if [[ $elapsed -ge $DISPATCH_COOLDOWN ]]; then
-        log "P${pane_idx} (${name}): IDLE → DELEGATING"
-        WORKER_RETRIES[$pane_idx]=0
-        dispatch_worker "$pane_idx"
-        eval LAST_DISPATCH_${pane_idx}=$NOW
-      else
-        log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
+      if [[ -z "$output" ]]; then
+        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?)"
+        continue
       fi
-    else
-      # Worker is active — extract status
-      status_word=$(echo "$output" | grep -oE "Running|thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading|Commit" | tail -1)
-      log "P${pane_idx} (${name}): WORKING (${status_word:-active})"
-    fi
+
+      # PHASE 4: VERIFY — check questions, errors, jidoka
+      if verify_worker "$pane_idx" "$output"; then
+        continue  # verify handled the worker
+      fi
+
+      # If idle and not recently dispatched → DELEGATE new task (with cooldown)
+      if is_idle "$output"; then
+        ld_var="LAST_DISPATCH_${pane_idx}"
+        last_dispatch="${!ld_var:-0}"
+        elapsed=$((NOW - last_dispatch))
+        if [[ $elapsed -ge $DISPATCH_COOLDOWN ]]; then
+          log "P${pane_idx} (${name}): IDLE → DELEGATING"
+          WORKER_RETRIES[$pane_idx]=0
+          dispatch_worker "$pane_idx" "$output"
+          eval "LAST_DISPATCH_${pane_idx}=$NOW"
+        else
+          log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
+        fi
+      else
+        # Worker is active — extract status from expanded pattern set
+        status_word=$(echo "$output" | tail -15 | grep -oE "$BUSY_PATTERNS|$STUCK_PATTERNS|Commit" | tail -1) || status_word=""
+        log "P${pane_idx} (${name}): WORKING (${status_word:-active})"
+      fi
+    } || log "CYCLE $CYCLE P${pane_idx}: ERROR IN PANE LOOP (continuing)"
   done
 
   # PHASE 5: INTEGRATE — push, check conflicts
-  phase_integrate
+  phase_integrate || log "CYCLE $CYCLE: INTEGRATE ERROR (continuing)"
 
   # Health check every 5 cycles
   if [[ $((CYCLE % 5)) -eq 0 ]]; then
-    health_check
+    health_check || true
   fi
 
   # Re-scan every 20 cycles to update context
   if [[ $((CYCLE % 20)) -eq 0 ]]; then
-    phase_scan
+    phase_scan || true
   fi
 
   sleep "$POLL_INTERVAL"
