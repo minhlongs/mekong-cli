@@ -1,6 +1,30 @@
 const path = require('path');
+const fs = require('fs');
 
 const MEKONG_DIR = process.env.MEKONG_DIR || path.join(process.env.HOME || '', 'mekong-cli');
+
+// Load unified CTO config — single source of truth for pane→project routing
+const CTO_CONFIG_PATH = path.join(MEKONG_DIR, 'config', 'cto-config.json');
+let _unifiedPanes = {};
+try {
+  const raw = fs.readFileSync(CTO_CONFIG_PATH, 'utf8');
+  const unified = JSON.parse(raw);
+  // Convert pane entries to {project, dir, model} format
+  if (unified.panes) {
+    for (const [k, v] of Object.entries(unified.panes)) {
+      _unifiedPanes[Number(k)] = { project: v.project, dir: v.dir, model: v.model };
+    }
+  }
+} catch {
+  // Fallback if unified config missing — preserves backward compat
+  _unifiedPanes = {
+    0: { project: 'mekong-cli', dir: '', model: 'qwen3.5-plus' },
+    1: { project: 'algo-trader', dir: 'apps/algo-trader', model: 'qwen3-coder-plus' },
+    2: { project: 'sophia-ai-factory', dir: 'apps/sophia-proposal', model: 'qwen3.5-plus' },
+    3: { project: 'well', dir: 'apps/well', model: 'qwen3.5-plus' },
+    4: { project: 'opus-strategic', dir: '', model: 'claude-opus-4-6' },
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════
 // 🔒 IRON CONFIG — LOCKED: FORBIDDEN TO CHANGE (including Tôm Hùm)
@@ -42,14 +66,8 @@ const config = {
   QWEN_MODEL_NAME: process.env.QWEN_MODEL_NAME || 'qwen3-coder-next',
   // Subagent model — CC CLI uses this to spawn subagent with correct Qwen model
   SUBAGENT_MODEL: process.env.CLAUDE_CODE_SUBAGENT_MODEL || 'qwen3-coder-plus',
-  // 🎯 PANE_CONFIG — Single source of truth for pane→project→model routing
-  PANE_CONFIG: {
-    0: { project: 'mekong-cli', dir: '', model: 'qwen3.5-plus' },
-    1: { project: 'algo-trader', dir: 'apps/algo-trader', model: 'qwen3-coder-plus' },
-    2: { project: 'sophia-ai-factory', dir: 'apps/sophia-proposal', model: 'qwen3.5-plus' },
-    3: { project: 'well', dir: 'apps/well', model: 'qwen3.5-plus' },
-    4: { project: 'opus-strategic', dir: '', model: 'claude-opus-4-6' },
-  },
+  // 🎯 PANE_CONFIG — Loaded from config/cto-config.json (single source of truth)
+  PANE_CONFIG: _unifiedPanes,
   // PROJECTS list below is for reference/scanning only, NOT for routing.
   PROJECTS: ['mekong-cli', 'algo-trader', 'sophia-ai-factory', 'well', 'mekong-cli-core', 'openclaw-worker'],
 

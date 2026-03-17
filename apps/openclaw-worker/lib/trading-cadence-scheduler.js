@@ -197,6 +197,7 @@ function buildTradingMissionFile(mission) {
 		`Run trading command: ${command}. ` +
 		`Cadence: ${cadenceId} | Timeout: ${timeoutTier} | Tier: ${tier}. ` +
 		`Save report to plans/reports/. ` +
+		`TIẾNG VIỆT: Thực hiện lệnh trading. ` +
 		`CRITICAL: DO NOT run git commit, git push, or /check-and-commit.`;
 
 	return { filename, content };

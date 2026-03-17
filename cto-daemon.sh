@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -u
 
 # ============================================================
 # CTO DAEMON v2.0 — Full P→D→V→S Loop Implementation
@@ -15,7 +15,7 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$SCRIPT_DIR}"
 MEKONG_DIR="${PROJECT_ROOT}/.mekong"
-CONFIG_FILE="${MEKONG_DIR}/cto-config.json"
+CONFIG_FILE="${PROJECT_ROOT}/config/cto-config.json"
 LOG_FILE="${MEKONG_DIR}/cto-daemon.log"
 MEMORY_FILE="${MEKONG_DIR}/cto-memory.md"
 JIDOKA_FILE="${MEKONG_DIR}/jidoka-alerts.log"
@@ -41,17 +41,22 @@ mkdir -p "$MEKONG_DIR"
 
 # Auto-create config if not exists
 if [[ ! -f "$CONFIG_FILE" ]]; then
+  mkdir -p "$(dirname "$CONFIG_FILE")"
   cat > "$CONFIG_FILE" << 'CONF'
 {
-  "workers": {
-    "1": { "name": "Worker-1", "dir": ".", "stack": "auto", "deploy_cmd": "npm run build" },
-    "2": { "name": "Worker-2", "dir": ".", "stack": "auto", "deploy_cmd": "npm run build" },
-    "3": { "name": "Worker-3", "dir": ".", "stack": "auto", "deploy_cmd": "npm run build" }
+  "panes": {
+    "0": { "project": "mekong-cli", "dir": "", "model": "qwen3.5-plus", "stack": "nodejs", "deploy_cmd": "pnpm run build" },
+    "1": { "project": "algo-trader", "dir": "apps/algo-trader", "model": "qwen3-coder-plus", "stack": "typescript", "deploy_cmd": "npx tsc --noEmit" },
+    "2": { "project": "sophia-ai-factory", "dir": "apps/sophia-proposal", "model": "qwen3.5-plus", "stack": "nextjs", "deploy_cmd": "npm run build" },
+    "3": { "project": "well", "dir": "apps/well", "model": "qwen3.5-plus", "stack": "nextjs", "deploy_cmd": "npm run build" },
+    "4": { "project": "opus-strategic", "dir": "", "model": "claude-opus-4-6", "stack": "strategic", "deploy_cmd": "" }
   },
-  "auto_approve": true,
-  "jidoka_enabled": true,
-  "delegation_template": true,
-  "max_retries": 3
+  "daemon": {
+    "auto_approve": true,
+    "jidoka_enabled": true,
+    "delegation_template": true,
+    "max_retries": 3
+  }
 }
 CONF
   echo "[CTO] Created default config at $CONFIG_FILE — edit to match your project."
@@ -67,20 +72,20 @@ log() {
   fi
 }
 
-# ---- WORKER CONFIG (read from cto-config.json or fallback) ----
-get_worker_config() {
+# ---- WORKER CONFIG (read from config/cto-config.json — unified source of truth) ----
+get_pane_config() {
   local idx=$1 field=$2
   if command -v python3 &>/dev/null && [[ -f "$CONFIG_FILE" ]]; then
-    python3 -c "import json; c=json.load(open('$CONFIG_FILE')); print(c.get('workers',{}).get('$idx',{}).get('$field',''))" 2>/dev/null
+    python3 -c "import json; c=json.load(open('$CONFIG_FILE')); print(c.get('panes',{}).get('$idx',{}).get('$field',''))" 2>/dev/null
   fi
 }
 
-# Load worker names and dirs
+# Load worker names and dirs from unified panes config
 declare -A WORKER_NAME WORKER_DIR WORKER_DEPLOY WORKER_RETRIES
 for idx in 1 2 3; do
-  WORKER_NAME[$idx]=$(get_worker_config "$idx" "name")
-  WORKER_DIR[$idx]=$(get_worker_config "$idx" "dir")
-  WORKER_DEPLOY[$idx]=$(get_worker_config "$idx" "deploy_cmd")
+  WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
+  WORKER_DIR[$idx]=$(get_pane_config "$idx" "dir")
+  WORKER_DEPLOY[$idx]=$(get_pane_config "$idx" "deploy_cmd")
   WORKER_RETRIES[$idx]=0
   [[ -z "${WORKER_NAME[$idx]}" ]] && WORKER_NAME[$idx]="Worker-$idx"
   [[ -z "${WORKER_DIR[$idx]}" ]] && WORKER_DIR[$idx]="."
@@ -206,6 +211,27 @@ EOF
 dispatch_worker() {
   local pane_idx=$1
   local name="${WORKER_NAME[$pane_idx]}"
+
+  # Check for pending mission files matching this worker's project
+  local mission_dir="${MEKONG_DIR}/missions"
+  if [[ -d "$mission_dir" ]]; then
+    for mf in "$mission_dir"/*.json; do
+      [[ -f "$mf" ]] || continue
+      local m_project
+      m_project=$(python3 -c "import json,sys; d=json.load(open('$mf')); print(d.get('project',''))" 2>/dev/null || echo "")
+      if [[ "$m_project" == "$name" || "$m_project" == "${WORKER_NAME[$pane_idx]}" ]]; then
+        local m_goal
+        m_goal=$(python3 -c "import json,sys; d=json.load(open('$mf')); print(d.get('goal',''))" 2>/dev/null || echo "")
+        if [[ -n "$m_goal" ]]; then
+          log "MISSION FILE: $mf → P${pane_idx} (${name})"
+          send_to_pane "$pane_idx" "/cook $m_goal"
+          mv "$mf" "${mf}.done"
+          log "DELEGATED P${pane_idx} (${name}) — MISSION from file"
+          return
+        fi
+      fi
+    done
+  fi
 
   local task
   task=$(build_delegation_task "$pane_idx")
