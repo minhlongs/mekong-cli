@@ -92,6 +92,28 @@ for idx in 1 2 3; do
   [[ -z "${WORKER_DEPLOY[$idx]}" ]] && WORKER_DEPLOY[$idx]="npm run build"
 done
 
+# Dynamic pane-to-project mapping: detect project from tmux pane_current_path
+# This runs EVERY cycle so pane index changes (respawns/splits) are auto-detected
+refresh_worker_mapping() {
+  for idx in 1 2 3; do
+    local pane_path
+    pane_path=$(tmux display-message -t "${CTO_SESSION}:0.${idx}" -p '#{pane_current_path}' 2>/dev/null || echo "")
+    if [[ -n "$pane_path" ]]; then
+      local detected=""
+      case "$pane_path" in
+        */apps/algo-trader*)    detected="algo-trader"; WORKER_DIR[$idx]="apps/algo-trader"; WORKER_DEPLOY[$idx]="npx tsc --noEmit" ;;
+        */apps/well*)           detected="well"; WORKER_DIR[$idx]="apps/well"; WORKER_DEPLOY[$idx]="npm run build" ;;
+        */apps/sophia-proposal*|*/apps/sophia-ai-factory*) detected="sophia-ai-factory"; WORKER_DIR[$idx]="apps/sophia-proposal"; WORKER_DEPLOY[$idx]="npm run build" ;;
+        */mekong-cli)           detected="mekong-cli"; WORKER_DIR[$idx]="."; WORKER_DEPLOY[$idx]="pnpm run build" ;;
+      esac
+      if [[ -n "$detected" && "$detected" != "${WORKER_NAME[$idx]}" ]]; then
+        log "REMAP P${idx}: ${WORKER_NAME[$idx]} → ${detected} (path: ${pane_path})"
+        WORKER_NAME[$idx]="$detected"
+      fi
+    fi
+  done
+}
+
 # ---- TMUX HELPERS ----
 capture_pane() {
   tmux capture-pane -t "${CTO_SESSION}:0.${1}" -p -S -50 2>/dev/null || echo ""
@@ -514,6 +536,9 @@ while true; do
   NOW=$(date +%s)
   _catalog_cache=""  # Clear catalog cache each cycle (pick up config changes)
   log "--- CYCLE $CYCLE ---"
+
+  # Re-detect which project is in which pane (handles index shifts from respawns)
+  refresh_worker_mapping
 
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
   for pane_idx in 1 2 3; do
