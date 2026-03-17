@@ -387,9 +387,10 @@ i18next-scanner.config.js
 
 # Rogue dirs (third pass)
 antigravity/
-config/
+/config/
+!config/cto-config.json
 docker/
-lib/
+/lib/
 locales/
 # mekong/ — tracked (core namespace)
 templates/
