@@ -89,4 +89,68 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
         showError(err instanceof Error ? err.message : String(err));
       }
     });
+
+  raas
+    .command('onboard <tenantId> <tier> <email>')
+    .description('Full onboarding: register tenant + generate API key')
+    .action(async (tenantId: string, tier: string, email: string) => {
+      try {
+        const { handleOnboardTenant } = await import('../../../../openclaw-engine/src/raas/raas-onboarding.js');
+        const result = handleOnboardTenant({
+          tenantId,
+          tier: tier as 'starter' | 'pro' | 'enterprise',
+          email,
+        });
+        if (result.ok && result.data) {
+          success(`✅ Tenant "${tenantId}" onboarded on ${tier} tier`);
+          info(`API Key: ${result.data.apiKey}`);
+          info(`Credits: ${result.data.creditsPerMonth === -1 ? '∞' : result.data.creditsPerMonth}/month`);
+          info(`Expires: ${new Date(result.data.expiresAt).toISOString()}`);
+        } else {
+          showError(result.error ?? 'Onboarding failed');
+          process.exitCode = 1;
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : String(err));
+        process.exitCode = 1;
+      }
+    });
+
+  raas
+    .command('api-key-validate <apiKey>')
+    .description('Validate an API key')
+    .action(async (apiKey: string) => {
+      try {
+        const { validateApiKey } = await import('../../../../openclaw-engine/src/raas/raas-onboarding.js');
+        const result = validateApiKey(apiKey);
+        if (result.ok && result.data) {
+          success(`✅ Valid — tenant: ${result.data.tenantId}, tier: ${result.data.tier}`);
+        } else {
+          showError(result.error ?? 'Invalid key');
+          process.exitCode = 1;
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : String(err));
+        process.exitCode = 1;
+      }
+    });
+
+  raas
+    .command('api-key-revoke <apiKey>')
+    .description('Revoke an API key')
+    .action(async (apiKey: string) => {
+      try {
+        const { revokeApiKey } = await import('../../../../openclaw-engine/src/raas/raas-onboarding.js');
+        const result = revokeApiKey(apiKey);
+        if (result.ok) {
+          success('✅ API key revoked');
+        } else {
+          showError(result.error ?? 'Revoke failed');
+          process.exitCode = 1;
+        }
+      } catch (err) {
+        showError(err instanceof Error ? err.message : String(err));
+        process.exitCode = 1;
+      }
+    });
 }
