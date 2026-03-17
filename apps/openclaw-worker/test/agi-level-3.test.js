@@ -79,9 +79,10 @@ describe('AGI Level 3 Tests', () => {
     cpMock.execSync.mockReturnValue('');
     fsMock.existsSync.mockReturnValue(true);
 
-    // Load SUT via require, ensuring we bust the cache so the require hook fires
-    const sutPath = require.resolve('../lib/post-mission-gate');
-    delete require.cache[sutPath];
+    // Load SUT — bust cache for both shim and actual engine module
+    for (const key of Object.keys(require.cache)) {
+      if (key.includes('post-mission-gate')) delete require.cache[key];
+    }
     sut = require('../lib/post-mission-gate');
   });
 
