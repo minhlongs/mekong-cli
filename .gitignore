@@ -408,3 +408,8 @@ supabase/
 conftest.py
 .coveragerc
 .env*.local
+
+# Private apps — NOT for public repo
+apps/
+mekong/daemon/
+mekong/hooks/

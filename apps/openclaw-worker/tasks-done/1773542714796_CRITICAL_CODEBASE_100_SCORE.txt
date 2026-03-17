@@ -1,4 +1,0 @@
-MISSION: Push all open projects (P0, P1, P2) to 100/100 Binh Phap codebase quality score.
-DISPATCH: Use '/cook' on all panes to thoroughly audit, scan, and fix all hidden bugs, tech debt, lint errors, and test failures. 
-PRIORITY: CRITICAL
-REQUIREMENT: Ensure the CI/CD pipeline and production tests pass with a green build. Continue looping and supervising until 100/100 is achieved on all active panes.
