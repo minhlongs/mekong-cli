@@ -4,7 +4,7 @@
  * and graceful fallback to in-memory when Redis is unavailable.
  */
 
-// ─── Redis mock ───────────────────────────────────────────────────────────────
+// ─── Redis mock — mock the connection factory directly (reliable with dynamic require) ─
 
 let mockEvalCounter = 0;
 let mockTtl = 60;
@@ -18,24 +18,30 @@ const mockEval = jest.fn().mockImplementation(
 
 const mockDel = jest.fn().mockResolvedValue(1);
 
-jest.mock('ioredis', () =>
-  jest.fn().mockImplementation(() => ({
-    status: 'ready',
-    on: jest.fn().mockReturnThis(),
-    quit: jest.fn().mockResolvedValue('OK'),
-    duplicate: jest.fn().mockReturnThis(),
-    publish: jest.fn().mockResolvedValue(1),
-    subscribe: jest.fn().mockResolvedValue(undefined),
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue('OK'),
-    incr: jest.fn().mockResolvedValue(1),
-    expire: jest.fn().mockResolvedValue(1),
-    ttl: jest.fn().mockResolvedValue(60),
-    del: mockDel,
-    eval: mockEval,
-  })),
-  { virtual: true }
-);
+const mockRedisClient = {
+  status: 'ready',
+  on: jest.fn().mockReturnThis(),
+  quit: jest.fn().mockResolvedValue('OK'),
+  duplicate: jest.fn().mockReturnThis(),
+  publish: jest.fn().mockResolvedValue(1),
+  subscribe: jest.fn().mockResolvedValue(undefined),
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue('OK'),
+  incr: jest.fn().mockResolvedValue(1),
+  expire: jest.fn().mockResolvedValue(1),
+  ttl: jest.fn().mockResolvedValue(60),
+  keys: jest.fn().mockResolvedValue([]),
+  del: mockDel,
+  eval: mockEval,
+};
+
+jest.mock('../../src/jobs/ioredis-connection-factory-and-singleton-pool', () => ({
+  createRedisConnection: jest.fn(() => mockRedisClient),
+  createSubscriberConnection: jest.fn(() => mockRedisClient),
+  closeAllConnections: jest.fn().mockResolvedValue(undefined),
+  getPoolSize: jest.fn(() => 1),
+  clearPool: jest.fn(),
+}));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
 
