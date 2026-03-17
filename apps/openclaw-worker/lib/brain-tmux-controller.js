@@ -149,6 +149,20 @@ async function waitForPrompt(timeoutMs = 120000, workerIdx = 0, sessionName = TM
 }
 
 /**
+ * 🎯 PROJECT NAME NORMALIZATION
+ * Maps directory basenames to canonical project names used by CTO dispatch.
+ * CTO uses these canonical names in PROJECT_BACKLOGS, task routing, etc.
+ */
+const PROJECT_NAME_MAP = {
+	'sophia-proposal': 'sophia-ai-factory',
+	'sophia-ai-factory': 'sophia-ai-factory',
+	'algo-trader': 'algo-trader',
+	'well': 'well',
+	'wellnexus': 'well',
+	'mekong-cli': 'mekong-cli',
+};
+
+/**
  * 🎯 DYNAMIC PANE ROUTING — Live project discovery from tmux panes.
  * Queries tmux for each pane's current working directory, extracts project name.
  * Returns: { 0: { path: '/path/to/mekong-cli', projectName: 'mekong-cli' }, ... }
@@ -173,8 +187,9 @@ function getActivePaneProjects(sessionName = config.TMUX_SESSION) {
 			const panePath = line.slice(colonIdx + 1).trim();
 			if (isNaN(idx) || !panePath) continue;
 
-			// Extract project name = last segment of the path
-			const projectName = require('path').basename(panePath);
+			// Extract project name = last segment of the path, then normalize to canonical name
+			const dirName = require('path').basename(panePath);
+			const projectName = PROJECT_NAME_MAP[dirName] || dirName;
 			paneMap[idx] = { path: panePath, projectName };
 		}
 
