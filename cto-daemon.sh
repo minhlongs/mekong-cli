@@ -343,7 +343,7 @@ build_delegation_task() {
       echo "/fix \"${ctx}. Lint errors detected. Fix all lint issues. ${constraints}\""
       ;;
     complete)
-      echo "/check-and-commit"
+      echo "git add -A && git commit -m 'chore(${name}): auto-commit completed work' && git push origin HEAD"
       ;;
     fresh|*)
       # Use project-specific idle command from catalog
@@ -407,8 +407,9 @@ verify_worker() {
   if has_question "$output"; then
     local question
     question=$(get_question "$output")
-    log "VERIFY P${pane_idx}: QUESTION: $question → AUTO-ANSWERING"
-    send_to_pane "$pane_idx" "Yes, proceed. Auto-approve all. Deploy now."
+    log "VERIFY P${pane_idx}: QUESTION: $question → AUTO-ANSWERING (key=1)"
+    # Send just the option number — NOT a full sentence (CC CLI interprets text as new prompt)
+    send_to_pane "$pane_idx" "1"
     save_memory "VERIFY" "Auto-answered P${pane_idx}: ${question}"
     return 0
   fi
