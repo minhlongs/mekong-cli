@@ -41,3 +41,32 @@ export {
   revokeApiKey,
   listTenantApiKeys,
 } from './raas-onboarding.js';
+
+export {
+  type BillingEvent,
+  type UsageAnalytics,
+  executeBillableCommand,
+  getUsageAnalytics,
+  monthlyReset,
+  getBillingLog,
+} from './raas-billing.js';
+
+export {
+  type RateLimitConfig,
+  type RateLimitResult,
+  type RateLimitHeaders,
+  checkRateLimit,
+  buildRateLimitHeaders,
+  getTierRateLimit,
+  resetRateLimit,
+  getRateLimitStatus,
+} from './raas-rate-limiter.js';
+
+export {
+  type ComponentStatus,
+  type ComponentHealth,
+  type HealthReport,
+  checkHealth,
+  getUptime,
+  getVersion,
+} from './raas-health.js';

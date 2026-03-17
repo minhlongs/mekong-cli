@@ -38,6 +38,26 @@ import {
   listTenantApiKeys,
 } from '../../../openclaw-engine/src/raas/raas-onboarding.js';
 
+import {
+  executeBillableCommand,
+  getUsageAnalytics,
+  monthlyReset,
+} from '../../../openclaw-engine/src/raas/raas-billing.js';
+
+import {
+  checkRateLimit,
+  buildRateLimitHeaders,
+  getTierRateLimit,
+  resetRateLimit,
+  getRateLimitStatus,
+} from '../../../openclaw-engine/src/raas/raas-rate-limiter.js';
+
+import {
+  checkHealth,
+  getUptime,
+  getVersion,
+} from '../../../openclaw-engine/src/raas/raas-health.js';
+
 // --- Gateway Delegation Tests ---
 describe('Gateway ROIaaS Delegation', () => {
   let gateway: Gateway;
@@ -309,5 +329,153 @@ describe('RaaS Onboarding', () => {
     expect(res.ok).toBe(true);
     expect(res.data!.length).toBe(1);
     expect(res.data![0].apiKey).toBe(onboard.data!.apiKey);
+  });
+});
+
+// --- RaaS Billing Tests ---
+describe('RaaS Billing Engine', () => {
+  beforeEach(() => {
+    registerTenant({
+      tenantId: 'billing-tenant',
+      tier: 'pro',
+      active: true,
+      expiresAt: Date.now() + 86400000,
+      usedCredits: 0,
+    });
+  });
+
+  it('executeBillableCommand — success deducts credits', () => {
+    const res = executeBillableCommand('billing-tenant', 'dev:feature', 5, 120);
+    expect(res.ok).toBe(true);
+    expect(res.status).toBe(200);
+    expect(res.data?.throttled).toBe(false);
+  });
+
+  it('executeBillableCommand — throttles when exhausted', () => {
+    registerTenant({
+      tenantId: 'broke-billing',
+      tier: 'starter',
+      active: true,
+      expiresAt: Date.now() + 86400000,
+      usedCredits: 200,
+    });
+    const res = executeBillableCommand('broke-billing', 'dev:fix', 3, 50);
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(429);
+    expect(res.data?.throttled).toBe(true);
+  });
+
+  it('executeBillableCommand — 404 for unknown tenant', () => {
+    const res = executeBillableCommand('ghost-billing', 'dev:fix', 1, 10);
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(404);
+  });
+
+  it('getUsageAnalytics — returns analytics after commands', () => {
+    executeBillableCommand('billing-tenant', 'dev:feature', 5, 100);
+    executeBillableCommand('billing-tenant', 'dev:fix', 3, 80);
+    const analytics = getUsageAnalytics('billing-tenant');
+    expect(analytics.ok).toBe(true);
+    expect(analytics.data!.totalCalls).toBeGreaterThanOrEqual(2);
+    expect(analytics.data!.creditsUsed).toBeGreaterThanOrEqual(8);
+  });
+
+  it('getUsageAnalytics — empty for new tenant', () => {
+    registerTenant({ tenantId: 'fresh-billing', tier: 'starter', active: true, expiresAt: Date.now() + 86400000, usedCredits: 0 });
+    const analytics = getUsageAnalytics('fresh-billing');
+    expect(analytics.ok).toBe(true);
+    expect(analytics.data!.totalCalls).toBe(0);
+  });
+
+  it('monthlyReset — resets credits', () => {
+    executeBillableCommand('billing-tenant', 'dev:feature', 50, 100);
+    const reset = monthlyReset('billing-tenant');
+    expect(reset.ok).toBe(true);
+    expect(getTenant('billing-tenant')?.usedCredits).toBe(0);
+  });
+
+  it('monthlyReset — 404 for unknown tenant', () => {
+    const res = monthlyReset('ghost-reset');
+    expect(res.ok).toBe(false);
+    expect(res.status).toBe(404);
+  });
+});
+
+// --- RaaS Rate Limiter Tests ---
+describe('RaaS Rate Limiter', () => {
+  it('checkRateLimit — allows within limit', () => {
+    resetRateLimit('rl-test-1');
+    const res = checkRateLimit('rl-test-1', 'pro');
+    expect(res.allowed).toBe(true);
+    expect(res.remaining).toBeLessThanOrEqual(1000);
+  });
+
+  it('checkRateLimit — exhausts bucket after many calls', () => {
+    resetRateLimit('rl-exhaust');
+    // Starter has 100 tokens — consume all
+    for (let i = 0; i < 100; i++) {
+      checkRateLimit('rl-exhaust', 'starter');
+    }
+    const res = checkRateLimit('rl-exhaust', 'starter');
+    expect(res.allowed).toBe(false);
+    expect(res.remaining).toBe(0);
+    expect(res.retryAfterMs).toBeGreaterThan(0);
+  });
+
+  it('buildRateLimitHeaders — includes required headers', () => {
+    resetRateLimit('rl-headers');
+    const result = checkRateLimit('rl-headers', 'pro');
+    const headers = buildRateLimitHeaders(result);
+    expect(headers['X-RateLimit-Limit']).toBe('1000');
+    expect(headers['X-RateLimit-Remaining']).toBeDefined();
+    expect(headers['X-RateLimit-Reset']).toBeDefined();
+    expect(headers['Retry-After']).toBeUndefined(); // allowed, no retry
+  });
+
+  it('buildRateLimitHeaders — includes Retry-After when denied', () => {
+    resetRateLimit('rl-denied-h');
+    for (let i = 0; i < 100; i++) checkRateLimit('rl-denied-h', 'starter');
+    const result = checkRateLimit('rl-denied-h', 'starter');
+    const headers = buildRateLimitHeaders(result);
+    expect(headers['Retry-After']).toBeDefined();
+  });
+
+  it('getTierRateLimit — returns config', () => {
+    const config = getTierRateLimit('enterprise');
+    expect(config.maxTokens).toBe(100000);
+  });
+
+  it('getRateLimitStatus — returns current bucket state', () => {
+    resetRateLimit('rl-status');
+    checkRateLimit('rl-status', 'starter');
+    const status = getRateLimitStatus('rl-status', 'starter');
+    expect(status.tokens).toBeLessThanOrEqual(100);
+    expect(status.maxTokens).toBe(100);
+  });
+});
+
+// --- RaaS Health Check Tests ---
+describe('RaaS Health Check', () => {
+  it('checkHealth — returns healthy status', () => {
+    const res = checkHealth();
+    expect(res.ok).toBe(true);
+    expect(res.data?.status).toBe('healthy');
+    expect(res.data?.components.length).toBe(4);
+    expect(res.data?.version).toBe('0.2.0');
+  });
+
+  it('checkHealth — all components healthy', () => {
+    const res = checkHealth();
+    for (const comp of res.data!.components) {
+      expect(comp.status).toBe('healthy');
+    }
+  });
+
+  it('getUptime — returns positive value', () => {
+    expect(getUptime()).toBeGreaterThan(0);
+  });
+
+  it('getVersion — returns semver string', () => {
+    expect(getVersion()).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
