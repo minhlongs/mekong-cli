@@ -68,9 +68,7 @@ export class BacktestRunner {
     this.initialBalance = initialBalance;
     this.balance = initialBalance;
     this.peakBalance = initialBalance;
-    // Default fee rate: 0.25% (25 BPS) matching Polymarket actual fees
-    // Previously was 0.1% which understated fees by 2.5x
-    this.feeRate = config?.feeRate ?? 0.0025;
+    this.feeRate = config?.feeRate ?? 0.001;
     this.riskPercentage = config?.riskPercentage ?? 2;
     this.slippageBps = config?.slippageBps ?? 5;
     this.slippageConfig = config?.slippageConfig;
@@ -176,15 +174,7 @@ export class BacktestRunner {
   private executeBuy(candle: ICandle) {
     const fillPrice = this.applySlippage(candle.close, 'buy');
     const riskAmount = this.balance * (this.riskPercentage / 100);
-    let positionSize = riskAmount / fillPrice;
-
-    // Market impact cap: limit to 5% of candle volume (if available)
-    // Prevents unrealistic fills on thin prediction market books
-    if (candle.volume && candle.volume > 0) {
-      const maxShares = candle.volume * 0.05;
-      if (positionSize > maxShares) positionSize = maxShares;
-    }
-
+    const positionSize = riskAmount / fillPrice;
     const fee = positionSize * fillPrice * this.feeRate;
 
     if (riskAmount <= 0 || positionSize <= 0) return;

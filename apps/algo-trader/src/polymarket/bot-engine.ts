@@ -34,12 +34,12 @@ import {
   MarketMakerStrategy,
 } from '../strategies/polymarket';
 import { IPolymarketSignal, IPolymarketOrder } from '../interfaces/IPolymarket';
+import { Signal } from '../strategies/ListingArbStrategy';
 import { logger } from '../utils/logger';
 import { CircuitBreaker } from '../risk/circuit-breaker';
 import { DrawdownTracker } from '../risk/drawdown-tracker';
 import { PnLTracker, PnLAlerts, AlertRules, type TradeRecord } from '../risk';
 import { saveState, loadState, type BotPersistentState } from '../core/state-manager';
-import { PortfolioRiskManager } from '../core/PortfolioRiskManager';
 
 interface BotStatus {
   running: boolean;
@@ -114,9 +114,6 @@ export class PolymarketBotEngine extends EventEmitter {
   // FIX 3: Idempotency — prevent duplicate signals
   private processedSignals = new Set<string>();
 
-  // Execution lock — prevents concurrent order placement
-  private isExecuting = false;
-
   // FIX 4: Periodic state save interval
   private stateSaveInterval: NodeJS.Timeout | null = null;
 
@@ -124,9 +121,9 @@ export class PolymarketBotEngine extends EventEmitter {
     super();
     this.config = {
       dryRun: config.dryRun ?? true,
-      maxBankroll: config.maxBankroll ?? parseFloat(process.env.MAX_BANKROLL || '5000'),
-      maxPositionPct: config.maxPositionPct ?? parseFloat(process.env.MAX_POSITION_PCT || '0.05'),
-      maxDailyLoss: config.maxDailyLoss ?? parseFloat(process.env.MAX_DAILY_LOSS_PCT || '0.03'),
+      maxBankroll: config.maxBankroll ?? 10000,
+      maxPositionPct: config.maxPositionPct ?? 0.06,
+      maxDailyLoss: config.maxDailyLoss ?? 0.05,
       minEdgeThreshold: config.minEdgeThreshold ?? 0.03,
       enabledStrategies: config.enabledStrategies ?? [
         'ComplementaryArb',
@@ -285,7 +282,8 @@ export class PolymarketBotEngine extends EventEmitter {
 
     // 7. Listing Arbitrage — pass depth check callback (Fix 6)
     const listingStrategy = new ListingArbStrategy(
-      (_sig: any) => {},
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_sig: Signal) => {},
       async (tokenId: string) => {
         try {
           const book = await this.adapter.getOrderBook(tokenId);
@@ -446,9 +444,7 @@ export class PolymarketBotEngine extends EventEmitter {
       try {
         const signals = this.runStrategy(strategy, tick);
         for (const signal of signals) {
-          this.processSignal(signal).catch(err =>
-            logger.error(`[BotEngine] processSignal error:`, err instanceof Error ? err.message : String(err))
-          );
+          this.processSignal(signal);
         }
       } catch (err) {
         logger.error(`[BotEngine] Strategy error (${strategy.name}):`, err instanceof Error ? err.message : String(err));
@@ -475,7 +471,7 @@ export class PolymarketBotEngine extends EventEmitter {
   /**
    * Process signal through risk checks
    */
-  private async processSignal(signal: IPolymarketSignal): Promise<void> {
+  private processSignal(signal: IPolymarketSignal): void {
     this.state.totalSignals++;
 
     // Risk check 0: Circuit breaker (NEW)
@@ -494,61 +490,26 @@ export class PolymarketBotEngine extends EventEmitter {
       return;
     }
 
-    // Risk check 2: Kelly-based position sizing (half-Kelly, max 5% portfolio)
-    const notionalValue = signal.price * signal.size;
+    // Risk check 2: Position size
     const maxPosition = this.config.maxBankroll * this.config.maxPositionPct;
-
-    // Use Kelly if confidence/win data available, else fall back to fixed cap
-    if (signal.confidence && signal.confidence > 0) {
-      const kellyFraction = 0.5; // Half-Kelly for safety
-      const edge = signal.confidence - (1 - signal.confidence); // Simplified binary Kelly
-      const kellyBet = Math.max(0, edge * kellyFraction);
-      const kellySizeUsd = this.config.maxBankroll * Math.min(kellyBet, 0.05); // Cap at 5%
-
-      if (notionalValue > kellySizeUsd && kellySizeUsd > 0 && signal.price > 0) {
-        // Resize signal to Kelly-recommended size
-        const kellyShares = Math.floor(kellySizeUsd / signal.price);
-        if (kellyShares <= 0) {
-          logger.warn('[BotEngine] Kelly size too small — rejecting');
-          this.state.rejectedTrades++;
-          this.emit('signal:rejected', { signal, reason: 'kelly_too_small' });
-          return;
-        }
-        signal.size = kellyShares;
-        logger.info(`[BotEngine] Kelly sized: ${signal.size} shares (${(kellyBet * 100).toFixed(1)}% of bankroll)`);
-      }
-    }
-
-    // Hard cap: reject if still exceeds max position after Kelly
-    if (signal.price * signal.size > maxPosition) {
-      logger.warn('[BotEngine] Position size exceeded after Kelly - rejecting');
+    const notionalValue = signal.price * signal.size;
+    if (notionalValue > maxPosition) {
+      logger.warn('[BotEngine] Position size exceeded - rejecting signal');
       this.state.rejectedTrades++;
       this.emit('signal:rejected', { signal, reason: 'position_size' });
       return;
     }
 
     // Risk check 3: Minimum edge
-    const finalNotional = signal.price * signal.size;
-    if (signal.expectedValue && signal.expectedValue < finalNotional * this.config.minEdgeThreshold) {
+    if (signal.expectedValue && signal.expectedValue < notionalValue * this.config.minEdgeThreshold) {
       logger.warn('[BotEngine] Edge too small - rejecting signal');
       this.state.rejectedTrades++;
       this.emit('signal:rejected', { signal, reason: 'insufficient_edge' });
       return;
     }
 
-    // Execute signal with lock — prevent concurrent order placement
-    if (this.isExecuting) {
-      logger.warn('[BotEngine] Execution lock active — queuing signal');
-      this.state.rejectedTrades++;
-      this.emit('signal:rejected', { signal, reason: 'execution_lock' });
-      return;
-    }
-    this.isExecuting = true;
-    try {
-      await this.executeSignal(signal);
-    } finally {
-      this.isExecuting = false;
-    }
+    // Execute signal
+    this.executeSignal(signal);
   }
 
   /**
@@ -562,11 +523,10 @@ export class PolymarketBotEngine extends EventEmitter {
       return;
     }
     this.processedSignals.add(key);
-    // Bulk evict when cache grows — keep newest 500 instead of deleting 1-at-a-time
+    // Evict old keys when cache grows too large
     if (this.processedSignals.size > 1000) {
-      const keep = Array.from(this.processedSignals).slice(-500);
-      this.processedSignals.clear();
-      keep.forEach(k => this.processedSignals.add(k));
+      const oldest = this.processedSignals.values().next().value;
+      if (oldest !== undefined) this.processedSignals.delete(oldest);
     }
 
     // Record trade for PnL tracking
@@ -593,40 +553,17 @@ export class PolymarketBotEngine extends EventEmitter {
       if (signal.action === 'CANCEL') {
         await this.adapter.cancelOrder(signal.tokenId);
       } else if (signal.action === 'BUY') {
-        // FIX: Use correct token_id for side — BUY on YES token or BUY on NO token
-        // Polymarket CLOB: buying NO = BUY order on the no_token_id, not SELL on yes_token_id
         const order = await this.adapter.placeLimitOrder(
           signal.tokenId,
           signal.price,
           signal.size,
-          'BUY',
+          signal.side === 'YES' ? 'BUY' : 'SELL',
         );
-        logger.info(`[BotEngine] BUY order placed: ${order.orderId} (${signal.side} token)`);
+        logger.info(`[BotEngine] Order placed: ${order.orderId}`);
 
-        trade.realizedPnl = 0;
+        // Record trade on fill
+        trade.realizedPnl = 0; // Will be updated on sell
         this.pnlTracker.recordTrade(trade);
-
-        // Update portfolio value after trade execution
-        const portfolioValue = this.config.maxBankroll - this.dailyLoss + this.pnlTracker.getTotalPnL();
-        this.updatePortfolioValue(portfolioValue);
-
-        this.emit('order:placed', { ...order, trade });
-      } else if (signal.action === 'SELL') {
-        // P0-4: Handle SELL signals (previously silently dropped)
-        const order = await this.adapter.placeLimitOrder(
-          signal.tokenId,
-          signal.price,
-          signal.size,
-          'SELL',
-        );
-        logger.info(`[BotEngine] SELL order placed: ${order.orderId} (${signal.side} token)`);
-
-        trade.realizedPnl = 0; // Realized PnL calculated separately via PnLTracker
-        this.pnlTracker.recordTrade(trade);
-
-        // Update portfolio value after sell
-        const portfolioValue = this.config.maxBankroll - this.dailyLoss + this.pnlTracker.getTotalPnL();
-        this.updatePortfolioValue(portfolioValue);
 
         this.emit('order:placed', { ...order, trade });
       }

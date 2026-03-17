@@ -9,7 +9,8 @@
  * - Hash-based deterministic rollout
  */
 
-import { PrismaClient, FeatureFlag, LicenseFeatureFlag } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { FeatureFlag, LicenseFeatureFlag, InputJsonValue } from '../db/prisma-types';
 import { createHash } from 'crypto';
 
 const prisma = new PrismaClient();
@@ -26,7 +27,7 @@ export interface CreateFeatureFlagInput {
   enabled?: boolean;
   rolloutPercentage?: number;
   userWhitelist?: string[];
-  metadata?: Record<string, any>;
+  metadata?: InputJsonValue;
 }
 
 export class FeatureFlagService {
@@ -68,7 +69,7 @@ export class FeatureFlagService {
 
     // Update cache
     this.cache.clear();
-    flags.forEach(flag => this.cache.set(flag.name, flag));
+    flags.forEach((flag: FeatureFlag & { licenses?: LicenseFeatureFlag[] }) => this.cache.set(flag.name, flag));
     this.lastCacheUpdate = now;
 
     return flags;
@@ -246,7 +247,7 @@ export class FeatureFlagService {
     licenseId: string,
     featureName: string,
     enabled: boolean,
-    overrideValue?: any
+    overrideValue?: InputJsonValue
   ): Promise<LicenseFeatureFlag> {
     const flag = await this.getFlagByName(featureName);
     if (!flag) {
@@ -265,7 +266,7 @@ export class FeatureFlagService {
         where: { id: existing.id },
         data: {
           enabled,
-          overrideValue: overrideValue ?? null
+          overrideValue: overrideValue ?? undefined
         }
       });
     }
@@ -275,7 +276,7 @@ export class FeatureFlagService {
         licenseId,
         featureFlagId: flag.id,
         enabled,
-        overrideValue: overrideValue ?? null
+        overrideValue: overrideValue ?? undefined
       }
     });
   }

@@ -67,8 +67,8 @@ export class PositionMerger {
         // Log and track — manual merge via UI if SDK doesn't support
         console.log(`[Merge] ${mergeAmount} shares on ${pair.conditionId.slice(0,8)}... → $${mergeAmount.toFixed(2)} USDC freed`);
         totalFreed += mergeAmount;
-      } catch (e: any) {
-        console.error(`[Merge] Failed on ${pair.conditionId.slice(0,8)}...: ${e.message}`);
+      } catch (e: unknown) {
+        console.error(`[Merge] Failed on ${pair.conditionId.slice(0,8)}...:`, (e as Error).message);
       }
     }
     this.lastMerge = Date.now();

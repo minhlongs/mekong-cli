@@ -34,8 +34,8 @@ export class ListingArbStrategy {
     await this.refreshListingMarkets();
 
     // 2. Connect both detection methods
-    this.bnWs.on("listing", (data: any) => this.handleListing(data));
-    this.bnRest.on("listing", (data: any) => this.handleListing(data));
+    this.bnWs.on("listing", (data: { ticker: string; name: string; title: string }) => this.handleListing(data));
+    this.bnRest.on("listing", (data: { ticker: string; name: string; title: string }) => this.handleListing(data));
     this.bnWs.connect();
     this.bnRest.start(5000);
 
@@ -93,8 +93,8 @@ export class ListingArbStrategy {
           console.log(`[ListingArb] ${data.ticker} — best ask ${matched.yesPrice} >= 0.85, skipping`);
           return;
         }
-      } catch (depthErr: any) {
-        console.warn(`[ListingArb] Book depth check failed for ${matched.yesTokenId}:`, depthErr.message);
+      } catch (depthErr: unknown) {
+        console.warn(`[ListingArb] Book depth check failed for ${matched.yesTokenId}:`, (depthErr as Error).message);
         // Non-fatal: proceed without depth check on error
       }
     }

@@ -58,8 +58,7 @@ export async function registerSignalRoutes(fastify: FastifyInstance): Promise<vo
    * Get all available signals (gated by tier)
    */
   fastify.get<SignalsRequest>('/api/signals', async (request, reply) => {
-    const rawApiKey0 = request.headers['x-api-key'];
-    const apiKey = Array.isArray(rawApiKey0) ? rawApiKey0[0] : (rawApiKey0 ?? '');
+    const apiKey = request.headers['x-api-key'];
     const limit = request.query.limit || 100;
     const since = request.query.since;
 
@@ -108,12 +107,11 @@ export async function registerSignalRoutes(fastify: FastifyInstance): Promise<vo
    * Get signals for a specific market
    */
   fastify.get<SignalsRequest>('/api/signals/:marketId', async (request, reply) => {
-    const rawApiKey = request.headers['x-api-key'];
-    const apiKey: string = (Array.isArray(rawApiKey) ? rawApiKey[0] : rawApiKey) ?? '';
+    const apiKey = request.headers['x-api-key'];
     const { marketId } = request.params;
 
     try {
-      const gatedSignals = defaultSignalGate.getSignalsForMarket(marketId ?? '', apiKey);
+      const gatedSignals = defaultSignalGate.getSignalsForMarket(marketId, apiKey);
 
       const tier = getTierFromKey(apiKey);
       const hasUpgradeCTA = gatedSignals.some(g => g.cta !== undefined);
@@ -145,8 +143,7 @@ export async function registerSignalRoutes(fastify: FastifyInstance): Promise<vo
    * Get early access signals (Enterprise only)
    */
   fastify.get<SignalsRequest>('/api/signals/early-access', async (request, reply) => {
-    const rawApiKey2 = request.headers['x-api-key'];
-    const apiKey = Array.isArray(rawApiKey2) ? rawApiKey2[0] : (rawApiKey2 ?? '');
+    const apiKey = request.headers['x-api-key'];
 
     try {
       // Check if user has early access

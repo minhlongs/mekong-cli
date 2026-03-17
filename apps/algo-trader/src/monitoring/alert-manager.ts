@@ -60,8 +60,7 @@ export class AlertManager extends EventEmitter {
 
   private evaluateAlert(alert: AlertConfig, stats: PortfolioSummary): AlertTriggered | null {
     const metricKey = METRIC_MAP[alert.condition];
-    const rawValue = metricKey ? stats[metricKey] : undefined;
-    const currentValue: number = typeof rawValue === 'number' ? rawValue : 0;
+    const currentValue = metricKey ? stats[metricKey] ?? 0 : 0;
     if (!BREACH_FN[alert.condition](currentValue, alert.threshold)) return null;
 
     const now = Date.now();

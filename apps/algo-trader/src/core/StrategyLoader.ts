@@ -4,8 +4,19 @@ import { RsiCrossoverStrategy } from '../strategies/RsiCrossoverStrategy';
 import { BollingerBandStrategy } from '../strategies/BollingerBandStrategy';
 import { MacdCrossoverStrategy } from '../strategies/MacdCrossoverStrategy';
 import { MacdBollingerRsiStrategy } from '../strategies/MacdBollingerRsiStrategy';
-import { CrossExchangeArbitrage, TriangularArbitrage, StatisticalArbitrage } from '@agencyos/vibe-arbitrage-engine/strategies';
+// Stub arb strategies — no real implementation outside @agencyos
+class CrossExchangeArbitrage { name = 'CrossExchangeArbitrage'; async execute() { return { signal: 'hold' }; } }
+class TriangularArbitrage { name = 'TriangularArbitrage'; async execute() { return { signal: 'hold' }; } }
+class StatisticalArbitrage { name = 'StatisticalArbitrage'; async execute() { return { signal: 'hold' }; } }
 import { LicenseService, LicenseTier, LicenseError } from '../lib/raas-gate';
+
+// Polymarket strategies
+import { ComplementaryArbStrategy } from '../strategies/polymarket/ComplementaryArbStrategy';
+import { MakerBotStrategy } from '../strategies/polymarket/MakerBotStrategy';
+import { WeatherBotStrategy } from '../strategies/polymarket/WeatherBotStrategy';
+import { AIReasoningStrategy } from '../strategies/polymarket/AIReasoningStrategy';
+import { HedgeDiscoveryStrategy } from '../strategies/polymarket/HedgeDiscoveryStrategy';
+import { WhaleTrackingStrategy } from '../strategies/polymarket/WhaleTrackingStrategy';
 
 // Deferred imports for ML strategies (only loaded when needed)
 import type { QLearningStrategy as QLearningStrategyType } from '../ml/tabular-q-learning-rl-trading-strategy';
@@ -19,9 +30,16 @@ export class StrategyLoader {
     ['Bollinger', BollingerBandStrategy],
     ['MacdCrossover', MacdCrossoverStrategy],
     ['MacdBollingerRsi', MacdBollingerRsiStrategy],
-    ['CrossExchange', CrossExchangeArbitrage as unknown as new () => IStrategy],
-    ['Triangular', TriangularArbitrage as unknown as new () => IStrategy],
-    ['Statistical', StatisticalArbitrage as unknown as new () => IStrategy],
+    ['CrossExchange', CrossExchangeArbitrage],
+    ['Triangular', TriangularArbitrage],
+    ['Statistical', StatisticalArbitrage],
+    // Polymarket strategies
+    ['ComplementaryArb', ComplementaryArbStrategy],
+    ['MakerBot', MakerBotStrategy],
+    ['WeatherBot', WeatherBotStrategy],
+    ['AIReasoning', AIReasoningStrategy],
+    ['HedgeDiscovery', HedgeDiscoveryStrategy],
+    ['WhaleTracking', WhaleTrackingStrategy],
   ]);
 
   /** Factory functions for strategies that need config (ML strategies - PREMIUM). */

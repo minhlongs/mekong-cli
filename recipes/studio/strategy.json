@@ -1,0 +1,40 @@
+{
+  "id": "studio-strategy",
+  "name": "Studio Portfolio Strategy",
+  "description": "Combine cto:roadmap and pm:okr to produce a cohesive multi-project portfolio strategy.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:strategy",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/strategy",
+  "estimated_credits": 8,
+  "estimated_minutes": 30,
+  "dag": {
+    "groups": [
+      {
+        "id": "technical-roadmap",
+        "name": "Technical Roadmap",
+        "mode": "parallel",
+        "commands": [
+          { "id": "cto-roadmap", "args": "--output reports/studio/strategy/technical-roadmap.md" },
+          { "id": "pm-okr", "args": "--output reports/studio/strategy/okr-framework.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "synthesize",
+        "name": "Synthesize Strategy",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-plan", "args": "--output reports/studio/strategy/execution-plan.md" }
+        ],
+        "depends_on": ["technical-roadmap"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/strategy/SUMMARY.md",
+      "template": "Compile technical roadmap, OKR framework, and execution plan into a portfolio strategy document with: vision, strategic pillars, portfolio allocation, key milestones, and success metrics."
+    }
+  }
+}

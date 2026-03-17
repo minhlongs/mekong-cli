@@ -98,32 +98,6 @@ export class TelegramTradeAlertBot extends EventEmitter {
     });
   }
 
-  /** Send kill switch activation alert */
-  alertKillSwitch(reason: string): void {
-    this.enqueue({
-      text: `🚨🚨🚨 *KILL SWITCH ACTIVATED*\nReason: ${reason}\nAll trading halted immediately.\nManual intervention required.`,
-      parseMode: 'Markdown',
-    });
-  }
-
-  /** Send circuit breaker trip alert */
-  alertCircuitBreaker(type: string, details: string): void {
-    this.enqueue({
-      text: `⛔ *Circuit Breaker: ${type}*\n${details}`,
-      parseMode: 'Markdown',
-    });
-  }
-
-  /** Send portfolio status */
-  alertPortfolioStatus(value: number, dailyPnl: number, drawdown: number): void {
-    const emoji = dailyPnl >= 0 ? '💰' : '💸';
-    const sign = dailyPnl >= 0 ? '+' : '';
-    this.enqueue({
-      text: `${emoji} *Portfolio Update*\nValue: $${value.toFixed(2)}\nDaily PnL: ${sign}$${dailyPnl.toFixed(2)}\nDrawdown: ${drawdown.toFixed(1)}%`,
-      parseMode: 'Markdown',
-    });
-  }
-
   /** Send raw text message */
   sendRaw(text: string): void {
     this.enqueue({ text });

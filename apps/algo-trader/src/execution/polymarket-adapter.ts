@@ -18,21 +18,6 @@ import {
 } from '../polymarket';
 import { logger } from '../utils/logger';
 
-/** Wrap a promise with a timeout to prevent indefinite hangs on API calls */
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`[Timeout] ${label} exceeded ${ms}ms`)), ms),
-    ),
-  ]);
-}
-
-/** Default API call timeout (10 seconds) */
-const API_TIMEOUT_MS = 10_000;
-/** Max slippage allowed (0.5% = 50 BPS) — reject if mid-price deviates more */
-const MAX_SLIPPAGE_BPS = 50;
-
 export interface PolymarketOrder {
   orderId: string;
   tokenId: string;
@@ -161,30 +146,13 @@ export class PolymarketAdapter extends EventEmitter {
       throw new Error('Polymarket client not authenticated - provide API credentials');
     }
 
-    // Slippage protection: verify price is within MAX_SLIPPAGE_BPS of current market
-    const tick = this.latestTicks.get(tokenId);
-    if (tick) {
-      const midPrice = (tick.bid + tick.ask) / 2;
-      if (midPrice > 0) {
-        const slippageBps = Math.abs(price - midPrice) / midPrice * 10000;
-        if (slippageBps > MAX_SLIPPAGE_BPS) {
-          throw new Error(
-            `Slippage ${slippageBps.toFixed(0)} BPS exceeds max ${MAX_SLIPPAGE_BPS} BPS ` +
-            `(price=${price}, mid=${midPrice.toFixed(4)}, token=${tokenId})`
-          );
-        }
-      }
-    }
-
-    // Validate order parameters
-    if (price <= 0 || price >= 1) throw new Error(`Invalid price ${price}: must be (0, 1)`);
-    if (size <= 0) throw new Error(`Invalid size ${size}: must be > 0`);
-    if (isNaN(price) || isNaN(size)) throw new Error('Price or size is NaN');
-
-    const response = await withTimeout(
-      this.clobClient.createAndPostLimitOrder(tokenId, price, size, side, orderType, expiration),
-      API_TIMEOUT_MS,
-      'placeLimitOrder',
+    const response = await this.clobClient.createAndPostLimitOrder(
+      tokenId,
+      price,
+      size,
+      side,
+      orderType,
+      expiration,
     );
 
     const order: PolymarketOrder = {
@@ -216,20 +184,11 @@ export class PolymarketAdapter extends EventEmitter {
       throw new Error('Polymarket client not authenticated');
     }
 
-    // Validate market order parameters
-    if (amount <= 0) throw new Error(`Invalid amount ${amount}: must be > 0`);
-    if (isNaN(amount)) throw new Error('Amount is NaN');
-
-    // Slippage warning for market orders: log spread check
-    const tick = this.latestTicks.get(tokenId);
-    if (tick && tick.spread > 0.01) {
-      logger.warn(`[Polymarket] Wide spread ${(tick.spread * 100).toFixed(1)}% on market order for ${tokenId}`);
-    }
-
-    const response = await withTimeout(
-      this.clobClient.createAndPostMarketOrder(tokenId, amount, side, orderType),
-      API_TIMEOUT_MS,
-      'placeMarketOrder',
+    const response = await this.clobClient.createAndPostMarketOrder(
+      tokenId,
+      amount,
+      side,
+      orderType,
     );
 
     const order: PolymarketOrder = {
@@ -299,8 +258,8 @@ export class PolymarketAdapter extends EventEmitter {
       orderId: o.id,
       tokenId: o.asset_id,
       side: o.side as 'BUY' | 'SELL',
-      price: typeof o.price === 'string' ? parseFloat(o.price) : o.price,
-      size: typeof o.original_size === 'string' ? parseFloat(o.original_size) : o.original_size,
+      price: parseFloat(o.price),
+      size: parseFloat(o.original_size),
       status: o.status as PolymarketOrder['status'],
       createdAt: new Date(o.created_at).getTime(),
     }));
@@ -326,11 +285,11 @@ export class PolymarketAdapter extends EventEmitter {
   }> {
     const book = await this.clobClient.getOrderBook(tokenId);
     return {
-      bids: book.bids.map((b: { price: string; size: string }) => ({
+      bids: book.bids.map(b => ({
         price: parseFloat(b.price),
         size: parseFloat(b.size),
       })),
-      asks: book.asks.map((a: { price: string; size: string }) => ({
+      asks: book.asks.map(a => ({
         price: parseFloat(a.price),
         size: parseFloat(a.size),
       })),
@@ -344,42 +303,6 @@ export class PolymarketAdapter extends EventEmitter {
     const tick = this.latestTicks.get(tokenId);
     if (!tick) return null;
     return { bid: tick.bid, ask: tick.ask, spread: tick.spread };
-  }
-
-  /**
-   * Check orderbook depth — verify enough liquidity for order size
-   * Returns estimated fill price and slippage for given size
-   */
-  async checkDepth(tokenId: string, size: number, side: 'BUY' | 'SELL'): Promise<{
-    hasSufficientDepth: boolean;
-    estimatedFillPrice: number;
-    estimatedSlippageBps: number;
-    availableSize: number;
-  }> {
-    const book = await this.getOrderBook(tokenId);
-    const levels = side === 'BUY' ? book.asks : book.bids;
-
-    let filled = 0;
-    let cost = 0;
-
-    for (const level of levels) {
-      const fillQty = Math.min(level.size, size - filled);
-      cost += fillQty * level.price;
-      filled += fillQty;
-      if (filled >= size) break;
-    }
-
-    const midTick = this.latestTicks.get(tokenId);
-    const midPrice = midTick ? (midTick.bid + midTick.ask) / 2 : (levels[0]?.price || 0);
-    const avgFillPrice = filled > 0 ? cost / filled : 0;
-    const slippageBps = midPrice > 0 ? Math.abs(avgFillPrice - midPrice) / midPrice * 10000 : 0;
-
-    return {
-      hasSufficientDepth: filled >= size,
-      estimatedFillPrice: avgFillPrice,
-      estimatedSlippageBps: slippageBps,
-      availableSize: filled,
-    };
   }
 
   /**
@@ -414,25 +337,6 @@ export class PolymarketAdapter extends EventEmitter {
   }
 
   /**
-   * Purge stale orders from activeOrders map (older than maxAgeMs)
-   * Call periodically to prevent memory leak from unfilled/expired orders
-   */
-  purgeStaleOrders(maxAgeMs: number = 3600000): number {
-    const now = Date.now();
-    let purged = 0;
-    for (const [id, order] of this.activeOrders) {
-      if (now - order.createdAt > maxAgeMs) {
-        this.activeOrders.delete(id);
-        purged++;
-      }
-    }
-    if (purged > 0) {
-      logger.info(`[Polymarket] Purged ${purged} stale orders (older than ${maxAgeMs / 1000}s)`);
-    }
-    return purged;
-  }
-
-  /**
    * Check if client is ready for trading
    */
   isReady(): boolean {
@@ -454,23 +358,13 @@ export class PolymarketAdapter extends EventEmitter {
   }
 
   private handleBestBidAsk(event: BestBidAskEvent): void {
-    const bid = parseFloat(event.best_bid);
-    const ask = parseFloat(event.best_ask);
-    const spread = parseFloat(event.spread);
-
-    // NaN guard: reject corrupted price data instead of propagating to strategies
-    if (isNaN(bid) || isNaN(ask)) {
-      logger.warn(`[Polymarket] NaN price for ${event.asset_id}: bid=${event.best_bid} ask=${event.best_ask}`);
-      return;
-    }
-
     const tick: PolymarketTick = {
       exchange: 'polymarket',
       symbol: event.market,
       tokenId: event.asset_id,
-      bid,
-      ask,
-      spread: isNaN(spread) ? ask - bid : spread,
+      bid: parseFloat(event.best_bid),
+      ask: parseFloat(event.best_ask),
+      spread: parseFloat(event.spread),
       timestamp: Date.now(),
     };
 

@@ -1,0 +1,40 @@
+{
+  "id": "pm-backlog",
+  "name": "PM Backlog Management",
+  "description": "List all known tasks, prioritize by value and urgency, and add effort estimates.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:backlog",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/backlog",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "list",
+        "name": "List Tasks",
+        "mode": "parallel",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/pm/backlog/technical-debt.md" },
+          { "id": "pm-scope", "args": "--output reports/pm/backlog/scope-items.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "prioritize-estimate",
+        "name": "Prioritize and Estimate",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-sprint", "args": "--output reports/pm/backlog/prioritized-list.md" }
+        ],
+        "depends_on": ["list"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/backlog/SUMMARY.md",
+      "template": "Compile technical debt, scope items, and prioritized list into a groomed backlog with: epics, stories, effort estimates, priority scores, and sprint-ready acceptance criteria."
+    }
+  }
+}

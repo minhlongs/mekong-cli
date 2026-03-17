@@ -97,6 +97,14 @@ function buildPrompt(taskContent, projectDir = null) {
 
 	const intent = detectIntent(safe);
 
+	// ROIaaS Command Stack — level-based routing
+	if (intent === 'PORTFOLIO' || lowerSafe.includes('portfolio') || lowerSafe.includes('investor report') || lowerSafe.includes('fund allocation')) return formatCmd('/studio:audit', safe);
+	if (intent === 'ARCHITECTURE' || lowerSafe.includes('architecture decision') || lowerSafe.includes('adr') || lowerSafe.includes('tech stack')) return formatCmd('/cto:architect', safe);
+	if (intent === 'INCIDENT' || lowerSafe.includes('incident') || lowerSafe.includes('outage') || lowerSafe.includes('p0')) return formatCmd('/cto:incident', safe);
+	if (intent === 'SPRINT' || lowerSafe.includes('sprint plan') || lowerSafe.includes('backlog groom')) return formatCmd('/pm:sprint', safe);
+	if (intent === 'MILESTONE' || lowerSafe.includes('milestone') || lowerSafe.includes('progress track')) return formatCmd('/pm:milestone', safe);
+	if (intent === 'DEPLOY' || lowerSafe.includes('deploy prod') || lowerSafe.includes('ship to prod')) return formatCmd('/cto:deploy', safe);
+
 	// 105-Hands role injection
 	let roleInjectedText = safe;
 	if (matchRole) {

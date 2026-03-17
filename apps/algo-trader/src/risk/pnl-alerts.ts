@@ -62,19 +62,16 @@ export class PnLAlerts {
   private eventEmitter: RiskEventEmitter;
   private config: AlertConfig;
   private alertState: Map<string, AlertState> = new Map();
-  /** Portfolio baseline for percentage calculations — MUST be set to actual portfolio value */
-  private portfolioBaseline: number;
 
   /** Throttle window (ms) */
   private readonly throttleWindow = 5 * 60 * 1000; // 5 minutes
   /** Max alerts per window */
   private readonly maxAlertsPerWindow = 3;
 
-  constructor(tracker: PnLTracker, config?: Partial<AlertConfig>, portfolioBaseline: number = 10000) {
+  constructor(tracker: PnLTracker, config?: Partial<AlertConfig>) {
     this.tracker = tracker;
     this.eventEmitter = RiskEventEmitter.getInstance();
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.portfolioBaseline = portfolioBaseline;
 
     this.setupMonitoring();
   }
@@ -124,8 +121,8 @@ export class PnLAlerts {
     threshold: AlertThreshold,
     strategy?: StrategyPnL,
   ): void {
-    // Calculate percentage using actual portfolio baseline (not hardcoded)
-    const baseline = this.portfolioBaseline || 10000;
+    // Calculate percentage (assume baseline of 1000 for percentage calculation)
+    const baseline = 1000;
     const pctChange = value / baseline;
 
     // Determine severity

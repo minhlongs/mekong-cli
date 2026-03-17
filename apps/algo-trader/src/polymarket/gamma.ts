@@ -93,13 +93,13 @@ export class PolymarketGammaClient {
       ...params,
     };
 
-    const response = await this.client.get("/markets", { params: defaultParams }) as { data: GammaMarket[] };
+    const response = await this.client.get<any, { data: GammaMarket[] }>("/markets", { params: defaultParams });
     return response.data.map((m: GammaMarket) => this.parseMarket(m));
   }
 
   async getMarket(id: string): Promise<ParsedMarket | null> {
     try {
-      const response = await this.client.get(`/markets/${id}`) as { data: GammaMarket };
+      const response = await this.client.get<any, { data: GammaMarket }>(`/markets/${id}`);
       return this.parseMarket(response.data);
     } catch {
       return null;
@@ -110,7 +110,9 @@ export class PolymarketGammaClient {
    * Search markets by keyword
    */
   async search(query: string, limit = 50): Promise<ParsedMarket[]> {
-    const response = await this.client.get("/search", { params: { q: query, limit } }) as { data: GammaMarket[] };
+    const response = await this.client.get<any, { data: GammaMarket[] }>("/search", {
+      params: { q: query, limit },
+    });
     return response.data.map((m: GammaMarket) => this.parseMarket(m));
   }
 
@@ -121,7 +123,7 @@ export class PolymarketGammaClient {
     limit?: number;
     offset?: number;
   }): Promise<GammaEvent[]> {
-    const response = await this.client.get("/events", { params }) as { data: GammaEvent[] };
+    const response = await this.client.get<any, { data: GammaEvent[] }>("/events", { params });
     return response.data;
   }
 
@@ -129,7 +131,7 @@ export class PolymarketGammaClient {
    * Get single event by ID
    */
   async getEvent(id: string): Promise<GammaEvent> {
-    const response = await this.client.get(`/events/${id}`) as { data: GammaEvent };
+    const response = await this.client.get<any, { data: GammaEvent }>(`/events/${id}`);
     return response.data;
   }
 
@@ -198,23 +200,18 @@ export class PolymarketGammaClient {
     const prices = JSON.parse(raw.outcomePrices) as string[];
     const tokenIds = JSON.parse(raw.clobTokenIds) as string[];
 
-    // Guard: skip markets with missing price/token data
-    if (prices.length < 2 || tokenIds.length < 2) {
-      throw new Error(`Malformed market ${raw.id}: prices=${prices.length} tokens=${tokenIds.length}`);
-    }
-
     return {
       id: raw.id,
       question: raw.question,
       conditionId: raw.conditionId,
       slug: raw.slug,
       outcomes,
-      outcomePrices: prices.map((p) => parseFloat(p) || 0),
+      outcomePrices: prices.map((p) => parseFloat(p)),
       clobTokenIds: tokenIds,
-      yesTokenId: tokenIds[0],
-      noTokenId: tokenIds[1],
-      yesPrice: parseFloat(prices[0]) || 0,
-      noPrice: parseFloat(prices[1]) || 0,
+      yesTokenId: tokenIds[0], // index 0 = YES
+      noTokenId: tokenIds[1], // index 1 = NO
+      yesPrice: parseFloat(prices[0]),
+      noPrice: parseFloat(prices[1]),
       active: raw.active,
       closed: raw.closed,
       volume: raw.volumeNum,

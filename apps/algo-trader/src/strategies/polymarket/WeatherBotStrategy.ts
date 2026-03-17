@@ -55,7 +55,6 @@ export class WeatherBotStrategy extends BasePolymarketStrategy {
 
   private weatherData = new Map<string, WeatherData>(); // location -> data
   private marketConditions = new Map<string, MarketCondition>(); // tokenId -> condition
-  private lastUpdate: number = 0;
 
   async init(candles: ICandle[], config?: Record<string, unknown>): Promise<void> {
     await super.init(candles, config);
@@ -108,26 +107,20 @@ export class WeatherBotStrategy extends BasePolymarketStrategy {
   }
 
   private calculatePrecipitationProb(condition: MarketCondition, weather: WeatherData): number {
-    if (weather.precipitation == null) return 0;
-    // Continuous sigmoid instead of binary 0/1 — avoids all-in on any drizzle
-    const diff = weather.precipitation - condition.threshold;
-    const prob = 1 / (1 + Math.exp(-diff * 2));
+    if (!weather.precipitation) return 0;
+    const prob = weather.precipitation > 0 ? 1 : 0;
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
   private calculateSnowProb(condition: MarketCondition, weather: WeatherData): number {
-    if (weather.snowDepth == null) return 0;
-    // Continuous sigmoid: gradual confidence as snow depth approaches threshold
-    const diff = weather.snowDepth - condition.threshold;
-    const prob = 1 / (1 + Math.exp(-diff * 0.5));
+    if (!weather.snowDepth) return 0;
+    const prob = weather.snowDepth >= condition.threshold ? 1 : 0;
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
   private calculateWindProb(condition: MarketCondition, weather: WeatherData): number {
-    if (weather.windSpeed == null) return 0.5;
-    // Continuous sigmoid instead of binary threshold
-    const diff = weather.windSpeed - condition.threshold;
-    const prob = 1 / (1 + Math.exp(-diff * 0.3));
+    if (!weather.windSpeed) return 0.5;
+    const prob = weather.windSpeed >= condition.threshold ? 1 : 0;
     return condition.comparator === 'above' ? prob : 1 - prob;
   }
 
@@ -197,7 +190,7 @@ export class WeatherBotStrategy extends BasePolymarketStrategy {
     return null;
   }
 
-  async processTick(tick: IMarketTick): Promise<IPolymarketSignal | null> {
+  processTick(tick: IMarketTick): IPolymarketSignal | null {
     this.onMarketTick(tick);
     return this.generateSignal(tick.tokenId, tick.marketId, tick);
   }

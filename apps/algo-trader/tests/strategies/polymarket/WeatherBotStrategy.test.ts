@@ -164,13 +164,12 @@ describe('WeatherBotStrategy', () => {
 
         const prob = await strategy.calculateFairValue('token-1');
 
-        // Sigmoid probability: high confidence for precipitation=5 vs threshold=0
-        expect(prob).toBeGreaterThan(0.95);
+        expect(prob).toBe(1);
       });
     });
 
     describe('wind probability', () => {
-      it('should return high probability when wind speed >= threshold', async () => {
+      it('should return 1 when wind speed >= threshold', async () => {
         const condition: MarketCondition = {
           type: 'wind',
           threshold: 20,
@@ -190,8 +189,7 @@ describe('WeatherBotStrategy', () => {
 
         const prob = await strategy.calculateFairValue('token-1');
 
-        // Sigmoid probability: windSpeed=25 vs threshold=20 → high but not 1.0
-        expect(prob).toBeGreaterThan(0.7);
+        expect(prob).toBe(1);
       });
     });
   });

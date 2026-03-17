@@ -25,8 +25,6 @@ export class LiveDataProvider implements IDataProvider {
     private isRunning = false;
     private isPolling = false; // Prevent concurrent polling (Thundering Herd)
     private lastTimestamp = 0;
-    private consecutiveErrors = 0;
-    private readonly MAX_CONSECUTIVE_ERRORS = 5;
 
     constructor(
         exchangeId: string,
@@ -123,78 +121,22 @@ export class LiveDataProvider implements IDataProvider {
     }
 
     private async poll(): Promise<void> {
-        try {
-            const ohlcv = await this.exchange.fetchOHLCV(this.symbol, this.timeframe, undefined, 5);
+        const ohlcv = await this.exchange.fetchOHLCV(this.symbol, this.timeframe, undefined, 5);
 
-            for (const raw of ohlcv) {
-                const ts = raw[0] as number;
-                if (ts > this.lastTimestamp) {
-                    const candle: ICandle = {
-                        timestamp: ts,
-                        open: raw[1] as number,
-                        high: raw[2] as number,
-                        low: raw[3] as number,
-                        close: raw[4] as number,
-                        volume: raw[5] as number,
-                    };
-                    this.lastTimestamp = ts;
-                    this.notifySubscribers(candle);
-                }
+        for (const raw of ohlcv) {
+            const ts = raw[0] as number;
+            if (ts > this.lastTimestamp) {
+                const candle: ICandle = {
+                    timestamp: ts,
+                    open: raw[1] as number,
+                    high: raw[2] as number,
+                    low: raw[3] as number,
+                    close: raw[4] as number,
+                    volume: raw[5] as number,
+                };
+                this.lastTimestamp = ts;
+                this.notifySubscribers(candle);
             }
-
-            // Reset error counter on success
-            this.consecutiveErrors = 0;
-        } catch (error: unknown) {
-            this.consecutiveErrors++;
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            logger.error(`LiveDataProvider: Poll error (#${this.consecutiveErrors}) — ${errorMsg}`);
-
-            // Auto-restart at MAX_CONSECUTIVE_ERRORS
-            if (this.consecutiveErrors >= this.MAX_CONSECUTIVE_ERRORS) {
-                logger.error(`LiveDataProvider: ${this.MAX_CONSECUTIVE_ERRORS} consecutive errors — triggering auto-restart`);
-                await this.handleMaxErrorsReached();
-            }
-        }
-    }
-
-    private async handleMaxErrorsReached(): Promise<void> {
-        logger.warn('LiveDataProvider: Auto-restart triggered — reconnecting to exchange...');
-
-        try {
-            // Stop current polling
-            if (this.pollTimer) {
-                clearInterval(this.pollTimer);
-                this.pollTimer = null;
-            }
-
-            // Reconnect exchange
-            await this.exchange.loadMarkets();
-            logger.info(`LiveDataProvider: Exchange reconnected — loaded ${Object.keys(this.exchange.markets).length} markets`);
-
-            // Reset error counter
-            this.consecutiveErrors = 0;
-
-            // Restart polling
-            this.pollTimer = setInterval(async () => {
-                if (this.isPolling) {
-                    logger.warn('LiveDataProvider: Polling overlap detected. Skipping this tick to prevent rate limits.');
-                    return;
-                }
-
-                try {
-                    this.isPolling = true;
-                    await this.poll();
-                } catch (error: unknown) {
-                    logger.error(`LiveDataProvider: Poll error — ${error instanceof Error ? error.message : String(error)}`);
-                } finally {
-                    this.isPolling = false;
-                }
-            }, this.pollIntervalMs);
-
-            logger.info('LiveDataProvider: Auto-restart complete — polling resumed');
-        } catch (restartError: unknown) {
-            const errorMsg = restartError instanceof Error ? restartError.message : String(restartError);
-            logger.error(`LiveDataProvider: Auto-restart FAILED — ${errorMsg}. Manual intervention may be required.`);
         }
     }
 

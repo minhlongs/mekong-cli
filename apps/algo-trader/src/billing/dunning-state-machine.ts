@@ -333,7 +333,16 @@ export class DunningStateMachine {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return states.map((s) => this.toResult(s));
+    type DunningStateRow = {
+      tenantId: string;
+      status: DunningStatus;
+      failedPayments: number;
+      suspendedAt?: Date | null;
+      revokedAt?: Date | null;
+      createdAt: Date;
+      lastPaymentFailedAt?: Date | null;
+    };
+    return (states as DunningStateRow[]).map((s) => this.toResult(s));
   }
 
   /**

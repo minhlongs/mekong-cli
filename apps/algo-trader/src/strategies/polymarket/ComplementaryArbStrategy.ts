@@ -94,9 +94,6 @@ export class ComplementaryArbStrategy extends BasePolymarketStrategy {
     const now = Date.now();
 
     if (arb.side === 'BUY_BOTH') {
-      // Atomic pair ID — bot engine should execute both or neither
-      const atomicPairId = `arb_${now}_${Math.random().toString(36).slice(2, 6)}`;
-
       // Buy YES shares
       signals.push({
         type: PolymarketSignalType.BUY_YES,
@@ -108,16 +105,13 @@ export class ComplementaryArbStrategy extends BasePolymarketStrategy {
         size,
         timestamp: now,
         expectedValue: arb.edge * size,
-        confidence: Math.min(arb.edge / 0.05, 1.0),
+        confidence: Math.min(arb.edge / 0.05, 1.0), // Scale confidence by edge
         catalyst: `Complementary arb: YES+NO=${1-arb.edge} < 1.00`,
         metadata: {
           marketQuestion: yesTick.marketId,
           outcomePrices: [yesTick.yesPrice, noTick.noPrice],
           edge: arb.edge,
           profitPerShare: arb.profitPerShare,
-          atomicPairId, // Both legs must fill or unwind
-          legIndex: 0,
-          totalLegs: 2,
         },
       });
 
@@ -139,9 +133,6 @@ export class ComplementaryArbStrategy extends BasePolymarketStrategy {
           outcomePrices: [yesTick.yesPrice, noTick.noPrice],
           edge: arb.edge,
           profitPerShare: arb.profitPerShare,
-          atomicPairId, // Both legs must fill or unwind
-          legIndex: 1,
-          totalLegs: 2,
         },
       });
     }

@@ -11,7 +11,7 @@ Usage:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Union
 from pydantic import BaseModel, Field
 
 

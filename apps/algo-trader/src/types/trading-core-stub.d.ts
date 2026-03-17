@@ -6,49 +6,49 @@
 declare module '@agencyos/trading-core/exchanges' {
   export interface IExchange {
     name: string;
-    fetchTicker(symbol: string): Promise<any>;
-    fetchOrderBook(symbol: string): Promise<any>;
-    createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<any>;
-    createMarketOrder(symbol: string, side: string, amount: number): Promise<any>;
-    fetchBalance(): Promise<any>;
+    fetchTicker(symbol: string): Promise<Record<string, unknown>>;
+    fetchOrderBook(symbol: string): Promise<Record<string, unknown>>;
+    createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<Record<string, unknown>>;
+    createMarketOrder(symbol: string, side: string, amount: number): Promise<Record<string, unknown>>;
+    fetchBalance(): Promise<Record<string, unknown>>;
     connect(): Promise<void>;
     disconnect(): Promise<void>;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export class ExchangeClientBase {
-    constructor(exchangeIdOrConfig?: any, apiKey?: any, secret?: any);
+    constructor(config?: Record<string, unknown>);
     name: string;
-    fetchTicker(symbol: string): Promise<any>;
-    fetchOrderBook(symbol: string): Promise<any>;
-    createOrder(symbol: string, type: string, side: string, amount: number, price?: number, ...args: any[]): Promise<any>;
-    createMarketOrder(symbol: string, side: string, amount: number): Promise<any>;
-    fetchBalance(): Promise<any>;
+    fetchTicker(symbol: string): Promise<Record<string, unknown>>;
+    fetchOrderBook(symbol: string): Promise<Record<string, unknown>>;
+    createOrder(symbol: string, type: string, side: string, amount: number, price?: number, ...args: unknown[]): Promise<Record<string, unknown>>;
+    createMarketOrder(symbol: string, side: string, amount: number): Promise<Record<string, unknown>>;
+    fetchBalance(): Promise<Record<string, unknown>>;
     connect(): Promise<void>;
     disconnect(): Promise<void>;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export class BinanceAdapter extends ExchangeClientBase {
-    constructor(config?: any, ...args: any[]);
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
   }
 
   export class OkxAdapter extends ExchangeClientBase {
-    constructor(config?: any, ...args: any[]);
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
   }
 
   export class BybitAdapter extends ExchangeClientBase {
-    constructor(config?: any, ...args: any[]);
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
   }
 
   export class ExchangeFactory {
-    static createExchange(name: string, config: any): IExchange;
+    static createExchange(name: string, config: Record<string, unknown>): IExchange;
   }
 
   export const exchanges: {
-    Binance: new (config: any) => IExchange;
-    Coinbase: new (config: any) => IExchange;
-    Kraken: new (config: any) => IExchange;
+    Binance: new (config: Record<string, unknown>) => IExchange;
+    Coinbase: new (config: Record<string, unknown>) => IExchange;
+    Kraken: new (config: Record<string, unknown>) => IExchange;
   };
 }
 
@@ -66,7 +66,7 @@ declare module '@agencyos/trading-core/arbitrage' {
     spreadPercent: number;
     netProfitPercent: number;
     estimatedProfitUsd: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface ArbitrageConfig {
@@ -77,77 +77,77 @@ declare module '@agencyos/trading-core/arbitrage' {
     minSpreadPercent?: number;
     pollIntervalMs?: number;
     positionSizeUsd?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface ExchangeConfig {
     name: string;
     apiKey?: string;
     secret?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export class AgiArbitrageEngine {
-    constructor(config?: any, ...args: any[]);
-    execute(): Promise<any>;
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
+    execute(): Promise<Record<string, unknown>>;
     init(): void;
     start(): void;
     stop(): void;
-    getStats(): any;
-    getProfitSummary(): any;
-    [key: string]: any;
+    getStats(): Record<string, unknown>;
+    getProfitSummary(): Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export class SpreadDetectorEngine {
-    constructor(config?: any, ...args: any[]);
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
     init(): void;
     start(): void;
     stop(): void;
-    getStats(): any;
-    getProfitSummary(): any;
-    [key: string]: any;
+    getStats(): Record<string, unknown>;
+    getProfitSummary(): Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export class ArbitrageOrchestrator {
-    constructor(config?: any, ...args: any[]);
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
     init(): void;
     start(): void;
     stop(): void;
-    getStats(): any;
-    [key: string]: any;
+    getStats(): Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export class ArbitrageScanner {
-    constructor(config?: ArbitrageConfig, ...args: any[]);
+    constructor(config?: ArbitrageConfig, ...args: unknown[]);
     scan(): Promise<ArbitrageOpportunity[]>;
-    addExchange(config: ExchangeConfig | any, ...args: any[]): void;
-    onOpportunity(callback: (opp: ArbitrageOpportunity) => void, ...args: any[]): void;
+    addExchange(config: ExchangeConfig | Record<string, unknown>, ...args: unknown[]): void;
+    onOpportunity(callback: (opp: ArbitrageOpportunity) => void, ...args: unknown[]): void;
     start(): void;
     stop(): void;
-    getStats(): any;
-    [key: string]: any;
+    getStats(): Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export class ArbitrageExecutor {
-    constructor(config?: any, ...args: any[]);
-    execute(opp: ArbitrageOpportunity): Promise<any>;
-    addExchange(exchange: any, ...args: any[]): void;
+    constructor(config?: Record<string, unknown>, ...args: unknown[]);
+    execute(opp: ArbitrageOpportunity): Promise<Record<string, unknown>>;
+    addExchange(exchange: Record<string, unknown>, ...args: unknown[]): void;
     printDashboard(): void;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 }
 
 declare module '@agencyos/trading-core/interfaces' {
   export interface IExchange {
     name: string;
-    fetchTicker(symbol: string): Promise<any>;
-    fetchOrderBook(symbol: string): Promise<any>;
-    createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<any>;
-    createMarketOrder(symbol: string, side: string, amount: number): Promise<any>;
-    fetchBalance(): Promise<any>;
+    fetchTicker(symbol: string): Promise<Record<string, unknown>>;
+    fetchOrderBook(symbol: string): Promise<Record<string, unknown>>;
+    createOrder(symbol: string, type: string, side: string, amount: number, price?: number): Promise<Record<string, unknown>>;
+    createMarketOrder(symbol: string, side: string, amount: number): Promise<Record<string, unknown>>;
+    fetchBalance(): Promise<Record<string, unknown>>;
     connect(): Promise<void>;
     disconnect(): Promise<void>;
-    [key: string]: any; // Allow any additional properties
+    [key: string]: unknown;
   }
 
   export interface IBalance {
@@ -155,7 +155,7 @@ declare module '@agencyos/trading-core/interfaces' {
       free: number;
       used: number;
       total: number;
-    } | string | number; // Allow string/number for balance values
+    } | string | number;
   }
 
   export interface IOrderBookEntry {
@@ -173,25 +173,25 @@ declare module '@agencyos/trading-core/interfaces' {
   export interface IOrder {
     id: string;
     symbol: string;
-    type?: string; // Optional
+    type?: string;
     side: string;
     amount: number;
     price?: number;
-    filled?: number; // Optional
+    filled?: number;
     status: string;
     timestamp: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface ISignal {
     type: SignalType;
-    symbol?: string; // Optional
-    action?: 'buy' | 'sell' | 'hold'; // Optional
-    strength?: number; // Optional
+    symbol?: string;
+    action?: 'buy' | 'sell' | 'hold';
+    strength?: number;
     timestamp: number;
     price?: number;
-    metadata?: any;
-    [key: string]: any;
+    metadata?: Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export interface ICandle {
@@ -201,15 +201,14 @@ declare module '@agencyos/trading-core/interfaces' {
     low: number;
     close: number;
     volume: number;
-    metadata?: any;
-    [key: string]: any;
+    metadata?: Record<string, unknown>;
+    [key: string]: unknown;
   }
 
   export interface IStrategy {
     name: string;
-    onCandle(candle: ICandle): Promise<ISignal | null>;
-    init(history: ICandle[]): Promise<void>;
-    [key: string]: any;
+    execute(): Promise<Record<string, unknown>>;
+    [key: string]: unknown;
   }
 
   export enum SignalType {
@@ -222,23 +221,23 @@ declare module '@agencyos/trading-core/interfaces' {
 declare module '@agencyos/vibe-arbitrage-engine/strategies' {
   export interface Strategy {
     name: string;
-    execute(): Promise<any>;
-    [key: string]: any;
+    execute(): Promise<Record<string, unknown>>;
+    [key: string]: unknown;
   }
 
   export class CrossExchangeArbitrage implements Strategy {
     name: string;
-    execute(): Promise<any>;
+    execute(): Promise<Record<string, unknown>>;
   }
 
   export class TriangularArbitrage implements Strategy {
     name: string;
-    execute(): Promise<any>;
+    execute(): Promise<Record<string, unknown>>;
   }
 
   export class StatisticalArbitrage implements Strategy {
     name: string;
-    execute(): Promise<any>;
+    execute(): Promise<Record<string, unknown>>;
   }
 
   export const strategies: {

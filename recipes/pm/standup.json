@@ -1,0 +1,31 @@
+{
+  "id": "pm-standup",
+  "name": "PM Daily Standup",
+  "description": "Read recent git activity and task status, then generate a concise standup report.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:standup",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/standup",
+  "estimated_credits": 1,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "gather",
+        "name": "Gather Activity",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-log", "args": "--output reports/pm/standup/git-activity.md" },
+          { "id": "pm-milestone", "args": "--output reports/pm/standup/milestone-status.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/standup/SUMMARY.md",
+      "template": "Compile git activity and milestone status into a standup report with: what was done yesterday, what is planned today, and any blockers."
+    }
+  }
+}

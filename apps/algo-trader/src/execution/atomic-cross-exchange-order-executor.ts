@@ -262,7 +262,7 @@ export class AtomicCrossExchangeOrderExecutor {
     if (buyFulfilled && sellFulfilled) {
       const buyOrder = (buyResult as PromiseFulfilledResult<IOrder>).value;
       const sellOrder = (sellResult as PromiseFulfilledResult<IOrder>).value;
-      const pnl = ((sellOrder.price ?? 0) - (buyOrder.price ?? 0)) * buyOrder.amount;
+      const pnl = (sellOrder.price - buyOrder.price) * buyOrder.amount;
       this.buyCircuitBreaker!.recordTrade(pnl);
       this.sellCircuitBreaker!.recordTrade(pnl);
     } else {
@@ -359,7 +359,7 @@ export class AtomicCrossExchangeOrderExecutor {
   }
 
   private estimateNetPnl(buyOrder: IOrder, sellOrder: IOrder): number {
-    return ((sellOrder.price ?? 0) - (buyOrder.price ?? 0)) * buyOrder.amount;
+    return (sellOrder.price - buyOrder.price) * buyOrder.amount;
   }
 
   private extractError(

@@ -35,18 +35,4 @@ export const ENV = {
   MM_MAX_INVENTORY: parseInt(opt("MM_MAX_INVENTORY", "200")),
   HEARTBEAT_MS: parseInt(opt("HEARTBEAT_MS", "5000")),
   SCAN_MS: parseInt(opt("SCAN_INTERVAL_MS", "60000")),
-  // Telegram alerts
-  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "",
-  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || "",
-  // Risk limits
-  MAX_DAILY_LOSS_PCT: parseFloat(opt("MAX_DAILY_LOSS_PCT", "0.03")),
-  MAX_DRAWDOWN_PCT: parseFloat(opt("MAX_DRAWDOWN_PCT", "0.10")),
 } as const;
-
-// Validate critical numeric env vars at startup
-if (ENV.MAX_BANKROLL <= 0 || isNaN(ENV.MAX_BANKROLL)) {
-  throw new Error(`Invalid MAX_BANKROLL: ${ENV.MAX_BANKROLL}`);
-}
-if (ENV.MAX_POS_PCT <= 0 || ENV.MAX_POS_PCT > 1) {
-  throw new Error(`Invalid MAX_POSITION_PCT: ${ENV.MAX_POS_PCT} (must be 0-1)`);
-}

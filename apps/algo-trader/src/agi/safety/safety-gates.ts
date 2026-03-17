@@ -53,20 +53,16 @@ export class ConfidenceGate {
 
 // Kill Switch - immediate stop all trading
 
-// CONVENTION: isActive() === true means the kill switch is ACTIVE (TRIPPED),
-// i.e., trading is BLOCKED. This matches circuit-breakers.ts KillSwitch.isActive().
-// Do NOT call isActive() to check if trading is allowed — use !isActive() for that.
-
-export type KillSwitchState = 'normal' | 'triggered';
+export type KillSwitchState = 'active' | 'triggered';
 
 export class KillSwitch {
-  private state: KillSwitchState = 'normal';
+  private state: KillSwitchState = 'active';
   private triggeredAt: number | null = null;
   private triggeredBy: string | null = null;
   private reason: string | null = null;
 
   /**
-   * Trigger kill switch — blocks all trading (isActive() will return true)
+   * Trigger kill switch
    */
   trigger(triggeredBy: string, reason: string): void {
     this.state = 'triggered';
@@ -77,10 +73,10 @@ export class KillSwitch {
   }
 
   /**
-   * Reset kill switch — allows trading to resume (isActive() returns false)
+   * Reset kill switch
    */
   reset(): void {
-    this.state = 'normal';
+    this.state = 'active';
     this.triggeredAt = null;
     this.triggeredBy = null;
     this.reason = null;
@@ -88,16 +84,14 @@ export class KillSwitch {
   }
 
   /**
-   * Returns true when kill switch is ACTIVE (TRIPPED) — trading is BLOCKED.
-   * Returns false when trading is allowed (normal state).
-   * Convention matches circuit-breakers.ts KillSwitch.isActive().
+   * Check if kill switch is active (trading allowed)
    */
   isActive(): boolean {
-    return this.state === 'triggered';
+    return this.state === 'active';
   }
 
   /**
-   * Check if kill switch is triggered (trading blocked) — alias for isActive()
+   * Check if kill switch is triggered (trading blocked)
    */
   isTriggered(): boolean {
     return this.state === 'triggered';
@@ -108,14 +102,12 @@ export class KillSwitch {
    */
   getState(): {
     state: KillSwitchState;
-    isActive: boolean;
     triggeredAt: number | null;
     triggeredBy: string | null;
     reason: string | null;
   } {
     return {
       state: this.state,
-      isActive: this.isActive(),
       triggeredAt: this.triggeredAt,
       triggeredBy: this.triggeredBy,
       reason: this.reason,

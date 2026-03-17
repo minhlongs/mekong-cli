@@ -1,6 +1,7 @@
 // src/strategies/CrossPlatformArbStrategy.ts
 // Flow: Scan matching markets on Polymarket + Kalshi → if YES(A) + NO(B) < $1.00 → buy both
 
+import { ClobClient, Side, OrderType } from "@polymarket/clob-client";
 import { KalshiClient } from "../adapters/KalshiClient";
 import { ParsedMarket } from "../adapters/GammaClient";
 import { ENV } from "../config/env";
@@ -40,8 +41,8 @@ export class CrossPlatformArbStrategy {
     try {
       const bal = await this.kalshi.getBalance();
       console.log(`[CrossArb] Kalshi balance: $${bal}`);
-    } catch (e: any) {
-      console.error("[CrossArb] Kalshi auth failed:", e.message);
+    } catch (e: unknown) {
+      console.error("[CrossArb] Kalshi auth failed:", (e as Error).message);
     }
   }
 
@@ -70,7 +71,7 @@ export class CrossPlatformArbStrategy {
           // Kalshi NO ask = lowest ask price on NO side
           // In binary: NO ask = 1.00 - highest YES bid
           // The orderbook returns bids, so:
-          const noAsks = book.no.map((l: any) => parseFloat(l[0]));
+          const noAsks = book.no.map((l: [string, string]) => parseFloat(l[0]));
           const kalshiNoAsk = Math.min(...noAsks);
           if (kalshiNoAsk <= 0) continue;
 
@@ -97,8 +98,8 @@ export class CrossPlatformArbStrategy {
             polyYesAsk, kalshiNoAsk, totalCost, grossProfit, netProfit, contracts,
           });
         }
-      } catch (e: any) {
-        console.error(`[CrossArb] Error scanning ${pair.kalshiEvent}:`, e.message);
+      } catch (e: unknown) {
+        console.error(`[CrossArb] Error scanning ${pair.kalshiEvent}:`, (e as Error).message);
       }
     }
 
@@ -108,7 +109,7 @@ export class CrossPlatformArbStrategy {
   // Execute both legs simultaneously
   async execute(
     opp: ArbOpportunity,
-    polyClient: any, // ClobClient
+    polyClient: ClobClient,
   ): Promise<{ polySuccess: boolean; kalshiSuccess: boolean }> {
     if (ENV.DRY_RUN) {
       console.log(`[CrossArb] DRY RUN: BUY YES Poly @${opp.polyYesAsk} + BUY NO Kalshi @${opp.kalshiNoAsk} = ${opp.netProfit.toFixed(2)} profit`);
@@ -119,9 +120,9 @@ export class CrossPlatformArbStrategy {
       // Polymarket leg: BUY YES
       polyClient.createAndPostMarketOrder(
         { tokenID: opp.polyMarket.yesTokenId, amount: opp.contracts * opp.polyYesAsk,
-          side: "BUY", feeRateBps: await polyClient.getFeeRateBps(opp.polyMarket.yesTokenId) },
+          side: "BUY" as Side, feeRateBps: await polyClient.getFeeRateBps(opp.polyMarket.yesTokenId) },
         { tickSize: await polyClient.getTickSize(opp.polyMarket.yesTokenId), negRisk: opp.polyMarket.negRisk },
-        "FOK",
+        OrderType.FOK,
       ),
       // Kalshi leg: BUY NO
       this.kalshi.placeOrder({
@@ -140,13 +141,13 @@ export class CrossPlatformArbStrategy {
       try {
         await polyClient.createAndPostMarketOrder(
           { tokenID: opp.polyMarket.yesTokenId, amount: opp.contracts * opp.polyYesAsk,
-            side: "SELL", feeRateBps: await polyClient.getFeeRateBps(opp.polyMarket.yesTokenId) },
+            side: "SELL" as Side, feeRateBps: await polyClient.getFeeRateBps(opp.polyMarket.yesTokenId) },
           { tickSize: await polyClient.getTickSize(opp.polyMarket.yesTokenId), negRisk: opp.polyMarket.negRisk },
-          "FOK",
+          OrderType.FOK,
         );
         console.log(`[CrossArb] Polymarket unwind successful for ${opp.polyMarket.yesTokenId}`);
-      } catch (unwindErr: any) {
-        console.error(`[CrossArb] CRITICAL: Polymarket unwind FAILED — manual intervention required for ${opp.polyMarket.yesTokenId}:`, unwindErr.message);
+      } catch (unwindErr: unknown) {
+        console.error(`[CrossArb] CRITICAL: Polymarket unwind FAILED — manual intervention required for ${opp.polyMarket.yesTokenId}:`, (unwindErr as Error).message);
       }
     } else if (!polySuccess && kalshiSuccess) {
       console.error(`[CrossArb] Polymarket leg FAILED — unwinding Kalshi NO position for ${opp.kalshiTicker}`);
@@ -157,8 +158,8 @@ export class CrossPlatformArbStrategy {
           timeInForce: "fill_or_kill",
         });
         console.log(`[CrossArb] Kalshi unwind successful for ${opp.kalshiTicker}`);
-      } catch (unwindErr: any) {
-        console.error(`[CrossArb] CRITICAL: Kalshi unwind FAILED — manual intervention required for ${opp.kalshiTicker}:`, unwindErr.message);
+      } catch (unwindErr: unknown) {
+        console.error(`[CrossArb] CRITICAL: Kalshi unwind FAILED — manual intervention required for ${opp.kalshiTicker}:`, (unwindErr as Error).message);
       }
     }
 

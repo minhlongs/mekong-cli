@@ -9,30 +9,23 @@ import { EventEmitter } from 'events';
 // ─── IORedis mock with pub/sub support ───────────────────────────────────────
 
 const messageEmitter = new EventEmitter();
+const subscribeCalls = new Map<string, number>();
 
-const mockPublish = jest.fn().mockImplementation(
-  (_channel: string, _msg: string) => Promise.resolve(1)
-);
-
-const mockSubscribe = jest.fn().mockImplementation(
-  (channel: string) => {
-    // Track subscribed channels (real ioredis transitions to subscriber mode)
-    void channel;
-    return Promise.resolve(undefined);
-  }
-);
-
-function makeMockRedis() {
-  return {
-    status: 'ready',
-    on: jest.fn().mockImplementation((event: string, listener: (...args: unknown[]) => void) => {
+function createMockRedisInstance() {
+  const instance = {
+    status: 'ready' as const,
+    on: jest.fn().mockImplementation(function (this: unknown, event: string, listener: (...args: unknown[]) => void) {
       messageEmitter.on(event, listener);
       return this;
     }),
     quit: jest.fn().mockResolvedValue('OK'),
-    duplicate: jest.fn().mockImplementation(makeMockRedis),
-    publish: mockPublish,
-    subscribe: mockSubscribe,
+    duplicate: jest.fn().mockImplementation(() => createMockRedisInstance()),
+    publish: jest.fn().mockImplementation((_channel: string, _msg: string) => Promise.resolve(1)),
+    subscribe: jest.fn().mockImplementation(async (channel: string) => {
+      const count = subscribeCalls.get(channel) || 0;
+      subscribeCalls.set(channel, count + 1);
+      return undefined;
+    }),
     get: jest.fn().mockResolvedValue(null),
     set: jest.fn().mockResolvedValue('OK'),
     incr: jest.fn().mockResolvedValue(1),
@@ -41,9 +34,29 @@ function makeMockRedis() {
     del: jest.fn().mockResolvedValue(1),
     eval: jest.fn().mockResolvedValue([1, 60]),
   };
+  return instance;
 }
 
-jest.mock('ioredis', () => jest.fn().mockImplementation(makeMockRedis), { virtual: true });
+let mockInstance: ReturnType<typeof createMockRedisInstance> | null = null;
+
+// Mock the connection factory module
+jest.mock('../../src/jobs/ioredis-connection-factory-and-singleton-pool', () => ({
+  createRedisConnection: jest.fn().mockImplementation(() => {
+    if (!mockInstance) {
+      mockInstance = createMockRedisInstance();
+    }
+    return mockInstance;
+  }),
+  createSubscriberConnection: jest.fn().mockImplementation(() => {
+    if (!mockInstance) {
+      mockInstance = createMockRedisInstance();
+    }
+    return mockInstance;
+  }),
+  getPoolSize: jest.fn().mockReturnValue(1),
+  clearPool: jest.fn(),
+  closeAllConnections: jest.fn().mockResolvedValue(undefined),
+}));
 
 // ─── Helper: simulate Redis delivering a message ──────────────────────────────
 
@@ -61,11 +74,16 @@ import {
   _resetPubSubForTesting,
 } from '../../src/jobs/redis-pubsub-publish-and-subscribe-wrapper-for-trading-events';
 
+const getMockSubscribe = () => mockInstance!.subscribe as jest.MockedFunction<typeof mockInstance.subscribe>;
+const getMockPublish = () => mockInstance!.publish as jest.MockedFunction<typeof mockInstance.publish>;
+
 describe('Redis PubSub wrapper', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     messageEmitter.removeAllListeners();
     _resetPubSubForTesting();
+    subscribeCalls.clear();
+    mockInstance = null;
   });
 
   // ─── publish() ──────────────────────────────────────────────────────────────
@@ -75,10 +93,13 @@ describe('Redis PubSub wrapper', () => {
       const data = { signal: 'BUY', pair: 'BTC/USDT' };
       await publish('signal:tenant-1', data);
 
-      expect(mockPublish).toHaveBeenCalledTimes(1);
-      const [channel, message] = mockPublish.mock.calls[0] as [string, string];
-      expect(channel).toBe('signal:tenant-1');
-      expect(JSON.parse(message)).toEqual(data);
+      expect(getMockPublish()).toHaveBeenCalledTimes(1);
+      const call = getMockPublish().mock.calls[0];
+      if (call) {
+        const [channel, message] = call as [string, string];
+        expect(channel).toBe('signal:tenant-1');
+        expect(JSON.parse(message)).toEqual(data);
+      }
     });
 
     it('returns true on successful publish', async () => {
@@ -87,15 +108,21 @@ describe('Redis PubSub wrapper', () => {
     });
 
     it('returns false when Redis publish throws', async () => {
-      mockPublish.mockRejectedValueOnce(new Error('Redis down'));
+      // Initialize mock instance first
+      await publish('signal:tenant-1', { x: 1 });
+      // Now set up the rejection for next call
+      getMockPublish().mockRejectedValueOnce(new Error('Redis down'));
       const result = await publish('signal:tenant-1', { x: 1 });
       expect(result).toBe(false);
     });
 
     it('publishes plain strings without double-encoding', async () => {
       await publish('channel', 'hello');
-      const [, message] = mockPublish.mock.calls[0] as [string, string];
-      expect(message).toBe('hello');
+      const call = getMockPublish().mock.calls[0];
+      if (call) {
+        const [, message] = call as [string, string];
+        expect(message).toBe('hello');
+      }
     });
   });
 
@@ -109,20 +136,23 @@ describe('Redis PubSub wrapper', () => {
       simulateRedisMessage('trade:tenant-2', JSON.stringify({ price: 50000 }));
 
       expect(cb).toHaveBeenCalledTimes(1);
-      const [data, channel] = cb.mock.calls[0] as [unknown, string];
-      expect(channel).toBe('trade:tenant-2');
-      expect((data as { price: number }).price).toBe(50000);
+      const call = cb.mock.calls[0];
+      if (call) {
+        const [data, channel] = call as [unknown, string];
+        expect(channel).toBe('trade:tenant-2');
+        expect((data as { price: number }).price).toBe(50000);
+      }
     });
 
     it('calls redis.subscribe for a new channel', () => {
       subscribe('backtest:done:t1', jest.fn());
-      expect(mockSubscribe).toHaveBeenCalledWith('backtest:done:t1');
+      expect(getMockSubscribe()).toHaveBeenCalledWith('backtest:done:t1');
     });
 
     it('does NOT call redis.subscribe again for same channel', () => {
       subscribe('backtest:done:t1', jest.fn());
       subscribe('backtest:done:t1', jest.fn());
-      expect(mockSubscribe).toHaveBeenCalledTimes(1);
+      expect(getMockSubscribe()).toHaveBeenCalledTimes(1);
     });
 
     it('dispatches to multiple callbacks on the same channel', () => {

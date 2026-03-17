@@ -37,10 +37,15 @@ import { analyticsRoutes } from './routes/analytics-routes';
 import { registerUsageEventsRoutes } from './routes/usage-events-routes';
 import { cacheStatsRoutes } from './routes/cache-stats-routes';
 import { registerUsageRoutes } from './routes/internal/usage-routes';
+import { registerUsageRoutes as registerTradeMeteringRoutes } from '../metering/usage-api-routes';
 import { buildPhase6Routes } from './routes/phase6-ghost-routes';
+import { registerBacktestRoutes } from './routes/backtest-routes';
+import { registerNotificationsRoutes } from './routes/notifications-routes';
+import { registerApiDocsRoute } from './routes/api-docs-route';
 import { usageTrackingPlugin } from './middleware/usage-tracking-middleware';
 import { IdempotencyStore, idempotencyMiddleware, createIdempotencyResponseHandler } from '../middleware/idempotency-middleware';
 import { hardLimitsPlugin } from './middleware/hard-limits-middleware';
+import { authRoutes } from './routes/auth-routes';
 
 export interface RaasServerOptions {
   port?: number;
@@ -79,6 +84,9 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   void server.register(errorHandlerPlugin);
   void server.register(corsPlugin);
 
+  // Auth routes (public — register BEFORE auth middleware)
+  void server.register(authRoutes);
+
   // Idempotency middleware for webhooks
   const idempotencyStore = new IdempotencyStore();
   const idempotencyHook = idempotencyMiddleware(idempotencyStore);
@@ -92,9 +100,10 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   if (!opts.skipAuth) {
     const authMiddleware = createAuthMiddleware(keyStore, rateLimiter);
     server.addHook('preHandler', async (request, reply) => {
-      // Skip auth for health routes
+      // Skip auth for health routes and public auth routes
       if (request.url === '/health' || request.url === '/ready' || request.url === '/metrics'
-        || request.url === '/api/v1/billing/webhook' || request.url === '/api/v1/billing/products') {
+        || request.url === '/api/v1/billing/webhook' || request.url === '/api/v1/billing/products'
+        || request.url.startsWith('/api/auth/')) {
         return;
       }
       return authMiddleware(request as any, reply as any);
@@ -138,6 +147,9 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
   // Usage events routes (new - Phase 4)
   void server.register(registerUsageEventsRoutes);
 
+  // Trade metering routes (ROIaaS Phase 4)
+  void server.register(registerTradeMeteringRoutes);
+
   // Internal usage routes for billing sync
   void server.register(registerUsageRoutes);
 
@@ -149,6 +161,15 @@ export function buildServer(opts: RaasServerOptions = {}): FastifyInstance {
 
   // Phase 6 Ghost Protocol routes (ENTERPRISE-only)
   void server.register(buildPhase6Routes());
+
+  // ROIaaS Phase 6 - Backtest routes
+  void server.register(registerBacktestRoutes);
+
+  // ROIaaS Phase 7 - Notifications routes
+  void server.register(registerNotificationsRoutes);
+
+  // API Docs - Swagger UI
+  void server.register(registerApiDocsRoute);
 
   // Hard limits middleware (quota enforcement)
   void server.register(hardLimitsPlugin);

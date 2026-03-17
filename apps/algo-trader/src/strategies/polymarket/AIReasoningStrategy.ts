@@ -179,7 +179,7 @@ export class AIReasoningStrategy extends BasePolymarketStrategy {
     return null;
   }
 
-  async processTick(tick: IMarketTick): Promise<IPolymarketSignal | null> {
+  processTick(tick: IMarketTick): IPolymarketSignal | null {
     this.onMarketTick(tick);
     return this.generateSignal(tick.tokenId, tick.marketId, tick);
   }

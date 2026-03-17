@@ -1,0 +1,39 @@
+{
+  "id": "cto-archive",
+  "name": "CTO Project Archive",
+  "description": "Back up the project via worker:backup, freeze active deployments, then document final project state.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:archive",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/archive",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "backup",
+        "name": "Backup Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-backup", "args": "--output reports/cto/archive/backup-log.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "freeze-document",
+        "name": "Freeze and Document",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-review", "args": "--output reports/cto/archive/final-state.md" }
+        ],
+        "depends_on": ["backup"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/archive/SUMMARY.md",
+      "template": "Compile backup log and final state review into an archive report with: backup location, project history, final metrics, lessons learned, and archive retrieval instructions."
+    }
+  }
+}

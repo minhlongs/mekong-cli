@@ -262,38 +262,6 @@ export class AlertNotificationSystem extends EventEmitter {
   }
 
   /**
-   * Send drawdown breach alert (Phase 18: Safety & Resilience)
-   */
-  async sendDrawdownAlert(
-    tenantId: string,
-    drawdown: number,
-    limit: number,
-    currentBalance: number,
-    peakBalance: number
-  ): Promise<AlertDeliveryResult[]> {
-    const severity: AlertSeverity = 'critical';
-
-    return this.sendAlert({
-      type: 'portfolio_risk_warning',
-      severity,
-      title: `🚨 DRAWDOWN BREACH - Bot Halted`,
-      message: `Drawdown ${drawdown.toFixed(2)}% exceeded limit ${limit.toFixed(2)}%\nPeak: $${peakBalance.toFixed(2)} → Current: $${currentBalance.toFixed(2)}`,
-      data: {
-        userId: tenantId,
-        currentDrawdown: drawdown,
-        maxDrawdownLimit: limit,
-        dailyPnL: currentBalance - peakBalance,
-        dailyLossLimit: limit,
-        exposurePercent: 100,
-        exposureLimit: 100,
-        riskLevel: 'critical' as const,
-      },
-      timestamp: Date.now(),
-      userId: tenantId,
-    });
-  }
-
-  /**
    * Send subscription expiry warning
    */
   async sendSubscriptionExpiryWarning(userId: string, warning: SubscriptionExpiryWarning): Promise<AlertDeliveryResult[]> {

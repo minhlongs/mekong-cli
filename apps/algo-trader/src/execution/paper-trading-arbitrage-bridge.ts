@@ -85,8 +85,8 @@ export class PaperTradingArbBridge {
       const buyOrder = await buyEngine.createMarketOrder(symbol, 'buy', amount);
       const sellOrder = await sellEngine.createMarketOrder(symbol, 'sell', amount);
 
-      const grossPnl = ((sellOrder.price ?? 0) - (buyOrder.price ?? 0)) * amount;
-      const fee = ((buyOrder.price ?? 0) + (sellOrder.price ?? 0)) * amount * (this.config.feeRate ?? 0.001);
+      const grossPnl = (sellOrder.price - buyOrder.price) * amount;
+      const fee = (buyOrder.price + sellOrder.price) * amount * (this.config.feeRate ?? 0.001);
 
       return {
         success: true,

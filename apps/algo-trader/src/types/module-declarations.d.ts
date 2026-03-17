@@ -1,34 +1,34 @@
 // Ambient module declarations for packages without type definitions
 
 declare module 'axios' {
-  const axios: any;
+  const axios: unknown;
   export default axios;
-  export const get: any;
-  export const post: any;
-  export const create: any;
+  export const get: unknown;
+  export const post: unknown;
+  export const create: unknown;
 }
 
 declare module 'ethers' {
   export class Wallet {
-    constructor(privateKey: string, provider?: any);
+    constructor(privateKey: string, provider?: unknown);
     address: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
   export class providers {
-    static JsonRpcProvider: any;
+    static JsonRpcProvider: unknown;
   }
-  export const utils: any;
-  export const BigNumber: any;
+  export const utils: unknown;
+  export const BigNumber: unknown;
 }
 
 declare module '@polymarket/clob-client' {
   export class ClobClient {
-    constructor(...args: any[]);
-    [key: string]: any;
-    getBalanceAllowance(params: any): Promise<any>;
-    createOrDeriveApiKey(): Promise<any>;
-    cancelAll(): Promise<any>;
-    postHeartbeat(id: string): Promise<any>;
+    constructor(...args: unknown[]);
+    [key: string]: unknown;
+    getBalanceAllowance(params: unknown): Promise<unknown>;
+    createOrDeriveApiKey(): Promise<unknown>;
+    cancelAll(): Promise<unknown>;
+    postHeartbeat(id: string): Promise<unknown>;
   }
 
   export interface ApiKeyCreds {
@@ -42,7 +42,7 @@ declare module '@polymarket/clob-client' {
     price: number;
     side: Side;
     size: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface UserMarketOrder {
@@ -50,19 +50,19 @@ declare module '@polymarket/clob-client' {
     side: Side;
     amount?: number;
     size?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface OrderResponse {
     success: boolean;
     orderId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface CreateOrderOptions {
     tickSize?: string;
     negRisk?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface OpenOrder {
@@ -71,7 +71,7 @@ declare module '@polymarket/clob-client' {
     price: number;
     size: number;
     side: Side;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface Trade {
@@ -79,7 +79,7 @@ declare module '@polymarket/clob-client' {
     price: number;
     size: number;
     side: Side;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export enum Side {

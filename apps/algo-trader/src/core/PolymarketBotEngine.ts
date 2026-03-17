@@ -2,31 +2,24 @@
 // MM-focused Polymarket bot — the only strategy with real edge
 // Safety: heartbeat, cancel-on-disconnect, crash recovery, idempotency
 
-import { ClobClient, Side, OrderType } from '@polymarket/clob-client';
+import { ClobClient } from '@polymarket/clob-client';
 import { Wallet } from 'ethers';
+import fs from 'fs';
+import path from 'path';
 import { PolymarketWS } from '../adapters/PolymarketWS';
 import { GammaClient, ParsedMarket } from '../adapters/GammaClient';
 import { MarketMakerStrategy } from '../strategies/MarketMakerStrategy';
+import { RiskManager } from './RiskManager';
 import { saveState, loadState, clearState } from './StateManager';
 import { LicenseGate } from './LicenseGate';
 import { ENV } from '../config/env';
-import { logger } from '../utils/logger';
 
 export class PolymarketBotEngine {
   private client!: ClobClient;
   private ws!: PolymarketWS;
   private gamma = new GammaClient();
   private mm = new MarketMakerStrategy();
-  private risk = {
-    _maxBankroll: 0,
-    _dailyLoss: 0,
-    _lastReset: Date.now(),
-    initDailyLoss(max: number) { this._maxBankroll = max; this._dailyLoss = 0; },
-    recordTrade(pnl: number) { if (pnl < 0) this._dailyLoss += Math.abs(pnl); },
-    canTrade() { return this._dailyLoss < this._maxBankroll * 0.1; },
-    resetDaily() { this._dailyLoss = 0; this._lastReset = Date.now(); },
-    getDailyPnl() { return -this._dailyLoss; },
-  };
+  private risk = new RiskManager();
   private license = new LicenseGate();
   private markets: ParsedMarket[] = [];
   private running = false;
@@ -38,7 +31,7 @@ export class PolymarketBotEngine {
   private stateInterval: NodeJS.Timeout | null = null;
 
   async start(): Promise<void> {
-    logger.info(`=== MM BOT START (${ENV.DRY_RUN ? 'DRY RUN' : 'LIVE'}) === [tier: ${this.license.tier.toUpperCase()}]`);
+    console.log(`=== MM BOT START (${ENV.DRY_RUN ? 'DRY RUN' : 'LIVE'}) === [tier: ${this.license.tier.toUpperCase()}]`);
 
     // 1. Init Polymarket client
     const wallet = new Wallet(ENV.PRIVATE_KEY);
@@ -49,26 +42,26 @@ export class PolymarketBotEngine {
     } else {
       const l1 = new ClobClient(ENV.POLY_HOST, ENV.CHAIN_ID, wallet);
       const c = await l1.createOrDeriveApiKey();
-      logger.info(`Save these to .env:\nPOLYMARKET_API_KEY=${c.key}\nPOLYMARKET_API_SECRET=${c.secret}\nPOLYMARKET_API_PASSPHRASE=${c.passphrase}`);
+      console.log(`Save these to .env:\nPOLYMARKET_API_KEY=${c.key}\nPOLYMARKET_API_SECRET=${c.secret}\nPOLYMARKET_API_PASSPHRASE=${c.passphrase}`);
       this.client = new ClobClient(ENV.POLY_HOST, ENV.CHAIN_ID, wallet, c, ENV.SIG_TYPE, ENV.FUNDER);
     }
 
     const bal = await this.client.getBalanceAllowance({ asset_type: 'COLLATERAL' as any });
-    logger.info(`Balance: $${bal.balance}`);
+    console.log(`Balance: $${bal.balance}`);
 
     // 2. Crash recovery (PRO/ENTERPRISE only)
     if (this.license.canRecover) {
       const prevState = loadState();
       if (prevState) {
-        logger.info(`[Recovery] Restoring state from ${new Date(prevState.lastSaveTime).toISOString()}`);
+        console.log(`[Recovery] Restoring state from ${new Date(prevState.lastSaveTime).toISOString()}`);
         try { await this.client.cancelAll(); } catch {}
-        logger.info('[Recovery] Cancelled all stale orders');
+        console.log('[Recovery] Cancelled all stale orders');
         this.heartbeatId = prevState.lastHeartbeatId || '';
         prevState.processedSignalKeys.forEach(k => this.processedSignals.add(k));
         clearState();
       }
     } else {
-      logger.info('[License] Crash recovery skipped (FREE tier)');
+      console.log('[License] Crash recovery skipped (FREE tier)');
     }
 
     // 3. Init daily loss tracking
@@ -76,6 +69,35 @@ export class PolymarketBotEngine {
 
     // 4. Scan markets
     await this.scanMarkets();
+
+    // 4b. Auto-create fair-values.json template if missing
+    const fvPath = path.join(process.cwd(), 'data', 'fair-values.json');
+    if (!fs.existsSync(fvPath)) {
+      const dir = path.dirname(fvPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      const top5 = this.markets.slice(0, 5);
+      const template: { _README: string; _HOWTO: string; markets: Record<string, unknown>; defaults: Record<string, unknown> } = {
+        _README: 'YOUR EDGE: estimate probability for each market. Bot quotes around YOUR value instead of midpoint.',
+        _HOWTO: '1. Research market 2. Set value (0.01-0.99) 3. Set confidence 4. Save file 5. Bot picks up changes automatically',
+        markets: {},
+        defaults: {
+          min_confidence_to_quote: 'low',
+          spread_by_confidence: { high: 0.06, medium: 0.08, low: 0.12 },
+        },
+      };
+      for (const m of top5) {
+        const key = m.slug || m.conditionId;
+        template.markets[key] = {
+          value: Math.round(m.yesPrice * 100) / 100,
+          confidence: 'low',
+          spread_override: null,
+          notes: `${m.question} — CHANGE THIS`,
+          updated: new Date().toISOString().slice(0, 10),
+        };
+      }
+      fs.writeFileSync(fvPath, JSON.stringify(template, null, 2));
+      console.log(`[FairValue] Created template: ${fvPath}`);
+    }
 
     // 5. Init MM with selected markets (license enforced inside)
     await this.mm.init(this.markets, this.license);
@@ -87,30 +109,22 @@ export class PolymarketBotEngine {
 
     // Cancel-all-on-disconnect
     this.ws.onDisconnect(async () => {
-      logger.warn('[Safety] WS disconnected — cancelling all orders');
+      console.warn('[Safety] WS disconnected — cancelling all orders');
       try { await this.client.cancelAll(); } catch {}
     });
 
     // WS-driven MM requoting (PRO/ENTERPRISE only)
-    this.ws.on('best_bid_ask', (d: any) => {
+    this.ws.on('best_bid_ask', (d: { asset_id: string; best_bid?: string; price?: string }) => {
       this.updatePrice(d);
       if (this.license.canWsRequote && this.mm.hasToken(d.asset_id)) {
-        this.mm.requote(this.client, d.asset_id).catch((e: any) => {
-          logger.warn('[MM] Requote failed:', e?.message || e);
-        });
+        this.mm.requote(this.client, d.asset_id).catch(() => {});
       }
     });
 
-    // Fill tracking + license trade counter + risk update
-    this.ws.on('user:trade', (d: any) => {
-      logger.info(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
+    // Fill tracking + license trade counter
+    this.ws.on('user:trade', (d: { side: 'BUY' | 'SELL'; size: string; price: string; status: string; market?: string }) => {
+      console.log(`[FILL] ${d.side} ${d.size}@${d.price} ${d.status}`);
       this.license.recordTrade();
-      this.tradeCount++;
-
-      // P0-5: Update risk manager with trade PnL
-      const tradeValue = parseFloat(d.size || '0') * parseFloat(d.price || '0');
-      this.risk.recordTrade(tradeValue);
-
       if (d.market) {
         this.mm.onFill(d.market, d.side, parseFloat(d.size));
       }
@@ -120,12 +134,12 @@ export class PolymarketBotEngine {
     this.heartbeatInterval = setInterval(async () => {
       try {
         const resp = await this.client.postHeartbeat(this.heartbeatId);
-        this.heartbeatId = (resp as any)?.heartbeat_id || this.heartbeatId;
-      } catch (e: any) {
-        logger.error('[Heartbeat] FAILED:', e.message);
+        this.heartbeatId = resp.heartbeat_id || this.heartbeatId;
+      } catch (e: unknown) {
+        console.error('[Heartbeat] FAILED:', (e as Error).message);
       }
     }, 5000);
-    logger.info('[Safety] Heartbeat active (5s)');
+    console.log('[Safety] Heartbeat active (5s)');
 
     // 8. Start loops
     this.running = true;
@@ -137,14 +151,10 @@ export class PolymarketBotEngine {
       this.stateInterval = setInterval(() => {
         try {
           saveState({
-            openOrders: [],
-            positions: Object.fromEntries(
-              [...(this.mm.getInventories?.() || new Map())].map(([k, v]) => [k, v.yesInventory || 0])
-            ),
             processedSignalKeys: Array.from(this.processedSignals).slice(-200),
             lastHeartbeatId: this.heartbeatId,
-            dailyPnl: 0,
             lastSaveTime: Date.now(),
+            inventories: Object.fromEntries(this.mm.getInventories()),
           });
         } catch {}
       }, 30000);
@@ -153,36 +163,14 @@ export class PolymarketBotEngine {
     // 10. Midnight PnL reset
     this.scheduleMidnightReset();
 
-    logger.info('=== MM RUNNING ===');
+    console.log('=== MM RUNNING ===');
   }
 
   // MM fallback tick: every 10s (WS requote handles fast updates)
   private async loopMM(): Promise<void> {
-    let consecutiveErrors = 0;
-    const MAX_CONSECUTIVE_ERRORS = 10;
-
     while (this.running) {
-      // P0-5: Check risk before every MM tick
-      if (!this.risk.canTrade()) {
-        logger.warn('[Safety] RiskManager blocked trading — pausing MM loop');
-        await sleep(30000);
-        continue;
-      }
-
-      try {
-        await this.mm.tick(this.client);
-        consecutiveErrors = 0; // Reset on success
-      } catch (e: any) {
-        consecutiveErrors++;
-        logger.error(`[MM] Error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, e.message);
-
-        // P0-5: Halt on sustained errors instead of infinite spam
-        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-          logger.error('[MM] HALTED: Too many consecutive errors — stopping bot');
-          await this.stop();
-          return;
-        }
-      }
+      try { await this.mm.tick(this.client); }
+      catch (e: unknown) { console.error('[MM]', (e as Error).message); }
       await sleep(10000);
     }
   }
@@ -195,19 +183,19 @@ export class PolymarketBotEngine {
         await this.scanMarkets();
         await this.mm.refreshMarkets(this.markets, this.client);
         this.ws?.subscribe(this.markets.flatMap(m => [m.yesTokenId, m.noTokenId]));
-        logger.info(`[Scan] Rotated markets: ${this.markets.length} total`);
-      } catch (e: any) {
-        logger.error('[Scan]', e.message);
+        console.log(`[Scan] Rotated markets: ${this.markets.length} total`);
+      } catch (e: unknown) {
+        console.error('[Scan]', (e as Error).message);
       }
     }
   }
 
   private async scanMarkets(): Promise<void> {
     this.markets = await this.gamma.getActiveMarkets(200);
-    logger.info(`[Scan] ${this.markets.length} active markets`);
+    console.log(`[Scan] ${this.markets.length} active markets`);
   }
 
-  private updatePrice(d: any): void {
+  private updatePrice(d: { asset_id: string; best_bid?: string; price?: string }): void {
     const m = this.markets.find(m => m.yesTokenId === d.asset_id || m.noTokenId === d.asset_id);
     if (!m) return;
     if (d.asset_id === m.yesTokenId) m.yesPrice = parseFloat(d.best_bid || d.price || '0');
@@ -225,29 +213,24 @@ export class PolymarketBotEngine {
     }, msUntilMidnight);
   }
 
-  private startTime = Date.now();
-  private tradeCount = 0;
-
-  // For dashboard bridge — returns real data instead of hardcoded zeros
-  getStatus(): any {
-    const uptime = Date.now() - this.startTime;
+  // For dashboard bridge compatibility
+  getStatus(): { running: boolean; uptimeMs: number; uptimeHuman: string; mode: string; totalSignals: number; executedTrades: number; rejectedTrades: number; dailyPnL: number; dailyVolume: number; totalPnL: number; strategies: Array<{ name: string; enabled: boolean; signalCount: number }> } {
     return {
       running: this.running,
-      uptimeMs: uptime,
-      uptimeHuman: `${Math.floor(uptime / 60000)}m ${Math.floor((uptime % 60000) / 1000)}s`,
+      uptimeMs: 0,
+      uptimeHuman: '',
       mode: ENV.DRY_RUN ? 'DRY_RUN' : 'LIVE',
-      totalSignals: this.tradeCount,
-      executedTrades: this.tradeCount,
+      totalSignals: 0,
+      executedTrades: 0,
       rejectedTrades: 0,
-      dailyPnL: this.risk.getDailyPnl() ?? 0,
+      dailyPnL: 0,
       dailyVolume: 0,
       totalPnL: 0,
-      strategies: [{ name: 'MarketMaker', enabled: this.running, signalCount: this.tradeCount }],
-      markets: this.markets.length,
+      strategies: [{ name: 'MarketMaker', enabled: true, signalCount: 0 }],
     };
   }
 
-  on(_event: string, _cb: (...args: any[]) => void): void {
+  on(_event: string, _cb: (...args: unknown[]) => void): void {
     // Stub for dashboard bridge compatibility
   }
 
@@ -259,7 +242,7 @@ export class PolymarketBotEngine {
     try { await this.client.cancelAll(); } catch {}
     this.ws?.shutdown();
     clearState();
-    logger.info('=== STOPPED ===');
+    console.log('=== STOPPED ===');
   }
 }
 

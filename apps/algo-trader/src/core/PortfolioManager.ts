@@ -12,6 +12,7 @@
 
 import { getPrisma } from '../db/client';
 import type { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
 
 /**
@@ -80,20 +81,8 @@ export class PortfolioManager {
   private positions: Map<string, Position> = new Map();
   private prisma: PrismaClient;
 
-  /** Exposure limits — configurable via setLimits() */
-  private maxTotalExposure: number = 50000; // $50K default
-  private maxPerPositionExposure: number = 5000; // 10% of $50K
-  private maxOpenPositions: number = 20;
-
   private constructor() {
     this.prisma = getPrisma();
-  }
-
-  /** Configure exposure limits (call before trading) */
-  setLimits(opts: { maxTotalExposure?: number; maxPerPositionExposure?: number; maxOpenPositions?: number }): void {
-    if (opts.maxTotalExposure) this.maxTotalExposure = opts.maxTotalExposure;
-    if (opts.maxPerPositionExposure) this.maxPerPositionExposure = opts.maxPerPositionExposure;
-    if (opts.maxOpenPositions) this.maxOpenPositions = opts.maxOpenPositions;
   }
 
   static getInstance(): PortfolioManager {
@@ -107,21 +96,6 @@ export class PortfolioManager {
    * Track a new position (in-memory + Prisma)
    */
   async trackPosition(position: Omit<Position, 'id' | 'unrealizedPnl' | 'realizedPnl'>): Promise<Position> {
-    // Enforce position limits before tracking
-    const positionValue = position.size * position.avgPrice;
-    const currentExposure = this.getExposure(position.tenantId);
-    const openCount = this.getOpenPositions(position.tenantId).length;
-
-    if (positionValue > this.maxPerPositionExposure) {
-      throw new Error(`Position $${positionValue.toFixed(2)} exceeds per-position limit $${this.maxPerPositionExposure}`);
-    }
-    if (currentExposure + positionValue > this.maxTotalExposure) {
-      throw new Error(`Total exposure $${(currentExposure + positionValue).toFixed(2)} would exceed limit $${this.maxTotalExposure}`);
-    }
-    if (openCount >= this.maxOpenPositions) {
-      throw new Error(`Max open positions (${this.maxOpenPositions}) reached`);
-    }
-
     const positionId = `pm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const newPosition: Position = {
@@ -136,7 +110,7 @@ export class PortfolioManager {
 
     // Persist to Prisma
     try {
-      await (this.prisma as any).polymarketPosition.create({
+      await this.prisma.polymarketPosition.create({
         data: {
           id: positionId,
           tenantId: position.tenantId,
@@ -229,7 +203,7 @@ export class PortfolioManager {
 
     // Update Prisma
     try {
-      await (this.prisma as any).polymarketPosition.update({
+      await this.prisma.polymarketPosition.update({
         where: { id: positionId },
         data: {
           realizedPnl: finalPnl,
@@ -320,14 +294,14 @@ export class PortfolioManager {
   async syncFromDatabase(tenantId?: string): Promise<Position[]> {
     try {
       const where = tenantId ? { tenantId } : {};
-      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
+      const dbPositions = await this.prisma.polymarketPosition.findMany({
         where,
         orderBy: { openedAt: 'desc' },
       });
 
       const synced: Position[] = [];
 
-      for (const dbPos of dbPositions as any[]) {
+      for (const dbPos of dbPositions) {
         const isClosed = !!dbPos.closedAt;
         const position: Position = {
           id: dbPos.id,
@@ -366,7 +340,7 @@ export class PortfolioManager {
     const end = new Date(year + 1, 0, 0, 23, 59, 59);
 
     try {
-      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
+      const dbPositions = await this.prisma.polymarketPosition.findMany({
         where: {
           tenantId,
           closedAt: {
@@ -377,7 +351,18 @@ export class PortfolioManager {
         orderBy: { closedAt: 'asc' },
       });
 
-      return dbPositions.map((dbPos: any) => {
+      return dbPositions.map((dbPos: {
+        id: string;
+        tenantId: string;
+        tokenId: string;
+        marketId: string;
+        side: string;
+        size: Prisma.Decimal;
+        avgPrice: Prisma.Decimal;
+        realizedPnl: Prisma.Decimal;
+        openedAt: Date;
+        closedAt: Date | null;
+      }) => {
         const costBasis = Number(dbPos.size) * Number(dbPos.avgPrice);
         const proceeds = costBasis + Number(dbPos.realizedPnl);
         const openedAt = dbPos.openedAt;
@@ -409,13 +394,24 @@ export class PortfolioManager {
    */
   async getPnLHistory(tenantId: string, limit: number = 100): Promise<Position[]> {
     try {
-      const dbPositions = await (this.prisma as any).polymarketPosition.findMany({
+      const dbPositions = await this.prisma.polymarketPosition.findMany({
         where: { tenantId, closedAt: { not: null } },
         orderBy: { closedAt: 'desc' },
         take: limit,
       });
 
-      return dbPositions.map((dbPos: any) => ({
+      return dbPositions.map((dbPos: {
+        id: string;
+        tenantId: string;
+        tokenId: string;
+        marketId: string;
+        side: string;
+        size: Prisma.Decimal;
+        avgPrice: Prisma.Decimal;
+        realizedPnl: Prisma.Decimal;
+        openedAt: Date;
+        closedAt: Date | null;
+      }) => ({
         id: dbPos.id,
         tenantId: dbPos.tenantId,
         tokenId: dbPos.tokenId,

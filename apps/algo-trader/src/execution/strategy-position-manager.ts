@@ -203,14 +203,11 @@ export class StrategyPositionManager extends EventEmitter {
   }
 
   private resetDailyIfNeeded(): void {
-    // Use calendar day boundary (midnight UTC) instead of elapsed time
-    const now = new Date();
-    const lastReset = new Date(this.dailyLossResetAt);
-    if (now.getUTCDate() !== lastReset.getUTCDate() ||
-        now.getUTCMonth() !== lastReset.getUTCMonth() ||
-        now.getUTCFullYear() !== lastReset.getUTCFullYear()) {
+    const now = Date.now();
+    const dayMs = 86_400_000;
+    if (now - this.dailyLossResetAt >= dayMs) {
       this.dailyLoss = 0;
-      this.dailyLossResetAt = Date.now();
+      this.dailyLossResetAt = now;
     }
   }
 }

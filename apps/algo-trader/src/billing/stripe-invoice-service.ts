@@ -55,19 +55,34 @@ export interface InvoiceOptions {
  */
 export class StripeInvoiceService {
   private static instance: StripeInvoiceService;
-  private stripe: Stripe;
+  private stripe?: Stripe;
 
   private constructor() {
+    // Lazy initialization - Stripe client created on first use
+  }
+
+  /**
+   * Get or create Stripe client instance
+   * Returns null if STRIPE_SECRET_KEY not configured (test environments)
+   */
+  private getStripeClient(): Stripe | null {
+    if (this.stripe) {
+      return this.stripe;
+    }
+
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
 
     if (!stripeSecretKey) {
-      logger.warn('[StripeInvoice] STRIPE_SECRET_KEY not configured');
+      logger.warn('[StripeInvoice] STRIPE_SECRET_KEY not configured - Stripe operations disabled');
+      return null;
     }
 
     this.stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2025-02-24.acacia',
       maxNetworkRetries: 3,
     });
+
+    return this.stripe;
   }
 
   static getInstance(): StripeInvoiceService {
@@ -97,9 +112,19 @@ export class StripeInvoiceService {
       totalOverage: summary.totalOverage,
     });
 
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      return {
+        success: false,
+        totalAmount: 0,
+        currency: 'usd',
+        error: 'Stripe not configured - STRIPE_SECRET_KEY missing',
+      };
+    }
+
     try {
       // Validate customer exists
-      const customer = await this.stripe.customers.retrieve(customerId);
+      const customer = await stripe.customers.retrieve(customerId);
       if (customer.deleted) {
         throw new Error(`Customer not found: ${customerId}`);
       }
@@ -119,7 +144,7 @@ export class StripeInvoiceService {
         auto_advance: false, // Don't auto-finalize
       };
 
-      const invoice = await this.stripe.invoices.create(invoiceData);
+      const invoice = await stripe.invoices.create(invoiceData);
 
       logger.info('[StripeInvoice] Draft invoice created', {
         invoiceId: invoice.id,
@@ -183,6 +208,11 @@ export class StripeInvoiceService {
     tenantId: string,
     period: string
   ): Promise<void> {
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      throw new Error('Stripe not configured - STRIPE_SECRET_KEY missing');
+    }
+
     const metricLabels: Record<string, string> = {
       api_calls: 'API Calls',
       compute_minutes: 'Compute Minutes',
@@ -192,7 +222,7 @@ export class StripeInvoiceService {
     const metricLabel = metricLabels[charge.metric] || charge.metric;
 
     // Create invoice item
-    await this.stripe.invoiceItems.create({
+    await stripe.invoiceItems.create({
       customer: await this.getCustomerIdForTenant(tenantId),
       invoice: invoiceId,
       amount: Math.round(charge.totalCharge * 100), // Convert to cents
@@ -225,8 +255,13 @@ export class StripeInvoiceService {
   async finalizeInvoice(invoiceId: string): Promise<Stripe.Invoice> {
     logger.info('[StripeInvoice] Finalizing invoice', { invoiceId });
 
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      throw new Error('Stripe not configured - STRIPE_SECRET_KEY missing');
+    }
+
     try {
-      const invoice = await this.stripe.invoices.finalizeInvoice(invoiceId, {
+      const invoice = await stripe.invoices.finalizeInvoice(invoiceId, {
         auto_advance: true,
       });
 
@@ -254,8 +289,13 @@ export class StripeInvoiceService {
   async voidInvoice(invoiceId: string): Promise<void> {
     logger.info('[StripeInvoice] Voiding invoice', { invoiceId });
 
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      throw new Error('Stripe not configured - STRIPE_SECRET_KEY missing');
+    }
+
     try {
-      await this.stripe.invoices.voidInvoice(invoiceId);
+      await stripe.invoices.voidInvoice(invoiceId);
       logger.info('[StripeInvoice] Invoice voided', { invoiceId });
     } catch (error) {
       logger.error('[StripeInvoice] Failed to void invoice', {
@@ -270,8 +310,13 @@ export class StripeInvoiceService {
    * Get invoice by ID
    */
   async getInvoice(invoiceId: string): Promise<Stripe.Invoice | null> {
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      throw new Error('Stripe not configured - STRIPE_SECRET_KEY missing');
+    }
+
     try {
-      const invoice = await this.stripe.invoices.retrieve(invoiceId);
+      const invoice = await stripe.invoices.retrieve(invoiceId);
       return invoice;
     } catch (error) {
       if (error instanceof Stripe.errors.StripeInvalidRequestError) {
@@ -288,6 +333,11 @@ export class StripeInvoiceService {
     customerId: string,
     options?: { limit?: number; status?: Stripe.InvoiceListParams.Status }
   ): Promise<Stripe.Invoice[]> {
+    const stripe = this.getStripeClient();
+    if (!stripe) {
+      throw new Error('Stripe not configured - STRIPE_SECRET_KEY missing');
+    }
+
     const params: Stripe.InvoiceListParams = {
       customer: customerId,
       limit: options?.limit || 10,
@@ -297,7 +347,7 @@ export class StripeInvoiceService {
       params.status = options.status;
     }
 
-    const invoices = await this.stripe.invoices.list(params);
+    const invoices = await stripe.invoices.list(params);
     return invoices.data;
   }
 

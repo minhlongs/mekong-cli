@@ -157,11 +157,16 @@ export function calculateExpansionRate(data: MRRData): number {
 }
 
 /**
+ * Infinity constant for quick ratio when no churn
+ */
+const INFINITE_QUICK_RATIO = Infinity;
+
+/**
  * Calculate quick ratio (growth efficiency)
  */
 export function calculateQuickRatio(data: MRRData): number {
   const churn = data.churnedMRR + data.contractionMRR;
-  if (churn === 0) return 999; // Infinite if no churn
+  if (churn === 0) return INFINITE_QUICK_RATIO;
   return (data.newMRR + data.expansionMRR) / churn;
 }
 
@@ -215,14 +220,13 @@ export function projectCohortRevenue(
 ): number[] {
   const revenues: number[] = [];
   let customers = cohort.initialCustomers;
-  let cumulativeRevenue = 0;
 
   for (let i = 0; i < monthsToProject; i++) {
     const retentionRate = cohort.retentionRates[i] || cohort.retentionRates[cohort.retentionRates.length - 1] || 0;
-    customers = customers * retentionRate;
+    const clampedRetentionRate = Math.max(0, Math.min(1, retentionRate));
+    customers = customers * clampedRetentionRate;
     const monthlyRevenue = customers * cohort.avgMRRPerCustomer * (1 + cohort.expansionRate);
     revenues.push(monthlyRevenue);
-    cumulativeRevenue += monthlyRevenue;
   }
 
   return revenues;
@@ -291,7 +295,7 @@ export function projectMRR(
     const monthIndex = forecastDate.getMonth();
 
     // Base projection with growth
-    let rawProjection = projectedMRR * (1 + monthlyGrowthRate);
+    const rawProjection = projectedMRR * (1 + monthlyGrowthRate);
 
     // Apply seasonal adjustment
     let finalProjection = rawProjection;
@@ -306,10 +310,11 @@ export function projectMRR(
     }
 
     // Calculate confidence interval
+    const sampleSize = Math.max(months, 12);
     const interval = calculateConfidenceInterval(
       finalProjection,
       finalProjection * volatility,
-      12, // Sample size
+      sampleSize,
       0.90
     );
 
@@ -346,6 +351,19 @@ export function calculateCAGR(
 }
 
 /**
+ * Validate MRR data for negative values
+ */
+function validateMRRData(data: MRRData): void {
+  const fields: Array<keyof MRRData> = ['startingMRR', 'newMRR', 'expansionMRR', 'contractionMRR', 'churnedMRR', 'reactivatedMRR'];
+  for (const field of fields) {
+    const value = data[field];
+    if (typeof value === 'number' && value < 0) {
+      throw new Error(`${String(field)} cannot be negative`);
+    }
+  }
+}
+
+/**
  * Main revenue forecast function
  */
 export function forecastRevenue(
@@ -353,6 +371,19 @@ export function forecastRevenue(
   cohorts: CohortMetrics[],
   config: ForecastConfig
 ): RevenueForecastResult {
+  // Validate input data
+  if (!Array.isArray(historicalData) || historicalData.length === 0) {
+    throw new Error('historicalData must contain at least one month');
+  }
+  if (!Array.isArray(cohorts)) {
+    throw new Error('cohorts must be an array');
+  }
+
+  // Validate all MRR data for negative values
+  for (const data of historicalData) {
+    validateMRRData(data);
+  }
+
   // Calculate current MRR and growth rate from historical data
   const currentMonth = historicalData[historicalData.length - 1];
   const currentMRR = calculateEndingMRR(currentMonth);

@@ -1,0 +1,48 @@
+{
+  "id": "dev-deploy",
+  "name": "Dev Deploy Pipeline",
+  "description": "Build via worker:build, push via worker:push, then verify health with worker:health.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:deploy",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/deploy",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "build",
+        "name": "Build",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-build", "args": "--output reports/dev/deploy/build-log.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "push",
+        "name": "Push",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-push", "args": "--output reports/dev/deploy/push-log.md" }
+        ],
+        "depends_on": ["build"]
+      },
+      {
+        "id": "verify",
+        "name": "Health Check",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-health", "args": "--output reports/dev/deploy/health-check.md" }
+        ],
+        "depends_on": ["push"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/deploy/SUMMARY.md",
+      "template": "Compile build log, push log, and health check into a deploy report with: build status, deployment URL, health check result, and rollback instructions."
+    }
+  }
+}

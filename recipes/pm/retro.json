@@ -1,0 +1,31 @@
+{
+  "id": "pm-retro",
+  "name": "PM Sprint Retrospective",
+  "description": "Read sprint history and team activity, then produce a structured retrospective report.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:retro",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/retro",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "read-history",
+        "name": "Read Sprint History",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-log", "args": "--output reports/pm/retro/sprint-history.md" },
+          { "id": "pm-milestone", "args": "--output reports/pm/retro/milestone-outcomes.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/retro/SUMMARY.md",
+      "template": "Compile sprint history and milestone outcomes into a retrospective report with: what went well, what to improve, action items, velocity trends, and commitments for next sprint."
+    }
+  }
+}

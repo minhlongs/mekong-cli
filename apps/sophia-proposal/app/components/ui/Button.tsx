@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -10,15 +9,14 @@ interface ButtonProps {
   glow?: boolean;
   children?: React.ReactNode;
   className?: string;
+  onClick?: () => void;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  disabled?: boolean;
+  title?: string;
 }
 
-// Pick only the props we need from motion.button to avoid type conflicts
-type MotionButtonProps = Pick<
-  React.ButtonHTMLAttributes<HTMLButtonElement>,
-  'onClick' | 'onMouseEnter' | 'onMouseLeave' | 'disabled' | 'title'
->;
-
-export const Button: React.FC<ButtonProps & MotionButtonProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
   glow = false,
@@ -49,7 +47,8 @@ export const Button: React.FC<ButtonProps & MotionButtonProps> = ({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       {...props}
-      children={children as any}
-    />
+    >
+      {children}
+    </motion.button>
   );
 };

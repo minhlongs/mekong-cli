@@ -10,6 +10,8 @@ import { PositionsTableSortable } from '../components/positions-table-sortable';
 import { SpreadOpportunitiesCardGrid } from '../components/spread-opportunities-card-grid';
 import { EquityCurveChart } from '../components/equity-curve-pnl-chart';
 import { CacheStatus } from '../components/cache-status';
+import { StrategyStatusPanel } from '../components/strategy-status-panel';
+import { TradeHistoryFeed } from '../components/trade-history-feed';
 
 function formatUsd(n: number): string {
   const abs = Math.abs(n);
@@ -35,6 +37,10 @@ export function DashboardPage() {
   const spreads = useTradingStore((s) => s.spreads);
   const lastUpdate = useNow();
 
+  const strategies = useTradingStore((s) => s.strategies);
+  const trades = useTradingStore((s) => s.trades);
+  const botStatus = useTradingStore((s) => s.botStatus);
+
   const totalPnl = positions.reduce((sum, p) => sum + p.pnl, 0);
   const openCount = positions.filter((p) => p.status === 'open').length;
   const bestSpread = spreads.length > 0
@@ -47,7 +53,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-white text-lg font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted text-xs mt-0.5">Real-time arbitrage monitor</p>
+          <p className="text-muted text-xs mt-0.5">Polymarket Market Maker</p>
         </div>
         <div className="flex items-center gap-3">
           <CacheStatus />
@@ -85,6 +91,15 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Strategy status */}
+      <section>
+        <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2">
+          <span className="w-1 h-4 bg-accent rounded-full inline-block" />
+          Strategies
+        </h3>
+        <StrategyStatusPanel strategies={strategies} botStatus={botStatus} />
+      </section>
+
       {/* Equity curve */}
       <section>
         <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2">
@@ -119,6 +134,22 @@ export function DashboardPage() {
           )}
         </h3>
         <SpreadOpportunitiesCardGrid spreads={spreads} />
+      </section>
+
+      {/* Trade history feed */}
+      <section>
+        <h3 className="text-white text-sm font-semibold mb-2 flex items-center gap-2">
+          <span className="w-1 h-4 bg-warning rounded-full inline-block" />
+          Trade History
+          {trades.length > 0 && (
+            <span className="text-[10px] text-muted bg-bg-border px-1.5 py-0.5 rounded">
+              {trades.length}
+            </span>
+          )}
+        </h3>
+        <div className="bg-bg-card border border-bg-border rounded-lg overflow-hidden">
+          <TradeHistoryFeed trades={trades} />
+        </div>
       </section>
 
       {/* Positions table */}

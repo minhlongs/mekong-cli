@@ -87,7 +87,7 @@ export function useRevenueAnalytics() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isPolling, setIsPolling] = useState(true);
 
-  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadAnalytics = useCallback(async () => {
     try {

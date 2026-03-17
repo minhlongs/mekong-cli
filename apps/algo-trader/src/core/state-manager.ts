@@ -3,6 +3,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 export interface BotPersistentState {
   openOrders: string[];               // order IDs
@@ -26,8 +27,8 @@ export function saveState(state: BotPersistentState): void {
   try {
     ensureDataDir();
     const json = JSON.stringify({ ...state, lastSaveTime: Date.now() }, null, 2);
-    // Atomic write: tmp in SAME directory to avoid cross-filesystem EXDEV error
-    const tmp = STATE_PATH + `.tmp.${Date.now()}`;
+    // Atomic write: write to temp file then rename
+    const tmp = path.join(os.tmpdir(), `bot-state-${Date.now()}.tmp`);
     fs.writeFileSync(tmp, json, 'utf8');
     fs.renameSync(tmp, STATE_PATH);
   } catch (err) {
