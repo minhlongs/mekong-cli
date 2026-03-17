@@ -1,0 +1,39 @@
+{
+  "id": "cto-team",
+  "name": "CTO Team Assessment",
+  "description": "Assess team velocity and capacity, then hand off to pm:sprint for sprint planning.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:team",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/team",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "assess",
+        "name": "Assess Team",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-retro", "args": "--output reports/cto/team/retro-summary.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "plan-sprint",
+        "name": "Plan Next Sprint",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-sprint", "args": "--output reports/cto/team/sprint-plan.md" }
+        ],
+        "depends_on": ["assess"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/team/SUMMARY.md",
+      "template": "Compile retro summary and sprint plan into a team assessment report with: velocity metrics, capacity analysis, blockers, morale indicators, and next sprint commitments."
+    }
+  }
+}

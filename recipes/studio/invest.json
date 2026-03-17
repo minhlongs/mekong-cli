@@ -1,0 +1,39 @@
+{
+  "id": "studio-invest",
+  "name": "Studio Invest in Project",
+  "description": "Onboard a new project into the portfolio via cto:onboard then establish a delivery plan via pm:plan.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:invest",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/invest",
+  "estimated_credits": 8,
+  "estimated_minutes": 30,
+  "dag": {
+    "groups": [
+      {
+        "id": "onboard",
+        "name": "Onboard Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-onboard", "args": "--output reports/studio/invest/onboard-report.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "plan",
+        "name": "Create Delivery Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-plan", "args": "--output reports/studio/invest/delivery-plan.md" }
+        ],
+        "depends_on": ["onboard"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/invest/SUMMARY.md",
+      "template": "Compile onboarding report and delivery plan into an investment summary with: project overview, technical setup, milestones, resource requirements, and success criteria."
+    }
+  }
+}

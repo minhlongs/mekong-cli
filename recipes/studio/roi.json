@@ -1,0 +1,39 @@
+{
+  "id": "studio-roi",
+  "name": "Studio ROI Matrix",
+  "description": "Read CTO reports and compute an ROI matrix across all portfolio projects.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:roi",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/roi",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "read-reports",
+        "name": "Read CTO Reports",
+        "mode": "parallel",
+        "commands": [
+          { "id": "cto-scorecard", "args": "--output reports/studio/roi/cto-scorecards.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "compute-roi",
+        "name": "Compute ROI Matrix",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-budget", "args": "--output reports/studio/roi/cost-analysis.md" }
+        ],
+        "depends_on": ["read-reports"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/roi/SUMMARY.md",
+      "template": "Compile CTO scorecards and cost analysis into an ROI matrix with: per-project ROI, cost-to-value ratio, growth trajectory, and portfolio optimization recommendations."
+    }
+  }
+}

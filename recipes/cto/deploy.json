@@ -1,0 +1,39 @@
+{
+  "id": "cto-deploy",
+  "name": "CTO Managed Deploy",
+  "description": "Deploy via dev:deploy, verify with worker:health, and confirm production is green.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:deploy",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/deploy",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "deploy",
+        "name": "Deploy",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-deploy", "args": "--output reports/cto/deploy/deploy-log.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "verify",
+        "name": "Verify Production",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-health", "args": "--output reports/cto/deploy/health-check.md" }
+        ],
+        "depends_on": ["deploy"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/deploy/SUMMARY.md",
+      "template": "Compile deploy log and health check into a deployment report with: deployment status, version deployed, health check results, production URL, and rollback instructions if needed."
+    }
+  }
+}

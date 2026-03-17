@@ -1,0 +1,39 @@
+{
+  "id": "studio-audit",
+  "name": "Studio Portfolio Audit",
+  "description": "Fan-out cto:review across all portfolio projects, then aggregate into a unified studio-level health report.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:audit",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/audit",
+  "estimated_credits": 10,
+  "estimated_minutes": 60,
+  "dag": {
+    "groups": [
+      {
+        "id": "review-projects",
+        "name": "Review All Projects",
+        "mode": "parallel",
+        "commands": [
+          { "id": "cto-review", "args": "--output reports/studio/audit/project-reviews.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "aggregate",
+        "name": "Aggregate Results",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-scorecard", "args": "--output reports/studio/audit/scorecard.md" }
+        ],
+        "depends_on": ["review-projects"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/audit/SUMMARY.md",
+      "template": "Compile all project reviews and scorecards into a unified portfolio health report with: overall health score, per-project breakdown, critical issues, and recommended priority actions."
+    }
+  }
+}

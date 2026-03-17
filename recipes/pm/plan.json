@@ -1,0 +1,40 @@
+{
+  "id": "pm-plan",
+  "name": "PM Implementation Plan",
+  "description": "Scout the codebase, conduct parallel research, decompose into tasks, and write a detailed implementation plan.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:plan",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/plan",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "research",
+        "name": "Scout and Research",
+        "mode": "parallel",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/pm/plan/codebase-state.md" },
+          { "id": "pm-scope", "args": "--output reports/pm/plan/scope.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "decompose",
+        "name": "Decompose into Tasks",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-backlog", "args": "--output reports/pm/plan/backlog.md" }
+        ],
+        "depends_on": ["research"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/plan/SUMMARY.md",
+      "template": "Compile codebase state, scope, and backlog into a full implementation plan with: objective, phases, task breakdown, dependencies, estimates, and acceptance criteria."
+    }
+  }
+}

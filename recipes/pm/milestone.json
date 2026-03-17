@@ -1,0 +1,31 @@
+{
+  "id": "pm-milestone",
+  "name": "PM Milestone Tracker",
+  "description": "Track milestone progress against plan and generate a status report.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:milestone",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/milestone",
+  "estimated_credits": 2,
+  "estimated_minutes": 5,
+  "dag": {
+    "groups": [
+      {
+        "id": "track",
+        "name": "Track Progress",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-log", "args": "--output reports/pm/milestone/activity-log.md" },
+          { "id": "pm-backlog", "args": "--output reports/pm/milestone/remaining-work.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/milestone/SUMMARY.md",
+      "template": "Compile activity log and remaining work into a milestone status report with: completion percentage, on-track assessment, completed items, remaining items, and projected completion date."
+    }
+  }
+}

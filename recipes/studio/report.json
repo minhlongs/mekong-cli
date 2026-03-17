@@ -1,0 +1,40 @@
+{
+  "id": "studio-report",
+  "name": "Studio Investor Report",
+  "description": "Aggregate project scorecards and ROI data into a polished investor-ready portfolio report.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:report",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/report",
+  "estimated_credits": 5,
+  "estimated_minutes": 20,
+  "dag": {
+    "groups": [
+      {
+        "id": "gather",
+        "name": "Gather Data",
+        "mode": "parallel",
+        "commands": [
+          { "id": "cto-scorecard", "args": "--output reports/studio/report/scorecards.md" },
+          { "id": "studio-roi", "args": "--output reports/studio/report/roi-matrix.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "compile-report",
+        "name": "Compile Investor Report",
+        "mode": "sequential",
+        "commands": [
+          { "id": "studio-portfolio", "args": "--output reports/studio/report/portfolio-snapshot.md" }
+        ],
+        "depends_on": ["gather"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/report/SUMMARY.md",
+      "template": "Compile scorecards, ROI matrix, and portfolio snapshot into a formal investor report with: executive summary, portfolio performance, project highlights, financial metrics, and forward-looking outlook."
+    }
+  }
+}

@@ -18,6 +18,8 @@ import { createGitTool } from '../tools/builtin/git-ops.js';
 import { createHttpTool } from '../tools/builtin/http-client.js';
 import { createAskUserTool } from '../tools/builtin/ask-user.js';
 import { emit } from './events.js';
+import { Gateway, ROIAAS_LEVELS } from './gateway.js';
+import type { RoiaasLevel } from './gateway.js';
 import { MekongError } from '../types/common.js';
 import type { WorkerDeps } from '../agents/worker.js';
 import type { SopRun } from '../types/sop.js';
@@ -38,6 +40,7 @@ export class MekongEngine {
   session!: SessionMemory;
   budget!: BudgetTracker;
   license!: LicenseGate;
+  gateway!: Gateway;
   private initialized = false;
   private currentTier: LicenseTier = 'free';
 
@@ -83,6 +86,9 @@ export class MekongEngine {
     });
 
     this.sopExecutor = new SopExecutor({ tools: this.tools, askUser: options.askUser });
+
+    // Gateway — ROIaaS command routing with delegation chain
+    this.gateway = new Gateway(this);
 
     // License gate — non-blocking background check
     this.license = new LicenseGate();

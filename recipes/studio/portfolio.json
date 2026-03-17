@@ -1,0 +1,39 @@
+{
+  "id": "studio-portfolio",
+  "name": "Studio Portfolio Overview",
+  "description": "Read MCU reports across all projects and compile a concise portfolio status snapshot.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:portfolio",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/portfolio",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "collect",
+        "name": "Collect MCU Reports",
+        "mode": "parallel",
+        "commands": [
+          { "id": "cto-scorecard", "args": "--output reports/studio/portfolio/scorecards.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "compile",
+        "name": "Compile Portfolio",
+        "mode": "sequential",
+        "commands": [
+          { "id": "studio-roi", "args": "--output reports/studio/portfolio/roi-summary.md" }
+        ],
+        "depends_on": ["collect"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/portfolio/SUMMARY.md",
+      "template": "Compile MCU reports and ROI data into a portfolio overview with: project list, status per project, key metrics, and portfolio-level health score."
+    }
+  }
+}

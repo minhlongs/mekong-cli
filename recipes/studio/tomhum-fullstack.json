@@ -1,0 +1,87 @@
+{
+  "id": "tomhum-fullstack",
+  "name": "Tôm Hùm Full-Stack Builder",
+  "description": "DAG recipe for multi-department parallel execution. Solo founder runs all 5 ROIaaS levels via sub-agents.",
+  "version": "1.0.0",
+  "credits": 30,
+  "estimated_minutes": 90,
+  "groups": [
+    {
+      "id": "g1-strategy",
+      "name": "Studio Strategy",
+      "mode": "sequential",
+      "level": "studio",
+      "commands": ["studio:strategy", "studio:roi"],
+      "outputs": ["reports/studio/strategy.md"]
+    },
+    {
+      "id": "g2-architecture",
+      "name": "CTO Architecture",
+      "mode": "sequential",
+      "level": "cto",
+      "depends_on": ["g1-strategy"],
+      "commands": ["cto:architect", "cto:roadmap"],
+      "outputs": ["reports/cto/architecture.md"]
+    },
+    {
+      "id": "g3-planning",
+      "name": "PM Sprint Planning",
+      "mode": "sequential",
+      "level": "pm",
+      "depends_on": ["g2-architecture"],
+      "commands": ["pm:sprint", "pm:scope", "pm:delegate"],
+      "outputs": ["reports/pm/sprint-backlog.md"]
+    },
+    {
+      "id": "g4-backend",
+      "name": "Dev Backend API",
+      "mode": "parallel",
+      "level": "dev",
+      "depends_on": ["g3-planning"],
+      "commands": ["dev:scaffold", "dev:code"],
+      "worker_commands": ["worker:code", "worker:test"],
+      "outputs": ["packages/openclaw-engine/src/raas/"]
+    },
+    {
+      "id": "g4-frontend",
+      "name": "Dev Frontend/CLI",
+      "mode": "parallel",
+      "level": "dev",
+      "depends_on": ["g3-planning"],
+      "commands": ["dev:scaffold", "dev:design"],
+      "worker_commands": ["worker:code", "worker:test"],
+      "outputs": ["packages/mekong-cli-core/src/cli/"]
+    },
+    {
+      "id": "g4-testing",
+      "name": "Dev Testing/QA",
+      "mode": "parallel",
+      "level": "dev",
+      "depends_on": ["g3-planning"],
+      "commands": ["dev:test", "dev:audit"],
+      "worker_commands": ["worker:scan", "worker:test"],
+      "outputs": ["packages/mekong-cli-core/src/core/*.test.ts"]
+    },
+    {
+      "id": "g5-integration",
+      "name": "Integration & Deploy",
+      "mode": "sequential",
+      "level": "cto",
+      "depends_on": ["g4-backend", "g4-frontend", "g4-testing"],
+      "commands": ["dev:review", "cto:deploy"],
+      "worker_commands": ["worker:commit", "worker:push"]
+    },
+    {
+      "id": "g6-scorecard",
+      "name": "ROI Scorecard",
+      "mode": "sequential",
+      "level": "studio",
+      "depends_on": ["g5-integration"],
+      "commands": ["studio:roi", "studio:report"],
+      "outputs": ["reports/studio/roi-scorecard.md"]
+    }
+  ],
+  "cascade_chain": ["studio", "cto", "pm", "dev", "worker"],
+  "parallel_max": 4,
+  "m1_safe": true
+}

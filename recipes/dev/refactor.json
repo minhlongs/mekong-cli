@@ -1,0 +1,48 @@
+{
+  "id": "dev-refactor",
+  "name": "Dev Refactor",
+  "description": "Establish a test baseline, apply code refactoring, then verify all tests still pass.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:refactor",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/refactor",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "baseline",
+        "name": "Test Baseline",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-test", "args": "--output reports/dev/refactor/baseline-tests.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "refactor",
+        "name": "Apply Refactoring",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-code", "args": "--output reports/dev/refactor/refactor-log.md" }
+        ],
+        "depends_on": ["baseline"]
+      },
+      {
+        "id": "verify",
+        "name": "Verify Tests Pass",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-test", "args": "--output reports/dev/refactor/post-refactor-tests.md" }
+        ],
+        "depends_on": ["refactor"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/refactor/SUMMARY.md",
+      "template": "Compile baseline tests, refactor log, and post-refactor tests into a refactor report with: changes made, test delta, quality improvements, and any regressions introduced."
+    }
+  }
+}

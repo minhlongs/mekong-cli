@@ -1,0 +1,39 @@
+{
+  "id": "studio-allocate",
+  "name": "Studio Resource Allocation",
+  "description": "Analyze ROI across projects and propose optimal resource reallocation recommendations.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:allocate",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/allocate",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "analyze",
+        "name": "Analyze ROI",
+        "mode": "sequential",
+        "commands": [
+          { "id": "studio-roi", "args": "--output reports/studio/allocate/roi-analysis.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "propose",
+        "name": "Propose Reallocation",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-budget", "args": "--output reports/studio/allocate/reallocation-proposal.md" }
+        ],
+        "depends_on": ["analyze"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/allocate/SUMMARY.md",
+      "template": "Compile ROI analysis and budget proposals into a resource reallocation plan with: current allocation, recommended changes, expected ROI impact, and risk assessment."
+    }
+  }
+}

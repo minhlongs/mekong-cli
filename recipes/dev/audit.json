@@ -1,0 +1,32 @@
+{
+  "id": "dev-audit",
+  "name": "Dev Code Audit",
+  "description": "Run parallel lint, type check, and security scans via worker:scan, then aggregate findings.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:audit",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/audit",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "scan",
+        "name": "Parallel Scans",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-scan", "args": "--lint --output reports/dev/audit/lint.md" },
+          { "id": "worker-scan", "args": "--types --output reports/dev/audit/types.md" },
+          { "id": "worker-scan", "args": "--security --output reports/dev/audit/security.md" }
+        ],
+        "depends_on": []
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/audit/SUMMARY.md",
+      "template": "Compile lint, type check, and security scan results into a code audit report with: error counts per category, severity breakdown, top issues, and recommended fixes."
+    }
+  }
+}
