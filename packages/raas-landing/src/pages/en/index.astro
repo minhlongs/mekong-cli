@@ -34,8 +34,11 @@ const faqs = [
 
   <!-- HERO -->
   <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(0,188,212,0.15),transparent 60%);pointer-events:none;"></div>
-    <div style="position:absolute;inset:0;background:radial-gradient(circle at 75% 60%,rgba(124,77,255,0.1),transparent 50%);pointer-events:none;"></div>
+    <!-- Animated mesh orbs -->
+    <div style="position:absolute;top:15%;left:5%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.12),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 16s ease-in-out infinite alternate;"></div>
+    <div style="position:absolute;bottom:10%;right:8%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.1),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 20s ease-in-out infinite alternate-reverse;"></div>
+    <div style="position:absolute;top:60%;left:40%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);filter:blur(30px);pointer-events:none;animation:meshDrift 24s ease-in-out infinite alternate;"></div>
+
     <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
       <div style="max-width:760px;">
         <div class="badge animate-in" style="margin-bottom:28px;">✨ New — AI Receptionist for Zalo &amp; Facebook</div>
@@ -46,7 +49,7 @@ const faqs = [
           24/7 customer replies · Auto content creation · Smart CRM
         </p>
         <!-- Stats row -->
-        <div style="display:flex;gap:32px;margin-bottom:40px;flex-wrap:wrap;" class="animate-in">
+        <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in">
           {[['500+', 'businesses'],['1M+', 'messages'],['99.9%', 'uptime']].map(([v,l]) => (
             <div>
               <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.5rem;font-weight:800;" class="gradient-text">{v}</div>
@@ -54,8 +57,13 @@ const faqs = [
             </div>
           ))}
         </div>
+        <!-- Social proof badges -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in">
+          <span class="proof-badge"><span class="dot"></span>Trusted by 500+ businesses</span>
+          <span class="proof-badge">🏆 #1 in Vietnam 2025</span>
+        </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in">
-          <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;">Try free for 14 days →</a>
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;">Try free for 14 days →</a>
           <a href="#features" class="btn-outline">See features</a>
         </div>
       </div>
@@ -88,7 +96,7 @@ const faqs = [
       <div class="grid-4">
         {features.map((f, i) => (
           <div class="card-glass animate-on-scroll" style={`animation-delay:${i*0.1}s`}>
-            <div style="font-size:2.25rem;margin-bottom:16px;">{f.icon}</div>
+            <div class="icon-container">{f.icon}</div>
             <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:10px;">{f.title}</h3>
             <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.65;">{f.desc}</p>
           </div>
@@ -103,6 +111,12 @@ const faqs = [
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Get Started</div>
         <h2 class="headline">Up and running in <span class="gradient-text">3 steps</span></h2>
+      </div>
+      <!-- Connector dots (desktop only) -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:-20px;padding:0 calc(100%/6 - 20px);position:relative;z-index:1;" class="animate-on-scroll">
+        <span class="step-dot"></span><span class="step-line"></span>
+        <span class="step-dot"></span><span class="step-line"></span>
+        <span class="step-dot"></span>
       </div>
       <div class="grid-3">
         {steps.map((s, i) => (
@@ -120,10 +134,17 @@ const faqs = [
   <!-- PRICING -->
   <section id="pricing" style="background:var(--md-surface);">
     <div class="container">
-      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+      <div class="text-center animate-on-scroll" style="margin-bottom:0;">
         <div class="badge" style="margin-bottom:16px;">Pricing</div>
         <h2 class="headline">Simple, <span class="gradient-text">transparent pricing</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 0;">14-day free trial. Cancel anytime. No hidden fees.</p>
+        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14-day free trial. Cancel anytime. No hidden fees.</p>
+        <!-- Toggle (visual only) -->
+        <div style="display:flex;justify-content:center;margin-bottom:48px;">
+          <div class="pricing-toggle">
+            <span class="toggle-opt active">Monthly</span>
+            <span class="toggle-opt">Annual <span style="font-size:0.7rem;color:#4ade80;margin-left:4px;">-20%</span></span>
+          </div>
+        </div>
       </div>
       <div class="grid-4" style="align-items:start;">
         {plans.map((p, i) => (
@@ -164,7 +185,7 @@ const faqs = [
           <details class="card animate-on-scroll" style={`animation-delay:${i*0.08}s;padding:0;`} open={i===0}>
             <summary style="padding:20px 24px;cursor:pointer;font-weight:600;font-size:0.975rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;">
               {f.q}
-              <span style="color:var(--md-primary);font-size:1.2rem;flex-shrink:0;">+</span>
+              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--md-primary);flex-shrink:0;transition:transform 0.25s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </summary>
             <div style="padding:0 24px 20px;color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;border-top:1px solid var(--md-outline);">{f.a}</div>
           </details>
@@ -176,14 +197,20 @@ const faqs = [
   <!-- CTA BANNER -->
   <section style="background:var(--md-surface);">
     <div class="container">
-      <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;">
-        <h2 class="headline" style="margin-bottom:16px;">Ready to let AI <span class="gradient-text">work for you?</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;">
+      <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.1),transparent 70%);pointer-events:none;"></div>
+        <h2 class="headline" style="margin-bottom:16px;position:relative;">Ready to let AI <span class="gradient-text">work for you?</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;position:relative;">
           Join 500+ businesses saving 20+ hours per week with OpenClaw.
         </p>
-        <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;padding:16px 44px;">Start for free →</a>
+        <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Start for free →</a>
       </div>
     </div>
   </section>
+
+  <style>
+    details[open] summary svg { transform: rotate(180deg); }
+  </style>
 
 </BaseLayout>
