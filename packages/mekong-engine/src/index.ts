@@ -5,6 +5,11 @@ import { agentRoutes } from './routes/agents'
 import { billingRoutes } from './routes/billing'
 import { settingsRoutes } from './routes/settings'
 import { chatRoutes } from './routes/chat'
+import { contentRoutes } from './routes/content'
+import { crmRoutes } from './routes/crm'
+import { reportRoutes } from './routes/reports'
+import { onboardingRoutes } from './routes/onboarding'
+import { paymentVnRoutes } from './routes/payment-vn'
 
 // Cloudflare bindings — all optional until resources created in dashboard
 export type Bindings = {
@@ -19,6 +24,9 @@ export type Bindings = {
   ENVIRONMENT?: string
   DEFAULT_LLM_MODEL?: string
   FB_VERIFY_TOKEN?: string
+  MOMO_SECRET_KEY?: string
+  MOMO_ACCESS_KEY?: string
+  VNPAY_HASH_SECRET?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -117,5 +125,36 @@ app.route('/v1/agents', agentRoutes)
 app.route('/v1/settings', settingsRoutes)
 app.route('/billing', billingRoutes)
 app.route('/v1/chat', chatRoutes)
+app.route('/v1/content', contentRoutes)
+app.route('/v1/crm', crmRoutes)
+app.route('/v1/reports', reportRoutes)
+app.route('/v1/onboard', onboardingRoutes)
+app.route('/payment', paymentVnRoutes)
 
-export default app
+// Cron Trigger — auto-publish approved content
+export default {
+  fetch: app.fetch,
+  async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
+    if (!env.DB) return
+    const now = new Date().toISOString()
+    const posts = await env.DB.prepare(
+      'SELECT * FROM content_posts WHERE status = ? AND scheduled_at <= ? LIMIT 5'
+    ).bind('approved', now).all()
+    for (const post of posts.results || []) {
+      const channel = await env.DB.prepare(
+        'SELECT * FROM channels WHERE tenant_id = ? AND type = ? AND active = 1 LIMIT 1'
+      ).bind(post.tenant_id, 'facebook').first()
+      if (channel?.access_token_encrypted) {
+        try {
+          await fetch(`https://graph.facebook.com/v19.0/${channel.external_id}/feed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: post.content_text, access_token: channel.access_token_encrypted }),
+          })
+          await env.DB.prepare('UPDATE content_posts SET status = ?, published_at = ? WHERE id = ?')
+            .bind('published', now, post.id).run()
+        } catch (e) { /* log error */ }
+      }
+    }
+  },
+}
