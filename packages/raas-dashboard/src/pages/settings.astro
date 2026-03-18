@@ -1,0 +1,98 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Cài đặt" activePage="/settings">
+  <h2 style="font-size:18px;margin-bottom:20px">Cài đặt</h2>
+
+  <div style="display:grid;gap:16px;max-width:600px">
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">Thông tin doanh nghiệp</strong>
+      <div id="biz-info" style="display:grid;gap:10px">
+        <div style="color:var(--text2);font-size:13px">Đang tải...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">API Key</strong>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="password" id="api-key-display" readonly style="flex:1;font-family:monospace;font-size:12px" />
+        <button class="btn btn-secondary btn-sm" id="btn-toggle-key">Hiện</button>
+        <button class="btn btn-secondary btn-sm" id="btn-copy-key">Sao chép</button>
+      </div>
+      <p style="color:var(--text2);font-size:11px;margin-top:8px">Giữ bí mật key này. Không chia sẻ với người khác.</p>
+    </div>
+
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">Gói hiện tại</strong>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div id="current-tier" style="font-size:16px;font-weight:600">—</div>
+          <div id="credits-info" style="color:var(--text2);font-size:12px;margin-top:4px">—</div>
+        </div>
+        <a href="/upgrade" class="btn btn-primary btn-sm">Nâng cấp</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">Nguy hiểm</strong>
+      <button class="btn btn-sm" style="background:#ef444420;color:var(--danger);border:1px solid #ef444440" id="btn-delete">Xoá tài khoản</button>
+      <p style="color:var(--text2);font-size:11px;margin-top:8px">Hành động này không thể hoàn tác.</p>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://mekong-engine.agencyos-openclaw.workers.dev';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  const key = localStorage.getItem('mk_api_key') || '';
+  const h = { Authorization: 'Bearer ' + key };
+
+  document.getElementById('api-key-display').value = key;
+
+  let shown = false;
+  document.getElementById('btn-toggle-key').addEventListener('click', () => {
+    const inp = document.getElementById('api-key-display');
+    shown = !shown;
+    inp.type = shown ? 'text' : 'password';
+    document.getElementById('btn-toggle-key').textContent = shown ? 'Ẩn' : 'Hiện';
+  });
+
+  document.getElementById('btn-copy-key').addEventListener('click', () => {
+    navigator.clipboard.writeText(key).then(() => {
+      document.getElementById('btn-copy-key').textContent = 'Đã sao chép!';
+      setTimeout(() => document.getElementById('btn-copy-key').textContent = 'Sao chép', 2000);
+    });
+  });
+
+  async function load() {
+    try {
+      const [biz, credits] = await Promise.all([
+        fetch(API + '/v1/business', { headers: h }).then(r => r.json()).catch(() => ({})),
+        fetch(API + '/billing/credits', { headers: h }).then(r => r.json()).catch(() => ({})),
+      ]);
+      const fields = [
+        { label: 'Tên', value: biz.name },
+        { label: 'Ngành', value: biz.industry },
+        { label: 'Địa chỉ', value: biz.address },
+        { label: 'Điện thoại', value: biz.phone },
+        { label: 'Giờ mở cửa', value: biz.hours },
+      ].filter(f => f.value);
+      document.getElementById('biz-info').innerHTML = fields.length
+        ? fields.map(f => `<div style="display:flex;gap:12px"><span style="color:var(--text2);min-width:100px;font-size:12px">${f.label}</span><span style="font-size:13px">${f.value}</span></div>`).join('')
+        : '<div style="color:var(--text2);font-size:13px">Chưa có thông tin.</div>';
+
+      document.getElementById('current-tier').textContent = credits.tier || 'Starter';
+      document.getElementById('credits-info').textContent = `${credits.balance ?? 0} credits còn lại / ${credits.limit ?? 200} credits/tháng`;
+    } catch { /* silent */ }
+  }
+
+  document.getElementById('btn-delete').addEventListener('click', () => {
+    if (confirm('Bạn chắc chắn muốn xoá tài khoản? Dữ liệu sẽ mất vĩnh viễn.')) {
+      fetch(API + '/billing/tenants/me', { method: 'DELETE', headers: h })
+        .finally(() => { localStorage.clear(); window.location.href = '/signup'; });
+    }
+  });
+
+  load();
+</script>

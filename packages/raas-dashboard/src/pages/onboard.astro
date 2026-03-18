@@ -1,0 +1,142 @@
+---
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thiết lập — RaaS Dashboard</title>
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+  <style>
+    .onboard-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .onboard-box { width:100%; max-width:560px; }
+    .onboard-header { text-align:center; margin-bottom:28px; }
+    .onboard-header h1 { font-size:20px; margin-bottom:6px; }
+    .onboard-header p { color:var(--text2); font-size:13px; }
+    .steps-indicator { display:flex; gap:8px; margin-bottom:24px; justify-content:center; }
+    .step-dot { width:32px; height:4px; border-radius:2px; background:var(--border); transition:background .2s; }
+    .step-dot.done { background:var(--success); }
+    .step-dot.active { background:var(--accent); }
+    .step-panel { display:none; }
+    .step-panel.active { display:block; }
+    .step-title { font-size:15px; font-weight:600; margin-bottom:16px; }
+    .industry-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .industry-btn { background:var(--bg3); border:2px solid var(--border); color:var(--text); padding:14px 8px; border-radius:var(--radius); cursor:pointer; text-align:center; font-size:13px; transition:all .15s; }
+    .industry-btn:hover, .industry-btn.selected { border-color:var(--accent); color:var(--accent2); }
+    .industry-btn .icon { font-size:24px; display:block; margin-bottom:6px; }
+    .nav-btns { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+    .error-msg { color:var(--danger); font-size:12px; margin-top:8px; display:none; }
+    .channel-opt { display:flex; gap:8px; margin-bottom:8px; }
+    .btn-full { width:100%; }
+    .menu-item { display:flex; gap:8px; margin-bottom:8px; align-items:center; }
+    .menu-item input { flex:1; }
+  </style>
+</head>
+<body>
+<div class="onboard-wrap">
+  <div class="onboard-box">
+    <div class="onboard-header">
+      <h1>Thiết lập doanh nghiệp</h1>
+      <p>Chỉ mất 3 phút để AI bắt đầu làm việc cho bạn</p>
+    </div>
+    <div class="steps-indicator">
+      <div class="step-dot active" id="dot-0"></div>
+      <div class="step-dot" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+      <div class="step-dot" id="dot-4"></div>
+    </div>
+
+    <div class="card">
+      <!-- Step 1: Industry -->
+      <div class="step-panel active" id="step-0">
+        <div class="step-title">Bước 1/5 — Chọn ngành kinh doanh</div>
+        <div class="industry-grid">
+          <button class="industry-btn" data-v="cafe"><span class="icon">☕</span>Cafe</button>
+          <button class="industry-btn" data-v="restaurant"><span class="icon">🍽️</span>Nhà hàng</button>
+          <button class="industry-btn" data-v="spa"><span class="icon">💆</span>Spa</button>
+          <button class="industry-btn" data-v="salon"><span class="icon">✂️</span>Salon</button>
+          <button class="industry-btn" data-v="gym"><span class="icon">🏋️</span>Gym</button>
+          <button class="industry-btn" data-v="other"><span class="icon">🏪</span>Khác</button>
+        </div>
+        <div class="error-msg" id="err-0">Vui lòng chọn ngành.</div>
+        <div class="nav-btns"><button class="btn btn-primary" id="next-0">Tiếp theo →</button></div>
+      </div>
+
+      <!-- Step 2: Business info -->
+      <div class="step-panel" id="step-1">
+        <div class="step-title">Bước 2/5 — Thông tin doanh nghiệp</div>
+        <div class="form-group"><label>Tên doanh nghiệp *</label><input id="biz-name" placeholder="VD: Cafe Sáng Tạo" /></div>
+        <div class="form-group"><label>Địa chỉ</label><input id="biz-address" placeholder="123 Đường ABC, Q.1, TP.HCM" /></div>
+        <div class="form-group"><label>Số điện thoại</label><input id="biz-phone" placeholder="0901234567" /></div>
+        <div class="form-group"><label>Giờ mở cửa</label><input id="biz-hours" placeholder="7:00 - 22:00 (Thứ 2 - CN)" /></div>
+        <div class="error-msg" id="err-1">Vui lòng nhập tên doanh nghiệp.</div>
+        <div class="nav-btns">
+          <button class="btn btn-secondary" id="back-1">← Quay lại</button>
+          <button class="btn btn-primary" id="next-1">Tiếp theo →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Channel -->
+      <div class="step-panel" id="step-2">
+        <div class="step-title">Bước 3/5 — Kết nối kênh nhắn tin</div>
+        <div class="form-group">
+          <label>Chọn kênh</label>
+          <div class="channel-opt"><input type="radio" name="channel" value="zalo" id="ch-zalo" checked /><label for="ch-zalo" style="display:inline">Zalo OA</label></div>
+          <div class="channel-opt"><input type="radio" name="channel" value="facebook" id="ch-fb" /><label for="ch-fb" style="display:inline">Facebook Page</label></div>
+        </div>
+        <div id="zalo-fields">
+          <div class="form-group"><label>Zalo OA ID</label><input id="zalo-oa-id" placeholder="1234567890" /></div>
+          <div class="form-group"><label>Zalo Access Token</label><input id="zalo-token" placeholder="zalo_token_..." /></div>
+        </div>
+        <div id="fb-fields" style="display:none">
+          <div class="form-group"><label>Facebook Page ID</label><input id="fb-page-id" placeholder="123456789" /></div>
+          <div class="form-group"><label>Page Access Token</label><input id="fb-token" placeholder="EAABwz..." /></div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-secondary" id="back-2">← Quay lại</button>
+          <button class="btn btn-primary" id="next-2">Tiếp theo →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Menu -->
+      <div class="step-panel" id="step-3">
+        <div class="step-title">Bước 4/5 — Danh sách menu / dịch vụ</div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:12px">Thêm sản phẩm/dịch vụ để AI tư vấn khách hàng</p>
+        <div id="menu-list"></div>
+        <button class="btn btn-secondary btn-sm" id="add-item">+ Thêm mục</button>
+        <div class="nav-btns">
+          <button class="btn btn-secondary" id="back-3">← Quay lại</button>
+          <button class="btn btn-primary" id="next-3">Tiếp theo →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Activate -->
+      <div class="step-panel" id="step-4">
+        <div class="step-title">Bước 5/5 — Kích hoạt AI</div>
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:16px">🤖</div>
+          <p style="font-size:15px;margin-bottom:8px">Sẵn sàng kích hoạt AI cho <strong id="confirm-biz-name">doanh nghiệp</strong></p>
+          <p style="color:var(--text2);font-size:13px">AI sẽ tự động trả lời khách hàng, tạo nội dung và báo cáo hàng tuần.</p>
+        </div>
+        <div class="error-msg" id="err-4">Lỗi kích hoạt. Vui lòng thử lại.</div>
+        <div class="nav-btns" style="justify-content:center">
+          <button class="btn btn-secondary" id="back-4">← Quay lại</button>
+          <button class="btn btn-primary" id="btn-activate" style="padding:12px 32px">⚡ Kích hoạt AI ngay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+  import { initIndustry, initBizInfo, initChannel, initMenu, initActivate } from '/scripts/onboard-wizard.js';
+  initIndustry();
+  initBizInfo();
+  initChannel();
+  initMenu();
+  initActivate();
+</script>
+</body>
+</html>

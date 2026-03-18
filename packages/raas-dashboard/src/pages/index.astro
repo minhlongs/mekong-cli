@@ -1,0 +1,16 @@
+---
+// Root redirect — handled client-side (SSG, no server)
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Đang tải...</title>
+</head>
+<body>
+<script>
+  const key = localStorage.getItem('mk_api_key');
+  window.location.replace(key ? '/dashboard' : '/signup');
+</script>
+</body>
+</html>

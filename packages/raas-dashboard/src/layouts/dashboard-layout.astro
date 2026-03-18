@@ -1,0 +1,68 @@
+---
+export interface Props { title: string; activePage?: string; }
+const { title, activePage = '' } = Astro.props;
+const nav = [
+  { href: '/dashboard', label: 'Tổng quan',  icon: '📊' },
+  { href: '/messages',  label: 'Tin nhắn',   icon: '💬' },
+  { href: '/content',   label: 'Nội dung',   icon: '📝' },
+  { href: '/contacts',  label: 'Khách hàng', icon: '👥' },
+  { href: '/reports',   label: 'Báo cáo',    icon: '📈' },
+  { href: '/settings',  label: 'Cài đặt',    icon: '⚙️' },
+  { href: '/upgrade',   label: 'Nâng cấp',   icon: '⭐' },
+];
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title} — RaaS Dashboard</title>
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      OpenClaw RaaS
+      <span>AI Business Platform</span>
+    </div>
+    <nav class="sidebar-nav">
+      {nav.map(item => (
+        <a
+          href={item.href}
+          class={`nav-item${activePage === item.href ? ' active' : ''}`}
+        >
+          <span class="nav-icon">{item.icon}</span>
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="topbar-biz" id="topbar-biz-name">Doanh nghiệp của bạn</span>
+      <div class="topbar-right">
+        <button class="btn-logout" id="btn-logout">Đăng xuất</button>
+      </div>
+    </header>
+    <main class="content">
+      <slot />
+    </main>
+  </div>
+</div>
+
+<script>
+  const bizName = localStorage.getItem('mk_biz_name');
+  if (bizName) {
+    const el = document.getElementById('topbar-biz-name');
+    if (el) el.textContent = bizName;
+  }
+  document.getElementById('btn-logout')?.addEventListener('click', () => {
+    localStorage.removeItem('mk_api_key');
+    localStorage.removeItem('mk_biz_name');
+    window.location.href = '/signup';
+  });
+</script>
+</body>
+</html>
