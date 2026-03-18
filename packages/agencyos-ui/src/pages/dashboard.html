@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw — AgencyOS Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+  header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px;display:flex;align-items:center;gap:16px}
+  header h1{font-size:1.1rem;font-weight:600;color:#58a6ff}
+  nav a{color:#8b949e;text-decoration:none;margin-left:20px;font-size:.9rem}
+  nav a:hover,nav a.active{color:#e6edf3}
+  main{max-width:1200px;margin:0 auto;padding:24px 16px;display:grid;gap:20px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px}
+  .card h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;margin-bottom:14px}
+  .health-score{font-size:3rem;font-weight:700;color:#3fb950}
+  .health-label{font-size:.8rem;color:#8b949e;margin-top:4px}
+  .meter{background:#21262d;border-radius:4px;height:8px;margin-top:12px;overflow:hidden}
+  .meter-fill{height:100%;background:linear-gradient(90deg,#388bfd,#3fb950);border-radius:4px;transition:width .4s}
+  .task-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .task-item{display:flex;justify-content:space-between;align-items:center;font-size:.88rem;padding:8px 10px;background:#0d1117;border-radius:6px}
+  .badge{font-size:.75rem;padding:2px 8px;border-radius:12px;font-weight:600}
+  .badge.green{background:#1a4428;color:#3fb950}
+  .badge.yellow{background:#2d2a16;color:#d29922}
+  .badge.red{background:#3d1a1a;color:#f85149}
+  .mrr{font-size:2.4rem;font-weight:700;color:#e6edf3}
+  .mrr-sub{font-size:.8rem;color:#3fb950;margin-top:4px}
+  .chart-placeholder{background:#0d1117;border-radius:6px;height:80px;margin-top:12px;display:flex;align-items:flex-end;gap:4px;padding:8px}
+  .bar{background:#388bfd;border-radius:3px 3px 0 0;flex:1;opacity:.7;transition:opacity .2s}
+  .bar:hover{opacity:1}
+  .dept-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .dept-card{background:#0d1117;border-radius:6px;padding:10px;text-align:center}
+  .dept-name{font-size:.75rem;color:#8b949e;margin-top:4px}
+  .dept-count{font-size:.8rem;color:#58a6ff;margin-top:2px}
+  .dot{width:10px;height:10px;border-radius:50%;margin:0 auto}
+  .dot.green{background:#3fb950}
+  .dot.yellow{background:#d29922}
+  .dot.red{background:#f85149}
+  .status-bar{font-size:.75rem;color:#8b949e;text-align:center;padding:8px;border-top:1px solid #30363d;margin-top:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>OpenClaw AgencyOS</h1>
+  <nav>
+    <a href="/" class="active">Dashboard</a>
+    <a href="/license">License</a>
+    <a href="/raas">RaaS</a>
+  </nav>
+</header>
+<main>
+  <div class="row">
+    <div class="card">
+      <h2>Company Health</h2>
+      <div class="health-score" id="health-score">--</div>
+      <div class="health-label">Overall Score / 100</div>
+      <div class="meter"><div class="meter-fill" id="health-meter" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <h2>Active Tasks</h2>
+      <ul class="task-list" id="task-list">
+        <li class="task-item"><span>Loading...</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Revenue (MRR)</h2>
+      <div class="mrr" id="mrr">--</div>
+      <div class="mrr-sub" id="mrr-sub">Loading...</div>
+      <div class="chart-placeholder" id="chart">
+        <div class="bar" style="height:40%"></div>
+        <div class="bar" style="height:55%"></div>
+        <div class="bar" style="height:48%"></div>
+        <div class="bar" style="height:70%"></div>
+        <div class="bar" style="height:62%"></div>
+        <div class="bar" style="height:80%"></div>
+        <div class="bar" style="height:75%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Department Status</h2>
+    <div class="dept-grid" id="dept-grid">
+      <div class="dept-card"><div class="dot yellow"></div><div class="dept-name">Loading...</div></div>
+    </div>
+  </div>
+</main>
+<div class="status-bar" id="status-bar">Connecting...</div>
+
+<script>
+async function refresh() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    const c = d.company;
+    document.getElementById('health-score').textContent = c.health;
+    document.getElementById('health-meter').style.width = c.health + '%';
+    const tasks = c.departments.filter(x => x.tasks > 0);
+    document.getElementById('task-list').innerHTML = tasks.length
+      ? tasks.map(t => `<li class="task-item"><span>${t.name}</span><span class="badge ${t.status}">${t.tasks} tasks</span></li>`).join('')
+      : '<li class="task-item"><span>No active tasks</span></li>';
+    document.getElementById('mrr').textContent = '$' + c.mrr.toLocaleString();
+    document.getElementById('mrr-sub').textContent = 'Updated ' + new Date(d.timestamp).toLocaleTimeString();
+    document.getElementById('dept-grid').innerHTML = c.departments.map(dep =>
+      `<div class="dept-card"><div class="dot ${dep.status}"></div><div class="dept-name">${dep.name}</div><div class="dept-count">${dep.tasks} tasks</div></div>`
+    ).join('');
+    document.getElementById('status-bar').textContent = 'Last updated: ' + new Date(d.timestamp).toLocaleTimeString() + ' · v' + d.version;
+  } catch(e) {
+    document.getElementById('status-bar').textContent = 'Connection error — retrying...';
+  }
+}
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
