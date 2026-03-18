@@ -1,36 +1,36 @@
 ---
-import BaseLayout from '../layouts/base-layout.astro';
+import BaseLayout from '../../layouts/base-layout.astro';
 
 const features = [
-  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.' },
-  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.' },
-  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.' },
-  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.' },
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Replies to Zalo & Facebook 24/7, never missing a message. Response under 3 seconds.' },
+  { icon: '✍️', title: 'Content Creator', desc: 'AI drafts 7 days of content on schedule. You just review and post.' },
+  { icon: '📊', title: 'Smart CRM', desc: 'Auto-saves customer profiles, classifies leads, retargets at the right moment.' },
+  { icon: '📈', title: 'Real-time Reports', desc: 'Visual dashboard. AI analyzes and suggests actions every week.' },
 ];
 
 const steps = [
-  { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
-  { num: '02', title: 'Kết nối Zalo / FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
-  { num: '03', title: 'AI vận hành tự động', time: '24/7', desc: 'Hệ thống tự học, tự trả lời, tự báo cáo từ phút đầu.' },
+  { num: '01', title: 'Sign Up', time: '2 min', desc: 'Create a free account — no credit card required.' },
+  { num: '02', title: 'Connect Zalo / FB', time: '5 min', desc: 'Link your sales channels with just a few clicks.' },
+  { num: '03', title: 'AI starts running', time: '24/7', desc: 'System learns, replies and reports automatically from minute one.' },
 ];
 
 const plans = [
-  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter', price: '$8', period: '/mo', tag: '', features: ['500 credits/tháng', 'AI Receptionist 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro', price: '$20', period: '/mo', tag: 'Phổ biến nhất', features: ['2.000 credits/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
-  { name: 'Enterprise', price: '$120', period: '/mo', tag: '', features: ['Credits không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
+  { name: 'Free',       price: '$0',   period: '/mo', tag: '', features: ['50 credits/month', 'Basic AI Receptionist', '3 days content/month', 'CRM: 50 contacts'], cta: 'Get started free', href: 'https://app.agencyos.network/signup', featured: false },
+  { name: 'Starter',   price: '$8',   period: '/mo', tag: '', features: ['500 credits/month', '24/7 AI Receptionist', '7 days content/week', 'Unlimited CRM', 'Weekly reports'], cta: 'Try free 14 days', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro',        price: '$20',  period: '/mo', tag: 'Most popular', features: ['2,000 credits/month', 'Multi-channel (Zalo+FB+Web)', 'Industry-tuned AI', 'API access', 'SLA 99.9%'], cta: 'Choose Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
+  { name: 'Enterprise', price: '$120', period: '/mo', tag: '', features: ['Unlimited credits', 'Dedicated AI model', 'White-label', '1-on-1 onboarding', 'SLA 99.99%'], cta: 'Contact sales', href: 'mailto:hello@agencyos.network', featured: false },
 ];
 
 const faqs = [
-  { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong 5 phút đầu tiên.' },
-  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
-  { q: 'Thanh toán bằng gì?', a: 'Thanh toán qua Polar.sh với Visa/Mastercard. Hỗ trợ toàn cầu, giá USD.' },
-  { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ.' },
-  { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
+  { q: 'Do I need to know how to code?', a: 'No. The interface is fully visual — anyone can get started within 5 minutes.' },
+  { q: 'Which industries are supported?', a: 'Cafes, restaurants, spas, salons, gyms, fashion shops, convenience stores and most retail businesses.' },
+  { q: 'What payment methods are accepted?', a: 'Payment via Polar.sh with Visa/Mastercard. Global support, USD pricing.' },
+  { q: 'Can I cancel my subscription?', a: 'Cancel anytime with no penalty. Your data is retained for 30 days after cancellation.' },
+  { q: 'Is my customer data safe?', a: 'Runs on Cloudflare Workers with end-to-end encryption. Never shared with third parties.' },
 ];
 ---
 
-<BaseLayout title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động" lang="vi">
+<BaseLayout title="OpenClaw — AI-Powered Business Automation" description="24/7 customer replies · Auto content creation · Smart CRM. Try free for 14 days." lang="en">
 
   <!-- HERO -->
   <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;">
@@ -38,16 +38,16 @@ const faqs = [
     <div style="position:absolute;inset:0;background:radial-gradient(circle at 75% 60%,rgba(124,77,255,0.1),transparent 50%);pointer-events:none;"></div>
     <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
       <div style="max-width:760px;">
-        <div class="badge animate-in" style="margin-bottom:28px;">✨ Mới — AI Receptionist cho Zalo &amp; Facebook</div>
+        <div class="badge animate-in" style="margin-bottom:28px;">✨ New — AI Receptionist for Zalo &amp; Facebook</div>
         <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp Tự Động
+          <span class="gradient-text">AI-Powered</span><br />Business Automation
         </h1>
-        <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--md-on-surface-muted);max-width:520px;margin-bottom:16px;" class="animate-in" style="animation-delay:0.2s;">
-          Trả lời khách 24/7 · Tạo content tự động · CRM thông minh
+        <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--md-on-surface-muted);max-width:520px;margin-bottom:16px;" class="animate-in">
+          24/7 customer replies · Auto content creation · Smart CRM
         </p>
         <!-- Stats row -->
         <div style="display:flex;gap:32px;margin-bottom:40px;flex-wrap:wrap;" class="animate-in">
-          {[['500+', 'doanh nghiệp'],['1M+', 'tin nhắn'],['99.9%', 'uptime']].map(([v,l]) => (
+          {[['500+', 'businesses'],['1M+', 'messages'],['99.9%', 'uptime']].map(([v,l]) => (
             <div>
               <div style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;" class="gradient-text">{v}</div>
               <div style="font-size:0.8rem;color:var(--md-on-surface-muted);">{l}</div>
@@ -55,8 +55,8 @@ const faqs = [
           ))}
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in">
-          <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;">Thử miễn phí 14 ngày →</a>
-          <a href="#features" class="btn-outline">Xem tính năng</a>
+          <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;">Try free for 14 days →</a>
+          <a href="#features" class="btn-outline">See features</a>
         </div>
       </div>
 
@@ -67,12 +67,12 @@ const faqs = [
           <span style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;display:inline-block;"></span>
           <span style="width:10px;height:10px;border-radius:50%;background:#27C93F;display:inline-block;"></span>
         </div>
-        <div style="color:#94a3b8;">$ <span style="color:#00BCD4;">openclaw</span> cook "Trả lời khách hỏi giá bánh mì"</div>
-        <div style="color:#64748b;">→ Phân tích yêu cầu...</div>
-        <div style="color:#64748b;">→ Tìm menu trong CRM...</div>
-        <div style="color:#94a3b8;">✓ <span style="color:#4ade80;">Đã trả lời:</span> "Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</div>
-        <div style="color:#64748b;">→ Lưu vào CRM: khách quan tâm combo</div>
-        <div style="color:#7C4DFF;">⚡ 1.2s · 1 credit used</div>
+        <div style="color:#94a3b8;">$ <span style="color:#00BCD4;">openclaw</span> cook "Reply to customer asking about pricing"</div>
+        <div style="color:#64748b;">→ Analyzing request...</div>
+        <div style="color:#64748b;">→ Fetching products from CRM...</div>
+        <div style="color:#94a3b8;">✓ <span style="color:#4ade80;">Replied:</span> "Starter plan: $8/mo, Pro plan: $20/mo 🚀"</div>
+        <div style="color:#64748b;">→ Saved to CRM: lead interested in Pro</div>
+        <div style="color:#7C4DFF;">⚡ 1.1s · 1 credit used</div>
       </div>
     </div>
   </section>
@@ -80,14 +80,14 @@ const faqs = [
   <!-- FEATURES -->
   <section id="features" style="background:var(--md-surface);">
     <div class="container">
-      <div class="text-center" style="margin-bottom:56px;" class="animate-on-scroll">
-        <div class="badge" style="margin-bottom:16px;">Tính năng</div>
-        <h2 class="headline">Mọi thứ bạn cần để <span class="gradient-text">bán hàng hiệu quả</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI làm thay những việc lặp lại, bạn tập trung vào tăng trưởng.</p>
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">Features</div>
+        <h2 class="headline">Everything you need to <span class="gradient-text">grow faster</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI handles repetitive tasks so you can focus on growth.</p>
       </div>
       <div class="grid-4">
         {features.map((f, i) => (
-          <div class="card-glass animate-on-scroll" style={`animation-delay:${i * 0.1}s`}>
+          <div class="card-glass animate-on-scroll" style={`animation-delay:${i*0.1}s`}>
             <div style="font-size:2.25rem;margin-bottom:16px;">{f.icon}</div>
             <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:10px;">{f.title}</h3>
             <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.65;">{f.desc}</p>
@@ -101,8 +101,8 @@ const faqs = [
   <section style="background:var(--md-surface-container);">
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">Bắt đầu</div>
-        <h2 class="headline">Chỉ <span class="gradient-text">3 bước</span> là xong</h2>
+        <div class="badge" style="margin-bottom:16px;">Get Started</div>
+        <h2 class="headline">Up and running in <span class="gradient-text">3 steps</span></h2>
       </div>
       <div class="grid-3">
         {steps.map((s, i) => (
@@ -121,9 +121,9 @@ const faqs = [
   <section id="pricing" style="background:var(--md-surface);">
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">Bảng giá</div>
-        <h2 class="headline">Minh bạch, <span class="gradient-text">không phí ẩn</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 0;">14 ngày dùng thử miễn phí. Huỷ bất cứ lúc nào.</p>
+        <div class="badge" style="margin-bottom:16px;">Pricing</div>
+        <h2 class="headline">Simple, <span class="gradient-text">transparent pricing</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 0;">14-day free trial. Cancel anytime. No hidden fees.</p>
       </div>
       <div class="grid-4" style="align-items:start;">
         {plans.map((p, i) => (
@@ -157,7 +157,7 @@ const faqs = [
     <div class="container" style="max-width:720px;">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">FAQ</div>
-        <h2 class="headline">Câu hỏi <span class="gradient-text">thường gặp</span></h2>
+        <h2 class="headline">Frequently asked <span class="gradient-text">questions</span></h2>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;">
         {faqs.map((f, i) => (
@@ -177,11 +177,11 @@ const faqs = [
   <section style="background:var(--md-surface);">
     <div class="container">
       <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;">
-        <h2 class="headline" style="margin-bottom:16px;">Sẵn sàng để AI <span class="gradient-text">làm việc cho bạn?</span></h2>
+        <h2 class="headline" style="margin-bottom:16px;">Ready to let AI <span class="gradient-text">work for you?</span></h2>
         <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;">
-          Tham gia cùng 500+ doanh nghiệp đang tiết kiệm 20+ giờ/tuần với OpenClaw.
+          Join 500+ businesses saving 20+ hours per week with OpenClaw.
         </p>
-        <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;padding:16px 44px;">Bắt đầu miễn phí ngay →</a>
+        <a href="https://app.agencyos.network/signup" class="btn-primary" style="font-size:1.05rem;padding:16px 44px;">Start for free →</a>
       </div>
     </div>
   </section>
