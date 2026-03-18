@@ -4,6 +4,7 @@ import { taskRoutes } from './routes/tasks'
 import { agentRoutes } from './routes/agents'
 import { billingRoutes } from './routes/billing'
 import { settingsRoutes } from './routes/settings'
+import { chatRoutes } from './routes/chat'
 
 // Cloudflare bindings — all optional until resources created in dashboard
 export type Bindings = {
@@ -17,6 +18,7 @@ export type Bindings = {
   POLAR_WEBHOOK_SECRET?: string
   ENVIRONMENT?: string
   DEFAULT_LLM_MODEL?: string
+  FB_VERIFY_TOKEN?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -114,5 +116,6 @@ app.route('/v1/tasks', taskRoutes)
 app.route('/v1/agents', agentRoutes)
 app.route('/v1/settings', settingsRoutes)
 app.route('/billing', billingRoutes)
+app.route('/v1/chat', chatRoutes)
 
 export default app
