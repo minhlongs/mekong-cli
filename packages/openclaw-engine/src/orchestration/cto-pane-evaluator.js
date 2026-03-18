@@ -12,7 +12,61 @@ const config = require('../_bridge/config');
 const { log } = require('../core/brain-process-manager');
 const { incrementPaneQuestionCount, resetPaneQuestionCount } = require('./cto-context-optimizer');
 
-const TOTAL_PANES = 10; // P0-P9 for 10-model rotation
+const TOTAL_PANES = 4; // P0-P3 only — M1 16GB limit
+
+// Per-pane cooldown tracking (prevent dispatch spam)
+const COOLDOWN_MS = 120_000; // 2 minutes
+const paneCooldowns = new Map(); // paneIdx → lastDispatchTimestamp
+
+// Per-pane error tracking (auto-respawn after consecutive errors)
+const paneErrorCounts = new Map(); // paneIdx → consecutive error count
+const MAX_CONSECUTIVE_ERRORS = 3;
+
+// Stuck detection: track last-seen output hash per pane
+const paneOutputHashes = new Map(); // paneIdx → { hash, since }
+const STUCK_THRESHOLD_MS = 5 * 60_000; // 5 minutes
+
+/** Simple string hash for stuck detection */
+function hashOutput(str) {
+	let h = 0;
+	for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+	return h;
+}
+
+/** Check if pane is in cooldown */
+function isPaneCoolingDown(paneIdx) {
+	const lastDispatch = paneCooldowns.get(paneIdx);
+	if (!lastDispatch) return false;
+	return Date.now() - lastDispatch < COOLDOWN_MS;
+}
+
+/** Mark pane as just dispatched */
+function markPaneDispatched(paneIdx) {
+	paneCooldowns.set(paneIdx, Date.now());
+}
+
+/** Track pane errors; returns true if should auto-respawn */
+function trackPaneError(paneIdx) {
+	const count = (paneErrorCounts.get(paneIdx) || 0) + 1;
+	paneErrorCounts.set(paneIdx, count);
+	return count >= MAX_CONSECUTIVE_ERRORS;
+}
+
+/** Reset pane error count on success */
+function resetPaneErrors(paneIdx) {
+	paneErrorCounts.set(paneIdx, 0);
+}
+
+/** Check if pane output is stuck (same hash for >5 min) */
+function checkStuck(paneIdx, output) {
+	const h = hashOutput(output);
+	const prev = paneOutputHashes.get(paneIdx);
+	if (prev && prev.hash === h) {
+		return Date.now() - prev.since >= STUCK_THRESHOLD_MS;
+	}
+	paneOutputHashes.set(paneIdx, { hash: h, since: Date.now() });
+	return false;
+}
 
 /**
  * Determine target pane index from task filename keywords.
@@ -23,10 +77,9 @@ function getTargetPane(filename) {
 	if (/algo.?trader|algotrader|trading/.test(lower)) return 1;
 	if (/sophia|vibe|core|package|mekong-cli/.test(lower)) return 2;
 	if (/well|wellnexus|84tea|apex/.test(lower)) return 3;
-	if (/strategic|binh_phap|roiaas|architecture|10x|complex|opus/i.test(lower)) return 4;
-	// Distribute between P0-P3 based on hash (never default to P4/Opus)
+	// Distribute between P0-P3 based on hash
 	const hash = filename.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-	return [0, 1, 2, 3][hash % 4];
+	return hash % TOTAL_PANES;
 }
 
 /**
@@ -50,6 +103,7 @@ function dispatchQueuedTasks() {
 	for (const taskFile of sorted) {
 		const targetIdx = getTargetPane(taskFile);
 		if (dispatching.has(targetIdx)) continue;
+		if (isPaneCoolingDown(targetIdx)) continue; // Cooldown: skip recently dispatched panes
 
 		const pane = `${config.TMUX_SESSION}:0.${targetIdx}`;
 		try {
@@ -87,6 +141,8 @@ function dispatchQueuedTasks() {
 				fs.renameSync(taskPath, path.join(doneDir, `${Date.now()}_${taskFile}`));
 				dispatched++;
 				dispatching.add(targetIdx);
+				markPaneDispatched(targetIdx);
+				resetPaneErrors(targetIdx);
 			}
 		} catch (dispatchErr) {
 			log(`AUTO-CTO DISPATCH P${targetIdx} ERROR: ${dispatchErr.message}`);
@@ -130,6 +186,18 @@ async function evaluateAllPanes() {
 					continue;
 				}
 
+				// Stuck detection: same output for >5 minutes
+				if (checkStuck(pIdx, paneOutput)) {
+					log(`[STUCK][P${pIdx}] Same output >5min — sending Escape + /compact`);
+					try {
+						execSync(`tmux send-keys -t tom_hum:0.${pIdx} Escape`, { timeout: 2000 });
+						execSync(`tmux send-keys -t tom_hum:0.${pIdx} "/compact" Enter`, { timeout: 5000 });
+					} catch (e) {}
+					paneOutputHashes.delete(pIdx);
+					isApiBusy = true;
+					continue;
+				}
+
 				const llmResult = await interpretState(paneOutput);
 
 				if (llmResult.state !== 'question') resetPaneQuestionCount(pIdx);
@@ -153,6 +221,14 @@ async function evaluateAllPanes() {
 					}
 					isApiBusy = true;
 				} else if (llmResult.state === 'error') {
+					const shouldRespawn = trackPaneError(pIdx);
+					if (shouldRespawn) {
+						log('[HEALTH][P' + pIdx + '] ' + MAX_CONSECUTIVE_ERRORS + ' consecutive errors — auto /exit + respawn');
+						try {
+							execSync('tmux send-keys -t tom_hum:0.' + pIdx + ' "/exit" Enter', { timeout: 3000 });
+						} catch (e) {}
+						resetPaneErrors(pIdx);
+					}
 					isApiBusy = true;
 				} else if (!['idle', 'complete', 'unknown'].includes(llmResult.state)) {
 					isApiBusy = true;
@@ -176,4 +252,9 @@ module.exports = {
 	dispatchQueuedTasks,
 	evaluateAllPanes,
 	TOTAL_PANES,
+	isPaneCoolingDown,
+	markPaneDispatched,
+	resetPaneErrors,
+	checkStuck,
+	COOLDOWN_MS,
 };
