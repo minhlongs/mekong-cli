@@ -1,0 +1,143 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+
+const DEPARTMENTS = [
+  { icon: '📣', name: 'Marketing', cmd: 'marketing', desc: 'Campaigns, copy, SEO, social' },
+  { icon: '💰', name: 'Sales', cmd: 'sales', desc: 'Pipeline, outreach, CRM, proposals' },
+  { icon: '📊', name: 'Finance', cmd: 'finance', desc: 'P&L, budgets, cash flow, invoices' },
+  { icon: '👥', name: 'HR', cmd: 'hr', desc: 'Hiring, JDs, onboarding, performance' },
+  { icon: '🎯', name: 'Product', cmd: 'plan', desc: 'Roadmap, sprints, user stories' },
+  { icon: '⚙️', name: 'Engineering', cmd: 'cook', desc: 'Build, test, deploy, review' },
+  { icon: '🔧', name: 'Ops', cmd: 'audit', desc: 'Infrastructure, security, monitoring' },
+  { icon: '⚖️', name: 'Legal', cmd: 'legal', desc: 'Contracts, compliance, IP protection' },
+];
+---
+
+<MainLayout title="SoloOS — OpenClaw">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <ul class="toc">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#start">Start Company</a></li>
+        <li><a href="#departments">8 Departments</a></li>
+        <li><a href="#daily">Daily Cycle</a></li>
+        <li><a href="#kpi">KPI Dashboard</a></li>
+      </ul>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Business</span>
+        <h1>SoloOS <span class="gradient-text">AI Company</span></h1>
+        <p class="guide-lead">Run an 8-department company as a team of one. SoloOS orchestrates AI agents across every business function simultaneously.</p>
+      </header>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>SoloOS is the operating layer that turns OpenClaw from a CLI into a complete company OS. Each department runs as an autonomous AI agent with its own context, tools, and KPIs.</p>
+        <p>You remain the decision-maker. The AI handles execution.</p>
+      </section>
+
+      <section id="start">
+        <h2>Start Your Company</h2>
+        <pre><code>mekong company/init</code></pre>
+        <p>The wizard asks:</p>
+        <ul>
+          <li>Company name and industry</li>
+          <li>Primary revenue model (SaaS / Agency / Product / Consulting)</li>
+          <li>Target market (B2B / B2C / Enterprise)</li>
+          <li>Current stage (Idea / MVP / Revenue / Growth)</li>
+          <li>Active departments to enable</li>
+        </ul>
+        <p>Output: <code>.mekong/company.json</code> — read by every command automatically.</p>
+        <div class="callout glass">
+          <md-icon>info</md-icon>
+          <p>Run <code>mekong company/update</code> anytime to change your profile. All agents re-calibrate instantly.</p>
+        </div>
+      </section>
+
+      <section id="departments">
+        <h2>8 Departments</h2>
+        <div class="dept-grid">
+          {DEPARTMENTS.map((d) => (
+            <div class="dept-card glass">
+              <span class="dept-icon">{d.icon}</span>
+              <div>
+                <h3 class="dept-name">{d.name}</h3>
+                <code class="dept-cmd">mekong {d.cmd}</code>
+                <p class="dept-desc">{d.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="daily">
+        <h2>Daily Operating Cycle</h2>
+        <p>Run the full daily cycle in one command:</p>
+        <pre><code>mekong daily</code></pre>
+        <p>This executes the standard SoloOS morning routine:</p>
+        <ol class="steps">
+          <li>Pull metrics from all connected data sources</li>
+          <li>Flag anomalies and blockers across departments</li>
+          <li>Generate daily priorities ranked by impact</li>
+          <li>Draft action items for approval</li>
+          <li>Send digest to configured channels (Slack / Telegram / Email)</li>
+        </ol>
+        <p>Customize the cycle in <code>.mekong/daily.yaml</code>.</p>
+      </section>
+
+      <section id="kpi">
+        <h2>KPI Dashboard</h2>
+        <p>View real-time KPIs across all departments:</p>
+        <pre><code>mekong status</code></pre>
+        <p>Or launch the full dashboard UI:</p>
+        <pre><code>mekong ui</code></pre>
+        <p>Key metrics tracked per department:</p>
+        <ul>
+          <li><strong>Sales:</strong> Pipeline value, conversion rate, CAC</li>
+          <li><strong>Marketing:</strong> Leads generated, CPL, channel ROI</li>
+          <li><strong>Finance:</strong> MRR, burn rate, runway months</li>
+          <li><strong>Engineering:</strong> Deploy frequency, error rate, velocity</li>
+        </ul>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/raas" class="nav-prev glass">← RaaS</a>
+        <a href="/guides/vc-ready" class="nav-next glass">VC Ready →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .guide-content ul, .steps { margin: 0 0 var(--spacing-md) var(--spacing-xl); color: var(--md-sys-color-on-surface-variant); line-height: 2; }
+  .guide-content li strong { color: var(--md-sys-color-on-surface); }
+  .dept-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-md); }
+  .dept-card { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-lg); }
+  .dept-icon { font-size: 1.75rem; flex-shrink: 0; }
+  .dept-name { font-weight: 700; margin-bottom: 2px; }
+  .dept-cmd { font-size: 0.75rem; color: var(--md-sys-color-primary); display: block; margin-bottom: var(--spacing-xs); }
+  .dept-desc { font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); }
+  .callout { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-md) var(--spacing-lg); margin: var(--spacing-md) 0; }
+  .callout md-icon { color: var(--md-sys-color-primary); flex-shrink: 0; }
+  .callout p { margin: 0; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } .dept-grid { grid-template-columns: 1fr; } }
+</style>

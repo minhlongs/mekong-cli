@@ -1,0 +1,128 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+---
+
+<MainLayout title="License — OpenClaw">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <ul class="toc">
+        <li><a href="#tiers">License Tiers</a></li>
+        <li><a href="#activate">Activation</a></li>
+        <li><a href="#buy">How to Buy</a></li>
+        <li><a href="#manage">Manage Seats</a></li>
+      </ul>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Monetization</span>
+        <h1>License <span class="gradient-text">Tiers & Activation</span></h1>
+        <p class="guide-lead">OpenClaw uses MCU (Mission Credit Units) billing via Polar.sh. Credits are only consumed on successful task delivery.</p>
+      </header>
+
+      <section id="tiers">
+        <h2>License Tiers</h2>
+        <div class="tiers-grid">
+          <div class="tier-card glass">
+            <h3>Free</h3>
+            <div class="mcu">50 MCU/mo</div>
+            <p>Try the CLI. Limited to core commands. Community support only.</p>
+          </div>
+          <div class="tier-card glass tier-highlight">
+            <div class="badge">Most Popular</div>
+            <h3>Starter — $49/mo</h3>
+            <div class="mcu">200 MCU/mo</div>
+            <p>All 8 SoloOS departments. 319 commands. Email support. Best for solo founders.</p>
+          </div>
+          <div class="tier-card glass">
+            <h3>Pro — $149/mo</h3>
+            <div class="mcu">1,000 MCU/mo</div>
+            <p>AGI Evolution, Multi-CLI routing, RaaS access, priority support.</p>
+          </div>
+          <div class="tier-card glass">
+            <h3>Enterprise — $499/mo</h3>
+            <div class="mcu">Unlimited MCU</div>
+            <p>White-label, custom adapters, SLA, dedicated infra, team seats.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="activate">
+        <h2>Activation</h2>
+        <p>After purchasing on Polar.sh, you receive a license key via email. Activate it:</p>
+        <pre><code>mekong license activate &lt;YOUR_LICENSE_KEY&gt;</code></pre>
+        <p>This stores the key in <code>~/.mekong/license.json</code> and verifies balance with the RaaS gateway.</p>
+        <p>Check current license status anytime:</p>
+        <pre><code>mekong license status
+# License: Pro | Balance: 847 MCU | Expires: 2026-04-18</code></pre>
+        <p>Top up credits without changing your plan:</p>
+        <pre><code>mekong license topup 500   # Add 500 MCU</code></pre>
+      </section>
+
+      <section id="buy">
+        <h2>How to Buy via Polar.sh</h2>
+        <ol class="steps">
+          <li>Visit <a href="https://polar.sh/openclaw" target="_blank" rel="noopener">polar.sh/openclaw</a></li>
+          <li>Select your product (MEKONG CLI, SOPHIA, ALGO TRADER, etc.)</li>
+          <li>Choose a tier — Starter, Pro, or Enterprise</li>
+          <li>Complete checkout (card or crypto accepted)</li>
+          <li>Receive license key by email within 60 seconds</li>
+          <li>Activate with <code>mekong license activate &lt;key&gt;</code></li>
+        </ol>
+        <div class="callout glass">
+          <md-icon>info</md-icon>
+          <p>All payments are processed by Polar.sh. OpenClaw never stores card details.</p>
+        </div>
+      </section>
+
+      <section id="manage">
+        <h2>Manage Seats (Enterprise)</h2>
+        <p>Enterprise licenses support multiple team members. Add a seat:</p>
+        <pre><code>mekong license seat/add --email teammate@company.com</code></pre>
+        <p>List active seats:</p>
+        <pre><code>mekong license seat/list</code></pre>
+        <p>Revoke a seat:</p>
+        <pre><code>mekong license seat/revoke --email teammate@company.com</code></pre>
+        <p>All seat activity is logged to <code>.mekong/audit.log</code> for compliance.</p>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/commands" class="nav-prev glass">← Commands</a>
+        <a href="/guides/raas" class="nav-next glass">RaaS →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .tiers-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+  .tier-card { padding: var(--spacing-lg); position: relative; }
+  .tier-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: var(--spacing-xs); }
+  .tier-highlight { border-color: var(--md-sys-color-primary) !important; }
+  .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #00BCD4, #9C27B0); color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 10px; border-radius: 10px; white-space: nowrap; }
+  .mcu { font-size: 1.25rem; font-weight: 800; background: linear-gradient(135deg, #00BCD4, #9C27B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: var(--spacing-sm); }
+  .tier-card p { font-size: 0.875rem; color: var(--md-sys-color-on-surface-variant); }
+  .steps { margin: 0 0 var(--spacing-lg) var(--spacing-xl); color: var(--md-sys-color-on-surface-variant); line-height: 2; }
+  .steps a { color: var(--md-sys-color-primary); }
+  .callout { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-md) var(--spacing-lg); }
+  .callout md-icon { color: var(--md-sys-color-primary); flex-shrink: 0; }
+  .callout p { margin: 0; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } .tiers-grid { grid-template-columns: 1fr; } }
+</style>

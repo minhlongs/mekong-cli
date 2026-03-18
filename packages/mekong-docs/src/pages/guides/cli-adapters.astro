@@ -1,0 +1,149 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+
+const PROVIDERS = [
+  { name: 'OpenRouter', env: 'LLM_BASE_URL + LLM_API_KEY', note: 'Recommended — access 200+ models' },
+  { name: 'Anthropic', env: 'ANTHROPIC_API_KEY', note: 'Direct Claude access' },
+  { name: 'OpenAI', env: 'OPENAI_API_KEY', note: 'GPT-4o, o1, o3' },
+  { name: 'Google Gemini', env: 'GOOGLE_API_KEY', note: 'Gemini 2.0 Flash/Pro' },
+  { name: 'DeepSeek', env: 'DEEPSEEK_API_KEY', note: 'Cost-efficient reasoning' },
+  { name: 'Qwen (DashScope)', env: 'DASHSCOPE_API_KEY', note: 'Alibaba models' },
+  { name: 'Ollama', env: 'OLLAMA_BASE_URL', note: 'Local models, offline' },
+];
+---
+
+<MainLayout title="CLI Adapters — OpenClaw">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <ul class="toc">
+        <li><a href="#discovery">Provider Discovery</a></li>
+        <li><a href="#routing">Routing Logic</a></li>
+        <li><a href="#failover">Failover</a></li>
+        <li><a href="#swarm">Swarm Mode</a></li>
+        <li><a href="#custom">Custom Adapters</a></li>
+      </ul>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Infrastructure</span>
+        <h1>CLI <span class="gradient-text">Adapters</span></h1>
+        <p class="guide-lead">OpenClaw routes tasks across CC CLI, Gemini, Qwen, and any OpenAI-compatible provider. One config. Automatic failover. Zero lock-in.</p>
+      </header>
+
+      <section id="discovery">
+        <h2>Provider Discovery</h2>
+        <p>OpenClaw auto-detects available providers from environment variables:</p>
+        <div class="provider-table">
+          {PROVIDERS.map((p) => (
+            <div class="provider-row glass">
+              <span class="provider-name">{p.name}</span>
+              <code class="provider-env">{p.env}</code>
+              <span class="provider-note">{p.note}</span>
+            </div>
+          ))}
+        </div>
+        <p>Check which providers are active:</p>
+        <pre><code>mekong adapters/list
+# ✓ OpenRouter  (primary)
+# ✓ Anthropic   (fallback 1)
+# ✓ Ollama      (offline fallback)
+# ✗ DeepSeek    (no API key)</code></pre>
+      </section>
+
+      <section id="routing">
+        <h2>Routing Logic</h2>
+        <p>Tasks are routed based on three variables:</p>
+        <pre><code>export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_MODEL=anthropic/claude-sonnet-4</code></pre>
+        <p>Override per-command with <code>--model</code>:</p>
+        <pre><code>mekong cook "Write pitch deck" --model google/gemini-2.0-flash
+mekong code "Refactor auth module" --model deepseek/deepseek-r1</code></pre>
+        <p>Configure routing rules in <code>mekong/adapters/llm-providers.yaml</code>:</p>
+        <pre><code class="language-yaml">routing:
+  coding: anthropic/claude-sonnet-4
+  writing: google/gemini-2.0-flash
+  analysis: deepseek/deepseek-r1
+  default: openai/gpt-4o</code></pre>
+      </section>
+
+      <section id="failover">
+        <h2>Automatic Failover</h2>
+        <p>If the primary provider fails (rate limit, outage, timeout), OpenClaw automatically falls back:</p>
+        <pre><code>Fallback chain:
+OPENROUTER_API_KEY → DASHSCOPE_API_KEY → DEEPSEEK_API_KEY
+→ ANTHROPIC_API_KEY → OPENAI_API_KEY → GOOGLE_API_KEY
+→ OLLAMA_BASE_URL → OfflineProvider</code></pre>
+        <p>Configure failover behavior:</p>
+        <pre><code class="language-yaml"># mekong/adapters/failover.yaml
+strategy: sequential   # sequential | random | latency-based
+timeout_ms: 10000
+max_retries: 2
+notify_on_failover: true</code></pre>
+        <p>The <code>OfflineProvider</code> runs a minimal Ollama model locally — ensuring tasks never fully fail even without internet.</p>
+      </section>
+
+      <section id="swarm">
+        <h2>Swarm Mode</h2>
+        <p>Run multiple providers in parallel and pick the best result:</p>
+        <pre><code>mekong cook "Generate 5 headline variants" --swarm</code></pre>
+        <p>Swarm mode spawns the task across all available providers simultaneously, then uses a judge model to select the best output. Consumes MCU for each provider used.</p>
+        <p>Configure swarm strategy:</p>
+        <pre><code class="language-yaml"># mekong/adapters/swarm.yaml
+mode: best-of-n        # best-of-n | consensus | fastest
+n: 3                   # number of providers
+judge_model: anthropic/claude-sonnet-4</code></pre>
+      </section>
+
+      <section id="custom">
+        <h2>Custom Adapters</h2>
+        <p>Add any OpenAI-compatible API as a custom adapter:</p>
+        <pre><code>mekong adapters/add \
+  --name "my-llm" \
+  --base-url https://api.my-llm.com/v1 \
+  --api-key $MY_LLM_KEY \
+  --model my-model-v1</code></pre>
+        <p>Or create a config file at <code>mekong/adapters/custom/my-llm.yaml</code>:</p>
+        <pre><code class="language-yaml">name: my-llm
+base_url: https://api.my-llm.com/v1
+api_key_env: MY_LLM_KEY
+model: my-model-v1
+context_window: 128000
+supports_tools: true</code></pre>
+        <p>Custom adapters participate in failover and swarm routing automatically.</p>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/vc-ready" class="nav-prev glass">← VC Ready</a>
+        <a href="/guides" class="nav-next glass">All Guides →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .provider-table { display: flex; flex-direction: column; gap: 4px; margin-bottom: var(--spacing-lg); }
+  .provider-row { display: grid; grid-template-columns: 160px 1fr 1fr; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); align-items: center; border-radius: 8px !important; }
+  .provider-name { font-weight: 600; font-size: 0.9rem; }
+  .provider-env { font-size: 0.75rem; color: var(--md-sys-color-primary); }
+  .provider-note { font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } .provider-row { grid-template-columns: 1fr; } }
+</style>
