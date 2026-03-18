@@ -42,7 +42,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
 </DashboardLayout>
 
 <script>
-  const API = 'https://mekong-engine.agencyos-openclaw.workers.dev';
+  const API = 'https://api.agencyos.network';
   if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
 
   const key = localStorage.getItem('mk_api_key') || '';

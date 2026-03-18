@@ -2,5 +2,5 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://raas-landing.pages.dev',
+  site: 'https://agencyos.network',
 });
