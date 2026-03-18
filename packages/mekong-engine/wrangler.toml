@@ -4,23 +4,24 @@ compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Replace with YOUR Cloudflare account ID (Dashboard → Overview → right sidebar)
-account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+account_id = "f691e83094f776311a1bfe3f8b126f1c"
 
 [vars]
 ENVIRONMENT = "production"
 DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+FB_VERIFY_TOKEN = "mekong_verify"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "mekong-db"
+database_name = "mekong-raas-db"
 # Create D1: wrangler d1 create mekong-db → paste database_id here
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "a0aa4f88-da5b-4616-84aa-7e559e37c91c"
 migrations_dir = "migrations"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 # Create KV: wrangler kv namespace create RATE_LIMIT_KV → paste id here
-id = "YOUR_KV_NAMESPACE_ID"
+id = "982a12a5ea414244988a51d743eb14e7"
 
 [ai]
 binding = "AI"
@@ -30,5 +31,8 @@ binding = "AI"
 # binding = "RECIPES"
 # bucket_name = "mekong-recipes"
 
-# Secrets (set via: CLOUDFLARE_API_TOKEN=<new-token> npx wrangler secret put <NAME>)
+# Secrets (set via: npx wrangler secret put <NAME>)
 # LLM_API_KEY, SERVICE_TOKEN, POLAR_WEBHOOK_SECRET
+
+[triggers]
+crons = ["*/30 * * * *"]
