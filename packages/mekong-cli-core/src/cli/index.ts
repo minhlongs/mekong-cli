@@ -18,6 +18,8 @@ import { registerAnalyticsCommand } from './commands/analytics.js';
 import { registerRoiaasCommands } from './commands/roiaas.js';
 import { registerRaasCommand } from './commands/raas.js';
 import { registerCtoCommand } from './commands/cto.js';
+import { registerCliProviderCommand } from './commands/cli-provider.js';
+import { registerRdCommand } from './commands/rd.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -68,6 +70,8 @@ export async function main(argv?: string[]): Promise<void> {
   registerRoiaasCommands(program, engine);
   registerRaasCommand(program, engine);
   registerCtoCommand(program, engine);
+  registerCliProviderCommand(program, engine);
+  registerRdCommand(program, engine);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
