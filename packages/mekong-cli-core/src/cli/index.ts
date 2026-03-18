@@ -21,6 +21,7 @@ import { registerCtoCommand } from './commands/cto.js';
 import { registerCliProviderCommand } from './commands/cli-provider.js';
 import { registerRdCommand } from './commands/rd.js';
 import { registerAgiCommand } from './commands/agi.js';
+import { registerRaasMarketplaceCommand } from './commands/raas-marketplace.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -74,6 +75,7 @@ export async function main(argv?: string[]): Promise<void> {
   registerCliProviderCommand(program, engine);
   registerRdCommand(program, engine);
   registerAgiCommand(program, engine);
+  registerRaasMarketplaceCommand(program, engine);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
