@@ -42,6 +42,15 @@ app.onError((err, c) => {
 // Middleware
 app.use('*', cors())
 
+// Root — service info
+app.get('/', (c) => c.json({
+  service: 'mekong-engine',
+  version: '3.2.0',
+  docs: 'https://docs.agencyos.network',
+  health: '/health',
+  api: '/v1',
+}))
+
 // Health check + auto-migrate tenant_settings
 app.get('/health', async (c) => {
   if (c.env.DB) {
