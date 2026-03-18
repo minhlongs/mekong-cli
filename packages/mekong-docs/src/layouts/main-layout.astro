@@ -4,14 +4,19 @@ import '../styles/theme.css';
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
 }
 
 const {
   title = 'OpenClaw — AGI CLI for Solo Founders',
   description = 'Run your entire company from the terminal. 16+ packages. 1 person. 0 employees.',
+  ogImage = '/og-default.png',
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+const siteUrl = 'https://mekong-docs.pages.dev';
+const canonicalUrl = `${siteUrl}${currentPath}`;
+const fullTitle = title.includes('Mekong Docs') ? title : `${title} | Mekong Docs`;
 ---
 
 <!doctype html>
@@ -20,8 +25,21 @@ const currentPath = Astro.url.pathname;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <title>{title} | Mekong Docs</title>
+    <title>{fullTitle}</title>
+    <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${siteUrl}${ogImage}`} />
+    <meta property="og:site_name" content="OpenClaw Docs" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${siteUrl}${ogImage}`} />
     <script type="module">
       import '@material/web/all.js';
     </script>
