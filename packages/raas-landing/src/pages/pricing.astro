@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../layouts/base-layout.astro';
+
+const rows = [
+  { feature: 'Credits / tháng', free: '50', starter: '500', pro: '2.000', enterprise: 'Không giới hạn' },
+  { feature: 'AI Receptionist', free: 'Cơ bản', starter: '24/7', pro: '24/7 Multi-channel', enterprise: 'Dedicated AI' },
+  { feature: 'Content Creator', free: '3 ngày/tháng', starter: '7 ngày/tuần', pro: '7 ngày/tuần + lịch', enterprise: 'Toàn quyền tùy chỉnh' },
+  { feature: 'CRM', free: '50 khách', starter: 'Không giới hạn', pro: 'Không giới hạn + API', enterprise: 'Enterprise CRM' },
+  { feature: 'Báo cáo', free: 'Tháng', starter: 'Tuần', pro: 'Thời gian thực', enterprise: 'Tuỳ chỉnh' },
+  { feature: 'Kênh hỗ trợ', free: 'Email', starter: 'Chat ưu tiên', pro: 'Chat + Phone', enterprise: 'Dedicated manager' },
+  { feature: 'API access', free: '—', starter: '—', pro: '✓', enterprise: '✓' },
+  { feature: 'White-label', free: '—', starter: '—', pro: '—', enterprise: '✓' },
+  { feature: 'SLA', free: '—', starter: '—', pro: '99.9%', enterprise: '99.99%' },
+  { feature: 'Onboarding 1-1', free: '—', starter: '—', pro: '—', enterprise: '✓' },
+];
+
+const plans = [
+  { name: 'Miễn phí', price: '0đ', href: 'https://raas-dashboard.pages.dev/signup', popular: false },
+  { name: 'Starter', price: '199K/tháng', href: 'https://raas-dashboard.pages.dev/signup?plan=starter', popular: true },
+  { name: 'Pro', price: '499K/tháng', href: 'https://raas-dashboard.pages.dev/signup?plan=pro', popular: false },
+  { name: 'Enterprise', price: '2.99M/tháng', href: 'mailto:hello@agencyos.network', popular: false },
+];
+---
+
+<BaseLayout title="Bảng giá — OpenClaw RaaS" description="So sánh chi tiết các gói OpenClaw RaaS. Miễn phí đến Enterprise.">
+  <section style="padding:80px 0 40px;text-align:center;">
+    <div class="container">
+      <div class="section-label">Bảng giá</div>
+      <h1 style="font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:12px;">
+        So sánh <span class="gradient-text">tất cả gói dịch vụ</span>
+      </h1>
+      <p style="color:var(--text-muted);max-width:480px;margin:0 auto;">
+        Minh bạch 100%. Không phí ẩn. Huỷ bất cứ lúc nào.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding:20px 0 80px;">
+    <div class="container" style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:640px;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:14px 16px;color:var(--text-muted);font-size:0.85rem;font-weight:500;border-bottom:1px solid var(--border);">Tính năng</th>
+            {plans.map(p => (
+              <th style={`text-align:center;padding:14px 16px;border-bottom:1px solid var(--border);${p.popular ? 'background:rgba(0,188,212,0.06);border-radius:8px 8px 0 0;' : ''}`}>
+                <div style="font-size:0.9rem;font-weight:600;color:var(--text);">{p.name}</div>
+                <div style="font-size:0.82rem;color:var(--primary);margin-top:2px;">{p.price}</div>
+                {p.popular && <div style="font-size:0.72rem;background:var(--primary);color:#fff;border-radius:100px;padding:2px 8px;display:inline-block;margin-top:4px;">Phổ biến nhất</div>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr style={i % 2 === 0 ? 'background:rgba(255,255,255,0.015);' : ''}>
+              <td style="padding:13px 16px;font-size:0.9rem;color:var(--text-muted);border-bottom:1px solid rgba(255,255,255,0.04);">{row.feature}</td>
+              {[row.free, row.starter, row.pro, row.enterprise].map((val, ci) => (
+                <td style={`text-align:center;padding:13px 16px;font-size:0.88rem;border-bottom:1px solid rgba(255,255,255,0.04);${ci === 1 ? 'background:rgba(0,188,212,0.04);' : ''}color:${val === '—' ? 'var(--text-muted)' : 'var(--text)'};`}>
+                  {val === '✓' ? <span style="color:var(--primary);font-size:1rem;">✓</span> : val}
+                </td>
+              ))}
+            </tr>
+          ))}
+          <tr>
+            <td style="padding:20px 16px;"></td>
+            {plans.map(p => (
+              <td style={`text-align:center;padding:20px 16px;${p.popular ? 'background:rgba(0,188,212,0.06);' : ''}`}>
+                <a href={p.href} class={p.popular ? 'btn-primary' : 'btn-outline'} style="display:inline-block;font-size:0.88rem;padding:10px 20px;">
+                  {p.name === 'Enterprise' ? 'Liên hệ' : 'Chọn gói'}
+                </a>
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="padding:0 0 80px;">
+    <div class="container" style="max-width:640px;text-align:center;">
+      <h2 style="margin-bottom:12px;">Còn thắc mắc?</h2>
+      <p style="color:var(--text-muted);margin-bottom:24px;">Đội ngũ hỗ trợ sẵn sàng tư vấn miễn phí cho bạn.</p>
+      <a href="mailto:hello@agencyos.network" class="btn-outline">Gửi email cho chúng tôi</a>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid var(--border);padding:32px 0;text-align:center;">
+    <div class="container">
+      <p style="font-size:0.82rem;color:var(--text-muted);">
+        <a href="/" style="color:var(--primary);">← Về trang chủ</a>
+        &nbsp;·&nbsp;
+        Sản phẩm của <a href="https://agencyos.network" style="color:var(--primary);">OpenClaw</a>
+      </p>
+    </div>
+  </footer>
+</BaseLayout>

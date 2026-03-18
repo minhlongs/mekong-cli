@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../layouts/base-layout.astro';
+
+const features = [
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo/Facebook 24/7, không bỏ sót tin nhắn nào từ khách hàng.' },
+  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content, bạn chỉ cần duyệt và đăng lên.' },
+  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu thông tin khách, remarketing đúng lúc đúng người.' },
+  { icon: '📈', title: 'Báo Cáo Tuần', desc: 'AI phân tích dữ liệu và gợi ý cải thiện kinh doanh mỗi tuần.' },
+];
+
+const steps = [
+  { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
+  { num: '02', title: 'Kết nối Zalo/FB', time: '5 phút', desc: 'Kết nối kênh bán hàng của bạn chỉ bằng vài cú click.' },
+  { num: '03', title: 'AI bắt đầu vận hành', time: 'Tự động', desc: 'Hệ thống tự học và vận hành 24/7 từ phút đầu tiên.' },
+];
+
+const plans = [
+  { name: 'Miễn phí', price: '0đ', period: '/tháng', credits: '50 credits', popular: false,
+    features: ['AI Receptionist cơ bản', '3 ngày content/tháng', 'Lưu 50 khách hàng', 'Báo cáo tháng'],
+    cta: 'Bắt đầu miễn phí', href: 'https://raas-dashboard.pages.dev/signup' },
+  { name: 'Starter', price: '199K', period: '/tháng', credits: '500 credits', popular: true,
+    features: ['AI Receptionist 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần', 'Hỗ trợ ưu tiên'],
+    cta: 'Dùng thử 14 ngày', href: 'https://raas-dashboard.pages.dev/signup?plan=starter' },
+  { name: 'Pro', price: '499K', period: '/tháng', credits: '2.000 credits', popular: false,
+    features: ['Tất cả Starter', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'],
+    cta: 'Chọn Pro', href: 'https://raas-dashboard.pages.dev/signup?plan=pro' },
+  { name: 'Enterprise', price: '2.99M', period: '/tháng', credits: 'Không giới hạn', popular: false,
+    features: ['Tất cả Pro', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'],
+    cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network' },
+];
+
+const faqs = [
+  { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong vòng 5 phút.' },
+  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
+  { q: 'Thanh toán bằng gì?', a: 'MoMo, VNPAY, chuyển khoản ngân hàng. Hỗ trợ hoá đơn VAT cho doanh nghiệp.' },
+  { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau huỷ.' },
+  { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Dữ liệu chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
+];
+---
+
+<BaseLayout>
+  <!-- HERO -->
+  <section style="padding:100px 0 80px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(0,188,212,0.08) 0%,transparent 70%);">
+    <div class="container">
+      <div style="display:inline-block;background:rgba(0,188,212,0.1);border:1px solid rgba(0,188,212,0.2);border-radius:100px;padding:6px 18px;font-size:0.8rem;color:var(--primary);margin-bottom:24px;">
+        Thử miễn phí 14 ngày — Không cần thẻ tín dụng
+      </div>
+      <h1 style="font-size:clamp(2.2rem,6vw,3.8rem);font-weight:800;line-height:1.15;margin-bottom:20px;">
+        <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp Của Bạn
+      </h1>
+      <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--text-muted);max-width:560px;margin:0 auto 36px;">
+        Trả lời khách 24/7. Tạo content tự động. CRM thông minh.<br />
+        <strong style="color:var(--text);">Chỉ 199K/tháng.</strong>
+      </p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="https://raas-dashboard.pages.dev/signup" class="btn-primary">Thử miễn phí 14 ngày</a>
+        <a href="#features" class="btn-outline">Xem demo →</a>
+      </div>
+      <p style="margin-top:20px;font-size:0.85rem;color:var(--text-muted);">
+        Hơn 500 doanh nghiệp đang dùng · Không cần cài đặt phức tạp
+      </p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="padding:80px 0;">
+    <div class="container">
+      <div class="text-center mb-48">
+        <div class="section-label">Tính năng</div>
+        <h2>Mọi thứ bạn cần để <span class="gradient-text">bán hàng hiệu quả</span></h2>
+        <p class="text-muted" style="max-width:500px;margin:12px auto 0;">AI làm thay những việc lặp đi lặp lại, bạn tập trung vào tăng trưởng.</p>
+      </div>
+      <div class="grid-4">
+        {features.map(f => (
+          <div class="glass-card">
+            <div style="font-size:2rem;margin-bottom:14px;">{f.icon}</div>
+            <h3>{f.title}</h3>
+            <p class="text-muted" style="font-size:0.92rem;line-height:1.6;">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="padding:80px 0;background:rgba(255,255,255,0.015);">
+    <div class="container">
+      <div class="text-center mb-48">
+        <div class="section-label">Bắt đầu</div>
+        <h2>Chỉ <span class="gradient-text">3 bước</span> là xong</h2>
+      </div>
+      <div class="grid-3">
+        {steps.map(s => (
+          <div class="glass-card" style="position:relative;overflow:hidden;">
+            <div style="position:absolute;top:16px;right:20px;font-size:3rem;font-weight:800;color:rgba(0,188,212,0.08);line-height:1;">{s.num}</div>
+            <div style="display:inline-block;background:rgba(0,188,212,0.12);color:var(--primary);font-size:0.78rem;font-weight:600;padding:3px 10px;border-radius:100px;margin-bottom:14px;">{s.time}</div>
+            <h3 style="font-size:1.25rem;">{s.title}</h3>
+            <p class="text-muted" style="font-size:0.92rem;margin-top:6px;">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="padding:80px 0;">
+    <div class="container">
+      <div class="text-center mb-48">
+        <div class="section-label">Bảng giá</div>
+        <h2>Minh bạch, <span class="gradient-text">không phí ẩn</span></h2>
+        <p class="text-muted" style="max-width:440px;margin:12px auto 0;">Tất cả gói đều có 14 ngày dùng thử miễn phí. Huỷ bất cứ lúc nào.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;align-items:start;">
+        {plans.map(p => (
+          <div class="glass-card" style={p.popular ? 'border-color:var(--primary);position:relative;' : 'position:relative;'}>
+            {p.popular && (
+              <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-size:0.75rem;font-weight:700;padding:4px 14px;border-radius:100px;white-space:nowrap;">
+                Phổ biến nhất
+              </div>
+            )}
+            <div style="margin-bottom:20px;">
+              <div style="font-size:0.9rem;color:var(--text-muted);margin-bottom:4px;">{p.name}</div>
+              <div style="display:flex;align-items:baseline;gap:2px;">
+                <span style="font-size:1.9rem;font-weight:800;color:var(--text);">{p.price}</span>
+                <span style="font-size:0.85rem;color:var(--text-muted);">{p.period}</span>
+              </div>
+              <div style="font-size:0.82rem;color:var(--primary);margin-top:4px;">{p.credits}</div>
+            </div>
+            <ul style="list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:8px;">
+              {p.features.map(feat => (
+                <li style="font-size:0.88rem;color:var(--text-muted);display:flex;gap:8px;align-items:flex-start;">
+                  <span style="color:var(--primary);flex-shrink:0;">✓</span>{feat}
+                </li>
+              ))}
+            </ul>
+            <a href={p.href} class={p.popular ? 'btn-primary' : 'btn-outline'} style="display:block;text-align:center;width:100%;">
+              {p.cta}
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" style="padding:80px 0;background:rgba(255,255,255,0.015);">
+    <div class="container" style="max-width:720px;">
+      <div class="text-center mb-48">
+        <div class="section-label">FAQ</div>
+        <h2>Câu hỏi <span class="gradient-text">thường gặp</span></h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {faqs.map(f => (
+          <div class="glass-card" style="padding:20px 24px;">
+            <h3 style="font-size:1rem;margin-bottom:8px;color:var(--text);">{f.q}</h3>
+            <p style="font-size:0.92rem;color:var(--text-muted);line-height:1.65;">{f.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section style="padding:80px 0;">
+    <div class="container">
+      <div style="background:linear-gradient(135deg,rgba(0,188,212,0.1),rgba(156,39,176,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:16px;padding:60px 40px;text-align:center;">
+        <h2 style="font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:16px;">Sẵn sàng để AI <span class="gradient-text">làm việc cho bạn?</span></h2>
+        <p style="color:var(--text-muted);margin-bottom:32px;max-width:440px;margin-left:auto;margin-right:auto;">
+          Tham gia cùng hơn 500 doanh nghiệp đang tiết kiệm 20+ giờ/tuần với OpenClaw RaaS.
+        </p>
+        <a href="https://raas-dashboard.pages.dev/signup" class="btn-primary" style="font-size:1.05rem;padding:16px 40px;">
+          Bắt đầu miễn phí ngay →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid var(--border);padding:48px 0 32px;">
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;align-items:start;margin-bottom:32px;">
+        <div>
+          <div style="font-size:1.2rem;font-weight:700;margin-bottom:6px;"><span class="gradient-text">OpenClaw</span> RaaS</div>
+          <p style="color:var(--text-muted);font-size:0.9rem;max-width:260px;">AI vận hành doanh nghiệp tự động. Tiết kiệm thời gian, tăng doanh thu.</p>
+        </div>
+        <nav style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+          <a href="https://raas-dashboard.pages.dev" style="color:var(--text-muted);font-size:0.9rem;">Dashboard</a>
+          <a href="https://docs.agencyos.network" style="color:var(--text-muted);font-size:0.9rem;">Docs</a>
+          <a href="https://docs.agencyos.network/api" style="color:var(--text-muted);font-size:0.9rem;">API</a>
+          <a href="mailto:hello@agencyos.network" style="color:var(--text-muted);font-size:0.9rem;">Liên hệ</a>
+        </nav>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:20px;font-size:0.82rem;color:var(--text-muted);text-align:center;">Sản phẩm của <a href="https://agencyos.network" style="color:var(--primary);">OpenClaw</a> — agencyos.network</div>
+    </div>
+  </footer>
+</BaseLayout>

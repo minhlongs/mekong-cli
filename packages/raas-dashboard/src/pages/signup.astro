@@ -1,0 +1,99 @@
+---
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký — RaaS Dashboard</title>
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+  <style>
+    .signup-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .signup-box { width:100%; max-width:420px; }
+    .signup-logo { text-align:center; margin-bottom:32px; }
+    .signup-logo h1 { font-size:24px; color:#818cf8; }
+    .signup-logo p { color:var(--text2); font-size:13px; margin-top:6px; }
+    .error-msg { color:var(--danger); font-size:13px; margin-top:8px; display:none; }
+    .success-msg { color:var(--success); font-size:13px; margin-top:8px; display:none; }
+    .divider { text-align:center; color:var(--text2); font-size:12px; margin:20px 0; }
+    .btn-full { width:100%; padding:12px; font-size:15px; }
+  </style>
+</head>
+<body>
+<div class="signup-wrap">
+  <div class="signup-box">
+    <div class="signup-logo">
+      <h1>OpenClaw RaaS</h1>
+      <p>AI tự động vận hành doanh nghiệp của bạn</p>
+    </div>
+
+    <div class="card">
+      <div class="form-group">
+        <label for="email">Email doanh nghiệp</label>
+        <input type="email" id="email" placeholder="you@company.com" autocomplete="email" />
+      </div>
+      <button class="btn btn-primary btn-full" id="btn-signup">Tạo tài khoản miễn phí</button>
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+    </div>
+
+    <div class="divider">Đã có tài khoản?</div>
+    <div class="card">
+      <div class="form-group">
+        <label for="existing-key">API Key</label>
+        <input type="password" id="existing-key" placeholder="mk_live_..." autocomplete="off" />
+      </div>
+      <button class="btn btn-secondary btn-full" id="btn-login">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://mekong-engine.agencyos-openclaw.workers.dev';
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('success-msg').style.display = 'none';
+  }
+  function showSuccess(msg) {
+    const el = document.getElementById('success-msg');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('error-msg').style.display = 'none';
+  }
+
+  document.getElementById('btn-signup').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    if (!email) { showError('Vui lòng nhập email.'); return; }
+    const btn = document.getElementById('btn-signup');
+    btn.textContent = 'Đang tạo...'; btn.disabled = true;
+    try {
+      const res = await fetch(API + '/billing/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showError(data.error || 'Lỗi tạo tài khoản.'); return; }
+      localStorage.setItem('mk_api_key', data.api_key);
+      showSuccess('Tài khoản đã tạo! Đang chuyển hướng...');
+      setTimeout(() => window.location.href = '/onboard', 1000);
+    } catch {
+      showError('Không thể kết nối server. Thử lại sau.');
+    } finally {
+      btn.textContent = 'Tạo tài khoản miễn phí'; btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btn-login').addEventListener('click', () => {
+    const key = document.getElementById('existing-key').value.trim();
+    if (!key) { showError('Vui lòng nhập API Key.'); return; }
+    localStorage.setItem('mk_api_key', key);
+    window.location.href = '/dashboard';
+  });
+
+  // Already logged in?
+  if (localStorage.getItem('mk_api_key')) window.location.replace('/dashboard');
+</script>
+</body>
+</html>

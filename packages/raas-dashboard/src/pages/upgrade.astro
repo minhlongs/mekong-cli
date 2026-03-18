@@ -1,0 +1,74 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Nâng cấp" activePage="/upgrade">
+  <h2 style="font-size:18px;margin-bottom:6px">Nâng cấp gói</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:24px">Mở khoá thêm tính năng AI cho doanh nghiệp của bạn</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px" id="tier-grid">
+    <!-- rendered by JS -->
+  </div>
+
+  <div class="card" style="max-width:480px">
+    <strong style="display:block;margin-bottom:12px">Thanh toán USD (Polar.sh)</strong>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Dành cho khách hàng quốc tế. Thanh toán bằng thẻ tín dụng qua Polar.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="polar-links">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://mekong-engine.agencyos-openclaw.workers.dev';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  const key = () => localStorage.getItem('mk_api_key');
+  const h = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + key() });
+
+  const TIERS = [
+    { id: 'starter',    label: 'Starter',    price: '490.000đ', usd: '$49',  credits: 200,  features: ['200 MCU/tháng', 'Trả lời tự động', 'Báo cáo tuần', '1 kênh'] },
+    { id: 'pro',        label: 'Pro',         price: '990.000đ', usd: '$99',  credits: 500,  features: ['500 MCU/tháng', 'Tất cả Starter', 'Content AI 30 ngày', '3 kênh', 'CRM nâng cao'], popular: true },
+    { id: 'growth',     label: 'Growth',      price: '1.490.000đ', usd: '$149', credits: 1000, features: ['1.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
+    { id: 'enterprise', label: 'Enterprise',  price: 'Liên hệ',  usd: '$499', credits: 999999, features: ['Không giới hạn MCU', 'Tất cả Growth', 'Tích hợp riêng', 'SLA 99.9%', 'Account manager'] },
+  ];
+
+  const POLAR_LINKS = {
+    starter: 'https://polar.sh/openclaw/starter',
+    pro: 'https://polar.sh/openclaw/pro',
+    growth: 'https://polar.sh/openclaw/growth',
+    enterprise: 'https://polar.sh/openclaw/enterprise',
+  };
+
+  document.getElementById('tier-grid').innerHTML = TIERS.map(t => `
+    <div class="card" style="position:relative;border-color:${t.popular ? 'var(--accent)' : 'var(--border)'}">
+      ${t.popular ? '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;padding:2px 10px;border-radius:99px">Phổ biến</div>' : ''}
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">${t.label}</div>
+      <div style="font-size:22px;font-weight:800;color:var(--accent2);margin-bottom:2px">${t.price}</div>
+      <div style="color:var(--text2);font-size:11px;margin-bottom:16px">/tháng · ${t.credits === 999999 ? 'Không giới hạn' : t.credits+' credits'}</div>
+      <ul style="list-style:none;margin-bottom:20px;display:grid;gap:6px">
+        ${t.features.map(f => `<li style="font-size:12px;color:var(--text2)">✓ ${f}</li>`).join('')}
+      </ul>
+      <button class="btn btn-${t.popular ? 'primary' : 'secondary'} btn-full" data-tier="${t.id}">${t.id === 'enterprise' ? 'Liên hệ' : 'Thanh toán VND'}</button>
+    </div>`).join('');
+
+  document.getElementById('tier-grid').querySelectorAll('[data-tier]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const tier = btn.dataset.tier;
+      if (tier === 'enterprise') { window.open('mailto:hello@openclaw.ai?subject=Enterprise', '_blank'); return; }
+      btn.disabled = true; btn.textContent = 'Đang xử lý...';
+      try {
+        const res = await fetch(API + '/billing/payment-url', { method: 'POST', headers: h(), body: JSON.stringify({ tier }) });
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+        else throw new Error();
+      } catch {
+        alert('Không thể tạo link thanh toán. Thử lại sau.');
+        btn.disabled = false; btn.textContent = 'Thanh toán VND';
+      }
+    });
+  });
+
+  document.getElementById('polar-links').innerHTML = TIERS.filter(t => t.id !== 'enterprise').map(t =>
+    `<a href="${POLAR_LINKS[t.id]}" target="_blank" class="btn btn-secondary btn-sm">${t.label} — ${t.usd}/mo</a>`
+  ).join('') + `<a href="${POLAR_LINKS.enterprise}" target="_blank" class="btn btn-secondary btn-sm">Enterprise — contact</a>`;
+</script>
