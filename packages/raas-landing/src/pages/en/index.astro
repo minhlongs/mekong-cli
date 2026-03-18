@@ -28,6 +28,20 @@ const faqs = [
   { q: 'Can I cancel my subscription?', a: 'Cancel anytime with no penalty. Your data is retained for 30 days after cancellation.' },
   { q: 'Is my customer data safe?', a: 'Runs on Cloudflare Workers with end-to-end encryption. Never shared with third parties.' },
 ];
+
+const platformStats = [
+  { value: '319', label: 'Commands', desc: 'CLI commands for every layer' },
+  { value: '540', label: 'AI Skills', desc: 'Specialized skill library' },
+  { value: '17', label: 'AI Agents', desc: 'Self-operating agents' },
+  { value: '410', label: 'Contracts', desc: 'Ready-made machine contracts' },
+  { value: '13', label: 'Hooks', desc: 'Auto-trigger pipelines' },
+];
+
+const testimonials = [
+  { name: 'Minh Tuan', role: 'CEO, FoodTech Startup', text: 'Since using OpenClaw, my one-person team handles the workload of a 5-person team.' },
+  { name: 'Ha Linh', role: 'Founder, Beauty Brand', text: 'AI replies to Zalo messages 24/7 — I never miss a customer, even at 2 AM.' },
+  { name: 'Duc Anh', role: 'CTO, SaaS Platform', text: 'Billing + metering running zero-cost on Cloudflare Workers. Impressive.' },
+];
 ---
 
 <BaseLayout title="OpenClaw — AI-Powered Business Automation" description="24/7 customer replies · Auto content creation · Smart CRM. Try free for 14 days." lang="en">
@@ -125,6 +139,54 @@ const faqs = [
             <div class="badge" style="margin-bottom:16px;font-size:0.78rem;">{s.time}</div>
             <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:10px;">{s.title}</h3>
             <p style="color:var(--md-on-surface-muted);font-size:0.9rem;">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM POWER -->
+  <section style="background:var(--md-surface);position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,188,212,0.04),transparent 70%);pointer-events:none;"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">Platform</div>
+        <h2 class="headline">The power <span class="gradient-text">behind every command</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">The largest AI ecosystem for business automation — built by top engineers.</p>
+      </div>
+      <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+        {platformStats.map((s, i) => (
+          <div class="card-glass animate-on-scroll" style={`text-align:center;min-width:160px;flex:1;max-width:200px;animation-delay:${i*0.08}s`}>
+            <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.5rem;font-weight:800;line-height:1;" class="gradient-text">{s.value}</div>
+            <div style="font-size:0.9rem;font-weight:600;margin:8px 0 4px;">{s.label}</div>
+            <div style="font-size:0.78rem;color:var(--md-on-surface-muted);">{s.desc}</div>
+          </div>
+        ))}
+      </div>
+      <div class="text-center" style="margin-top:36px;">
+        <a href="https://docs.agencyos.network/guides/all-commands" class="btn-outline" style="font-size:0.9rem;padding:10px 24px;">View all →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <section style="background:var(--md-surface-container);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
+        <div class="badge" style="margin-bottom:16px;">What customers say</div>
+        <h2 class="headline"><span class="gradient-text">Trusted</span> by founders</h2>
+      </div>
+      <div class="grid-3">
+        {testimonials.map((t, i) => (
+          <div class="card animate-on-scroll" style={`animation-delay:${i*0.1}s`}>
+            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;margin-bottom:16px;font-style:italic;">"{t.text}"</p>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00BCD4,#7C4DFF);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;">{t.name[0]}</div>
+              <div>
+                <div style="font-size:0.85rem;font-weight:600;">{t.name}</div>
+                <div style="font-size:0.75rem;color:var(--md-on-surface-muted);">{t.role}</div>
+              </div>
+            </div>
           </div>
         ))}
       </div>

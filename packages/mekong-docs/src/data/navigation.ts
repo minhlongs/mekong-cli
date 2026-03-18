@@ -53,6 +53,12 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Multi-provider routing, failover, and swarm',
     icon: '🤖',
   },
+  {
+    label: 'Architecture',
+    href: '/guides/architecture',
+    description: 'PEV engine, API gateway, Workers, multi-tenant metering',
+    icon: '🏗️',
+  },
 ];
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -70,6 +76,6 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     group: 'Infrastructure',
-    items: NAV_ITEMS.slice(6),
+    items: NAV_ITEMS.slice(6, 8),
   },
 ];
