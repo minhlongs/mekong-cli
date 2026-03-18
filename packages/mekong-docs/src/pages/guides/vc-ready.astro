@@ -1,0 +1,129 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+---
+
+<MainLayout title="VC Ready — OpenClaw">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <ul class="toc">
+        <li><a href="#pitch">Pitch Generation</a></li>
+        <li><a href="#data-room">Data Room</a></li>
+        <li><a href="#cap-table">Cap Table</a></li>
+        <li><a href="#compliance">Compliance</a></li>
+        <li><a href="#exit">Exit Strategy</a></li>
+      </ul>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Founder</span>
+        <h1>VC Ready <span class="gradient-text">Governance</span></h1>
+        <p class="guide-lead">Generate investor-grade documents, manage your cap table, and track compliance — all from the terminal.</p>
+      </header>
+
+      <section id="pitch">
+        <h2>Pitch Generation</h2>
+        <p>Generate a full pitch deck tailored to your stage and target investors:</p>
+        <pre><code>mekong pitch "AI-powered inventory SaaS for SMBs — Seed round $500K"</code></pre>
+        <p>Output includes:</p>
+        <ul>
+          <li>12-slide deck (PDF + Google Slides export)</li>
+          <li>Problem / Solution / Market / Traction / Team / Ask</li>
+          <li>Financial projections (3-year model)</li>
+          <li>Competitive landscape analysis</li>
+        </ul>
+        <p>Customize the template:</p>
+        <pre><code>mekong pitch --template yc --stage seed --ask 750000</code></pre>
+        <div class="callout glass">
+          <md-icon>star</md-icon>
+          <p>Templates available: YC, a16z, Sequoia, First Round, generic. Each follows the firm's preferred narrative structure.</p>
+        </div>
+      </section>
+
+      <section id="data-room">
+        <h2>Data Room</h2>
+        <p>Scaffold a due-diligence-ready data room:</p>
+        <pre><code>mekong vc/data-room/init</code></pre>
+        <p>Generates the standard folder structure with placeholder docs:</p>
+        <pre><code>data-room/
+├── financials/    # P&L, balance sheet, projections
+├── legal/         # incorporation, IP assignments, contracts
+├── product/       # roadmap, architecture, demo
+├── team/          # bios, org chart, advisors
+└── market/        # TAM analysis, competitive map</code></pre>
+        <p>Upload to Notion or Google Drive:</p>
+        <pre><code>mekong vc/data-room/sync --target notion</code></pre>
+      </section>
+
+      <section id="cap-table">
+        <h2>Cap Table Management</h2>
+        <p>Initialize your cap table:</p>
+        <pre><code>mekong vc/cap-table/init --founders "Alice:60,Bob:40"</code></pre>
+        <p>Model a funding round:</p>
+        <pre><code>mekong vc/cap-table/round \
+  --pre-money 3000000 \
+  --raise 750000 \
+  --investor "VC Fund:750000"</code></pre>
+        <p>Run dilution scenarios:</p>
+        <pre><code>mekong vc/cap-table/dilution --option-pool 10</code></pre>
+        <p>Output: CSV + visual ownership chart.</p>
+      </section>
+
+      <section id="compliance">
+        <h2>Compliance</h2>
+        <p>Run a compliance audit for your stage:</p>
+        <pre><code>mekong compliance/audit --stage seed</code></pre>
+        <p>Checks include:</p>
+        <ul>
+          <li>Delaware C-Corp formation documents</li>
+          <li>IP assignment agreements (founders + employees)</li>
+          <li>83(b) election status</li>
+          <li>SAFE / convertible note terms review</li>
+          <li>Data privacy (GDPR / CCPA) baseline</li>
+        </ul>
+        <p>Generate missing documents:</p>
+        <pre><code>mekong legal/generate --type ip-assignment --party "Alice Smith"</code></pre>
+      </section>
+
+      <section id="exit">
+        <h2>Exit Strategy</h2>
+        <p>Model exit scenarios at various valuations:</p>
+        <pre><code>mekong vc/exit --valuations "10M,25M,50M,100M"</code></pre>
+        <p>Output shows payout waterfall for each stakeholder at each valuation, accounting for liquidation preferences, pro-rata rights, and option pool.</p>
+        <p>For M&A readiness:</p>
+        <pre><code>mekong vc/ma-readiness</code></pre>
+        <p>Generates a checklist of technical, legal, and financial items acquirers typically request in due diligence.</p>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/solo-os" class="nav-prev glass">← SoloOS</a>
+        <a href="/guides/cli-adapters" class="nav-next glass">CLI Adapters →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .guide-content ul { margin: 0 0 var(--spacing-md) var(--spacing-xl); color: var(--md-sys-color-on-surface-variant); line-height: 2; }
+  .callout { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-md) var(--spacing-lg); margin: var(--spacing-md) 0; }
+  .callout md-icon { color: #FFD54F; flex-shrink: 0; }
+  .callout p { margin: 0; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } }
+</style>

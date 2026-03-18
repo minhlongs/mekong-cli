@@ -1,0 +1,24 @@
+---
+const STATS = [
+  { value: '319', label: 'Commands' },
+  { value: '16+', label: 'Packages' },
+  { value: '542', label: 'Skills' },
+  { value: '$0', label: 'Infra Cost' },
+];
+---
+
+<div class="install-stats">
+  {STATS.map((s) => (
+    <div class="stat glass">
+      <span class="stat-value gradient-text">{s.value}</span>
+      <span class="stat-label">{s.label}</span>
+    </div>
+  ))}
+</div>
+
+<style>
+  .install-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); }
+  .stat { padding: var(--spacing-xl); text-align: center; }
+  .stat-value { display: block; font-size: 2.5rem; font-weight: 800; line-height: 1; margin-bottom: var(--spacing-xs); }
+  .stat-label { color: var(--md-sys-color-on-surface-variant); font-size: 0.9rem; }
+</style>

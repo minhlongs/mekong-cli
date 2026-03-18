@@ -1,0 +1,174 @@
+---
+import MainLayout from '../layouts/main-layout.astro';
+
+interface PricingTier {
+  name: string;
+  price: string;
+  description: string;
+  features: string[];
+  cta: string;
+  ctaHref: string;
+  highlight?: boolean;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  tagline: string;
+  tiers: PricingTier[];
+}
+
+const PRODUCTS: Product[] = [
+  {
+    id: 'mekong',
+    name: 'MEKONG CLI',
+    tagline: 'The core AGI CLI engine',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Try it out', features: ['50 MCU/mo', '3 departments', 'Community support', 'Basic commands'], cta: 'Get Started', ctaHref: '/guides/quickstart' },
+      { name: 'Starter', price: '$49', description: 'Solo founder', features: ['200 MCU/mo', 'All 8 departments', 'Email support', '319 commands', 'SoloOS included'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$149', description: 'Power user', features: ['1,000 MCU/mo', 'Priority support', 'AGI Evolution', 'Multi-CLI routing', 'RaaS access'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$499', description: 'Team / Agency', features: ['Unlimited MCU', 'SLA support', 'Custom adapters', 'White-label', 'Dedicated infra'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+  {
+    id: 'sophia',
+    name: 'SOPHIA',
+    tagline: 'AI Agency OS dashboard',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Preview', features: ['1 project', 'Public templates', 'Read-only dashboard'], cta: 'Get Started', ctaHref: 'https://sophia.agencyos.network' },
+      { name: 'Starter', price: '$29', description: 'Freelancer', features: ['5 projects', 'Client portal', 'Invoice generation', 'Basic analytics'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$99', description: 'Agency', features: ['Unlimited projects', 'White-label', 'API access', 'Custom domain', 'Priority support'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$299', description: 'Scale', features: ['Multi-tenant', 'SSO', 'Audit logs', 'SLA', 'Custom integrations'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+  {
+    id: 'well',
+    name: 'WELL',
+    tagline: 'Health & wellness SaaS',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Personal use', features: ['1 practitioner', '10 clients', 'Basic scheduling', 'SOAP notes'], cta: 'Get Started', ctaHref: '#' },
+      { name: 'Starter', price: '$39', description: 'Solo clinic', features: ['1 practitioner', '100 clients', 'Video sessions', 'Billing'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$119', description: 'Clinic group', features: ['10 practitioners', 'Unlimited clients', 'EHR integration', 'Analytics'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$399', description: 'Hospital', features: ['Unlimited staff', 'HIPAA compliant', 'Custom workflows', 'SLA'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+  {
+    id: 'algo',
+    name: 'ALGO TRADER',
+    tagline: 'Autonomous trading engine',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Paper trading', features: ['Paper mode only', '3 strategies', 'Backtest engine', 'No live trading'], cta: 'Get Started', ctaHref: '#' },
+      { name: 'Starter', price: '$79', description: 'Live trading', features: ['Live trading', '10 strategies', 'CEX + DEX', 'Alert bot'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$249', description: 'Prop trading', features: ['Unlimited strategies', 'Arbitrage engine', 'Polymarket', 'AGI signals'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$799', description: 'Fund', features: ['Co-location', 'Custom execution', 'Compliance module', 'SLA'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+  {
+    id: 'apex',
+    name: 'APEX',
+    tagline: 'VC-ready founder toolkit',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Explore', features: ['Pitch template', 'Basic cap table', 'SWOT generator'], cta: 'Get Started', ctaHref: '#' },
+      { name: 'Starter', price: '$49', description: 'Pre-seed', features: ['Full pitch deck AI', 'Cap table modeling', 'Data room', 'Investor CRM'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$149', description: 'Seed+', features: ['409A valuation', 'Term sheet analysis', 'Board deck', 'Compliance'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$499', description: 'Series A+', features: ['M&A modeling', 'IPO readiness', 'Custom legal', 'Advisor network'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+  {
+    id: 'agencyos',
+    name: 'AGENCYOS',
+    tagline: 'Full agency operating system',
+    tiers: [
+      { name: 'Free', price: '$0', description: 'Preview', features: ['1 client', 'Template library', 'Basic reporting'], cta: 'Get Started', ctaHref: 'https://agencyos.network' },
+      { name: 'Starter', price: '$59', description: 'Boutique', features: ['10 clients', 'Project management', 'Time tracking', 'Invoicing'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw', highlight: true },
+      { name: 'Pro', price: '$179', description: 'Growth agency', features: ['Unlimited clients', 'Retainer management', 'P&L dashboard', 'Automations'], cta: 'Buy on Polar', ctaHref: 'https://polar.sh/openclaw' },
+      { name: 'Enterprise', price: '$499', description: 'Enterprise agency', features: ['Multi-office', 'Custom branding', 'API access', 'Dedicated CSM'], cta: 'Contact Sales', ctaHref: 'mailto:sales@openclaw.ai' },
+    ],
+  },
+];
+---
+
+<MainLayout title="Pricing — OpenClaw">
+  <div class="pricing-page">
+    <header class="pricing-header">
+      <h1 class="gradient-text">Simple, transparent pricing</h1>
+      <p class="pricing-subtitle">Pick the product that fits your stack. All plans include Cloudflare deployment.</p>
+    </header>
+
+    {PRODUCTS.map((product) => (
+      <section class="product-section" id={product.id}>
+        <div class="product-header">
+          <h2 class="product-name">{product.name}</h2>
+          <p class="product-tagline">{product.tagline}</p>
+        </div>
+        <div class="tiers-grid">
+          {product.tiers.map((tier) => (
+            <div class:list={['tier-card glass', { 'tier-highlight': tier.highlight }]}>
+              {tier.highlight && <div class="popular-badge">Most Popular</div>}
+              <div class="tier-header">
+                <h3 class="tier-name">{tier.name}</h3>
+                <div class="tier-price">
+                  <span class="price-amount gradient-text">{tier.price}</span>
+                  {tier.price !== '$0' && <span class="price-period">/mo</span>}
+                </div>
+                <p class="tier-desc">{tier.description}</p>
+              </div>
+              <ul class="tier-features">
+                {tier.features.map((f) => (
+                  <li><md-icon class="check-icon">check_circle</md-icon>{f}</li>
+                ))}
+              </ul>
+              <div class="tier-cta">
+                {tier.highlight
+                  ? <md-elevated-button onclick={`location.href='${tier.ctaHref}'`}>{tier.cta}</md-elevated-button>
+                  : <md-filled-tonal-button onclick={`location.href='${tier.ctaHref}'`}>{tier.cta}</md-filled-tonal-button>
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</MainLayout>
+
+<style>
+  .pricing-page { max-width: 1200px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .pricing-header { text-align: center; margin-bottom: var(--spacing-3xl); }
+  .pricing-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin-bottom: var(--spacing-md); }
+  .pricing-subtitle { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+
+  .product-section { margin-bottom: var(--spacing-3xl); }
+  .product-header { margin-bottom: var(--spacing-xl); }
+  .product-name { font-size: var(--md-sys-typescale-headline-medium-size); font-weight: 700; color: var(--md-sys-color-primary); }
+  .product-tagline { color: var(--md-sys-color-on-surface-variant); margin-top: var(--spacing-xs); }
+
+  .tiers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-md); }
+
+  .tier-card { padding: var(--spacing-xl); position: relative; transition: transform 0.2s; }
+  .tier-card:hover { transform: translateY(-4px); }
+  .tier-highlight { border-color: var(--md-sys-color-primary) !important; box-shadow: 0 0 0 1px var(--md-sys-color-primary), 0 8px 32px rgba(0,188,212,0.15); }
+
+  .popular-badge {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #00BCD4, #9C27B0);
+    color: white; font-size: 0.7rem; font-weight: 700;
+    padding: 2px 12px; border-radius: 12px; white-space: nowrap;
+  }
+
+  .tier-header { margin-bottom: var(--spacing-lg); }
+  .tier-name { font-size: 1rem; font-weight: 600; margin-bottom: var(--spacing-xs); color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tier-price { display: flex; align-items: baseline; gap: 2px; margin-bottom: var(--spacing-xs); }
+  .price-amount { font-size: 2rem; font-weight: 800; }
+  .price-period { color: var(--md-sys-color-on-surface-variant); font-size: 0.9rem; }
+  .tier-desc { color: var(--md-sys-color-on-surface-variant); font-size: 0.85rem; }
+
+  .tier-features { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); margin-bottom: var(--spacing-xl); }
+  .tier-features li { display: flex; align-items: center; gap: var(--spacing-sm); font-size: 0.875rem; }
+  .check-icon { color: var(--md-sys-color-primary); font-size: 1rem; }
+
+  .tier-cta { margin-top: auto; }
+
+  @media (max-width: 900px) { .tiers-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 540px) { .tiers-grid { grid-template-columns: 1fr; } }
+</style>
