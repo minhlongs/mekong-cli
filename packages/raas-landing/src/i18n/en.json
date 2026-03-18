@@ -1,0 +1,8 @@
+{
+  "nav": { "features": "Features", "pricing": "Pricing", "faq": "FAQ", "cta": "Try now" },
+  "hero": { "title": "AI-Powered Business Automation", "subtitle": "24/7 customer replies. Auto content. Smart CRM. From $8/month.", "cta": "Try free for 14 days", "demo": "See demo" },
+  "features": { "title": "Features", "ai": "AI Receptionist", "aiDesc": "Reply on Zalo/Facebook 24/7", "content": "Content Creator", "contentDesc": "AI creates 7-day content", "crm": "Smart CRM", "crmDesc": "Auto-track customer info", "report": "Weekly Report", "reportDesc": "AI analysis & suggestions" },
+  "pricing": { "title": "Pricing", "free": "Free", "starter": "Starter", "pro": "Pro", "enterprise": "Enterprise", "popular": "Most popular", "cta": "Sign up now" },
+  "faq": { "title": "Frequently Asked Questions" },
+  "footer": { "product": "A product by OpenClaw", "dashboard": "Dashboard", "docs": "Docs", "contact": "Contact" }
+}
