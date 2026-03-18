@@ -1,5 +1,13 @@
 ---
 import MainLayout from '../../layouts/main-layout.astro';
+
+const mcuConfigExample = `{
+  "routes": {
+    "POST /v1/missions": { "mcu": 2 },
+    "POST /v1/cook": { "mcu": 1 },
+    "GET /v1/status": { "mcu": 0 }
+  }
+}`;
 ---
 
 <MainLayout title="RaaS — OpenClaw">
@@ -70,13 +78,7 @@ Admin dashboard: https://raas.openclaw.ai/tenant/tenant_abc123</code></pre>
         <p>View transaction history:</p>
         <pre><code>mekong raas/ledger --tenant tenant_abc123 --last 50</code></pre>
         <p>Set MCU cost per endpoint in your worker config:</p>
-        <pre><code class="language-json">{
-  "routes": {
-    "POST /v1/missions": { "mcu": 2 },
-    "POST /v1/cook": { "mcu": 1 },
-    "GET /v1/status": { "mcu": 0 }
-  }
-}</code></pre>
+        <pre><code class="language-json" set:text={mcuConfigExample}></code></pre>
       </section>
 
       <section id="webhook">
