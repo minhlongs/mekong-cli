@@ -37,9 +37,9 @@ const labels = isEn
   <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
     <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text">OpenClaw</a>
     <div style="display:flex;align-items:center;gap:28px;">
-      <a href={`${base}/#features`} style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.2s" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{labels.features}</a>
-      <a href={labels.pLink} style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.2s" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{labels.pricing}</a>
-      <a href={`${base}/#faq`} style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.2s" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">FAQ</a>
+      <a href={`${base}/#features`} class="nav-link">{labels.features}</a>
+      <a href={labels.pLink} class="nav-link">{labels.pricing}</a>
+      <a href={`${base}/#faq`} class="nav-link">FAQ</a>
       <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;">
         <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`}>VI</a>
         <span style="color:var(--md-on-surface-muted);">|</span>
@@ -65,22 +65,25 @@ const labels = isEn
       <div>
         <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Product' : 'Sản phẩm'}</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href={`${base}/#features`} style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.875rem;" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{isEn ? 'Features' : 'Tính năng'}</a>
-          <a href={labels.pLink} style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.875rem;" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{isEn ? 'Pricing' : 'Bảng giá'}</a>
-          <a href="https://docs.agencyos.network" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.875rem;" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">API Docs</a>
+          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Features' : 'Tính năng'}</a>
+          <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Pricing' : 'Bảng giá'}</a>
+          <a href="https://docs.agencyos.network" class="nav-link" style="font-size:0.875rem;">API Docs</a>
         </div>
       </div>
       <div>
         <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Company' : 'Công ty'}</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="https://agencyos.network" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.875rem;" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{isEn ? 'About' : 'Về chúng tôi'}</a>
-          <a href="mailto:hello@agencyos.network" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.875rem;" onmouseover="this.style.color='#00BCD4'" onmouseout="this.style.color=''">{isEn ? 'Contact' : 'Liên hệ'}</a>
+          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'About' : 'Về chúng tôi'}</a>
+          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'Contact' : 'Liên hệ'}</a>
         </div>
       </div>
     </div>
     <hr class="divider" />
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;">
-      <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
+        <span class="built-badge">⚡ Built with AI</span>
+      </div>
       <div style="display:flex;gap:20px;">
         <a href="/privacy" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Privacy' : 'Bảo mật'}</a>
         <a href="/terms" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Terms' : 'Điều khoản'}</a>
