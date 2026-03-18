@@ -26,6 +26,24 @@ const SCAN_INTERVAL_MS = 60000;
 const FIX_INTERVAL_MS = 15000;
 const MAX_FIX_CYCLES = 3;
 
+/** Project priority queue — higher priority = scanned first (revenue potential) */
+const PROJECT_PRIORITY = {
+	'sophia-ai-factory': 1, // highest — active SaaS product
+	'algo-trader': 2,       // trading revenue
+	'well': 3,              // wellnexus
+	'mekong-cli': 4,        // platform itself
+	'openclaw-worker': 5,   // internal tooling
+};
+
+function getProjectPriority(projectName) {
+	return PROJECT_PRIORITY[projectName] || 99;
+}
+
+/** Sort projects by priority (lower number = higher priority) */
+function sortByPriority(projects) {
+	return [...projects].sort((a, b) => getProjectPriority(a) - getProjectPriority(b));
+}
+
 let intervalRef = null;
 
 function getPhaseInterval(phase) {
@@ -33,6 +51,11 @@ function getPhaseInterval(phase) {
 }
 
 function startAutoCTO() {
+	// Catch unhandled rejections from scan/fix/verify
+	process.on('unhandledRejection', (reason) => {
+		log(`AUTO-CTO unhandledRejection: ${reason?.message || reason}`);
+	});
+
 	let currentPhase = 'scan';
 
 	function scheduleNext() {
@@ -69,7 +92,7 @@ function startAutoCTO() {
 				// Dynamic project discovery from live tmux panes
 				const { getActivePaneProjects } = require('../_bridge/brain-tmux-controller');
 				const paneMap = getActivePaneProjects(config.TMUX_SESSION);
-				const liveProjects = Object.values(paneMap).map((p) => p.projectName);
+				const liveProjects = sortByPriority(Object.values(paneMap).map((p) => p.projectName));
 				if (liveProjects.length === 0) { scheduleNext(); return; }
 
 				const projectIdx = state.currentProjectIdx % liveProjects.length;
@@ -239,4 +262,4 @@ function stopAutoCTO() {
 	if (intervalRef) { clearTimeout(intervalRef); intervalRef = null; }
 }
 
-module.exports = { startAutoCTO, stopAutoCTO, handleScan, handleFix, handleVerify, advanceProject };
+module.exports = { startAutoCTO, stopAutoCTO, handleScan, handleFix, handleVerify, advanceProject, PROJECT_PRIORITY, getProjectPriority, sortByPriority };

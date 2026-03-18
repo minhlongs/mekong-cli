@@ -70,3 +70,10 @@ export {
   getUptime,
   getVersion,
 } from './raas-health.js';
+
+export {
+  type DashboardSummary,
+  trackTenantForDashboard,
+  untrackTenant,
+  getDashboardSummary,
+} from './raas-dashboard.js';

@@ -58,6 +58,12 @@ import {
   getVersion,
 } from '../../../openclaw-engine/src/raas/raas-health.js';
 
+import {
+  getDashboardSummary,
+  trackTenantForDashboard,
+  untrackTenant,
+} from '../../../openclaw-engine/src/raas/raas-dashboard.js';
+
 // --- Gateway Delegation Tests ---
 describe('Gateway ROIaaS Delegation', () => {
   let gateway: Gateway;
@@ -477,5 +483,36 @@ describe('RaaS Health Check', () => {
 
   it('getVersion — returns semver string', () => {
     expect(getVersion()).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+// --- RaaS Dashboard Tests ---
+describe('RaaS Dashboard', () => {
+  it('getDashboardSummary — returns summary with no tenants', () => {
+    const res = getDashboardSummary();
+    expect(res.ok).toBe(true);
+    expect(res.data?.healthScore).toBeGreaterThan(0);
+    expect(res.data?.timestamp).toBeGreaterThan(0);
+  });
+
+  it('trackTenantForDashboard — increases tenant count', () => {
+    trackTenantForDashboard('dash-t1', 'pro');
+    trackTenantForDashboard('dash-t2', 'starter');
+    const res = getDashboardSummary();
+    expect(res.data!.totalTenants).toBeGreaterThanOrEqual(2);
+    expect(res.data!.revenueEstimateUsd).toBeGreaterThan(0);
+  });
+
+  it('untrackTenant — decreases tenant count', () => {
+    trackTenantForDashboard('dash-remove', 'enterprise');
+    const before = getDashboardSummary().data!.totalTenants;
+    untrackTenant('dash-remove');
+    const after = getDashboardSummary().data!.totalTenants;
+    expect(after).toBe(before - 1);
+  });
+
+  it('getDashboardSummary — health score is 100 when all healthy', () => {
+    const res = getDashboardSummary();
+    expect(res.data!.healthScore).toBe(100); // 4 components * 25
   });
 });
