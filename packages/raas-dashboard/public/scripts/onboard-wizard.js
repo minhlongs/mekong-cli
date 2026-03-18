@@ -1,4 +1,4 @@
-const API = 'https://mekong-engine.agencyos-openclaw.workers.dev';
+const API = 'https://api.agencyos.network';
 let step = 0;
 const state = { industry:'', name:'', address:'', phone:'', hours:'', channel:'zalo', channelId:'', channelToken:'', menu:[] };
 
