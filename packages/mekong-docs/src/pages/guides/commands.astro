@@ -59,12 +59,18 @@ const LAYERS: Layer[] = [
     icon: '⚙️',
     name: 'Engineering',
     commands: [
-      { cmd: 'cook', description: 'Execute any development mission end-to-end', mcu: '1-5' },
-      { cmd: 'fix', description: 'Diagnose and fix bugs autonomously', mcu: '1-3' },
+      { cmd: 'cook', description: 'Smart feature implementation (scout→plan→code→test→review)', mcu: '1-5' },
+      { cmd: 'fix', description: 'Diagnose and fix bugs with root cause analysis', mcu: '1-3' },
       { cmd: 'code', description: 'Write or refactor code with full context', mcu: '1-3' },
-      { cmd: 'test', description: 'Generate and run test suites', mcu: '1-2' },
-      { cmd: 'deploy', description: 'Deploy to Cloudflare Pages/Workers', mcu: '1' },
+      { cmd: 'test', description: 'Run unit/integration/e2e tests, coverage analysis', mcu: '1-2' },
+      { cmd: 'deploy', description: 'Deploy to Cloudflare Pages/Workers/Vercel', mcu: '1' },
       { cmd: 'review', description: 'AI code review with severity ratings', mcu: '2' },
+      { cmd: 'debug', description: 'Systematic debugging with root cause tracing', mcu: '1-3' },
+      { cmd: 'preview', description: 'Visual explanations, diagrams, slides, ASCII art', mcu: '0-1' },
+      { cmd: 'worktree', description: 'Git worktree for parallel development', mcu: '0' },
+      { cmd: 'check-and-commit', description: 'Run quality checks → commit → push', mcu: '0' },
+      { cmd: 'bootstrap', description: 'Scaffold new project with research + tech stack', mcu: '3-5' },
+      { cmd: 'scout', description: 'Fast codebase scouting with parallel agents', mcu: '0-1' },
     ],
   },
   {
@@ -131,6 +137,17 @@ const LAYERS: Layer[] = [
           <div class="cmd-row glass"><code>--strict</code><span>Fail fast on any error</span><span>0</span></div>
           <div class="cmd-row glass"><code>--no-rollback</code><span>Skip rollback on failure</span><span>0</span></div>
           <div class="cmd-row glass"><code>--model &lt;id&gt;</code><span>Override LLM model for this run</span><span>0</span></div>
+        </div>
+      </section>
+
+      <section id="tiers">
+        <h2>💎 License Tiers</h2>
+        <div class="cmd-table">
+          <div class="cmd-table-header"><span>Tier</span><span>Commands</span><span>Price</span></div>
+          <div class="cmd-row glass"><code>Free</code><span>run, sop, status, license, usage, help</span><span>$0</span></div>
+          <div class="cmd-row glass"><code>Starter</code><span>+ crm, finance, dashboard, cook, plan</span><span>$8/mo</span></div>
+          <div class="cmd-row glass"><code>Pro</code><span>+ kaizen, marketplace, deploy, review, raas, cli, rd scan</span><span>$20/mo</span></div>
+          <div class="cmd-row glass"><code>Enterprise</code><span>+ agi, solo, vc, swarm, live-dashboard, cto-brain, all</span><span>$120/mo</span></div>
         </div>
       </section>
 
