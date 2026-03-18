@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --md-primary: #00BCD4;
@@ -19,7 +19,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Be Vietnam Pro', 'Inter', system-ui, sans-serif;
   background-color: var(--md-surface);
   color: var(--md-on-surface);
   line-height: 1.6;
@@ -28,13 +28,13 @@ body {
 
 /* Typography */
 .display {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
 }
-.headline { font-family: 'Outfit', sans-serif; font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; }
+.headline { font-family: 'Be Vietnam Pro', sans-serif; font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 700; }
 
 /* Gradient text */
 .gradient-text {
@@ -91,7 +91,7 @@ body {
   border: none;
   border-radius: 12px;
   padding: 14px 32px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
@@ -112,7 +112,7 @@ body {
   border: 1px solid var(--md-outline);
   border-radius: 12px;
   padding: 13px 30px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 500;
   text-decoration: none;
