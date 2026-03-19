@@ -7,6 +7,7 @@ import { z } from 'zod'
 import type { Bindings } from '../index'
 import { webhookRateLimit } from '../raas/rate-limit-middleware'
 import { handleAsync, handleDb, createError } from '../types/error'
+import { isDuplicateWebhookEvent, recordWebhookEvent } from '../lib/webhook-utils'
 
 // Zod schemas for webhook payloads
 const zaloWebhookSchema = z.object({
@@ -85,15 +86,9 @@ chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
   // Check for replay attack (duplicate msg_id)
   const msgId = body.message.msg_id
   if (msgId) {
-    const isDuplicate = await handleDb(
-      () => db.prepare(
-        'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
-      ).bind('zalo', msgId).first(),
-      'DATABASE_ERROR',
-      'Failed to check for duplicate Zalo message'
-    )
+    const isDuplicate = await isDuplicateWebhookEvent(db, 'zalo', msgId)
     if (isDuplicate) {
-      return c.json({ error: 'Duplicate message detected', code: 'REPLAY_ATTACK' }, 409)
+      return c.json(createError('REPLAY_ATTACK', 'Duplicate Zalo message detected'), 409)
     }
   }
 
@@ -123,13 +118,7 @@ chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
 
   // Record webhook event to prevent replay attacks
   if (msgId) {
-    await handleDb(
-      () => db.prepare(
-        'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
-      ).bind(crypto.randomUUID(), 'zalo', msgId, 'message').run(),
-      'DATABASE_ERROR',
-      'Failed to record Zalo webhook event'
-    )
+    await recordWebhookEvent(db, 'zalo', msgId, 'message')
   }
 
   return c.json({ received: true })
@@ -196,13 +185,7 @@ chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) =
       // Check for replay attack (duplicate mid)
       const mid = event.message.mid
       if (mid) {
-        const isDuplicate = await handleDb(
-          () => db.prepare(
-            'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
-          ).bind('facebook', mid).first(),
-          'DATABASE_ERROR',
-          'Failed to check for duplicate Facebook message'
-        )
+        const isDuplicate = await isDuplicateWebhookEvent(db, 'facebook', mid)
         if (isDuplicate) {
           continue // Skip duplicate but continue processing other events
         }
@@ -233,13 +216,7 @@ chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) =
 
       // Record webhook event to prevent replay attacks
       if (mid) {
-        await handleDb(
-          () => db.prepare(
-            'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
-          ).bind(crypto.randomUUID(), 'facebook', mid, 'message').run(),
-          'DATABASE_ERROR',
-          'Failed to record Facebook webhook event'
-        )
+        await recordWebhookEvent(db, 'facebook', mid, 'message')
       }
     }
   }
