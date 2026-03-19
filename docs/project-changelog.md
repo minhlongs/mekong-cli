@@ -7,6 +7,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-19 - Governance Dashboard Charts & Mobile Responsive)
+
+#### Enhanced Governance Dashboard (`frontend/landing/app/dashboard/governance/page.tsx`)
+- **Library**: Added `recharts` for professional chart visualizations
+- **Pie Chart**: Voting distribution with donut chart (For/Against/Abstain)
+  - Color-coded: Green (#22c55e), Red (#ef4444), Gray (#9ca3af)
+  - Interactive tooltips with percentage display
+  - Time range selector (7d/30d/90d)
+- **Area Chart**: Weekly activity trend visualization
+  - Gradient fill with blue primary color
+  - Smooth monotone curves
+  - Hover tooltips showing vote counts
+- **Bar Chart**: Stakeholder level distribution (L1/L2/L3/L4+)
+  - Rounded bar corners
+  - Interactive hover states
+- **Treasury Overview Card**: New 4th stats card
+  - Total value display ($125,000)
+  - Monthly change percentage (+12.5%)
+  - Available vs allocated breakdown
+- **Responsive Design Improvements**:
+  - Mobile-first breakpoints (sm:, lg:)
+  - 4-column grid on large screens
+  - Stacked layout on mobile
+  - Touch-friendly spacing and sizing
+  - Dark mode support for all charts
+- **Chart Customization**:
+  - Custom tooltip styles (dark theme)
+  - ResponsiveContainer for all charts
+  - 256px height for optimal viewing
+
+#### Files Changed
+- `frontend/landing/package.json`: Added `recharts@2.15.4`
+- `frontend/landing/app/dashboard/governance/page.tsx`: Complete rewrite with charts
+
+#### Build Status
+- ✅ Build passed (0 errors)
+- ✅ No TypeScript errors
+- ✅ No linting issues
+
+### Added (2026-03-19 - Complete OpenAPI Specification)
+
+#### API Documentation
+- **docs/api-spec.yaml**: Comprehensive OpenAPI 3.0 specification (1325 lines)
+  - 19 API tags covering all mekong-engine routes
+  - 70+ endpoints with full request/response schemas
+  - BearerAuth security scheme documented
+  - Component schemas for all data models
+- **docs/api-documentation.md**: Human-readable Markdown API docs
+  - Authentication guide with examples
+  - Credit system explanation
+  - All endpoints organized by category
+  - Error handling reference
+  - Rate limits by tier
+  - SDK examples (TypeScript, Python)
+
+---
+
+### Added (2026-03-19 - RBAC Permission System)
+
+#### Role-Based Access Control API
+- **POST /v1/rbac/check**: Permission policy checking
+  - Role-action-resource validation
+  - Policy-based authorization
+  - Returns allowed boolean with policy name
+- **GET /v1/rbac/policies**: List all RBAC policies
+
+#### Database Tables
+- `rbac_policies`: id, name, role, action, resource, conditions
+- `rbac_role_assignments`: stakeholder_id, role, scope, assigned_at
+
+---
+
+### Added (2026-03-19 - Stakeholder Matching Algorithm)
+
+#### Matching API
+- **GET /v1/matching/suggestions**: AI-powered stakeholder matching
+  - Complementary skill matching
+  - Voice credit optimization
+  - Reputation-based scoring
+- **POST /v1/matching/run**: Execute matching algorithm
+  - Multi-criteria scoring
+  - Quadratic voting integration
+  - Governance level awareness
+
+#### Matching Criteria
+- Skills complementarity (technical + business + domain)
+- Governance level alignment
+- Reputation dimension matching
+- Voice credit optimization
+
+---
+
+### Added (2026-03-19 - 5-Level Conflict Resolution)
+
+#### Conflict Resolution API
+- **GET /v1/conflicts**: List all conflicts
+- **POST /v1/conflicts**: Create conflict case
+  - Parties identification
+  - Description and evidence
+  - Resolution level assignment
+- **POST /v1/conflicts/:id/resolve**: Execute resolution
+
+#### 5-Level Resolution Hierarchy
+1. **Auto Resolve**: Automated settlement for simple disputes
+2. **Agent Negotiation**: AI-mediated negotiation
+3. **Governance Review**: Human governance board review
+4. **Human Arbitration**: External third-party arbitration
+5. **Constitutional Review**: Constitutional court final review
+
+#### Database Tables
+- `conflicts`: id, parties[], description, level, status, resolution
+- `conflict_evidence`: conflict_id, evidence_url, submitted_by
+- `conflict_resolutions`: conflict_id, resolver, decision, rationale
+
+---
+
+### Added (2026-03-19 - Progressive Decentralization)
+
+#### Decentralization API
+- **GET /v1/decentralization/status**: Current phase status
+- **POST /v1/decentralization/transition**: Phase transition
+
+#### 4-Phase Power Transfer
+| Phase | Platform | Community | Expert | Description |
+|-------|----------|-----------|--------|-------------|
+| Foundation | 50% | 25% | 25% | Platform retains majority control |
+| Growth | 33% | 34% | 33% | Balanced power distribution |
+| Maturity | 25% | 40% | 35% | Community majority |
+| Full Inversion | 20% | 45% | 35% | DAO-governed |
+
+#### Trigger Conditions
+- Phase transitions based on:
+  - Active stakeholder count
+  - Treasury balance threshold
+  - Proposal participation rate
+  - Time since inception
+
+---
+
 ### Added (2026-03-19 - RaaS Getting Started Guide)
 
 #### New Documentation
@@ -393,6 +532,41 @@ Comprehensive API usage billing system fully implemented. Includes CLI commands,
 - `src/cli/billing_commands.py` - CLI commands (Typer)
 - `src/db/migrations/008_billing_system.sql` - 7 tables + rate cards
 - `docs/billing-cli.md` - Complete CLI guide (600+ lines)
+
+---
+
+## Binh Pháp VC Studio - Complete Governance Stack (2026-03-19)
+
+| Module | Endpoints | Database Tables | Status |
+|--------|-----------|-----------------|--------|
+| Governance | 6 | 6 (stakeholders, proposals, votes, reputation, ngu_su, treasury) | ✅ Complete |
+| Equity | 5 | 4 (entities, share_classes, grants, safe_notes) | ✅ Complete |
+| Revenue | 3 | Uses ledger tables | ✅ Complete |
+| Funding | 5 | 3 (rounds, projects, contributions) | ✅ Complete |
+| Ledger | 4 | 3 (journal_entries, transaction_lines, ledger_accounts) | ✅ Complete |
+| Matching | 2 | Uses governance tables | ✅ Complete |
+| Conflicts | 3 | 3 (conflicts, evidence, resolutions) | ✅ Complete |
+| Decentralization | 2 | Uses governance tables | ✅ Complete |
+| RBAC | 2 | 2 (policies, role_assignments) | ✅ Complete |
+| **Total** | **32 endpoints** | **23 tables** | ✅ **Complete** |
+
+### Philosophy Implementation
+- **Tam Giác Ngược**: Inverted triangle revenue split (customer/community first)
+- **Ngũ Sự**: Dao-Thien-Dia-Tuong-Phap assessment framework
+- **Progressive Decentralization**: 4-phase power transfer (Foundation → Full Inversion)
+- **Quadratic Funding**: Democratic matching formula `(Σ√ci)² - Σci`
+- **Shapley Value**: Marginal contribution attribution
+- **5-Level Conflict Resolution**: Auto → Agent → Governance → Human → Constitutional
+
+### Documentation Created
+- `docs/api-spec.yaml` - OpenAPI 3.0 specification (1325 lines)
+- `docs/api-documentation.md` - Human-readable Markdown docs
+- `docs/raas-getting-started.md` - End-to-end user guide
+- `docs/raas-sales-proposal.md` - Sales proposal template
+- `docs/raas-email-sequences.md` - Email sequence templates
+- `docs/sales-raas-guide.md` - Complete sales guide
+
+---
 
 ## [1.0.0] - 2026-02-06
 
