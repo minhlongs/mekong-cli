@@ -38,9 +38,38 @@ curl https://mekong-engine.agencyos-openclaw.workers.dev/health
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | `/health` | Health check + auto-migrate |
+| GET | `/health` | Health check + uptime + DB status |
 | POST | `/cmd` | PEV pipeline (optional auth for BYOK) |
 | GET | `/ai/test` | Workers AI test |
+
+### Health Endpoint Response
+
+```json
+{
+  "status": "ok",
+  "version": "3.2.0",
+  "uptime": 3600,
+  "database": {
+    "connected": true,
+    "latency_ms": 5
+  },
+  "active_workers": 3,
+  "bindings": {
+    "d1": true,
+    "kv": true,
+    "r2": false,
+    "ai": true,
+    "llm": true
+  }
+}
+```
+
+**Fields:**
+- `uptime`: Seconds since server start
+- `database.connected`: true if D1 responds to `SELECT 1`
+- `database.latency_ms`: DB query latency in milliseconds (null if not connected)
+- `active_workers`: Count of missions with `status = 'running'`
+- `bindings`: Boolean flags for configured resources
 
 ### Authenticated (`Authorization: Bearer <API_KEY>`)
 

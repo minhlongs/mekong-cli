@@ -29,10 +29,16 @@ export type Bindings = {
   ENVIRONMENT?: string
   DEFAULT_LLM_MODEL?: string
   FB_VERIFY_TOKEN?: string
+  FB_APP_SECRET?: string
+  ZALO_APP_SECRET?: string
+  ZALO_SECRET?: string
   MOMO_SECRET_KEY?: string
   MOMO_ACCESS_KEY?: string
   VNPAY_HASH_SECRET?: string
 }
+
+// Track server start time for uptime calculation
+const START_TIME = Date.now()
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -58,16 +64,53 @@ app.get('/', (c) => c.json({
 
 // Health check + auto-migrate tenant_settings
 app.get('/health', async (c) => {
+  // Auto-migrate tenant_settings table
   if (c.env.DB) {
     await c.env.DB.exec(
       `CREATE TABLE IF NOT EXISTS tenant_settings (tenant_id TEXT PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE, llm_provider TEXT NOT NULL DEFAULT 'workers-ai', llm_api_key_encrypted TEXT, llm_base_url TEXT, llm_model TEXT, updated_at TEXT NOT NULL DEFAULT (datetime('now')))`,
     ).catch(() => {})
   }
+
+  // Calculate uptime in seconds
+  const uptime = Math.floor((Date.now() - START_TIME) / 1000)
+
+  // Check database health with latency measurement
+  let databaseConnected = false
+  let databaseLatencyMs: number | null = null
+
+  if (c.env.DB) {
+    const dbStart = Date.now()
+    try {
+      await c.env.DB.prepare('SELECT 1 as health').first()
+      databaseConnected = true
+      databaseLatencyMs = Date.now() - dbStart
+    } catch {
+      databaseConnected = false
+    }
+  }
+
+  // Count active workers (running missions)
+  let activeWorkers = 0
+  if (c.env.DB) {
+    try {
+      const result = await c.env.DB
+        .prepare("SELECT COUNT(*) as count FROM missions WHERE status = 'running'")
+        .first<{ count: number }>()
+      activeWorkers = result?.count ?? 0
+    } catch {
+      activeWorkers = 0
+    }
+  }
+
   return c.json({
     status: 'ok',
     version: '3.2.0',
-    engine: 'mekong-pev',
-    runtime: 'cloudflare-workers',
+    uptime: uptime,
+    database: {
+      connected: databaseConnected,
+      latency_ms: databaseLatencyMs,
+    },
+    active_workers: activeWorkers,
     bindings: {
       d1: !!c.env.DB,
       kv: !!c.env.RATE_LIMIT_KV,
