@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S bash
+# Requires bash 4+ (macOS: /opt/homebrew/bin/bash)
 set -u
 
 # ============================================================
@@ -33,38 +34,49 @@ RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard,
 
 # ---- DOANH TRẠI: Pane Roles (Binh Pháp military model) ----
 # P1=TIÊN PHONG (complex/plan), P2=CÔNG BINH (build/fix), P3=HIẾN BINH (review/test)
-declare -A PANE_ROLE
-PANE_ROLE[1]="tien_phong"   # Complex tasks: /plan:hard, /cook complex features, /debug hard bugs
-PANE_ROLE[2]="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api-build
-PANE_ROLE[3]="hien_binh"    # Review tasks: /review, /test, /check-and-commit
+PANE_ROLE_1="tien_phong"   # Complex tasks: /plan:hard, /cook complex features, /debug hard bugs
+PANE_ROLE_2="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api-build
+PANE_ROLE_3="hien_binh"    # Review tasks: /review, /test, /check-and-commit
 
-# Role-specific fallback tasks (round-robin per role)
-declare -A ROLE_FALLBACK_1 ROLE_FALLBACK_2 ROLE_FALLBACK_3
-ROLE_FALLBACK_1=(
-  '/plan:hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
-  '/cook "Implement missing governance features — check spec vs implementation gaps"'
-  '/debug "Analyze and fix any TypeScript errors across all packages"'
-)
-ROLE_FALLBACK_2=(
-  '/cook "Fix and polish raas-landing — check build, fix errors, improve SEO"'
-  '/cook "Harden mekong-engine API — input validation on all routes"'
-  '/cook "Build missing frontend components in dashboard pages"'
-)
-ROLE_FALLBACK_3=(
-  '/review "Review packages/mekong-engine/src/routes/ for code quality and security"'
-  '/test "Run all tests in packages/mekong-engine — fix any failures"'
-  '/cook "Add error handling and edge case coverage to API endpoints"'
-)
+# Role-specific fallback tasks (indexed arrays — bash 3.2 compatible)
+ROLE_FB_1_0='/plan:hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
+ROLE_FB_1_1='/cook "Implement missing governance features — check spec vs implementation gaps"'
+ROLE_FB_1_2='/debug "Analyze and fix any TypeScript errors across all packages"'
+ROLE_FB_1_COUNT=3
+
+ROLE_FB_2_0='/cook "Fix and polish raas-landing — check build, fix errors, improve SEO"'
+ROLE_FB_2_1='/cook "Harden mekong-engine API — input validation on all routes"'
+ROLE_FB_2_2='/cook "Build missing frontend components in dashboard pages"'
+ROLE_FB_2_COUNT=3
+
+ROLE_FB_3_0='/review "Review packages/mekong-engine/src/routes/ for code quality and security"'
+ROLE_FB_3_1='/test "Run all tests in packages/mekong-engine — fix any failures"'
+ROLE_FB_3_2='/cook "Add error handling and edge case coverage to API endpoints"'
+ROLE_FB_3_COUNT=3
 
 # Persist fallback index across restarts
 FALLBACK_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/fallback-state"
-declare -A FALLBACK_IDX
-for _r in 1 2 3; do FALLBACK_IDX[$_r]=0; done
+FALLBACK_IDX_1=0; FALLBACK_IDX_2=0; FALLBACK_IDX_3=0
 if [[ -f "$FALLBACK_STATE_FILE" ]]; then
-  # Format: "idx1 idx2 idx3"
   read -r _f1 _f2 _f3 < "$FALLBACK_STATE_FILE" 2>/dev/null || true
-  FALLBACK_IDX[1]=${_f1:-0}; FALLBACK_IDX[2]=${_f2:-0}; FALLBACK_IDX[3]=${_f3:-0}
+  FALLBACK_IDX_1=${_f1:-0}; FALLBACK_IDX_2=${_f2:-0}; FALLBACK_IDX_3=${_f3:-0}
 fi
+
+# Helper: get pane role
+get_pane_role() { eval echo "\${PANE_ROLE_${1}:-cong_binh}"; }
+# Helper: get fallback command for pane
+get_fallback_cmd() {
+  local pidx=$1
+  local fidx_var="FALLBACK_IDX_${pidx}"
+  local fidx=${!fidx_var:-0}
+  local cmd_var="ROLE_FB_${pidx}_${fidx}"
+  local cmd=${!cmd_var:-"/cook \"RaaS build check\""}
+  local count_var="ROLE_FB_${pidx}_COUNT"
+  local count=${!count_var:-3}
+  eval "${fidx_var}=$(( (fidx + 1) % count ))"
+  echo "$FALLBACK_IDX_1 $FALLBACK_IDX_2 $FALLBACK_IDX_3" > "$FALLBACK_STATE_FILE"
+  echo "$cmd"
+}
 
 # Defaults (overridable via CLI flags)
 CTO_SESSION="${CTO_SESSION:-tom_hum}"
@@ -170,7 +182,7 @@ Pick the MOST SPECIFIC command."
   fi
 
   # Role context for this pane
-  local role="${PANE_ROLE[$pane_idx]:-cong_binh}"
+  local role=$(get_pane_role "$pane_idx")
   local role_desc
   case "$role" in
     tien_phong) role_desc="TIÊN PHONG (complex): /plan:hard, /debug hard bugs, /cook complex features" ;;
@@ -606,7 +618,7 @@ dispatch_worker() {
   if [[ -n "$brain_cmd" ]]; then
     log "P${pane_idx} (${name}): BRAIN WARM → ${brain_cmd}"
     send_to_pane "$pane_idx" "$brain_cmd"
-    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [${PANE_ROLE[$pane_idx]:-?}]"
+    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [$(get_pane_role "$pane_idx")]"
     return
   fi
   log "P${pane_idx} (${name}): BRAIN COLD/EMPTY — using role fallback"
@@ -618,14 +630,10 @@ dispatch_worker() {
   fi
 
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
-    # Pick from role-specific fallback array
-    local -n role_tasks="ROLE_FALLBACK_${pane_idx}"
-    local ridx=0
-    [[ -v "FALLBACK_IDX[$pane_idx]" ]] && ridx=${FALLBACK_IDX[$pane_idx]}
-    local fallback_cmd="${role_tasks[$ridx]:-/cook \"RaaS build check\"}"
-    FALLBACK_IDX[$pane_idx]=$(( (ridx + 1) % ${#role_tasks[@]} ))
-    echo "${FALLBACK_IDX[1]} ${FALLBACK_IDX[2]} ${FALLBACK_IDX[3]}" > "$FALLBACK_STATE_FILE"
-    log "P${pane_idx} (${name}): FALLBACK[${PANE_ROLE[$pane_idx]}#${ridx}]: ${fallback_cmd}"
+    # Pick from role-specific fallback array (bash 3.2 compatible)
+    local fallback_cmd=$(get_fallback_cmd "$pane_idx")
+    local pane_role=$(get_pane_role "$pane_idx")
+    log "P${pane_idx} (${name}): FALLBACK[${pane_role}]: ${fallback_cmd}"
     send_to_pane "$pane_idx" "$fallback_cmd"
     return
   fi
