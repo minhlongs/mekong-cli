@@ -4,7 +4,7 @@ export default defineConfig({
   entry: ['src/cli/index.ts'],
   format: ['esm'],
   dts: true,
-  tsconfig: true,
+  dtsConfig: false,
   external: [
     '@openclaw/solo-os',
     '@openclaw/solo-os/company-brain',
