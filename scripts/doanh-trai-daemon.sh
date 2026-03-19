@@ -12,8 +12,16 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MEKONG_DIR="${PROJECT_ROOT}/.mekong"
 CONFIG_FILE="${PROJECT_ROOT}/config/doanh-trai-departments.yaml"
 LOG_FILE="${MEKONG_DIR}/doanh-trai.log"
+API_USAGE_FILE="${MEKONG_DIR}/api-usage.log"
+TASK_RUNNER="${SCRIPT_DIR}/dept-task-runner.sh"
 POLL_INTERVAL=120
 MAX_LOG_LINES=2000
+DAILY_API_LIMIT=2500
+
+# Departments that use LOCAL Ollama only (no CC CLI API burn)
+LOCAL_ONLY_DEPTS="sales mktg docs"
+# Departments that use CC CLI (code changes needed)
+CODE_DEPTS="ops design"
 
 mkdir -p "$MEKONG_DIR"
 
@@ -154,6 +162,34 @@ while true; do
         continue
       fi
 
+      # Check API budget — if over limit, force local-only for ALL depts
+      daily_usage=0
+      today=$(date '+%Y-%m-%d')
+      if [[ -f "$API_USAGE_FILE" ]]; then
+        daily_usage=$(grep -c "^${today}" "$API_USAGE_FILE" 2>/dev/null || echo 0)
+      fi
+      budget_exceeded=false
+      [[ "$daily_usage" -gt "$DAILY_API_LIMIT" ]] && budget_exceeded=true
+
+      # Route: LOCAL_ONLY depts → Ollama directly (no CC CLI burn)
+      if echo "$LOCAL_ONLY_DEPTS" | grep -qw "$dept_name" || [[ "$budget_exceeded" == true ]]; then
+        # Use dept-task-runner.sh with Ollama — zero API cost
+        IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"
+        if [[ ${#task_arr[@]} -gt 0 ]]; then
+          tidx=${DEPT_TASK_IDX[$dept_name]:-0}
+          task="${task_arr[$tidx]}"
+          # Strip /cook prefix — task runner takes raw description
+          task_desc=$(echo "$task" | sed 's|^/[a-z_:-]* *"*||; s|"*$||')
+          DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
+          log "${dept_name} P${pane_idx}: LOCAL[${tidx}] → ${task_desc}"
+          bash "$TASK_RUNNER" "$dept_name" "$task_desc" >> "$LOG_FILE" 2>&1 &
+        fi
+        continue
+      fi
+
+      # CODE depts (ops, design) → use CC CLI pane but with budget tracking
+      echo "${today} ${dept_name} P${pane_idx}" >> "$API_USAGE_FILE"
+
       # Try brain dispatch first
       brain_cmd=""
       brain_cmd=$(brain_dispatch_dept "$dept_name" "$output" 2>/dev/null || echo "")
@@ -163,13 +199,13 @@ while true; do
         continue
       fi
 
-      # Fallback: round-robin from dept tasks
+      # Fallback for code depts
       IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"
       if [[ ${#task_arr[@]} -gt 0 ]]; then
         tidx=${DEPT_TASK_IDX[$dept_name]:-0}
         task="${task_arr[$tidx]}"
         DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
-        log "${dept_name} P${pane_idx}: FALLBACK[${tidx}] → ${task}"
+        log "${dept_name} P${pane_idx}: CC-CLI[${tidx}] → ${task}"
         send_to_pane "$session" "$pane_idx" "$task"
       else
         log "${dept_name} P${pane_idx}: NO TASKS CONFIGURED"
