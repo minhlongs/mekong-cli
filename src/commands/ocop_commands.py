@@ -9,14 +9,19 @@ Commands:
 - mekong ocop list: Show available export platforms
 """
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
+from typing import Any, Optional
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+
+from src.core.llm_client import get_client
 
 console = Console()
 app = typer.Typer(help="OCOP: AI-powered agricultural export tools")
@@ -80,9 +85,8 @@ def analyze(
 
         progress.update(task, description="Sending to AI Agent for analysis...")
 
-        # TODO: Integrate with LLM client for actual analysis
-        # For now, generate structured output from input
-        analysis = _generate_analysis_stub(product_data, file_path)
+        # Generate AI-powered analysis
+        analysis = _generate_analysis(product_data, file_path)
 
         progress.update(task, description="Analysis complete!")
 
@@ -150,8 +154,8 @@ def export_listing(
     ) as progress:
         task = progress.add_task(f"Generating {target} listing...", total=None)
 
-        # TODO: Integrate with LLM client for actual listing generation
-        listing = _generate_listing_stub(target, product_data)
+        # Generate AI-powered listing
+        listing = _generate_listing(target, product_data)
 
         progress.update(task, description="Listing generated!")
 
@@ -194,8 +198,84 @@ def list_platforms():
     console.print(table)
 
 
-def _generate_analysis_stub(product_data: dict, file_path: Path) -> dict:
-    """Generate a stub analysis result. Replace with LLM integration."""
+def _generate_analysis(product_data: dict, file_path: Path) -> dict:
+    """Generate AI-powered analysis using LLM client.
+
+    Analyzes product data to extract:
+    - HS code classification
+    - Quality grade and certifications
+    - Export compliance requirements
+    - Suggested target markets
+    - Estimated FOB pricing
+    """
+    client = get_client()
+
+    # Build prompt for product analysis
+    system_prompt = """You are an agricultural export expert specializing in product classification and compliance.
+Analyze the product data and provide structured JSON output with:
+- hs_code: 6-digit Harmonized System code (format: XXXX.XX)
+- category: Product category
+- subcategory: Specific product subcategory
+- grade: Quality grade (A/B/C)
+- certifications: List of relevant certifications (VietGAP, GlobalGAP, ISO, etc.)
+- shelf_life_days: Estimated shelf life in days
+- phytosanitary_required: Boolean for phytosanitary certificate requirement
+- food_safety_required: Boolean for food safety certificate
+- origin_certificate_required: Boolean for certificate of origin
+- suggested_markets: List of 3-5 target export markets
+- estimated_fob_usd_kg: Estimated FOB price in USD per kg
+
+Respond ONLY with valid JSON, no markdown."""
+
+    user_content = f"""Analyze this agricultural product for export readiness:
+
+Product Data:
+{json.dumps(product_data, indent=2)}
+
+Source File: {file_path.name}
+File Type: {file_path.suffix}
+
+Provide comprehensive export analysis."""
+
+    try:
+        result = client.generate_json(
+            system_prompt + "\n\n" + user_content,
+            temperature=0.3,  # Lower temperature for structured output
+            max_tokens=1024,
+        )
+
+        # Ensure all required fields exist with defaults
+        analysis = {
+            "source": str(file_path),
+            "classification": {
+                "hs_code": result.get("hs_code", "0901.11"),
+                "category": result.get("category", "Agricultural Product"),
+                "subcategory": result.get("subcategory", "Unspecified"),
+            },
+            "quality": {
+                "grade": result.get("grade", "A"),
+                "certifications": result.get("certifications", []),
+                "shelf_life_days": result.get("shelf_life_days", 365),
+            },
+            "export_compliance": {
+                "phytosanitary": result.get("phytosanitary_required", True),
+                "food_safety": result.get("food_safety_required", True),
+                "origin_certificate": result.get("origin_certificate_required", True),
+            },
+            "suggested_markets": result.get("suggested_markets", ["Japan", "EU", "USA"]),
+            "estimated_fob_usd_kg": result.get("estimated_fob_usd_kg", 4.50),
+        }
+
+        return analysis
+
+    except Exception as e:
+        console.print(f"[yellow]LLM analysis failed: {e}[/yellow]")
+        console.print("[dim]Using fallback analysis...[/dim]")
+        return _generate_fallback_analysis(product_data, file_path)
+
+
+def _generate_fallback_analysis(product_data: dict, file_path: Path) -> dict:
+    """Fallback analysis when LLM is unavailable."""
     return {
         "source": str(file_path),
         "classification": {
@@ -262,8 +342,118 @@ def _display_listing(listing: dict, target: str, dry_run: bool) -> None:
     console.print(table)
 
 
-def _generate_listing_stub(target: str, product_data: dict | None) -> dict:
-    """Generate stub listing. Replace with LLM integration."""
+def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
+    """Generate AI-powered export listing using LLM client.
+
+    Creates platform-optimized B2B listings for:
+    - Amazon, Alibaba, Shopee, Lazada, Tiki, Grab, Sendo
+
+    Each platform has specific requirements for:
+    - Title format and length
+    - Pricing display
+    - MOQ (Minimum Order Quantity)
+    - Shipping terms
+    - Certification highlights
+    """
+    client = get_client()
+
+    # Platform-specific optimization prompts
+    platform_configs = {
+        "amazon": {
+            "title_max": 200,
+            "focus": "Premium quality, consumer-friendly, detailed specs",
+            "terms": "FBA, Prime eligible language",
+        },
+        "alibaba": {
+            "title_max": 128,
+            "focus": "B2B wholesale, factory direct, bulk pricing",
+            "terms": "FOB, CIF, MOQ emphasis",
+        },
+        "shopee": {
+            "title_max": 100,
+            "focus": "Southeast Asia market, competitive pricing",
+            "terms": "Free shipping, local warehouse",
+        },
+        "lazada": {
+            "title_max": 120,
+            "focus": "Premium SEA marketplace, brand-focused",
+            "terms": "LazMall, official store",
+        },
+        "tiki": {
+            "title_max": 100,
+            "focus": "Vietnam domestic, fast delivery",
+            "terms": "TikiNOW, same-day delivery",
+        },
+        "grab": {
+            "title_max": 80,
+            "focus": "Quick commerce, fresh produce",
+            "terms": "Instant delivery, local sourcing",
+        },
+        "sendo": {
+            "title_max": 100,
+            "focus": "Vietnam rural market, value pricing",
+            "terms": "Free shipping, cash on delivery",
+        },
+    }
+
+    config = platform_configs.get(target.lower(), platform_configs["alibaba"])
+
+    system_prompt = f"""You are a B2B e-commerce listing expert specializing in {target.upper()} marketplace.
+Create an optimized product listing with:
+- title: Product title (max {config['title_max']} chars) - {config['focus']}
+- price: Clear pricing with currency and terms
+- moq: Minimum order quantity
+- origin: Product origin with region
+- shipping: Shipping terms and options
+- certifications: List of relevant certifications
+- description: Compelling product description (2-3 sentences)
+- keywords: 5-8 SEO keywords for the platform
+
+Respond ONLY with valid JSON, no markdown."""
+
+    product_info = json.dumps(product_data, indent=2) if product_data else "Premium Vietnamese agricultural product"
+
+    user_content = f"""Create a {target.upper()} export listing for this product:
+
+Product Analysis Data:
+{product_info}
+
+Platform Requirements:
+- Focus: {config['focus']}
+- Terms: {config['terms']}
+- Title max length: {config['title_max']} characters
+
+Generate a complete, optimized listing."""
+
+    try:
+        result = client.generate_json(
+            system_prompt + "\n\n" + user_content,
+            temperature=0.5,  # Balanced for creativity + structure
+            max_tokens=1024,
+        )
+
+        listing = {
+            "title": result.get("title", "Premium Vietnamese Agricultural Product"),
+            "price": result.get("price", "$4.50/kg FOB Ho Chi Minh City"),
+            "moq": result.get("moq", "1,000 kg"),
+            "origin": result.get("origin", "Dak Lak, Mekong Delta, Vietnam"),
+            "shipping": result.get("shipping", "FOB / CIF available"),
+            "platform": target,
+            "certifications": result.get("certifications", ["VietGAP", "GlobalGAP"]),
+            "description": result.get("description", ""),
+            "keywords": result.get("keywords", []),
+        }
+
+        return listing
+
+    except Exception as e:
+        console.print(f"[yellow]LLM listing generation failed: {e}[/yellow]")
+        console.print("[dim]Using fallback listing...[/dim]")
+        return _generate_fallback_listing(target, product_data)
+
+
+def _generate_fallback_listing(target: str, product_data: Optional[dict]) -> dict:
+    """Fallback listing when LLM is unavailable."""
     return {
         "title": "Premium Vietnamese Robusta Coffee Beans — Grade A, VietGAP Certified",
         "price": "$4.50/kg FOB Ho Chi Minh City",
