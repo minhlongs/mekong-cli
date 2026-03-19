@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "type": "module",
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pitch-generator": "./src/pitch-generator.ts",
+    "./data-room": "./src/data-room.ts",
+    "./iso-compliance": "./src/iso-compliance.ts",
+    "./exit-engine": "./src/exit-engine.ts",
+    "./board-meeting": "./src/board-meeting.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run"

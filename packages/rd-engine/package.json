@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "type": "module",
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./analyzer": "./src/analyzer.ts",
+    "./reporter": "./src/reporter.ts",
+    "./scheduler": "./src/scheduler.ts",
+    "./proposer": "./src/proposer.ts",
+    "./sources/github-trending": "./src/sources/github-trending.ts",
+    "./sources/npm-registry": "./src/sources/npm-registry.ts",
+    "./sources/hackernews": "./src/sources/hackernews.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run"
