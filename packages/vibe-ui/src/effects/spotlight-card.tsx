@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { ErrorBoundary } from '../components/error-boundary';
 
 export interface SpotlightCardProps {
     children: React.ReactNode;
     className?: string;
 }
 
-export function SpotlightCard({ children, className = '' }: SpotlightCardProps) {
+function SpotlightCardInner({ children, className = '' }: SpotlightCardProps) {
     const ref = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
@@ -38,5 +39,13 @@ export function SpotlightCard({ children, className = '' }: SpotlightCardProps) 
             />
             <div className="relative z-10">{children}</div>
         </motion.div>
+    );
+}
+
+export function SpotlightCard(props: SpotlightCardProps) {
+    return (
+        <ErrorBoundary name="SpotlightCard">
+            <SpotlightCardInner {...props} />
+        </ErrorBoundary>
     );
 }

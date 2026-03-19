@@ -1,15 +1,9 @@
 import { BaseAgent } from './base-agent.js';
-import { AgentResult, BuildMetrics } from '../types/index.js';
+import { AgentResult } from '../types/index.js';
 import { BuildService } from '../services/build-service.js';
 import { spawn } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-
-interface TestOptions {
-  runUnitTests?: boolean;
-  runIntegrationTests?: boolean;
-  runLighthouse?: boolean;
-}
 
 export class TesterAgent extends BaseAgent {
   readonly name = 'TesterAgent';
@@ -75,27 +69,17 @@ export class TesterAgent extends BaseAgent {
         stdio: 'pipe',
         shell: true,
       });
-      
-      let stdout = '';
-      let stderr = '';
-      
-      child.stdout?.on('data', (data) => {
-        stdout += data.toString();
-      });
-      
+
       child.stderr?.on('data', (data) => {
-        stderr += data.toString();
+        this.logger.debug(`${label} output:`, data.toString().slice(0, 500));
       });
-      
+
       child.on('close', (code) => {
         if (code === 0) {
           this.logger.info(`✓ ${label} passed`);
           resolve(true);
         } else {
           this.logger.error(`✗ ${label} failed`);
-          if (stderr) {
-            this.logger.debug('Error output:', { stderr: stderr.slice(0, 500) });
-          }
           resolve(false);
         }
       });

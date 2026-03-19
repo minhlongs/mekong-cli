@@ -45,6 +45,22 @@ const createCampaignSchema = z.object({
 
 crmRoutes.use('*', authMiddleware)
 
+type Contact = {
+  id: string
+  tenant_id: string
+  external_id: string | null
+  platform: string
+  name: string | null
+  phone: string | null
+  email: string | null
+  tags: string
+  notes: string | null
+  visit_count: number
+  last_contact_at: string
+  created_at: string
+  updated_at: string
+}
+
 // GET /crm/contacts — list with optional ?tag= and ?limit=
 crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tenant = c.get('tenant')
@@ -53,7 +69,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tag = c.req.query('tag')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
-  let contacts: any[]
+  let contacts: Contact[]
   if (tag) {
     const result = await handleDb(
       async () => {
@@ -62,7 +78,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
         )
           .bind(tenant.id, tag, limit)
           .all()
-        return r as { results?: any[] }
+        return r as { results?: Contact[] }
       },
       'DATABASE_ERROR',
       'Failed to fetch contacts'
@@ -76,7 +92,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
         )
           .bind(tenant.id, limit)
           .all()
-        return r as { results?: any[] }
+        return r as { results?: Contact[] }
       },
       'DATABASE_ERROR',
       'Failed to fetch contacts'

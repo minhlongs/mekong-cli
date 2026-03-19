@@ -6,9 +6,23 @@
 import { handleDb, createError } from '../types/error'
 
 /**
+ * D1Database type for webhook operations
+ */
+export interface WebhookDatabase {
+  exec: (sql: string) => Promise<{ success: boolean }>
+  prepare: (query: string) => {
+    bind: (...params: unknown[]) => {
+      first: () => Promise<unknown>
+      run: () => Promise<{ success: boolean }>
+      all: () => Promise<{ results: unknown[] }>
+    }
+  }
+}
+
+/**
  * Ensure webhook_events table exists (idempotent)
  */
-export async function ensureWebhookEventsTable(db: any) {
+export async function ensureWebhookEventsTable(db: WebhookDatabase) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS webhook_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,7 +39,7 @@ export async function ensureWebhookEventsTable(db: any) {
  * Check if webhook event already processed (replay attack detection)
  */
 export async function isDuplicateWebhookEvent(
-  db: any,
+  db: WebhookDatabase,
   provider: string,
   eventId: string
 ): Promise<boolean> {
@@ -43,7 +57,7 @@ export async function isDuplicateWebhookEvent(
  * Record webhook event for replay attack tracking
  */
 export async function recordWebhookEvent(
-  db: any,
+  db: WebhookDatabase,
   provider: string,
   eventId: string,
   type: string

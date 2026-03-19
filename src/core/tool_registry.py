@@ -286,8 +286,9 @@ class ToolRegistry:
         discovered: List[Tool] = []
 
         try:
+            import shlex
             result = subprocess.run(
-                f"{command} --help", shell=True,
+                shlex.split(f"{command} --help"),
                 capture_output=True, text=True, timeout=10,
             )
             help_text = result.stdout or result.stderr

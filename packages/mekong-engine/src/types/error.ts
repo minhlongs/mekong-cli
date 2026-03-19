@@ -72,6 +72,31 @@ export type ErrorResponse = {
 }
 
 /**
+ * Hono Context type for type-safe handlers
+ * Supports common operations used in route handlers
+ */
+export interface HonoContext {
+  req: {
+    json: () => Promise<unknown>
+    query: (key: string) => string | undefined
+  }
+  json: (data: unknown, status?: number) => Response
+  env: {
+    DB: {
+      prepare: (query: string) => {
+        bind: (...params: unknown[]) => {
+          first: () => Promise<unknown>
+          run: () => Promise<{ success: boolean }>
+          all: () => Promise<{ results: unknown[] }>
+        }
+      }
+    }
+  }
+  get: (key: string) => unknown
+  set: (key: string, value: unknown) => void
+}
+
+/**
  * Custom Error class for HTTP errors
  * Use throw new HttpError('NOT_FOUND', 'Resource not found', 404)
  */
@@ -115,9 +140,9 @@ export class HttpError extends Error {
  * ```
  */
 export function handleAsync<T>(
-  fn: (c: any) => Promise<T>
-): (c: any) => Promise<T | Response> {
-  return async (c: any) => {
+  fn: (c: HonoContext) => Promise<T>
+): (c: HonoContext) => Promise<T | Response> {
+  return async (c: HonoContext) => {
     try {
       return await fn(c)
     } catch (error) {
@@ -221,7 +246,7 @@ export function requireResource<T>(
  * ```
  */
 export async function validateJsonBody<T extends ZodSchema>(
-  c: any,
+  c: HonoContext,
   schema: T
 ): Promise<z.infer<T>> {
   try {
@@ -250,13 +275,26 @@ export async function validateJsonBody<T extends ZodSchema>(
  */
 export function guardEmptyArray<T>(
   arr: T[],
-  c: any,
+  c: HonoContext,
   message: string = 'No items found'
 ): T[] | Response {
   if (!arr || arr.length === 0) {
     return c.json(createError('NOT_FOUND', message), 404)
   }
   return arr
+}
+
+/**
+ * D1 Database type for requireTenant helper
+ */
+export interface D1Database {
+  prepare: (query: string) => {
+    bind: (...params: unknown[]) => {
+      first: () => Promise<unknown>
+      run: () => Promise<{ success: boolean }>
+      all: () => Promise<{ results: unknown[] }>
+    }
+  }
 }
 
 /**
@@ -270,7 +308,7 @@ export function guardEmptyArray<T>(
  * ```
  */
 export async function requireTenant(
-  db: any,
+  db: D1Database,
   tenantId: string,
   message: string = 'Tenant not found'
 ): Promise<void> {

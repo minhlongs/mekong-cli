@@ -132,7 +132,7 @@ export async function createJournalEntry(
   }
 
   const jeId = crypto.randomUUID()
-  const batch: any[] = []
+  const batch: Promise<{ success: boolean }>[] = []
 
   // Insert journal entry
   batch.push(
@@ -198,7 +198,7 @@ export async function getTransactionHistory(
   accountId: string,
   limit: number = 50,
   offset: number = 0
-): Promise<any[]> {
+): Promise<unknown[]> {
   const safeLimit = Math.max(1, Math.min(200, limit))
   const safeOffset = Math.max(0, offset)
 
@@ -216,7 +216,7 @@ export async function getTransactionHistory(
     .bind(accountId, safeLimit, safeOffset)
     .all()
 
-  return (result as { results?: any[] }).results ?? []
+  return (result as { results?: unknown[] }).results ?? []
 }
 
 /**

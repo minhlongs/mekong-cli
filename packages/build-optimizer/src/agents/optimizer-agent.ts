@@ -1,5 +1,5 @@
 import { BaseAgent } from './base-agent.js';
-import { AgentResult, BuildMetrics, OptimizationResult, AppConfig } from '../types/index.js';
+import { AgentResult, OptimizationResult, AppConfig } from '../types/index.js';
 import { BuildService } from '../services/build-service.js';
 import { GitService } from '../services/git-service.js';
 import { OptimizationFailedError } from '../utils/errors.js';
@@ -125,7 +125,7 @@ export class OptimizerAgent extends BaseAgent {
     this.logger.warn('Rolling back changes...');
     try {
       await strategy.rollback(app, this.logger);
-    } catch (error) {
+    } catch {
       this.logger.warn('Strategy rollback failed, performing git reset...');
       await git.resetHard('HEAD');
     }
