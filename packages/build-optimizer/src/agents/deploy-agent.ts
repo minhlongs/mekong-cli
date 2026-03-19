@@ -2,12 +2,6 @@ import { BaseAgent } from './base-agent.js';
 import { AgentResult, OptimizationResult } from '../types/index.js';
 import { GitService } from '../services/git-service.js';
 
-interface DeployOptions {
-  autoCommit?: boolean;
-  autoPush?: boolean;
-  commitMessage?: string;
-}
-
 export class DeployAgent extends BaseAgent {
   readonly name = 'DeployAgent';
   

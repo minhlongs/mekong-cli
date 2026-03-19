@@ -94,7 +94,7 @@ billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let event: { type: string; data?: any; timestamp?: string; created_at?: string; id?: string }
+  let event: { type: string; data?: unknown; timestamp?: string; created_at?: string; id?: string }
   try {
     event = JSON.parse(rawBody)
   } catch {

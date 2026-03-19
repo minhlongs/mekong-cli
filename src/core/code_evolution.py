@@ -6,6 +6,7 @@ test in sandbox, and apply with git branch isolation.
 The closest step to AGI — the system improves its own codebase.
 """
 
+import ast
 import logging
 import subprocess
 import time
@@ -19,6 +20,13 @@ import yaml  # type: ignore[import-untyped]
 from .event_bus import EventType, get_event_bus
 
 logger = logging.getLogger(__name__)
+
+# Dangerous patterns that LLM should not generate
+DANGEROUS_PATTERNS = {
+    "eval(", "exec(", "compile(", "__import__",
+    "os.system", "os.popen", "subprocess.call",
+    "subprocess.run", "subprocess.Popen",
+}
 
 
 class EvolutionStatus(str, Enum):
@@ -271,10 +279,25 @@ class CodeEvolutionEngine:
             # Create branch
             self._git_cmd(f"checkout -b {branch}")
 
-            # Apply changes
+            # Apply changes WITH VALIDATION
             for change in attempt.changes:
                 full_path = self.project_root / change.file_path
                 if change.modified_content:
+                    # CRITICAL: Validate code before writing
+                    validation_errors = self._validate_code(
+                        change.modified_content, full_path
+                    )
+                    if validation_errors:
+                        logger.error(
+                            "[EVOLUTION] Code validation failed: %s",
+                            validation_errors,
+                        )
+                        attempt.status = EvolutionStatus.FAILED
+                        attempt.test_results = (
+                            f"Code validation failed: {validation_errors}"
+                        )
+                        return False
+
                     # Store rollback data
                     attempt.rollback_data[change.file_path] = (
                         change.original_content
@@ -324,6 +347,53 @@ class CodeEvolutionEngine:
 
         self._save_journal()
         return passed
+
+    def _validate_code(
+        self,
+        code: str,
+        file_path: Path,
+    ) -> Optional[str]:
+        """
+        Validate LLM-generated code before writing.
+
+        Args:
+            code: Generated code content.
+            file_path: Target file path.
+
+        Returns:
+            None if valid, error message if invalid.
+        """
+        # 1. Syntax validation
+        try:
+            ast.parse(code)
+        except SyntaxError as e:
+            return f"Syntax error: {e}"
+
+        # 2. Check for dangerous patterns
+        code_lower = code.lower()
+        for pattern in DANGEROUS_PATTERNS:
+            if pattern.lower() in code_lower:
+                lines = code.split("\n")
+                for line in lines:
+                    stripped = line.strip()
+                    if not stripped.startswith("#"):
+                        if pattern in line:
+                            return (
+                                f"Dangerous pattern detected: {pattern}. "
+                                "Self-modifying code cannot use eval/exec/os.system"
+                            )
+
+        # 3. Import verification
+        dangerous_imports = [
+            "import ctypes", "from ctypes",
+            "import pickle", "from pickle",
+            "import marshal", "from marshal",
+        ]
+        for imp in dangerous_imports:
+            if imp in code:
+                return f"Dangerous import blocked: {imp}"
+
+        return None
 
     def apply_evolution(self, attempt: EvolutionAttempt) -> bool:
         """

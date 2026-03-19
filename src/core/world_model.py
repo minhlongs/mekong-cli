@@ -140,18 +140,19 @@ class WorldModel:
         # Open ports
         state.open_ports = self._get_open_ports()
 
-        # Relevant environment variables — mask sensitive values
-        _SENSITIVE = {"KEY", "SECRET", "TOKEN", "PASSWORD", "CREDENTIAL"}
+        # Relevant environment variables — EXCLUDE sensitive entirely
+        _EXCLUDE_PATTERNS = {"SECRET", "TOKEN", "PASSWORD", "CREDENTIAL", "KEY"}
         state.env_vars = {}
         for k, v in os.environ.items():
+            # Skip sensitive vars entirely - do not capture them
+            if any(pat in k.upper() for pat in _EXCLUDE_PATTERNS):
+                continue
+            # Only include non-sensitive env vars
             if any(pat in k.upper() for pat in [
-                "API", "KEY", "URL", "PORT", "HOST",
+                "API", "URL", "PORT", "HOST",
                 "DATABASE", "REDIS", "MEKONG", "LLM",
             ]):
-                if any(s in k.upper() for s in _SENSITIVE):
-                    state.env_vars[k] = v[:4] + "****" if len(v) > 4 else "****"
-                else:
-                    state.env_vars[k] = v
+                state.env_vars[k] = v
 
         # Store snapshot
         self._snapshots.append(state)
@@ -392,12 +393,13 @@ class WorldModel:
     def _run_cmd(self, cmd: str) -> str:
         """Run a shell command and return stdout."""
         try:
+            import shlex
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True,
+                shlex.split(cmd), capture_output=True, text=True,
                 timeout=5, cwd=self.working_dir,
             )
             return result.stdout.strip()
-        except (subprocess.TimeoutExpired, Exception):
+        except (subprocess.TimeoutExpired, Exception) as e:
             return ""
 
     def _llm_predict(self, plan: str) -> Dict[str, Any]:

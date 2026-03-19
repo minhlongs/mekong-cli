@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
+import { ErrorBoundary } from '../components/error-boundary';
 import { isSafari } from '../utils/browser-detect';
 
-export function MorphingBlob({ className = '' }: { className?: string }) {
+function MorphingBlobInner({ className = '' }: { className?: string }) {
     if (isSafari()) {
         return <div className={`absolute rounded-full opacity-20 ${className}`} />;
     }
@@ -20,5 +21,13 @@ export function MorphingBlob({ className = '' }: { className?: string }) {
             }}
             transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
         />
+    );
+}
+
+export function MorphingBlob(props: { className?: string }) {
+    return (
+        <ErrorBoundary name="MorphingBlob">
+            <MorphingBlobInner {...props} />
+        </ErrorBoundary>
     );
 }

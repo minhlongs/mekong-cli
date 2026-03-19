@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { ErrorBoundary } from '../components/error-boundary';
 
 interface Sparkle {
     id: number;
@@ -9,7 +10,7 @@ interface Sparkle {
     delay: number;
 }
 
-export function SparkleEffect({ count = 20 }: { count?: number }) {
+function SparkleEffectInner({ count = 20 }: { count?: number }) {
     const [sparkles, setSparkles] = useState<Sparkle[]>([]);
 
     useEffect(() => {
@@ -34,5 +35,13 @@ export function SparkleEffect({ count = 20 }: { count?: number }) {
                 />
             ))}
         </div>
+    );
+}
+
+export function SparkleEffect(props: { count?: number }) {
+    return (
+        <ErrorBoundary name="SparkleEffect">
+            <SparkleEffectInner {...props} />
+        </ErrorBoundary>
     );
 }

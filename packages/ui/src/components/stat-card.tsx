@@ -28,16 +28,20 @@ export function StatCard({
   className,
 }: StatCardProps) {
   const formattedValue = React.useMemo(() => {
-    if (typeof value === "string") return value;
-    switch (format) {
-      case "currency":
-        return formatCurrency(value, currency);
-      case "percent":
-        return formatPercent(value);
-      case "compact":
-        return formatCompact(value);
-      default:
-        return value.toLocaleString();
+    try {
+      if (typeof value === "string") return value;
+      switch (format) {
+        case "currency":
+          return formatCurrency(value, currency);
+        case "percent":
+          return formatPercent(value);
+        case "compact":
+          return formatCompact(value);
+        default:
+          return value.toLocaleString();
+      }
+    } catch {
+      return String(value); // Fallback to string representation
     }
   }, [value, format, currency]);
 

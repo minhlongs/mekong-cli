@@ -19,7 +19,14 @@ from src.auth.user_repository import UserRepository
 
 
 # JWT Configuration from environment
-JWT_SECRET=REDACTED = os.getenv("JWT_SECRET=REDACTED", secrets.token_urlsafe(32))
+# CRITICAL: No fallback secret - must be set in environment
+JWT_SECRET=REDACTED = os.getenv("JWT_SECRET=REDACTED")
+if not JWT_SECRET=REDACTED:
+    raise RuntimeError(
+        "JWT_SECRET=REDACTED environment variable is required. "
+        "Generate one with: secrets.token_urlsafe(32) "
+        "and add to your .env file."
+    )
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))

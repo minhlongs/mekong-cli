@@ -1,5 +1,6 @@
 import React, { useRef, type ReactNode } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, type MotionValue } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ErrorBoundary } from '../components/error-boundary';
 
 export interface TiltCardProps {
     children: ReactNode;
@@ -8,6 +9,14 @@ export interface TiltCardProps {
 }
 
 export function TiltCard({ children, className = '', intensity = 15 }: TiltCardProps) {
+    return (
+        <ErrorBoundary name="TiltCard">
+            <TiltCardInner {...{ children, className, intensity }} />
+        </ErrorBoundary>
+    );
+}
+
+function TiltCardInner({ children, className = '', intensity = 15 }: TiltCardProps) {
     const ref = useRef<HTMLDivElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -37,7 +46,7 @@ export function TiltCard({ children, className = '', intensity = 15 }: TiltCardP
                 className="absolute inset-0 rounded-3xl pointer-events-none"
                 style={{
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, transparent 100%)',
-                    opacity: useTransform(x, [-0.5, 0, 0.5], [0, 0.3, 0]) as unknown as number | MotionValue<number>,
+                    opacity: useTransform(x, [-0.5, 0, 0.5], [0, 0.3, 0] as const),
                 }}
             />
         </motion.div>
