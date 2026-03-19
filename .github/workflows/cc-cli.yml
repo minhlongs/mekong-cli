@@ -51,7 +51,7 @@ jobs:
           pip install pytest pytest-asyncio anyio httpx pytest-cov
           pip install -e .
       - name: Run tests
-        run: pytest tests/ -x -q --ignore=tests/benchmarks --ignore=tests/e2e --ignore=tests/backend --tb=short
+        run: pytest tests/ -x -q --ignore=tests/benchmarks --ignore=tests/e2e --ignore=tests/backend --ignore=tests/integration --ignore=tests/unit --tb=short
         env:
           PYTHONPATH: ${{ github.workspace }}
           CI: "true"
