@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { z } from 'zod'
 import { payloadSizeLimit } from './raas/payload-limiter'
+import { createError } from './types/error'
 import { taskRoutes } from './routes/tasks'
 import { agentRoutes } from './routes/agents'
 import { billingRoutes } from './routes/billing'
@@ -47,6 +49,16 @@ export type Bindings = {
 const START_TIME = Date.now()
 
 const app = new Hono<{ Bindings: Bindings }>()
+
+// Zod schema for /cmd endpoint validation
+const cmdSchema = z.object({
+  goal: z.string()
+    .min(1, 'Goal is required')
+    .max(5000, 'Goal must be 5000 characters or less'),
+  params: z.record(z.unknown())
+    .optional()
+    .describe('Optional parameters for the command'),
+})
 
 // Global error handler — catch JSON parse errors, unexpected crashes
 app.onError((err, c) => {
@@ -133,9 +145,19 @@ app.get('/health', async (c) => {
 app.post('/cmd', async (c) => {
   if (!c.env.AI && !c.env.LLM_API_KEY) return c.json({ error: 'No LLM provider configured (need AI binding or LLM_API_KEY)' }, 503)
 
+  // Validate request body with Zod schema
+  let body: z.infer<typeof cmdSchema>
+  try {
+    const json = await c.req.json()
+    body = cmdSchema.parse(json)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
+  }
+
   const { MekongEngineAdapter } = await import('./core/mekong-engine-adapter')
-  const body = await c.req.json<{ goal: string }>()
-  if (!body.goal) return c.json({ error: 'Missing goal' }, 400)
 
   // BYOK fallback chain: tenant settings → global env → Workers AI
   let llmApiKey = c.env.LLM_API_KEY

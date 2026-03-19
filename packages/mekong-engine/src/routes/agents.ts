@@ -8,6 +8,11 @@ import { handleAsync, handleDb, requireResource, createError, ERROR_CODES } from
 
 type Variables = { tenant: Tenant }
 
+// Zod schema for agent name route param
+const agentNameParamSchema = z.object({
+  name: z.enum(['git', 'file', 'shell', 'lead-hunter', 'content-writer', 'recipe-crawler']),
+})
+
 // Zod schema for agent execution
 const runAgentSchema = z.object({
   command: z.string().min(1, 'command is required'),
@@ -30,9 +35,12 @@ const agentRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 agentRoutes.get('/', (c) => c.json({ agents: AVAILABLE_AGENTS }))
 
 agentRoutes.post('/:name/run', authMiddleware, payloadSizeLimit(), handleAsync(async (c) => {
-  const name = c.req.param('name')
-  const agent = AVAILABLE_AGENTS.find((a) => a.name === name)
-  if (!agent) return c.json(createError('NOT_FOUND', `Agent '${name}' not found`), 404)
+  // Validate route params
+  const paramsResult = agentNameParamSchema.safeParse({ name: c.req.param('name') })
+  if (!paramsResult.success) {
+    return c.json(createError('VALIDATION_ERROR', 'Invalid agent name. Must be one of: git, file, shell, lead-hunter, content-writer, recipe-crawler'), 400)
+  }
+  const { name } = paramsResult.data
 
   let body: RunAgentBody
   try {
