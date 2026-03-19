@@ -208,6 +208,48 @@ launch_pane_cc() {
   bash "${PROJECT_ROOT}/scripts/launch-pane-cc.sh" "$pane_idx" "${WORKER_DIR[$pane_idx]}" "$CTO_SESSION" "$tool"
 }
 
+# ─── ORPHAN NODE CLEANUP (prevents RAM overflow) ───
+# CC CLI spawns node subprocesses. When panes restart/crash, orphans accumulate.
+# This kills node processes NOT attached to any active tmux pane.
+cleanup_orphan_nodes() {
+  local tmux_pids="" killed=0
+  # Get PIDs of processes directly in tmux panes
+  tmux_pids=$(tmux list-panes -t "${CTO_SESSION}" -F '#{pane_pid}' 2>/dev/null | tr '\n' ' ')
+  
+  # Find all node processes
+  local all_nodes
+  all_nodes=$(pgrep -f 'node' 2>/dev/null || true)
+  [[ -z "$all_nodes" ]] && return 0
+  
+  for pid in $all_nodes; do
+    # Skip if this PID or its parent is a tmux pane process
+    local ppid
+    ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ') || continue
+    local dominated=false
+    for tpid in $tmux_pids; do
+      if [[ "$pid" == "$tpid" ]] || [[ "$ppid" == "$tpid" ]]; then
+        dominated=true; break
+      fi
+      # Check grandparent (CC CLI → node → node children)
+      local gppid
+      gppid=$(ps -o ppid= -p "$ppid" 2>/dev/null | tr -d ' ') || continue
+      if [[ "$gppid" == "$tpid" ]]; then
+        dominated=true; break
+      fi
+    done
+    
+    if [[ "$dominated" == false ]]; then
+      # Check if node is truly orphaned (parent is init/launchd = PID 1)
+      if [[ "$ppid" == "1" ]]; then
+        kill -9 "$pid" 2>/dev/null && killed=$((killed + 1))
+      fi
+    fi
+  done
+  
+  [[ $killed -gt 0 ]] && log "🧹 CLEANUP: killed $killed orphan node processes"
+  return 0
+}
+
 # ---- PHASE 1: SCAN ----
 # Reads codebase context on startup (per spec: CLAUDE.md, package.json, src/, git log)
 phase_scan() {
@@ -666,6 +708,11 @@ while true; do
   # Health check every 5 cycles
   if [[ $((CYCLE % 5)) -eq 0 ]]; then
     health_check || true
+  fi
+
+  # Orphan node cleanup every 3 cycles (prevents RAM overflow)
+  if [[ $((CYCLE % 3)) -eq 0 ]]; then
+    cleanup_orphan_nodes || true
   fi
 
   # Re-scan every 20 cycles to update context
