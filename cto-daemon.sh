@@ -1045,7 +1045,13 @@ else
 fi
 
 # Warmup Ollama brain model before first cycle
-bash "${PROJECT_ROOT}/scripts/warmup-ollama.sh" 2>/dev/null || log "WARN: Ollama warmup failed"
+# Inline warmup — non-blocking (10s max), uses hardcoded OLLAMA_URL
+{
+  curl -sf --max-time 10 "${OLLAMA_URL}/api/generate" \
+    -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"hi\",\"stream\":false,\"keep_alive\":\"24h\",\"options\":{\"num_predict\":1}}" >/dev/null 2>&1 \
+    && log "OLLAMA: ${OLLAMA_MODEL} warm" \
+    || log "OLLAMA: warmup skipped (will retry on first dispatch)"
+} &
 
 # Reset any panes stuck at 100% context
 bash "${PROJECT_ROOT}/scripts/reset-full-panes.sh" "${CTO_SESSION}" 2>/dev/null || true
