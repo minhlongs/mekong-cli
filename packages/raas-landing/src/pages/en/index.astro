@@ -89,18 +89,29 @@ const breadcrumbSchema = {
 };
 ---
 
-<BaseLayout title="OpenClaw — AI-Powered Business Automation" description="24/7 customer replies · Auto content creation · Smart CRM. Try free for 14 days." lang="en">
+<BaseLayout
+  title="OpenClaw — AI-Powered Business Automation | Increase 35% Revenue"
+  description="AI business automation: 24/7 customer replies, auto content creation, smart CRM. Free 14-day trial. Trusted by 500+ businesses. Increase 35% revenue, save 20+ hours/week."
+  lang="en"
+  type="website"
+  canonical="/en"
+  keywords="AI automation, business automation, CRM, content creation, customer service, SaaS, enterprise AI, marketing automation, Vietnam, AI Receptionist, Zalo automation, Facebook automation, CRM software, chatbot, auto reply, increase revenue, save time, AI marketing, business automation Vietnam, customer engagement"
+  ogTitle="OpenClaw — AI Working For You 24/7 | Increase 35% Revenue"
+  ogDescription="AI automation: 24/7 customer replies, content creation, smart CRM. Trusted by 500+ businesses. Start free 14-day trial."
+  twitterTitle="OpenClaw — AI Business Automation 24/7"
+  twitterDescription="AI automation: 24/7 customer replies, content creation, smart CRM. Increase 35% revenue, save 20+ hours/week."
+>
 
   <!-- HERO -->
-  <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;">
-    <!-- Animated mesh orbs -->
-    <div style="position:absolute;top:15%;left:5%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.12),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 16s ease-in-out infinite alternate;"></div>
-    <div style="position:absolute;bottom:10%;right:8%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.1),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 20s ease-in-out infinite alternate-reverse;"></div>
-    <div style="position:absolute;top:60%;left:40%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);filter:blur(30px);pointer-events:none;animation:meshDrift 24s ease-in-out infinite alternate;"></div>
+  <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;" aria-label="OpenClaw Introduction">
+    <!-- Animated mesh orbs (decorative) -->
+    <div style="position:absolute;top:15%;left:5%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.12),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 16s ease-in-out infinite alternate;" aria-hidden="true"></div>
+    <div style="position:absolute;bottom:10%;right:8%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.1),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 20s ease-in-out infinite alternate-reverse;" aria-hidden="true"></div>
+    <div style="position:absolute;top:60%;left:40%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);filter:blur(30px);pointer-events:none;animation:meshDrift 24s ease-in-out infinite alternate;" aria-hidden="true"></div>
 
     <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
       <div style="max-width:760px;">
-        <div class="badge animate-in" style="margin-bottom:28px;">✨ New — AI Receptionist for Zalo &amp; Facebook</div>
+        <div class="badge animate-in" style="margin-bottom:28px;" role="status">✨ New — AI Receptionist for Zalo & Facebook</div>
         <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
           <span class="gradient-text">AI-Powered</span><br />Business Automation
         </h1>
@@ -108,28 +119,28 @@ const breadcrumbSchema = {
           24/7 customer replies · Auto content creation · Smart CRM
         </p>
         <!-- Stats row -->
-        <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in">
+        <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in" role="list" aria-label="Platform statistics">
           {[['500+', 'businesses'],['1M+', 'messages'],['99.9%', 'uptime']].map(([v,l]) => (
-            <div>
+            <div role="listitem">
               <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.5rem;font-weight:800;" class="gradient-text">{v}</div>
               <div style="font-size:0.8rem;color:var(--md-on-surface-muted);">{l}</div>
             </div>
           ))}
         </div>
         <!-- Social proof badges -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in">
-          <span class="proof-badge"><span class="dot"></span>Trusted by 500+ businesses</span>
-          <span class="proof-badge">🏆 #1 in Vietnam 2025</span>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in" role="list" aria-label="Trust badges">
+          <span class="proof-badge" role="listitem"><span class="dot"></span>Trusted by 500+ businesses</span>
+          <span class="proof-badge" role="listitem">🏆 #1 in Vietnam 2025</span>
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;">Try free for 14 days →</a>
-          <a href="#features" class="btn-outline">See features</a>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in" role="group" aria-label="Quick actions">
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;" aria-label="Start free 14-day trial, no credit card required">Try free for 14 days →</a>
+          <a href="#features" class="btn-outline" aria-label="View OpenClaw features">See features</a>
         </div>
       </div>
 
       <!-- Terminal mockup -->
-      <div class="terminal animate-on-scroll" style="margin-top:56px;max-width:520px;">
-        <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <div class="terminal animate-on-scroll" style="margin-top:56px;max-width:520px;" aria-label="Example OpenClaw CLI interaction">
+        <div style="display:flex;gap:6px;margin-bottom:14px;" aria-hidden="true">
           <span style="width:10px;height:10px;border-radius:50%;background:#FF5F56;display:inline-block;"></span>
           <span style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;display:inline-block;"></span>
           <span style="width:10px;height:10px;border-radius:50%;background:#27C93F;display:inline-block;"></span>

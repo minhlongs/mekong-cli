@@ -1096,6 +1096,38 @@ details[open] summary .chevron { transform: rotate(180deg); }
   animation: badgeGlow 3s ease-in-out infinite;
 }
 
+/* FOMO Badge */
+.fomo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(255, 159, 67, 0.1));
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ff6b6b;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 16px rgba(255, 107, 107, 0.2);
+  animation: fomoPulse 2s ease-in-out infinite;
+}
+
+@keyframes fomoPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(255, 107, 107, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(255, 107, 107, 0.35); }
+}
+
+.fomo-icon {
+  animation: fomoBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes fomoBounce {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  75% { transform: scale(1.1) rotate(5deg); }
+}
+
 @keyframes badgeGlow {
   0%, 100% { box-shadow: 0 0 20px rgba(0, 188, 212, 0.15); }
   50% { box-shadow: 0 0 30px rgba(0, 188, 212, 0.25); }
@@ -1177,12 +1209,113 @@ details[open] summary .chevron { transform: rotate(180deg); }
 }
 
 /* ========================================
-   TRUST ICON
+   TRUST BADGES (NEW)
    ======================================== */
 
-.trust-icon {
+.trust-badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-on-surface-muted);
+  transition: all 0.2s ease;
+}
+
+.trust-badge:hover {
+  background: rgba(0, 188, 212, 0.1);
+  border-color: rgba(0, 188, 212, 0.3);
+  color: var(--md-primary);
+  transform: translateY(-1px);
+}
+
+.trust-badge .trust-icon {
   font-size: 1rem;
-  filter: drop-shadow(0 0 4px rgba(0, 188, 212, 0.4));
+  filter: drop-shadow(0 0 4px rgba(0, 188, 212, 0.3));
+}
+
+/* ========================================
+   VERIFIED BADGE FOR TESTIMONIALS
+   ======================================== */
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  background: linear-gradient(135deg, #00BCD4, #7C4DFF);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4);
+  animation: verifiedPulse 2s ease-in-out infinite;
+}
+
+@keyframes verifiedPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4); }
+  50% { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0, 188, 212, 0.6); }
+}
+
+.testimonial-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ========================================
+   CAROUSEL AUTO-PLAY ENHANCEMENTS
+   ======================================== */
+
+.carousel-auto .carousel-track {
+  animation: carouselSlide 30s linear infinite;
+}
+
+.carousel-auto:hover .carousel-track {
+  animation-play-state: paused;
+}
+
+/* Progress bar for carousel */
+.carousel-progress {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.carousel-progress-bar {
+  width: 40px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.carousel-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00BCD4, #7C4DFF);
+  animation: progressFill 5s linear infinite;
+}
+
+@keyframes progressFill {
+  0% { width: 0%; }
+  100% { width: 100%; }
 }
 
 /* ========================================

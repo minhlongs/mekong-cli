@@ -12,6 +12,10 @@ interface Props {
   modifiedTime?: string;
   section?: string;
   type?: 'website' | 'article';
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
 }
 const {
   title = 'OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động',
@@ -25,6 +29,10 @@ const {
   modifiedTime,
   section,
   type = 'website',
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
 } = Astro.props;
 const isEn = lang === 'en';
 const base = isEn ? '/en' : '';
@@ -143,12 +151,12 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content={type} />
   <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
+  <meta property="og:title" content={ogTitle || title} />
+  <meta property="og:description" content={ogDescription || description} />
   <meta property="og:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="OpenClaw — AI Business Automation Platform" />
+  <meta property="og:image:alt" content={isEn ? 'OpenClaw — AI Business Automation Platform Dashboard' : 'OpenClaw — Nền tảng AI tự động hóa doanh nghiệp'} />
   <meta property="og:site_name" content="OpenClaw" />
   <meta property="og:locale" content={isEn ? 'en_US' : 'vi_VN'} />
   <meta property="og:locale:alternate" content="vi_VN" />
@@ -160,14 +168,18 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content={canonicalUrl} />
-  <meta name="twitter:title" content={title} />
-  <meta name="twitter:description" content={description} />
+  <meta name="twitter:title" content={twitterTitle || title} />
+  <meta name="twitter:description" content={twitterDescription || description} />
   <meta name="twitter:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
-  <meta name="twitter:image:alt" content="OpenClaw Platform Screenshot" />
+  <meta name="twitter:image:alt" content={isEn ? 'OpenClaw Platform Screenshot' : 'Chụp màn hình nền tảng OpenClaw'} />
   <meta name="twitter:site" content="@agencyos" />
   <meta name="twitter:creator" content="@agencyos" />
   <meta name="twitter:label1" content={isEn ? 'Reading time' : 'Thời gian đọc'} />
   <meta name="twitter:data1" content="5 min" />
+  {isEn && <meta name="twitter:label2" content="Pricing" />}
+  {isEn && <meta name="twitter:data2" content="From $0/mo" />}
+  {!isEn && <meta name="twitter:label2" content="Giá" />}
+  {!isEn && <meta name="twitter:data2" content="Từ $0/tháng" />}
 
   <!-- Google / Search Engine -->
   <meta name="theme-color" content="#00BCD4" />
@@ -193,34 +205,64 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <!-- DNS Prefetch -->
   <link rel="dns-prefetch" href="https://agencyos.network" />
   <link rel="dns-prefetch" href="https://app.agencyos.network" />
+
+  <!-- Font Preload (critical fonts) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+  <!-- Critical CSS Preload -->
+  <link rel="preload" as="style" href="/src/styles/global.css" />
 </head>
 <body>
+<!-- Skip to Content Link (Accessibility) -->
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;">
+  {isEn ? 'Skip to main content' : 'Chuyển đến nội dung chính'}
+</a>
 
 <!-- Structured Data JSON-LD -->
 <script type="application/ld+json" set:html={JSON.stringify(jsonLdSchemas)} />
 
+<!-- Skip Link Focus Style -->
+<style>
+  .skip-link:focus {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    width: auto;
+    height: auto;
+    padding: 12px 20px;
+    background: #00BCD4;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    z-index: 9999;
+    outline: 3px solid #7C4DFF;
+    outline-offset: 2px;
+  }
+</style>
+
 <!-- Sticky nav -->
-<nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass">
+<nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass" role="navigation" aria-label={isEn ? 'Main navigation' : 'Điều hướng chính'}>
   <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
-    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text">OpenClaw</a>
-    <div style="display:flex;align-items:center;gap:28px;">
-      <a href={`${base}/#features`} class="nav-link">{labels.features}</a>
-      <a href={labels.pLink} class="nav-link">{labels.pricing}</a>
-      <a href={`${base}/#faq`} class="nav-link">FAQ</a>
-      <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;">
-        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`}>VI</a>
-        <span style="color:var(--md-on-surface-muted);">|</span>
-        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`}>EN</a>
+    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'OpenClaw Home' : 'Trang chủ OpenClaw'}>OpenClaw</a>
+    <div style="display:flex;align-items:center;gap:28px;" role="menubar">
+      <a href={`${base}/#features`} class="nav-link" role="menuitem" aria-label={isEn ? 'View features' : 'Xem tính năng'}>{labels.features}</a>
+      <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
+      <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
+      <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
+        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'}>VI</a>
+        <span style="color:var(--md-on-surface-muted);" role="presentation">|</span>
+        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to English' : 'Chuyển sang tiếng Anh'} aria-current={isEn ? 'true' : 'false'}>EN</a>
       </div>
-      <a href="https://app.agencyos.network/signup" class="btn-primary" style="padding:10px 20px;font-size:0.875rem;">{labels.cta}</a>
+      <a href="https://app.agencyos.network/signup" class="btn-primary" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
     </div>
   </div>
 </nav>
 
-<main><slot /></main>
+<main id="main-content" role="main"><slot /></main>
 
 <!-- Footer -->
-<footer style="background:var(--md-surface-container);border-top:1px solid var(--md-outline);padding:64px 0 32px;">
+<footer style="background:var(--md-surface-container);border-top:1px solid var(--md-outline);padding:64px 0 32px;" role="contentinfo">
   <div class="container">
     <div class="grid-3" style="margin-bottom:48px;">
       <div>
@@ -230,19 +272,19 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
         </p>
       </div>
       <div>
-        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Product' : 'Sản phẩm'}</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Features' : 'Tính năng'}</a>
-          <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Pricing' : 'Bảng giá'}</a>
-          <a href="https://docs.agencyos.network" class="nav-link" style="font-size:0.875rem;">API Docs</a>
-          <a href="https://dashboard.agencyos.network/dashboard" class="nav-link" style="font-size:0.875rem;">Dashboard</a>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-product-label">{isEn ? 'Product' : 'Sản phẩm'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-product-label">
+          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Features' : 'Tính năng'}</a>
+          <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Pricing' : 'Bảng giá'}</a>
+          <a href="https://docs.agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">API Docs</a>
+          <a href="https://dashboard.agencyos.network/dashboard" class="nav-link" style="font-size:0.875rem;" role="listitem">Dashboard</a>
         </div>
       </div>
       <div>
-        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Company' : 'Công ty'}</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'About' : 'Về chúng tôi'}</a>
-          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'Contact' : 'Liên hệ'}</a>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-company-label">{isEn ? 'Company' : 'Công ty'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-company-label">
+          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'About' : 'Về chúng tôi'}</a>
+          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Contact' : 'Liên hệ'}</a>
         </div>
       </div>
     </div>
@@ -252,7 +294,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
         <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
         <span class="built-badge">⚡ Built with AI</span>
       </div>
-      <div style="display:flex;gap:20px;">
+      <div style="display:flex;gap:20px;" role="navigation" aria-label={isEn ? 'Legal links' : 'Liên kết pháp lý'}>
         <a href="/privacy" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Privacy' : 'Bảo mật'}</a>
         <a href="/terms" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Terms' : 'Điều khoản'}</a>
       </div>
