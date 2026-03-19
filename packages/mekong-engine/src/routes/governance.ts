@@ -12,6 +12,21 @@ type Variables = { tenant: Tenant }
 const governanceRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 governanceRoutes.use('*', authMiddleware)
 
+// Type helpers for DB results
+type DbResult<T = unknown> = { results?: T[] }
+type StakeholderRow = {
+  id: string
+  tenant_id: string
+  display_name: string
+  email: string | null
+  role: string
+  governance_level: number
+  voice_credits_monthly: number
+  reputation_score: number
+  created_at: string
+  updated_at: string
+}
+
 // ─── ZOD SCHEMAS FOR VALIDATION ───
 
 const stakeholderSchema = z.object({
@@ -105,7 +120,7 @@ governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB.prepare(query).bind(...params).all()
-      return r as { results?: any[] }
+      return r as DbResult<StakeholderRow>
     },
     'DATABASE_ERROR',
     'Failed to fetch stakeholders'
@@ -166,7 +181,7 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB.prepare(query).bind(...params).all()
-      return r as { results?: any[] }
+      return r as DbResult
     },
     'DATABASE_ERROR',
     'Failed to fetch proposals'
@@ -181,7 +196,7 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
           `SELECT direction, COUNT(*) as count, SUM(votes_cast) as total_votes
          FROM votes WHERE proposal_id = ? GROUP BY direction`
         ).bind(p.id).all()
-        return r as { results?: any[] }
+        return r as DbResult
       },
       'DATABASE_ERROR',
       'Failed to fetch vote stats'
@@ -244,9 +259,9 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
       'DATABASE_ERROR',
       'Failed to cast vote'
     )
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) return c.json({ error: 'Already voted on this proposal', code: 'CONFLICT' }, 409)
-    throw e
+  } catch (error: unknown) {
+    if ((error as Error).message?.includes('UNIQUE')) return c.json({ error: 'Already voted on this proposal', code: 'CONFLICT' }, 409)
+    throw error
   }
 
   // Update proposal voice_credits_pool
