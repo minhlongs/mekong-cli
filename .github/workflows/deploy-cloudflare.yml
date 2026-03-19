@@ -22,15 +22,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: cd packages/mekong-engine && pnpm install --no-frozen-lockfile
+      - name: Install dependencies (root workspace)
+        run: pnpm install --no-frozen-lockfile
 
       - name: TypeScript check
-        run: cd packages/mekong-engine && npx tsc --noEmit
+        run: pnpm --filter mekong-engine typecheck
         continue-on-error: true
 
       - name: Run tests
-        run: cd packages/mekong-engine && npx vitest run
+        run: pnpm --filter mekong-engine test
         continue-on-error: true
 
   deploy:
@@ -48,8 +48,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: cd packages/mekong-engine && pnpm install --no-frozen-lockfile
+      - name: Install dependencies (root workspace)
+        run: pnpm install --no-frozen-lockfile
 
       - name: Deploy via Wrangler
         uses: cloudflare/wrangler-action@v3
