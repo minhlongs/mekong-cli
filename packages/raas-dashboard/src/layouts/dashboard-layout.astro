@@ -24,7 +24,7 @@ const nav = [
 </head>
 <body>
 <div class="shell">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       OpenClaw RaaS
       <span>AI Business Platform</span>
@@ -42,8 +42,17 @@ const nav = [
     </nav>
   </aside>
 
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <div class="main">
     <header class="topbar">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
       <span class="topbar-biz" id="topbar-biz-name">Doanh nghiệp của bạn</span>
       <div class="topbar-right">
         <button class="btn-logout" id="btn-logout">Đăng xuất</button>
@@ -61,6 +70,36 @@ const nav = [
     const el = document.getElementById('topbar-biz-name');
     if (el) el.textContent = bizName;
   }
+
+  // Mobile menu toggle
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  function toggleMenu() {
+    const isOpen = sidebar.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', isOpen.toString());
+    overlay.classList.toggle('active');
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+
+  function closeMenu() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  menuToggle?.addEventListener('click', toggleMenu);
+  overlay?.addEventListener('click', closeMenu);
+
+  // Close on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+      closeMenu();
+    }
+  });
+
   document.getElementById('btn-logout')?.addEventListener('click', () => {
     localStorage.removeItem('mk_api_key');
     localStorage.removeItem('mk_biz_name');
