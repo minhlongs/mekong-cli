@@ -322,7 +322,7 @@ governanceRoutes.get('/reputation', handleAsync(async (c) => {
       const r = await c.env.DB.prepare(
         'SELECT id, display_name, role, reputation_score, governance_level FROM stakeholders WHERE tenant_id = ? ORDER BY reputation_score DESC LIMIT 20'
       ).bind(tenant.id).all()
-      return r as { results?: any[] }
+      return r as DbResult<StakeholderRow>
     },
     'DATABASE_ERROR',
     'Failed to fetch reputation leaderboard'
@@ -373,7 +373,7 @@ governanceRoutes.get('/ngu-su', handleAsync(async (c) => {
       const r = await c.env.DB.prepare(
         'SELECT * FROM ngu_su_scores WHERE tenant_id = ? ORDER BY scored_at DESC'
       ).bind(tenant.id).all()
-      return r as { results?: any[] }
+      return r as DbResult<{ entity_name: string; dao_score: number; thien_score: number; dia_score: number; tuong_score: number; phap_score: number; terrain: string; overall: number }>
     },
     'DATABASE_ERROR',
     'Failed to fetch scores'
