@@ -1,6 +1,5 @@
 """Tests for OCOP Commands - AI-powered agricultural export tools."""
 
-import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
