@@ -6,7 +6,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Bindings } from '../index'
 import { webhookRateLimit } from '../raas/rate-limit-middleware'
-import { handleDb, createError } from '../types/error'
+import { handleAsync, handleDb, createError } from '../types/error'
 
 // Zod schemas for webhook payloads
 const zaloWebhookSchema = z.object({
@@ -303,18 +303,6 @@ async function sendFBReply(token: string, recipientId: string, text: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
   })
-}
-
-// Helper wrapper for async route handlers
-function handleAsync(fn: (c: any) => Promise<any>) {
-  return async (c: any) => {
-    try {
-      return await fn(c)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      return c.json({ error: message }, 500)
-    }
-  }
 }
 
 export { chatRoutes }

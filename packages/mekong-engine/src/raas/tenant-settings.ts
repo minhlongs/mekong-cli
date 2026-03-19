@@ -33,7 +33,7 @@ async function encrypt(plaintext: string, secret: string): Promise<string> {
   const combined = new Uint8Array(iv.length + new Uint8Array(ciphertext).length)
   combined.set(iv)
   combined.set(new Uint8Array(ciphertext), iv.length)
-  return btoa(String.fromCharCode(...combined))
+  return btoa(String.fromCharCode(...Array.from(combined)))
 }
 
 async function decrypt(encoded: string, secret: string): Promise<string> {
