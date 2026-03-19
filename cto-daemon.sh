@@ -994,25 +994,25 @@ health_check() {
 
 # ---- SINGLETON GUARD: prevent multiple daemon instances ----
 PIDFILE="${MEKONG_DIR}/cto-daemon.pid"
-LOCKFILE="${MEKONG_DIR}/cto-daemon.lock"
 
-# Atomic lock via flock (prevents race condition on concurrent starts)
-exec 200>"$LOCKFILE"
-if ! flock -n 200; then
-  echo "CTO DAEMON already running (lock held). Exiting."
-  exit 1
-fi
-
-# Check stale PID file
-if [[ -f "$PIDFILE" ]]; then
-  old_pid=$(cat "$PIDFILE" 2>/dev/null)
-  if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
-    echo "CTO DAEMON already running (PID $old_pid). Kill it first: kill $old_pid"
-    exit 1
+# Atomic lock via mkdir (portable — works on macOS + Linux)
+LOCKDIR="${MEKONG_DIR}/cto-daemon.lockdir"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+  # Lock exists — check if holder is still alive
+  if [[ -f "$PIDFILE" ]]; then
+    old_pid=$(cat "$PIDFILE" 2>/dev/null)
+    if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
+      echo "CTO DAEMON already running (PID $old_pid). Exiting."
+      exit 1
+    fi
   fi
+  # Stale lock — reclaim
+  rm -rf "$LOCKDIR"
+  mkdir "$LOCKDIR" 2>/dev/null || { echo "Cannot acquire lock"; exit 1; }
 fi
+
 echo $$ > "$PIDFILE"
-trap 'rm -f "$PIDFILE" "$LOCKFILE"; log "DAEMON SHUTDOWN (PID $$)"' EXIT INT TERM
+trap 'rm -f "$PIDFILE"; rm -rf "$LOCKDIR"; log "DAEMON SHUTDOWN (PID $$)"' EXIT INT TERM
 trap 'log "TRAP: Error at line $LINENO (ignored — daemon continues)"' ERR
 
 log "============================================="
