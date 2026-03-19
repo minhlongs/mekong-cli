@@ -92,9 +92,13 @@ def extract_command(text: str) -> str:
     m = re.search(rf"(/{CMD_PATTERN}\s+\"[^\"]+\")", text, re.IGNORECASE)
     if m:
         return normalize_cmd(m.group(1))
-    m = re.search(rf"(/{CMD_PATTERN}(?:\s+[^\n]+)?)", text, re.IGNORECASE)
+    m = re.search(rf"(/{CMD_PATTERN}\s+[^\n.,:;!?]{{5,80}})", text, re.IGNORECASE)
     if m:
-        return normalize_cmd(m.group(0).strip()[:250])
+        return normalize_cmd(m.group(0).strip())
+    # Bare command (no args)
+    m = re.search(rf"(/{CMD_PATTERN})(?:\s|$)", text, re.IGNORECASE)
+    if m:
+        return normalize_cmd(m.group(1))
     return ""
 
 
@@ -110,10 +114,13 @@ def extract_command_from_thinking(text: str) -> str:
     if matches:
         return normalize_cmd(matches[-1])
 
-    # Fallback: /command without quotes
-    matches = re.findall(rf"/{CMD_PATTERN}(?:\s+[^\n]+)?", text, re.IGNORECASE)
+    # Fallback: /command with non-quoted but reasonable args (max 80 chars, stop at period/comma)
+    matches = re.findall(rf"/{CMD_PATTERN}\s+[^\n.,:;!?]{{5,80}}", text, re.IGNORECASE)
     if matches:
-        return normalize_cmd(matches[-1].strip()[:250])
+        # Filter out reasoning text ("the /fix command is..." → not a command)
+        valid = [m for m in matches if not re.search(r"command|option|would|should|seems|choice", m, re.IGNORECASE)]
+        if valid:
+            return normalize_cmd(valid[-1].strip())
 
     # Last resort: look for "I would use /command" or "the command is /command" patterns
     m = re.search(
