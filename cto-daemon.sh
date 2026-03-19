@@ -436,10 +436,10 @@ send_to_pane() {
       echo "[$(date '+%H:%M:%S')] SAFETY GATE: Blocked send to P${pane_idx} (pane BUSY): ${cmd:0:80}" >> "$LOG_FILE"
       return 1
     fi
-    # FIX #1: TOCTOU double-check — re-capture immediately before send (closes 50-200ms race window)
-    local recheck
-    recheck=$(tmux capture-pane -t "${CTO_SESSION}:0.${pane_idx}" -p 2>/dev/null | tail -3)
-    if ! echo "$recheck" | grep -qE '^[[:space:]]*❯[[:space:]]*$'; then
+    # FIX #1: TOCTOU double-check — re-capture and run full is_idle (same logic, no divergence)
+    local recheck_output
+    recheck_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
+    if [[ -n "$recheck_output" ]] && ! is_idle "$recheck_output"; then
       echo "[$(date '+%H:%M:%S')] SAFETY GATE RECHECK: P${pane_idx} no longer idle: ${cmd:0:80}" >> "$LOG_FILE"
       return 1
     fi
@@ -567,10 +567,16 @@ is_idle() {
   fi
 
   # PRIORITY CHECK: clean ❯ prompt = IDLE (check BEFORE busy guards)
-  # This MUST come before busy icons because completion text (✻ Cooked for...)
-  # stays visible in scroll but pane IS idle at prompt
   if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
-    return 0  # IDLE — clean prompt, ready for input
+    return 0
+  fi
+
+  # CC CLI idle: ⏵⏵ visible + NO busy icons in last 8 lines = truly idle
+  # ⏵⏵ is status bar (always visible), so ONLY count as idle if no active work above it
+  if echo "$output" | tail -3 | grep -qE "⏵⏵"; then
+    if ! echo "$output" | tail -8 | grep -qE "⏺|✽|✳|✢|●|◼|▸|Thinking|Running\.\.\.|Searching\.\.\.|pending"; then
+      return 0  # IDLE — status bar visible, no active work
+    fi
   fi
 
   # No clean prompt found — check if genuinely busy
