@@ -133,6 +133,14 @@ cto_brain_dispatch() {
   local error_lines
   error_lines=$(echo "$pane_output" | tail -20 | grep -iE "error|failed|FAIL|TypeError|Cannot find|SyntaxError" | head -3 | tr '\n' ' ' | cut -c1-200)
 
+  # Codebase context for brain (cached per cycle via _codebase_ctx)
+  if [[ -z "${_codebase_ctx:-}" ]]; then
+    local file_count recent_commits
+    file_count=$(find "${dir}" -name "*.ts" -o -name "*.tsx" -o -name "*.py" 2>/dev/null | wc -l | tr -d ' ')
+    recent_commits=$(cd "${dir}" && git log --oneline -3 2>/dev/null | tr '\n' ' ' | cut -c1-200)
+    _codebase_ctx="FILES: ${file_count} source files. RECENT: ${recent_commits}"
+  fi
+
   # Build catalog section
   local catalog_section
   if [[ -n "$COMMAND_CATALOG" ]]; then
@@ -147,6 +155,7 @@ Pick the MOST SPECIFIC command."
 You are CTO Brain. Your ONLY job: move this project closer to selling RaaS.
 
 PROJECT: ${name} | DIR: ${dir} | DEPLOY: ${deploy}
+${_codebase_ctx}
 PANE OUTPUT: ${pane_tail}
 ${error_lines:+ERRORS: ${error_lines}}
 
@@ -723,6 +732,7 @@ while true; do
   CYCLE=$((CYCLE + 1))
   NOW=$(date +%s)
   _catalog_cache=""  # Clear catalog cache each cycle (pick up config changes)
+  _codebase_ctx=""   # Clear codebase context cache each cycle
   log "--- CYCLE $CYCLE ---"
 
   # Re-detect which project is in which pane (handles index shifts from respawns)
