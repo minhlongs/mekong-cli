@@ -9,7 +9,7 @@ import type { ZodSchema } from 'zod'
 import { ZodError, z } from 'zod'
 
 // Type alias for Hono context with our Bindings
-export type HonoContext = Context<{ Bindings: Bindings }>
+export type HonoContext<B = { tenant: unknown }> = Context<{ Bindings: Bindings; Variables: B }>
 
 export const ERROR_CODES = {
   // Client Errors (4xx)
@@ -120,10 +120,10 @@ export class HttpError extends Error {
  * }))
  * ```
  */
-export function handleAsync<T>(
-  fn: (c: HonoContext) => Promise<T>
-): (c: HonoContext) => Promise<T | Response> {
-  return async (c: HonoContext) => {
+export function handleAsync<B = { tenant: unknown }, T = unknown>(
+  fn: (c: HonoContext<B>) => Promise<T>
+): (c: HonoContext<B>) => Promise<T | TypedResponse<unknown, any, string>> {
+  return async (c: HonoContext<B>) => {
     try {
       return await fn(c)
     } catch (error) {

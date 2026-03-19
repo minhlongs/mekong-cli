@@ -9,11 +9,11 @@ import { handleDb, createError } from '../types/error'
  * D1Database type for webhook operations
  */
 export interface WebhookDatabase {
-  exec: (sql: string) => Promise<{ success: boolean }>
+  exec: (sql: string) => Promise<unknown>
   prepare: (query: string) => {
     bind: (...params: unknown[]) => {
       first: () => Promise<unknown>
-      run: () => Promise<{ success: boolean }>
+      run: () => Promise<unknown>
       all: () => Promise<{ results: unknown[] }>
     }
   }
