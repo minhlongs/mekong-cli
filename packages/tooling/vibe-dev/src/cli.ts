@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { SyncCommand } from './commands/sync.command';
-import { metricsCommand } from '@mekong/vibe-analytics';
+import { metricsCommand } from '@mekong/tooling-vibe-analytics';
 import { promptForConfig, resolveConflicts } from './ui/interactive';
 import * as dotenv from 'dotenv';
 import path from 'path';

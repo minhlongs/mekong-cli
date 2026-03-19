@@ -7,13 +7,9 @@ export * from "./src/telemetry";
 export * from "./src/growth";
 export * from "./src/web-vitals";
 export * from "./src/share";
-
-// Re-export named instance for convenience
 export { vibeTelemetry } from "./src/telemetry";
-
-// 🛠️ DevOps & Engineering Metrics
 export * from "./src/devops/types/metrics";
 export * from "./src/devops/types/github";
 export * from "./src/devops/client/github-client";
 export * from "./src/devops/engine/metrics-engine";
-export { metricsCommand } from "./src/devops/cli/metrics-command";
+export * from "./src/devops/cli/metrics-command";
