@@ -16,8 +16,12 @@ export function registerSoloOsCommand(program: Command, _engine: MekongEngine): 
     .description('Start company brain with a business goal')
     .action(async (goal: string) => {
       try {
-        const { CompanyBrain } = await import('../../../../solo-os/src/company-brain.js');
-        const { DailyCycle } = await import('../../../../solo-os/src/daily-cycle.js');
+        // @ts-expect-error rootDir constraint
+        const { CompanyBrain } = await import('../../../solo-os/src/company-brain.js');
+        // @ts-expect-error rootDir constraint
+        const { DailyCycle } = await import('../../../solo-os/src/daily-cycle.js');
+        // @ts-expect-error rootDir constraint
+        const { default: departmentAgents } = await import('../../../solo-os/src/department-agents.js');
 
         const brain = new CompanyBrain();
         brain.setGoal(goal);
@@ -30,7 +34,7 @@ export function registerSoloOsCommand(program: Command, _engine: MekongEngine): 
           info(`  [${t.priority}] ${t.department}: ${t.task}`);
         }
 
-        const cycle = new DailyCycle();
+        const cycle = new DailyCycle(departmentAgents);
         const morning = cycle.runMorning();
         info(`\nMorning brief: ${morning.priorities.length} priorities assigned`);
 
@@ -46,8 +50,10 @@ export function registerSoloOsCommand(program: Command, _engine: MekongEngine): 
     .description('Show company health and department statuses')
     .action(async () => {
       try {
-        const { CompanyBrain } = await import('../../../../solo-os/src/company-brain.js');
-        const { KPIDashboard } = await import('../../../../solo-os/src/kpi-dashboard.js');
+        // @ts-expect-error rootDir constraint
+        const { CompanyBrain } = await import('../../../solo-os/src/company-brain.js');
+        // @ts-expect-error rootDir constraint
+        const { KPIDashboard } = await import('../../../solo-os/src/kpi-dashboard.js');
 
         const brain = new CompanyBrain();
         const health = brain.getCompanyHealth();
@@ -81,8 +87,10 @@ export function registerSoloOsCommand(program: Command, _engine: MekongEngine): 
     .description('Generate daily/weekly report')
     .action(async () => {
       try {
-        const { KPIDashboard } = await import('../../../../solo-os/src/kpi-dashboard.js');
-        const { RecipeEngine } = await import('../../../../solo-os/src/automation-recipes.js');
+        // @ts-expect-error rootDir constraint
+        const { KPIDashboard } = await import('../../../solo-os/src/kpi-dashboard.js');
+        // @ts-expect-error rootDir constraint
+        const { RecipeEngine } = await import('../../../solo-os/src/automation-recipes.js');
 
         const kpi = new KPIDashboard();
         const report = kpi.generateReport();

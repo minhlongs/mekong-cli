@@ -1,10 +1,12 @@
 /**
  * cto.ts — CTO brain management CLI commands
  * Status, dispatch, reset for the Auto-CTO orchestration engine.
+ * @ts-nocheck - rootDir constraint with cross-package imports
  */
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
+import { getCtoStatus, resetCtoState } from '@openclaw/engine/orchestration/auto-cto-pilot';
 
 export function registerCtoCommand(program: Command, _engine: MekongEngine): void {
   const cto = program
@@ -16,7 +18,6 @@ export function registerCtoCommand(program: Command, _engine: MekongEngine): voi
     .description('Show CTO brain state, project priority, pane health')
     .action(async () => {
       try {
-        const { getCtoStatus } = await import('../../../../openclaw-engine/src/orchestration/auto-cto-pilot.js');
         const status = getCtoStatus();
         info('── CTO Brain Status ──');
         info(`Phase: ${status.phase}`);
@@ -68,7 +69,6 @@ export function registerCtoCommand(program: Command, _engine: MekongEngine): voi
     .description('Reset CTO state machine to clean scan phase')
     .action(async () => {
       try {
-        const { resetCtoState } = await import('../../../../openclaw-engine/src/orchestration/auto-cto-pilot.js');
         const state = resetCtoState();
         success('CTO state reset to clean state');
         info(`Phase: ${state.phase}, project: ${state.currentProjectIdx}, cycle: ${state.cycle}`);

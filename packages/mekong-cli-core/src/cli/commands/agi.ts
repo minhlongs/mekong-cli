@@ -5,6 +5,9 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
+import { analyzeCodebase, getQualityScore, generateRefactoringProposals } from '@openclaw/agi-evolution/self-improver';
+import { checkVersions } from '@openclaw/agi-evolution/version-tracker';
+import { BenchmarkRunner } from '@openclaw/agi-evolution/benchmark';
 
 export function registerAgiCommand(program: Command, _engine: MekongEngine): void {
   const agi = program
@@ -16,9 +19,6 @@ export function registerAgiCommand(program: Command, _engine: MekongEngine): voi
     .description('Show evolution metrics: quality score, capabilities, lessons learned')
     .action(async () => {
       try {
-        const { analyzeCodebase, getQualityScore } = await import('../../../../agi-evolution/src/self-improver.js');
-        const { checkVersions } = await import('../../../../agi-evolution/src/version-tracker.js');
-
         info('── AGI Evolution Status ──');
 
         // Codebase quality
@@ -26,7 +26,7 @@ export function registerAgiCommand(program: Command, _engine: MekongEngine): voi
         const score = getQualityScore(analysis);
         info(`Quality Score: ${score}/100`);
         info(`Files: ${analysis.totalFiles} | Lines: ${analysis.totalLines}`);
-        info(`Anti-patterns: ${analysis.oversizedFiles} oversized, ${analysis.anyTypes} any-types, ${analysis.todoCount} TODOs`);
+        info(`Anti-patterns: ${analysis.filesOver200Loc.length} oversized, ${analysis.anyTypeCount} any-types, ${analysis.todoFixmeCount} TODOs`);
 
         // Version report
         info('\n── Dependency Versions ──');
@@ -45,8 +45,6 @@ export function registerAgiCommand(program: Command, _engine: MekongEngine): voi
     .description('Trigger self-improvement cycle: analyze → propose → report')
     .action(async () => {
       try {
-        const { analyzeCodebase, generateRefactoringProposals, getQualityScore } = await import('../../../../agi-evolution/src/self-improver.js');
-
         info('Running self-improvement cycle...');
         const analysis = analyzeCodebase(process.cwd());
         const score = getQualityScore(analysis);
@@ -74,7 +72,6 @@ export function registerAgiCommand(program: Command, _engine: MekongEngine): voi
     .description('Show competitive benchmark report')
     .action(async () => {
       try {
-        const { BenchmarkRunner } = await import('../../../../agi-evolution/src/benchmark.js');
         const runner = new BenchmarkRunner();
         const report = runner.generateCompetitiveReport();
         info(report || 'No benchmarks recorded yet. Use the API to record benchmarks first.');

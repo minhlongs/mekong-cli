@@ -5,6 +5,7 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
+import { discoverClis } from '@openclaw/cli-adapter';
 
 export function registerCliProviderCommand(program: Command, _engine: MekongEngine): void {
   const cli = program
@@ -16,7 +17,6 @@ export function registerCliProviderCommand(program: Command, _engine: MekongEngi
     .description('List discovered CLI providers and their status')
     .action(async () => {
       try {
-        const { discoverClis } = await import('../../../../cli-adapter/src/discovery.js');
         const providers = discoverClis();
         if (providers.length === 0) {
           info('No CLI providers found in PATH');
@@ -24,7 +24,7 @@ export function registerCliProviderCommand(program: Command, _engine: MekongEngi
         }
         info(`── ${providers.length} CLI Provider(s) ──`);
         for (const p of providers) {
-          const status = p.available ? '✅' : '❌';
+          const status = p.path ? '✅' : '❌';
           info(`  ${status} ${p.name} — ${p.binary}${p.version ? ` (${p.version})` : ''}`);
         }
       } catch (err) {
