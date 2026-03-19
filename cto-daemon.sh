@@ -349,6 +349,8 @@ ${catalog_section}
 THINK: What is the SINGLE most impactful action to make RaaS sellable?
 Priority chain: fix errors → fix tests → polish UI → harden API → add features → write docs.
 Give ONE slash command with SPECIFIC file paths or descriptions.
+CRITICAL: ONLY use commands from the AVAILABLE COMMANDS list above. NEVER invent commands like /deploy or /ship.
+If unsure, default to /cook with a specific task description.
 Examples:
 - /cook \"fix landing page pricing section in packages/raas-landing/src/pages/pricing.astro\"
 - /debug \"TypeError in packages/mekong-engine/src/routes/billing.ts line 45\"
@@ -362,12 +364,27 @@ Reply with ONLY the command. No explanation."
 
   # Strip Qwen thinking prefix: everything before first /command
   local stripped
-  stripped=$(echo "$result" | sed 's/^[^/]*//' | head -1)
+  stripped=$(echo "$result" | sed 's/^[^\/]*//' | head -1)
 
   # Extract /command with optional args (quoted or unquoted)
   local cmd
   cmd=$(echo "$stripped" | grep -oE '/[a-z][a-z0-9_:-]*([ ]+(".*"|.+))?' | head -1 | cut -c1-300)
   if [[ -n "$cmd" ]]; then
+    # VALIDATE: check command base exists in catalog or core commands
+    local cmd_base
+    cmd_base=$(echo "$cmd" | awk '{print $1}')
+    local valid_cores="/cook /fix /debug /test /review /plan:hard /plan:fast /check-and-commit /clear /compact /docs /docs:update"
+    if ! echo " $valid_cores " | grep -q " $cmd_base "; then
+      # Check commands-catalog.txt
+      if [[ -f "$COMMAND_CATALOG_FILE" ]] && ! grep -q "^${cmd_base}$" "$COMMAND_CATALOG_FILE" 2>/dev/null; then
+        # Check .claude/commands/ and .claude/skills/ directories
+        local cmd_name="${cmd_base#/}"
+        if [[ ! -d "${PROJECT_ROOT}/.claude/skills/${cmd_name}" ]] && [[ ! -f "${PROJECT_ROOT}/.claude/commands/${cmd_name}.md" ]]; then
+          echo "[$(date '+%H:%M:%S')] BRAIN: invalid command '${cmd_base}' — falling back to /cook" >> "$LOG_FILE"
+          cmd="/cook $(echo "$cmd" | sed "s|^${cmd_base} *||")"
+        fi
+      fi
+    fi
     # If bare command (no args), append project context
     if ! echo "$cmd" | grep -qE '".*"| '; then
       cmd="${cmd} \"Project: ${name}, Dir: ${dir}. Fix errors, improve code quality.\""
