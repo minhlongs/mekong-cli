@@ -31,21 +31,39 @@ JIDOKA_FILE="${MEKONG_DIR}/jidoka-alerts.log"
 # ---- CTO DNA: MISSION ----
 RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard, mekong-engine. Priority: landing page polish → API hardening → dashboard working → tests green → deploy pipeline."
 
-# Fallback tasks when brain is unavailable (round-robin per pane)
-RAAS_FALLBACK_TASKS=(
-  '/cook "Fix and polish raas-landing — check build, fix any errors, improve SEO meta tags"'
-  '/cook "Harden mekong-engine API — add input validation to all routes, fix any TypeScript errors"'
-  '/cook "Verify raas-dashboard builds and renders — fix any missing imports or broken components"'
-  '/test "Run all tests in packages/mekong-engine — fix any failures"'
-  '/cook "Add error handling and loading states to frontend/landing dashboard pages"'
-  '/cook "Review and fix packages/mekong-engine/src/routes/ — ensure all endpoints return proper error codes"'
+# ---- DOANH TRẠI: Pane Roles (Binh Pháp military model) ----
+# P1=TIÊN PHONG (complex/plan), P2=CÔNG BINH (build/fix), P3=HIẾN BINH (review/test)
+declare -A PANE_ROLE
+PANE_ROLE[1]="tien_phong"   # Complex tasks: /plan:hard, /cook complex features, /debug hard bugs
+PANE_ROLE[2]="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api-build
+PANE_ROLE[3]="hien_binh"    # Review tasks: /review, /test, /check-and-commit
+
+# Role-specific fallback tasks (round-robin per role)
+declare -A ROLE_FALLBACK_1 ROLE_FALLBACK_2 ROLE_FALLBACK_3
+ROLE_FALLBACK_1=(
+  '/plan:hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
+  '/cook "Implement missing governance features — check spec vs implementation gaps"'
+  '/debug "Analyze and fix any TypeScript errors across all packages"'
 )
+ROLE_FALLBACK_2=(
+  '/cook "Fix and polish raas-landing — check build, fix errors, improve SEO"'
+  '/cook "Harden mekong-engine API — input validation on all routes"'
+  '/cook "Build missing frontend components in dashboard pages"'
+)
+ROLE_FALLBACK_3=(
+  '/review "Review packages/mekong-engine/src/routes/ for code quality and security"'
+  '/test "Run all tests in packages/mekong-engine — fix any failures"'
+  '/cook "Add error handling and edge case coverage to API endpoints"'
+)
+
 # Persist fallback index across restarts
 FALLBACK_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/fallback-state"
+declare -A FALLBACK_IDX
+for _r in 1 2 3; do FALLBACK_IDX[$_r]=0; done
 if [[ -f "$FALLBACK_STATE_FILE" ]]; then
-  FALLBACK_IDX=$(cat "$FALLBACK_STATE_FILE" 2>/dev/null || echo 0)
-else
-  FALLBACK_IDX=0
+  # Format: "idx1 idx2 idx3"
+  read -r _f1 _f2 _f3 < "$FALLBACK_STATE_FILE" 2>/dev/null || true
+  FALLBACK_IDX[1]=${_f1:-0}; FALLBACK_IDX[2]=${_f2:-0}; FALLBACK_IDX[3]=${_f3:-0}
 fi
 
 # Defaults (overridable via CLI flags)
@@ -151,8 +169,17 @@ Pick the MOST SPECIFIC command."
     catalog_section="Commands: /cook \"task\" /debug \"issue\" /fix \"bug\" /test \"scope\" /plan:hard \"feature\" /review"
   fi
 
+  # Role context for this pane
+  local role="${PANE_ROLE[$pane_idx]:-cong_binh}"
+  local role_desc
+  case "$role" in
+    tien_phong) role_desc="TIÊN PHONG (complex): /plan:hard, /debug hard bugs, /cook complex features" ;;
+    cong_binh)  role_desc="CÔNG BINH (build): /cook build, /fix, /backend-api-build, /frontend-ui-build" ;;
+    hien_binh)  role_desc="HIẾN BINH (review): /review, /test, /check-and-commit, /code-review" ;;
+  esac
+
   local prompt="GOAL: ${RAAS_GOAL}
-You are CTO Brain. Your ONLY job: move this project closer to selling RaaS.
+You are CTO Brain (QUÂN SƯ). Dispatching PANE ${pane_idx} role: ${role_desc}
 
 PROJECT: ${name} | DIR: ${dir} | DEPLOY: ${deploy}
 ${_codebase_ctx}
@@ -577,26 +604,28 @@ dispatch_worker() {
   local brain_cmd
   brain_cmd=$(cto_brain_dispatch "$pane_idx" "$pane_output")
   if [[ -n "$brain_cmd" ]]; then
-    log "P${pane_idx} (${name}): BRAIN → ${brain_cmd}"
+    log "P${pane_idx} (${name}): BRAIN WARM → ${brain_cmd}"
     send_to_pane "$pane_idx" "$brain_cmd"
-    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch"
+    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [${PANE_ROLE[$pane_idx]:-?}]"
     return
   fi
+  log "P${pane_idx} (${name}): BRAIN COLD/EMPTY — using role fallback"
 
-  # Priority 3: Fallback to state-aware command (brain failed but pane needs work)
+  # Priority 3: Role-specific fallback (round-robin per pane role)
   local state="fresh"
   if [[ -n "$pane_output" ]]; then
     state=$(detect_pane_state "$pane_output")
   fi
 
-  # For fresh/complete: brain failed → use RaaS fallback tasks (round-robin)
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
-    local fallback_cmd="${RAAS_FALLBACK_TASKS[$FALLBACK_IDX]}"
-    FALLBACK_IDX=$(( (FALLBACK_IDX + 1) % ${#RAAS_FALLBACK_TASKS[@]} ))
-    echo "$FALLBACK_IDX" > "$FALLBACK_STATE_FILE"
-    log "P${pane_idx} (${name}): BRAIN EMPTY → FALLBACK[$FALLBACK_IDX]: ${fallback_cmd}"
+    # Pick from role-specific fallback array
+    local -n role_tasks="ROLE_FALLBACK_${pane_idx}"
+    local ridx=${FALLBACK_IDX[$pane_idx]:-0}
+    local fallback_cmd="${role_tasks[$ridx]}"
+    FALLBACK_IDX[$pane_idx]=$(( (ridx + 1) % ${#role_tasks[@]} ))
+    echo "${FALLBACK_IDX[1]} ${FALLBACK_IDX[2]} ${FALLBACK_IDX[3]}" > "$FALLBACK_STATE_FILE"
+    log "P${pane_idx} (${name}): FALLBACK[${PANE_ROLE[$pane_idx]}#${ridx}]: ${fallback_cmd}"
     send_to_pane "$pane_idx" "$fallback_cmd"
-    log "DELEGATED P${pane_idx} (${name}) — FALLBACK RaaS task"
     return
   fi
 
