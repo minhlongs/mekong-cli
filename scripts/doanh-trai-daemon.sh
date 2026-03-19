@@ -57,6 +57,10 @@ for name, dept in cfg.get('departments', {}).items():
 # ---- IDLE DETECTION ----
 is_pane_idle() {
   local output="$1"
+  # NOT idle if queued messages, plan mode dialog, or selection prompt
+  if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No"; then
+    return 1
+  fi
   # CC CLI idle: shows prompt character or ">" at end, no active tool use
   echo "$output" | tail -5 | grep -qE '^\$|^>|^❯|waiting for input|^claude>' 2>/dev/null
 }
@@ -188,6 +192,7 @@ while true; do
         if [[ ${#task_arr[@]} -gt 0 ]]; then
           tidx=${DEPT_TASK_IDX[$dept_name]:-0}
           task="${task_arr[$tidx]}"
+          if [[ -z "$task" || "$task" == "|||" ]]; then continue; fi
           # Strip /cook prefix — task runner takes raw description
           task_desc=$(echo "$task" | sed 's|^/[a-z_:-]* *"*||; s|"*$||')
           DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
@@ -215,6 +220,10 @@ while true; do
         tidx=${DEPT_TASK_IDX[$dept_name]:-0}
         task="${task_arr[$tidx]}"
         DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
+        if [[ -z "$task" || "$task" == "|||" ]]; then
+          log "${dept_name} P${pane_idx}: SKIP empty task"
+          continue
+        fi
         log "${dept_name} P${pane_idx}: CC-CLI[${tidx}] → ${task}"
         send_to_pane "$session" "$pane_idx" "$task"
       else
