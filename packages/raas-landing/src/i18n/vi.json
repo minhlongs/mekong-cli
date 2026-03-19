@@ -1,0 +1,8 @@
+{
+  "nav": { "features": "Tính năng", "pricing": "Bảng giá", "faq": "FAQ", "cta": "Dùng thử" },
+  "hero": { "title": "AI Vận Hành Doanh Nghiệp Tự Động", "subtitle": "Trả lời khách 24/7. Tạo content tự động. CRM thông minh. Chỉ $8/tháng.", "cta": "Thử miễn phí 14 ngày", "demo": "Xem demo" },
+  "features": { "title": "Tính năng", "ai": "AI Receptionist", "aiDesc": "Trả lời Zalo/Facebook 24/7", "content": "Content Creator", "contentDesc": "AI tạo 7 ngày content", "crm": "CRM Thông Minh", "crmDesc": "Tự động lưu thông tin khách", "report": "Báo Cáo Tuần", "reportDesc": "AI phân tích và gợi ý" },
+  "pricing": { "title": "Bảng giá", "free": "Miễn phí", "starter": "Starter", "pro": "Pro", "enterprise": "Enterprise", "popular": "Phổ biến nhất", "cta": "Đăng ký ngay" },
+  "faq": { "title": "Câu hỏi thường gặp" },
+  "footer": { "product": "Sản phẩm của OpenClaw", "dashboard": "Dashboard", "docs": "Tài liệu", "contact": "Liên hệ" }
+}

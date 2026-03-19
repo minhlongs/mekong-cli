@@ -1,0 +1,5 @@
+description = "Multi-channel marketing campaign — content, ads, email, social, SEO. 6 commands, ~35 min."
+
+[steps]
+[steps.run]
+command = "mekong business-campaign-launch {{args}}"

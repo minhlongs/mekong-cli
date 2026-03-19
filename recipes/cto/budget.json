@@ -1,0 +1,39 @@
+{
+  "id": "cto-budget",
+  "name": "CTO Budget Management",
+  "description": "Analyze resource usage, propose a budget plan, and apply approved allocations.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:budget",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/budget",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "analyze",
+        "name": "Analyze Usage",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-health", "args": "--output reports/cto/budget/usage-report.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "propose",
+        "name": "Propose Budget",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-scope", "args": "--output reports/cto/budget/budget-proposal.md" }
+        ],
+        "depends_on": ["analyze"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/budget/SUMMARY.md",
+      "template": "Compile usage analysis and budget proposal into a CTO budget report with: current spend, projected costs, optimization opportunities, and approved allocation plan."
+    }
+  }
+}

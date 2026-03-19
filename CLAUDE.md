@@ -23,6 +23,7 @@ CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
 
 ---
 
+<<<<<<< HEAD
 ## EXECUTION RULE — CRITICAL
 
 ALL slash commands MUST execute via `mekong` CLI engine.
@@ -32,6 +33,41 @@ ALL slash commands MUST execute via `mekong` CLI engine.
 
 The `.claude/commands/*.md` files are DISPATCHERS only.
 The real logic lives in the mekong CLI Python/TypeScript engine.
+=======
+## UNIFIED WRAPPER — `mekong` is the ONLY entry point
+
+```
+mekong-cli (outer shell)  →  CC CLI (inner engine)  →  .claude/commands/ (300+ commands)
+scripts/mekong-wrapper.sh    claude|gemini|qwen|bb     135 root + package commands
+scripts/shell-init.sh        --dangerously-skip-perms  257 skills auto-loaded
+```
+
+### Quick Start
+
+```bash
+source ~/mekong-cli/scripts/shell-init.sh   # Add to .zshrc/.bashrc
+
+mekong              # Interactive CC CLI with all mekong commands
+mekong-opus         # Force Anthropic Claude Opus 4.6
+mekong-sonnet       # Force Anthropic Claude Sonnet 4.6
+mekong-qwen         # Force DashScope Qwen 3.5 Plus
+mekong-cto          # CTO daemon mode (P->D->V->S loop)
+mekong-continue     # Resume last session
+mekong-print "task" # Non-interactive (pipe output)
+mekong-status       # Show current API config
+```
+
+### Provider Routing
+
+| Alias | Provider | Binary | Model |
+|-------|----------|--------|-------|
+| `mekong` | claude (default) | `claude` | CC CLI default |
+| `mekong-opus` | claude | `claude` | claude-opus-4-6 |
+| `mekong-qwen` | dashscope | `claude` | qwen3.5-plus |
+| `mekong --provider gemini` | google | `gemini` | gemini default |
+
+All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` discovery.
+>>>>>>> origin/main
 
 ---
 
@@ -132,12 +168,40 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 | UX | Loading states, error boundaries |
 | Documentation | Self-documenting code |
 
+## 🚨 PUBLIC REPO BOUNDARY — KHÔNG ĐƯỢC VI PHẠM
+
+**mekong-cli là PUBLIC repo.** Bất kỳ ai trên internet đều thấy.
+
+### ❌ CẤM TUYỆT ĐỐI commit/push:
+| Path | Lý do |
+|------|-------|
+| `apps/` | Dự án khách hàng PRIVATE (algo-trader, sophia, well...) |
+| `mekong/daemon/` | Internal CTO brain, API keys, secrets |
+| `mekong/hooks/` | Internal automation hooks |
+| `.env`, `.env.*` | Secrets, API keys |
+| `*.pem`, `*.key` | Certificates |
+
+### ✅ CHỈ commit/push:
+| Path | Nội dung |
+|------|----------|
+| `packages/` | openclaw-engine, mekong-cli-core (PUBLIC SDK) |
+| `recipes/` | Command recipes (PUBLIC) |
+| `.claude/skills/` | Skill definitions (PUBLIC) |
+| `.claude/commands/` | Command definitions (PUBLIC) |
+| `factory/contracts/` | Machine contracts (PUBLIC) |
+| Root files | package.json, tsconfig, README, CLAUDE.md |
+
+### Khi `git add -A` hoặc `git commit`:
+1. **LUÔN kiểm tra** `git diff --cached --name-only` trước khi commit
+2. Nếu thấy `apps/` hoặc `mekong/daemon/` → **DỪNG LẠI**, chạy `git reset HEAD -- apps/ mekong/daemon/`
+3. Pre-commit hook sẽ block, nhưng **đừng dùng --no-verify**
+
 ---
 
 ## GIT PROTOCOL
 
 ```bash
-# Pre-commit: lint + type check
+# Pre-commit: blocks apps/ + secrets + runs tsc
 # Pre-push: pytest must pass
 # Commit format:
 feat: add new command
@@ -145,7 +209,7 @@ fix: resolve billing edge case
 refactor: simplify PEV orchestrator
 ```
 
-Never commit: `.env`, API keys, `node_modules`, `__pycache__`, `.pyc`
+Never commit: `.env`, API keys, `node_modules`, `__pycache__`, `.pyc`, `apps/`, `mekong/daemon/`
 
 ---
 

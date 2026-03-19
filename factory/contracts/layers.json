@@ -1,11 +1,128 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "layers": {
+    "studio": {
+      "chapter": "始計 — Initial Calculations (Portfolio)",
+      "icon": "🏛️",
+      "role": "VC Studio / Chairman / Investor",
+      "description": "Portfolio-wide ROI oversight, fund allocation, investment decisions. The apex of the command pyramid.",
+      "cascades_to": [
+        "cto"
+      ],
+      "hubs": [
+        "studio-hub"
+      ],
+      "commands": [
+        "studio-audit",
+        "studio-portfolio",
+        "studio-allocate",
+        "studio-invest",
+        "studio-divest",
+        "studio-report",
+        "studio-roi",
+        "studio-strategy"
+      ]
+    },
+    "cto": {
+      "chapter": "地形 — Terrain",
+      "icon": "🧠",
+      "role": "CTO / Chief Architect",
+      "description": "Architecture decisions, team orchestration, tech debt prioritization, deployment pipeline. Strategic technical layer.",
+      "cascades_to": [
+        "pm"
+      ],
+      "hubs": [
+        "cto-hub"
+      ],
+      "commands": [
+        "cto-review",
+        "cto-roadmap",
+        "cto-budget",
+        "cto-architect",
+        "cto-onboard",
+        "cto-archive",
+        "cto-scorecard",
+        "cto-deploy",
+        "cto-incident",
+        "cto-team"
+      ]
+    },
+    "pm": {
+      "chapter": "謀攻 — Attack by Stratagem",
+      "icon": "📋",
+      "role": "Product Manager / Tactical Lead",
+      "description": "Sprint planning, task breakdown, progress tracking, milestone management. Bridge between strategy and execution.",
+      "cascades_to": [
+        "dev"
+      ],
+      "hubs": [
+        "product-hub"
+      ],
+      "commands": [
+        "pm-plan",
+        "pm-sprint",
+        "pm-standup",
+        "pm-okr",
+        "pm-milestone",
+        "pm-backlog",
+        "pm-retro",
+        "pm-scope",
+        "pm-delegate"
+      ]
+    },
+    "dev": {
+      "chapter": "軍爭 — Military Contention",
+      "icon": "⚙️",
+      "role": "Developer / Tech Lead",
+      "description": "Code generation, testing, debugging, deployment. The execution powerhouse.",
+      "cascades_to": [
+        "worker"
+      ],
+      "hubs": [
+        "engineering-hub"
+      ],
+      "commands": [
+        "dev-feature",
+        "dev-fix",
+        "dev-test",
+        "dev-audit",
+        "dev-deploy",
+        "dev-debug",
+        "dev-review",
+        "dev-scaffold",
+        "dev-refactor",
+        "dev-design"
+      ]
+    },
+    "worker": {
+      "chapter": "九變 — Nine Variations (Atomic)",
+      "icon": "⚡",
+      "role": "Worker / Atomic Executor",
+      "description": "Individual task execution, file operations, API calls. Leaf nodes — no delegation.",
+      "cascades_to": [],
+      "hubs": [
+        "ops-hub"
+      ],
+      "commands": [
+        "worker-code",
+        "worker-test",
+        "worker-build",
+        "worker-scan",
+        "worker-push",
+        "worker-commit",
+        "worker-health",
+        "worker-rollback",
+        "worker-backup",
+        "worker-log",
+        "worker-trace",
+        "worker-exec"
+      ]
+    },
     "founder": {
       "chapter": "始計 — Initial Calculations",
       "icon": "👑",
       "role": "Founder / CEO",
-      "description": "Strategic vision, fundraising, OKRs, financial goals. The apex of the pyramid.",
+      "description": "Strategic vision, fundraising, OKRs, financial goals. Founder-specific operations.",
       "cascades_to": [
         "business"
       ],
@@ -331,5 +448,9 @@
       ]
     }
   },
-  "unclassified": []
+  "unclassified": [],
+  "cascade_chain": {
+    "roiaas": ["studio", "cto", "pm", "dev", "worker"],
+    "legacy": ["founder", "business", "product", "engineering", "ops"]
+  }
 }

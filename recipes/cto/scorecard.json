@@ -1,0 +1,40 @@
+{
+  "id": "cto-scorecard",
+  "name": "CTO Project Scorecard",
+  "description": "Scan the project and compute an ROI-weighted health scorecard.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:scorecard",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/scorecard",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "scan",
+        "name": "Scan Project",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-scan", "args": "--lint --output reports/cto/scorecard/lint.md" },
+          { "id": "worker-health", "args": "--output reports/cto/scorecard/health.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "compute",
+        "name": "Compute Scorecard",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/cto/scorecard/audit-summary.md" }
+        ],
+        "depends_on": ["scan"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/scorecard/SUMMARY.md",
+      "template": "Compile scan results and audit summary into a scorecard with: overall score (0-100), category scores (code quality, test coverage, security, performance, maintainability), ROI estimate, and priority improvements."
+    }
+  }
+}

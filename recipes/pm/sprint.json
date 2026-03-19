@@ -1,0 +1,39 @@
+{
+  "id": "pm-sprint",
+  "name": "PM Sprint Planning",
+  "description": "Read the backlog, prioritize items by value, and assign tasks for the upcoming sprint.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:sprint",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/sprint",
+  "estimated_credits": 3,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "read-backlog",
+        "name": "Read Backlog",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-backlog", "args": "--output reports/pm/sprint/backlog-snapshot.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "prioritize-assign",
+        "name": "Prioritize and Assign",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-milestone", "args": "--output reports/pm/sprint/sprint-goals.md" }
+        ],
+        "depends_on": ["read-backlog"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/sprint/SUMMARY.md",
+      "template": "Compile backlog snapshot and sprint goals into a sprint plan with: sprint objective, committed stories, assignments, capacity, definition of done, and risk flags."
+    }
+  }
+}

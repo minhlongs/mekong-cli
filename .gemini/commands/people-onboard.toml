@@ -1,0 +1,5 @@
+description = "Welcome email, access setup, day-1 schedule. 2 commands, ~5 min."
+
+[steps]
+[steps.run]
+command = "mekong people-onboard {{args}}"

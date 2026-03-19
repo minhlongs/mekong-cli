@@ -1,0 +1,39 @@
+{
+  "id": "dev-scaffold",
+  "name": "Dev Project Scaffold",
+  "description": "Apply project template via worker:code then run worker:test to verify the scaffold is functional.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:scaffold",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/scaffold",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "scaffold",
+        "name": "Apply Template",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-code", "args": "--output reports/dev/scaffold/scaffold-log.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "verify",
+        "name": "Verify Scaffold",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-test", "args": "--output reports/dev/scaffold/test-results.md" }
+        ],
+        "depends_on": ["scaffold"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/scaffold/SUMMARY.md",
+      "template": "Compile scaffold log and test results into a scaffold report with: files created, structure overview, test pass status, and next development steps."
+    }
+  }
+}

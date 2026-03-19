@@ -1,0 +1,5 @@
+description = "Sprint planning — backlog to sprint tasks. 3 credits, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong pm-sprint {{args}}"

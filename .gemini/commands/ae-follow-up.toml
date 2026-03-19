@@ -1,0 +1,5 @@
+description = "Meeting follow-up — follow-up email + next steps scheduled in parallel. 2 commands, ~5 min."
+
+[steps]
+[steps.run]
+command = "mekong ae-follow-up {{args}}"

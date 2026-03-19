@@ -1,0 +1,39 @@
+{
+  "id": "cto-architect",
+  "name": "CTO Architecture Decision",
+  "description": "Research technology options, produce a design via dev:design, then document as an ADR.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:architect",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/architect",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "research",
+        "name": "Research Options",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-design", "args": "--output reports/cto/architect/design-research.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "adr",
+        "name": "Write ADR",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-code", "args": "--output reports/cto/architect/adr.md" }
+        ],
+        "depends_on": ["research"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/architect/SUMMARY.md",
+      "template": "Compile design research and ADR into an architecture decision record with: context, options considered, decision, rationale, consequences, and implementation guidance."
+    }
+  }
+}

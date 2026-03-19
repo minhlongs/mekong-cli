@@ -1,0 +1,69 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+import { NAV_ITEMS } from '../../data/navigation.ts';
+---
+
+<MainLayout title="Guides — OpenClaw" description="OpenClaw documentation and guides. Learn to install, configure, and run your company from the terminal with the AGI CLI for solo founders.">
+  <div class="guides-page">
+    <header class="guides-header">
+      <h1>Guides</h1>
+      <p class="guides-subtitle">Everything you need to master OpenClaw.</p>
+    </header>
+
+    <div class="guides-grid">
+      {NAV_ITEMS.map((item) => (
+        <a href={item.href} class="guide-card glass">
+          <span class="guide-icon">{item.icon}</span>
+          <div class="guide-content">
+            <h2 class="guide-title">{item.label}</h2>
+            <p class="guide-desc">{item.description}</p>
+            <span class="guide-link">Read guide →</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</MainLayout>
+
+<style>
+  .guides-page { max-width: 960px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+
+  .guides-header { margin-bottom: var(--spacing-2xl); }
+  .guides-header h1 {
+    font-size: var(--md-sys-typescale-display-small-size);
+    font-weight: 800;
+    background: linear-gradient(135deg, #00BCD4, #9C27B0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-sm);
+  }
+  .guides-subtitle { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+
+  .guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .guide-card {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .guide-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0, 188, 212, 0.4);
+    text-decoration: none;
+  }
+
+  .guide-icon { font-size: 2rem; flex-shrink: 0; }
+
+  .guide-content { display: flex; flex-direction: column; gap: var(--spacing-xs); }
+  .guide-title { font-size: 1.1rem; font-weight: 600; color: var(--md-sys-color-on-surface); }
+  .guide-desc { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; line-height: 1.5; }
+  .guide-link { color: var(--md-sys-color-primary); font-size: 0.875rem; font-weight: 500; margin-top: var(--spacing-xs); }
+</style>

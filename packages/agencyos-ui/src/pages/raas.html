@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw — RaaS Marketplace</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+  header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 24px;display:flex;align-items:center;gap:16px}
+  header h1{font-size:1.1rem;font-weight:600;color:#58a6ff}
+  nav a{color:#8b949e;text-decoration:none;margin-left:20px;font-size:.9rem}
+  nav a:hover,nav a.active{color:#e6edf3}
+  main{max-width:1000px;margin:0 auto;padding:24px 16px;display:grid;gap:20px}
+  .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:24px}
+  .card h2{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;margin-bottom:16px}
+  .catalog{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .tier-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px}
+  .tier-card.featured{border-color:#388bfd}
+  .tier-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#58a6ff;font-weight:700}
+  .tier-title{font-size:1.25rem;font-weight:700}
+  .tier-price{font-size:2rem;font-weight:700;color:#3fb950}
+  .tier-price span{font-size:.9rem;font-weight:400;color:#8b949e}
+  .features{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:#8b949e}
+  .features li::before{content:"✓ ";color:#3fb950}
+  .cta-btn{background:#238636;color:#fff;border:none;border-radius:6px;padding:10px;font-size:.9rem;font-weight:600;cursor:pointer;text-align:center;transition:background .2s;width:100%}
+  .cta-btn:hover{background:#2ea043}
+  .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  label{font-size:.85rem;color:#8b949e}
+  input,select{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:9px 12px;color:#e6edf3;font-size:.9rem;outline:none;transition:border-color .2s;width:100%}
+  input:focus,select:focus{border-color:#388bfd}
+  button.submit{background:#238636;color:#fff;border:none;border-radius:6px;padding:10px 24px;font-size:.9rem;font-weight:600;cursor:pointer}
+  button.submit:hover{background:#2ea043}
+  .msg{font-size:.85rem;margin-top:8px;min-height:20px;color:#3fb950}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat{background:#0d1117;border-radius:6px;padding:14px;text-align:center}
+  .stat-val{font-size:1.6rem;font-weight:700;color:#58a6ff}
+  .stat-label{font-size:.75rem;color:#8b949e;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>OpenClaw AgencyOS</h1>
+  <nav>
+    <a href="/">Dashboard</a>
+    <a href="/license">License</a>
+    <a href="/raas" class="active">RaaS</a>
+  </nav>
+</header>
+<main>
+  <div class="card">
+    <h2>Usage Stats</h2>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-val">142</div><div class="stat-label">MCU Used</div></div>
+      <div class="stat"><div class="stat-val">58</div><div class="stat-label">MCU Remaining</div></div>
+      <div class="stat"><div class="stat-val">12</div><div class="stat-label">Active Tenants</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Product Catalog</h2>
+    <div class="catalog">
+      <div class="tier-card">
+        <div class="tier-label">Starter</div>
+        <div class="tier-title">OpenClaw Starter</div>
+        <div class="tier-price">$49<span>/mo</span></div>
+        <ul class="features">
+          <li>200 MCU / month</li>
+          <li>10 agents</li>
+          <li>100+ commands</li>
+          <li>Email support</li>
+        </ul>
+        <button class="cta-btn" onclick="selectTier('starter')">Get Started</button>
+      </div>
+      <div class="tier-card featured">
+        <div class="tier-label">Most Popular · Pro</div>
+        <div class="tier-title">OpenClaw Pro</div>
+        <div class="tier-price">$149<span>/mo</span></div>
+        <ul class="features">
+          <li>1,000 MCU / month</li>
+          <li>All 319 commands</li>
+          <li>Priority support</li>
+          <li>Analytics dashboard</li>
+        </ul>
+        <button class="cta-btn" onclick="selectTier('pro')">Get Pro</button>
+      </div>
+      <div class="tier-card">
+        <div class="tier-label">Enterprise</div>
+        <div class="tier-title">OpenClaw Enterprise</div>
+        <div class="tier-price">$499<span>/mo</span></div>
+        <ul class="features">
+          <li>Unlimited MCU</li>
+          <li>Custom agents</li>
+          <li>99.9% SLA</li>
+          <li>Dedicated support</li>
+        </ul>
+        <button class="cta-btn" onclick="selectTier('enterprise')">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>New Tenant Signup</h2>
+    <div class="form-group">
+      <label for="tenant-id">Tenant ID</label>
+      <input type="text" id="tenant-id" placeholder="my-company" maxlength="40">
+    </div>
+    <div class="form-group">
+      <label for="tenant-email">Email</label>
+      <input type="text" id="tenant-email" placeholder="you@company.com">
+    </div>
+    <div class="form-group">
+      <label for="tier-select">Tier</label>
+      <select id="tier-select">
+        <option value="starter">Starter — $49/mo</option>
+        <option value="pro" selected>Pro — $149/mo</option>
+        <option value="enterprise">Enterprise — $499/mo</option>
+      </select>
+    </div>
+    <button class="submit" onclick="signup()">Sign Up via Polar.sh</button>
+    <div class="msg" id="signup-msg"></div>
+  </div>
+</main>
+
+<script>
+function selectTier(tier) {
+  document.getElementById('tier-select').value = tier;
+  document.getElementById('tier-select').scrollIntoView({behavior:'smooth'});
+}
+function signup() {
+  const id = document.getElementById('tenant-id').value.trim();
+  const email = document.getElementById('tenant-email').value.trim();
+  const tier = document.getElementById('tier-select').value;
+  const msg = document.getElementById('signup-msg');
+  if (!id || !email) { msg.textContent = 'Tenant ID and email are required.'; msg.style.color='#f85149'; return; }
+  msg.textContent = 'Redirecting to Polar.sh checkout...';
+  msg.style.color = '#3fb950';
+  const url = `https://polar.sh/openclaw/checkout?tier=${tier}&tenant=${encodeURIComponent(id)}&email=${encodeURIComponent(email)}`;
+  setTimeout(() => window.open(url, '_blank'), 600);
+}
+</script>
+</body>
+</html>

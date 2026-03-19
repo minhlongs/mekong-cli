@@ -1,0 +1,48 @@
+{
+  "id": "cto-onboard",
+  "name": "CTO Project Onboarding",
+  "description": "Plan the project via pm:plan, scaffold the codebase via dev:scaffold, then configure routing and infrastructure.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:onboard",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/onboard",
+  "estimated_credits": 8,
+  "estimated_minutes": 30,
+  "dag": {
+    "groups": [
+      {
+        "id": "plan",
+        "name": "Create Project Plan",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-plan", "args": "--output reports/cto/onboard/project-plan.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "scaffold",
+        "name": "Scaffold Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-scaffold", "args": "--output reports/cto/onboard/scaffold-report.md" }
+        ],
+        "depends_on": ["plan"]
+      },
+      {
+        "id": "configure",
+        "name": "Configure Routing",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-health", "args": "--output reports/cto/onboard/health-check.md" }
+        ],
+        "depends_on": ["scaffold"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/onboard/SUMMARY.md",
+      "template": "Compile project plan, scaffold report, and health check into an onboarding summary with: project setup status, architecture overview, configuration details, and next steps for the development team."
+    }
+  }
+}

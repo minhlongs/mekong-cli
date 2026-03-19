@@ -1,0 +1,5 @@
+description = "Audit → plan → refactor → test → verify. Safe large-scale refactoring. 5 commands, ~40 min."
+
+[steps]
+[steps.run]
+command = "mekong engineering-refactor {{args}}"

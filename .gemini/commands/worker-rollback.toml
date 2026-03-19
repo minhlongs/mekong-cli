@@ -1,0 +1,5 @@
+description = "Mekong command: worker-rollback"
+
+[steps]
+[steps.run]
+command = "mekong worker-rollback {{args}}"

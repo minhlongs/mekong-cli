@@ -1,0 +1,5 @@
+description = "Build complete sales pipeline — ICP profile, lead list, outreach sequences, CRM setup. 5 commands, ~30 min."
+
+[steps]
+[steps.run]
+command = "mekong sales-pipeline-build {{args}}"

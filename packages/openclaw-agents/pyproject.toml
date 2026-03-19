@@ -1,0 +1,11 @@
+[project]
+name = "openclaw-agents"
+version = "0.1.0"
+description = "Python agent modules for OpenClaw orchestration engine"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"

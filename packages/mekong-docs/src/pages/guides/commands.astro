@@ -1,0 +1,184 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+
+interface Command {
+  cmd: string;
+  description: string;
+  mcu: string;
+}
+
+interface Layer {
+  id: string;
+  icon: string;
+  name: string;
+  commands: Command[];
+}
+
+const LAYERS: Layer[] = [
+  {
+    id: 'founder',
+    icon: '👑',
+    name: 'Founder',
+    commands: [
+      { cmd: 'annual', description: 'Generate annual report and OKR rollup', mcu: '3' },
+      { cmd: 'okr', description: 'Set and track OKRs across departments', mcu: '2' },
+      { cmd: 'swot', description: 'Run full SWOT analysis with AI insights', mcu: '2' },
+      { cmd: 'fundraise', description: 'End-to-end fundraising campaign manager', mcu: '5' },
+      { cmd: 'pitch', description: 'AI pitch deck generator with slide deck', mcu: '3' },
+      { cmd: 'vc/cap-table', description: 'Cap table modeling and dilution simulation', mcu: '2' },
+      { cmd: 'ipo/readiness', description: 'IPO readiness checklist and gap analysis', mcu: '4' },
+    ],
+  },
+  {
+    id: 'business',
+    icon: '💼',
+    name: 'Business',
+    commands: [
+      { cmd: 'sales', description: 'Sales pipeline, outreach, and CRM automation', mcu: '2' },
+      { cmd: 'marketing', description: 'Full marketing campaign generation', mcu: '3' },
+      { cmd: 'finance', description: 'P&L, cash flow, and budget modeling', mcu: '2' },
+      { cmd: 'hr', description: 'Hiring plan, JDs, and onboarding', mcu: '2' },
+      { cmd: 'pricing', description: 'Pricing strategy and competitor analysis', mcu: '2' },
+      { cmd: 'brand', description: 'Brand identity and positioning workshop', mcu: '3' },
+    ],
+  },
+  {
+    id: 'product',
+    icon: '🎯',
+    name: 'Product',
+    commands: [
+      { cmd: 'plan', description: 'Product roadmap and feature prioritization', mcu: '2' },
+      { cmd: 'sprint', description: 'Sprint planning with story points', mcu: '1' },
+      { cmd: 'roadmap', description: 'Quarterly roadmap with milestones', mcu: '2' },
+      { cmd: 'brainstorm', description: 'Structured ideation session', mcu: '1' },
+      { cmd: 'scope', description: 'Feature scoping and requirements doc', mcu: '2' },
+    ],
+  },
+  {
+    id: 'engineering',
+    icon: '⚙️',
+    name: 'Engineering',
+    commands: [
+      { cmd: 'cook', description: 'Smart feature implementation (scout→plan→code→test→review)', mcu: '1-5' },
+      { cmd: 'fix', description: 'Diagnose and fix bugs with root cause analysis', mcu: '1-3' },
+      { cmd: 'code', description: 'Write or refactor code with full context', mcu: '1-3' },
+      { cmd: 'test', description: 'Run unit/integration/e2e tests, coverage analysis', mcu: '1-2' },
+      { cmd: 'deploy', description: 'Deploy to Cloudflare Pages/Workers/Vercel', mcu: '1' },
+      { cmd: 'review', description: 'AI code review with severity ratings', mcu: '2' },
+      { cmd: 'debug', description: 'Systematic debugging with root cause tracing', mcu: '1-3' },
+      { cmd: 'preview', description: 'Visual explanations, diagrams, slides, ASCII art', mcu: '0-1' },
+      { cmd: 'worktree', description: 'Git worktree for parallel development', mcu: '0' },
+      { cmd: 'check-and-commit', description: 'Run quality checks → commit → push', mcu: '0' },
+      { cmd: 'bootstrap', description: 'Scaffold new project with research + tech stack', mcu: '3-5' },
+      { cmd: 'scout', description: 'Fast codebase scouting with parallel agents', mcu: '0-1' },
+    ],
+  },
+  {
+    id: 'ops',
+    icon: '🔧',
+    name: 'Ops',
+    commands: [
+      { cmd: 'audit', description: 'Full infrastructure and security audit', mcu: '3' },
+      { cmd: 'health', description: 'System health check across all services', mcu: '1' },
+      { cmd: 'security', description: 'Security scan and vulnerability report', mcu: '2' },
+      { cmd: 'status', description: 'Real-time status dashboard', mcu: '0' },
+      { cmd: 'clean', description: 'Remove dead code and unused dependencies', mcu: '1' },
+    ],
+  },
+];
+---
+
+<MainLayout title="Commands Reference — OpenClaw" description="Complete reference for all 319 OpenClaw CLI commands across 5 layers: Founder, Business, Product, Engineering, and Ops. Each command consumes MCU credits on successful delivery.">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <nav>
+        <ul class="toc">
+          {LAYERS.map((l) => (
+            <li><a href={`#${l.id}`}>{l.icon} {l.name}</a></li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Reference</span>
+        <h1>CLI <span class="gradient-text">Commands</span></h1>
+        <p class="guide-lead">319 commands across 5 layers. Each command consumes MCU credits on successful delivery.</p>
+      </header>
+
+      {LAYERS.map((layer) => (
+        <section id={layer.id}>
+          <h2>{layer.icon} {layer.name} Layer</h2>
+          <div class="cmd-table">
+            <div class="cmd-table-header">
+              <span>Command</span>
+              <span>Description</span>
+              <span>MCU</span>
+            </div>
+            {layer.commands.map((cmd) => (
+              <div class="cmd-row glass">
+                <code class="cmd-name">mekong {cmd.cmd}</code>
+                <span class="cmd-desc">{cmd.description}</span>
+                <span class="cmd-mcu">{cmd.mcu}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section id="usage">
+        <h2>Common Flags</h2>
+        <div class="cmd-table">
+          <div class="cmd-table-header"><span>Flag</span><span>Description</span><span></span></div>
+          <div class="cmd-row glass"><code>--dry-run</code><span>Plan only, no execution</span><span>0</span></div>
+          <div class="cmd-row glass"><code>--verbose</code><span>Show step-by-step details</span><span>0</span></div>
+          <div class="cmd-row glass"><code>--strict</code><span>Fail fast on any error</span><span>0</span></div>
+          <div class="cmd-row glass"><code>--no-rollback</code><span>Skip rollback on failure</span><span>0</span></div>
+          <div class="cmd-row glass"><code>--model &lt;id&gt;</code><span>Override LLM model for this run</span><span>0</span></div>
+        </div>
+      </section>
+
+      <section id="tiers">
+        <h2>💎 License Tiers</h2>
+        <div class="cmd-table">
+          <div class="cmd-table-header"><span>Tier</span><span>Commands</span><span>Price</span></div>
+          <div class="cmd-row glass"><code>Free</code><span>run, sop, status, license, usage, help</span><span>$0</span></div>
+          <div class="cmd-row glass"><code>Starter</code><span>+ crm, finance, dashboard, cook, plan</span><span>$8/mo</span></div>
+          <div class="cmd-row glass"><code>Pro</code><span>+ kaizen, marketplace, deploy, review, raas, cli, rd scan</span><span>$20/mo</span></div>
+          <div class="cmd-row glass"><code>Enterprise</code><span>+ agi, solo, vc, swarm, live-dashboard, cto-brain, all</span><span>$120/mo</span></div>
+        </div>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/quickstart" class="nav-prev glass">← Quickstart</a>
+        <a href="/guides/license" class="nav-next glass">License →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .cmd-table { display: flex; flex-direction: column; gap: 2px; }
+  .cmd-table-header { display: grid; grid-template-columns: 2fr 3fr 1fr; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-on-surface-variant); }
+  .cmd-row { display: grid; grid-template-columns: 2fr 3fr 1fr; gap: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); align-items: center; border-radius: 8px !important; }
+  .cmd-name { font-size: 0.875rem; color: var(--md-sys-color-primary); }
+  .cmd-desc { font-size: 0.875rem; color: var(--md-sys-color-on-surface-variant); }
+  .cmd-mcu { font-size: 0.8rem; color: var(--md-sys-color-secondary); font-weight: 600; text-align: right; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } .cmd-table-header, .cmd-row { grid-template-columns: 1fr 2fr; } .cmd-mcu { display: none; } }
+</style>

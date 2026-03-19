@@ -1,0 +1,5 @@
+description = "Compliance check — privacy policy → terms → data handling → regulatory gaps"
+
+[steps]
+[steps.run]
+command = "mekong legal-compliance-check {{args}}"

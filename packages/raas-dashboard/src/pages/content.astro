@@ -1,0 +1,84 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Nội dung" activePage="/content">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h2 style="font-size:18px">Nội dung</h2>
+    <button class="btn btn-primary" id="btn-generate">✨ Tạo 7 ngày content</button>
+  </div>
+
+  <div id="gen-status" style="display:none;margin-bottom:16px" class="card">
+    <p id="gen-msg" style="color:var(--text2);font-size:13px">Đang tạo nội dung...</p>
+  </div>
+
+  <div class="card">
+    <div id="content-list">
+      <p style="color:var(--text2);font-size:13px;text-align:center;padding:32px 0">Đang tải...</p>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://api.agencyos.network';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  const key = () => localStorage.getItem('mk_api_key');
+  const h = () => ({ 'Content-Type':'application/json', Authorization:'Bearer '+key() });
+
+  const STATUS_LABEL = { draft:'Nháp', approved:'Đã duyệt', published:'Đã đăng', rejected:'Từ chối' };
+  const STATUS_BADGE = { draft:'badge-gray', approved:'badge-green', published:'badge-green', rejected:'badge-yellow' };
+
+  async function loadPosts() {
+    try {
+      const data = await fetch(API+'/v1/content/posts', {headers:h()}).then(r=>r.json());
+      const posts = Array.isArray(data) ? data : (data.posts || []);
+      if (!posts.length) { document.getElementById('content-list').innerHTML='<p style="color:var(--text2);font-size:13px;text-align:center;padding:32px 0">Chưa có nội dung nào. Nhấn "Tạo 7 ngày content" để bắt đầu.</p>'; return; }
+      document.getElementById('content-list').innerHTML = posts.map(p => `
+        <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:start;justify-content:space-between;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:13px;margin-bottom:4px">${p.content || p.text || ''}</div>
+              <div style="color:var(--text2);font-size:11px">${p.scheduled_date || ''} · ${p.platform || 'Facebook'}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge ${STATUS_BADGE[p.status]||'badge-gray'}">${STATUS_LABEL[p.status]||p.status}</span>
+              ${p.status==='draft' ? `<button class="btn btn-secondary btn-sm" onclick="approve('${p.id}')">✓ Duyệt</button><button class="btn btn-secondary btn-sm" onclick="reject('${p.id}')">✕</button>` : ''}
+            </div>
+          </div>
+        </div>`).join('');
+    } catch {
+      document.getElementById('content-list').innerHTML='<p style="color:var(--danger);font-size:13px;padding:16px">Không thể tải nội dung.</p>';
+    }
+  }
+
+  window.approve = async (id) => {
+    await fetch(API+'/v1/content/posts/'+id+'/approve', {method:'POST',headers:h()}).catch(()=>{});
+    loadPosts();
+  };
+  window.reject = async (id) => {
+    await fetch(API+'/v1/content/posts/'+id+'/reject', {method:'POST',headers:h()}).catch(()=>{});
+    loadPosts();
+  };
+
+  document.getElementById('btn-generate').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-generate');
+    const status = document.getElementById('gen-status');
+    const msg = document.getElementById('gen-msg');
+    btn.disabled = true; btn.textContent = 'Đang tạo...';
+    status.style.display = 'block'; msg.textContent = 'AI đang tạo 7 ngày nội dung...';
+    try {
+      const res = await fetch(API+'/v1/content/generate', {method:'POST',headers:h(),body:JSON.stringify({days:7})});
+      const data = await res.json();
+      msg.style.color = 'var(--success)';
+      msg.textContent = data.message || `Đã tạo ${data.count || 7} bài viết thành công!`;
+      loadPosts();
+    } catch {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = 'Lỗi tạo nội dung. Thử lại sau.';
+    } finally {
+      btn.disabled = false; btn.textContent = '✨ Tạo 7 ngày content';
+    }
+  });
+
+  loadPosts();
+</script>

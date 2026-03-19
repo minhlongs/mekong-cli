@@ -1,0 +1,196 @@
+---
+import '../styles/theme.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title = 'OpenClaw — AGI CLI for Solo Founders',
+  description = 'Run your entire company from the terminal. 16+ packages. 1 person. 0 employees.',
+  ogImage = '/og-default.jpg',
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+const siteUrl = 'https://mekong-docs.pages.dev';
+const canonicalUrl = `${siteUrl}${currentPath}`;
+const fullTitle = title.includes('Mekong Docs') ? title : `${title} | Mekong Docs`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={`${siteUrl}${ogImage}`} />
+    <meta property="og:site_name" content="OpenClaw Docs" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${siteUrl}${ogImage}`} />
+    <script type="module">
+      import '@material/web/all.js';
+    </script>
+  </head>
+  <body>
+    <header class="site-header glass">
+      <div class="header-inner">
+        <a href="/" class="logo">
+          <span class="gradient-text">OpenClaw</span>
+          <span class="logo-sub">Docs</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="/" class:list={['nav-link', { active: currentPath === '/' }]}>Home</a>
+          <a href="/guides" class:list={['nav-link', { active: currentPath.startsWith('/guides') }]}>Guides</a>
+          <a href="/pricing" class:list={['nav-link', { active: currentPath === '/pricing' }]}>Pricing</a>
+        </nav>
+        <a href="https://github.com/openclaw/mekong-cli" target="_blank" rel="noopener" class="github-link" aria-label="GitHub">
+          <md-icon>code</md-icon>
+        </a>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <p class="footer-brand"><span class="gradient-text">OpenClaw</span> &copy; {new Date().getFullYear()}</p>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="/guides/quickstart">Quickstart</a>
+          <a href="/guides/commands">Commands</a>
+          <a href="/guides/license">License</a>
+          <a href="https://polar.sh/openclaw" target="_blank" rel="noopener">Buy</a>
+          <a href="https://github.com/openclaw/mekong-cli" target="_blank" rel="noopener">GitHub</a>
+        </nav>
+        <p class="footer-tagline">16+ packages. 1 person. 0 employees.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .logo-sub {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .main-nav {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-left: auto;
+  }
+
+  .nav-link {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-label-large-size);
+    font-weight: 500;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--md-sys-color-primary);
+    background: rgba(0, 188, 212, 0.08);
+    text-decoration: none;
+  }
+
+  .github-link {
+    color: var(--md-sys-color-on-surface-variant);
+    display: flex;
+    align-items: center;
+    margin-left: var(--spacing-md);
+    transition: color 0.2s;
+  }
+
+  .github-link:hover {
+    color: var(--md-sys-color-primary);
+  }
+
+  .main-content {
+    min-height: calc(100vh - 64px - 120px);
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--md-sys-color-outline);
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+  }
+
+  .footer-brand {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .footer-nav {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+
+  .footer-nav a {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-medium-size);
+  }
+
+  .footer-tagline {
+    margin-left: auto;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-medium-size);
+    font-style: italic;
+  }
+</style>

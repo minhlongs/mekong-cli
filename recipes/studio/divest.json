@@ -1,0 +1,39 @@
+{
+  "id": "studio-divest",
+  "name": "Studio Divest from Project",
+  "description": "Archive a project via cto:archive and create a full backup before removing from active portfolio.",
+  "version": "1.0.0",
+  "layer": "studio",
+  "trigger": "/studio:divest",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/studio/divest",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "backup",
+        "name": "Backup Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-backup", "args": "--output reports/studio/divest/backup-confirmation.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "archive",
+        "name": "Archive Project",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-archive", "args": "--output reports/studio/divest/archive-report.md" }
+        ],
+        "depends_on": ["backup"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/studio/divest/SUMMARY.md",
+      "template": "Compile backup confirmation and archive report into a divestment summary with: project timeline, assets archived, backup location, and portfolio impact assessment."
+    }
+  }
+}

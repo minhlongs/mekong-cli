@@ -1,0 +1,40 @@
+{
+  "id": "dev-debug",
+  "name": "Dev Debug Session",
+  "description": "Trace the issue via worker:trace, collect logs via worker:log, then analyze root cause.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:debug",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/debug",
+  "estimated_credits": 5,
+  "estimated_minutes": 15,
+  "dag": {
+    "groups": [
+      {
+        "id": "collect",
+        "name": "Collect Evidence",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-trace", "args": "--output reports/dev/debug/trace.md" },
+          { "id": "worker-log", "args": "--output reports/dev/debug/logs.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "analyze",
+        "name": "Analyze Root Cause",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-scan", "args": "--security --output reports/dev/debug/code-analysis.md" }
+        ],
+        "depends_on": ["collect"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/debug/SUMMARY.md",
+      "template": "Compile trace, logs, and code analysis into a debug report with: root cause, reproduction steps, affected code paths, fix recommendation, and test cases to add."
+    }
+  }
+}

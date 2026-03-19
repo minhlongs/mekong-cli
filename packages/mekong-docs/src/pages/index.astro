@@ -1,0 +1,207 @@
+---
+import MainLayout from '../layouts/main-layout.astro';
+import InstallStats from '../components/install-stats.astro';
+import TerminalDemo from '../components/terminal-demo.astro';
+import { FEATURES } from '../data/features.ts';
+---
+
+<MainLayout title="OpenClaw — AGI CLI for Solo Founders" description="Run your entire company from the terminal. 319 commands. 8 departments. 1 person. 0 employees. The AGI CLI that replaces your entire startup team.">
+  <!-- Hero -->
+  <section class="hero" style="background-image: linear-gradient(rgba(18,18,18,0.85), rgba(18,18,18,0.95)), url('/hero-bg.jpg'); background-size: cover; background-position: center;">
+    <div class="hero-inner">
+      <div class="hero-badge glass">v5.0 — OpenClaw Constitution</div>
+      <h1 class="hero-title">
+        <span class="gradient-text">OpenClaw</span><br />
+        AGI CLI for Solo Founders
+      </h1>
+      <p class="hero-subtitle">
+        Run your entire company from the terminal.<br />
+        16+ packages. 1 person. 0 employees.
+      </p>
+      <div class="hero-install glass">
+        <code id="install-cmd">npm install -g @openclaw/mekong-cli</code>
+        <md-filled-tonal-button id="copy-btn" aria-label="Copy install command">
+          <md-icon slot="icon">content_copy</md-icon>
+          Copy
+        </md-filled-tonal-button>
+      </div>
+      <div class="hero-ctas">
+        <md-elevated-button onclick="location.href='/guides/quickstart'">
+          <md-icon slot="icon">bolt</md-icon>
+          Quickstart
+        </md-elevated-button>
+        <md-filled-tonal-button onclick="location.href='/guides'">
+          <md-icon slot="icon">menu_book</md-icon>
+          Read Guides
+        </md-filled-tonal-button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features">
+    <div class="section-inner">
+      <h2 class="section-title">Everything you need to run a company</h2>
+      <p class="section-subtitle">From idea to exit — without hiring a single employee.</p>
+      <div class="features-grid">
+        {FEATURES.map((f) => (
+          <article class="feature-card glass">
+            <div class="feature-icon">{f.icon}</div>
+            <span class="feature-tag">{f.tag}</span>
+            <h3 class="feature-title">{f.title}</h3>
+            <p class="feature-desc">{f.description}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Terminal Demo -->
+  <section class="terminal-section">
+    <div class="section-inner">
+      <h2 class="section-title">See it in action</h2>
+      <p class="section-subtitle">One command. Infinite leverage.</p>
+      <TerminalDemo />
+    </div>
+  </section>
+
+  <!-- Install Section -->
+  <section class="install-section">
+    <div class="section-inner install-grid">
+      <div class="install-text">
+        <h2 class="section-title">Get started in 30 seconds</h2>
+        <ol class="install-steps">
+          <li>
+            <span class="step-num">1</span>
+            <div>
+              <strong>Install the CLI</strong>
+              <pre><code>npm install -g @openclaw/mekong-cli</code></pre>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <div>
+              <strong>Initialize your company</strong>
+              <pre><code>mekong company/init</code></pre>
+            </div>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <div>
+              <strong>Run your first mission</strong>
+              <pre><code>mekong cook "Write homepage copy"</code></pre>
+            </div>
+          </li>
+        </ol>
+        <md-elevated-button onclick="location.href='/guides/quickstart'">
+          Full Quickstart Guide
+          <md-icon slot="trailing-icon">arrow_forward</md-icon>
+        </md-elevated-button>
+      </div>
+      <InstallStats />
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  const btn = document.getElementById('copy-btn');
+  const cmd = document.getElementById('install-cmd');
+  btn?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(cmd?.textContent?.trim() ?? '');
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.innerHTML = '<md-icon slot="icon">content_copy</md-icon>Copy'; }, 2000);
+  });
+</script>
+
+<style>
+  .hero {
+    padding: var(--spacing-3xl) var(--spacing-lg);
+    text-align: center;
+    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,188,212,0.15), transparent);
+  }
+  .hero-inner { max-width: 760px; margin: 0 auto; }
+  .hero-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--md-sys-typescale-body-medium-size);
+    color: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-lg);
+  }
+  .hero-title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: var(--spacing-lg);
+  }
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.7;
+  }
+  .hero-install {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+  .hero-ctas { display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap; }
+
+  .section-inner { max-width: 1200px; margin: 0 auto; padding: 0 var(--spacing-lg); }
+  .section-title {
+    font-size: var(--md-sys-typescale-headline-large-size);
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+  }
+  .section-subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: var(--spacing-2xl);
+    font-size: 1.1rem;
+  }
+
+  .features { padding: var(--spacing-3xl) var(--spacing-lg); }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+  }
+  .feature-card { padding: var(--spacing-xl); position: relative; transition: transform 0.2s; }
+  .feature-card:hover { transform: translateY(-4px); }
+  .feature-icon { font-size: 2rem; margin-bottom: var(--spacing-sm); }
+  .feature-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--md-sys-color-primary);
+    background: rgba(0,188,212,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: var(--spacing-sm);
+  }
+  .feature-title { font-size: 1.2rem; font-weight: 600; margin-bottom: var(--spacing-sm); }
+  .feature-desc { color: var(--md-sys-color-on-surface-variant); font-size: 0.9rem; line-height: 1.6; }
+
+  .terminal-section { padding: var(--spacing-3xl) var(--spacing-lg); }
+
+  .install-section { padding: var(--spacing-3xl) var(--spacing-lg); }
+  .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-3xl); align-items: start; }
+  .install-steps { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
+  .install-steps li { display: flex; gap: var(--spacing-md); align-items: flex-start; }
+  .step-num {
+    min-width: 32px; height: 32px;
+    background: linear-gradient(135deg, #00BCD4, #9C27B0);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+  }
+  .install-steps pre { margin-top: var(--spacing-xs); }
+  @media (max-width: 768px) {
+    .install-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+  }
+</style>

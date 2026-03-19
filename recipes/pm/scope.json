@@ -1,0 +1,39 @@
+{
+  "id": "pm-scope",
+  "name": "PM Scope Definition",
+  "description": "Parse requirements and define clear project boundaries, in-scope and out-of-scope items.",
+  "version": "1.0.0",
+  "layer": "pm",
+  "trigger": "/pm:scope",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/pm/scope",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "requirements",
+        "name": "Parse Requirements",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/pm/scope/current-capabilities.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "define-boundaries",
+        "name": "Define Boundaries",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-backlog", "args": "--output reports/pm/scope/scope-items.md" }
+        ],
+        "depends_on": ["requirements"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/pm/scope/SUMMARY.md",
+      "template": "Compile current capabilities and scope items into a scope definition document with: project objectives, in-scope features, out-of-scope items, assumptions, constraints, and success criteria."
+    }
+  }
+}

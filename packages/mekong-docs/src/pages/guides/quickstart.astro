@@ -1,0 +1,132 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+---
+
+<MainLayout title="Quickstart — OpenClaw" description="Get OpenClaw running in 5 minutes. Install the CLI, initialize your company, configure your LLM, and deploy to Cloudflare — all from the terminal.">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <nav>
+        <a href="/guides" class="back-link">← All Guides</a>
+        <ul class="toc">
+          <li><a href="#install">1. Install</a></li>
+          <li><a href="#init">2. Initialize</a></li>
+          <li><a href="#first-command">3. First Command</a></li>
+          <li><a href="#configure">4. Configure LLM</a></li>
+          <li><a href="#deploy">5. Deploy</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Getting Started</span>
+        <h1>Quickstart <span class="gradient-text">5-minute setup</span></h1>
+        <p class="guide-lead">From zero to running your first AI mission in under 5 minutes.</p>
+      </header>
+
+      <section id="install">
+        <h2>1. Install the CLI</h2>
+        <p>Install OpenClaw globally via npm or pnpm:</p>
+        <pre><code>npm install -g @openclaw/mekong-cli
+# or
+pnpm add -g @openclaw/mekong-cli</code></pre>
+        <p>Verify the installation:</p>
+        <pre><code>mekong --version
+# OpenClaw v5.0.0</code></pre>
+      </section>
+
+      <section id="init">
+        <h2>2. Initialize Your Company</h2>
+        <p>Run the init wizard to scaffold your company configuration:</p>
+        <pre><code>mekong company/init</code></pre>
+        <p>This creates <code>.mekong/company.json</code> with your company profile, active departments, and billing settings.</p>
+        <div class="callout glass">
+          <md-icon>info</md-icon>
+          <p>Every session reads <code>.mekong/company.json</code> automatically. No extra flags needed.</p>
+        </div>
+      </section>
+
+      <section id="first-command">
+        <h2>3. Run Your First Command</h2>
+        <p>Cook a mission — the most powerful command in OpenClaw:</p>
+        <pre><code>mekong cook "Write a product description for my SaaS"</code></pre>
+        <p>The PEV engine will plan, execute, and verify the task. Output is saved to <code>.mekong/outputs/</code>.</p>
+        <p>Try other quick commands:</p>
+        <pre><code># Generate a pitch deck outline
+mekong pitch "AI-powered inventory management for SMBs"
+
+# Write a cold email sequence
+mekong sales/email "B2B SaaS outreach, 5-email sequence"
+
+# Create a sprint plan
+mekong sprint "MVP launch — 2 weeks"</code></pre>
+      </section>
+
+      <section id="configure">
+        <h2>4. Configure Your LLM</h2>
+        <p>OpenClaw supports any OpenAI-compatible API. Set three environment variables:</p>
+        <pre><code>export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_MODEL=anthropic/claude-sonnet-4</code></pre>
+        <p>Or add them to <code>.env</code> in your project root. Pre-configured presets live in <code>mekong/adapters/llm-providers.yaml</code>.</p>
+        <p>Supported providers (auto-fallback chain):</p>
+        <ul>
+          <li>OpenRouter (recommended — access all models)</li>
+          <li>Anthropic Claude directly</li>
+          <li>OpenAI / Azure OpenAI</li>
+          <li>Google Gemini via DashScope</li>
+          <li>DeepSeek, Qwen</li>
+          <li>Ollama (local, offline)</li>
+        </ul>
+      </section>
+
+      <section id="deploy">
+        <h2>5. Deploy to Cloudflare</h2>
+        <p>OpenClaw ships a zero-cost 3-layer CF infrastructure scaffold:</p>
+        <pre><code># Scaffold frontend + edge API
+bash mekong/infra/scaffold.sh myproject startup
+
+# Full stack (frontend + API + backend + D1 + KV + R2)
+bash mekong/infra/scaffold.sh myproject scale
+
+# Deploy
+git push origin main  # CF Pages auto-deploys
+wrangler deploy       # Workers backend</code></pre>
+        <div class="callout callout-success glass">
+          <md-icon>check_circle</md-icon>
+          <p>Total infra cost: <strong>$0/mo</strong> on Cloudflare free tier.</p>
+        </div>
+      </section>
+
+      <div class="guide-nav">
+        <span></span>
+        <a href="/guides/commands" class="nav-next glass">Commands Reference →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.15rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-md); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .guide-content ul { margin: var(--spacing-sm) 0 var(--spacing-md) var(--spacing-xl); color: var(--md-sys-color-on-surface-variant); line-height: 1.8; }
+  .callout { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-md) var(--spacing-lg); margin: var(--spacing-lg) 0; }
+  .callout md-icon { color: var(--md-sys-color-primary); flex-shrink: 0; }
+  .callout-success md-icon { color: #4CAF50; }
+  .callout p { margin: 0; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } }
+</style>

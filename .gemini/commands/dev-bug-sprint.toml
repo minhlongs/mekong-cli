@@ -1,0 +1,5 @@
+description = "Bug sprint — debug, fix, test. Batch bug fixes in 15 min"
+
+[steps]
+[steps.run]
+command = "mekong dev-bug-sprint {{args}}"

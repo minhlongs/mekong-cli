@@ -1,0 +1,5 @@
+description = "Mekong command: worker-log"
+
+[steps]
+[steps.run]
+command = "mekong worker-log {{args}}"

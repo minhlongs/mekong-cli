@@ -1,0 +1,5 @@
+description = "Architecture decision record (ADR). 5 credits, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong cto-architect {{args}}"

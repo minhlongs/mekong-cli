@@ -1,0 +1,5 @@
+description = "Mekong command: ck-binh-phap"
+
+[steps]
+[steps.run]
+command = "mekong ck-binh-phap {{args}}"
