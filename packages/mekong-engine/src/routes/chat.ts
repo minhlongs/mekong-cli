@@ -85,7 +85,11 @@ chatRoutes.get('/webhook/facebook', (c) => {
   const mode = c.req.query('hub.mode')
   const token = c.req.query('hub.verify_token')
   const challenge = c.req.query('hub.challenge')
-  const verifyToken = c.env.FB_VERIFY_TOKEN || 'mekong_verify'
+  const verifyToken = c.env.FB_VERIFY_TOKEN
+  if (!verifyToken) {
+    console.warn('FB_VERIFY_TOKEN not configured — Facebook webhook verification disabled')
+    return c.text('Forbidden', 403)
+  }
   if (mode === 'subscribe' && token === verifyToken) return c.text(challenge || '', 200)
   return c.text('Forbidden', 403)
 })

@@ -1,0 +1,2281 @@
+openapi: 3.0.3
+info:
+  title: Mekong Engine API
+  description: |
+    RaaS (Research as a Service) Engine - Multi-tenant SaaS API với double-entry ledger,
+    quadratic funding, governance, và AI content generation.
+
+    ## Authentication
+    Tất cả endpoints yêu cầu API key qua header: `Authorization: Bearer <tenant-api-key>`
+
+    ## Architecture
+    - **Tenant Isolation**: Mỗi tenant có API key riêng, data cách ly qua tenant_id
+    - **Double-Entry Ledger**: Mọi giao dịch đều có journal entry + 2 transaction lines
+    - **Quadratic Funding**: QF formula: matched = (Σ√ci)² - Σci
+  version: 0.3.0
+  contact:
+    name: Mekong CLI Support
+    url: https://github.com/longtho638/mekong-cli
+  license:
+    name: MIT
+
+servers:
+  - url: https://engine.mekong-cli.local
+    description: Local development
+  - url: https://engine.agencyos.network
+    description: Production
+
+tags:
+  - name: billing
+    description: Tenant billing, Polar.sh webhooks, credit management
+  - name: chat
+    description: Zalo OA + Facebook Messenger webhook integration
+  - name: content
+    description: AI content generation với LLM, 7-14 day content batches
+  - name: crm
+    description: Contact management, remarketing campaigns
+  - name: equity
+    description: Equity management: entities, grants, cap table, SAFE notes
+  - name: funding
+    description: Quadratic funding rounds, project contributions
+  - name: governance
+    description: Stakeholder management, proposals, quadratic voting, reputation
+  - name: ledger
+    description: Double-entry ledger accounting system
+  - name: onboarding
+    description: 4-step tenant onboarding: profile → channel → menu → activate
+  - name: payment-vn
+    description: Vietnam payments: MoMo, VNPAY integration
+  - name: reports
+    description: Weekly analytics với AI summary, real-time dashboard
+  - name: revenue
+    description: 6-way revenue split: platform, expert, ai_compute, developer, community, customer
+  - name: settings
+    description: LLM provider settings (OpenAI, Google, Anthropic, custom)
+  - name: tasks
+    description: Mission/task management với credit metering, SSE streaming
+  - name: agents
+    description: Agent registry và execution
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ==================== BILLING ====================
+  /tenants:
+    post:
+      tags: [billing]
+      summary: Create new tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenant'
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '400':
+          description: Invalid request
+        '409':
+          description: Tenant already exists
+
+  /tenants/regenerate-key:
+    post:
+      tags: [billing]
+      summary: Regenerate tenant API key
+      responses:
+        '200':
+          description: API key regenerated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key:
+                    type: string
+                    example: "tenant_abc123_xyz789"
+
+  /webhook:
+    post:
+      tags: [billing]
+      summary: Polar.sh webhook handler
+      description: |
+        Xử lý subscription events:
+        - subscription.created
+        - subscription.updated
+        - subscription.active
+        - subscription.inactive
+        - subscription.canceled
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolarWebhook'
+      responses:
+        '200':
+          description: Webhook processed
+        '401':
+          description: Invalid signature
+        '400':
+          description: Invalid payload
+
+  /pricing:
+    get:
+      tags: [billing]
+      summary: Get pricing tiers
+      responses:
+        '200':
+          description: Pricing tiers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingTiers'
+
+  /credits:
+    get:
+      tags: [billing]
+      summary: Get tenant credit balance
+      parameters:
+        - name: include_history
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Credit balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditBalance'
+        '402':
+          description: Zero balance
+
+  /credits/history:
+    get:
+      tags: [billing]
+      summary: Get credit transaction history
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditHistory'
+
+  # ==================== CHAT ====================
+  /webhook/zalo:
+    post:
+      tags: [chat]
+      summary: Zalo OA webhook handler
+      description: |
+        Xử lý Zalo OA messages:
+        - Text messages → KB lookup → LLM reply
+        - Event messages (follow, unfollow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ZaloWebhook'
+      responses:
+        '200':
+          description: Message processed
+        '400':
+          description: Invalid payload
+
+  /webhook/facebook:
+    get:
+      tags: [chat]
+      summary: Facebook Messenger webhook verification
+      parameters:
+        - name: hub.mode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification challenge
+
+    post:
+      tags: [chat]
+      summary: Facebook Messenger webhook handler
+      description: |
+        Xử lý Facebook Messenger messages:
+        - Text messages → KB lookup → LLM reply
+        - Event messages (messaging_optins, messaging)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookWebhook'
+      responses:
+        '200':
+          description: Message processed
+        '400':
+          description: Invalid payload
+
+  # ==================== CONTENT ====================
+  /content/generate:
+    post:
+      tags: [content]
+      summary: Generate AI content batch
+      description: Generate 7-14 days of social media content via LLM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentGenerateRequest'
+      responses:
+        '200':
+          description: Content generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentGenerateResponse'
+        '502':
+          description: LLM generation failed
+
+  /content:
+    get:
+      tags: [content]
+      summary: List content posts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, approved, rejected, scheduled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: Posts list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentPostsList'
+
+  /content/{id}:
+    patch:
+      tags: [content]
+      summary: Update content post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentUpdateRequest'
+      responses:
+        '200':
+          description: Post updated
+        '404':
+          description: Post not found
+
+  # ==================== CRM ====================
+  /crm/contacts:
+    get:
+      tags: [crm]
+      summary: List contacts
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: tag
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contacts list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactList'
+
+    post:
+      tags: [crm]
+      summary: Create/update contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContact'
+      responses:
+        '201':
+          description: Contact created
+        '409':
+          description: Contact already exists
+
+  /crm/contacts/auto:
+    post:
+      tags: [crm]
+      summary: Auto-create contact from chat
+      description: Tạo contact tự động từ Zalo/FB chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutoCreateContact'
+      responses:
+        '201':
+          description: Contact created
+
+  /crm/campaigns:
+    get:
+      tags: [crm]
+      summary: List campaigns
+      responses:
+        '200':
+          description: Campaigns list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignList'
+
+    post:
+      tags: [crm]
+      summary: Create remarketing campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCampaign'
+      responses:
+        '201':
+          description: Campaign created
+
+  # ==================== EQUITY ====================
+  /equity/entities:
+    post:
+      tags: [equity]
+      summary: Create equity entity (company/entity)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEntity'
+      responses:
+        '201':
+          description: Entity created
+
+    get:
+      tags: [equity]
+      summary: List entities
+      responses:
+        '200':
+          description: Entities list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntityList'
+
+  /equity/grants:
+    post:
+      tags: [equity]
+      summary: Create equity grant
+      description: |
+        Types: stock_option, rsa, profit_interest, phantom_stock
+        Vesting: cliff_months, total_months, start_date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGrant'
+      responses:
+        '201':
+          description: Grant created
+
+  /equity/cap-table/{entityId}:
+    get:
+      tags: [equity]
+      summary: Get cap table for entity
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cap table
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CapTable'
+
+  /equity/safe:
+    post:
+      tags: [equity]
+      summary: Create SAFE note
+      description: |
+        SAFE types:
+        - cap: Valuation cap only
+        - discount: Discount rate only
+        - cap+discount: Both
+        - mfn: Most Favored Nation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSafe'
+      responses:
+        '201':
+          description: SAFE created
+
+  /equity/safe/{id}/convert:
+    post:
+      tags: [equity]
+      summary: Convert SAFE to equity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvertSafe'
+      responses:
+        '200':
+          description: SAFE converted
+
+  # ==================== FUNDING ====================
+  /funding/rounds:
+    post:
+      tags: [funding]
+      summary: Create funding round
+      description: |
+        Quadratic funding round với matching pool.
+        Duration default: 14 days.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFundingRound'
+      responses:
+        '201':
+          description: Round created
+
+    get:
+      tags: [funding]
+      summary: List funding rounds
+      responses:
+        '200':
+          description: Rounds list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRoundList'
+
+  /funding/projects:
+    post:
+      tags: [funding]
+      summary: Add project to funding round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFundingProject'
+      responses:
+        '201':
+          description: Project added
+
+  /funding/contribute:
+    post:
+      tags: [funding]
+      summary: Contribute to project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingContribution'
+      responses:
+        '201':
+          description: Contribution recorded
+        '409':
+          description: Already contributed
+
+  /funding/rounds/{id}/calculate:
+    post:
+      tags: [funding]
+      summary: Calculate QF matching
+      description: |
+        QF formula: matched = (Σ√ci)² - Σci
+
+        Returns results sorted by total (direct + matched).
+        Updates round status to 'completed'.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: QF calculation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QFResults'
+
+  # ==================== GOVERNANCE ====================
+  /governance/stakeholders:
+    post:
+      tags: [governance]
+      summary: Create stakeholder
+      description: |
+        Roles: founder, advisor, investor, employee, community
+        Stakeholder types: individual, organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStakeholder'
+      responses:
+        '201':
+          description: Stakeholder created
+
+    get:
+      tags: [governance]
+      summary: List stakeholders
+      responses:
+        '200':
+          description: Stakeholders list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakeholderList'
+
+  /governance/proposals:
+    post:
+      tags: [governance]
+      summary: Create proposal
+      description: |
+        Proposal types:
+        - standard: Regular proposal
+        - emergency: Fast-track (24h)
+        - spending: Treasury spending
+        - governance: Rule changes
+
+        Status flow: pending → active → passed/rejected → executed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProposal'
+      responses:
+        '201':
+          description: Proposal created
+
+    get:
+      tags: [governance]
+      summary: List proposals
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, passed, rejected, executed]
+      responses:
+        '200':
+          description: Proposals list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalList'
+
+  /governance/vote:
+    post:
+      tags: [governance]
+      summary: Cast vote
+      description: |
+        Quadratic voting: voice_credits = floor(√tokens_staked)
+
+        Vote weights:
+        - founder: 1.5x
+        - advisor: 1.2x
+        - investor: 1.3x
+        - employee: 1.0x
+        - community: 0.8x
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CastVote'
+      responses:
+        '201':
+          description: Vote recorded
+        '400':
+          description: Insufficient voice credits
+
+  /governance/reputation:
+    post:
+      tags: [governance]
+      summary: Update reputation score
+      description: |
+        Reputation factors:
+        - Proposal participation: +1
+        - Voting participation: +0.5
+        - Proposal passed: +5
+        - Proposal executed: +10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReputation'
+      responses:
+        '200':
+          description: Reputation updated
+
+    get:
+      tags: [governance]
+      summary: Get stakeholder reputation
+      parameters:
+        - name: stakeholderId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reputation score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReputationScore'
+
+  /governance/ngu-su:
+    post:
+      tags: [governance]
+      summary: Calculate Ngũ Sự score
+      description: |
+        Ngũ Sự (5 Elements) scoring:
+        - Nhân (Benevolence): Community contributions
+        - Lễ (Propriety): Governance participation
+        - Nghĩa (Righteousness): Fund usage efficiency
+        - Trí (Wisdom): Proposal quality
+        - Tín (Integrity): Commitment fulfillment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateNguSu'
+      responses:
+        '200':
+          description: Ngũ Sự scores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NguSuScores'
+
+    get:
+      tags: [governance]
+      summary: Get Ngũ Sự scores
+      responses:
+        '200':
+          description: All stakeholder scores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NguSuScoresList'
+
+  /governance/treasury:
+    get:
+      tags: [governance]
+      summary: Get treasury balance
+      responses:
+        '200':
+          description: Treasury balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreasuryBalance'
+
+  # ==================== LEDGER ====================
+  /ledger/transfer:
+    post:
+      tags: [ledger]
+      summary: Double-entry transfer
+      description: |
+        Transfer between accounts với journal entry.
+        Ensures source account has sufficient balance.
+
+        Atomic batch:
+        1. Create journal entry
+        2. Debit source (direction: -1)
+        3. Credit destination (direction: 1)
+        4. Update balances
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '201':
+          description: Transfer completed
+        '400':
+          description: Insufficient balance
+
+  /ledger/topup:
+    post:
+      tags: [ledger]
+      summary: Add credits to account
+      description: |
+        Topup từ platform treasury.
+        Creates journal entry với 2 lines.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopupRequest'
+      responses:
+        '201':
+          description: Topup completed
+
+  /ledger/balance:
+    get:
+      tags: [ledger]
+      summary: Get account balance(s)
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+          description: Filter by account code
+      responses:
+        '200':
+          description: Account balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountBalances'
+
+  /ledger/history:
+    get:
+      tags: [ledger]
+      summary: Get transaction history
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 30
+            maximum: 100
+      responses:
+        '200':
+          description: Transaction history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionHistory'
+
+  # ==================== ONBOARDING ====================
+  /onboarding/status:
+    get:
+      tags: [onboarding]
+      summary: Get onboarding status
+      responses:
+        '200':
+          description: Onboarding progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingStatus'
+
+  /onboarding/profile:
+    post:
+      tags: [onboarding]
+      summary: Step 1 - Create profile
+      description: |
+        Required fields:
+        - business_name
+        - business_type (restaurant, retail, service, etc.)
+        - contact_email
+        - contact_phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProfile'
+      responses:
+        '201':
+          description: Profile created
+
+  /onboarding/channel:
+    post:
+      tags: [onboarding]
+      summary: Step 2 - Configure channels
+      description: |
+        Configure communication channels:
+        - facebook: Page ID + token
+        - zalo: OA ID + token
+        - website: Domain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureChannels'
+      responses:
+        '200':
+          description: Channels configured
+
+  /onboarding/menu:
+    post:
+      tags: [onboarding]
+      summary: Step 3 - Upload menu/FAQ
+      description: |
+        Upload menu items hoặc FAQ entries.
+        Auto-generates KB entries cho AI chat.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadMenu'
+      responses:
+        '201':
+          description: Menu uploaded
+
+  /onboarding/activate:
+    post:
+      tags: [onboarding]
+      summary: Step 4 - Activate tenant
+      description: |
+        Final activation:
+        - Validates all previous steps
+        - Generates API key
+        - Creates default ledger accounts
+        - Sends welcome email
+      responses:
+        '200':
+          description: Tenant activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantActivated'
+
+  # ==================== PAYMENT-VN ====================
+  /payment/momo/ipn:
+    post:
+      tags: [payment-vn]
+      summary: MoMo IPN handler
+      description: |
+        Instant Payment Notification từ MoMo.
+        Verifies signature, updates transaction status.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MoMoIpn'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Invalid signature
+
+  /payment/vnpay/ipn:
+    get:
+      tags: [payment-vn]
+      summary: VNPAY IPN handler
+      description: |
+        Instant Payment Notification từ VNPAY.
+        Verifies secure hash, updates transaction.
+      parameters:
+        - name: vnp_ResponseCode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: vnp_TxnRef
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: vnp_Amount
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: vnp_SecureHash
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: R00=OK
+        '400':
+          description: Invalid hash
+
+  /payment/create:
+    post:
+      tags: [payment-vn]
+      summary: Create payment request
+      description: |
+        Creates payment request với MoMo hoặc VNPAY.
+        Returns payment URL for redirect.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePayment'
+      responses:
+        '200':
+          description: Payment URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /payment/pricing-vn:
+    get:
+      tags: [payment-vn]
+      summary: Get VND pricing tiers
+      description: |
+        Vietnam-specific pricing:
+        - Free: 0đ
+        - Starter: 199kđ/month
+        - Pro: 499kđ/month
+        - Enterprise: 2.99Mđ/month
+      responses:
+        '200':
+          description: VND pricing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VndPricing'
+
+  # ==================== REPORTS ====================
+  /reports/weekly:
+    get:
+      tags: [reports]
+      summary: Get weekly report
+      description: |
+        Weekly analytics với AI summary:
+        - New contacts, conversations
+        - Content performance
+        - Revenue, credits
+      parameters:
+        - name: weeks
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Weekly report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyReport'
+
+  /reports/overview:
+    get:
+      tags: [reports]
+      summary: Get real-time dashboard
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOverview'
+
+  # ==================== REVENUE ====================
+  /revenue/split:
+    post:
+      tags: [revenue]
+      summary: Calculate 6-way split
+      description: |
+        Tam giác ngược - Inverted triangle split:
+        - platform: 20%
+        - expert: 30%
+        - ai_compute: 15%
+        - developer: 15%
+        - community_fund: 10%
+        - customer_reward: 10%
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevenueSplitRequest'
+      responses:
+        '200':
+          description: Split calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueSplit'
+
+  /revenue/split-config:
+    get:
+      tags: [revenue]
+      summary: Get split configuration
+      responses:
+        '200':
+          description: Split config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitConfig'
+
+  /revenue/summary:
+    get:
+      tags: [revenue]
+      summary: Get revenue summary
+      responses:
+        '200':
+          description: Revenue summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueSummary'
+
+  # ==================== SETTINGS ====================
+  /settings/llm:
+    post:
+      tags: [settings]
+      summary: Save LLM settings
+      description: |
+        Supported providers:
+        - openai
+        - google
+        - anthropic
+        - custom (requires base_url)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LlmSettings'
+      responses:
+        '200':
+          description: Settings saved
+        '400':
+          description: Invalid provider or missing base_url
+
+    get:
+      tags: [settings]
+      summary: Get LLM settings
+      description: Returns masked API key
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LlmSettingsResponse'
+
+    delete:
+      tags: [settings]
+      summary: Remove LLM settings
+      description: Falls back to Workers AI
+      responses:
+        '200':
+          description: Settings removed
+
+  # ==================== TASKS ====================
+  /tasks:
+    post:
+      tags: [tasks]
+      summary: Create mission/task
+      description: |
+        Creates task với credit estimation.
+        Supports SSE streaming via /tasks/{id}/stream.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Task created
+
+    get:
+      tags: [tasks]
+      summary: List tasks
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed, cancelled]
+      responses:
+        '200':
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+
+  /tasks/{id}:
+    get:
+      tags: [tasks]
+      summary: Get task details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetail'
+
+  /tasks/{id}/stream:
+    get:
+      tags: [tasks]
+      summary: Stream task progress (SSE)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/TaskProgressEvent'
+
+  /tasks/{id}/cancel:
+    post:
+      tags: [tasks]
+      summary: Cancel running task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task cancelled
+
+  # ==================== AGENTS ====================
+  /agents:
+    get:
+      tags: [agents]
+      summary: List available agents
+      responses:
+        '200':
+          description: Agent registry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRegistry'
+
+  /agents/{name}/run:
+    post:
+      tags: [agents]
+      summary: Execute agent
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [git, file, shell, lead-hunter, content-writer, recipe-crawler]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentExecutionRequest'
+      responses:
+        '200':
+          description: Agent execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExecutionResult'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Tenant API key (Bearer token)
+
+  schemas:
+    # ==================== BILLING SCHEMAS ====================
+    CreateTenant:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: "My Cafe"
+        email:
+          type: string
+          format: email
+          example: "owner@mycafe.com"
+        tier:
+          type: string
+          enum: [free, starter, pro, enterprise]
+          default: "free"
+
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        api_key:
+          type: string
+        tier:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PolarWebhook:
+      type: object
+      properties:
+        event_id:
+          type: string
+        event_type:
+          type: string
+          enum: [subscription.created, subscription.updated, subscription.active, subscription.inactive, subscription.canceled]
+        data:
+          type: object
+          properties:
+            subscription_id:
+              type: string
+            customer_id:
+              type: string
+            product_id:
+              type: string
+            status:
+              type: string
+
+    PricingTiers:
+      type: object
+      properties:
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              price:
+                type: number
+              credits:
+                type: integer
+              features:
+                type: array
+                items:
+                  type: string
+
+    CreditBalance:
+      type: object
+      properties:
+        balance:
+          type: integer
+          example: 150
+        tier:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    CreditHistory:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [grant, usage, purchase, refund]
+              amount:
+                type: integer
+              balance_after:
+                type: integer
+              description:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+
+    # ==================== CHAT SCHEMAS ====================
+    ZaloWebhook:
+      type: object
+      properties:
+        id:
+          type: string
+        time:
+          type: string
+        event:
+          type: string
+        message:
+          type: object
+          properties:
+            text:
+              type: string
+            sender:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+
+    FacebookWebhook:
+      type: object
+      properties:
+        object:
+          type: string
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              time:
+                type: integer
+              messaging:
+                type: array
+                items:
+                  type: object
+
+    # ==================== CONTENT SCHEMAS ====================
+    ContentGenerateRequest:
+      type: object
+      properties:
+        channel:
+          type: string
+          default: "facebook"
+        days:
+          type: integer
+          minimum: 7
+          maximum: 14
+          default: 7
+        industry:
+          type: string
+          default: "cafe"
+        topic:
+          type: string
+          default: "daily promotions"
+
+    ContentGenerateResponse:
+      type: object
+      properties:
+        generated:
+          type: integer
+        ids:
+          type: array
+          items:
+            type: string
+
+    ContentPostsList:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentPost'
+        count:
+          type: integer
+
+    ContentPost:
+      type: object
+      properties:
+        id:
+          type: string
+        tenant_id:
+          type: string
+        channel:
+          type: string
+        content_text:
+          type: string
+        image_prompt:
+          type: string
+        status:
+          type: string
+          enum: [draft, approved, rejected, scheduled]
+        scheduled_at:
+          type: string
+          format: date-time
+
+    ContentUpdateRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected, scheduled]
+        content_text:
+          type: string
+        scheduled_at:
+          type: string
+          format: date-time
+
+    # ==================== CRM SCHEMAS ====================
+    ContactList:
+      type: object
+      properties:
+        contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              phone:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+
+    CreateContact:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    AutoCreateContact:
+      type: object
+      required: [sender_id, channel]
+      properties:
+        sender_id:
+          type: string
+        channel:
+          type: string
+          enum: [zalo, facebook]
+        sender_name:
+          type: string
+
+    CampaignList:
+      type: object
+      properties:
+        campaigns:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              type:
+                type: string
+              status:
+                type: string
+
+    CreateCampaign:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        target_tags:
+          type: array
+          items:
+            type: string
+        message_template:
+          type: string
+
+    # ==================== EQUITY SCHEMAS ====================
+    CreateEntity:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [company, llc, partnership]
+        jurisdiction:
+          type: string
+
+    EntityList:
+      type: object
+      properties:
+        entities:
+          type: array
+          items:
+            type: object
+
+    CreateGrant:
+      type: object
+      required: [entity_id, holder_id, type, shares]
+      properties:
+        entity_id:
+          type: string
+        holder_id:
+          type: string
+        type:
+          type: string
+          enum: [stock_option, rsa, profit_interest, phantom_stock]
+        shares:
+          type: integer
+        strike_price:
+          type: number
+        vesting:
+          type: object
+          properties:
+            cliff_months:
+              type: integer
+            total_months:
+              type: integer
+            start_date:
+              type: string
+              format: date
+
+    CapTable:
+      type: object
+      properties:
+        entity_id:
+          type: string
+        total_shares:
+          type: integer
+        holders:
+          type: array
+          items:
+            type: object
+            properties:
+              holder_id:
+                type: string
+              shares:
+                type: integer
+              percentage:
+                type: number
+
+    CreateSafe:
+      type: object
+      required: [entity_id, investor_id, amount]
+      properties:
+        entity_id:
+          type: string
+        investor_id:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [cap, discount, cap+discount, mfn]
+        cap:
+          type: number
+        discount:
+          type: number
+
+    ConvertSafe:
+      type: object
+      required: [price_per_share]
+      properties:
+        price_per_share:
+          type: number
+        valuation_cap:
+          type: number
+
+    # ==================== FUNDING SCHEMAS ====================
+    CreateFundingRound:
+      type: object
+      required: [title, matching_pool]
+      properties:
+        title:
+          type: string
+        matching_pool:
+          type: integer
+        duration_days:
+          type: integer
+          default: 14
+
+    FundingRoundList:
+      type: object
+      properties:
+        rounds:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              matching_pool:
+                type: integer
+              status:
+                type: string
+                enum: [active, calculating, completed]
+              ends_at:
+                type: string
+                format: date-time
+
+    CreateFundingProject:
+      type: object
+      required: [round_id, name]
+      properties:
+        round_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        author_id:
+          type: string
+
+    FundingContribution:
+      type: object
+      required: [project_id, stakeholder_id, amount]
+      properties:
+        project_id:
+          type: string
+        stakeholder_id:
+          type: string
+        amount:
+          type: integer
+
+    QFResults:
+      type: object
+      properties:
+        round_id:
+          type: string
+        matching_pool:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              direct:
+                type: integer
+              qf_score:
+                type: number
+              contributors:
+                type: integer
+              matched_amount:
+                type: integer
+              total:
+                type: integer
+        note:
+          type: string
+          example: "QF: 10 people × $1 beats 1 person × $10 — democratic funding"
+
+    # ==================== GOVERNANCE SCHEMAS ====================
+    CreateStakeholder:
+      type: object
+      required: [name, role]
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [founder, advisor, investor, employee, community]
+        type:
+          type: string
+          enum: [individual, organization]
+        email:
+          type: string
+
+    StakeholderList:
+      type: object
+      properties:
+        stakeholders:
+          type: array
+          items:
+            type: object
+
+    CreateProposal:
+      type: object
+      required: [title, description, type]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [standard, emergency, spending, governance]
+        funding_requested:
+          type: integer
+        duration_hours:
+          type: integer
+
+    ProposalList:
+      type: object
+      properties:
+        proposals:
+          type: array
+          items:
+            type: object
+
+    CastVote:
+      type: object
+      required: [proposal_id, vote, tokens_staked]
+      properties:
+        proposal_id:
+          type: string
+        vote:
+          type: string
+          enum: [for, against, abstain]
+        tokens_staked:
+          type: integer
+
+    UpdateReputation:
+      type: object
+      required: [stakeholder_id, action]
+      properties:
+        stakeholder_id:
+          type: string
+        action:
+          type: string
+          enum: [proposal_participation, voting_participation, proposal_passed, proposal_executed]
+
+    ReputationScore:
+      type: object
+      properties:
+        stakeholder_id:
+          type: string
+        score:
+          type: number
+        rank:
+          type: integer
+
+    CalculateNguSu:
+      type: object
+      required: [stakeholder_id]
+      properties:
+        stakeholder_id:
+          type: string
+
+    NguSuScores:
+      type: object
+      properties:
+        stakeholder_id:
+          type: string
+        scores:
+          type: object
+          properties:
+            nhan:
+              type: number
+            le:
+              type: number
+            nghia:
+              type: number
+            tri:
+              type: number
+            tin:
+              type: number
+        total:
+          type: number
+
+    NguSuScoresList:
+      type: object
+      properties:
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/NguSuScores'
+
+    TreasuryBalance:
+      type: object
+      properties:
+        total:
+          type: integer
+        allocated:
+          type: integer
+        available:
+          type: integer
+
+    # ==================== LEDGER SCHEMAS ====================
+    TransferRequest:
+      type: object
+      required: [from_code, to_code, amount, description]
+      properties:
+        from_code:
+          type: string
+        to_code:
+          type: string
+        amount:
+          type: integer
+          minimum: 1
+        description:
+          type: string
+        entry_type:
+          type: string
+        idempotency_key:
+          type: string
+
+    TopupRequest:
+      type: object
+      required: [account_code, amount]
+      properties:
+        account_code:
+          type: string
+        amount:
+          type: integer
+        description:
+          type: string
+
+    AccountBalances:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              code:
+                type: string
+              balance:
+                type: integer
+              account_type:
+                type: string
+
+    TransactionHistory:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              description:
+                type: string
+              entry_type:
+                type: string
+              posted_at:
+                type: string
+                format: date-time
+              lines:
+                type: string
+
+    # ==================== ONBOARDING SCHEMAS ====================
+    OnboardingStatus:
+      type: object
+      properties:
+        step:
+          type: integer
+        completed:
+          type: array
+          items:
+            type: string
+        next_step:
+          type: string
+
+    CreateProfile:
+      type: object
+      required: [business_name, business_type, contact_email]
+      properties:
+        business_name:
+          type: string
+        business_type:
+          type: string
+        contact_email:
+          type: string
+        contact_phone:
+          type: string
+
+    ConfigureChannels:
+      type: object
+      properties:
+        facebook:
+          type: object
+          properties:
+            page_id:
+              type: string
+            token:
+              type: string
+        zalo:
+          type: object
+          properties:
+            oa_id:
+              type: string
+            token:
+              type: string
+        website:
+          type: object
+          properties:
+            domain:
+              type: string
+
+    UploadMenu:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              price:
+                type: number
+              category:
+                type: string
+
+    TenantActivated:
+      type: object
+      properties:
+        id:
+          type: string
+        api_key:
+          type: string
+        status:
+          type: string
+          example: "active"
+
+    # ==================== PAYMENT-VN SCHEMAS ====================
+    MoMoIpn:
+      type: object
+      properties:
+        partnerCode:
+          type: string
+        orderId:
+          type: string
+        requestId:
+          type: string
+        amount:
+          type: number
+        orderInfo:
+          type: string
+        orderType:
+          type: string
+        transId:
+          type: number
+        resultCode:
+          type: number
+        message:
+          type: string
+        payType:
+          type: string
+        responseTime:
+          type: number
+        signature:
+          type: string
+
+    CreatePayment:
+      type: object
+      required: [amount, provider]
+      properties:
+        amount:
+          type: number
+        provider:
+          type: string
+          enum: [momo, vnpay]
+        order_info:
+          type: string
+
+    PaymentResponse:
+      type: object
+      properties:
+        payment_url:
+          type: string
+        order_id:
+          type: string
+
+    VndPricing:
+      type: object
+      properties:
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              price_vnd:
+                type: integer
+              credits:
+                type: integer
+
+    # ==================== REPORTS SCHEMAS ====================
+    WeeklyReport:
+      type: object
+      properties:
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        metrics:
+          type: object
+        ai_summary:
+          type: string
+
+    DashboardOverview:
+      type: object
+      properties:
+        total_contacts:
+          type: integer
+        active_conversations:
+          type: integer
+        credits_remaining:
+          type: integer
+        revenue_mtd:
+          type: number
+
+    # ==================== REVENUE SCHEMAS ====================
+    RevenueSplitRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+
+    RevenueSplit:
+      type: object
+      properties:
+        platform:
+          type: number
+        expert:
+          type: number
+        ai_compute:
+          type: number
+        developer:
+          type: number
+        community_fund:
+          type: number
+        customer_reward:
+          type: number
+
+    SplitConfig:
+      type: object
+      properties:
+        percentages:
+          type: object
+          properties:
+            platform:
+              type: number
+              example: 0.20
+            expert:
+              type: number
+              example: 0.30
+            ai_compute:
+              type: number
+              example: 0.15
+            developer:
+              type: number
+              example: 0.15
+            community_fund:
+              type: number
+              example: 0.10
+            customer_reward:
+              type: number
+              example: 0.10
+
+    RevenueSummary:
+      type: object
+      properties:
+        total_revenue:
+          type: number
+        period:
+          type: string
+
+    # ==================== SETTINGS SCHEMAS ====================
+    LlmSettings:
+      type: object
+      required: [provider, api_key]
+      properties:
+        provider:
+          type: string
+          enum: [openai, google, anthropic, custom]
+        api_key:
+          type: string
+        base_url:
+          type: string
+        model:
+          type: string
+
+    LlmSettingsResponse:
+      type: object
+      properties:
+        provider:
+          type: string
+        api_key:
+          type: string
+          description: Masked API key
+        base_url:
+          type: string
+        model:
+          type: string
+        available_providers:
+          type: array
+          items:
+            type: string
+
+    # ==================== TASKS SCHEMAS ====================
+    CreateTask:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        estimated_credits:
+          type: integer
+
+    TaskList:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            type: object
+
+    TaskDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        prompt:
+          type: string
+        status:
+          type: string
+        credits_used:
+          type: integer
+        result:
+          type: string
+
+    TaskProgressEvent:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [started, progress, completed, failed]
+        data:
+          type: object
+
+    # ==================== AGENTS SCHEMAS ====================
+    AgentRegistry:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              type:
+                type: string
+
+    AgentExecutionRequest:
+      type: object
+      properties:
+        input:
+          type: string
+        options:
+          type: object
+
+    AgentExecutionResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        output:
+          type: string
+        duration_ms:
+          type: integer
