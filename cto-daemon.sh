@@ -457,7 +457,7 @@ send_to_pane() {
     local abs_dir="${PROJECT_ROOT}/${worker_dir}"
     if [[ -d "$abs_dir" ]] && ! echo "$cmd" | grep -qF "$worker_dir"; then
       # Insert scope after first quote in command
-      cmd=$(echo "$cmd" | sed "s/\"/\"SCOPE: Only modify files in ${worker_dir}\/.  /")
+      cmd=$(echo "$cmd" | sed "s|\"|\"|SCOPE: Only modify files in ${worker_dir}/. |")
     fi
   fi
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$cmd" Enter
