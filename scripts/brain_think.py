@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """CTO Brain Think — calls Ollama and extracts /command from response+thinking."""
-import json, urllib.request, sys, re, os
+import json
+import urllib.request
+import sys
+import re
+import os
 
 def main():
     ollama_url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
@@ -50,7 +54,7 @@ def main():
                 print(m.group(0).strip()[:200])
             else:
                 print(all_text[:200] if all_text.strip() else "")
-    except Exception as e:
+    except Exception:
         print("", end="")
 
 if __name__ == "__main__":
