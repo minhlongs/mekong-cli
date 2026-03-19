@@ -517,17 +517,31 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
-  local tail3
-  tail3=$(echo "$output" | tail -3)
+  local tail5
+  tail5=$(echo "$output" | tail -5)
 
-  # PRIORITY 1 (HIGHEST): Check for idle prompt in last 3 lines
-  # ⏵⏵ = CC CLI idle prompt (may have leading spaces)
-  # ❯ = generic shell prompt
-  if echo "$tail3" | grep -qE "⏵⏵|❯|Type your message|aider>|codex>"; then
-    return 0  # IDLE — at prompt, ready for input
+  # BUSY OVERRIDE: "queued messages" or "Press up to edit" = task running with queued input
+  if echo "$tail5" | grep -qiE "queued messages|Press up to edit"; then
+    return 1  # NOT idle — has queued tasks
   fi
 
-  # If no prompt → NOT idle
+  # BUSY OVERRIDE: CC CLI activity indicators in last 5 lines (tool running)
+  if echo "$tail5" | grep -qE "⏺|✽|✳|✢|✶|✻|●"; then
+    return 1  # NOT idle — tool actively executing
+  fi
+
+  # IDLE: ❯ at start of line (CC CLI input prompt) WITHOUT queued messages
+  # Note: "⏵⏵ bypass" is STATUS BAR — always visible, NOT an idle indicator
+  if echo "$tail5" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
+    return 0  # IDLE — clean prompt, no queued messages
+  fi
+
+  # IDLE: shell prompt patterns (non-CC CLI tools)
+  if echo "$output" | tail -2 | grep -qE "^❯ $|aider>|codex>|Type your message"; then
+    return 0
+  fi
+
+  # Default: NOT idle
   return 1
 }
 
