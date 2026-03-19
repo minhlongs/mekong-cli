@@ -5,6 +5,7 @@
  */
 
 import type { AgentBase, Result, Task } from '../types/agent'
+import type { R2Bucket } from '@cloudflare/workers-types'
 
 export class RecipeCrawlerAgent implements AgentBase {
   name = 'recipe-crawler'

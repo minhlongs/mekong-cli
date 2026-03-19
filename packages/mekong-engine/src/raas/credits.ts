@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types'
 import type { CreditEntry } from '../types/raas'
 import { CreditEntrySchema } from '../types/raas'
 

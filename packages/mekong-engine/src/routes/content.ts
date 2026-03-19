@@ -5,6 +5,7 @@
  * PATCH /:id      — approve/reject/edit a post
  */
 import { Hono } from 'hono'
+import type { D1PreparedStatement } from '@cloudflare/workers-types'
 import { authMiddleware } from '../raas/auth-middleware'
 import { LLMClient } from '../core/llm-client'
 import type { Bindings } from '../index'

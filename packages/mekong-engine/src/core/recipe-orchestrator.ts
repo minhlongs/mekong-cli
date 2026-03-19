@@ -5,6 +5,7 @@
  * Coordinates the full PEV pipeline for a goal.
  */
 
+import type { Ai } from '@cloudflare/workers-types'
 import type { Recipe } from '../types/recipe'
 import type { OrchestrationResult, StepResult } from '../types/execution'
 import { LLMClient } from './llm-client'

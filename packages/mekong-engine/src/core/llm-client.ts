@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod'
+import type { Ai } from '@cloudflare/workers-types'
 
 // --- Types ---
 
