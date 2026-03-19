@@ -4,6 +4,10 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
+import { ProductCatalog } from '@openclaw/raas-marketplace/catalog';
+import { generateStorefrontJSON } from '@openclaw/raas-marketplace/storefront';
+import { SalesBot } from '@openclaw/raas-marketplace/sales-bot';
+import { SalesAnalytics } from '@openclaw/raas-marketplace/analytics';
 
 export function registerRaasMarketplaceCommand(program: Command, _engine: MekongEngine): void {
   const mp = program
@@ -15,7 +19,6 @@ export function registerRaasMarketplaceCommand(program: Command, _engine: Mekong
     .description('List all products in catalog')
     .action(async () => {
       try {
-        const { ProductCatalog } = await import('../../../../raas-marketplace/src/catalog.js');
         const catalog = new ProductCatalog();
         const products = catalog.listProducts();
         info(`── ${products.length} Products ──`);
@@ -33,8 +36,6 @@ export function registerRaasMarketplaceCommand(program: Command, _engine: Mekong
     .description('Generate storefront JSON')
     .action(async () => {
       try {
-        const { ProductCatalog } = await import('../../../../raas-marketplace/src/catalog.js');
-        const { generateStorefrontJSON } = await import('../../../../raas-marketplace/src/storefront.js');
         const catalog = new ProductCatalog();
         const json = generateStorefrontJSON(catalog.listProducts());
         info(JSON.stringify(json, null, 2));
@@ -49,7 +50,6 @@ export function registerRaasMarketplaceCommand(program: Command, _engine: Mekong
     .description('Qualify a lead and get tier recommendation')
     .action(async (name: string, email: string, company: string, size: string, budget: string) => {
       try {
-        const { SalesBot } = await import('../../../../raas-marketplace/src/sales-bot.js');
         const bot = new SalesBot();
         const lead = { name, email, company, size: parseInt(size, 10), budget: parseInt(budget, 10), useCase: 'general' };
         const score = bot.qualifyLead(lead);
@@ -72,7 +72,6 @@ export function registerRaasMarketplaceCommand(program: Command, _engine: Mekong
     .description('Generate weekly sales report')
     .action(async () => {
       try {
-        const { SalesAnalytics } = await import('../../../../raas-marketplace/src/analytics.js');
         const sa = new SalesAnalytics();
         const report = sa.generateWeeklySalesReport();
         info(report);
@@ -87,7 +86,6 @@ export function registerRaasMarketplaceCommand(program: Command, _engine: Mekong
     .description('Show conversion funnel')
     .action(async () => {
       try {
-        const { SalesAnalytics } = await import('../../../../raas-marketplace/src/analytics.js');
         const sa = new SalesAnalytics();
         const funnel = sa.getConversionFunnel();
         info('── Conversion Funnel ──');

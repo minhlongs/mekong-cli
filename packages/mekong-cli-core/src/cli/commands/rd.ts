@@ -16,10 +16,10 @@ export function registerRdCommand(program: Command, _engine: MekongEngine): void
     .description('Manual R&D scan across GitHub, npm, HackerNews')
     .action(async () => {
       try {
-        const { fetchTrendingRepos } = await import('../../../../rd-engine/src/sources/github-trending.js');
-        const { searchNpmPackages } = await import('../../../../rd-engine/src/sources/npm-registry.js');
-        const { fetchHNStories } = await import('../../../../rd-engine/src/sources/hackernews.js');
-        const { scoreRelevance, filterHighRelevance } = await import('../../../../rd-engine/src/analyzer.js');
+        const { fetchTrendingRepos } = await import('@openclaw/rd-engine/sources/github-trending');
+        const { searchNpmPackages } = await import('@openclaw/rd-engine/sources/npm-registry');
+        const { fetchHNStories } = await import('@openclaw/rd-engine/sources/hackernews');
+        const { scoreRelevance, filterHighRelevance } = await import('@openclaw/rd-engine/analyzer');
 
         info('Scanning GitHub trending...');
         const repos = await fetchTrendingRepos('vibe-coding');
@@ -58,10 +58,10 @@ export function registerRdCommand(program: Command, _engine: MekongEngine): void
     .description('Generate weekly R&D report')
     .action(async () => {
       try {
-        const { fetchTrendingRepos } = await import('../../../../rd-engine/src/sources/github-trending.js');
-        const { searchNpmPackages } = await import('../../../../rd-engine/src/sources/npm-registry.js');
-        const { scoreRelevance } = await import('../../../../rd-engine/src/analyzer.js');
-        const { generateWeeklyReport } = await import('../../../../rd-engine/src/reporter.js');
+        const { fetchTrendingRepos } = await import('@openclaw/rd-engine/sources/github-trending');
+        const { searchNpmPackages } = await import('@openclaw/rd-engine/sources/npm-registry');
+        const { scoreRelevance } = await import('@openclaw/rd-engine/analyzer');
+        const { generateWeeklyReport } = await import('@openclaw/rd-engine/reporter');
         const fs = await import('fs');
         const path = await import('path');
 

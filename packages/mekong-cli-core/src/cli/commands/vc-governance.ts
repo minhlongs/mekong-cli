@@ -5,6 +5,10 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
+import { PitchGenerator } from '@openclaw/vc-governance/pitch-generator';
+import { DataRoom } from '@openclaw/vc-governance/data-room';
+import { ComplianceEngine } from '@openclaw/vc-governance/iso-compliance';
+import { ExitEngine } from '@openclaw/vc-governance/exit-engine';
 
 export function registerVcGovernanceCommand(program: Command, _engine: MekongEngine): void {
   const vc = program
@@ -16,11 +20,10 @@ export function registerVcGovernanceCommand(program: Command, _engine: MekongEng
     .description('Generate pitch deck data from current KPIs')
     .action(async () => {
       try {
-        const { PitchGenerator } = await import('../../../../vc-governance/src/pitch-generator.js');
         const gen = new PitchGenerator();
         const data = gen.generatePitchData({
           name: 'OpenClaw', stage: 'seed', mrr: 0, users: 0,
-          market: 'AI Developer Tools', founded: '2025',
+          market: 'AI Developer Tools', founded: 2025,
         });
         info('── Pitch Deck Data ──');
         info(`Problem: ${data.problem}`);
@@ -39,7 +42,6 @@ export function registerVcGovernanceCommand(program: Command, _engine: MekongEng
     .description('Show data room status')
     .action(async () => {
       try {
-        const { DataRoom } = await import('../../../../vc-governance/src/data-room.js');
         const room = new DataRoom();
         const docs = room.listDocuments();
         info(`── Data Room: ${docs.length} documents ──`);
@@ -57,7 +59,6 @@ export function registerVcGovernanceCommand(program: Command, _engine: MekongEng
     .description('Run compliance audit (ISO 27001, SOC 2, GDPR)')
     .action(async () => {
       try {
-        const { ComplianceEngine } = await import('../../../../vc-governance/src/iso-compliance.js');
         const engine = new ComplianceEngine();
         const iso27001 = engine.auditISO27001();
         const soc2 = engine.auditSOC2();
@@ -79,14 +80,13 @@ export function registerVcGovernanceCommand(program: Command, _engine: MekongEng
     .description('Calculate exit valuation and strategy')
     .action(async () => {
       try {
-        const { ExitEngine } = await import('../../../../vc-governance/src/exit-engine.js');
         const engine = new ExitEngine();
         const val = engine.calculateValuation('revenue-multiple', {
           annualRevenue: 600000, growthRate: 2.0, ebitdaMargin: 0.3, discountRate: 0.15,
         });
         const strategy = engine.recommendStrategy({
           name: 'OpenClaw', stage: 'seed', mrr: 50000, users: 500,
-          market: 'AI Developer Tools', founded: '2025',
+          market: 'AI Developer Tools', founded: 2025,
         });
         info('── Exit Analysis ──');
         info(`Valuation (revenue multiple): $${(val / 1e6).toFixed(1)}M`);
