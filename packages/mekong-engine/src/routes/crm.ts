@@ -10,10 +10,36 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../raas/auth-middleware'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant }
 
 export const crmRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Zod schemas for CRM validation
+const createContactSchema = z.object({
+  external_id: z.string().optional(),
+  platform: z.string().optional(),
+  name: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  tags: z.array(z.string()).optional(),
+  notes: z.string().optional(),
+})
+
+const autoContactSchema = z.object({
+  external_id: z.string().min(1, 'external_id is required'),
+  platform: z.string().min(1, 'platform is required'),
+  name: z.string().optional(),
+})
+
+const createCampaignSchema = z.object({
+  name: z.string().min(1, 'Campaign name is required'),
+  trigger_type: z.enum(['days_since_visit', 'birthday', 'manual', 'tag_match']),
+  trigger_value: z.string().optional(),
+  message_template: z.string().min(1, 'Message template is required'),
+  channel: z.string().optional(),
+})
 
 crmRoutes.use('*', authMiddleware)
 
@@ -50,15 +76,9 @@ crmRoutes.post('/contacts', async (c) => {
   const tenant = c.get('tenant')
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    external_id?: string
-    platform?: string
-    name?: string
-    phone?: string
-    email?: string
-    tags?: string[]
-    notes?: string
-  }>()
+  const body = await c.req.json()
+  const parsed = createContactSchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
 
   const id = `ct_${tenant.id}_${Date.now()}`
   await c.env.DB.prepare(
@@ -67,13 +87,13 @@ crmRoutes.post('/contacts', async (c) => {
   )
     .bind(
       id, tenant.id,
-      body.external_id ?? null,
-      body.platform ?? 'zalo',
-      body.name ?? null,
-      body.phone ?? null,
-      body.email ?? null,
-      JSON.stringify(body.tags ?? []),
-      body.notes ?? null
+      parsed.data.external_id ?? null,
+      parsed.data.platform ?? 'zalo',
+      parsed.data.name ?? null,
+      parsed.data.phone ?? null,
+      parsed.data.email ?? null,
+      JSON.stringify(parsed.data.tags ?? []),
+      parsed.data.notes ?? null
     )
     .run()
 
@@ -85,14 +105,10 @@ crmRoutes.post('/contacts/auto', async (c) => {
   const tenant = c.get('tenant')
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    external_id: string
-    platform: string
-    name?: string
-  }>()
-
-  if (!body.external_id || !body.platform) {
-    return c.json({ error: 'external_id and platform required' }, 400)
+  const body = await c.req.json()
+  const parsed = autoContactSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
   }
 
   const existing = await c.env.DB.prepare(
@@ -141,17 +157,9 @@ crmRoutes.post('/campaigns', async (c) => {
   const tenant = c.get('tenant')
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    name: string
-    trigger_type: 'days_since_visit' | 'birthday' | 'manual' | 'tag_match'
-    trigger_value?: string
-    message_template: string
-    channel?: string
-  }>()
-
-  if (!body.name || !body.trigger_type || !body.message_template) {
-    return c.json({ error: 'name, trigger_type, message_template required' }, 400)
-  }
+  const body = await c.req.json()
+  const parsed = createCampaignSchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
 
   const id = `rc_${tenant.id}_${Date.now()}`
   await c.env.DB.prepare(
@@ -160,10 +168,10 @@ crmRoutes.post('/campaigns', async (c) => {
   )
     .bind(
       id, tenant.id,
-      body.name, body.trigger_type,
-      body.trigger_value ?? null,
-      body.message_template,
-      body.channel ?? 'zalo'
+      parsed.data.name, parsed.data.trigger_type,
+      parsed.data.trigger_value ?? null,
+      parsed.data.message_template,
+      parsed.data.channel ?? 'zalo'
     )
     .run()
 

@@ -18,7 +18,7 @@ reportRoutes.use('*', authMiddleware)
 // GET /reports/weekly — last 7 days aggregated + AI summary
 reportRoutes.get('/weekly', async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
 
   const [messages, content, contacts, conversations] = await Promise.all([
     c.env.DB.prepare(
@@ -71,7 +71,7 @@ reportRoutes.get('/weekly', async (c) => {
 // GET /reports/overview — real-time dashboard: today + totals
 reportRoutes.get('/overview', async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
 
   const [todayMessages, totalContacts, pendingContent, activeConvs] = await Promise.all([
     c.env.DB.prepare(

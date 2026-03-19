@@ -9,16 +9,46 @@ const chatRoutes = new Hono<{ Bindings: Bindings }>()
 
 // ─── Zalo OA Webhook ───
 chatRoutes.post('/webhook/zalo', async (c) => {
-  const body = await c.req.json<{
+  const signature = c.req.header('x-zalo-signature') || c.req.header('x-signature')
+  const secret = c.env.ZALO_APP_SECRET || c.env.ZALO_SECRET
+
+  if (secret && signature) {
+    const rawBody = await c.req.text()
+    const expectedSig = await crypto.subtle.sign(
+      'HMAC',
+      await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      ),
+      new TextEncoder().encode(rawBody)
+    )
+    const expectedHex = Array.from(new Uint8Array(expectedSig))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    if (signature !== expectedHex) {
+      return c.json({ error: 'Invalid Zalo signature' }, 401)
+    }
+  }
+
+  let body: {
     event_name: string
     app_id: string
     sender: { id: string }
     recipient: { id: string }
     message?: { text: string; msg_id: string }
     timestamp: string
-  }>()
+  }
 
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   if (body.event_name !== 'user_send_text' || !body.message?.text) {
     return c.json({ received: true })
   }
@@ -61,13 +91,44 @@ chatRoutes.get('/webhook/facebook', (c) => {
 })
 
 chatRoutes.post('/webhook/facebook', async (c) => {
-  const body = await c.req.json<{
+  // Verify Facebook signature
+  const signature = c.req.header('X-Hub-Signature-256')?.replace('sha256=', '')
+  const secret = c.env.FB_APP_SECRET
+
+  if (secret && signature) {
+    const rawBody = await c.req.text()
+    const expectedSig = await crypto.subtle.sign(
+      'HMAC',
+      await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      ),
+      new TextEncoder().encode(rawBody)
+    )
+    const expectedHex = Array.from(new Uint8Array(expectedSig))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    if (signature !== expectedHex) {
+      return c.json({ error: 'Invalid Facebook signature' }, 401)
+    }
+  }
+
+  let body: {
     object: string
     entry: Array<{ id: string; messaging: Array<{
       sender: { id: string }; recipient: { id: string }
       message?: { mid: string; text: string }; timestamp: number
     }> }>
-  }>()
+  }
+
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
 
   if (!c.env.DB || body.object !== 'page') return c.json({ received: true })
 
@@ -109,7 +170,7 @@ async function processMessage(
   const db = env.DB!
   const kbMatch = await db.prepare(
     'SELECT answer FROM knowledge_base WHERE tenant_id = ? AND question LIKE ? LIMIT 1'
-  ).bind(tenantId, `%${userMessage.slice(0, 50)}%`).first()
+  ).bind(tenantId, `%${userMessage.replace(/[%_]/g, '\\$&').slice(0, 50)}%`).first()
 
   let reply: string
   if (kbMatch) {
