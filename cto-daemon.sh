@@ -212,40 +212,50 @@ launch_pane_cc() {
 # CC CLI spawns node subprocesses. When panes restart/crash, orphans accumulate.
 # This kills node processes NOT attached to any active tmux pane.
 cleanup_orphan_nodes() {
-  local tmux_pids="" killed=0
-  # Get PIDs of processes directly in tmux panes
-  tmux_pids=$(tmux list-panes -t "${CTO_SESSION}" -F '#{pane_pid}' 2>/dev/null | tr '\n' ' ')
-  
-  # Find all node processes
+  local killed=0
+  local MAX_NODE_COUNT=30
+
+  # Hard guard: if node count exceeds MAX, kill all and warn
+  local node_count
+  node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$node_count" -gt "$MAX_NODE_COUNT" ]]; then
+    log "⚠️  GUARD: $node_count node processes (>${MAX_NODE_COUNT}) — killing ALL"
+    killall -9 node 2>/dev/null || true
+    return 0
+  fi
+
+  # Build set of ALL PIDs in tmux pane process trees (recursive)
+  local allowed_pids=""
+  local tmux_pids
+  tmux_pids=$(tmux list-panes -t "${CTO_SESSION}" -F '#{pane_pid}' 2>/dev/null || true)
+  [[ -z "$tmux_pids" ]] && return 0
+
+  # Walk tree: collect pid + all descendants via pgrep -P (recursive)
+  walk_descendants() {
+    local parent=$1
+    allowed_pids+=" $parent"
+    local children
+    children=$(pgrep -P "$parent" 2>/dev/null || true)
+    for child in $children; do
+      walk_descendants "$child"
+    done
+  }
+
+  for tpid in $tmux_pids; do
+    walk_descendants "$tpid"
+  done
+
+  # Find all node processes, kill those NOT in allowed set
   local all_nodes
   all_nodes=$(pgrep -f 'node' 2>/dev/null || true)
   [[ -z "$all_nodes" ]] && return 0
-  
+
   for pid in $all_nodes; do
-    # Skip if this PID or its parent is a tmux pane process
-    local ppid
-    ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ') || continue
-    local dominated=false
-    for tpid in $tmux_pids; do
-      if [[ "$pid" == "$tpid" ]] || [[ "$ppid" == "$tpid" ]]; then
-        dominated=true; break
-      fi
-      # Check grandparent (CC CLI → node → node children)
-      local gppid
-      gppid=$(ps -o ppid= -p "$ppid" 2>/dev/null | tr -d ' ') || continue
-      if [[ "$gppid" == "$tpid" ]]; then
-        dominated=true; break
-      fi
-    done
-    
-    if [[ "$dominated" == false ]]; then
-      # Check if node is truly orphaned (parent is init/launchd = PID 1)
-      if [[ "$ppid" == "1" ]]; then
-        kill -9 "$pid" 2>/dev/null && killed=$((killed + 1))
-      fi
+    if ! echo " $allowed_pids " | grep -q " $pid "; then
+      kill -9 "$pid" 2>/dev/null && killed=$((killed + 1))
     fi
   done
-  
+
   [[ $killed -gt 0 ]] && log "🧹 CLEANUP: killed $killed orphan node processes"
   return 0
 }
