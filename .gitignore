@@ -1,3 +1,6 @@
+# Archived projects (moved from apps/)
+_archived/
+
 # Python
 __pycache__/
 *.py[cod]
