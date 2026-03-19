@@ -865,9 +865,12 @@ dispatch_worker() {
       return
     fi
     log "P${pane_idx} (${name}): BRAIN WARM → ${brain_cmd}"
-    send_to_pane "$pane_idx" "$brain_cmd"
-    record_dispatch "$pane_idx" "$brain_cmd"
-    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [$(get_pane_role "$pane_idx")]"
+    if send_to_pane "$pane_idx" "$brain_cmd"; then
+      record_dispatch "$pane_idx" "$brain_cmd"
+      log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [$(get_pane_role "$pane_idx")]"
+    else
+      log "P${pane_idx} (${name}): BRAIN cmd BLOCKED by safety gate"
+    fi
     return
   fi
   log "P${pane_idx} (${name}): BRAIN COLD/EMPTY — using role fallback"
@@ -887,8 +890,9 @@ dispatch_worker() {
       return
     fi
     log "P${pane_idx} (${name}): FALLBACK[${pane_role}]: ${fallback_cmd}"
-    send_to_pane "$pane_idx" "$fallback_cmd"
-    record_dispatch "$pane_idx" "$fallback_cmd"
+    if send_to_pane "$pane_idx" "$fallback_cmd"; then
+      record_dispatch "$pane_idx" "$fallback_cmd"
+    fi
     return
   fi
 
@@ -901,9 +905,10 @@ dispatch_worker() {
     return
   fi
   log "P${pane_idx} (${name}): FALLBACK STATE=${state} → CMD=${chosen_cmd}"
-  send_to_pane "$pane_idx" "$task"
-  record_dispatch "$pane_idx" "$chosen_cmd"
-  log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
+  if send_to_pane "$pane_idx" "$task"; then
+    record_dispatch "$pane_idx" "$chosen_cmd"
+    log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
+  fi
 }
 
 # ---- PHASE 4: VERIFY ----
