@@ -9,7 +9,35 @@
 
 ## Use Cases for RaaS
 
-### 1. Manufacturing Automation Scaling
+### 1. Financial Services Automation
+
+**Challenge:** Banks and financial institutions need regulatory compliance, fraud detection, and customer service at scale.
+
+**RaaS Solution:**
+
+| Use Case | Automation | ROI Impact |
+|----------|------------|------------|
+| **Fraud Detection** | Real-time transaction monitoring, anomaly detection | 70% faster fraud identification |
+| **KYC/AML Compliance** | Automated identity verification, sanctions screening | 60% onboarding time reduced |
+| **Loan Processing** | Document analysis, credit scoring, approval workflows | 50% faster loan decisions |
+| **Customer Support** | AI chatbots for balance, transfers, dispute handling | 80% call volume reduced |
+| **Risk Reporting** | Automated Basel III, CCAR, stress test reports | 75% compliance time saved |
+
+**Example Mission:**
+```
+"Deploy financial services automation:
+- Real-time fraud detection for card transactions
+- Automated KYC/AML workflow with identity verification
+- Loan document processing with OCR + credit decisioning
+- Regulatory reporting (Basel III, CCAR) automation"
+→ 25 credits (5 complex missions)
+→ 1,000 hours/month manual processing automated
+→ $150,000/month value delivered (SOC2 compliant)
+```
+
+---
+
+### 2. Manufacturing Automation Scaling
 
 **Challenge:** Production lines need 24/7 monitoring, quality control, and adaptive scheduling.
 
@@ -35,7 +63,7 @@ generate daily quality reports with root cause analysis"
 
 ---
 
-### 2. Warehouse Robotics Deployment
+### 3. Healthcare Facility Assistance
 
 **Challenge:** E-commerce fulfillment requires fast, accurate picking, packing, and inventory management.
 
