@@ -26,14 +26,14 @@ import json
 with open('$SETTINGS') as f: d = json.load(f)
 d['env']['ANTHROPIC_BASE_URL'] = 'https://coding-intl.dashscope.aliyuncs.com/apps/anthropic'
 d['env']['ANTHROPIC_AUTH_TOKEN'] = '$DASHSCOPE_API_KEY'
-d['env']['ANTHROPIC_MODEL'] = 'qwen3.5-plus'
-d['model'] = 'qwen3.5-plus'
-d['smallModelId'] = 'qwen3.5-plus' # Ensure smallModelId is also set
-d['largeModelId'] = 'qwen3.5-plus' # Ensure largeModelId is also set
+d['env']['ANTHROPIC_MODEL'] = 'qwen3.5-plus[1m]'
+d['model'] = 'qwen3.5-plus[1m]'
+d['smallModelId'] = 'qwen3.5-plus[1m]'
+d['largeModelId'] = 'qwen3.5-plus[1m]'
 with open('$SETTINGS', 'w') as f: json.dump(d, f, indent=2)
 print('  BASE_URL: https://coding-intl.dashscope.aliyuncs.com/apps/anthropic')
-print('  MODEL:    qwen3.5-plus')
-print('  SUBAGENT: qwen3.5-plus (all)')
+print('  MODEL:    qwen3.5-plus[1m] (1M context explicit)')
+print('  SUBAGENT: qwen3.5-plus[1m] (all)')
 print('  KEY:      $DASHSCOPE_API_KEY[:10]...')
 "
     echo -e "${GREEN}✅ DashScope mode active. Restart CC CLI to apply.${NC}"
