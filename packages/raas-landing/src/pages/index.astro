@@ -164,35 +164,40 @@ const breadcrumbSchema = {
 
     <div class="container hero-container">
       <div class="hero-content">
-        <!-- FOMO Badge -->
-        <div class="fomo-badge animate-in" style="margin-bottom:16px;" role="status" aria-label="47 doanh nghiệp đăng ký hôm nay">
-          <span class="fomo-icon" aria-hidden="true">🔥</span>
-          <span class="fomo-text">47 doanh nghiệp đăng ký hôm nay</span>
+        <!-- FOMO Badge - Top Urgency -->
+        <div class="fomo-badge-wrapper animate-in" style="margin-bottom:12px;" role="status" aria-label="47 doanh nghiệp đăng ký hôm nay">
+          <div class="fomo-badge">
+            <span class="fomo-icon" aria-hidden="true">🔥</span>
+            <span class="fomo-text">47 doanh nghiệp đăng ký hôm nay</span>
+            <span class="fomo-live-dot" aria-hidden="true"></span>
+          </div>
         </div>
 
+        <!-- Main Hero Badge -->
         <div class="hero-badge animate-in" style="margin-bottom:24px;">
           <span class="badge-icon" aria-hidden="true">✨</span>
           <span class="badge-text">AI Receptionist cho Zalo & Facebook — Trả lời trong 3 giây</span>
         </div>
 
         <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Làm Việc Thay Bạn</span><br />24/7 <span class="gradient-text-highlight">Tự Động 100%</span>
+          <span class="gradient-text">AI Làm Việc Thay Bạn</span><br />
+          24/7 <span class="gradient-text-highlight">Tự Động 100%</span>
         </h1>
 
         <p class="hero-description animate-in" style="margin-bottom:28px;">
           Tiết kiệm <span class="highlight">20+ giờ/tuần</span> · Tăng <span class="highlight">35% doanh thu</span> · CRM thông minh · Tạo content tự động
         </p>
 
-        <!-- Enhanced CTA Buttons - Moved Up -->
+        <!-- Enhanced CTA Buttons with Stronger Animations -->
         <div class="hero-cta animate-in" style="margin-bottom:24px;" role="group" aria-label="Hành động nhanh">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow" aria-label="Đăng ký dùng thử miễn phí 14 ngày, không cần thẻ tín dụng">
-            <span>Dùng thử miễn phí</span>
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow btn-cta-primary" aria-label="Dùng thử miễn phí 14 ngày, không cần thẻ tín dụng">
+            <span class="cta-text">Dùng thử miễn phí 14 ngày</span>
             <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </a>
-          <a href="#features" class="btn-outline btn-ghost" aria-label="Xem tính năng OpenClaw">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <a href="#features" class="btn-outline btn-ghost btn-demo" aria-label="Xem demo 30 giây">
+            <svg class="play-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
             <span>Xem demo 30s</span>
@@ -201,13 +206,22 @@ const breadcrumbSchema = {
 
         <!-- Trust & Security Badges -->
         <div class="trust-badges animate-in" style="margin-bottom:24px;" role="list" aria-label="Chứng nhận bảo mật">
-          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">🔐</span>SSL Encrypted</span>
-          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">☁️</span>Cloudflare Protected</span>
-          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">✓</span>Không cần thẻ tín dụng</span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">🔐</span>
+            <span>SSL Encrypted</span>
+          </span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">☁️</span>
+            <span>Cloudflare Protected</span>
+          </span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">✓</span>
+            <span>Không cần thẻ tín dụng</span>
+          </span>
         </div>
 
-        <!-- Enhanced Social Proof Counter -->
-        <div class="social-proof-counter animate-in" style="margin-bottom:24px;">
+        <!-- Enhanced Social Proof Counter with Animation -->
+        <div class="social-proof-counter animate-in" style="margin-bottom:28px;" aria-label="Thống kê nền tảng">
           <div class="counter-item">
             <div class="counter-value" data-target="500">0</div>
             <div class="counter-suffix">+</div>
@@ -227,39 +241,44 @@ const breadcrumbSchema = {
           </div>
         </div>
 
-        <!-- Customer logos -->
+        <!-- Customer Logos Carousel -->
         <div class="customer-logos animate-in" style="margin-bottom:28px;">
           <span class="logos-label">Được tin dùng bởi:</span>
-          <div class="logos-grid">
-            {customerLogos.slice(0, 5).map((logo, i) => (
-              <div class="logo-item" title={logo.name}>
+          <div class="logos-grid logos-scroll">
+            {customerLogos.map((logo, i) => (
+              <div class="logo-item" title={logo.name} aria-label={logo.name}>
                 <span class="logo-icon">{logo.icon}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <!-- Trust indicators -->
-        <div class="trust-indicators animate-in" style="margin-bottom:20px;">
-          <span class="trust-item"><span class="trust-icon">⚡</span>Setup 2 phút</span>
-          <span class="trust-item"><span class="trust-icon">💯</span>Free 100% khi bắt đầu</span>
+        <!-- Social Proof Badges with Rating -->
+        <div class="proof-badges animate-in" style="margin-bottom:24px;">
+          <span class="proof-badge featured" role="img" aria-label="Top 1 AI Việt Nam 2025">
+            <span class="badge-glow"></span>
+            <span>🏆 Top 1 AI VN 2025</span>
+          </span>
+          <span class="proof-badge proof-rating" role="img" aria-label="4.9 trên 5 sao từ hơn 500 đánh giá">
+            <span class="stars" aria-hidden="true">⭐⭐⭐⭐⭐</span>
+            <span>4.9/5 từ 500+ reviews</span>
+          </span>
         </div>
 
-        <!-- Social proof badges -->
-        <div class="proof-badges animate-in">
-          <span class="proof-badge featured"><span class="badge-glow"></span>🏆 Top 1 AI VN 2025</span>
-          <span class="proof-badge"><span class="stars">⭐⭐⭐⭐⭐</span>4.9/5 từ 500+ reviews</span>
-          <span class="proof-badge">💼 500+ doanh nghiệp Việt</span>
+        <!-- Trust Indicators -->
+        <div class="trust-indicators animate-in">
+          <span class="trust-item"><span class="trust-icon" aria-hidden="true">⚡</span>Setup 2 phút</span>
+          <span class="trust-item"><span class="trust-icon" aria-hidden="true">💯</span>Free 100% khi bắt đầu</span>
         </div>
       </div>
 
-      <!-- Enhanced Terminal mockup -->
-      <div class="terminal-wrapper animate-on-scroll">
+      <!-- Enhanced Terminal mockup with code highlight -->
+      <div class="terminal-wrapper animate-on-scroll" aria-label="Demo terminal OpenClaw">
         <div class="terminal">
           <div class="terminal-header">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
+            <span class="terminal-dot red" aria-hidden="true"></span>
+            <span class="terminal-dot yellow" aria-hidden="true"></span>
+            <span class="terminal-dot green" aria-hidden="true"></span>
             <span class="terminal-title">OpenClaw CLI</span>
           </div>
           <div class="terminal-body">
@@ -268,11 +287,29 @@ const breadcrumbSchema = {
               <span class="command">openclaw</span>
               <span class="args">cook "Trả lời khách hỏi giá bánh mì"</span>
             </div>
-            <div class="terminal-line process"><span class="arrow">→</span> Phân tích yêu cầu...</div>
-            <div class="terminal-line process"><span class="arrow">→</span> Tìm menu trong CRM...</div>
-            <div class="terminal-line success"><span class="check">✓</span><span class="success-text">Đã trả lời:</span> "Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</div>
-            <div class="terminal-line process"><span class="arrow">→</span> Lưu vào CRM: khách quan tâm combo</div>
-            <div class="terminal-line stats"><span class="bolt">⚡</span><span class="stat-time">1.2s</span> · <span class="stat-credits">1 credit used</span></div>
+            <div class="terminal-line process">
+              <span class="arrow">→</span>
+              <span class="process-text">Phân tích yêu cầu...</span>
+            </div>
+            <div class="terminal-line process">
+              <span class="arrow">→</span>
+              <span class="process-text">Tìm menu trong CRM...</span>
+            </div>
+            <div class="terminal-line success">
+              <span class="check">✓</span>
+              <span class="success-text">Đã trả lời:</span>
+              <span class="response-text">"Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</span>
+            </div>
+            <div class="terminal-line process">
+              <span class="arrow">→</span>
+              <span class="process-text">Lưu vào CRM: khách quan tâm combo</span>
+            </div>
+            <div class="terminal-line stats">
+              <span class="bolt">⚡</span>
+              <span class="stat-time">1.2s</span>
+              <span class="stat-separator">·</span>
+              <span class="stat-credits">1 credit used</span>
+            </div>
           </div>
         </div>
         <div class="terminal-glow"></div>
