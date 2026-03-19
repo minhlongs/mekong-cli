@@ -3,7 +3,7 @@ import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { getByApiKey } from './tenant'
 
-type Variables = { tenant: Tenant }
+export type Variables = { tenant: Tenant }
 
 export const authMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
   async (c, next) => {
