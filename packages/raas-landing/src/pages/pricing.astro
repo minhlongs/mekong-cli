@@ -20,6 +20,53 @@ const plans = [
   { name: 'Pro',        price: '$20/mo',href: 'https://app.agencyos.network/signup?plan=pro',    featured: true  },
   { name: 'Enterprise', price: '$120/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
 ];
+
+// Product JSON-LD for pricing plans
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "OpenClaw",
+  "description": "Nền tảng AI tự động hóa doanh nghiệp",
+  "brand": {
+    "@type": "Organization",
+    "name": "OpenClaw",
+    "url": "https://agencyos.network"
+  },
+  "offers": plans.map(plan => ({
+    "@type": "Offer",
+    "name": `${plan.name} Plan`,
+    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '8' : plan.name === 'Pro' ? '20' : '120',
+    "priceCurrency": "USD",
+    "priceValidUntil": new Date(new Date().getFullYear() + 1, 0, 1).toISOString().split('T')[0],
+    "availability": "https://schema.org/InStock",
+    "url": plan.href,
+    "category": "SoftwareApplication",
+    "description": plan.name === 'Free' ? 'Miễn phí mãi mãi với 50 credits/tháng' :
+                  plan.name === 'Starter' ? '500 credits/tháng, AI Receptionist 24/7' :
+                  plan.name === 'Pro' ? '2.000 credits/tháng, multi-channel, API access' :
+                  'Credits không giới hạn, dedicated AI model, white-label'
+  }))
+};
+
+// BreadcrumbList JSON-LD for pricing page
+const pricingBreadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://agencyos.network"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Pricing",
+      "item": "https://agencyos.network/pricing"
+    }
+  ]
+};
 ---
 
 <BaseLayout title="Bảng giá — OpenClaw" description="So sánh chi tiết các gói OpenClaw. Miễn phí đến Enterprise." lang="vi">
@@ -94,5 +141,8 @@ const plans = [
       </div>
     </div>
   </section>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json" set:html={JSON.stringify([productSchema, pricingBreadcrumbSchema])} />
 
 </BaseLayout>

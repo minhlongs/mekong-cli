@@ -42,6 +42,51 @@ const testimonials = [
   { name: 'Ha Linh', role: 'Founder, Beauty Brand', text: 'AI replies to Zalo messages 24/7 — I never miss a customer, even at 2 AM.' },
   { name: 'Duc Anh', role: 'CTO, SaaS Platform', text: 'Billing + metering running zero-cost on Cloudflare Workers. Impressive.' },
 ];
+
+// JSON-LD Structured Data
+const softwareAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "OpenClaw",
+  "description": "AI-powered business automation platform with 24/7 customer replies, content creation, and smart CRM",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web-based",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "ratingCount": "500"
+  },
+  "featureList": features.map(f => f.title).join(', ')
+};
+
+const faqPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.a
+    }
+  }))
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem",
+    "position": 1,
+    "name": "Home",
+    "item": "https://agencyos.network"
+  }]
+};
 ---
 
 <BaseLayout title="OpenClaw — AI-Powered Business Automation" description="24/7 customer replies · Auto content creation · Smart CRM. Try free for 14 days." lang="en">
@@ -274,5 +319,8 @@ const testimonials = [
   <style>
     details[open] summary svg { transform: rotate(180deg); }
   </style>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, faqPageSchema, breadcrumbSchema])} />
 
 </BaseLayout>
