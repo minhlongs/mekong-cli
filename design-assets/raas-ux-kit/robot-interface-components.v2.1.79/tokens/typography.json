@@ -1,0 +1,150 @@
+{
+  "version": "2.1.79",
+  "name": "robot-interface-components",
+  "typography": {
+    "fontFamilies": {
+      "primary": "Inter",
+      "secondary": "be Vietnam Pro",
+      "mono": "JetBrains Mono",
+      "system": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif",
+      "fallback": "system-ui, -apple-system, sans-serif"
+    },
+    "fontStacks": {
+      "base": "'Inter', 'be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "vietnamese": "'be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      "code": "'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace"
+    },
+    "display": {
+      "displayXl": {
+        "fontSize": "57px",
+        "lineHeight": "64px",
+        "letterSpacing": "-0.25px",
+        "fontWeight": "700"
+      },
+      "displayLg": {
+        "fontSize": "57px",
+        "lineHeight": "64px",
+        "letterSpacing": "-0.25px",
+        "fontWeight": "600"
+      },
+      "display": {
+        "fontSize": "45px",
+        "lineHeight": "52px",
+        "letterSpacing": "0px",
+        "fontWeight": "700"
+      },
+      "displaySm": {
+        "fontSize": "36px",
+        "lineHeight": "44px",
+        "letterSpacing": "0px",
+        "fontWeight": "600"
+      }
+    },
+    "headline": {
+      "headlineXl": {
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "0px",
+        "fontWeight": "700"
+      },
+      "headlineLg": {
+        "fontSize": "28px",
+        "lineHeight": "36px",
+        "letterSpacing": "0px",
+        "fontWeight": "600"
+      },
+      "headline": {
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "0px",
+        "fontWeight": "600"
+      },
+      "headlineMd": {
+        "fontSize": "22px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px",
+        "fontWeight": "500"
+      },
+      "headlineSm": {
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px",
+        "fontWeight": "500"
+      }
+    },
+    "title": {
+      "titleLg": {
+        "fontSize": "22px",
+        "lineHeight": "28px",
+        "letterSpacing": "0.15px",
+        "fontWeight": "500"
+      },
+      "title": {
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.15px",
+        "fontWeight": "500"
+      },
+      "titleSm": {
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.1px",
+        "fontWeight": "500"
+      }
+    },
+    "body": {
+      "bodyLg": {
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0.5px",
+        "fontWeight": "400"
+      },
+      "body": {
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.25px",
+        "fontWeight": "400"
+      },
+      "bodySm": {
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.4px",
+        "fontWeight": "400"
+      }
+    },
+    "label": {
+      "labelLg": {
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0.1px",
+        "fontWeight": "500"
+      },
+      "label": {
+        "fontSize": "12px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.5px",
+        "fontWeight": "500"
+      },
+      "labelSm": {
+        "fontSize": "11px",
+        "lineHeight": "16px",
+        "letterSpacing": "0.5px",
+        "fontWeight": "500"
+      }
+    },
+    "weights": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "lineHeights": {
+      "none": 1,
+      "tight": 1.25,
+      "snug": 1.375,
+      "normal": 1.5,
+      "relaxed": 1.625,
+      "loose": 2
+    }
+  }
+}

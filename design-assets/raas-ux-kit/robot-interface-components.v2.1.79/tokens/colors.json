@@ -1,0 +1,171 @@
+{
+  "version": "2.1.79",
+  "name": "robot-interface-components",
+  "colors": {
+    "surface": {
+      "light": {
+        "surface": "#FFFFFF",
+        "surfaceContainer": "#F5F5F5",
+        "surfaceVariant": "#E8E8E8",
+        "surfaceRaised": "#FFFFFF",
+        "surfaceOverlay": "rgba(0, 0, 0, 0.5)"
+      },
+      "dark": {
+        "surface": "#0D0D0D",
+        "surfaceContainer": "#1A1A1A",
+        "surfaceVariant": "#262626",
+        "surfaceRaised": "#1F1F1F",
+        "surfaceOverlay": "rgba(0, 0, 0, 0.7)"
+      }
+    },
+    "primary": {
+      "light": {
+        "primary": "#2563EB",
+        "primaryHover": "#1D4ED8",
+        "primaryActive": "#1E40AF",
+        "primaryContainer": "#DBEAFE",
+        "primaryOnContainer": "#1E3A8A"
+      },
+      "dark": {
+        "primary": "#3B82F6",
+        "primaryHover": "#60A5FA",
+        "primaryActive": "#93C5FD",
+        "primaryContainer": "#1E3A8A",
+        "primaryOnContainer": "#DBEAFE"
+      }
+    },
+    "secondary": {
+      "light": {
+        "secondary": "#64748B",
+        "secondaryHover": "#475569",
+        "secondaryActive": "#334155",
+        "secondaryContainer": "#F1F5F9",
+        "secondaryOnContainer": "#475569"
+      },
+      "dark": {
+        "secondary": "#94A3B8",
+        "secondaryHover": "#CBD5E1",
+        "secondaryActive": "#E2E8F0",
+        "secondaryContainer": "#334155",
+        "secondaryOnContainer": "#CBD5E1"
+      }
+    },
+    "accent": {
+      "light": {
+        "accent": "#8B5CF6",
+        "accentHover": "#7C3AED",
+        "accentActive": "#6D28D9",
+        "accentContainer": "#EDE9FE",
+        "accentOnContainer": "#5B21B6"
+      },
+      "dark": {
+        "accent": "#A78BFA",
+        "accentHover": "#C4B5FD",
+        "accentActive": "#DDD6FE",
+        "accentContainer": "#5B21B6",
+        "accentOnContainer": "#EDE9FE"
+      }
+    },
+    "error": {
+      "light": {
+        "error": "#DC2626",
+        "errorHover": "#B91C1C",
+        "errorActive": "#991B1B",
+        "errorContainer": "#FEE2E2",
+        "errorOnContainer": "#7F1D1D"
+      },
+      "dark": {
+        "error": "#EF4444",
+        "errorHover": "#F87171",
+        "errorActive": "#FCA5A5",
+        "errorContainer": "#7F1D1D",
+        "errorOnContainer": "#FEE2E2"
+      }
+    },
+    "status": {
+      "robot": {
+        "online": {
+          "light": "#10B981",
+          "dark": "#34D399",
+          "glow": "rgba(16, 185, 129, 0.4)"
+        },
+        "offline": {
+          "light": "#6B7280",
+          "dark": "#9CA3AF",
+          "glow": "rgba(107, 114, 128, 0.3)"
+        },
+        "charging": {
+          "light": "#F59E0B",
+          "dark": "#FBBF24",
+          "glow": "rgba(245, 158, 11, 0.4)"
+        },
+        "error": {
+          "light": "#EF4444",
+          "dark": "#F87171",
+          "glow": "rgba(239, 68, 68, 0.4)"
+        },
+        "warning": {
+          "light": "#F59E0B",
+          "dark": "#FBBF24",
+          "glow": "rgba(245, 158, 11, 0.4)"
+        },
+        "busy": {
+          "light": "#3B82F6",
+          "dark": "#60A5FA",
+          "glow": "rgba(59, 130, 246, 0.4)"
+        },
+        "idle": {
+          "light": "#8B5CF6",
+          "dark": "#A78BFA",
+          "glow": "rgba(139, 92, 246, 0.3)"
+        }
+      }
+    },
+    "border": {
+      "light": {
+        "border": "#E5E7EB",
+        "borderStrong": "#D1D5DB",
+        "borderSubtle": "#F3F4F6",
+        "borderFocus": "#2563EB"
+      },
+      "dark": {
+        "border": "#374151",
+        "borderStrong": "#4B5563",
+        "borderSubtle": "#27272A",
+        "borderFocus": "#3B82F6"
+      }
+    },
+    "text": {
+      "light": {
+        "textPrimary": "#111827",
+        "textSecondary": "#6B7280",
+        "textTertiary": "#9CA3AF",
+        "textDisabled": "#D1D5DB",
+        "textInverse": "#FFFFFF",
+        "textLink": "#2563EB"
+      },
+      "dark": {
+        "textPrimary": "#F9FAFB",
+        "textSecondary": "#9CA3AF",
+        "textTertiary": "#6B7280",
+        "textDisabled": "#4B5563",
+        "textInverse": "#0D0D0D",
+        "textLink": "#3B82F6"
+      }
+    },
+    "utility": {
+      "light": {
+        "success": "#10B981",
+        "info": "#0EA5E9",
+        "caution": "#F59E0B",
+        "critical": "#EF4444"
+      },
+      "dark": {
+        "success": "#34D399",
+        "info": "#38BDF8",
+        "caution": "#FBBF24",
+        "critical": "#F87171"
+      }
+    }
+  }
+}

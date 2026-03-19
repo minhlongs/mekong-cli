@@ -1,0 +1,168 @@
+{
+  "version": "2.1.79",
+  "name": "robot-interface-components",
+  "shadows": {
+    "shadow1": {
+      "description": "Subtle - Cards, chips, small elevations",
+      "light": {
+        "x": 0,
+        "y": 1,
+        "blur": 2,
+        "spread": 0,
+        "color": "#000000",
+        "opacity": 0.05
+      },
+      "dark": {
+        "x": 0,
+        "y": 1,
+        "blur": 2,
+        "spread": 0,
+        "color": "#000000",
+        "opacity": 0.2
+      },
+      "css": {
+        "light": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+        "dark": "0 1px 2px 0 rgba(0, 0, 0, 0.2)"
+      }
+    },
+    "shadow2": {
+      "description": "Small - Dropdowns, menus, hover states",
+      "light": {
+        "x": 0,
+        "y": 4,
+        "blur": 6,
+        "spread": -1,
+        "color": "#000000",
+        "opacity": 0.07
+      },
+      "dark": {
+        "x": 0,
+        "y": 4,
+        "blur": 6,
+        "spread": -1,
+        "color": "#000000",
+        "opacity": 0.25
+      },
+      "css": {
+        "light": "0 4px 6px -1px rgba(0, 0, 0, 0.07)",
+        "dark": "0 4px 6px -1px rgba(0, 0, 0, 0.25)"
+      }
+    },
+    "shadow3": {
+      "description": "Medium - Modals, dialogs, popovers",
+      "light": {
+        "x": 0,
+        "y": 10,
+        "blur": 15,
+        "spread": -3,
+        "color": "#000000",
+        "opacity": 0.1
+      },
+      "dark": {
+        "x": 0,
+        "y": 10,
+        "blur": 15,
+        "spread": -3,
+        "color": "#000000",
+        "opacity": 0.3
+      },
+      "css": {
+        "light": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+        "dark": "0 10px 15px -3px rgba(0, 0, 0, 0.3)"
+      }
+    },
+    "shadow4": {
+      "description": "Large - Floating panels, toolbars",
+      "light": {
+        "x": 0,
+        "y": 20,
+        "blur": 25,
+        "spread": -5,
+        "color": "#000000",
+        "opacity": 0.12
+      },
+      "dark": {
+        "x": 0,
+        "y": 20,
+        "blur": 25,
+        "spread": -5,
+        "color": "#000000",
+        "opacity": 0.35
+      },
+      "css": {
+        "light": "0 20px 25px -5px rgba(0, 0, 0, 0.12)",
+        "dark": "0 20px 25px -5px rgba(0, 0, 0, 0.35)"
+      }
+    },
+    "shadow5": {
+      "description": "Dramatic - Full-screen overlays, critical alerts",
+      "light": {
+        "x": 0,
+        "y": 25,
+        "blur": 50,
+        "spread": -12,
+        "color": "#000000",
+        "opacity": 0.15
+      },
+      "dark": {
+        "x": 0,
+        "y": 25,
+        "blur": 50,
+        "spread": -12,
+        "color": "#000000",
+        "opacity": 0.4
+      },
+      "css": {
+        "light": "0 25px 50px -12px rgba(0, 0, 0, 0.15)",
+        "dark": "0 25px 50px -12px rgba(0, 0, 0, 0.4)"
+      }
+    },
+    "special": {
+      "glow": {
+        "online": {
+          "x": 0,
+          "y": 0,
+          "blur": 12,
+          "spread": 2,
+          "color": "#10B981",
+          "opacity": 0.4
+        },
+        "error": {
+          "x": 0,
+          "y": 0,
+          "blur": 12,
+          "spread": 2,
+          "color": "#EF4444",
+          "opacity": 0.4
+        },
+        "warning": {
+          "x": 0,
+          "y": 0,
+          "blur": 12,
+          "spread": 2,
+          "color": "#F59E0B",
+          "opacity": 0.4
+        },
+        "charging": {
+          "x": 0,
+          "y": 0,
+          "blur": 12,
+          "spread": 2,
+          "color": "#F59E0B",
+          "opacity": 0.4
+        }
+      },
+      "inner": {
+        "inset": {
+          "x": 0,
+          "y": 2,
+          "blur": 4,
+          "spread": 0,
+          "color": "#000000",
+          "opacity": 0.05,
+          "inset": true
+        }
+      }
+    }
+  }
+}
