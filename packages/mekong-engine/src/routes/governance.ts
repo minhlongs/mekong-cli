@@ -6,6 +6,7 @@ import { payloadSizeLimit } from '../raas/payload-limiter'
 import { GOVERNANCE_VOICE_CREDITS } from '../types/raas'
 import { z } from 'zod'
 import { handleAsync, handleDb, createError } from '../types/error'
+import { autoClassifyFromDB } from '../raas/terrain-classifier'
 
 type Variables = { tenant: Tenant }
 const governanceRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -384,6 +385,16 @@ governanceRoutes.get('/treasury', handleAsync(async (c) => {
     treasury = { id, tenant_id: tenant.id, balance: 0, total_in: 0, total_out: 0 }
   }
   return c.json(treasury)
+}))
+
+// ─── TERRAIN AUTO-CLASSIFY ───
+
+// GET /v1/governance/terrain-auto — auto-gather metrics from DB and classify terrain
+governanceRoutes.get('/terrain-auto', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant')
+  const result = await autoClassifyFromDB(c.env.DB, tenant.id)
+  return c.json(result)
 }))
 
 export { governanceRoutes }

@@ -22,6 +22,8 @@ import { matchingRoutes } from './routes/matching'
 import { conflictRoutes } from './routes/conflicts'
 import { decentralRoutes } from './routes/decentralization'
 import { rbacRoutes } from './routes/rbac'
+import { constitutionRoutes } from './routes/constitution'
+import { marketplaceRoutes } from './routes/marketplace'
 import type { D1Database, KVNamespace, R2Bucket, Ai, AiModels, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types'
 
 // Cloudflare bindings — all optional until resources created in dashboard
@@ -225,6 +227,8 @@ app.route('/v1/matching', matchingRoutes)
 app.route('/v1/conflicts', conflictRoutes)
 app.route('/v1/decentralization', decentralRoutes)
 app.route('/v1/rbac', rbacRoutes)
+app.route('/v1/constitution', constitutionRoutes)
+app.route('/v1/marketplace', marketplaceRoutes)
 
 // Cron Trigger — auto-publish approved content
 export default {
