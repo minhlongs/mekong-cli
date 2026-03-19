@@ -1,0 +1,843 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+
+// Mock data for charts - replace with real API calls
+const complianceHistory = [
+  { date: '01/03', score: 82 },
+  { date: '05/03', score: 85 },
+  { date: '10/03', score: 88 },
+  { date: '15/03', score: 87 },
+  { date: '18/03', score: 92 },
+];
+
+const auditActivity = [
+  { action: 'Login', count: 245, trend: '+12%' },
+  { action: 'API Call', count: 1842, trend: '+8%' },
+  { action: 'Data Export', count: 23, trend: '+5%' },
+  { action: 'Config Change', count: 67, trend: '-3%' },
+];
+
+const securityMetrics = [
+  { name: '2FA Enabled', value: 94, total: 100, status: 'good' },
+  { name: 'API Keys Active', value: 12, total: 20, status: 'good' },
+  { name: 'Sessions Monitored', value: 156, total: 200, status: 'warning' },
+  { name: 'Audit Coverage', value: 87, total: 100, status: 'good' },
+];
+---
+
+<DashboardLayout title="Quản trị" activePage="/governance">
+  <div class="governance-shell">
+    <header class="governance-header">
+      <div>
+        <h1>Quản trị & Tuân thủ</h1>
+        <p class="subtitle">Dashboard quản lý rủi ro và tuân thủ thời gian thực</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary">📥 Xuất báo cáo</button>
+        <button class="btn-primary">⚙️ Cấu hình</button>
+      </div>
+    </header>
+
+    {/* Metrics Overview */}
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-icon compliance">📊</div>
+        <div class="metric-content">
+          <span class="metric-value">92%</span>
+          <span class="metric-label">Compliance Score</span>
+        </div>
+        <span class="metric-trend positive">+5% tuần này</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon audit">📋</div>
+        <div class="metric-content">
+          <span class="metric-value">2,177</span>
+          <span class="metric-label">Audit Events (7N)</span>
+        </div>
+        <span class="metric-trend positive">+8% tuần trước</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon security">🛡️</div>
+        <div class="metric-content">
+          <span class="metric-value">94%</span>
+          <span class="metric-label">Security Status</span>
+        </div>
+        <span class="metric-trend neutral">Ổn định</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon issues">⚠️</div>
+        <div class="metric-content">
+          <span class="metric-value">3</span>
+          <span class="metric-label">Vấn đề cần xử lý</span>
+        </div>
+        <span class="metric-trend negative">-2 so với hôm qua</span>
+      </div>
+    </div>
+
+    <div class="governance-grid">
+      <div class="governance-card">
+        <h2>📋 Chính sách bảo mật</h2>
+        <p>Quản lý chính sách bảo mật dữ liệu khách hàng</p>
+        <button class="btn-primary">Xem chính sách</button>
+      </div>
+
+      <div class="governance-card">
+        <h2>⚖️ Điều khoản dịch vụ</h2>
+        <p>Điều khoản sử dụng nền tảng OpenClaw RaaS</p>
+        <button class="btn-primary">Xem điều khoản</button>
+      </div>
+
+      <div class="governance-card">
+        <h2>🔒 GDPR Compliance</h2>
+        <p>Tuân thủ quy định bảo vệ dữ liệu chung</p>
+        <button class="btn-primary">Kiểm tra</button>
+      </div>
+
+      <div class="governance-card">
+        <h2>📊 Audit Logs</h2>
+        <p>Lịch sử kiểm tra hoạt động hệ thống</p>
+        <button class="btn-primary">Xem logs</button>
+      </div>
+
+      <div class="governance-card">
+        <h2>🛡️ Security Settings</h2>
+        <p>Cấu hình bảo mật và xác thực 2FA</p>
+        <button class="btn-primary">Cấu hình</button>
+      </div>
+
+      <div class="governance-card">
+        <h2>📄 Data Export</h2>
+        <p>Xuất dữ liệu theo yêu cầu compliance</p>
+        <button class="btn-primary">Xuất dữ liệu</button>
+      </div>
+    </div>
+
+    {/* Charts Section */}
+    <section class="charts-section">
+      <h2>Phân tích & Xu hướng</h2>
+
+      <div class="charts-grid">
+        {/* Compliance Trend Chart */}
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <h3>📈 Xu hướng Compliance Score (30 ngày)</h3>
+          </div>
+          <div class="chart-container">
+            <div class="line-chart">
+              {complianceHistory.map((item, index) => (
+                <div class="chart-bar-container">
+                  <div
+                    class="chart-bar"
+                    style={`height: ${item.score}%`}
+                    title={`${item.date}: ${item.score}%`}
+                  ></div>
+                  <span class="chart-label">{item.date}</span>
+                </div>
+              ))}
+            </div>
+            <div class="chart-stats">
+              <div class="stat">
+                <span class="stat-label">Trung bình</span>
+                <span class="stat-value">86.8%</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Cao nhất</span>
+                <span class="stat-value">92%</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Thấp nhất</span>
+                <span class="stat-value">82%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Metrics */}
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>🛡️ Security Metrics</h3>
+          </div>
+          <div class="security-grid">
+            {securityMetrics.map((metric) => (
+              <div class="security-item">
+                <div class="security-header">
+                  <span class="security-name">{metric.name}</span>
+                  <span class={`security-status ${metric.status}`}>
+                    {metric.status === 'good' ? '✓' : '⚠'}
+                  </span>
+                </div>
+                <div class="progress-bar">
+                  <div
+                    class={`progress-fill ${metric.status}`}
+                    style={`width: ${(metric.value / metric.total) * 100}%`}
+                  ></div>
+                </div>
+                <span class="progress-value">{metric.value} / {metric.total}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Audit Activity */}
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>📋 Audit Activity (24h)</h3>
+          </div>
+          <div class="audit-list">
+            {auditActivity.map((item) => (
+              <div class="audit-row">
+                <span class="audit-action">{item.action}</span>
+                <div class="audit-stats">
+                  <span class="audit-count">{item.count.toLocaleString()}</span>
+                  <span class={`audit-trend ${item.trend.startsWith('+') ? 'positive' : 'negative'}`}>
+                    {item.trend}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Enhanced Status Section */}
+    <div class="governance-status">
+      <div class="status-header">
+        <h2>Trạng thái tuân thủ</h2>
+        <span class="last-updated">Cập nhật: 5 phút trước</span>
+      </div>
+      <div class="status-grid">
+        <div class="status-item-enhanced">
+          <div class="status-icon">🔒</div>
+          <div class="status-details">
+            <span class="status-name">Bảo mật dữ liệu</span>
+            <span class="status-desc">Mã hóa AES-256, TLS 1.3</span>
+          </div>
+          <span class="status-badge status-green">Đạt</span>
+        </div>
+        <div class="status-item-enhanced">
+          <div class="status-icon">📜</div>
+          <div class="status-details">
+            <span class="status-name">GDPR</span>
+            <span class="status-desc">Right to erasure enabled</span>
+          </div>
+          <span class="status-badge status-green">Đạt</span>
+        </div>
+        <div class="status-item-enhanced">
+          <div class="status-icon">📊</div>
+          <div class="status-details">
+            <span class="status-name">Audit Trail</span>
+            <span class="status-desc">3 events cần review</span>
+          </div>
+          <span class="status-badge status-yellow">Cảnh báo</span>
+        </div>
+        <div class="status-item-enhanced">
+          <div class="status-icon">🔄</div>
+          <div class="status-details">
+            <span class="status-name">Backup</span>
+            <span class="status-desc">Last: 2 giờ trước</span>
+          </div>
+          <span class="status-badge status-green">OK</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<style>
+  .governance-shell {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .governance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .governance-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+  }
+
+  .btn-secondary:hover {
+    background: #e5e7eb;
+  }
+
+  /* Metrics Row */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .metric-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .metric-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .metric-icon.compliance { background: #dbeafe; }
+  .metric-icon.audit { background: #fef3c7; }
+  .metric-icon.security { background: #dcfce7; }
+  .metric-icon.issues { background: #fee2e2; }
+
+  .metric-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1;
+  }
+
+  .metric-label {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  .metric-trend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .metric-trend.positive { color: #16a34a; }
+  .metric-trend.negative { color: #dc2626; }
+  .metric-trend.neutral { color: #6b7280; }
+
+  /* Governance Grid */
+  .governance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .governance-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .governance-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .governance-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .governance-card p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0 0 1rem 0;
+  }
+
+  /* Charts Section */
+  .charts-section {
+    margin-bottom: 2rem;
+  }
+
+  .charts-section h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1.25rem;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .chart-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .chart-card.wide {
+    grid-column: span 2;
+  }
+
+  .chart-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .chart-container {
+    margin-top: 1rem;
+  }
+
+  /* Line Chart */
+  .line-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    height: 160px;
+    padding: 1rem 0;
+    gap: 0.5rem;
+  }
+
+  .chart-bar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .chart-bar {
+    width: 100%;
+    min-height: 20px;
+    background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+    border-radius: 6px 6px 0 0;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .chart-bar:hover {
+    background: linear-gradient(180deg, #2563eb 0%, #3b82f6 100%);
+  }
+
+  .chart-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: center;
+  }
+
+  .chart-stats {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    margin-top: 1rem;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  /* Security Grid */
+  .security-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .security-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .security-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .security-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .security-status {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  .security-status.good {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .security-status.warning {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-fill.good {
+    background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%);
+  }
+
+  .progress-fill.warning {
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  }
+
+  .progress-value {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-align: right;
+  }
+
+  /* Audit List */
+  .audit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .audit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+  }
+
+  .audit-action {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .audit-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .audit-count {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .audit-trend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .audit-trend.positive {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .audit-trend.negative {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  /* Status Section */
+  .governance-status {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .status-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .last-updated {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .status-item-enhanced {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .status-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .status-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .status-name {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+  }
+
+  .status-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+  }
+
+  .status-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .status-green {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .status-yellow {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .status-red {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 1024px) {
+    .governance-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-card.wide {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .governance-shell {
+      padding: 1rem;
+    }
+
+    .governance-header {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .governance-header h1 {
+      font-size: 1.5rem;
+    }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .header-actions button {
+      flex: 1;
+    }
+
+    .metrics-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .metric-card {
+      padding: 1rem;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.25rem;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+    }
+
+    .metric-label {
+      font-size: 0.8rem;
+    }
+
+    .metric-trend {
+      font-size: 0.75rem;
+    }
+
+    .governance-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .charts-section h2 {
+      font-size: 1.1rem;
+    }
+
+    .status-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .status-item-enhanced {
+      padding: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .metrics-row {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-card {
+      flex-wrap: wrap;
+    }
+
+    .metric-trend {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+  }
+</style>
