@@ -399,7 +399,7 @@ class WorldModel:
                 timeout=5, cwd=self.working_dir,
             )
             return result.stdout.strip()
-        except (subprocess.TimeoutExpired, Exception) as e:
+        except (subprocess.TimeoutExpired, Exception):
             return ""
 
     def _llm_predict(self, plan: str) -> Dict[str, Any]:
