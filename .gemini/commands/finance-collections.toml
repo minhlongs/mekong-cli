@@ -1,0 +1,5 @@
+description = "AR aging assessment, overdue invoice list, reminder emails, follow-up schedule. 3 commands, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong finance-collections {{args}}"

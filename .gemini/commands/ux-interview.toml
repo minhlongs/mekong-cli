@@ -1,0 +1,5 @@
+description = "Interview script, discussion guide, insight synthesis. 2 commands, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong ux-interview {{args}}"

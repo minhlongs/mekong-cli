@@ -1,0 +1,5 @@
+description = "Employee onboarding — welcome kit → access setup → 30-60-90 plan → buddy assignment"
+
+[steps]
+[steps.run]
+command = "mekong hr-onboard {{args}}"

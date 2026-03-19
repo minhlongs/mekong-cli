@@ -1,0 +1,5 @@
+description = "Worker compile atomic command. 1 credit."
+
+[steps]
+[steps.run]
+command = "mekong worker-build {{args}}"

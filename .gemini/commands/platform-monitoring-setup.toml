@@ -1,0 +1,5 @@
+description = "Health checks → alerts → dashboard → runbook for platform monitoring"
+
+[steps]
+[steps.run]
+command = "mekong platform-monitoring-setup {{args}}"

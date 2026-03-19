@@ -1,0 +1,5 @@
+description = "Outreach blast — cold emails + LinkedIn messages in parallel. 2 commands, ~8 min."
+
+[steps]
+[steps.run]
+command = "mekong sdr-outreach-blast {{args}}"

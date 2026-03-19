@@ -1,0 +1,5 @@
+description = "Build complete revenue pipeline — leads, CRM, sales, invoicing, analytics. 7 commands, ~40 min."
+
+[steps]
+[steps.run]
+command = "mekong business-revenue-engine {{args}}"

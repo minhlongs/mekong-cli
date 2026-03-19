@@ -1,0 +1,5 @@
+description = "Close report — win/loss analysis then CRM update. 2 commands, ~5 min."
+
+[steps]
+[steps.run]
+command = "mekong ae-close-report {{args}}"

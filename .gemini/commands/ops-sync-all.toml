@@ -1,0 +1,5 @@
+description = "Sync everything in parallel — agents, skills, MCP, artifacts, rules. 6 commands, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong ops-sync-all {{args}}"

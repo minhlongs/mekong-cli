@@ -1,0 +1,5 @@
+description = "CTO ROI scorecard for single project. 3 credits, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong cto-scorecard {{args}}"

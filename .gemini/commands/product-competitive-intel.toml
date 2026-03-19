@@ -1,0 +1,5 @@
+description = "Market scan + competitor deep dive + positioning strategy. 4 commands, ~25 min."
+
+[steps]
+[steps.run]
+command = "mekong product-competitive-intel {{args}}"
