@@ -37,64 +37,176 @@ const platformStats = [
   { value: '13', label: 'Hooks', desc: 'Auto-trigger pipeline' },
 ];
 
-const testimonials = [
-  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.' },
-  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.' },
-  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.' },
+const socialProof = [
+  { value: '500+', label: 'doanh nghiệp tin dùng' },
+  { value: '1M+', label: 'tin nhắn xử lý' },
+  { value: '99.9%', label: 'uptime' },
+  { value: '24/7', label: 'hỗ trợ' },
 ];
+
+const testimonials = [
+  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼' },
+  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼' },
+  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻' },
+  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳' },
+  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬' },
+];
+
+// SoftwareApplication JSON-LD
+const softwareAppSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "OpenClaw",
+  "alternateName": "AgencyOS",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free tier available with 50 credits/month"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "ratingCount": "500",
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "featureList": "AI Receptionist, Content Creator, Smart CRM, Real-time Reports",
+  "screenshot": "https://agencyos.network/og-default.jpg",
+  "description": "Nền tảng AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh"
+};
+
+// FAQPage JSON-LD
+const faqPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.a
+    }
+  }))
+};
+
+// BreadcrumbList JSON-LD
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://agencyos.network"
+    }
+  ]
+};
 ---
 
 <BaseLayout title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động" lang="vi">
 
-  <!-- HERO -->
-  <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;">
-    <!-- Animated mesh orbs -->
-    <div style="position:absolute;top:15%;left:5%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.12),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 16s ease-in-out infinite alternate;"></div>
-    <div style="position:absolute;bottom:10%;right:8%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.1),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 20s ease-in-out infinite alternate-reverse;"></div>
-    <div style="position:absolute;top:60%;left:40%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);filter:blur(30px);pointer-events:none;animation:meshDrift 24s ease-in-out infinite alternate;"></div>
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(softwareAppSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqPageSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
 
-    <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
-      <div style="max-width:760px;">
+  <!-- HERO -->
+  <section class="hero-section">
+    <!-- Enhanced animated mesh gradient orbs -->
+    <div class="mesh-orb orb-1"></div>
+    <div class="mesh-orb orb-2"></div>
+    <div class="mesh-orb orb-3"></div>
+    <div class="mesh-orb orb-4"></div>
+
+    <div class="container hero-container">
+      <div class="hero-content">
         <div class="badge animate-in" style="margin-bottom:28px;">✨ Mới — AI Receptionist cho Zalo &amp; Facebook</div>
         <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
           <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp Tự Động
         </h1>
-        <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--md-on-surface-muted);max-width:520px;margin-bottom:16px;" class="animate-in">
+        <p class="hero-description animate-in">
           Trả lời khách 24/7 · Tạo content tự động · CRM thông minh
         </p>
-        <!-- Stats row -->
-        <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in">
-          {[['500+', 'doanh nghiệp'],['1M+', 'tin nhắn'],['99.9%', 'uptime']].map(([v,l]) => (
-            <div>
-              <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.5rem;font-weight:800;" class="gradient-text">{v}</div>
-              <div style="font-size:0.8rem;color:var(--md-on-surface-muted);">{l}</div>
-            </div>
-          ))}
+
+        <!-- Enhanced Social Proof Counter -->
+        <div class="social-proof-counter animate-in">
+          <div class="counter-item">
+            <div class="counter-value" data-target="500">0</div>
+            <div class="counter-suffix">+</div>
+            <div class="counter-label">doanh nghiệp</div>
+          </div>
+          <div class="counter-divider"></div>
+          <div class="counter-item">
+            <div class="counter-value" data-target="1">0</div>
+            <div class="counter-suffix">M+</div>
+            <div class="counter-label">tin nhắn</div>
+          </div>
+          <div class="counter-divider"></div>
+          <div class="counter-item">
+            <div class="counter-value" data-target="99">0</div>
+            <div class="counter-suffix">.9%</div>
+            <div class="counter-label">uptime</div>
+          </div>
         </div>
+
         <!-- Social proof badges -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in">
+        <div class="proof-badges animate-in">
           <span class="proof-badge"><span class="dot"></span>500+ doanh nghiệp tin dùng</span>
           <span class="proof-badge">🏆 Top 1 Việt Nam 2025</span>
+          <span class="proof-badge">⭐ 4.9/5 đánh giá</span>
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;">Thử miễn phí 14 ngày →</a>
-          <a href="#features" class="btn-outline">Xem tính năng</a>
+
+        <!-- Enhanced CTA Buttons -->
+        <div class="hero-cta animate-in">
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow">
+            <span>Thử miễn phí 14 ngày</span>
+            <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="#features" class="btn-outline btn-ghost">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Xem tính năng</span>
+          </a>
+        </div>
+
+        <!-- Trust indicators -->
+        <div class="trust-indicators animate-in">
+          <span class="trust-item">🔒 Không cần thẻ tín dụng</span>
+          <span class="trust-item">⚡ Setup trong 2 phút</span>
+          <span class="trust-item">💯 Miễn phí 100% khi bắt đầu</span>
         </div>
       </div>
 
-      <!-- Terminal mockup -->
-      <div class="terminal animate-on-scroll" style="margin-top:56px;max-width:520px;">
-        <div style="display:flex;gap:6px;margin-bottom:14px;">
-          <span style="width:10px;height:10px;border-radius:50%;background:#FF5F56;display:inline-block;"></span>
-          <span style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;display:inline-block;"></span>
-          <span style="width:10px;height:10px;border-radius:50%;background:#27C93F;display:inline-block;"></span>
+      <!-- Enhanced Terminal mockup -->
+      <div class="terminal-wrapper animate-on-scroll">
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">OpenClaw CLI</span>
+          </div>
+          <div class="terminal-body">
+            <div class="terminal-line input">
+              <span class="prompt">$</span>
+              <span class="command">openclaw</span>
+              <span class="args">cook "Trả lời khách hỏi giá bánh mì"</span>
+            </div>
+            <div class="terminal-line process"><span class="arrow">→</span> Phân tích yêu cầu...</div>
+            <div class="terminal-line process"><span class="arrow">→</span> Tìm menu trong CRM...</div>
+            <div class="terminal-line success"><span class="check">✓</span><span class="success-text">Đã trả lời:</span> "Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</div>
+            <div class="terminal-line process"><span class="arrow">→</span> Lưu vào CRM: khách quan tâm combo</div>
+            <div class="terminal-line stats"><span class="bolt">⚡</span><span class="stat-time">1.2s</span> · <span class="stat-credits">1 credit used</span></div>
+          </div>
         </div>
-        <div style="color:#94a3b8;">$ <span style="color:#00BCD4;">openclaw</span> cook "Trả lời khách hỏi giá bánh mì"</div>
-        <div style="color:#64748b;">→ Phân tích yêu cầu...</div>
-        <div style="color:#64748b;">→ Tìm menu trong CRM...</div>
-        <div style="color:#94a3b8;">✓ <span style="color:#4ade80;">Đã trả lời:</span> "Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</div>
-        <div style="color:#64748b;">→ Lưu vào CRM: khách quan tâm combo</div>
-        <div style="color:#7C4DFF;">⚡ 1.2s · 1 credit used</div>
+        <div class="terminal-glow"></div>
       </div>
     </div>
   </section>
@@ -169,26 +281,61 @@ const testimonials = [
     </div>
   </section>
 
-  <!-- SOCIAL PROOF -->
-  <section style="background:var(--md-surface-container);">
+  <!-- SOCIAL PROOF - Testimonial Carousel -->
+  <section class="testimonials-section">
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
         <div class="badge" style="margin-bottom:16px;">Khách hàng nói gì</div>
         <h2 class="headline">Được <span class="gradient-text">tin dùng</span> bởi founder Việt</h2>
       </div>
-      <div class="grid-3">
-        {testimonials.map((t, i) => (
-          <div class="card animate-on-scroll" style={`animation-delay:${i*0.1}s`}>
-            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;margin-bottom:16px;font-style:italic;">"{t.text}"</p>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00BCD4,#7C4DFF);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;">{t.name[0]}</div>
-              <div>
-                <div style="font-size:0.85rem;font-weight:600;">{t.name}</div>
-                <div style="font-size:0.75rem;color:var(--md-on-surface-muted);">{t.role}</div>
+
+      <!-- Carousel Container -->
+      <div class="testimonial-carousel">
+        <div class="carousel-track" id="testimonialTrack">
+          <!-- Testimonials will be duplicated for seamless loop -->
+          {testimonials.map((t, i) => (
+            <div class="testimonial-card">
+              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+              <p class="testimonial-text">"{t.text}"</p>
+              <div class="testimonial-author">
+                <div class="testimonial-avatar">{t.avatar}</div>
+                <div class="testimonial-info">
+                  <div class="testimonial-name">{t.name}</div>
+                  <div class="testimonial-role">{t.role}</div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+          <!-- Duplicate for seamless loop -->
+          {testimonials.map((t, i) => (
+            <div class="testimonial-card">
+              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+              <p class="testimonial-text">"{t.text}"</p>
+              <div class="testimonial-author">
+                <div class="testimonial-avatar">{t.avatar}</div>
+                <div class="testimonial-info">
+                  <div class="testimonial-name">{t.name}</div>
+                  <div class="testimonial-role">{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- Carousel Controls -->
+        <div class="carousel-controls">
+          <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous testimonial">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <div class="carousel-dots" id="carouselDots"></div>
+          <button class="carousel-btn next" id="carouselNext" aria-label="Next testimonial">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </section>
