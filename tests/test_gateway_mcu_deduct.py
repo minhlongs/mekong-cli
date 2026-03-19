@@ -59,7 +59,9 @@ class TestMCUDeductEndpoint:
             "complexity": "complex",
         })
         assert resp.status_code == 402
-        assert "Insufficient" in resp.json()["detail"]
+        data = resp.json()
+        # Check for structured error response
+        assert "INSUFFICIENT_CREDITS" in str(data) or "Insufficient" in str(data)
 
     def test_deduct_invalid_complexity_400(self):
         mcu_billing.add_credits("t1", 100)
@@ -68,7 +70,9 @@ class TestMCUDeductEndpoint:
             "complexity": "mega",
         })
         assert resp.status_code == 400
-        assert "Invalid complexity" in resp.json()["detail"]
+        data = resp.json()
+        # Check for structured error response with INVALID_INPUT or Invalid complexity
+        assert "INVALID_INPUT" in str(data) or "Invalid complexity" in str(data)
 
     def test_deduct_with_mission_id(self):
         mcu_billing.add_credits("t1", 50)
