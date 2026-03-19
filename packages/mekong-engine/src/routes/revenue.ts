@@ -1,7 +1,10 @@
 import { Hono } from 'hono'
+import { z } from 'zod'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
+import { payloadSizeLimit } from '../raas/payload-limiter'
+import { createError, handleAsync, handleDb } from '../types/error'
 
 type Variables = { tenant: Tenant }
 const revenueRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -17,18 +20,35 @@ const DEFAULT_SPLIT = {
   customer_reward: 0.10, // 10% — Loyalty credits back to customer
 }
 
-// POST /split — Execute revenue split for a completed task
-revenueRoutes.post('/split', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant')
-  const body = await c.req.json<{
-    total_credits: number; customer_account: string;
-    expert_account?: string; developer_account?: string;
-    description: string; split_override?: Record<string, number>
-  }>()
+// Zod schema for POST /split
+const splitSchema = z.object({
+  total_credits: z.number().int().positive('total_credits must be positive').max(1_000_000_000, 'total_credits too large'),
+  customer_account: z.string().min(1, 'customer_account is required').max(100, 'customer_account must be ≤100 chars'),
+  expert_account: z.string().uuid('expert_account must be a valid UUID').optional(),
+  developer_account: z.string().uuid('developer_account must be a valid UUID').optional(),
+  description: z.string().max(500, 'description must be ≤500 chars'),
+  split_override: z.record(z.number()).refine(
+    (val) => {
+      const sum = Object.values(val).reduce((a, b) => a + b, 0)
+      return Math.abs(sum - 1.0) < 0.01 // Allow 1% rounding tolerance
+    },
+    { message: 'split_override percentages must sum to 1.0 (±1%)' }
+  ).optional(),
+})
+type SplitInput = z.infer<typeof splitSchema>
 
-  if (!body.total_credits || body.total_credits <= 0) {
-    return c.json({ error: 'total_credits must be positive' }, 400)
+// POST /split — Execute revenue split for a completed task
+revenueRoutes.post('/split', payloadSizeLimit(), handleAsync(async (c) => {
+  const tenant = c.get('tenant')
+
+  let body: SplitInput
+  try {
+    body = splitSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    throw error
   }
 
   const split = body.split_override || DEFAULT_SPLIT
@@ -36,10 +56,23 @@ revenueRoutes.post('/split', async (c) => {
 
   // Ensure all accounts exist
   const ensureAcct = async (code: string, type: string) => {
-    const existing = await db.prepare('SELECT id FROM ledger_accounts WHERE tenant_id = ? AND code = ?').bind(tenant.id, code).first()
-    if (existing) return existing.id as string
+    const existingResult = await handleDb(
+      async () => {
+        const r = await db.prepare('SELECT id FROM ledger_accounts WHERE tenant_id = ? AND code = ?').bind(tenant.id, code).first()
+        return r as { id: string } | null
+      },
+      'DATABASE_ERROR',
+      'Failed to ensure account exists'
+    )
+    if (existingResult) return (existingResult as { id: string }).id
     const id = crypto.randomUUID()
-    await db.prepare('INSERT INTO ledger_accounts (id, tenant_id, code, account_type) VALUES (?, ?, ?, ?)').bind(id, tenant.id, code, type).run()
+    await handleDb(
+      async () => {
+        await db.prepare('INSERT INTO ledger_accounts (id, tenant_id, code, account_type) VALUES (?, ?, ?, ?)').bind(id, tenant.id, code, type).run()
+      },
+      'DATABASE_ERROR',
+      'Failed to create account'
+    )
     return id
   }
 
@@ -52,9 +85,16 @@ revenueRoutes.post('/split', async (c) => {
   const rewardAcctId = await ensureAcct(body.customer_account + ':rewards', 'asset')
 
   // Check customer balance
-  const bal = await db.prepare('SELECT balance FROM ledger_accounts WHERE id = ?').bind(customerAcctId).first()
-  if ((bal?.balance as number || 0) < body.total_credits) {
-    return c.json({ error: 'Insufficient credits', balance: bal?.balance }, 400)
+  const bal = await handleDb(
+    async () => {
+      const r = await db.prepare('SELECT balance FROM ledger_accounts WHERE id = ?').bind(customerAcctId).first()
+      return r as { balance: number } | null
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch customer balance'
+  )
+  if ((bal?.balance || 0) < body.total_credits) {
+    return c.json(createError('INSUFFICIENT_CREDITS', 'Insufficient credits', [{ balance: (bal as { balance: number })?.balance ?? 0 }]), 402)
   }
 
   // Calculate amounts
@@ -94,11 +134,19 @@ revenueRoutes.post('/split', async (c) => {
     ]),
   ]
 
-  await db.batch(batch)
+  await handleDb(
+    () => db.batch(batch),
+    'DATABASE_ERROR',
+    'Failed to execute revenue split'
+  )
 
   // Update treasury table too
-  await db.prepare("UPDATE treasury SET balance = balance + ?, total_in = total_in + ?, last_updated = datetime('now') WHERE tenant_id = ?")
-    .bind(amounts.community_fund, amounts.community_fund, tenant.id).run()
+  await handleDb(
+    () => db.prepare("UPDATE treasury SET balance = balance + ?, total_in = total_in + ?, last_updated = datetime('now') WHERE tenant_id = ?")
+      .bind(amounts.community_fund, amounts.community_fund, tenant.id).run(),
+    'DATABASE_ERROR',
+    'Failed to update treasury'
+  )
 
   return c.json({
     journal_entry_id: jeId,
@@ -106,7 +154,7 @@ revenueRoutes.post('/split', async (c) => {
     split: amounts,
     message: 'Revenue split executed — 6-way distribution via double-entry ledger'
   }, 201)
-})
+}))
 
 // GET /split-config — Current split percentages
 revenueRoutes.get('/split-config', (c) => {
@@ -114,13 +162,19 @@ revenueRoutes.get('/split-config', (c) => {
 })
 
 // GET /revenue-summary — Revenue by account
-revenueRoutes.get('/summary', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+revenueRoutes.get('/summary', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  const rows = await c.env.DB.prepare(
-    "SELECT code, balance FROM ledger_accounts WHERE tenant_id = ? AND code LIKE 'revenue:%' ORDER BY balance DESC"
-  ).bind(tenant.id).all()
-  return c.json({ accounts: rows.results })
-})
+  const rowsResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        "SELECT code, balance FROM ledger_accounts WHERE tenant_id = ? AND code LIKE 'revenue:%' ORDER BY balance DESC"
+      ).bind(tenant.id).all()
+      return r as { results?: Array<{ code: string; balance: number }> }
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch revenue accounts'
+  )
+  return c.json({ accounts: (rowsResult as { results?: Array<{ code: string; balance: number }> }).results ?? [] })
+}))
 
 export { revenueRoutes }

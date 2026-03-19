@@ -8,9 +8,11 @@
  */
 import { Hono } from 'hono'
 import { authMiddleware } from '../raas/auth-middleware'
+import { payloadSizeLimit } from '../raas/payload-limiter'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { z } from 'zod'
+import { handleAsync, handleDb, createError, ERROR_CODES } from '../types/error'
 
 type Variables = { tenant: Tenant }
 
@@ -44,136 +46,180 @@ const createCampaignSchema = z.object({
 crmRoutes.use('*', authMiddleware)
 
 // GET /crm/contacts — list with optional ?tag= and ?limit=
-crmRoutes.get('/contacts', async (c) => {
+crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const tag = c.req.query('tag')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
-  let contacts
+  let contacts: any[]
   if (tag) {
-    const { results } = await c.env.DB.prepare(
-      `SELECT * FROM contacts WHERE tenant_id = ? AND json_each.value = ? LIMIT ?`
+    const result = await handleDb(
+      async () => {
+        const r = await c.env.DB.prepare(
+          `SELECT * FROM contacts WHERE tenant_id = ? AND json_each.value = ? LIMIT ?`
+        )
+          .bind(tenant.id, tag, limit)
+          .all()
+        return r as { results?: any[] }
+      },
+      'DATABASE_ERROR',
+      'Failed to fetch contacts'
     )
-      .bind(tenant.id, tag, limit)
-      .all()
-    contacts = results
+    contacts = result.results || []
   } else {
-    const { results } = await c.env.DB.prepare(
-      'SELECT * FROM contacts WHERE tenant_id = ? ORDER BY last_contact_at DESC LIMIT ?'
+    const result = await handleDb(
+      async () => {
+        const r = await c.env.DB.prepare(
+          'SELECT * FROM contacts WHERE tenant_id = ? ORDER BY last_contact_at DESC LIMIT ?'
+        )
+          .bind(tenant.id, limit)
+          .all()
+        return r as { results?: any[] }
+      },
+      'DATABASE_ERROR',
+      'Failed to fetch contacts'
     )
-      .bind(tenant.id, limit)
-      .all()
-    contacts = results
+    contacts = result.results || []
   }
 
   return c.json({ contacts, count: contacts.length })
-})
+}))
 
 // POST /crm/contacts — create contact
-crmRoutes.post('/contacts', async (c) => {
+crmRoutes.post('/contacts', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
   const parsed = createContactSchema.safeParse(body)
-  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+  if (!parsed.success) return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
 
   const id = `ct_${tenant.id}_${Date.now()}`
-  await c.env.DB.prepare(
-    `INSERT INTO contacts (id, tenant_id, external_id, platform, name, phone, email, tags, notes)
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO contacts (id, tenant_id, external_id, platform, name, phone, email, tags, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  )
-    .bind(
-      id, tenant.id,
-      parsed.data.external_id ?? null,
-      parsed.data.platform ?? 'zalo',
-      parsed.data.name ?? null,
-      parsed.data.phone ?? null,
-      parsed.data.email ?? null,
-      JSON.stringify(parsed.data.tags ?? []),
-      parsed.data.notes ?? null
     )
-    .run()
+      .bind(
+        id, tenant.id,
+        parsed.data.external_id ?? null,
+        parsed.data.platform ?? 'zalo',
+        parsed.data.name ?? null,
+        parsed.data.phone ?? null,
+        parsed.data.email ?? null,
+        JSON.stringify(parsed.data.tags ?? []),
+        parsed.data.notes ?? null
+      )
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to create contact'
+  )
 
   return c.json({ id, created: true }, 201)
-})
+}))
 
 // POST /crm/contacts/auto — upsert from chat event (platform + external_id key)
-crmRoutes.post('/contacts/auto', async (c) => {
+crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
   const parsed = autoContactSchema.safeParse(body)
   if (!parsed.success) {
-    return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+    return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
   }
 
-  const existing = await c.env.DB.prepare(
-    'SELECT id, visit_count FROM contacts WHERE tenant_id = ? AND external_id = ? AND platform = ?'
+  const existing = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT id, visit_count FROM contacts WHERE tenant_id = ? AND external_id = ? AND platform = ?'
+      )
+        .bind(tenant.id, body.external_id, body.platform)
+        .first()
+      return r as { id: string; visit_count: number } | null
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch contact'
   )
-    .bind(tenant.id, body.external_id, body.platform)
-    .first<{ id: string; visit_count: number }>()
 
   if (existing) {
-    await c.env.DB.prepare(
-      `UPDATE contacts SET visit_count = visit_count + 1, last_contact_at = datetime('now')
+    await handleDb(
+      () => c.env.DB.prepare(
+        `UPDATE contacts SET visit_count = visit_count + 1, last_contact_at = datetime('now')
        WHERE id = ?`
+      )
+        .bind(existing.id)
+        .run(),
+      'DATABASE_ERROR',
+      'Failed to update contact'
     )
-      .bind(existing.id)
-      .run()
     return c.json({ id: existing.id, upserted: 'updated' })
   }
 
   const id = `ct_${tenant.id}_${Date.now()}`
-  await c.env.DB.prepare(
-    `INSERT INTO contacts (id, tenant_id, external_id, platform, name)
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO contacts (id, tenant_id, external_id, platform, name)
      VALUES (?, ?, ?, ?, ?)`
+    )
+      .bind(id, tenant.id, body.external_id, body.platform, body.name ?? null)
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to create contact'
   )
-    .bind(id, tenant.id, body.external_id, body.platform, body.name ?? null)
-    .run()
 
   return c.json({ id, upserted: 'created' }, 201)
-})
+}))
 
 // GET /crm/campaigns — list remarketing campaigns
-crmRoutes.get('/campaigns', async (c) => {
+crmRoutes.get('/campaigns', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
-  const { results } = await c.env.DB.prepare(
-    'SELECT * FROM remarketing_campaigns WHERE tenant_id = ? ORDER BY created_at DESC'
+  const campaignsResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT * FROM remarketing_campaigns WHERE tenant_id = ? ORDER BY created_at DESC'
+      )
+        .bind(tenant.id)
+        .all()
+      return r as { results?: any[] }
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch campaigns'
   )
-    .bind(tenant.id)
-    .all()
 
-  return c.json({ campaigns: results })
-})
+  return c.json({ campaigns: campaignsResult.results || [] })
+}))
 
 // POST /crm/campaigns — create campaign
-crmRoutes.post('/campaigns', async (c) => {
+crmRoutes.post('/campaigns', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
   const parsed = createCampaignSchema.safeParse(body)
-  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+  if (!parsed.success) return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
 
   const id = `rc_${tenant.id}_${Date.now()}`
-  await c.env.DB.prepare(
-    `INSERT INTO remarketing_campaigns (id, tenant_id, name, trigger_type, trigger_value, message_template, channel)
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO remarketing_campaigns (id, tenant_id, name, trigger_type, trigger_value, message_template, channel)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
-  )
-    .bind(
-      id, tenant.id,
-      parsed.data.name, parsed.data.trigger_type,
-      parsed.data.trigger_value ?? null,
-      parsed.data.message_template,
-      parsed.data.channel ?? 'zalo'
     )
-    .run()
+      .bind(
+        id, tenant.id,
+        parsed.data.name, parsed.data.trigger_type,
+        parsed.data.trigger_value ?? null,
+        parsed.data.message_template,
+        parsed.data.channel ?? 'zalo'
+      )
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to create campaign'
+  )
 
   return c.json({ id, created: true }, 201)
-})
+}))

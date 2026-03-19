@@ -4,6 +4,7 @@
  */
 
 import type { ZodSchema } from 'zod'
+import { ZodError, z } from 'zod'
 
 export const ERROR_CODES = {
   // Client Errors (4xx)

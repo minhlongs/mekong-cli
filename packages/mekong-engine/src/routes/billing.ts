@@ -5,7 +5,8 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { getBalance, getHistory, addCredits } from '../raas/credits'
 import { createTenant, regenerateApiKey } from '../raas/tenant'
 import { z } from 'zod'
-import { handleAsync } from '../types/error'
+import { handleAsync, handleDb } from '../types/error'
+import { authRateLimit, webhookRateLimit } from '../raas/rate-limit-middleware'
 
 type Variables = { tenant: Tenant }
 
@@ -36,7 +37,7 @@ billingRoutes.post('/tenants', handleAsync(async (c) => {
 }))
 
 // Regenerate API key - requires tenant_id + name as ownership proof
-billingRoutes.post('/tenants/regenerate-key', handleAsync(async (c) => {
+billingRoutes.post('/tenants/regenerate-key', authRateLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const parsed = regenerateKeySchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
@@ -67,9 +68,10 @@ const POLAR_TIER_MAP: Record<string, string> = {
   'agencyos-master': 'enterprise',
 }
 
-billingRoutes.post('/webhook', handleAsync(async (c) => {
+billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   const db = c.env.DB
+  await ensureWebhookEventsTable(db)
   const secret = c.env.POLAR_WEBHOOK_SECRET ?? ''
   const signature = c.req.header('webhook-signature') ?? ''
   const rawBody = await c.req.text()
@@ -91,11 +93,24 @@ billingRoutes.post('/webhook', handleAsync(async (c) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let event: { type: string; data?: any; timestamp?: string; created_at?: string }
+  let event: { type: string; data?: any; timestamp?: string; created_at?: string; id?: string }
   try {
     event = JSON.parse(rawBody)
   } catch {
     return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  // Check for replay attack (duplicate event ID)
+  if (event.id) {
+    const eventId: string = event.id // Type guard: narrow from string | undefined
+    const isDuplicate = await handleDb(
+      () => isDuplicateWebhookEvent(db, 'polar', eventId),
+      'DATABASE_ERROR',
+      'Failed to check for duplicate webhook event'
+    ) as boolean
+    if (isDuplicate) {
+      return c.json({ error: 'Duplicate event detected', code: 'REPLAY_ATTACK' }, 409)
+    }
   }
 
   // Add timestamp validation to prevent replay attacks (5 minute window)
@@ -146,6 +161,16 @@ billingRoutes.post('/webhook', handleAsync(async (c) => {
     }
   }
 
+  // Record webhook event to prevent replay attacks
+  if (event.id) {
+    const eventId: string = event.id // Type guard: narrow from string | undefined
+    await handleDb(
+      () => recordWebhookEvent(db, 'polar', eventId, event.type),
+      'DATABASE_ERROR',
+      'Failed to record Polar webhook event'
+    ) as void
+  }
+
   return c.json({ received: true })
 }))
 
@@ -182,5 +207,31 @@ billingRoutes.get('/credits/history', authMiddleware, handleAsync(async (c) => {
   const history = await getHistory(c.env.DB, tenant.id, limit)
   return c.json({ tenant_id: tenant.id, history, limit })
 }))
+
+// Helper functions for replay attack prevention
+async function ensureWebhookEventsTable(db: any) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS webhook_events (
+      id TEXT PRIMARY KEY,
+      provider TEXT NOT NULL,
+      event_id TEXT NOT NULL UNIQUE,
+      type TEXT NOT NULL,
+      processed_at TEXT DEFAULT (datetime('now'))
+    )
+  `).catch(() => {})
+}
+
+async function isDuplicateWebhookEvent(db: any, provider: string, eventId: string): Promise<boolean> {
+  const existing = await db.prepare(
+    'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
+  ).bind(provider, eventId).first()
+  return !!existing
+}
+
+async function recordWebhookEvent(db: any, provider: string, eventId: string, type: string) {
+  await db.prepare(
+    'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
+  ).bind(crypto.randomUUID(), provider, eventId, type).run()
+}
 
 export { billingRoutes }

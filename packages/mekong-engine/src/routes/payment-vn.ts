@@ -1,8 +1,40 @@
 import { Hono } from 'hono'
+import { z } from 'zod'
 import type { Bindings } from '../index'
 import { addCredits } from '../raas/credits'
+import { createError } from '../types/error'
 
 const paymentVnRoutes = new Hono<{ Bindings: Bindings }>()
+
+// Zod schemas for payment operations
+const createPaymentSchema = z.object({
+  method: z.enum(['momo', 'vnpay']),
+  tenant_id: z.string().min(1, 'tenant_id is required'),
+  amount: z.number().positive('amount must be positive').max(1_000_000_000, 'amount too large'),
+  credits: z.number().int().positive('credits must be positive').max(1_000_000, 'credits too large'),
+  plan: z.enum(['starter', 'pro', 'enterprise']).optional(),
+})
+type CreatePaymentBody = z.infer<typeof createPaymentSchema>
+
+// MoMo webhook payload schema
+const momoWebhookSchema = z.object({
+  partnerCode: z.string().optional(),
+  orderId: z.string().optional(),
+  amount: z.number().optional(),
+  resultCode: z.number(),
+  extraData: z.string().optional(),
+  signature: z.string().optional(),
+})
+type MomoWebhookBody = z.infer<typeof momoWebhookSchema>
+
+// VNPAY webhook query schema
+const vnpayQuerySchema = z.object({
+  vnp_ResponseCode: z.string().optional(),
+  vnp_OrderInfo: z.string().optional(),
+  vnp_TxnRef: z.string().optional(),
+  vnp_Amount: z.string().optional(),
+  vnp_SecureHash: z.string().optional().transform((val) => val?.replace('SHA512=', '')),
+})
 
 // VND pricing tiers
 const PRICING_VN = [
@@ -48,19 +80,14 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
     }
   }
 
-  let body: {
-    partnerCode?: string
-    orderId?: string
-    amount?: number
-    resultCode?: number
-    extraData?: string
-    signature?: string
-  }
-
+  let body: MomoWebhookBody
   try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
+    body = momoWebhookSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Invalid MoMo webhook payload', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
   const { partnerCode, orderId, amount, resultCode, extraData } = body
@@ -71,7 +98,7 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
   }
 
   if (!extraData) {
-    return c.json({ error: 'Missing extraData' }, 400)
+    return c.json(createError('VALIDATION_ERROR', 'Missing extraData'), 400)
   }
 
   let parsed: { tenant_id?: string; credits?: number; plan?: string }
@@ -80,13 +107,13 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
     const decoded = atob(extraData)
     parsed = JSON.parse(decoded)
   } catch {
-    return c.json({ error: 'Invalid extraData encoding' }, 400)
+    return c.json(createError('VALIDATION_ERROR', 'Invalid extraData encoding'), 400)
   }
 
   const { tenant_id, credits, plan } = parsed
 
   if (!tenant_id || !credits) {
-    return c.json({ error: 'Missing tenant_id or credits in extraData' }, 400)
+    return c.json(createError('VALIDATION_ERROR', 'Missing tenant_id or credits in extraData'), 400)
   }
 
   const reason = `MoMo: order ${orderId ?? 'unknown'}, ${amount ?? 0}đ`
@@ -138,29 +165,31 @@ paymentVnRoutes.get('/vnpay/ipn', async (c) => {
     }
   }
 
-  const responseCode = c.req.query('vnp_ResponseCode')
-  const orderInfo = c.req.query('vnp_OrderInfo') // "tenant_id|credits|plan"
-  const txnRef = c.req.query('vnp_TxnRef')
-  const amount = c.req.query('vnp_Amount') // VNPAY amount = actual * 100
+  // Validate VNPAY query params with Zod
+  const queryResult = vnpayQuerySchema.safeParse(c.req.query())
+  if (!queryResult.success) {
+    return c.json(createError('VALIDATION_ERROR', 'Invalid VNPAY query params', queryResult.error.errors), 400)
+  }
+  const { vnp_ResponseCode: responseCode, vnp_OrderInfo: orderInfo, vnp_TxnRef: txnRef, vnp_Amount: amount } = queryResult.data as { vnp_ResponseCode?: string; vnp_OrderInfo?: string; vnp_TxnRef?: string; vnp_Amount?: string }
 
   if (responseCode !== '00') {
     return c.json({ received: true, status: 'ignored', reason: 'payment not successful' })
   }
 
   if (!orderInfo) {
-    return c.json({ error: 'Missing vnp_OrderInfo' }, 400)
+    return c.json(createError('VALIDATION_ERROR', 'Missing vnp_OrderInfo'), 400)
   }
 
-  const parts = orderInfo.split('|')
+  const parts = (orderInfo as string).split('|')
   const tenant_id = parts[0]
   const credits = parseInt(parts[1] ?? '0', 10)
   const plan = parts[2] ?? ''
 
   if (!tenant_id || !credits) {
-    return c.json({ error: 'Invalid vnp_OrderInfo format, expected: tenant_id|credits|plan' }, 400)
+    return c.json(createError('VALIDATION_ERROR', 'Invalid vnp_OrderInfo format, expected: tenant_id|credits|plan'), 400)
   }
 
-  const vndAmount = Math.round(parseInt(amount ?? '0', 10) / 100)
+  const vndAmount = Math.round(parseInt((amount as string) ?? '0', 10) / 100)
   const reason = `VNPAY: txn ${txnRef ?? 'unknown'}, ${vndAmount}đ`
   await addCredits(c.env.DB, tenant_id, credits, reason)
 
@@ -176,29 +205,17 @@ paymentVnRoutes.get('/vnpay/ipn', async (c) => {
 
 // POST /create — Create payment URL (mock)
 paymentVnRoutes.post('/create', async (c) => {
-  let body: {
-    method?: string
-    tenant_id?: string
-    plan?: string
-    amount?: number
-    credits?: number
-  }
-
+  let body: CreatePaymentBody
   try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
+    body = createPaymentSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
   const { method, tenant_id, plan, amount, credits } = body
-
-  if (!method || !tenant_id || !amount || !credits) {
-    return c.json({ error: 'Missing required fields: method, tenant_id, amount, credits' }, 400)
-  }
-
-  if (!['momo', 'vnpay'].includes(method)) {
-    return c.json({ error: 'Invalid method, use: momo or vnpay' }, 400)
-  }
 
   const orderId = `${tenant_id}-${Date.now()}`
 
