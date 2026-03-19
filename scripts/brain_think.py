@@ -11,12 +11,27 @@ import re
 import os
 
 CMD_NAMES = (
+    # Core commands
     "cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|"
-    "backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm"
+    "backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm|"
+    # Engineering layer (from cto-command-catalog.json)
+    "engineering-refactor|eng-sprint-execute|eng-tech-debt|"
+    "dev-feature|dev-bug-sprint|dev-pr-review|"
+    "backend-db-task|tech-architecture-review|tech-migration|"
+    # Ops layer
+    "ops-health-sweep|ops-security-audit|"
+    "devops-deploy-pipeline|devops-rollback|"
+    "sre-incident|sre-morning-check|release-ship|release-hotfix|"
+    # Product layer
+    "product-discovery|product-launch-feature|product-sprint-plan|"
+    "product-retrospective|product-competitive-intel|"
+    # Business layer
+    "business-campaign-launch|business-client-onboard|"
+    "business-revenue-engine|business-quarterly-review"
 )
 
 
-def call_ollama(url, model, prompt, think=True, timeout=120):
+def call_ollama(url, model, prompt, think=True, timeout=30):
     """Call Ollama generate API, return parsed JSON."""
     payload = {
         "model": model,

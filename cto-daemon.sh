@@ -34,11 +34,17 @@ RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard,
 
 # ---- DOANH TRẠI: Pane Roles (Binh Pháp military model) ----
 # P1=TIÊN PHONG (complex/plan), P2=CÔNG BINH (build/fix), P3=HIẾN BINH (review/test)
+PANE_ROLE_0="tien_phong"   # Pane 0: mekong-cli monorepo — complex/planning tasks
 PANE_ROLE_1="tien_phong"   # Complex tasks: /plan:hard, /cook complex features, /debug hard bugs
 PANE_ROLE_2="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api-build
 PANE_ROLE_3="hien_binh"    # Review tasks: /review, /test, /check-and-commit
 
 # Role-specific fallback tasks (indexed arrays — bash 3.2 compatible)
+ROLE_FB_0_0='/plan:hard "Analyze monorepo architecture — packages/ dependency graph and build order"'
+ROLE_FB_0_1='/eng-tech-debt "Audit mekong-cli TypeScript errors and dead code across all packages"'
+ROLE_FB_0_2='/ops-health-sweep "Run health checks on all packages — build, lint, test status"'
+ROLE_FB_0_COUNT=3
+
 ROLE_FB_1_0='/plan:hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
 ROLE_FB_1_1='/cook "Implement missing governance features — check spec vs implementation gaps"'
 ROLE_FB_1_2='/debug "Analyze and fix any TypeScript errors across all packages"'
@@ -402,7 +408,7 @@ get_pane_config() {
 
 # Load worker names and dirs from unified panes config
 declare -A WORKER_NAME WORKER_DIR WORKER_DEPLOY WORKER_RETRIES
-for idx in 1 2 3; do
+for idx in 0 1 2 3; do
   WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
   WORKER_DIR[$idx]=$(get_pane_config "$idx" "dir")
   WORKER_DEPLOY[$idx]=$(get_pane_config "$idx" "deploy_cmd")
@@ -417,7 +423,7 @@ done
 refresh_worker_mapping() {
   # Use config file as source of truth — NEVER auto-remap from pane path
   # CC CLI always runs from monorepo root, so pane_current_path is unreliable
-  for idx in 1 2 3; do
+  for idx in 0 1 2 3; do
     # Only load from config if not already set (first run)
     if [[ -z "${WORKER_NAME[$idx]:-}" ]]; then
       WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
@@ -1148,9 +1154,9 @@ if ! tmux has-session -t "${CTO_SESSION}" 2>/dev/null; then
 else
   # Verify pane count
   pane_count=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
-  if [[ "$pane_count" -lt 3 ]]; then
+  if [[ "$pane_count" -lt 4 ]]; then
     log "BOOTSTRAP: Only ${pane_count} panes in '${CTO_SESSION}' — adding missing panes"
-    while [[ "$pane_count" -lt 3 ]]; do
+    while [[ "$pane_count" -lt 4 ]]; do
       tmux split-window -t "${CTO_SESSION}:0" 2>/dev/null || break
       pane_count=$((pane_count + 1))
     done
@@ -1204,7 +1210,7 @@ while true; do
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
   # FIX: max 1 dispatch per cycle (brain call takes 30s → prevents serial stuffing)
   dispatched_this_cycle=false
-  for pane_idx in 1 2 3; do
+  for pane_idx in 0 1 2 3; do
     # Guard: any failure in per-pane logic must not kill the loop
     {
       output=$(capture_pane "$pane_idx") || output=""
