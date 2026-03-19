@@ -30,6 +30,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from src.core.error_responses import ErrorCode, error_response
+from src.core.input_validation import (
+    validate_required,
+    validate_string_length,
+    validate_url,
+    validate_enum_value,
+)
 from src.core.gateway_api import (
     MissionRequest,
     create_mission,
@@ -256,22 +263,40 @@ async def get_mission_status(mission_id: str) -> MissionStatusResponse:
 
     Returns mission state including progress (steps completed/total).
     """
-    if mission_id not in MISSION_STORE:
-        raise HTTPException(status_code=404, detail="Mission not found")
+    # Validate mission_id format
+    if not mission_id or not mission_id.strip():
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "INVALID_INPUT", "message": "Mission ID cannot be empty"},
+        )
 
-    mission = MISSION_STORE[mission_id]
-    steps = mission.get("steps", [])
+    try:
+        if mission_id not in MISSION_STORE:
+            logger.warning("Mission not found: %s", mission_id)
+            raise HTTPException(status_code=404, detail="Mission not found")
 
-    return MissionStatusResponse(
-        mission_id=mission_id,
-        status=mission["status"],
-        goal=mission["goal"],
-        tenant_id=mission["tenant_id"],
-        created_at=mission["created_at"],
-        updated_at=datetime.now(timezone.utc).isoformat(),
-        steps_total=len(steps),
-        steps_completed=sum(1 for s in steps if s.get("status") == "completed"),
-    )
+        mission = MISSION_STORE[mission_id]
+        steps = mission.get("steps", [])
+
+        return MissionStatusResponse(
+            mission_id=mission_id,
+            status=mission["status"],
+            goal=mission["goal"],
+            tenant_id=mission["tenant_id"],
+            created_at=mission["created_at"],
+            updated_at=datetime.now(timezone.utc).isoformat(),
+            steps_total=len(steps),
+            steps_completed=sum(1 for s in steps if s.get("status") == "completed"),
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Get mission status failed for %s: %s", mission_id, str(e))
+        raise HTTPException(
+            status_code=500,
+            detail={"error": "INTERNAL_ERROR", "message": "Failed to get mission status"},
+        )
 
 
 @app.get("/v1/missions/{mission_id}/stream")
@@ -283,47 +308,74 @@ async def stream_mission(mission_id: str) -> StreamingResponse:
 
     **Important:** Client must handle reconnection if stream drops.
     """
+    if not mission_id or not mission_id.strip():
+        raise HTTPException(
+            status_code=400,
+            detail=error_response(
+                ErrorCode.MISSING_FIELD,
+                "Mission ID is required",
+            ).to_dict(),
+        )
+
     if mission_id not in MISSION_STORE:
         raise HTTPException(status_code=404, detail="Mission not found")
 
     async def event_generator() -> AsyncGenerator[str, None]:
         """Generate SSE events."""
         mission = MISSION_STORE[mission_id]
+        max_poll_duration = 300  # 5 minute timeout
+        start_time = asyncio.get_event_loop().time()
 
-        # Send initial state
-        event = {
-            "event_type": "mission.state",
-            "mission_id": mission_id,
-            "data": {
-                "status": mission["status"],
-                "goal": mission["goal"],
-                "steps": mission.get("steps", []),
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-        yield f"data: {json.dumps(event)}\n\n"
+        try:
+            # Send initial state
+            event = {
+                "event_type": "mission.state",
+                "mission_id": mission_id,
+                "data": {
+                    "status": mission["status"],
+                    "goal": mission["goal"],
+                    "steps": mission.get("steps", []),
+                },
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            yield f"data: {json.dumps(event)}\n\n"
 
-        # Stream events from mission queue
-        last_event_idx = 0
-        while True:
-            events = mission.get("events", [])
-            if len(events) > last_event_idx:
-                for evt in events[last_event_idx:]:
-                    yield f"data: {json.dumps(evt)}\n\n"
-                last_event_idx = len(events)
+            last_event_idx = 0
+            while True:
+                # Timeout protection
+                if (asyncio.get_event_loop().time() - start_time) > max_poll_duration:
+                    logger.warning("Stream timeout for mission %s", mission_id)
+                    break
 
-            # Check if mission completed
-            if mission["status"] in ["completed", "failed", "cancelled"]:
-                final_event = {
-                    "event_type": f"mission.{mission['status']}",
-                    "mission_id": mission_id,
-                    "data": {"final_state": mission},
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                }
-                yield f"data: {json.dumps(final_event)}\n\n"
-                break
+                events = mission.get("events", [])
+                if len(events) > last_event_idx:
+                    for evt in events[last_event_idx:]:
+                        yield f"data: {json.dumps(evt)}\n\n"
+                    last_event_idx = len(events)
 
-            await asyncio.sleep(0.5)  # Poll for new events
+                if mission["status"] in ["completed", "failed", "cancelled"]:
+                    final_event = {
+                        "event_type": f"mission.{mission['status']}",
+                        "mission_id": mission_id,
+                        "data": {"final_state": mission},
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                    yield f"data: {json.dumps(final_event)}\n\n"
+                    break
+
+                await asyncio.sleep(0.5)  # Poll for new events
+
+        except asyncio.CancelledError:
+            logger.info("Stream cancelled for mission %s", mission_id)
+        except Exception as e:
+            logger.error("Stream error for mission %s: %s", mission_id, str(e))
+            error_event = {
+                "event_type": "mission.error",
+                "mission_id": mission_id,
+                "data": {"error": str(e)},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            yield f"data: {json.dumps(error_event)}\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -345,23 +397,51 @@ async def test_webhook(request: TestWebhookRequest) -> TestWebhookResponse:
     """
     import time
 
+    # Validate webhook_url
+    error = validate_required(request.webhook_url, "webhook_url")
+    if error:
+        logger.warning("Webhook test failed validation: %s", error.message)
+        return TestWebhookResponse(
+            success=False,
+            message=error.message,
+            response_time_ms=0,
+        )
+
+    error = validate_url(request.webhook_url, "webhook_url")
+    if error:
+        logger.warning("Webhook test failed validation: %s", error.message)
+        return TestWebhookResponse(
+            success=False,
+            message=error.message,
+            response_time_ms=0,
+        )
+
     start = time.time()
-    success, message = validate_webhook_url(request.webhook_url)
-    elapsed_ms = (time.time() - start) * 1000
+    try:
+        success, message = validate_webhook_url(request.webhook_url)
+        elapsed_ms = (time.time() - start) * 1000
 
-    status_code = None
-    if "HTTP" in message:
-        try:
-            status_code = int(message.split()[-1])
-        except (ValueError, IndexError):
-            pass
+        status_code = None
+        if "HTTP" in message:
+            try:
+                status_code = int(message.split()[-1])
+            except (ValueError, IndexError):
+                pass
 
-    return TestWebhookResponse(
-        success=success,
-        message=message,
-        status_code=status_code,
-        response_time_ms=elapsed_ms,
-    )
+        return TestWebhookResponse(
+            success=success,
+            message=message,
+            status_code=status_code,
+            response_time_ms=elapsed_ms,
+        )
+
+    except Exception as e:
+        logger.error("Webhook test error for %s: %s", request.webhook_url, str(e))
+        return TestWebhookResponse(
+            success=False,
+            message=f"Webhook test failed: {str(e)}",
+            response_time_ms=0,
+        )
 
 
 @app.get("/v1/webhook/schema")
@@ -386,28 +466,59 @@ async def mcu_deduct(request: MCUDeductRequest) -> MCUDeductResponse:
 
     Complexity costs: simple=1 MCU, standard=3 MCU, complex=5 MCU.
     """
-    if request.complexity not in MCU_COSTS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid complexity: {request.complexity}. Use: simple, standard, complex",
+    # Validate required fields
+    error = validate_required(request.tenant_id, "tenant_id")
+    if error:
+        logger.warning("MCU deduct failed validation: %s", error.message)
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    # Validate complexity
+    error = validate_enum_value(
+        request.complexity,
+        "complexity",
+        ["simple", "standard", "complex"],
+        f"Invalid complexity '{request.complexity}'. Use: simple, standard, complex",
+    )
+    if error:
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    try:
+        result = mcu_billing.deduct(
+            tenant_id=request.tenant_id,
+            complexity=request.complexity,
+            mission_id=request.mission_id,
         )
 
-    result = mcu_billing.deduct(
-        tenant_id=request.tenant_id,
-        complexity=request.complexity,
-        mission_id=request.mission_id,
-    )
+        if not result.success:
+            # Check error type for appropriate status code
+            if "Insufficient MCU" in result.error:
+                raise HTTPException(
+                    status_code=402,  # Payment Required
+                    detail={
+                        "error": "INSUFFICIENT_CREDITS",
+                        "message": result.error,
+                        "balance": result.balance_after,
+                        "required": MCU_COSTS[request.complexity],
+                    },
+                )
+            raise HTTPException(status_code=400, detail=result.error)
 
-    if not result.success:
-        raise HTTPException(status_code=402, detail=result.error)
+        return MCUDeductResponse(
+            success=result.success,
+            balance_before=result.balance_before,
+            balance_after=result.balance_after,
+            amount_deducted=result.amount_deducted,
+            low_balance=result.low_balance,
+        )
 
-    return MCUDeductResponse(
-        success=result.success,
-        balance_before=result.balance_before,
-        balance_after=result.balance_after,
-        amount_deducted=result.amount_deducted,
-        low_balance=result.low_balance,
-    )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("MCU deduct failed for tenant %s: %s", request.tenant_id, str(e))
+        raise HTTPException(
+            status_code=500,
+            detail={"error": "INTERNAL_ERROR", "message": "Failed to deduct MCU credits"},
+        )
 
 
 @app.get("/health")
@@ -418,6 +529,11 @@ async def health_check() -> dict:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": "3.3.0",
     }
+
+
+# Add request logging middleware
+from src.core.request_logger import RequestLoggerMiddleware
+app.add_middleware(RequestLoggerMiddleware)
 
 
 # =============================================================================
