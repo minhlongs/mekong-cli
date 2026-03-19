@@ -234,20 +234,48 @@ if [[ -f "$COMMAND_CATALOG_FILE" ]]; then
   COMMAND_CATALOG=$(cat "$COMMAND_CATALOG_FILE")
 fi
 
-# Call Ollama via standalone Python script (handles thinking mode, /no_think, keep_alive)
-# Tracks consecutive failures — auto-restarts Ollama after BRAIN_MAX_FAILS
+# Call Ollama via standalone Python script with 45s hard timeout
+# Uses bash background + wait to prevent daemon hang on brain freeze
+BRAIN_TIMEOUT=45
+
 cto_brain_think() {
   local prompt="$1"
   local sd; sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local result
-  result=$(OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>>"${MEKONG_DIR}/brain-errors.log")
-  local exit_code=$?
+  local tmpfile="${MEKONG_DIR}/brain-output.tmp"
 
-  if [[ $exit_code -ne 0 || -z "$result" ]]; then
+  # Run brain in background with hard timeout
+  (OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" \
+    python3 "${sd}/scripts/brain_think.py" <<< "$prompt" \
+    > "$tmpfile" 2>>"${MEKONG_DIR}/brain-errors.log") &
+  local brain_pid=$!
+
+  # Wait with timeout (portable macOS — no gtimeout needed)
+  local elapsed=0
+  while kill -0 "$brain_pid" 2>/dev/null && [[ $elapsed -lt $BRAIN_TIMEOUT ]]; do
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  # Kill if still running (timed out)
+  if kill -0 "$brain_pid" 2>/dev/null; then
+    kill "$brain_pid" 2>/dev/null
+    wait "$brain_pid" 2>/dev/null
+    echo "[$(date '+%H:%M:%S')] BRAIN: TIMEOUT after ${BRAIN_TIMEOUT}s" >> "$LOG_FILE"
+    BRAIN_CONSECUTIVE_FAILS=$((BRAIN_CONSECUTIVE_FAILS + 1))
+    rm -f "$tmpfile"
+    echo ""
+    return
+  fi
+
+  wait "$brain_pid" 2>/dev/null
+  local result
+  result=$(cat "$tmpfile" 2>/dev/null)
+  rm -f "$tmpfile"
+
+  if [[ -z "$result" ]]; then
     BRAIN_CONSECUTIVE_FAILS=$((BRAIN_CONSECUTIVE_FAILS + 1))
     if [[ $BRAIN_CONSECUTIVE_FAILS -ge $BRAIN_MAX_FAILS ]]; then
-      log "BRAIN CRITICAL: ${BRAIN_CONSECUTIVE_FAILS} consecutive failures — auto-recovering Ollama"
-      save_memory "BRAIN" "CRITICAL: ${BRAIN_CONSECUTIVE_FAILS} fails, triggering auto-recovery"
+      echo "[$(date '+%H:%M:%S')] BRAIN CRITICAL: ${BRAIN_CONSECUTIVE_FAILS} fails — auto-recovering" >> "$LOG_FILE"
       ollama_auto_recover
       BRAIN_CONSECUTIVE_FAILS=0
     fi
@@ -1065,11 +1093,15 @@ LAST_DISPATCH_1=0
 LAST_DISPATCH_2=0
 LAST_DISPATCH_3=0
 DISPATCH_COOLDOWN=180
+CRASH_COUNT=0
+
 while true; do
+  # Wrap entire cycle in error trap — never let one bad cycle kill daemon
+  {
   CYCLE=$((CYCLE + 1))
   NOW=$(date +%s)
-  _catalog_cache=""  # Clear catalog cache each cycle (pick up config changes)
-  _codebase_ctx=""   # Clear codebase context cache each cycle
+  _catalog_cache=""
+  _codebase_ctx=""
   log "--- CYCLE $CYCLE ---"
 
   # Re-detect which project is in which pane (handles index shifts from respawns)
@@ -1164,6 +1196,16 @@ while true; do
   if [[ $((CYCLE % 20)) -eq 0 ]]; then
     phase_scan || true
   fi
+
+  CRASH_COUNT=0  # Reset on successful cycle
+  } || {
+    CRASH_COUNT=$((CRASH_COUNT + 1))
+    log "CYCLE $CYCLE CRASHED (attempt ${CRASH_COUNT}) — recovering"
+    if [[ $CRASH_COUNT -ge 10 ]]; then
+      log "FATAL: 10 consecutive crashes — daemon giving up"
+      exit 1
+    fi
+  }
 
   sleep "$POLL_INTERVAL"
 done
