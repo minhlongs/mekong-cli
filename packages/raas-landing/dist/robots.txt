@@ -1,4 +1,34 @@
+# Robots.txt for OpenClaw / AgencyOS
+# https://agencyos.network/robots.txt
+
 User-agent: *
 Allow: /
 
-Sitemap: https://raas-landing.pages.dev/sitemap.xml
+# Crawl delay for all bots
+Crawl-delay: 1
+
+# Block sensitive and non-public paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /_astro/
+Disallow: /*?*
+Disallow: /*.json$
+
+# Google specific rules
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Bing specific rules
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block image crawling for certain paths
+User-agent: Googlebot-Image
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://agencyos.network/sitemap.xml

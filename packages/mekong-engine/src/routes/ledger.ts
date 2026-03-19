@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { z } from 'zod'
 import type { D1Database } from '@cloudflare/workers-types'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
@@ -7,6 +8,22 @@ import { authMiddleware } from '../raas/auth-middleware'
 type Variables = { tenant: Tenant }
 const ledgerRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 ledgerRoutes.use('*', authMiddleware)
+
+// Zod schemas
+const transferSchema = z.object({
+  from_code: z.string().min(1, 'from_code is required').max(100, 'from_code must be ≤100 chars'),
+  to_code: z.string().min(1, 'to_code is required').max(100, 'to_code must be ≤100 chars'),
+  amount: z.number().positive('amount must be positive').max(1_000_000_000, 'amount too large'),
+  description: z.string().max(500, 'description must be ≤500 chars').optional(),
+  entry_type: z.string().max(50, 'entry_type must be ≤50 chars').optional(),
+  idempotency_key: z.string().max(100, 'idempotency_key must be ≤100 chars').optional(),
+})
+
+const topupSchema = z.object({
+  account_code: z.string().min(1, 'account_code is required').max(100, 'account_code must be ≤100 chars'),
+  amount: z.number().positive('amount must be positive').max(1_000_000_000, 'amount too large'),
+  description: z.string().max(500, 'description must be ≤500 chars').optional(),
+})
 
 // Ensure account exists (upsert)
 async function ensureAccount(db: D1Database, tenantId: string, code: string, type: string, ownerId?: string) {

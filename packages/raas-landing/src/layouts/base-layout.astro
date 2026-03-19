@@ -8,6 +8,10 @@ interface Props {
   image?: string;
   keywords?: string;
   noindex?: boolean;
+  publishedTime?: string;
+  modifiedTime?: string;
+  section?: string;
+  type?: 'website' | 'article';
 }
 const {
   title = 'OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động',
@@ -17,6 +21,10 @@ const {
   image = '/og-default.jpg',
   keywords,
   noindex = false,
+  publishedTime,
+  modifiedTime,
+  section,
+  type = 'website',
 } = Astro.props;
 const isEn = lang === 'en';
 const base = isEn ? '/en' : '';
@@ -80,6 +88,36 @@ const webSiteSchema = {
     "query-input": "required name=search_term_string"
   }
 };
+
+// Article JSON-LD (for blog posts)
+const articleSchema = type === 'article' && publishedTime ? {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "inLanguage": lang,
+  "datePublished": publishedTime,
+  "dateModified": modifiedTime || publishedTime,
+  "author": {
+    "@type": "Organization",
+    "name": "OpenClaw Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenClaw",
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${siteUrl}/logo.jpg`
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalUrl
+  }
+} : null;
+
+// Combine schemas
+const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ? [articleSchema] : []);
 ---
 <!doctype html>
 <html lang={lang}>
@@ -103,7 +141,7 @@ const webSiteSchema = {
   <link rel="alternate" hreflang="x-default" href={siteUrl} />
 
   <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content={type} />
   <meta property="og:url" content={canonicalUrl} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
@@ -115,6 +153,9 @@ const webSiteSchema = {
   <meta property="og:locale" content={isEn ? 'en_US' : 'vi_VN'} />
   <meta property="og:locale:alternate" content="vi_VN" />
   <meta property="og:locale:alternate" content="en_US" />
+  {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+  {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+  {section && <meta property="article:section" content={section} />}
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -125,6 +166,8 @@ const webSiteSchema = {
   <meta name="twitter:image:alt" content="OpenClaw Platform Screenshot" />
   <meta name="twitter:site" content="@agencyos" />
   <meta name="twitter:creator" content="@agencyos" />
+  <meta name="twitter:label1" content={isEn ? 'Reading time' : 'Thời gian đọc'} />
+  <meta name="twitter:data1" content="5 min" />
 
   <!-- Google / Search Engine -->
   <meta name="theme-color" content="#00BCD4" />
@@ -154,7 +197,7 @@ const webSiteSchema = {
 <body>
 
 <!-- Structured Data JSON-LD -->
-<script type="application/ld+json" set:html={JSON.stringify([organizationSchema, webSiteSchema])} />
+<script type="application/ld+json" set:html={JSON.stringify(jsonLdSchemas)} />
 
 <!-- Sticky nav -->
 <nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass">

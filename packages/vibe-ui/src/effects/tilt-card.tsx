@@ -1,8 +1,8 @@
-import React, { useRef, ReactNode } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, MotionValue } from 'framer-motion';
+import React, { useRef, type ReactNode } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, type MotionValue } from 'framer-motion';
 
 export interface TiltCardProps {
-    children: ReactNode | MotionValue<number> | MotionValue<string>;
+    children: ReactNode;
     className?: string;
     intensity?: number;
 }
@@ -37,7 +37,7 @@ export function TiltCard({ children, className = '', intensity = 15 }: TiltCardP
                 className="absolute inset-0 rounded-3xl pointer-events-none"
                 style={{
                     background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, transparent 100%)',
-                    opacity: useTransform(x, [-0.5, 0, 0.5], [0, 0.3, 0]),
+                    opacity: useTransform(x, [-0.5, 0, 0.5], [0, 0.3, 0]) as unknown as number | MotionValue<number>,
                 }}
             />
         </motion.div>

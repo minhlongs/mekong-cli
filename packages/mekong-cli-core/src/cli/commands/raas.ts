@@ -1,18 +1,45 @@
 /**
  * raas.ts — RaaS CLI commands for license and credit management
- * @ts-nocheck - rootDir constraint with cross-package imports
  */
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
-import {
-  handleValidate,
-  handleGetBalance,
-  handleListTiers,
-  handleRegisterTenant,
-  handleGetUsage,
-} from '@openclaw/engine/raas/raas-api.js';
-import { handleOnboardTenant } from '@openclaw/engine/raas/raas-onboarding.js';
+
+// Dynamic imports to avoid TypeScript module resolution issues
+async function getRaasApiModules() {
+  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
+  const mod = await import('@openclaw/engine/raas/raas-api.js');
+  const { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage } = mod;
+  return { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage };
+}
+
+async function getRaasOnboardingModules() {
+  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
+  const mod = await import('@openclaw/engine/raas/raas-onboarding.js');
+  const { handleOnboardTenant, validateApiKey, revokeApiKey } = mod;
+  return { handleOnboardTenant, validateApiKey, revokeApiKey };
+}
+
+async function getRaasBillingModules() {
+  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
+  const mod = await import('@openclaw/engine/raas/raas-billing');
+  const { getUsageAnalytics } = mod;
+  return { getUsageAnalytics };
+}
+
+async function getRaasRateLimiterModules() {
+  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
+  const mod = await import('@openclaw/engine/raas/raas-rate-limiter');
+  const { getRateLimitStatus } = mod;
+  return { getRateLimitStatus };
+}
+
+async function getRaasHealthModules() {
+  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
+  const mod = await import('@openclaw/engine/raas/raas-health');
+  const { checkHealth } = mod;
+  return { checkHealth };
+}
 
 export function registerRaasCommand(program: Command, _engine: MekongEngine): void {
   const raas = program
@@ -24,6 +51,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Validate tenant license and meter credits')
     .action(async (tenantId: string, command: string, credits?: string) => {
       try {
+        const { handleValidate } = await getRaasApiModules();
         const cost = credits ? parseInt(credits, 10) : 1;
         const result = handleValidate(tenantId, command, cost);
         if (result.ok) {
@@ -44,6 +72,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Check credit balance for a tenant')
     .action(async (tenantId: string) => {
       try {
+        const { handleGetBalance } = await getRaasApiModules();
         const result = handleGetBalance(tenantId);
         if (result.ok && result.data) {
           info(`Tier: ${result.data.tier}`);
@@ -62,6 +91,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('List available pricing tiers')
     .action(async () => {
       try {
+        const { handleListTiers } = await getRaasApiModules();
         const result = handleListTiers();
         if (result.ok && result.data) {
           const tiers = result.data as Record<string, { priceUsd: number; creditsPerMonth: number; maxProjects: number }>;
@@ -79,6 +109,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Register a new tenant with a tier')
     .action(async (tenantId: string, tier: string) => {
       try {
+        const { handleRegisterTenant } = await getRaasApiModules();
         const result = handleRegisterTenant({
           tenantId,
           tier: tier as 'starter' | 'pro' | 'enterprise',
@@ -101,6 +132,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Full onboarding: register tenant + generate API key')
     .action(async (tenantId: string, tier: string, email: string) => {
       try {
+        const { handleOnboardTenant } = await getRaasOnboardingModules();
         const result = handleOnboardTenant({
           tenantId,
           tier: tier as 'starter' | 'pro' | 'enterprise',
@@ -126,7 +158,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Validate an API key')
     .action(async (apiKey: string) => {
       try {
-        const { validateApiKey } = await import('@openclaw/engine/raas/raas-onboarding');
+        const { validateApiKey } = await getRaasOnboardingModules();
         const result = validateApiKey(apiKey);
         if (result.ok && result.data) {
           success(`✅ Valid — tenant: ${result.data.tenantId}, tier: ${result.data.tier}`);
@@ -145,7 +177,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Revoke an API key')
     .action(async (apiKey: string) => {
       try {
-        const { revokeApiKey } = await import('@openclaw/engine/raas/raas-onboarding');
+        const { revokeApiKey } = await getRaasOnboardingModules();
         const result = revokeApiKey(apiKey);
         if (result.ok) {
           success('✅ API key revoked');
@@ -164,11 +196,12 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('Show tenant status: credits, rate limits, health')
     .action(async (tenantId: string) => {
       try {
-        const { getUsageAnalytics } = await import('@openclaw/engine/raas/raas-billing');
-        const { getRateLimitStatus } = await import('@openclaw/engine/raas/raas-rate-limiter');
-        const { checkHealth } = await import('@openclaw/engine/raas/raas-health');
+        const { getUsageAnalytics } = await getRaasBillingModules();
+        const { getRateLimitStatus } = await getRaasRateLimiterModules();
+        const { checkHealth } = await getRaasHealthModules();
 
         // Balance
+        const { handleGetBalance } = await getRaasApiModules();
         const bal = handleGetBalance(tenantId);
         if (!bal.ok) {
           showError(bal.error ?? 'Tenant not found');
@@ -209,7 +242,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
     .description('RaaS system health check')
     .action(async () => {
       try {
-        const { checkHealth } = await import('@openclaw/engine/raas/raas-health');
+        const { checkHealth } = await getRaasHealthModules();
         const result = checkHealth();
         if (result.ok && result.data) {
           success(`Status: ${result.data.status} | v${result.data.version}`);

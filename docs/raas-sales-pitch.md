@@ -1,26 +1,32 @@
 # RaaS Sales Pitch — Revenue-as-a-Service
 
-> Transform your agency from hourly billing to outcome-based revenue.
+> **Transform your agency from hourly billing to outcome-based revenue.**
+> *Track every dollar. Measure every outcome. Prove ROI in real-time.*
 
 ---
 
 ## The Problem: Hourly Billing is Broken
 
-- Clients hate unpredictable costs
-- Agencies penalized for efficiency
-- Revenue capped by human capacity
-- Constant scope negotiations
+| Clients Hate | Agencies Hate |
+|--------------|---------------|
+| Unpredictable costs | Revenue capped by hours |
+| Paying for inefficiency | Penalized for speed |
+| Scope negotiations | Feast-or-famine cash flow |
 
-## The Solution: RaaS
+**Result:** Adversarial relationship. Everyone loses.
 
-**Revenue-as-a-Service (RaaS)** flips the model:
+---
+
+## The Solution: RaaS (Revenue-as-a-Service)
 
 | Old Model (Hourly) | New Model (RaaS) |
 |--------------------|------------------|
-| Bill for hours worked | Bill for outcomes delivered |
-| Client manages tasks | AI agents execute autonomously |
+| Bill for hours | Bill for outcomes |
+| Client manages tasks | AI agents execute |
 | Revenue = hours × rate | Revenue = missions × tier |
-| Scaling = hire more | Scaling = deploy more agents |
+| Scale = hire more | Scale = deploy more agents |
+
+**Bottom Line:** Clients get predictability. Agencies get scalability. Everyone wins.
 
 ---
 
@@ -30,15 +36,14 @@
 
 **For:** Solo founders, indie hackers, small automation needs
 
-**Includes:**
-- **200 credits/month** (1 credit = 1 MCU unit)
-- **3 projects** maximum
-- **Basic Commands**: `/cook`, `/fix`, `/plan`, `/test`, `/review`
-- **Local LLM Support**: Ollama integration
-- **Email Support**: 48hr response time
-- **Community Recipes**: Access to public Binh Phap collection
-
-**ROI:** Automate 10-15 hours of manual work/month
+| | |
+|---|---|
+| **Credits** | 200/month |
+| **Projects** | 3 max |
+| **Commands** | `/cook`, `/fix`, `/plan`, `/test`, `/review` |
+| **LLM** | Local (Ollama) |
+| **Support** | Email, 48hr |
+| **ROI** | Automate 10-15 hrs/month |
 
 **Best For:**
 - Weekly report automation
@@ -48,22 +53,20 @@
 
 ---
 
-### 🟡 Pro — $149/mo
+### 🟡 Pro — $149/mo ⭐ MOST POPULAR
 
 **For:** Growing agencies, startups, product teams
 
-**Includes:**
-- **1,000 credits/month** (5x Starter)
-- **10 projects** maximum
-- **All Starter Features +**:
-- **Advanced Commands**: `/deploy`, `/audit`, `/security`, `/kanban`
-- **Multi-Agent Teams**: Parallel subagent execution
-- **Antigravity Proxy**: Premium LLM routing (Claude 4.6, Gemini 1.5 Pro)
-- **API Access**: Programmatic mission submission
-- **Priority Support**: 12hr response time
-- **ROI Dashboard**: Track credits → outcomes
-
-**ROI:** Automate 50-75 hours of manual work/month
+| | |
+|---|---|
+| **Credits** | 1,000/month (5x Starter) |
+| **Projects** | 10 max |
+| **Commands** | All basic + `/deploy`, `/audit`, `/security`, `/kanban` |
+| **LLM** | Premium (Claude 4.6, Gemini 1.5 Pro) |
+| **Support** | Priority, 12hr |
+| **ROI Dashboard** | ✅ Live tracking |
+| **API Access** | ✅ Programmatic missions |
+| **ROI** | Automate 50-75 hrs/month |
 
 **Best For:**
 - Full sprint automation
@@ -78,54 +81,32 @@
 
 **For:** Scale-ups, enterprises, high-volume operations
 
-**Includes:**
-- **Unlimited credits** (no caps)
-- **Unlimited projects**
-- **All Pro Features +**:
-- **SLA Guarantee**: 99.9% uptime, 4hr emergency response
-- **Custom Agents**: Bespoke agent training on your codebase
-- **Private Knowledge Vault**: Data never leaves your boundary
-- **Dedicated Engineer**: Assigned from Binh Phap Venture Studio
-- **Quarterly DR Drills**: Disaster recovery testing
-- **White-Label Dashboard**: Custom client portals
-- **Custom Quality Gates**: HIPAA, SOC2, industry compliance
-
-**ROI:** Automate 200+ hours of manual work/month
+| | |
+|---|---|
+| **Credits** | Unlimited |
+| **Projects** | Unlimited |
+| **Commands** | All Pro + custom |
+| **LLM** | Any provider + custom fine-tuning |
+| **Support** | Dedicated engineer, 4hr SLA |
+| **Uptime SLA** | 99.9% guarantee |
+| **Custom Agents** | Trained on your codebase |
+| **Private Vault** | Data never leaves boundary |
+| **Compliance** | HIPAA, SOC2, custom gates |
+| **ROI** | Automate 200+ hrs/month |
 
 **Best For:**
 - Enterprise-wide automation
 - Regulated industry compliance
 - Multi-team coordination
 - 24/7 autonomous operations
-- Custom AGI evolution loops
-
----
-
-## Feature Deep Dive
-
-### AI Agents — Your Digital Workforce
-
-Each tier unlocks more sophisticated agent capabilities:
-
-| Capability | Starter | Pro | Enterprise |
-|------------|---------|-----|------------|
-| Single Agent | ✓ | ✓ | ✓ |
-| Multi-Agent Teams | — | ✓ | ✓ |
-| Custom Trained Agents | — | — | ✓ |
-| Autonomous CTO Mode | — | ✓ | ✓ |
-
-**What Agents Can Do:**
-- Write and refactor code
-- Run tests and fix bugs
-- Deploy to production
-- Monitor and self-heal
-- Conduct security audits
 
 ---
 
 ## ROI Tracking — The Heart of RaaS
 
-**Stop guessing. Start measuring.** Every mission tracked, every credit accounted for.
+### Stop Guessing. Start Measuring.
+
+Every mission tracked. Every credit accounted for. Every dollar of value proven.
 
 ### Real-Time Dashboard
 
@@ -144,16 +125,6 @@ Each tier unlocks more sophisticated agent capabilities:
 *Based on $150/hr agency rate
 ```
 
-### What Gets Measured
-
-| Metric | What It Shows | Why It Matters |
-|--------|---------------|----------------|
-| **Credits → Outcomes** | Cost per mission completed | Prove every dollar generates value |
-| **Hours Saved** | Manual work automated | Translate to client billing equivalents |
-| **Success Rate** | % missions without errors | Reliability = trust |
-| **Tech Debt Eliminated** | TODOs, `any` types, console.logs removed | Code quality = future velocity |
-| **Cycle Time** | Goal → deployed time | Speed = competitive advantage |
-
 ### ROI Calculator (Built-In)
 
 ```
@@ -166,9 +137,19 @@ Pro Tier Example:
 = 62x ROI
 ```
 
+### What Gets Measured
+
+| Metric | What It Shows | Why It Matters |
+|--------|---------------|----------------|
+| **Credits → Outcomes** | Cost per mission | Prove every dollar generates value |
+| **Hours Saved** | Manual work automated | Translate to billing equivalents |
+| **Success Rate** | % missions without errors | Reliability = trust |
+| **Tech Debt Eliminated** | TODOs, `any` types removed | Code quality = velocity |
+| **Cycle Time** | Goal → deployed time | Speed = competitive advantage |
+
 ### Client Reporting Mode (Pro+)
 
-**White-label reports** your clients can understand:
+White-label reports your clients can understand:
 
 ```markdown
 # Monthly Value Report — [Client Name]
@@ -206,110 +187,120 @@ curl https://api.agencyos.network/v1/roi \
 
 ---
 
-### Governance — Enterprise-Grade Control
-
-**Security & Compliance:**
-- Bearer token authentication
-- Tenant isolation (data never shared)
-- Audit logging (every mission tracked)
-- Webhook signature verification
-- Role-based access control
-
-**Quality Gates:**
-- 0 `any` types allowed (type safety)
-- 0 `TODO`/`FIXME` comments
-- 0 `console.log` in production
-- 100% test pass required
-- Build < 10s required
-
-**Disaster Recovery:**
-- Daily automated backups
-- Point-in-time recovery
-- Quarterly DR drills (Enterprise)
-- RTO < 4hr, RPO < 24hr
-
----
-
 ## Credit System Explained
+
+### What is 1 Credit?
 
 **1 Credit = 1 MCU (Mission Control Unit)**
 
-| Mission Complexity | Credits | Example |
-|--------------------|---------|---------|
-| Simple | 1 | "Fix typo in README" |
-| Standard | 3 | "Add user authentication" |
-| Complex | 5 | "Migrate database schema" |
-| Multi-Agent | 10+ | "Full sprint automation" |
+| Complexity | Credits | Character Length | Example |
+|------------|---------|------------------|---------|
+| Simple | 1 | < 50 chars | "Fix typo in README" |
+| Standard | 3 | 50-149 chars | "Add user authentication" |
+| Complex | 5 | ≥ 150 chars | "Migrate database schema" |
+| Multi-Agent | 10+ | Parallel orchestration | "Full sprint automation" |
 
-**Auto-Detection:**
-- Simple: < 50 chars
-- Standard: 50-149 chars
-- Complex: ≥ 150 chars
+**Auto-Detection:** Complexity detected from mission length.
 
-**Unused Credits:** Roll over for Pro/Enterprise tiers
+**Unused Credits:**
+- Starter: No rollover
+- Pro: Rollover enabled
+- Enterprise: Unlimited (no tracking)
 
 ---
 
-## Why RaaS Wins
+## Quality Gates — Binh Phap Standards
 
-### For Agency Owners:
-- **Predictable Revenue**: Monthly recurring, not feast/famine
-- **Scalable Margins**: AI agents don't sleep, don't quit
-- **Competitive Moat**: Proprietary automation stack
-- **Higher Valuations**: SaaS multiples > services multiples
+Every mission MUST pass before delivery:
 
-### For Clients:
-- **Predictable Costs**: Know exact monthly spend
-- **Faster Delivery**: AI agents work 24/7
-- **Higher Quality**: Binh Phap quality gates enforced
-- **Transparent ROI**: Dashboard shows value delivered
+| Gate | Target | Verification |
+|------|--------|--------------|
+| Tech Debt | 0 TODO/FIXME | `grep -r "TODO\|FIXME" src` |
+| Type Safety | 0 `any` types | `grep -r ": any" src` |
+| Clean Code | 0 console.log | `grep -r "console\." src` |
+| Tests | 100% pass | `npm test` |
+| Performance | Build < 10s | `time npm run build` |
+
+**We don't ship tech debt. Period.**
 
 ---
 
 ## Competitive Comparison
 
-| Feature | RaaS (Us) | Traditional Agency | Freelancer | No-Code Tools |
-|---------|-----------|-------------------|------------|---------------|
-| Pricing Model | Fixed/mo | Hourly ($150-300/hr) | Hourly ($50-150/hr) | Subscription |
-| Turnaround | 24-48hr | 1-2 weeks | 3-5 days | Instant (limited) |
-| Quality Gates | Automated | Manual review | Varies | None |
-| Scalability | Unlimited | Hire more | capped | Platform limits |
-| Tech Stack | Any (LLM-driven) | Agency's stack | Freelancer's skill | Platform's stack |
+| Feature | RaaS | Traditional Agency | Zapier |
+|---------|------|-------------------|--------|
+| Pricing | Fixed/mo | $150-300/hr | $50/mo |
+| Code Writing | ✅ Yes | ✅ Yes | ❌ No |
+| Testing | ✅ 100% | ⚠️ Varies | ❌ N/A |
+| Deployment | ✅ Auto | ⚠️ Manual | ❌ No |
+| Tech Debt | ✅ 0 | ⚠️ Maybe | ❌ N/A |
+| 24/7 Ops | ✅ Yes | ❌ No | ❌ No |
+| ROI Tracking | ✅ Live | ❌ Manual | ❌ No |
+
+### True Cost Comparison
+
+**Scenario: Automate weekly reporting + bug fixes + deployments**
+
+| Platform | Monthly Cost | Annual |
+|----------|--------------|--------|
+| Zapier + Developer (20 hrs) | $3,050 | $36,600 |
+| **RaaS Pro** | **$149** | **$1,788** |
+| **You Save** | **$2,901/mo** | **$34,812/yr** |
 
 ---
 
-## Call to Action
+## Getting Started — 3 Steps
 
-### Start Your RaaS Transformation
+### 1. Book a Demo
+See live mission execution. Watch AI agents write, test, deploy in real-time.
+👉 `agencyos.network/demo`
 
-1. **Book a Demo**: See live mission execution
-2. **Pilot Program**: 14-day free trial (Pro tier)
-3. **Custom Quote**: Enterprise deployment assessment
+### 2. 14-Day Free Trial (Pro Tier)
+Full access. 1,000 credits. No credit card required.
+👉 `agencyos.network/pricing`
 
-**Contact:**
-- Email: sales@agencyos.network
-- Dashboard: https://agencyos.network/pricing
-- Demo: https://agencyos.network/demo
+### 3. Custom Quote (Enterprise)
+Deployment assessment + custom agent training.
+👉 `sales@agencyos.network`
 
 ---
 
 ## FAQ
 
 **Q: What happens if I run out of credits?**
-A: Starter/Pro tiers can purchase credit top-ups. Enterprise is unlimited.
+A: Starter/Pro can purchase top-ups at $0.25/credit. Enterprise is unlimited.
 
 **Q: Can I pause my subscription?**
-A: Yes, pause anytime. Projects remain accessible, missions queued until resume.
-
-**Q: How does the 14-day trial work?**
-A: Full Pro tier access. 1,000 credits. No credit card required. Cancel anytime.
+A: Yes, pause anytime. Projects accessible, missions queued until resume.
 
 **Q: What if a mission fails?**
 A: Credits automatically refunded. Audit log shows failure reason.
 
 **Q: Can I self-host?**
-A: Enterprise tier includes on-premise deployment option.
+A: Enterprise tier includes on-premise deployment with dedicated engineer.
+
+**Q: Is my code safe?**
+A: Yes. Enterprise includes private knowledge vault — data never leaves your boundary.
+
+**Q: What LLMs do you support?**
+A: All major providers via Antigravity Proxy: Claude 4.6, Gemini 1.5 Pro, Qwen 3.5+.
 
 ---
 
-© 2026 Binh Phap Venture Studio. *"The supreme art of war is to subdue the enemy without fighting."*
+## Contact
+
+| Channel | Details |
+|---------|---------|
+| **Email** | `sales@agencyos.network` |
+| **Website** | `agencyos.network/pricing` |
+| **Demo** | `agencyos.network/demo` |
+| **Docs** | `agencyos.network/docs` |
+
+---
+
+> **"The supreme art of war is to subdue the enemy without fighting."**
+> — 孫子兵法 (Sun Tzu)
+
+**RaaS: Win by automating the grind. Focus your team on strategy.**
+
+© 2026 Binh Phap Venture Studio

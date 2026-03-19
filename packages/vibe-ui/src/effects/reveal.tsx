@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion, MotionValue } from 'framer-motion';
+import React, { type ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 export interface RevealProps {
-    children: React.ReactNode | MotionValue<number> | MotionValue<string>;
+    children: ReactNode;
     direction?: 'up' | 'down' | 'left' | 'right';
     delay?: number;
 }
@@ -22,6 +22,7 @@ export function Reveal({ children, direction = 'up', delay = 0 }: RevealProps) {
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
         >
+            {/* @ts-ignore - framer-motion accepts ReactNode at runtime */}
             {children}
         </motion.div>
     );
