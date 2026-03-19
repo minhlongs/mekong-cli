@@ -1,8 +1,8 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, MotionValue } from 'framer-motion';
 
 export interface RevealProps {
-    children: React.ReactNode;
+    children: React.ReactNode | MotionValue<number> | MotionValue<string>;
     direction?: 'up' | 'down' | 'left' | 'right';
     delay?: number;
 }

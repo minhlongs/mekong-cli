@@ -1,4 +1,4 @@
-import { logger } from '@agencyos/shared';
+import { logger } from '@mekong/shared';
 
 /**
  * 🛡️ VIBE Hardened - Error Boundary Patterns

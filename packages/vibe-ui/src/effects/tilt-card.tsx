@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import React, { useRef, ReactNode } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, MotionValue } from 'framer-motion';
 
 export interface TiltCardProps {
-    children: React.ReactNode;
+    children: ReactNode | MotionValue<number> | MotionValue<string>;
     className?: string;
     intensity?: number;
 }
