@@ -41,6 +41,35 @@ export async function deductCredits(
   return true
 }
 
+/**
+ * Check if tenant has sufficient credits
+ * Returns true if balance >= required amount
+ */
+export async function hasSufficientCredits(
+  db: D1Database,
+  tenantId: string,
+  amount: number,
+): Promise<boolean> {
+  const balance = await getBalance(db, tenantId)
+  return balance >= amount
+}
+
+/**
+ * Require sufficient credits helper
+ * Throws error if balance is insufficient (for use in routes)
+ */
+export async function requireSufficientCredits(
+  db: D1Database,
+  tenantId: string,
+  amount: number,
+): Promise<{ balance: number }> {
+  const balance = await getBalance(db, tenantId)
+  if (balance < amount) {
+    throw new Error(`INSUFFICIENT_CREDITS: Required ${amount}, has ${balance}`)
+  }
+  return { balance }
+}
+
 export async function getHistory(
   db: D1Database,
   tenantId: string,

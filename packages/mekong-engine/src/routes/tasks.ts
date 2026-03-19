@@ -4,7 +4,7 @@ import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { creditMeteringMiddleware } from '../raas/credit-metering-middleware'
 import { createMission, getMission, listMissions, updateMissionStatus, estimateCredits } from '../raas/missions'
-import { deductCredits, addCredits } from '../raas/credits'
+import { deductCredits, addCredits, getBalance } from '../raas/credits'
 import { createSSEStream } from '../raas/sse'
 import { z } from 'zod'
 import { createError, ERROR_CODES, handleAsync, handleDb, requireResource } from '../types/error'
@@ -53,6 +53,19 @@ taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
   if (!parsed.success) return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
 
   const credits = estimateCredits(parsed.data.goal)
+
+  // Check balance BEFORE deducting (P0 credit gate)
+  const balance = await getBalance(db, tenant.id)
+  if (balance < credits) {
+    return c.json({
+      error: 'Insufficient credits',
+      code: 'INSUFFICIENT_CREDITS',
+      required: credits,
+      balance,
+      message: `Task requires ${credits} credits but you only have ${balance}. Please add credits to continue.`
+    }, 402)
+  }
+
   const deducted = await deductCredits(db, tenant.id, credits, `mission: ${parsed.data.goal.slice(0, 50)}`)
   if (!deducted) return c.json(createError('INSUFFICIENT_CREDITS', 'Insufficient credits'), 402)
 
