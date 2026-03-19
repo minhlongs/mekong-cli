@@ -66,3 +66,96 @@ export type MissionStatus = z.infer<typeof MissionStatusSchema>
 export type Mission = z.infer<typeof MissionSchema>
 export type LLMProvider = z.infer<typeof LLMProviderSchema>
 export type TenantSettings = z.infer<typeof TenantSettingsSchema>
+
+// ═══════════════════════════════════════════════════════════════
+// BINH PHÁP VC STUDIO — Governance Types
+// ═══════════════════════════════════════════════════════════════
+
+export const StakeholderRoleSchema = z.enum([
+  'owner', 'admin', 'operator', 'vc_partner', 'founder',
+  'expert', 'developer', 'customer', 'community',
+])
+
+export const ProposalTypeSchema = z.enum([
+  'feature', 'strategic', 'constitutional', 'treasury', 'equity',
+])
+
+export const ProposalStatusSchema = z.enum([
+  'draft', 'discussion', 'voting', 'approved', 'rejected', 'implemented',
+])
+
+export const VotingMechanismSchema = z.enum([
+  'quadratic', 'simple_majority', 'supermajority',
+])
+
+export const ReputationDimensionSchema = z.enum([
+  'code', 'mentorship', 'governance', 'expertise', 'community', 'general',
+])
+
+export const TerrainSchema = z.enum([
+  'tan_dia', 'khinh_dia', 'tranh_dia', 'giao_dia',
+  'trung_dia', 'vi_dia', 'tu_dia', 'unknown',
+])
+
+export const StakeholderSchema = z.object({
+  id: z.string(),
+  tenant_id: z.string(),
+  display_name: z.string(),
+  email: z.string().nullable().optional(),
+  role: StakeholderRoleSchema,
+  governance_level: z.number().int().min(1).max(6).default(6),
+  voice_credits_monthly: z.number().int().default(10),
+  reputation_score: z.number().int().default(0),
+  created_at: z.string(),
+})
+
+export const ProposalSchema = z.object({
+  id: z.string(),
+  tenant_id: z.string(),
+  author_id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  proposal_type: ProposalTypeSchema,
+  voting_mechanism: VotingMechanismSchema,
+  status: ProposalStatusSchema,
+  quorum_pct: z.number().default(0.10),
+  voice_credits_pool: z.number().int().default(0),
+  voting_starts_at: z.string().nullable().optional(),
+  voting_ends_at: z.string().nullable().optional(),
+  created_at: z.string(),
+})
+
+export const NguSuScoreSchema = z.object({
+  id: z.string(),
+  tenant_id: z.string(),
+  entity_name: z.string(),
+  dao_score: z.number().min(0).max(5),
+  thien_score: z.number().min(0).max(5),
+  dia_score: z.number().min(0).max(5),
+  tuong_score: z.number().min(0).max(5),
+  phap_score: z.number().min(0).max(5),
+  overall_score: z.number().optional(),
+  terrain: TerrainSchema.default('unknown'),
+  scored_at: z.string(),
+})
+
+// Voice credits for QV: governance_level → monthly credits
+export const GOVERNANCE_VOICE_CREDITS: Record<string, number> = {
+  owner: 10,      // ít nhất (servant)
+  admin: 15,
+  operator: 20,
+  vc_partner: 30,
+  founder: 40,
+  expert: 50,
+  developer: 60,
+  customer: 80,
+  community: 100,  // nhiều nhất (tam giác ngược)
+}
+
+export type Stakeholder = z.infer<typeof StakeholderSchema>
+export type Proposal = z.infer<typeof ProposalSchema>
+export type NguSuScore = z.infer<typeof NguSuScoreSchema>
+export type StakeholderRole = z.infer<typeof StakeholderRoleSchema>
+export type ProposalType = z.infer<typeof ProposalTypeSchema>
+export type ReputationDimension = z.infer<typeof ReputationDimensionSchema>
+export type Terrain = z.infer<typeof TerrainSchema>
