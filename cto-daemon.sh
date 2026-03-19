@@ -54,6 +54,31 @@ ROLE_FB_3_1='/test "Run all tests in packages/mekong-engine — fix any failures
 ROLE_FB_3_2='/cook "Add error handling and edge case coverage to API endpoints"'
 ROLE_FB_3_COUNT=3
 
+# ---- DEDUP GUARD: track last dispatched command per pane ----
+DEDUP_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/dedup-state"
+declare -A LAST_DISPATCH_CMD  # pane_idx → last command sent
+declare -A LAST_DISPATCH_TIME # pane_idx → epoch when sent
+DEDUP_MIN_INTERVAL=300        # seconds before allowing same command again
+
+is_duplicate_dispatch() {
+  local pane_idx=$1 cmd=$2
+  local last_cmd="${LAST_DISPATCH_CMD[$pane_idx]:-}"
+  local last_time="${LAST_DISPATCH_TIME[$pane_idx]:-0}"
+  local now
+  now=$(date +%s)
+  # Same command within DEDUP_MIN_INTERVAL → duplicate
+  if [[ "$cmd" == "$last_cmd" && $((now - last_time)) -lt $DEDUP_MIN_INTERVAL ]]; then
+    return 0  # is duplicate
+  fi
+  return 1  # not duplicate
+}
+
+record_dispatch() {
+  local pane_idx=$1 cmd=$2
+  LAST_DISPATCH_CMD[$pane_idx]="$cmd"
+  LAST_DISPATCH_TIME[$pane_idx]=$(date +%s)
+}
+
 # Persist fallback index across restarts
 FALLBACK_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/fallback-state"
 FALLBACK_IDX_1=0; FALLBACK_IDX_2=0; FALLBACK_IDX_3=0
@@ -131,7 +156,9 @@ log() {
 }
 
 # ---- CTO BRAIN: Ollama qwen3:32b via scripts/brain_think.py ----
-OLLAMA_URL="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
+# Strip /v1 suffix if present (OpenAI compat format breaks native Ollama API)
+_raw_ollama_url="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
+OLLAMA_URL="${_raw_ollama_url%/v1}"
 OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
 
 # Load 135-command catalog for brain dispatch (loaded once at startup)
@@ -535,8 +562,13 @@ detect_pane_state() {
     return
   fi
 
-  # Build/runtime errors
-  if echo "$tail20" | grep -qiE "error|failed|SyntaxError|TypeError|Cannot find"; then
+  # Build/runtime errors (strict: require real error patterns, not "0 errors" or "error handling")
+  if echo "$tail20" | grep -qiE "SyntaxError|TypeError|ReferenceError|Cannot find module|ENOENT|EACCES|Segmentation fault|panic:|fatal:|build failed|exit code [1-9]|npm ERR!|error TS[0-9]"; then
+    echo "error"
+    return
+  fi
+  # Fallback: lines starting with "Error:" or "ERROR" (not substring matches)
+  if echo "$tail20" | grep -qE "^(Error:|ERROR[: ])|command failed|exited with"; then
     echo "error"
     return
   fi
@@ -658,8 +690,13 @@ dispatch_worker() {
   local brain_cmd
   brain_cmd=$(cto_brain_dispatch "$pane_idx" "$pane_output")
   if [[ -n "$brain_cmd" ]]; then
+    if is_duplicate_dispatch "$pane_idx" "$brain_cmd"; then
+      log "P${pane_idx} (${name}): DEDUP — skipping duplicate brain cmd"
+      return
+    fi
     log "P${pane_idx} (${name}): BRAIN WARM → ${brain_cmd}"
     send_to_pane "$pane_idx" "$brain_cmd"
+    record_dispatch "$pane_idx" "$brain_cmd"
     log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch [$(get_pane_role "$pane_idx")]"
     return
   fi
@@ -675,8 +712,13 @@ dispatch_worker() {
     # Pick from role-specific fallback array (bash 3.2 compatible)
     local fallback_cmd=$(get_fallback_cmd "$pane_idx")
     local pane_role=$(get_pane_role "$pane_idx")
+    if is_duplicate_dispatch "$pane_idx" "$fallback_cmd"; then
+      log "P${pane_idx} (${name}): DEDUP — skipping duplicate fallback [${pane_role}]"
+      return
+    fi
     log "P${pane_idx} (${name}): FALLBACK[${pane_role}]: ${fallback_cmd}"
     send_to_pane "$pane_idx" "$fallback_cmd"
+    record_dispatch "$pane_idx" "$fallback_cmd"
     return
   fi
 
@@ -684,8 +726,13 @@ dispatch_worker() {
   task=$(build_delegation_task "$pane_idx" "$pane_output")
   local chosen_cmd
   chosen_cmd=$(echo "$task" | awk '{print $1}')
+  if is_duplicate_dispatch "$pane_idx" "$chosen_cmd"; then
+    log "P${pane_idx} (${name}): DEDUP — skipping duplicate ${chosen_cmd} (wait ${DEDUP_MIN_INTERVAL}s)"
+    return
+  fi
   log "P${pane_idx} (${name}): FALLBACK STATE=${state} → CMD=${chosen_cmd}"
   send_to_pane "$pane_idx" "$task"
+  record_dispatch "$pane_idx" "$chosen_cmd"
   log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
 }
 
