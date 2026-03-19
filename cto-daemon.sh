@@ -333,6 +333,10 @@ Reply with ONLY the command. No explanation."
   local cmd
   cmd=$(echo "$stripped" | grep -oE '/[a-z][a-z0-9_:-]*([ ]+(".*"|.+))?' | head -1 | cut -c1-300)
   if [[ -n "$cmd" ]]; then
+    # If bare command (no args), append project context
+    if ! echo "$cmd" | grep -qE '".*"| '; then
+      cmd="${cmd} \"Project: ${name}, Dir: ${dir}. Fix errors, improve code quality.\""
+    fi
     echo "$cmd"
   else
     # Write directly to log (NOT via log() which uses tee → stdout → captured by $())
@@ -968,15 +972,25 @@ health_check() {
 
 # ---- SINGLETON GUARD: prevent multiple daemon instances ----
 PIDFILE="${MEKONG_DIR}/cto-daemon.pid"
+LOCKFILE="${MEKONG_DIR}/cto-daemon.lock"
+
+# Atomic lock via flock (prevents race condition on concurrent starts)
+exec 200>"$LOCKFILE"
+if ! flock -n 200; then
+  echo "CTO DAEMON already running (lock held). Exiting."
+  exit 1
+fi
+
+# Check stale PID file
 if [[ -f "$PIDFILE" ]]; then
   old_pid=$(cat "$PIDFILE" 2>/dev/null)
-  if kill -0 "$old_pid" 2>/dev/null; then
+  if [[ -n "$old_pid" ]] && kill -0 "$old_pid" 2>/dev/null; then
     echo "CTO DAEMON already running (PID $old_pid). Kill it first: kill $old_pid"
     exit 1
   fi
 fi
 echo $$ > "$PIDFILE"
-trap 'rm -f "$PIDFILE"; log "DAEMON SHUTDOWN (PID $$)"' EXIT INT TERM
+trap 'rm -f "$PIDFILE" "$LOCKFILE"; log "DAEMON SHUTDOWN (PID $$)"' EXIT INT TERM
 trap 'log "TRAP: Error at line $LINENO (ignored — daemon continues)"' ERR
 
 log "============================================="
