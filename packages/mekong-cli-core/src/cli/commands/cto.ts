@@ -8,7 +8,6 @@ import { success, error as showError, info } from '../ui/output.js';
 
 // Dynamic imports to avoid TypeScript module resolution issues
 async function getCtoModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/orchestration/auto-cto-pilot
   const { getCtoStatus, resetCtoState } = await import('@openclaw/engine/orchestration/auto-cto-pilot');
   return { getCtoStatus, resetCtoState };
 }
