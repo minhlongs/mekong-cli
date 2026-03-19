@@ -3,8 +3,13 @@
  * All API endpoints MUST use this format for consistent error handling
  */
 
+import type { Context, TypedResponse } from 'hono'
+import type { Bindings } from '../index'
 import type { ZodSchema } from 'zod'
 import { ZodError, z } from 'zod'
+
+// Type alias for Hono context with our Bindings
+export type HonoContext = Context<{ Bindings: Bindings }>
 
 export const ERROR_CODES = {
   // Client Errors (4xx)
@@ -72,15 +77,6 @@ export type ErrorResponse = {
 }
 
 /**
- * Minimal context interface for error handling
- * Compatible with Hono's Context type via structural typing
- */
-export interface MinimalContext {
-  json: (data: unknown, status?: number) => Response
-  text?: (data: string, status?: number) => Response
-}
-
-/**
  * Custom Error class for HTTP errors
  * Use throw new HttpError('NOT_FOUND', 'Resource not found', 404)
  */
@@ -125,25 +121,24 @@ export class HttpError extends Error {
  * ```
  */
 export function handleAsync<T>(
-  fn: (c: unknown) => Promise<T>
-): (c: unknown) => Promise<T | Response> {
-  return async (c: unknown) => {
+  fn: (c: HonoContext) => Promise<T>
+): (c: HonoContext) => Promise<T | Response> {
+  return async (c: HonoContext) => {
     try {
       return await fn(c)
     } catch (error) {
-      const ctx = c as MinimalContext
       if (error instanceof HttpError) {
-        return ctx.json(error.toResponse(), error.status)
+        return c.json(error.toResponse(), error.status)
       }
       if (error instanceof ZodError) {
-        return ctx.json(
+        return c.json(
           createError('VALIDATION_ERROR', 'Validation failed', error.errors),
           400
         )
       }
       // Unknown error - log and return 500
       console.error('Unhandled error in route handler:', error)
-      return ctx.json(
+      return c.json(
         createError('INTERNAL_ERROR', 'An unexpected error occurred'),
         500
       )

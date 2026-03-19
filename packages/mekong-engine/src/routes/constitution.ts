@@ -4,33 +4,26 @@ import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { enforceConstitution } from '../raas/constitution-enforcer'
 import type { AgentAction } from '../raas/constitution-enforcer'
+import { handleAsync, createError, validateJsonBody } from '../types/error'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant }
 const constitutionRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 constitutionRoutes.use('*', authMiddleware)
 
 // POST /v1/constitution/check — enforce 4-layer constitution against an agent action
-constitutionRoutes.post('/check', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+constitutionRoutes.post('/check', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const tenant = c.get('tenant')
 
-  let body: {
-    agent_name: string
-    agent_layer: string
-    action_type: string
-    resource: string
-    estimated_cost_usd?: number
-    target_stakeholder_id?: string
-  }
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
-  }
-
-  if (!body.agent_name || !body.agent_layer || !body.action_type || !body.resource) {
-    return c.json({ error: 'agent_name, agent_layer, action_type, resource are required' }, 400)
-  }
+  const body = await validateJsonBody(c, z.object({
+    agent_name: z.string().min(1, 'agent_name is required'),
+    agent_layer: z.string().min(1, 'agent_layer is required'),
+    action_type: z.string().min(1, 'action_type is required'),
+    resource: z.string().min(1, 'resource is required'),
+    estimated_cost_usd: z.number().optional(),
+    target_stakeholder_id: z.string().optional(),
+  }))
 
   const action: AgentAction = {
     ...body,
@@ -41,7 +34,7 @@ constitutionRoutes.post('/check', async (c) => {
 
   const result = await enforceConstitution(action, c.env.DB)
   return c.json(result, result.allowed ? 200 : 403)
-})
+}))
 
 // GET /v1/constitution/layers — describe the 4 enforcement layers
 constitutionRoutes.get('/layers', (c) => {
