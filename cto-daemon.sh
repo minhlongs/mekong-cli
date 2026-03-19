@@ -423,8 +423,9 @@ send_to_pane() {
   local pane_idx=$1; shift
   local cmd="$*"
   # SAFETY GATE: capture fresh output and verify pane is truly idle before sending
-  # Exception: "1" (answering question) and "/clear" "/compact" bypass gate
-  if [[ "$cmd" != "1" && "$cmd" != "/clear" && "$cmd" != "/compact" ]]; then
+  # Exception: ONLY "1" (answering question) bypasses gate
+  # /clear and /compact MUST go through gate — sending to working pane kills task!
+  if [[ "$cmd" != "1" ]]; then
     local fresh_output
     fresh_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
     if [[ -n "$fresh_output" ]] && ! is_idle "$fresh_output"; then
@@ -545,31 +546,46 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
-  local tail5
-  tail5=$(echo "$output" | tail -5)
+  local tail15 tail10
+  tail15=$(echo "$output" | tail -15)
+  tail10=$(echo "$output" | tail -10)
 
-  # BUSY OVERRIDE: "queued messages" or "Press up to edit" = task running with queued input
-  if echo "$tail5" | grep -qiE "queued messages|Press up to edit"; then
-    return 1  # NOT idle — has queued tasks
+  # GUARD 1: "queued messages" / "Press up to edit" = task stuffed, NOT idle
+  if echo "$tail10" | grep -qiE "queued messages|Press up to edit"; then
+    return 1
   fi
 
-  # BUSY OVERRIDE: CC CLI activity indicators in last 5 lines (tool running)
-  if echo "$tail5" | grep -qE "⏺|✽|✳|✢|✶|✻|●"; then
-    return 1  # NOT idle — tool actively executing
+  # GUARD 2: CC CLI activity icons in LAST 15 LINES (status bar takes 4-5 lines,
+  # so busy icon ✢/✽/✳/⏺ can be at line 7-10 from bottom)
+  if echo "$tail15" | grep -qE "⏺|✽|✳|✢|✶|✻|●|◼|▸"; then
+    return 1
   fi
 
-  # IDLE: ❯ at start of line (CC CLI input prompt) WITHOUT queued messages
+  # GUARD 3: CC CLI busy verbs in last 15 lines
+  if echo "$tail15" | grep -qE "Thinking|Running|Searching|Reading|Editing|Bash\(|Update\(|Read |Write\(|Search\("; then
+    return 1
+  fi
+
+  # IDLE: ❯ alone on a line (CC CLI clean input prompt)
   # Note: "⏵⏵ bypass" is STATUS BAR — always visible, NOT an idle indicator
-  if echo "$tail5" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
-    return 0  # IDLE — clean prompt, no queued messages
+  if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
+    return 0  # IDLE — clean prompt
   fi
 
-  # IDLE: shell prompt patterns (non-CC CLI tools)
-  if echo "$output" | tail -2 | grep -qE "^❯ $|aider>|codex>|Type your message"; then
+  # IDLE: Completion markers (worker just finished, at prompt)
+  if echo "$tail15" | grep -qE "Brewed for|Cooked for|Crunched for|Sautéed for|Baked for|Session Complete|Hẹn gặp lại|All Tasks Done"; then
+    # Finished task — but only if prompt is visible too
+    if echo "$tail10" | grep -qE "❯"; then
+      return 0
+    fi
+  fi
+
+  # IDLE: non-CC CLI tool prompts
+  if echo "$output" | tail -2 | grep -qE "aider>|codex>|Type your message"; then
     return 0
   fi
 
-  # Default: NOT idle
+  # Default: NOT idle (safe)
   return 1
 }
 
@@ -878,7 +894,8 @@ verify_worker() {
   local name="${WORKER_NAME[$pane_idx]}"
 
   # SESSION COMPLETE detection — /clear immediately to recycle pane
-  if echo "$output" | tail -20 | grep -qiE "Session Complete|Hẹn gặp lại|All Tasks Done|Task hoàn thành|Session kết thúc|goodbye|signing off"; then
+  # IMPORTANT: only check tail -5 to avoid matching old scroll history from previous sessions
+  if echo "$output" | tail -5 | grep -qiE "Session Complete|Hẹn gặp lại|All Tasks Done|Task hoàn thành|Session kết thúc|goodbye|signing off"; then
     if is_idle "$output"; then
       log "VERIFY P${pane_idx}: SESSION COMPLETE → /clear for new task"
       send_to_pane "$pane_idx" "/clear"
