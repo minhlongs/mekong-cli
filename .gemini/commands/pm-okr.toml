@@ -1,5 +1,4 @@
 description = "Set/review OKRs and key results. 3 credits, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong pm-okr {{args}}"

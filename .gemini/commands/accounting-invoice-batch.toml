@@ -1,5 +1,4 @@
 description = "Generate invoices, send reminders, update AR. 2 commands, ~8 min."
-
 [steps]
 [steps.run]
 command = "mekong accounting-invoice-batch {{args}}"

@@ -1,5 +1,4 @@
 description = "Audit current → plan migration → generate scripts → test → verify"
-
 [steps]
 [steps.run]
 command = "mekong tech-migration {{args}}"

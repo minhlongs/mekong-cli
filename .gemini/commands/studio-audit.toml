@@ -1,5 +1,4 @@
 description = "Full portfolio ROI audit across all projects. Delegates cto:review per project. 10 credits, ~60 min."
-
 [steps]
 [steps.run]
 command = "mekong studio-audit {{args}}"

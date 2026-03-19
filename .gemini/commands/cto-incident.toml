@@ -1,5 +1,4 @@
 description = "Incident response orchestration. 8 credits, ~20 min."
-
 [steps]
 [steps.run]
 command = "mekong cto-incident {{args}}"

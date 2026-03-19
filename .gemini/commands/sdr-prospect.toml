@@ -1,5 +1,4 @@
 description = "Prospecting sprint — ICP match + lead research in parallel. 2 commands, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong sdr-prospect {{args}}"

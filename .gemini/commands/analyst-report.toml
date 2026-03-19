@@ -1,5 +1,4 @@
 description = "Data pull, analysis, executive summary. 2 commands, ~12 min."
-
 [steps]
 [steps.run]
 command = "mekong analyst-report {{args}}"

@@ -1,5 +1,4 @@
 description = "Usability test — test plan, task scenarios, findings, recommendations in 10 min"
-
 [steps]
 [steps.run]
 command = "mekong ux-usability {{args}}"

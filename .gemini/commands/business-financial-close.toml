@@ -1,5 +1,4 @@
 description = "Monthly/quarterly close — reconcile, report, forecast, tax prep. 5 commands, ~25 min."
-
 [steps]
 [steps.run]
 command = "mekong business-financial-close {{args}}"

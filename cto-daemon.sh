@@ -40,7 +40,13 @@ RAAS_FALLBACK_TASKS=(
   '/cook "Add error handling and loading states to frontend/landing dashboard pages"'
   '/cook "Review and fix packages/mekong-engine/src/routes/ — ensure all endpoints return proper error codes"'
 )
-FALLBACK_IDX=0
+# Persist fallback index across restarts
+FALLBACK_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/fallback-state"
+if [[ -f "$FALLBACK_STATE_FILE" ]]; then
+  FALLBACK_IDX=$(cat "$FALLBACK_STATE_FILE" 2>/dev/null || echo 0)
+else
+  FALLBACK_IDX=0
+fi
 
 # Defaults (overridable via CLI flags)
 CTO_SESSION="${CTO_SESSION:-tom_hum}"
@@ -578,6 +584,7 @@ dispatch_worker() {
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
     local fallback_cmd="${RAAS_FALLBACK_TASKS[$FALLBACK_IDX]}"
     FALLBACK_IDX=$(( (FALLBACK_IDX + 1) % ${#RAAS_FALLBACK_TASKS[@]} ))
+    echo "$FALLBACK_IDX" > "$FALLBACK_STATE_FILE"
     log "P${pane_idx} (${name}): BRAIN EMPTY → FALLBACK[$FALLBACK_IDX]: ${fallback_cmd}"
     send_to_pane "$pane_idx" "$fallback_cmd"
     log "DELEGATED P${pane_idx} (${name}) — FALLBACK RaaS task"

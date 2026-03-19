@@ -1,5 +1,4 @@
 description = "Lint → test → build → staging → smoke → production deployment pipeline"
-
 [steps]
 [steps.run]
 command = "mekong devops-deploy-pipeline {{args}}"

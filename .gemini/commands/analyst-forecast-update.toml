@@ -1,5 +1,4 @@
 description = "Pull actuals, compare, update model, variance report. 2 commands, ~8 min."
-
 [steps]
 [steps.run]
 command = "mekong analyst-forecast-update {{args}}"

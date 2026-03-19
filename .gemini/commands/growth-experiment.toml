@@ -1,5 +1,4 @@
 description = "Growth experiment — experiment design then metrics framework. 2 commands, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong growth-experiment {{args}}"

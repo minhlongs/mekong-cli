@@ -1,5 +1,4 @@
 description = "Team capacity planning and task routing. 3 credits, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong cto-team {{args}}"

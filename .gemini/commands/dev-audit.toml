@@ -1,5 +1,4 @@
 description = "Dev audit command. Delegates to worker level."
-
 [steps]
 [steps.run]
 command = "mekong dev-audit {{args}}"

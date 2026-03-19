@@ -1,5 +1,4 @@
 description = "Junior first task — codebase overview, starter issue, guided implementation in 15 min"
-
 [steps]
 [steps.run]
 command = "mekong junior-first-task {{args}}"

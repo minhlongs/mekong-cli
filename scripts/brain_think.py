@@ -17,7 +17,7 @@ def main():
         "prompt": prompt_text,
         "stream": False,
         "keep_alive": "24h",
-        "options": {"temperature": 0.3, "num_predict": 1500}
+        "options": {"temperature": 0.3, "num_predict": 500, "num_ctx": 8192}
     }).encode()
     
     try:

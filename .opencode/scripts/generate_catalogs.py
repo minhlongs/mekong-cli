@@ -44,7 +44,7 @@ def load_yaml(filename):
 
     if not primary.exists():
         print(f"Error: {primary} not found", file=sys.stderr)
-        print(f"Hint: Run scan_skills.py or scan_commands.py first to generate data files", file=sys.stderr)
+        print("Hint: Run scan_skills.py or scan_commands.py first to generate data files", file=sys.stderr)
         sys.exit(1)
 
     loaded = yaml.safe_load(primary.read_text(encoding='utf-8'))

@@ -1,5 +1,4 @@
 description = "ROI scorecard across all projects. 3 credits, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong studio-roi {{args}}"

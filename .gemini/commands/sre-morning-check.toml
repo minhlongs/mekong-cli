@@ -1,5 +1,4 @@
 description = "SRE morning check — health, status, benchmark in parallel, 5 min"
-
 [steps]
 [steps.run]
 command = "mekong sre-morning-check {{args}}"

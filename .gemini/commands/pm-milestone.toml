@@ -1,5 +1,4 @@
 description = "Milestone tracking and status. 2 credits, ~5 min."
-
 [steps]
 [steps.run]
 command = "mekong pm-milestone {{args}}"

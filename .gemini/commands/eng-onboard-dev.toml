@@ -1,5 +1,4 @@
 description = "Codebase tour → setup guide → first ticket → contribution guide for new developer"
-
 [steps]
 [steps.run]
 command = "mekong eng-onboard-dev {{args}}"

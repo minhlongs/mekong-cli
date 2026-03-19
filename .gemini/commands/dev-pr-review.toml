@@ -1,5 +1,4 @@
 description = "PR review — code review and security check in parallel, 10 min"
-
 [steps]
 [steps.run]
 command = "mekong dev-pr-review {{args}}"

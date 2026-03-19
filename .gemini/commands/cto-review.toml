@@ -1,5 +1,4 @@
 description = "Full project health review. 5 credits, ~20 min."
-
 [steps]
 [steps.run]
 command = "mekong cto-review {{args}}"

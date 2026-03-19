@@ -1,5 +1,4 @@
 description = "Analyze term sheet + model dilution + plan negotiation strategy. 4 commands, ~20 min."
-
 [steps]
 [steps.run]
 command = "mekong founder-negotiate {{args}}"

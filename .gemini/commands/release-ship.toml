@@ -1,5 +1,4 @@
 description = "Changelog → version bump → test → tag → deploy production release"
-
 [steps]
 [steps.run]
 command = "mekong release-ship {{args}}"
