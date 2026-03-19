@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { D1Database } from '@cloudflare/workers-types'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { payloadSizeLimit } from '../raas/payload-limiter'
 import { createError, handleAsync, handleDb } from '../types/error'
+import { ensureAccount, getAccountBalance, requireBalance } from '../lib/ledger-utils'
 
 type Variables = { tenant: Tenant }
 const ledgerRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -29,25 +29,10 @@ const topupSchema = z.object({
 })
 type TopupInput = z.infer<typeof topupSchema>
 
-// Ensure account exists (upsert)
-async function ensureAccount(db: D1Database, tenantId: string, code: string, type: string, ownerId?: string) {
-  return await handleDb(
-    async () => {
-      const existing = await db.prepare('SELECT id FROM ledger_accounts WHERE tenant_id = ? AND code = ?').bind(tenantId, code).first()
-      if (existing) return existing.id as string
-      const id = crypto.randomUUID()
-      await db.prepare('INSERT INTO ledger_accounts (id, tenant_id, owner_id, code, account_type) VALUES (?, ?, ?, ?, ?)')
-        .bind(id, tenantId, ownerId || null, code, type).run()
-      return id
-    },
-    'DATABASE_ERROR',
-    'Failed to ensure account exists'
-  )
-}
-
 // POST /transfer — Double-entry transfer between accounts
 ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
+  const db = c.env.DB
 
   let body: TransferInput
   try {
@@ -59,7 +44,10 @@ ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
     return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
-  const db = c.env.DB
+  // Edge case: Validate from_code and to_code are not the same
+  if (body.from_code === body.to_code) {
+    return c.json(createError('VALIDATION_ERROR', 'Cannot transfer from and to the same account'), 400)
+  }
 
   // Idempotency check
   if (body.idempotency_key) {
@@ -74,21 +62,14 @@ ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
     if (existingResult) return c.json({ journal_entry_id: existingResult.id, status: 'already_processed' })
   }
 
-  // Ensure accounts exist
+  // Ensure accounts exist using shared utility
   const fromAcctId = await ensureAccount(db, tenant.id, body.from_code, 'asset')
   const toAcctId = await ensureAccount(db, tenant.id, body.to_code, 'asset')
 
-  // Check balance
-  const fromAcct = await handleDb(
-    async () => {
-      const result = await db.prepare('SELECT balance FROM ledger_accounts WHERE id = ?').bind(fromAcctId).first()
-      return result as { balance: number } | null
-    },
-    'DATABASE_ERROR',
-    'Failed to fetch account balance'
-  )
-  if ((fromAcct?.balance || 0) < body.amount) {
-    return c.json(createError('INSUFFICIENT_CREDITS', 'Insufficient balance', [{ balance: fromAcct?.balance ?? 0 }]), 402)
+  // Check balance with proper error handling
+  const fromBalance = await getAccountBalance(db, fromAcctId)
+  if (fromBalance < body.amount) {
+    return c.json(createError('INSUFFICIENT_CREDITS', 'Insufficient balance', [{ balance: fromBalance, required: body.amount }]), 402)
   }
 
   // Create journal entry + 2 transaction lines (ATOMIC)
@@ -115,12 +96,13 @@ ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
     'Failed to execute transfer'
   )
 
-  return c.json({ journal_entry_id: jeId, from: body.from_code, to: body.to_code, amount: body.amount }, 201)
+  return c.json({ journal_entry_id: jeId, from: body.from_code, to: body.to_code, amount: body.amount, balance_after: fromBalance - body.amount }, 201)
 }))
 
 // POST /topup — Add credits to an account (from platform)
 ledgerRoutes.post('/topup', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
+  const db = c.env.DB
 
   let body: TopupInput
   try {
@@ -132,19 +114,20 @@ ledgerRoutes.post('/topup', payloadSizeLimit(), handleAsync(async (c) => {
     return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
-  const acctId = await ensureAccount(c.env.DB, tenant.id, body.account_code, 'asset')
-  const platformId = await ensureAccount(c.env.DB, tenant.id, 'platform:treasury', 'equity')
+  // Use shared utility for account management
+  const acctId = await ensureAccount(db, tenant.id, body.account_code, 'asset')
+  const platformId = await ensureAccount(db, tenant.id, 'platform:treasury', 'equity')
 
   const jeId = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.batch([
-      c.env.DB.prepare('INSERT INTO journal_entries (id, tenant_id, description, entry_type) VALUES (?, ?, ?, ?)')
+    () => db.batch([
+      db.prepare('INSERT INTO journal_entries (id, tenant_id, description, entry_type) VALUES (?, ?, ?, ?)')
         .bind(jeId, tenant.id, body.description || 'Credit top-up', 'topup'),
-      c.env.DB.prepare('INSERT INTO transaction_lines (id, journal_entry_id, account_id, amount, direction) VALUES (?, ?, ?, ?, ?)')
+      db.prepare('INSERT INTO transaction_lines (id, journal_entry_id, account_id, amount, direction) VALUES (?, ?, ?, ?, ?)')
         .bind(crypto.randomUUID(), jeId, platformId, body.amount, -1),
-      c.env.DB.prepare('INSERT INTO transaction_lines (id, journal_entry_id, account_id, amount, direction) VALUES (?, ?, ?, ?, ?)')
+      db.prepare('INSERT INTO transaction_lines (id, journal_entry_id, account_id, amount, direction) VALUES (?, ?, ?, ?, ?)')
         .bind(crypto.randomUUID(), jeId, acctId, body.amount, 1),
-      c.env.DB.prepare('UPDATE ledger_accounts SET balance = balance + ? WHERE id = ?').bind(body.amount, acctId),
+      db.prepare('UPDATE ledger_accounts SET balance = balance + ? WHERE id = ?').bind(body.amount, acctId),
     ]),
     'DATABASE_ERROR',
     'Failed to execute topup'

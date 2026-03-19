@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-19 - Error Handling & Edge Case Coverage for mekong-engine)
+
+#### Security Fixes
+- **SQL Injection Prevention** (`packages/mekong-engine/src/routes/funding.ts`):
+  - Replaced dangerous `db.exec()` with batched prepared statements using `db.batch()`
+  - Added table existence check before creation
+  - Removed silent catch that masked errors
+
+#### Code Quality Improvements
+- **Shared Utilities Created**:
+  - `packages/mekong-engine/src/lib/ledger-utils.ts` (NEW - 250 LOC):
+    - `ensureAccount()` - Account creation/retrieval with upsert pattern
+    - `getAccountBalance()` - Balance lookup with null-safety
+    - `requireBalance()` - Balance validation with error throwing
+    - `createJournalEntry()` - Atomic double-entry journal creation
+    - `transfer()` - Safe transfer wrapper with validation
+    - `validateDoubleEntry()` - Balance verification helper
+    - `getTransactionHistory()` - Paginated history retrieval
+  - `packages/mekong-engine/src/lib/route-utils.ts` (NEW - 200 LOC):
+    - `validateTenantExists()` - Tenant existence validation
+    - `sanitizeString()` - Input sanitization with length limits
+    - `parsePagination()` - Safe pagination parameter parsing
+    - `safeDate()` - Date parsing with fallback
+    - `isValidUuid()` - UUID format validation
+    - `requireNonEmptyString()` - Required field validation
+    - `clamp()` - Number bounds enforcement
+    - `safeJsonParse()` - JSON parsing with fallback
+    - `isValidEmail()` - Email format validation
+    - `parseBoolean()` - Boolean coercion helper
+
+- **Enhanced Error Handling** (`packages/mekong-engine/src/types/error.ts`):
+  - Added `requireTenant()` helper for tenant validation
+  - Added `safeNumber()` for bounded number parsing
+  - Added `safeJsonParse()` for safe JSON operations
+
+#### Edge Case Coverage
+- **Ledger Routes** (`packages/mekong-engine/src/routes/ledger.ts`):
+  - Same-account transfer validation (prevent self-transfer)
+  - Improved balance error messages with actual/required amounts
+  - Idempotency key handling with proper status response
+  - Using shared utilities instead of duplicate implementations
+
+- **Funding Routes** (`packages/mekong-engine/src/routes/funding.ts`):
+  - Duration bounds validation (1-365 days)
+  - Round status validation before project operations
+  - Tenant existence validation on all operations
+
+#### Test Results
+- All 32 tests passing
+- 0 TypeScript errors
+- 0 `any` types
+- 0 TODO/FIXME comments
+- 0 console.log statements
+
+---
+
 ### Added (2026-03-19 - Governance Dashboard Charts & Mobile Responsive)
 
 #### Enhanced Governance Dashboard (`frontend/landing/app/dashboard/governance/page.tsx`)
