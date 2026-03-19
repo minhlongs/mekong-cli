@@ -59,6 +59,18 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'PEV engine, API gateway, Workers, multi-tenant metering',
     icon: '🏗️',
   },
+  {
+    label: 'All Commands',
+    href: '/guides/all-commands',
+    description: '135 commands across 20 roles — studio to worker',
+    icon: '⚡',
+  },
+  {
+    label: 'Skills Catalog',
+    href: '/guides/skills-catalog',
+    description: '540 AI skills organized by category',
+    icon: '🧩',
+  },
 ];
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -77,5 +89,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     group: 'Infrastructure',
     items: NAV_ITEMS.slice(6, 8),
+  },
+  {
+    group: 'Reference',
+    items: NAV_ITEMS.slice(8, 10),
   },
 ];

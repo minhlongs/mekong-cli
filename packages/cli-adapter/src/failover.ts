@@ -1,4 +1,4 @@
-import { BaseAdapter, type ExecOptions, type ExecResult } from './adapters/base-adapter.ts';
+import { BaseAdapter, type ExecOptions, type ExecResult } from './adapters/base-adapter.js';
 
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes

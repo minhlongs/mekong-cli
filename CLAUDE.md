@@ -23,6 +23,42 @@ CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
 
 ---
 
+## UNIFIED WRAPPER — `mekong` is the ONLY entry point
+
+```
+mekong-cli (outer shell)  →  CC CLI (inner engine)  →  .claude/commands/ (300+ commands)
+scripts/mekong-wrapper.sh    claude|gemini|qwen|bb     135 root + package commands
+scripts/shell-init.sh        --dangerously-skip-perms  257 skills auto-loaded
+```
+
+### Quick Start
+
+```bash
+source ~/mekong-cli/scripts/shell-init.sh   # Add to .zshrc/.bashrc
+
+mekong              # Interactive CC CLI with all mekong commands
+mekong-opus         # Force Anthropic Claude Opus 4.6
+mekong-sonnet       # Force Anthropic Claude Sonnet 4.6
+mekong-qwen         # Force DashScope Qwen 3.5 Plus
+mekong-cto          # CTO daemon mode (P->D->V->S loop)
+mekong-continue     # Resume last session
+mekong-print "task" # Non-interactive (pipe output)
+mekong-status       # Show current API config
+```
+
+### Provider Routing
+
+| Alias | Provider | Binary | Model |
+|-------|----------|--------|-------|
+| `mekong` | claude (default) | `claude` | CC CLI default |
+| `mekong-opus` | claude | `claude` | claude-opus-4-6 |
+| `mekong-qwen` | dashscope | `claude` | qwen3.5-plus |
+| `mekong --provider gemini` | google | `gemini` | gemini default |
+
+All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` discovery.
+
+---
+
 ## ARCHITECTURE
 
 ```
