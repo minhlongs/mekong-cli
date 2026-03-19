@@ -76,9 +76,13 @@ def extract_from_thinking(text):
 
 
 def normalize(cmd):
-    """Lowercase command name, strip trailing punctuation."""
+    """Lowercase command name, ensure / prefix, strip trailing punctuation."""
     if not cmd:
         return ""
+    cmd = cmd.strip()
+    # Ensure / prefix
+    if not cmd.startswith("/"):
+        cmd = "/" + cmd
     parts = cmd.split(" ", 1)
     parts[0] = parts[0].lower()
     return " ".join(parts).rstrip(".,;:!?").strip()
