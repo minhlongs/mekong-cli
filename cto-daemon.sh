@@ -557,38 +557,39 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
-  local tail15 tail10
-  tail15=$(echo "$output" | tail -15)
+  local tail10 tail15
   tail10=$(echo "$output" | tail -10)
+  tail15=$(echo "$output" | tail -15)
 
-  # GUARD 1: "queued messages" / "Press up to edit" = task stuffed, NOT idle
+  # GUARD 1: "queued messages" = task stuffed, NEVER idle
   if echo "$tail10" | grep -qiE "queued messages|Press up to edit"; then
     return 1
   fi
 
-  # GUARD 2: CC CLI activity icons in LAST 15 LINES (status bar takes 4-5 lines,
-  # so busy icon ✢/✽/✳/⏺ can be at line 7-10 from bottom)
-  if echo "$tail15" | grep -qE "⏺|✽|✳|✢|✶|✻|●|◼|▸"; then
-    return 1
-  fi
-
-  # GUARD 3: CC CLI busy verbs in last 15 lines
-  if echo "$tail15" | grep -qE "Thinking|Running|Searching|Reading|Editing|Bash\(|Update\(|Read |Write\(|Search\("; then
-    return 1
-  fi
-
-  # IDLE: ❯ alone on a line (CC CLI clean input prompt)
-  # Note: "⏵⏵ bypass" is STATUS BAR — always visible, NOT an idle indicator
+  # PRIORITY CHECK: clean ❯ prompt = IDLE (check BEFORE busy guards)
+  # This MUST come before busy icons because completion text (✻ Cooked for...)
+  # stays visible in scroll but pane IS idle at prompt
   if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
-    return 0  # IDLE — clean prompt
+    return 0  # IDLE — clean prompt, ready for input
   fi
 
-  # IDLE: Completion markers — ONLY in tail -5 (not stale scroll) + clean prompt in tail -3
-  # FIX #2: tighten window to prevent matching OLD completion from previous tasks
-  if echo "$output" | tail -5 | grep -qE "Brewed for|Cooked for|Crunched for|Sautéed for|Baked for|Session Complete|Hẹn gặp lại|All Tasks Done"; then
-    if echo "$output" | tail -3 | grep -qE '^[[:space:]]*❯[[:space:]]*$'; then
-      return 0
-    fi
+  # No clean prompt found — check if genuinely busy
+  # GUARD 2: CC CLI ACTIVE icons only (NOT completion icons)
+  # ✻ = COMPLETION ("Cooked for 48s") — NOT busy!
+  # ✶ = COMPLETION variant — NOT busy!
+  # Only match: ⏺ (tool output) ✽ (cooking) ✳ (working) ✢ (phase) ● (active) ◼ (subtask)
+  if echo "$tail15" | grep -qE "⏺|✽|✳|✢|●|◼|▸"; then
+    return 1
+  fi
+
+  # GUARD 3: CC CLI busy verbs (context-aware — require active spinner prefix)
+  if echo "$tail15" | grep -qE "^[[:space:]]*[·✽✳✢⏺●].*Thinking|Running\.\.\.|Searching\.\.\.|Bash\(|Update\(|Write\(|Search\("; then
+    return 1
+  fi
+
+  # IDLE: Completion markers + prompt visible
+  if echo "$tail15" | grep -qE "Brewed for|Cooked for|Crunched for|Churned for|Cogitated for|Sautéed for|Baked for"; then
+    return 0  # Task finished, at prompt
   fi
 
   # IDLE: non-CC CLI tool prompts
