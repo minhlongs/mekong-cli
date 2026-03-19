@@ -728,8 +728,8 @@ while true; do
       # If idle → check missions first (bypass cooldown), then dispatch with cooldown
       if is_idle "$output"; then
         # Priority 0: mission files bypass cooldown entirely
-        local mission_dir="${MEKONG_DIR}/missions"
-        local has_mission=false
+        mission_dir="${MEKONG_DIR}/missions"
+        has_mission=false
         if [[ -d "$mission_dir" ]]; then
           for mf in "$mission_dir"/*.json; do
             [[ -f "$mf" ]] && has_mission=true && break
