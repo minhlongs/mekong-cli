@@ -335,7 +335,8 @@ Reply with ONLY the command. No explanation."
   if [[ -n "$cmd" ]]; then
     echo "$cmd"
   else
-    log "BRAIN: unparseable response: $(echo "$result" | head -1 | cut -c1-80)"
+    # Write directly to log (NOT via log() which uses tee → stdout → captured by $())
+    echo "[$(date '+%H:%M:%S')] BRAIN: unparseable response: $(echo "$result" | head -1 | cut -c1-80)" >> "$LOG_FILE"
   fi
 }
 
@@ -840,13 +841,23 @@ verify_worker() {
     return 0
   fi
 
-  # Check for questions → always compact (key=1 is never useful)
+  # Check for questions — CC CLI asking for user input
+  # Send "1" (pick first option) to unblock, NOT /compact (which causes loop)
   if has_question "$output"; then
     local question
     question=$(get_question "$output")
-    log "VERIFY P${pane_idx}: QUESTION → /compact: ${question}"
-    send_to_pane "$pane_idx" "/compact"
-    save_memory "VERIFY" "P${pane_idx}: question → compacted: ${question}"
+    # Skip if we already answered recently (prevent answer loop)
+    local last_answer_var="LAST_ANSWER_${pane_idx}"
+    local last_answer_time="${!last_answer_var:-0}"
+    local now_ts
+    now_ts=$(date +%s)
+    if [[ $((now_ts - last_answer_time)) -lt 120 ]]; then
+      log "P${pane_idx} (${name}): QUESTION skipped (answered <120s ago)"
+      return 0
+    fi
+    eval "${last_answer_var}=${now_ts}"
+    log "VERIFY P${pane_idx}: QUESTION → answering '1': ${question}"
+    send_to_pane "$pane_idx" "1"
     return 0
   fi
 

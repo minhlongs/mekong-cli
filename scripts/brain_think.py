@@ -1,62 +1,84 @@
 #!/usr/bin/env python3
-"""CTO Brain Think — calls Ollama and extracts /command from response+thinking."""
+"""CTO Brain Think — calls Ollama /api/generate and extracts /command.
+
+Qwen3 ALWAYS uses thinking mode: 'response' is empty, output is in 'thinking'.
+We search BOTH fields for /command patterns.
+Uses /api/generate (NOT /api/chat — chat API returns empty content with qwen3).
+"""
 import json
 import urllib.request
 import sys
 import re
 import os
 
+
 def main():
     ollama_url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
     ollama_model = os.environ.get("OLLAMA_MODEL", "qwen3:32b")
-    
-    prompt_text = "/no_think\nDo NOT use thinking. Reply with ONLY the slash command, nothing else.\n" + sys.stdin.read().strip()
-    
+
+    stdin_text = sys.stdin.read().strip()
+    if not stdin_text:
+        print("", end="")
+        return
+
+    # Use /api/generate — NOT /api/chat (qwen3 chat API returns empty content)
+    prompt_text = (
+        "/no_think\n"
+        "Reply with ONLY a single slash command. No explanation. Examples:\n"
+        '/cook "implement user auth"\n'
+        '/debug "fix login error"\n'
+        '/review "check code quality"\n'
+        "Now reply with ONLY the /command:\n\n"
+        + stdin_text
+    )
+
     data = json.dumps({
         "model": ollama_model,
         "prompt": prompt_text,
         "stream": False,
         "keep_alive": "24h",
-        "options": {"temperature": 0.3, "num_predict": 500, "num_ctx": 8192}
+        "options": {"temperature": 0.3, "num_predict": 150, "num_ctx": 4096},
     }).encode()
-    
+
     try:
         req = urllib.request.Request(
             f"{ollama_url}/api/generate",
             data=data,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
-        resp = urllib.request.urlopen(req, timeout=60)
+        resp = urllib.request.urlopen(req, timeout=120)
         d = json.loads(resp.read())
-        
-        # qwen3 ALWAYS uses thinking mode — command may be in 'response' OR 'thinking'
+
+        # Qwen3 puts output in 'thinking' field, 'response' is usually empty
         response_text = d.get("response", "").strip()
         thinking_text = d.get("thinking", "").strip()
-        
-        # Combine both and search for /command patterns
-        all_text = response_text + "\n" + thinking_text
-        if not all_text.strip():
-            for key in ("content", "message", "text"):
-                val = d.get(key, "")
-                if isinstance(val, dict):
-                    val = val.get("content", "")
-                all_text += "\n" + str(val).strip()
-        
-        # Extract /command patterns — accept any slash command (135-command catalog)
-        # Priority 1: /command-name "quoted args"
+        all_text = (response_text + "\n" + thinking_text).strip()
+
+        if not all_text:
+            print("", end="")
+            return
+
+        # Extract /command — priority: quoted args > unquoted > raw text
         m = re.search(r'(/[\w][\w:-]*\s+"[^"]+")', all_text)
         if m:
             print(m.group(1))
-        else:
-            # Priority 2: /command-name unquoted args  
-            m = re.search(r'(/[\w][\w:-]*(?:\s+[^\n]+)?)', all_text)
-            if m:
-                print(m.group(0).strip()[:200])
-            else:
-                print(all_text[:200] if all_text.strip() else "")
+            return
+
+        m = re.search(r'(/[\w][\w:-]*(?:\s+[^\n]+)?)', all_text)
+        if m:
+            cmd = m.group(0).strip()[:200]
+            # Filter garbage: must start with valid command prefix
+            if cmd.startswith("/") and len(cmd) > 2:
+                print(cmd)
+                return
+
+        # No command found — output empty (will trigger fallback)
+        print("", end="")
+
     except Exception as e:
         print(f"BRAIN_ERROR: {e}", file=sys.stderr)
         print("", end="")
+
 
 if __name__ == "__main__":
     main()
