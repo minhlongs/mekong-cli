@@ -250,9 +250,9 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
       <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
       <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
-        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'}>VI</a>
-        <span style="color:var(--md-on-surface-muted);" role="presentation">|</span>
-        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to English' : 'Chuyển sang tiếng Anh'} aria-current={isEn ? 'true' : 'false'}>EN</a>
+        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'} aria-pressed={!isEn}>VI</a>
+        <span style="color:var(--md-on-surface-muted);" role="separator">|</span>
+        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to English' : 'Chuyển sang tiếng Anh'} aria-current={isEn ? 'true' : 'false'} aria-pressed={isEn}>EN</a>
       </div>
       <a href="https://app.agencyos.network/signup" class="btn-primary" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
     </div>
