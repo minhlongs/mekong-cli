@@ -1185,7 +1185,6 @@ while true; do
 
   # FIX #15: log rotation (every 100 cycles, cap at 5MB)
   if [[ $((CYCLE % 100)) -eq 0 ]] && [[ -f "$LOG_FILE" ]]; then
-    local log_bytes
     log_bytes=$(wc -c < "$LOG_FILE" 2>/dev/null || echo 0)
     if [[ $log_bytes -gt 5000000 ]]; then
       tail -2000 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
@@ -1198,7 +1197,7 @@ while true; do
 
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
   # FIX: max 1 dispatch per cycle (brain call takes 30s → prevents serial stuffing)
-  local dispatched_this_cycle=false
+  dispatched_this_cycle=false
   for pane_idx in 1 2 3; do
     # Guard: any failure in per-pane logic must not kill the loop
     {
@@ -1237,7 +1236,6 @@ while true; do
 
         # FIX: double-sample idle check (1s apart) to close race window
         sleep 1
-        local recheck_output
         recheck_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
         if [[ -n "$recheck_output" ]] && ! is_idle "$recheck_output"; then
           log "P${pane_idx} (${name}): IDLE→BUSY detected (double-sample), skipping"
