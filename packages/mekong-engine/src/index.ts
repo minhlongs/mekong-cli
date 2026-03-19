@@ -15,6 +15,10 @@ import { ledgerRoutes } from './routes/ledger'
 import { equityRoutes } from './routes/equity'
 import { revenueRoutes } from './routes/revenue'
 import { fundingRoutes } from './routes/funding'
+import { matchingRoutes } from './routes/matching'
+import { conflictRoutes } from './routes/conflicts'
+import { decentralRoutes } from './routes/decentralization'
+import { rbacRoutes } from './routes/rbac'
 import type { D1Database, KVNamespace, R2Bucket, Ai, AiModels, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types'
 
 // Cloudflare bindings — all optional until resources created in dashboard
@@ -193,6 +197,10 @@ app.route('/v1/ledger', ledgerRoutes)
 app.route('/v1/equity', equityRoutes)
 app.route('/v1/revenue', revenueRoutes)
 app.route('/v1/funding', fundingRoutes)
+app.route('/v1/matching', matchingRoutes)
+app.route('/v1/conflicts', conflictRoutes)
+app.route('/v1/decentralization', decentralRoutes)
+app.route('/v1/rbac', rbacRoutes)
 
 // Cron Trigger — auto-publish approved content
 export default {
