@@ -1,14 +1,19 @@
 /**
- * chat.ts — Zalo OA + Facebook Messenger webhook routes
- * Receives messages → KB lookup → LLM reply → send back to platform
+ * chat.ts - Zalo OA + Facebook Messenger webhook routes
+ * Receives messages -> KB lookup -> LLM reply -> send back to platform
  */
 import { Hono } from 'hono'
 import type { Bindings } from '../index'
+import { webhookRateLimit } from '../raas/rate-limit-middleware'
+import { handleDb } from '../types/error'
 
 const chatRoutes = new Hono<{ Bindings: Bindings }>()
 
-// ─── Zalo OA Webhook ───
-chatRoutes.post('/webhook/zalo', async (c) => {
+// --- Zalo OA Webhook ---
+chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+  const db = c.env.DB
+
   const signature = c.req.header('x-zalo-signature') || c.req.header('x-signature')
   const secret = c.env.ZALO_APP_SECRET || c.env.ZALO_SECRET
 
@@ -48,9 +53,23 @@ chatRoutes.post('/webhook/zalo', async (c) => {
     return c.json({ error: 'Invalid JSON' }, 400)
   }
 
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   if (body.event_name !== 'user_send_text' || !body.message?.text) {
     return c.json({ received: true })
+  }
+
+  // Check for replay attack (duplicate msg_id)
+  const msgId = body.message.msg_id
+  if (msgId) {
+    const isDuplicate = await handleDb(
+      () => db.prepare(
+        'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
+      ).bind('zalo', msgId).first(),
+      'DATABASE_ERROR',
+      'Failed to check for duplicate Zalo message'
+    )
+    if (isDuplicate) {
+      return c.json({ error: 'Duplicate message detected', code: 'REPLAY_ATTACK' }, 409)
+    }
   }
 
   const channel = await c.env.DB.prepare(
@@ -77,24 +96,37 @@ chatRoutes.post('/webhook/zalo', async (c) => {
     oa_id: body.recipient.id, access_token: channel.access_token_encrypted as string,
   }))
 
-  return c.json({ received: true })
-})
+  // Record webhook event to prevent replay attacks
+  if (msgId) {
+    await handleDb(
+      () => db.prepare(
+        'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
+      ).bind(crypto.randomUUID(), 'zalo', msgId, 'message').run(),
+      'DATABASE_ERROR',
+      'Failed to record Zalo webhook event'
+    )
+  }
 
-// ─── Facebook Messenger Webhook ───
+  return c.json({ received: true })
+}))
+
+// --- Facebook Messenger Webhook ---
 chatRoutes.get('/webhook/facebook', (c) => {
   const mode = c.req.query('hub.mode')
   const token = c.req.query('hub.verify_token')
   const challenge = c.req.query('hub.challenge')
   const verifyToken = c.env.FB_VERIFY_TOKEN
   if (!verifyToken) {
-    console.warn('FB_VERIFY_TOKEN not configured — Facebook webhook verification disabled')
     return c.text('Forbidden', 403)
   }
   if (mode === 'subscribe' && token === verifyToken) return c.text(challenge || '', 200)
   return c.text('Forbidden', 403)
 })
 
-chatRoutes.post('/webhook/facebook', async (c) => {
+chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+  const db = c.env.DB
+
   // Verify Facebook signature
   const signature = c.req.header('X-Hub-Signature-256')?.replace('sha256=', '')
   const secret = c.env.FB_APP_SECRET
@@ -139,6 +171,22 @@ chatRoutes.post('/webhook/facebook', async (c) => {
   for (const entry of body.entry) {
     for (const event of entry.messaging) {
       if (!event.message?.text) continue
+
+      // Check for replay attack (duplicate mid)
+      const mid = event.message.mid
+      if (mid) {
+        const isDuplicate = await handleDb(
+          () => db.prepare(
+            'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
+          ).bind('facebook', mid).first(),
+          'DATABASE_ERROR',
+          'Failed to check for duplicate Facebook message'
+        )
+        if (isDuplicate) {
+          continue // Skip duplicate but continue processing other events
+        }
+      }
+
       const channel = await c.env.DB.prepare(
         'SELECT * FROM channels WHERE type = ? AND external_id = ? AND active = 1'
       ).bind('facebook', entry.id).first()
@@ -161,12 +209,23 @@ chatRoutes.post('/webhook/facebook', async (c) => {
         platform: 'facebook', sender_id: event.sender.id,
         page_id: entry.id, access_token: channel.access_token_encrypted as string,
       }))
+
+      // Record webhook event to prevent replay attacks
+      if (mid) {
+        await handleDb(
+          () => db.prepare(
+            'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
+          ).bind(crypto.randomUUID(), 'facebook', mid, 'message').run(),
+          'DATABASE_ERROR',
+          'Failed to record Facebook webhook event'
+        )
+      }
     }
   }
   return c.json({ received: true })
-})
+}))
 
-// ─── AI message processing: KB → LLM → reply → save ───
+// --- AI message processing: KB -> LLM -> reply -> save ---
 async function processMessage(
   env: Bindings, tenantId: string, convId: string, userMessage: string,
   ctx: { platform: string; sender_id: string; access_token: string; [k: string]: string },
@@ -185,7 +244,7 @@ async function processMessage(
     ).bind(convId).all()
 
     const messages = [
-      { role: 'system' as const, content: 'Bạn là trợ lý AI cho doanh nghiệp. Trả lời bằng tiếng Việt, ngắn gọn, thân thiện.' },
+      { role: 'system' as const, content: 'Ban la tro ly AI cho doanh nghiep. Tra loi bang tieng Viet, ngan gon, than thien.' },
       ...(history.results || []).reverse().map((m: Record<string, unknown>) => ({
         role: m.role as 'user' | 'assistant', content: m.content as string,
       })),
@@ -223,6 +282,18 @@ async function sendFBReply(token: string, recipientId: string, text: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
   })
+}
+
+// Helper wrapper for async route handlers
+function handleAsync(fn: (c: any) => Promise<any>) {
+  return async (c: any) => {
+    try {
+      return await fn(c)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      return c.json({ error: message }, 500)
+    }
+  }
 }
 
 export { chatRoutes }
