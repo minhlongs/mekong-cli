@@ -453,11 +453,11 @@ send_to_pane() {
   # Inject project scope: ensure CC CLI works in correct project directory
   local worker_dir="${WORKER_DIR[$pane_idx]:-}"
   if [[ -n "$worker_dir" && "$worker_dir" != "." && "$cmd" == /* ]]; then
-    # Prepend "IMPORTANT: ONLY modify files in {dir}/" to task description
-    local abs_dir="${PROJECT_ROOT}/${worker_dir}"
-    if [[ -d "$abs_dir" ]] && ! echo "$cmd" | grep -qF "$worker_dir"; then
-      # Insert scope after first quote in command
-      cmd=$(echo "$cmd" | sed "s|\"|\"|SCOPE: Only modify files in ${worker_dir}/. |")
+    if ! echo "$cmd" | grep -qF "$worker_dir"; then
+      # Replace closing quote with scope + closing quote
+      if echo "$cmd" | grep -qF '"'; then
+        cmd="${cmd%\"} SCOPE: Only work in ${worker_dir}/.\""
+      fi
     fi
   fi
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$cmd" Enter
