@@ -24,6 +24,9 @@ import { decentralRoutes } from './routes/decentralization'
 import { rbacRoutes } from './routes/rbac'
 import { constitutionRoutes } from './routes/constitution'
 import { marketplaceRoutes } from './routes/marketplace'
+import { raasRoutes, webhookRoutes } from './routes/raas'
+import { formatPrometheusMetrics, getMetrics, requestLoggingMiddleware, metricsMiddleware } from './lib/monitoring'
+import { handleAsync } from './types/error'
 import type { D1Database, KVNamespace, R2Bucket, Ai, AiModels, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types'
 
 // Cloudflare bindings — all optional until resources created in dashboard
@@ -229,6 +232,17 @@ app.route('/v1/decentralization', decentralRoutes)
 app.route('/v1/rbac', rbacRoutes)
 app.route('/v1/constitution', constitutionRoutes)
 app.route('/v1/marketplace', marketplaceRoutes)
+app.route('/v1/raas', raasRoutes)
+app.route('/', webhookRoutes)
+
+// Metrics endpoint for Prometheus scraping
+app.get('/metrics', (c) => {
+  const metrics = getMetrics()
+  const prometheusFormat = formatPrometheusMetrics(metrics)
+  return c.body(prometheusFormat, 200, {
+    'Content-Type': 'text/plain; version=0.0.4',
+  })
+})
 
 // Cron Trigger — auto-publish approved content
 export default {
