@@ -14,6 +14,14 @@ set -u
 # ---- CONFIG (portable — auto-detect project root) ----
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="${PROJECT_ROOT:-$SCRIPT_DIR}"
+
+# ---- TOOL ADAPTER (universal CLI support) ----
+if [[ -f "$PROJECT_ROOT/mekong/adapters/registry.sh" ]]; then
+  source "$PROJECT_ROOT/mekong/adapters/registry.sh"
+  CTO_TOOL=$(select_tool "${MEKONG_TOOL:-auto}" 2>/dev/null || echo "claude")
+else
+  CTO_TOOL="claude"
+fi
 MEKONG_DIR="${PROJECT_ROOT}/.mekong"
 CONFIG_FILE="${PROJECT_ROOT}/config/cto-config.json"
 LOG_FILE="${MEKONG_DIR}/cto-daemon.log"
@@ -193,11 +201,11 @@ send_to_pane() {
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$*" Enter
 }
 
-# Launch/respawn a CC CLI pane via mekong-wrapper (unified entry point)
+# Launch/respawn a CLI pane via mekong-wrapper (unified entry point)
 launch_pane_cc() {
   local pane_idx=$1
-  local provider="${2:-qwen}"
-  bash "${PROJECT_ROOT}/scripts/launch-pane-cc.sh" "$pane_idx" "${WORKER_DIR[$pane_idx]}" "$CTO_SESSION" "$provider"
+  local tool="${2:-$CTO_TOOL}"
+  bash "${PROJECT_ROOT}/scripts/launch-pane-cc.sh" "$pane_idx" "${WORKER_DIR[$pane_idx]}" "$CTO_SESSION" "$tool"
 }
 
 # ---- PHASE 1: SCAN ----
@@ -245,20 +253,19 @@ phase_scan() {
 
 # CC CLI activity patterns — if ANY of these appear in recent output, pane is BUSY
 # Covers all known CC CLI spinner/status words + interactive prompts
-BUSY_PATTERNS="thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading|Running|Searching|Bootstrapping|Wandering|Swooping|Pondering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|Compacting|Ebbing|Hatching|Committing"
+BUSY_PATTERNS="thinking|Cooking|Baking|Stewing|Sautéed|Elucidating|Imagining|Crunching|Writing|Reading|Running|Searching|Bootstrapping|Wandering|Swooping|Pondering|Brewing|Frosting|Moonwalking|Concocting|Sautéing|Churning|Orbiting|Compacting|Ebbing|Hatching|Committing|Generating|Creating|Hashing|Blanching"
 STUCK_PATTERNS="queued messages|Press up to edit queued"
 QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
 
-  # PRIORITY 1: If ❯ prompt visible in last 3 lines → IDLE immediately
-  # This takes precedence over BUSY/STUCK patterns in earlier buffer
-  if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass"; then
+  # PRIORITY 1: Multi-tool idle detection (claude/gemini/opencode/aider)
+  if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass|Type your message|aider>|codex>|^>"; then
     return 0  # IDLE — pane is at prompt
   fi
 
-  # No ❯ prompt → check if stuck/busy/question
+  # No prompt → check if stuck/busy/question
   return 1  # NOT idle
 }
 
@@ -590,9 +597,9 @@ health_check() {
 trap 'log "TRAP: Error at line $LINENO (ignored — daemon continues)"' ERR
 
 log "============================================="
-log "CTO DAEMON v2.1 — P→D→V→S + Command Catalog"
+log "CTO DAEMON v3.0 — Universal CLI + P→D→V→S"
 log "Session: ${CTO_SESSION} | Poll: ${POLL_INTERVAL}s"
-log "Project: ${PROJECT_ROOT}"
+log "Tool: ${CTO_TOOL} | Project: ${PROJECT_ROOT}"
 log "Workers: P1=${WORKER_NAME[1]} P2=${WORKER_NAME[2]} P3=${WORKER_NAME[3]}"
 log "Config: ${CONFIG_FILE}"
 log "============================================="
@@ -622,8 +629,8 @@ while true; do
       name="${WORKER_NAME[$pane_idx]:-Worker-${pane_idx}}"
 
       if [[ -z "$output" ]]; then
-        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper"
-        launch_pane_cc "$pane_idx" "qwen" || true
+        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper ($CTO_TOOL)"
+        launch_pane_cc "$pane_idx" "$CTO_TOOL" || true
         continue
       fi
 
