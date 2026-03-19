@@ -1,0 +1,36 @@
+{
+  "client": {
+    "id": "acme-corp",
+    "name": "Acme Corporation",
+    "segment": "Digital Agency (50-200 emp)",
+    "recommended_tier": "Pro",
+    "sales_track": "Inside Sales (Demo→Trial)",
+    "decision_date": "2026-04-01",
+    "contact": {
+      "name": "John Smith",
+      "email": "john@acme.corp",
+      "company": "Acme Corporation"
+    },
+    "roi_metrics": {
+      "missions_completed": 147,
+      "credits_used": "847 / 1,000 (84.7%)",
+      "hours_saved": "62 hrs",
+      "value": "9,300",
+      "tech_debt_items": 23,
+      "deploy_count": 8,
+      "success_rate": "98.6%"
+    },
+    "tier_pricing": {
+      "tier": "Pro",
+      "price": 149,
+      "gross_value": 9300,
+      "net_roi": 9151,
+      "roi_multiple": 62
+    },
+    "use_cases": [
+      "Full sprint automation",
+      "CI/CD pipeline management",
+      "Automated code reviews"
+    ]
+  }
+}

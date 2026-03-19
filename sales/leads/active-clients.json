@@ -1,0 +1,107 @@
+{
+  "active_clients": [
+    {
+      "id": "client-001",
+      "name": "Acme Digital Agency",
+      "segment": "Digital Agency (50-200 emp)",
+      "recommended_tier": "Pro",
+      "sales_track": "Inside Sales (Demo→Trial)",
+      "decision_date": "2026-04-01",
+      "contact": {
+        "name": "John Smith",
+        "email": "john@acme.digital",
+        "company": "Acme Digital Agency"
+      },
+      "roi_metrics": {
+        "missions_completed": 147,
+        "credits_used": "847 / 1,000 (84.7%)",
+        "hours_saved": "62 hrs",
+        "value": "9,300",
+        "tech_debt_items": 23,
+        "deploy_count": 8,
+        "success_rate": "98.6%"
+      },
+      "tier_pricing": {
+        "tier": "Pro",
+        "price": 149,
+        "gross_value": 9300,
+        "net_roi": 9151,
+        "roi_multiple": 62
+      },
+      "use_cases": [
+        "Full sprint automation",
+        "CI/CD pipeline management",
+        "Automated code reviews"
+      ]
+    },
+    {
+      "id": "client-002",
+      "name": "TechStart SaaS",
+      "segment": "SaaS Startup (Series A-B)",
+      "recommended_tier": "Enterprise",
+      "sales_track": "Field Sales (POC→Enterprise)",
+      "decision_date": "2026-04-15",
+      "contact": {
+        "name": "Sarah Chen",
+        "email": "sarah@techstart.io",
+        "company": "TechStart SaaS"
+      },
+      "roi_metrics": {
+        "missions_completed": 520,
+        "credits_used": "Unlimited",
+        "hours_saved": "215 hrs",
+        "value": "32,250",
+        "tech_debt_items": 89,
+        "deploy_count": 34,
+        "success_rate": "99.2%"
+      },
+      "tier_pricing": {
+        "tier": "Enterprise",
+        "price": 499,
+        "gross_value": 32250,
+        "net_roi": 31751,
+        "roi_multiple": 64
+      },
+      "use_cases": [
+        "Enterprise-wide automation",
+        "HIPAA compliance automation",
+        "Multi-team coordination",
+        "Custom agent training"
+      ]
+    },
+    {
+      "id": "client-003",
+      "name": "Indie Hacker Labs",
+      "segment": "Digital Agency (50-200 emp)",
+      "recommended_tier": "Starter",
+      "sales_track": "Product-Led (Self-Serve)",
+      "decision_date": "2026-03-25",
+      "contact": {
+        "name": "Mike Johnson",
+        "email": "mike@indiehacker.labs",
+        "company": "Indie Hacker Labs"
+      },
+      "roi_metrics": {
+        "missions_completed": 45,
+        "credits_used": "180 / 200 (90%)",
+        "hours_saved": "18 hrs",
+        "value": "2,700",
+        "tech_debt_items": 7,
+        "deploy_count": 3,
+        "success_rate": "97.8%"
+      },
+      "tier_pricing": {
+        "tier": "Starter",
+        "price": 49,
+        "gross_value": 2700,
+        "net_roi": 2651,
+        "roi_multiple": 54
+      },
+      "use_cases": [
+        "Weekly report automation",
+        "Documentation generation",
+        "Simple bug fixes"
+      ]
+    }
+  ]
+}
