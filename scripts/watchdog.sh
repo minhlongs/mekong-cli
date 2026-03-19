@@ -4,13 +4,13 @@
 # Crontab: */5 * * * * /opt/homebrew/bin/bash ~/mekong-cli/scripts/watchdog.sh
 # ═══════════════════════════════════════════════════════════════
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
-export HOME="${HOME:-/Users/macbookprom1}"
+export HOME="${HOME:-/Users/macbook}"
 
 PROJECT_ROOT="$HOME/mekong-cli"
 MEKONG_DIR="$PROJECT_ROOT/.mekong"
 LOG_FILE="$MEKONG_DIR/watchdog.log"
 OLLAMA_BIN="/Applications/Ollama.app/Contents/Resources/ollama"
-OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:8b}"
+OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
 
 mkdir -p "$MEKONG_DIR"
 
@@ -24,7 +24,7 @@ log "=== WATCHDOG CHECK ==="
 FIXES=0
 
 # ── 1. CHECK SESSIONS ──
-REQUIRED_SESSIONS="tom_hum tom_hum_sales tom_hum_docs tom_hum_ops"
+REQUIRED_SESSIONS="tom_hum tom_hum_sales tom_hum_mktg tom_hum_docs tom_hum_ops tom_hum_design"
 MISSING=""
 for s in $REQUIRED_SESSIONS; do
   tmux has-session -t "$s" 2>/dev/null || MISSING+="$s "
