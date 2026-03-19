@@ -21,7 +21,32 @@ const PLAN_TIER_MAP: Record<string, string> = {
 
 // POST /momo/ipn — MoMo Instant Payment Notification
 paymentVnRoutes.post('/momo/ipn', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+
+  const secret = c.env.MOMO_SECRET_KEY
+  const signature = c.req.header('x-signature') || c.req.header('x-momo-signature')
+
+  // Verify MoMo HMAC signature if secret configured
+  if (secret && signature) {
+    const rawBody = await c.req.text()
+    const expectedSig = await crypto.subtle.sign(
+      'HMAC',
+      await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+      ),
+      new TextEncoder().encode(rawBody)
+    )
+    const expectedHex = Array.from(new Uint8Array(expectedSig))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    if (signature !== expectedHex) {
+      return c.json({ error: 'Invalid MoMo signature' }, 401)
+    }
+  }
 
   let body: {
     partnerCode?: string
@@ -51,7 +76,9 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
 
   let parsed: { tenant_id?: string; credits?: number; plan?: string }
   try {
-    parsed = JSON.parse(atob(extraData))
+    // Use atob() for base64 decoding (Cloudflare Workers compatible)
+    const decoded = atob(extraData)
+    parsed = JSON.parse(decoded)
   } catch {
     return c.json({ error: 'Invalid extraData encoding' }, 400)
   }
@@ -77,7 +104,39 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
 
 // GET /vnpay/ipn — VNPAY Return + IPN handler
 paymentVnRoutes.get('/vnpay/ipn', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+
+  const hashSecret = c.env.VNPAY_HASH_SECRET
+  const secureHash = c.req.query('vnp_SecureHash')?.replace('SHA512=', '')
+
+  // Verify VNPAY secure hash if secret configured
+  if (hashSecret && secureHash) {
+    const params = c.req.query()
+    // Build hash string from sorted query params (exclude vnp_SecureHash itself)
+    const hashParams = Object.entries(params)
+      .filter(([key]) => key !== 'vnp_SecureHash')
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v ?? ''}`)
+      .join('&')
+
+    const expectedHash = await crypto.subtle.sign(
+      'HMAC',
+      await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(hashSecret),
+        { name: 'HMAC', hash: 'SHA-512' },
+        false,
+        ['sign']
+      ),
+      new TextEncoder().encode(hashParams)
+    )
+    const expectedHex = Array.from(new Uint8Array(expectedHash))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+    if (secureHash.toLowerCase() !== expectedHex.toLowerCase()) {
+      return c.json({ error: 'Invalid VNPAY signature' }, 401)
+    }
+  }
 
   const responseCode = c.req.query('vnp_ResponseCode')
   const orderInfo = c.req.query('vnp_OrderInfo') // "tenant_id|credits|plan"

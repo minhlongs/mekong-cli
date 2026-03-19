@@ -3,10 +3,19 @@ import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { saveLLMSettings, getLLMSettings, deleteLLMSettings, maskApiKey, PROVIDER_PRESETS } from '../raas/tenant-settings'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant }
 
 const settingsRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Zod schema for LLM settings
+const llmSettingsSchema = z.object({
+  provider: z.enum(['openai', 'google', 'anthropic', 'custom']),
+  api_key: z.string().min(1, 'API key is required'),
+  base_url: z.string().url().optional().or(z.literal('')),
+  model: z.string().optional(),
+})
 
 settingsRoutes.use('*', async (c, next) => {
   if (!c.env.DB) return c.json({ error: 'D1 database not configured' }, 503)
@@ -15,31 +24,26 @@ settingsRoutes.use('*', async (c, next) => {
 })
 settingsRoutes.use('*', authMiddleware)
 
-const VALID_PROVIDERS = ['openai', 'google', 'anthropic', 'custom']
-
 // POST /v1/settings/llm — save LLM config
 settingsRoutes.post('/llm', async (c) => {
-  const body = await c.req.json<{ provider?: string; api_key?: string; base_url?: string; model?: string }>()
-
-  if (!body.provider || !VALID_PROVIDERS.includes(body.provider)) {
-    return c.json({ error: `Invalid provider. Must be one of: ${VALID_PROVIDERS.join(', ')}` }, 400)
+  const body = await c.req.json()
+  const parsed = llmSettingsSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
   }
-  if (!body.api_key?.trim()) {
-    return c.json({ error: 'Missing api_key' }, 400)
-  }
-  if (body.provider === 'custom' && !body.base_url?.trim()) {
+  if (parsed.data.provider === 'custom' && !parsed.data.base_url?.trim()) {
     return c.json({ error: 'base_url required for custom provider' }, 400)
   }
 
   const tenant = c.get('tenant')
   await saveLLMSettings(c.env.DB!, tenant.id, {
-    provider: body.provider,
-    apiKey: body.api_key,
-    baseUrl: body.base_url,
-    model: body.model,
+    provider: parsed.data.provider,
+    apiKey: parsed.data.api_key,
+    baseUrl: parsed.data.base_url,
+    model: parsed.data.model,
   }, c.env.SERVICE_TOKEN!)
 
-  return c.json({ ok: true, provider: body.provider, message: 'LLM settings saved' })
+  return c.json({ ok: true, provider: parsed.data.provider, message: 'LLM settings saved' })
 })
 
 // GET /v1/settings/llm — get current config (masked key)

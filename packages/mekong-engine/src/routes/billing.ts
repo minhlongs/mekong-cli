@@ -4,17 +4,29 @@ import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { getBalance, getHistory, addCredits } from '../raas/credits'
 import { createTenant, regenerateApiKey } from '../raas/tenant'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant }
 
 const billingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
+// Zod schemas for validation
+const createTenantSchema = z.object({
+  name: z.string().min(1, 'Tenant name is required').trim(),
+})
+
+const regenerateKeySchema = z.object({
+  tenant_id: z.string().min(1, 'Tenant ID is required').trim(),
+  name: z.string().min(1, 'Tenant name is required').trim(),
+})
+
 // Create tenant — returns API key (one-time display)
 billingRoutes.post('/tenants', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const body = await c.req.json<{ name?: string }>()
-  if (!body.name?.trim()) return c.json({ error: 'Missing name' }, 400)
-  const { tenant, apiKey } = await createTenant(c.env.DB, body.name)
+  const body = await c.req.json()
+  const parsed = createTenantSchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+  const { tenant, apiKey } = await createTenant(c.env.DB, parsed.data.name)
   // Grant 10 free welcome credits so user can start immediately
   await addCredits(c.env.DB, tenant.id, 10, 'welcome: free tier bonus')
   return c.json({
@@ -26,11 +38,10 @@ billingRoutes.post('/tenants', async (c) => {
 // Regenerate API key — requires tenant_id + name as ownership proof
 billingRoutes.post('/tenants/regenerate-key', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const body = await c.req.json<{ tenant_id?: string; name?: string }>()
-  if (!body.tenant_id?.trim() || !body.name?.trim()) {
-    return c.json({ error: 'Both tenant_id and name are required' }, 400)
-  }
-  const result = await regenerateApiKey(c.env.DB, body.tenant_id, body.name)
+  const body = await c.req.json()
+  const parsed = regenerateKeySchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+  const result = await regenerateApiKey(c.env.DB, parsed.data.tenant_id, parsed.data.name)
   if (!result) return c.json({ error: 'Tenant not found or name mismatch' }, 404)
   return c.json({
     api_key: result.apiKey,
@@ -58,14 +69,14 @@ const POLAR_TIER_MAP: Record<string, string> = {
 }
 
 billingRoutes.post('/webhook', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   const db = c.env.DB
   const secret = c.env.POLAR_WEBHOOK_SECRET ?? ''
   const signature = c.req.header('webhook-signature') ?? ''
   const rawBody = await c.req.text()
 
   // Verify webhook signature if secret configured
-  if (secret) {
+  if (secret && signature) {
     const keyData = new TextEncoder().encode(secret)
     const msgData = new TextEncoder().encode(rawBody)
     const cryptoKey = await crypto.subtle.importKey(
@@ -81,11 +92,25 @@ billingRoutes.post('/webhook', async (c) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let event: { type: string; data?: any }
+  let event: { type: string; data?: any; timestamp?: string; created_at?: string }
   try {
     event = JSON.parse(rawBody)
   } catch {
     return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  // Add timestamp validation to prevent replay attacks (5 minute window)
+  const timestamp = event.timestamp ?? event.created_at
+  if (timestamp) {
+    const eventTime = new Date(timestamp).getTime()
+    const now = Date.now()
+    const age = now - eventTime
+    if (age > 5 * 60 * 1000) { // 5 minutes
+      return c.json({ error: 'Webhook timestamp too old (replay attack prevented)', code: 'REPLAY_ATTACK' }, 401)
+    }
+    if (age < 0) {
+      return c.json({ error: 'Webhook timestamp in future', code: 'INVALID_TIMESTAMP' }, 400)
+    }
   }
 
   const data = event.data ?? {} as Record<string, any>

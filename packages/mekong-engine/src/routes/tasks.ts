@@ -6,10 +6,16 @@ import { creditMeteringMiddleware } from '../raas/credit-metering-middleware'
 import { createMission, getMission, listMissions, updateMissionStatus, estimateCredits } from '../raas/missions'
 import { deductCredits, addCredits } from '../raas/credits'
 import { createSSEStream } from '../raas/sse'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant; creditsUsed: number }
 
 const taskRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+// Zod schema for mission creation
+const createMissionSchema = z.object({
+  goal: z.string().min(1, 'Goal is required').max(2000, 'Goal must be 2000 characters or less'),
+})
 
 // Guard: DB required for all task routes
 taskRoutes.use('*', async (c, next) => {
@@ -21,12 +27,12 @@ taskRoutes.use('*', authMiddleware)
 taskRoutes.post('/', creditMeteringMiddleware, async (c) => {
   const db = c.env.DB!
   const tenant = c.get('tenant')
-  const body = await c.req.json<{ goal: string }>()
-  if (!body.goal?.trim()) return c.json({ error: 'Missing goal' }, 400)
-  if (body.goal.length > 2000) return c.json({ error: 'Goal too long (max 2000 characters)' }, 400)
+  const body = await c.req.json()
+  const parsed = createMissionSchema.safeParse(body)
+  if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
 
-  const credits = estimateCredits(body.goal)
-  const deducted = await deductCredits(db, tenant.id, credits, `mission: ${body.goal.slice(0, 50)}`)
+  const credits = estimateCredits(parsed.data.goal)
+  const deducted = await deductCredits(db, tenant.id, credits, `mission: ${parsed.data.goal.slice(0, 50)}`)
   if (!deducted) return c.json({ error: 'Insufficient credits' }, 402)
 
   c.set('creditsUsed', credits)
