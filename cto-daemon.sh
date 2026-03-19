@@ -391,8 +391,13 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 is_idle() {
   local output="$1"
 
-  # NOT idle if queued messages, plan mode dialog, or selection prompt
-  if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No"; then
+  # LOCK 1: NOT idle if tool actively running (CC CLI status indicators)
+  if echo "$output" | tail -15 | grep -qE "⏺|✳|Quantumizing|Scurrying|Writing|Reading|Thinking|Searching|Running|Brewing|Cooked|Cogitating|Crunching"; then
+    return 1
+  fi
+
+  # LOCK 1b: NOT idle if dialog/queued state
+  if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No|arrow keys"; then
     return 1
   fi
 
@@ -403,6 +408,32 @@ is_idle() {
 
   # No prompt → check if stuck/busy/question
   return 1  # NOT idle
+}
+
+# ---- PANE LOCK (2-way dispatch protection) ----
+PANE_LOCK_DIR="${MEKONG_DIR}/pane-lock"
+mkdir -p "$PANE_LOCK_DIR"
+LOCK_TIMEOUT=600  # 10 minutes
+
+acquire_pane_lock() {
+  local session=$1 pane=$2
+  local lock_file="${PANE_LOCK_DIR}/${session}-${pane}.lock"
+  # Check if lock exists and not expired
+  if [[ -f "$lock_file" ]]; then
+    local age=$(( $(date +%s) - $(stat -f %m "$lock_file" 2>/dev/null || echo 0) ))
+    if [[ $age -lt $LOCK_TIMEOUT ]]; then
+      return 1  # Lock held, skip dispatch
+    fi
+    # Lock expired, remove it
+    rm -f "$lock_file"
+  fi
+  touch "$lock_file"
+  return 0
+}
+
+release_pane_lock() {
+  local session=$1 pane=$2
+  rm -f "${PANE_LOCK_DIR}/${session}-${pane}.lock"
 }
 
 # Check if pane is actively working (inverse of idle, but also catches stuck state)
@@ -587,6 +618,12 @@ dispatch_worker() {
   local pane_idx=$1
   local pane_output="${2:-}"
   local name="${WORKER_NAME[$pane_idx]}"
+
+  # LOCK 2: Check pane lock before dispatch
+  if ! acquire_pane_lock "${CTO_SESSION}" "$pane_idx"; then
+    log "P${pane_idx} (${name}): LOCKED — skip dispatch (task in progress)"
+    return
+  fi
 
   # Priority 1: Check for pending mission files matching this worker's project
   local mission_dir="${MEKONG_DIR}/missions"
@@ -811,8 +848,9 @@ while true; do
         continue  # verify handled the worker
       fi
 
-      # If idle → check missions first (bypass cooldown), then dispatch with cooldown
+      # If idle → release lock + check missions/dispatch
       if is_idle "$output"; then
+        release_pane_lock "${CTO_SESSION}" "$pane_idx"
         # Priority 0: mission files bypass cooldown entirely
         mission_dir="${MEKONG_DIR}/missions"
         has_mission=false
