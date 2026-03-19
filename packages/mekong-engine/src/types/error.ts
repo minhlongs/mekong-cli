@@ -258,3 +258,66 @@ export function guardEmptyArray<T>(
   }
   return arr
 }
+
+/**
+ * Validate tenant exists helper
+ * Checks if tenant exists in database, throws NOT_FOUND if not
+ *
+ * @example
+ * ```ts
+ * const tenant = c.get('tenant')
+ * await requireTenant(c.env.DB, tenant.id)
+ * ```
+ */
+export async function requireTenant(
+  db: any,
+  tenantId: string,
+  message: string = 'Tenant not found'
+): Promise<void> {
+  const tenant = await db
+    .prepare('SELECT id FROM tenants WHERE id = ?')
+    .bind(tenantId)
+    .first()
+
+  if (!tenant) {
+    throw new HttpError('NOT_FOUND', message, undefined, 404)
+  }
+}
+
+/**
+ * Safe number parsing helper
+ * Parses and validates number inputs with bounds checking
+ *
+ * @example
+ * ```ts
+ * const limit = safeNumber(c.req.query('limit'), 1, 100, 50)
+ * ```
+ */
+export function safeNumber(
+  value: unknown,
+  min: number,
+  max: number,
+  defaultValue: number
+): number {
+  const parsed = typeof value === 'string' ? parseInt(value, 10) : Number(value ?? defaultValue)
+  if (isNaN(parsed)) return defaultValue
+  return Math.max(min, Math.min(max, parsed))
+}
+
+/**
+ * Null-safe JSON parse helper
+ * Safely parses JSON strings, returns null on failure
+ *
+ * @example
+ * ```ts
+ * const tags = safeJsonParse(contact.tags, [])
+ * ```
+ */
+export function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return fallback
+  }
+}
