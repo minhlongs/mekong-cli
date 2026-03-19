@@ -182,7 +182,8 @@ class TestGlobalRegistry(unittest.TestCase):
         agent = RecipeCrawler()
         self.assertEqual(agent.name, "RecipeCrawler")
 
-    def test_resolve_and_instantiate_workspace_agent(self):
+    @unittest.mock.patch('src.agents.workspace_agent.WorkspaceAgent._check_gws_installed')
+    def test_resolve_and_instantiate_workspace_agent(self, mock_check):
         """Test resolving and instantiating WorkspaceAgent."""
         WorkspaceAgent = registry.get("workspace")
         agent = WorkspaceAgent()
