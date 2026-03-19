@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "type": "module",
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api.ts",
+    "./renderer": "./src/renderer.ts",
+    "./event-bus": "./src/event-bus.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run"

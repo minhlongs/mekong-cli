@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "type": "module",
   "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./self-improver": "./src/self-improver.ts",
+    "./version-tracker": "./src/version-tracker.ts",
+    "./benchmark": "./src/benchmark.ts",
+    "./benchmark-runner": "./src/benchmark-runner.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run"

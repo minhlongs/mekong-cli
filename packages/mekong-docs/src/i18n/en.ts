@@ -50,4 +50,14 @@ export const en = {
   },
 } as const;
 
-export type Translations = typeof en;
+// Type for translations - allows any string values for i18n
+export type Translations = {
+  nav: { home: string; guides: string; pricing: string; github: string };
+  hero: { title: string; subtitle: string; cta_install: string; cta_guides: string; cta_copy: string; cta_copied: string };
+  features: { title: string; subtitle: string };
+  terminal: { title: string; subtitle: string };
+  install: { title: string; step1: string; step2: string; step3: string };
+  footer: { tagline: string; copyright: string };
+  pricing: { title: string; subtitle: string; free: string; starter: string; pro: string; enterprise: string; per_month: string; buy: string; contact: string; get_started: string };
+  guides: { title: string; subtitle: string; read_more: string };
+};
