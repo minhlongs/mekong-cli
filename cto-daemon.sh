@@ -848,6 +848,28 @@ verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
 
+  # SESSION COMPLETE detection — /clear immediately to recycle pane
+  if echo "$output" | tail -20 | grep -qiE "Session Complete|Hẹn gặp lại|All Tasks Done|Task hoàn thành|Session kết thúc|goodbye|signing off"; then
+    if is_idle "$output"; then
+      log "VERIFY P${pane_idx}: SESSION COMPLETE → /clear for new task"
+      send_to_pane "$pane_idx" "/clear"
+      save_memory "RECYCLE" "P${pane_idx}: session complete, cleared for new dispatch"
+      return 0
+    fi
+  fi
+
+  # CI POLLING STUCK detection — worker waiting for CI forever after commit
+  if echo "$output" | tail -15 | grep -qE "gh run list|gh run view|sleep 30|Waiting.*CI|checking.*deploy"; then
+    if echo "$output" | tail -30 | grep -qE "git push|pushed|Commit.*success"; then
+      log "VERIFY P${pane_idx}: CI POLLING STUCK (commit done) → Ctrl-C + /clear"
+      tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" C-c "" 2>/dev/null
+      sleep 1
+      send_to_pane "$pane_idx" "/clear"
+      save_memory "UNSTUCK" "P${pane_idx}: broke CI polling loop after commit"
+      return 0
+    fi
+  fi
+
   # Context management — ONLY when pane is IDLE (never interrupt active work)
   if is_idle "$output"; then
     # Context 90%+ or 100% → /clear (hard reset)
