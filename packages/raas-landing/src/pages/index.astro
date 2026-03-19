@@ -61,12 +61,12 @@ const testimonials = [
   { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention', verified: true },
 ];
 
-// SoftwareApplication JSON-LD
+// SoftwareApplication JSON-LD (RaaS Product)
 const softwareAppSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "OpenClaw",
-  "alternateName": "AgencyOS",
+  "alternateName": ["AgencyOS", "RaaS", "Revenue-as-a-Service"],
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "offers": {
@@ -75,7 +75,62 @@ const softwareAppSchema = {
     "priceCurrency": "USD",
     "description": "Miễn phí 14 ngày, không cần thẻ tín dụng",
     "availability": "https://schema.org/InStock",
-    "eligibleRegion": "VN"
+    "eligibleRegion": ["VN", "US", "SG"]
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "RaaS Pricing Tiers",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "price": "0",
+        "priceCurrency": "USD",
+        "description": "50 credits/tháng, AI Receptionist cơ bản"
+      },
+      {
+        "@type": "Offer",
+        "name": "Starter",
+        "price": "8",
+        "priceCurrency": "USD",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "8",
+          "priceCurrency": "USD",
+          "referenceQuantity": {
+            "@type": "QuantitativeValue",
+            "value": "1",
+            "unitCode": "MON"
+          }
+        },
+        "description": "500 credits, AI 24/7, 7 ngày content/tuần"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro",
+        "price": "20",
+        "priceCurrency": "USD",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "20",
+          "priceCurrency": "USD",
+          "referenceQuantity": {
+            "@type": "QuantitativeValue",
+            "value": "1",
+            "unitCode": "MON"
+          }
+        },
+        "description": "2.000 credits, Multi-channel, AI tùy chỉnh",
+        "bestOffer": "true"
+      },
+      {
+        "@type": "Offer",
+        "name": "Enterprise",
+        "price": "120",
+        "priceCurrency": "USD",
+        "description": "Credits không giới hạn, Dedicated AI, White-label"
+      }
+    ]
   },
   "aggregateRating": {
     "@type": "AggregateRating",
@@ -85,28 +140,60 @@ const softwareAppSchema = {
     "worstRating": "1",
     "reviewCount": "500"
   },
-  "featureList": "AI Receptionist, Content Creator, CRM Thông Minh, Báo Cáo Thời Gian Thực, Tự động hóa Zalo, Tự động hóa Facebook",
+  "featureList": "AI Receptionist, Content Creator, CRM Thông Minh, Báo Cáo Thời Gian Thực, Tự động hóa Zalo, Tự động hóa Facebook, Multi-channel Support, API Access",
   "screenshot": "https://agencyos.network/og-default.jpg",
   "description": "Nền tảng AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần.",
+  "applicationSubCategory": "SaaS",
+  "downloadUrl": "https://app.agencyos.network/signup",
+  "releaseNotes": "https://docs.agencyos.network/changelog",
+  "softwareVersion": "5.0.0",
   "potentialAction": {
     "@type": "UseAction",
     "actionStatus": "https://schema.org/PotentialActionStatus",
     "target": "https://app.agencyos.network/signup",
     "description": "Đăng ký dùng thử miễn phí 14 ngày"
   },
-  "review": {
-    "@type": "Review",
-    "reviewRating": {
-      "@type": "Rating",
-      "ratingValue": "5",
-      "bestRating": "5"
+  "review": [
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Minh Tuấn, CEO FoodTech Startup"
+      },
+      "reviewBody": "Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó. +40% năng suất."
     },
-    "author": {
-      "@type": "Person",
-      "name": "Minh Tuấn, CEO FoodTech Startup"
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Hà Linh, Founder Beauty Brand"
+      },
+      "reviewBody": "AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng. +40% conversion."
     },
-    "reviewBody": "Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó."
-  }
+    {
+      "@type": "Review",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Đức Anh, CTO SaaS Platform"
+      },
+      "reviewBody": "Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. -90% chi phí."
+    }
+  ]
 };
 
 // FAQPage JSON-LD
@@ -121,6 +208,72 @@ const faqPageSchema = {
       "text": faq.a
     }
   }))
+};
+
+// Service JSON-LD (RaaS Service)
+const raasServiceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "AI Business Automation Platform",
+  "provider": {
+    "@type": "Organization",
+    "name": "OpenClaw",
+    "alternateName": "AgencyOS",
+    "url": "https://agencyos.network",
+    "logo": "https://agencyos.network/logo.jpg"
+  },
+  "areaServed": ["VN", "US", "SG", "Global"],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "RaaS Service Tiers",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Free Tier",
+          "description": "50 credits/tháng, AI Receptionist cơ bản, 3 ngày content/tháng"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Starter Tier",
+          "description": "500 credits/tháng, AI 24/7, 7 ngày content/tuần, CRM không giới hạn"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Pro Tier",
+          "description": "2.000 credits/tháng, Multi-channel, AI tùy chỉnh, API access, SLA 99.9%"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Enterprise Tier",
+          "description": "Unlimited credits, Dedicated AI model, White-label, 1-1 onboarding, SLA 99.99%"
+        }
+      }
+    ]
+  },
+  "audience": {
+    "@type": "BusinessAudience",
+    "audienceType": ["SMB", "Enterprise", "Agency", "Startup"],
+    "geographicArea": {
+      "@type": "Country",
+      "name": "Vietnam"
+    }
+  },
+  "availableChannel": {
+    "@type": "ServiceChannel",
+    "serviceUrl": "https://app.agencyos.network",
+    "availableLanguage": ["Vietnamese", "English"]
+  }
 };
 
 // BreadcrumbList JSON-LD
@@ -152,7 +305,7 @@ const breadcrumbSchema = {
 >
 
   <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, faqPageSchema, breadcrumbSchema])} />
+  <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, raasServiceSchema, faqPageSchema, breadcrumbSchema])} />
 
   <!-- HERO -->
   <section class="hero-section" aria-label="Giới thiệu OpenClaw">

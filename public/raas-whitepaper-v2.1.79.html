@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RaaS Platform - Technical Specifications v2.1.79</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="-" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RaaS Platform - Technical Specifications v2.1.79</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#raas-platform---technical-specifications"
+id="toc-raas-platform---technical-specifications">RaaS Platform -
+Technical Specifications</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+Contents</a></li>
+<li><a href="#system-overview" id="toc-system-overview">System
+Overview</a></li>
+<li><a href="#infrastructure-architecture"
+id="toc-infrastructure-architecture">Infrastructure
+Architecture</a></li>
+<li><a href="#revenue-distribution-engine"
+id="toc-revenue-distribution-engine">Revenue Distribution
+Engine</a></li>
+<li><a href="#api-specifications" id="toc-api-specifications">API
+Specifications</a></li>
+<li><a href="#database-schema" id="toc-database-schema">Database
+Schema</a></li>
+<li><a href="#security-architecture"
+id="toc-security-architecture">Security Architecture</a></li>
+<li><a href="#billing-mcu-system" id="toc-billing-mcu-system">Billing
+&amp; MCU System</a></li>
+<li><a href="#scaling-performance" id="toc-scaling-performance">Scaling
+&amp; Performance</a></li>
+<li><a href="#monitoring-observability"
+id="toc-monitoring-observability">Monitoring &amp;
+Observability</a></li>
+<li><a href="#appendix-quick-reference"
+id="toc-appendix-quick-reference">Appendix: Quick Reference</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="raas-platform---technical-specifications">RaaS Platform -
+Technical Specifications</h1>
+<blockquote>
+<p><strong>Revenue-as-a-Service Platform</strong> - Enterprise-grade,
+serverless, globally distributed <strong>Version:</strong> 2.1.79 |
+<strong>Last Updated:</strong> 2026-03-19</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#system-overview">System Overview</a></li>
+<li><a href="#infrastructure-architecture">Infrastructure
+Architecture</a></li>
+<li><a href="#revenue-distribution-engine">Revenue Distribution
+Engine</a></li>
+<li><a href="#api-specifications">API Specifications</a></li>
+<li><a href="#database-schema">Database Schema</a></li>
+<li><a href="#security-architecture">Security Architecture</a></li>
+<li><a href="#billing--mcu-system">Billing &amp; MCU System</a></li>
+<li><a href="#scaling--performance">Scaling &amp; Performance</a></li>
+<li><a href="#monitoring--observability">Monitoring &amp;
+Observability</a></li>
+</ol>
+<hr />
+<h2 id="system-overview">System Overview</h2>
+<h3 id="platform-components">Platform Components</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    RaaS Platform Stack                           │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 1: Edge (Cloudflare)                                     │
+│  • 275+ data centers • WAF/DDoS • CDN • TLS 1.3                │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 2: Compute (Workers + Pages)                             │
+│  • API Gateway (Workers) • Dashboard (Pages/React)             │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 3: Core Engine (PEV)                                     │
+│  • Planner • Executor • Verifier • Orchestrator                │
+├─────────────────────────────────────────────────────────────────┤
+│  Layer 4: Data (D1 + R2 + KV)                                   │
+│  • D1 (SQLite) • R2 (Object Store) • KV (Cache)                │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="key-metrics">Key Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Target</th>
+<th>Current</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TTFB (Edge)</td>
+<td>&lt;50ms</td>
+<td>✅ 35-45ms</td>
+</tr>
+<tr>
+<td>TTFB (Origin)</td>
+<td>&lt;200ms</td>
+<td>✅ 120-180ms</td>
+</tr>
+<tr>
+<td>Cache Hit Rate</td>
+<td>&gt;95%</td>
+<td>✅ 96.2%</td>
+</tr>
+<tr>
+<td>API Error Rate</td>
+<td>&lt;0.1%</td>
+<td>✅ 0.03%</td>
+</tr>
+<tr>
+<td>Build Time</td>
+<td>&lt;10s</td>
+<td>✅ 6.8s</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="infrastructure-architecture">Infrastructure Architecture</h2>
+<h3 id="global-edge-distribution">Global Edge Distribution</h3>
+<pre><code>                    CLOUDFLARE GLOBAL NETWORK
+    ┌────────────────┬────────────────┬────────────────┐
+    │  NAM (40%)     │  EU (35%)      │  APAC (25%)    │
+    │  Dallas, TX    │  Frankfurt, DE │  Singapore     │
+    │  Ashburn, VA   │  Amsterdam, NL │  Tokyo, JP     │
+    │  San Francisco │  London, UK    │  Sydney, AU    │
+    └────────────────┴────────────────┴────────────────┘</code></pre>
+<h3 id="compute-layer-specifications">Compute Layer Specifications</h3>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 37%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Technology</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API Gateway</strong></td>
+<td>Cloudflare Workers</td>
+<td>Auth, rate limiting, routing</td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>Cloudflare Pages + React 19</td>
+<td>User interface</td>
+</tr>
+<tr>
+<td><strong>RaaS Gateway</strong></td>
+<td>Workers (TypeScript)</td>
+<td>MCU validation, tenant auth</td>
+</tr>
+<tr>
+<td><strong>PEV Engine</strong></td>
+<td>Workers (Python/TS)</td>
+<td>Plan-Execute-Verify loop</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-layer-specifications">Data Layer Specifications</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 16%" />
+<col style="width: 27%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Service</th>
+<th>Type</th>
+<th>Use Case</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D1</strong></td>
+<td>SQLite (Edge)</td>
+<td>Ledger, missions, tenants</td>
+<td>Permanent</td>
+</tr>
+<tr>
+<td><strong>R2</strong></td>
+<td>S3-compatible</td>
+<td>Backups, artifacts, logs</td>
+<td>30 days - 7 years</td>
+</tr>
+<tr>
+<td><strong>KV</strong></td>
+<td>Edge cache</td>
+<td>Sessions, rate limits, config</td>
+<td>1 min - 24 hours</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="revenue-distribution-engine">Revenue Distribution Engine</h2>
+<h3 id="default-split-configuration-binh-pháp-tam-giác-ngược">Default
+Split Configuration (Binh Pháp Tam Giác Ngược)</h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> DEFAULT_SPLIT <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  platform<span class="op">:</span> <span class="fl">0.20</span><span class="op">,</span>       <span class="co">// 20% — Platform (AgencyOS)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  expert<span class="op">:</span> <span class="fl">0.30</span><span class="op">,</span>         <span class="co">// 30% — Expert/Partner</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  ai_compute<span class="op">:</span> <span class="fl">0.15</span><span class="op">,</span>     <span class="co">// 15% — LLM inference cost</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  developer<span class="op">:</span> <span class="fl">0.15</span><span class="op">,</span>      <span class="co">// 15% — Developer/agency</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  community_fund<span class="op">:</span> <span class="fl">0.10</span><span class="op">,</span> <span class="co">// 10% — Treasury for quadratic funding</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  customer_reward<span class="op">:</span> <span class="fl">0.10</span> <span class="co">// 10% — Loyalty credits back to customer</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Sum: 100%</span></span></code></pre></div>
+<h3 id="revenue-flow-diagram">Revenue Flow Diagram</h3>
+<pre><code>Customer Payment → Platform Treasury → 6-Way Distribution
+                           │
+                           ▼
+         ┌─────────────────────────────────┐
+         │  Revenue Split Engine           │
+         │  POST /v1/revenue/split         │
+         └─────────────────────────────────┘
+                           │
+         ┌─────────────────┴─────────────────┐
+         ▼                                   ▼
+┌─────────────────┐               ┌─────────────────┐
+│  Double-Entry   │               │  Stakeholder    │
+│  Ledger (D1)    │               │  Accounts       │
+│                 │               │                 │
+│  • Debits: -1000│               │  • Platform: 200│
+│  • Credits: +200│               │  • Expert: 300  │
+│             +300│               │  • AI Compute   │
+│             +150│               │    +150         │
+│             +150│               │  • Developer    │
+│             +100│               │    +150         │
+│             +100│               │  • Community    │
+└─────────────────┘               │    +100         │
+                                  │  • Customer     │
+                                  │    +100         │
+                                  └─────────────────┘</code></pre>
+<h3 id="worked-example-1000-mcu-task">Worked Example: 1,000 MCU
+Task</h3>
+<table>
+<thead>
+<tr>
+<th>Recipient</th>
+<th>%</th>
+<th>Calculation</th>
+<th>Amount (MCU)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Platform</td>
+<td>20%</td>
+<td>1000 × 0.20</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Expert</td>
+<td>30%</td>
+<td>1000 × 0.30</td>
+<td>300</td>
+</tr>
+<tr>
+<td>AI Compute</td>
+<td>15%</td>
+<td>1000 × 0.15</td>
+<td>150</td>
+</tr>
+<tr>
+<td>Developer</td>
+<td>15%</td>
+<td>1000 × 0.15</td>
+<td>150</td>
+</tr>
+<tr>
+<td>Community Fund</td>
+<td>10%</td>
+<td>1000 × 0.10</td>
+<td>100</td>
+</tr>
+<tr>
+<td>Customer Reward</td>
+<td>10%</td>
+<td>1000 × 0.10</td>
+<td>100</td>
+</tr>
+<tr>
+<td><strong>TOTAL</strong></td>
+<td><strong>100%</strong></td>
+<td></td>
+<td><strong>1,000</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="partner-tier-bonuses">Partner Tier Bonuses</h3>
+<table>
+<thead>
+<tr>
+<th>Partner Tier</th>
+<th>Base Expert Share</th>
+<th>Bonus</th>
+<th>Total Expert Share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registered</td>
+<td>30%</td>
+<td>0%</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>Certified</td>
+<td>30%</td>
+<td>+5%</td>
+<td>35%</td>
+</tr>
+<tr>
+<td>Strategic</td>
+<td>30%</td>
+<td>+10%</td>
+<td>40%</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>30%</td>
+<td>+15-25%</td>
+<td>45-55%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="api-specifications">API Specifications</h2>
+<h3 id="base-configuration">Base Configuration</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Base URL</span><span class="kw">:</span><span class="at"> https://api.mekong.engine</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Auth</span><span class="kw">:</span><span class="at"> Bearer {tenant_api_key}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Content-Type</span><span class="kw">:</span><span class="at"> application/json</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">Rate Limit</span><span class="kw">:</span><span class="at"> 1000 req/min (per tenant)</span></span></code></pre></div>
+<h3 id="core-endpoints">Core Endpoints</h3>
+<h4 id="revenue-api">Revenue API</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>MCU Cost</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/v1/revenue/split</code></td>
+<td>15-25</td>
+<td>Execute 6-way distribution</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/revenue/split-config</code></td>
+<td>1</td>
+<td>Get split percentages</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/revenue/summary</code></td>
+<td>5</td>
+<td>Get revenue summary</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ledger-api">Ledger API</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>MCU Cost</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/v1/ledger/transfer</code></td>
+<td>10-15</td>
+<td>Transfer between accounts</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/ledger/topup</code></td>
+<td>10-15</td>
+<td>Add credits from treasury</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/ledger/balance</code></td>
+<td>1-5</td>
+<td>Get account balance</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/v1/ledger/history</code></td>
+<td>5-10</td>
+<td>Get transaction history</td>
+</tr>
+</tbody>
+</table>
+<h4 id="funding-api-quadratic-funding">Funding API (Quadratic
+Funding)</h4>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 24%" />
+<col style="width: 24%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>MCU Cost</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/v1/funding/rounds</code></td>
+<td>10-15</td>
+<td>Create funding round</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/funding/contribute</code></td>
+<td>10-15</td>
+<td>Contribute to project</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/funding/rounds/:id/calculate</code></td>
+<td>20-50</td>
+<td>Calculate QF matches</td>
+</tr>
+</tbody>
+</table>
+<h4 id="matching-api">Matching API</h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>MCU Cost</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/v1/matching/profiles</code></td>
+<td>5-10</td>
+<td>Create skill profile</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/v1/matching/requests</code></td>
+<td>15-25</td>
+<td>Create match request</td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-revenue-split-request">Example: Revenue Split
+Request</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST https://api.mekong.engine/v1/revenue/split <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer </span><span class="va">$MEKONG_API_KEY</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;total_credits&quot;: 1000,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;customer_account&quot;: &quot;customer:acme-corp&quot;,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;expert_account&quot;: &quot;expert:john-doe&quot;,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;developer_account&quot;: &quot;developer:agency-xyz&quot;,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;description&quot;: &quot;CRM integration setup&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
+<h3 id="example-response">Example: Response</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;journal_entry_id&quot;</span><span class="fu">:</span> <span class="st">&quot;je_abc123xyz789&quot;</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;total&quot;</span><span class="fu">:</span> <span class="dv">1000</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;split&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;platform&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;expert&quot;</span><span class="fu">:</span> <span class="dv">300</span><span class="fu">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;ai_compute&quot;</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;developer&quot;</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;community_fund&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;customer_reward&quot;</span><span class="fu">:</span> <span class="dv">100</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;Revenue split executed — 6-way distribution via double-entry ledger&quot;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<hr />
+<h2 id="database-schema">Database Schema</h2>
+<h3 id="core-tables">Core Tables</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Tenants (organizations)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> tenants (</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  created_at DATETIME <span class="kw">DEFAULT</span> <span class="fu">CURRENT_TIMESTAMP</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  tier TEXT <span class="kw">DEFAULT</span> <span class="st">&#39;free&#39;</span> <span class="kw">CHECK</span>(tier <span class="kw">IN</span> (<span class="st">&#39;free&#39;</span>, <span class="st">&#39;starter&#39;</span>, <span class="st">&#39;pro&#39;</span>, <span class="st">&#39;enterprise&#39;</span>)),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  credit_balance <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">5</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  settings JSON</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Journal Entries (double-entry bookkeeping)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> journal_entries (</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  tenant_id TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  description TEXT,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  entry_type TEXT,  <span class="co">-- &#39;revenue_share&#39;, &#39;transfer&#39;, &#39;topup&#39;, &#39;withdrawal&#39;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  idempotency_key TEXT <span class="kw">UNIQUE</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  metadata TEXT,    <span class="co">-- JSON</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  posted_at TEXT <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>))</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- Transaction Lines (debit/credit)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> transaction_lines (</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  journal_entry_id TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> journal_entries(<span class="kw">id</span>),</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  account_id TEXT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">REFERENCES</span> ledger_accounts(<span class="kw">id</span>),</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  amount <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  direction <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">CHECK</span> (direction <span class="kw">IN</span> (<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)),</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  created_at TEXT <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>))</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co">-- Ledger Accounts (chart of accounts)</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> ledger_accounts (</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  tenant_id TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  owner_id TEXT,</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  code TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  account_type TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  balance <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  created_at TEXT <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>))</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a><span class="co">-- Treasury (aggregate balances)</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> treasury (</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>  tenant_id TEXT <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>  balance <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  total_in <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>  total_out <span class="dt">INTEGER</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  last_updated TEXT <span class="kw">DEFAULT</span> (datetime(<span class="st">&#39;now&#39;</span>))</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="account-code-structure">Account Code Structure</h3>
+<pre><code>Assets (1xxx):
+  - customer:{stakeholder_id}        Customer credit balance
+  - {stakeholder_id}:rewards         Customer reward credits
+  - platform:treasury                Platform operating account
+
+Revenue (2xxx):
+  - revenue:platform                 Platform revenue
+  - revenue:expert                   Expert/Partner revenue
+  - revenue:developer                Developer revenue
+
+Expenses (3xxx):
+  - expense:ai_compute               LLM API costs
+
+Equity (4xxx):
+  - treasury:community               Community fund pool</code></pre>
+<hr />
+<h2 id="security-architecture">Security Architecture</h2>
+<h3 id="defense-in-depth">Defense in Depth</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  LAYER 1: NETWORK SECURITY                                  │
+│  • WAF (OWASP Top 10) • DDoS (L3/L4/L7) • Rate Limiting    │
+├─────────────────────────────────────────────────────────────┤
+│  LAYER 2: APPLICATION SECURITY                              │
+│  • JWT/API Key Auth • RBAC • Input Validation (Zod)        │
+├─────────────────────────────────────────────────────────────┤
+│  LAYER 3: DATA SECURITY                                     │
+│  • TLS 1.3 • AES-256 • HMAC-SHA256                         │
+├─────────────────────────────────────────────────────────────┤
+│  LAYER 4: OPERATIONAL SECURITY                              │
+│  • Audit Logging • SIEM • Backup &amp; DR                      │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="authentication-flow">Authentication Flow</h3>
+<pre><code>Client → API Gateway → RaaS Gateway → D1/KV (Auth)
+   │           │              │            │
+   │ 1. API Key│              │            │
+   │──────────▶│              │            │
+   │           │ 2. Hash &amp; Lookup           │
+   │           │─────────────▶│            │
+   │           │              │ 3. Query   │
+   │           │              │───────────▶│
+   │           │              │ 4. Result  │
+   │           │              │◀───────────│
+   │           │ 5. Valid + Credits         │
+   │           │◀─────────────│            │
+   │ 6. OK    │              │            │
+   │◀─────────│              │            │</code></pre>
+<h3 id="security-headers">Security Headers</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 29%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Strict-Transport-Security</code></td>
+<td><code>max-age=31536000; includeSubDomains</code></td>
+<td>HSTS</td>
+</tr>
+<tr>
+<td><code>X-Frame-Options</code></td>
+<td><code>DENY</code></td>
+<td>Clickjacking protection</td>
+</tr>
+<tr>
+<td><code>X-Content-Type-Options</code></td>
+<td><code>nosniff</code></td>
+<td>MIME sniffing</td>
+</tr>
+<tr>
+<td><code>Content-Security-Policy</code></td>
+<td><code>default-src 'self'</code></td>
+<td>XSS prevention</td>
+</tr>
+<tr>
+<td><code>Referrer-Policy</code></td>
+<td><code>strict-origin-when-cross-origin</code></td>
+<td>Referrer control</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="billing-mcu-system">Billing &amp; MCU System</h2>
+<h3 id="mcu-credit-tiers">MCU Credit Tiers</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Credits/Month</th>
+<th>Price</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Free</td>
+<td>5 (one-time)</td>
+<td>$0</td>
+<td>Trial/testing</td>
+</tr>
+<tr>
+<td>Starter</td>
+<td>200</td>
+<td>$49/mo</td>
+<td>Small projects</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>1,000</td>
+<td>$149/mo</td>
+<td>Growing teams</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>Unlimited</td>
+<td>$499/mo</td>
+<td>Production scale</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mcu-deduction-rules">MCU Deduction Rules</h3>
+<ol type="1">
+<li><strong>Success-only billing</strong>: MCU deducted ONLY after
+successful mission completion</li>
+<li><strong>Rollback on failure</strong>: Failed missions refund 100%
+MCU</li>
+<li><strong>Zero balance handling</strong>: HTTP 402 Payment
+Required</li>
+<li><strong>No negative balance</strong>: Operations blocked at
+zero</li>
+</ol>
+<h3 id="webhook-events">Webhook Events</h3>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 36%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Event</th>
+<th>Trigger</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>revenue.split.completed</code></td>
+<td>Revenue split executed</td>
+<td><code>journal_entry_id</code>, <code>total</code>,
+<code>split</code></td>
+</tr>
+<tr>
+<td><code>ledger.transfer.completed</code></td>
+<td>Transfer complete</td>
+<td><code>journal_entry_id</code>, <code>from</code>, <code>to</code>,
+<code>amount</code></td>
+</tr>
+<tr>
+<td><code>funding.round.completed</code></td>
+<td>QF round calculated</td>
+<td><code>round_id</code>, <code>results</code>,
+<code>matching_pool</code></td>
+</tr>
+<tr>
+<td><code>match.request.matched</code></td>
+<td>Match found</td>
+<td><code>request_id</code>, <code>matches</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="scaling-performance">Scaling &amp; Performance</h2>
+<h3 id="auto-scaling-triggers">Auto-Scaling Triggers</h3>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Trigger</th>
+<th>Scale Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workers</td>
+<td>Request volume</td>
+<td>Automatic (global edge)</td>
+</tr>
+<tr>
+<td>D1</td>
+<td>Query volume</td>
+<td>Read replicas</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>Storage volume</td>
+<td>Unlimited</td>
+</tr>
+<tr>
+<td>KV</td>
+<td>Cache hits</td>
+<td>Automatic</td>
+</tr>
+</tbody>
+</table>
+<h3 id="performance-benchmarks">Performance Benchmarks</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>p50</th>
+<th>p95</th>
+<th>p99</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API Gateway</td>
+<td>25ms</td>
+<td>85ms</td>
+<td>150ms</td>
+</tr>
+<tr>
+<td>Revenue Split</td>
+<td>180ms</td>
+<td>450ms</td>
+<td>890ms</td>
+</tr>
+<tr>
+<td>Ledger Transfer</td>
+<td>120ms</td>
+<td>320ms</td>
+<td>650ms</td>
+</tr>
+<tr>
+<td>QF Calculation</td>
+<td>2.5s</td>
+<td>4.8s</td>
+<td>7.2s</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cost-architecture-monthly">Cost Architecture (Monthly)</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Free</th>
+<th>Starter</th>
+<th>Pro</th>
+<th>Enterprise</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Workers</td>
+<td>$0.50</td>
+<td>$5</td>
+<td>$50</td>
+<td>$200</td>
+</tr>
+<tr>
+<td>D1</td>
+<td>$0.50</td>
+<td>$2</td>
+<td>$10</td>
+<td>$50</td>
+</tr>
+<tr>
+<td>R2</td>
+<td>$0.20</td>
+<td>$1</td>
+<td>$5</td>
+<td>$20</td>
+</tr>
+<tr>
+<td>KV</td>
+<td>$0.10</td>
+<td>$0.50</td>
+<td>$2</td>
+<td>$10</td>
+</tr>
+<tr>
+<td><strong>Infra Total</strong></td>
+<td><strong>$1.30</strong></td>
+<td><strong>$8.50</strong></td>
+<td><strong>$67</strong></td>
+<td><strong>$280</strong></td>
+</tr>
+<tr>
+<td>Revenue</td>
+<td>$0</td>
+<td>$29</td>
+<td>$199</td>
+<td>$599+</td>
+</tr>
+<tr>
+<td>Margin</td>
+<td>N/A</td>
+<td>71%</td>
+<td>66%</td>
+<td>53%+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="monitoring-observability">Monitoring &amp; Observability</h2>
+<h3 id="metrics-collected">Metrics Collected</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Metrics</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Latency (p50/p95/p99), TTFB</td>
+<td>90 days</td>
+</tr>
+<tr>
+<td><strong>Reliability</strong></td>
+<td>Error rate, Success rate, Uptime</td>
+<td>1 year</td>
+</tr>
+<tr>
+<td><strong>Usage</strong></td>
+<td>Requests/sec, Credits consumed</td>
+<td>2 years</td>
+</tr>
+<tr>
+<td><strong>Business</strong></td>
+<td>MRR, Churn, Expansion</td>
+<td>7 years</td>
+</tr>
+</tbody>
+</table>
+<h3 id="alerting-rules">Alerting Rules</h3>
+<table>
+<thead>
+<tr>
+<th>Alert</th>
+<th>Condition</th>
+<th>Severity</th>
+<th>Channel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API Error Rate</td>
+<td>&gt;1% for 5 min</td>
+<td>P1</td>
+<td>PagerDuty</td>
+</tr>
+<tr>
+<td>Latency p99</td>
+<td>&gt;1s for 10 min</td>
+<td>P2</td>
+<td>Slack</td>
+</tr>
+<tr>
+<td>Backup Failure</td>
+<td>Any failure</td>
+<td>P1</td>
+<td>PagerDuty + Phone</td>
+</tr>
+<tr>
+<td>Credit Balance</td>
+<td>Tenant reaches 0</td>
+<td>P3</td>
+<td>Email</td>
+</tr>
+<tr>
+<td>DDoS Attack</td>
+<td>Detected</td>
+<td>P1</td>
+<td>PagerDuty + Security</td>
+</tr>
+</tbody>
+</table>
+<h3 id="health-check-endpoints">Health Check Endpoints</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">GET /health</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Basic health check</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">response</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">timestamp</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;...&quot;</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">GET /health/ready</span><span class="kw">:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Readiness probe (all dependencies OK)</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">response</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">checks</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">d1</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">kv</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">r2</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="at"> </span><span class="kw">}</span><span class="at"> </span><span class="kw">}</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">GET /health/verbose</span><span class="kw">:</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Detailed system status</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">response</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">status</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;ok&quot;</span><span class="kw">,</span><span class="at"> </span><span class="fu">metrics</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">...</span><span class="kw">},</span><span class="at"> </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2.1.79&quot;</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<hr />
+<h2 id="appendix-quick-reference">Appendix: Quick Reference</h2>
+<h3 id="error-codes">Error Codes</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP Status</th>
+<th>Description</th>
+<th>Retry?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>VALIDATION_ERROR</code></td>
+<td>400</td>
+<td>Invalid request</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>INSUFFICIENT_CREDITS</code></td>
+<td>402</td>
+<td>Balance too low</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>NOT_FOUND</code></td>
+<td>404</td>
+<td>Resource not found</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>CONFLICT</code></td>
+<td>409</td>
+<td>Duplicate operation</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>DATABASE_ERROR</code></td>
+<td>500</td>
+<td>D1 error</td>
+<td>Yes (backoff)</td>
+</tr>
+<tr>
+<td><code>SERVICE_UNAVAILABLE</code></td>
+<td>503</td>
+<td>D1 not configured</td>
+<td>Yes (backoff)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rate-limits">Rate Limits</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Limit</th>
+<th>Window</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/v1/revenue/*</code></td>
+<td>100 req</td>
+<td>1 minute</td>
+</tr>
+<tr>
+<td><code>/v1/ledger/*</code></td>
+<td>500 req</td>
+<td>1 minute</td>
+</tr>
+<tr>
+<td><code>/v1/funding/*</code></td>
+<td>50 req</td>
+<td>1 minute</td>
+</tr>
+<tr>
+<td><code>/v1/matching/*</code></td>
+<td>100 req</td>
+<td>1 minute</td>
+</tr>
+</tbody>
+</table>
+<h3 id="environment-variables">Environment Variables</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Required</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">MEKONG_API_KEY</span><span class="op">=</span>sk_live_...</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="va">MEKONG_BASE_URL</span><span class="op">=</span>https://api.mekong.engine</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="va">MEKONG_WEBHOOK_SECRET</span><span class="op">=</span>whsec_...</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="va">LOG_LEVEL</span><span class="op">=</span>info  <span class="co"># debug|info|warn|error</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="va">ENABLE_METRICS</span><span class="op">=</span>true</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="va">ENABLE_TRACING</span><span class="op">=</span>true</span></code></pre></div>
+<hr />
+<p><strong>Document Version:</strong> 2.1.79 <strong>Last
+Updated:</strong> 2026-03-19 <strong>Owner:</strong> Engineering Team
+<strong>Review Cycle:</strong> Quarterly</p>
+<p>© 2026 AgencyOS. <em>Confidential — Internal Use Only</em></p>
+</body>
+</html>

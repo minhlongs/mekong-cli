@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>RaaS Sales Deck</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">RaaS Sales Deck</h1>
+</header>
+<h1 id="raas-sales-deck-revenue-as-a-service">RaaS Sales Deck —
+Revenue-as-a-Service</h1>
+<blockquote>
+<p><strong>Transform your agency from hourly billing to outcome-based
+revenue.</strong> <em>Track every dollar. Measure every outcome. Prove
+ROI in real-time.</em></p>
+</blockquote>
+<p><strong>Generated:</strong> 2026-03-19 <strong>Version:</strong> 5.0
+| <strong>License:</strong> MIT <strong>Contact:</strong>
+sales@agencyos.network | agencyos.network</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#the-problem">The Problem</a></li>
+<li><a href="#the-solution">The Solution</a></li>
+<li><a href="#how-it-works">How It Works</a></li>
+<li><a href="#pricing-tiers">Pricing Tiers</a></li>
+<li><a href="#roi-dashboard">ROI Dashboard</a></li>
+<li><a href="#credit-system">Credit System</a></li>
+<li><a href="#quality-gates">Quality Gates</a></li>
+<li><a href="#use-cases">Use Cases</a></li>
+<li><a href="#competitive-advantage">Competitive Advantage</a></li>
+<li><a href="#sales-strategy">Sales Strategy</a></li>
+<li><a href="#getting-started">Getting Started</a></li>
+</ol>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<h3 id="the-one-liner">The One-Liner</h3>
+<p><strong>RaaS</strong> turns AI agents into your revenue engine —
+automate 50-200+ hours/month of development work, bill clients for
+outcomes (not hours), and prove ROI in real-time.</p>
+<h3 id="key-metrics-q1-2026">Key Metrics (Q1 2026)</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Average ROI</td>
+<td>62x (Pro tier)</td>
+</tr>
+<tr>
+<td>Trial→Paid Conversion</td>
+<td>20% target</td>
+</tr>
+<tr>
+<td>Customer Satisfaction</td>
+<td>98.6% success rate</td>
+</tr>
+<tr>
+<td>Time to Value</td>
+<td>&lt; 5 minutes</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="the-problem">The Problem</h2>
+<h3 id="hourly-billing-is-broken">Hourly Billing is Broken</h3>
+<p><strong>Clients Hate:</strong> - ❌ Unpredictable costs (“How much
+will this cost?”) - ❌ Paying for inefficiency (slow devs = more bills)
+- ❌ Constant scope negotiations</p>
+<p><strong>Agencies Hate:</strong> - ❌ Revenue capped by human capacity
+- ❌ Penalized for efficiency (work faster = earn less) - ❌
+Feast-or-famine cash flow</p>
+<p><strong>Result:</strong> Adversarial relationship. Everyone
+loses.</p>
+<hr />
+<h2 id="the-solution">The Solution</h2>
+<h3 id="raas-revenue-as-a-service">RaaS — Revenue-as-a-Service</h3>
+<table>
+<thead>
+<tr>
+<th>Old Model (Hourly)</th>
+<th>New Model (RaaS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bill for hours worked</td>
+<td>Bill for outcomes delivered</td>
+</tr>
+<tr>
+<td>Client manages tasks</td>
+<td>AI agents execute autonomously</td>
+</tr>
+<tr>
+<td>Revenue = hours × rate</td>
+<td>Revenue = missions × tier</td>
+</tr>
+<tr>
+<td>Scale = hire more</td>
+<td>Scale = deploy more agents</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bottom Line:</strong> Clients get predictability. Agencies
+get scalability. Everyone wins.</p>
+<hr />
+<h2 id="how-it-works">How It Works</h2>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  1. CLIENT SUBMITS MISSION                              │
+│     &quot;Add user authentication with OAuth2&quot;               │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│  2. AI AGENT TEAM EXECUTES                              │
+│     ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│     │ Planner  │→ │ Coder    │→ │ Tester   │           │
+│     │  Agent   │  │  Agent   │  │  Agent   │           │
+│     └──────────┘  └──────────┘  └──────────┘           │
+│          │                              │               │
+│          └────────→ Reviewer ←──────────┘               │
+│                    Agent                                │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│  3. MISSION COMPLETE                                    │
+│     ✅ Code written, tested, deployed                   │
+│     ✅ 3 credits deducted (Standard complexity)         │
+│     ✅ ROI tracked: 4 hours saved → $600 value          │
+└─────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 id="pricing-tiers">Pricing Tiers</h2>
+<h3 id="tiers-built-for-every-stage">3 Tiers — Built for Every
+Stage</h3>
+<pre><code>┌─────────────────┬─────────────────┬─────────────────┐
+│   🟢 STARTER    │   🟡 PRO        │   🔴 ENTERPRISE │
+│   $49/mo        │   $149/mo       │   $499/mo       │
+├─────────────────┼─────────────────┼─────────────────┤
+│ 200 credits/mo  │ 1,000 credits   │ Unlimited       │
+│ 3 projects      │ 10 projects     │ Unlimited       │
+│ Basic commands  │ All commands    │ + Custom        │
+│ Local LLM only  │ Premium LLMs    │ Any provider    │
+│ Email 48hr      │ Priority 12hr   │ Dedicated 4hr   │
+│                 │ ROI Dashboard   │ + SLA 99.9%     │
+│                 │ API Access      │ + Custom Agents │
+│                 │                 │ + White-label   │
+└─────────────────┴─────────────────┴─────────────────┘
+
+⭐ MOST POPULAR: Pro Tier (62x average ROI)</code></pre>
+<hr />
+<h2 id="roi-dashboard">ROI Dashboard</h2>
+<h3 id="the-heart-of-raas">The Heart of RaaS</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  RaaS ROI Dashboard — This Month                        │
+├─────────────────────────────────────────────────────────┤
+│  Missions Completed:     147                            │
+│  Credits Used:           847 / 1,000 (84.7%)            │
+│  Est. Hours Saved:       62 hrs  →  $9,300 value*       │
+│  Tech Debt Fixed:        23 items                       │
+│  Production Deploys:     8                              │
+│  Success Rate:           98.6%                          │
+│  Avg. Completion Time:   4m 32s                         │
+└─────────────────────────────────────────────────────────┘
+*Based on $150/hr agency rate</code></pre>
+<h3 id="roi-calculator">ROI Calculator</h3>
+<pre><code>Monthly ROI = (Hours Saved × Agency Rate) - Subscription
+
+Pro Tier Example:
+= (62 hrs × $150/hr) - $149
+= $9,300 - $149
+= $9,151 net value/month
+= 62x ROI</code></pre>
+<hr />
+<h2 id="credit-system">Credit System</h2>
+<h3 id="what-is-1-credit">What is 1 Credit?</h3>
+<p><strong>1 Credit = 1 MCU (Mission Control Unit)</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 18%" />
+<col style="width: 37%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Complexity</th>
+<th>Credits</th>
+<th>Character Length</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simple</td>
+<td>1</td>
+<td>&lt; 50 chars</td>
+<td>“Fix typo in README”</td>
+</tr>
+<tr>
+<td>Standard</td>
+<td>3</td>
+<td>50-149 chars</td>
+<td>“Add user authentication”</td>
+</tr>
+<tr>
+<td>Complex</td>
+<td>5</td>
+<td>≥ 150 chars</td>
+<td>“Migrate database schema”</td>
+</tr>
+<tr>
+<td>Multi-Agent</td>
+<td>10+</td>
+<td>Parallel orchestration</td>
+<td>“Full sprint automation”</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Auto-Detection:</strong> Complexity detected from mission
+length.</p>
+<h3 id="unused-credits-policy">Unused Credits Policy</h3>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Rollover</th>
+<th>Top-Up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Starter</td>
+<td>❌ No rollover</td>
+<td>$0.50/credit</td>
+</tr>
+<tr>
+<td>Pro</td>
+<td>✅ Enabled (up to 500)</td>
+<td>$0.25/credit</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>N/A (unlimited)</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quality-gates">Quality Gates</h2>
+<h3 id="binh-phap-standards-non-negotiable">Binh Phap Standards —
+Non-Negotiable</h3>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Target</th>
+<th>Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tech Debt</td>
+<td>0 TODO/FIXME</td>
+<td><code>grep -r "TODO\|FIXME" src</code></td>
+</tr>
+<tr>
+<td>Type Safety</td>
+<td>0 <code>any</code> types</td>
+<td><code>grep -r ": any" src</code></td>
+</tr>
+<tr>
+<td>Clean Code</td>
+<td>0 console.log</td>
+<td><code>grep -r "console\." src</code></td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>100% pass</td>
+<td><code>npm test</code></td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>Build &lt; 10s</td>
+<td><code>time npm run build</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>We don’t ship tech debt. Period.</strong></p>
+<hr />
+<h2 id="use-cases">Use Cases</h2>
+<h3 id="what-gets-automated">What Gets Automated</h3>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Use Cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Code Automation</strong></td>
+<td>Write features, refactor legacy code, fix bugs autonomously,
+generate tests (100% coverage), remove tech debt</td>
+</tr>
+<tr>
+<td><strong>DevOps Automation</strong></td>
+<td>CI/CD pipeline management, production deploys, infrastructure as
+code, monitoring + self-healing</td>
+</tr>
+<tr>
+<td><strong>Governance Automation</strong></td>
+<td>Security audits, compliance checks (HIPAA, SOC2), code reviews, tech
+debt elimination</td>
+</tr>
+<tr>
+<td><strong>Business Automation</strong></td>
+<td>Data pipelines, report generation, API integrations, customer
+onboarding, revenue operations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="use-cases-by-tier">Use Cases by Tier</h3>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 64%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Use Cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Starter ($49/mo)</strong></td>
+<td>Weekly reports, basic scaffolding, docs, simple pipelines, bug
+fixes</td>
+</tr>
+<tr>
+<td><strong>Pro ($149/mo)</strong></td>
+<td>Full sprints, CI/CD, multi-repo refactoring, agent orchestration,
+code reviews</td>
+</tr>
+<tr>
+<td><strong>Enterprise ($499/mo)</strong></td>
+<td>Enterprise automation, compliance (HIPAA/SOC2), multi-team, 24/7
+ops, custom agents</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="competitive-advantage">Competitive Advantage</h2>
+<h3 id="raas-vs-traditional-options">RaaS vs Traditional Options</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>RaaS</th>
+<th>Traditional Agency</th>
+<th>Freelancer</th>
+<th>Zapier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pricing</td>
+<td>Fixed/mo</td>
+<td>$150-300/hr</td>
+<td>$50-150/hr</td>
+<td>$50/mo</td>
+</tr>
+<tr>
+<td>Code Writing</td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>✅ 100%</td>
+<td>⚠️ Varies</td>
+<td>⚠️ Varies</td>
+<td>❌ N/A</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>✅ Auto</td>
+<td>⚠️ Manual</td>
+<td>⚠️ Manual</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td>Tech Debt</td>
+<td>✅ 0</td>
+<td>⚠️ Maybe</td>
+<td>⚠️ Maybe</td>
+<td>❌ N/A</td>
+</tr>
+<tr>
+<td>24/7 Ops</td>
+<td>✅ Yes</td>
+<td>❌ No</td>
+<td>❌ No</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td>ROI Tracking</td>
+<td>✅ Live</td>
+<td>❌ Manual</td>
+<td>❌ No</td>
+<td>❌ No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="true-cost-comparison">True Cost Comparison</h3>
+<p><strong>Scenario: Automate weekly reporting + bug fixes + deployments
+(20 hrs/month)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Monthly Cost</th>
+<th>Annual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zapier + Developer (20 hrs)</td>
+<td>$3,050</td>
+<td>$36,600</td>
+</tr>
+<tr>
+<td>Traditional Agency (20 hrs @ $200/hr)</td>
+<td>$4,000</td>
+<td>$48,000</td>
+</tr>
+<tr>
+<td>Freelancer (20 hrs @ $75/hr)</td>
+<td>$1,500</td>
+<td>$18,000</td>
+</tr>
+<tr>
+<td><strong>RaaS Pro</strong></td>
+<td><strong>$149</strong></td>
+<td><strong>$1,788</strong></td>
+</tr>
+<tr>
+<td><strong>You Save vs Agency</strong></td>
+<td><strong>$3,851/mo</strong></td>
+<td><strong>$46,212/yr</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sales-strategy">Sales Strategy</h2>
+<h3 id="three-track-sales-engine">Three-Track Sales Engine</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Revenue Engine                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Track 1: Product-Led Growth (Self-Serve)                  │
+│  └─→ Pricing page → Free trial → Self-onboard → Expand    │
+│     CAC: $0 (organic) | Conversion: 3-5% trial→paid        │
+│                                                             │
+│  Track 2: Inside Sales (SMB/Mid-Market)                    │
+│  └─→ Inbound lead → Demo → Pro tier → Account management  │
+│     CAC: $500-2K | Conversion: 15-25% demo→closed          │
+│                                                             │
+│  Track 3: Field Sales (Enterprise)                         │
+│  └─→ Outbound → POC → Security review → Enterprise deal   │
+│     CAC: $10K-50K | Conversion: 5-10% POC→closed           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="path-to-1m-arr">Path to $1M ARR</h3>
+<table>
+<thead>
+<tr>
+<th>Quarter</th>
+<th>MRR Target</th>
+<th>ARR</th>
+<th>Key Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1 2026</td>
+<td>$15K</td>
+<td>$180K</td>
+<td>Product-market fit validation</td>
+</tr>
+<tr>
+<td>Q2 2026</td>
+<td>$50K</td>
+<td>$600K</td>
+<td>Channel partner program launch</td>
+</tr>
+<tr>
+<td>Q3 2026</td>
+<td>$100K</td>
+<td>$1.2M</td>
+<td>Enterprise tier adoption</td>
+</tr>
+<tr>
+<td>Q4 2026</td>
+<td>$150K</td>
+<td>$1.8M</td>
+<td>Market leadership position</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="steps-to-revenue">3 Steps to Revenue</h3>
+<h4 id="book-a-demo">1. Book a Demo</h4>
+<p>See live mission execution. Watch AI agents write, test, deploy in
+real-time.</p>
+<p>👉 <strong>Link:</strong> <code>agencyos.network/demo</code></p>
+<p><strong>Demo Agenda (30 min):</strong> - 5 min: Discovery —
+understand their workflow - 10 min: Live demo — run their actual use
+case - 10 min: ROI calculator — personalized numbers - 5 min: Q&amp;A +
+next steps</p>
+<hr />
+<h4 id="day-free-trial-pro-tier">2. 14-Day Free Trial (Pro Tier)</h4>
+<p>Full access. 1,000 credits. No credit card required.</p>
+<p>👉 <strong>Link:</strong> <code>agencyos.network/pricing</code></p>
+<p><strong>Trial Success Checklist:</strong> - [ ] Complete onboarding
+wizard - [ ] Run first mission (scaffold project) - [ ] Deploy to
+production - [ ] View ROI dashboard - [ ] Run 10+ missions total</p>
+<hr />
+<h4 id="custom-quote-enterprise">3. Custom Quote (Enterprise)</h4>
+<p>Deployment assessment + custom agent training.</p>
+<p>👉 <strong>Email:</strong> <code>sales@agencyos.network</code></p>
+<p><strong>Enterprise Sales Cycle:</strong> 90-180 days <strong>Average
+Contract:</strong> $50K-500K ACV</p>
+<hr />
+<h2 id="faq">FAQ</h2>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What happens if I run out of credits?</td>
+<td>Starter/Pro can purchase top-ups at $0.25/credit. Enterprise is
+unlimited.</td>
+</tr>
+<tr>
+<td>Can I pause my subscription?</td>
+<td>Yes, pause anytime. Projects accessible, missions queued until
+resume.</td>
+</tr>
+<tr>
+<td>What if a mission fails?</td>
+<td>Credits automatically refunded. Audit log shows failure reason.</td>
+</tr>
+<tr>
+<td>Can I self-host?</td>
+<td>Enterprise tier includes on-premise deployment with dedicated
+engineer.</td>
+</tr>
+<tr>
+<td>Is my code safe?</td>
+<td>Yes. Enterprise includes private vault — data never leaves your
+boundary.</td>
+</tr>
+<tr>
+<td>What LLMs do you support?</td>
+<td>All major providers: Claude 4.6, Gemini 1.5 Pro, Qwen 3.5+.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="call-to-action">Call to Action</h2>
+<pre><code>╔═════════════════════════════════════════════════════════╗
+║                                                         ║
+║           &quot;The supreme art of war is to subdue          ║
+║            the enemy without fighting.&quot;                 ║
+║                      — 孫子兵法 (Sun Tzu)               ║
+║                                                         ║
+║           RaaS: Win by automating the grind.           ║
+║                Focus your team on strategy.            ║
+║                                                         ║
+║                                                         ║
+║   [Start Free Trial]  [Book a Demo]  [Contact Sales]   ║
+║   agencyos.network/pricing                             ║
+║   agencyos.network/demo                                ║
+║   sales@agencyos.network                               ║
+║                                                         ║
+╚═════════════════════════════════════════════════════════╝</code></pre>
+<hr />
+<p><strong>Contact:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Email</strong></td>
+<td><code>sales@agencyos.network</code></td>
+</tr>
+<tr>
+<td><strong>Website</strong></td>
+<td><code>agencyos.network/pricing</code></td>
+</tr>
+<tr>
+<td><strong>Demo</strong></td>
+<td><code>agencyos.network/demo</code></td>
+</tr>
+<tr>
+<td><strong>Docs</strong></td>
+<td><code>agencyos.network/docs</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p>© 2026 Binh Phap Venture Studio</p>
+</body>
+</html>
