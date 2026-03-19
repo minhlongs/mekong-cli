@@ -7,135 +7,182 @@
  * GET  /status    — check current progress
  */
 import { Hono } from 'hono'
+import { z } from 'zod'
 import { authMiddleware } from '../raas/auth-middleware'
 import { LLMClient } from '../core/llm-client'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
+import { createError, handleAsync, handleDb, handleExternalApi } from '../types/error'
 
 type Variables = { tenant: Tenant }
+
+// Zod schemas
+const profileSchema = z.object({
+  business_name: z.string().min(1, 'business_name is required').max(200, 'business_name must be ≤200 chars'),
+  industry: z.string().max(100, 'industry must be ≤100 chars').optional(),
+  address: z.string().max(300, 'address must be ≤300 chars').optional(),
+  phone: z.string().max(20, 'phone must be ≤20 chars').optional(),
+  hours: z.string().max(200, 'hours must be ≤200 chars').optional(),
+  logo_url: z.string().url('logo_url must be a valid URL').optional(),
+})
+
+const channelSchema = z.object({
+  type: z.enum(['zalo_oa', 'facebook_page']),
+  external_id: z.string().min(1, 'external_id is required').max(100, 'external_id must be ≤100 chars'),
+  access_token: z.string().max(500, 'access_token must be ≤500 chars').optional(),
+  name: z.string().max(200, 'name must be ≤200 chars').optional(),
+})
+
+const menuSchema = z.object({
+  menu_data: z.record(z.unknown()),
+})
+
+type ProfileBody = z.infer<typeof profileSchema>
+type ChannelBody = z.infer<typeof channelSchema>
+type MenuBody = z.infer<typeof menuSchema>
 
 export const onboardingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 onboardingRoutes.use('*', authMiddleware)
 
 // GET /onboarding/status — return current step and completion flag
-onboardingRoutes.get('/status', async (c) => {
+onboardingRoutes.get('/status', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-
-  const profile = await c.env.DB.prepare(
-    'SELECT onboarding_step, onboarding_completed FROM tenant_profiles WHERE tenant_id = ?'
+  const profile = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT onboarding_step, onboarding_completed FROM tenant_profiles WHERE tenant_id = ?'
+      )
+        .bind(tenant.id)
+        .first()
+      return r as { onboarding_step: number; onboarding_completed: number } | null
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch onboarding status'
   )
-    .bind(tenant.id)
-    .first<{ onboarding_step: number; onboarding_completed: number }>()
 
   return c.json({
     step: profile?.onboarding_step ?? 0,
     completed: !!profile?.onboarding_completed,
     steps: ['profile', 'channel', 'menu', 'activate'],
   })
-})
+}))
 
 // POST /onboarding/profile — step 1: save business info
-onboardingRoutes.post('/profile', async (c) => {
+onboardingRoutes.post('/profile', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    business_name: string
-    industry?: string
-    address?: string
-    phone?: string
-    hours?: string
-    logo_url?: string
-  }>()
+  let body: ProfileBody
+  try {
+    body = profileSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    throw error
+  }
 
-  if (!body.business_name) return c.json({ error: 'business_name required' }, 400)
-
-  await c.env.DB.prepare(
-    `INSERT INTO tenant_profiles (tenant_id, business_name, industry, address, phone, hours, logo_url, onboarding_step)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-     ON CONFLICT(tenant_id) DO UPDATE SET
-       business_name = excluded.business_name,
-       industry = excluded.industry,
-       address = excluded.address,
-       phone = excluded.phone,
-       hours = excluded.hours,
-       logo_url = excluded.logo_url,
-       onboarding_step = MAX(onboarding_step, 1),
-       updated_at = datetime('now')`
-  )
-    .bind(
-      tenant.id,
-      body.business_name,
-      body.industry ?? 'cafe',
-      body.address ?? null,
-      body.phone ?? null,
-      body.hours ?? null,
-      body.logo_url ?? null
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO tenant_profiles (tenant_id, business_name, industry, address, phone, hours, logo_url, onboarding_step)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+       ON CONFLICT(tenant_id) DO UPDATE SET
+         business_name = excluded.business_name,
+         industry = excluded.industry,
+         address = excluded.address,
+         phone = excluded.phone,
+         hours = excluded.hours,
+         logo_url = excluded.logo_url,
+         onboarding_step = MAX(onboarding_step, 1),
+         updated_at = datetime('now')`
     )
-    .run()
+      .bind(
+        tenant.id,
+        body.business_name,
+        body.industry ?? 'cafe',
+        body.address ?? null,
+        body.phone ?? null,
+        body.hours ?? null,
+        body.logo_url ?? null
+      )
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to save business profile'
+  )
 
   return c.json({ step: 1, next: 'channel' })
-})
+}))
 
 // POST /onboarding/channel — step 2: record channel connection intent
-onboardingRoutes.post('/channel', async (c) => {
+onboardingRoutes.post('/channel', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    type: 'zalo_oa' | 'facebook_page'
-    external_id: string
-    access_token?: string
-    name?: string
-  }>()
-
-  if (!body.type || !body.external_id) {
-    return c.json({ error: 'type and external_id required' }, 400)
+  let body: ChannelBody
+  try {
+    body = channelSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    throw error
   }
 
   const channelId = `ch_${tenant.id}_${body.type}`
-  await c.env.DB.prepare(
-    `INSERT INTO channels (id, tenant_id, type, external_id, name, access_token_encrypted, active)
-     VALUES (?, ?, ?, ?, ?, ?, 1)
-     ON CONFLICT(id) DO UPDATE SET
-       external_id = excluded.external_id,
-       name = excluded.name,
-       access_token_encrypted = excluded.access_token_encrypted,
-       active = 1`
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO channels (id, tenant_id, type, external_id, name, access_token_encrypted, active)
+       VALUES (?, ?, ?, ?, ?, ?, 1)
+       ON CONFLICT(id) DO UPDATE SET
+         external_id = excluded.external_id,
+         name = excluded.name,
+         access_token_encrypted = excluded.access_token_encrypted,
+         active = 1`
+    )
+      .bind(channelId, tenant.id, body.type, body.external_id, body.name ?? null, body.access_token ?? null)
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to save channel connection'
   )
-    .bind(channelId, tenant.id, body.type, body.external_id, body.name ?? null, body.access_token ?? null)
-    .run()
 
-  await c.env.DB.prepare(
-    `UPDATE tenant_profiles SET onboarding_step = MAX(onboarding_step, 2), updated_at = datetime('now')
-     WHERE tenant_id = ?`
+  await handleDb(
+    () => c.env.DB.prepare(
+      `UPDATE tenant_profiles SET onboarding_step = MAX(onboarding_step, 2), updated_at = datetime('now')
+       WHERE tenant_id = ?`
+    )
+      .bind(tenant.id)
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to update onboarding step'
   )
-    .bind(tenant.id)
-    .run()
 
   return c.json({ step: 2, channel_id: channelId, next: 'menu' })
-})
+}))
 
 // POST /onboarding/menu — step 3: store menu + generate FAQ KB entries
-onboardingRoutes.post('/menu', async (c) => {
+onboardingRoutes.post('/menu', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const body = await c.req.json<{
-    menu_data: Record<string, unknown>
-  }>()
+  let body: MenuBody
+  try {
+    body = menuSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    throw error
+  }
 
-  if (!body.menu_data) return c.json({ error: 'menu_data required' }, 400)
-
-  await c.env.DB.prepare(
-    `UPDATE tenant_profiles
-     SET menu_data = ?, onboarding_step = MAX(onboarding_step, 3), updated_at = datetime('now')
-     WHERE tenant_id = ?`
+  await handleDb(
+    () => c.env.DB.prepare(
+      `UPDATE tenant_profiles
+       SET menu_data = ?, onboarding_step = MAX(onboarding_step, 3), updated_at = datetime('now')
+       WHERE tenant_id = ?`
+    )
+      .bind(JSON.stringify(body.menu_data), tenant.id)
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to save menu data'
   )
-    .bind(JSON.stringify(body.menu_data), tenant.id)
-    .run()
 
   const llm = new LLMClient({
     ai: c.env.AI,
@@ -149,7 +196,9 @@ Generate 5 FAQ Q&A pairs customers commonly ask. Return JSON: [{"question":"..."
 
   let faqs: Array<{ question: string; answer: string }> = []
   try {
-    const result = await llm.generateJson(faqPrompt)
+    const result = await handleExternalApi(
+      () => llm.generateJson(faqPrompt)
+    )
     faqs = Array.isArray(result) ? result : []
   } catch {
     // non-blocking — menu saved, FAQ generation optional
@@ -164,34 +213,48 @@ Generate 5 FAQ Q&A pairs customers commonly ask. Return JSON: [{"question":"..."
   })
 
   if (kbInserts.length > 0) {
-    await c.env.DB.batch(kbInserts)
+    await handleDb(
+      () => c.env.DB.batch(kbInserts),
+      'DATABASE_ERROR',
+      'Failed to insert FAQ entries to knowledge base'
+    )
   }
 
   return c.json({ step: 3, faq_generated: faqs.length, next: 'activate' })
-})
+}))
 
 // POST /onboarding/activate — step 4: mark onboarding complete
-onboardingRoutes.post('/activate', async (c) => {
+onboardingRoutes.post('/activate', handleAsync(async (c) => {
   const tenant = c.get('tenant')
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
-  const profile = await c.env.DB.prepare(
-    'SELECT onboarding_step FROM tenant_profiles WHERE tenant_id = ?'
+  const profile = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT onboarding_step FROM tenant_profiles WHERE tenant_id = ?'
+      )
+        .bind(tenant.id)
+        .first()
+      return r as { onboarding_step: number } | null
+    },
+    'DATABASE_ERROR',
+    'Failed to fetch onboarding profile'
   )
-    .bind(tenant.id)
-    .first<{ onboarding_step: number }>()
 
   if (!profile || profile.onboarding_step < 3) {
-    return c.json({ error: 'Complete steps 1-3 before activating' }, 400)
+    return c.json(createError('BAD_REQUEST', 'Complete steps 1-3 before activating'), 400)
   }
 
-  await c.env.DB.prepare(
-    `UPDATE tenant_profiles
-     SET onboarding_step = 4, onboarding_completed = 1, updated_at = datetime('now')
-     WHERE tenant_id = ?`
+  await handleDb(
+    () => c.env.DB.prepare(
+      `UPDATE tenant_profiles
+       SET onboarding_step = 4, onboarding_completed = 1, updated_at = datetime('now')
+       WHERE tenant_id = ?`
+    )
+      .bind(tenant.id)
+      .run(),
+    'DATABASE_ERROR',
+    'Failed to activate tenant'
   )
-    .bind(tenant.id)
-    .run()
 
   return c.json({ step: 4, completed: true, message: 'Onboarding complete. System is active.' })
-})
+}))

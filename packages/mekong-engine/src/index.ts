@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { payloadSizeLimit } from './raas/payload-limiter'
 import { taskRoutes } from './routes/tasks'
 import { agentRoutes } from './routes/agents'
 import { billingRoutes } from './routes/billing'
@@ -56,6 +57,7 @@ app.onError((err, c) => {
 })
 
 // Middleware
+app.use('*', payloadSizeLimit())
 app.use('*', cors())
 
 // Root — service info

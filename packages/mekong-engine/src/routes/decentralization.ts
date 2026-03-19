@@ -57,35 +57,44 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
   const tenant = c.get('tenant')
 
   // Count stakeholders
-  const stakeholderCount = await handleDb(
-    () => c.env.DB.prepare(
-      'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
-    ).bind(tenant.id).first<{ count: number }>(),
+  const stakeholderCountResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
+      ).bind(tenant.id).first()
+      return r as { count: number } | null
+    },
     'DATABASE_ERROR',
     'Failed to count stakeholders'
   )
-  const totalStakeholders = stakeholderCount?.count || 0
+  const totalStakeholders = stakeholderCountResult?.count || 0
 
   // Calculate months since first stakeholder
-  const firstStakeholder = await handleDb(
-    () => c.env.DB.prepare(
-      'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
-    ).bind(tenant.id).first<{ first: string | null }>(),
+  const firstStakeholderResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
+      ).bind(tenant.id).first()
+      return r as { first: string | null } | null
+    },
     'DATABASE_ERROR',
     'Failed to fetch first stakeholder'
   )
 
   let monthsActive = 0
-  if (firstStakeholder?.first) {
-    const diffMs = Date.now() - new Date(firstStakeholder.first).getTime()
+  if (firstStakeholderResult?.first) {
+    const diffMs = Date.now() - new Date(firstStakeholderResult.first).getTime()
     monthsActive = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30))
   }
 
   // Count proposals passed (governance maturity signal)
-  const passedProposals = await handleDb(
-    () => c.env.DB.prepare(
-      "SELECT COUNT(*) as count FROM proposals WHERE tenant_id = ? AND status = 'approved'"
-    ).bind(tenant.id).first<{ count: number }>(),
+  const passedProposalsResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        "SELECT COUNT(*) as count FROM proposals WHERE tenant_id = ? AND status = 'approved'"
+      ).bind(tenant.id).first()
+      return r as { count: number } | null
+    },
     'DATABASE_ERROR',
     'Failed to count proposals'
   )
@@ -104,20 +113,23 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
   const nextPhase = PHASES[currentPhaseIndex + 1] ?? null
 
   // Community vs leadership vote weight from recent proposals
-  const roleStats = await handleDb(
-    () => c.env.DB.prepare(
-      `SELECT role, COUNT(*) as count, SUM(reputation_score) as total_rep
+  const roleStatsResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        `SELECT role, COUNT(*) as count, SUM(reputation_score) as total_rep
      FROM stakeholders WHERE tenant_id = ? GROUP BY role`
-    ).bind(tenant.id).all(),
+      ).bind(tenant.id).all()
+      return r as { results?: { role: string; count: number; total_rep: number }[] }
+    },
     'DATABASE_ERROR',
     'Failed to fetch role stats'
   )
 
   const roleBreakdown: Record<string, { count: number; total_rep: number }> = {}
-  for (const row of roleStats.results || []) {
-    roleBreakdown[row.role as string] = {
-      count: row.count as number,
-      total_rep: row.total_rep as number || 0,
+  for (const row of roleStatsResult.results || []) {
+    roleBreakdown[row.role] = {
+      count: row.count,
+      total_rep: row.total_rep || 0,
     }
   }
 
@@ -131,7 +143,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
     metrics: {
       total_stakeholders: totalStakeholders,
       months_active: monthsActive,
-      proposals_passed: passedProposals?.count || 0,
+      proposals_passed: passedProposalsResult?.count || 0,
       role_breakdown: roleBreakdown,
     },
     next_phase: nextPhase
@@ -168,26 +180,32 @@ decentralRoutes.post('/check-transition', handleAsync(async (c) => {
     return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
-  const stakeholderCount = await handleDb(
-    () => c.env.DB.prepare(
-      'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
-    ).bind(tenant.id).first<{ count: number }>(),
+  const stakeholderCountResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
+      ).bind(tenant.id).first()
+      return r as { count: number } | null
+    },
     'DATABASE_ERROR',
     'Failed to count stakeholders'
   )
-  const totalStakeholders = stakeholderCount?.count || 0
+  const totalStakeholders = stakeholderCountResult?.count || 0
 
-  const firstStakeholder = await handleDb(
-    () => c.env.DB.prepare(
-      'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
-    ).bind(tenant.id).first<{ first: string | null }>(),
+  const firstStakeholderResult = await handleDb(
+    async () => {
+      const r = await c.env.DB.prepare(
+        'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
+      ).bind(tenant.id).first()
+      return r as { first: string | null } | null
+    },
     'DATABASE_ERROR',
     'Failed to fetch first stakeholder'
   )
 
   let monthsActive = 0
-  if (firstStakeholder?.first) {
-    const diffMs = Date.now() - new Date(firstStakeholder.first).getTime()
+  if (firstStakeholderResult?.first) {
+    const diffMs = Date.now() - new Date(firstStakeholderResult.first).getTime()
     monthsActive = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30))
   }
 

@@ -19,6 +19,11 @@ function monthKey(tenantId: string): string {
   return `rl:${tenantId}:m:${m}`
 }
 
+function windowKey(endpoint: string, windowMs: number): string {
+  const window = Math.floor(Date.now() / windowMs)
+  return `rl:${endpoint}:${window}`
+}
+
 async function getCount(kv: KVNamespace, key: string): Promise<number> {
   const val = await kv.get(key)
   return val ? parseInt(val, 10) : 0
@@ -63,4 +68,39 @@ export async function recordUsage(
     kv.put(dKey, String(daily + creditsUsed), { expirationTtl: 172800 }),
     kv.put(mKey, String(monthly + creditsUsed), { expirationTtl: 3024000 }),
   ])
+}
+
+/**
+ * Strict rate limiting for sensitive endpoints (webhooks, payments)
+ * Uses sliding window based on endpoint + IP/tenant
+ * @param kv KV namespace
+ * @param endpoint Unique endpoint identifier
+ * @param maxRequests Max requests per window (default: 10)
+ * @param windowMs Window size in ms (default: 60000 = 1 minute)
+ */
+export async function checkStrictRateLimit(
+  kv: KVNamespace,
+  endpoint: string,
+  maxRequests: number = 10,
+  windowMs: number = 60000,
+): Promise<{ allowed: boolean; current: number; retryAfter?: number }> {
+  const key = windowKey(endpoint, windowMs)
+  const current = await getCount(kv, key)
+
+  if (current >= maxRequests) {
+    const retryAfter = Math.ceil((windowMs - (Date.now() % windowMs)) / 1000)
+    return { allowed: false, current, retryAfter }
+  }
+
+  return { allowed: true, current }
+}
+
+export async function recordStrictRateLimit(
+  kv: KVNamespace,
+  endpoint: string,
+  windowMs: number = 60000,
+): Promise<void> {
+  const key = windowKey(endpoint, windowMs)
+  const current = await getCount(kv, key)
+  await kv.put(key, String(current + 1), { expirationTtl: Math.ceil(windowMs / 1000) + 60 })
 }

@@ -3,15 +3,45 @@
  * Receives messages -> KB lookup -> LLM reply -> send back to platform
  */
 import { Hono } from 'hono'
+import { z } from 'zod'
 import type { Bindings } from '../index'
 import { webhookRateLimit } from '../raas/rate-limit-middleware'
-import { handleDb } from '../types/error'
+import { handleDb, createError } from '../types/error'
+
+// Zod schemas for webhook payloads
+const zaloWebhookSchema = z.object({
+  event_name: z.string(),
+  app_id: z.string(),
+  sender: z.object({ id: z.string() }),
+  recipient: z.object({ id: z.string() }),
+  message: z.object({ text: z.string(), msg_id: z.string() }).optional(),
+  timestamp: z.string(),
+})
+type ZaloWebhookBody = z.infer<typeof zaloWebhookSchema>
+
+const facebookMessageSchema = z.object({
+  sender: z.object({ id: z.string() }),
+  recipient: z.object({ id: z.string() }),
+  message: z.object({ mid: z.string(), text: z.string() }).optional(),
+  timestamp: z.number(),
+})
+
+const facebookEntrySchema = z.object({
+  id: z.string(),
+  messaging: z.array(facebookMessageSchema),
+})
+
+const facebookWebhookSchema = z.object({
+  object: z.string(),
+  entry: z.array(facebookEntrySchema),
+})
+type FacebookWebhookBody = z.infer<typeof facebookWebhookSchema>
 
 const chatRoutes = new Hono<{ Bindings: Bindings }>()
 
 // --- Zalo OA Webhook ---
 chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const db = c.env.DB
 
   const signature = c.req.header('x-zalo-signature') || c.req.header('x-signature')
@@ -34,23 +64,18 @@ chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
     if (signature !== expectedHex) {
-      return c.json({ error: 'Invalid Zalo signature' }, 401)
+      return c.json(createError('UNAUTHORIZED', 'Invalid Zalo signature'), 401)
     }
   }
 
-  let body: {
-    event_name: string
-    app_id: string
-    sender: { id: string }
-    recipient: { id: string }
-    message?: { text: string; msg_id: string }
-    timestamp: string
-  }
-
+  let body: ZaloWebhookBody
   try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
+    body = zaloWebhookSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Invalid Zalo webhook payload', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
   if (body.event_name !== 'user_send_text' || !body.message?.text) {
@@ -124,7 +149,7 @@ chatRoutes.get('/webhook/facebook', (c) => {
 })
 
 chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const db = c.env.DB
 
   // Verify Facebook signature
@@ -148,22 +173,18 @@ chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) =
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
     if (signature !== expectedHex) {
-      return c.json({ error: 'Invalid Facebook signature' }, 401)
+      return c.json(createError('UNAUTHORIZED', 'Invalid Facebook signature'), 401)
     }
   }
 
-  let body: {
-    object: string
-    entry: Array<{ id: string; messaging: Array<{
-      sender: { id: string }; recipient: { id: string }
-      message?: { mid: string; text: string }; timestamp: number
-    }> }>
-  }
-
+  let body: FacebookWebhookBody
   try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
+    body = facebookWebhookSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Invalid Facebook webhook payload', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
   if (!c.env.DB || body.object !== 'page') return c.json({ received: true })
