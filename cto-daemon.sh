@@ -652,12 +652,18 @@ verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
 
-  # Context >80% → auto-compact to free context window
-  # Qwen tokenizer inflates ~2x vs Claude, so compact earlier
-  if echo "$output" | tail -10 | grep -qE "Context:.*[89][0-9]%|context.*[89][0-9]%"; then
-    log "VERIFY P${pane_idx}: CONTEXT >80% → /compact"
+  # Context 90%+ or 100% → /clear (hard reset, avoids stuck at 100%)
+  if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
+    log "VERIFY P${pane_idx}: CONTEXT ≥90% → /clear"
+    send_to_pane "$pane_idx" "/clear"
+    save_memory "CLEAR" "P${pane_idx}: context ≥90%, hard reset"
+    return 0
+  fi
+  # Context 80-89% → /compact (soft compress)
+  if echo "$output" | tail -10 | grep -qE "Context:.*8[0-9]%"; then
+    log "VERIFY P${pane_idx}: CONTEXT 80-89% → /compact"
     send_to_pane "$pane_idx" "/compact"
-    save_memory "COMPACT" "P${pane_idx}: context >80%, auto-compacted"
+    save_memory "COMPACT" "P${pane_idx}: context 80-89%, compacted"
     return 0
   fi
 
@@ -757,6 +763,12 @@ log "Tool: ${CTO_TOOL} | Project: ${PROJECT_ROOT}"
 log "Workers: P1=${WORKER_NAME[1]} P2=${WORKER_NAME[2]} P3=${WORKER_NAME[3]}"
 log "Config: ${CONFIG_FILE}"
 log "============================================="
+
+# Warmup Ollama brain model before first cycle
+bash "${PROJECT_ROOT}/scripts/warmup-ollama.sh" 2>/dev/null || log "WARN: Ollama warmup failed"
+
+# Reset any panes stuck at 100% context
+bash "${PROJECT_ROOT}/scripts/reset-full-panes.sh" "${CTO_SESSION}" 2>/dev/null || true
 
 # PHASE 1: Initial SCAN on startup
 phase_scan

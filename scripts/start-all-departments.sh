@@ -79,6 +79,11 @@ echo "  DOANH TRẠI TÔM HÙM — Multi-Department Launcher"
 echo "═══════════════════════════════════════════════════════"
 echo ""
 
+# Warmup Ollama brain before launching sessions
+echo -e "${YELLOW}Warming up Ollama brain...${NC}"
+bash "${SCRIPT_DIR}/warmup-ollama.sh" 2>/dev/null || echo "  (Ollama warmup skipped)"
+echo ""
+
 if [[ "$DEPT_ARG" == "all" ]]; then
   for dept in eng sales mktg docs ops design; do
     start_department "$dept"

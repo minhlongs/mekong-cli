@@ -114,6 +114,10 @@ log "Config: ${CONFIG_FILE}"
 log "Poll interval: ${POLL_INTERVAL}s"
 log "═══════════════════════════════════════════════════════"
 
+# Warmup Ollama + reset stuck panes
+bash "${SCRIPT_DIR}/warmup-ollama.sh" 2>/dev/null || log "WARN: Ollama warmup failed"
+bash "${SCRIPT_DIR}/reset-full-panes.sh" 2>/dev/null || true
+
 # Parse departments once at startup
 declare -A DEPT_SESSION DEPT_PANES DEPT_TASKS DEPT_TASK_IDX
 while IFS='|' read -r name session panes tasks; do
@@ -149,9 +153,15 @@ while true; do
         continue
       fi
 
-      # Check context >80% → auto-compact
-      if echo "$output" | tail -10 | grep -qE "Context:.*[89][0-9]%|context.*[89][0-9]%"; then
-        log "${dept_name} P${pane_idx}: CONTEXT >80% → /compact"
+      # Context 90%+ or 100% → /clear (hard reset)
+      if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
+        log "${dept_name} P${pane_idx}: CONTEXT ≥90% → /clear"
+        send_to_pane "$session" "$pane_idx" "/clear"
+        continue
+      fi
+      # Context 80-89% → /compact
+      if echo "$output" | tail -10 | grep -qE "Context:.*8[0-9]%"; then
+        log "${dept_name} P${pane_idx}: CONTEXT 80-89% → /compact"
         send_to_pane "$session" "$pane_idx" "/compact"
         continue
       fi
