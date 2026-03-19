@@ -7,6 +7,7 @@ import { createTenant, regenerateApiKey } from '../raas/tenant'
 import { z } from 'zod'
 import { handleAsync, handleDb } from '../types/error'
 import { authRateLimit, webhookRateLimit } from '../raas/rate-limit-middleware'
+import { ensureWebhookEventsTable, isDuplicateWebhookEvent, recordWebhookEvent } from '../lib/webhook-utils'
 
 type Variables = { tenant: Tenant }
 
@@ -207,31 +208,5 @@ billingRoutes.get('/credits/history', authMiddleware, handleAsync(async (c) => {
   const history = await getHistory(c.env.DB, tenant.id, limit)
   return c.json({ tenant_id: tenant.id, history, limit })
 }))
-
-// Helper functions for replay attack prevention
-async function ensureWebhookEventsTable(db: any) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS webhook_events (
-      id TEXT PRIMARY KEY,
-      provider TEXT NOT NULL,
-      event_id TEXT NOT NULL UNIQUE,
-      type TEXT NOT NULL,
-      processed_at TEXT DEFAULT (datetime('now'))
-    )
-  `).catch(() => {})
-}
-
-async function isDuplicateWebhookEvent(db: any, provider: string, eventId: string): Promise<boolean> {
-  const existing = await db.prepare(
-    'SELECT id FROM webhook_events WHERE provider = ? AND event_id = ?'
-  ).bind(provider, eventId).first()
-  return !!existing
-}
-
-async function recordWebhookEvent(db: any, provider: string, eventId: string, type: string) {
-  await db.prepare(
-    'INSERT INTO webhook_events (id, provider, event_id, type) VALUES (?, ?, ?, ?)'
-  ).bind(crypto.randomUUID(), provider, eventId, type).run()
-}
 
 export { billingRoutes }
