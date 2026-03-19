@@ -2,7 +2,9 @@
 
 > **Runtime:** Cloudflare Workers | **Framework:** Hono | **Version:** 3.2.0
 >
-> Base URL: `https://<your-worker>.workers.dev`
+> **Base URL:** `https://<your-worker>.workers.dev`
+>
+> **Status:** Production Ready | **Last Updated:** 2026-03-19
 
 ---
 
@@ -10,22 +12,26 @@
 
 - [Authentication](#authentication)
 - [Health & Status](#health--status)
-- [PEV Engine](#pev-engine)
-- [Task Management](#task-management-v1tasks)
-- [Agent Execution](#agent-execution-v1agents)
-- [Settings](#settings-v1settings)
-- [Chat Webhooks](#chat-webhooks-v1chat)
-- [Content Generation](#content-generation-v1content)
-- [CRM](#crm-v1crm)
-- [Reports](#reports-v1reports)
-- [Onboarding](#onboarding-v1onboard)
-- [Governance](#governance-v1governance)
-- [Ledger](#ledger-v1ledger)
-- [Equity](#equity-v1equity)
-- [Billing](#billing)
-- [Vietnam Payments](#vietnam-payments-payment)
+- [Route Groups](#route-groups)
+  - [1. /billing](#1-billing)
+  - [2. /payment](#2-payment-vietnam-payments)
+  - [3. /v1/tasks](#3-v1tasks)
+  - [4. /v1/agents](#4-v1agents)
+  - [5. /v1/chat](#5-v1chat)
+  - [6. /v1/content](#6-v1content)
+  - [7. /v1/crm](#7-v1crm)
+  - [8. /v1/reports](#8-v1reports)
+  - [9. /v1/onboard](#9-v1onboard)
+  - [10. /v1/settings](#10-v1settings)
+  - [11. /v1/governance](#11-v1governance)
+  - [12. /v1/ledger](#12-v1ledger)
+  - [13. /v1/equity](#13-v1equity)
+  - [14. /v1/revenue](#14-v1revenue)
+  - [15. /v1/funding](#15-v1funding)
 - [Rate Limits](#rate-limits)
 - [Error Codes](#error-codes)
+- [Database Schema](#database-schema)
+- [SDK Examples](#sdk-examples)
 
 ---
 
@@ -44,10 +50,11 @@ Authorization: Bearer <tenant_api_key>
 2. API key returned once (cannot be recovered if lost)
 3. Lost key? Regenerate via `POST /billing/tenants/regenerate-key`
 
-**Middleware behavior:**
-- `authMiddleware` validates key against `tenants` table
-- Injects `tenant` object into request context
-- Returns `401 Unauthorized` if missing/invalid
+**Middleware behaviors:**
+| Middleware | Purpose | Routes |
+|------------|---------|--------|
+| `authMiddleware` | Validates API key against `tenants` table | All protected routes |
+| `creditMeteringMiddleware` | Estimates + deducts credits before execution | `POST /v1/tasks` |
 
 ---
 
@@ -55,7 +62,7 @@ Authorization: Bearer <tenant_api_key>
 
 ### GET /
 
-Service information.
+**Purpose:** Service information and discovery.
 
 **Response:**
 ```json
@@ -70,7 +77,7 @@ Service information.
 
 ### GET /health
 
-Health check with database latency and active workers count.
+**Purpose:** Health check with database latency and binding status.
 
 **Response:**
 ```json
@@ -93,74 +100,327 @@ Health check with database latency and active workers count.
 }
 ```
 
-### GET /ai/test
+---
 
-Test Workers AI binding.
+## Route Groups
+
+## 1. /billing
+
+**Purpose:** Tenant management, credit billing, and Polar.sh payment integration.
+
+**Base Path:** `/billing`
+
+**Authentication:** Mixed (public endpoints for pricing/tenant creation, protected for credit operations)
+
+### Endpoints
+
+#### POST /billing/tenants
+
+**Purpose:** Create new tenant (returns API key one-time).
+
+**Authentication:** None (public)
+
+**Request Body:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `name` | string | Yes | 1-255 chars |
+
+**Request Example:**
+```json
+{ "name": "ABC Company" }
+```
+
+**Response (201):**
+```json
+{
+  "tenant_id": "tnt_abc123",
+  "name": "ABC Company",
+  "api_key": "sk_live_abc123xyz789",
+  "tier": "free",
+  "credits": 10,
+  "message": "Save your API key — it cannot be recovered if lost!"
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 400 | Missing or invalid name |
+| 503 | D1 database not configured |
+
+---
+
+#### POST /billing/tenants/regenerate-key
+
+**Purpose:** Regenerate API key for existing tenant.
+
+**Authentication:** None (uses tenant_id + name as proof)
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `tenant_id` | string (UUID) | Yes |
+| `name` | string | Yes |
 
 **Response:**
 ```json
 {
-  "ok": true,
-  "result": {
-    "response": "Xin chào! Tôi là AI trợ lý của bạn."
+  "api_key": "sk_live_newkey456",
+  "message": "New API key generated. Old key is now invalid. Save this key!"
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | Tenant not found or name mismatch |
+
+---
+
+#### POST /billing/webhook
+
+**Purpose:** Polar.sh webhook handler for payment events.
+
+**Authentication:** HMAC-SHA256 signature via `webhook-signature` header
+
+**Headers:**
+| Header | Purpose |
+|--------|---------|
+| `webhook-signature` | HMAC-SHA256 of raw body using `POLAR_WEBHOOK_SECRET` |
+
+**Supported Events:**
+| Event | Action |
+|-------|--------|
+| `order.paid` | Add credits, upgrade tier if subscription |
+| `subscription.canceled` | Downgrade tier to `free` |
+
+**Security:** 5-minute timestamp window to prevent replay attacks.
+
+**Response:**
+```json
+{ "received": true }
+```
+
+---
+
+#### GET /billing/pricing
+
+**Purpose:** Public pricing tiers and credit packs.
+
+**Authentication:** None (public)
+
+**Response:**
+```json
+{
+  "tiers": [
+    { "id": "free", "name": "Free", "price": 0, "credits": 10, "description": "Try it out" },
+    { "id": "agencyos-starter", "name": "Starter", "price": 29, "credits": 50, "description": "Solo non-tech user" },
+    { "id": "agencyos-pro", "name": "Pro", "price": 99, "credits": 200, "description": "Small agency" },
+    { "id": "agencyos-agency", "name": "Agency", "price": 199, "credits": 500, "description": "Growing agency" },
+    { "id": "agencyos-master", "name": "Master", "price": 399, "credits": 1000, "description": "Premium agency" }
+  ],
+  "credit_packs": [
+    { "id": "credits-10", "credits": 10, "price": 5 },
+    { "id": "credits-50", "credits": 50, "price": 20 },
+    { "id": "credits-100", "credits": 100, "price": 35 }
+  ],
+  "credit_costs": {
+    "simple": 1,
+    "standard": 3,
+    "complex": 5
   }
 }
 ```
 
 ---
 
-## PEV Engine
+#### GET /billing/credits
 
-### POST /cmd
+**Purpose:** Get current credit balance.
 
-Execute Plan-Execute-Verify pipeline.
-
-**Authentication:** Optional (BYOK: tenant key → global key → Workers AI)
-
-**Request:**
-```json
-{
-  "goal": "Create CRUD API for user management"
-}
-```
+**Authentication:** Required
 
 **Response:**
 ```json
 {
-  "plan": [...],
-  "execution": [...],
-  "verification": "passed"
+  "tenant_id": "tnt_abc123",
+  "balance": 45,
+  "tier": "pro"
 }
 ```
 
 ---
 
-## Task Management (`/v1/tasks`)
+#### GET /billing/credits/history
 
-Mission-based async task execution with credit metering.
+**Purpose:** Credit transaction history.
 
-### POST /v1/tasks
+**Authentication:** Required
 
-Create new mission.
+**Query Parameters:**
+| Param | Type | Default | Max |
+|-------|------|---------|-----|
+| `limit` | number | 50 | 200 |
 
-**Authentication:** Required | **Middleware:** `creditMeteringMiddleware`
-
-**Request Schema:**
+**Response:**
 ```json
 {
-  "goal": "string (1-2000 chars) - Mission objective"
+  "tenant_id": "tnt_abc123",
+  "history": [
+    {
+      "id": "crd_...",
+      "type": "purchase",
+      "amount": 50,
+      "balance_after": 100,
+      "description": "Polar.sh: agencyos-starter (50 credits)",
+      "created_at": "2026-03-18T10:30:00Z"
+    }
+  ],
+  "limit": 50
 }
 ```
 
+---
+
+## 2. /payment (Vietnam Payments)
+
+**Purpose:** MoMo and VNPay payment gateway integration for VND transactions.
+
+**Base Path:** `/payment`
+
+**Authentication:** None for webhook endpoints; HMAC signature validation
+
+### Endpoints
+
+#### POST /payment/create
+
+**Purpose:** Create payment URL for MoMo or VNPay.
+
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `method` | string | Yes | `momo`, `vnpay` |
+| `tenant_id` | string (UUID) | Yes | - |
+| `plan` | string | Optional | `starter`, `pro`, `enterprise` |
+| `amount` | number | Yes | VND amount |
+| `credits` | number | Yes | Credits to add |
+
+**Response:**
+```json
+{
+  "method": "momo",
+  "order_id": "tnt_abc-1710849600000",
+  "amount": 199000,
+  "payment_url": "https://payment.momo.vn/pay?partnerCode=MEKONG&orderId=...&extraData=...",
+  "note": "Mock URL — replace with real MoMo API integration"
+}
+```
+
+---
+
+#### POST /payment/momo/ipn
+
+**Purpose:** MoMo Instant Payment Notification webhook.
+
+**Authentication:** HMAC-SHA256 via `x-signature` or `x-momo-signature` header
+
+**Request Headers:**
+| Header | Purpose |
+|--------|---------|
+| `x-signature` or `x-momo-signature` | HMAC-SHA256 of raw body |
+
+**Request Body (MoMo payload):**
+| Field | Type |
+|-------|------|
+| `partnerCode` | string |
+| `orderId` | string |
+| `amount` | number |
+| `resultCode` | number (0 = success) |
+| `extraData` | string (base64 JSON: `{tenant_id, credits, plan}`) |
+
+**Response (200):**
+```json
+{
+  "received": true,
+  "tenant_id": "tnt_abc123",
+  "credits_added": 50
+}
+```
+
+---
+
+#### GET /payment/vnpay/ipn
+
+**Purpose:** VNPay IPN webhook handler.
+
+**Authentication:** HMAC-SHA512 via `vnp_SecureHash` query param
+
+**Query Parameters:**
+| Param | Purpose |
+|-------|---------|
+| `vnp_ResponseCode` | `00` = success |
+| `vnp_OrderInfo` | Format: `tenant_id|credits|plan` |
+| `vnp_TxnRef` | Transaction reference |
+| `vnp_Amount` | Amount * 100 |
+| `vnp_SecureHash` | HMAC-SHA512 signature |
+
+**Response:**
+```json
+{ "received": true, "tenant_id": "tnt_abc123", "credits_added": 50 }
+```
+
+---
+
+#### GET /payment/pricing-vn
+
+**Purpose:** Vietnam pricing tiers in VND.
+
+**Response:**
+```json
+{
+  "tiers": [
+    { "id": "free", "name": "Miễn phí", "price_vnd": 0, "credits": 10 },
+    { "id": "starter", "name": "Starter", "price_vnd": 199000, "credits": 50 },
+    { "id": "pro", "name": "Pro", "price_vnd": 499000, "credits": 200 },
+    { "id": "enterprise", "name": "Enterprise", "price_vnd": 2990000, "credits": 1000 }
+  ]
+}
+```
+
+---
+
+## 3. /v1/tasks
+
+**Purpose:** Mission-based async task execution with credit metering.
+
+**Base Path:** `/v1/tasks`
+
+**Authentication:** Required
+
+**Middleware:** `creditMeteringMiddleware` (auto-deducts credits)
+
+### Endpoints
+
+#### POST /v1/tasks
+
+**Purpose:** Create new mission.
+
+**Request Body:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `goal` | string | Yes | 1-2000 chars |
+
 **Credit Estimation:**
-- Simple goal: 1 credit
-- Standard goal: 3 credits
-- Complex goal: 5 credits
+| Goal Type | Credits | Examples |
+|-----------|---------|----------|
+| Simple | 1 | "Send email", "List contacts" |
+| Standard | 3 | "Generate weekly report", "Create content batch" |
+| Complex | 5 | "Build CRUD API", "Full onboarding flow" |
 
 **Response (201):**
 ```json
 {
-  "id": "msn_<tenant_id>_1234567890",
+  "id": "msn_tnt_abc_1710849600",
   "tenant_id": "tnt_abc123",
   "goal": "Send welcome email to new users",
   "status": "pending",
@@ -171,13 +431,17 @@ Create new mission.
 ```
 
 **Errors:**
-- `400` - Invalid request (goal missing or too long)
-- `402` - Insufficient credits
-- `503` - D1 database not configured
+| Code | Reason |
+|------|--------|
+| 400 | Invalid goal (missing/too long) |
+| 402 | Insufficient credits |
+| 503 | D1 not configured |
 
-### GET /v1/tasks
+---
 
-List missions with pagination.
+#### GET /v1/tasks
+
+**Purpose:** List missions with pagination.
 
 **Query Parameters:**
 | Param | Type | Default | Max |
@@ -203,9 +467,11 @@ List missions with pagination.
 }
 ```
 
-### GET /v1/tasks/:id
+---
 
-Get mission by ID.
+#### GET /v1/tasks/:id
+
+**Purpose:** Get mission by ID.
 
 **Response:**
 ```json
@@ -220,9 +486,11 @@ Get mission by ID.
 }
 ```
 
-### GET /v1/tasks/:id/stream
+---
 
-SSE stream for real-time mission progress.
+#### GET /v1/tasks/:id/stream
+
+**Purpose:** SSE stream for real-time mission progress.
 
 **Headers:**
 ```
@@ -231,14 +499,16 @@ Cache-Control: no-cache
 Connection: keep-alive
 ```
 
-**Response:**
+**Stream Events:**
 ```
 data: {"id":"msn_...","status":"running","result":null}
 ```
 
-### POST /v1/tasks/:id/cancel
+---
 
-Cancel pending mission with credit refund.
+#### POST /v1/tasks/:id/cancel
+
+**Purpose:** Cancel pending mission with credit refund.
 
 **Response:**
 ```json
@@ -250,91 +520,568 @@ Cancel pending mission with credit refund.
 ```
 
 **Errors:**
-- `404` - Mission not found
-- `409` - Only pending missions can be cancelled
+| Code | Reason |
+|------|--------|
+| 404 | Mission not found |
+| 409 | Only pending missions can be cancelled |
 
 ---
 
-## Agent Execution (`/v1/agents`)
+## 4. /v1/agents
 
-Available agents: `git`, `file`, `shell`, `lead-hunter`, `content-writer`, `recipe-crawler`
+**Purpose:** Agent execution and discovery.
 
-### GET /v1/agents
+**Base Path:** `/v1/agents`
 
-List available agents.
+**Authentication:** Required for `POST /:name/run`
+
+### Available Agents
+
+| Agent | Description |
+|-------|-------------|
+| `git` | Git operations: status, diff, log, commit, branch |
+| `file` | File operations: find, read, tree, stats, grep |
+| `shell` | Shell command execution |
+| `lead-hunter` | Company and CEO lead discovery |
+| `content-writer` | Content generation |
+| `recipe-crawler` | Recipe file discovery |
+
+### Endpoints
+
+#### GET /v1/agents
+
+**Purpose:** List available agents.
 
 **Response:**
 ```json
 {
   "agents": [
-    { "name": "git", "description": "Git operations" },
-    { "name": "file", "description": "File operations" },
+    { "name": "git", "description": "Git operations: status, diff, log, commit, branch" },
+    { "name": "file", "description": "File operations: find, read, tree, stats, grep" },
     { "name": "shell", "description": "Shell command execution" },
-    { "name": "lead-hunter", "description": "Lead generation" },
-    { "name": "content-writer", "description": "Content creation" },
-    { "name": "recipe-crawler", "description": "Recipe discovery" }
+    { "name": "lead-hunter", "description": "Company and CEO lead discovery" },
+    { "name": "content-writer", "description": "Content generation" },
+    { "name": "recipe-crawler", "description": "Recipe file discovery" }
   ]
-}
-```
-
-### POST /v1/agents/:name/run
-
-Execute agent by name.
-
-**Request:**
-```json
-{
-  "args": ["arg1", "arg2"],
-  "kwargs": { "key": "value" }
-}
-```
-
-**Response:**
-```json
-{
-  "agent": "git",
-  "output": "Changes committed successfully",
-  "success": true
 }
 ```
 
 ---
 
-## Settings (`/v1/settings`)
+#### POST /v1/agents/:name/run
 
-LLM provider configuration.
+**Purpose:** Execute agent by name.
 
-### POST /v1/settings/llm
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `command` | string | Yes |
+| `params` | object | Optional |
 
-Save LLM configuration.
-
-**Request Schema:**
+**Response (202):**
 ```json
 {
-  "provider": "openai" | "google" | "anthropic" | "custom",
-  "api_key": "string (min 1 char)",
-  "base_url": "https://api.example.com (URL, optional)",
-  "model": "gpt-4o (optional)"
+  "agent": "git",
+  "command": "status",
+  "status": "accepted",
+  "message": "Agent execution queued — use /v1/tasks to track progress"
 }
 ```
 
-**Validation:**
-- `provider` must be one of the enum values
-- `api_key` required
-- `base_url` required if provider is `custom`
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | Agent not found |
+| 400 | Missing command |
+
+---
+
+## 5. /v1/chat
+
+**Purpose:** Zalo OA and Facebook Messenger webhook handlers.
+
+**Base Path:** `/v1/chat`
+
+**Authentication:** Platform-specific signature validation
+
+### Endpoints
+
+#### POST /v1/chat/webhook/zalo
+
+**Purpose:** Zalo OA message webhook.
+
+**Authentication:** HMAC-SHA256 via `x-zalo-signature` header
+
+**Request Headers:**
+| Header | Purpose |
+|--------|---------|
+| `x-zalo-signature` or `x-signature` | HMAC-SHA256 signature |
+
+**Request Body (Zalo event):**
+| Field | Type |
+|-------|------|
+| `event_name` | string (e.g., `user_send_text`) |
+| `app_id` | string |
+| `sender.id` | string |
+| `recipient.id` | string |
+| `message.text` | string |
+| `message.msg_id` | string |
+| `timestamp` | string |
+
+**Response:**
+```json
+{ "received": true }
+```
+
+---
+
+#### GET /v1/chat/webhook/facebook
+
+**Purpose:** Facebook Messenger webhook verification.
+
+**Query Parameters:**
+| Param | Purpose |
+|-------|---------|
+| `hub.mode` | Must be `subscribe` |
+| `hub.verify_token` | Must match `FB_VERIFY_TOKEN` |
+| `hub.challenge` | String to return |
+
+**Response:** Challenge string (200) or Forbidden (403)
+
+---
+
+#### POST /v1/chat/webhook/facebook
+
+**Purpose:** Facebook Messenger event handler.
+
+**Authentication:** HMAC-SHA256 via `X-Hub-Signature-256` header
+
+**Response:**
+```json
+{ "received": true }
+```
+
+---
+
+## 6. /v1/content
+
+**Purpose:** AI-generated content batches for social media.
+
+**Base Path:** `/v1/content`
+
+**Authentication:** Required
+
+### Endpoints
+
+#### POST /v1/content/generate
+
+**Purpose:** Generate 7-14 day content batch via LLM.
+
+**Request Body:**
+| Field | Type | Default | Validation |
+|-------|------|---------|------------|
+| `channel` | string | `facebook` | - |
+| `days` | number | 7 | 7-14 |
+| `industry` | string | `cafe` | - |
+| `topic` | string | `daily promotions` | - |
+
+**Response (201):**
+```json
+{
+  "generated": 14,
+  "ids": ["cp_tnt_abc_1710849600_1", "cp_tnt_abc_1710849600_2"]
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 502 | LLM generation failed |
+| 503 | D1 not configured |
+
+---
+
+#### GET /v1/content
+
+**Purpose:** List content posts.
+
+**Query Parameters:**
+| Param | Type | Values |
+|-------|------|--------|
+| `status` | string | `draft`, `approved`, `scheduled`, `rejected` |
+| `limit` | number | Max 100 |
 
 **Response:**
 ```json
 {
-  "ok": true,
-  "provider": "openai",
-  "message": "LLM settings saved"
+  "posts": [
+    {
+      "id": "cp_...",
+      "tenant_id": "tnt_abc",
+      "channel": "facebook",
+      "content_text": "Post content with emojis...",
+      "image_prompt": "...",
+      "status": "draft",
+      "scheduled_at": "2026-03-19T09:00:00Z",
+      "created_at": "2026-03-18T10:30:00Z"
+    }
+  ],
+  "count": 14
 }
 ```
 
-### GET /v1/settings/llm
+---
 
-Get current configuration (API key masked).
+#### PATCH /v1/content/:id
+
+**Purpose:** Update content post (approve/reject/edit).
+
+**Request Body:**
+| Field | Type | Values |
+|-------|------|--------|
+| `status` | string | `approved`, `rejected`, `scheduled`, `draft` |
+| `content_text` | string | Updated content |
+| `scheduled_at` | string (ISO) | New schedule time |
+
+**Response:**
+```json
+{ "updated": true }
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | Post not found |
+| 400 | No fields to update |
+
+---
+
+## 7. /v1/crm
+
+**Purpose:** Contact management and remarketing campaigns.
+
+**Base Path:** `/v1/crm`
+
+**Authentication:** Required
+
+### Endpoints
+
+#### GET /v1/crm/contacts
+
+**Purpose:** List contacts with filters.
+
+**Query Parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `tag` | string | Filter by tag |
+| `limit` | number | Max 200, default 50 |
+
+**Response:**
+```json
+{
+  "contacts": [
+    {
+      "id": "ct_tnt_abc_1710849600",
+      "external_id": "user_zalo_123",
+      "platform": "zalo",
+      "name": "Nguyen Van A",
+      "phone": "+84901234567",
+      "email": "a@example.com",
+      "tags": ["vip", "interested"],
+      "visit_count": 5,
+      "last_contact_at": "2026-03-18T10:30:00Z"
+    }
+  ],
+  "count": 1
+}
+```
+
+---
+
+#### POST /v1/crm/contacts
+
+**Purpose:** Create contact manually.
+
+**Request Body:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `external_id` | string | No | - |
+| `platform` | string | No | Default: `zalo` |
+| `name` | string | No | - |
+| `phone` | string | No | - |
+| `email` | string | No | Email format |
+| `tags` | string[] | No | - |
+| `notes` | string | No | - |
+
+**Response (201):**
+```json
+{ "id": "ct_tnt_abc_1710849600", "created": true }
+```
+
+---
+
+#### POST /v1/crm/contacts/auto
+
+**Purpose:** Upsert contact from chat event.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `external_id` | string | Yes |
+| `platform` | string | Yes |
+| `name` | string | No |
+
+**Behavior:**
+- If exists: increment `visit_count`, update `last_contact_at`
+- If new: create contact
+
+**Response:**
+```json
+{ "id": "ct_tnt_abc_1710849600", "upserted": "created" }
+```
+
+---
+
+#### GET /v1/crm/campaigns
+
+**Purpose:** List remarketing campaigns.
+
+**Response:**
+```json
+{
+  "campaigns": [
+    {
+      "id": "rc_tnt_abc_1710849600",
+      "name": "Re-engagement Campaign",
+      "trigger_type": "days_since_visit",
+      "trigger_value": "7",
+      "message_template": "Hi {name}, come back!",
+      "channel": "zalo",
+      "created_at": "2026-03-18T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### POST /v1/crm/campaigns
+
+**Purpose:** Create remarketing campaign.
+
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `name` | string | Yes | Min 1 char |
+| `trigger_type` | string | Yes | `days_since_visit`, `birthday`, `manual`, `tag_match` |
+| `trigger_value` | string | No | - |
+| `message_template` | string | Yes | - |
+| `channel` | string | No | Default: `zalo` |
+
+**Response (201):**
+```json
+{ "id": "rc_tnt_abc_1710849600", "created": true }
+```
+
+---
+
+## 8. /v1/reports
+
+**Purpose:** AI-generated analytics and business reports.
+
+**Base Path:** `/v1/reports`
+
+**Authentication:** Required
+
+### Endpoints
+
+#### GET /v1/reports/weekly
+
+**Purpose:** 7-day summary with AI-generated insights.
+
+**Query Parameters:**
+| Param | Type | Example |
+|-------|------|---------|
+| `week` | string | `2026-W11` (ISO week) |
+
+**Response:**
+```json
+{
+  "period": "7d",
+  "stats": {
+    "messages": 150,
+    "new_contacts": 25,
+    "conversations": 45,
+    "content": [{ "status": "draft", "count": 7 }]
+  },
+  "ai_summary": "Tuần này bạn có 150 tin nhắn, 25 contact mới..."
+}
+```
+
+---
+
+#### GET /v1/reports/overview
+
+**Purpose:** Real-time dashboard metrics (today).
+
+**Response:**
+```json
+{
+  "today_messages": 45,
+  "total_contacts": 150,
+  "pending_content": 12,
+  "active_conversations": 8
+}
+```
+
+---
+
+## 9. /v1/onboard
+
+**Purpose:** 4-step tenant onboarding flow.
+
+**Base Path:** `/v1/onboard`
+
+**Authentication:** Required
+
+### Onboarding Steps
+
+| Step | Endpoint | Purpose |
+|------|----------|---------|
+| 1 | POST /profile | Business info |
+| 2 | POST /channel | Connect Zalo/FB |
+| 3 | POST /menu | Upload menu + generate FAQ |
+| 4 | POST /activate | Complete onboarding |
+
+### Endpoints
+
+#### GET /v1/onboard/status
+
+**Purpose:** Check onboarding progress.
+
+**Response:**
+```json
+{
+  "step": 2,
+  "completed": false,
+  "steps": ["profile", "channel", "menu", "activate"]
+}
+```
+
+---
+
+#### POST /v1/onboard/profile
+
+**Purpose:** Submit company profile (Step 1).
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `business_name` | string | Yes |
+| `industry` | string | No |
+| `address` | string | No |
+| `phone` | string | No |
+| `hours` | string | No |
+| `logo_url` | string | No |
+
+**Response:**
+```json
+{ "step": 1, "next": "channel" }
+```
+
+---
+
+#### POST /v1/onboard/channel
+
+**Purpose:** Connect messaging channel (Step 2).
+
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `type` | string | Yes | `zalo_oa`, `facebook_page` |
+| `external_id` | string | Yes | Channel/page ID |
+| `access_token` | string | No | OAuth token |
+| `name` | string | No | Channel name |
+
+**Response:**
+```json
+{ "step": 2, "channel_id": "ch_tnt_abc_zalo_oa", "next": "menu" }
+```
+
+---
+
+#### POST /v1/onboard/menu
+
+**Purpose:** Store menu + auto-generate FAQ (Step 3).
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `menu_data` | object | Yes |
+
+**Response:**
+```json
+{ "step": 3, "faq_generated": 5, "next": "activate" }
+```
+
+---
+
+#### POST /v1/onboard/activate
+
+**Purpose:** Complete onboarding (Step 4).
+
+**Response:**
+```json
+{ "step": 4, "completed": true, "message": "Onboarding complete. System is active." }
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 400 | Steps 1-3 not completed |
+
+---
+
+## 10. /v1/settings
+
+**Purpose:** LLM provider configuration.
+
+**Base Path:** `/v1/settings`
+
+**Authentication:** Required
+
+**Available Providers:** `openai`, `google`, `anthropic`, `custom`, `workers-ai` (default)
+
+### Endpoints
+
+#### POST /v1/settings/llm
+
+**Purpose:** Save LLM configuration.
+
+**Request Body:**
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `provider` | string | Yes | Enum: `openai`, `google`, `anthropic`, `custom` |
+| `api_key` | string | Yes | Min 1 char |
+| `base_url` | string | No | URL format (required if `custom`) |
+| `model` | string | No | - |
+
+**Response:**
+```json
+{ "ok": true, "provider": "openai", "message": "LLM settings saved" }
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 400 | Invalid provider, missing base_url for custom |
+| 503 | D1 or SERVICE_TOKEN not configured |
+
+---
+
+#### GET /v1/settings/llm
+
+**Purpose:** Get current configuration (API key masked).
 
 **Response:**
 ```json
@@ -358,571 +1105,153 @@ Get current configuration (API key masked).
 }
 ```
 
-### DELETE /v1/settings/llm
+---
 
-Remove custom config, fallback to Workers AI.
+#### DELETE /v1/settings/llm
+
+**Purpose:** Remove custom config, fallback to Workers AI.
 
 **Response:**
 ```json
-{
-  "ok": true,
-  "deleted": true,
-  "message": "LLM settings removed, falling back to Workers AI"
-}
+{ "ok": true, "deleted": true, "message": "LLM settings removed, falling back to Workers AI" }
 ```
 
 ---
 
-## Chat Webhooks (`/v1/chat`)
+## 11. /v1/governance
 
-Platform webhooks for Zalo OA and Facebook Messenger.
+**Purpose:** Quadratic voting, stakeholder management, reputation system, and Ngũ Sự analysis.
 
-### POST /v1/chat/webhook/zalo
+**Base Path:** `/v1/governance`
 
-Zalo OA webhook endpoint.
+**Authentication:** Required
 
-**Authentication:** Zalo app secret validation
+### Stakeholder Roles & Voice Credits
 
-**Request:** Zalo event payload
+| Role | Level | Monthly Voice Credits |
+|------|-------|----------------------|
+| `owner` | 1 | 10 |
+| `admin` | 2 | 15 |
+| `operator` | 3 | 20 |
+| `vc_partner` | 4 | 30 |
+| `founder` | 5 | 40 |
+| `expert` | 5 | 50 |
+| `developer` | 6 | 60 |
+| `customer` | 6 | 80 |
+| `community` | 6 | 100 |
 
-**Response:** `200 OK`
+### Endpoints
 
-### GET /v1/chat/webhook/facebook
+#### POST /v1/governance/stakeholders
 
-Facebook Messenger webhook verification.
+**Purpose:** Register stakeholder.
 
-**Query Params:** `hub.mode`, `hub.verify_token`, `hub.challenge`
-
-**Response:** Challenge string if verified
-
-### POST /v1/chat/webhook/facebook
-
-Facebook Messenger event handler.
-
-**Authentication:** Facebook app secret validation
-
-**Response:** `200 OK`
-
----
-
-## Content Generation (`/v1/content`)
-
-AI-generated content batches (7-14 days).
-
-### POST /v1/content/generate
-
-Generate content batch.
-
-**Request:**
-```json
-{
-  "topic": "AI automation trends",
-  "days": 14,
-  "platform": "facebook"
-}
-```
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `display_name` | string | Yes | - |
+| `email` | string | No | Email format |
+| `role` | string | No | Default: `community` |
 
 **Response (201):**
 ```json
 {
-  "posts": [
-    {
-      "id": "cnt_...",
-      "content_text": "Post content...",
-      "scheduled_at": "2026-03-19T09:00:00Z",
-      "status": "draft"
-    }
-  ],
-  "count": 14
-}
-```
-
-### GET /v1/content
-
-List content posts.
-
-**Query Params:** `status`, `limit`, `offset`
-
-**Response:**
-```json
-{
-  "posts": [...],
-  "count": 14
-}
-```
-
-### PATCH /v1/content/:id
-
-Update content post (approve/reject).
-
-**Request:**
-```json
-{
-  "status": "approved" | "rejected" | "draft"
-}
-```
-
-**Response:**
-```json
-{
-  "id": "cnt_...",
-  "status": "approved",
-  "updated_at": "2026-03-18T10:30:00Z"
+  "id": "stk_abc123",
+  "role": "community",
+  "governance_level": 6,
+  "voice_credits": 100,
+  "message": "Stakeholder registered successfully"
 }
 ```
 
 ---
 
-## CRM (`/v1/crm`)
+#### GET /v1/governance/stakeholders
 
-Contact management and remarketing campaigns.
+**Purpose:** List stakeholders.
 
-### GET /v1/crm/contacts
-
-List contacts with filters.
-
-**Query Params:**
+**Query Parameters:**
 | Param | Type | Description |
 |-------|------|-------------|
-| `tag` | string | Filter by tag |
-| `limit` | number | Max results (default 50, max 200) |
-
-**Response:**
-```json
-{
-  "contacts": [
-    {
-      "id": "ct_tnt_1234567890",
-      "external_id": "user_zalo_123",
-      "platform": "zalo",
-      "name": "Nguyen Van A",
-      "phone": "+84901234567",
-      "email": "a@example.com",
-      "tags": ["vip", "interested"],
-      "visit_count": 5,
-      "last_contact_at": "2026-03-18T10:30:00Z"
-    }
-  ],
-  "count": 1
-}
-```
-
-### POST /v1/crm/contacts
-
-Create contact manually.
-
-**Request Schema:**
-```json
-{
-  "external_id": "string (optional)",
-  "platform": "string (optional, default: zalo)",
-  "name": "string (optional)",
-  "phone": "string (optional)",
-  "email": "string (email format, optional)",
-  "tags": ["string"] (optional),
-  "notes": "string (optional)"
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "ct_tnt_1234567890",
-  "created": true
-}
-```
-
-### POST /v1/crm/contacts/auto
-
-Upsert contact from chat event.
-
-**Request Schema:**
-```json
-{
-  "external_id": "string (required)",
-  "platform": "string (required)",
-  "name": "string (optional)"
-}
-```
-
-**Behavior:**
-- If contact exists: increment `visit_count`, update `last_contact_at`
-- If new: create contact
-
-**Response:**
-```json
-{
-  "id": "ct_tnt_1234567890",
-  "upserted": "updated" | "created"
-}
-```
-
-### GET /v1/crm/campaigns
-
-List remarketing campaigns.
-
-**Response:**
-```json
-{
-  "campaigns": [
-    {
-      "id": "rc_tnt_1234567890",
-      "name": "Re-engagement Campaign",
-      "trigger_type": "days_since_visit",
-      "trigger_value": "7",
-      "message_template": "Hi {name}, come back!",
-      "channel": "zalo",
-      "created_at": "2026-03-18T10:30:00Z"
-    }
-  ]
-}
-```
-
-### POST /v1/crm/campaigns
-
-Create remarketing campaign.
-
-**Request Schema:**
-```json
-{
-  "name": "string (required, min 1 char)",
-  "trigger_type": "days_since_visit" | "birthday" | "manual" | "tag_match",
-  "trigger_value": "string (optional)",
-  "message_template": "string (required)",
-  "channel": "string (optional, default: zalo)"
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "rc_tnt_1234567890",
-  "created": true
-}
-```
-
----
-
-## Reports (`/v1/reports`)
-
-AI-generated reports.
-
-### GET /v1/reports/weekly
-
-Weekly summary report.
-
-**Query Params:** `week` (ISO week, e.g., `2026-W11`)
-
-**Response:**
-```json
-{
-  "week": "2026-W11",
-  "summary": "Tuần này bạn có 15 contact mới, 3 chiến dịch đã gửi...",
-  "metrics": {
-    "new_contacts": 15,
-    "campaigns_sent": 3,
-    "content_published": 7
-  }
-}
-```
-
-### GET /v1/reports/overview
-
-Business overview report.
-
-**Response:**
-```json
-{
-  "tenant_id": "tnt_abc",
-  "period": "last_30_days",
-  "summary": "Tổng quan 30 ngày qua...",
-  "metrics": {
-    "total_contacts": 150,
-    "total_campaigns": 12,
-    "credit_balance": 45
-  }
-}
-```
-
----
-
-## Onboarding (`/v1/onboard`)
-
-4-step onboarding flow.
-
-### GET /v1/onboard/status
-
-Check onboarding status.
-
-**Response:**
-```json
-{
-  "completed": false,
-  "steps": {
-    "profile": false,
-    "channel": false,
-    "menu": false,
-    "activate": false
-  }
-}
-```
-
-### POST /v1/onboard/profile
-
-Submit company profile.
-
-**Request:**
-```json
-{
-  "company_name": "ABC Company",
-  "industry": "retail",
-  "size": "10-50"
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "faq_generated": true
-}
-```
-
-### POST /v1/onboard/channel
-
-Connect messaging channel.
-
-**Request:**
-```json
-{
-  "platform": "facebook" | "zalo",
-  "credentials": { ... }
-}
-```
-
-**Response:**
-```json
-{
-  "ok": true,
-  "channel_id": "chn_..."
-}
-```
-
-### POST /v1/onboard/menu
-
-Setup FAQ menu.
-
-**Response:**
-```json
-{
-  "ok": true,
-  "menu_items": 5
-}
-```
-
-### POST /v1/onboard/activate
-
-Activate tenant.
-
-**Response:**
-```json
-{
-  "ok": true,
-  "activated": true
-}
-```
-
----
-
-## Governance (`/v1/governance`)
-
-Quadratic voting and stakeholder management.
-
-### GET /v1/governance/stakeholders
-
-List stakeholders.
+| `role` | string | Filter by role |
 
 **Response:**
 ```json
 {
   "stakeholders": [
     {
-      "id": "stk_...",
-      "name": "Nguyen Van A",
+      "id": "stk_abc123",
+      "display_name": "Nguyen Van A",
+      "email": "a@example.com",
       "role": "founder",
-      "credits": 1000,
-      "reputation": 850
+      "governance_level": 5,
+      "voice_credits_monthly": 40,
+      "reputation_score": 850,
+      "created_at": "2026-03-01T00:00:00Z"
     }
-  ]
+  ],
+  "total": 1
 }
 ```
 
-### POST /v1/governance/proposals
+---
 
-Create proposal.
+#### POST /v1/governance/proposals
 
-**Request:**
-```json
-{
-  "title": "Upgrade to Pro plan",
-  "description": "提议 nội dung...",
-  "credits_requested": 500
-}
-```
+**Purpose:** Create proposal.
+
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `author_id` | string (UUID) | Yes | - |
+| `title` | string | Yes | - |
+| `body` | string | Yes | - |
+| `proposal_type` | string | No | `feature`, `strategic`, `constitutional`, `treasury`, `equity` |
+| `voting_mechanism` | string | No | `quadratic`, `simple_majority`, `supermajority` |
+| `voting_days` | number | No | 1-30, default 7 |
+
+**Quorum Rules:**
+| Proposal Type | Quorum | Mechanism |
+|---------------|--------|-----------|
+| `constitutional` | 75% | `supermajority` (forced) |
+| Other | 10% | `quadratic` (default) |
 
 **Response (201):**
 ```json
 {
-  "id": "prp_...",
-  "status": "voting"
-}
-```
-
-### POST /v1/governance/vote
-
-Cast vote (quadratic: votes = √credits_spent).
-
-**Request:**
-```json
-{
-  "proposal_id": "prp_...",
-  "support": true,
-  "credits_to_spend": 100
-}
-```
-
-**Response:**
-```json
-{
-  "votes_cast": 10,
-  "remaining_credits": 900
-}
-```
-
-### GET /v1/governance/reputation
-
-Get stakeholder reputation.
-
-**Response:**
-```json
-{
-  "stakeholder_id": "stk_...",
-  "reputation": 850,
-  "level": "elder"
-}
-```
-
-### GET /v1/governance/ngu-su
-
-Ngũ Sự analysis (Đạo-Thiên-Địa-Tướng-Pháp).
-
-**Response:**
-```json
-{
-  "dao": 8.5,
-  "thien": 7.0,
-  "dia": 9.0,
-  "tuong": 8.0,
-  "phap": 7.5,
-  "overall": 8.0
-}
-```
-
-### GET /v1/governance/treasury
-
-Treasury balance.
-
-**Response:**
-```json
-{
-  "total_credits": 50000,
-  "allocated": 12000,
-  "available": 38000
+  "id": "prp_abc123",
+  "proposal_type": "feature",
+  "mechanism": "quadratic",
+  "quorum": 0.10,
+  "voting_ends_at": "2026-03-25T10:30:00Z",
+  "message": "Proposal created successfully"
 }
 ```
 
 ---
 
-## Ledger (`/v1/ledger`)
+#### GET /v1/governance/proposals
 
-Double-entry accounting system.
+**Purpose:** List proposals.
 
-### POST /v1/ledger/transfer
-
-Transfer credits between accounts.
-
-**Request:**
-```json
-{
-  "from_account": "acc_...",
-  "to_account": "acc_...",
-  "amount": 100,
-  "description": "Payment for services"
-}
-```
+**Query Parameters:**
+| Param | Type | Values |
+|-------|------|--------|
+| `status` | string | `draft`, `discussion`, `voting`, `approved`, `rejected`, `implemented` |
 
 **Response:**
 ```json
 {
-  "transaction_id": "txn_...",
-  "debits": [...],
-  "credits": [...],
-  "balanced": true
-}
-```
-
-### POST /v1/ledger/topup
-
-Add credits to account.
-
-**Request:**
-```json
-{
-  "account_id": "acc_...",
-  "amount": 500,
-  "source": "purchase"
-}
-```
-
-**Response:**
-```json
-{
-  "transaction_id": "txn_...",
-  "new_balance": 1500
-}
-```
-
-### GET /v1/ledger/balance
-
-Get account balance.
-
-**Query Params:** `account_id`
-
-**Response:**
-```json
-{
-  "account_id": "acc_...",
-  "balance": 1500,
-  "currency": "credits"
-}
-```
-
-### GET /v1/ledger/history
-
-Transaction history.
-
-**Query Params:** `account_id`, `limit`, `offset`
-
-**Response:**
-```json
-{
-  "transactions": [
+  "proposals": [
     {
-      "id": "txn_...",
-      "type": "transfer",
-      "amount": 100,
-      "description": "Payment for services",
-      "created_at": "2026-03-18T10:30:00Z"
+      "id": "prp_abc123",
+      "title": "Upgrade to Pro plan",
+      "body": "...",
+      "status": "voting",
+      "vote_stats": [
+        { "direction": "for", "count": 5, "total_votes": 25.5 },
+        { "direction": "against", "count": 2, "total_votes": 8.0 }
+      ]
     }
   ]
 }
@@ -930,305 +1259,703 @@ Transaction history.
 
 ---
 
-## Equity (`/v1/equity`)
+#### POST /v1/governance/vote
 
-Cap table, SAFE notes, vesting.
+**Purpose:** Cast quadratic vote.
 
-### GET /v1/equity/entities
+**Formula:** `votes = sqrt(credits_spent)`, `cost = credits²`
 
-List equity entities.
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `proposal_id` | string (UUID) | Yes | - |
+| `stakeholder_id` | string (UUID) | Yes | - |
+| `voice_credits` | number | Yes | Positive integer |
+| `direction` | string | No | `for`, `against`, `abstain` (default: `for`) |
+
+**Example:** Spend 100 credits → 10 votes
+
+**Response (201):**
+```json
+{
+  "vote_id": "vote_abc123",
+  "credits_spent": 100,
+  "votes_cast": "10.00",
+  "direction": "for",
+  "message": "QV: 100 credits → 10.00 votes"
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | Proposal/stakeholder not found |
+| 400 | Voting period ended |
+| 409 | Already voted on this proposal |
+
+---
+
+#### POST /v1/governance/reputation
+
+**Purpose:** Add reputation event.
+
+**Request Body:**
+| Field | Type | Required | Values |
+|-------|------|----------|--------|
+| `stakeholder_id` | string (UUID) | Yes | - |
+| `dimension` | string | No | `code`, `mentorship`, `governance`, `expertise`, `community`, `general` |
+| `points` | number | Yes | -100 to 100 |
+| `reason` | string | Yes | - |
+
+**Response (201):**
+```json
+{ "added": 50, "dimension": "general" }
+```
+
+---
+
+#### GET /v1/governance/reputation
+
+**Purpose:** Get reputation leaderboard.
+
+**Response:**
+```json
+{
+  "leaderboard": [
+    {
+      "id": "stk_abc123",
+      "display_name": "Nguyen Van A",
+      "role": "founder",
+      "reputation_score": 850,
+      "governance_level": 5
+    }
+  ]
+}
+```
+
+---
+
+#### POST /v1/governance/ngu-su
+
+**Purpose:** Score entity using Ngũ Sự framework (Đạo-Thiên-Địa-Tướng-Pháp).
+
+**Request Body:**
+| Field | Type | Required | Range |
+|-------|------|----------|-------|
+| `entity_name` | string | Yes | - |
+| `dao` | number | Yes | 0-5 |
+| `thien` | number | Yes | 0-5 |
+| `dia` | number | Yes | 0-5 |
+| `tuong` | number | Yes | 0-5 |
+| `phap` | number | Yes | 0-5 |
+| `terrain` | string | No | Auto-classified |
+| `notes` | string | No | - |
+
+**Terrain Auto-Classification:**
+| Overall Score | Terrain |
+|---------------|---------|
+| < 1.5 | `tu_dia` (Death ground) |
+| 1.5-2.5 | `vi_dia` (Hemmed-in) |
+| 2.5-3.5 | `tranh_dia` (Contentious) |
+| >= 3.5 | `giao_dia` (Intersecting) |
+
+**Response (201):**
+```json
+{
+  "id": "ns_abc123",
+  "overall": "4.20",
+  "terrain": "giao_dia"
+}
+```
+
+---
+
+#### GET /v1/governance/ngu-su
+
+**Purpose:** List Ngũ Sự scores.
+
+**Response:**
+```json
+{
+  "scores": [
+    {
+      "id": "ns_abc123",
+      "entity_name": "Portfolio Company A",
+      "dao_score": 4,
+      "thien_score": 4,
+      "dia_score": 5,
+      "tuong_score": 4,
+      "phap_score": 4,
+      "overall_score": 4.2,
+      "terrain": "giao_dia",
+      "scored_at": "2026-03-18T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /v1/governance/treasury
+
+**Purpose:** Get treasury balance.
+
+**Response:**
+```json
+{
+  "id": "trs_abc123",
+  "tenant_id": "tnt_abc",
+  "balance": 50000,
+  "total_in": 75000,
+  "total_out": 25000,
+  "last_updated": "2026-03-18T10:30:00Z"
+}
+```
+
+---
+
+## 12. /v1/ledger
+
+**Purpose:** Double-entry accounting system for credit transfers.
+
+**Base Path:** `/v1/ledger`
+
+**Authentication:** Required
+
+### Account Types
+
+| Type | Purpose |
+|------|---------|
+| `asset` | Credit balances (customers, rewards) |
+| `revenue` | Income accounts |
+| `expense` | Cost accounts (AI compute) |
+| `equity` | Treasury, platform ownership |
+
+### Endpoints
+
+#### POST /v1/ledger/transfer
+
+**Purpose:** Transfer credits between accounts (double-entry).
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `from_code` | string | Yes |
+| `to_code` | string | Yes |
+| `amount` | number | Yes (positive) |
+| `description` | string | Yes |
+| `entry_type` | string | No |
+| `idempotency_key` | string | No |
+
+**Response (201):**
+```json
+{
+  "journal_entry_id": "je_abc123",
+  "from": "customer:xyz",
+  "to": "revenue:platform",
+  "amount": 100
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 400 | Missing fields, insufficient balance |
+| 409 | Idempotency key already processed |
+
+---
+
+#### POST /v1/ledger/topup
+
+**Purpose:** Add credits to account from platform treasury.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `account_code` | string | Yes |
+| `amount` | number | Yes |
+| `description` | string | No |
+
+**Response (201):**
+```json
+{
+  "journal_entry_id": "je_abc123",
+  "account": "customer:xyz",
+  "credited": 500
+}
+```
+
+---
+
+#### GET /v1/ledger/balance
+
+**Purpose:** Get account balance(s).
+
+**Query Parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `code` | string | Filter by account code |
+
+**Response:**
+```json
+{
+  "accounts": [
+    {
+      "id": "acc_abc123",
+      "tenant_id": "tnt_abc",
+      "owner_id": null,
+      "code": "customer:xyz",
+      "account_type": "asset",
+      "balance": 1500,
+      "created_at": "2026-03-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /v1/ledger/history
+
+**Purpose:** Transaction history.
+
+**Query Parameters:**
+| Param | Type | Default | Max |
+|-------|------|---------|-----|
+| `limit` | number | 30 | 100 |
+
+**Response:**
+```json
+{
+  "entries": [
+    {
+      "id": "je_abc123",
+      "tenant_id": "tnt_abc",
+      "description": "Revenue split",
+      "entry_type": "revenue_share",
+      "posted_at": "2026-03-18T10:30:00Z",
+      "lines": "acc_1:100:1,acc_2:100:-1"
+    }
+  ]
+}
+```
+
+---
+
+## 13. /v1/equity
+
+**Purpose:** Cap table management, equity grants, and SAFE notes.
+
+**Base Path:** `/v1/equity`
+
+**Authentication:** Required
+
+### Endpoints
+
+#### POST /v1/equity/entities
+
+**Purpose:** Create equity entity (portfolio company).
+
+**Request Body:**
+| Field | Type | Default |
+|-------|------|---------|
+| `name` | string | - |
+| `entity_type` | string | `portfolio_company` |
+| `total_shares` | number | 10,000,000 |
+| `jurisdiction` | string | `VN` |
+
+**Response (201):**
+```json
+{
+  "id": "ent_abc123",
+  "share_class_id": "sc_abc123"
+}
+```
+
+**Note:** Auto-creates Common share class.
+
+---
+
+#### GET /v1/equity/entities
+
+**Purpose:** List equity entities.
 
 **Response:**
 ```json
 {
   "entities": [
     {
-      "id": "ent_...",
-      "name": "Founder",
-      "type": "individual"
+      "id": "ent_abc123",
+      "tenant_id": "tnt_abc",
+      "name": "Portfolio Company A",
+      "entity_type": "portfolio_company",
+      "total_authorized_shares": 10000000,
+      "jurisdiction": "VN",
+      "created_at": "2026-03-01T00:00:00Z"
     }
   ]
-}
-```
-
-### POST /v1/equity/grants
-
-Create equity grant.
-
-**Request:**
-```json
-{
-  "entity_id": "ent_...",
-  "shares": 1000,
-  "vesting_months": 48,
-  "cliff_months": 12
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "grt_...",
-  "vested": 0,
-  "vesting_start": "2026-03-18"
-}
-```
-
-### GET /v1/equity/cap-table
-
-Compute cap table.
-
-**Response:**
-```json
-{
-  "total_shares": 10000,
-  "holders": [
-    {
-      "entity": "Founder",
-      "shares": 5000,
-      "percentage": 50.0,
-      "vested": 4500
-    }
-  ]
-}
-```
-
-### POST /v1/equity/safe
-
-Create SAFE note.
-
-**Request:**
-```json
-{
-  "investor": "Investor ABC",
-  "amount": 100000,
-  "valuation_cap": 5000000
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": "safe_...",
-  "shares_on_conversion": 2000
-}
-```
-
-### POST /v1/equity/safe/convert
-
-Convert SAFE to equity.
-
-**Request:**
-```json
-{
-  "safe_id": "safe_...",
-  "current_valuation": 10000000
-}
-```
-
-**Response:**
-```json
-{
-  "shares_issued": 2000,
-  "conversion_price": 50
 }
 ```
 
 ---
 
-## Billing
+#### POST /v1/equity/grants
 
-### POST /billing/tenants
+**Purpose:** Create equity grant.
 
-Create tenant (returns API key one-time).
-
-**Request:**
-```json
-{
-  "name": "ABC Company"
-}
-```
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `entity_id` | string (UUID) | Yes |
+| `stakeholder_id` | string (UUID) | Yes |
+| `share_class_id` | string (UUID) | Yes |
+| `shares` | number | Yes |
+| `price_per_share` | number | No |
+| `grant_type` | string | No |
+| `vesting_months` | number | No |
+| `cliff_months` | number | No |
 
 **Response (201):**
 ```json
 {
-  "tenant_id": "tnt_abc123",
-  "name": "ABC Company",
-  "api_key": "sk_live_abc123xyz789",
-  "tier": "free",
-  "credits": 10,
-  "message": "Save your API key — it cannot be recovered if lost!"
+  "id": "grt_abc123",
+  "shares": 1000,
+  "vesting_months": 48
 }
 ```
 
-### POST /billing/tenants/regenerate-key
+---
 
-Regenerate API key.
+#### GET /v1/equity/cap-table/:entityId
 
-**Request:**
-```json
-{
-  "tenant_id": "tnt_abc123",
-  "name": "ABC Company"
-}
-```
+**Purpose:** Compute cap table for entity.
 
 **Response:**
 ```json
 {
-  "api_key": "sk_live_newkey456",
-  "message": "New API key generated. Old key is now invalid. Save this key!"
-}
-```
-
-### POST /billing/webhook
-
-Polar.sh webhook handler.
-
-**Headers:**
-```
-webhook-signature: <HMAC-SHA256>
-```
-
-**Events:** `order.paid`, `subscription.canceled`
-
-**Response:**
-```json
-{
-  "received": true
-}
-```
-
-### GET /billing/pricing
-
-Public pricing info.
-
-**Response:**
-```json
-{
-  "tiers": [
-    { "id": "free", "name": "Free", "price": 0, "credits": 10 },
-    { "id": "agencyos-starter", "name": "Starter", "price": 29, "credits": 50 },
-    { "id": "agencyos-pro", "name": "Pro", "price": 99, "credits": 200 },
-    { "id": "agencyos-agency", "name": "Agency", "price": 199, "credits": 500 },
-    { "id": "agencyos-master", "name": "Master", "price": 399, "credits": 1000 }
+  "entity": { "name": "Portfolio Company A", "total_authorized": 10000000 },
+  "total_outstanding": 5000000,
+  "dilution_pct": "50.00",
+  "holders": [
+    {
+      "stakeholder_id": "stk_abc123",
+      "display_name": "Founder",
+      "role": "founder",
+      "share_class": "Common",
+      "total_granted": 5000000,
+      "total_cancelled": 0
+    }
   ],
-  "credit_packs": [
-    { "id": "credits-10", "credits": 10, "price": 5 },
-    { "id": "credits-50", "credits": 50, "price": 20 },
-    { "id": "credits-100", "credits": 100, "price": 35 }
+  "vesting_schedule": [
+    {
+      "id": "grt_abc123",
+      "shares": 1000000,
+      "vested_shares": 250000,
+      "vested_pct": 25
+    }
   ],
-  "credit_costs": {
-    "simple": 1,
-    "standard": 3,
-    "complex": 5
-  }
+  "safe_notes": [
+    {
+      "id": "safe_abc123",
+      "investor_stakeholder_id": "stk_investor",
+      "display_name": "Investor ABC",
+      "principal_amount": 100000,
+      "valuation_cap": 5000000,
+      "status": "outstanding"
+    }
+  ]
 }
 ```
 
-### GET /billing/credits
+---
 
-Get credit balance.
+#### POST /v1/equity/safe
+
+**Purpose:** Create SAFE note.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `entity_id` | string (UUID) | Yes |
+| `investor_stakeholder_id` | string (UUID) | Yes |
+| `principal_amount` | number | Yes |
+| `valuation_cap` | number | No |
+| `discount_rate` | number | No |
+
+**Response (201):**
+```json
+{ "id": "safe_abc123", "status": "outstanding" }
+```
+
+---
+
+#### POST /v1/equity/safe/:id/convert
+
+**Purpose:** Convert SAFE to equity.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `price_per_share` | number | Yes |
+| `share_class_id` | string (UUID) | Yes |
+
+**Conversion Formula:**
+```
+effective_price = price_per_share * (1 - discount_rate)
+shares = principal / effective_price
+
+If valuation_cap:
+  cap_shares = principal / (valuation_cap / total_authorized)
+  shares = max(shares, cap_shares)
+```
+
+**Response:**
+```json
+{
+  "grant_id": "grt_abc123",
+  "shares_converted": 2000,
+  "effective_price": "0.0500"
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | SAFE not found or already converted |
+
+---
+
+## 14. /v1/revenue
+
+**Purpose:** 6-way revenue distribution via double-entry ledger.
+
+**Base Path:** `/v1/revenue`
 
 **Authentication:** Required
 
-**Response:**
+### Default Revenue Split (Tam Giác Ngược)
+
+| Recipient | Percentage | Account Code |
+|-----------|------------|--------------|
+| Platform | 20% | `revenue:platform` |
+| Expert | 30% | `revenue:expert` |
+| AI Compute | 15% | `expense:ai_compute` |
+| Developer | 15% | `revenue:developer` |
+| Community Fund | 10% | `treasury:community` |
+| Customer Reward | 10% | `customer:rewards` |
+
+### Endpoints
+
+#### POST /v1/revenue/split
+
+**Purpose:** Execute revenue split for completed task.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `total_credits` | number | Yes (positive) |
+| `customer_account` | string | Yes |
+| `expert_account` | string | No |
+| `developer_account` | string | No |
+| `description` | string | Yes |
+| `split_override` | object | No |
+
+**Response (201):**
 ```json
 {
-  "tenant_id": "tnt_abc123",
-  "balance": 45,
-  "tier": "pro"
+  "journal_entry_id": "je_abc123",
+  "total": 100,
+  "split": {
+    "platform": 20,
+    "expert": 30,
+    "ai_compute": 15,
+    "developer": 15,
+    "community_fund": 10,
+    "customer_reward": 10
+  },
+  "message": "Revenue split executed — 6-way distribution via double-entry ledger"
 }
 ```
 
-### GET /billing/credits/history
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 400 | Invalid credits, insufficient balance |
 
-Credit transaction history.
+---
 
-**Query Params:** `limit` (default 50, max 200)
+#### GET /v1/revenue/split-config
+
+**Purpose:** Get current split configuration.
 
 **Response:**
 ```json
 {
-  "tenant_id": "tnt_abc123",
-  "history": [
-    {
-      "id": "crd_...",
-      "type": "purchase",
-      "amount": 50,
-      "balance_after": 100,
-      "description": "Polar.sh: agencyos-starter (50 credits)",
-      "created_at": "2026-03-18T10:30:00Z"
-    }
-  ],
-  "limit": 50
+  "split": {
+    "platform": 0.20,
+    "expert": 0.30,
+    "ai_compute": 0.15,
+    "developer": 0.15,
+    "community_fund": 0.10,
+    "customer_reward": 0.10
+  },
+  "note": "Tam giác ngược: community_fund + customer_reward = 20% goes back to community"
 }
 ```
 
 ---
 
-## Vietnam Payments (`/payment`)
+#### GET /v1/revenue/summary
 
-### POST /payment/create
-
-Create Vietnam payment (MoMo/VNPay).
-
-**Request:**
-```json
-{
-  "provider": "momo" | "vnpay",
-  "amount": 500000,
-  "order_id": "ord_123456"
-}
-```
+**Purpose:** Revenue by account.
 
 **Response:**
 ```json
 {
-  "payment_url": "https://payment.momo.vn/...",
-  "order_id": "ord_123456"
+  "accounts": [
+    { "code": "revenue:platform", "balance": 5000 },
+    { "code": "revenue:expert", "balance": 7500 }
+  ]
 }
 ```
 
-### POST /payment/momo/ipn
+---
 
-MoMo IPN webhook.
+## 15. /v1/funding
 
-**Request:** MoMo callback payload
+**Purpose:** Quadratic funding rounds and project matching.
+
+**Base Path:** `/v1/funding`
+
+**Authentication:** Required
+
+### Quadratic Funding Formula
+
+```
+For each project:
+  sqrt_sum = Σ√(contribution_i)
+  direct_sum = Σ(contribution_i)
+  qf_score = sqrt_sum² - direct_sum
+
+Matched amount = (qf_score / total_qf_score) * matching_pool
+```
+
+**Key Insight:** 10 people × $1 beats 1 person × $10 (democratic funding)
+
+### Endpoints
+
+#### POST /v1/funding/rounds
+
+**Purpose:** Create funding round.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `title` | string | Yes |
+| `matching_pool` | number | Yes |
+| `duration_days` | number | No (default: 14) |
+
+**Response (201):**
+```json
+{
+  "id": "round_abc123",
+  "matching_pool": 10000,
+  "ends_at": "2026-04-01T10:30:00Z"
+}
+```
+
+---
+
+#### POST /v1/funding/projects
+
+**Purpose:** Add project to round.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `round_id` | string (UUID) | Yes |
+| `name` | string | Yes |
+| `description` | string | No |
+| `author_id` | string (UUID) | No |
+
+**Response (201):**
+```json
+{ "id": "proj_abc123" }
+```
+
+---
+
+#### POST /v1/funding/contribute
+
+**Purpose:** Contribute to project.
+
+**Request Body:**
+| Field | Type | Required |
+|-------|------|----------|
+| `project_id` | string (UUID) | Yes |
+| `stakeholder_id` | string (UUID) | Yes |
+| `amount` | number | Yes |
+
+**Response (201):**
+```json
+{ "id": "contrib_abc123", "amount": 100 }
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 409 | Already contributed to this project |
+
+---
+
+#### POST /v1/funding/rounds/:id/calculate
+
+**Purpose:** Calculate QF matching and distribute pool.
+
+**Path Parameters:**
+| Param | Type |
+|-------|------|
+| `id` | string (UUID) |
 
 **Response:**
 ```json
 {
-  "received": true
+  "round_id": "round_abc123",
+  "matching_pool": 10000,
+  "results": [
+    {
+      "id": "proj_1",
+      "name": "Community Garden",
+      "direct": 5000,
+      "qf_score": 8500,
+      "contributors": 50,
+      "matched_amount": 6300,
+      "total": 11300
+    }
+  ],
+  "note": "QF: 10 people × $1 beats 1 person × $10 — democratic funding"
 }
 ```
 
-### GET /payment/vnpay/ipn
+---
 
-VNPay IPN webhook.
+#### GET /v1/funding/rounds
 
-**Query Params:** VNPay callback params
+**Purpose:** List funding rounds.
 
 **Response:**
 ```json
 {
-  "received": true
-}
-```
-
-### GET /payment/pricing-vn
-
-Vietnam pricing (VND).
-
-**Response:**
-```json
-{
-  "tiers_vnd": [
-    { "id": "free", "name": "Miễn phí", "price": 0, "credits": 10 },
-    { "id": "starter", "name": "Khởi đầu", "price": 690000, "credits": 50 },
-    { "id": "pro", "name": "Chuyên nghiệp", "price": 2390000, "credits": 200 },
-    { "id": "agency", "name": "Agency", "price": 4790000, "credits": 500 },
-    { "id": "master", "name": "Master", "price": 9590000, "credits": 1000 }
+  "rounds": [
+    {
+      "id": "round_abc123",
+      "tenant_id": "tnt_abc",
+      "title": "Q2 2026 Community Round",
+      "matching_pool": 10000,
+      "status": "completed",
+      "starts_at": "2026-03-18T10:30:00Z",
+      "ends_at": "2026-04-01T10:30:00Z"
+    }
   ]
 }
 ```
@@ -1254,59 +1981,16 @@ X-RateLimit-Reset: 1710756000
 
 ## Error Codes
 
-| Code | Meaning |
-|------|---------|
-| 400 | Bad Request - Invalid input |
-| 401 | Unauthorized - Invalid/missing API key |
-| 402 | Payment Required - Insufficient credits |
-| 404 | Not Found - Resource doesn't exist |
-| 409 | Conflict - State conflict (e.g., cancel non-pending mission) |
-| 503 | Service Unavailable - D1/KV not configured |
-
----
-
-## SDK Examples
-
-### JavaScript/TypeScript
-
-```typescript
-import { MekongClient } from '@mekong/cli-core'
-
-const client = new MekongClient({
-  baseUrl: 'https://your-worker.workers.dev',
-  apiKey: 'sk_live_...'
-})
-
-// Create mission
-const mission = await client.tasks.create({
-  goal: 'Send welcome emails'
-})
-
-// Stream progress
-const stream = client.tasks.stream(mission.id)
-for await (const event of stream) {
-  console.log(event.status)
-}
-```
-
-### cURL
-
-```bash
-# Create tenant
-curl -X POST https://your-worker.workers.dev/billing/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"name":"My Company"}'
-
-# Create mission
-curl -X POST https://your-worker.workers.dev/v1/tasks \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk_live_..." \
-  -d '{"goal":"Generate weekly report"}'
-
-# Get credit balance
-curl -X GET https://your-worker.workers.dev/billing/credits \
-  -H "Authorization: Bearer sk_live_..."
-```
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 400 | Bad Request | Invalid input, validation failed |
+| 401 | Unauthorized | Invalid/missing API key or signature |
+| 402 | Payment Required | Insufficient credits |
+| 404 | Not Found | Resource doesn't exist |
+| 409 | Conflict | State conflict (e.g., cancel non-pending mission) |
+| 429 | Too Many Requests | Rate limit exceeded |
+| 502 | Bad Gateway | LLM generation failed |
+| 503 | Service Unavailable | D1/KV not configured |
 
 ---
 
@@ -1368,4 +2052,286 @@ proposals (
   votes_against INTEGER,
   created_at TEXT
 )
+
+stakeholders (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  display_name TEXT,
+  email TEXT,
+  role TEXT,
+  governance_level INTEGER,
+  voice_credits_monthly INTEGER,
+  reputation_score INTEGER DEFAULT 0
+)
+
+ledger_accounts (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  owner_id TEXT,
+  code TEXT,
+  account_type TEXT,
+  balance INTEGER DEFAULT 0
+)
+
+journal_entries (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  description TEXT,
+  entry_type TEXT,
+  posted_at TEXT DEFAULT datetime('now')
+)
+
+transaction_lines (
+  id TEXT PRIMARY KEY,
+  journal_entry_id TEXT REFERENCES journal_entries(id),
+  account_id TEXT REFERENCES ledger_accounts(id),
+  amount INTEGER,
+  direction INTEGER -- 1=credit, -1=debit
+)
+
+equity_entities (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  name TEXT,
+  entity_type TEXT,
+  total_authorized_shares INTEGER
+)
+
+equity_grants (
+  id TEXT PRIMARY KEY,
+  entity_id TEXT REFERENCES equity_entities(id),
+  stakeholder_id TEXT,
+  share_class_id TEXT,
+  grant_type TEXT,
+  shares INTEGER,
+  price_per_share REAL,
+  vesting_months INTEGER,
+  cliff_months INTEGER,
+  vesting_start_date TEXT
+)
+
+safe_notes (
+  id TEXT PRIMARY KEY,
+  entity_id TEXT REFERENCES equity_entities(id),
+  investor_stakeholder_id TEXT,
+  principal_amount INTEGER,
+  valuation_cap INTEGER,
+  discount_rate REAL DEFAULT 0,
+  status TEXT DEFAULT 'outstanding'
+)
+
+funding_rounds (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  title TEXT,
+  matching_pool INTEGER,
+  status TEXT DEFAULT 'active',
+  starts_at TEXT,
+  ends_at TEXT
+)
+
+funding_projects (
+  id TEXT PRIMARY KEY,
+  round_id TEXT REFERENCES funding_rounds(id),
+  tenant_id TEXT REFERENCES tenants(id),
+  name TEXT,
+  total_contributions INTEGER DEFAULT 0,
+  contributor_count INTEGER DEFAULT 0,
+  matched_amount INTEGER DEFAULT 0
+)
+
+funding_contributions (
+  id TEXT PRIMARY KEY,
+  project_id TEXT REFERENCES funding_projects(id),
+  stakeholder_id TEXT,
+  amount INTEGER,
+  UNIQUE(project_id, stakeholder_id)
+)
+
+ngu_su_scores (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT REFERENCES tenants(id),
+  entity_name TEXT,
+  dao_score INTEGER,
+  thien_score INTEGER,
+  dia_score INTEGER,
+  tuong_score INTEGER,
+  phap_score INTEGER,
+  terrain TEXT,
+  scored_at TEXT DEFAULT datetime('now')
+)
 ```
+
+---
+
+## SDK Examples
+
+### JavaScript/TypeScript
+
+```typescript
+import { MekongClient } from '@mekong/cli-core'
+
+const client = new MekongClient({
+  baseUrl: 'https://your-worker.workers.dev',
+  apiKey: 'sk_live_...'
+})
+
+// Create tenant
+const tenant = await client.billing.createTenant({ name: 'My Company' })
+console.log('Save this key:', tenant.api_key)
+
+// Create mission
+const mission = await client.tasks.create({
+  goal: 'Send welcome emails'
+})
+
+// Stream progress
+const stream = client.tasks.stream(mission.id)
+for await (const event of stream) {
+  console.log(event.status)
+}
+
+// Governance: Create proposal
+const proposal = await client.governance.createProposal({
+  author_id: 'stk_...',
+  title: 'Upgrade to Pro plan',
+  body: 'We need more credits for scaling',
+  proposal_type: 'treasury'
+})
+
+// Quadratic voting
+const vote = await client.governance.vote({
+  proposal_id: proposal.id,
+  stakeholder_id: 'stk_...',
+  voice_credits: 100, // = 10 votes (sqrt)
+  direction: 'for'
+})
+
+// Equity: Create SAFE note
+const safe = await client.equity.createSafe({
+  entity_id: 'ent_...',
+  investor_stakeholder_id: 'stk_investor',
+  principal_amount: 100000,
+  valuation_cap: 5000000
+})
+
+// Revenue split
+const split = await client.revenue.split({
+  total_credits: 100,
+  customer_account: 'customer:xyz',
+  description: 'Payment for service'
+})
+
+// Quadratic funding
+const round = await client.funding.createRound({
+  title: 'Q2 2026 Round',
+  matching_pool: 10000,
+  duration_days: 14
+})
+```
+
+### cURL
+
+```bash
+# Create tenant
+curl -X POST https://your-worker.workers.dev/billing/tenants \
+  -H "Content-Type: application/json" \
+  -d '{"name":"My Company"}'
+
+# Create mission
+curl -X POST https://your-worker.workers.dev/v1/tasks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk_live_..." \
+  -d '{"goal":"Generate weekly report"}'
+
+# Get credit balance
+curl -X GET https://your-worker.workers.dev/billing/credits \
+  -H "Authorization: Bearer sk_live_..."
+
+# Create stakeholder
+curl -X POST https://your-worker.workers.dev/v1/governance/stakeholders \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"display_name":"Nguyen Van A","role":"founder"}'
+
+# Cast quadratic vote
+curl -X POST https://your-worker.workers.dev/v1/governance/vote \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"proposal_id":"prp_...","stakeholder_id":"stk_...","voice_credits":100,"direction":"for"}'
+
+# Create SAFE note
+curl -X POST https://your-worker.workers.dev/v1/equity/safe \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"entity_id":"ent_...","investor_stakeholder_id":"stk_...","principal_amount":100000,"valuation_cap":5000000}'
+
+# Execute revenue split
+curl -X POST https://your-worker.workers.dev/v1/revenue/split \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"total_credits":100,"customer_account":"customer:xyz","description":"Service payment"}'
+
+# Create funding round
+curl -X POST https://your-worker.workers.dev/v1/funding/rounds \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Q2 2026","matching_pool":10000}'
+```
+
+### Python
+
+```python
+import requests
+
+BASE_URL = 'https://your-worker.workers.dev'
+API_KEY = 'sk_live_...'
+headers = {'Authorization': f'Bearer {API_KEY}'}
+
+# Create mission
+response = requests.post(f'{BASE_URL}/v1/tasks', json={
+    'goal': 'Generate weekly report'
+}, headers=headers)
+mission = response.json()
+
+# Governance: Vote
+response = requests.post(f'{BASE_URL}/v1/governance/vote', json={
+    'proposal_id': 'prp_...',
+    'stakeholder_id': 'stk_...',
+    'voice_credits': 100,
+    'direction': 'for'
+}, headers=headers)
+vote = response.json()
+print(f"Votes cast: {vote['votes_cast']}")
+
+# Revenue split
+response = requests.post(f'{BASE_URL}/v1/revenue/split', json={
+    'total_credits': 100,
+    'customer_account': 'customer:xyz',
+    'description': 'Service payment'
+}, headers=headers)
+split = response.json()
+print(f"Split: {split['split']}")
+```
+
+---
+
+## Appendix: Governance Voice Credits Reference
+
+| Role | Level | Monthly Voice Credits | Description |
+|------|-------|----------------------|-------------|
+| `owner` | 1 | 10 | Servant leader (least power) |
+| `admin` | 2 | 15 | Operations manager |
+| `operator` | 3 | 20 | Day-to-day executor |
+| `vc_partner` | 4 | 30 | Investment partner |
+| `founder` | 5 | 40 | Company founder |
+| `expert` | 5 | 50 | Domain expert |
+| `developer` | 6 | 60 | Technical contributor |
+| `customer` | 6 | 80 | Paying customer |
+| `community` | 6 | 100 | Community member (most power - inverted triangle) |
+
+---
+
+_Last Updated: 2026-03-19_
+_Version: 3.2.0_
+_Maintained by: Mekong Engine Team_

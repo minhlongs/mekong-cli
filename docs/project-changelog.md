@@ -7,6 +7,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-19 - Binh Pháp VC Studio Governance System)
+
+#### 4-Layer Constitutional Governance (HIẾN PHÁP v2.0)
+- **Layer 1 — Firewall**: 5 immutable rules (legal compliance, data isolation, damage limits, human approval, AI self-restraint)
+- **Layer 2 — Multi-stakeholder Balance**: Supermajority 75% required (reverse service, Shapley revenue, transparency, data portability)
+- **Layer 3 — Agent Rules**: 5-layer agent hierarchy with bounded authority (Studio → Founder → Business → Engineering → Ops)
+- **Layer 4 — Context Adaptation**: Cửu Địa terrain-based governance (Tử/Vi/Tranh/Giao Địa responses)
+- **Progressive Decentralization**: Foundation (50/25/25) → Growth (33/34/33) → Full Inversion (20/45/35)
+
+#### Governance API (15 route groups, 40+ endpoints)
+- **POST/GET /v1/governance/stakeholders**: Register stakeholders with voice credits by role (owner:100, vc_partner:80, founder:50, expert:50, community:10)
+- **POST/GET /v1/governance/proposals**: Create proposals (feature/strategic/constitutional/treasury/equity types)
+- **POST /v1/governance/vote**: Quadratic voting with voice credits (√cost for additional votes)
+- **POST /v1/governance/reputation**: 6-dimension reputation tracking (code/mentorship/governance/expertise/community/general)
+- **POST/GET /v1/governance/ngu-su**: Ngũ Sự assessment (Đạo/Thiên/Địa/Tướng/Pháp 0-5 scale) + terrain classification
+- **GET /v1/governance/treasury**: Community treasury balance and flows
+
+#### Dashboard Pages
+- **/dashboard/governance**: Tam giác ngược visualization, active proposals, quadratic voting bars, treasury display
+- **/dashboard/reputation**: Leaderboard table (name, role, governance level, reputation score)
+- **/dashboard/ngu-su**: Ngũ Sự radar chart + terrain classification per entity
+
+#### Database Schema (Migration 0009)
+- `stakeholders`: id, display_name, email, role, governance_level, voice_credits_monthly
+- `proposals`: id, author_id, title, body, proposal_type, voting_mechanism, status
+- `votes`: id, proposal_id, stakeholder_id, voice_credits, direction (for/against/abstain)
+- `reputation`: id, stakeholder_id, dimension, points, reason, created_at
+- `ngu_su`: id, entity_name, dao, thien, dia, tuong, phap, terrain
+- `treasury`: tenant_id, balance, total_in, total_out, last_updated
+- **Indexes**: votes(stakeholder_id), treasury(tenant_id) for performance
+
+#### API Hardening
+- **Zod Validation**: All 5 POST endpoints validated (stakeholder, proposal, vote, reputation, ngu-su schemas)
+- **Structured Errors**: Machine-readable codes (VALIDATION_ERROR, BAD_REQUEST, SERVICE_UNAVAILABLE)
+- **JSON Parse Handling**: 400 status (not 500) for malformed requests
+- **Governance Level Mapping**: 7 role levels (owner=1 through community=6)
+
+---
+
+### Added (2026-03-19 - Equity & Cap Table Management)
+
+#### Equity API (Migration 0009)
+- **POST/GET /v1/equity/entities**: Portfolio company registry (share classes, authorized shares)
+- **POST /v1/equity/grants**: Issue equity with vesting schedule (cliff months + monthly vesting)
+- **GET /v1/equity/cap-table/:entityId**: Computed cap table with dilution + vested % calculation
+- **POST /v1/equity/safe**: SAFE note issuance (valuation cap + discount rate)
+- **POST /v1/equity/safe/:id/convert**: SAFE → equity conversion (min(discount_price, cap_price))
+
+#### Vesting Logic
+- Auto-calculate `vested_shares` based on elapsed months since grant_date
+- Cliff enforcement: 0% vested before cliff_months, then pro-rata
+- Standard: 4-year vesting, 1-year cliff (Binh Pháp: Studio 25%, Founder 45%, Expert 5-10%, ESOP 10-15%)
+
+#### SAFE Conversion
+- Discount rate: typically 20% (investor pays 80% of next round price)
+- Valuation cap: maximum effective valuation for conversion
+- Investor gets better deal: min(discount_price, cap_price)
+
+#### Database Tables
+- `equity_entities`: id, tenant_id, name, entity_type, total_authorized_shares, jurisdiction
+- `share_classes`: id, entity_id, name, class_type (common/preferred), rights
+- `equity_grants`: id, entity_id, stakeholder_id, share_class_id, shares, vested_shares, vesting_months, cliff_months, grant_date
+- `safe_notes`: id, entity_id, investor_id, amount, valuation_cap, discount_rate, converted_at, converted_shares
+
+---
+
+### Added (2026-03-19 - 6-Way Revenue Distribution)
+
+#### Revenue Split API
+- **POST /v1/revenue/split**: Execute revenue distribution via double-entry ledger
+  - Platform: 20% (Owner — servant leadership, smallest share)
+  - Expert: 30% (Knowledge provider)
+  - AI Compute: 15% (LLM inference cost + margin)
+  - Developer: 15% (Agency/developer who brought customer)
+  - Community Fund: 10% (Treasury for quadratic funding)
+  - Customer Reward: 10% (Loyalty credits back to customer)
+- **GET /v1/revenue/split-config**: Current split percentages
+- **GET /v1/revenue/summary**: Revenue by account
+
+#### Tam Giác Ngược (Inverted Triangle) Philosophy
+- Customer welfare first → receives 10% reward
+- Community receives 20% total (10% fund + 10% reward)
+- Platform Owner receives least (20%) — servant leadership model
+- Shapley value attribution: each contributor receives proportional to marginal contribution
+
+---
+
+### Added (2026-03-19 - Quadratic Funding Engine)
+
+#### QF Funding API
+- **POST /v1/funding/rounds**: Create funding round with matching pool
+- **POST /v1/funding/projects**: Add project to round
+- **POST /v1/funding/contribute**: Community member contribution
+- **POST /v1/funding/rounds/:id/calculate**: QF matching formula execution
+- **GET /v1/funding/rounds**: List all rounds with status
+
+#### Quadratic Matching Formula
+```
+matched = (Σ√ci)² - Σci
+```
+Where ci = each contribution amount
+
+**Example**: 5 people × $1 = $5 direct, QF score = (5×√1)² - 5 = 25 - 5 = $20 matched → total $25
+vs 1 person × $5 = $5 direct, QF score = (√5)² - 5 = 5 - 5 = $0 matched → total $5
+
+**Philosophy**: Democratic funding — broad community support beats large individual contributions
+
+#### Database Tables
+- `funding_rounds`: id, tenant_id, title, matching_pool, status, starts_at, ends_at
+- `funding_projects`: id, round_id, tenant_id, name, total_contributions, contributor_count, matched_amount
+- `funding_contributions`: id, project_id, stakeholder_id, amount (unique constraint)
+
+---
+
+### Added (2026-03-19 - Double-Entry Credit Ledger)
+
+#### Ledger API (Migration 0008)
+- **POST /v1/ledger/transfer**: Double-entry transfer (debit + credit, must balance)
+- **POST /v1/ledger/topup**: Add credits from platform treasury
+- **GET /v1/ledger/balance**: Account balance(s)
+- **GET /v1/ledger/history**: Transaction log with journal entries
+
+#### Double-Entry Accounting
+- Every transaction creates 2 lines: debit (-1) and credit (+1)
+- `journal_entries`: Immutable record with description, entry_type, idempotency_key
+- `transaction_lines`: Individual debit/credit lines linked to journal entry
+- `ledger_accounts`: Chart of accounts with running balance
+
+#### Idempotency Protection
+- `idempotency_key` prevents double-processing
+- Check existing journal entry before batch execution
+
+#### Account Types
+- `asset`: Customer credits, receivables
+- `liability`: Payables, obligations
+- `revenue`: Income accounts
+- `expense`: Cost accounts
+- `equity`: Treasury, owner equity
+
+---
+
+### Added (2026-03-19 - GTM Integration Test Suite)
+
+#### 26-Point Integration Test
+- **Script**: `scripts/gtm-integration-test-v2.sh`
+- **Coverage**: All 15 route groups validated
+  - /billing, /payment, /v1/tasks, /v1/agents, /v1/chat, /v1/content
+  - /v1/crm, /v1/reports, /v1/onboard, /v1/settings, /v1/governance
+  - /v1/ledger, /v1/equity, /v1/revenue, /v1/funding
+- **Assertions**: 93 test assertions covering endpoints, response codes, data persistence
+- **Status**: GTM ready — 百川入海 (Binh Pháp VC Studio complete)
+
+---
+
 ### Added (2026-03-07 - Tier-Based Rate Limiting Phase 6 - COMPLETED)
 
 #### Tier-Based Rate Limiting System

@@ -44,12 +44,21 @@ const socialProof = [
   { value: '24/7', label: 'hỗ trợ' },
 ];
 
+const customerLogos = [
+  { name: 'FoodTech Startup', icon: '🍜' },
+  { name: 'Beauty Brand', icon: '💄' },
+  { name: 'Cafe Chain', icon: '☕' },
+  { name: 'E-commerce', icon: '🛒' },
+  { name: 'SaaS Platform', icon: '💻' },
+  { name: 'Spa & Wellness', icon: '🧘' },
+];
+
 const testimonials = [
-  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼' },
-  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼' },
-  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻' },
-  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳' },
-  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬' },
+  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼', result: 'Tiết kiệm 20h/tuần' },
+  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼', result: 'Tăng 40% conversion' },
+  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻', result: 'Giảm 90% chi phí' },
+  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳', result: '+35% doanh thu' },
+  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention' },
 ];
 
 // SoftwareApplication JSON-LD
@@ -107,12 +116,16 @@ const breadcrumbSchema = {
 };
 ---
 
-<BaseLayout title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động" lang="vi">
+<BaseLayout
+  title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động"
+  description="AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày. 500+ doanh nghiệp tin dùng."
+  lang="vi"
+  type="website"
+  keywords="AI tự động hóa, tự động hóa doanh nghiệp, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam, AI Receptionist, Zalo automation, Facebook automation"
+>
 
   <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json" set:html={JSON.stringify(softwareAppSchema)} />
-  <script type="application/ld+json" set:html={JSON.stringify(faqPageSchema)} />
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, faqPageSchema, breadcrumbSchema])} />
 
   <!-- HERO -->
   <section class="hero-section">
@@ -124,16 +137,21 @@ const breadcrumbSchema = {
 
     <div class="container hero-container">
       <div class="hero-content">
-        <div class="badge animate-in" style="margin-bottom:28px;">✨ Mới — AI Receptionist cho Zalo &amp; Facebook</div>
-        <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp Tự Động
+        <div class="hero-badge animate-in" style="margin-bottom:24px;">
+          <span class="badge-icon">✨</span>
+          <span class="badge-text">AI Receptionist cho Zalo & Facebook — Trả lời trong 3 giây</span>
+        </div>
+
+        <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
+          <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp <span class="gradient-text-highlight">Tự Động</span>
         </h1>
-        <p class="hero-description animate-in">
-          Trả lời khách 24/7 · Tạo content tự động · CRM thông minh
+
+        <p class="hero-description animate-in" style="margin-bottom:28px;">
+          Trả lời khách 24/7 · Tạo content tự động · CRM thông minh · <span class="highlight">Tiết kiệm 20+ giờ/tuần</span>
         </p>
 
         <!-- Enhanced Social Proof Counter -->
-        <div class="social-proof-counter animate-in">
+        <div class="social-proof-counter animate-in" style="margin-bottom:24px;">
           <div class="counter-item">
             <div class="counter-value" data-target="500">0</div>
             <div class="counter-suffix">+</div>
@@ -153,17 +171,22 @@ const breadcrumbSchema = {
           </div>
         </div>
 
-        <!-- Social proof badges -->
-        <div class="proof-badges animate-in">
-          <span class="proof-badge"><span class="dot"></span>500+ doanh nghiệp tin dùng</span>
-          <span class="proof-badge">🏆 Top 1 Việt Nam 2025</span>
-          <span class="proof-badge">⭐ 4.9/5 đánh giá</span>
+        <!-- Customer logos -->
+        <div class="customer-logos animate-in" style="margin-bottom:28px;">
+          <span class="logos-label">Được tin dùng bởi:</span>
+          <div class="logos-grid">
+            {customerLogos.slice(0, 5).map((logo, i) => (
+              <div class="logo-item" title={logo.name}>
+                <span class="logo-icon">{logo.icon}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <!-- Enhanced CTA Buttons -->
-        <div class="hero-cta animate-in">
+        <div class="hero-cta animate-in" style="margin-bottom:20px;">
           <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow">
-            <span>Thử miễn phí 14 ngày</span>
+            <span>Bắt đầu 14 ngày dùng thử</span>
             <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
@@ -172,15 +195,22 @@ const breadcrumbSchema = {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
-            <span>Xem tính năng</span>
+            <span>Xem demo</span>
           </a>
         </div>
 
         <!-- Trust indicators -->
-        <div class="trust-indicators animate-in">
-          <span class="trust-item">🔒 Không cần thẻ tín dụng</span>
-          <span class="trust-item">⚡ Setup trong 2 phút</span>
-          <span class="trust-item">💯 Miễn phí 100% khi bắt đầu</span>
+        <div class="trust-indicators animate-in" style="margin-bottom:32px;">
+          <span class="trust-item"><span class="trust-icon">🔒</span>Không cần thẻ tín dụng</span>
+          <span class="trust-item"><span class="trust-icon">⚡</span>Setup 2 phút</span>
+          <span class="trust-item"><span class="trust-icon">💯</span>Free 100% khi bắt đầu</span>
+        </div>
+
+        <!-- Social proof badges -->
+        <div class="proof-badges animate-in">
+          <span class="proof-badge featured"><span class="badge-glow"></span>🏆 Top 1 AI VN 2025</span>
+          <span class="proof-badge"><span class="stars">⭐⭐⭐⭐⭐</span>4.9/5 từ 500+ reviews</span>
+          <span class="proof-badge">💼 500+ doanh nghiệp Việt</span>
         </div>
       </div>
 
@@ -285,8 +315,11 @@ const breadcrumbSchema = {
   <section class="testimonials-section">
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
-        <div class="badge" style="margin-bottom:16px;">Khách hàng nói gì</div>
-        <h2 class="headline">Được <span class="gradient-text">tin dùng</span> bởi founder Việt</h2>
+        <div class="badge" style="margin-bottom:16px;">Testimonials</div>
+        <h2 class="headline">Kết quả <span class="gradient-text">thực tế</span> từ founder Việt</h2>
+        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">
+          Những con số biết nói từ doanh nghiệp đã triển khai OpenClaw
+        </p>
       </div>
 
       <!-- Carousel Container -->
@@ -294,7 +327,8 @@ const breadcrumbSchema = {
         <div class="carousel-track" id="testimonialTrack">
           <!-- Testimonials will be duplicated for seamless loop -->
           {testimonials.map((t, i) => (
-            <div class="testimonial-card">
+            <div class="testimonial-card featured">
+              <div class="testimonial-result-badge">{t.result}</div>
               <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
               <p class="testimonial-text">"{t.text}"</p>
               <div class="testimonial-author">
@@ -308,7 +342,8 @@ const breadcrumbSchema = {
           ))}
           <!-- Duplicate for seamless loop -->
           {testimonials.map((t, i) => (
-            <div class="testimonial-card">
+            <div class="testimonial-card featured">
+              <div class="testimonial-result-badge">{t.result}</div>
               <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
               <p class="testimonial-text">"{t.text}"</p>
               <div class="testimonial-author">
@@ -336,6 +371,13 @@ const breadcrumbSchema = {
             </svg>
           </button>
         </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="text-center" style="margin-top:48px;">
+        <a href="https://app.agencyos.network/signup" class="btn-primary">
+          Nhận kết quả tương tự →
+        </a>
       </div>
     </div>
   </section>
