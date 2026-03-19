@@ -13,6 +13,8 @@ import { paymentVnRoutes } from './routes/payment-vn'
 import { governanceRoutes } from './routes/governance'
 import { ledgerRoutes } from './routes/ledger'
 import { equityRoutes } from './routes/equity'
+import { revenueRoutes } from './routes/revenue'
+import { fundingRoutes } from './routes/funding'
 
 // Cloudflare bindings — all optional until resources created in dashboard
 export type Bindings = {
@@ -145,6 +147,8 @@ app.route('/payment', paymentVnRoutes)
 app.route('/v1/governance', governanceRoutes)
 app.route('/v1/ledger', ledgerRoutes)
 app.route('/v1/equity', equityRoutes)
+app.route('/v1/revenue', revenueRoutes)
+app.route('/v1/funding', fundingRoutes)
 
 // Cron Trigger — auto-publish approved content
 export default {
