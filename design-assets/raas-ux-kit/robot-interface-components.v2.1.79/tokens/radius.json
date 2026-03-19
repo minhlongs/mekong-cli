@@ -1,0 +1,46 @@
+{
+  "version": "2.1.79",
+  "name": "robot-interface-components",
+  "radius": {
+    "none": {
+      "value": "0px",
+      "description": "Sharp corners - technical displays, data tables"
+    },
+    "sm": {
+      "value": "4px",
+      "description": "Subtle rounding - buttons, inputs, chips"
+    },
+    "md": {
+      "value": "8px",
+      "description": "Medium rounding - cards, panels"
+    },
+    "lg": {
+      "value": "12px",
+      "description": "Large rounding - modals, sidebars"
+    },
+    "xl": {
+      "value": "16px",
+      "description": "Extra large rounding - floating panels"
+    },
+    "2xl": {
+      "value": "24px",
+      "description": "Pill-shaped - tags, status indicators"
+    },
+    "full": {
+      "value": "9999px",
+      "description": "Full circle - avatars, toggles, FABs"
+    },
+    "component": {
+      "button": "8px",
+      "buttonPill": "9999px",
+      "input": "8px",
+      "card": "12px",
+      "modal": "16px",
+      "chip": "9999px",
+      "badge": "9999px",
+      "avatar": "9999px",
+      "toggle": "9999px",
+      "panel": "12px"
+    }
+  }
+}

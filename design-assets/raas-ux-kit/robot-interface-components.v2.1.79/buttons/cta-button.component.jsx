@@ -13,6 +13,7 @@ import React, { useState, useCallback } from 'react';
  * - secondary: Alternative action (Learn More, View Pricing)
  * - gradient: Premium/highlight action (Pro, Enterprise)
  * - outline: Low-friction action (Watch Demo, See Features)
+ * - success: Positive confirmation (Activate, Start Free Trial, Enable)
  */
 const VARIANTS = {
   primary: {
@@ -43,6 +44,13 @@ const VARIANTS = {
     text: 'var(--color-text-primary)',
     border: 'var(--color-border-strong)',
     shadow: 'none',
+  },
+  success: {
+    bg: 'var(--color-success)',
+    hover: 'var(--color-success-hover, var(--color-success))',
+    active: 'var(--color-success-active, var(--color-success))',
+    text: 'var(--color-text-inverse)',
+    shadow: 'var(--shadow-3)',
   },
 };
 
