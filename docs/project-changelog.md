@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-03-19 - RaaS Getting Started Guide)
+
+#### New Documentation
+- **docs/raas-getting-started.md**: Complete end-to-end guide for new RaaS users
+  - Account signup flow (web dashboard + CLI)
+  - API key generation and management
+  - Python SDK installation and setup
+  - First mission submission with examples
+  - Mission monitoring via polling and SSE streaming
+  - Log retrieval and result handling
+  - Billing and credits explanation (credit packs + subscriptions)
+  - Troubleshooting section (401, 402, 403 errors)
+  - Complete code examples (basic + end-to-end workflow)
+
+---
+
+### Added (2026-03-19 - Governance Dashboard UI Enhancements)
+
+#### React Governance Page (`frontend/landing/app/dashboard/governance/page.tsx`)
+- **Responsive Stats Cards**: 3-card grid (Stakeholders, Active Proposals, Total Votes) with trend indicators
+- **Voting Distribution Chart**: Horizontal bar chart with color-coded segments (Green=For, Red=Against, Gray=Abstain)
+- **Weekly Activity Chart**: Vertical bar chart with gradient bars, hover tooltips showing vote counts
+- **Enhanced Stakeholders Table**: Horizontal scroll on mobile, level badges, formatted voice credits
+- **Enhanced Proposals Cards**: Progress bars showing for/against ratio, status badges, hover shadows
+- **Mobile-First Responsive**: sm: and lg: breakpoints, stacked layouts on mobile, touch-friendly spacing
+
+#### Astro Governance Dashboard (`packages/raas-dashboard/src/pages/governance.astro`)
+- **Metrics Overview**: 4-card grid (Compliance Score, Audit Events, Security Status, Issues) with trend indicators
+- **Compliance Trend Chart**: 30-day bar chart with avg/max/min stats
+- **Security Metrics**: Progress bars with status indicators (good/warning)
+- **Audit Activity List**: 24h activity breakdown with positive/negative trend badges
+- **Governance Status Grid**: 4-item status display (Data Security, GDPR, Audit Trail, Backup) with color-coded badges
+- **Responsive Breakpoints**: 1024px (2-col grid), 768px (single column), 480px (stacked metrics)
+
+---
+
 ### Added (2026-03-19 - Binh Pháp VC Studio Governance System)
 
 #### 4-Layer Constitutional Governance (HIẾN PHÁP v2.0)

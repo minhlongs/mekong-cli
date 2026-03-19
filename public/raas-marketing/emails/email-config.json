@@ -1,0 +1,194 @@
+{
+  "sequence_name": "RaaS Onboarding Email Sequence",
+  "version": "1.0",
+  "created": "2026-03-19",
+  "owner": "RaaS Growth Team",
+  "audience": "New subscribers (Starter, Growth, Premium tiers)",
+  "goal": "Activate users, demonstrate value, reduce churn",
+
+  "templates": [
+    {
+      "id": "01-welcome",
+      "file": "01-welcome.mustache",
+      "name": "Welcome — You're In",
+      "trigger": "immediate",
+      "send_delay": "0 days",
+      "goal_metric": "dashboard_login",
+      "targets": {
+        "open_rate": 0.65,
+        "click_rate": 0.45,
+        "activation_rate": 0.80
+      }
+    },
+    {
+      "id": "02-day3-quick-win",
+      "file": "02-day3-quick-win.mustache",
+      "name": "Day 3 — Quick Win",
+      "trigger": "day_3",
+      "send_delay": "3 days",
+      "goal_metric": "first_agent_deployed",
+      "targets": {
+        "open_rate": 0.50,
+        "click_rate": 0.30,
+        "deployment_rate": 0.50
+      }
+    },
+    {
+      "id": "03-day7-social-proof",
+      "file": "03-day7-social-proof.mustache",
+      "name": "Day 7 — Social Proof + Upgrade Path",
+      "trigger": "day_7",
+      "send_delay": "7 days",
+      "goal_metric": "upgrade_consideration",
+      "targets": {
+        "open_rate": 0.45,
+        "click_rate": 0.25,
+        "upgrade_rate": 0.15
+      }
+    },
+    {
+      "id": "04-day14-transformation",
+      "file": "04-day14-transformation.mustache",
+      "name": "Day 14 — Transformation + Urgency",
+      "trigger": "day_14",
+      "send_delay": "14 days",
+      "goal_metric": "tier_upgrade",
+      "targets": {
+        "open_rate": 0.40,
+        "click_rate": 0.20,
+        "upgrade_rate": 0.20
+      }
+    },
+    {
+      "id": "05-day30-winback",
+      "file": "05-day30-winback.mustache",
+      "name": "Day 30 — Win-Back (Inactive Users)",
+      "trigger": "inactive_day_30",
+      "send_delay": "30 days",
+      "condition": "no_login_7_days",
+      "goal_metric": "reactivation",
+      "targets": {
+        "open_rate": 0.45,
+        "click_rate": 0.12,
+        "reactivation_rate": 0.25
+      }
+    },
+    {
+      "id": "06-day45-feature-spotlight",
+      "file": "06-day45-feature-spotlight.mustache",
+      "name": "Day 45 — Feature Spotlight (Webhooks)",
+      "trigger": "day_45",
+      "send_delay": "45 days",
+      "goal_metric": "feature_adoption",
+      "targets": {
+        "open_rate": 0.40,
+        "click_rate": 0.17,
+        "adoption_rate": 0.30
+      }
+    }
+  ],
+
+  "variables": {
+    "user": ["name", "email", "company", "tier"],
+    "urls": [
+      "dashboard_url",
+      "browse_agents_url",
+      "calendar_url",
+      "upgrade_url",
+      "choose_tier_url",
+      "book_session_url",
+      "activate_trial_url",
+      "learn_webhooks_url",
+      "api_docs_url"
+    ],
+    "metrics": [
+      "agents_used",
+      "agents_limit",
+      "agents_running",
+      "agents_deployed",
+      "roi_amount",
+      "roi_tracked",
+      "hours_saved",
+      "workflow_count"
+    ],
+    "sender": ["sender_name"],
+    "tier": ["tier_limit"]
+  },
+
+  "segmentation": {
+    "active": {
+      "trigger": "daily_login",
+      "action": "skip_day_7_upgrade",
+      "focus": "scaling_tips"
+    },
+    "stuck": {
+      "trigger": "no_agent_day_3",
+      "action": "send_extra_handholding",
+      "offer": "onboarding_call"
+    },
+    "power_user": {
+      "trigger": "3_plus_agents",
+      "action": "fast_track_premium",
+      "highlight": "api_access"
+    },
+    "at_risk": {
+      "trigger": "no_login_day_5",
+      "action": "trigger_winback_early",
+      "template": "05-day30-winback"
+    }
+  },
+
+  "ab_tests": {
+    "subject_lines": [
+      {
+        "template": "01-welcome",
+        "variant_a": "Welcome to RaaS",
+        "variant_b": "Your ROI starts here"
+      },
+      {
+        "template": "02-day3-quick-win",
+        "variant_a": "The 5-minute setup",
+        "variant_b": "How Sarah saved 12 hrs/week"
+      },
+      {
+        "template": "03-day7-social-proof",
+        "variant_a": "What power users do",
+        "variant_b": "You're using [X] of [Y] agents"
+      },
+      {
+        "template": "04-day14-transformation",
+        "variant_a": "14 days in",
+        "variant_b": "Your competitors are already"
+      }
+    ],
+    "ctas": [
+      {
+        "variant_a": "View Dashboard",
+        "variant_b": "See Your ROI"
+      },
+      {
+        "variant_a": "Browse Agents",
+        "variant_b": "Find Your Agent"
+      },
+      {
+        "variant_a": "Upgrade to Growth",
+        "variant_b": "Unlock Unlimited"
+      },
+      {
+        "variant_a": "Book a Demo",
+        "variant_b": "Claim Your Spot"
+      }
+    ],
+    "send_time": {
+      "test_windows": [
+        "9:00 AM (morning)",
+        "2:00 PM (afternoon)",
+        "7:00 PM (evening)"
+      ],
+      "test_days": {
+        "weekday": ["Tuesday", "Wednesday", "Thursday"],
+        "weekend": ["Saturday", "Sunday"]
+      }
+    }
+  }
+}
