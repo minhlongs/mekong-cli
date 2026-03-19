@@ -1,5 +1,4 @@
 description = "Audit → prioritize → refactor → test → verify tech debt"
-
 [steps]
 [steps.run]
 command = "mekong eng-tech-debt {{args}}"

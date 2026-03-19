@@ -1,5 +1,4 @@
 description = "Dependency scan → code audit → config review → remediation plan. 3 commands, ~20 min."
-
 [steps]
 [steps.run]
 command = "mekong ops-security-audit {{args}}"

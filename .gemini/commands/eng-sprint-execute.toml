@@ -1,5 +1,4 @@
 description = "Plan parallel → implement features → test all → review → ship"
-
 [steps]
 [steps.run]
 command = "mekong eng-sprint-execute {{args}}"

@@ -1,5 +1,4 @@
 description = "Backend DB task — schema change, migration, seed, verify in 10 min"
-
 [steps]
 [steps.run]
 command = "mekong backend-db-task {{args}}"

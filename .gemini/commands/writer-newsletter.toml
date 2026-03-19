@@ -1,5 +1,4 @@
 description = "Newsletter pipeline — draft content then generate subject lines. 2 commands, ~8 min."
-
 [steps]
 [steps.run]
 command = "mekong writer-newsletter {{args}}"

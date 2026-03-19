@@ -1,5 +1,4 @@
-description = "Mekong command: worker-code"
-
+description = "Mekong: worker-code"
 [steps]
 [steps.run]
 command = "mekong worker-code {{args}}"

@@ -1,5 +1,4 @@
 description = "API audit → schema review → dependency analysis → improvement plan"
-
 [steps]
 [steps.run]
 command = "mekong tech-architecture-review {{args}}"

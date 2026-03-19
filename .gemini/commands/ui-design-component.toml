@@ -1,5 +1,4 @@
 description = "Spec, design, implement, responsive check. 2 commands, ~12 min."
-
 [steps]
 [steps.run]
 command = "mekong ui-design-component {{args}}"

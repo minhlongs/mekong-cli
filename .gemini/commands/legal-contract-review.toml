@@ -1,5 +1,4 @@
 description = "Contract review — analyze contract → flag risks → suggest amendments → negotiation brief"
-
 [steps]
 [steps.run]
 command = "mekong legal-contract-review {{args}}"

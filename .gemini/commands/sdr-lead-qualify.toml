@@ -1,5 +1,4 @@
 description = "Lead qualify & handoff — score lead then prep AE handoff brief. 2 commands, ~8 min."
-
 [steps]
 [steps.run]
 command = "mekong sdr-lead-qualify {{args}}"

@@ -1,5 +1,4 @@
 description = "Opus Tôm Hùm Team — Self-orchestrate as 5-department company. Builds full-stack code multi-threaded. 30+ credits, ~90 min."
-
 [steps]
 [steps.run]
 command = "mekong opus-tomhum-orchestrator {{args}}"

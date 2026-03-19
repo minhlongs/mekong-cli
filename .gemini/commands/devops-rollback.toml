@@ -1,5 +1,4 @@
 description = "Emergency rollback → smoke test → health check → incident report"
-
 [steps]
 [steps.run]
 command = "mekong devops-rollback {{args}}"

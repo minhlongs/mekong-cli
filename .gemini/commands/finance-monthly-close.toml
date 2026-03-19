@@ -1,5 +1,4 @@
 description = "Revenue reconcile, expense audit, P&L statement, cash flow, AR aging. 5 commands, ~25 min."
-
 [steps]
 [steps.run]
 command = "mekong finance-monthly-close {{args}}"

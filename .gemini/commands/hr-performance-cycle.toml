@@ -1,5 +1,4 @@
 description = "Performance review cycle — self-assessment → manager review → calibration → feedback delivery"
-
 [steps]
 [steps.run]
 command = "mekong hr-performance-cycle {{args}}"

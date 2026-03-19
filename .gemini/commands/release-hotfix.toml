@@ -1,5 +1,4 @@
 description = "Branch → fix → test → deploy hotfix to production"
-
 [steps]
 [steps.run]
 command = "mekong release-hotfix {{args}}"

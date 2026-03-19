@@ -1,5 +1,4 @@
 description = "Social batch — 7-day posts + posting schedule in parallel. 2 commands, ~10 min."
-
 [steps]
 [steps.run]
 command = "mekong writer-social-batch {{args}}"

@@ -1,5 +1,4 @@
 description = "Deal prep — company research + competitive positioning, then proposal talking points. 3 commands, ~12 min."
-
 [steps]
 [steps.run]
 command = "mekong ae-deal-prep {{args}}"

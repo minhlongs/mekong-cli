@@ -1,5 +1,4 @@
 description = "Transaction review, categorize, reconcile, flag anomalies. 2 commands, ~8 min."
-
 [steps]
 [steps.run]
 command = "mekong accounting-daily {{args}}"

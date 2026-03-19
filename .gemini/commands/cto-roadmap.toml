@@ -1,5 +1,4 @@
 description = "Technical roadmap generation. 5 credits, ~20 min."
-
 [steps]
 [steps.run]
 command = "mekong cto-roadmap {{args}}"

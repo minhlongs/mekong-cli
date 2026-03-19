@@ -1,5 +1,4 @@
 description = "Recruiting pipeline — JD → sourcing → interview kit → offer template"
-
 [steps]
 [steps.run]
 command = "mekong hr-recruit {{args}}"

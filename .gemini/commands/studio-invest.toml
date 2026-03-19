@@ -1,5 +1,4 @@
 description = "Add new project to portfolio. 8 credits, ~30 min."
-
 [steps]
 [steps.run]
 command = "mekong studio-invest {{args}}"

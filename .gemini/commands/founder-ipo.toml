@@ -1,5 +1,4 @@
 description = "18-month IPO readiness — audit, S-1, roadshow, day-of execution. 7 commands, ~60 min."
-
 [steps]
 [steps.run]
 command = "mekong founder-ipo {{args}}"

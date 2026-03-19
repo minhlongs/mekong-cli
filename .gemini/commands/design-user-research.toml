@@ -1,5 +1,4 @@
 description = "UX research sprint — personas → user journeys → pain points → opportunity map"
-
 [steps]
 [steps.run]
 command = "mekong design-user-research {{args}}"

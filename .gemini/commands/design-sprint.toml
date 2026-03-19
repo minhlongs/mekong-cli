@@ -1,5 +1,4 @@
 description = "Design sprint — understand → sketch → decide → prototype → test"
-
 [steps]
 [steps.run]
 command = "mekong design-sprint {{args}}"
