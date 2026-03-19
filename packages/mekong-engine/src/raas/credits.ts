@@ -16,6 +16,9 @@ export async function addCredits(
   amount: number,
   reason: string,
 ): Promise<number> {
+  if (amount < 0) {
+    throw new Error('Cannot add negative credits')
+  }
   await db
     .prepare('INSERT INTO credits (tenant_id, amount, reason) VALUES (?, ?, ?)')
     .bind(tenantId, amount, reason)
