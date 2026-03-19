@@ -11,7 +11,7 @@ export default function ReputationPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Reputation Leaderboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reputation Leaderboard</h1>
       <div className="rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[var(--md-surface-container)]">
