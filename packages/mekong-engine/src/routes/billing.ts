@@ -5,7 +5,7 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { getBalance, getHistory, addCredits } from '../raas/credits'
 import { createTenant, regenerateApiKey } from '../raas/tenant'
 import { z } from 'zod'
-import { handleAsync, handleDb } from '../types/error'
+import { handleAsync } from '../types/error'
 
 type Variables = { tenant: Tenant }
 
@@ -21,7 +21,7 @@ const regenerateKeySchema = z.object({
   name: z.string().min(1, 'Tenant name is required').trim(),
 })
 
-// Create tenant — returns API key (one-time display)
+// Create tenant - returns API key (one-time display)
 billingRoutes.post('/tenants', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const parsed = createTenantSchema.safeParse(await c.req.json().catch(() => ({})))
@@ -31,11 +31,11 @@ billingRoutes.post('/tenants', handleAsync(async (c) => {
   await addCredits(c.env.DB, tenant.id, 10, 'welcome: free tier bonus')
   return c.json({
     tenant_id: tenant.id, name: tenant.name, api_key: apiKey, tier: tenant.tier,
-    credits: 10, message: 'Save your API key — it cannot be recovered if lost!',
+    credits: 10, message: 'Save your API key - it cannot be recovered if lost!',
   }, 201)
 }))
 
-// Regenerate API key — requires tenant_id + name as ownership proof
+// Regenerate API key - requires tenant_id + name as ownership proof
 billingRoutes.post('/tenants/regenerate-key', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const parsed = regenerateKeySchema.safeParse(await c.req.json().catch(() => ({})))
@@ -48,7 +48,7 @@ billingRoutes.post('/tenants/regenerate-key', handleAsync(async (c) => {
   })
 }))
 
-// Polar product → credit mapping (match Polar.sh product names)
+// Polar product -> credit mapping (match Polar.sh product names)
 const POLAR_PRODUCT_CREDITS: Record<string, number> = {
   'agencyos-starter': 50,
   'agencyos-pro': 200,
@@ -59,7 +59,7 @@ const POLAR_PRODUCT_CREDITS: Record<string, number> = {
   'credits-100': 100,
 }
 
-// Polar tier → tenant tier mapping
+// Polar tier -> tenant tier mapping
 const POLAR_TIER_MAP: Record<string, string> = {
   'agencyos-starter': 'pro',
   'agencyos-pro': 'pro',
@@ -147,9 +147,9 @@ billingRoutes.post('/webhook', handleAsync(async (c) => {
   }
 
   return c.json({ received: true })
-})
+}))
 
-// Public pricing info — landing page + dashboard can fetch this
+// Public pricing info - landing page + dashboard can fetch this
 billingRoutes.get('/pricing', handleAsync(async (c) => {
   return c.json({
     tiers: [
@@ -166,14 +166,14 @@ billingRoutes.get('/pricing', handleAsync(async (c) => {
     ],
     credit_costs: { simple: 1, standard: 3, complex: 5 },
   })
-})
+}))
 
 billingRoutes.get('/credits', authMiddleware, handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const tenant = c.get('tenant')
   const balance = await getBalance(c.env.DB, tenant.id)
   return c.json({ tenant_id: tenant.id, balance, tier: tenant.tier })
-})
+}))
 
 billingRoutes.get('/credits/history', authMiddleware, handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
@@ -181,6 +181,6 @@ billingRoutes.get('/credits/history', authMiddleware, handleAsync(async (c) => {
   const limit = Math.min(Math.max(parseInt(c.req.query('limit') ?? '50', 10) || 50, 1), 200)
   const history = await getHistory(c.env.DB, tenant.id, limit)
   return c.json({ tenant_id: tenant.id, history, limit })
-})
+}))
 
 export { billingRoutes }
