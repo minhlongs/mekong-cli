@@ -208,6 +208,58 @@ launch_pane_cc() {
   bash "${PROJECT_ROOT}/scripts/launch-pane-cc.sh" "$pane_idx" "${WORKER_DIR[$pane_idx]}" "$CTO_SESSION" "$tool"
 }
 
+# ─── ORPHAN NODE CLEANUP (prevents RAM overflow) ───
+# CC CLI spawns node subprocesses. When panes restart/crash, orphans accumulate.
+# This kills node processes NOT attached to any active tmux pane.
+cleanup_orphan_nodes() {
+  local killed=0
+  local MAX_NODE_COUNT=30
+
+  # Hard guard: if node count exceeds MAX, kill all and warn
+  local node_count
+  node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$node_count" -gt "$MAX_NODE_COUNT" ]]; then
+    log "⚠️  GUARD: $node_count node processes (>${MAX_NODE_COUNT}) — killing ALL"
+    killall -9 node 2>/dev/null || true
+    return 0
+  fi
+
+  # Build set of ALL PIDs in tmux pane process trees (recursive)
+  local allowed_pids=""
+  local tmux_pids
+  tmux_pids=$(tmux list-panes -t "${CTO_SESSION}" -F '#{pane_pid}' 2>/dev/null || true)
+  [[ -z "$tmux_pids" ]] && return 0
+
+  # Walk tree: collect pid + all descendants via pgrep -P (recursive)
+  walk_descendants() {
+    local parent=$1
+    allowed_pids+=" $parent"
+    local children
+    children=$(pgrep -P "$parent" 2>/dev/null || true)
+    for child in $children; do
+      walk_descendants "$child"
+    done
+  }
+
+  for tpid in $tmux_pids; do
+    walk_descendants "$tpid"
+  done
+
+  # Find all node processes, kill those NOT in allowed set
+  local all_nodes
+  all_nodes=$(pgrep -f 'node' 2>/dev/null || true)
+  [[ -z "$all_nodes" ]] && return 0
+
+  for pid in $all_nodes; do
+    if ! echo " $allowed_pids " | grep -q " $pid "; then
+      kill -9 "$pid" 2>/dev/null && killed=$((killed + 1))
+    fi
+  done
+
+  [[ $killed -gt 0 ]] && log "🧹 CLEANUP: killed $killed orphan node processes"
+  return 0
+}
+
 # ---- PHASE 1: SCAN ----
 # Reads codebase context on startup (per spec: CLAUDE.md, package.json, src/, git log)
 phase_scan() {
@@ -685,6 +737,11 @@ while true; do
   # Health check every 5 cycles
   if [[ $((CYCLE % 5)) -eq 0 ]]; then
     health_check || true
+  fi
+
+  # Orphan node cleanup every 3 cycles (prevents RAM overflow)
+  if [[ $((CYCLE % 3)) -eq 0 ]]; then
+    cleanup_orphan_nodes || true
   fi
 
   # Re-scan every 20 cycles to update context

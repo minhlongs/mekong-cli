@@ -1,44 +1,30 @@
-import DashboardNav from '@/components/dashboard/dashboard-nav'
-import WorkspaceSelector from '@/components/dashboard/workspace-selector'
+'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const NAV = [
+  { href: '/dashboard', label: 'Overview', icon: '📊' },
+  { href: '/dashboard/governance', label: 'Governance', icon: '⚖️' },
+  { href: '/dashboard/reputation', label: 'Reputation', icon: '🏆' },
+  { href: '/dashboard/ngu-su', label: 'Ngũ Sự', icon: '五' },
+]
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   return (
-    <div className="flex min-h-screen bg-[var(--md-surface)]">
-      {/* Sidebar Navigation */}
-      <DashboardNav />
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col">
-        {/* Top Header */}
-        <header className="flex items-center justify-between border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] px-6 py-4">
-          <WorkspaceSelector />
-          <div className="flex items-center gap-4">
-            <button
-              className="rounded-lg p-2 text-[var(--md-on-surface-variant)] transition-colors hover:bg-[var(--md-surface-container)] hover:text-[var(--md-on-surface)]"
-              aria-label="Notifications"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-            </button>
-            <div className="h-8 w-8 rounded-full bg-[var(--md-primary)] text-sm font-bold text-[var(--md-on-primary)] flex items-center justify-center">
-              U
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-6">{children}</main>
-      </div>
+    <div className="flex min-h-screen bg-[var(--md-surface,#111)] text-[var(--md-on-surface,#e0e0e0)]">
+      <aside className="w-56 border-r border-[var(--md-outline-variant,#333)] p-4 space-y-1">
+        <h2 className="text-lg font-bold mb-4">Mekong Studio</h2>
+        {NAV.map(n => (
+          <Link key={n.href} href={n.href}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+              pathname === n.href ? 'bg-[var(--md-primary-container,#1a3a5c)] font-semibold' : 'hover:bg-[var(--md-surface-container,#222)]'
+            }`}>
+            <span>{n.icon}</span>{n.label}
+          </Link>
+        ))}
+      </aside>
+      <main className="flex-1 p-6 overflow-auto">{children}</main>
     </div>
   )
 }
