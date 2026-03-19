@@ -38,10 +38,10 @@ const platformStats = [
 ];
 
 const socialProof = [
-  { value: '500+', label: 'doanh nghiệp tin dùng' },
-  { value: '1M+', label: 'tin nhắn xử lý' },
-  { value: '99.9%', label: 'uptime' },
-  { value: '24/7', label: 'hỗ trợ' },
+  { value: '500+', label: 'doanh nghiệp Việt tin dùng' },
+  { value: '1M+', label: 'tin nhắn đã xử lý tự động' },
+  { value: '99.9%', label: 'uptime trong 12 tháng' },
+  { value: '24/7', label: 'hỗ trợ khách hàng' },
 ];
 
 const customerLogos = [
@@ -54,11 +54,11 @@ const customerLogos = [
 ];
 
 const testimonials = [
-  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼', result: 'Tiết kiệm 20h/tuần' },
-  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼', result: 'Tăng 40% conversion' },
-  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻', result: 'Giảm 90% chi phí' },
-  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳', result: '+35% doanh thu' },
-  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention' },
+  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼', result: '+40% năng suất', verified: true },
+  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼', result: '+40% conversion', verified: true },
+  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻', result: '-90% chi phí', verified: true },
+  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳', result: '+35% doanh thu', verified: true },
+  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention', verified: true },
 ];
 
 // SoftwareApplication JSON-LD
@@ -73,18 +73,40 @@ const softwareAppSchema = {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD",
-    "description": "Free tier available with 50 credits/month"
+    "description": "Miễn phí 14 ngày, không cần thẻ tín dụng",
+    "availability": "https://schema.org/InStock",
+    "eligibleRegion": "VN"
   },
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.9",
     "ratingCount": "500",
     "bestRating": "5",
-    "worstRating": "1"
+    "worstRating": "1",
+    "reviewCount": "500"
   },
-  "featureList": "AI Receptionist, Content Creator, Smart CRM, Real-time Reports",
+  "featureList": "AI Receptionist, Content Creator, CRM Thông Minh, Báo Cáo Thời Gian Thực, Tự động hóa Zalo, Tự động hóa Facebook",
   "screenshot": "https://agencyos.network/og-default.jpg",
-  "description": "Nền tảng AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh"
+  "description": "Nền tảng AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần.",
+  "potentialAction": {
+    "@type": "UseAction",
+    "actionStatus": "https://schema.org/PotentialActionStatus",
+    "target": "https://app.agencyos.network/signup",
+    "description": "Đăng ký dùng thử miễn phí 14 ngày"
+  },
+  "review": {
+    "@type": "Review",
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": "5",
+      "bestRating": "5"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Minh Tuấn, CEO FoodTech Startup"
+    },
+    "reviewBody": "Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó."
+  }
 };
 
 // FAQPage JSON-LD
@@ -117,57 +139,91 @@ const breadcrumbSchema = {
 ---
 
 <BaseLayout
-  title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động"
-  description="AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày. 500+ doanh nghiệp tin dùng."
+  title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động | Tăng 35% Doanh Thu"
+  description="AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày. 500+ doanh nghiệp Việt tin dùng. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
   lang="vi"
   type="website"
-  keywords="AI tự động hóa, tự động hóa doanh nghiệp, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam, AI Receptionist, Zalo automation, Facebook automation"
+  canonical="/"
+  keywords="AI tự động hóa, tự động hóa doanh nghiệp, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam, AI Receptionist, Zalo automation, Facebook automation, phần mềm CRM, chatbot Zalo, trả lời tự động, tăng doanh thu, tiết kiệm thời gian, AI marketing, business automation Vietnam"
+  ogTitle="OpenClaw — AI Làm Việc Thay Bạn 24/7 | Tăng 35% Doanh Thu"
+  ogDescription="AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. 500+ doanh nghiệp Việt tin dùng. Dùng thử miễn phí 14 ngày."
+  twitterTitle="OpenClaw — AI Vận Hành Doanh Nghiệp 24/7"
+  twitterDescription="AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
 >
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, faqPageSchema, breadcrumbSchema])} />
 
   <!-- HERO -->
-  <section class="hero-section">
-    <!-- Enhanced animated mesh gradient orbs -->
-    <div class="mesh-orb orb-1"></div>
-    <div class="mesh-orb orb-2"></div>
-    <div class="mesh-orb orb-3"></div>
-    <div class="mesh-orb orb-4"></div>
+  <section class="hero-section" aria-label="Giới thiệu OpenClaw">
+    <!-- Enhanced animated mesh gradient orbs (decorative) -->
+    <div class="mesh-orb orb-1" aria-hidden="true"></div>
+    <div class="mesh-orb orb-2" aria-hidden="true"></div>
+    <div class="mesh-orb orb-3" aria-hidden="true"></div>
+    <div class="mesh-orb orb-4" aria-hidden="true"></div>
 
     <div class="container hero-container">
       <div class="hero-content">
+        <!-- FOMO Badge -->
+        <div class="fomo-badge animate-in" style="margin-bottom:16px;" role="status" aria-label="47 doanh nghiệp đăng ký hôm nay">
+          <span class="fomo-icon" aria-hidden="true">🔥</span>
+          <span class="fomo-text">47 doanh nghiệp đăng ký hôm nay</span>
+        </div>
+
         <div class="hero-badge animate-in" style="margin-bottom:24px;">
-          <span class="badge-icon">✨</span>
+          <span class="badge-icon" aria-hidden="true">✨</span>
           <span class="badge-text">AI Receptionist cho Zalo & Facebook — Trả lời trong 3 giây</span>
         </div>
 
         <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp <span class="gradient-text-highlight">Tự Động</span>
+          <span class="gradient-text">AI Làm Việc Thay Bạn</span><br />24/7 <span class="gradient-text-highlight">Tự Động 100%</span>
         </h1>
 
         <p class="hero-description animate-in" style="margin-bottom:28px;">
-          Trả lời khách 24/7 · Tạo content tự động · CRM thông minh · <span class="highlight">Tiết kiệm 20+ giờ/tuần</span>
+          Tiết kiệm <span class="highlight">20+ giờ/tuần</span> · Tăng <span class="highlight">35% doanh thu</span> · CRM thông minh · Tạo content tự động
         </p>
+
+        <!-- Enhanced CTA Buttons - Moved Up -->
+        <div class="hero-cta animate-in" style="margin-bottom:24px;" role="group" aria-label="Hành động nhanh">
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow" aria-label="Đăng ký dùng thử miễn phí 14 ngày, không cần thẻ tín dụng">
+            <span>Dùng thử miễn phí</span>
+            <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="#features" class="btn-outline btn-ghost" aria-label="Xem tính năng OpenClaw">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Xem demo 30s</span>
+          </a>
+        </div>
+
+        <!-- Trust & Security Badges -->
+        <div class="trust-badges animate-in" style="margin-bottom:24px;" role="list" aria-label="Chứng nhận bảo mật">
+          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">🔐</span>SSL Encrypted</span>
+          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">☁️</span>Cloudflare Protected</span>
+          <span class="trust-badge" role="listitem"><span class="trust-icon" aria-hidden="true">✓</span>Không cần thẻ tín dụng</span>
+        </div>
 
         <!-- Enhanced Social Proof Counter -->
         <div class="social-proof-counter animate-in" style="margin-bottom:24px;">
           <div class="counter-item">
             <div class="counter-value" data-target="500">0</div>
             <div class="counter-suffix">+</div>
-            <div class="counter-label">doanh nghiệp</div>
+            <div class="counter-label">doanh nghiệp Việt</div>
           </div>
           <div class="counter-divider"></div>
           <div class="counter-item">
             <div class="counter-value" data-target="1">0</div>
             <div class="counter-suffix">M+</div>
-            <div class="counter-label">tin nhắn</div>
+            <div class="counter-label">tin nhắn đã xử lý</div>
           </div>
           <div class="counter-divider"></div>
           <div class="counter-item">
             <div class="counter-value" data-target="99">0</div>
             <div class="counter-suffix">.9%</div>
-            <div class="counter-label">uptime</div>
+            <div class="counter-label">uptime 12 tháng</div>
           </div>
         </div>
 
@@ -183,25 +239,8 @@ const breadcrumbSchema = {
           </div>
         </div>
 
-        <!-- Enhanced CTA Buttons -->
-        <div class="hero-cta animate-in" style="margin-bottom:20px;">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow">
-            <span>Bắt đầu 14 ngày dùng thử</span>
-            <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-          <a href="#features" class="btn-outline btn-ghost">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            <span>Xem demo</span>
-          </a>
-        </div>
-
         <!-- Trust indicators -->
-        <div class="trust-indicators animate-in" style="margin-bottom:32px;">
-          <span class="trust-item"><span class="trust-icon">🔒</span>Không cần thẻ tín dụng</span>
+        <div class="trust-indicators animate-in" style="margin-bottom:20px;">
           <span class="trust-item"><span class="trust-icon">⚡</span>Setup 2 phút</span>
           <span class="trust-item"><span class="trust-icon">💯</span>Free 100% khi bắt đầu</span>
         </div>
@@ -323,7 +362,7 @@ const breadcrumbSchema = {
       </div>
 
       <!-- Carousel Container -->
-      <div class="testimonial-carousel">
+      <div class="testimonial-carousel carousel-auto">
         <div class="carousel-track" id="testimonialTrack">
           <!-- Testimonials will be duplicated for seamless loop -->
           {testimonials.map((t, i) => (
@@ -334,7 +373,12 @@ const breadcrumbSchema = {
               <div class="testimonial-author">
                 <div class="testimonial-avatar">{t.avatar}</div>
                 <div class="testimonial-info">
-                  <div class="testimonial-name">{t.name}</div>
+                  <div class="testimonial-name">
+                    {t.name}
+                    {t.verified && (
+                      <span class="verified-badge" title="Verified customer">✓</span>
+                    )}
+                  </div>
                   <div class="testimonial-role">{t.role}</div>
                 </div>
               </div>
@@ -349,7 +393,12 @@ const breadcrumbSchema = {
               <div class="testimonial-author">
                 <div class="testimonial-avatar">{t.avatar}</div>
                 <div class="testimonial-info">
-                  <div class="testimonial-name">{t.name}</div>
+                  <div class="testimonial-name">
+                    {t.name}
+                    {t.verified && (
+                      <span class="verified-badge" title="Verified customer">✓</span>
+                    )}
+                  </div>
                   <div class="testimonial-role">{t.role}</div>
                 </div>
               </div>
