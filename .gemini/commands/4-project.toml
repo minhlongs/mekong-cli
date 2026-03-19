@@ -1,0 +1,5 @@
+description = "Tứ Đại Chiến — 4 projects parallel dispatch. Start master view, dispatch missions, monitor status."
+
+[steps]
+[steps.run]
+command = "mekong 4-project {{args}}"

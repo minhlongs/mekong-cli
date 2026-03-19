@@ -1,0 +1,5 @@
+description = "Release pre-release — full test suite, changelog, version bump, tag in 10 min"
+
+[steps]
+[steps.run]
+command = "mekong releng-pre-release {{args}}"

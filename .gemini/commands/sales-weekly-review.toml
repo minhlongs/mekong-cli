@@ -1,0 +1,5 @@
+description = "Pipeline health, revenue tracking, weekly forecast and action items. 3 commands, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong sales-weekly-review {{args}}"

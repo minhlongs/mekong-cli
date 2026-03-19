@@ -1,0 +1,5 @@
+description = "Reallocate MCU budget across projects. 3 credits, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong studio-allocate {{args}}"

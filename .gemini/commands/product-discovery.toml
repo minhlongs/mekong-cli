@@ -1,0 +1,5 @@
+description = "Problem → persona → solution → validation. 5 commands, ~30 min."
+
+[steps]
+[steps.run]
+command = "mekong product-discovery {{args}}"

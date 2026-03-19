@@ -1,0 +1,5 @@
+description = "New client setup — contract, project setup, kickoff deck, schedule. 4 commands, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong business-client-onboard {{args}}"

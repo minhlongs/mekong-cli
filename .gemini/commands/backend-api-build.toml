@@ -1,0 +1,5 @@
+description = "Backend API build — schema, implement, test, docs. Full API cycle in 12 min"
+
+[steps]
+[steps.run]
+command = "mekong backend-api-build {{args}}"

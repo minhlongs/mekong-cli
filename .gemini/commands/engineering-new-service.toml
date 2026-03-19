@@ -1,0 +1,5 @@
+description = "Scaffold → implement → test → deploy. New microservice from zero. 6 commands, ~45 min."
+
+[steps]
+[steps.run]
+command = "mekong engineering-new-service {{args}}"

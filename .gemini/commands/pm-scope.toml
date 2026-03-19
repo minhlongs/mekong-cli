@@ -1,0 +1,5 @@
+description = "Scope definition and boundary setting. 3 credits, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong pm-scope {{args}}"

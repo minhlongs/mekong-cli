@@ -1,0 +1,5 @@
+description = "Sprint retrospective. 3 credits, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong pm-retro {{args}}"

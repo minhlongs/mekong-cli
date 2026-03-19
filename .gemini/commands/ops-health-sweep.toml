@@ -1,0 +1,5 @@
+description = "System-wide health audit — services, security, performance, sync status. 5 commands, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong ops-health-sweep {{args}}"

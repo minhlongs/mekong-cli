@@ -1,0 +1,5 @@
+description = "Exit checklist, access revocation, knowledge transfer. 2 commands, ~5 min."
+
+[steps]
+[steps.run]
+command = "mekong people-offboard {{args}}"

@@ -1,0 +1,5 @@
+description = "Release post-release — smoke prod, health check, announce in 5 min"
+
+[steps]
+[steps.run]
+command = "mekong releng-post-release {{args}}"

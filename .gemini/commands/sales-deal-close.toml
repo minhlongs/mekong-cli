@@ -1,0 +1,5 @@
+description = "Research buyer, build proposal, pricing strategy, closing playbook. 4 commands, ~20 min."
+
+[steps]
+[steps.run]
+command = "mekong sales-deal-close {{args}}"

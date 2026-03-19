@@ -1,0 +1,5 @@
+description = "Create implementation plan with phases. 5 credits, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong pm-plan {{args}}"

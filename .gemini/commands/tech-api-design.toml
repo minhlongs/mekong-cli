@@ -1,0 +1,5 @@
+description = "Requirements → schema → OpenAPI spec → implementation plan"
+
+[steps]
+[steps.run]
+command = "mekong tech-api-design {{args}}"

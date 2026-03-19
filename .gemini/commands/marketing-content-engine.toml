@@ -1,0 +1,5 @@
+description = "SEO research, content calendar, blog drafts, social posts, email sequences. 5 commands, ~35 min."
+
+[steps]
+[steps.run]
+command = "mekong marketing-content-engine {{args}}"

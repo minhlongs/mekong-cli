@@ -1,0 +1,5 @@
+description = "Junior learn — architecture overview, module deep dive, key patterns in 10 min"
+
+[steps]
+[steps.run]
+command = "mekong junior-learn {{args}}"

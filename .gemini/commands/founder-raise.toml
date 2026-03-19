@@ -1,0 +1,5 @@
+description = "Complete fundraise preparation — from unit economics to investor targeting. 8 commands, ~45 min."
+
+[steps]
+[steps.run]
+command = "mekong founder-raise {{args}}"

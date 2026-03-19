@@ -1,0 +1,5 @@
+description = "Generate investor report (weekly/monthly). 5 credits, ~20 min."
+
+[steps]
+[steps.run]
+command = "mekong studio-report {{args}}"

@@ -1,0 +1,5 @@
+description = "Mekong command: ck-save"
+
+[steps]
+[steps.run]
+command = "mekong ck-save {{args}}"
