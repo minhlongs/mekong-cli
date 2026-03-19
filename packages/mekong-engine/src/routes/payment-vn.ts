@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { Bindings } from '../index'
 import { addCredits } from '../raas/credits'
-import { createError } from '../types/error'
+import { handleAsync, handleDb, createError, validateJsonBody } from '../types/error'
 
 const paymentVnRoutes = new Hono<{ Bindings: Bindings }>()
 
@@ -14,7 +14,6 @@ const createPaymentSchema = z.object({
   credits: z.number().int().positive('credits must be positive').max(1_000_000, 'credits too large'),
   plan: z.enum(['starter', 'pro', 'enterprise']).optional(),
 })
-type CreatePaymentBody = z.infer<typeof createPaymentSchema>
 
 // MoMo webhook payload schema
 const momoWebhookSchema = z.object({
@@ -52,8 +51,9 @@ const PLAN_TIER_MAP: Record<string, string> = {
 }
 
 // POST /momo/ipn — MoMo Instant Payment Notification
-paymentVnRoutes.post('/momo/ipn', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+paymentVnRoutes.post('/momo/ipn', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
+  const db = c.env.DB
 
   const secret = c.env.MOMO_SECRET_KEY
   const signature = c.req.header('x-signature') || c.req.header('x-momo-signature')
@@ -76,7 +76,7 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
     if (signature !== expectedHex) {
-      return c.json({ error: 'Invalid MoMo signature' }, 401)
+      return c.json(createError('UNAUTHORIZED', 'Invalid MoMo signature'), 401)
     }
   }
 
@@ -117,21 +117,30 @@ paymentVnRoutes.post('/momo/ipn', async (c) => {
   }
 
   const reason = `MoMo: order ${orderId ?? 'unknown'}, ${amount ?? 0}đ`
-  await addCredits(c.env.DB, tenant_id, credits, reason)
+  await handleDb(
+    () => addCredits(db, tenant_id, credits, reason),
+    'DATABASE_ERROR',
+    'Failed to add credits from MoMo payment'
+  )
 
   if (plan && PLAN_TIER_MAP[plan]) {
-    await c.env.DB
-      .prepare('UPDATE tenants SET tier = ? WHERE id = ?')
-      .bind(PLAN_TIER_MAP[plan], tenant_id)
-      .run()
+    await handleDb(
+      () => db
+        .prepare('UPDATE tenants SET tier = ? WHERE id = ?')
+        .bind(PLAN_TIER_MAP[plan], tenant_id)
+        .run(),
+      'DATABASE_ERROR',
+      'Failed to upgrade tenant tier'
+    )
   }
 
   return c.json({ received: true, tenant_id, credits_added: credits })
-})
+}))
 
 // GET /vnpay/ipn — VNPAY Return + IPN handler
-paymentVnRoutes.get('/vnpay/ipn', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+paymentVnRoutes.get('/vnpay/ipn', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
+  const db = c.env.DB
 
   const hashSecret = c.env.VNPAY_HASH_SECRET
   const secureHash = c.req.query('vnp_SecureHash')?.replace('SHA512=', '')
@@ -161,7 +170,7 @@ paymentVnRoutes.get('/vnpay/ipn', async (c) => {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
     if (secureHash.toLowerCase() !== expectedHex.toLowerCase()) {
-      return c.json({ error: 'Invalid VNPAY signature' }, 401)
+      return c.json(createError('UNAUTHORIZED', 'Invalid VNPAY signature'), 401)
     }
   }
 
@@ -191,29 +200,29 @@ paymentVnRoutes.get('/vnpay/ipn', async (c) => {
 
   const vndAmount = Math.round(parseInt((amount as string) ?? '0', 10) / 100)
   const reason = `VNPAY: txn ${txnRef ?? 'unknown'}, ${vndAmount}đ`
-  await addCredits(c.env.DB, tenant_id, credits, reason)
+  await handleDb(
+    () => addCredits(db, tenant_id, credits, reason),
+    'DATABASE_ERROR',
+    'Failed to add credits from VNPAY payment'
+  )
 
   if (plan && PLAN_TIER_MAP[plan]) {
-    await c.env.DB
-      .prepare('UPDATE tenants SET tier = ? WHERE id = ?')
-      .bind(PLAN_TIER_MAP[plan], tenant_id)
-      .run()
+    await handleDb(
+      () => db
+        .prepare('UPDATE tenants SET tier = ? WHERE id = ?')
+        .bind(PLAN_TIER_MAP[plan], tenant_id)
+        .run(),
+      'DATABASE_ERROR',
+      'Failed to upgrade tenant tier'
+    )
   }
 
   return c.json({ received: true, tenant_id, credits_added: credits })
-})
+}))
 
 // POST /create — Create payment URL (mock)
-paymentVnRoutes.post('/create', async (c) => {
-  let body: CreatePaymentBody
-  try {
-    body = createPaymentSchema.parse(await c.req.json())
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
-    }
-    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
-  }
+paymentVnRoutes.post('/create', handleAsync(async (c) => {
+  const body = await validateJsonBody(c, createPaymentSchema)
 
   const { method, tenant_id, plan, amount, credits } = body
 
@@ -240,7 +249,7 @@ paymentVnRoutes.post('/create', async (c) => {
     payment_url: `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_TxnRef=${orderId}&vnp_Amount=${vnpAmount}&vnp_OrderInfo=${encodeURIComponent(orderInfo)}`,
     note: 'Mock URL — replace with real VNPAY API integration',
   })
-})
+}))
 
 // GET /pricing-vn — VND pricing tiers
 paymentVnRoutes.get('/pricing-vn', (c) => {
