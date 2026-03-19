@@ -419,21 +419,14 @@ done
 # Dynamic pane-to-project mapping: detect project from tmux pane_current_path
 # This runs EVERY cycle so pane index changes (respawns/splits) are auto-detected
 refresh_worker_mapping() {
+  # Use config file as source of truth — NEVER auto-remap from pane path
+  # CC CLI always runs from monorepo root, so pane_current_path is unreliable
   for idx in 1 2 3; do
-    local pane_path
-    pane_path=$(tmux display-message -t "${CTO_SESSION}:0.${idx}" -p '#{pane_current_path}' 2>/dev/null || echo "")
-    if [[ -n "$pane_path" ]]; then
-      local detected=""
-      case "$pane_path" in
-        */apps/algo-trader*)    detected="algo-trader"; WORKER_DIR[$idx]="apps/algo-trader"; WORKER_DEPLOY[$idx]="npx tsc --noEmit" ;;
-        */apps/well*)           detected="well"; WORKER_DIR[$idx]="apps/well"; WORKER_DEPLOY[$idx]="npm run build" ;;
-        */apps/sophia-proposal*|*/apps/sophia-ai-factory*) detected="sophia-ai-factory"; WORKER_DIR[$idx]="apps/sophia-proposal"; WORKER_DEPLOY[$idx]="npm run build" ;;
-        */mekong-cli)           detected="mekong-cli"; WORKER_DIR[$idx]="."; WORKER_DEPLOY[$idx]="pnpm run build" ;;
-      esac
-      if [[ -n "$detected" && "$detected" != "${WORKER_NAME[$idx]}" ]]; then
-        log "REMAP P${idx}: ${WORKER_NAME[$idx]} → ${detected} (path: ${pane_path})"
-        WORKER_NAME[$idx]="$detected"
-      fi
+    # Only load from config if not already set (first run)
+    if [[ -z "${WORKER_NAME[$idx]:-}" ]]; then
+      WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
+      WORKER_DIR[$idx]=$(get_pane_config "$idx" "dir")
+      WORKER_DEPLOY[$idx]=$(get_pane_config "$idx" "deploy_cmd")
     fi
   done
 }
@@ -938,6 +931,13 @@ dispatch_worker() {
 verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
+
+  # CC CLI selection dialogs — auto-select option 1 (Enter)
+  if echo "$output" | tail -5 | grep -qE "Enter to select|↑/↓ to navigate|Esc to cancel"; then
+    log "VERIFY P${pane_idx}: SELECTION DIALOG → Enter (pick default)"
+    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
+    return 0
+  fi
 
   # SESSION COMPLETE detection — /clear immediately to recycle pane
   # IMPORTANT: only check tail -5 to avoid matching old scroll history from previous sessions
