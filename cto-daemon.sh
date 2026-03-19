@@ -620,8 +620,9 @@ dispatch_worker() {
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
     # Pick from role-specific fallback array
     local -n role_tasks="ROLE_FALLBACK_${pane_idx}"
-    local ridx=${FALLBACK_IDX[$pane_idx]:-0}
-    local fallback_cmd="${role_tasks[$ridx]}"
+    local ridx=0
+    [[ -v "FALLBACK_IDX[$pane_idx]" ]] && ridx=${FALLBACK_IDX[$pane_idx]}
+    local fallback_cmd="${role_tasks[$ridx]:-/cook \"RaaS build check\"}"
     FALLBACK_IDX[$pane_idx]=$(( (ridx + 1) % ${#role_tasks[@]} ))
     echo "${FALLBACK_IDX[1]} ${FALLBACK_IDX[2]} ${FALLBACK_IDX[3]}" > "$FALLBACK_STATE_FILE"
     log "P${pane_idx} (${name}): FALLBACK[${PANE_ROLE[$pane_idx]}#${ridx}]: ${fallback_cmd}"
