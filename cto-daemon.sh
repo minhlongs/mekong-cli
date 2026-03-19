@@ -826,19 +826,27 @@ verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
 
-  # Context 90%+ or 100% → /clear (hard reset, avoids stuck at 100%)
-  if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
-    log "VERIFY P${pane_idx}: CONTEXT ≥90% → /clear"
-    send_to_pane "$pane_idx" "/clear"
-    save_memory "CLEAR" "P${pane_idx}: context ≥90%, hard reset"
-    return 0
-  fi
-  # Context 80-89% → /compact (soft compress)
-  if echo "$output" | tail -10 | grep -qE "Context:.*8[0-9]%"; then
-    log "VERIFY P${pane_idx}: CONTEXT 80-89% → /compact"
-    send_to_pane "$pane_idx" "/compact"
-    save_memory "COMPACT" "P${pane_idx}: context 80-89%, compacted"
-    return 0
+  # Context management — ONLY when pane is IDLE (never interrupt active work)
+  if is_idle "$output"; then
+    # Context 90%+ or 100% → /clear (hard reset)
+    if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
+      log "VERIFY P${pane_idx}: CONTEXT ≥90% + IDLE → /clear"
+      send_to_pane "$pane_idx" "/clear"
+      save_memory "CLEAR" "P${pane_idx}: context ≥90%, hard reset"
+      return 0
+    fi
+    # Context 80-89% → /compact (soft compress)
+    if echo "$output" | tail -10 | grep -qE "Context:.*8[0-9]%"; then
+      log "VERIFY P${pane_idx}: CONTEXT 80-89% + IDLE → /compact"
+      send_to_pane "$pane_idx" "/compact"
+      save_memory "COMPACT" "P${pane_idx}: context 80-89%, compacted"
+      return 0
+    fi
+  else
+    # Log but don't interrupt working panes
+    if echo "$output" | tail -10 | grep -qE "Context:.*[89][0-9]%|Context:.*100%"; then
+      log "P${pane_idx} (${name}): CONTEXT HIGH but WORKING — skipping clear/compact"
+    fi
   fi
 
   # Check for questions — CC CLI asking for user input
