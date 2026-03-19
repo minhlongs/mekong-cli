@@ -4,7 +4,7 @@
   "state_commands": {
     "error":      "/debug",
     "test_fail":  "/test",
-    "complete":   "git add -A && git commit && git push",
+    "complete":   "/check-and-commit",
     "lint_error": "/fix",
     "fresh":      "/cook"
   },
