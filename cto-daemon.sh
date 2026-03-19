@@ -543,12 +543,24 @@ dispatch_worker() {
     return
   fi
 
-  # Priority 3: Fallback to static state-aware command selection
+  # Priority 3: Fallback — but ONLY if pane has actionable state (error/test_fail/lint)
+  # For fresh/complete state: require pending task context, else SKIP (no generic /cook spam)
+  local state="fresh"
+  if [[ -n "$pane_output" ]]; then
+    state=$(detect_pane_state "$pane_output")
+  fi
+
+  if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
+    # No mission file, no brain task → SKIP dispatch, avoid empty /cook loop
+    log "P${pane_idx} (${name}): IDLE NO-TASK — no pending mission or brain dispatch (state=$state)"
+    return
+  fi
+
   local task
   task=$(build_delegation_task "$pane_idx" "$pane_output")
   local chosen_cmd
   chosen_cmd=$(echo "$task" | awk '{print $1}')
-  log "P${pane_idx} (${name}): FALLBACK STATE=$(detect_pane_state "$pane_output") → CMD=${chosen_cmd}"
+  log "P${pane_idx} (${name}): FALLBACK STATE=${state} → CMD=${chosen_cmd}"
   send_to_pane "$pane_idx" "$task"
   log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
 }
@@ -558,14 +570,28 @@ verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
 
-  # Check for questions → auto-answer
+  # Context >90% → auto-compact to free context window
+  if echo "$output" | tail -10 | grep -qE "Context:.*9[0-9]%|context.*9[0-9]%"; then
+    log "VERIFY P${pane_idx}: CONTEXT >90% → /compact"
+    send_to_pane "$pane_idx" "/compact"
+    save_memory "COMPACT" "P${pane_idx}: context >90%, auto-compacted"
+    return 0
+  fi
+
+  # Check for questions → smart answer
   if has_question "$output"; then
     local question
     question=$(get_question "$output")
-    log "VERIFY P${pane_idx}: QUESTION: $question → AUTO-ANSWERING (key=1)"
-    # Send just the option number — NOT a full sentence (CC CLI interprets text as new prompt)
-    send_to_pane "$pane_idx" "1"
-    save_memory "VERIFY" "Auto-answered P${pane_idx}: ${question}"
+    # Questions about "what task" / "ready" / "next" → compact instead of answering
+    if echo "$question" | grep -qiE "what.*task\|what.*next\|ready\|sẵn sàng\|tiếp theo\|gì tiếp"; then
+      log "VERIFY P${pane_idx}: QUESTION (task inquiry): $question → /compact"
+      send_to_pane "$pane_idx" "/compact"
+      save_memory "VERIFY" "P${pane_idx}: task inquiry → compacted: ${question}"
+    else
+      log "VERIFY P${pane_idx}: QUESTION: $question → AUTO-ANSWERING (key=1)"
+      send_to_pane "$pane_idx" "1"
+      save_memory "VERIFY" "Auto-answered P${pane_idx}: ${question}"
+    fi
     return 0
   fi
 
@@ -663,7 +689,7 @@ CYCLE=0
 LAST_DISPATCH_1=0
 LAST_DISPATCH_2=0
 LAST_DISPATCH_3=0
-DISPATCH_COOLDOWN=90
+DISPATCH_COOLDOWN=180
 while true; do
   CYCLE=$((CYCLE + 1))
   NOW=$(date +%s)
