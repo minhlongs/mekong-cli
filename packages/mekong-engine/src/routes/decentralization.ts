@@ -1,0 +1,195 @@
+import { Hono } from 'hono'
+import type { Bindings } from '../index'
+import type { Tenant } from '../types/raas'
+import { authMiddleware } from '../raas/auth-middleware'
+
+type Variables = { tenant: Tenant }
+const decentralRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+decentralRoutes.use('*', authMiddleware)
+
+// Progressive decentralization phases — power distribution percentages
+// [owner/admin, founders/experts, community/customers]
+export const PHASES = [
+  {
+    name: 'foundation',
+    power_distribution: { leadership: 50, founders: 25, community: 25 },
+    min_stakeholders: 0,
+    min_months: 0,
+    description: 'Company-controlled — establishing product-market fit',
+  },
+  {
+    name: 'growth',
+    power_distribution: { leadership: 33, founders: 34, community: 33 },
+    min_stakeholders: 20,
+    min_months: 12,
+    description: 'Balanced triangle — proven PMF, scaling operations',
+  },
+  {
+    name: 'maturity',
+    power_distribution: { leadership: 25, founders: 40, community: 35 },
+    min_stakeholders: 100,
+    min_months: 18,
+    description: 'Community gaining weight — ecosystem self-sustaining',
+  },
+  {
+    name: 'full_inversion',
+    power_distribution: { leadership: 20, founders: 45, community: 35 },
+    min_stakeholders: 500,
+    min_months: 24,
+    description: 'Tam giác ngược complete — community at apex',
+  },
+]
+
+// GET /status — current phase + power distribution + metrics + next phase requirements
+decentralRoutes.get('/status', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant')
+
+  // Count stakeholders
+  const stakeholderCount = await c.env.DB.prepare(
+    'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
+  ).bind(tenant.id).first<{ count: number }>()
+  const totalStakeholders = stakeholderCount?.count || 0
+
+  // Calculate months since first stakeholder
+  const firstStakeholder = await c.env.DB.prepare(
+    'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
+  ).bind(tenant.id).first<{ first: string | null }>()
+
+  let monthsActive = 0
+  if (firstStakeholder?.first) {
+    const diffMs = Date.now() - new Date(firstStakeholder.first).getTime()
+    monthsActive = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30))
+  }
+
+  // Count proposals passed (governance maturity signal)
+  const passedProposals = await c.env.DB.prepare(
+    "SELECT COUNT(*) as count FROM proposals WHERE tenant_id = ? AND status = 'approved'"
+  ).bind(tenant.id).first<{ count: number }>()
+
+  // Determine current phase
+  let currentPhaseIndex = 0
+  for (let i = PHASES.length - 1; i >= 0; i--) {
+    const phase = PHASES[i]!
+    if (totalStakeholders >= phase.min_stakeholders && monthsActive >= phase.min_months) {
+      currentPhaseIndex = i
+      break
+    }
+  }
+
+  const currentPhase = PHASES[currentPhaseIndex]!
+  const nextPhase = PHASES[currentPhaseIndex + 1] ?? null
+
+  // Community vs leadership vote weight from recent proposals
+  const roleStats = await c.env.DB.prepare(
+    `SELECT role, COUNT(*) as count, SUM(reputation_score) as total_rep
+     FROM stakeholders WHERE tenant_id = ? GROUP BY role`
+  ).bind(tenant.id).all()
+
+  const roleBreakdown: Record<string, { count: number; total_rep: number }> = {}
+  for (const row of roleStats.results || []) {
+    roleBreakdown[row.role as string] = {
+      count: row.count as number,
+      total_rep: row.total_rep as number || 0,
+    }
+  }
+
+  return c.json({
+    current_phase: {
+      index: currentPhaseIndex,
+      name: currentPhase.name,
+      description: currentPhase.description,
+      power_distribution: currentPhase.power_distribution,
+    },
+    metrics: {
+      total_stakeholders: totalStakeholders,
+      months_active: monthsActive,
+      proposals_passed: passedProposals?.count || 0,
+      role_breakdown: roleBreakdown,
+    },
+    next_phase: nextPhase
+      ? {
+          name: nextPhase.name,
+          power_distribution: nextPhase.power_distribution,
+          requirements: {
+            min_stakeholders: nextPhase.min_stakeholders,
+            min_months: nextPhase.min_months,
+          },
+          progress: {
+            stakeholders: `${totalStakeholders}/${nextPhase.min_stakeholders}`,
+            months: `${monthsActive}/${nextPhase.min_months}`,
+          },
+        }
+      : null,
+    all_phases: PHASES,
+  })
+})
+
+// POST /check-transition — evaluate eligibility for next phase
+decentralRoutes.post('/check-transition', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant')
+
+  const stakeholderCount = await c.env.DB.prepare(
+    'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
+  ).bind(tenant.id).first<{ count: number }>()
+  const totalStakeholders = stakeholderCount?.count || 0
+
+  const firstStakeholder = await c.env.DB.prepare(
+    'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
+  ).bind(tenant.id).first<{ first: string | null }>()
+
+  let monthsActive = 0
+  if (firstStakeholder?.first) {
+    const diffMs = Date.now() - new Date(firstStakeholder.first).getTime()
+    monthsActive = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30))
+  }
+
+  // Find current phase
+  let currentPhaseIndex = 0
+  for (let i = PHASES.length - 1; i >= 0; i--) {
+    const phase = PHASES[i]!
+    if (totalStakeholders >= phase.min_stakeholders && monthsActive >= phase.min_months) {
+      currentPhaseIndex = i
+      break
+    }
+  }
+
+  const currentPhaseName = PHASES[currentPhaseIndex]!.name
+  const nextPhase = PHASES[currentPhaseIndex + 1]
+  if (!nextPhase) {
+    return c.json({
+      eligible: false,
+      message: 'Already at maximum decentralization phase (full_inversion)',
+      current_phase: currentPhaseName,
+    })
+  }
+
+  const stakeholdersMet = totalStakeholders >= nextPhase.min_stakeholders
+  const monthsMet = monthsActive >= nextPhase.min_months
+  const eligible = stakeholdersMet && monthsMet
+
+  const gaps: string[] = []
+  if (!stakeholdersMet) {
+    gaps.push(`Need ${nextPhase.min_stakeholders - totalStakeholders} more stakeholders`)
+  }
+  if (!monthsMet) {
+    gaps.push(`Need ${nextPhase.min_months - monthsActive} more months`)
+  }
+
+  return c.json({
+    eligible,
+    current_phase: currentPhaseName,
+    target_phase: nextPhase.name,
+    checks: {
+      stakeholders: { required: nextPhase.min_stakeholders, actual: totalStakeholders, met: stakeholdersMet },
+      months: { required: nextPhase.min_months, actual: monthsActive, met: monthsMet },
+    },
+    gaps,
+    message: eligible
+      ? `Ready to transition to ${nextPhase.name} phase`
+      : `Not yet eligible: ${gaps.join('; ')}`,
+  })
+})
+
+export { decentralRoutes }
