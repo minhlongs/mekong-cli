@@ -1,8 +1,8 @@
-import { BaseAdapter } from './adapters/base-adapter.ts';
-import { ClaudeCliAdapter } from './adapters/claude-cli.ts';
-import { GeminiCliAdapter } from './adapters/gemini-cli.ts';
-import { QwenCliAdapter } from './adapters/qwen-cli.ts';
-import { BlackboxCliAdapter } from './adapters/blackbox-cli.ts';
+import { BaseAdapter } from './adapters/base-adapter.js';
+import { ClaudeCliAdapter } from './adapters/claude-cli.js';
+import { GeminiCliAdapter } from './adapters/gemini-cli.js';
+import { QwenCliAdapter } from './adapters/qwen-cli.js';
+import { BlackboxCliAdapter } from './adapters/blackbox-cli.js';
 
 export interface RoutePreferences {
   /** Preferred provider names in priority order */

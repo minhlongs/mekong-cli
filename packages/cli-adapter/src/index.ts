@@ -1,9 +1,9 @@
 // Adapters
-export { BaseAdapter } from './adapters/base-adapter.ts';
-export { ClaudeCliAdapter } from './adapters/claude-cli.ts';
-export { GeminiCliAdapter } from './adapters/gemini-cli.ts';
-export { QwenCliAdapter } from './adapters/qwen-cli.ts';
-export { BlackboxCliAdapter } from './adapters/blackbox-cli.ts';
+export { BaseAdapter } from './adapters/base-adapter.js';
+export { ClaudeCliAdapter } from './adapters/claude-cli.js';
+export { GeminiCliAdapter } from './adapters/gemini-cli.js';
+export { QwenCliAdapter } from './adapters/qwen-cli.js';
+export { BlackboxCliAdapter } from './adapters/blackbox-cli.js';
 
 // Types from base
 export type {
@@ -11,15 +11,15 @@ export type {
   ExecResult,
   CliState,
   AdapterHealth,
-} from './adapters/base-adapter.ts';
+} from './adapters/base-adapter.js';
 
 // Discovery
-export { discoverClis, getInstalledProviders } from './discovery.ts';
-export type { DiscoveredCli } from './discovery.ts';
+export { discoverClis, getInstalledProviders } from './discovery.js';
+export type { DiscoveredCli } from './discovery.js';
 
 // Router
-export { CliRouter } from './router.ts';
-export type { RoutePreferences } from './router.ts';
+export { CliRouter } from './router.js';
+export type { RoutePreferences } from './router.js';
 
 // Failover
-export { FailoverChain } from './failover.ts';
+export { FailoverChain } from './failover.js';

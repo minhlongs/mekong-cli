@@ -1,0 +1,205 @@
+# CTO Brain — COMPLETE mekong-cli Command Catalog (300+)
+# Pick the MOST SPECIFIC command. Include task description in quotes.
+# CTO vận hành 100% công ty — không chỉ code.
+
+## CLAUDEKIT BUILT-IN (always available)
+/cook "task" — implement feature/task (DEFAULT)
+/debug "issue" — investigate bugs
+/fix "bug" — quick fix
+/test "scope" — run tests
+/plan:hard "feature" — detailed research + plan
+/plan:fast "task" — quick plan
+/plan:two "feature" — 2 alternative approaches
+/plan:parallel "feature" — parallel research planning
+/plan:ci — analyze CI failures + fix
+/plan:cro — CRO optimization plan
+/review — code review
+/bootstrap "description" — init new project
+/worktree "feature" — git worktree
+/check-and-commit — check quality + commit
+/docs — manage documentation
+/docs:init — first-time docs setup
+/docs:update — update docs after changes
+/ask "question" — ask about codebase
+
+## STUDIO / VC GOVERNANCE (thượng tầng)
+/studio-strategy — portfolio strategy + allocation
+/studio-portfolio — portfolio overview + metrics
+/studio-invest — investment thesis + due diligence
+/studio-divest — divestment analysis
+/studio-allocate — resource allocation across projects
+/studio-audit — studio health audit
+/studio-report — executive report generation
+/studio-roi — ROI analysis per project
+
+## CTO OPERATIONS
+/cto-architect — architecture decision record (ADR)
+/cto-deploy — production deployment
+/cto-incident — incident response orchestration
+/cto-onboard — onboard new project
+/cto-review — full project health review
+/cto-roadmap — technical roadmap
+/cto-scorecard — CTO ROI scorecard
+/cto-team — team capacity planning
+/cto-budget — MCU budget allocation
+/cto-archive — archive project
+/opus-tomhum-orchestrator — multi-project orchestrator
+
+## BUSINESS OPERATIONS (run company)
+/business-revenue-engine — full revenue pipeline (7 steps, ~40min)
+/business-quarterly-review — QBR all departments (6 steps, ~30min)
+/business-financial-close — monthly/quarterly close (5 steps, ~25min)
+/business-campaign-launch — multi-channel marketing (6 steps, ~35min)
+/business-client-onboard — new client setup (4 steps, ~15min)
+/business-hiring-sprint — end-to-end recruiting (4 steps, ~20min)
+
+## FINANCE
+/finance-budget-plan — department budgets + forecast
+/finance-collections — AR aging + reminders
+/finance-monthly-close — revenue reconcile + P&L
+/accounting-daily — transaction review + reconcile
+/accounting-invoice-batch — generate invoices + AR
+
+## FOUNDER / EXECUTIVE
+/founder-raise — fundraising round management
+/founder-negotiate — deal negotiation
+/founder-ipo — IPO preparation
+/founder-validate — business idea validation
+
+## SALES & GROWTH
+/sales-pipeline-build — build sales pipeline
+/sales-deal-close — close deals
+/sales-weekly-review — weekly sales review
+/sdr-prospect — prospecting
+/sdr-outreach-blast — outreach campaigns
+/sdr-lead-qualify — lead qualification
+/growth-experiment — growth experiments
+/growth-channel-optimize — channel optimization
+
+## MARKETING
+/marketing-campaign-run — run campaigns
+/marketing-content-engine — content creation
+/marketing-performance-report — performance analytics
+
+## PRODUCT MANAGEMENT
+/pm-sprint — sprint planning
+/pm-standup — daily standup
+/pm-backlog — backlog grooming
+/pm-delegate — task delegation
+/pm-milestone — milestone tracking
+/pm-okr — OKR management
+/pm-plan — project planning
+/pm-retro — retrospective
+/pm-scope — scope management
+/product-discovery — product discovery
+/product-launch-feature — feature launch
+/product-competitive-intel — competitive analysis
+/product-retrospective — product retro
+/product-sprint-plan — sprint planning
+
+## ENGINEERING
+/eng-sprint-execute — sprint execution parallel
+/eng-tech-debt — tech debt audit + fix
+/eng-onboard-dev — new developer onboarding
+/engineering-new-service — new microservice from zero
+/engineering-refactor — large-scale refactoring
+/dev-feature — full feature build cycle
+/dev-debug — debug issues
+/dev-deploy — deploy
+/dev-refactor — refactor
+/dev-review — code review
+/dev-audit — codebase audit
+/dev-bug-sprint — batch bug fixes
+/dev-pr-review — PR review + security
+/dev-scaffold — scaffold new module
+/dev-design — design doc
+
+## DEVOPS / SRE
+/devops-deploy-pipeline — full deploy pipeline
+/devops-rollback — emergency rollback
+/sre-morning-check — daily health check
+/sre-incident — incident response
+/ops-health-sweep — system health sweep
+/ops-security-audit — security audit
+/ops-disaster-recovery — DR planning
+/ops-sync-all — sync all systems
+
+## RELEASE
+/release-ship — ship release
+/release-hotfix — emergency hotfix
+/releng-pre-release — pre-release checks
+/releng-post-release — post-release verification
+
+## PEOPLE / HR
+/hr-recruit — recruiting
+/hr-onboard — employee onboarding
+/hr-performance-cycle — performance reviews
+/people-onboard — people onboarding
+/people-offboard — offboarding
+/recruiter-source — candidate sourcing
+/recruiter-screen — candidate screening
+
+## DESIGN / UX
+/design-sprint — design sprint (5 phases)
+/design-user-research — UX research sprint
+/ui-design-component — component design
+/ui-design-review — design review
+/ux-interview — user interviews
+/ux-usability — usability testing
+/frontend-ui-build — frontend build
+/frontend-responsive-fix — responsive fixes
+
+## LEGAL
+/legal-contract-review — contract review
+/legal-compliance-check — compliance audit
+
+## CONTENT
+/writer-blog — blog post
+/writer-newsletter — newsletter
+/writer-social-batch — social media batch
+
+## BACKEND / API
+/backend-api-build — full API cycle
+/backend-db-task — DB schema + migration
+/tech-api-design — API design
+/tech-architecture-review — architecture review
+/tech-migration — system migration
+
+## WORKER LEVEL (low-level ops)
+/worker-build — build project
+/worker-test — run tests
+/worker-code — write code
+/worker-commit — commit
+/worker-push — push
+/worker-exec — execute command
+/worker-health — health check
+/worker-scan — security scan
+/worker-log — view logs
+/worker-trace — trace issues
+/worker-backup — backup
+/worker-rollback — rollback
+
+## CLEO TASK MANAGEMENT
+/orchestrator — task orchestration
+/roadmap — project roadmap
+/phase — manage phases
+/stats — project statistics
+/dash — dashboard view
+
+## PLATFORM
+/platform-environment-setup — env setup
+/platform-monitoring-setup — monitoring setup
+
+## BINH PHÁP
+/ck-binh-phap — strategic execution framework
+
+## 4-PROJECT PARALLEL
+/4-project — dispatch 4 projects simultaneously
+
+## RULES:
+# 1. For company operations → use BUSINESS/FINANCE/SALES commands
+# 2. For code → use DEV/ENGINEERING commands  
+# 3. For infrastructure → use DEVOPS/SRE commands
+# 4. For strategic decisions → use STUDIO/CTO/FOUNDER commands
+# 5. Include specific context in quotes
+# 6. Do NOT invent commands — only use commands listed above

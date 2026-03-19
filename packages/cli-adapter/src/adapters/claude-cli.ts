@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { BaseAdapter, type ExecOptions, type ExecResult, type CliState } from './base-adapter.ts';
+import { BaseAdapter, type ExecOptions, type ExecResult, type CliState } from './base-adapter.js';
 
 const DEFAULT_TIMEOUT = 60_000;
 

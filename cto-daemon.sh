@@ -72,6 +72,75 @@ log() {
   fi
 }
 
+# ---- CTO BRAIN: Ollama qwen3:32b via scripts/brain_think.py ----
+OLLAMA_URL="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
+OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
+
+# Load 135-command catalog for brain dispatch (loaded once at startup)
+COMMAND_CATALOG_FILE="${MEKONG_DIR}/commands-catalog.txt"
+COMMAND_CATALOG=""
+if [[ -f "$COMMAND_CATALOG_FILE" ]]; then
+  COMMAND_CATALOG=$(cat "$COMMAND_CATALOG_FILE")
+fi
+
+# Call Ollama via standalone Python script (handles thinking mode, /no_think, keep_alive)
+cto_brain_think() {
+  local prompt="$1"
+  local sd; sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>/dev/null || echo ""
+}
+
+# Build context-rich prompt and dispatch via brain
+cto_brain_dispatch() {
+  local pane_idx=$1 pane_output="$2"
+  local name="${WORKER_NAME[$pane_idx]}"
+  local dir="${WORKER_DIR[$pane_idx]}"
+  local deploy="${WORKER_DEPLOY[$pane_idx]}"
+
+  # Extract recent pane output (last 45 lines, collapsed)
+  local pane_tail
+  pane_tail=$(echo "$pane_output" | tail -45 | tr '\n' ' ' | cut -c1-800)
+
+  # Detect errors in pane output for targeted dispatch
+  local error_lines
+  error_lines=$(echo "$pane_output" | tail -20 | grep -iE "error|failed|FAIL|TypeError|Cannot find|SyntaxError" | head -3 | tr '\n' ' ' | cut -c1-200)
+
+  # Build catalog section
+  local catalog_section
+  if [[ -n "$COMMAND_CATALOG" ]]; then
+    catalog_section="AVAILABLE COMMANDS:
+${COMMAND_CATALOG}
+Pick the MOST SPECIFIC command."
+  else
+    catalog_section="Commands: /cook \"task\" /debug \"issue\" /fix \"bug\" /test \"scope\" /plan:hard \"feature\" /review"
+  fi
+
+  local prompt="CTO daemon. Project: ${name} (dir: ${dir}). Deploy: ${deploy}.
+
+PANE OUTPUT: ${pane_tail}
+${error_lines:+ERRORS: ${error_lines}}
+
+${catalog_section}
+
+Give ONE slash command. Be SPECIFIC — include exact file paths, error descriptions, or feature names.
+Examples:
+- /debug \"TypeError in src/strategies/RsiSmaStrategy.ts line 45\"
+- /eng-tech-debt \"clean up dead imports in src/core/\"
+- /backend-api-build \"add rate limiting to /api/v1/missions\"
+- /sre-morning-check
+Reply with ONLY the command."
+
+  local result
+  result=$(cto_brain_think "$prompt")
+  # Sanitize: extract only the /command part
+  local cmd
+  cmd=$(echo "$result" | grep -oE '/[a-z][a-z0-9_:-]*[[:space:]]+"[^"]*"' | head -1)
+  if [[ -z "$cmd" ]]; then
+    cmd=$(echo "$result" | grep -oE '/[a-z][a-z0-9_:-]*([[:space:]]+.*)?' | head -1 | cut -c1-200)
+  fi
+  echo "${cmd:-}"
+}
+
 # ---- WORKER CONFIG (read from config/cto-config.json — unified source of truth) ----
 get_pane_config() {
   local idx=$1 field=$2
@@ -122,6 +191,13 @@ capture_pane() {
 send_to_pane() {
   local pane_idx=$1; shift
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$*" Enter
+}
+
+# Launch/respawn a CC CLI pane via mekong-wrapper (unified entry point)
+launch_pane_cc() {
+  local pane_idx=$1
+  local provider="${2:-qwen}"
+  bash "${PROJECT_ROOT}/scripts/launch-pane-cc.sh" "$pane_idx" "${WORKER_DIR[$pane_idx]}" "$CTO_SESSION" "$provider"
 }
 
 # ---- PHASE 1: SCAN ----
@@ -175,27 +251,15 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
-  local tail_lines
-  tail_lines=$(echo "$output" | tail -15)
 
-  # STUCK: queued messages means pane is jammed, not idle
-  if echo "$tail_lines" | grep -qE "$STUCK_PATTERNS"; then
-    return 1
+  # PRIORITY 1: If ❯ prompt visible in last 3 lines → IDLE immediately
+  # This takes precedence over BUSY/STUCK patterns in earlier buffer
+  if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass"; then
+    return 0  # IDLE — pane is at prompt
   fi
 
-  # BUSY: any activity indicator in last 15 lines → not idle
-  if echo "$tail_lines" | grep -qE "$BUSY_PATTERNS"; then
-    return 1
-  fi
-
-  # QUESTION: interactive prompt waiting → not idle (needs answer, not new task)
-  if echo "$tail_lines" | grep -qE "$QUESTION_PATTERNS"; then
-    return 1
-  fi
-
-  # IDLE: must see CC CLI prompt (❯) or bypass indicator in last 5 lines
-  # with NO activity patterns above it
-  echo "$tail_lines" | tail -5 | grep -qE "^❯|⏵⏵ bypass"
+  # No ❯ prompt → check if stuck/busy/question
+  return 1  # NOT idle
 }
 
 # Check if pane is actively working (inverse of idle, but also catches stuck state)
@@ -365,7 +429,7 @@ build_delegation_task() {
       echo "/fix \"${ctx}. Lint errors detected. Fix all lint issues. ${constraints}\""
       ;;
     complete)
-      echo "git add -A && git commit -m 'chore(${name}): auto-commit completed work' && git push origin HEAD"
+      echo "/git \"chore(${name}): auto-commit completed work\""
       ;;
     fresh|*)
       # Use project-specific idle command from catalog
@@ -410,12 +474,22 @@ dispatch_worker() {
     done
   fi
 
-  # Priority 2: State-aware command selection
+  # Priority 2: Ask CTO Brain (Ollama qwen3:32b) for intelligent dispatch
+  local brain_cmd
+  brain_cmd=$(cto_brain_dispatch "$pane_idx" "$pane_output")
+  if [[ -n "$brain_cmd" ]]; then
+    log "P${pane_idx} (${name}): BRAIN → ${brain_cmd}"
+    send_to_pane "$pane_idx" "$brain_cmd"
+    log "DELEGATED P${pane_idx} (${name}) — BRAIN dispatch"
+    return
+  fi
+
+  # Priority 3: Fallback to static state-aware command selection
   local task
   task=$(build_delegation_task "$pane_idx" "$pane_output")
   local chosen_cmd
   chosen_cmd=$(echo "$task" | awk '{print $1}')
-  log "P${pane_idx} (${name}): STATE=$(detect_pane_state "$pane_output") → CMD=${chosen_cmd}"
+  log "P${pane_idx} (${name}): FALLBACK STATE=$(detect_pane_state "$pane_output") → CMD=${chosen_cmd}"
   send_to_pane "$pane_idx" "$task"
   log "DELEGATED P${pane_idx} (${name}) — ${chosen_cmd}"
 }
@@ -548,7 +622,8 @@ while true; do
       name="${WORKER_NAME[$pane_idx]:-Worker-${pane_idx}}"
 
       if [[ -z "$output" ]]; then
-        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?)"
+        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper"
+        launch_pane_cc "$pane_idx" "qwen" || true
         continue
       fi
 
