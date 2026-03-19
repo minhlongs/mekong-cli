@@ -318,7 +318,7 @@ const breadcrumbSchema = {
     <div class="container hero-container">
       <div class="hero-content">
         <!-- FOMO Badge - Top Urgency -->
-        <div class="fomo-badge-wrapper animate-in" style="margin-bottom:12px;" role="status" aria-label="47 doanh nghiệp đăng ký hôm nay">
+        <div class="fomo-badge-wrapper animate-in" style="margin-bottom:12px;" role="status" aria-live="polite" aria-atomic="true" aria-label="47 doanh nghiệp đăng ký hôm nay">
           <div class="fomo-badge">
             <span class="fomo-icon" aria-hidden="true">🔥</span>
             <span class="fomo-text">47 doanh nghiệp đăng ký hôm nay</span>
@@ -400,7 +400,7 @@ const breadcrumbSchema = {
           <div class="logos-grid logos-scroll">
             {customerLogos.map((logo, i) => (
               <div class="logo-item" title={logo.name} aria-label={logo.name}>
-                <span class="logo-icon">{logo.icon}</span>
+                <span class="logo-icon" aria-hidden="true">{logo.icon}</span>
               </div>
             ))}
           </div>
@@ -598,13 +598,13 @@ const breadcrumbSchema = {
 
         <!-- Carousel Controls -->
         <div class="carousel-controls">
-          <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous testimonial">
+          <button type="button" class="carousel-btn prev" id="carouselPrev" aria-label="Previous testimonial">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           </button>
           <div class="carousel-dots" id="carouselDots"></div>
-          <button class="carousel-btn next" id="carouselNext" aria-label="Next testimonial">
+          <button type="button" class="carousel-btn next" id="carouselNext" aria-label="Next testimonial">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
