@@ -578,20 +578,13 @@ verify_worker() {
     return 0
   fi
 
-  # Check for questions → smart answer
+  # Check for questions → always compact (key=1 is never useful)
   if has_question "$output"; then
     local question
     question=$(get_question "$output")
-    # Questions about "what task" / "ready" / "next" → compact instead of answering
-    if echo "$question" | grep -qiE "what.*task\|what.*next\|ready\|sẵn sàng\|tiếp theo\|gì tiếp\|làm gì\|cần tôi\|hoàn tất\|thực hiện\|task gì\|task nào\|việc gì\|Session.*hoàn\|bạn.*cần\|bạn.*muốn"; then
-      log "VERIFY P${pane_idx}: QUESTION (task inquiry): $question → /compact"
-      send_to_pane "$pane_idx" "/compact"
-      save_memory "VERIFY" "P${pane_idx}: task inquiry → compacted: ${question}"
-    else
-      log "VERIFY P${pane_idx}: QUESTION: $question → AUTO-ANSWERING (key=1)"
-      send_to_pane "$pane_idx" "1"
-      save_memory "VERIFY" "Auto-answered P${pane_idx}: ${question}"
-    fi
+    log "VERIFY P${pane_idx}: QUESTION → /compact: ${question}"
+    send_to_pane "$pane_idx" "/compact"
+    save_memory "VERIFY" "P${pane_idx}: question → compacted: ${question}"
     return 0
   fi
 
