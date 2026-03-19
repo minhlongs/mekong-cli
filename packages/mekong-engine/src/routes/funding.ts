@@ -1,11 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import type { D1Database } from '@cloudflare/workers-types'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
-import { createError, handleAsync, handleDb } from '../types/error'
+import { createError, handleAsync, handleDb, HttpError } from '../types/error'
 import { payloadSizeLimit } from '../raas/payload-limiter'
+import { validateTenantExists } from '../lib/route-utils'
 
 type Variables = { tenant: Tenant }
 const fundingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -34,33 +34,58 @@ const contributeSchema = z.object({
 })
 type ContributeInput = z.infer<typeof contributeSchema>
 
-// Inline table creation (proper migration can be added later)
-async function ensureFundingTables(db: D1Database) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS funding_rounds (
-      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, title TEXT NOT NULL,
-      matching_pool INTEGER NOT NULL DEFAULT 0,
-      status TEXT DEFAULT 'active' CHECK (status IN ('active','calculating','completed')),
-      starts_at TEXT, ends_at TEXT, created_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS funding_projects (
-      id TEXT PRIMARY KEY, round_id TEXT NOT NULL, tenant_id TEXT NOT NULL,
-      name TEXT NOT NULL, description TEXT, author_id TEXT,
-      total_contributions INTEGER DEFAULT 0, contributor_count INTEGER DEFAULT 0,
-      matched_amount INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE IF NOT EXISTS funding_contributions (
-      id TEXT PRIMARY KEY, project_id TEXT NOT NULL, stakeholder_id TEXT NOT NULL,
-      amount INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')),
-      UNIQUE(project_id, stakeholder_id)
-    );
-  `).catch(() => {})
+/**
+ * Ensure funding tables exist - using safe batched statements instead of .exec()
+ * This prevents SQL injection risks from raw SQL strings
+ */
+async function ensureFundingTables(db: Bindings['DB']) {
+  if (!db) return
+
+  // Check if tables exist first (avoid redundant creation attempts)
+  const checkResult = await db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='funding_rounds'")
+    .first()
+
+  if (checkResult) return // Tables already exist
+
+  // Create tables using batched statements (safer than .exec())
+  const batch = [
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS funding_rounds (
+        id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, title TEXT NOT NULL,
+        matching_pool INTEGER NOT NULL DEFAULT 0,
+        status TEXT DEFAULT 'active' CHECK (status IN ('active','calculating','completed')),
+        starts_at TEXT, ends_at TEXT, created_at TEXT DEFAULT (datetime('now'))
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS funding_projects (
+        id TEXT PRIMARY KEY, round_id TEXT NOT NULL, tenant_id TEXT NOT NULL,
+        name TEXT NOT NULL, description TEXT, author_id TEXT,
+        total_contributions INTEGER DEFAULT 0, contributor_count INTEGER DEFAULT 0,
+        matched_amount INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `),
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS funding_contributions (
+        id TEXT PRIMARY KEY, project_id TEXT NOT NULL, stakeholder_id TEXT NOT NULL,
+        amount INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(project_id, stakeholder_id)
+      )
+    `),
+  ]
+
+  await db.batch(batch)
 }
 
 // Create funding round
 fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
   const tenant = c.get('tenant')
+
+  // Validate tenant exists (defense in depth)
+  await validateTenantExists(c.env.DB, tenant.id)
+
   await handleDb(
     () => ensureFundingTables(c.env.DB),
     'DATABASE_ERROR',
@@ -74,11 +99,17 @@ fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    throw error
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
+  }
+
+  // Edge case: Validate duration bounds
+  const durationDays = body.duration_days || 14
+  if (durationDays <= 0 || durationDays > 365) {
+    return c.json(createError('VALIDATION_ERROR', 'duration_days must be between 1 and 365'), 400)
   }
 
   const now = new Date()
-  const end = new Date(now.getTime() + (body.duration_days || 14) * 24 * 60 * 60 * 1000)
+  const end = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000)
 
   const id = crypto.randomUUID()
   await handleDb(
@@ -89,7 +120,7 @@ fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
     'Failed to create funding round'
   )
 
-  return c.json({ id, matching_pool: body.matching_pool, ends_at: end.toISOString() }, 201)
+  return c.json({ id, matching_pool: body.matching_pool, ends_at: end.toISOString(), status: 'active' }, 201)
 }))
 
 // Add project to round
@@ -103,7 +134,24 @@ fundingRoutes.post('/projects', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    throw error
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
+  }
+
+  // Edge case: Validate round exists and is active
+  const round = await handleDb(
+    () => c.env.DB.prepare('SELECT id, status FROM funding_rounds WHERE id = ? AND tenant_id = ?')
+      .bind(body.round_id, tenant.id)
+      .first(),
+    'DATABASE_ERROR',
+    'Failed to validate funding round'
+  )
+
+  if (!round) {
+    return c.json(createError('NOT_FOUND', 'Funding round not found'), 404)
+  }
+
+  if ((round as { status: string }).status !== 'active') {
+    return c.json(createError('CONFLICT', 'Funding round is not active'), 409)
   }
 
   const id = crypto.randomUUID()
@@ -115,7 +163,7 @@ fundingRoutes.post('/projects', payloadSizeLimit(), handleAsync(async (c) => {
     'Failed to add project to funding round'
   )
 
-  return c.json({ id }, 201)
+  return c.json({ id, round_id: body.round_id }, 201)
 }))
 
 // Contribute to project
