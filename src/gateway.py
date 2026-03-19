@@ -33,7 +33,6 @@ from pydantic import BaseModel, Field
 from src.core.error_responses import ErrorCode, error_response
 from src.core.input_validation import (
     validate_required,
-    validate_string_length,
     validate_url,
     validate_enum_value,
 )
@@ -47,6 +46,8 @@ from src.core.mcu_billing import MCUBilling, MCU_COSTS
 from src.core.webhook_events import WEBHOOK_EVENT_PAYLOADS
 from src.core.api_key_manager import validate_api_key
 from src.raas.missions_api_router import router as raas_router
+
+from src.core.request_logger import RequestLoggerMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -531,8 +532,6 @@ async def health_check() -> dict:
     }
 
 
-# Add request logging middleware
-from src.core.request_logger import RequestLoggerMiddleware
 app.add_middleware(RequestLoggerMiddleware)
 
 
