@@ -16,12 +16,12 @@ API_USAGE_FILE="${MEKONG_DIR}/api-usage.log"
 TASK_RUNNER="${SCRIPT_DIR}/dept-task-runner.sh"
 POLL_INTERVAL=120
 MAX_LOG_LINES=2000
-DAILY_API_LIMIT=2500
+DAILY_API_LIMIT=5000  # 2 API keys × 90k = 180k/mo = 6k/day, cap at 5k
 
-# Departments that use LOCAL Ollama only (no CC CLI API burn)
-LOCAL_ONLY_DEPTS="sales mktg docs"
-# Departments that use CC CLI (code changes needed)
-CODE_DEPTS="ops design"
+# Departments that use LOCAL Ollama only (content gen — Qwen3:32b sufficient)
+LOCAL_ONLY_DEPTS="mktg"
+# Departments that use CC CLI API (code changes + RaaS-critical quality)
+CODE_DEPTS="sales docs ops design"
 
 mkdir -p "$MEKONG_DIR"
 
