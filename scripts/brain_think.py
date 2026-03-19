@@ -81,14 +81,20 @@ def main():
         print("", end="")
 
 
+CMD_PATTERN = (
+    r"(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|"
+    r"backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)"
+)
+
+
 def extract_command(text: str) -> str:
     """Extract /command from direct response text."""
-    m = re.search(r'(/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)\s+"[^"]+")', text)
+    m = re.search(rf"(/{CMD_PATTERN}\s+\"[^\"]+\")", text, re.IGNORECASE)
     if m:
-        return m.group(1)
-    m = re.search(r'(/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)(?:\s+[^\n]+)?)', text)
+        return normalize_cmd(m.group(1))
+    m = re.search(rf"(/{CMD_PATTERN}(?:\s+[^\n]+)?)", text, re.IGNORECASE)
     if m:
-        return m.group(0).strip()[:250]
+        return normalize_cmd(m.group(0).strip()[:250])
     return ""
 
 
@@ -97,28 +103,45 @@ def extract_command_from_thinking(text: str) -> str:
 
     Qwen3 thinks through the problem then concludes with the command.
     We want the LAST match, not the first (which might be from examples).
+    Also handles case-insensitive (/Cook → /cook).
     """
-    # Find ALL /command "args" patterns
-    matches = re.findall(
-        r'/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|'
-        r'backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)'
-        r'\s+"[^"]+"',
-        text,
-    )
+    # Find ALL /command "args" patterns (case-insensitive)
+    matches = re.findall(rf"/{CMD_PATTERN}\s+\"[^\"]+\"", text, re.IGNORECASE)
     if matches:
-        return matches[-1]  # Last match = conclusion
+        return normalize_cmd(matches[-1])
 
     # Fallback: /command without quotes
-    matches = re.findall(
-        r'/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|'
-        r'backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)'
-        r'(?:\s+[^\n]+)?',
-        text,
-    )
+    matches = re.findall(rf"/{CMD_PATTERN}(?:\s+[^\n]+)?", text, re.IGNORECASE)
     if matches:
-        return matches[-1].strip()[:250]
+        return normalize_cmd(matches[-1].strip()[:250])
+
+    # Last resort: look for "I would use /command" or "the command is /command" patterns
+    m = re.search(
+        rf"(?:use|assign|run|execute|recommend|suggest)\s+(/{CMD_PATTERN})",
+        text,
+        re.IGNORECASE,
+    )
+    if m:
+        # Build a reasonable command with context
+        cmd_name = normalize_cmd(m.group(1))
+        # Try to find a description nearby
+        desc_match = re.search(r'"([^"]{5,})"', text[m.start():m.start()+200])
+        if desc_match:
+            return f'{cmd_name} "{desc_match.group(1)}"'
+        return cmd_name
 
     return ""
+
+
+def normalize_cmd(cmd: str) -> str:
+    """Normalize command: /Cook → /cook, strip trailing punctuation."""
+    if not cmd:
+        return ""
+    # Lowercase the command name part (before space or quote)
+    parts = cmd.split(" ", 1)
+    parts[0] = parts[0].lower()
+    result = " ".join(parts).rstrip(".,;:!?")
+    return result
 
 
 if __name__ == "__main__":
