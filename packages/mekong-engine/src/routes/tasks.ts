@@ -18,6 +18,26 @@ const createMissionSchema = z.object({
   goal: z.string().min(1, 'Goal is required').max(2000, 'Goal must be 2000 characters or less'),
 })
 
+// Zod schema for list query params
+const listTasksQuerySchema = z.object({
+  limit: z.coerce.number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .default(20),
+  offset: z.coerce.number()
+    .int()
+    .min(0)
+    .optional()
+    .default(0),
+})
+
+// Zod schema for route params
+const idParamSchema = z.object({
+  id: z.string().uuid('Invalid mission ID format'),
+})
+
 // Guard: DB required for all task routes
 taskRoutes.use('*', async (c, next) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 database not configured'), 503)
@@ -48,8 +68,14 @@ taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
 taskRoutes.get('/', handleAsync(async (c) => {
   const db = c.env.DB!
   const tenant = c.get('tenant')
-  const limit = Math.min(Math.max(parseInt(c.req.query('limit') ?? '20', 10) || 20, 1), 100)
-  const offset = Math.max(parseInt(c.req.query('offset') ?? '0', 10) || 0, 0)
+
+  // Validate query params with Zod
+  const queryResult = listTasksQuerySchema.safeParse(c.req.query())
+  if (!queryResult.success) {
+    return c.json(createError('VALIDATION_ERROR', queryResult.error.errors[0]?.message || 'Invalid query parameters'), 400)
+  }
+  const { limit, offset } = queryResult.data
+
   const missions = await handleDb(
     () => listMissions(db, tenant.id, limit, offset),
     'DATABASE_ERROR',
@@ -61,7 +87,14 @@ taskRoutes.get('/', handleAsync(async (c) => {
 taskRoutes.get('/:id', handleAsync(async (c) => {
   const db = c.env.DB!
   const tenant = c.get('tenant')
-  const id = c.req.param('id')
+
+  // Validate route params
+  const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
+  if (!paramsResult.success) {
+    return c.json(createError('VALIDATION_ERROR', paramsResult.error.errors[0]?.message || 'Invalid route parameters'), 400)
+  }
+  const { id } = paramsResult.data
+
   const mission = await handleDb(
     () => getMission(db, id, tenant.id),
     'DATABASE_ERROR',
@@ -74,7 +107,14 @@ taskRoutes.get('/:id', handleAsync(async (c) => {
 taskRoutes.get('/:id/stream', handleAsync(async (c) => {
   const db = c.env.DB!
   const tenant = c.get('tenant')
-  const id = c.req.param('id')
+
+  // Validate route params
+  const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
+  if (!paramsResult.success) {
+    return c.json(createError('VALIDATION_ERROR', paramsResult.error.errors[0]?.message || 'Invalid route parameters'), 400)
+  }
+  const { id } = paramsResult.data
+
   const mission = await handleDb(
     () => getMission(db, id, tenant.id),
     'DATABASE_ERROR',
@@ -94,7 +134,14 @@ taskRoutes.get('/:id/stream', handleAsync(async (c) => {
 taskRoutes.post('/:id/cancel', handleAsync(async (c) => {
   const db = c.env.DB!
   const tenant = c.get('tenant')
-  const id = c.req.param('id')
+
+  // Validate route params
+  const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
+  if (!paramsResult.success) {
+    return c.json(createError('VALIDATION_ERROR', paramsResult.error.errors[0]?.message || 'Invalid route parameters'), 400)
+  }
+  const { id } = paramsResult.data
+
   const mission = await handleDb(
     () => getMission(db, id, tenant.id),
     'DATABASE_ERROR',
