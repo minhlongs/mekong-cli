@@ -570,11 +570,12 @@ verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
 
-  # Context >90% → auto-compact to free context window
-  if echo "$output" | tail -10 | grep -qE "Context:.*9[0-9]%|context.*9[0-9]%"; then
-    log "VERIFY P${pane_idx}: CONTEXT >90% → /compact"
+  # Context >80% → auto-compact to free context window
+  # Qwen tokenizer inflates ~2x vs Claude, so compact earlier
+  if echo "$output" | tail -10 | grep -qE "Context:.*[89][0-9]%|context.*[89][0-9]%"; then
+    log "VERIFY P${pane_idx}: CONTEXT >80% → /compact"
     send_to_pane "$pane_idx" "/compact"
-    save_memory "COMPACT" "P${pane_idx}: context >90%, auto-compacted"
+    save_memory "COMPACT" "P${pane_idx}: context >80%, auto-compacted"
     return 0
   fi
 
