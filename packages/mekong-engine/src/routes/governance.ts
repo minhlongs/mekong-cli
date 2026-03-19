@@ -4,6 +4,7 @@ import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { GOVERNANCE_VOICE_CREDITS } from '../types/raas'
 import { z } from 'zod'
+import { handleAsync, handleDb, createError } from '../types/error'
 
 type Variables = { tenant: Tenant }
 const governanceRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -57,18 +58,10 @@ const nguSuSchema = z.object({
 // ─── STAKEHOLDERS ───
 
 // Register stakeholder
-governanceRoutes.post('/stakeholders', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+governanceRoutes.post('/stakeholders', handleAsync(async (c) => {
   const tenant = c.get('tenant')
 
-  let body
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON in request body', code: 'BAD_REQUEST' }, 400)
-  }
-
-  const parsed = stakeholderSchema.safeParse(body)
+  const parsed = stakeholderSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
     const errors = parsed.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
     return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: errors }, 400)
@@ -82,9 +75,13 @@ governanceRoutes.post('/stakeholders', async (c) => {
   const voiceCredits = GOVERNANCE_VOICE_CREDITS[role] || 10
 
   const id = crypto.randomUUID()
-  await c.env.DB.prepare(
-    'INSERT INTO stakeholders (id, tenant_id, display_name, email, role, governance_level, voice_credits_monthly) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).bind(id, tenant.id, parsed.data.display_name, parsed.data.email || null, role, levelMap[role] || 6, voiceCredits).run()
+  await handleDb(
+    () => c.env.DB.prepare(
+      'INSERT INTO stakeholders (id, tenant_id, display_name, email, role, governance_level, voice_credits_monthly) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(id, tenant.id, parsed.data.display_name, parsed.data.email || null, role, levelMap[role] || 6, voiceCredits).run(),
+    'DATABASE_ERROR',
+    'Failed to register stakeholder'
+  )
 
   return c.json({
     id,
@@ -93,36 +90,31 @@ governanceRoutes.post('/stakeholders', async (c) => {
     voice_credits: voiceCredits,
     message: 'Stakeholder registered successfully'
   }, 201)
-})
+}))
 
 // List stakeholders
-governanceRoutes.get('/stakeholders', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const role = c.req.query('role')
   const query = role
     ? 'SELECT * FROM stakeholders WHERE tenant_id = ? AND role = ? ORDER BY governance_level DESC, reputation_score DESC'
     : 'SELECT * FROM stakeholders WHERE tenant_id = ? ORDER BY governance_level DESC, reputation_score DESC'
   const params = role ? [tenant.id, role] : [tenant.id]
-  const rows = await c.env.DB.prepare(query).bind(...params).all()
+  const rows = await handleDb(
+    () => c.env.DB.prepare(query).bind(...params).all(),
+    'DATABASE_ERROR',
+    'Failed to fetch stakeholders'
+  )
   return c.json({ stakeholders: rows.results, total: rows.results?.length || 0 })
-})
+}))
 
 // ─── PROPOSALS ───
 
 // Create proposal
-governanceRoutes.post('/proposals', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
+governanceRoutes.post('/proposals', handleAsync(async (c) => {
   const tenant = c.get('tenant')
 
-  let body
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON in request body', code: 'BAD_REQUEST' }, 400)
-  }
-
-  const parsed = proposalSchema.safeParse(body)
+  const parsed = proposalSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
     const errors = parsed.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
     return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: errors }, 400)
@@ -138,11 +130,15 @@ governanceRoutes.post('/proposals', async (c) => {
   const votingEnd = new Date(now.getTime() + votingDays * 24 * 60 * 60 * 1000)
 
   const id = crypto.randomUUID()
-  await c.env.DB.prepare(
-    `INSERT INTO proposals (id, tenant_id, author_id, title, body, proposal_type, voting_mechanism, status, quorum_pct, voting_starts_at, voting_ends_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'voting', ?, ?, ?)`
-  ).bind(id, tenant.id, parsed.data.author_id, parsed.data.title, parsed.data.body, proposalType, mechanism, quorum,
-    now.toISOString(), votingEnd.toISOString()).run()
+  await handleDb(
+    () => c.env.DB.prepare(
+      `INSERT INTO proposals (id, tenant_id, author_id, title, body, proposal_type, voting_mechanism, status, quorum_pct, voting_starts_at, voting_ends_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'voting', ?, ?, ?)`
+    ).bind(id, tenant.id, parsed.data.author_id, parsed.data.title, parsed.data.body, proposalType, mechanism, quorum,
+      now.toISOString(), votingEnd.toISOString()).run(),
+    'DATABASE_ERROR',
+    'Failed to create proposal'
+  )
 
   return c.json({
     id,
@@ -152,31 +148,38 @@ governanceRoutes.post('/proposals', async (c) => {
     voting_ends_at: votingEnd.toISOString(),
     message: 'Proposal created successfully'
   }, 201)
-})
+}))
 
 // List proposals
-governanceRoutes.get('/proposals', async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+governanceRoutes.get('/proposals', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const status = c.req.query('status')
   const query = status
     ? 'SELECT * FROM proposals WHERE tenant_id = ? AND status = ? ORDER BY created_at DESC LIMIT 50'
     : 'SELECT * FROM proposals WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50'
   const params = status ? [tenant.id, status] : [tenant.id]
-  const rows = await c.env.DB.prepare(query).bind(...params).all()
+  const rows = await handleDb(
+    () => c.env.DB.prepare(query).bind(...params).all(),
+    'DATABASE_ERROR',
+    'Failed to fetch proposals'
+  )
 
   // Enrich with vote counts
   const proposals = []
   for (const p of rows.results || []) {
-    const voteStats = await c.env.DB.prepare(
-      `SELECT direction, COUNT(*) as count, SUM(votes_cast) as total_votes
-       FROM votes WHERE proposal_id = ? GROUP BY direction`
-    ).bind(p.id).all()
+    const voteStats = await handleDb(
+      () => c.env.DB.prepare(
+        `SELECT direction, COUNT(*) as count, SUM(votes_cast) as total_votes
+         FROM votes WHERE proposal_id = ? GROUP BY direction`
+      ).bind(p.id).all(),
+      'DATABASE_ERROR',
+      'Failed to fetch vote stats'
+    )
     proposals.push({ ...p, vote_stats: voteStats.results })
   }
 
   return c.json({ proposals })
-})
+}))
 
 // ─── VOTING (Quadratic) ───
 
@@ -185,14 +188,7 @@ governanceRoutes.post('/vote', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   const tenant = c.get('tenant')
 
-  let body
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON in request body', code: 'BAD_REQUEST' }, 400)
-  }
-
-  const parsed = voteSchema.safeParse(body)
+  const parsed = voteSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
     const errors = parsed.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
     return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: errors }, 400)
@@ -251,14 +247,7 @@ governanceRoutes.post('/reputation', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   const tenant = c.get('tenant')
 
-  let body
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON in request body', code: 'BAD_REQUEST' }, 400)
-  }
-
-  const parsed = reputationSchema.safeParse(body)
+  const parsed = reputationSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
     const errors = parsed.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
     return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: errors }, 400)
@@ -293,14 +282,7 @@ governanceRoutes.post('/ngu-su', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
   const tenant = c.get('tenant')
 
-  let body
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json({ error: 'Invalid JSON in request body', code: 'BAD_REQUEST' }, 400)
-  }
-
-  const parsed = nguSuSchema.safeParse(body)
+  const parsed = nguSuSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
     const errors = parsed.error.errors.map(e => ({ field: e.path.join('.'), message: e.message }))
     return c.json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: errors }, 400)
