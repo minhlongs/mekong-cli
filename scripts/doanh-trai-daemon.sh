@@ -155,7 +155,7 @@ while true; do
       fi
 
       # Try brain dispatch first
-      local brain_cmd
+      brain_cmd=""
       brain_cmd=$(brain_dispatch_dept "$dept_name" "$output" 2>/dev/null || echo "")
       if [[ -n "$brain_cmd" ]]; then
         log "${dept_name} P${pane_idx}: BRAIN → ${brain_cmd}"
@@ -166,8 +166,8 @@ while true; do
       # Fallback: round-robin from dept tasks
       IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"
       if [[ ${#task_arr[@]} -gt 0 ]]; then
-        local tidx=${DEPT_TASK_IDX[$dept_name]:-0}
-        local task="${task_arr[$tidx]}"
+        tidx=${DEPT_TASK_IDX[$dept_name]:-0}
+        task="${task_arr[$tidx]}"
         DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
         log "${dept_name} P${pane_idx}: FALLBACK[${tidx}] → ${task}"
         send_to_pane "$session" "$pane_idx" "$task"
