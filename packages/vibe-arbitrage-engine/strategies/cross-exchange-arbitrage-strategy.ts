@@ -4,8 +4,8 @@
  * Detects spread > 0.1%, signals simultaneous buy-low/sell-high.
  */
 
-import { IStrategy, ISignal, SignalType } from '@agencyos/trading-core/interfaces';
-import { ICandle } from '@agencyos/trading-core/interfaces';
+import { IStrategy, ISignal, SignalType } from '@mekong/trading-core/interfaces';
+import { ICandle } from '@mekong/trading-core/interfaces';
 
 export class CrossExchangeArbitrage implements IStrategy {
   name = 'Cross-Exchange Arbitrage';

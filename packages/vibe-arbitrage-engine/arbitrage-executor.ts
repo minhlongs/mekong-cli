@@ -4,7 +4,7 @@
  * Uses IExchange interface for exchange abstraction.
  */
 
-import { IExchange } from '@agencyos/trading-core/interfaces';
+import { IExchange } from '@mekong/trading-core/interfaces';
 import { getArbLogger } from './arb-logger';
 import {
   ArbitrageOpportunity, ExecutionResult, ArbitrageTradeLog,

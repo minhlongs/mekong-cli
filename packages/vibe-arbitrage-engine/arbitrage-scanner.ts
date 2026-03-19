@@ -6,7 +6,7 @@
  * Flow: poll() → aggregatePrices() → detectSpreads() → emit opportunities
  */
 
-import { IExchange } from '@agencyos/trading-core/interfaces';
+import { IExchange } from '@mekong/trading-core/interfaces';
 import { getArbLogger } from './arb-logger';
 import {
   ExchangePrice, ArbitrageOpportunity, ScannerConfig, ScannerStats,
