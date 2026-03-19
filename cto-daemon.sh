@@ -929,7 +929,17 @@ health_check() {
 # Hardened: trap errors so daemon never exits
 # ============================================================
 
-# Safety net: log but don't exit on errors
+# ---- SINGLETON GUARD: prevent multiple daemon instances ----
+PIDFILE="${MEKONG_DIR}/cto-daemon.pid"
+if [[ -f "$PIDFILE" ]]; then
+  old_pid=$(cat "$PIDFILE" 2>/dev/null)
+  if kill -0 "$old_pid" 2>/dev/null; then
+    echo "CTO DAEMON already running (PID $old_pid). Kill it first: kill $old_pid"
+    exit 1
+  fi
+fi
+echo $$ > "$PIDFILE"
+trap 'rm -f "$PIDFILE"; log "DAEMON SHUTDOWN (PID $$)"' EXIT INT TERM
 trap 'log "TRAP: Error at line $LINENO (ignored — daemon continues)"' ERR
 
 log "============================================="
@@ -939,6 +949,27 @@ log "Tool: ${CTO_TOOL} | Project: ${PROJECT_ROOT}"
 log "Workers: P1=${WORKER_NAME[1]} P2=${WORKER_NAME[2]} P3=${WORKER_NAME[3]}"
 log "Config: ${CONFIG_FILE}"
 log "============================================="
+
+# Ensure tmux session exists with 3 panes (required for daemon operation)
+if ! tmux has-session -t "${CTO_SESSION}" 2>/dev/null; then
+  log "BOOTSTRAP: tmux session '${CTO_SESSION}' not found — creating with 3 panes"
+  tmux new-session -d -s "${CTO_SESSION}" -x 200 -y 50
+  tmux split-window -t "${CTO_SESSION}:0" -h
+  tmux split-window -t "${CTO_SESSION}:0" -v
+  sleep 1
+  log "BOOTSTRAP: tmux session '${CTO_SESSION}' created with 3 panes"
+else
+  # Verify pane count
+  pane_count=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$pane_count" -lt 3 ]]; then
+    log "BOOTSTRAP: Only ${pane_count} panes in '${CTO_SESSION}' — adding missing panes"
+    while [[ "$pane_count" -lt 3 ]]; do
+      tmux split-window -t "${CTO_SESSION}:0" 2>/dev/null || break
+      pane_count=$((pane_count + 1))
+    done
+  fi
+  log "BOOTSTRAP: tmux session '${CTO_SESSION}' OK (${pane_count} panes)"
+fi
 
 # Warmup Ollama brain model before first cycle
 bash "${PROJECT_ROOT}/scripts/warmup-ollama.sh" 2>/dev/null || log "WARN: Ollama warmup failed"
