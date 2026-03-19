@@ -76,6 +76,8 @@ app.onError((err, c) => {
 // Middleware
 app.use('*', payloadSizeLimit())
 app.use('*', cors())
+app.use('*', metricsMiddleware)
+app.use('*', requestLoggingMiddleware)
 
 // Root — service info
 app.get('/', (c) => c.json({
@@ -235,14 +237,19 @@ app.route('/v1/marketplace', marketplaceRoutes)
 app.route('/v1/raas', raasRoutes)
 app.route('/', webhookRoutes)
 
-// Metrics endpoint for Prometheus scraping
-app.get('/metrics', (c) => {
+// Metrics endpoint for Prometheus scraping (protected by SERVICE_TOKEN)
+app.get('/metrics', handleAsync(async (c) => {
+  // Require authentication via SERVICE_TOKEN
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ') || authHeader.slice(7) !== c.env.SERVICE_TOKEN) {
+    return c.json({ error: 'Unauthorized - SERVICE_TOKEN required' }, 401)
+  }
   const metrics = getMetrics()
   const prometheusFormat = formatPrometheusMetrics(metrics)
   return c.body(prometheusFormat, 200, {
     'Content-Type': 'text/plain; version=0.0.4',
   })
-})
+}))
 
 // Cron Trigger — auto-publish approved content
 export default {
