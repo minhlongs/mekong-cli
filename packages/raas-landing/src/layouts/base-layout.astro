@@ -4,33 +4,157 @@ interface Props {
   title?: string;
   description?: string;
   lang?: 'vi' | 'en';
+  canonical?: string;
+  image?: string;
+  keywords?: string;
+  noindex?: boolean;
 }
 const {
-  title = 'OpenClaw — AI Vận Hành Doanh Nghiệp',
-  description = 'AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh.',
+  title = 'OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động',
+  description = 'AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày. 500+ doanh nghiệp tin dùng.',
   lang = 'vi',
+  canonical,
+  image = '/og-default.jpg',
+  keywords,
+  noindex = false,
 } = Astro.props;
 const isEn = lang === 'en';
 const base = isEn ? '/en' : '';
+const siteUrl = 'https://agencyos.network';
+const canonicalUrl = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname.replace(/\/$/, '')}`;
+const viUrl = canonicalUrl.replace('/en', '');
+const enUrl = canonicalUrl.includes('/en') ? canonicalUrl : canonicalUrl.replace(siteUrl, siteUrl + '/en');
 const labels = isEn
   ? { features: 'Features', pricing: 'Pricing', faq: 'FAQ', cta: 'Start Free', pLink: '/en/pricing' }
   : { features: 'Tính năng', pricing: 'Bảng giá', faq: 'FAQ', cta: 'Dùng miễn phí', pLink: '/pricing' };
+
+// Default keywords per language
+const defaultKeywords = isEn
+  ? 'AI automation, business automation, CRM, content creation, customer service, SaaS, enterprise AI, marketing automation, Vietnam'
+  : 'AI tự động hóa, tự động hóa doanh nghiệp, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam';
+const pageKeywords = keywords || defaultKeywords;
+
+// Robots directive
+const robotsDirective = noindex ? 'noindex, nofollow' : 'index, follow';
+
+// Organization JSON-LD
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "OpenClaw",
+  "alternateName": "AgencyOS",
+  "url": siteUrl,
+  "logo": `${siteUrl}/logo.jpg`,
+  "description": isEn
+    ? 'AI-powered business automation platform for modern enterprises'
+    : 'Nền tảng tự động hóa doanh nghiệp bằng AI cho doanh nghiệp hiện đại',
+  "sameAs": [
+    "https://twitter.com/agencyos",
+    "https://github.com/openclaw",
+    "https://www.linkedin.com/company/agencyos"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "hello@agencyos.network",
+    "contactType": "customer service",
+    "availableLanguage": ["Vietnamese", "English"]
+  },
+  "areaServed": ["VN", "US", "SG"],
+  "foundingDate": "2025"
+};
+
+// WebSite JSON-LD
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "OpenClaw",
+  "alternateName": "AgencyOS",
+  "url": siteUrl,
+  "description": isEn
+    ? 'AI-powered business automation platform'
+    : 'Nền tảng tự động hóa doanh nghiệp bằng AI',
+  "inLanguage": lang,
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": `${siteUrl}/search?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
 ---
 <!doctype html>
 <html lang={lang}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary Meta Tags -->
+  <title>{title}</title>
+  <meta name="title" content={title} />
   <meta name="description" content={description} />
+  <meta name="keywords" content={pageKeywords} />
+  <meta name="author" content="OpenClaw by AgencyOS" />
+  <meta name="robots" content={robotsDirective} />
+  <meta name="googlebot" content={robotsDirective} />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <!-- Hreflang Tags for i18n -->
+  <link rel="alternate" hreflang="vi" href={viUrl} />
+  <link rel="alternate" hreflang="en" href={enUrl} />
+  <link rel="alternate" hreflang="x-default" href={siteUrl} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalUrl} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:image" content="https://agencyos.network/og-default.jpg" />
-  <meta property="og:type" content="website" />
+  <meta property="og:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="OpenClaw — AI Business Automation Platform" />
+  <meta property="og:site_name" content="OpenClaw" />
+  <meta property="og:locale" content={isEn ? 'en_US' : 'vi_VN'} />
+  <meta property="og:locale:alternate" content="vi_VN" />
+  <meta property="og:locale:alternate" content="en_US" />
+
+  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <title>{title}</title>
+  <meta name="twitter:url" content={canonicalUrl} />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
+  <meta name="twitter:image:alt" content="OpenClaw Platform Screenshot" />
+  <meta name="twitter:site" content="@agencyos" />
+  <meta name="twitter:creator" content="@agencyos" />
+
+  <!-- Google / Search Engine -->
+  <meta name="theme-color" content="#00BCD4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="OpenClaw" />
+  <meta name="application-name" content="OpenClaw" />
+  <meta name="msapplication-TileColor" content="#00BCD4" />
+  <meta name="msapplication-config" content="/browserconfig.xml" />
+
+  <!-- Favicon -->
   <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo.jpg" />
+  <link rel="icon" sizes="32x32" href="/logo.jpg" />
+  <link rel="icon" sizes="16x16" href="/logo.jpg" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://app.agencyos.network" />
+
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="https://agencyos.network" />
+  <link rel="dns-prefetch" href="https://app.agencyos.network" />
 </head>
 <body>
+
+<!-- Structured Data JSON-LD -->
+<script type="application/ld+json" set:html={JSON.stringify([organizationSchema, webSiteSchema])} />
 
 <!-- Sticky nav -->
 <nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass">
@@ -94,10 +218,177 @@ const labels = isEn
 </footer>
 
 <script>
+  // Intersection Observer for scroll animations
   const obs = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('animate-in'); });
   }, { threshold: 0.1 });
   document.querySelectorAll('.animate-on-scroll').forEach(el => obs.observe(el));
+
+  // Counter Animation for Hero Section
+  const counters = document.querySelectorAll('.counter-value');
+  const speed = 2000; // Animation duration in ms
+
+  const animateCounter = (counter) => {
+    const target = +counter.getAttribute('data-target');
+    const increment = target / (speed / 16); // 60fps
+    let current = 0;
+
+    const updateCounter = () => {
+      current += increment;
+      if (current < target) {
+        counter.textContent = Math.floor(current).toLocaleString();
+        requestAnimationFrame(updateCounter);
+      } else {
+        counter.textContent = target.toLocaleString();
+      }
+    };
+    updateCounter();
+  };
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(counter => counterObserver.observe(counter));
+
+  // Testimonial Carousel
+  const track = document.getElementById('testimonialTrack');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const dotsContainer = document.getElementById('carouselDots');
+
+  if (track && prevBtn && nextBtn) {
+    let currentIndex = 0;
+    let isAutoPlaying = true;
+    let autoplayInterval;
+    const cardWidth = 320; // Approximate card width + gap
+    const visibleCards = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
+    const maxIndex = Math.max(0, track.children.length - visibleCards);
+
+    // Create dots
+    const totalDots = Math.min(5, Math.ceil(track.children.length / 2));
+    for (let i = 0; i < totalDots; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    }
+
+    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+
+    function updateCarousel() {
+      const translateX = -currentIndex * cardWidth;
+      track.style.transform = `translateX(${translateX}px)`;
+
+      // Update dots
+      const activeDotIndex = Math.min(Math.floor(currentIndex / (track.children.length / 2 / totalDots)), dots.length - 1);
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === activeDotIndex);
+      });
+    }
+
+    function goToSlide(index) {
+      currentIndex = Math.max(0, Math.min(index, maxIndex));
+      updateCarousel();
+      resetAutoplay();
+    }
+
+    function nextSlide() {
+      if (currentIndex >= maxIndex) {
+        currentIndex = 0; // Loop back to start
+      } else {
+        currentIndex++;
+      }
+      updateCarousel();
+    }
+
+    function prevSlide() {
+      if (currentIndex <= 0) {
+        currentIndex = maxIndex; // Loop to end
+      } else {
+        currentIndex--;
+      }
+      updateCarousel();
+    }
+
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextSlide, 4000);
+      isAutoPlaying = true;
+    }
+
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+      isAutoPlaying = false;
+    }
+
+    function resetAutoplay() {
+      stopAutoplay();
+      setTimeout(() => {
+        if (!isHovering) startAutoplay();
+      }, 3000);
+    }
+
+    let isHovering = false;
+    const carousel = document.querySelector('.testimonial-carousel');
+
+    if (carousel) {
+      carousel.addEventListener('mouseenter', () => {
+        isHovering = true;
+        stopAutoplay();
+      });
+      carousel.addEventListener('mouseleave', () => {
+        isHovering = false;
+        startAutoplay();
+      });
+    }
+
+    // Event listeners
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+      resetAutoplay();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+      resetAutoplay();
+    });
+
+    // Touch support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      stopAutoplay();
+    }, { passive: true });
+
+    track.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+      resetAutoplay();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      }
+    }
+
+    // Start autoplay
+    startAutoplay();
+  }
 </script>
 </body>
 </html>
