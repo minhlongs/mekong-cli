@@ -10,7 +10,22 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+    "paths": {
+      "@openclaw/agi-evolution/*": ["../agi-evolution/src/*"],
+      "@openclaw/cli-adapter/*": ["../cli-adapter/src/*"],
+      "@mekong/openclaw-engine/*": ["../openclaw-engine/src/*"],
+      "@openclaw/engine/*": ["../openclaw-engine/src/*"],
+      "@openclaw/engine/orchestration/auto-cto-pilot": ["../openclaw-engine/src/orchestration/auto-cto-pilot.js"],
+      "@openclaw/agencyos-dashboard/*": ["../agencyos-dashboard/src/*"],
+      "@openclaw/cli-orchestrator/*": ["../cli-orchestrator/src/*"],
+      "@mekong/raas-marketplace/*": ["../raas-marketplace/src/*"],
+      "@openclaw/solo-os/*": ["../solo-os/src/*"],
+      "@openclaw/rd-engine/*": ["../rd-engine/src/*"],
+      "@openclaw/vc-governance/*": ["../vc-governance/src/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

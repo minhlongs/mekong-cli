@@ -4,7 +4,10 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./swarm": "./src/swarm.ts",
+    "./tmux-manager": "./src/tmux-manager.ts",
+    "./wiring": "./src/wiring.ts"
   },
   "scripts": {
     "build": "tsc",

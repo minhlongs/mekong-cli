@@ -1,4 +1,8 @@
-import type { Translations } from './en.ts';
+/**
+ * Vietnamese translations
+ * Note: Values are Vietnamese strings, keys match English structure
+ */
+import type { Translations } from './en.js';
 
 export const vi: Translations = {
   nav: {
