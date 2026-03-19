@@ -2,7 +2,7 @@
 """CTO Brain Think — calls Ollama /api/generate and extracts /command.
 
 Qwen3 ALWAYS uses thinking mode: 'response' is empty, output is in 'thinking'.
-We search BOTH fields for /command patterns.
+We parse thinking text for the LAST /command mentioned (the model's conclusion).
 Uses /api/generate (NOT /api/chat — chat API returns empty content with qwen3).
 """
 import json
@@ -10,6 +10,13 @@ import urllib.request
 import sys
 import re
 import os
+
+# Known valid command prefixes (subset — catches most)
+VALID_CMDS = {
+    "cook", "fix", "debug", "review", "test", "plan", "code", "ask",
+    "plan:hard", "plan:fast", "backend-api-build", "frontend-ui-build",
+    "check-and-commit", "scout", "brainstorm", "deploy", "ship",
+}
 
 
 def main():
@@ -21,14 +28,15 @@ def main():
         print("", end="")
         return
 
-    # Use /api/generate — NOT /api/chat (qwen3 chat API returns empty content)
+    # Prompt: ask for JUST the command, no examples to avoid regex matching them
     prompt_text = (
         "/no_think\n"
-        "Reply with ONLY a single slash command. No explanation. Examples:\n"
-        '/cook "implement user auth"\n'
-        '/debug "fix login error"\n'
-        '/review "check code quality"\n'
-        "Now reply with ONLY the /command:\n\n"
+        "You are CTO Brain. Given the worker context below, decide the SINGLE "
+        "most impactful slash command to assign.\n"
+        "Valid commands: /cook, /fix, /debug, /review, /test, /plan:hard, "
+        "/backend-api-build, /frontend-ui-build, /check-and-commit, /scout\n"
+        "Reply format: /command \"specific task description\"\n"
+        "Reply with ONLY the command line. No explanation.\n\n"
         + stdin_text
     )
 
@@ -49,35 +57,68 @@ def main():
         resp = urllib.request.urlopen(req, timeout=120)
         d = json.loads(resp.read())
 
-        # Qwen3 puts output in 'thinking' field, 'response' is usually empty
         response_text = d.get("response", "").strip()
         thinking_text = d.get("thinking", "").strip()
-        all_text = (response_text + "\n" + thinking_text).strip()
 
-        if not all_text:
-            print("", end="")
-            return
-
-        # Extract /command — priority: quoted args > unquoted > raw text
-        m = re.search(r'(/[\w][\w:-]*\s+"[^"]+")', all_text)
-        if m:
-            print(m.group(1))
-            return
-
-        m = re.search(r'(/[\w][\w:-]*(?:\s+[^\n]+)?)', all_text)
-        if m:
-            cmd = m.group(0).strip()[:200]
-            # Filter garbage: must start with valid command prefix
-            if cmd.startswith("/") and len(cmd) > 2:
+        # Check response first (if model actually responds)
+        if response_text:
+            cmd = extract_command(response_text)
+            if cmd:
                 print(cmd)
                 return
 
-        # No command found — output empty (will trigger fallback)
+        # Parse thinking for the LAST /command (model's final conclusion)
+        if thinking_text:
+            cmd = extract_command_from_thinking(thinking_text)
+            if cmd:
+                print(cmd)
+                return
+
         print("", end="")
 
     except Exception as e:
         print(f"BRAIN_ERROR: {e}", file=sys.stderr)
         print("", end="")
+
+
+def extract_command(text: str) -> str:
+    """Extract /command from direct response text."""
+    m = re.search(r'(/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)\s+"[^"]+")', text)
+    if m:
+        return m.group(1)
+    m = re.search(r'(/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)(?:\s+[^\n]+)?)', text)
+    if m:
+        return m.group(0).strip()[:250]
+    return ""
+
+
+def extract_command_from_thinking(text: str) -> str:
+    """Extract the LAST /command from thinking text (model's conclusion).
+
+    Qwen3 thinks through the problem then concludes with the command.
+    We want the LAST match, not the first (which might be from examples).
+    """
+    # Find ALL /command "args" patterns
+    matches = re.findall(
+        r'/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|'
+        r'backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)'
+        r'\s+"[^"]+"',
+        text,
+    )
+    if matches:
+        return matches[-1]  # Last match = conclusion
+
+    # Fallback: /command without quotes
+    matches = re.findall(
+        r'/(?:cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|'
+        r'backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm)'
+        r'(?:\s+[^\n]+)?',
+        text,
+    )
+    if matches:
+        return matches[-1].strip()[:250]
+
+    return ""
 
 
 if __name__ == "__main__":
