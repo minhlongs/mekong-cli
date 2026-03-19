@@ -1,0 +1,76 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Tổng quan" activePage="/dashboard">
+  <h2 style="font-size:18px;margin-bottom:20px">Tổng quan</h2>
+
+  <div class="card-grid">
+    <div class="stat-card">
+      <div class="stat-label">💬 Tin nhắn hôm nay</div>
+      <div class="stat-value" id="stat-messages">—</div>
+      <div class="stat-sub">Tự động xử lý bởi AI</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">👥 Khách hàng</div>
+      <div class="stat-value" id="stat-contacts">—</div>
+      <div class="stat-sub">Tổng liên hệ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">📝 Content chờ duyệt</div>
+      <div class="stat-value" id="stat-content">—</div>
+      <div class="stat-sub">Cần xem xét</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">⚡ Credits còn lại</div>
+      <div class="stat-value" id="stat-credits">—</div>
+      <div class="stat-sub">MCU balance</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <strong>Trạng thái AI</strong>
+        <span class="badge badge-green"><span class="status-dot"></span>Đang hoạt động</span>
+      </div>
+      <p style="color:var(--text2);font-size:13px" id="ai-status-msg">AI đang theo dõi và phản hồi khách hàng 24/7.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <strong>Hoạt động gần đây</strong>
+      </div>
+      <div id="recent-activity" style="color:var(--text2);font-size:13px">Đang tải...</div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://api.agencyos.network';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  async function load() {
+    const key = localStorage.getItem('mk_api_key');
+    const h = { 'Content-Type':'application/json', Authorization:'Bearer '+key };
+    try {
+      const [overview, credits] = await Promise.all([
+        fetch(API+'/v1/reports/overview', {headers:h}).then(r=>r.json()).catch(()=>({})),
+        fetch(API+'/billing/credits',     {headers:h}).then(r=>r.json()).catch(()=>({})),
+      ]);
+      document.getElementById('stat-messages').textContent = overview.messages_today ?? '0';
+      document.getElementById('stat-contacts').textContent = overview.total_contacts ?? '0';
+      document.getElementById('stat-content').textContent  = overview.pending_content ?? '0';
+      document.getElementById('stat-credits').textContent  = credits.balance ?? '0';
+
+      const activities = overview.recent_activity;
+      if (Array.isArray(activities) && activities.length) {
+        document.getElementById('recent-activity').innerHTML = activities.slice(0,4).map(a=>`<div style="padding:4px 0;border-bottom:1px solid var(--border)">${a}</div>`).join('');
+      } else {
+        document.getElementById('recent-activity').textContent = 'Chưa có hoạt động nào.';
+      }
+    } catch {
+      document.getElementById('recent-activity').textContent = 'Không thể tải dữ liệu.';
+    }
+  }
+  load();
+</script>

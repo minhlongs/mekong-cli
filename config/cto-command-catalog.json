@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+
+  "state_commands": {
+    "error":      "/debug",
+    "test_fail":  "/test",
+    "complete":   "git add -A && git commit && git push",
+    "lint_error": "/fix",
+    "fresh":      "/cook"
+  },
+
+  "layer_commands": {
+    "engineering": {
+      "build":    "/cook",
+      "debug":    "/debug",
+      "test":     "/test",
+      "review":   "/review",
+      "commit":   "/check-and-commit",
+      "plan":     "/plan:hard",
+      "refactor": "/engineering-refactor",
+      "sprint":   "/eng-sprint-execute",
+      "techdebt": "/eng-tech-debt",
+      "feature":  "/dev-feature",
+      "bugfix":   "/dev-bug-sprint",
+      "pr":       "/dev-pr-review",
+      "api":      "/backend-api-build",
+      "db":       "/backend-db-task",
+      "ui":       "/frontend-ui-build",
+      "arch":     "/tech-architecture-review",
+      "migrate":  "/tech-migration"
+    },
+    "ops": {
+      "health":   "/ops-health-sweep",
+      "security": "/ops-security-audit",
+      "deploy":   "/devops-deploy-pipeline",
+      "rollback": "/devops-rollback",
+      "incident": "/sre-incident",
+      "morning":  "/sre-morning-check",
+      "ship":     "/release-ship",
+      "hotfix":   "/release-hotfix"
+    },
+    "product": {
+      "discover": "/product-discovery",
+      "launch":   "/product-launch-feature",
+      "sprint":   "/product-sprint-plan",
+      "retro":    "/product-retrospective",
+      "intel":    "/product-competitive-intel"
+    },
+    "business": {
+      "campaign": "/business-campaign-launch",
+      "onboard":  "/business-client-onboard",
+      "revenue":  "/business-revenue-engine",
+      "review":   "/business-quarterly-review"
+    }
+  },
+
+  "project_profiles": {
+    "mekong-cli": {
+      "layer": "engineering",
+      "idle_command": "/cook",
+      "green_commands": ["/eng-tech-debt", "/ops-health-sweep", "/review:codebase"],
+      "error_command": "/debug",
+      "description": "Monorepo core — orchestration engine"
+    },
+    "algo-trader": {
+      "layer": "engineering",
+      "idle_command": "/cook",
+      "green_commands": ["/test", "/ops-security-audit", "/dev-feature"],
+      "error_command": "/debug",
+      "description": "Trading bot — TypeScript, Prisma, WebSocket"
+    },
+    "well": {
+      "layer": "engineering",
+      "idle_command": "/cook",
+      "green_commands": ["/frontend-ui-build", "/test", "/docs:update"],
+      "error_command": "/debug",
+      "description": "Health platform — Next.js, Supabase"
+    },
+    "sophia-ai-factory": {
+      "layer": "engineering",
+      "idle_command": "/cook",
+      "green_commands": ["/frontend-ui-build", "/test", "/review"],
+      "error_command": "/debug",
+      "description": "AI factory — Next.js, Polar payments"
+    },
+    "opus-strategic": {
+      "layer": "product",
+      "idle_command": "/plan:hard",
+      "green_commands": ["/product-sprint-plan", "/product-competitive-intel"],
+      "error_command": "/debug",
+      "description": "Strategic planning pane — Opus model"
+    }
+  },
+
+  "state_escalation": {
+    "retry_1": "debug",
+    "retry_2": "debug --parallel",
+    "retry_3": "plan:hard"
+  }
+}

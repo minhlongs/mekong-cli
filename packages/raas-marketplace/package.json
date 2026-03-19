@@ -1,0 +1,9 @@
+{
+  "name": "@openclaw/raas-marketplace",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": { "build": "tsc", "test": "vitest run" },
+  "devDependencies": { "typescript": "^5.7.0", "vitest": "^4.0.0" },
+  "license": "MIT"
+}

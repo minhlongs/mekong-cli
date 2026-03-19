@@ -1,0 +1,5 @@
+description = "QBR across all departments — revenue, expenses, KPIs, team, forecast. 6 commands, ~30 min."
+
+[steps]
+[steps.run]
+command = "mekong business-quarterly-review {{args}}"

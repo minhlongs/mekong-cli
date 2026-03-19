@@ -1,0 +1,5 @@
+description = "Daily standup report. 1 credit, ~5 min."
+
+[steps]
+[steps.run]
+command = "mekong pm-standup {{args}}"

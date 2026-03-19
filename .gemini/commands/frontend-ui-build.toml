@@ -1,0 +1,5 @@
+description = "Frontend UI build — component, styling, responsive, test in 12 min"
+
+[steps]
+[steps.run]
+command = "mekong frontend-ui-build {{args}}"

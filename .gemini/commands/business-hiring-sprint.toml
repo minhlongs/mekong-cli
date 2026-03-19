@@ -1,0 +1,5 @@
+description = "End-to-end recruiting — JD, sourcing, interview kit, comp benchmarking. 4 commands, ~20 min."
+
+[steps]
+[steps.run]
+command = "mekong business-hiring-sprint {{args}}"

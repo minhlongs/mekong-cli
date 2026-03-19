@@ -1,0 +1,130 @@
+---
+import MainLayout from '../../layouts/main-layout.astro';
+
+const mcuConfigExample = `{
+  "routes": {
+    "POST /v1/missions": { "mcu": 2 },
+    "POST /v1/cook": { "mcu": 1 },
+    "GET /v1/status": { "mcu": 0 }
+  }
+}`;
+---
+
+<MainLayout title="RaaS Onboarding — OpenClaw" description="Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and Polar.sh billing in under an hour using OpenClaw's RaaS gateway on Cloudflare Workers.">
+  <div class="guide-page">
+    <aside class="guide-sidebar">
+      <a href="/guides" class="back-link">← All Guides</a>
+      <ul class="toc">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#register">Register Tenant</a></li>
+        <li><a href="#api-key">API Keys</a></li>
+        <li><a href="#credits">Credit Management</a></li>
+        <li><a href="#webhook">Polar Webhook</a></li>
+      </ul>
+    </aside>
+
+    <article class="guide-content">
+      <header class="guide-header">
+        <span class="guide-tag">Monetization</span>
+        <h1>RaaS <span class="gradient-text">Onboarding</span></h1>
+        <p class="guide-lead">Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and Polar.sh billing in under an hour.</p>
+      </header>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>RaaS (Repository as a Service) is OpenClaw's monetization layer. It provides:</p>
+        <ul>
+          <li><strong>License gate</strong> — HTTP 402 on zero balance, JWT verification</li>
+          <li><strong>MCU metering</strong> — per-request credit deduction with rollback on failure</li>
+          <li><strong>Polar.sh webhooks</strong> — automatic credit top-up on subscription payment</li>
+          <li><strong>Audit trail</strong> — full transaction log per tenant</li>
+          <li><strong>KV cache</strong> — Cloudflare KV for fast balance lookups</li>
+        </ul>
+        <p>The RaaS gateway runs as a Cloudflare Worker. Deploy time: ~2 minutes.</p>
+      </section>
+
+      <section id="register">
+        <h2>Register Tenant</h2>
+        <p>Initialize your RaaS tenant from the CLI:</p>
+        <pre><code>mekong raas/init --name "My Product" --email you@company.com</code></pre>
+        <p>This scaffolds the gateway worker, registers you in the tenant registry, and outputs your tenant ID:</p>
+        <pre><code>Tenant registered: tenant_abc123
+Gateway URL: https://gateway.myproduct.workers.dev
+Admin dashboard: https://raas.openclaw.ai/tenant/tenant_abc123</code></pre>
+      </section>
+
+      <section id="api-key">
+        <h2>API Keys</h2>
+        <p>Generate your first API key:</p>
+        <pre><code>mekong raas/key/create --name "production" --tier pro</code></pre>
+        <p>List all keys:</p>
+        <pre><code>mekong raas/key/list</code></pre>
+        <p>Rotate a key:</p>
+        <pre><code>mekong raas/key/rotate --id key_xyz789</code></pre>
+        <p>Protect your gateway by validating the key in each request header:</p>
+        <pre><code>Authorization: Bearer &lt;YOUR_API_KEY&gt;</code></pre>
+        <div class="callout glass">
+          <md-icon>warning</md-icon>
+          <p>Never commit API keys to git. Store in <code>.env</code> or Cloudflare Secrets.</p>
+        </div>
+      </section>
+
+      <section id="credits">
+        <h2>Credit Management</h2>
+        <p>Check balance for a tenant:</p>
+        <pre><code>mekong raas/balance --tenant tenant_abc123</code></pre>
+        <p>Manually top up credits (e.g. for testing):</p>
+        <pre><code>mekong raas/topup --tenant tenant_abc123 --amount 100</code></pre>
+        <p>View transaction history:</p>
+        <pre><code>mekong raas/ledger --tenant tenant_abc123 --last 50</code></pre>
+        <p>Set MCU cost per endpoint in your worker config:</p>
+        <pre><code class="language-json" set:text={mcuConfigExample}></code></pre>
+      </section>
+
+      <section id="webhook">
+        <h2>Polar Webhook Setup</h2>
+        <p>Connect Polar.sh to automatically credit users on payment:</p>
+        <ol class="steps">
+          <li>Go to your <a href="https://polar.sh" target="_blank" rel="noopener">Polar.sh dashboard</a></li>
+          <li>Navigate to Settings → Webhooks → Add Endpoint</li>
+          <li>Enter your gateway URL: <code>https://gateway.myproduct.workers.dev/webhooks/polar</code></li>
+          <li>Select events: <code>subscription.created</code>, <code>subscription.renewed</code>, <code>order.paid</code></li>
+          <li>Copy the webhook secret and set it in your worker:</li>
+        </ol>
+        <pre><code>wrangler secret put POLAR_WEBHOOK_SECRET</code></pre>
+        <p>The gateway automatically maps Polar product IDs to MCU tiers defined in your config.</p>
+      </section>
+
+      <div class="guide-nav">
+        <a href="/guides/license" class="nav-prev glass">← License</a>
+        <a href="/guides/solo-os" class="nav-next glass">SoloOS →</a>
+      </div>
+    </article>
+  </div>
+</MainLayout>
+
+<style>
+  .guide-page { display: grid; grid-template-columns: 220px 1fr; gap: var(--spacing-2xl); max-width: 1100px; margin: 0 auto; padding: var(--spacing-3xl) var(--spacing-lg); }
+  .guide-sidebar { position: sticky; top: 80px; height: fit-content; }
+  .back-link { display: block; color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; margin-bottom: var(--spacing-lg); }
+  .toc { list-style: none; display: flex; flex-direction: column; gap: var(--spacing-sm); }
+  .toc a { color: var(--md-sys-color-on-surface-variant); font-size: 0.875rem; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 6px; display: block; }
+  .toc a:hover { color: var(--md-sys-color-primary); background: rgba(0,188,212,0.08); text-decoration: none; }
+  .guide-tag { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--md-sys-color-primary); }
+  .guide-header { margin-bottom: var(--spacing-2xl); }
+  .guide-header h1 { font-size: var(--md-sys-typescale-display-small-size); font-weight: 800; margin: var(--spacing-sm) 0 var(--spacing-md); }
+  .guide-lead { color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; }
+  .guide-content section { margin-bottom: var(--spacing-2xl); }
+  .guide-content h2 { font-size: var(--md-sys-typescale-headline-small-size); font-weight: 700; margin-bottom: var(--spacing-lg); color: var(--md-sys-color-primary); }
+  .guide-content p { margin-bottom: var(--spacing-md); color: var(--md-sys-color-on-surface-variant); line-height: 1.7; }
+  .guide-content pre { margin-bottom: var(--spacing-md); }
+  .guide-content ul, .guide-content ol { margin: 0 0 var(--spacing-md) var(--spacing-xl); color: var(--md-sys-color-on-surface-variant); line-height: 2; }
+  .guide-content li strong { color: var(--md-sys-color-on-surface); }
+  .steps a { color: var(--md-sys-color-primary); }
+  .callout { display: flex; gap: var(--spacing-md); align-items: flex-start; padding: var(--spacing-md) var(--spacing-lg); margin: var(--spacing-md) 0; }
+  .callout md-icon { color: #FFB74D; flex-shrink: 0; }
+  .callout p { margin: 0; }
+  .guide-nav { display: flex; justify-content: space-between; margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--md-sys-color-outline); }
+  .nav-prev, .nav-next { padding: var(--spacing-sm) var(--spacing-lg); color: var(--md-sys-color-primary); font-weight: 500; }
+  @media (max-width: 768px) { .guide-page { grid-template-columns: 1fr; } .guide-sidebar { display: none; } }
+</style>

@@ -1,0 +1,41 @@
+{
+  "id": "cto-review",
+  "name": "CTO Project Review",
+  "description": "Run parallel dev:audit, dev:test, and worker:health checks then compile a project scorecard.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:review",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/review",
+  "estimated_credits": 5,
+  "estimated_minutes": 20,
+  "dag": {
+    "groups": [
+      {
+        "id": "health-checks",
+        "name": "Health Checks",
+        "mode": "parallel",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/cto/review/audit.md" },
+          { "id": "dev-test", "args": "--output reports/cto/review/test-results.md" },
+          { "id": "worker-health", "args": "--output reports/cto/review/health.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "scorecard",
+        "name": "Generate Scorecard",
+        "mode": "sequential",
+        "commands": [
+          { "id": "cto-scorecard", "args": "--output reports/cto/review/scorecard.md" }
+        ],
+        "depends_on": ["health-checks"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/review/SUMMARY.md",
+      "template": "Compile audit, test results, health checks, and scorecard into a CTO review report with: overall health score, critical issues, technical debt, performance metrics, and recommended actions."
+    }
+  }
+}

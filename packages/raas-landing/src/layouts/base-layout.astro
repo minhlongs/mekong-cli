@@ -1,0 +1,103 @@
+---
+import '../styles/global.css';
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: 'vi' | 'en';
+}
+const {
+  title = 'OpenClaw — AI Vận Hành Doanh Nghiệp',
+  description = 'AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh.',
+  lang = 'vi',
+} = Astro.props;
+const isEn = lang === 'en';
+const base = isEn ? '/en' : '';
+const labels = isEn
+  ? { features: 'Features', pricing: 'Pricing', faq: 'FAQ', cta: 'Start Free', pLink: '/en/pricing' }
+  : { features: 'Tính năng', pricing: 'Bảng giá', faq: 'FAQ', cta: 'Dùng miễn phí', pLink: '/pricing' };
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content="https://agencyos.network/og-default.jpg" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>{title}</title>
+  <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+</head>
+<body>
+
+<!-- Sticky nav -->
+<nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
+    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text">OpenClaw</a>
+    <div style="display:flex;align-items:center;gap:28px;">
+      <a href={`${base}/#features`} class="nav-link">{labels.features}</a>
+      <a href={labels.pLink} class="nav-link">{labels.pricing}</a>
+      <a href={`${base}/#faq`} class="nav-link">FAQ</a>
+      <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;">
+        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`}>VI</a>
+        <span style="color:var(--md-on-surface-muted);">|</span>
+        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`}>EN</a>
+      </div>
+      <a href="https://app.agencyos.network/signup" class="btn-primary" style="padding:10px 20px;font-size:0.875rem;">{labels.cta}</a>
+    </div>
+  </div>
+</nav>
+
+<main><slot /></main>
+
+<!-- Footer -->
+<footer style="background:var(--md-surface-container);border-top:1px solid var(--md-outline);padding:64px 0 32px;">
+  <div class="container">
+    <div class="grid-3" style="margin-bottom:48px;">
+      <div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:12px;" class="gradient-text">OpenClaw</div>
+        <p style="color:var(--md-on-surface-muted);font-size:0.875rem;line-height:1.7;max-width:240px;">
+          {isEn ? 'AI-powered business automation for modern enterprises.' : 'Nền tảng tự động hóa doanh nghiệp bằng AI hiện đại.'}
+        </p>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Product' : 'Sản phẩm'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Features' : 'Tính năng'}</a>
+          <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;">{isEn ? 'Pricing' : 'Bảng giá'}</a>
+          <a href="https://docs.agencyos.network" class="nav-link" style="font-size:0.875rem;">API Docs</a>
+          <a href="https://dashboard.agencyos.network/dashboard" class="nav-link" style="font-size:0.875rem;">Dashboard</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;">{isEn ? 'Company' : 'Công ty'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'About' : 'Về chúng tôi'}</a>
+          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;">{isEn ? 'Contact' : 'Liên hệ'}</a>
+        </div>
+      </div>
+    </div>
+    <hr class="divider" />
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
+        <span class="built-badge">⚡ Built with AI</span>
+      </div>
+      <div style="display:flex;gap:20px;">
+        <a href="/privacy" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Privacy' : 'Bảo mật'}</a>
+        <a href="/terms" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Terms' : 'Điều khoản'}</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('animate-in'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.animate-on-scroll').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+description = "Department budgets, financial forecast, budget allocation and approval deck. 3 commands, ~20 min."
+
+[steps]
+[steps.run]
+command = "mekong finance-budget-plan {{args}}"

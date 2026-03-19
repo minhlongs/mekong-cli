@@ -1,0 +1,5 @@
+description = "Blog pipeline — keyword research, then draft + SEO optimize in parallel. 3 commands, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong writer-blog {{args}}"

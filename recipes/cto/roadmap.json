@@ -1,0 +1,40 @@
+{
+  "id": "cto-roadmap",
+  "name": "CTO Technical Roadmap",
+  "description": "Scout the codebase, define milestones, then create a pm:plan for each milestone.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:roadmap",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/roadmap",
+  "estimated_credits": 5,
+  "estimated_minutes": 20,
+  "dag": {
+    "groups": [
+      {
+        "id": "scout",
+        "name": "Scout Codebase",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/cto/roadmap/current-state.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "milestones",
+        "name": "Define Milestones",
+        "mode": "sequential",
+        "commands": [
+          { "id": "pm-milestone", "args": "--output reports/cto/roadmap/milestones.md" },
+          { "id": "pm-plan", "args": "--output reports/cto/roadmap/execution-plan.md" }
+        ],
+        "depends_on": ["scout"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/roadmap/SUMMARY.md",
+      "template": "Compile codebase assessment, milestones, and execution plan into a technical roadmap with: current state, target architecture, milestone timeline, dependencies, and resource estimates."
+    }
+  }
+}

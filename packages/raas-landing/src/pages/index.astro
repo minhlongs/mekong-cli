@@ -1,0 +1,278 @@
+---
+import BaseLayout from '../layouts/base-layout.astro';
+
+const features = [
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.' },
+  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.' },
+  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.' },
+  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.' },
+];
+
+const steps = [
+  { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
+  { num: '02', title: 'Kết nối Zalo / FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
+  { num: '03', title: 'AI vận hành tự động', time: '24/7', desc: 'Hệ thống tự học, tự trả lời, tự báo cáo từ phút đầu.' },
+];
+
+const plans = [
+  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: 'https://app.agencyos.network/signup', featured: false },
+  { name: 'Starter', price: '$8', period: '/mo', tag: '', features: ['500 credits/tháng', 'AI Receptionist 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro', price: '$20', period: '/mo', tag: 'Phổ biến nhất', features: ['2.000 credits/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
+  { name: 'Enterprise', price: '$120', period: '/mo', tag: '', features: ['Credits không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
+];
+
+const faqs = [
+  { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong 5 phút đầu tiên.' },
+  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
+  { q: 'Thanh toán bằng gì?', a: 'Thanh toán qua Polar.sh với Visa/Mastercard. Hỗ trợ toàn cầu, giá USD.' },
+  { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ.' },
+  { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
+];
+
+const platformStats = [
+  { value: '319', label: 'Commands', desc: 'CLI commands cho mọi tầng' },
+  { value: '540', label: 'AI Skills', desc: 'Kho skill chuyên biệt' },
+  { value: '17', label: 'AI Agents', desc: 'Agent tự vận hành' },
+  { value: '410', label: 'Contracts', desc: 'Machine contract sẵn dùng' },
+  { value: '13', label: 'Hooks', desc: 'Auto-trigger pipeline' },
+];
+
+const testimonials = [
+  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.' },
+  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.' },
+  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.' },
+];
+---
+
+<BaseLayout title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động" lang="vi">
+
+  <!-- HERO -->
+  <section style="background:linear-gradient(135deg,#0a0f1a 0%,#1a1040 50%,#0a2030 100%);min-height:90vh;display:flex;align-items:center;position:relative;overflow:hidden;">
+    <!-- Animated mesh orbs -->
+    <div style="position:absolute;top:15%;left:5%;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.12),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 16s ease-in-out infinite alternate;"></div>
+    <div style="position:absolute;bottom:10%;right:8%;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.1),transparent 70%);filter:blur(40px);pointer-events:none;animation:meshDrift 20s ease-in-out infinite alternate-reverse;"></div>
+    <div style="position:absolute;top:60%;left:40%;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);filter:blur(30px);pointer-events:none;animation:meshDrift 24s ease-in-out infinite alternate;"></div>
+
+    <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
+      <div style="max-width:760px;">
+        <div class="badge animate-in" style="margin-bottom:28px;">✨ Mới — AI Receptionist cho Zalo &amp; Facebook</div>
+        <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
+          <span class="gradient-text">AI Vận Hành</span><br />Doanh Nghiệp Tự Động
+        </h1>
+        <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--md-on-surface-muted);max-width:520px;margin-bottom:16px;" class="animate-in">
+          Trả lời khách 24/7 · Tạo content tự động · CRM thông minh
+        </p>
+        <!-- Stats row -->
+        <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in">
+          {[['500+', 'doanh nghiệp'],['1M+', 'tin nhắn'],['99.9%', 'uptime']].map(([v,l]) => (
+            <div>
+              <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.5rem;font-weight:800;" class="gradient-text">{v}</div>
+              <div style="font-size:0.8rem;color:var(--md-on-surface-muted);">{l}</div>
+            </div>
+          ))}
+        </div>
+        <!-- Social proof badges -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in">
+          <span class="proof-badge"><span class="dot"></span>500+ doanh nghiệp tin dùng</span>
+          <span class="proof-badge">🏆 Top 1 Việt Nam 2025</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in">
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;">Thử miễn phí 14 ngày →</a>
+          <a href="#features" class="btn-outline">Xem tính năng</a>
+        </div>
+      </div>
+
+      <!-- Terminal mockup -->
+      <div class="terminal animate-on-scroll" style="margin-top:56px;max-width:520px;">
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <span style="width:10px;height:10px;border-radius:50%;background:#FF5F56;display:inline-block;"></span>
+          <span style="width:10px;height:10px;border-radius:50%;background:#FFBD2E;display:inline-block;"></span>
+          <span style="width:10px;height:10px;border-radius:50%;background:#27C93F;display:inline-block;"></span>
+        </div>
+        <div style="color:#94a3b8;">$ <span style="color:#00BCD4;">openclaw</span> cook "Trả lời khách hỏi giá bánh mì"</div>
+        <div style="color:#64748b;">→ Phân tích yêu cầu...</div>
+        <div style="color:#64748b;">→ Tìm menu trong CRM...</div>
+        <div style="color:#94a3b8;">✓ <span style="color:#4ade80;">Đã trả lời:</span> "Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</div>
+        <div style="color:#64748b;">→ Lưu vào CRM: khách quan tâm combo</div>
+        <div style="color:#7C4DFF;">⚡ 1.2s · 1 credit used</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" style="background:var(--md-surface);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">Tính năng</div>
+        <h2 class="headline">Mọi thứ bạn cần để <span class="gradient-text">bán hàng hiệu quả</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI làm thay những việc lặp lại, bạn tập trung vào tăng trưởng.</p>
+      </div>
+      <div class="grid-4">
+        {features.map((f, i) => (
+          <div class="card-glass animate-on-scroll" style={`animation-delay:${i * 0.1}s`}>
+            <div class="icon-container">{f.icon}</div>
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:10px;">{f.title}</h3>
+            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.65;">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section style="background:var(--md-surface-container);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">Bắt đầu</div>
+        <h2 class="headline">Chỉ <span class="gradient-text">3 bước</span> là xong</h2>
+      </div>
+      <!-- Connector dots (desktop only) -->
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:-20px;padding:0 calc(100%/6 - 20px);position:relative;z-index:1;" class="animate-on-scroll">
+        <span class="step-dot"></span><span class="step-line"></span>
+        <span class="step-dot"></span><span class="step-line"></span>
+        <span class="step-dot"></span>
+      </div>
+      <div class="grid-3">
+        {steps.map((s, i) => (
+          <div class="card animate-on-scroll" style={`position:relative;overflow:hidden;animation-delay:${i*0.12}s`}>
+            <div style="position:absolute;top:16px;right:20px;font-family:'Be Vietnam Pro',sans-serif;font-size:3.5rem;font-weight:800;color:rgba(0,188,212,0.06);line-height:1;user-select:none;">{s.num}</div>
+            <div class="badge" style="margin-bottom:16px;font-size:0.78rem;">{s.time}</div>
+            <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:10px;">{s.title}</h3>
+            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM POWER -->
+  <section style="background:var(--md-surface);position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,188,212,0.04),transparent 70%);pointer-events:none;"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">Nền tảng</div>
+        <h2 class="headline">Sức mạnh <span class="gradient-text">đằng sau mỗi lệnh</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">Hệ sinh thái AI lớn nhất cho vận hành doanh nghiệp — được xây dựng bởi những kỹ sư hàng đầu.</p>
+      </div>
+      <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+        {platformStats.map((s, i) => (
+          <div class="card-glass animate-on-scroll" style={`text-align:center;min-width:160px;flex:1;max-width:200px;animation-delay:${i*0.08}s`}>
+            <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.5rem;font-weight:800;line-height:1;" class="gradient-text">{s.value}</div>
+            <div style="font-size:0.9rem;font-weight:600;margin:8px 0 4px;">{s.label}</div>
+            <div style="font-size:0.78rem;color:var(--md-on-surface-muted);">{s.desc}</div>
+          </div>
+        ))}
+      </div>
+      <div class="text-center" style="margin-top:36px;">
+        <a href="https://docs.agencyos.network/guides/all-commands" class="btn-outline" style="font-size:0.9rem;padding:10px 24px;">Xem toàn bộ →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <section style="background:var(--md-surface-container);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
+        <div class="badge" style="margin-bottom:16px;">Khách hàng nói gì</div>
+        <h2 class="headline">Được <span class="gradient-text">tin dùng</span> bởi founder Việt</h2>
+      </div>
+      <div class="grid-3">
+        {testimonials.map((t, i) => (
+          <div class="card animate-on-scroll" style={`animation-delay:${i*0.1}s`}>
+            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;margin-bottom:16px;font-style:italic;">"{t.text}"</p>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#00BCD4,#7C4DFF);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;">{t.name[0]}</div>
+              <div>
+                <div style="font-size:0.85rem;font-weight:600;">{t.name}</div>
+                <div style="font-size:0.75rem;color:var(--md-on-surface-muted);">{t.role}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="background:var(--md-surface);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:0;">
+        <div class="badge" style="margin-bottom:16px;">Bảng giá</div>
+        <h2 class="headline">Minh bạch, <span class="gradient-text">không phí ẩn</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14 ngày dùng thử miễn phí. Huỷ bất cứ lúc nào.</p>
+        <!-- Toggle (visual only) -->
+        <div style="display:flex;justify-content:center;margin-bottom:48px;">
+          <div class="pricing-toggle">
+            <span class="toggle-opt active">Hàng tháng</span>
+            <span class="toggle-opt">Hàng năm <span style="font-size:0.7rem;color:#4ade80;margin-left:4px;">-20%</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="grid-4" style="align-items:start;">
+        {plans.map((p, i) => (
+          <div class={`animate-on-scroll${p.featured ? ' pricing-featured' : ' card'}`} style={`animation-delay:${i*0.1}s;border-radius:var(--md-radius);padding:28px;position:relative;${!p.featured ? 'background:var(--md-surface-container);border:1px solid var(--md-outline);' : ''}`}>
+            {p.tag && (
+              <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00BCD4,#7C4DFF);color:#fff;font-size:0.72rem;font-weight:700;padding:4px 14px;border-radius:100px;white-space:nowrap;">{p.tag}</div>
+            )}
+            <div style="margin-bottom:20px;">
+              <div style="font-size:0.85rem;color:var(--md-on-surface-muted);margin-bottom:6px;">{p.name}</div>
+              <div style="display:flex;align-items:baseline;gap:2px;">
+                <span style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.2rem;font-weight:800;">{p.price}</span>
+                <span style="font-size:0.85rem;color:var(--md-on-surface-muted);">{p.period}</span>
+              </div>
+            </div>
+            <ul style="list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:10px;">
+              {p.features.map(feat => (
+                <li style="font-size:0.875rem;color:var(--md-on-surface-muted);display:flex;gap:8px;align-items:flex-start;">
+                  <span style="color:#00BCD4;flex-shrink:0;font-weight:600;">✓</span>{feat}
+                </li>
+              ))}
+            </ul>
+            <a href={p.href} class={p.featured ? 'btn-primary' : 'btn-outline'} style="display:flex;justify-content:center;width:100%;text-align:center;">{p.cta}</a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" style="background:var(--md-surface-container);">
+    <div class="container" style="max-width:720px;">
+      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
+        <div class="badge" style="margin-bottom:16px;">FAQ</div>
+        <h2 class="headline">Câu hỏi <span class="gradient-text">thường gặp</span></h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        {faqs.map((f, i) => (
+          <details class="card animate-on-scroll" style={`animation-delay:${i*0.08}s;padding:0;`} open={i===0}>
+            <summary style="padding:20px 24px;cursor:pointer;font-weight:600;font-size:0.975rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              {f.q}
+              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--md-primary);flex-shrink:0;transition:transform 0.25s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div style="padding:0 24px 20px;color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;border-top:1px solid var(--md-outline);">{f.a}</div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section style="background:var(--md-surface);">
+    <div class="container">
+      <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;"></div>
+        <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.1),transparent 70%);pointer-events:none;"></div>
+        <h2 class="headline" style="margin-bottom:16px;position:relative;">Sẵn sàng để AI <span class="gradient-text">làm việc cho bạn?</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;position:relative;">
+          Tham gia cùng 500+ doanh nghiệp đang tiết kiệm 20+ giờ/tuần với OpenClaw.
+        </p>
+        <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Bắt đầu miễn phí ngay →</a>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    details[open] summary svg { transform: rotate(180deg); }
+  </style>
+
+</BaseLayout>

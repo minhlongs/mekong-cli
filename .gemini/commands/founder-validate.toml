@@ -1,0 +1,5 @@
+description = "Validate business model before spending money — PMF, economics, market, moat. 5 commands, ~25 min."
+
+[steps]
+[steps.run]
+command = "mekong founder-validate {{args}}"

@@ -1,0 +1,49 @@
+{
+  "id": "cto-incident",
+  "name": "CTO Incident Response",
+  "description": "Debug the incident via dev:debug, rollback via worker:rollback, then write a post-mortem.",
+  "version": "1.0.0",
+  "layer": "cto",
+  "trigger": "/cto:incident",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/cto/incident",
+  "estimated_credits": 8,
+  "estimated_minutes": 20,
+  "dag": {
+    "groups": [
+      {
+        "id": "triage",
+        "name": "Triage Incident",
+        "mode": "parallel",
+        "commands": [
+          { "id": "dev-debug", "args": "--output reports/cto/incident/debug-report.md" },
+          { "id": "worker-log", "args": "--output reports/cto/incident/logs.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "mitigate",
+        "name": "Mitigate",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-rollback", "args": "--output reports/cto/incident/rollback-log.md" }
+        ],
+        "depends_on": ["triage"]
+      },
+      {
+        "id": "post-mortem",
+        "name": "Post-Mortem",
+        "mode": "sequential",
+        "commands": [
+          { "id": "worker-health", "args": "--output reports/cto/incident/post-recovery-health.md" }
+        ],
+        "depends_on": ["mitigate"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/cto/incident/SUMMARY.md",
+      "template": "Compile debug report, logs, rollback log, and post-recovery health check into an incident post-mortem with: timeline, root cause, impact, mitigation steps, recovery status, and preventive actions."
+    }
+  }
+}

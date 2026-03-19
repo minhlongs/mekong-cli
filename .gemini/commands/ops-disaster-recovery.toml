@@ -1,0 +1,5 @@
+description = "Backup → test restore → verify integrity → document. 3 commands, ~15 min."
+
+[steps]
+[steps.run]
+command = "mekong ops-disaster-recovery {{args}}"

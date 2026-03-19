@@ -1,0 +1,7 @@
+{
+  "nav": { "overview": "Overview", "messages": "Messages", "content": "Content", "contacts": "Contacts", "reports": "Reports", "settings": "Settings", "upgrade": "Upgrade", "logout": "Logout" },
+  "auth": { "login": "Login", "signup": "Sign up", "enterKey": "Enter API Key", "noAccount": "No account? Sign up free" },
+  "dashboard": { "title": "Overview", "todayMessages": "Messages today", "totalContacts": "Contacts", "pendingContent": "Pending content", "credits": "Credits", "aiRunning": "AI is running" },
+  "content": { "title": "Content", "generate": "Generate 7-day content", "generating": "Generating...", "approve": "Approve", "reject": "Reject", "empty": "No posts yet" },
+  "onboard": { "step1": "Choose industry", "step2": "Business info", "step3": "Connect channels", "step4": "Upload menu", "step5": "Activate AI" }
+}

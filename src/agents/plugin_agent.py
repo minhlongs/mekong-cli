@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..core.agent_base import AgentBase, Task, Result
 
@@ -25,7 +25,7 @@ class PluginAgent(AgentBase):
     - update: Update plugin to latest version
     """
 
-    def __init__(self, cwd: str = ".", registry_path: str | None = None) -> None:
+    def __init__(self, cwd: str = ".", registry_path: Optional[str] = None) -> None:
         """Initialize PluginAgent.
 
         Args:

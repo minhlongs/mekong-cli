@@ -1,0 +1,40 @@
+{
+  "id": "dev-review",
+  "name": "Dev Code Review",
+  "description": "Scan the codebase via worker:scan then perform LLM-powered analysis for quality and correctness.",
+  "version": "1.0.0",
+  "layer": "dev",
+  "trigger": "/dev:review",
+  "input": "$ARGUMENTS",
+  "output_dir": "reports/dev/review",
+  "estimated_credits": 3,
+  "estimated_minutes": 10,
+  "dag": {
+    "groups": [
+      {
+        "id": "scan",
+        "name": "Static Scan",
+        "mode": "parallel",
+        "commands": [
+          { "id": "worker-scan", "args": "--lint --output reports/dev/review/lint.md" },
+          { "id": "worker-scan", "args": "--types --output reports/dev/review/types.md" }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "analyze",
+        "name": "LLM Analysis",
+        "mode": "sequential",
+        "commands": [
+          { "id": "dev-audit", "args": "--output reports/dev/review/audit.md" }
+        ],
+        "depends_on": ["scan"]
+      }
+    ],
+    "on_complete": {
+      "compile_summary": true,
+      "summary_file": "reports/dev/review/SUMMARY.md",
+      "template": "Compile lint, type check, and audit findings into a code review report with: quality score, critical issues, style violations, suggested improvements, and approval recommendation."
+    }
+  }
+}

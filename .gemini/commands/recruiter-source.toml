@@ -1,0 +1,5 @@
+description = "Job requirements, candidate search, outreach. 2 commands, ~10 min."
+
+[steps]
+[steps.run]
+command = "mekong recruiter-source {{args}}"

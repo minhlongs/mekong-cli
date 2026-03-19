@@ -1,0 +1,42 @@
+{
+  "panes": {
+    "0": {
+      "project": "mekong-cli",
+      "dir": "",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "nodejs",
+      "deploy_cmd": "pnpm run build"
+    },
+    "1": {
+      "project": "algo-trader",
+      "dir": "apps/algo-trader",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "typescript",
+      "deploy_cmd": "npx tsc --noEmit"
+    },
+    "2": {
+      "project": "well",
+      "dir": "apps/well",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "nextjs",
+      "deploy_cmd": "npm run build"
+    },
+    "3": {
+      "project": "sophia-ai-factory",
+      "dir": "apps/sophia-proposal",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "nextjs",
+      "deploy_cmd": "npm run build"
+    }
+  },
+  "daemon": {
+    "auto_approve": true,
+    "jidoka_enabled": true,
+    "delegation_template": true,
+    "max_retries": 3
+  }
+}

@@ -15,6 +15,16 @@ import { registerLicenseAdminCommand } from './commands/license-admin.js';
 import { registerBillingCommand } from './commands/billing.js';
 import { registerUsageCommand } from './commands/usage.js';
 import { registerAnalyticsCommand } from './commands/analytics.js';
+import { registerRoiaasCommands } from './commands/roiaas.js';
+import { registerRaasCommand } from './commands/raas.js';
+import { registerCtoCommand } from './commands/cto.js';
+import { registerCliProviderCommand } from './commands/cli-provider.js';
+import { registerRdCommand } from './commands/rd.js';
+import { registerAgiCommand } from './commands/agi.js';
+import { registerRaasMarketplaceCommand } from './commands/raas-marketplace.js';
+import { registerSwarmDashboardCommand } from './commands/swarm-dashboard.js';
+import { registerSoloOsCommand } from './commands/solo-os.js';
+import { registerVcGovernanceCommand } from './commands/vc-governance.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -60,6 +70,18 @@ export async function main(argv?: string[]): Promise<void> {
   registerBillingCommand(program);
   registerUsageCommand(program);
   registerAnalyticsCommand(program);
+
+  // ROIaaS 5-level command stack: studio → cto → pm → dev → worker
+  registerRoiaasCommands(program, engine);
+  registerRaasCommand(program, engine);
+  registerCtoCommand(program, engine);
+  registerCliProviderCommand(program, engine);
+  registerRdCommand(program, engine);
+  registerAgiCommand(program, engine);
+  registerRaasMarketplaceCommand(program, engine);
+  registerSwarmDashboardCommand(program, engine);
+  registerSoloOsCommand(program, engine);
+  registerVcGovernanceCommand(program, engine);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();

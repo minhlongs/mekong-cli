@@ -1,0 +1,77 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Báo cáo" activePage="/reports">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <h2 style="font-size:18px">Báo cáo tuần</h2>
+    <button class="btn btn-secondary btn-sm" id="btn-refresh">↻ Làm mới</button>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px">🤖</span>
+      <strong>Nhận xét AI</strong>
+    </div>
+    <p id="ai-summary" style="color:var(--text2);font-size:13px;line-height:1.6">Đang tải...</p>
+  </div>
+
+  <div class="card-grid" style="margin-bottom:16px">
+    <div class="stat-card">
+      <div class="stat-label">Tin nhắn trong tuần</div>
+      <div class="stat-value" id="r-messages">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Khách hàng mới</div>
+      <div class="stat-value" id="r-new-contacts">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Bài đã đăng</div>
+      <div class="stat-value" id="r-posts">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tỉ lệ phản hồi</div>
+      <div class="stat-value" id="r-response-rate">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong style="display:block;margin-bottom:12px">Chi tiết hoạt động</strong>
+    <div id="weekly-detail" style="color:var(--text2);font-size:13px">Đang tải...</div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://api.agencyos.network';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  const key = () => localStorage.getItem('mk_api_key');
+  const h = () => ({ Authorization: 'Bearer ' + key() });
+
+  async function load() {
+    try {
+      const data = await fetch(API + '/v1/reports/weekly', { headers: h() }).then(r => r.json());
+      document.getElementById('ai-summary').textContent = data.ai_summary || 'Chưa có dữ liệu đủ để phân tích tuần này.';
+      document.getElementById('r-messages').textContent     = data.total_messages     ?? '0';
+      document.getElementById('r-new-contacts').textContent = data.new_contacts       ?? '0';
+      document.getElementById('r-posts').textContent        = data.posts_published    ?? '0';
+      const rate = data.response_rate;
+      document.getElementById('r-response-rate').textContent = rate != null ? rate + '%' : '—';
+
+      const details = data.daily_breakdown;
+      if (Array.isArray(details) && details.length) {
+        document.getElementById('weekly-detail').innerHTML = details.map(d =>
+          `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span>${d.date || ''}</span>
+            <span>${d.messages ?? 0} tin · ${d.new_contacts ?? 0} khách mới</span>
+          </div>`).join('');
+      } else {
+        document.getElementById('weekly-detail').textContent = 'Chưa có dữ liệu chi tiết.';
+      }
+    } catch {
+      document.getElementById('ai-summary').textContent = 'Không thể tải báo cáo.';
+    }
+  }
+
+  document.getElementById('btn-refresh').addEventListener('click', load);
+  load();
+</script>

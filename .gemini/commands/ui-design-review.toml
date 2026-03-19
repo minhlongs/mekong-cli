@@ -1,0 +1,5 @@
+description = "Audit components, check consistency, flag issues. 2 commands, ~8 min."
+
+[steps]
+[steps.run]
+command = "mekong ui-design-review {{args}}"

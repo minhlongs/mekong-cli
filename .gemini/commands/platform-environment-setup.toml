@@ -1,0 +1,5 @@
+description = "Init → install deps → configure MCP → verify environment setup"
+
+[steps]
+[steps.run]
+command = "mekong platform-environment-setup {{args}}"

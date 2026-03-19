@@ -33,6 +33,12 @@ echo $$ > "$PID_FILE"
 PANE_STATE_DIR="/tmp/pane_state"
 mkdir -p "$PANE_STATE_DIR"
 
+# ─── UNIVERSAL TOOL ADAPTER ───
+source "$HOME/mekong-cli/mekong/adapters/registry.sh" 2>/dev/null || true
+ACTIVE_TOOL=$(select_tool "${MEKONG_TOOL:-auto}" 2>/dev/null || echo "claude")
+LAUNCH_CMD=$(get_launch_cmd "$ACTIVE_TOOL" "$HOME/mekong-cli" 2>/dev/null || echo "cd ~/mekong-cli && claude --dangerously-skip-permissions")
+echo "🔧 Active tool: $ACTIVE_TOOL"
+
 # ═══════════════════════════════════════════════════════════════
 # TRAP + CLEANUP — Kill zombie processes on exit
 # ═══════════════════════════════════════════════════════════════
@@ -231,12 +237,12 @@ preflight() {
     local PROJ=${PANE_PROJECTS[$i]}
     if tmux capture-pane -t "$TMUX_SESSION:0.$P" -p > /dev/null 2>&1; then
       local TAIL=$(tmux capture-pane -t "$TMUX_SESSION:0.$P" -p 2>/dev/null | tail -3)
-      if echo "$TAIL" | grep -qE "❯|bypass|thinking|Cooking"; then
+      if echo "$TAIL" | grep -qE "❯|bypass|thinking|Cooking|Type your message|aider>|codex>"; then
         echo "   ✅ P$P ($PROJ): CC CLI alive"
         PASS=$((PASS + 1))
       elif echo "$TAIL" | grep -qE "bash-5|% $"; then
         echo "   ⚠️  P$P ($PROJ): shell only — auto-respawning CC CLI"
-        tmux send-keys -t "$TMUX_SESSION:0.$P" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions" 2>/dev/null || true
+        tmux send-keys -t "$TMUX_SESSION:0.$P" -l "$LAUNCH_CMD" 2>/dev/null || true
         sleep 0.5
         tmux send-keys -t "$TMUX_SESSION:0.$P" Enter 2>/dev/null || true
         PASS=$((PASS + 1))
@@ -750,7 +756,7 @@ while true; do
     fi
     if ! check_pane_health "$PANE"; then
       echo "🔄 [P$PANE] Attempting respawn..."
-      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions" 2>/dev/null || true
+      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$LAUNCH_CMD" 2>/dev/null || true
       sleep 0.5
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter 2>/dev/null || true
       log_metric "respawn" "triggered" "0" "$PANE" "$PROJECT"
@@ -771,7 +777,7 @@ while true; do
     if echo "$LAST_5" | grep -qE "bash-5|% $"; then
       echo "☠️ [P$PANE] CRASHED — Restarting CC CLI..."
       log_metric "crash" "detected" "0" "$PANE" "$PROJECT"
-      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "cd ~/mekong-cli && claude --dangerously-skip-permissions"
+      tmux send-keys -t "$TMUX_SESSION:0.$PANE" -l "$LAUNCH_CMD"
       sleep 0.5
       tmux send-keys -t "$TMUX_SESSION:0.$PANE" Enter
       mark_dispatch_done "$PANE"
@@ -832,7 +838,7 @@ while true; do
     fi
 
     # TRULY IDLE → dispatch command with cascade logic
-    if echo "$LAST_5" | grep -qE "❯|bypass permissions"; then
+    if echo "$LAST_5" | grep -qE "❯|bypass permissions|Type your message|aider>|codex>|^>"; then
       # GUARD: if dispatch timestamp exists and < 10min old, pane may still be processing
       if [ -f "/tmp/cto_dispatch_ts_P${PANE}" ]; then
         ACTIVE_TS=$(cat "/tmp/cto_dispatch_ts_P${PANE}" 2>/dev/null || echo "0")

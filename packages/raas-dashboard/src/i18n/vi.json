@@ -1,0 +1,7 @@
+{
+  "nav": { "overview": "Tổng quan", "messages": "Tin nhắn", "content": "Nội dung", "contacts": "Khách hàng", "reports": "Báo cáo", "settings": "Cài đặt", "upgrade": "Nâng cấp", "logout": "Đăng xuất" },
+  "auth": { "login": "Đăng nhập", "signup": "Đăng ký", "enterKey": "Nhập API Key", "noAccount": "Chưa có? Đăng ký miễn phí" },
+  "dashboard": { "title": "Tổng quan", "todayMessages": "Tin nhắn hôm nay", "totalContacts": "Khách hàng", "pendingContent": "Bài chờ duyệt", "credits": "Credits", "aiRunning": "AI đang vận hành" },
+  "content": { "title": "Nội dung", "generate": "Tạo 7 ngày content", "generating": "Đang tạo...", "approve": "Duyệt", "reject": "Bỏ", "empty": "Chưa có bài nào" },
+  "onboard": { "step1": "Chọn ngành", "step2": "Thông tin doanh nghiệp", "step3": "Kết nối kênh", "step4": "Upload menu", "step5": "Kích hoạt AI" }
+}
