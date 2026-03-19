@@ -1197,6 +1197,8 @@ while true; do
   refresh_worker_mapping
 
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
+  # FIX: max 1 dispatch per cycle (brain call takes 30s → prevents serial stuffing)
+  local dispatched_this_cycle=false
   for pane_idx in 1 2 3; do
     # Guard: any failure in per-pane logic must not kill the loop
     {
@@ -1226,6 +1228,22 @@ while true; do
       # If idle → release lock + check missions/dispatch
       if is_idle "$output"; then
         release_pane_lock "${CTO_SESSION}" "$pane_idx"
+
+        # FIX: skip dispatch if already dispatched another pane this cycle
+        if [[ "$dispatched_this_cycle" == true ]]; then
+          log "P${pane_idx} (${name}): IDLE (1-dispatch-per-cycle limit)"
+          continue
+        fi
+
+        # FIX: double-sample idle check (1s apart) to close race window
+        sleep 1
+        local recheck_output
+        recheck_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
+        if [[ -n "$recheck_output" ]] && ! is_idle "$recheck_output"; then
+          log "P${pane_idx} (${name}): IDLE→BUSY detected (double-sample), skipping"
+          continue
+        fi
+
         # Priority 0: mission files bypass cooldown entirely
         mission_dir="${MEKONG_DIR}/missions"
         has_mission=false
@@ -1239,6 +1257,8 @@ while true; do
           WORKER_RETRIES[$pane_idx]=0
           dispatch_worker "$pane_idx" "$output"
           eval "LAST_DISPATCH_${pane_idx}=$NOW"
+          dispatched_this_cycle=true
+          sleep 2  # Let pane accept command before checking next pane
         else
           ld_var="LAST_DISPATCH_${pane_idx}"
           last_dispatch="${!ld_var:-0}"
@@ -1248,6 +1268,8 @@ while true; do
             WORKER_RETRIES[$pane_idx]=0
             dispatch_worker "$pane_idx" "$output"
             eval "LAST_DISPATCH_${pane_idx}=$NOW"
+            dispatched_this_cycle=true
+            sleep 2  # Let pane accept command before checking next pane
           else
             log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
           fi
