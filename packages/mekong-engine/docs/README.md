@@ -455,6 +455,28 @@ Revenue tracking, MRR/ARR calculations.
 | GET | `/v1/revenue/mrr` | ✓ | MRR breakdown |
 | GET | `/v1/revenue/arr` | ✓ | ARR calculation |
 
+**GET /v1/revenue/mrr**
+```json
+// Query: ?period=2026-03
+// Response
+{
+  "tenant_id": "tnt_xyz",
+  "period": "2026-03",
+  "mrr": 4900,
+  "breakdown": {
+    "subscription": 4500,
+    "usage_based": 400
+  },
+  "growth": {
+    "new_mrr": 800,
+    "expansion_mrr": 300,
+    "churn_mrr": -200,
+    "contraction_mrr": -100
+  },
+  "net_mrr_change": 800
+}
+```
+
 ---
 
 ### 15. Funding (`/v1/funding`)
@@ -468,6 +490,47 @@ Quadratic funding rounds with matching pool.
 | POST | `/v1/funding/rounds/:id/contribute` | ✓ | Contribute to pool |
 | POST | `/v1/funding/rounds/:id/apply` | ✓ | Apply for funding |
 | POST | `/v1/funding/rounds/:id/calculate` | ✓ | Calculate QF matching |
+
+**POST /v1/funding/rounds**
+```json
+// Request
+{
+  "name": "Q2 2026 Community Projects",
+  "description": "Quadratic funding round for community initiatives",
+  "matching_pool": 10000,
+  "start_date": "2026-04-01T00:00:00Z",
+  "end_date": "2026-04-30T23:59:59Z"
+}
+
+// Response (201 Created)
+{
+  "id": "round_abc123",
+  "name": "Q2 2026 Community Projects",
+  "matching_pool": 10000,
+  "total_contributions": 0,
+  "total_applicants": 0,
+  "status": "active"
+}
+```
+
+**POST /v1/funding/rounds/:id/calculate**
+```json
+// Response
+{
+  "round_id": "round_abc123",
+  "total_pool": 10000,
+  "total_contributions": 5000,
+  "projects": [
+    {
+      "project_id": "proj_1",
+      "contributions": [100, 25, 25],
+      "sum_sqrt": 20,
+      "matched_amount": 400
+    }
+  ],
+  "formula": "matched = (Σ√contribution_i)² - Σcontribution_i"
+}
+```
 
 **Quadratic Funding Formula:**
 ```
@@ -486,6 +549,55 @@ Skill profile matching algorithm.
 | GET | `/v1/matching/profiles/:id` | ✓ | Get profile |
 | POST | `/v1/matching/profiles/:id/find` | ✓ | Find matches |
 
+**POST /v1/matching/profiles**
+```json
+// Request
+{
+  "tenant_id": "tnt_xyz",
+  "user_id": "usr_abc",
+  "skills": [
+    { "name": "react", "level": 8, "years": 5 },
+    { "name": "python", "level": 7, "years": 3 },
+    { "name": "product-management", "level": 6, "years": 2 }
+  ],
+  "interests": ["ai-ml", "fintech", "developer-tools"],
+  "availability": "full-time"
+}
+
+// Response (201 Created)
+{
+  "id": "profile_abc123",
+  "user_id": "usr_abc",
+  "skills_count": 3,
+  "match_score_ready": true
+}
+```
+
+**POST /v1/matching/profiles/:id/find**
+```json
+// Request (optional filters)
+{
+  "required_skills": ["react", "nodejs"],
+  "min_match_score": 0.7,
+  "limit": 10
+}
+
+// Response
+{
+  "profile_id": "profile_abc123",
+  "matches": [
+    {
+      "profile_id": "profile_xyz",
+      "user_id": "usr_xyz",
+      "match_score": 0.85,
+      "common_skills": ["react", "nodejs", "typescript"],
+      "complementary_skills": ["design", "marketing"]
+    }
+  ],
+  "algorithm": "cosine_similarity_weighted_by_level"
+}
+```
+
 ---
 
 ### 17. Conflicts (`/v1/conflicts`)
@@ -499,12 +611,55 @@ Skill profile matching algorithm.
 | POST | `/v1/conflicts/:id/escalate` | ✓ | Escalate conflict |
 | POST | `/v1/conflicts/:id/resolve` | ✓ | Resolve conflict |
 
+**POST /v1/conflicts**
+```json
+// Request
+{
+  "title": "Dispute over feature priority",
+  "description": "Team A and Team B disagree on Q2 roadmap priority",
+  "parties": ["usr_abc", "usr_xyz"],
+  "level": "L1",
+  "context": {
+    "project": "platform-refresh",
+    "deadline": "2026-06-30"
+  }
+}
+
+// Response (201 Created)
+{
+  "id": "conflict_abc123",
+  "title": "Dispute over feature priority",
+  "level": "L1",
+  "status": "pending",
+  "assigned_mediator": null,
+  "next_action": "Direct negotiation between parties"
+}
+```
+
+**POST /v1/conflicts/:id/escalate**
+```json
+// Request
+{
+  "reason": "L1 negotiation failed after 7 days",
+  "requested_level": "L2"
+}
+
+// Response
+{
+  "conflict_id": "conflict_abc123",
+  "previous_level": "L1",
+  "new_level": "L2",
+  "assigned_mediator": "usr_mediator_1",
+  "next_steps": "Mediator will schedule joint session within 3 business days"
+}
+```
+
 **Conflict Levels:**
-1. `L1` — Direct negotiation
-2. `L2` — Mediator involvement
-3. `L3` — Stakeholder vote
-4. `L4` — Constitution review
-5. `L5` — Final arbitration
+1. `L1` — Direct negotiation (parties resolve themselves)
+2. `L2` — Mediator involvement (neutral third party)
+3. `L3` — Stakeholder vote (community decision)
+4. `L4` — Constitution review (compliance check)
+5. `L5` — Final arbitration (founder/CTO decision)
 
 ---
 
@@ -517,11 +672,56 @@ Progressive decentralization phase management.
 | GET | `/v1/decentralization/status` | ✓ | Current phase |
 | POST | `/v1/decentralization/transition` | ✓ | Transition phase |
 
+**GET /v1/decentralization/status**
+```json
+// Response
+{
+  "tenant_id": "tnt_xyz",
+  "current_phase": "P1",
+  "phase_name": "Delegation",
+  "started_at": "2026-01-15T00:00:00Z",
+  "metrics": {
+    "active_stakeholders": 12,
+    "proposals_voted": 8,
+    "team_leads": 4
+  },
+  "next_phase_requirements": {
+    "phase": "P2",
+    "missing": [
+      "Minimum 20 active stakeholders (current: 12)",
+      "3 successful stakeholder votes (current: 1)"
+    ]
+  }
+}
+```
+
+**POST /v1/decentralization/transition**
+```json
+// Request
+{
+  "target_phase": "P2",
+  "justification": "Met all P1 requirements: 20+ stakeholders, 3 votes completed"
+}
+
+// Response
+{
+  "tenant_id": "tnt_xyz",
+  "previous_phase": "P1",
+  "new_phase": "P2",
+  "transitioned_at": "2026-03-19T09:30:00Z",
+  "new_capabilities": [
+    "Stakeholder voting on proposals",
+    "Community-driven roadmap",
+    "Treasury transparency"
+  ]
+}
+```
+
 **Phases:**
-- `P0` — Centralized (founder controls)
-- `P1` — Delegation (team leads)
-- `P2` — Distributed (stakeholder voting)
-- `P3` — Decentralized (DAO governance)
+- `P0` — Centralized (founder controls all decisions)
+- `P1` — Delegation (team leads own domains)
+- `P2` — Distributed (stakeholder voting on key decisions)
+- `P3` — Decentralized (DAO governance, token-based voting)
 
 ---
 
@@ -537,6 +737,7 @@ Permission checking middleware.
 
 **POST /v1/rbac/check**
 ```json
+// Request
 {
   "tenant_id": "tnt_xyz",
   "user_id": "usr_abc",
@@ -546,7 +747,32 @@ Permission checking middleware.
 // Response
 {
   "allowed": true,
-  "role": "admin"
+  "role": "admin",
+  "granted_by": "role:admin",
+  "scope": "tenant"
+}
+```
+
+**POST /v1/rbac/roles**
+```json
+// Request
+{
+  "name": "moderator",
+  "description": "Community moderator with limited admin access",
+  "permissions": [
+    "content.approve",
+    "content.reject",
+    "users.view",
+    "reports.view"
+  ]
+}
+
+// Response (201 Created)
+{
+  "id": "role_mod123",
+  "name": "moderator",
+  "permissions_count": 4,
+  "created_at": "2026-03-19T09:30:00Z"
 }
 ```
 
@@ -562,11 +788,38 @@ Permission checking middleware.
 | POST | `/v1/constitution/layers` | ✓ | Add layer |
 | POST | `/v1/constitution/check` | ✓ | Compliance check |
 
+**POST /v1/constitution/check**
+```json
+// Request
+{
+  "tenant_id": "tnt_xyz",
+  "action": "governance.proposal.execute",
+  "proposal_id": "prop_abc123",
+  "context": {
+    "votes_for": 150,
+    "votes_against": 80,
+    "quorum": 100
+  }
+}
+
+// Response
+{
+  "compliant": true,
+  "layer_checks": [
+    { "layer": "L0", "passed": true, "message": "No core principle violations" },
+    { "layer": "L1", "passed": true, "message": "Governance rules satisfied (quorum met)" },
+    { "layer": "L2", "passed": true, "message": "Operational policies approved" },
+    { "layer": "L3", "passed": true, "message": "Procedures followed" }
+  ],
+  "can_execute": true
+}
+```
+
 **Layers:**
-- `L0` — Core principles (immutable)
-- `L1` — Governance rules (stakeholder vote)
+- `L0` — Core principles (immutable, requires 100% stakeholder consensus to change)
+- `L1` — Governance rules (stakeholder vote, 2/3 majority)
 - `L2` — Operational policies (team lead approval)
-- `L3` — Procedures (automated)
+- `L3` — Procedures (automated enforcement)
 
 ---
 
@@ -580,6 +833,54 @@ Plugin marketplace with reviews.
 | POST | `/v1/marketplace/plugins` | ✓ | Submit plugin |
 | GET | `/v1/marketplace/plugins/:id` | ✓ | Plugin details |
 | POST | `/v1/marketplace/plugins/:id/review` | ✓ | Add review |
+
+**POST /v1/marketplace/plugins**
+```json
+// Request
+{
+  "name": "slack-integration",
+  "version": "1.0.0",
+  "description": "Send mission completions to Slack channels",
+  "author": "usr_abc",
+  "category": "integration",
+  "manifest": {
+    "endpoints": ["POST /slack/notify"],
+    "permissions": ["missions.read", "channels.write"],
+    "env_vars": ["SLACK_WEBHOOK_URL"]
+  },
+  "pricing": {
+    "type": "freemium",
+    "credits": 1
+  }
+}
+
+// Response (201 Created)
+{
+  "id": "plugin_slack123",
+  "name": "slack-integration",
+  "status": "pending_review",
+  "submitted_at": "2026-03-19T09:30:00Z"
+}
+```
+
+**GET /v1/marketplace/plugins/:id/reviews**
+```json
+// Response
+{
+  "plugin_id": "plugin_slack123",
+  "average_rating": 4.5,
+  "total_reviews": 12,
+  "reviews": [
+    {
+      "id": "review_abc",
+      "user_id": "usr_xyz",
+      "rating": 5,
+      "comment": "Works perfectly for our team!",
+      "created_at": "2026-03-15T00:00:00Z"
+    }
+  ]
+}
+```
 
 ---
 
