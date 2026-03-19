@@ -95,7 +95,7 @@ fi
 cto_brain_think() {
   local prompt="$1"
   local sd; sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>/dev/null || echo ""
+  OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>>"${MEKONG_DIR}/brain-errors.log" || echo ""
 }
 
 # Build context-rich prompt and dispatch via brain
@@ -140,13 +140,20 @@ Reply with ONLY the command."
 
   local result
   result=$(cto_brain_think "$prompt")
-  # Sanitize: extract only the /command part
+  [[ -z "$result" ]] && return
+
+  # Strip Qwen thinking prefix: everything before first /command
+  local stripped
+  stripped=$(echo "$result" | sed 's/^[^/]*//' | head -1)
+
+  # Extract /command with optional args (quoted or unquoted)
   local cmd
-  cmd=$(echo "$result" | grep -oE '/[a-z][a-z0-9_:-]*[[:space:]]+"[^"]*"' | head -1)
-  if [[ -z "$cmd" ]]; then
-    cmd=$(echo "$result" | grep -oE '/[a-z][a-z0-9_:-]*([[:space:]]+.*)?' | head -1 | cut -c1-200)
+  cmd=$(echo "$stripped" | grep -oE '/[a-z][a-z0-9_:-]*([ ]+(".*"|.+))?' | head -1 | cut -c1-300)
+  if [[ -n "$cmd" ]]; then
+    echo "$cmd"
+  else
+    log "BRAIN: unparseable response: $(echo "$result" | head -1 | cut -c1-80)"
   fi
-  echo "${cmd:-}"
 }
 
 # ---- WORKER CONFIG (read from config/cto-config.json — unified source of truth) ----

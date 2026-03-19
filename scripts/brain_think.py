@@ -54,7 +54,8 @@ def main():
                 print(m.group(0).strip()[:200])
             else:
                 print(all_text[:200] if all_text.strip() else "")
-    except Exception:
+    except Exception as e:
+        print(f"BRAIN_ERROR: {e}", file=sys.stderr)
         print("", end="")
 
 if __name__ == "__main__":
