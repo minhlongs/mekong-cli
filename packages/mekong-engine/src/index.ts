@@ -10,6 +10,7 @@ import { crmRoutes } from './routes/crm'
 import { reportRoutes } from './routes/reports'
 import { onboardingRoutes } from './routes/onboarding'
 import { paymentVnRoutes } from './routes/payment-vn'
+import { governanceRoutes } from './routes/governance'
 
 // Cloudflare bindings — all optional until resources created in dashboard
 export type Bindings = {
@@ -139,6 +140,7 @@ app.route('/v1/crm', crmRoutes)
 app.route('/v1/reports', reportRoutes)
 app.route('/v1/onboard', onboardingRoutes)
 app.route('/payment', paymentVnRoutes)
+app.route('/v1/governance', governanceRoutes)
 
 // Cron Trigger — auto-publish approved content
 export default {
