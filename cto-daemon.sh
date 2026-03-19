@@ -517,30 +517,17 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
-  local tail15
-  tail15=$(echo "$output" | tail -15)
+  local tail3
+  tail3=$(echo "$output" | tail -3)
 
-  # GUARD 1: NOT idle if CC CLI tool/activity icons present (comprehensive set)
-  if echo "$tail15" | grep -qE "⏺|✳|✢|✶|✻|✽|◼|▸|⎿|●"; then
-    return 1
+  # PRIORITY 1 (HIGHEST): Check for idle prompt in last 3 lines
+  # ⏵⏵ = CC CLI idle prompt (may have leading spaces)
+  # ❯ = generic shell prompt
+  if echo "$tail3" | grep -qE "⏵⏵|❯|Type your message|aider>|codex>"; then
+    return 0  # IDLE — at prompt, ready for input
   fi
 
-  # GUARD 2: NOT idle if any busy verb detected (CC CLI status words)
-  if echo "$tail15" | grep -qE "$BUSY_PATTERNS|Commit"; then
-    return 1
-  fi
-
-  # GUARD 3: NOT idle if dialog/queued state
-  if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No|arrow keys"; then
-    return 1
-  fi
-
-  # IDLE: Multi-tool prompt detection (claude/gemini/opencode/aider)
-  if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass|Type your message|aider>|codex>|^>"; then
-    return 0
-  fi
-
-  # No prompt detected → assume NOT idle (safe default)
+  # If no prompt → NOT idle
   return 1
 }
 
