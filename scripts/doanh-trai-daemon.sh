@@ -1,0 +1,181 @@
+#!/opt/homebrew/bin/bash
+# ═══════════════════════════════════════════════════════════════
+# DOANH TRẠI TÔM HÙM — Master Multi-Department Daemon
+# Polls all non-engineering tmux sessions, dispatches dept-specific tasks
+# Engineering (tom_hum) managed by cto-daemon.sh separately
+# Usage: bash scripts/doanh-trai-daemon.sh
+# ═══════════════════════════════════════════════════════════════
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+MEKONG_DIR="${PROJECT_ROOT}/.mekong"
+CONFIG_FILE="${PROJECT_ROOT}/config/doanh-trai-departments.yaml"
+LOG_FILE="${MEKONG_DIR}/doanh-trai.log"
+POLL_INTERVAL=120
+MAX_LOG_LINES=2000
+
+mkdir -p "$MEKONG_DIR"
+
+# ---- LOGGING ----
+log() {
+  local ts
+  ts=$(date '+%H:%M:%S')
+  echo "[$ts] $*" >> "$LOG_FILE"
+  echo "[$ts] $*"
+  # Rotate log
+  if [[ $(wc -l < "$LOG_FILE" 2>/dev/null || echo 0) -gt $MAX_LOG_LINES ]]; then
+    tail -$((MAX_LOG_LINES / 2)) "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+  fi
+}
+
+# ---- PARSE YAML CONFIG ----
+# Returns: session|panes|task1|||task2|||task3 for each non-existing dept
+parse_departments() {
+  python3 -c "
+import yaml, sys
+with open('${CONFIG_FILE}') as f:
+    cfg = yaml.safe_load(f)
+for name, dept in cfg.get('departments', {}).items():
+    if dept.get('existing', False):
+        continue  # Skip engineering (managed by cto-daemon.sh)
+    session = dept.get('session', '')
+    panes = dept.get('panes', 2)
+    tasks = '|||'.join(dept.get('fallback_tasks', []))
+    print(f'{name}|{session}|{panes}|{tasks}')
+" 2>/dev/null
+}
+
+# ---- IDLE DETECTION ----
+is_pane_idle() {
+  local output="$1"
+  # CC CLI idle: shows prompt character or ">" at end, no active tool use
+  echo "$output" | tail -5 | grep -qE '^\$|^>|^❯|waiting for input|^claude>' 2>/dev/null
+}
+
+# ---- CAPTURE PANE ----
+capture_pane() {
+  local session=$1 pane_idx=$2
+  tmux capture-pane -t "${session}:0.${pane_idx}" -p -S -50 2>/dev/null || echo ""
+}
+
+# ---- SEND COMMAND TO PANE ----
+send_to_pane() {
+  local session=$1 pane_idx=$2 cmd=$3
+  tmux send-keys -t "${session}:0.${pane_idx}" "$cmd" Enter 2>/dev/null
+}
+
+# ---- RESPAWN DEAD PANE ----
+respawn_pane() {
+  local session=$1 pane_idx=$2
+  log "RESPAWN ${session}:${pane_idx} — launching CC CLI"
+  tmux send-keys -t "${session}:0.${pane_idx}" \
+    "cd ${PROJECT_ROOT} && claude --dangerously-skip-permissions" Enter 2>/dev/null
+}
+
+# ---- BRAIN DISPATCH (dept-aware) ----
+OLLAMA_URL="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
+OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
+
+brain_dispatch_dept() {
+  local dept_name=$1 pane_output=$2
+  local pane_tail
+  pane_tail=$(echo "$pane_output" | tail -30 | tr '\n' ' ' | cut -c1-500)
+
+  local prompt="CTO Brain. Department: ${dept_name}. Goal: Sell RaaS.
+PANE: ${pane_tail}
+Give ONE /cook command specific to ${dept_name} department work. Be specific with file paths.
+Reply ONLY the command."
+
+  local result
+  result=$(OLLAMA_URL="$OLLAMA_URL" OLLAMA_MODEL="$OLLAMA_MODEL" \
+    python3 "${SCRIPT_DIR}/brain_think.py" <<< "$prompt" 2>>"${MEKONG_DIR}/brain-errors.log" || echo "")
+
+  # Extract /command
+  if [[ -n "$result" ]]; then
+    local cmd
+    cmd=$(echo "$result" | sed 's/^[^/]*//' | head -1 | grep -oE '/[a-z][a-z0-9_:-]*([ ]+(".*"|.+))?' | head -1 | cut -c1-300)
+    [[ -n "$cmd" ]] && echo "$cmd"
+  fi
+}
+
+# ---- MAIN LOOP ----
+log "═══════════════════════════════════════════════════════"
+log "DOANH TRẠI DAEMON started — polling non-eng departments"
+log "Config: ${CONFIG_FILE}"
+log "Poll interval: ${POLL_INTERVAL}s"
+log "═══════════════════════════════════════════════════════"
+
+# Parse departments once at startup
+declare -A DEPT_SESSION DEPT_PANES DEPT_TASKS DEPT_TASK_IDX
+while IFS='|' read -r name session panes tasks; do
+  DEPT_SESSION[$name]="$session"
+  DEPT_PANES[$name]="$panes"
+  DEPT_TASKS[$name]="$tasks"
+  DEPT_TASK_IDX[$name]=0
+done < <(parse_departments)
+
+log "Departments loaded: ${!DEPT_SESSION[*]}"
+
+CYCLE=0
+while true; do
+  CYCLE=$((CYCLE + 1))
+  log "--- CYCLE $CYCLE ---"
+
+  for dept_name in "${!DEPT_SESSION[@]}"; do
+    session="${DEPT_SESSION[$dept_name]}"
+    panes="${DEPT_PANES[$dept_name]}"
+
+    # Check if session exists
+    if ! tmux has-session -t "$session" 2>/dev/null; then
+      log "${dept_name} (${session}): SESSION NOT RUNNING — skip"
+      continue
+    fi
+
+    for ((pane_idx=0; pane_idx<panes; pane_idx++)); do
+      output=$(capture_pane "$session" "$pane_idx")
+
+      if [[ -z "$output" ]]; then
+        log "${dept_name} P${pane_idx}: DEAD — respawning"
+        respawn_pane "$session" "$pane_idx"
+        continue
+      fi
+
+      # Check context >80% → auto-compact
+      if echo "$output" | tail -10 | grep -qE "Context:.*[89][0-9]%|context.*[89][0-9]%"; then
+        log "${dept_name} P${pane_idx}: CONTEXT >80% → /compact"
+        send_to_pane "$session" "$pane_idx" "/compact"
+        continue
+      fi
+
+      # Only dispatch if idle
+      if ! is_pane_idle "$output"; then
+        log "${dept_name} P${pane_idx}: WORKING"
+        continue
+      fi
+
+      # Try brain dispatch first
+      local brain_cmd
+      brain_cmd=$(brain_dispatch_dept "$dept_name" "$output" 2>/dev/null || echo "")
+      if [[ -n "$brain_cmd" ]]; then
+        log "${dept_name} P${pane_idx}: BRAIN → ${brain_cmd}"
+        send_to_pane "$session" "$pane_idx" "$brain_cmd"
+        continue
+      fi
+
+      # Fallback: round-robin from dept tasks
+      IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"
+      if [[ ${#task_arr[@]} -gt 0 ]]; then
+        local tidx=${DEPT_TASK_IDX[$dept_name]:-0}
+        local task="${task_arr[$tidx]}"
+        DEPT_TASK_IDX[$dept_name]=$(( (tidx + 1) % ${#task_arr[@]} ))
+        log "${dept_name} P${pane_idx}: FALLBACK[${tidx}] → ${task}"
+        send_to_pane "$session" "$pane_idx" "$task"
+      else
+        log "${dept_name} P${pane_idx}: NO TASKS CONFIGURED"
+      fi
+    done
+  done
+
+  sleep "$POLL_INTERVAL"
+done

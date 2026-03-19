@@ -95,6 +95,17 @@ else
   exit 1
 fi
 
+# Start master daemon for non-eng departments
+if [[ "$DEPT_ARG" == "all" ]]; then
+  if ! pgrep -f "doanh-trai-daemon" >/dev/null 2>&1; then
+    echo -e "${YELLOW}Starting Doanh Trại master daemon...${NC}"
+    nohup bash "${SCRIPT_DIR}/doanh-trai-daemon.sh" >> "${PROJECT_ROOT}/.mekong/doanh-trai.log" 2>&1 &
+    echo -e "  ${GREEN}✅${NC} Master daemon PID: $!"
+  else
+    echo -e "  ${GREEN}✅${NC} Master daemon already running"
+  fi
+fi
+
 echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "  Active sessions:"
