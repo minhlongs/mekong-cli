@@ -391,6 +391,11 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 is_idle() {
   local output="$1"
 
+  # NOT idle if queued messages, plan mode dialog, or selection prompt
+  if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No"; then
+    return 1
+  fi
+
   # PRIORITY 1: Multi-tool idle detection (claude/gemini/opencode/aider)
   if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass|Type your message|aider>|codex>|^>"; then
     return 0  # IDLE — pane is at prompt
