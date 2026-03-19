@@ -7,35 +7,30 @@ import { success, error as showError, info } from '../ui/output.js';
 
 // Dynamic imports to avoid TypeScript module resolution issues
 async function getRaasApiModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
   const mod = await import('@openclaw/engine/raas/raas-api.js');
   const { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage } = mod;
   return { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage };
 }
 
 async function getRaasOnboardingModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
   const mod = await import('@openclaw/engine/raas/raas-onboarding.js');
   const { handleOnboardTenant, validateApiKey, revokeApiKey } = mod;
   return { handleOnboardTenant, validateApiKey, revokeApiKey };
 }
 
 async function getRaasBillingModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
   const mod = await import('@openclaw/engine/raas/raas-billing');
   const { getUsageAnalytics } = mod;
   return { getUsageAnalytics };
 }
 
 async function getRaasRateLimiterModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
   const mod = await import('@openclaw/engine/raas/raas-rate-limiter');
   const { getRateLimitStatus } = mod;
   return { getRateLimitStatus };
 }
 
 async function getRaasHealthModules() {
-  // @ts-ignore - no declaration file for @openclaw/engine/raas modules
   const mod = await import('@openclaw/engine/raas/raas-health');
   const { checkHealth } = mod;
   return { checkHealth };
