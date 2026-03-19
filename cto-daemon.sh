@@ -58,19 +58,26 @@ ROLE_FB_3_COUNT=3
 DEDUP_STATE_FILE="${MEKONG_DIR:-$HOME/.mekong}/dedup-state"
 declare -A LAST_DISPATCH_CMD  # pane_idx → last command sent
 declare -A LAST_DISPATCH_TIME # pane_idx → epoch when sent
+declare -A PANE_RESPAWN_COUNT   # FIX #12: replace eval with associative array
+declare -A LAST_ANSWER_TIME     # FIX #12: replace eval with associative array
 DEDUP_MIN_INTERVAL=300        # seconds before allowing same command again
+
+# FIX #8: normalize commands for dedup (brain rephrasing no longer bypasses)
+_normalize_dedup() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9/]/ /g' | tr -s ' ' | cut -c1-60
+}
 
 is_duplicate_dispatch() {
   local pane_idx=$1 cmd=$2
-  local last_cmd="${LAST_DISPATCH_CMD[$pane_idx]:-}"
+  local norm=$(_normalize_dedup "$cmd")
+  local last_norm=$(_normalize_dedup "${LAST_DISPATCH_CMD[$pane_idx]:-}")
   local last_time="${LAST_DISPATCH_TIME[$pane_idx]:-0}"
   local now
   now=$(date +%s)
-  # Same command within DEDUP_MIN_INTERVAL → duplicate
-  if [[ "$cmd" == "$last_cmd" && $((now - last_time)) -lt $DEDUP_MIN_INTERVAL ]]; then
-    return 0  # is duplicate
+  if [[ "$norm" == "$last_norm" && $((now - last_time)) -lt $DEDUP_MIN_INTERVAL ]]; then
+    return 0
   fi
-  return 1  # not duplicate
+  return 1
 }
 
 record_dispatch() {
@@ -422,14 +429,18 @@ capture_pane() {
 send_to_pane() {
   local pane_idx=$1; shift
   local cmd="$*"
-  # SAFETY GATE: capture fresh output and verify pane is truly idle before sending
-  # Exception: ONLY "1" (answering question) bypasses gate
-  # /clear and /compact MUST go through gate — sending to working pane kills task!
   if [[ "$cmd" != "1" ]]; then
     local fresh_output
     fresh_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
     if [[ -n "$fresh_output" ]] && ! is_idle "$fresh_output"; then
       echo "[$(date '+%H:%M:%S')] SAFETY GATE: Blocked send to P${pane_idx} (pane BUSY): ${cmd:0:80}" >> "$LOG_FILE"
+      return 1
+    fi
+    # FIX #1: TOCTOU double-check — re-capture immediately before send (closes 50-200ms race window)
+    local recheck
+    recheck=$(tmux capture-pane -t "${CTO_SESSION}:0.${pane_idx}" -p 2>/dev/null | tail -3)
+    if ! echo "$recheck" | grep -qE '^[[:space:]]*❯[[:space:]]*$'; then
+      echo "[$(date '+%H:%M:%S')] SAFETY GATE RECHECK: P${pane_idx} no longer idle: ${cmd:0:80}" >> "$LOG_FILE"
       return 1
     fi
   fi
@@ -450,12 +461,12 @@ cleanup_orphan_nodes() {
   local killed=0
   local MAX_NODE_COUNT=30
 
-  # Hard guard: if node count exceeds MAX, kill all and warn
+  # FIX #9: only count/kill CC CLI-related node processes (not system-wide)
   local node_count
-  node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
+  node_count=$(pgrep -f 'node.*claude\|node.*@anthropic' 2>/dev/null | wc -l | tr -d ' ')
   if [[ "$node_count" -gt "$MAX_NODE_COUNT" ]]; then
-    log "⚠️  GUARD: $node_count node processes (>${MAX_NODE_COUNT}) — killing ALL"
-    killall -9 node 2>/dev/null || true
+    log "⚠️  GUARD: $node_count CC CLI node processes (>${MAX_NODE_COUNT}) — killing CC CLI nodes"
+    pkill -9 -f 'node.*claude|node.*@anthropic' 2>/dev/null || true
     return 0
   fi
 
@@ -572,10 +583,10 @@ is_idle() {
     return 0  # IDLE — clean prompt
   fi
 
-  # IDLE: Completion markers (worker just finished, at prompt)
-  if echo "$tail15" | grep -qE "Brewed for|Cooked for|Crunched for|Sautéed for|Baked for|Session Complete|Hẹn gặp lại|All Tasks Done"; then
-    # Finished task — but only if prompt is visible too
-    if echo "$tail10" | grep -qE "❯"; then
+  # IDLE: Completion markers — ONLY in tail -5 (not stale scroll) + clean prompt in tail -3
+  # FIX #2: tighten window to prevent matching OLD completion from previous tasks
+  if echo "$output" | tail -5 | grep -qE "Brewed for|Cooked for|Crunched for|Sautéed for|Baked for|Session Complete|Hẹn gặp lại|All Tasks Done"; then
+    if echo "$output" | tail -3 | grep -qE '^[[:space:]]*❯[[:space:]]*$'; then
       return 0
     fi
   fi
@@ -599,7 +610,10 @@ acquire_pane_lock() {
   local lock_file="${PANE_LOCK_DIR}/${session}-${pane}.lock"
   # Check if lock exists and not expired
   if [[ -f "$lock_file" ]]; then
-    local age=$(( $(date +%s) - $(stat -f %m "$lock_file" 2>/dev/null || echo 0) ))
+    # FIX #7: cross-platform stat (macOS: -f %m, Linux: -c %Y)
+    local mtime
+    mtime=$(stat -f %m "$lock_file" 2>/dev/null || stat -c %Y "$lock_file" 2>/dev/null || echo 0)
+    local age=$(( $(date +%s) - mtime ))
     if [[ $age -lt $LOCK_TIMEOUT ]]; then
       return 1  # Lock held, skip dispatch
     fi
@@ -625,7 +639,10 @@ is_busy() {
 
 has_question() {
   local output="$1"
-  echo "$output" | tail -15 | grep -vE "🔋|⏰|📁|🌿|bypass|auto-compact|compact|model" | grep -qE "\?|Do you want|Would you like|proceed"
+  # FIX #4: strict patterns — exclude code output, error messages, URLs
+  local candidate
+  candidate=$(echo "$output" | tail -8 | grep -vE '🔋|⏰|📁|🌿|bypass|auto-compact|model|Error:|Cannot|TODO|FIXME|http|\.ts|\.js|\.py')
+  echo "$candidate" | grep -qE 'Do you want to|Would you like to|Should I |Shall I |Pick an option|Select.*:|Choose.*:|Y/n|\(y/N\)'
 }
 
 get_question() {
@@ -904,29 +921,32 @@ verify_worker() {
     fi
   fi
 
-  # CI POLLING STUCK detection — worker waiting for CI forever after commit
-  if echo "$output" | tail -15 | grep -qE "gh run list|gh run view|sleep 30|Waiting.*CI|checking.*deploy"; then
-    if echo "$output" | tail -30 | grep -qE "git push|pushed|Commit.*success"; then
-      log "VERIFY P${pane_idx}: CI POLLING STUCK (commit done) → Ctrl-C + /clear"
-      tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" C-c "" 2>/dev/null
-      sleep 1
-      send_to_pane "$pane_idx" "/clear"
-      save_memory "UNSTUCK" "P${pane_idx}: broke CI polling loop after commit"
-      return 0
+  # CI POLLING STUCK detection — FIX #5: tighten ranges + require idle
+  if echo "$output" | tail -8 | grep -qE "gh run list|gh run view|Waiting.*CI|checking.*deploy"; then
+    if echo "$output" | tail -10 | grep -qE "git push|pushed to"; then
+      if is_idle "$output"; then
+        log "VERIFY P${pane_idx}: CI POLLING STUCK (commit done + idle) → Ctrl-C + /clear"
+        tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" C-c "" 2>/dev/null
+        sleep 1
+        send_to_pane "$pane_idx" "/clear"
+        save_memory "UNSTUCK" "P${pane_idx}: broke CI polling loop after commit"
+        return 0
+      fi
     fi
   fi
 
   # Context management — ONLY when pane is IDLE (never interrupt active work)
   if is_idle "$output"; then
     # Context 90%+ or 100% → /clear (hard reset)
-    if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
+    # FIX #6: anchor to CC CLI format (has ━ progress bar) — prevents matching code output
+    if echo "$output" | tail -5 | grep -qE 'Context:[[:space:]]*100%[[:space:]]*━|Context:[[:space:]]*9[0-9]%[[:space:]]*━|auto-compact|Auto-compacting'; then
       log "VERIFY P${pane_idx}: CONTEXT ≥90% + IDLE → /clear"
       send_to_pane "$pane_idx" "/clear"
       save_memory "CLEAR" "P${pane_idx}: context ≥90%, hard reset"
       return 0
     fi
     # Context 80-89% → /compact (soft compress)
-    if echo "$output" | tail -10 | grep -qE "Context:.*8[0-9]%"; then
+    if echo "$output" | tail -5 | grep -qE 'Context:[[:space:]]*8[0-9]%[[:space:]]*━'; then
       log "VERIFY P${pane_idx}: CONTEXT 80-89% + IDLE → /compact"
       send_to_pane "$pane_idx" "/compact"
       save_memory "COMPACT" "P${pane_idx}: context 80-89%, compacted"
@@ -945,17 +965,23 @@ verify_worker() {
     local question
     question=$(get_question "$output")
     # Skip if we already answered recently (prevent answer loop)
-    local last_answer_var="LAST_ANSWER_${pane_idx}"
-    local last_answer_time="${!last_answer_var:-0}"
+    local last_answer_time="${LAST_ANSWER_TIME[$pane_idx]:-0}"
     local now_ts
     now_ts=$(date +%s)
     if [[ $((now_ts - last_answer_time)) -lt 120 ]]; then
       log "P${pane_idx} (${name}): QUESTION skipped (answered <120s ago)"
       return 0
     fi
-    eval "${last_answer_var}=${now_ts}"
-    log "VERIFY P${pane_idx}: QUESTION → answering '1': ${question}"
-    send_to_pane "$pane_idx" "1"
+    LAST_ANSWER_TIME[$pane_idx]=$now_ts
+    # FIX #10: context-aware answer — pick "proceed/yes" not "cancel"
+    local answer="1"
+    local options_text
+    options_text=$(echo "$output" | tail -10 | grep -E '^[[:space:]]*[0-9]+[).:]')
+    if echo "$options_text" | grep -qiE '2.*proceed|2.*yes|2.*continue|2.*accept'; then
+      answer="2"
+    fi
+    log "VERIFY P${pane_idx}: QUESTION → answering '${answer}': ${question}"
+    send_to_pane "$pane_idx" "$answer"
     return 0
   fi
 
@@ -1041,8 +1067,15 @@ health_check() {
 # ---- SINGLETON GUARD: prevent multiple daemon instances ----
 PIDFILE="${MEKONG_DIR}/cto-daemon.pid"
 
-# Atomic lock via mkdir (portable — works on macOS + Linux)
+# FIX #14: flock if available (more robust), mkdir fallback
 LOCKDIR="${MEKONG_DIR}/cto-daemon.lockdir"
+if command -v flock >/dev/null 2>&1; then
+  exec 9>"${MEKONG_DIR}/cto-daemon.flock"
+  if ! flock -n 9; then
+    echo "CTO DAEMON already running (flock). Exiting."
+    exit 1
+  fi
+fi
 if ! mkdir "$LOCKDIR" 2>/dev/null; then
   # Lock exists — check if holder is still alive
   if [[ -f "$PIDFILE" ]]; then
@@ -1109,7 +1142,7 @@ CYCLE=0
 LAST_DISPATCH_1=0
 LAST_DISPATCH_2=0
 LAST_DISPATCH_3=0
-DISPATCH_COOLDOWN=180
+DISPATCH_COOLDOWN=90  # FIX #13: reduced from 180s — less idle waste
 CRASH_COUNT=0
 
 while true; do
@@ -1120,6 +1153,16 @@ while true; do
   _catalog_cache=""
   _codebase_ctx=""
   log "--- CYCLE $CYCLE ---"
+
+  # FIX #15: log rotation (every 100 cycles, cap at 5MB)
+  if [[ $((CYCLE % 100)) -eq 0 ]] && [[ -f "$LOG_FILE" ]]; then
+    local log_bytes
+    log_bytes=$(wc -c < "$LOG_FILE" 2>/dev/null || echo 0)
+    if [[ $log_bytes -gt 5000000 ]]; then
+      tail -2000 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
+      log "LOG ROTATED (was ${log_bytes} bytes)"
+    fi
+  fi
 
   # Re-detect which project is in which pane (handles index shifts from respawns)
   refresh_worker_mapping
@@ -1133,19 +1176,18 @@ while true; do
 
       if [[ -z "$output" ]]; then
         # Guard: limit respawns to prevent infinite restart loop
-        local respawn_var="PANE_RESPAWN_COUNT_${pane_idx}"
-        local respawn_count="${!respawn_var:-0}"
+        local respawn_count="${PANE_RESPAWN_COUNT[$pane_idx]:-0}"
         if [[ $respawn_count -ge 3 ]]; then
           log "P${pane_idx} (${name}): NO OUTPUT — respawn limit reached (${respawn_count}/3), skipping until next health cycle"
           continue
         fi
         log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper ($CTO_TOOL) [${respawn_count}/3]"
         launch_pane_cc "$pane_idx" "$CTO_TOOL" || true
-        eval "${respawn_var}=$((respawn_count + 1))"
+        PANE_RESPAWN_COUNT[$pane_idx]=$((respawn_count + 1))
         continue
       fi
       # Reset respawn counter on successful output
-      eval "PANE_RESPAWN_COUNT_${pane_idx}=0"
+      PANE_RESPAWN_COUNT[$pane_idx]=0
 
       # PHASE 4: VERIFY — check questions, errors, jidoka
       if verify_worker "$pane_idx" "$output"; then
@@ -1201,7 +1243,7 @@ while true; do
       ollama_auto_recover || true
     fi
     # Reset pane respawn counters every 5 cycles (allow retry)
-    PANE_RESPAWN_COUNT_1=0; PANE_RESPAWN_COUNT_2=0; PANE_RESPAWN_COUNT_3=0
+    PANE_RESPAWN_COUNT[1]=0; PANE_RESPAWN_COUNT[2]=0; PANE_RESPAWN_COUNT[3]=0
   fi
 
   # Orphan node cleanup every 3 cycles (prevents RAM overflow)

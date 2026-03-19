@@ -107,7 +107,7 @@ def main():
     try:
         # Strategy 1: think:false (clean response, may be slow/timeout)
         try:
-            d = call_ollama(url, model, prompt, think=False, timeout=30)
+            d = call_ollama(url, model, prompt, think=False, timeout=10)
             cmd = extract_cmd(d.get("response", ""))
             if cmd:
                 print(cmd)
@@ -116,7 +116,7 @@ def main():
             pass  # Timeout expected — fall through to thinking mode
 
         # Strategy 2: thinking mode (fast, parse from thinking field)
-        d = call_ollama(url, model, prompt, think=True, timeout=120)
+        d = call_ollama(url, model, prompt, think=True, timeout=30)
         # Check response first
         cmd = extract_cmd(d.get("response", ""))
         if cmd:
