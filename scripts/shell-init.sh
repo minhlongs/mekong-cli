@@ -1,45 +1,31 @@
 #!/bin/bash
-# ═══════════════════════════════════════════════════════════════
-# MEKONG SHELL INIT — Add to ~/.zshrc or ~/.bashrc:
-#   source ~/mekong-cli/scripts/shell-init.sh
-# ═══════════════════════════════════════════════════════════════
-
+# Source from ~/.zshrc: source ~/mekong-cli/scripts/shell-init.sh
 export MEKONG_ROOT="${MEKONG_ROOT:-$HOME/mekong-cli}"
 export PATH="$MEKONG_ROOT/scripts:$PATH"
 
-# ─── ALIASES: Tool-specific shortcuts ───
+# Tool shortcuts
 alias mekong='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-claude='MEKONG_TOOL=claude bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-gemini='MEKONG_TOOL=gemini bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-opencode='MEKONG_TOOL=opencode bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-aider='MEKONG_TOOL=aider bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
-# ─── ALIASES: Model-specific shortcuts ───
-alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-0520 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
-alias mekong-sonnet='MEKONG_TOOL=claude MEKONG_MODEL=claude-sonnet-4-20250514 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
-alias mekong-qwen='MEKONG_TOOL=claude MEKONG_MODEL=qwen3.5-plus bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+# Model shortcuts
+alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-6-20250901 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-sonnet='MEKONG_TOOL=claude MEKONG_MODEL=claude-sonnet-4-6-20250514 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-qwen='MEKONG_TOOL=claude MEKONG_MODEL=qwen3-coder-plus bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
-# ─── ALIASES: CTO daemon ───
-alias mekong-cto='MEKONG_TOOL=claude MEKONG_MODE=cto bash $MEKONG_ROOT/scripts/mekong-wrapper.sh --cto'
-alias mekong-status='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh --status'
-alias mekong-continue='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh --continue'
+# Quick
+alias mek='mekong' mkc='mekong-claude' mkg='mekong-gemini'
+alias mekong-cto='bash $MEKONG_ROOT/cto-daemon.sh'
+alias mekong-health='bash $MEKONG_ROOT/scripts/cto-health-check.sh'
 
-# ─── ALIASES: Quick commands ───
-alias mek='mekong'
-alias mkc='mekong-claude'
-alias mkg='mekong-gemini'
-
-# ─── Override bare `claude` ───
-unalias claude 2>/dev/null
-alias claude='cd $MEKONG_ROOT && command claude --dangerously-skip-permissions'
-
-# ─── Quick dispatch ───
-mekong-print() {
-  bash "$MEKONG_ROOT/scripts/mekong-wrapper.sh" --tool "${MEKONG_TOOL:-auto}" -p "$*"
+# Completion
+_mekong_comp() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local cmds=$(ls "$MEKONG_ROOT/.claude/commands/" 2>/dev/null | sed 's/\.md$//' | tr '\n' ' ')
+  COMPREPLY=($(compgen -W "--tool --model --interactive --list-tools --status $cmds" -- "$cur"))
 }
+complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null
 
-mekong-cook() {
-  bash "$MEKONG_ROOT/scripts/mekong-wrapper.sh" --tool "${MEKONG_TOOL:-auto}" -p "/cook \"$*\""
-}
-
-echo "🏯 Mekong CLI loaded | $(find $MEKONG_ROOT/.claude/commands -name '*.md' 2>/dev/null | wc -l | tr -d ' ') commands | $(find $MEKONG_ROOT/.claude/skills -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ') skills"
+echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 2>/dev/null && echo "Tools: $(list_available_tools)" || echo "")"
