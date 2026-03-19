@@ -72,28 +72,12 @@ export type ErrorResponse = {
 }
 
 /**
- * Hono Context type for type-safe handlers
- * Supports common operations used in route handlers
+ * Minimal context interface for error handling
+ * Compatible with Hono's Context type via structural typing
  */
-export interface HonoContext {
-  req: {
-    json: () => Promise<unknown>
-    query: (key: string) => string | undefined
-  }
+export interface MinimalContext {
   json: (data: unknown, status?: number) => Response
-  env: {
-    DB: {
-      prepare: (query: string) => {
-        bind: (...params: unknown[]) => {
-          first: () => Promise<unknown>
-          run: () => Promise<{ success: boolean }>
-          all: () => Promise<{ results: unknown[] }>
-        }
-      }
-    }
-  }
-  get: (key: string) => unknown
-  set: (key: string, value: unknown) => void
+  text?: (data: string, status?: number) => Response
 }
 
 /**
@@ -129,7 +113,8 @@ export class HttpError extends Error {
 
 /**
  * Type-safe async handler wrapper for Hono routes
- * Automatically catches errors and returns proper format
+ * Uses type assertion to work with any Hono Context type
+ * The handler function receives the actual Hono Context with proper Bindings
  *
  * @example
  * ```ts
@@ -140,24 +125,25 @@ export class HttpError extends Error {
  * ```
  */
 export function handleAsync<T>(
-  fn: (c: HonoContext) => Promise<T>
-): (c: HonoContext) => Promise<T | Response> {
-  return async (c: HonoContext) => {
+  fn: (c: unknown) => Promise<T>
+): (c: unknown) => Promise<T | Response> {
+  return async (c: unknown) => {
     try {
       return await fn(c)
     } catch (error) {
+      const ctx = c as MinimalContext
       if (error instanceof HttpError) {
-        return c.json(error.toResponse(), error.status)
+        return ctx.json(error.toResponse(), error.status)
       }
       if (error instanceof ZodError) {
-        return c.json(
+        return ctx.json(
           createError('VALIDATION_ERROR', 'Validation failed', error.errors),
           400
         )
       }
       // Unknown error - log and return 500
       console.error('Unhandled error in route handler:', error)
-      return c.json(
+      return ctx.json(
         createError('INTERNAL_ERROR', 'An unexpected error occurred'),
         500
       )
