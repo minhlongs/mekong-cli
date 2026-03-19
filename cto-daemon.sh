@@ -155,11 +155,77 @@ log() {
   fi
 }
 
-# ---- CTO BRAIN: Ollama qwen3:32b via scripts/brain_think.py ----
-# Strip /v1 suffix if present (OpenAI compat format breaks native Ollama API)
-_raw_ollama_url="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
-OLLAMA_URL="${_raw_ollama_url%/v1}"
+# ---- OLLAMA HEALTH CHECK + AUTO-RECOVERY ----
+# HARDCODED — never depend on env vars for Ollama native API
+OLLAMA_URL="http://127.0.0.1:11434"
 OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
+BRAIN_CONSECUTIVE_FAILS=0
+BRAIN_MAX_FAILS=3
+
+# Check if Ollama is alive and model loaded
+ollama_health_check() {
+  # 1. Check Ollama server responding
+  if ! curl -sf "${OLLAMA_URL}/" >/dev/null 2>&1; then
+    log "OLLAMA HEALTH: Server DOWN at ${OLLAMA_URL}"
+    return 1
+  fi
+
+  # 2. Check model is loaded (in ps output)
+  local ps_output
+  ps_output=$(curl -sf "${OLLAMA_URL}/api/ps" 2>/dev/null || echo "")
+  if [[ -z "$ps_output" ]] || ! echo "$ps_output" | python3 -c "import json,sys; d=json.load(sys.stdin); models=[m['name'] for m in d.get('models',[])]; sys.exit(0 if any('${OLLAMA_MODEL}'.split(':')[0] in m for m in models) else 1)" 2>/dev/null; then
+    log "OLLAMA HEALTH: Model ${OLLAMA_MODEL} NOT loaded"
+    return 2
+  fi
+
+  return 0
+}
+
+# Auto-recover Ollama: restart serve + pull/warmup model
+ollama_auto_recover() {
+  log "OLLAMA RECOVERY: Starting auto-recovery sequence..."
+
+  # Step 1: Check if ollama serve is running
+  if ! pgrep -f "ollama serve" >/dev/null 2>&1; then
+    log "OLLAMA RECOVERY: Launching ollama serve..."
+    nohup ollama serve >/dev/null 2>&1 &
+    sleep 5
+  fi
+
+  # Step 2: Verify server is up
+  local attempts=0
+  while [[ $attempts -lt 10 ]]; do
+    if curl -sf "${OLLAMA_URL}/" >/dev/null 2>&1; then
+      log "OLLAMA RECOVERY: Server alive after ${attempts}s"
+      break
+    fi
+    attempts=$((attempts + 1))
+    sleep 2
+  done
+
+  if [[ $attempts -ge 10 ]]; then
+    log "OLLAMA RECOVERY: FAILED — server not responding after 20s"
+    save_memory "BRAIN" "CRITICAL: Ollama server failed to start"
+    return 1
+  fi
+
+  # Step 3: Warmup model (keep_alive ensures it stays loaded)
+  log "OLLAMA RECOVERY: Warming up ${OLLAMA_MODEL}..."
+  curl -sf "${OLLAMA_URL}/api/generate" -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"ping\",\"stream\":false,\"keep_alive\":\"24h\"}" >/dev/null 2>&1 || true
+  sleep 2
+
+  # Step 4: Verify model loaded
+  if ollama_health_check; then
+    log "OLLAMA RECOVERY: SUCCESS — ${OLLAMA_MODEL} loaded and ready"
+    save_memory "BRAIN" "Ollama auto-recovered, model ${OLLAMA_MODEL} loaded"
+    return 0
+  else
+    log "OLLAMA RECOVERY: Model warmup failed — may need manual intervention"
+    return 1
+  fi
+}
+
+# ---- CTO BRAIN: Ollama qwen3:32b via scripts/brain_think.py ----
 
 # Load 135-command catalog for brain dispatch (loaded once at startup)
 COMMAND_CATALOG_FILE="${MEKONG_DIR}/commands-catalog.txt"
@@ -169,10 +235,28 @@ if [[ -f "$COMMAND_CATALOG_FILE" ]]; then
 fi
 
 # Call Ollama via standalone Python script (handles thinking mode, /no_think, keep_alive)
+# Tracks consecutive failures — auto-restarts Ollama after BRAIN_MAX_FAILS
 cto_brain_think() {
   local prompt="$1"
   local sd; sd="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>>"${MEKONG_DIR}/brain-errors.log" || echo ""
+  local result
+  result=$(OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" python3 "${sd}/scripts/brain_think.py" <<< "$prompt" 2>>"${MEKONG_DIR}/brain-errors.log")
+  local exit_code=$?
+
+  if [[ $exit_code -ne 0 || -z "$result" ]]; then
+    BRAIN_CONSECUTIVE_FAILS=$((BRAIN_CONSECUTIVE_FAILS + 1))
+    if [[ $BRAIN_CONSECUTIVE_FAILS -ge $BRAIN_MAX_FAILS ]]; then
+      log "BRAIN CRITICAL: ${BRAIN_CONSECUTIVE_FAILS} consecutive failures — auto-recovering Ollama"
+      save_memory "BRAIN" "CRITICAL: ${BRAIN_CONSECUTIVE_FAILS} fails, triggering auto-recovery"
+      ollama_auto_recover
+      BRAIN_CONSECUTIVE_FAILS=0
+    fi
+    echo ""
+    return
+  fi
+
+  BRAIN_CONSECUTIVE_FAILS=0
+  echo "$result"
 }
 
 # Build context-rich prompt and dispatch via brain
@@ -806,12 +890,15 @@ phase_integrate() {
 
   # Push any unpushed commits
   local unpushed
-  unpushed=$(git log origin/master..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+  # Auto-detect default branch (main or master)
+  local default_branch
+  default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+  unpushed=$(git log "origin/${default_branch}..HEAD" --oneline 2>/dev/null | wc -l | tr -d ' ')
   if [[ "$unpushed" -gt "0" ]]; then
-    log "INTEGRATE: Pushing $unpushed commits..."
-    if git push origin master 2>&1 | tail -3 >> "$LOG_FILE"; then
+    log "INTEGRATE: Pushing $unpushed commits to ${default_branch}..."
+    if git push origin "${default_branch}" 2>&1 | tail -3 >> "$LOG_FILE"; then
       log "INTEGRATE: Push SUCCESS"
-      save_memory "SHIP" "Pushed $unpushed commits to master"
+      save_memory "SHIP" "Pushed $unpushed commits to ${default_branch}"
     else
       log "INTEGRATE: Push FAILED"
     fi
@@ -885,10 +972,20 @@ while true; do
       name="${WORKER_NAME[$pane_idx]:-Worker-${pane_idx}}"
 
       if [[ -z "$output" ]]; then
-        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper ($CTO_TOOL)"
+        # Guard: limit respawns to prevent infinite restart loop
+        local respawn_var="PANE_RESPAWN_COUNT_${pane_idx}"
+        local respawn_count="${!respawn_var:-0}"
+        if [[ $respawn_count -ge 3 ]]; then
+          log "P${pane_idx} (${name}): NO OUTPUT — respawn limit reached (${respawn_count}/3), skipping until next health cycle"
+          continue
+        fi
+        log "P${pane_idx} (${name}): NO OUTPUT (pane dead?) — respawning via mekong-wrapper ($CTO_TOOL) [${respawn_count}/3]"
         launch_pane_cc "$pane_idx" "$CTO_TOOL" || true
+        eval "${respawn_var}=$((respawn_count + 1))"
         continue
       fi
+      # Reset respawn counter on successful output
+      eval "PANE_RESPAWN_COUNT_${pane_idx}=0"
 
       # PHASE 4: VERIFY — check questions, errors, jidoka
       if verify_worker "$pane_idx" "$output"; then
@@ -935,9 +1032,16 @@ while true; do
   # PHASE 5: INTEGRATE — push, check conflicts
   phase_integrate || log "CYCLE $CYCLE: INTEGRATE ERROR (continuing)"
 
-  # Health check every 5 cycles
+  # Health check every 5 cycles (system + Ollama brain)
   if [[ $((CYCLE % 5)) -eq 0 ]]; then
     health_check || true
+    # Ollama brain health — auto-recover if down
+    if ! ollama_health_check; then
+      log "HEALTH: Ollama brain unhealthy — triggering auto-recovery"
+      ollama_auto_recover || true
+    fi
+    # Reset pane respawn counters every 5 cycles (allow retry)
+    PANE_RESPAWN_COUNT_1=0; PANE_RESPAWN_COUNT_2=0; PANE_RESPAWN_COUNT_3=0
   fi
 
   # Orphan node cleanup every 3 cycles (prevents RAM overflow)
