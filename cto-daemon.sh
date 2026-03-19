@@ -340,22 +340,18 @@ Pick the MOST SPECIFIC command."
 You are CTO Brain (QUÂN SƯ). Dispatching PANE ${pane_idx} role: ${role_desc}
 
 PROJECT: ${name} | DIR: ${dir} | DEPLOY: ${deploy}
+CONSTRAINT: ONLY modify files inside ${dir}/. Do NOT touch other projects.
 ${_codebase_ctx}
 PANE OUTPUT: ${pane_tail}
 ${error_lines:+ERRORS: ${error_lines}}
 
 ${catalog_section}
 
-THINK: What is the SINGLE most impactful action to make RaaS sellable?
-Priority chain: fix errors → fix tests → polish UI → harden API → add features → write docs.
-Give ONE slash command with SPECIFIC file paths or descriptions.
-CRITICAL: ONLY use commands from the AVAILABLE COMMANDS list above. NEVER invent commands like /deploy or /ship.
-If unsure, default to /cook with a specific task description.
-Examples:
-- /cook \"fix landing page pricing section in packages/raas-landing/src/pages/pricing.astro\"
-- /debug \"TypeError in packages/mekong-engine/src/routes/billing.ts line 45\"
-- /backend-api-build \"add rate limiting to /v1/missions endpoint in mekong-engine\"
-- /test \"run vitest for packages/mekong-engine\"
+THINK: What is the SINGLE most impactful action for ${name} to make RaaS sellable?
+Priority: fix errors → fix tests → polish UI → harden API → add features.
+Give ONE slash command. Include \"${dir}/\" in the task description.
+CRITICAL: ONLY use commands from the AVAILABLE COMMANDS list above.
+If unsure, default to /cook.
 Reply with ONLY the command. No explanation."
 
   local result
@@ -452,6 +448,16 @@ send_to_pane() {
     if [[ -n "$recheck_output" ]] && ! is_idle "$recheck_output"; then
       echo "[$(date '+%H:%M:%S')] SAFETY GATE RECHECK: P${pane_idx} no longer idle: ${cmd:0:80}" >> "$LOG_FILE"
       return 1
+    fi
+  fi
+  # Inject project scope: ensure CC CLI works in correct project directory
+  local worker_dir="${WORKER_DIR[$pane_idx]:-}"
+  if [[ -n "$worker_dir" && "$worker_dir" != "." && "$cmd" == /* ]]; then
+    # Prepend "IMPORTANT: ONLY modify files in {dir}/" to task description
+    local abs_dir="${PROJECT_ROOT}/${worker_dir}"
+    if [[ -d "$abs_dir" ]] && ! echo "$cmd" | grep -qF "$worker_dir"; then
+      # Insert scope after first quote in command
+      cmd=$(echo "$cmd" | sed "s/\"/\"SCOPE: Only modify files in ${worker_dir}\/.  /")
     fi
   fi
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$cmd" Enter
