@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://raas-landing.pages.dev/sitemap.xml
+# Sitemap location
+Sitemap: https://agencyos.network/sitemap.xml
+
+# Block sensitive paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
