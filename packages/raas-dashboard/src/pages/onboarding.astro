@@ -1,0 +1,461 @@
+---
+---
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onboarding — RaaS Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+</head>
+<body>
+<div class="onboarding-wrap">
+
+<style>
+  .onboarding-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .wizard-container { width: 100%; max-width: 640px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+
+  /* Progress Bar */
+  .wizard-progress { margin-bottom: 32px; }
+  .progress-steps { display: flex; justify-content: space-between; position: relative; }
+  .progress-steps::before { content: ''; position: absolute; top: 12px; left: 0; right: 0; height: 2px; background: var(--border); z-index: 0; }
+  .progress-step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .step-circle { width: 26px; height: 26px; border-radius: 50%; background: var(--bg3); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text2); transition: all 0.3s; }
+  .step-circle.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .step-circle.completed { background: var(--success); border-color: var(--success); color: #fff; }
+  .step-label { font-size: 11px; color: var(--text2); font-weight: 500; }
+  .step-label.active { color: var(--accent); }
+
+  /* Wizard Steps */
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
+
+  .step-header { margin-bottom: 24px; }
+  .step-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .step-description { color: var(--text2); font-size: 13px; }
+
+  /* Form Styles */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; color: var(--text2); font-size: 12px; margin-bottom: 6px; font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: var(--radius); font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group input.error { border-color: var(--danger); }
+  .error-text { color: var(--danger); font-size: 11px; margin-top: 4px; display: none; }
+  .error-text.visible { display: block; }
+
+  /* File Upload */
+  .file-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .file-upload:hover { border-color: var(--accent); background: var(--bg3); }
+  .file-upload input { display: none; }
+  .file-upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .file-upload-text { color: var(--text); font-size: 13px; font-weight: 500; }
+  .file-upload-hint { color: var(--text2); font-size: 11px; margin-top: 4px; }
+  .file-preview { margin-top: 16px; padding: 12px; background: var(--bg3); border-radius: var(--radius); display: none; }
+  .file-preview.visible { display: flex; align-items: center; gap: 12px; }
+  .file-preview-img { width: 48px; height: 48px; object-fit: contain; border-radius: 4px; }
+  .file-preview-info { flex: 1; }
+  .file-preview-name { color: var(--text); font-size: 12px; font-weight: 500; }
+  .file-preview-size { color: var(--text2); font-size: 10px; }
+
+  /* Color Picker */
+  .color-picker-group { display: flex; gap: 12px; }
+  .color-option { width: 40px; height: 40px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
+  .color-option.selected { border-color: var(--text); transform: scale(1.1); }
+
+  /* Wizard Actions */
+  .wizard-actions { display: flex; justify-content: space-between; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn-prev { background: var(--bg3); color: var(--text); border: 1px solid var(--border); padding: 10px 24px; border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .btn-prev:hover { background: var(--border); }
+  .btn-prev:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-next { background: var(--accent); color: #fff; border: none; padding: 10px 24px; border-radius: var(--radius); cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .btn-next:hover { opacity: 0.85; }
+  .btn-skip { background: none; color: var(--text2); border: none; padding: 10px 16px; cursor: pointer; font-size: 13px; }
+  .btn-skip:hover { color: var(--text); }
+
+  /* Team Members */
+  .team-list { margin-bottom: 16px; }
+  .team-member { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg3); border-radius: var(--radius); margin-bottom: 8px; }
+  .team-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; font-size: 14px; }
+  .team-info { flex: 1; }
+  .team-email { color: var(--text); font-size: 13px; font-weight: 500; }
+  .team-role { color: var(--text2); font-size: 11px; }
+  .btn-remove { background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px; opacity: 0.7; transition: opacity 0.2s; }
+  .btn-remove:hover { opacity: 1; }
+
+  /* Success State */
+  .success-state { text-align: center; padding: 24px 0; }
+  .success-icon { width: 80px; height: 80px; margin: 0 auto 24px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .success-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .success-message { color: var(--text2); font-size: 14px; margin-bottom: 24px; }
+
+  /* Loading */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .loading-overlay.visible { display: flex; }
+  .loading-content { text-align: center; }
+  .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text); font-size: 14px; font-weight: 500; }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .wizard-container { padding: 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .progress-steps::before { display: none; }
+    .step-label { display: none; }
+  }
+</style>
+
+<div class="onboarding-wrap">
+  <div class="wizard-container">
+    <!-- Progress Bar -->
+    <div class="wizard-progress">
+      <div class="progress-steps">
+        <div class="progress-step">
+          <div class="step-circle active">1</div>
+          <span class="step-label active">Doanh nghiệp</span>
+        </div>
+        <div class="progress-step">
+          <div class="step-circle">2</div>
+          <span class="step-label">Thương hiệu</span>
+        </div>
+        <div class="progress-step">
+          <div class="step-circle">3</div>
+          <span class="step-label">Đội ngũ</span>
+        </div>
+      </div>
+    </div>
+
+    <form id="onboardingForm">
+      <!-- Step 1: Business Information -->
+      <div class="wizard-step active" data-step="1">
+        <div class="step-header">
+          <h2 class="step-title">Thông tin doanh nghiệp</h2>
+          <p class="step-description">Hãy cho chúng tôi biết về doanh nghiệp của bạn</p>
+        </div>
+
+        <div class="form-group">
+          <label for="companyName">Tên doanh nghiệp *</label>
+          <input type="text" id="companyName" name="companyName" placeholder="VD: Công ty TNHH ABC" required />
+          <span class="error-text">Vui lòng nhập tên doanh nghiệp</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="industry">Ngành nghề</label>
+            <select id="industry" name="industry">
+              <option value="">Chọn ngành...</option>
+              <option value="technology">Công nghệ / Phần mềm</option>
+              <option value="ecommerce">Thương mại điện tử</option>
+              <option value="retail">Bán lẻ</option>
+              <option value="services">Dịch vụ</option>
+              <option value="manufacturing">Sản xuất</option>
+              <option value="healthcare">Y tế / Sức khỏe</option>
+              <option value="education">Giáo dục</option>
+              <option value="finance">Tài chính</option>
+              <option value="marketing">Marketing / Advertising</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="companySize">Quy mô</label>
+            <select id="companySize" name="companySize">
+              <option value="">Chọn quy mô...</option>
+              <option value="1">1 người (Solo)</option>
+              <option value="2-10">2-10 nhân viên</option>
+              <option value="11-50">11-50 nhân viên</option>
+              <option value="51-200">51-200 nhân viên</option>
+              <option value="200+">200+ nhân viên</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="website">Website (nếu có)</label>
+          <input type="url" id="website" name="website" placeholder="https://yourcompany.com" />
+        </div>
+
+        <div class="wizard-actions" style="justify-content: flex-end;">
+          <button type="button" class="btn-next" onclick="nextStep(1)">Tiếp theo →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Branding -->
+      <div class="wizard-step" data-step="2">
+        <div class="step-header">
+          <h2 class="step-title">Thiết lập thương hiệu</h2>
+          <p class="step-description">Tùy chỉnh giao diện phù hợp với thương hiệu của bạn</p>
+        </div>
+
+        <div class="form-group">
+          <label>Logo doanh nghiệp</label>
+          <div class="file-upload" onclick="document.getElementById('logoUpload').click()">
+            <div class="file-upload-icon">📁</div>
+            <div class="file-upload-text">Click để tải lên logo</div>
+            <div class="file-upload-hint">PNG, JPG tối đa 2MB</div>
+            <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(this)" />
+          </div>
+          <div class="file-preview" id="logoPreview">
+            <img class="file-preview-img" id="logoPreviewImg" alt="Logo preview" />
+            <div class="file-preview-info">
+              <div class="file-preview-name" id="logoPreviewName"></div>
+              <div class="file-preview-size" id="logoPreviewSize"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tagline">Tagline / Slogan</label>
+          <input type="text" id="tagline" name="tagline" placeholder="VD: Giải pháp AI cho doanh nghiệp" />
+        </div>
+
+        <div class="form-group">
+          <label>Màu sắc thương hiệu</label>
+          <div class="color-picker-group">
+            <div class="color-option selected" style="background: #6366f1;" data-color="#6366f1" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #00BCD4;" data-color="#00BCD4" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #10b981;" data-color="#10b981" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #f59e0b;" data-color="#f59e0b" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #ef4444;" data-color="#ef4444" onclick="selectColor(this)"></div>
+            <div class="color-option" style="background: #8b5cf6;" data-color="#8b5cf6" onclick="selectColor(this)"></div>
+          </div>
+          <input type="hidden" id="brandColor" name="brandColor" value="#6366f1" />
+        </div>
+
+        <div class="wizard-actions">
+          <button type="button" class="btn-prev" onclick="prevStep(2)">← Quay lại</button>
+          <button type="button" class="btn-next" onclick="nextStep(2)">Tiếp theo →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Team Invitation -->
+      <div class="wizard-step" data-step="3">
+        <div class="step-header">
+          <h2 class="step-title">Mời thành viên</h2>
+          <p class="step-description">Thêm đồng đội của bạn vào hệ thống (có thể bỏ qua)</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="memberEmail">Email thành viên</label>
+            <input type="email" id="memberEmail" placeholder="colleague@company.com" />
+          </div>
+          <div class="form-group">
+            <label for="memberRole">Vai trò</label>
+            <select id="memberRole">
+              <option value="member">Thành viên</option>
+              <option value="admin">Quản trị viên</option>
+              <option value="viewer">Chỉ xem</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn-skip" onclick="addMember()">+ Thêm thành viên</button>
+
+        <div class="team-list" id="teamList"></div>
+
+        <div class="wizard-actions">
+          <button type="button" class="btn-prev" onclick="prevStep(3)">← Quay lại</button>
+          <button type="button" class="btn-next" onclick="completeOnboarding()">Hoàn thành ✨</button>
+        </div>
+      </div>
+
+      <!-- Success State -->
+      <div class="wizard-step" data-step="success">
+        <div class="success-state">
+          <div class="success-icon">🎉</div>
+          <h2 class="success-title">Chào mừng đến với OpenClaw!</h2>
+          <p class="success-message">Doanh nghiệp của bạn đã được thiết lập thành công. Đang chuyển hướng...</p>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <div class="loading-text">Đang thiết lập doanh nghiệp...</div>
+  </div>
+</div>
+
+<script>
+  // State
+  let currentStep = 1;
+  const teamMembers = [];
+  const formData = {
+    companyName: '',
+    industry: '',
+    companySize: '',
+    website: '',
+    logo: null,
+    tagline: '',
+    brandColor: '#6366f1'
+  };
+
+  // Navigation
+  function nextStep(step) {
+    if (!validateStep(step)) return;
+
+    // Save form data
+    if (step === 1) {
+      formData.companyName = document.getElementById('companyName').value;
+      formData.industry = document.getElementById('industry').value;
+      formData.companySize = document.getElementById('companySize').value;
+      formData.website = document.getElementById('website').value;
+    } else if (step === 2) {
+      formData.tagline = document.getElementById('tagline').value;
+      formData.brandColor = document.getElementById('brandColor').value;
+    }
+
+    // Update UI
+    document.querySelector(`.wizard-step[data-step="${step}"]`).classList.remove('active');
+    document.querySelector(`.wizard-step[data-step="${step + 1}"]`).classList.add('active');
+
+    // Update progress
+    document.querySelectorAll('.step-circle')[step].classList.add('active');
+    document.querySelectorAll('.step-label')[step].classList.add('active');
+    document.querySelectorAll('.step-circle')[step - 1].classList.remove('active');
+    document.querySelectorAll('.step-circle')[step - 1].classList.add('completed');
+
+    currentStep = step + 1;
+  }
+
+  function prevStep(step) {
+    document.querySelector(`.wizard-step[data-step="${step}"]`).classList.remove('active');
+    document.querySelector(`.wizard-step[data-step="${step - 1}"]`).classList.add('active');
+
+    document.querySelectorAll('.step-circle')[step - 1].classList.remove('active');
+    document.querySelectorAll('.step-circle')[step - 2].classList.remove('completed');
+    document.querySelectorAll('.step-circle')[step - 2].classList.add('active');
+    document.querySelectorAll('.step-label')[step - 1].classList.remove('active');
+    document.querySelectorAll('.step-label')[step - 2].classList.add('active');
+
+    currentStep = step - 1;
+  }
+
+  // Validation
+  function validateStep(step) {
+    if (step === 1) {
+      const companyName = document.getElementById('companyName');
+      const errorText = companyName.parentElement.querySelector('.error-text');
+
+      if (!companyName.value.trim()) {
+        companyName.classList.add('error');
+        errorText.classList.add('visible');
+        return false;
+      }
+      companyName.classList.remove('error');
+      errorText.classList.remove('visible');
+    }
+    return true;
+  }
+
+  // Logo upload
+  function handleLogoUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      formData.logo = e.target.result;
+      document.getElementById('logoPreviewImg').src = e.target.result;
+      document.getElementById('logoPreviewName').textContent = file.name;
+      document.getElementById('logoPreviewSize').textContent = formatFileSize(file.size);
+      document.getElementById('logoPreview').classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  // Color selection
+  function selectColor(element) {
+    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    document.getElementById('brandColor').value = element.dataset.color;
+  }
+
+  // Team management
+  function addMember() {
+    const email = document.getElementById('memberEmail').value;
+    const role = document.getElementById('memberRole').value;
+
+    if (!email || !email.includes('@')) {
+      alert('Vui lòng nhập email hợp lệ');
+      return;
+    }
+
+    teamMembers.push({ email, role });
+    renderTeamList();
+
+    document.getElementById('memberEmail').value = '';
+  }
+
+  function removeMember(index) {
+    teamMembers.splice(index, 1);
+    renderTeamList();
+  }
+
+  function renderTeamList() {
+    const teamList = document.getElementById('teamList');
+    if (teamMembers.length === 0) {
+      teamList.innerHTML = '';
+      return;
+    }
+
+    teamList.innerHTML = teamMembers.map((member, index) => {
+      const initial = member.email.charAt(0).toUpperCase();
+      const roleLabels = { member: 'Thành viên', admin: 'Quản trị viên', viewer: 'Chỉ xem' };
+      return `
+        <div class="team-member">
+          <div class="team-avatar">${initial}</div>
+          <div class="team-info">
+            <div class="team-email">${member.email}</div>
+            <div class="team-role">${roleLabels[member.role]}</div>
+          </div>
+          <button type="button" class="btn-remove" onclick="removeMember(${index})">✕</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Complete onboarding
+  async function completeOnboarding() {
+    const loading = document.getElementById('loadingOverlay');
+    loading.classList.add('visible');
+
+    try {
+      // Save to localStorage for now
+      const onboardingData = {
+        ...formData,
+        teamMembers,
+        completedAt: new Date().toISOString()
+      };
+      localStorage.setItem('mk_onboarding', JSON.stringify(onboardingData));
+      localStorage.setItem('mk_biz_name', formData.companyName);
+
+      // Show success
+      document.querySelector('.wizard-step[data-step="3"]').classList.remove('active');
+      document.querySelector('.wizard-step[data-step="success"]').classList.add('active');
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 2000);
+    } catch (error) {
+      console.error('Onboarding error:', error);
+      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    } finally {
+      loading.classList.remove('visible');
+    }
+  }
+</script>
+</body>
+</html>
