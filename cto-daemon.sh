@@ -28,6 +28,9 @@ LOG_FILE="${MEKONG_DIR}/cto-daemon.log"
 MEMORY_FILE="${MEKONG_DIR}/cto-memory.md"
 JIDOKA_FILE="${MEKONG_DIR}/jidoka-alerts.log"
 
+# ---- CTO DNA: MISSION ----
+RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard, mekong-engine. Priority: landing page polish → API hardening → dashboard working → tests green → deploy pipeline."
+
 # Defaults (overridable via CLI flags)
 CTO_SESSION="${CTO_SESSION:-tom_hum}"
 POLL_INTERVAL="${POLL_INTERVAL:-30}"
@@ -123,20 +126,24 @@ Pick the MOST SPECIFIC command."
     catalog_section="Commands: /cook \"task\" /debug \"issue\" /fix \"bug\" /test \"scope\" /plan:hard \"feature\" /review"
   fi
 
-  local prompt="CTO daemon. Project: ${name} (dir: ${dir}). Deploy: ${deploy}.
+  local prompt="GOAL: ${RAAS_GOAL}
+You are CTO Brain. Your ONLY job: move this project closer to selling RaaS.
 
+PROJECT: ${name} | DIR: ${dir} | DEPLOY: ${deploy}
 PANE OUTPUT: ${pane_tail}
 ${error_lines:+ERRORS: ${error_lines}}
 
 ${catalog_section}
 
-Give ONE slash command. Be SPECIFIC — include exact file paths, error descriptions, or feature names.
+THINK: What is the SINGLE most impactful action to make RaaS sellable?
+Priority chain: fix errors → fix tests → polish UI → harden API → add features → write docs.
+Give ONE slash command with SPECIFIC file paths or descriptions.
 Examples:
-- /debug \"TypeError in src/strategies/RsiSmaStrategy.ts line 45\"
-- /eng-tech-debt \"clean up dead imports in src/core/\"
-- /backend-api-build \"add rate limiting to /api/v1/missions\"
-- /sre-morning-check
-Reply with ONLY the command."
+- /cook \"fix landing page pricing section in packages/raas-landing/src/pages/pricing.astro\"
+- /debug \"TypeError in packages/mekong-engine/src/routes/billing.ts line 45\"
+- /backend-api-build \"add rate limiting to /v1/missions endpoint in mekong-engine\"
+- /test \"run vitest for packages/mekong-engine\"
+Reply with ONLY the command. No explanation."
 
   local result
   result=$(cto_brain_think "$prompt")
@@ -550,16 +557,16 @@ dispatch_worker() {
     return
   fi
 
-  # Priority 3: Fallback — but ONLY if pane has actionable state (error/test_fail/lint)
-  # For fresh/complete state: require pending task context, else SKIP (no generic /cook spam)
+  # Priority 3: Fallback to state-aware command (brain failed but pane needs work)
   local state="fresh"
   if [[ -n "$pane_output" ]]; then
     state=$(detect_pane_state "$pane_output")
   fi
 
+  # For fresh/complete: brain should have handled it above. If brain returned nothing,
+  # log but don't spam generic commands
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
-    # No mission file, no brain task → SKIP dispatch, avoid empty /cook loop
-    log "P${pane_idx} (${name}): IDLE NO-TASK — no pending mission or brain dispatch (state=$state)"
+    log "P${pane_idx} (${name}): IDLE — brain returned no task (state=$state)"
     return
   fi
 
@@ -718,18 +725,33 @@ while true; do
         continue  # verify handled the worker
       fi
 
-      # If idle and not recently dispatched → DELEGATE new task (with cooldown)
+      # If idle → check missions first (bypass cooldown), then dispatch with cooldown
       if is_idle "$output"; then
-        ld_var="LAST_DISPATCH_${pane_idx}"
-        last_dispatch="${!ld_var:-0}"
-        elapsed=$((NOW - last_dispatch))
-        if [[ $elapsed -ge $DISPATCH_COOLDOWN ]]; then
-          log "P${pane_idx} (${name}): IDLE → DELEGATING"
+        # Priority 0: mission files bypass cooldown entirely
+        local mission_dir="${MEKONG_DIR}/missions"
+        local has_mission=false
+        if [[ -d "$mission_dir" ]]; then
+          for mf in "$mission_dir"/*.json; do
+            [[ -f "$mf" ]] && has_mission=true && break
+          done
+        fi
+        if [[ "$has_mission" == true ]]; then
+          log "P${pane_idx} (${name}): IDLE + MISSION FILE → DISPATCHING (bypass cooldown)"
           WORKER_RETRIES[$pane_idx]=0
           dispatch_worker "$pane_idx" "$output"
           eval "LAST_DISPATCH_${pane_idx}=$NOW"
         else
-          log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
+          ld_var="LAST_DISPATCH_${pane_idx}"
+          last_dispatch="${!ld_var:-0}"
+          elapsed=$((NOW - last_dispatch))
+          if [[ $elapsed -ge $DISPATCH_COOLDOWN ]]; then
+            log "P${pane_idx} (${name}): IDLE → DELEGATING"
+            WORKER_RETRIES[$pane_idx]=0
+            dispatch_worker "$pane_idx" "$output"
+            eval "LAST_DISPATCH_${pane_idx}=$NOW"
+          else
+            log "P${pane_idx} (${name}): IDLE (cooldown ${elapsed}/${DISPATCH_COOLDOWN}s)"
+          fi
         fi
       else
         # Worker is active — extract status from expanded pattern set
