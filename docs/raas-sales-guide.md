@@ -41,6 +41,19 @@
 - **Churn Rate:** <5% monthly
 - **NDR (Net Dollar Retention):** 120%+
 
+### Case Study: Telco X
+
+**Results:** 400% revenue increase, 15% efficiency gain in 6 months
+
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Monthly Revenue | $2.3M | $9.2M | +400% |
+| Revenue Leakage | 15% | 0.3% | -98% |
+| Reconciliation Time | 40 hrs/week | 15 min/week | -99% |
+| Customer Disputes | 234/month | 52/month | -78% |
+
+**Solution:** RaaS automated billing + double-entry ledger + real-time revenue distribution
+
 ---
 
 ## Product Positioning
