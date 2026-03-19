@@ -3,7 +3,7 @@
  * Cross-exchange arbitrage engine — spread detection, signal scoring,
  * orderbook validation, circuit breaker, auto-execution for Binance/OKX/Bybit.
  *
- * Peer dependency: @agencyos/trading-core (interfaces, analysis)
+ * Peer dependency: @mekong/trading-core (interfaces, analysis)
  */
 
 // Types & utilities

@@ -3,7 +3,7 @@
  * Used by ArbitrageScanner, ArbitrageExecutor, SpreadDetectorEngine.
  */
 
-import { IOrder } from '@agencyos/trading-core/interfaces';
+import { IOrder } from '@mekong/trading-core/interfaces';
 
 // --- Scanner types ---
 

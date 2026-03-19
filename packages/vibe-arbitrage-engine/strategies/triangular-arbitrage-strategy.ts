@@ -5,8 +5,8 @@
  * Detects profitable loops > 0.05% after fees.
  */
 
-import { IStrategy, ISignal, SignalType } from '@agencyos/trading-core/interfaces';
-import { ICandle } from '@agencyos/trading-core/interfaces';
+import { IStrategy, ISignal, SignalType } from '@mekong/trading-core/interfaces';
+import { ICandle } from '@mekong/trading-core/interfaces';
 
 export class TriangularArbitrage implements IStrategy {
   name = 'Triangular Arbitrage';

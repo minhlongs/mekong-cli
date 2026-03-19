@@ -8,7 +8,7 @@
  * Package version: uses IExchange interface, no app-specific dependencies.
  */
 
-import { IExchange } from '@agencyos/trading-core/interfaces';
+import { IExchange } from '@mekong/trading-core/interfaces';
 import { getArbLogger } from './arb-logger';
 import {
   ArbitrageOpportunity, ScannerConfig, ExecutorConfig,

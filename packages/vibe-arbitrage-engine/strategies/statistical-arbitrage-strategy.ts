@@ -5,9 +5,9 @@
  * Requires correlation >= 0.8 between pair.
  */
 
-import { IStrategy, ISignal, SignalType } from '@agencyos/trading-core/interfaces';
-import { ICandle } from '@agencyos/trading-core/interfaces';
-import { Indicators } from '@agencyos/trading-core/analysis';
+import { IStrategy, ISignal, SignalType } from '@mekong/trading-core/interfaces';
+import { ICandle } from '@mekong/trading-core/interfaces';
+import { Indicators } from '@mekong/trading-core/analysis';
 
 export class StatisticalArbitrage implements IStrategy {
   name = 'Statistical Arbitrage (Pairs Trading)';
