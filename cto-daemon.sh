@@ -389,7 +389,18 @@ capture_pane() {
 
 send_to_pane() {
   local pane_idx=$1; shift
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$*" Enter
+  local cmd="$*"
+  # SAFETY GATE: capture fresh output and verify pane is truly idle before sending
+  # Exception: "1" (answering question) and "/clear" "/compact" bypass gate
+  if [[ "$cmd" != "1" && "$cmd" != "/clear" && "$cmd" != "/compact" ]]; then
+    local fresh_output
+    fresh_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
+    if [[ -n "$fresh_output" ]] && ! is_idle "$fresh_output"; then
+      echo "[$(date '+%H:%M:%S')] SAFETY GATE: Blocked send to P${pane_idx} (pane BUSY): ${cmd:0:80}" >> "$LOG_FILE"
+      return 1
+    fi
+  fi
+  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$cmd" Enter
 }
 
 # Launch/respawn a CLI pane via mekong-wrapper (unified entry point)
@@ -502,24 +513,31 @@ QUESTION_PATTERNS="Do you want to proceed|Would you like"
 
 is_idle() {
   local output="$1"
+  local tail15
+  tail15=$(echo "$output" | tail -15)
 
-  # LOCK 1: NOT idle if tool actively running (CC CLI status indicators)
-  if echo "$output" | tail -15 | grep -qE "⏺|✳|Quantumizing|Scurrying|Writing|Reading|Thinking|Searching|Running|Brewing|Cooked|Cogitating|Crunching"; then
+  # GUARD 1: NOT idle if CC CLI tool/activity icons present (comprehensive set)
+  if echo "$tail15" | grep -qE "⏺|✳|✢|✶|✻|✽|◼|▸|⎿|●"; then
     return 1
   fi
 
-  # LOCK 1b: NOT idle if dialog/queued state
+  # GUARD 2: NOT idle if any busy verb detected (CC CLI status words)
+  if echo "$tail15" | grep -qE "$BUSY_PATTERNS|Commit"; then
+    return 1
+  fi
+
+  # GUARD 3: NOT idle if dialog/queued state
   if echo "$output" | tail -10 | grep -qiE "queued messages|Press up to edit|Exit plan mode|Enter to select|Yes.*No|arrow keys"; then
     return 1
   fi
 
-  # PRIORITY 1: Multi-tool idle detection (claude/gemini/opencode/aider)
+  # IDLE: Multi-tool prompt detection (claude/gemini/opencode/aider)
   if echo "$output" | tail -3 | grep -qE "^❯|⏵⏵ bypass|Type your message|aider>|codex>|^>"; then
-    return 0  # IDLE — pane is at prompt
+    return 0
   fi
 
-  # No prompt → check if stuck/busy/question
-  return 1  # NOT idle
+  # No prompt detected → assume NOT idle (safe default)
+  return 1
 }
 
 # ---- PANE LOCK (2-way dispatch protection) ----
