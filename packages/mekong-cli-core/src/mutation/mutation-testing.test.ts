@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { createHmac } from 'node:crypto';
 import { computeSignature } from '../license/verifier.js';
 import { tierMeetsMinimum } from '../license/feature-map.js';
-import { TIER_ORDER } from '../license/types.js';
+import { TIER_ORDER, type LicenseTier } from '../license/types.js';
 import { ROICalculator } from '../analytics/roi-calculator.js';
 import { AgentScorer } from '../analytics/agent-scorer.js';
 
@@ -59,7 +59,7 @@ describe('Mutation: Tier order reversed', () => {
 
     // Mutant: reverse order — now enterprise has lower index than pro
     const reversedOrder = [...TIER_ORDER].reverse(); // ['enterprise','pro','starter','free']
-    const mutantMeetsMinimum = (current: string, required: string) =>
+    const mutantMeetsMinimum = (current: LicenseTier, required: LicenseTier) =>
       reversedOrder.indexOf(current) >= reversedOrder.indexOf(required);
 
     // In reversed order, enterprise index=0, pro index=1 → 0 >= 1 is false (broken!)

@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types'
 import type { Mission, MissionStatus } from '../types/raas'
 import { MissionSchema, CREDIT_TIERS } from '../types/raas'
 

@@ -15,6 +15,7 @@ import { ledgerRoutes } from './routes/ledger'
 import { equityRoutes } from './routes/equity'
 import { revenueRoutes } from './routes/revenue'
 import { fundingRoutes } from './routes/funding'
+import type { D1Database, KVNamespace, R2Bucket, Ai, AiModels, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types'
 
 // Cloudflare bindings — all optional until resources created in dashboard
 export type Bindings = {

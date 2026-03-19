@@ -4,6 +4,7 @@
  * Encryption key derived from SERVICE_TOKEN (Cloudflare secret).
  */
 
+import type { D1Database } from '@cloudflare/workers-types'
 export const PROVIDER_PRESETS: Record<string, { baseUrl: string; model: string }> = {
   openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
   google: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.0-flash' },

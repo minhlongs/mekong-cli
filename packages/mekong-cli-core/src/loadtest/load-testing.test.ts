@@ -52,12 +52,15 @@ describe('load tests — metering & payments', () => {
       const store = new LicenseStore(join(dir, `license-${i}.json`));
       const license = { key: `mk_${randomUUID()}`, tier: 'pro' as const, owner: `owner-${i}`,
         issuedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 86_400_000 * 365).toISOString(), status: 'active' as const };
+        expiresAt: new Date(Date.now() + 86_400_000 * 365).toISOString(), status: 'active' as const,
+        signature: '' }; // Empty signature for test licenses
       return store.save(license).then(async (sr) => {
         expect(sr.ok).toBe(true);
         const lr = await store.load();
         expect(lr.ok).toBe(true);
-        expect(lr.value?.key).toBe(license.key);
+        if (lr.ok) {
+          expect(lr.value?.key).toBe(license.key);
+        }
       });
     }));
   }, 10_000);

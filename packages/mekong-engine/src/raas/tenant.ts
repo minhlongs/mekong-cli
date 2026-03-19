@@ -1,3 +1,4 @@
+import type { D1Database } from '@cloudflare/workers-types'
 import type { Tenant } from '../types/raas'
 import { TenantSchema } from '../types/raas'
 

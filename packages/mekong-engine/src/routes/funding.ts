@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import type { D1Database } from '@cloudflare/workers-types'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'

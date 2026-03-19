@@ -3,6 +3,7 @@
  * Mirrors Python: src/agents/__init__.py AGENT_REGISTRY
  */
 
+import type { R2Bucket } from '@cloudflare/workers-types'
 import { LLMClient } from '../core/llm-client'
 import type { AgentRegistry } from '../types/agent'
 import { ContentWriterAgent } from './content-writer-agent'

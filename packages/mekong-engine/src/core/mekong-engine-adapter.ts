@@ -6,6 +6,7 @@
  */
 
 import type { Bindings } from '../index'
+import type { Ai, AiModels } from '@cloudflare/workers-types'
 
 export class MekongEngineAdapter {
   private aiBinding?: Ai

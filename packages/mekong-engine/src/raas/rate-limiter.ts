@@ -1,3 +1,4 @@
+import type { KVNamespace } from '@cloudflare/workers-types'
 type TierLimits = { daily: number; monthly: number }
 
 const TIER_LIMITS: Record<string, TierLimits> = {
