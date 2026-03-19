@@ -31,6 +31,17 @@ JIDOKA_FILE="${MEKONG_DIR}/jidoka-alerts.log"
 # ---- CTO DNA: MISSION ----
 RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard, mekong-engine. Priority: landing page polish → API hardening → dashboard working → tests green → deploy pipeline."
 
+# Fallback tasks when brain is unavailable (round-robin per pane)
+RAAS_FALLBACK_TASKS=(
+  '/cook "Fix and polish raas-landing — check build, fix any errors, improve SEO meta tags"'
+  '/cook "Harden mekong-engine API — add input validation to all routes, fix any TypeScript errors"'
+  '/cook "Verify raas-dashboard builds and renders — fix any missing imports or broken components"'
+  '/test "Run all tests in packages/mekong-engine — fix any failures"'
+  '/cook "Add error handling and loading states to frontend/landing dashboard pages"'
+  '/cook "Review and fix packages/mekong-engine/src/routes/ — ensure all endpoints return proper error codes"'
+)
+FALLBACK_IDX=0
+
 # Defaults (overridable via CLI flags)
 CTO_SESSION="${CTO_SESSION:-tom_hum}"
 POLL_INTERVAL="${POLL_INTERVAL:-30}"
@@ -563,10 +574,13 @@ dispatch_worker() {
     state=$(detect_pane_state "$pane_output")
   fi
 
-  # For fresh/complete: brain should have handled it above. If brain returned nothing,
-  # log but don't spam generic commands
+  # For fresh/complete: brain failed → use RaaS fallback tasks (round-robin)
   if [[ "$state" == "fresh" || "$state" == "complete" ]]; then
-    log "P${pane_idx} (${name}): IDLE — brain returned no task (state=$state)"
+    local fallback_cmd="${RAAS_FALLBACK_TASKS[$FALLBACK_IDX]}"
+    FALLBACK_IDX=$(( (FALLBACK_IDX + 1) % ${#RAAS_FALLBACK_TASKS[@]} ))
+    log "P${pane_idx} (${name}): BRAIN EMPTY → FALLBACK[$FALLBACK_IDX]: ${fallback_cmd}"
+    send_to_pane "$pane_idx" "$fallback_cmd"
+    log "DELEGATED P${pane_idx} (${name}) — FALLBACK RaaS task"
     return
   fi
 
