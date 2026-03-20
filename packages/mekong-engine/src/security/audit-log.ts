@@ -89,6 +89,7 @@ export async function queryAuditLogs(
   filters: {
     tenant_id?: string
     action?: string
+    resource?: string
     resource_type?: string
     resource_id?: string
     start_date?: string
@@ -98,9 +99,9 @@ export async function queryAuditLogs(
   }
 ): Promise<AuditLogEntry[]> {
   let sql = `
-    SELECT id, tenant_id, user_id, action, resource_type, resource_id,
+    SELECT id, tenant_id, user_id, action, resource, resource_id,
            ip_address, user_agent, request_method, request_path, status_code,
-           metadata, created_at
+           old_value, new_value, metadata, created_at
     FROM audit_logs
     WHERE 1=1
   `
@@ -116,9 +117,9 @@ export async function queryAuditLogs(
     params.push(filters.action)
   }
 
-  if (filters.resource_type) {
-    sql += ' AND resource_type = ?'
-    params.push(filters.resource_type)
+  if (filters.resource || filters.resource_type) {
+    sql += ' AND resource = ?'
+    params.push(filters.resource || filters.resource_type || '')
   }
 
   if (filters.resource_id) {
@@ -143,8 +144,21 @@ export async function queryAuditLogs(
   const { results } = await db.prepare(sql).bind(...params).all()
 
   return results.map((row: any) => ({
-    ...row,
-    metadata: row.metadata ? JSON.parse(row.metadata) : null,
+    id: String(row.id),
+    tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
+    user_id: row.user_id ? String(row.user_id) : undefined,
+    action: String(row.action),
+    resource: row.resource ? String(row.resource) : undefined,
+    resource_id: row.resource_id ? String(row.resource_id) : undefined,
+    ip_address: row.ip_address ? String(row.ip_address) : undefined,
+    user_agent: row.user_agent ? String(row.user_agent) : undefined,
+    request_method: row.request_method ? String(row.request_method) : undefined,
+    request_path: row.request_path ? String(row.request_path) : undefined,
+    status_code: row.status_code ? Number(row.status_code) : undefined,
+    old_value: row.old_value ? JSON.parse(row.old_value as string) : null,
+    new_value: row.new_value ? JSON.parse(row.new_value as string) : null,
+    metadata: row.metadata ? JSON.parse(row.metadata as string) : null,
+    created_at: String(row.created_at),
   }))
 }
 
@@ -157,9 +171,9 @@ export async function getAuditLogById(
 ): Promise<AuditLogEntry | null> {
   const row = await db
     .prepare(`
-      SELECT id, tenant_id, user_id, action, resource_type, resource_id,
+      SELECT id, tenant_id, user_id, action, resource, resource_id,
              ip_address, user_agent, request_method, request_path, status_code,
-             metadata, created_at
+             old_value, new_value, metadata, created_at
       FROM audit_logs
       WHERE id = ?
     `)
@@ -169,8 +183,21 @@ export async function getAuditLogById(
   if (!row) return null
 
   return {
-    ...row,
-    metadata: row.metadata ? JSON.parse(row.metadata) : null,
+    id: String(row.id),
+    tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
+    user_id: row.user_id ? String(row.user_id) : undefined,
+    action: String(row.action),
+    resource: row.resource ? String(row.resource) : undefined,
+    resource_id: row.resource_id ? String(row.resource_id) : undefined,
+    ip_address: row.ip_address ? String(row.ip_address) : undefined,
+    user_agent: row.user_agent ? String(row.user_agent) : undefined,
+    request_method: row.request_method ? String(row.request_method) : undefined,
+    request_path: row.request_path ? String(row.request_path) : undefined,
+    status_code: row.status_code ? Number(row.status_code) : undefined,
+    old_value: row.old_value ? JSON.parse(row.old_value as string) : null,
+    new_value: row.new_value ? JSON.parse(row.new_value as string) : null,
+    metadata: row.metadata ? JSON.parse(row.metadata as string) : null,
+    created_at: String(row.created_at),
   }
 }
 
@@ -188,7 +215,7 @@ export function auditMiddleware(options?: {
   /** Include response body in metadata (default: false) */
   includeResponse?: boolean
 }) {
-  return async (c: Context<{ Bindings: Bindings }>, next: Next) => {
+  return async (c: Context<{ Bindings: Bindings; Variables: { tenant: { id: string } } }>, next: Next) => {
     const startTime = Date.now()
 
     // Skip if path is excluded
@@ -247,17 +274,20 @@ export function auditMiddleware(options?: {
     // Determine action from path and method
     const action = `${c.req.method} ${c.req.path}`
 
-    await logAudit(c.env.DB, {
-      tenant_id: tenantId,
-      user_id: userId,
-      action,
-      request_method: c.req.method,
-      request_path: c.req.path,
-      ip_address: c.req.header('X-Forwarded-For') || c.req.header('CF-Connecting-IP'),
-      user_agent: c.req.header('User-Agent'),
-      status_code: c.res.status,
-      metadata,
-    })
+    // Only log if DB is available
+    if (c.env.DB) {
+      await logAudit(c.env.DB, {
+        tenant_id: tenantId,
+        user_id: userId,
+        action,
+        request_method: c.req.method,
+        request_path: c.req.path,
+        ip_address: c.req.header('X-Forwarded-For') || c.req.header('CF-Connecting-IP'),
+        user_agent: c.req.header('User-Agent'),
+        status_code: c.res.status,
+        metadata,
+      })
+    }
   }
 }
 

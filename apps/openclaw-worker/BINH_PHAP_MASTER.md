@@ -1,0 +1,1 @@
+docs/BINH_PHAP_MASTER.md

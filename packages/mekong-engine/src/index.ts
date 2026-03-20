@@ -29,6 +29,8 @@ import { analyticsRoutes } from './routes/analytics'
 import { formatPrometheusMetrics, getMetrics, requestLoggingMiddleware, metricsMiddleware } from './lib/monitoring'
 import { handleAsync } from './types/error'
 import { rateLimitMiddleware } from './middleware/rate-limit'
+import { apiSecurityHeaders } from './middleware/security'
+import { auditMiddleware } from './security/audit-log'
 // Observability imports
 import {
   getMetrics as getObservabilityMetrics,
@@ -91,6 +93,9 @@ app.use('*', cors())
 app.use('*', metricsMiddleware)
 app.use('*', requestLoggingMiddleware)
 app.use('*', rateLimitMiddleware())
+app.use('*', apiSecurityHeaders)
+app.use('/v1/*', auditMiddleware())
+app.use('/billing/*', auditMiddleware())
 
 // Initialize alerts on startup
 initAlerts()

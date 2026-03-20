@@ -6,6 +6,7 @@ import { handleAsync } from '../types/error'
 import { z } from 'zod'
 import * as dunning from '../raas/dunning'
 import { verifyPolarSignature } from '../raas/webhook-utils'
+import { webhookSecurityHeaders } from '../middleware/security'
 
 type Variables = { tenant: Tenant }
 const raasRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -13,6 +14,7 @@ raasRoutes.use('*', authMiddleware)
 
 // Public webhook routes (no auth required - signature verified)
 const webhookRoutes = new Hono<{ Bindings: Bindings }>()
+webhookRoutes.use('/webhooks/*', webhookSecurityHeaders())
 
 // POST /webhooks/polar - Handle Polar.sh webhook events
 webhookRoutes.post('/polar', handleAsync(async (c) => {
