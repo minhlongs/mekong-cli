@@ -31,8 +31,9 @@ type TopupInput = z.infer<typeof topupSchema>
 
 // POST /transfer — Double-entry transfer between accounts
 ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const db = c.env.DB
+  if (!db) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: TransferInput
   try {
@@ -101,8 +102,9 @@ ledgerRoutes.post('/transfer', payloadSizeLimit(), handleAsync(async (c) => {
 
 // POST /topup — Add credits to an account (from platform)
 ledgerRoutes.post('/topup', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const db = c.env.DB
+  if (!db) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: TopupInput
   try {
@@ -138,7 +140,8 @@ ledgerRoutes.post('/topup', payloadSizeLimit(), handleAsync(async (c) => {
 
 // GET /balance — Account balance(s)
 ledgerRoutes.get('/balance', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const code = c.req.query('code')
   const query = code
     ? 'SELECT * FROM ledger_accounts WHERE tenant_id = ? AND code = ?'
@@ -157,7 +160,8 @@ ledgerRoutes.get('/balance', handleAsync(async (c) => {
 
 // GET /history — Transaction log
 ledgerRoutes.get('/history', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const limit = Math.min(parseInt(c.req.query('limit') || '30'), 100)
   const rowsResult = await handleDb(
     async () => {

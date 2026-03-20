@@ -27,7 +27,7 @@ rbacRoutes.get('/policies', rateLimitMiddleware('rbac_policies', 100, 60000), (c
 // POST /check — check permission for stakeholder
 rbacRoutes.post('/check', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: CheckPermissionBody
   try {
@@ -43,7 +43,7 @@ rbacRoutes.post('/check', handleAsync(async (c) => {
     async () => {
       const result = await c.env.DB!.prepare(
         'SELECT id, role, governance_level FROM stakeholders WHERE id = ? AND tenant_id = ?'
-      ).bind(body.stakeholder_id, tenant.id).first()
+      ).bind(body.stakeholder_id, (tenant as { id: string }).id).first()
       return result as { id: string; role: string; governance_level: number } | null
     },
     'DATABASE_ERROR',

@@ -1,16 +1,38 @@
-name: Deploy Mekong Engine to Cloudflare
+name: Deploy Cloudflare
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
     paths:
       - 'packages/mekong-engine/**'
+      - 'packages/raas-landing/**'
       - '.github/workflows/deploy-cloudflare.yml'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '22'
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
 jobs:
-  test-engine:
-    name: Test & Typecheck (mekong-engine)
+  # ============================================
+  # JOB: VERIFY & TEST
+  # ============================================
+  verify:
+    name: Verify & Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -20,25 +42,39 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies (root workspace)
+      - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: TypeScript check
+      - name: Type check (mekong-engine)
         run: pnpm --filter mekong-engine typecheck
         continue-on-error: true
 
-      - name: Run tests
+      - name: Run tests (mekong-engine)
         run: pnpm --filter mekong-engine test
         continue-on-error: true
 
-  deploy:
-    name: Deploy to Cloudflare Workers
-    needs: test-engine
+      - name: Build (raas-landing)
+        run: cd packages/raas-landing && pnpm install && pnpm run build
+        continue-on-error: true
+
+  # ============================================
+  # JOB: DEPLOY STAGING
+  # ============================================
+  deploy-staging:
+    name: Deploy Staging
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    timeout-minutes: 15
+    needs: [verify]
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.environment == 'staging' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment:
+      name: staging
+      url: https://mekong-engine-staging.${{ vars.CLOUDFLARE_ACCOUNT_ID }}.workers.dev
+
     steps:
       - uses: actions/checkout@v4
 
@@ -46,29 +82,99 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies (root workspace)
+      - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Deploy via Wrangler
+      - name: Build mekong-engine
+        run: cd packages/mekong-engine && pnpm install && pnpm run build
+
+      - name: Deploy mekong-engine to Staging
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
           workingDirectory: packages/mekong-engine
-          command: deploy
 
-      - name: Smoke test
-        if: success()
+      - name: Build raas-landing
+        run: cd packages/raas-landing && pnpm install && npm run build
+
+      - name: Deploy raas-landing to Staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy dist --project-name=raas-landing-staging
+          workingDirectory: packages/raas-landing
+
+      - name: Smoke test (health check)
         run: |
+          echo "Waiting for deployment to propagate..."
           sleep 10
-          HTTP_STATUS=$(curl -sI "https://mekong-engine.${CLOUDFLARE_ACCOUNT_ID}.workers.dev/health" -o /dev/null -w '%{http_code}' 2>/dev/null || echo "000")
-          echo "Health check: HTTP $HTTP_STATUS"
+          HTTP_STATUS=$(curl -sI "https://mekong-engine-staging.${{ vars.CLOUDFLARE_ACCOUNT_ID }}.workers.dev/health" -o /dev/null -w '%{http_code}' 2>/dev/null || echo "000")
+          echo "Health check HTTP status: $HTTP_STATUS"
           if [ "$HTTP_STATUS" = "200" ]; then
-            echo "✅ Deploy verified!"
+            echo "✅ Staging health check passed"
           else
-            echo "⚠️ Health check returned $HTTP_STATUS — may need custom domain setup"
+            echo "⚠️ Staging health check returned $HTTP_STATUS (may need custom domain)"
           fi
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  # ============================================
+  # JOB: DEPLOY PRODUCTION
+  # ============================================
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [verify, deploy-staging]
+    if: >
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.environment == 'production'
+
+    environment:
+      name: production
+      url: https://mekong-engine.agencyos.network
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build mekong-engine
+        run: cd packages/mekong-engine && pnpm install && pnpm run build
+
+      - name: Deploy mekong-engine to Production
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+          workingDirectory: packages/mekong-engine
+
+      - name: Build raas-landing
+        run: cd packages/raas-landing && pnpm install && npm run build
+
+      - name: Deploy raas-landing to Production
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy dist --project-name=raas-landing
+          workingDirectory: packages/raas-landing
+
+      - name: Production smoke test
+        run: |
+          echo "Waiting for deployment to propagate..."
+          sleep 10
+          HTTP_STATUS=$(curl -sI "https://mekong-engine.agencyos.network/health" -o /dev/null -w '%{http_code}' 2>/dev/null || echo "000")
+          echo "Production health check HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Production health check passed"
+          else
+            echo "⚠️ Production health check returned $HTTP_STATUS"
+          fi

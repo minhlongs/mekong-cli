@@ -27,7 +27,7 @@ const configSchemaSchema = z.record(configSchemaItemSchema).refine(
 // POST /v1/marketplace/plugins — publish a plugin
 marketplaceRoutes.post('/plugins', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Define validation schema
   const pluginSchema = z.object({
@@ -101,7 +101,7 @@ marketplaceRoutes.get('/plugins', handleAsync(async (c) => {
 // POST /v1/marketplace/install — install plugin to tenant
 marketplaceRoutes.post('/install', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: { plugin_id: string; installed_by: string; config?: Record<string, unknown> }
   try {
@@ -136,7 +136,7 @@ marketplaceRoutes.post('/install', payloadSizeLimit(), handleAsync(async (c) => 
     'Failed to install plugin'
   )
 
-  return c.json(createError('OK', 'Plugin installed successfully', { install_id: id, plugin_name: plugin.name }), 201)
+  return c.json({ install_id: id, plugin_name: plugin.name }, 201)
 }))
 
 // POST /v1/marketplace/review — rate a plugin (1-5)
@@ -192,7 +192,7 @@ marketplaceRoutes.post('/review', payloadSizeLimit(), handleAsync(async (c) => {
 // GET /v1/marketplace/installed — list active installs for tenant
 marketplaceRoutes.get('/installed', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const result = await handleDb(
     () => c.env.DB!.prepare(

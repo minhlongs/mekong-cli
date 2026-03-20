@@ -36,3 +36,22 @@ binding = "AI"
 
 [triggers]
 crons = ["*/30 * * * *"]
+
+# ============================================
+# STAGING ENVIRONMENT
+# ============================================
+[env.staging]
+name = "mekong-engine-staging"
+vars = { ENVIRONMENT = "staging", DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct" }
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "mekong-raas-db-staging"
+database_id = ""
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = ""
+
+[env.staging.ai]
+binding = "AI"

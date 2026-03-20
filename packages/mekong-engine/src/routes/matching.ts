@@ -41,7 +41,8 @@ matchingRoutes.use('*', authMiddleware)
 
 // POST /profiles — upsert skill profile
 matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: CreateProfileBody
   try {
@@ -112,7 +113,8 @@ matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
 
 // POST /requests — create match request + auto-match
 matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: CreateRequestBody
   try {
@@ -145,7 +147,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
          JOIN stakeholders s ON s.id = sp.stakeholder_id
          WHERE sp.tenant_id = ? AND sp.stakeholder_id != ? AND sp.availability = 'available'`
       ).bind(tenant.id, body.requester_id).all()
-      return result as { results?: Array<{ stakeholder_id: string; skills: string; industries: string; reputation_score: number }> }
+      return result as unknown as Array<{ stakeholder_id: string; skills: string; industries: string; reputation_score: number }>
     },
     'DATABASE_ERROR',
     'Failed to fetch profiles for matching'
@@ -153,7 +155,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
 
   const proposedMatches = []
 
-  for (const profile of profilesResult.results || []) {
+  for (const profile of profilesResult || []) {
     const profileSkills: string[] = JSON.parse((profile.skills as string) || '[]')
     const profileIndustries: string[] = JSON.parse((profile.industries as string) || '[]')
 
@@ -252,7 +254,8 @@ matchingRoutes.patch('/matches/:id', handleAsync(async (c) => {
 
 // GET /requests — list all match requests
 matchingRoutes.get('/requests', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const status = c.req.query('status')
 
   const query = status
@@ -260,10 +263,7 @@ matchingRoutes.get('/requests', handleAsync(async (c) => {
     : 'SELECT * FROM match_requests WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50'
   const params = status ? [tenant.id, status] : [tenant.id]
   const rowsResult = await handleDb(
-    async () => {
-      const result = await c.env.DB!.prepare(query).bind(...params).all()
-      return result as { results?: unknown[] }
-    },
+    async () => c.env.DB!.prepare(query).bind(...params).all(),
     'DATABASE_ERROR',
     'Failed to fetch match requests'
   )

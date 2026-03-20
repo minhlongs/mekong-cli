@@ -139,16 +139,16 @@ raasRoutes.post('/reactivate', handleAsync(async (c) => {
 
 // GET /v1/raas/license/status - Check current tenant's license status
 raasRoutes.get('/license/status', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
   const status = await dunning.checkLicenseStatus(c.env.DB, tenant.id)
   const schedule = await dunning.getDunningSchedule(c.env.DB, tenant.id)
 
   return c.json({
-    tenant_id: tenant.id,
+    tenant_id: (tenant as { id: string }).id,
     status,
-    tier: tenant.tier,
+    tier: (tenant as { tier: string }).tier,
     days_until_suspension: schedule.daysUntilSuspension,
     grace_period_ends: schedule.gracePeriodEnds,
   })
@@ -156,13 +156,13 @@ raasRoutes.get('/license/status', handleAsync(async (c) => {
 
 // GET /v1/raas/dunning/schedule - Get detailed dunning schedule
 raasRoutes.get('/dunning/schedule', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
   const schedule = await dunning.getDunningSchedule(c.env.DB, tenant.id)
 
   return c.json({
-    tenant_id: tenant.id,
+    tenant_id: (tenant as { id: string }).id,
     ...schedule,
   })
 }))

@@ -28,7 +28,7 @@ reportRoutes.use('*', authMiddleware)
 
 // GET /reports/weekly — last 7 days aggregated + AI summary
 reportRoutes.get('/weekly', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate query params
   let query: { days: number }
@@ -49,7 +49,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM messages
          WHERE tenant_id = ? AND created_at >= datetime('now', ? days')`
-        ).bind(tenant.id, `-${days}`).first()
+        ).bind((tenant as { id: string }).id, `-${days}`).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -57,14 +57,11 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
     ),
 
     handleDb(
-      async () => {
-        const r = await c.env.DB!.prepare(
-          `SELECT status, COUNT(*) as count FROM content_posts
-         WHERE tenant_id = ? AND created_at >= datetime('now', ? days')
-         GROUP BY status`
-        ).bind(tenant.id, `-${days}`).all()
-        return r as { results?: Array<{ status: string; count: number }> }
-      },
+      () => c.env.DB!.prepare(
+        `SELECT status, COUNT(*) as count FROM content_posts
+       WHERE tenant_id = ? AND created_at >= datetime('now', ? days')
+       GROUP BY status`
+      ).bind((tenant as { id: string }).id, `-${days}`).all() as Promise<{ results?: Array<{ status: string; count: number }> }>,
       'DATABASE_ERROR',
       'Failed to fetch content stats'
     ),
@@ -74,7 +71,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM contacts
          WHERE tenant_id = ? AND first_contact_at >= datetime('now', ? days')`
-        ).bind(tenant.id, `-${days}`).first()
+        ).bind((tenant as { id: string }).id, `-${days}`).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -86,7 +83,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM conversations
          WHERE tenant_id = ? AND created_at >= datetime('now', ? days')`
-        ).bind(tenant.id, `-${days}`).first()
+        ).bind((tenant as { id: string }).id, `-${days}`).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -123,7 +120,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
 
 // GET /reports/overview — real-time dashboard: today + totals
 reportRoutes.get('/overview', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate query params
   let query: { include_history: boolean }
@@ -142,7 +139,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM messages
          WHERE tenant_id = ? AND created_at >= datetime('now', 'start of day')`
-        ).bind(tenant.id).first()
+        ).bind((tenant as { id: string }).id).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -153,7 +150,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
       async () => {
         const r = await c.env.DB!.prepare(
           'SELECT COUNT(*) as count FROM contacts WHERE tenant_id = ?'
-        ).bind(tenant.id).first()
+        ).bind((tenant as { id: string }).id).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -165,7 +162,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM content_posts
          WHERE tenant_id = ? AND status IN ('draft','approved')`
-        ).bind(tenant.id).first()
+        ).bind((tenant as { id: string }).id).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -177,7 +174,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
         const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM conversations
          WHERE tenant_id = ? AND status = 'active'`
-        ).bind(tenant.id).first()
+        ).bind((tenant as { id: string }).id).first()
         return r as { count: number } | null
       },
       'DATABASE_ERROR',
@@ -206,7 +203,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
           const r = await c.env.DB!.prepare(
             `SELECT COUNT(*) as count FROM messages
            WHERE tenant_id = ? AND created_at >= datetime('now', '-7 days')`
-          ).bind(tenant.id).first()
+          ).bind((tenant as { id: string }).id).first()
           return r as { count: number } | null
         },
         'DATABASE_ERROR',
@@ -217,7 +214,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
           const r = await c.env.DB!.prepare(
             `SELECT COUNT(*) as count FROM contacts
            WHERE tenant_id = ? AND first_contact_at >= datetime('now', '-7 days')`
-          ).bind(tenant.id).first()
+          ).bind((tenant as { id: string }).id).first()
           return r as { count: number } | null
         },
         'DATABASE_ERROR',

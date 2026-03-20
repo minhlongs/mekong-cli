@@ -199,6 +199,7 @@ export const metricsMiddleware = createMiddleware<{ Bindings: Bindings }>(
 
 /**
  * Format metrics as Prometheus exposition format
+ * @deprecated Use formatPrometheusMetrics from observability/metrics.ts
  */
 export function formatPrometheusMetrics(metrics: Metrics): string {
   const { p50, p95, p99 } = getLatencyPercentiles()
@@ -227,3 +228,26 @@ export function formatPrometheusMetrics(metrics: Metrics): string {
 
   return output
 }
+
+// Re-export from observability module for convenience
+export type { MetricsData } from '../observability/metrics'
+export {
+  trackCommand,
+  trackMcuConsumption,
+  trackSession,
+  endSession,
+  trackError,
+  recordLatency as recordObservabilityLatency,
+  recordDbQuery,
+  getMetrics as getObservabilityMetrics,
+  formatPrometheusMetrics as formatObservabilityMetrics,
+  createMetricsMiddleware as createObservabilityMetricsMiddleware,
+} from '../observability/metrics'
+export {
+  checkAlerts,
+  sendSlackAlert,
+  sendAlertsToSlack,
+  getAlertStatus,
+  initAlerts,
+  createAlertsMiddleware,
+} from '../observability/alerts'

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from typing import Any, AsyncGenerator, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,7 +28,11 @@ from src.api.raas_task_models import (
     TaskStatusResponse,
 )
 from src.api.raas_task_store import TaskRecord, get_task_store
+from src.core.error_responses import ErrorCode, error_response
+from src.core.input_validation import validate_required, validate_string_length
 from src.raas.auth import TenantContext
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1", tags=["RaaS v1"])
 
@@ -103,10 +108,20 @@ def submit_task(
     Returns:
         :class:`TaskResponse` with task_id and initial status.
     """
+    # Validate goal
+    error = validate_required(body.goal, "goal")
+    if error:
+        logger.warning("Task submission failed validation: %s", body.goal)
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    error = validate_string_length(body.goal, "goal", min_len=1, max_len=10000)
+    if error:
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
     store = get_task_store()
-    record = store.create(goal=body.goal, tenant_id=tenant.tenant_id)
 
     try:
+        record = store.create(goal=body.goal, tenant_id=tenant.tenant_id)
         record.status = TaskStatus.RUNNING
         store.update(record)
 
@@ -114,9 +129,18 @@ def submit_task(
         result = orchestrator.run_from_goal(body.goal)
         record = _result_to_record(record, result)
 
-    except Exception as exc:
+    except ValueError as e:
+        # Business logic errors
+        logger.warning("Task submission business error: %s", e)
+        record = store.create(goal=body.goal, tenant_id=tenant.tenant_id)
         record.status = TaskStatus.FAILED
-        record.errors.append(str(exc))
+        record.errors.append(f"validation_error: {e}")
+
+    except Exception as exc:
+        logger.error("Task execution failed: %s", str(exc), exc_info=True)
+        record = store.create(goal=body.goal, tenant_id=tenant.tenant_id)
+        record.status = TaskStatus.FAILED
+        record.errors.append(f"execution_failed: {str(exc)}")
 
     store.update(record)
     return TaskResponse(
@@ -141,26 +165,51 @@ def get_task_status(
         :class:`TaskStatusResponse` with current status and step details.
 
     Raises:
+        HTTPException 400: Invalid task_id format.
         HTTPException 404: Task not found or belongs to another tenant.
     """
-    store = get_task_store()
-    record = store.get(task_id=task_id, tenant_id=tenant.tenant_id)
-    if record is None:
-        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+    # Validate task_id format
+    if not task_id or not task_id.strip():
+        raise HTTPException(
+            status_code=400,
+            detail=error_response(
+                ErrorCode.INVALID_INPUT,
+                "Task ID is required and cannot be empty",
+            ).to_dict(),
+        )
 
-    return TaskStatusResponse(
-        task_id=record.task_id,
-        status=record.status,
-        goal=record.goal,
-        tenant_id=record.tenant_id,
-        total_steps=record.total_steps,
-        completed_steps=record.completed_steps,
-        failed_steps=record.failed_steps,
-        success_rate=record.success_rate,
-        errors=record.errors,
-        warnings=record.warnings,
-        steps=record.steps,
-    )
+    try:
+        store = get_task_store()
+        record = store.get(task_id=task_id, tenant_id=tenant.tenant_id)
+        if record is None:
+            logger.warning("Task not found: %s", task_id)
+            raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+        return TaskStatusResponse(
+            task_id=record.task_id,
+            status=record.status,
+            goal=record.goal,
+            tenant_id=record.tenant_id,
+            total_steps=record.total_steps,
+            completed_steps=record.completed_steps,
+            failed_steps=record.failed_steps,
+            success_rate=record.success_rate,
+            errors=record.errors,
+            warnings=record.warnings,
+            steps=record.steps,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Get task status failed for %s: %s", task_id, str(exc))
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "Failed to get task status",
+            },
+        )
 
 
 @router.get("/tasks/{task_id}/stream")
@@ -181,11 +230,23 @@ async def stream_task(
         :class:`StreamingResponse` with SSE content-type.
 
     Raises:
+        HTTPException 400: Invalid task_id format.
         HTTPException 404: Task not found or belongs to another tenant.
     """
+    # Validate task_id format
+    if not task_id or not task_id.strip():
+        raise HTTPException(
+            status_code=400,
+            detail=error_response(
+                ErrorCode.INVALID_INPUT,
+                "Task ID is required and cannot be empty",
+            ).to_dict(),
+        )
+
     store = get_task_store()
     record = store.get(task_id=task_id, tenant_id=tenant.tenant_id)
     if record is None:
+        logger.warning("Task not found: %s", task_id)
         raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
 
     async def _event_stream() -> AsyncGenerator[str, None]:
@@ -236,6 +297,7 @@ async def stream_task(
                 "errors": record_updated.errors,
             }
         except Exception as exc:
+            logger.error("Stream finalization error for %s: %s", task_id, str(exc))
             done_event = {"type": "error", "message": str(exc)}
 
         yield f"data: {json.dumps(done_event)}\n\n"
@@ -297,13 +359,33 @@ def run_agent(
         HTTPException 404: Agent name not registered.
         HTTPException 500: Agent execution error.
     """
+    # Validate agent name
+    if not name or not name.strip():
+        raise HTTPException(
+            status_code=400,
+            detail=error_response(
+                ErrorCode.INVALID_INPUT,
+                "Agent name is required",
+            ).to_dict(),
+        )
+
+    # Validate goal
+    error = validate_required(body.goal, "goal")
+    if error:
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
     from src.agents import registry
 
     if name not in registry:
         available = registry.list_agents()
+        logger.warning("Agent not found: %s. Available: %s", name, available)
         raise HTTPException(
             status_code=404,
-            detail=f"Agent '{name}' not found. Available: {available}",
+            detail={
+                "error": "NOT_FOUND",
+                "message": f"Agent '{name}' not found",
+                "available_agents": available,
+            },
         )
 
     try:
@@ -316,10 +398,24 @@ def run_agent(
         output = str(exec_result) if exec_result is not None else ""
         return AgentRunResponse(agent=name, status="success", output=output)
 
+    except TimeoutError as e:
+        logger.error("Agent %s timed out: %s", name, str(e))
+        raise HTTPException(
+            status_code=504,  # Gateway Timeout
+            detail={
+                "error": "TIMEOUT",
+                "message": f"Agent '{name}' timed out",
+            },
+        )
+
     except Exception as exc:
+        logger.error("Agent %s execution error: %s", name, str(exc), exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Agent '{name}' execution error: {exc}",
+            detail={
+                "error": "AGENT_EXECUTION_ERROR",
+                "message": f"Agent '{name}' failed: {str(exc)}",
+            },
         ) from exc
 
 

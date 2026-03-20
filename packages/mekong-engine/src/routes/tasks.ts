@@ -47,7 +47,7 @@ taskRoutes.use('*', authMiddleware)
 
 taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
   const db = c.env.DB!
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const body = await c.req.json()
   const parsed = createMissionSchema.safeParse(body)
   if (!parsed.success) return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
@@ -55,7 +55,7 @@ taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
   const credits = estimateCredits(parsed.data.goal)
 
   // Check balance BEFORE deducting (P0 credit gate)
-  const balance = await getBalance(db, tenant.id)
+  const balance = await getBalance(db, (tenant as { id: string }).id)
   if (balance < credits) {
     return c.json({
       error: 'Insufficient credits',
@@ -66,12 +66,11 @@ taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
     }, 402)
   }
 
-  const deducted = await deductCredits(db, tenant.id, credits, `mission: ${parsed.data.goal.slice(0, 50)}`)
+  const deducted = await deductCredits(db, (tenant as { id: string }).id, credits, `mission: ${parsed.data.goal.slice(0, 50)}`)
   if (!deducted) return c.json(createError('INSUFFICIENT_CREDITS', 'Insufficient credits'), 402)
 
-  c.set('creditsUsed', credits)
   const mission = await handleDb(
-    () => createMission(db, tenant.id, body.goal, credits),
+    () => createMission(db, (tenant as { id: string }).id, body.goal, credits),
     'DATABASE_ERROR',
     'Failed to create mission'
   )
@@ -80,7 +79,7 @@ taskRoutes.post('/', creditMeteringMiddleware, handleAsync(async (c) => {
 
 taskRoutes.get('/', handleAsync(async (c) => {
   const db = c.env.DB!
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate query params with Zod
   const queryResult = listTasksQuerySchema.safeParse(c.req.query())
@@ -90,7 +89,7 @@ taskRoutes.get('/', handleAsync(async (c) => {
   const { limit, offset } = queryResult.data
 
   const missions = await handleDb(
-    () => listMissions(db, tenant.id, limit, offset),
+    () => listMissions(db, (tenant as { id: string }).id, limit, offset),
     'DATABASE_ERROR',
     'Failed to list missions'
   )
@@ -99,7 +98,7 @@ taskRoutes.get('/', handleAsync(async (c) => {
 
 taskRoutes.get('/:id', handleAsync(async (c) => {
   const db = c.env.DB!
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate route params
   const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
@@ -109,7 +108,7 @@ taskRoutes.get('/:id', handleAsync(async (c) => {
   const { id } = paramsResult.data
 
   const mission = await handleDb(
-    () => getMission(db, id, tenant.id),
+    () => getMission(db, id, (tenant as { id: string }).id),
     'DATABASE_ERROR',
     'Failed to fetch mission'
   )
@@ -119,7 +118,7 @@ taskRoutes.get('/:id', handleAsync(async (c) => {
 
 taskRoutes.get('/:id/stream', handleAsync(async (c) => {
   const db = c.env.DB!
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate route params
   const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
@@ -129,7 +128,7 @@ taskRoutes.get('/:id/stream', handleAsync(async (c) => {
   const { id } = paramsResult.data
 
   const mission = await handleDb(
-    () => getMission(db, id, tenant.id),
+    () => getMission(db, id, (tenant as { id: string }).id),
     'DATABASE_ERROR',
     'Failed to fetch mission'
   )
@@ -146,7 +145,7 @@ taskRoutes.get('/:id/stream', handleAsync(async (c) => {
 
 taskRoutes.post('/:id/cancel', handleAsync(async (c) => {
   const db = c.env.DB!
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate route params
   const paramsResult = idParamSchema.safeParse({ id: c.req.param('id') })
@@ -156,7 +155,7 @@ taskRoutes.post('/:id/cancel', handleAsync(async (c) => {
   const { id } = paramsResult.data
 
   const mission = await handleDb(
-    () => getMission(db, id, tenant.id),
+    () => getMission(db, id, (tenant as { id: string }).id),
     'DATABASE_ERROR',
     'Failed to fetch mission'
   )
@@ -169,7 +168,7 @@ taskRoutes.post('/:id/cancel', handleAsync(async (c) => {
     'Failed to cancel mission'
   )
   await handleDb(
-    () => addCredits(db, tenant.id, mission.credits_used, 'refund: cancelled mission'),
+    () => addCredits(db, (tenant as { id: string }).id, mission.credits_used, 'refund: cancelled mission'),
     'DATABASE_ERROR',
     'Failed to refund credits'
   )

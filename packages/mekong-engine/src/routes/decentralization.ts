@@ -119,7 +119,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
         `SELECT role, COUNT(*) as count, SUM(reputation_score) as total_rep
      FROM stakeholders WHERE tenant_id = ? GROUP BY role`
       ).bind(tenant.id).all()
-      return r as { results?: { role: string; count: number; total_rep: number }[] }
+      return r as unknown as { results?: Array<{ role: string; count: number; total_rep: number }> }
     },
     'DATABASE_ERROR',
     'Failed to fetch role stats'
