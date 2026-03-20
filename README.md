@@ -97,9 +97,77 @@ All infrastructure runs on Cloudflare:
 └── reports/               # Self-dogfood analysis (242 reports)
 ```
 
+## Verify Installation
+
+After installation, verify everything works:
+
+```bash
+# 1. Check version
+mekong version
+# Expected: Mekong CLI v5.0.0
+
+# 2. Run self-test
+make setup && make self-test
+# Expected: Score 100/100
+
+# 3. Test a command
+mekong status
+# Expected: Current LLM config
+```
+
+If any step fails, see [Troubleshooting](#troubleshooting) below.
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [QUICKSTART.md](QUICKSTART.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md), [FORK.md](FORK.md) and [QUICKSTART.md](QUICKSTART.md).
+
+## Troubleshooting
+
+### Installation issues
+
+```bash
+# Reinstall
+pip uninstall mekong-cli
+pip install -e .
+
+# Verify
+pip list | grep mekong
+```
+
+### LLM connection errors
+
+```bash
+# Check env vars
+echo $LLM_BASE_URL
+echo $LLM_API_KEY
+
+# Test with different provider
+export LLM_BASE_URL=http://localhost:11434/v1
+export LLM_MODEL=qwen2.5-coder
+```
+
+### Command not working
+
+```bash
+# Reload shell
+source ~/mekong-cli/scripts/shell-init.sh
+
+# Or restart terminal
+```
+
+### Test failures
+
+```bash
+# Reinstall dev dependencies
+pip install -e ".[dev]"
+
+# Run tests verbose
+python3 -m pytest tests/ -v --tb=short
+
+# Clear cache
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -name "*.pyc" -delete
+```
 
 ## License
 
