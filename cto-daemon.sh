@@ -1300,10 +1300,14 @@ while true; do
   if [[ $((CYCLE % 5)) -eq 0 ]]; then
     health_check || true
     # Ollama brain health — auto-recover if down
-    if ! ollama_health_check; then
-      log "HEALTH: Ollama brain unhealthy — triggering auto-recovery"
-      ollama_auto_recover || true
-    fi
+    # DISABLED: CC CLI workers use DashScope API (cloud), not local Ollama
+    # Ollama auto-recover was loading 31GB Qwen model on every health check cycle
+    # causing OOM kills on task-watcher. Local Ollama only used by CTO brain_think.py
+    # which handles its own model loading with keep_alive=5m
+    # if ! ollama_health_check; then
+    #   log "HEALTH: Ollama brain unhealthy — triggering auto-recovery"
+    #   ollama_auto_recover || true
+    # fi
     # Reset pane respawn counters every 5 cycles (allow retry)
     PANE_RESPAWN_COUNT[1]=0; PANE_RESPAWN_COUNT[2]=0; PANE_RESPAWN_COUNT[3]=0
   fi
