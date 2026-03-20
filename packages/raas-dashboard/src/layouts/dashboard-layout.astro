@@ -1,15 +1,27 @@
 ---
 export interface Props { title: string; activePage?: string; }
 const { title, activePage = '' } = Astro.props;
-const nav = [
-  { href: '/dashboard', label: 'Tổng quan',  icon: '📊' },
-  { href: '/messages',  label: 'Tin nhắn',   icon: '💬' },
-  { href: '/content',   label: 'Nội dung',   icon: '📝' },
-  { href: '/contacts',  label: 'Khách hàng', icon: '👥' },
-  { href: '/reports',   label: 'Báo cáo',    icon: '📈' },
-  { href: '/governance', label: 'Quản trị',   icon: '🛡️' },
-  { href: '/settings',  label: 'Cài đặt',    icon: '⚙️' },
-  { href: '/upgrade',   label: 'Nâng cấp',   icon: '⭐' },
+
+// 5-Layer Command Navigation
+const navLayers = [
+  { label: 'Tổng quan', icon: '📊', href: '/dashboard', layer: 'overview' },
+  { label: 'Founder', icon: '👑', href: '#', layer: 'founder', children: [
+    { href: '#', label: 'OKR' }, { href: '#', label: 'Fundraise' }, { href: '#', label: 'IPO' }
+  ]},
+  { label: 'Business', icon: '💼', href: '#', layer: 'business', children: [
+    { href: '/contacts', label: 'CRM' }, { href: '/messages', label: 'Sales' }, { href: '/content', label: 'Marketing' }
+  ]},
+  { label: 'Product', icon: '🎯', href: '#', layer: 'product', children: [
+    { href: '#', label: 'Plan' }, { href: '#', label: 'Sprint' }, { href: '#', label: 'Roadmap' }
+  ]},
+  { label: 'Engineering', icon: '⚙️', href: '#', layer: 'engineering', children: [
+    { href: '#', label: 'Code' }, { href: '#', label: 'Test' }, { href: '#', label: 'Deploy' }
+  ]},
+  { label: 'Ops', icon: '🔧', href: '#', layer: 'ops', children: [
+    { href: '#', label: 'Health' }, { href: '#', label: 'Security' }, { href: '/reports', label: 'Audit' }
+  ]},
+  { label: 'Nâng cấp', icon: '⭐', href: '/upgrade', layer: 'upgrade' },
+  { label: 'Cài đặt', icon: '⚙️', href: '/settings', layer: 'settings' },
 ];
 ---
 <!DOCTYPE html>
@@ -30,17 +42,46 @@ const nav = [
       <span>AI Business Platform</span>
     </div>
     <nav class="sidebar-nav">
-      {nav.map(item => (
-        <a
-          href={item.href}
-          class={`nav-item${activePage === item.href ? ' active' : ''}`}
-        >
-          <span class="nav-icon">{item.icon}</span>
-          {item.label}
-        </a>
+      {navLayers.map(item => (
+        item.children ? (
+          <div class="nav-group">
+            <div class="nav-item nav-group-header" style="cursor:pointer;display:flex;align-items:center;gap:8px;">
+              <span class="nav-icon">{item.icon}</span>
+              {item.label}
+              <span style="margin-left:auto;font-size:0.75rem;">▼</span>
+            </div>
+            <div class="nav-group-children" style="display:none;padding-left:16px;">
+              {item.children.map(child => (
+                <a href={child.href} class={`nav-item${activePage === child.href ? ' active' : ''}`} style="padding-left:32px;font-size:0.875rem;">
+                  {child.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <a
+            href={item.href}
+            class={`nav-item${activePage === item.href ? ' active' : ''}`}
+          >
+            <span class="nav-icon">{item.icon}</span>
+            {item.label}
+          </a>
+        )
       ))}
     </nav>
   </aside>
+
+  <script>
+    // Accordion navigation groups
+    document.querySelectorAll('.nav-group-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const children = header.nextElementSibling;
+        const isExpanded = children.style.display === 'block';
+        children.style.display = isExpanded ? 'none' : 'block';
+        header.classList.toggle('expanded', !isExpanded);
+      });
+    });
+  </script>
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 

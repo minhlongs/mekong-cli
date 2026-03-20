@@ -2,12 +2,12 @@
 import BaseLayout from '../layouts/base-layout.astro';
 
 const rows = [
-  { feature: 'Credits / tháng',      free: '50',          starter: '500',          pro: '2.000',                enterprise: 'Không giới hạn' },
-  { feature: 'AI Receptionist',       free: 'Cơ bản',      starter: '24/7',         pro: '24/7 Multi-channel',  enterprise: 'Dedicated AI' },
-  { feature: 'Content Creator',       free: '3 ngày/tháng',starter: '7 ngày/tuần',  pro: '7 ngày + lịch',       enterprise: 'Toàn quyền tùy chỉnh' },
-  { feature: 'CRM',                   free: '50 khách',    starter: 'Không giới hạn',pro: 'Không giới hạn + API',enterprise: 'Enterprise CRM' },
-  { feature: 'Báo cáo',               free: 'Tháng',       starter: 'Tuần',         pro: 'Thời gian thực',      enterprise: 'Tuỳ chỉnh' },
-  { feature: 'Hỗ trợ',               free: 'Email',       starter: 'Chat ưu tiên', pro: 'Chat + Phone',        enterprise: 'Dedicated manager' },
+  { feature: 'MCU / tháng',           free: '5',           starter: '200',          pro: '1.000',                enterprise: '5.000' },
+  { feature: 'AI Receptionist',       free: '—',           starter: '24/7',         pro: '24/7 Multi-channel',  enterprise: 'Dedicated AI' },
+  { feature: 'Content Creator',       free: '—',           starter: '7 ngày/tuần',  pro: '7 ngày + lịch',       enterprise: 'Toàn quyền tùy chỉnh' },
+  { feature: 'CRM',                   free: '—',           starter: 'Không giới hạn',pro: 'Không giới hạn + API',enterprise: 'Enterprise CRM' },
+  { feature: 'Báo cáo',               free: '—',           starter: 'Tuần',         pro: 'Thời gian thực',      enterprise: 'Tuỳ chỉnh' },
+  { feature: 'Hỗ trợ',                free: '—',           starter: 'Chat ưu tiên', pro: 'Chat + Phone',        enterprise: 'Dedicated manager' },
   { feature: 'API access',            free: '—',           starter: '—',            pro: '✓',                   enterprise: '✓' },
   { feature: 'White-label',           free: '—',           starter: '—',            pro: '—',                   enterprise: '✓' },
   { feature: 'SLA',                   free: '—',           starter: '—',            pro: '99.9%',               enterprise: '99.99%' },
@@ -16,9 +16,9 @@ const rows = [
 
 const plans = [
   { name: 'Free',       price: '$0',   href: 'https://app.agencyos.network/signup',              featured: false },
-  { name: 'Starter',   price: '$8/mo', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro',        price: '$20/mo',href: 'https://app.agencyos.network/signup?plan=pro',    featured: true  },
-  { name: 'Enterprise', price: '$120/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
+  { name: 'Starter',   price: '$49/mo', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro',        price: '$199/mo',href: 'https://app.agencyos.network/signup?plan=pro',    featured: true  },
+  { name: 'Enterprise', price: '$499/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
 ];
 
 // Product JSON-LD for pricing plans
@@ -35,7 +35,7 @@ const productSchema = {
   "offers": plans.map(plan => ({
     "@type": "Offer",
     "name": `${plan.name} Plan`,
-    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '8' : plan.name === 'Pro' ? '20' : '120',
+    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '49' : plan.name === 'Pro' ? '199' : '499',
     "priceCurrency": "USD",
     "priceValidUntil": new Date(new Date().getFullYear() + 1, 0, 1).toISOString().split('T')[0],
     "availability": "https://schema.org/InStock",

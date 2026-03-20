@@ -41,8 +41,17 @@ const canonicalUrl = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.u
 const viUrl = canonicalUrl.replace('/en', '');
 const enUrl = canonicalUrl.includes('/en') ? canonicalUrl : canonicalUrl.replace(siteUrl, siteUrl + '/en');
 const labels = isEn
-  ? { features: 'Features', pricing: 'Pricing', faq: 'FAQ', cta: 'Start Free', pLink: '/en/pricing' }
-  : { features: 'Tính năng', pricing: 'Bảng giá', faq: 'FAQ', cta: 'Dùng miễn phí', pLink: '/pricing' };
+  ? { features: 'Features', pricing: 'Pricing', faq: 'FAQ', cta: 'Start Free', pLink: '/en/pricing', commands: 'Commands' }
+  : { features: 'Tính năng', pricing: 'Bảng giá', faq: 'FAQ', cta: 'Dùng miễn phí', pLink: '/pricing', commands: 'Lệnh' };
+
+// 5-Layer Command Hierarchy Navigation
+const commandLayers = [
+  { name: isEn ? '👑 Founder' : '👑 Founder', desc: isEn ? 'Strategy & Fundraising' : 'Chiến lược & Gọi vốn', items: ['OKR', 'Fundraise', 'IPO', 'Negotiate'] },
+  { name: isEn ? '💼 Business' : '💼 Business', desc: isEn ? 'Revenue & Operations' : 'Doanh thu & Vận hành', items: ['Sales', 'Marketing', 'Finance', 'HR'] },
+  { name: isEn ? '🎯 Product' : '🎯 Product', desc: isEn ? 'Product Management' : 'Quản lý Sản phẩm', items: ['Plan', 'Sprint', 'Roadmap', 'Discovery'] },
+  { name: isEn ? '⚙️ Engineering' : '⚙️ Engineering', desc: isEn ? 'Build & Ship' : 'Xây dựng & Triển khai', items: ['Code', 'Test', 'Deploy', 'Review'] },
+  { name: isEn ? '🔧 Ops' : '🔧 Ops', desc: isEn ? 'Monitor & Maintain' : 'Giám sát & Duy trì', items: ['Health', 'Security', 'Audit', 'Recovery'] },
+];
 
 // Default keywords per language
 const defaultKeywords = isEn
@@ -247,6 +256,28 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
     <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'OpenClaw Home' : 'Trang chủ OpenClaw'}>OpenClaw</a>
     <div style="display:flex;align-items:center;gap:28px;" role="menubar">
       <a href={`${base}/#features`} class="nav-link" role="menuitem" aria-label={isEn ? 'View features' : 'Xem tính năng'}>{labels.features}</a>
+
+      <!-- 5-Layer Commands Mega Menu -->
+      <div style="position:relative;" class="dropdown-container" role="menuitem" aria-haspopup="true" aria-expanded="false">
+        <button class="nav-link" style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:inherit;color:inherit;" aria-label={isEn ? 'Browse commands by layer' : 'Duyệt lệnh theo tầng'}>
+          {labels.commands}
+          <span style="margin-left:4px;">▼</span>
+        </button>
+        <div class="dropdown-menu" style="position:absolute;top:100%;left:0;background:var(--md-surface);border:1px solid var(--md-outline);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:16px;min-width:600px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;opacity:0;visibility:hidden;transform:translateY(-8px);transition:all 0.2s ease;">
+          {commandLayers.map((layer, idx) => (
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-weight:700;font-size:0.75rem;line-height:1.2;">{layer.name}</div>
+              <div style="font-size:0.65rem;color:var(--md-on-surface-muted);line-height:1.3;">{layer.desc}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                {layer.items.map(item => (
+                  <a href="#" style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item" onMouseOver={(e) => e.target.style.background='rgba(0,188,212,0.08)'} onMouseOut={(e) => e.target.style.background=''}>{item}</a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
       <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
       <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
@@ -259,7 +290,19 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   </div>
 </nav>
 
-<main id="main-content" role="main"><slot /></main>
+<style>
+  /* 5-Layer Dropdown */
+  .dropdown-container:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .dropdown-menu {
+    backdrop-filter: blur(8px);
+  }
+</style>
+
+<main id="main-content" role="main" tabindex="-1"><slot /></main>
 
 <!-- Footer -->
 <footer style="background:var(--md-surface-container);border-top:1px solid var(--md-outline);padding:64px 0 32px;" role="contentinfo">
@@ -351,16 +394,28 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
     let currentIndex = 0;
     let isAutoPlaying = true;
     let autoplayInterval;
+    let autoplayProgressInterval;
     const cardWidth = 320; // Approximate card width + gap
     const visibleCards = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
     const maxIndex = Math.max(0, track.children.length - visibleCards);
+    const autoplayDelay = 5000; // 5 seconds per slide
 
     // Create dots
     const totalDots = Math.min(5, Math.ceil(track.children.length / 2));
     for (let i = 0; i < totalDots; i++) {
       const dot = document.createElement('div');
       dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      dot.setAttribute('tabindex', i === 0 ? '0' : '-1');
       dot.addEventListener('click', () => goToSlide(i));
+      dot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToSlide(i);
+        }
+      });
       dotsContainer.appendChild(dot);
     }
 
@@ -373,8 +428,15 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       // Update dots
       const activeDotIndex = Math.min(Math.floor(currentIndex / (track.children.length / 2 / totalDots)), dots.length - 1);
       dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === activeDotIndex);
+        const isActive = i === activeDotIndex;
+        dot.classList.toggle('active', isActive);
+        dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        dot.setAttribute('tabindex', isActive ? '0' : '-1');
       });
+
+      // Announce slide change for screen readers
+      track.setAttribute('aria-live', 'polite');
+      track.setAttribute('aria-label', `Testimonial ${currentIndex + 1} of ${maxIndex + 1}`);
     }
 
     function goToSlide(index) {
@@ -402,7 +464,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
     }
 
     function startAutoplay() {
-      autoplayInterval = setInterval(nextSlide, 4000);
+      autoplayInterval = setInterval(nextSlide, autoplayDelay);
       isAutoPlaying = true;
     }
 
@@ -432,7 +494,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       });
     }
 
-    // Event listeners
+    // Event listeners for buttons
     nextBtn.addEventListener('click', () => {
       nextSlide();
       resetAutoplay();
@@ -441,6 +503,23 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
     prevBtn.addEventListener('click', () => {
       prevSlide();
       resetAutoplay();
+    });
+
+    // Keyboard navigation for carousel
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement === carousel || carousel.contains(document.activeElement)) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          prevSlide();
+          resetAutoplay();
+          prevBtn.focus();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          nextSlide();
+          resetAutoplay();
+          nextBtn.focus();
+        }
+      }
     });
 
     // Touch support for mobile
@@ -471,7 +550,8 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       }
     }
 
-    // Start autoplay
+    // Initialize
+    updateCarousel();
     startAutoplay();
   }
 </script>
