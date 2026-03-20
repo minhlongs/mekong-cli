@@ -271,7 +271,7 @@ Repeated "${failurePattern}" failures detected in mission history.
 
 ## Prevention Rules
 1. Before starting a "${failurePattern}" task, check prerequisites
-2. Use \`/plan:hard\` instead of \`/cook\` for complex ${failurePattern} tasks
+2. Use \`/plan hard\` instead of \`/cook\` for complex ${failurePattern} tasks
 3. Run build verification BEFORE making changes
 4. If the first attempt fails, analyze the error before retrying
 

@@ -124,14 +124,14 @@ function buildAgentTeamBlock(taskId, taskDescription = '') {
 
 	// 10x: Generate SPECIFIC subtask per role instead of generic "spawn N agents"
 	const roleInstructions = {
-		'code-reviewer': 'SCOPE: Review code quality, naming, DRY violations, complexity. Use /review:codebase.',
-		tester: 'SCOPE: Write/fix unit tests. Verify coverage. Use /test and /test:ui.',
+		'code-reviewer': 'SCOPE: Review code quality, naming, DRY violations, complexity. Use /review codebase.',
+		tester: 'SCOPE: Write/fix unit tests. Verify coverage. Use /test and /test ui.',
 		debugger: 'SCOPE: Find runtime errors and edge cases. Use /debug command.',
 		'fullstack-developer': 'SCOPE: Implement the core feature. Use /cook.',
 		researcher: 'SCOPE: Research best practices and examples. Use /ask and /search.',
-		architect: 'SCOPE: Design system architecture and API contracts. Use /plan:hard.',
-		planner: 'SCOPE: Break task into subtasks. Use /plan:hard or /plan:two.',
-		'security-auditor': 'SCOPE: Check for vulnerabilities. Use /review:codebase.',
+		architect: 'SCOPE: Design system architecture and API contracts. Use /plan hard.',
+		planner: 'SCOPE: Break task into subtasks. Use /plan hard or /plan two.',
+		'security-auditor': 'SCOPE: Check for vulnerabilities. Use /review codebase.',
 	};
 
 	const subtasks = roles.map((role, i) => {

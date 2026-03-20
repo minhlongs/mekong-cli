@@ -62,8 +62,8 @@ The user runs a monorepo with these projects in apps/:
 
 ### Planning (Ch.1):
 - /plan [description] — Create implementation plan
-- /plan:fast [description] — Quick planning
-- /plan:hard [complex feature] — Deep research & planning
+- /plan fast [description] — Quick planning
+- /plan hard [complex feature] — Deep research & planning
 - /binh-phap [query] — Query the Master Strategy
 
 ### Implementation (Ch.2, 3, 4, 8, 9):
@@ -261,7 +261,7 @@ class NLPCommander:
 
         if any(w in msg_lower for w in ["plan", "lên kế hoạch", "nghiên cứu"]):
             intent = "plan"
-            claudekit_commands = ["/plan:fast"]
+            claudekit_commands = ["/plan fast"]
         elif any(w in msg_lower for w in ["fix", "sửa", "bug", "lỗi", "debug"]):
             intent = "fix"
             claudekit_commands = ["/debug"]

@@ -42,6 +42,14 @@ const { preemptiveCool } = require('../safety/m1-cooling-daemon');
 // --- Prompt Building ---
 
 function formatCmd(cmd, text, flags = '') {
+	// CC CLI colon-syntax fix: convert /cmd:sub to correct format
+	// Skills (/plan, /bootstrap, /docs, /review, /test) → space args: /plan hard
+	// Commands (/cto, /studio, /pm, /ops, etc.) → hyphen filename: /cto-architect
+	const SKILL_BASES = ['/plan', '/bootstrap', '/docs', '/review', '/test', '/cook'];
+	const base = cmd.split(':')[0];
+	if (cmd.includes(':')) {
+		cmd = SKILL_BASES.includes(base) ? cmd.replace(/:/g, ' ') : cmd.replace(/:/g, '-');
+	}
 	const escapedText = text.replace(/"/g, '\\"').trim();
 	const isPlanCmd = cmd.startsWith('/plan') || cmd === '/bootstrap';
 	const finalMandate = isPlanCmd
