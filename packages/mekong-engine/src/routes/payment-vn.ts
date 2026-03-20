@@ -107,7 +107,7 @@ paymentVnRoutes.post('/momo/ipn', handleAsync(async (c) => {
   let parsed: { tenant_id?: string; credits?: number; plan?: string }
   try {
     // Use encrypted decryption for payment metadata
-    const metadataSecret = (c.env as any).PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
+    const metadataSecret = c.env.PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
     parsed = await decryptPaymentMetadata(extraData, metadataSecret)
   } catch {
     return c.json(createError('VALIDATION_ERROR', 'Invalid extraData encoding'), 400)
@@ -236,7 +236,7 @@ paymentVnRoutes.post('/create', handleAsync(async (c) => {
 
   if (method === 'momo') {
     // Use encrypted metadata instead of base64
-    const metadataSecret = (c.env as any).PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
+    const metadataSecret = c.env.PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
     const extraData = await encryptPaymentMetadata({ tenant_id, credits, plan: plan ?? '' }, metadataSecret)
     return c.json({
       method: 'momo',
@@ -248,7 +248,7 @@ paymentVnRoutes.post('/create', handleAsync(async (c) => {
   }
 
   // VNPAY - Use encrypted metadata
-  const metadataSecretVnp = (c.env as any).PAYMENT_METADATA_SECRET || c.env.VNPAY_HASH_SECRET || 'fallback-secret'
+  const metadataSecretVnp = c.env.PAYMENT_METADATA_SECRET || c.env.VNPAY_HASH_SECRET || 'fallback-secret'
   const encryptedMetadata = await encryptPaymentMetadata({ tenant_id, credits, plan: plan ?? '' }, metadataSecretVnp)
   return c.json({
     method: 'vnpay',

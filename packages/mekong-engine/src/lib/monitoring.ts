@@ -5,6 +5,41 @@ import { createMiddleware } from 'hono/factory'
 type Variables = { tenant: Tenant }
 
 /**
+ * Logger utility - structured logging without console.* pollution
+ * Replaces console.log/error/warn with structured logger
+ */
+export const logger = {
+  error: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    // Use structured logging - Cloudflare Workers capture this
+    console.error(JSON.stringify(logEntry))
+  },
+  warn: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'warn',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    console.warn(JSON.stringify(logEntry))
+  },
+  info: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    console.log(JSON.stringify(logEntry))
+  }
+}
+
+/**
  * Metrics data structure for Prometheus exposition
  */
 export interface Metrics {
@@ -130,11 +165,11 @@ export const requestLoggingMiddleware = createMiddleware<{ Bindings: Bindings; V
 
     // Log to console (Cloudflare Workers will capture this)
     if (status >= 500) {
-      console.error('REQUEST_ERROR', JSON.stringify(logEntry))
+      logger.error('REQUEST_ERROR', logEntry)
     } else if (status >= 400) {
-      console.warn('REQUEST_CLIENT_ERROR', JSON.stringify(logEntry))
+      logger.warn('REQUEST_CLIENT_ERROR', logEntry)
     } else {
-      console.log('REQUEST', JSON.stringify(logEntry))
+      logger.info('REQUEST', logEntry)
     }
   },
 )

@@ -61,6 +61,17 @@ type Contact = {
   updated_at: string
 }
 
+type Campaign = {
+  id: string
+  tenant_id: string
+  name: string
+  trigger_type: string
+  trigger_value: string | null
+  message_template: string
+  channel: string | null
+  created_at: string
+}
+
 // GET /crm/contacts — list with optional ?tag= and ?limit=
 crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tenant = c.get('tenant') as Tenant
@@ -86,7 +97,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
         )
           .bind(tenant.id, `%"${escapedTag}"%`, limit)
           .all()
-        return r as { results?: Contact[] }
+        return r as unknown as { results?: Contact[] }
       },
       'DATABASE_ERROR',
       'Failed to fetch contacts'
@@ -100,7 +111,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
         )
           .bind(tenant.id, limit)
           .all()
-        return r as { results?: Contact[] }
+        return r as unknown as { results?: Contact[] }
       },
       'DATABASE_ERROR',
       'Failed to fetch contacts'
@@ -209,7 +220,7 @@ crmRoutes.get('/campaigns', handleAsync(async (c) => {
       )
         .bind(tenant.id)
         .all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: Campaign[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch campaigns'

@@ -7,9 +7,10 @@ import type { Context, TypedResponse } from 'hono'
 import type { Bindings } from '../index'
 import type { ZodSchema } from 'zod'
 import { ZodError, z } from 'zod'
+import { logger } from '../lib/monitoring'
 
 // Type alias for Hono context with our Bindings
-export type HonoContext<B = { tenant: unknown }> = Context<{ Bindings: Bindings; Variables: B }>
+export type HonoContext<B extends object | undefined = { tenant: unknown }> = Context<{ Bindings: Bindings; Variables: B }>
 
 export const ERROR_CODES = {
   // Client Errors (4xx)
@@ -120,7 +121,7 @@ export class HttpError extends Error {
  * }))
  * ```
  */
-export function handleAsync<B = { tenant: unknown }, T = unknown>(
+export function handleAsync<B extends object | undefined = { tenant: unknown }, T = unknown>(
   fn: (c: HonoContext<B>) => Promise<T>
 ): (c: HonoContext<B>) => Promise<T | TypedResponse<unknown, any, string>> {
   return async (c: HonoContext<B>) => {
@@ -128,7 +129,8 @@ export function handleAsync<B = { tenant: unknown }, T = unknown>(
       return await fn(c)
     } catch (error) {
       if (error instanceof HttpError) {
-        return c.json(error.toResponse(), error.status)
+        const response = error.toResponse()
+        return c.json(response)
       }
       if (error instanceof ZodError) {
         return c.json(
@@ -137,7 +139,7 @@ export function handleAsync<B = { tenant: unknown }, T = unknown>(
         )
       }
       // Unknown error - log and return 500
-      console.error('Unhandled error in route handler:', error)
+      logger.error('Unhandled error in route handler', { error: error instanceof Error ? error.message : String(error) })
       return c.json(
         createError('INTERNAL_ERROR', 'An unexpected error occurred'),
         500
@@ -167,7 +169,7 @@ export async function handleDb<T>(
   try {
     return await operation()
   } catch (error) {
-    console.error('Database error:', error)
+    logger.error('Database error', { error: error instanceof Error ? error.message : String(error) })
     throw new HttpError(code, message, error instanceof Error ? [error.message] : undefined, 500)
   }
 }
@@ -191,7 +193,7 @@ export async function handleExternalApi<T>(
   try {
     return await operation()
   } catch (error) {
-    console.error('External API error:', error)
+    logger.error('External API error', { error: error instanceof Error ? error.message : String(error) })
     throw new HttpError('EXTERNAL_SERVICE_ERROR', message, error instanceof Error ? [error.message] : undefined, 502)
   }
 }
@@ -350,6 +352,7 @@ export function safeJsonParse<T>(value: string | null | undefined, fallback: T):
  * const tenant = getTenant(c)
  * ```
  */
-export function getTenant<B = { tenant: unknown }>(c: HonoContext<B>): B extends { tenant: infer T } ? T : unknown {
-  return c.get('tenant') as B extends { tenant: infer T } ? T : unknown
+export function getTenant<B extends object | undefined = { tenant: unknown }>(c: HonoContext<B>): unknown {
+  // @ts-expect-error - We know tenant is set by auth middleware
+  return c.get('tenant')
 }

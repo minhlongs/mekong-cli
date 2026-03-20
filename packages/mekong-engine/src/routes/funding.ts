@@ -6,6 +6,7 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { createError, handleAsync, handleDb, HttpError } from '../types/error'
 import { payloadSizeLimit } from '../raas/payload-limiter'
 import { validateTenantExists } from '../lib/route-utils'
+import { logger } from '../lib/monitoring'
 
 type Variables = { tenant: Tenant }
 const fundingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
@@ -33,6 +34,49 @@ const contributeSchema = z.object({
   amount: z.number().int().positive('amount must be positive').max(1_000_000_000, 'amount too large'),
 })
 type ContributeInput = z.infer<typeof contributeSchema>
+
+// Type definitions for funding entities
+type FundingRound = {
+  id: string
+  tenant_id: string
+  title: string
+  matching_pool: number
+  status: 'active' | 'calculating' | 'completed'
+  starts_at: string
+  ends_at: string
+  created_at: string
+}
+
+type FundingProject = {
+  id: string
+  round_id: string
+  tenant_id: string
+  name: string
+  description: string
+  author_id: string | null
+  total_contributions: number
+  contributor_count: number
+  matched_amount: number
+  created_at: string
+}
+
+type FundingContribution = {
+  id: string
+  project_id: string
+  stakeholder_id: string
+  amount: number
+  created_at: string
+}
+
+type QFResult = {
+  id: string
+  name: string
+  direct: number
+  qf_score: number
+  contributors: number
+  matched_amount: number
+  total: number
+}
 
 /**
  * Ensure funding tables exist - using safe batched statements instead of .exec()
@@ -191,7 +235,7 @@ fundingRoutes.post('/contribute', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof Error && error.message.includes('UNIQUE')) {
       return c.json(createError('CONFLICT', 'Already contributed to this project'), 409)
     }
-    console.error('Failed to record funding contribution:', { error, projectId: body.project_id })
+    logger.error('Failed to record funding contribution', { error: error instanceof Error ? error.message : String(error), projectId: body.project_id })
     throw error
   }
 
@@ -223,13 +267,13 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
   const projectsResult = await handleDb(
     async () => {
       const r = await db.prepare('SELECT * FROM funding_projects WHERE round_id = ?').bind(roundId).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: FundingProject[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch projects for round'
   )
 
-  const results: any[] = []
+  const results: QFResult[] = []
   let totalQFScore = 0
 
   for (const project of projectsResult.results || []) {
@@ -238,15 +282,15 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
         const r = await db.prepare(
           'SELECT amount FROM funding_contributions WHERE project_id = ?'
         ).bind(project.id).all()
-        return r as { results?: any[] }
+        return r as unknown as { results?: FundingContribution[] }
       },
       'DATABASE_ERROR',
       `Failed to fetch contributions for project ${project.id}`
     )
 
     // QF formula: matched = (Σ√ci)² - Σci
-    const sqrtSum = (contributionsResult.results || []).reduce((sum: number, c: any) => sum + Math.sqrt(c.amount), 0)
-    const directSum = (contributionsResult.results || []).reduce((sum: number, c: any) => sum + c.amount, 0)
+    const sqrtSum = (contributionsResult.results || []).reduce((sum: number, c: FundingContribution) => sum + Math.sqrt(c.amount), 0)
+    const directSum = (contributionsResult.results || []).reduce((sum: number, c: FundingContribution) => sum + c.amount, 0)
     const qfScore = Math.pow(sqrtSum, 2) - directSum
 
     results.push({ id: project.id, name: project.name, direct: directSum, qf_score: qfScore, contributors: contributionsResult.results?.length || 0, matched_amount: 0, total: 0 })
@@ -254,7 +298,7 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
   }
 
   // Distribute matching pool proportionally to QF scores
-  const matchingPool = (round as any).matching_pool
+  const matchingPool = (round as FundingRound).matching_pool
   for (const r of results) {
     r.matched_amount = totalQFScore > 0 ? Math.floor((r.qf_score / totalQFScore) * matchingPool) : 0
     r.total = r.direct + r.matched_amount
@@ -275,7 +319,7 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
   return c.json({
     round_id: roundId,
     matching_pool: matchingPool,
-    results: results.sort((a: any, b: any) => b.total - a.total),
+    results: results.sort((a: QFResult, b: QFResult) => b.total - a.total),
     note: 'QF: 10 people × $1 beats 1 person × $10 — democratic funding'
   })
 }))
@@ -293,7 +337,7 @@ fundingRoutes.get('/rounds', handleAsync(async (c) => {
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB!.prepare('SELECT * FROM funding_rounds WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: FundingRound[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch funding rounds'
