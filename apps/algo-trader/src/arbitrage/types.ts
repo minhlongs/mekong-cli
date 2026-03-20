@@ -122,3 +122,19 @@ export interface ExecutorConfig {
   minProfitThreshold: number;
   timeoutMs: number;
 }
+
+export interface ExecutionEngineConfig {
+  dryRun?: boolean;
+  timeoutMs?: number;
+}
+
+export class ExecutionEngine {
+  constructor(config?: ExecutionEngineConfig) {
+    // Implementation placeholder
+  }
+
+  async execute(opportunity: ArbitrageOpportunity): Promise<any> {
+    // Implementation placeholder
+    return { success: true, actualProfit: 0, actualProfitPct: 0, totalFees: 0 };
+  }
+}
