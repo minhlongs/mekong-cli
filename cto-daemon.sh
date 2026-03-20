@@ -375,7 +375,7 @@ Reply with ONLY the command. No explanation."
     # VALIDATE: check command base exists in catalog or core commands
     local cmd_base
     cmd_base=$(echo "$cmd" | awk '{print $1}')
-    local valid_cores="/cook /fix /debug /test /review /plan hard /plan fast /check-and-commit /clear /compact /docs /docs:update"
+    local valid_cores="/cook /fix /debug /test /review /plan hard /plan fast /check-and-commit /clear /compact /docs /docs update"
     if ! echo " $valid_cores " | grep -q " $cmd_base "; then
       # Check commands-catalog.txt
       if [[ -f "$COMMAND_CATALOG_FILE" ]] && ! grep -q "^${cmd_base}$" "$COMMAND_CATALOG_FILE" 2>/dev/null; then
