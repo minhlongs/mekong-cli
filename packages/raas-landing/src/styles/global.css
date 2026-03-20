@@ -8,11 +8,17 @@
   --md-surface-container: #121828;
   --md-surface-variant: #1a2235;
   --md-on-surface: #e2e8f0;
-  --md-on-surface-muted: #94a3b8;
-  --md-outline: rgba(255,255,255,0.08);
+  --md-on-surface-muted: #a0aec0; /* Fixed contrast ratio 4.5:1 minimum */
+  --md-outline: rgba(255,255,255,0.12); /* Increased from 0.08 for better contrast */
   --md-radius: 16px;
   --md-radius-sm: 8px;
   --md-transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  /* Animation tokens for consistency */
+  --anim-fast: 150ms;
+  --anim-normal: 300ms;
+  --anim-slow: 500ms;
+  /* Touch target minimum (WCAG 2.2) */
+  --touch-target-min: 48px;
   /* MD3 Elevation */
   --md-elevation-1: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,188,212,0.06);
   --md-elevation-2: 0 4px 8px rgba(0,0,0,0.4), 0 2px 4px rgba(0,188,212,0.08);
@@ -292,9 +298,11 @@ body::after {
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color var(--anim-fast) ease;
   position: relative;
   padding-bottom: 2px;
+  border-radius: 6px;
+  padding: 4px 8px;
 }
 .nav-link::after {
   content: '';
@@ -305,10 +313,15 @@ body::after {
   height: 2px;
   background: linear-gradient(90deg, #00BCD4, #7C4DFF);
   border-radius: 2px;
-  transition: width 0.25s ease;
+  transition: width var(--anim-fast) ease;
 }
 .nav-link:hover { color: var(--md-primary); }
 .nav-link:hover::after { width: 100%; }
+.nav-link:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+  background: rgba(0, 188, 212, 0.1);
+}
 
 /* Grid */
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
@@ -1115,8 +1128,8 @@ details[open] summary .chevron { transform: rotate(180deg); }
 }
 
 .carousel-btn {
-  width: 44px;
-  height: 44px;
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
   border-radius: 50%;
   background: var(--md-surface);
   border: 1px solid var(--md-outline);
@@ -1125,7 +1138,7 @@ details[open] summary .chevron { transform: rotate(180deg); }
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all var(--anim-fast) ease;
 }
 
 .carousel-btn:hover {
@@ -1136,7 +1149,8 @@ details[open] summary .chevron { transform: rotate(180deg); }
   box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
 }
 
-.carousel-btn:focus-visible {
+.carousel-btn:focus-visible,
+.carousel-btn:focus {
   outline: 2px solid var(--md-primary);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(0, 188, 212, 0.3);
@@ -1802,9 +1816,9 @@ details[open] summary .chevron { transform: rotate(180deg); }
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
   }
 
   .mesh-orb,
@@ -1816,7 +1830,9 @@ details[open] summary .chevron { transform: rotate(180deg); }
   .badge-glow,
   .testimonial-result-badge,
   .verified-badge,
-  .logos-scroll .logos-grid {
+  .logos-scroll .logos-grid,
+  .btn-cta-primary,
+  .carousel-auto .carousel-track {
     animation: none !important;
   }
 
