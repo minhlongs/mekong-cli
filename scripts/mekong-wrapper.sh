@@ -12,10 +12,10 @@ PROMPT="" INTERACTIVE=false ACTION="run"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --tool|-t) TOOL="$2"; shift 2;; --model|-m) MODEL="$2"; shift 2;;
+    --tool|-t|--provider) TOOL="$2"; shift 2;; --model|-m) MODEL="$2"; shift 2;;
     --cwd) CWD="$2"; shift 2;; --interactive|-i) INTERACTIVE=true; shift;;
     --list-tools) ACTION="list"; shift;; --status) ACTION="status"; shift;;
-    --help|-h) ACTION="help"; shift;; --) shift; PROMPT="$*"; break;;
+    --help|-h) ACTION="help"; shift;; --quiet|-q) shift;; --) shift; PROMPT="$*"; break;;
     -*) echo "Unknown: $1" >&2; exit 1;; *) PROMPT="$*"; break;;
   esac
 done

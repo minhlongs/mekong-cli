@@ -604,15 +604,18 @@ async function healthCheck() {
 		clearStaleLocks();
 	}
 
-	// Check 2: LLM provider health
-	if (!isProxyAlive()) {
-		log('🩺 LLM provider DOWN — attempting recovery');
-		await restartProxy();
-	}
-	const llmOk = await checkLLMHealth();
-	if (!llmOk) {
-		log('🩺 LLM provider health check failed — attempting recovery');
-		await restartProxy();
+	// Check 2: LLM provider health — SKIP if already exceeded max recovery attempts
+	// Prevents infinite retry loop that causes OOM on M1 (Qwen 32B + daemon = RAM exhaustion)
+	if (consecutiveRecoveryFailures < MAX_RECOVERY_FAILURES) {
+		if (!isProxyAlive()) {
+			log('🩺 LLM provider DOWN — attempting recovery');
+			await restartProxy();
+		}
+		const llmOk = await checkLLMHealth();
+		if (!llmOk) {
+			log('🩺 LLM provider health check failed — attempting recovery');
+			await restartProxy();
+		}
 	}
 
 	// Check 3: Auto-respawn crashed CC CLI workers
