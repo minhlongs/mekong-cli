@@ -5,6 +5,8 @@ const { title, activePage = '' } = Astro.props;
 // 5-Layer Command Navigation
 const navLayers = [
   { label: 'Tổng quan', icon: '📊', href: '/dashboard', layer: 'overview' },
+  { label: 'Sử dụng', icon: '📈', href: '/usage', layer: 'overview' },
+  { label: 'Thanh toán', icon: '💳', href: '/billing', layer: 'overview' },
   { label: 'Founder', icon: '👑', href: '#', layer: 'founder', children: [
     { href: '#', label: 'OKR' }, { href: '#', label: 'Fundraise' }, { href: '#', label: 'IPO' }
   ]},

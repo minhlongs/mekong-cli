@@ -25,8 +25,18 @@ import { rbacRoutes } from './routes/rbac'
 import { constitutionRoutes } from './routes/constitution'
 import { marketplaceRoutes } from './routes/marketplace'
 import { raasRoutes, webhookRoutes } from './routes/raas'
+import { analyticsRoutes } from './routes/analytics'
 import { formatPrometheusMetrics, getMetrics, requestLoggingMiddleware, metricsMiddleware } from './lib/monitoring'
 import { handleAsync } from './types/error'
+import { rateLimitMiddleware } from './middleware/rate-limit'
+// Observability imports
+import {
+  getMetrics as getObservabilityMetrics,
+  formatPrometheusMetrics as formatObservabilityMetrics,
+  createMetricsMiddleware as createObservabilityMetricsMiddleware,
+  trackError,
+} from './observability/metrics'
+import { createAlertsMiddleware, getAlertStatus, initAlerts } from './observability/alerts'
 import type { D1Database, KVNamespace, R2Bucket, Ai, AiModels, ScheduledEvent, ExecutionContext } from '@cloudflare/workers-types'
 
 // Cloudflare bindings — all optional until resources created in dashboard
@@ -49,6 +59,7 @@ export type Bindings = {
   MOMO_ACCESS_KEY?: string
   VNPAY_HASH_SECRET?: string
   PAYMENT_METADATA_SECRET?: string
+  SLACK_WEBHOOK_URL?: string
 }
 
 // Track server start time for uptime calculation
@@ -79,6 +90,10 @@ app.use('*', payloadSizeLimit())
 app.use('*', cors())
 app.use('*', metricsMiddleware)
 app.use('*', requestLoggingMiddleware)
+app.use('*', rateLimitMiddleware())
+
+// Initialize alerts on startup
+initAlerts()
 
 // Root — service info
 app.get('/', (c) => c.json({
@@ -236,19 +251,54 @@ app.route('/v1/rbac', rbacRoutes)
 app.route('/v1/constitution', constitutionRoutes)
 app.route('/v1/marketplace', marketplaceRoutes)
 app.route('/v1/raas', raasRoutes)
+app.route('/v1/analytics', analyticsRoutes)
 app.route('/', webhookRoutes)
 
-// Metrics endpoint for Prometheus scraping (protected by SERVICE_TOKEN)
+// Observability routes
 app.get('/metrics', handleAsync(async (c) => {
   // Require authentication via SERVICE_TOKEN
   const authHeader = c.req.header('Authorization')
   if (!authHeader?.startsWith('Bearer ') || authHeader.slice(7) !== c.env.SERVICE_TOKEN) {
     return c.json({ error: 'Unauthorized - SERVICE_TOKEN required' }, 401)
   }
-  const metrics = getMetrics()
-  const prometheusFormat = formatPrometheusMetrics(metrics)
+  // Return both legacy and new observability metrics
+  const obsMetrics = getObservabilityMetrics()
+  const prometheusFormat = formatObservabilityMetrics(obsMetrics)
   return c.body(prometheusFormat, 200, {
     'Content-Type': 'text/plain; version=0.0.4',
+  })
+}))
+
+// Alert status endpoint
+app.get('/v1/observability/alerts', handleAsync(async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+  return c.json(getAlertStatus())
+}))
+
+// Trigger manual alert check (for testing)
+app.post('/v1/observability/alerts/check', handleAsync(async (c) => {
+  const authHeader = c.req.header('Authorization')
+  if (!authHeader?.startsWith('Bearer ') || authHeader.slice(7) !== c.env.SERVICE_TOKEN) {
+    return c.json({ error: 'Unauthorized - SERVICE_TOKEN required' }, 401)
+  }
+
+  const { checkAlerts } = await import('./observability/alerts')
+  const metrics = getObservabilityMetrics()
+  const triggered = checkAlerts(metrics)
+
+  // Send to Slack if webhooks configured
+  const slackWebhook = c.env.SLACK_WEBHOOK_URL
+  if (triggered.length > 0 && slackWebhook) {
+    const { sendAlertsToSlack } = await import('./observability/alerts')
+    c.executionCtx.waitUntil(sendAlertsToSlack([slackWebhook], triggered))
+  }
+
+  return c.json({
+    metrics_timestamp: metrics.timestamp,
+    alerts_triggered: triggered,
   })
 }))
 

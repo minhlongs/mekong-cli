@@ -1,141 +1,223 @@
-# Deployment Guide: AgencyOS RaaS
+# Deployment Guide: Mekong CLI RaaS
 
-## 1. Landing Page (Cloudflare Pages)
+## Overview
 
-**Project**: `apps/agencyos-landing`
-**Platform**: Cloudflare Pages
+Mekong CLI RaaS uses Cloudflare's serverless infrastructure:
+- **Workers**: mekong-engine (API + PEV engine)
+- **Pages**: raas-landing (marketing site)
 
-### Configuration
-Add security headers in `_headers` file (Cloudflare Pages static headers) or via `wrangler.toml`:
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy`: Restricts camera, microphone, and geolocation.
+## Environments
 
-### Setup Instructions
-1.  **Connect to Cloudflare Pages**:
-    -   Go to Cloudflare Dashboard → Pages → Create a project.
-    -   Connect your GitHub repository.
-    -   Select root directory: `apps/agencyos-landing`.
-    -   Framework Preset: `Next.js` (static export) or use `@astrojs/cloudflare`.
-
-2.  **Environment Variables**:
-    Configure these in Cloudflare Pages project settings:
-    -   `NEXT_PUBLIC_POLAR_PUBLISHABLE_KEY`: From Polar Dashboard (Public).
-    -   `POLAR_SECRET_KEY`: From Polar Dashboard (Secret).
-
-3.  **Deploy**:
-    -   Push to `main` to trigger automatic Cloudflare Pages deployment.
+| Environment | Worker URL | Pages URL | Purpose |
+|-------------|-----------|-----------|---------|
+| Staging | `mekong-engine-staging.<account>.workers.dev` | `raas-landing-staging.pages.dev` | Testing, pre-prod verification |
+| Production | `mekong-engine.agencyos.network` | `raas-landing.pages.dev` | Live production |
 
 ---
 
-## 2. RaaS Gateway (Cloudflare Workers)
+## 1. Prerequisites
 
-**Project**: `apps/raas-gateway`
-**Platform**: Cloudflare Workers
-
-### Setup
-1.  Install Wrangler: `npm install -g wrangler`
-2.  Login: `wrangler login`
-3.  Deploy:
-    ```bash
-    cd apps/raas-gateway
-    wrangler deploy
-    ```
-4.  Secrets:
-    ```bash
-    wrangler secret put OPENCLAW_URL
-    wrangler secret put SERVICE_TOKEN
-    ```
-
----
-
-## 3. Engine Layer (Docker / Cloud Run)
-
-**Projects**: `apps/engine`, `apps/worker`
-**Infrastructure**: Redis, PostgreSQL
-
-Both services use multi-stage Dockerfiles optimized for production (based on `node:20-alpine`), keeping image sizes small and secure (running as non-root `nodejs` user).
-
-### Option A: Local / VPS Deployment (Docker Compose)
-
-Use the provided `Makefile` in the `infrastructure/` directory for easy management.
-
-1.  **Navigate to Infrastructure**:
-    ```bash
-    cd infrastructure
-    ```
-
-2.  **Start Services**:
-    ```bash
-    make deploy-local
-    ```
-    This builds the images locally and starts Redis, Postgres, Engine, and Worker services defined in `docker-compose.yml`.
-
-3.  **Stop Services**:
-    ```bash
-    make down
-    ```
-
-### Option B: Local Development (SQLite - Zero Dependency)
-
-For rapid iteration without Docker, you can run the Engine and Worker using SQLite and a local Redis instance (or mocked).
-
-1.  **Configure Environment**:
-    Ensure `.env` in `apps/engine` and `apps/worker` has:
-    ```env
-    DATABASE_URL="file:./dev.db"
-    ```
-
-2.  **Run Services**:
-    ```bash
-    # From root
-    npm run dev
-    ```
-    This starts the API and Frontend concurrently.
-
-### Option C: Production Deployment (Cloud Run / Kubernetes)
-
-1.  **Build and Push Images**:
-    You can use the Makefile to build and push images to your container registry (e.g., Google Container Registry or Docker Hub).
-
-    ```bash
-    cd infrastructure
-
-    # Set your registry URL
-    export REGISTRY=gcr.io/your-project-id
-
-    # Build images
-    make build-all
-
-    # Push images
-    make push-all
-    ```
-
-2.  **Deploy to Cloud Run (Example)**:
-
-    **Engine Service**:
-    -   Image: `gcr.io/your-project-id/agency-engine:latest`
-    -   Port: 3000
-    -   Env Vars:
-        -   `REDIS_HOST`: (Redis IP/Host)
-        -   `REDIS_PORT`: 6379
-        -   `DATABASE_URL`: postgresql://user:pass@host:5432/db
-        -   `SERVICE_TOKEN`: (Your secure internal token)
-
-    **Worker Service**:
-    -   Image: `gcr.io/your-project-id/agency-worker:latest`
-    -   Env Vars:
-        -   `REDIS_HOST`: (Redis IP/Host)
-        -   `REDIS_PORT`: 6379
-        -   `DATABASE_URL`: postgresql://user:pass@host:5432/db
-
-### Database Migrations (Production)
-
-Since the Docker images include `prisma generate` but do not auto-run migrations on start (for safety), you should run migrations as part of your deployment pipeline or via a bastion host.
+### Install Wrangler
 
 ```bash
-# Example: Running migrations against production DB
-DATABASE_URL="postgresql://prod-db-url..." npx prisma migrate deploy
+npm install -g wrangler
+# or
+pnpm add -g wrangler
 ```
+
+### Authenticate
+
+```bash
+wrangler login
+```
+
+### Required Secrets
+
+```bash
+# Set via GitHub Secrets (not wrangler secret put for CI/CD)
+# In GitHub Repo Settings → Secrets and variables → Actions:
+# - CLOUDFLARE_API_TOKEN
+# - CLOUDFLARE_ACCOUNT_ID
+```
+
+---
+
+## 2. Local Deployment
+
+### mekong-engine (Worker)
+
+```bash
+cd packages/mekong-engine
+
+# Development (local)
+wrangler dev
+
+# Deploy to staging
+wrangler deploy --env staging
+
+# Deploy to production
+wrangler deploy
+```
+
+### raas-landing (Pages)
+
+```bash
+cd packages/raas-landing
+
+# Development
+npm run dev
+
+# Build
+npm run build
+
+# Deploy to staging
+npx wrangler pages deploy dist --project-name=raas-landing-staging
+
+# Deploy to production
+npx wrangler pages deploy dist --project-name=raas-landing
+```
+
+---
+
+## 3. CI/CD Deployment (GitHub Actions)
+
+### Manual Deploy via Workflow Dispatch
+
+1. Go to **Actions** → **Deploy Cloudflare**
+2. Click **Run workflow**
+3. Select environment: `staging` or `production`
+4. Click **Run workflow**
+
+### Automatic Deploy on Push
+
+- Push to `main` → Auto-deploys to **staging**
+- Manual dispatch required for **production**
+
+### Rollback
+
+1. Go to **Actions** → **Rollback Cloudflare**
+2. Click **Run workflow**
+3. Select environment and optionally specify version ID
+4. Click **Run workflow**
+
+---
+
+## 4. Smoke Tests
+
+### Health Endpoints
+
+```bash
+# Staging
+curl -sI "https://mekong-engine-staging.<account>.workers.dev/health"
+
+# Production
+curl -sI "https://mekong-engine.agencyos.network/health"
+```
+
+### Expected Response
+
+```
+HTTP/2 200
+content-type: application/json
+```
+
+---
+
+## 5. Security Headers
+
+Add to `wrangler.toml` or via `_headers` file for Pages:
+
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+---
+
+## 6. Rollback Runbook
+
+### Via GitHub Actions (Recommended)
+
+```bash
+# Go to Actions → Rollback Cloudflare
+# Select environment: staging or production
+# Optionally specify version ID
+```
+
+### Via Wrangler CLI
+
+```bash
+cd packages/mekong-engine
+
+# List deployments
+wrangler deployments list --env staging
+wrangler deployments list
+
+# Rollback to specific version
+wrangler rollback [version-id] --env staging
+wrangler rollback [version-id]
+```
+
+### Pages Rollback
+
+For Pages, redeploy the previous commit:
+
+```bash
+cd packages/raas-landing
+git checkout <previous-commit>
+npm run build
+npx wrangler pages deploy dist --project-name=raas-landing-staging
+```
+
+---
+
+## 7. Environment Variables
+
+### Production (wrangler.toml)
+
+```toml
+[vars]
+ENVIRONMENT = "production"
+DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+```
+
+### Staging (wrangler.toml)
+
+```toml
+[env.staging]
+name = "mekong-engine-staging"
+vars = { ENVIRONMENT = "staging" }
+```
+
+### Secrets (set via GitHub)
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Wrangler deployment auth |
+| `CLOUDFLARE_ACCOUNT_ID` | Account identifier |
+| `LLM_API_KEY` | LLM provider key (set via `wrangler secret put`) |
+| `POLAR_WEBHOOK_SECRET` | Polar.sh webhook verification |
+
+---
+
+## 8. Troubleshooting
+
+### Deployment Fails
+
+1. Check Wrangler logs: `wrangler deploy --dry-run`
+2. Verify API token has correct permissions
+3. Check account ID matches
+
+### Health Check Fails
+
+1. Wait 10-30s for propagation
+2. Verify custom domain is configured
+3. Check Worker logs: `wrangler tail --env staging`
+
+### Rollback Issues
+
+1. List available versions: `wrangler deployments list`
+2. Check version is not already rolled back
+3. For Pages, redeploy from git history

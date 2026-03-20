@@ -37,9 +37,9 @@ settingsRoutes.post('/llm', payloadSizeLimit(), handleAsync(async (c) => {
     return c.json(createError('VALIDATION_ERROR', 'base_url required for custom provider'), 400)
   }
 
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   await handleDb(
-    () => saveLLMSettings(c.env.DB!, tenant.id, {
+    () => saveLLMSettings(c.env.DB!, (tenant as { id: string }).id, {
       provider: parsed.data.provider,
       apiKey: parsed.data.api_key,
       baseUrl: parsed.data.base_url,
@@ -54,9 +54,9 @@ settingsRoutes.post('/llm', payloadSizeLimit(), handleAsync(async (c) => {
 
 // GET /v1/settings/llm — get current config (masked key)
 settingsRoutes.get('/llm', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const settings = await handleDb(
-    () => getLLMSettings(c.env.DB!, tenant.id, c.env.SERVICE_TOKEN!),
+    () => getLLMSettings(c.env.DB!, (tenant as { id: string }).id, c.env.SERVICE_TOKEN!),
     'DATABASE_ERROR',
     'Failed to fetch LLM settings'
   )
@@ -76,9 +76,9 @@ settingsRoutes.get('/llm', handleAsync(async (c) => {
 
 // DELETE /v1/settings/llm — remove custom config, fallback to Workers AI
 settingsRoutes.delete('/llm', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const deleted = await handleDb(
-    () => deleteLLMSettings(c.env.DB!, tenant.id),
+    () => deleteLLMSettings(c.env.DB!, (tenant as { id: string }).id),
     'DATABASE_ERROR',
     'Failed to delete LLM settings'
   )

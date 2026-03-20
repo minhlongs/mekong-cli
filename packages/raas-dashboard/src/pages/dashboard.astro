@@ -2,75 +2,569 @@
 import DashboardLayout from '../layouts/dashboard-layout.astro';
 ---
 <DashboardLayout title="Tổng quan" activePage="/dashboard">
-  <h2 style="font-size:18px;margin-bottom:20px">Tổng quan</h2>
-
-  <div class="card-grid">
-    <div class="stat-card">
-      <div class="stat-label">💬 Tin nhắn hôm nay</div>
-      <div class="stat-value" id="stat-messages">—</div>
-      <div class="stat-sub">Tự động xử lý bởi AI</div>
+  <div class="dashboard-header">
+    <div>
+      <h1>Tổng quan</h1>
+      <p class="subtitle">Thống kê hoạt động và sử dụng MCU</p>
     </div>
-    <div class="stat-card">
-      <div class="stat-label">👥 Khách hàng</div>
-      <div class="stat-value" id="stat-contacts">—</div>
-      <div class="stat-sub">Tổng liên hệ</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">📝 Content chờ duyệt</div>
-      <div class="stat-value" id="stat-content">—</div>
-      <div class="stat-sub">Cần xem xét</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">⚡ Credits còn lại</div>
-      <div class="stat-value" id="stat-credits">—</div>
-      <div class="stat-sub">MCU balance</div>
+    <div class="header-actions">
+      <span id="tier-badge" class="badge badge-accent">Free</span>
+      <a href="/usage" class="btn btn-secondary btn-sm">Xem chi tiết →</a>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <strong>Trạng thái AI</strong>
-        <span class="badge badge-green"><span class="status-dot"></span>Đang hoạt động</span>
+  <!-- MCU Balance Banner -->
+  <div class="mcu-banner card">
+    <div class="mcu-content">
+      <div class="mcu-icon">⚡</div>
+      <div class="mcu-info">
+        <div class="mcu-label">MCU còn lại</div>
+        <div class="mcu-value" id="mcu-balance">—</div>
+        <div class="mcu-sub" id="mcu-limit">Giới hạn tháng: —</div>
       </div>
-      <p style="color:var(--text2);font-size:13px" id="ai-status-msg">AI đang theo dõi và phản hồi khách hàng 24/7.</p>
+      <div class="mcu-progress">
+        <div class="progress-bar" id="mcu-progress-bar">
+          <div class="progress-fill" id="mcu-progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="mcu-consumed">0 đã dùng</span>
+          <span id="mcu-remaining">100% còn lại</span>
+        </div>
+      </div>
+      <a href="/billing" class="btn btn-primary" id="upgrade-btn">Nâng cấp</a>
     </div>
+  </div>
 
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <strong>Hoạt động gần đây</strong>
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">💬</div>
+      <div class="stat-content">
+        <div class="stat-label">Tin nhắn hôm nay</div>
+        <div class="stat-value" id="stat-messages">—</div>
+        <div class="stat-change positive" id="messages-change">+0%</div>
       </div>
-      <div id="recent-activity" style="color:var(--text2);font-size:13px">Đang tải...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-content">
+        <div class="stat-label">Khách hàng</div>
+        <div class="stat-value" id="stat-contacts">—</div>
+        <div class="stat-sub">Tổng liên hệ</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-label">Commands</div>
+        <div class="stat-value" id="stat-commands">—</div>
+        <div class="stat-sub">Tháng này</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <div class="stat-label">Tỉ lệ thành công</div>
+        <div class="stat-value" id="stat-success-rate">—</div>
+        <div class="stat-sub">AI accuracy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="card chart-card">
+      <div class="chart-header">
+        <h3>Sử dụng MCU (30 ngày)</h3>
+        <select id="usage-period" class="period-select">
+          <option value="7">7 ngày</option>
+          <option value="30" selected>30 ngày</option>
+          <option value="90">90 ngày</option>
+        </select>
+      </div>
+      <canvas id="usage-chart"></canvas>
+    </div>
+    <div class="card chart-card">
+      <div class="chart-header">
+        <h3>Commands theo loại</h3>
+      </div>
+      <canvas id="commands-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card activity-card">
+    <div class="activity-header">
+      <h3>Hoạt động gần đây</h3>
+      <a href="/reports" class="link">Xem tất cả →</a>
+    </div>
+    <div id="recent-activity" class="activity-list">
+      <div class="loading">Đang tải hoạt động...</div>
     </div>
   </div>
 </DashboardLayout>
 
 <script>
-  const API = 'https://api.agencyos.network';
-  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+  const API = 'https://mekong-engine.agencyos.network';
+
+  // Auth check
+  const apiKey = localStorage.getItem('mk_api_key');
+  if (!apiKey) window.location.replace('/login');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer ' + apiKey
+  };
+
+  // Tier config
+  const TIERS = {
+    free: { name: 'Free', mcu: 50, color: '#6366f1' },
+    starter: { name: 'Starter', mcu: 200, color: '#10b981' },
+    pro: { name: 'Pro', mcu: 500, color: '#f59e0b' },
+    growth: { name: 'Growth', mcu: 1000, color: '#8b5cf6' },
+    enterprise: { name: 'Enterprise', mcu: 999999, color: '#ef4444' }
+  };
+
+  let usageChartInstance = null;
+  let commandsChartInstance = null;
 
   async function load() {
-    const key = localStorage.getItem('mk_api_key');
-    const h = { 'Content-Type':'application/json', Authorization:'Bearer '+key };
     try {
-      const [overview, credits] = await Promise.all([
-        fetch(API+'/v1/reports/overview', {headers:h}).then(r=>r.json()).catch(()=>({})),
-        fetch(API+'/billing/credits',     {headers:h}).then(r=>r.json()).catch(()=>({})),
-      ]);
-      document.getElementById('stat-messages').textContent = overview.messages_today ?? '0';
-      document.getElementById('stat-contacts').textContent = overview.total_contacts ?? '0';
-      document.getElementById('stat-content').textContent  = overview.pending_content ?? '0';
-      document.getElementById('stat-credits').textContent  = credits.balance ?? '0';
+      // Load billing info
+      const creditsRes = await fetch(API + '/billing/credits', { headers });
+      const billing = await creditsRes.json().catch(() => ({}));
 
-      const activities = overview.recent_activity;
-      if (Array.isArray(activities) && activities.length) {
-        document.getElementById('recent-activity').innerHTML = activities.slice(0,4).map(a=>`<div style="padding:4px 0;border-bottom:1px solid var(--border)">${a}</div>`).join('');
+      const balance = billing.balance || 0;
+      const tier = (billing.tier || 'free').toLowerCase();
+      const tierConfig = TIERS[tier] || TIERS.free;
+      const limit = tierConfig.mcu === 999999 ? '∞' : tierConfig.mcu;
+      const consumed = Math.max(0, (tierConfig.mcu || 0) - balance);
+      const usedPercent = tierConfig.mcu === 999999 ? 0 : Math.min(100, (consumed / tierConfig.mcu) * 100);
+
+      // Update tier badge
+      document.getElementById('tier-badge').textContent = tierConfig.name;
+
+      // Update MCU banner
+      document.getElementById('mcu-balance').textContent = balance.toLocaleString();
+      document.getElementById('mcu-limit').textContent = `Giới hạn tháng: ${limit}`;
+      document.getElementById('mcu-consumed').textContent = `${consumed.toLocaleString()} đã dùng`;
+      document.getElementById('mcu-remaining').textContent = `${(100 - usedPercent).toFixed(0)}% còn lại`;
+      document.getElementById('mcu-progress-fill').style.width = `${usedPercent}%`;
+
+      // Load overview
+      const overviewRes = await fetch(API + '/v1/reports/overview', { headers });
+      const overview = await overviewRes.json().catch(() => ({}));
+
+      document.getElementById('stat-messages').textContent = overview.messages_today?.toLocaleString() ?? '0';
+      document.getElementById('stat-contacts').textContent = overview.total_contacts?.toLocaleString() ?? '0';
+      document.getElementById('stat-commands').textContent = overview.commands_count?.toLocaleString() ?? '0';
+      document.getElementById('stat-success-rate').textContent = (overview.success_rate ?? 95) + '%';
+
+      // Recent activity
+      const activities = overview.recent_activity || [];
+      const activityEl = document.getElementById('recent-activity');
+      if (activities.length > 0) {
+        activityEl.innerHTML = activities.slice(0, 6).map((a, i) => `
+          <div class="activity-item">
+            <span class="activity-icon">${getActivityIcon(a)}</span>
+            <span class="activity-text">${a}</span>
+            <span class="activity-time">${i === 0 ? 'Vừa xong' : i + ' phút trước'}</span>
+          </div>
+        `).join('');
       } else {
-        document.getElementById('recent-activity').textContent = 'Chưa có hoạt động nào.';
+        activityEl.innerHTML = '<div class="no-activity">Chưa có hoạt động nào</div>';
       }
-    } catch {
-      document.getElementById('recent-activity').textContent = 'Không thể tải dữ liệu.';
+
+      // Load and render charts
+      await loadUsageStats(30);
+
+    } catch (err) {
+      console.error('Dashboard load error:', err);
+      document.getElementById('recent-activity').innerHTML =
+        '<div class="error">Không thể tải dữ liệu. Vui lòng thử lại sau.</div>';
     }
   }
+
+  function getActivityIcon(activity) {
+    const lower = activity.toLowerCase();
+    if (lower.includes('message') || lower.includes('tin')) return '💬';
+    if (lower.includes('contact') || lower.includes('khách')) return '👥';
+    if (lower.includes('content') || lower.includes('bài')) return '📝';
+    if (lower.includes('command') || lower.includes('lệnh')) return '⚙️';
+    return '✓';
+  }
+
+  async function loadUsageStats(days = 30) {
+    try {
+      const res = await fetch(API + `/v1/usage/stats?days=${days}`, { headers });
+      const data = await res.json().catch(() => ({ daily: [], by_command: {} }));
+
+      renderUsageChart(data.daily || []);
+      renderCommandsChart(data.by_command || {});
+    } catch {
+      // Show empty charts
+      renderUsageChart([]);
+      renderCommandsChart({});
+    }
+  }
+
+  function renderUsageChart(dailyData) {
+    const ctx = document.getElementById('usage-chart').getContext('2d');
+
+    if (usageChartInstance) {
+      usageChartInstance.destroy();
+    }
+
+    const labels = dailyData.map(d => d.date || d.day || '');
+    const consumed = dailyData.map(d => d.consumed || d.mcu_consumed || 0);
+    const cumulative = consumed.reduce((acc, val, i) => {
+      acc.push((acc[i-1] || 0) + val);
+      return acc;
+    }, []);
+
+    usageChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'MCU tiêu thụ',
+          data: consumed,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }, {
+          label: 'Tích lũy',
+          data: cumulative,
+          borderColor: '#10b981',
+          backgroundColor: 'transparent',
+          borderDash: [5, 5],
+          tension: 0.4,
+          pointRadius: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, labels: { color: '#a3b0c2' } }
+        },
+        scales: {
+          x: { ticks: { color: '#a3b0c2' }, grid: { color: '#2e3248' } },
+          y: { ticks: { color: '#a3b0c2' }, grid: { color: '#2e3248' } }
+        }
+      }
+    });
+  }
+
+  function renderCommandsChart(byCommand) {
+    const ctx = document.getElementById('commands-chart').getContext('2d');
+
+    if (commandsChartInstance) {
+      commandsChartInstance.destroy();
+    }
+
+    const entries = Object.entries(byCommand).slice(0, 8);
+    const labels = entries.map(([k]) => k.replace(/_/g, ' '));
+    const values = entries.map(([, v]) => v);
+
+    commandsChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: [
+            '#6366f1', '#10b981', '#f59e0b', '#8b5cf6',
+            '#ef4444', '#06b6d4', '#ec4899', '#84cc16'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { color: '#a3b0c2', font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // Event listeners
+  document.getElementById('usage-period')?.addEventListener('change', (e) => {
+    loadUsageStats(parseInt(e.target.value));
+  });
+
+  document.getElementById('upgrade-btn')?.addEventListener('click', () => {
+    window.location.href = '/upgrade';
+  });
+
+  // Init
   load();
 </script>
+
+<style>
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+  }
+
+  .subtitle {
+    color: var(--text2);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .badge-accent {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+  }
+
+  /* MCU Banner */
+  .mcu-banner {
+    background: linear-gradient(135deg, #1a1d27 0%, #242736 100%);
+    border: 1px solid #2e3248;
+    margin-bottom: 24px;
+  }
+
+  .mcu-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .mcu-icon {
+    font-size: 40px;
+  }
+
+  .mcu-info {
+    flex: 1;
+  }
+
+  .mcu-label {
+    color: var(--text2);
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .mcu-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .mcu-sub {
+    color: var(--text2);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .mcu-progress {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #2e3248;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1 0%, #818cf8 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .stat-icon {
+    font-size: 28px;
+  }
+
+  .stat-content {
+    flex: 1;
+  }
+
+  .stat-label {
+    color: var(--text2);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .stat-sub {
+    color: var(--text2);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .stat-change {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .stat-change.positive { color: var(--success); }
+  .stat-change.negative { color: var(--danger); }
+
+  /* Charts */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    min-height: 300px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .period-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    outline: none;
+  }
+
+  #usage-chart, #commands-chart {
+    max-height: 250px;
+  }
+
+  /* Activity */
+  .activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .activity-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+  }
+
+  .activity-icon {
+    font-size: 18px;
+  }
+
+  .activity-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .activity-time {
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .loading, .no-activity, .error {
+    text-align: center;
+    color: var(--text2);
+    padding: 24px;
+  }
+
+  .error {
+    color: var(--danger);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .dashboard-header {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mcu-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .charts-row {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

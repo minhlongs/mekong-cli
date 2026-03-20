@@ -39,7 +39,9 @@ type SplitInput = z.infer<typeof splitSchema>
 
 // POST /split — Execute revenue split for a completed task
 revenueRoutes.post('/split', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
+  const db = c.env.DB
+  if (!db) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: SplitInput
   try {
@@ -52,24 +54,18 @@ revenueRoutes.post('/split', payloadSizeLimit(), handleAsync(async (c) => {
   }
 
   const split = body.split_override || DEFAULT_SPLIT
-  const db = c.env.DB
 
   // Ensure all accounts exist
   const ensureAcct = async (code: string, type: string) => {
     const existingResult = await handleDb(
-      async () => {
-        const r = await db.prepare('SELECT id FROM ledger_accounts WHERE tenant_id = ? AND code = ?').bind(tenant.id, code).first()
-        return r as { id: string } | null
-      },
+      () => db.prepare('SELECT id FROM ledger_accounts WHERE tenant_id = ? AND code = ?').bind(tenant.id, code).first() as Promise<{ id: string } | null>,
       'DATABASE_ERROR',
       'Failed to ensure account exists'
     )
     if (existingResult) return (existingResult as { id: string }).id
     const id = crypto.randomUUID()
     await handleDb(
-      async () => {
-        await db.prepare('INSERT INTO ledger_accounts (id, tenant_id, code, account_type) VALUES (?, ?, ?, ?)').bind(id, tenant.id, code, type).run()
-      },
+      () => db.prepare('INSERT INTO ledger_accounts (id, tenant_id, code, account_type) VALUES (?, ?, ?, ?)').bind(id, tenant.id, code, type).run(),
       'DATABASE_ERROR',
       'Failed to create account'
     )
@@ -86,10 +82,7 @@ revenueRoutes.post('/split', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Check customer balance
   const bal = await handleDb(
-    async () => {
-      const r = await db.prepare('SELECT balance FROM ledger_accounts WHERE id = ?').bind(customerAcctId).first()
-      return r as { balance: number } | null
-    },
+    () => db.prepare('SELECT balance FROM ledger_accounts WHERE id = ?').bind(customerAcctId).first() as Promise<{ balance: number } | null>,
     'DATABASE_ERROR',
     'Failed to fetch customer balance'
   )
@@ -142,7 +135,7 @@ revenueRoutes.post('/split', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Update treasury table too
   await handleDb(
-    () => db.prepare("UPDATE treasury SET balance = balance + ?, total_in = total_in + ?, last_updated = datetime('now') WHERE tenant_id = ?")
+    () => c.env.DB!.prepare("UPDATE treasury SET balance = balance + ?, total_in = total_in + ?, last_updated = datetime('now') WHERE tenant_id = ?")
       .bind(amounts.community_fund, amounts.community_fund, tenant.id).run(),
     'DATABASE_ERROR',
     'Failed to update treasury'
@@ -163,18 +156,15 @@ revenueRoutes.get('/split-config', (c) => {
 
 // GET /revenue-summary — Revenue by account
 revenueRoutes.get('/summary', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const rowsResult = await handleDb(
-    async () => {
-      const r = await c.env.DB!.prepare(
-        "SELECT code, balance FROM ledger_accounts WHERE tenant_id = ? AND code LIKE 'revenue:%' ORDER BY balance DESC"
-      ).bind(tenant.id).all()
-      return r as { results?: Array<{ code: string; balance: number }> }
-    },
+    () => c.env.DB!.prepare(
+      "SELECT code, balance FROM ledger_accounts WHERE tenant_id = ? AND code LIKE 'revenue:%' ORDER BY balance DESC"
+    ).bind(tenant.id).all() as Promise<{ results?: Array<{ code: string; balance: number }> }>,
     'DATABASE_ERROR',
     'Failed to fetch revenue accounts'
   )
-  return c.json({ accounts: (rowsResult as { results?: Array<{ code: string; balance: number }> }).results ?? [] })
+  return c.json({ accounts: rowsResult.results ?? [] })
 }))
 
 export { revenueRoutes }

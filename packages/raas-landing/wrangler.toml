@@ -4,3 +4,10 @@ pages_build_output_dir = "dist"
 
 [site]
 bucket = "./dist"
+
+# ============================================
+# STAGING ENVIRONMENT
+# ============================================
+[env.staging]
+name = "raas-landing-staging"
+vars = { ENVIRONMENT = "staging" }

@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
 
@@ -35,6 +36,7 @@ from src.core.input_validation import (
     validate_required,
     validate_url,
     validate_enum_value,
+    validate_string_length,
 )
 from src.core.gateway_api import (
     MissionRequest,
@@ -184,49 +186,103 @@ async def create_mission_endpoint(
 
     **Webhook:** If webhook_url provided, sends mission.created event.
     """
-    mission_request = MissionRequest(
-        goal=request.goal,
-        tenant_id=request.tenant_id,
-        webhook_url=request.webhook_url,
-        priority=request.priority,  # type: ignore
-        metadata=request.metadata,
+    request_id = str(uuid.uuid4())
+
+    # Validate required fields
+    error = validate_required(request.goal, "goal")
+    if error:
+        logger.warning("Mission creation failed validation: %s", error.message)
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    error = validate_required(request.tenant_id, "tenant_id")
+    if error:
+        logger.warning("Mission creation failed validation: %s", error.message)
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    # Validate goal length
+    error = validate_string_length(request.goal, "goal", min_len=1, max_len=5000)
+    if error:
+        raise HTTPException(status_code=400, detail=error.to_dict())
+
+    # Validate priority
+    error = validate_enum_value(
+        request.priority,
+        "priority",
+        ["low", "normal", "high"],
+        f"Invalid priority '{request.priority}'. Use: low, normal, high",
     )
+    if error:
+        raise HTTPException(status_code=400, detail=error.to_dict())
 
-    response = create_mission(mission_request)
-    mission_id = response.mission_id
+    try:
+        mission_request = MissionRequest(
+            goal=request.goal.strip(),
+            tenant_id=request.tenant_id.strip(),
+            webhook_url=request.webhook_url.strip() if request.webhook_url else None,
+            priority=request.priority,  # type: ignore
+            metadata=request.metadata or {},
+        )
 
-    # Store mission state
-    MISSION_STORE[mission_id] = {
-        "goal": request.goal,
-        "tenant_id": request.tenant_id,
-        "webhook_url": request.webhook_url,
-        "status": response.status.value,
-        "created_at": response.created_at,
-        "steps": [],
-        "events": [],
-    }
+        # Validate webhook URL if provided
+        if mission_request.webhook_url:
+            error = validate_url(mission_request.webhook_url, "webhook_url")
+            if error:
+                raise HTTPException(status_code=400, detail=error.to_dict())
 
-    # Launch hybrid router as background task
-    background_tasks.add_task(
-        _run_hybrid_router,
-        mission_id=mission_id,
-        goal=request.goal,
-        tenant_id=request.tenant_id,
-    )
+        response = create_mission(mission_request)
+        mission_id = response.mission_id
 
-    logger.info(
-        "Mission %s created for tenant %s (hybrid router queued)",
-        mission_id,
-        request.tenant_id,
-    )
+        # Store mission state
+        MISSION_STORE[mission_id] = {
+            "goal": request.goal,
+            "tenant_id": request.tenant_id,
+            "webhook_url": request.webhook_url,
+            "status": response.status.value,
+            "created_at": response.created_at,
+            "steps": [],
+            "events": [],
+        }
 
-    return CreateMissionResponse(
-        mission_id=mission_id,
-        status=response.status.value,
-        created_at=response.created_at,
-        estimated_steps=response.estimated_steps,
-        stream_url=response.stream_url or f"/v1/missions/{mission_id}/stream",
-    )
+        # Launch hybrid router as background task
+        background_tasks.add_task(
+            _run_hybrid_router,
+            mission_id=mission_id,
+            goal=request.goal,
+            tenant_id=request.tenant_id,
+        )
+
+        logger.info(
+            "Mission %s created for tenant %s (hybrid router queued)",
+            mission_id,
+            request.tenant_id,
+        )
+
+        return CreateMissionResponse(
+            mission_id=mission_id,
+            status=response.status.value,
+            created_at=response.created_at,
+            estimated_steps=response.estimated_steps,
+            stream_url=response.stream_url or f"/v1/missions/{mission_id}/stream",
+        )
+
+    except ValueError as e:
+        # API key validation or business logic errors
+        logger.warning("Mission creation business error: %s", e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error("Mission creation failed: %s", str(e), exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "Failed to create mission",
+                "request_id": request_id,
+            },
+        )
 
 
 async def _run_hybrid_router(mission_id: str, goal: str, tenant_id: str) -> None:

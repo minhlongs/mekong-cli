@@ -18,6 +18,13 @@ import {
 } from '../raas/dunning'
 import { requireActiveLicense } from '../raas/license-middleware'
 import { constantTimeCompare } from '../lib/crypto-utils'
+import {
+  generateLicenseKey,
+  validateLicenseKey,
+  revokeLicenseKey,
+  listLicenseKeys,
+  getLicenseKey,
+} from '../raas/license-keys'
 
 const billingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -270,6 +277,95 @@ billingRoutes.get('/dunning/schedule', authMiddleware, handleAsync(async (c) => 
   const tenant = c.get('tenant') as Tenant
   const schedule = await getDunningSchedule(c.env.DB, tenant.id)
   return c.json({ tenant_id: tenant.id, schedule })
+}))
+
+// License Key System Endpoints
+
+// Generate new license key
+billingRoutes.post('/licenses', authMiddleware, requireActiveLicense, handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant') as Tenant
+  const body = await c.req.json().catch(() => ({}))
+  const expiresAt = body.expires_at // Optional ISO date string
+
+  const result = await generateLicenseKey(c.env.DB, tenant.id, expiresAt)
+  if (!result) {
+    return c.json({ error: 'Failed to generate license key' }, 500)
+  }
+
+  return c.json({
+    license_key: result.key,
+    license: result.licenseKey,
+    message: 'Save your license key - it cannot be recovered if lost!',
+  }, 201)
+}))
+
+// List tenant's license keys
+billingRoutes.get('/licenses', authMiddleware, handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant') as Tenant
+  const keys = await listLicenseKeys(c.env.DB, tenant.id)
+  return c.json({ tenant_id: tenant.id, licenses: keys })
+}))
+
+// Get specific license key
+billingRoutes.get('/licenses/:id', authMiddleware, handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const keyId = c.req.param('id')
+  if (!keyId) {
+    return c.json({ error: 'License key ID required' }, 400)
+  }
+  const key = await getLicenseKey(c.env.DB, keyId)
+  if (!key) {
+    return c.json({ error: 'License key not found' }, 404)
+  }
+  return c.json({ license: key })
+}))
+
+// Revoke license key
+billingRoutes.delete('/licenses/:id', authMiddleware, requireActiveLicense, handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const tenant = c.get('tenant') as Tenant
+  const keyId = c.req.param('id')
+  if (!keyId) {
+    return c.json({ error: 'License key ID required' }, 400)
+  }
+  const body = await c.req.json().catch(() => ({}))
+  const reason = body.reason || 'Revoked by admin'
+
+  const success = await revokeLicenseKey(c.env.DB, keyId, reason)
+  if (!success) {
+    return c.json({ error: 'Failed to revoke license key or already revoked' }, 400)
+  }
+
+  await emitLicenseEvent(c.env.DB, tenant.id, 'license.suspended', {
+    reason,
+    license_key_id: keyId
+  })
+  return c.json({ success: true, message: 'License key revoked' })
+}))
+
+// Validate a license key (public endpoint for client-side validation)
+billingRoutes.post('/licenses/validate', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  const body = await c.req.json().catch(() => ({}))
+  const key = body.key
+
+  if (!key) {
+    return c.json({ error: 'License key required' }, 400)
+  }
+
+  const result = await validateLicenseKey(c.env.DB, key)
+  if (!result) {
+    return c.json({ valid: false, error: 'Invalid license key' }, 404)
+  }
+
+  return c.json({
+    valid: true,
+    tenant_id: result.tenantId,
+    status: result.status,
+    expires_at: result.expiresAt,
+  })
 }))
 
 export { billingRoutes }

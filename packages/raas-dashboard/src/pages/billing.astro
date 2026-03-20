@@ -1,0 +1,913 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Thanh toán" activePage="/billing">
+  <div class="page-header">
+    <div>
+      <h1>Thanh toán & Nâng cấp</h1>
+      <p class="subtitle">Quản lý gói dịch vụ và thanh toán</p>
+    </div>
+  </div>
+
+  <!-- Current Plan Card -->
+  <div class="current-plan card">
+    <div class="plan-header">
+      <div>
+        <div class="plan-label">Gói hiện tại</div>
+        <div class="plan-name" id="current-tier">Free</div>
+      </div>
+      <span class="plan-badge" id="plan-status">Active</span>
+    </div>
+    <div class="plan-details">
+      <div class="plan-mcu">
+        <div class="mcu-amount" id="current-mcu">50 MCU</div>
+        <div class="mcu-period">/tháng</div>
+      </div>
+      <div class="plan-features" id="current-features">
+        <span class="feature-tag">50 MCU/tháng</span>
+        <span class="feature-tag">Commands cơ bản</span>
+        <span class="feature-tag">Báo cáo tuần</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Progress -->
+  <div class="usage-progress card">
+    <h3>Sử dụng tháng này</h3>
+    <div class="progress-section">
+      <div class="progress-info">
+        <span id="used-mcu">0 đã dùng</span>
+        <span id="remaining-mcu">50 còn lại</span>
+      </div>
+      <div class="progress-bar-large">
+        <div class="progress-fill-large" id="usage-progress-fill" style="width: 0%"></div>
+      </div>
+      <div class="progress-warning" id="usage-warning" style="display: none;">
+        ⚠️ Bạn đã dùng 80% MCU. Cân nhắc nâng cấp để tránh gián đoạn.
+      </div>
+    </div>
+    <div class="billing-cycle">
+      <span>Chu kỳ: <strong id="billing-period">Hàng tháng</strong></span>
+      <span>Tái tục: <strong id="renewal-date">--/--/----</strong></span>
+    </div>
+  </div>
+
+  <!-- Upgrade Plans -->
+  <div class="plans-section">
+    <h2>Chọn gói nâng cấp</h2>
+    <p class="section-subtitle">Mở khóa thêm tính năng AI cho doanh nghiệp của bạn</p>
+
+    <div class="plans-grid">
+      <!-- Starter -->
+      <div class="plan-card" data-tier="starter">
+        <div class="plan-card-header">
+          <div class="plan-icon">🚀</div>
+          <h3>Starter</h3>
+          <div class="plan-price">
+            <span class="price-vnd">490.000₫</span>
+            <span class="price-usd">$49</span>
+          </div>
+        </div>
+        <ul class="plan-features-list">
+          <li class="feature-item">✓ 200 MCU/tháng</li>
+          <li class="feature-item">✓ Trả lời tự động AI</li>
+          <li class="feature-item">✓ Báo cáo tuần</li>
+          <li class="feature-item">✓ 1 kênh liên lạc</li>
+          <li class="feature-item muted">✗ Content AI</li>
+          <li class="feature-item muted">✗ CRM nâng cao</li>
+        </ul>
+        <button class="btn btn-secondary btn-full" data-tier="starter">Chọn Starter</button>
+        <div class="polar-link">
+          <a href="https://polar.sh/openclaw/starter" target="_blank" class="link-polar">
+            Thanh toán USD →
+          </a>
+        </div>
+      </div>
+
+      <!-- Pro (Popular) -->
+      <div class="plan-card popular" data-tier="pro">
+        <div class="popular-badge">Phổ biến nhất</div>
+        <div class="plan-card-header">
+          <div class="plan-icon">⚡</div>
+          <h3>Pro</h3>
+          <div class="plan-price">
+            <span class="price-vnd">990.000₫</span>
+            <span class="price-usd">$99</span>
+          </div>
+        </div>
+        <ul class="plan-features-list">
+          <li class="feature-item">✓ 500 MCU/tháng</li>
+          <li class="feature-item">✓ Tất cả tính năng Starter</li>
+          <li class="feature-item">✓ Content AI 30 ngày</li>
+          <li class="feature-item">✓ 3 kênh liên lạc</li>
+          <li class="feature-item">✓ CRM nâng cao</li>
+          <li class="feature-item muted">✗ Phân tích nâng cao</li>
+        </ul>
+        <button class="btn btn-primary btn-full" data-tier="pro">Chọn Pro</button>
+        <div class="polar-link">
+          <a href="https://polar.sh/openclaw/pro" target="_blank" class="link-polar">
+            Thanh toán USD →
+          </a>
+        </div>
+      </div>
+
+      <!-- Growth -->
+      <div class="plan-card" data-tier="growth">
+        <div class="plan-card-header">
+          <div class="plan-icon">📈</div>
+          <h3>Growth</h3>
+          <div class="plan-price">
+            <span class="price-vnd">1.490.000₫</span>
+            <span class="price-usd">$149</span>
+          </div>
+        </div>
+        <ul class="plan-features-list">
+          <li class="feature-item">✓ 1.000 MCU/tháng</li>
+          <li class="feature-item">✓ Tất cả tính năng Pro</li>
+          <li class="feature-item">✓ Phân tích nâng cao</li>
+          <li class="feature-item">✓ 5 kênh liên lạc</li>
+          <li class="feature-item">✓ Ưu tiên hỗ trợ</li>
+          <li class="feature-item muted">✗ Account manager</li>
+        </ul>
+        <button class="btn btn-secondary btn-full" data-tier="growth">Chọn Growth</button>
+        <div class="polar-link">
+          <a href="https://polar.sh/openclaw/growth" target="_blank" class="link-polar">
+            Thanh toán USD →
+          </a>
+        </div>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="plan-card enterprise" data-tier="enterprise">
+        <div class="plan-card-header">
+          <div class="plan-icon">🏢</div>
+          <h3>Enterprise</h3>
+          <div class="plan-price">
+            <span class="price-vnd">Liên hệ</span>
+            <span class="price-usd">$499</span>
+          </div>
+        </div>
+        <ul class="plan-features-list">
+          <li class="feature-item">✓ Không giới hạn MCU</li>
+          <li class="feature-item">✓ Tất cả tính năng Growth</li>
+          <li class="feature-item">✓ Tích hợp riêng</li>
+          <li class="feature-item">✓ SLA 99.9%</li>
+          <li class="feature-item">✓ Account manager</li>
+          <li class="feature-item">✓ Custom AI training</li>
+        </ul>
+        <button class="btn btn-secondary btn-full" data-tier="enterprise">Liên hệ sales</button>
+        <div class="polar-link">
+          <a href="https://polar.sh/openclaw/enterprise" target="_blank" class="link-polar">
+            Thanh toán USD →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Management -->
+  <div class="api-keys-section card">
+    <div class="section-header">
+      <h2>API Keys</h2>
+      <button class="btn btn-primary" id="generate-key-btn">+ Tạo key mới</button>
+    </div>
+    <p class="section-subtitle">Quản lý API keys để tích hợp với ứng dụng của bạn</p>
+
+    <div class="api-keys-list" id="api-keys-list">
+      <div class="api-key-item">
+        <div class="key-info">
+          <div class="key-name">Default Key</div>
+          <div class="key-value">
+            <code id="current-api-key">mk_••••••••••••</code>
+            <button class="btn-icon" id="copy-key-btn" title="Copy">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="key-meta">
+            <span class="key-created">Tạo: --/--/----</span>
+            <span class="key-permissions">Full access</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-key-warning">
+      <p>⚠️ <strong>Lưu ý:</strong> API key cung cấp quyền truy cập vào tài khoản của bạn. Không chia sẻ với người khác.</p>
+    </div>
+  </div>
+
+  <!-- Payment Methods -->
+  <div class="payment-methods card">
+    <h2>Phương thức thanh toán</h2>
+    <div class="payment-options">
+      <div class="payment-option">
+        <div class="payment-icon">💳</div>
+        <div class="payment-info">
+          <div class="payment-name">Thẻ tín dụng (Polar.sh)</div>
+          <div class="payment-desc">Visa, Mastercard, American Express</div>
+        </div>
+        <span class="badge badge-green">Khuyến nghị</span>
+      </div>
+      <div class="payment-option">
+        <div class="payment-icon">🏦</div>
+        <div class="payment-info">
+          <div class="payment-name">Chuyển khoản ngân hàng</div>
+          <div class="payment-desc">Dành cho gói Enterprise</div>
+        </div>
+        <a href="mailto:billing@openclaw.ai" class="btn btn-sm btn-secondary">Liên hệ</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="payment-modal" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Xác nhận nâng cấp</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-message">Bạn đang chọn gói <strong id="selected-tier-name"></strong></p>
+        <div class="payment-info-box">
+          <p>Bạn sẽ được chuyển đến trang thanh toán an toàn của Polar.sh</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modal-cancel">Hủy</button>
+        <button class="btn btn-primary" id="modal-confirm">Tiếp tục →</button>
+      </div>
+    </div>
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://mekong-engine.agencyos.network';
+  const apiKey = localStorage.getItem('mk_api_key');
+  if (!apiKey) window.location.replace('/login');
+
+  const headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey };
+
+  const PLANS = {
+    free: { name: 'Free', mcu: 50, features: ['50 MCU/tháng', 'Commands cơ bản', 'Báo cáo tuần'] },
+    starter: { name: 'Starter', mcu: 200, features: ['200 MCU/tháng', 'Trả lời tự động', 'Báo cáo tuần', '1 kênh'] },
+    pro: { name: 'Pro', mcu: 500, features: ['500 MCU/tháng', 'Tất cả Starter', 'Content AI 30 ngày', '3 kênh', 'CRM nâng cao'] },
+    growth: { name: 'Growth', mcu: 1000, features: ['1.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
+    enterprise: { name: 'Enterprise', mcu: 999999, features: ['Không giới hạn MCU', 'Tất cả Growth', 'Tích hợp riêng', 'SLA 99.9%', 'Account manager'] }
+  };
+
+  let currentTier = 'free';
+  let currentUsage = 0;
+
+  async function load() {
+    await loadBillingInfo();
+    displayCurrentKey();
+  }
+
+  async function loadBillingInfo() {
+    try {
+      const res = await fetch(API + '/billing/credits', { headers });
+      const data = await res.json().catch(() => ({}));
+
+      currentTier = (data.tier || 'free').toLowerCase();
+      currentUsage = (data.used || 0);
+      const balance = data.balance || PLANS[currentTier]?.mcu || 50;
+
+      const plan = PLANS[currentTier] || PLANS.free;
+      const usedPercent = plan.mcu === 999999 ? 0 : Math.min(100, (currentUsage / plan.mcu) * 100);
+
+      // Update current plan display
+      document.getElementById('current-tier').textContent = plan.name;
+      document.getElementById('current-mcu').textContent = plan.mcu === 999999 ? '∞' : plan.mcu.toLocaleString();
+      document.getElementById('current-features').innerHTML = plan.features
+        .map(f => `<span class="feature-tag">${f}</span>`).join('');
+
+      // Update usage progress
+      document.getElementById('used-mcu').textContent = `${currentUsage.toLocaleString()} đã dùng`;
+      document.getElementById('remaining-mcu').textContent = `${(plan.mcu - currentUsage).toLocaleString()} còn lại`;
+      document.getElementById('usage-progress-fill').style.width = `${usedPercent}%`;
+
+      // Show warning if over 80%
+      const warningEl = document.getElementById('usage-warning');
+      if (usedPercent >= 80) {
+        warningEl.style.display = 'block';
+      }
+
+      // Renewal date (next month)
+      const renewalDate = new Date();
+      renewalDate.setMonth(renewalDate.getMonth() + 1);
+      document.getElementById('renewal-date').textContent = renewalDate.toLocaleDateString('vi-VN');
+
+      // Highlight current plan in grid
+      document.querySelectorAll('.plan-card').forEach(card => {
+        if (card.dataset.tier === currentTier) {
+          card.classList.add('current-plan');
+          card.querySelector('button').textContent = 'Gói hiện tại';
+          card.querySelector('button').disabled = true;
+        }
+      });
+
+    } catch (err) {
+      console.error('Failed to load billing info:', err);
+    }
+  }
+
+  function displayCurrentKey() {
+    const key = apiKey || '';
+    const masked = key.length > 10 ? key.substring(0, 6) + '••••••' + key.substring(key.length - 4) : '••••••••';
+    document.getElementById('current-api-key').textContent = masked;
+
+    const createdDate = new Date().toLocaleDateString('vi-VN');
+    document.querySelector('.key-created').textContent = `Tạo: ${createdDate}`;
+  }
+
+  // Modal handling
+  const modal = document.getElementById('payment-modal');
+  let selectedTier = null;
+
+  document.querySelectorAll('[data-tier]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (btn.disabled) return;
+
+      const tier = btn.dataset.tier;
+      if (tier === currentTier) return;
+
+      if (tier === 'enterprise') {
+        window.open('mailto:sales@openclaw.ai?subject=Enterprise Inquiry', '_blank');
+        return;
+      }
+
+      selectedTier = tier;
+      const plan = PLANS[tier];
+      document.getElementById('selected-tier-name').textContent = `${plan.name} - ${plan.mcu === 999999 ? '∞' : plan.mcu} MCU`;
+      modal.style.display = 'flex';
+    });
+  });
+
+  document.getElementById('modal-close')?.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  document.getElementById('modal-cancel')?.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  document.getElementById('modal-confirm')?.addEventListener('click', async () => {
+    if (!selectedTier) return;
+
+    const btn = document.getElementById('modal-confirm');
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý...';
+
+    try {
+      const res = await fetch(API + '/billing/payment-url', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ tier: selectedTier })
+      });
+      const data = await res.json();
+
+      if (data.url) {
+        window.open(data.url, '_blank');
+        modal.style.display = 'none';
+      } else {
+        // Fallback to Polar direct link
+        window.open(`https://polar.sh/openclaw/${selectedTier}`, '_blank');
+        modal.style.display = 'none';
+      }
+    } catch {
+      // Fallback to Polar direct link
+      window.open(`https://polar.sh/openclaw/${selectedTier}`, '_blank');
+      modal.style.display = 'none';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Tiếp tục →';
+  });
+
+  // Copy API key
+  document.getElementById('copy-key-btn')?.addEventListener('click', () => {
+    const key = apiKey || '';
+    navigator.clipboard.writeText(key).then(() => {
+      const btn = document.getElementById('copy-key-btn');
+      btn.innerHTML = '✓';
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        `;
+      }, 2000);
+    });
+  });
+
+  // Generate new key (placeholder)
+  document.getElementById('generate-key-btn')?.addEventListener('click', async () => {
+    const name = prompt('Tên API key mới:');
+    if (!name) return;
+
+    try {
+      const res = await fetch(API + '/v1/api-keys', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name, permissions: ['full_access'] })
+      });
+      const data = await res.json();
+
+      if (data.key) {
+        alert(`API key mới: ${data.key}\n\n⚠️ Lưu lại ngay, bạn sẽ không thể xem lại key này!`);
+        localStorage.setItem('mk_api_key', data.key);
+        location.reload();
+      } else {
+        alert('Không thể tạo API key. Vui lòng thử lại sau.');
+      }
+    } catch {
+      alert('Không thể tạo API key. Vui lòng thử lại sau.');
+    }
+  });
+
+  // Init
+  load();
+</script>
+
+<style>
+  .page-header {
+    margin-bottom: 24px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+  }
+
+  .subtitle {
+    color: var(--text2);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Current Plan */
+  .current-plan {
+    background: linear-gradient(135deg, #1a1d27 0%, #242736 100%);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .plan-label {
+    color: var(--text2);
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .plan-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .plan-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .plan-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .plan-mcu {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .mcu-amount {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .mcu-period {
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  .plan-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .feature-tag {
+    background: var(--bg3);
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  /* Usage Progress */
+  .usage-progress {
+    margin-bottom: 24px;
+  }
+
+  .usage-progress h3 {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .progress-section {
+    margin-bottom: 16px;
+  }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-large {
+    height: 12px;
+    background: var(--bg3);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .progress-fill-large {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    padding: 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  .billing-cycle {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  /* Plans Section */
+  .plans-section {
+    margin-bottom: 24px;
+  }
+
+  .plans-section h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .section-subtitle {
+    color: var(--text2);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .plan-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .plan-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .plan-card.popular {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+
+  .plan-card.current-plan {
+    border-color: var(--success);
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .plan-card-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .plan-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .plan-card h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .plan-price {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .price-vnd {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .price-usd {
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  .plan-features-list {
+    list-style: none;
+    margin-bottom: 24px;
+  }
+
+  .feature-item {
+    padding: 8px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .feature-item:last-child {
+    border-bottom: none;
+  }
+
+  .feature-item.muted {
+    color: var(--text2);
+    opacity: 0.6;
+  }
+
+  .polar-link {
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .link-polar {
+    color: var(--text2);
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .link-polar:hover {
+    color: var(--text);
+  }
+
+  /* API Keys Section */
+  .api-keys-section {
+    margin-bottom: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .section-header h2 {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .api-key-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .key-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .key-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .key-value {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .key-value code {
+    background: var(--bg2);
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    font-family: monospace;
+    font-size: 13px;
+    flex: 1;
+  }
+
+  .btn-icon {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-icon:hover {
+    background: var(--bg);
+  }
+
+  .key-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .api-key-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid var(--warn);
+    padding: 12px;
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  .api-key-warning p {
+    margin: 0;
+  }
+
+  /* Payment Methods */
+  .payment-methods {
+    margin-bottom: 24px;
+  }
+
+  .payment-methods h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .payment-icon {
+    font-size: 32px;
+  }
+
+  .payment-info {
+    flex: 1;
+  }
+
+  .payment-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .payment-desc {
+    color: var(--text2);
+    font-size: 12px;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .modal-body {
+    margin-bottom: 24px;
+  }
+
+  .payment-info-box {
+    background: var(--bg3);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-top: 16px;
+  }
+
+  .payment-info-box p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .plans-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .plan-details {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

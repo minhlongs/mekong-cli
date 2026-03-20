@@ -1,0 +1,226 @@
+name: Rollback Cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment to rollback'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version_id:
+        description: 'Specific version ID to rollback to (optional, defaults to previous)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ============================================
+  # JOB: VALIDATE INPUTS
+  # ============================================
+  validate-inputs:
+    name: Validate Inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate environment input
+        run: |
+          if [[ "${{ github.event.inputs.environment }}" != "production" && "${{ github.event.inputs.environment }}" != "staging" ]]; then
+            echo "Invalid environment: ${{ github.event.inputs.environment }}"
+            exit 1
+          fi
+          echo "Valid environment: ${{ github.event.inputs.environment }}"
+
+  # ============================================
+  # JOB: ROLLBACK STAGING
+  # ============================================
+  rollback-staging:
+    name: Rollback Staging
+    runs-on: ubuntu-latest
+    needs: [validate-inputs]
+    if: github.event.inputs.environment == 'staging'
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Get previous version (if not specified)
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_id }}" ]; then
+            echo "version_id=${{ github.event.inputs.version_id }}" >> $GITHUB_OUTPUT
+          else
+            cd packages/mekong-engine
+            PREV_VERSION=$(npx wrangler deployments list --env staging --json 2>/dev/null | jq -r '.[1].id' 2>/dev/null || echo "")
+            if [ -z "$PREV_VERSION" ]; then
+              echo "Could not determine previous version, will rollback to latest stable"
+            fi
+            echo "version_id=$PREV_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Execute rollback (mekong-engine)
+        workingDirectory: packages/mekong-engine
+        run: |
+          VERSION="${{ steps.version.outputs.version_id }}"
+          if [ -n "$VERSION" ]; then
+            echo "Rolling back to version: $VERSION"
+            npx wrangler rollback "$VERSION" --env staging
+          else
+            echo "Rolling back to previous version"
+            npx wrangler rollback --env staging
+          fi
+
+      - name: Rollback raas-landing (redeploy previous)
+        run: |
+          echo "Note: Pages rollback requires redeploy"
+          cd packages/raas-landing
+          pnpm install && npm run build
+          npx wrangler pages deploy dist --project-name=raas-landing-staging --branch=main
+
+      - name: Smoke test
+        run: |
+          echo "Waiting for rollback to propagate..."
+          sleep 10
+          HTTP_STATUS=$(curl -sI "https://mekong-engine-staging.${{ vars.CLOUDFLARE_ACCOUNT_ID }}.workers.dev/health" -o /dev/null -w '%{http_code}' 2>/dev/null || echo "000")
+          echo "Health check HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Staging rollback health check passed"
+          else
+            echo "Warning: Health check returned $HTTP_STATUS"
+          fi
+
+      - name: Generate rollback report
+        run: |
+          mkdir -p rollback-report
+          cat > rollback-report/staging-rollback-report.md << EOF
+          # Staging Rollback Report
+
+          - Triggered by: ${{ github.actor }}
+          - Environment: staging
+          - Target Version: ${{ steps.version.outputs.version_id || 'previous' }}
+          - Time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Status: ${{ job.status }}
+
+          ## Actions Performed
+          - Rolled back mekong-engine Worker
+          - Redeployed raas-landing Pages
+
+          ## Next Steps
+          - Monitor staging metrics
+          - Verify functionality before next production deploy
+          EOF
+
+      - name: Upload rollback report
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-rollback-report
+          path: rollback-report
+          retention-days: 30
+
+  # ============================================
+  # JOB: ROLLBACK PRODUCTION
+  # ============================================
+  rollback-production:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    needs: [validate-inputs]
+    if: github.event.inputs.environment == 'production'
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Get previous version (if not specified)
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_id }}" ]; then
+            echo "version_id=${{ github.event.inputs.version_id }}" >> $GITHUB_OUTPUT
+          else
+            cd packages/mekong-engine
+            PREV_VERSION=$(npx wrangler deployments list --json 2>/dev/null | jq -r '.[1].id' 2>/dev/null || echo "")
+            if [ -z "$PREV_VERSION" ]; then
+              echo "Could not determine previous version"
+            fi
+            echo "version_id=$PREV_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Execute rollback (mekong-engine)
+        workingDirectory: packages/mekong-engine
+        run: |
+          VERSION="${{ steps.version.outputs.version_id }}"
+          if [ -n "$VERSION" ]; then
+            echo "Rolling back to version: $VERSION"
+            npx wrangler rollback "$VERSION"
+          else
+            echo "Rolling back to previous version"
+            npx wrangler rollback
+          fi
+
+      - name: Rollback raas-landing (redeploy previous)
+        run: |
+          echo "Note: Pages rollback requires redeploy"
+          cd packages/raas-landing
+          pnpm install && npm run build
+          npx wrangler pages deploy dist --project-name=raas-landing --branch=main
+
+      - name: Production smoke test
+        run: |
+          echo "Waiting for rollback to propagate..."
+          sleep 10
+          HTTP_STATUS=$(curl -sI "https://mekong-engine.agencyos.network/health" -o /dev/null -w '%{http_code}' 2>/dev/null || echo "000")
+          echo "Health check HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Production rollback health check passed"
+          else
+            echo "Warning: Health check returned $HTTP_STATUS"
+          fi
+
+      - name: Generate rollback report
+        run: |
+          mkdir -p rollback-report
+          cat > rollback-report/production-rollback-report.md << EOF
+          # Production Rollback Report
+
+          - Triggered by: ${{ github.actor }}
+          - Environment: production
+          - Target Version: ${{ steps.version.outputs.version_id || 'previous' }}
+          - Time: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          - Status: ${{ job.status }}
+
+          ## Actions Performed
+          - Rolled back mekong-engine Worker
+          - Redeployed raas-landing Pages
+
+          ## Next Steps
+          - Monitor production metrics
+          - Investigate root cause that necessitated rollback
+          EOF
+
+      - name: Upload rollback report
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-rollback-report
+          path: rollback-report
+          retention-days: 30

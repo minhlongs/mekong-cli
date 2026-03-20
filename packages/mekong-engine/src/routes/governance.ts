@@ -122,7 +122,7 @@ governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB!.prepare(query).bind(...params).all()
-      return r as DbResult<StakeholderRow>
+      return r as unknown as DbResult<StakeholderRow>
     },
     'DATABASE_ERROR',
     'Failed to fetch stakeholders'
@@ -194,18 +194,19 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
   // Enrich with vote counts
   const proposals = []
   for (const p of rowsResult.results || []) {
+    const pTyped = p as { id: string }
     const voteStatsResult = await handleDb(
       async () => {
         const r = await c.env.DB!.prepare(
           `SELECT direction, COUNT(*) as count, SUM(votes_cast) as total_votes
          FROM votes WHERE proposal_id = ? GROUP BY direction`
-        ).bind(p.id).all()
-        return r as DbResult
+        ).bind(pTyped.id).all()
+        return r as unknown as DbResult
       },
       'DATABASE_ERROR',
       'Failed to fetch vote stats'
     )
-    proposals.push({ ...p, vote_stats: voteStatsResult.results })
+    proposals.push({ ...(p as object), vote_stats: voteStatsResult.results || [] })
   }
 
   return c.json({ proposals })
@@ -326,7 +327,7 @@ governanceRoutes.get('/reputation', handleAsync(async (c) => {
       const r = await c.env.DB!.prepare(
         'SELECT id, display_name, role, reputation_score, governance_level FROM stakeholders WHERE tenant_id = ? ORDER BY reputation_score DESC LIMIT 20'
       ).bind(tenant.id).all()
-      return r as DbResult<StakeholderRow>
+      return r as unknown as DbResult<StakeholderRow>
     },
     'DATABASE_ERROR',
     'Failed to fetch reputation leaderboard'
@@ -377,7 +378,7 @@ governanceRoutes.get('/ngu-su', handleAsync(async (c) => {
       const r = await c.env.DB!.prepare(
         'SELECT * FROM ngu_su_scores WHERE tenant_id = ? ORDER BY scored_at DESC'
       ).bind(tenant.id).all()
-      return r as DbResult<{ entity_name: string; dao_score: number; thien_score: number; dia_score: number; tuong_score: number; phap_score: number; terrain: string; overall: number }>
+      return r as unknown as DbResult<{ entity_name: string; dao_score: number; thien_score: number; dia_score: number; tuong_score: number; phap_score: number; terrain: string; overall: number }>
     },
     'DATABASE_ERROR',
     'Failed to fetch scores'

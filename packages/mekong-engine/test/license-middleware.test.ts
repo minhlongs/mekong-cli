@@ -21,14 +21,15 @@ describe('requireActiveLicense middleware', () => {
     jsonBody: any
     nextCalled: boolean
   }>) => {
-    const ctx = {
+    let status: number = 200
+    const ctx: any = {
       get: vi.fn((key: string) => {
         if (key === 'tenant') return overrides?.tenant ?? null
         return null
       }),
       json: vi.fn((body: any, status?: number) => {
         ctx.jsonBody = body
-        ctx.status = status
+        if (status !== undefined) ctx.status = status
         return new Response(JSON.stringify(body), { status })
       }),
       status: 200,
@@ -36,7 +37,7 @@ describe('requireActiveLicense middleware', () => {
       env: overrides?.env ?? {},
       next: vi.fn().mockImplementation(() => Promise.resolve()),
     }
-    return ctx as any
+    return ctx
   }
 
   beforeEach(() => {
