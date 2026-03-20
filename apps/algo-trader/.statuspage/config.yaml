@@ -1,0 +1,267 @@
+# Status Page Configuration for Algo Trader
+
+# Global configuration
+name: "Algo Trader Status"
+description: "Real-time status monitoring for Algo Trader trading bot and infrastructure"
+logo: "https://agencyos.network/logo.png"
+favicon: "https://agencyos.network/favicon.ico"
+
+# Uptime monitoring configuration
+uptime:
+  # Production endpoints to monitor
+  endpoints:
+    - name: "API Health Check"
+      url: "https://api.algo-trader.agencyos.network/health"
+      method: "GET"
+      expected_status: 200
+      timeout: 5000
+      interval: 60  # Check every 60 seconds
+
+    - name: "Trading Bot Health"
+      url: "https://api.algo-trader.agencyos.network/api/v1/health"
+      method: "GET"
+      expected_status: 200
+      timeout: 5000
+      interval: 60
+
+    - name: "Dashboard Health"
+      url: "https://dashboard.algo-trader.agencyos.network/health"
+      method: "GET"
+      expected_status: 200
+      timeout: 5000
+      interval: 60
+
+    - name: "Database Connection"
+      url: "https://api.algo-trader.agencyos.network/api/v1/database/health"
+      method: "GET"
+      expected_status: 200
+      timeout: 10000
+      interval: 120  # Check every 2 minutes
+
+    - name: "Redis Cache"
+      url: "https://api.algo-trader.agencyos.network/api/v1/cache/health"
+      method: "GET"
+      expected_status: 200
+      timeout: 5000
+      interval: 120
+
+  # Auto-incident detection thresholds
+  auto_incident_detection:
+    enabled: true
+    # Trigger incident when endpoint is down for more than 2 consecutive checks
+    consecutive_failures_threshold: 2
+    # Consider incident resolved when endpoint is up for 3 consecutive checks
+    consecutive_successes_threshold: 3
+    # Minimum duration before auto-resolving (in seconds)
+    min_resolution_duration: 300
+
+# Maintenance windows support
+maintenance_windows:
+  enabled: true
+  # Default maintenance window settings
+  default:
+    duration: 3600  # 1 hour in seconds
+    notification_lead_time: 86400  # 24 hours in seconds
+    auto_approve: false  # Require manual approval for maintenance windows
+
+# Notification configuration
+notifications:
+  # Slack notifications
+  slack:
+    enabled: true
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#algo-trader-status"
+    username: "Algo Trader Status Bot"
+    icon_emoji: ":robot_face:"
+
+    # Notification events
+    events:
+      - incident.created
+      - incident.updated
+      - incident.resolved
+      - maintenance.scheduled
+      - maintenance.started
+      - maintenance.ended
+
+  # Telegram notifications
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+    # Notification events
+    events:
+      - incident.created
+      - incident.resolved
+      - maintenance.scheduled
+
+  # Email notifications (for critical incidents only)
+  email:
+    enabled: false  # Disabled by default, enable if needed
+    smtp_server: "${SMTP_SERVER}"
+    smtp_port: "${SMTP_PORT}"
+    smtp_username: "${SMTP_USERNAME}"
+    smtp_password: "${SMTP_PASSWORD}"
+    from_address: "status@algo-trader.agencyos.network"
+    to_addresses:
+      - "ops@agencyos.network"
+      - "trading-team@agencyos.network"
+
+    # Only send email for critical incidents
+    events:
+      - incident.created.sev1
+      - incident.created.sev2
+
+# Incident severity mapping
+incident_severity:
+  sev1:
+    name: "Critical"
+    color: "#d32f2f"
+    description: "Complete system outage or critical functionality down"
+    response_time: "0-15 minutes"
+
+  sev2:
+    name: "High"
+    description: "Partial system degradation or non-critical features down"
+    color: "#f57c00"
+    response_time: "Within 1 hour"
+
+  sev3:
+    name: "Medium"
+    description: "Minor issues or cosmetic problems"
+    color: "#fbc02d"
+    response_time: "Within 4 hours"
+
+  sev4:
+    name: "Low"
+    description: "Low impact issues or documentation errors"
+    color: "#4caf50"
+    response_time: "Within 24 hours"
+
+# Status page customization
+status_page:
+  # Custom CSS for branding
+  custom_css: |
+    .status-page-header {
+      background-color: #1a237e;
+    }
+    .status-indicator-up {
+      background-color: #4caf50;
+    }
+    .status-indicator-down {
+      background-color: #f44336;
+    }
+    .status-indicator-degraded {
+      background-color: #ff9800;
+    }
+
+  # Custom JavaScript for additional functionality
+  custom_js: |
+    // Add custom analytics or tracking
+    console.log('Algo Trader Status Page Loaded');
+
+  # Footer content
+  footer:
+    copyright: "© 2026 AgencyOS. All rights reserved."
+    links:
+      - name: "Documentation"
+        url: "https://docs.algo-trader.agencyos.network"
+      - name: "GitHub"
+        url: "https://github.com/agencyos/mekong-cli"
+      - name: "Support"
+        url: "mailto:support@agencyos.network"
+
+# Metrics and analytics
+metrics:
+  enabled: true
+  retention_days: 90
+  # Track response times and uptime percentages
+  tracked_metrics:
+    - response_time
+    - uptime_percentage
+    - error_rate
+    - latency_p95
+    - latency_p99
+
+# Integration with existing monitoring systems
+integrations:
+  # GitHub Actions integration for deployment tracking
+  github_actions:
+    enabled: true
+    repository: "agencyos/mekong-cli"
+    workflow_names:
+      - "Algo Trader CI/CD"
+      - "Algo Trader Staging Deployment"
+
+  # PM2 process monitoring integration
+  pm2:
+    enabled: true
+    processes:
+      - "algo-trader-production"
+      - "algo-trader-staging"
+      - "algo-trader-dashboard"
+
+# Environment-specific overrides
+environments:
+  production:
+    uptime:
+      endpoints:
+        - name: "API Health Check"
+          url: "https://api.algo-trader.agencyos.network/health"
+        - name: "Trading Bot Health"
+          url: "https://api.algo-trader.agencyos.network/api/v1/health"
+        - name: "Dashboard Health"
+          url: "https://dashboard.algo-trader.agencyos.network/health"
+
+  staging:
+    uptime:
+      endpoints:
+        - name: "API Health Check"
+          url: "https://staging-api.algo-trader.agencyos.network/health"
+        - name: "Trading Bot Health"
+          url: "https://staging-api.algo-trader.agencyos.network/api/v1/health"
+        - name: "Dashboard Health"
+          url: "https://staging-dashboard.algo-trader.agencyos.network/health"
+
+# Security configuration
+security:
+  # API authentication for status page management
+  api_key: "${STATUS_PAGE_API_KEY}"
+  # IP whitelisting for admin access
+  admin_ip_whitelist:
+    - "127.0.0.1"
+    - "::1"
+  # Rate limiting for API requests
+  rate_limit:
+    requests_per_minute: 60
+    burst: 10
+
+# Advanced configuration
+advanced:
+  # Retry configuration for failed checks
+  retry_config:
+    max_retries: 2
+    backoff_multiplier: 1.5
+    initial_delay: 1000  # 1 second
+
+  # Alert deduplication
+  alert_deduplication:
+    enabled: true
+    window_seconds: 300  # 5 minutes
+
+  # Custom incident templates
+  incident_templates:
+    database_failure:
+      title: "Database Connectivity Issues"
+      description: "We are experiencing issues with our database connectivity. Our team is investigating and working on a resolution."
+      impact: "Trading functionality may be temporarily unavailable."
+
+    api_degradation:
+      title: "API Performance Degradation"
+      description: "Our API is experiencing higher than normal response times. We are scaling resources to address this issue."
+      impact: "Trading orders may experience delays in execution."
+
+# Version and metadata
+version: "1.0.0"
+created_at: "2026-03-15T00:00:00Z"
+updated_at: "2026-03-15T00:00:00Z"

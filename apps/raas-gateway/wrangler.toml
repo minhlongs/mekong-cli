@@ -1,0 +1,38 @@
+name = "raas-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Account ID (get from Dashboard → Overview)
+account_id = "f691e83094f776311a1bfe3f8b126f1c"
+
+[vars]
+ENVIRONMENT = "production"
+LOG_LEVEL = "info"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "mekong-raas-db"
+database_id = "a0aa4f88-da5b-4616-84aa-7e559e37c91c"
+migrations_dir = "migrations"
+
+# KV Namespaces
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "982a12a5ea414244988a51d743eb14e7"
+preview_id = "982a12a5ea414244988a51d743eb14e7"
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "ba8c93a931524b7e97027dbad43b31c0"
+preview_id = "ba8c93a931524b7e97027dbad43b31c0"
+
+# AI Binding (for future LLM routing)
+[ai]
+binding = "AI"
+
+# Secrets (set via: wrangler secret put <NAME>)
+# JWT_SECRET=REDACTED — for API key validation
+# POLAR_WEBHOOK_SECRET — for billing webhooks
+# SERVICE_TOKEN — for internal service auth

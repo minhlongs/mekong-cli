@@ -24,6 +24,7 @@
     "apps/admin",
     "apps/agencyos-landing",
     "apps/agencyos-web",
+    "apps/crm",
     "apps/agi-sops",
     "apps/algo-trader",
     "apps/analytics",

@@ -1,0 +1,1 @@
+docs/COMMUNITY_GUIDE_VI.md

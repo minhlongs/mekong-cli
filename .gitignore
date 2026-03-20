@@ -413,6 +413,31 @@ conftest.py
 .env*.local
 
 # Private apps — NOT for public repo
-apps/
+# Exception: roi-calculator is public (sales tool)
+!apps/
+apps/84tea/
+apps/anima119/
+apps/apex-os/
+apps/sophia-ai-factory/
+apps/sa-dec-flower-hunt/
+apps/com-anh-duong/
+apps/com-anh-duong-10x/
+apps/well/
+apps/agencyos-web/
+apps/agencyos-landing/
+apps/dashboard/
+apps/admin/
+apps/analytics/
+apps/developers/
+apps/landing/
+apps/web/
+apps/stealth-engine/
+apps/vibe-coding-cafe/
+apps/agentic-brain/
+apps/gemini-proxy-clone/
+apps/antigravity-cli/
+apps/antigravity-gateway/
+apps/project/
+apps/sophia-proposal/
 mekong/daemon/
 mekong/hooks/

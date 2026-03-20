@@ -1,0 +1,28 @@
+/**
+ * Route registry — combines all route handlers
+ */
+
+import { Hono } from 'hono';
+import type { Env } from '../index';
+import { health } from './health';
+import { api } from './api';
+import { credits } from './credits';
+import { billing } from './billing';
+import { notFound } from '../utils/response';
+
+export function createRoutes() {
+  const routes = new Hono<{ Bindings: Env }>();
+
+  // Mount routes
+  routes.route('/health', health);
+  routes.route('/v1', api);
+  routes.route('/credits', credits);
+  routes.route('/billing', billing);
+
+  // Catch-all 404
+  routes.notFound((c) => {
+    return notFound(`Route ${c.req.path} not found`);
+  });
+
+  return routes;
+}

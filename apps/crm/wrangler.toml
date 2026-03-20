@@ -1,0 +1,23 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "crm"
+main = "src/server/index.ts"
+compatibility_date = "2024-12-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Frontend
+assets = { directory = "dist", binding = "ASSETS" }
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "crm-db"
+database_id = "crm-db-local"
+
+# KV for caching (optional)
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "xxx"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"

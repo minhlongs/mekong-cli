@@ -1,0 +1,16 @@
+{
+  "currentProjectIdx": 0,
+  "phase": "fix",
+  "cycle": 1,
+  "errors": [
+    {
+      "type": "lint",
+      "severity": "medium",
+      "file": "package.json",
+      "message": "Lint failed exit 2.  > mekong-cli@5.0.0 lint > npx turbo run lint --concurrency=1  • turbo 2.8.17 • Packages in scope: @mekong/admin, @mekong/agencyos-landing, @mekong/agencyos-web, @mekong/agents, @mekong/algo-trader, @...",
+      "rule": "general-lint-failure",
+      "project": "mekong-cli"
+    }
+  ],
+  "fixIndex": 1
+}
