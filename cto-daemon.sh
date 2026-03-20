@@ -850,6 +850,26 @@ dispatch_worker() {
   local pane_output="${2:-}"
   local name="${WORKER_NAME[$pane_idx]}"
 
+  # GATE 0: Context % check — NEVER dispatch to full pane (prevents OOM + queue stacking)
+  local ctx_pct
+  ctx_pct=$(echo "$pane_output" | grep -oE '[0-9]+%' | head -1 | tr -d '%')
+  if [[ -n "$ctx_pct" && "$ctx_pct" -ge 85 ]]; then
+    log "P${pane_idx} (${name}): CONTEXT ${ctx_pct}% >= 85% — auto-compacting"
+    send_to_pane "$pane_idx" "/compact"
+    return
+  fi
+
+  # GATE 1: company.json awareness — /idea → $1M flow
+  local project_dir="${WORKER_DIR[$pane_idx]}"
+  local company_file="${MEKONG_DIR}/${project_dir}/.mekong/company.json"
+  if [[ ! -f "$company_file" && "$project_dir" != "." ]]; then
+    # No company.json → must run /idea first (MANDATORY GATE)
+    log "P${pane_idx} (${name}): NO company.json — dispatching /idea"
+    local fallback_cmd=$(get_fallback_cmd "$pane_idx")
+    send_to_pane "$pane_idx" "$fallback_cmd"
+    return
+  fi
+
   # LOCK 2: Check pane lock before dispatch
   if ! acquire_pane_lock "${CTO_SESSION}" "$pane_idx"; then
     log "P${pane_idx} (${name}): LOCKED — skip dispatch (task in progress)"
