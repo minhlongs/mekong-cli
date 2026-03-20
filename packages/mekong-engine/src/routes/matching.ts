@@ -55,7 +55,7 @@ matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
 
   const stakeholder = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         'SELECT id FROM stakeholders WHERE id = ? AND tenant_id = ?'
       ).bind(body.stakeholder_id, tenant.id).first()
       return result as { id: string } | null
@@ -67,7 +67,7 @@ matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
 
   const existingResult = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         'SELECT id FROM skill_profiles WHERE stakeholder_id = ?'
       ).bind(body.stakeholder_id).first()
       return result as { id: string } | null
@@ -83,7 +83,7 @@ matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
 
   if (existingResult) {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         `UPDATE skill_profiles SET skills = ?, industries = ?, availability = ?,
          hourly_rate_usd = ?, bio = ?, updated_at = ? WHERE stakeholder_id = ?`
       ).bind(skills, industries, availability, body.hourly_rate_usd ?? null,
@@ -96,7 +96,7 @@ matchingRoutes.post('/profiles', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO skill_profiles (id, stakeholder_id, tenant_id, skills, industries, availability, hourly_rate_usd, bio, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, body.stakeholder_id, tenant.id, skills, industries, availability,
@@ -127,7 +127,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
   const requestId = crypto.randomUUID()
   const skillsNeeded = body.skills_needed || []
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO match_requests (id, tenant_id, requester_id, request_type, skills_needed, industry, description, budget_usd)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(requestId, tenant.id, body.requester_id, body.request_type,
@@ -140,7 +140,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
   // Auto-match: find available profiles in same tenant
   const profilesResult = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         `SELECT sp.*, s.reputation_score FROM skill_profiles sp
          JOIN stakeholders s ON s.id = sp.stakeholder_id
          WHERE sp.tenant_id = ? AND sp.stakeholder_id != ? AND sp.availability = 'available'`
@@ -186,7 +186,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
 
     const matchId = crypto.randomUUID()
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         `INSERT INTO matches (id, request_id, matched_stakeholder_id, match_score, match_reasons)
          VALUES (?, ?, ?, ?, ?)`
       ).bind(matchId, requestId, profile.stakeholder_id, totalScore, JSON.stringify(reasons)).run(),
@@ -205,7 +205,7 @@ matchingRoutes.post('/requests', payloadSizeLimit(), handleAsync(async (c) => {
   // Update request status if matches found
   if (proposedMatches.length > 0) {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         "UPDATE match_requests SET status = 'matched' WHERE id = ?"
       ).bind(requestId).run(),
       'DATABASE_ERROR',
@@ -235,14 +235,14 @@ matchingRoutes.patch('/matches/:id', handleAsync(async (c) => {
   }
 
   const match = await handleDb(
-    () => c.env.DB.prepare('SELECT * FROM matches WHERE id = ?').bind(id).first(),
+    () => c.env.DB!.prepare('SELECT * FROM matches WHERE id = ?').bind(id).first(),
     'DATABASE_ERROR',
     'Failed to fetch match'
   )
   if (!match) return c.json(createError('NOT_FOUND', 'Match not found'), 404)
 
   await handleDb(
-    () => c.env.DB.prepare('UPDATE matches SET status = ? WHERE id = ?').bind(body.status, id).run(),
+    () => c.env.DB!.prepare('UPDATE matches SET status = ? WHERE id = ?').bind(body.status, id).run(),
     'DATABASE_ERROR',
     'Failed to update match status'
   )
@@ -261,7 +261,7 @@ matchingRoutes.get('/requests', handleAsync(async (c) => {
   const params = status ? [tenant.id, status] : [tenant.id]
   const rowsResult = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(query).bind(...params).all()
+      const result = await c.env.DB!.prepare(query).bind(...params).all()
       return result as { results?: unknown[] }
     },
     'DATABASE_ERROR',

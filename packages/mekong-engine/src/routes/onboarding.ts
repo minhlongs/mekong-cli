@@ -63,7 +63,7 @@ onboardingRoutes.get('/status', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const profile = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT onboarding_step, onboarding_completed FROM tenant_profiles WHERE tenant_id = ?'
       )
         .bind(tenant.id)
@@ -96,7 +96,7 @@ onboardingRoutes.post('/profile', handleAsync(async (c) => {
   }
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO tenant_profiles (tenant_id, business_name, industry, address, phone, hours, logo_url, onboarding_step)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
        ON CONFLICT(tenant_id) DO UPDATE SET
@@ -142,7 +142,7 @@ onboardingRoutes.post('/channel', handleAsync(async (c) => {
 
   const channelId = `ch_${tenant.id}_${body.type}`
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO channels (id, tenant_id, type, external_id, name, access_token_encrypted, active)
        VALUES (?, ?, ?, ?, ?, ?, 1)
        ON CONFLICT(id) DO UPDATE SET
@@ -158,7 +158,7 @@ onboardingRoutes.post('/channel', handleAsync(async (c) => {
   )
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `UPDATE tenant_profiles SET onboarding_step = MAX(onboarding_step, 2), updated_at = datetime('now')
        WHERE tenant_id = ?`
     )
@@ -186,7 +186,7 @@ onboardingRoutes.post('/menu', handleAsync(async (c) => {
   }
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `UPDATE tenant_profiles
        SET menu_data = ?, onboarding_step = MAX(onboarding_step, 3), updated_at = datetime('now')
        WHERE tenant_id = ?`
@@ -227,7 +227,7 @@ Generate 5 FAQ Q&A pairs customers commonly ask. Return JSON: [{"question":"..."
 
   if (kbInserts.length > 0) {
     await handleDb(
-      () => c.env.DB.batch(kbInserts),
+      () => c.env.DB!.batch(kbInserts),
       'DATABASE_ERROR',
       'Failed to insert FAQ entries to knowledge base'
     )
@@ -242,7 +242,7 @@ onboardingRoutes.post('/activate', handleAsync(async (c) => {
 
   const profile = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT onboarding_step FROM tenant_profiles WHERE tenant_id = ?'
       )
         .bind(tenant.id)
@@ -258,7 +258,7 @@ onboardingRoutes.post('/activate', handleAsync(async (c) => {
   }
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `UPDATE tenant_profiles
        SET onboarding_step = 4, onboarding_completed = 1, updated_at = datetime('now')
        WHERE tenant_id = ?`

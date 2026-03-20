@@ -54,12 +54,12 @@ export const PHASES = [
 // GET /status — current phase + power distribution + metrics + next phase requirements
 decentralRoutes.get('/status', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Count stakeholders
   const stakeholderCountResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
       ).bind(tenant.id).first()
       return r as { count: number } | null
@@ -72,7 +72,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
   // Calculate months since first stakeholder
   const firstStakeholderResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
       ).bind(tenant.id).first()
       return r as { first: string | null } | null
@@ -90,7 +90,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
   // Count proposals passed (governance maturity signal)
   const passedProposalsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         "SELECT COUNT(*) as count FROM proposals WHERE tenant_id = ? AND status = 'approved'"
       ).bind(tenant.id).first()
       return r as { count: number } | null
@@ -115,7 +115,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
   // Community vs leadership vote weight from recent proposals
   const roleStatsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         `SELECT role, COUNT(*) as count, SUM(reputation_score) as total_rep
      FROM stakeholders WHERE tenant_id = ? GROUP BY role`
       ).bind(tenant.id).all()
@@ -167,7 +167,7 @@ decentralRoutes.get('/status', handleAsync(async (c) => {
 // POST /check-transition — evaluate eligibility for next phase
 decentralRoutes.post('/check-transition', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate request body
   let body: CheckTransitionBody
@@ -182,7 +182,7 @@ decentralRoutes.post('/check-transition', handleAsync(async (c) => {
 
   const stakeholderCountResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT COUNT(*) as count FROM stakeholders WHERE tenant_id = ?'
       ).bind(tenant.id).first()
       return r as { count: number } | null
@@ -194,7 +194,7 @@ decentralRoutes.post('/check-transition', handleAsync(async (c) => {
 
   const firstStakeholderResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT MIN(created_at) as first FROM stakeholders WHERE tenant_id = ?'
       ).bind(tenant.id).first()
       return r as { first: string | null } | null

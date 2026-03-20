@@ -46,7 +46,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
   const [messagesResult, contentResult, contactsResult, conversationsResult] = await Promise.all([
     handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM messages
          WHERE tenant_id = ? AND created_at >= datetime('now', ? days')`
         ).bind(tenant.id, `-${days}`).first()
@@ -58,7 +58,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
 
     handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT status, COUNT(*) as count FROM content_posts
          WHERE tenant_id = ? AND created_at >= datetime('now', ? days')
          GROUP BY status`
@@ -71,7 +71,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
 
     handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM contacts
          WHERE tenant_id = ? AND first_contact_at >= datetime('now', ? days')`
         ).bind(tenant.id, `-${days}`).first()
@@ -83,7 +83,7 @@ reportRoutes.get('/weekly', handleAsync(async (c) => {
 
     handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM conversations
          WHERE tenant_id = ? AND created_at >= datetime('now', ? days')`
         ).bind(tenant.id, `-${days}`).first()
@@ -139,7 +139,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
   const [todayMessagesResult, totalContactsResult, pendingContentResult, activeConvsResult] = await Promise.all([
     handleDb<{ count: number } | null>(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM messages
          WHERE tenant_id = ? AND created_at >= datetime('now', 'start of day')`
         ).bind(tenant.id).first()
@@ -151,7 +151,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
 
     handleDb<{ count: number } | null>(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           'SELECT COUNT(*) as count FROM contacts WHERE tenant_id = ?'
         ).bind(tenant.id).first()
         return r as { count: number } | null
@@ -162,7 +162,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
 
     handleDb<{ count: number } | null>(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM content_posts
          WHERE tenant_id = ? AND status IN ('draft','approved')`
         ).bind(tenant.id).first()
@@ -174,7 +174,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
 
     handleDb<{ count: number } | null>(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT COUNT(*) as count FROM conversations
          WHERE tenant_id = ? AND status = 'active'`
         ).bind(tenant.id).first()
@@ -203,7 +203,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
     const [msg7dResult, contacts7dResult] = await Promise.all([
       handleDb<{ count: number } | null>(
         async () => {
-          const r = await c.env.DB.prepare(
+          const r = await c.env.DB!.prepare(
             `SELECT COUNT(*) as count FROM messages
            WHERE tenant_id = ? AND created_at >= datetime('now', '-7 days')`
           ).bind(tenant.id).first()
@@ -214,7 +214,7 @@ reportRoutes.get('/overview', handleAsync(async (c) => {
       ),
       handleDb<{ count: number } | null>(
         async () => {
-          const r = await c.env.DB.prepare(
+          const r = await c.env.DB!.prepare(
             `SELECT COUNT(*) as count FROM contacts
            WHERE tenant_id = ? AND first_contact_at >= datetime('now', '-7 days')`
           ).bind(tenant.id).first()

@@ -63,7 +63,7 @@ type Contact = {
 
 // GET /crm/contacts — list with optional ?tag= and ?limit=
 crmRoutes.get('/contacts', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const tag = c.req.query('tag')
@@ -81,7 +81,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
     const escapedTag = tag.replace(/['"%]/g, '')
     const result = await handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT * FROM contacts WHERE tenant_id = ? AND tags LIKE ? ORDER BY last_contact_at DESC LIMIT ?`
         )
           .bind(tenant.id, `%"${escapedTag}"%`, limit)
@@ -95,7 +95,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
   } else {
     const result = await handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           'SELECT * FROM contacts WHERE tenant_id = ? ORDER BY last_contact_at DESC LIMIT ?'
         )
           .bind(tenant.id, limit)
@@ -113,7 +113,7 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
 
 // POST /crm/contacts — create contact
 crmRoutes.post('/contacts', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
@@ -122,7 +122,7 @@ crmRoutes.post('/contacts', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = `ct_${tenant.id}_${Date.now()}`
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO contacts (id, tenant_id, external_id, platform, name, phone, email, tags, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
@@ -146,7 +146,7 @@ crmRoutes.post('/contacts', payloadSizeLimit(), handleAsync(async (c) => {
 
 // POST /crm/contacts/auto — upsert from chat event (platform + external_id key)
 crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
@@ -157,7 +157,7 @@ crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
 
   const existing = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT id, visit_count FROM contacts WHERE tenant_id = ? AND external_id = ? AND platform = ?'
       )
         .bind(tenant.id, body.external_id, body.platform)
@@ -170,7 +170,7 @@ crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
 
   if (existing) {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         `UPDATE contacts SET visit_count = visit_count + 1, last_contact_at = datetime('now')
        WHERE id = ?`
       )
@@ -184,7 +184,7 @@ crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = `ct_${tenant.id}_${Date.now()}`
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO contacts (id, tenant_id, external_id, platform, name)
      VALUES (?, ?, ?, ?, ?)`
     )
@@ -199,12 +199,12 @@ crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
 
 // GET /crm/campaigns — list remarketing campaigns
 crmRoutes.get('/campaigns', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const campaignsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT * FROM remarketing_campaigns WHERE tenant_id = ? ORDER BY created_at DESC'
       )
         .bind(tenant.id)
@@ -220,7 +220,7 @@ crmRoutes.get('/campaigns', handleAsync(async (c) => {
 
 // POST /crm/campaigns — create campaign
 crmRoutes.post('/campaigns', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const body = await c.req.json()
@@ -229,7 +229,7 @@ crmRoutes.post('/campaigns', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = `rc_${tenant.id}_${Date.now()}`
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO remarketing_campaigns (id, tenant_id, name, trigger_type, trigger_value, message_template, channel)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
