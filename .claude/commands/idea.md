@@ -9,6 +9,8 @@ argument-hint: "<your business idea in 1-3 sentences>"
 **Input:** A business idea (1-3 sentences)
 **Output:** Full company blueprint in `.mekong/company.json` + 5-layer execution plan
 
+**CRITICAL: AUTO-EXECUTE MODE. Do NOT ask questions. Do NOT present menus. Do NOT wait for user input. Execute ALL 25 steps sequentially and generate ALL output files immediately. This is an autonomous command — treat it as `--auto` mode.**
+
 ## Your Business Idea
 $ARGUMENTS
 
