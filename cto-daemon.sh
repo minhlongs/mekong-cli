@@ -224,7 +224,7 @@ ollama_auto_recover() {
 
   # Step 3: Warmup model (keep_alive ensures it stays loaded)
   log "OLLAMA RECOVERY: Warming up ${OLLAMA_MODEL}..."
-  curl -sf "${OLLAMA_URL}/api/generate" -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"ping\",\"stream\":false,\"keep_alive\":\"24h\"}" >/dev/null 2>&1 || true
+  curl -sf "${OLLAMA_URL}/api/generate" -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"ping\",\"stream\":false,\"keep_alive\":\"5m\"}" >/dev/null 2>&1 || true
   sleep 2
 
   # Step 4: Verify model loaded
@@ -1168,7 +1168,7 @@ fi
 # Inline warmup — non-blocking (10s max), uses hardcoded OLLAMA_URL
 {
   curl -sf --max-time 10 "${OLLAMA_URL}/api/generate" \
-    -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"hi\",\"stream\":false,\"keep_alive\":\"24h\",\"options\":{\"num_predict\":1}}" >/dev/null 2>&1 \
+    -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"hi\",\"stream\":false,\"keep_alive\":\"5m\",\"options\":{\"num_predict\":1}}" >/dev/null 2>&1 \
     && log "OLLAMA: ${OLLAMA_MODEL} warm" \
     || log "OLLAMA: warmup skipped (will retry on first dispatch)"
 } &
