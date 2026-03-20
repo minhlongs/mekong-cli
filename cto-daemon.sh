@@ -467,7 +467,13 @@ send_to_pane() {
       fi
     fi
   fi
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "$cmd" Enter
+  # FIX: CC CLI Ink TUI needs Escape first to ensure input mode
+  # Without this, send-keys produces "not in a mode" error
+  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+  sleep 0.5
+  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" -l "$cmd"
+  sleep 0.3
+  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
 }
 
 # Launch/respawn a CLI pane via mekong-wrapper (unified entry point)
