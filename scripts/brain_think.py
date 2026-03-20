@@ -115,7 +115,7 @@ def main():
         "You are CTO Brain. Reply with ONLY a single slash command.\n"
         "Valid: /cook, /fix, /debug, /review, /test, /plan hard, /scout, "
         "/backend-api-build, /frontend-ui-build, /check-and-commit\n"
-        'Format: /command "specific task"\n\n'
+        'Format: /command "specific task" (NEVER use colon — /plan hard NOT /plan:hard)\n\n'
         + stdin_text
     )
 

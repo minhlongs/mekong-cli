@@ -357,6 +357,7 @@ THINK: What is the SINGLE most impactful action for ${name} to make RaaS sellabl
 Priority: fix errors → fix tests → polish UI → harden API → add features.
 Give ONE slash command. Include \"${dir}/\" in the task description.
 CRITICAL: ONLY use commands from the AVAILABLE COMMANDS list above.
+NEVER use colon syntax (e.g. /plan:hard). Use SPACE: /plan hard, /cto-architect, /pm-sprint.
 If unsure, default to /cook.
 Reply with ONLY the command. No explanation."
 
