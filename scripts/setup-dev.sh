@@ -11,10 +11,19 @@ set -euo pipefail
 # What it does:
 #   1. Copies .env.example → .env (if missing)
 #   2. Installs Python deps (pip install -e ".[dev]")
-#   3. Installs Node deps (pnpm install)
+#   3. Installs Node deps (pnpm install) — SKIPPED when called from postinstall
 #   4. Sets up CC CLI settings template (if missing)
 #   5. Runs health check
+#
+# ⚠️  RECURSION GUARD: postinstall → setup-dev.sh → pnpm install → postinstall = ∞
+#     MEKONG_SETUP_RUNNING env var prevents this infinite fork bomb.
 # =============================================================================
+
+# ---- RECURSION GUARD (FIX: prevents postinstall infinite loop) ----
+if [[ "${MEKONG_SETUP_RUNNING:-}" == "1" ]]; then
+    exit 0  # Already running in parent — skip to break recursion
+fi
+export MEKONG_SETUP_RUNNING=1
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -62,8 +71,12 @@ else
 fi
 
 # --- Step 3: Node deps ---
-info "Installing Node dependencies..."
-if command -v pnpm &>/dev/null; then
+# ⚠️  SKIP when called from postinstall (npm_lifecycle_event set by pnpm/npm)
+#     This prevents: pnpm install → postinstall → setup-dev.sh → pnpm install → ∞
+if [[ "${npm_lifecycle_event:-}" == "postinstall" ]]; then
+    success "Node deps: skipped (called from postinstall — already installing)"
+elif command -v pnpm &>/dev/null; then
+    info "Installing Node dependencies..."
     pnpm install --frozen-lockfile 2>/dev/null && success "Node deps installed (pnpm)" || { pnpm install 2>/dev/null && success "Node deps installed (pnpm, no lockfile)"; }
 elif command -v npm &>/dev/null; then
     npm install 2>/dev/null && success "Node deps installed (npm)"

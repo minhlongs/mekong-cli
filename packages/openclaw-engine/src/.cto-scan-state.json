@@ -4,11 +4,21 @@
   "cycle": 1,
   "errors": [
     {
-      "type": "lint",
-      "severity": "medium",
-      "file": "package.json",
-      "message": "Lint failed exit 2.  > mekong-cli@5.0.0 lint > npx turbo run lint --concurrency=1  • turbo 2.8.17 • Packages in scope: @mekong/admin, @mekong/agencyos-landing, @mekong/agencyos-web, @mekong/agents, @mekong/algo-trader, @...",
-      "rule": "general-lint-failure",
+      "type": "build",
+      "severity": "critical",
+      "file": "@mekong/algo-trader:build: src/commands/setup-wizard.ts",
+      "line": 174,
+      "code": "TS2769",
+      "message": "No overload matches this call.",
+      "project": "mekong-cli"
+    },
+    {
+      "type": "build",
+      "severity": "critical",
+      "file": "@mekong/algo-trader:build: src/commands/setup-wizard.ts",
+      "line": 188,
+      "code": "TS2322",
+      "message": "Type 'Promise<unknown>' is not assignable to type 'string'.",
       "project": "mekong-cli"
     }
   ],
