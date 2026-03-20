@@ -37,7 +37,7 @@ def call_ollama(url, model, prompt, think=True, timeout=30):
         "model": model,
         "prompt": prompt,
         "stream": False,
-        "keep_alive": "24h",
+        "keep_alive": "5m",
         "options": {"temperature": 0.3, "num_predict": 100, "num_ctx": 4096},
     }
     if not think:

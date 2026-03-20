@@ -16,7 +16,7 @@ def main():
         "model": ollama_model,
         "prompt": prompt_text,
         "stream": False,
-        "keep_alive": "24h",
+        "keep_alive": "5m",
         "options": {"temperature": 0.3, "num_predict": 500, "num_ctx": 8192}
     }).encode()
     
