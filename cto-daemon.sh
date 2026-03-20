@@ -35,17 +35,17 @@ RAAS_GOAL="Sell RaaS (ROI-as-a-Service). Packages: raas-landing, raas-dashboard,
 # ---- DOANH TRẠI: Pane Roles (Binh Pháp military model) ----
 # P1=TIÊN PHONG (complex/plan), P2=CÔNG BINH (build/fix), P3=HIẾN BINH (review/test)
 PANE_ROLE_0="tien_phong"   # Pane 0: mekong-cli monorepo — complex/planning tasks
-PANE_ROLE_1="tien_phong"   # Complex tasks: /plan:hard, /cook complex features, /debug hard bugs
+PANE_ROLE_1="tien_phong"   # Complex tasks: /plan hard, /cook complex features, /debug hard bugs
 PANE_ROLE_2="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api-build
 PANE_ROLE_3="hien_binh"    # Review tasks: /review, /test, /check-and-commit
 
 # Role-specific fallback tasks (indexed arrays — bash 3.2 compatible)
-ROLE_FB_0_0='/plan:hard "Analyze monorepo architecture — packages/ dependency graph and build order"'
+ROLE_FB_0_0='/plan hard "Analyze monorepo architecture — packages/ dependency graph and build order"'
 ROLE_FB_0_1='/eng-tech-debt "Audit mekong-cli TypeScript errors and dead code across all packages"'
 ROLE_FB_0_2='/ops-health-sweep "Run health checks on all packages — build, lint, test status"'
 ROLE_FB_0_COUNT=3
 
-ROLE_FB_1_0='/plan:hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
+ROLE_FB_1_0='/plan hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
 ROLE_FB_1_1='/cook "Implement missing governance features — check spec vs implementation gaps"'
 ROLE_FB_1_2='/debug "Analyze and fix any TypeScript errors across all packages"'
 ROLE_FB_1_COUNT=3
@@ -330,14 +330,14 @@ cto_brain_dispatch() {
 ${COMMAND_CATALOG}
 Pick the MOST SPECIFIC command."
   else
-    catalog_section="Commands: /cook \"task\" /debug \"issue\" /fix \"bug\" /test \"scope\" /plan:hard \"feature\" /review"
+    catalog_section="Commands: /cook \"task\" /debug \"issue\" /fix \"bug\" /test \"scope\" /plan hard \"feature\" /review"
   fi
 
   # Role context for this pane
   local role=$(get_pane_role "$pane_idx")
   local role_desc
   case "$role" in
-    tien_phong) role_desc="TIÊN PHONG (complex): /plan:hard, /debug hard bugs, /cook complex features" ;;
+    tien_phong) role_desc="TIÊN PHONG (complex): /plan hard, /debug hard bugs, /cook complex features" ;;
     cong_binh)  role_desc="CÔNG BINH (build): /cook build, /fix, /backend-api-build, /frontend-ui-build" ;;
     hien_binh)  role_desc="HIẾN BINH (review): /review, /test, /check-and-commit, /code-review" ;;
   esac
@@ -375,7 +375,7 @@ Reply with ONLY the command. No explanation."
     # VALIDATE: check command base exists in catalog or core commands
     local cmd_base
     cmd_base=$(echo "$cmd" | awk '{print $1}')
-    local valid_cores="/cook /fix /debug /test /review /plan:hard /plan:fast /check-and-commit /clear /compact /docs /docs:update"
+    local valid_cores="/cook /fix /debug /test /review /plan hard /plan fast /check-and-commit /clear /compact /docs /docs:update"
     if ! echo " $valid_cores " | grep -q " $cmd_base "; then
       # Check commands-catalog.txt
       if [[ -f "$COMMAND_CATALOG_FILE" ]] && ! grep -q "^${cmd_base}$" "$COMMAND_CATALOG_FILE" 2>/dev/null; then
@@ -818,8 +818,8 @@ build_delegation_task() {
       local error_ctx
       error_ctx=$(extract_error_context "$pane_output")
       if [[ "$retries" -ge 3 ]]; then
-        # Escalate: switch to /plan:hard after 3 failed retries
-        echo "/plan:hard \"${ctx}. ESCALATION: ${retries} retries failed. Error: ${error_ctx}. Analyze root cause deeply, create plan before fixing.\""
+        # Escalate: switch to /plan hard after 3 failed retries
+        echo "/plan hard \"${ctx}. ESCALATION: ${retries} retries failed. Error: ${error_ctx}. Analyze root cause deeply, create plan before fixing.\""
       elif [[ "$retries" -gt 0 ]]; then
         echo "${error_cmd} \"RETRY #${retries}. ${ctx}. Error: ${error_ctx}. Analyze root cause, fix, verify: ${deploy}\""
       else
