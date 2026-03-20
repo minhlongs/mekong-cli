@@ -187,9 +187,12 @@ fundingRoutes.post('/contribute', payloadSizeLimit(), handleAsync(async (c) => {
       'DATABASE_ERROR',
       'Failed to record contribution'
     )
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) return c.json(createError('CONFLICT', 'Already contributed to this project'), 409)
-    throw e
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('UNIQUE')) {
+      return c.json(createError('CONFLICT', 'Already contributed to this project'), 409)
+    }
+    console.error('Failed to record funding contribution:', { error, projectId: body.project_id })
+    throw error
   }
 
   // Update project totals
@@ -279,6 +282,8 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
 // List rounds
 fundingRoutes.get('/rounds', handleAsync(async (c) => {
   const tenant = c.get('tenant')
+  const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
+
   await handleDb(
     () => ensureFundingTables(c.env.DB),
     'DATABASE_ERROR',
@@ -286,13 +291,13 @@ fundingRoutes.get('/rounds', handleAsync(async (c) => {
   )
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare('SELECT * FROM funding_rounds WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenant.id).all()
+      const r = await c.env.DB.prepare('SELECT * FROM funding_rounds WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
       return r as { results?: any[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch funding rounds'
   )
-  return c.json({ rounds: rowsResult.results })
+  return c.json({ rounds: rowsResult.results, count: rowsResult.results?.length || 0 })
 }))
 
 export { fundingRoutes }

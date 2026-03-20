@@ -5,7 +5,7 @@
  * with proper error handling and edge case coverage.
  */
 
-import type { D1Database } from '@cloudflare/workers-types'
+import type { D1Database, D1PreparedStatement } from '@cloudflare/workers-types'
 import { HttpError, createError } from '../types/error'
 
 /**
@@ -132,7 +132,7 @@ export async function createJournalEntry(
   }
 
   const jeId = crypto.randomUUID()
-  const batch: Promise<{ success: boolean }>[] = []
+  const batch: D1PreparedStatement[] = []
 
   // Insert journal entry
   batch.push(

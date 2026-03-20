@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { Bindings } from '../index'
 import { addCredits } from '../raas/credits'
 import { handleAsync, handleDb, createError, validateJsonBody } from '../types/error'
+import { constantTimeCompare, encryptPaymentMetadata, decryptPaymentMetadata } from '../lib/crypto-utils'
 
 const paymentVnRoutes = new Hono<{ Bindings: Bindings }>()
 
@@ -75,7 +76,9 @@ paymentVnRoutes.post('/momo/ipn', handleAsync(async (c) => {
     const expectedHex = Array.from(new Uint8Array(expectedSig))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    if (signature !== expectedHex) {
+
+    // Constant-time comparison to prevent timing attacks
+    if (!constantTimeCompare(signature, expectedHex)) {
       return c.json(createError('UNAUTHORIZED', 'Invalid MoMo signature'), 401)
     }
   }
@@ -103,9 +106,9 @@ paymentVnRoutes.post('/momo/ipn', handleAsync(async (c) => {
 
   let parsed: { tenant_id?: string; credits?: number; plan?: string }
   try {
-    // Use atob() for base64 decoding (Cloudflare Workers compatible)
-    const decoded = atob(extraData)
-    parsed = JSON.parse(decoded)
+    // Use encrypted decryption for payment metadata
+    const metadataSecret = (c.env as any).PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
+    parsed = await decryptPaymentMetadata(extraData, metadataSecret)
   } catch {
     return c.json(createError('VALIDATION_ERROR', 'Invalid extraData encoding'), 400)
   }
@@ -169,7 +172,9 @@ paymentVnRoutes.get('/vnpay/ipn', handleAsync(async (c) => {
     const expectedHex = Array.from(new Uint8Array(expectedHash))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    if (secureHash.toLowerCase() !== expectedHex.toLowerCase()) {
+
+    // Constant-time comparison to prevent timing attacks
+    if (!constantTimeCompare(secureHash.toLowerCase(), expectedHex.toLowerCase())) {
       return c.json(createError('UNAUTHORIZED', 'Invalid VNPAY signature'), 401)
     }
   }
@@ -227,26 +232,29 @@ paymentVnRoutes.post('/create', handleAsync(async (c) => {
   const { method, tenant_id, plan, amount, credits } = body
 
   const orderId = `${tenant_id}-${Date.now()}`
+  const vnpAmount = amount * 100 // VNPAY requires amount * 100
 
   if (method === 'momo') {
-    const extraData = btoa(JSON.stringify({ tenant_id, credits, plan: plan ?? '' }))
+    // Use encrypted metadata instead of base64
+    const metadataSecret = (c.env as any).PAYMENT_METADATA_SECRET || c.env.MOMO_SECRET_KEY || 'fallback-secret'
+    const extraData = await encryptPaymentMetadata({ tenant_id, credits, plan: plan ?? '' }, metadataSecret)
     return c.json({
       method: 'momo',
       order_id: orderId,
       amount,
-      payment_url: `https://payment.momo.vn/pay?partnerCode=MEKONG&orderId=${orderId}&amount=${amount}&extraData=${extraData}`,
+      payment_url: `https://payment.momo.vn/pay?partnerCode=MEKONG&orderId=${orderId}&amount=${amount}&extraData=${encodeURIComponent(extraData)}`,
       note: 'Mock URL — replace with real MoMo API integration',
     })
   }
 
-  // VNPAY
-  const orderInfo = `${tenant_id}|${credits}|${plan ?? ''}`
-  const vnpAmount = amount * 100 // VNPAY requires amount * 100
+  // VNPAY - Use encrypted metadata
+  const metadataSecretVnp = (c.env as any).PAYMENT_METADATA_SECRET || c.env.VNPAY_HASH_SECRET || 'fallback-secret'
+  const encryptedMetadata = await encryptPaymentMetadata({ tenant_id, credits, plan: plan ?? '' }, metadataSecretVnp)
   return c.json({
     method: 'vnpay',
     order_id: orderId,
     amount,
-    payment_url: `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_TxnRef=${orderId}&vnp_Amount=${vnpAmount}&vnp_OrderInfo=${encodeURIComponent(orderInfo)}`,
+    payment_url: `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_TxnRef=${orderId}&vnp_Amount=${vnpAmount}&vnp_OrderInfo=${encodeURIComponent(encryptedMetadata)}`,
     note: 'Mock URL — replace with real VNPAY API integration',
   })
 }))

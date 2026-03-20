@@ -49,7 +49,7 @@ export const RESOLUTION_LEVELS: Record<number, { name: string; sla: string; stat
 // POST / — report conflict
 conflictRoutes.post('/', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: CreateConflictBody
   try {
@@ -67,7 +67,7 @@ conflictRoutes.post('/', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO conflicts (id, tenant_id, reporter_id, against_id, conflict_type, description, severity, resolution_level, status)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, tenant.id, body.reporter_id, body.against_id ?? null, body.conflict_type,
@@ -90,7 +90,7 @@ conflictRoutes.post('/', payloadSizeLimit(), handleAsync(async (c) => {
 // POST /:id/escalate — increase resolution level
 conflictRoutes.post('/:id/escalate', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const id = c.req.param('id')
 
   let body: EscalateConflictBody
@@ -105,7 +105,7 @@ conflictRoutes.post('/:id/escalate', payloadSizeLimit(), handleAsync(async (c) =
 
   const conflict = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         'SELECT * FROM conflicts WHERE id = ? AND tenant_id = ?'
       ).bind(id, tenant.id).first()
       return result as { resolution_level: number; status: string } | null
@@ -130,7 +130,7 @@ conflictRoutes.post('/:id/escalate', payloadSizeLimit(), handleAsync(async (c) =
 
   // Update conflict level and status
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'UPDATE conflicts SET resolution_level = ?, status = ? WHERE id = ?'
     ).bind(newLevel, levelInfo.status, id).run(),
     'DATABASE_ERROR',
@@ -139,7 +139,7 @@ conflictRoutes.post('/:id/escalate', payloadSizeLimit(), handleAsync(async (c) =
 
   // Log escalation
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO conflict_escalations (conflict_id, from_level, to_level, reason, escalated_by)
      VALUES (?, ?, ?, ?, ?)`
     ).bind(id, currentLevel, newLevel, body.reason, body.escalated_by ?? null).run(),
@@ -161,7 +161,7 @@ conflictRoutes.post('/:id/escalate', payloadSizeLimit(), handleAsync(async (c) =
 // POST /:id/resolve — close with notes
 conflictRoutes.post('/:id/resolve', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const id = c.req.param('id')
 
   let body: ResolveConflictBody
@@ -176,7 +176,7 @@ conflictRoutes.post('/:id/resolve', payloadSizeLimit(), handleAsync(async (c) =>
 
   const conflict = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         'SELECT * FROM conflicts WHERE id = ? AND tenant_id = ?'
       ).bind(id, tenant.id).first()
       return result as { resolution_level: number; status: string } | null
@@ -190,7 +190,7 @@ conflictRoutes.post('/:id/resolve', payloadSizeLimit(), handleAsync(async (c) =>
   const now = new Date().toISOString()
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'UPDATE conflicts SET status = ?, resolution_notes = ?, resolved_at = ? WHERE id = ?'
     ).bind(finalStatus, body.resolution_notes ?? null, now, id).run(),
     'DATABASE_ERROR',
@@ -203,7 +203,7 @@ conflictRoutes.post('/:id/resolve', payloadSizeLimit(), handleAsync(async (c) =>
 // GET / — list conflicts by status
 conflictRoutes.get('/', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const status = c.req.query('status')
 
   const query = status
@@ -212,8 +212,8 @@ conflictRoutes.get('/', handleAsync(async (c) => {
   const params = status ? [tenant.id, status] : [tenant.id]
   const rows = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(query).bind(...params).all()
-      return result as { results?: { resolution_level: number }[] }
+      const result = await c.env.DB!.prepare(query).bind(...params).all()
+      return result as { results?: Record<string, unknown>[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch conflicts'
@@ -222,7 +222,7 @@ conflictRoutes.get('/', handleAsync(async (c) => {
   // Enrich with resolution level info
   const conflicts = (rows.results || []).map((row) => ({
     ...row,
-    resolution_info: RESOLUTION_LEVELS[row.resolution_level] ?? null,
+    resolution_info: RESOLUTION_LEVELS[(row.resolution_level as number) ?? 1] ?? null,
   }))
 
   return c.json({ conflicts, total: conflicts.length })

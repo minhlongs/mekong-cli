@@ -31,6 +31,7 @@ const DEFAULT_CURRENCY_OPTIONS: Required<CurrencyOptions> = {
 };
 
 const DEFAULT_PERCENTAGE_OPTIONS: Required<PercentageOptions> = {
+  locale: 'en-US',
   minimumFractionDigits: 1,
   maximumFractionDigits: 2,
   style: 'percent',

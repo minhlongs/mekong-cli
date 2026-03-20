@@ -33,8 +33,21 @@ const channelSchema = z.object({
   name: z.string().max(200, 'name must be ≤200 chars').optional(),
 })
 
+const menuItemSchema = z.object({
+  name: z.string().max(200, 'item name must be ≤200 chars'),
+  price: z.number().positive('price must be positive').max(1_000_000, 'price too large'),
+  description: z.string().max(500, 'description must be ≤500 chars').optional(),
+  category: z.string().max(100, 'category must be ≤100 chars').optional(),
+})
+
 const menuSchema = z.object({
-  menu_data: z.record(z.unknown()),
+  menu_data: z.object({
+    categories: z.array(z.string()).max(50, 'max 50 categories').optional(),
+    items: z.array(menuItemSchema).max(500, 'max 500 items'),
+  }).refine(data => {
+    // Ensure total size is reasonable (100KB limit)
+    return JSON.stringify(data).length < 100_000
+  }, 'Menu data exceeds size limit (100KB)'),
 })
 
 type ProfileBody = z.infer<typeof profileSchema>

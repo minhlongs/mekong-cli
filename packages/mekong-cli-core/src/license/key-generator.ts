@@ -16,12 +16,12 @@ export interface KeyGenOptions {
 
 /**
  * Generate a new signed LicenseKey.
- * Format: MEKONG-XXXX-XXXX-XXXX-XXXX (16 hex chars in 4 groups)
+ * Format: RAAS-{TIER}-{16hex} (e.g., RAAS-PRO-3ce302be23c7d707)
  */
 export function generateKey(opts: KeyGenOptions): LicenseKey {
   const { tier, owner, expiryDays = 365 } = opts;
-  const hex = randomBytes(8).toString('hex').toUpperCase(); // 16 hex chars
-  const key = `MEKONG-${hex.slice(0,4)}-${hex.slice(4,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}`;
+  const hex = randomBytes(8).toString('hex'); // 16 hex chars, lowercase
+  const key = `RAAS-${tier.toUpperCase()}-${hex}`;
   const issuedAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + expiryDays * 86_400_000).toISOString();
 

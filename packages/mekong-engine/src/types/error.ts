@@ -340,3 +340,16 @@ export function safeJsonParse<T>(value: string | null | undefined, fallback: T):
     return fallback
   }
 }
+
+/**
+ * Get tenant from context with proper typing
+ * Use this instead of c.get('tenant') to avoid 'unknown' type issues
+ *
+ * @example
+ * ```ts
+ * const tenant = getTenant(c)
+ * ```
+ */
+export function getTenant<B = { tenant: unknown }>(c: HonoContext<B>): B extends { tenant: infer T } ? T : unknown {
+  return c.get('tenant') as B extends { tenant: infer T } ? T : unknown
+}
