@@ -878,6 +878,34 @@ dispatch_worker() {
     return
   fi
 
+  # PRIORITY 0: Read next_commands from company.json (skip brain entirely)
+  local project_dir_p0="${WORKER_DIR[$pane_idx]:-}"
+  if [[ -n "$project_dir_p0" && "$project_dir_p0" != "." ]]; then
+    local cjf="${MEKONG_DIR}/${project_dir_p0}/.mekong/company.json"
+    if [[ -f "$cjf" ]]; then
+      local next_cmd
+      next_cmd=$(python3 -c "
+import json,sys
+try:
+    d=json.load(open('$cjf'))
+    cmds=d.get('next_commands',[])
+    if cmds: print(cmds[0])
+except: pass
+" 2>/dev/null)
+      if [[ -n "$next_cmd" ]]; then
+        local full_cmd="${next_cmd} "Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.""
+        if ! is_duplicate_dispatch "$pane_idx" "$next_cmd"; then
+          log "P${pane_idx} (${name}): COMPANY.JSON → ${next_cmd}"
+          if send_to_pane "$pane_idx" "$full_cmd"; then
+            record_dispatch "$pane_idx" "$next_cmd"
+            log "DELEGATED P${pane_idx} (${name}) — company.json dispatch"
+            return
+          fi
+        fi
+      fi
+    fi
+  fi
+
   # Priority 1: Check for pending mission files matching this worker's project
   local mission_dir="${MEKONG_DIR}/missions"
   if [[ -d "$mission_dir" ]]; then
