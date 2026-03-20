@@ -860,14 +860,16 @@ dispatch_worker() {
   fi
 
   # GATE 1: company.json awareness — /idea → $1M flow
-  local project_dir="${WORKER_DIR[$pane_idx]}"
-  local company_file="${MEKONG_DIR}/${project_dir}/.mekong/company.json"
-  if [[ ! -f "$company_file" && "$project_dir" != "." ]]; then
-    # No company.json → must run /idea first (MANDATORY GATE)
-    log "P${pane_idx} (${name}): NO company.json — dispatching /idea"
-    local fallback_cmd=$(get_fallback_cmd "$pane_idx")
-    send_to_pane "$pane_idx" "$fallback_cmd"
-    return
+  local project_dir="${WORKER_DIR[$pane_idx]:-}"
+  # Skip gate if WORKER_DIR not yet loaded (first cycle race condition)
+  if [[ -n "$project_dir" && "$project_dir" != "." ]]; then
+    local company_file="${MEKONG_DIR}/${project_dir}/.mekong/company.json"
+    if [[ ! -f "$company_file" ]]; then
+      log "P${pane_idx} (${name}): NO company.json at ${project_dir} — dispatching /idea"
+      local fallback_cmd=$(get_fallback_cmd "$pane_idx")
+      send_to_pane "$pane_idx" "$fallback_cmd"
+      return
+    fi
   fi
 
   # LOCK 2: Check pane lock before dispatch
