@@ -14,7 +14,7 @@ constitutionRoutes.use('*', authMiddleware)
 // POST /v1/constitution/check — enforce 4-layer constitution against an agent action
 constitutionRoutes.post('/check', handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const body = await validateJsonBody(c, z.object({
     agent_name: z.string().min(1, 'agent_name is required'),

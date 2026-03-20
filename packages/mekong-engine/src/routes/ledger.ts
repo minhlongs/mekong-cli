@@ -146,7 +146,7 @@ ledgerRoutes.get('/balance', handleAsync(async (c) => {
   const params = code ? [tenant.id, code] : [tenant.id]
   const rowsResult = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(query).bind(...params).all()
+      const result = await c.env.DB!.prepare(query).bind(...params).all()
       return result as { results?: unknown[] }
     },
     'DATABASE_ERROR',
@@ -161,7 +161,7 @@ ledgerRoutes.get('/history', handleAsync(async (c) => {
   const limit = Math.min(parseInt(c.req.query('limit') || '30'), 100)
   const rowsResult = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         `SELECT je.*, GROUP_CONCAT(tl.account_id || ':' || tl.amount || ':' || tl.direction) as lines
          FROM journal_entries je LEFT JOIN transaction_lines tl ON tl.journal_entry_id = je.id
          WHERE je.tenant_id = ? GROUP BY je.id ORDER BY je.posted_at DESC LIMIT ?`

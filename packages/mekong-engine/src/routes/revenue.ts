@@ -166,7 +166,7 @@ revenueRoutes.get('/summary', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         "SELECT code, balance FROM ledger_accounts WHERE tenant_id = ? AND code LIKE 'revenue:%' ORDER BY balance DESC"
       ).bind(tenant.id).all()
       return r as { results?: Array<{ code: string; balance: number }> }

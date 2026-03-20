@@ -39,7 +39,7 @@ contentRoutes.use('*', authMiddleware)
 
 // POST /content/generate — LLM generates 7-14 day content batch as drafts
 contentRoutes.post('/generate', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   let body: GenerateContentBody
@@ -85,7 +85,7 @@ Return JSON array: [{ "day": 1, "content_text": "...", "image_prompt": "..." }, 
     scheduledAt.setDate(scheduledAt.getDate() + (post.day - 1))
 
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         `INSERT INTO content_posts (id, tenant_id, channel, content_text, image_prompt, status, scheduled_at)
        VALUES (?, ?, ?, ?, ?, 'draft', ?)`
       )
@@ -103,7 +103,7 @@ Return JSON array: [{ "day": 1, "content_text": "...", "image_prompt": "..." }, 
 
 // GET /content — list posts, optional ?status= filter
 contentRoutes.get('/', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const status = c.req.query('status')
@@ -111,11 +111,11 @@ contentRoutes.get('/', handleAsync(async (c) => {
 
   let query: D1PreparedStatement
   if (status) {
-    query = c.env.DB.prepare(
+    query = c.env.DB!.prepare(
       'SELECT * FROM content_posts WHERE tenant_id = ? AND status = ? ORDER BY scheduled_at ASC LIMIT ?'
     ).bind(tenant.id, status, limit)
   } else {
-    query = c.env.DB.prepare(
+    query = c.env.DB!.prepare(
       'SELECT * FROM content_posts WHERE tenant_id = ? ORDER BY scheduled_at ASC LIMIT ?'
     ).bind(tenant.id, limit)
   }
@@ -130,7 +130,7 @@ contentRoutes.get('/', handleAsync(async (c) => {
 
 // PATCH /content/:id — approve/reject/edit
 contentRoutes.patch('/:id', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const id = c.req.param('id')
@@ -146,7 +146,7 @@ contentRoutes.patch('/:id', handleAsync(async (c) => {
   }
 
   const existing = await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'SELECT id FROM content_posts WHERE id = ? AND tenant_id = ?'
     )
       .bind(id, tenant.id)
@@ -168,7 +168,7 @@ contentRoutes.patch('/:id', handleAsync(async (c) => {
 
   values.push(id, tenant.id)
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `UPDATE content_posts SET ${fields.join(', ')} WHERE id = ? AND tenant_id = ?`
     )
       .bind(...values)

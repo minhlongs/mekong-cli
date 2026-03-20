@@ -51,7 +51,7 @@ equityRoutes.use('*', authMiddleware)
 // ─── ENTITIES (portfolio companies) ───
 
 equityRoutes.post('/entities', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: CreateEntityBody
   try {
@@ -67,7 +67,7 @@ equityRoutes.post('/entities', payloadSizeLimit(), handleAsync(async (c) => {
   const id = crypto.randomUUID()
   await handleDb(
     async () => {
-      await c.env.DB.prepare(
+      await c.env.DB!.prepare(
         'INSERT INTO equity_entities (id, tenant_id, name, entity_type, total_authorized_shares, jurisdiction) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(id, tenant.id, body.name, body.entity_type || 'portfolio_company',
         body.total_shares || 10000000, body.jurisdiction || 'VN').run()
@@ -80,7 +80,7 @@ equityRoutes.post('/entities', payloadSizeLimit(), handleAsync(async (c) => {
   const classId = crypto.randomUUID()
   await handleDb(
     async () => {
-      await c.env.DB.prepare(
+      await c.env.DB!.prepare(
         'INSERT INTO share_classes (id, entity_id, name, class_type) VALUES (?, ?, ?, ?)'
       ).bind(classId, id, 'Common', 'common').run()
     },
@@ -92,12 +92,12 @@ equityRoutes.post('/entities', payloadSizeLimit(), handleAsync(async (c) => {
 }))
 
 equityRoutes.get('/entities', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare('SELECT * FROM equity_entities WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
+      const r = await c.env.DB!.prepare('SELECT * FROM equity_entities WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
       return r as { results?: any[] }
     },
     'DATABASE_ERROR',
@@ -109,7 +109,7 @@ equityRoutes.get('/entities', handleAsync(async (c) => {
 // ─── GRANTS (issue equity) ───
 
 equityRoutes.post('/grants', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: CreateGrantBody
   try {
@@ -125,7 +125,7 @@ equityRoutes.post('/grants', payloadSizeLimit(), handleAsync(async (c) => {
   const id = crypto.randomUUID()
   await handleDb(
     async () => {
-      await c.env.DB.prepare(
+      await c.env.DB!.prepare(
         `INSERT INTO equity_grants (id, entity_id, stakeholder_id, share_class_id, grant_type, shares, price_per_share, vesting_months, cliff_months, vesting_start_date)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
       ).bind(id, body.entity_id, body.stakeholder_id, body.share_class_id,
@@ -143,12 +143,12 @@ equityRoutes.post('/grants', payloadSizeLimit(), handleAsync(async (c) => {
 
 equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   const entityId = c.req.param('entityId')
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Fix IDOR: Add tenant_id to entity lookup
   const entity = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare('SELECT * FROM equity_entities WHERE id = ? AND tenant_id = ?').bind(entityId, tenant.id).first()
+      const r = await c.env.DB!.prepare('SELECT * FROM equity_entities WHERE id = ? AND tenant_id = ?').bind(entityId, tenant.id).first()
       return r as Record<string, any> | null
     },
     'DATABASE_ERROR',
@@ -159,7 +159,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   // Aggregate grants per stakeholder
   const grants = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(`
+      const r = await c.env.DB!.prepare(`
       SELECT g.stakeholder_id, s.display_name, s.role, sc.name as share_class,
              SUM(CASE WHEN g.grant_type IN ('grant','exercise','conversion') THEN g.shares ELSE 0 END) as total_granted,
              SUM(CASE WHEN g.grant_type IN ('cancellation') THEN g.shares ELSE 0 END) as total_cancelled
@@ -180,7 +180,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   const now = new Date()
   const detailedGrantsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT * FROM equity_grants WHERE entity_id = ? ORDER BY effective_date'
       ).bind(entityId).all()
       return r as { results?: any[] }
@@ -201,7 +201,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   // Total outstanding
   const grantsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(`
+      const r = await c.env.DB!.prepare(`
       SELECT g.stakeholder_id, s.display_name, s.role, sc.name as share_class,
              SUM(CASE WHEN g.grant_type IN ('grant','exercise','conversion') THEN g.shares ELSE 0 END) as total_granted,
              SUM(CASE WHEN g.grant_type IN ('cancellation') THEN g.shares ELSE 0 END) as total_cancelled
@@ -224,7 +224,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   // SAFE notes
   const safesResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT sn.*, s.display_name FROM safe_notes sn JOIN stakeholders s ON s.id = sn.investor_stakeholder_id WHERE sn.entity_id = ?'
       ).bind(entityId).all()
       return r as { results?: any[] }
@@ -246,6 +246,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
 // ─── SAFE NOTES ───
 
 equityRoutes.post('/safe', payloadSizeLimit(), handleAsync(async (c) => {
+  const tenant = c.get('tenant') as Tenant
   let body: CreateSafeBody
   try {
     body = createSafeSchema.parse(await c.req.json())
@@ -260,7 +261,7 @@ equityRoutes.post('/safe', payloadSizeLimit(), handleAsync(async (c) => {
   const id = crypto.randomUUID()
   await handleDb(
     async () => {
-      await c.env.DB.prepare(
+      await c.env.DB!.prepare(
         'INSERT INTO safe_notes (id, entity_id, investor_stakeholder_id, principal_amount, valuation_cap, discount_rate) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(id, body.entity_id, body.investor_stakeholder_id, body.principal_amount,
         body.valuation_cap || null, body.discount_rate || 0).run()
@@ -275,6 +276,7 @@ equityRoutes.post('/safe', payloadSizeLimit(), handleAsync(async (c) => {
 // Convert SAFE to equity
 equityRoutes.post('/safe/:id/convert', payloadSizeLimit(), handleAsync(async (c) => {
   const safeId = c.req.param('id')
+  const tenant = c.get('tenant') as Tenant
 
   let body: ConvertSafeBody
   try {
@@ -289,7 +291,7 @@ equityRoutes.post('/safe/:id/convert', payloadSizeLimit(), handleAsync(async (c)
 
   const safe = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare('SELECT * FROM safe_notes WHERE id = ? AND status = ?').bind(safeId, 'outstanding').first()
+      const r = await c.env.DB!.prepare('SELECT * FROM safe_notes WHERE id = ? AND status = ?').bind(safeId, 'outstanding').first()
       return r as { discount_rate: number; principal_amount: number; valuation_cap?: number; entity_id: string; investor_stakeholder_id: string } | null
     },
     'DATABASE_ERROR',
@@ -305,7 +307,7 @@ equityRoutes.post('/safe/:id/convert', payloadSizeLimit(), handleAsync(async (c)
   if (safe.valuation_cap) {
     const entityResult = await handleDb(
       async () => {
-        const r = await c.env.DB.prepare('SELECT total_authorized_shares FROM equity_entities WHERE id = ? AND tenant_id = ?')
+        const r = await c.env.DB!.prepare('SELECT total_authorized_shares FROM equity_entities WHERE id = ? AND tenant_id = ?')
           .bind(safe.entity_id, tenant.id).first()
         return r as { total_authorized_shares: number } | null
       },
@@ -319,17 +321,17 @@ equityRoutes.post('/safe/:id/convert', payloadSizeLimit(), handleAsync(async (c)
   // Create equity grant + update SAFE status
   const grantId = crypto.randomUUID()
   const batch = [
-    c.env.DB.prepare(
+    c.env.DB!.prepare(
       `INSERT INTO equity_grants (id, entity_id, stakeholder_id, share_class_id, grant_type, shares, price_per_share)
        VALUES (?, ?, ?, ?, 'conversion', ?, ?)`
     ).bind(grantId, safe.entity_id, safe.investor_stakeholder_id, body.share_class_id, shares, effectivePrice),
-    c.env.DB.prepare(
+    c.env.DB!.prepare(
       "UPDATE safe_notes SET status = 'converted', conversion_date = datetime('now'), converted_shares = ? WHERE id = ?"
     ).bind(shares, safeId),
   ]
   await handleDb(
     async () => {
-      await c.env.DB.batch(batch)
+      await c.env.DB!.batch(batch)
     },
     'DATABASE_ERROR',
     'Failed to execute SAFE conversion'

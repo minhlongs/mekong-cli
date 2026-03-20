@@ -55,7 +55,7 @@ marketplaceRoutes.post('/plugins', payloadSizeLimit(), handleAsync(async (c) => 
 
   const id = crypto.randomUUID()
   try {
-    await c.env.DB.prepare(
+    await c.env.DB!.prepare(
       `INSERT INTO marketplace_plugins
         (id, developer_id, tenant_id, name, slug, description, category, version, pricing_type, price_credits, webhook_url, config_schema)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -94,7 +94,7 @@ marketplaceRoutes.get('/plugins', handleAsync(async (c) => {
     : "SELECT * FROM marketplace_plugins WHERE status = 'published' ORDER BY install_count DESC LIMIT 50"
   const params = category ? [category] : []
 
-  const result = await c.env.DB.prepare(query).bind(...params).all()
+  const result = await c.env.DB!.prepare(query).bind(...params).all()
   return c.json({ plugins: result.results, total: result.results?.length || 0 })
 }))
 
@@ -115,7 +115,7 @@ marketplaceRoutes.post('/install', payloadSizeLimit(), handleAsync(async (c) => 
   }
 
   // Verify plugin exists and is published
-  const plugin = await c.env.DB.prepare(
+  const plugin = await c.env.DB!.prepare(
     "SELECT id, name FROM marketplace_plugins WHERE id = ? AND status = 'published'"
   )
     .bind(body.plugin_id)
@@ -124,11 +124,11 @@ marketplaceRoutes.post('/install', payloadSizeLimit(), handleAsync(async (c) => 
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.batch([
-      c.env.DB.prepare(
+    () => c.env.DB!.batch([
+      c.env.DB!.prepare(
         'INSERT INTO plugin_installs (id, plugin_id, tenant_id, installed_by, config) VALUES (?, ?, ?, ?, ?)'
       ).bind(id, body.plugin_id, tenant.id, body.installed_by, JSON.stringify(body.config || {})),
-      c.env.DB.prepare(
+      c.env.DB!.prepare(
         'UPDATE marketplace_plugins SET install_count = install_count + 1 WHERE id = ?'
       ).bind(body.plugin_id),
     ]),
@@ -154,7 +154,7 @@ marketplaceRoutes.post('/review', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'INSERT INTO plugin_reviews (id, plugin_id, reviewer_id, rating, review_text) VALUES (?, ?, ?, ?, ?)'
     )
       .bind(id, plugin_id, reviewer_id, rating, review_text || null)
@@ -164,7 +164,7 @@ marketplaceRoutes.post('/review', payloadSizeLimit(), handleAsync(async (c) => {
   )
 
   // Recalculate and update avg rating
-  const stats = await c.env.DB.prepare(
+  const stats = await c.env.DB!.prepare(
     'SELECT AVG(rating) as avg_rating, COUNT(*) as count FROM plugin_reviews WHERE plugin_id = ?'
   )
     .bind(plugin_id)
@@ -172,7 +172,7 @@ marketplaceRoutes.post('/review', payloadSizeLimit(), handleAsync(async (c) => {
 
   if (stats) {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         'UPDATE marketplace_plugins SET rating_avg = ?, rating_count = ? WHERE id = ?'
       )
         .bind(stats.avg_rating, stats.count, plugin_id)
@@ -195,7 +195,7 @@ marketplaceRoutes.get('/installed', handleAsync(async (c) => {
   const tenant = c.get('tenant')
 
   const result = await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `SELECT pi.id, pi.plugin_id, pi.installed_by, pi.config, pi.installed_at,
             mp.name, mp.slug, mp.category, mp.version, mp.rating_avg
      FROM plugin_installs pi

@@ -81,10 +81,10 @@ async function ensureFundingTables(db: Bindings['DB']) {
 
 // Create funding round
 fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   // Validate tenant exists (defense in depth)
-  await validateTenantExists(c.env.DB, tenant.id)
+  await validateTenantExists(c.env.DB!, tenant.id)
 
   await handleDb(
     () => ensureFundingTables(c.env.DB),
@@ -113,7 +113,7 @@ fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'INSERT INTO funding_rounds (id, tenant_id, title, matching_pool, starts_at, ends_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(id, tenant.id, body.title, body.matching_pool, now.toISOString(), end.toISOString()).run(),
     'DATABASE_ERROR',
@@ -125,7 +125,7 @@ fundingRoutes.post('/rounds', payloadSizeLimit(), handleAsync(async (c) => {
 
 // Add project to round
 fundingRoutes.post('/projects', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   let body: CreateProjectInput
   try {
@@ -139,7 +139,7 @@ fundingRoutes.post('/projects', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Edge case: Validate round exists and is active
   const round = await handleDb(
-    () => c.env.DB.prepare('SELECT id, status FROM funding_rounds WHERE id = ? AND tenant_id = ?')
+    () => c.env.DB!.prepare('SELECT id, status FROM funding_rounds WHERE id = ? AND tenant_id = ?')
       .bind(body.round_id, tenant.id)
       .first(),
     'DATABASE_ERROR',
@@ -156,7 +156,7 @@ fundingRoutes.post('/projects', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'INSERT INTO funding_projects (id, round_id, tenant_id, name, description, author_id) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(id, body.round_id, tenant.id, body.name, body.description || '', body.author_id || null).run(),
     'DATABASE_ERROR',
@@ -181,7 +181,7 @@ fundingRoutes.post('/contribute', payloadSizeLimit(), handleAsync(async (c) => {
   const id = crypto.randomUUID()
   try {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         'INSERT INTO funding_contributions (id, project_id, stakeholder_id, amount) VALUES (?, ?, ?, ?)'
       ).bind(id, body.project_id, body.stakeholder_id, body.amount).run(),
       'DATABASE_ERROR',
@@ -197,7 +197,7 @@ fundingRoutes.post('/contribute', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Update project totals
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'UPDATE funding_projects SET total_contributions = total_contributions + ?, contributor_count = contributor_count + 1 WHERE id = ?'
     ).bind(body.amount, body.project_id).run(),
     'DATABASE_ERROR',
@@ -210,7 +210,8 @@ fundingRoutes.post('/contribute', payloadSizeLimit(), handleAsync(async (c) => {
 // Calculate QF matching: matched = (Σ√ci)² - Σci
 fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(async (c) => {
   const roundId = c.req.param('id')
-  const db = c.env.DB
+  const db = c.env.DB!
+  if (!db) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
 
   const round = await handleDb(
     () => db.prepare('SELECT * FROM funding_rounds WHERE id = ?').bind(roundId).first(),
@@ -281,7 +282,7 @@ fundingRoutes.post('/rounds/:id/calculate', payloadSizeLimit(), handleAsync(asyn
 
 // List rounds
 fundingRoutes.get('/rounds', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
   await handleDb(
@@ -291,7 +292,7 @@ fundingRoutes.get('/rounds', handleAsync(async (c) => {
   )
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare('SELECT * FROM funding_rounds WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
+      const r = await c.env.DB!.prepare('SELECT * FROM funding_rounds WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
       return r as { results?: any[] }
     },
     'DATABASE_ERROR',

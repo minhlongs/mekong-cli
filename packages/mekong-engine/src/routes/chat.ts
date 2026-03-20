@@ -95,20 +95,20 @@ chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
     }
   }
 
-  const channel = await c.env.DB.prepare(
+  const channel = await c.env.DB!.prepare(
     'SELECT ch.*, ch.tenant_id FROM channels ch WHERE ch.type = ? AND ch.external_id = ? AND ch.active = 1'
   ).bind('zalo_oa', body.recipient.id).first()
 
   if (!channel) return c.json({ received: true })
 
   const convId = `zalo_${body.recipient.id}_${body.sender.id}`
-  await c.env.DB.prepare(`
+  await c.env.DB!.prepare(`
     INSERT INTO conversations (id, tenant_id, channel_id, external_user_id, last_message_at)
     VALUES (?, ?, ?, ?, datetime('now'))
     ON CONFLICT(id) DO UPDATE SET last_message_at = datetime('now'), status = 'active'
   `).bind(convId, channel.tenant_id, channel.id, body.sender.id).run()
 
-  await c.env.DB.prepare(
+  await c.env.DB!.prepare(
     'INSERT INTO messages (conversation_id, tenant_id, role, content, metadata) VALUES (?, ?, ?, ?, ?)'
   ).bind(convId, channel.tenant_id, 'user', body.message.text, JSON.stringify({
     msg_id: body.message.msg_id, platform: 'zalo', sender_id: body.sender.id
@@ -196,19 +196,19 @@ chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) =
         }
       }
 
-      const channel = await c.env.DB.prepare(
+      const channel = await c.env.DB!.prepare(
         'SELECT * FROM channels WHERE type = ? AND external_id = ? AND active = 1'
       ).bind('facebook', entry.id).first()
       if (!channel) continue
 
       const convId = `fb_${entry.id}_${event.sender.id}`
-      await c.env.DB.prepare(`
+      await c.env.DB!.prepare(`
         INSERT INTO conversations (id, tenant_id, channel_id, external_user_id, last_message_at)
         VALUES (?, ?, ?, ?, datetime('now'))
         ON CONFLICT(id) DO UPDATE SET last_message_at = datetime('now')
       `).bind(convId, channel.tenant_id, channel.id, event.sender.id).run()
 
-      await c.env.DB.prepare(
+      await c.env.DB!.prepare(
         'INSERT INTO messages (conversation_id, tenant_id, role, content, metadata) VALUES (?, ?, ?, ?, ?)'
       ).bind(convId, channel.tenant_id, 'user', event.message.text, JSON.stringify({
         mid: event.message.mid, platform: 'facebook'

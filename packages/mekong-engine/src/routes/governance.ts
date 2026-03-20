@@ -76,7 +76,7 @@ const nguSuSchema = z.object({
 
 // Register stakeholder
 governanceRoutes.post('/stakeholders', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const parsed = stakeholderSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -93,7 +93,7 @@ governanceRoutes.post('/stakeholders', payloadSizeLimit(), handleAsync(async (c)
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'INSERT INTO stakeholders (id, tenant_id, display_name, email, role, governance_level, voice_credits_monthly) VALUES (?, ?, ?, ?, ?, ?, ?)'
     ).bind(id, tenant.id, parsed.data.display_name, parsed.data.email || null, role, levelMap[role] || 6, voiceCredits).run(),
     'DATABASE_ERROR',
@@ -111,7 +111,7 @@ governanceRoutes.post('/stakeholders', payloadSizeLimit(), handleAsync(async (c)
 
 // List stakeholders
 governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const role = c.req.query('role')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
@@ -121,7 +121,7 @@ governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
   const params = role ? [tenant.id, role, limit] : [tenant.id, limit]
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(query).bind(...params).all()
+      const r = await c.env.DB!.prepare(query).bind(...params).all()
       return r as DbResult<StakeholderRow>
     },
     'DATABASE_ERROR',
@@ -134,7 +134,7 @@ governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
 
 // Create proposal
 governanceRoutes.post('/proposals', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const parsed = proposalSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -153,7 +153,7 @@ governanceRoutes.post('/proposals', payloadSizeLimit(), handleAsync(async (c) =>
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO proposals (id, tenant_id, author_id, title, body, proposal_type, voting_mechanism, status, quorum_pct, voting_starts_at, voting_ends_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'voting', ?, ?, ?)`
     ).bind(id, tenant.id, parsed.data.author_id, parsed.data.title, parsed.data.body, proposalType, mechanism, quorum,
@@ -174,7 +174,7 @@ governanceRoutes.post('/proposals', payloadSizeLimit(), handleAsync(async (c) =>
 
 // List proposals
 governanceRoutes.get('/proposals', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const status = c.req.query('status')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
@@ -184,7 +184,7 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
   const params = status ? [tenant.id, status, limit] : [tenant.id, limit]
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(query).bind(...params).all()
+      const r = await c.env.DB!.prepare(query).bind(...params).all()
       return r as DbResult
     },
     'DATABASE_ERROR',
@@ -196,7 +196,7 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
   for (const p of rowsResult.results || []) {
     const voteStatsResult = await handleDb(
       async () => {
-        const r = await c.env.DB.prepare(
+        const r = await c.env.DB!.prepare(
           `SELECT direction, COUNT(*) as count, SUM(votes_cast) as total_votes
          FROM votes WHERE proposal_id = ? GROUP BY direction`
         ).bind(p.id).all()
@@ -215,7 +215,7 @@ governanceRoutes.get('/proposals', handleAsync(async (c) => {
 
 // Cast vote: cost = credits², votes = √credits
 governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const parsed = voteSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -225,7 +225,7 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Check proposal is in voting state
   const proposal = await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'SELECT * FROM proposals WHERE id = ? AND tenant_id = ? AND status = ?'
     ).bind(parsed.data.proposal_id, tenant.id, 'voting').first(),
     'DATABASE_ERROR',
@@ -241,7 +241,7 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Check stakeholder exists and has enough credits
   const stakeholder = await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'SELECT * FROM stakeholders WHERE id = ? AND tenant_id = ?'
     ).bind(parsed.data.stakeholder_id, tenant.id).first(),
     'DATABASE_ERROR',
@@ -257,7 +257,7 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
   const id = crypto.randomUUID()
   try {
     await handleDb(
-      () => c.env.DB.prepare(
+      () => c.env.DB!.prepare(
         'INSERT INTO votes (id, proposal_id, stakeholder_id, voice_credits_spent, votes_cast, direction) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(id, parsed.data.proposal_id, parsed.data.stakeholder_id, creditsSpent, votesCast, direction).run(),
       'DATABASE_ERROR',
@@ -270,7 +270,7 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
 
   // Update proposal voice_credits_pool
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'UPDATE proposals SET voice_credits_pool = voice_credits_pool + ? WHERE id = ?'
     ).bind(creditsSpent, parsed.data.proposal_id).run(),
     'DATABASE_ERROR',
@@ -290,7 +290,7 @@ governanceRoutes.post('/vote', payloadSizeLimit(), handleAsync(async (c) => {
 
 // Add reputation event
 governanceRoutes.post('/reputation', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const parsed = reputationSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -299,7 +299,7 @@ governanceRoutes.post('/reputation', payloadSizeLimit(), handleAsync(async (c) =
   }
 
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'INSERT INTO reputation_events (stakeholder_id, tenant_id, dimension, points_delta, reason) VALUES (?, ?, ?, ?, ?)'
     ).bind(parsed.data.stakeholder_id, tenant.id, parsed.data.dimension || 'general', parsed.data.points, parsed.data.reason).run(),
     'DATABASE_ERROR',
@@ -308,7 +308,7 @@ governanceRoutes.post('/reputation', payloadSizeLimit(), handleAsync(async (c) =
 
   // Update stakeholder total
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       'UPDATE stakeholders SET reputation_score = reputation_score + ? WHERE id = ? AND tenant_id = ?'
     ).bind(parsed.data.points, parsed.data.stakeholder_id, tenant.id).run(),
     'DATABASE_ERROR',
@@ -320,10 +320,10 @@ governanceRoutes.post('/reputation', payloadSizeLimit(), handleAsync(async (c) =
 
 // Get reputation leaderboard
 governanceRoutes.get('/reputation', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT id, display_name, role, reputation_score, governance_level FROM stakeholders WHERE tenant_id = ? ORDER BY reputation_score DESC LIMIT 20'
       ).bind(tenant.id).all()
       return r as DbResult<StakeholderRow>
@@ -338,7 +338,7 @@ governanceRoutes.get('/reputation', handleAsync(async (c) => {
 
 // Score a portfolio entity
 governanceRoutes.post('/ngu-su', payloadSizeLimit(), handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
 
   const parsed = nguSuSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) {
@@ -358,7 +358,7 @@ governanceRoutes.post('/ngu-su', payloadSizeLimit(), handleAsync(async (c) => {
 
   const id = crypto.randomUUID()
   await handleDb(
-    () => c.env.DB.prepare(
+    () => c.env.DB!.prepare(
       `INSERT INTO ngu_su_scores (id, tenant_id, entity_name, dao_score, thien_score, dia_score, tuong_score, phap_score, terrain, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, tenant.id, parsed.data.entity_name, parsed.data.dao, parsed.data.thien, parsed.data.dia, parsed.data.tuong, parsed.data.phap, terrain, parsed.data.notes || null).run(),
@@ -371,10 +371,10 @@ governanceRoutes.post('/ngu-su', payloadSizeLimit(), handleAsync(async (c) => {
 
 // List scores
 governanceRoutes.get('/ngu-su', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const rowsResult = await handleDb(
     async () => {
-      const r = await c.env.DB.prepare(
+      const r = await c.env.DB!.prepare(
         'SELECT * FROM ngu_su_scores WHERE tenant_id = ? ORDER BY scored_at DESC'
       ).bind(tenant.id).all()
       return r as DbResult<{ entity_name: string; dao_score: number; thien_score: number; dia_score: number; tuong_score: number; phap_score: number; terrain: string; overall: number }>
@@ -388,16 +388,16 @@ governanceRoutes.get('/ngu-su', handleAsync(async (c) => {
 // ─── TREASURY ───
 
 governanceRoutes.get('/treasury', handleAsync(async (c) => {
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   let treasury = await handleDb(
-    () => c.env.DB.prepare('SELECT * FROM treasury WHERE tenant_id = ?').bind(tenant.id).first(),
+    () => c.env.DB!.prepare('SELECT * FROM treasury WHERE tenant_id = ?').bind(tenant.id).first(),
     'DATABASE_ERROR',
     'Failed to fetch treasury'
   )
   if (!treasury) {
     const id = crypto.randomUUID()
     await handleDb(
-      () => c.env.DB.prepare('INSERT INTO treasury (id, tenant_id) VALUES (?, ?)').bind(id, tenant.id).run(),
+      () => c.env.DB!.prepare('INSERT INTO treasury (id, tenant_id) VALUES (?, ?)').bind(id, tenant.id).run(),
       'DATABASE_ERROR',
       'Failed to initialize treasury'
     )
@@ -411,7 +411,7 @@ governanceRoutes.get('/treasury', handleAsync(async (c) => {
 // GET /v1/governance/terrain-auto — auto-gather metrics from DB and classify terrain
 governanceRoutes.get('/terrain-auto', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant')
+  const tenant = c.get('tenant') as Tenant
   const result = await autoClassifyFromDB(c.env.DB, tenant.id)
   return c.json(result)
 }))

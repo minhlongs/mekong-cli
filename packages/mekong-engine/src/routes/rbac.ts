@@ -41,7 +41,7 @@ rbacRoutes.post('/check', handleAsync(async (c) => {
 
   const stakeholder = await handleDb(
     async () => {
-      const result = await c.env.DB.prepare(
+      const result = await c.env.DB!.prepare(
         'SELECT id, role, governance_level FROM stakeholders WHERE id = ? AND tenant_id = ?'
       ).bind(body.stakeholder_id, tenant.id).first()
       return result as { id: string; role: string; governance_level: number } | null
