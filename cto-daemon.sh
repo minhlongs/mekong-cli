@@ -467,8 +467,16 @@ send_to_pane() {
       fi
     fi
   fi
+  # FIX #16: Auto-inject --auto for task commands (skip /compact /clear and menu answers)
+  if [[ "$cmd" == /* ]] && ! echo "$cmd" | grep -qE '^/(compact|clear)(\s|$)' && ! echo "$cmd" | grep -q '\-\-auto'; then
+    cmd="${cmd} --auto"
+  fi
   # FIX: CC CLI Ink TUI needs Escape first to ensure input mode
   # Without this, send-keys produces "not in a mode" error
+  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+  sleep 0.3
+  # FIX #17: Send a second Escape to ensure TUI fully exits any mode (search/copy)
+  # First Escape may exit one mode but leave TUI in transition; the / char gets swallowed
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
   sleep 0.5
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" -l "$cmd"
@@ -485,10 +493,28 @@ launch_pane_cc() {
 
 # ─── ORPHAN NODE CLEANUP (prevents RAM overflow) ───
 # CC CLI spawns node subprocesses. When panes restart/crash, orphans accumulate.
-# This kills node processes NOT attached to any active tmux pane.
+# Also catches: pnpm install fork bombs, zombie tmux send-keys processes.
 cleanup_orphan_nodes() {
   local killed=0
   local MAX_NODE_COUNT=30
+
+  # FIX #13: Kill orphan pnpm install processes (postinstall fork bomb defense)
+  # These can accumulate from postinstall → setup-dev.sh → pnpm install recursion
+  local pnpm_count
+  pnpm_count=$(pgrep -f 'pnpm.*install.*frozen-lockfile' 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$pnpm_count" -gt 3 ]]; then
+    log "⚠️  GUARD: $pnpm_count orphan pnpm install processes — killing all"
+    pkill -9 -f 'pnpm.*install.*frozen-lockfile' 2>/dev/null || true
+    killed=$((killed + pnpm_count))
+  fi
+
+  # FIX #14: Kill zombie tmux send-keys processes (accumulate when panes are busy)
+  local sendkeys_count
+  sendkeys_count=$(pgrep -f 'tmux send-keys' 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$sendkeys_count" -gt 5 ]]; then
+    log "⚠️  GUARD: $sendkeys_count zombie tmux send-keys — killing stale ones"
+    pkill -9 -f 'tmux send-keys' 2>/dev/null || true
+  fi
 
   # FIX #9: only count/kill CC CLI-related node processes (not system-wide)
   local node_count
@@ -844,7 +870,7 @@ build_delegation_task() {
       ;;
     fresh|*)
       # Use project-specific idle command from catalog
-      echo "${idle_cmd} \"${ctx}. Run: ${deploy}. Fix ALL errors. ${constraints}\" --auto"
+      echo "${idle_cmd} \"${ctx}. Run: ${deploy}. Fix ALL errors. ${constraints}\""
       ;;
   esac
 }
@@ -903,6 +929,12 @@ try:
 except: pass
 " 2>/dev/null)
       if [[ -n "$next_cmd" ]]; then
+        # FIX #15: Ensure next_cmd starts with / (same logic as mission files)
+        local first_word
+        first_word=$(echo "$next_cmd" | awk '{print $1}')
+        if [[ "$first_word" != /* ]]; then
+          next_cmd="/cook \"$next_cmd\""
+        fi
         local full_cmd="${next_cmd} "Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.""
         if ! is_duplicate_dispatch "$pane_idx" "$next_cmd"; then
           log "P${pane_idx} (${name}): COMPANY.JSON → ${next_cmd}"
@@ -1009,6 +1041,13 @@ verify_worker() {
   if echo "$output" | tail -5 | grep -qE "Enter to select|↑/↓ to navigate|Esc to cancel"; then
     log "VERIFY P${pane_idx}: SELECTION DIALOG → Enter (pick default)"
     tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
+    return 0
+  fi
+
+  # FIX #18: CC CLI feedback survey — auto-dismiss (option 0) to unblock pane
+  if echo "$output" | tail -5 | grep -qE "How is Claude doing.*session|1: Bad.*2: Fine.*3: Good.*0: Dismiss"; then
+    log "VERIFY P${pane_idx}: FEEDBACK SURVEY → dismissing (0)"
+    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "0" Enter
     return 0
   fi
 

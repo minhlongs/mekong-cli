@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────────────────────────────
+# Alertmanager Configuration
+# For email, SMS (Twilio), and Telegram notifications
+# ─────────────────────────────────────────────────────────────────────
+
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: '${SMTP_HOST:-smtp.sendgrid.net:587}'
+  smtp_from: '${SMTP_FROM:-alerts@algo-trader.local}'
+  smtp_auth_username: '${SMTP_USERNAME:-}'
+  smtp_auth_password: '${SMTP_PASSWORD:-}'
+
+# Templates for alert rendering
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Inhibition rules - prevent alert storms
+inhibit_rules:
+  # If ServiceDown is firing, suppress all other alerts for that instance
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.+'
+    equal: ['instance']
+
+# Routing tree
+route:
+  receiver: 'default-receiver'
+  group_by: ['alertname', 'severity', 'instance']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+  # Child routes for specific alert types
+  routes:
+    # Critical alerts → immediate notification
+    - match:
+        severity: 'critical'
+      receiver: 'critical-receiver'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Circuit breaker alerts → immediate SMS/Telegram
+    - match:
+        alertname: 'CircuitBreakerOpen'
+      receiver: 'circuit-breaker-receiver'
+      group_wait: 5s
+      repeat_interval: 30m
+
+    # Loss limit alerts → email + Telegram
+    - match:
+        alertname: 'DailyLossLimit'
+      receiver: 'loss-limit-receiver'
+      group_wait: 1m
+      repeat_interval: 2h
+
+# Receivers
+receivers:
+  # Default receiver - email only
+  - name: 'default-receiver'
+    email_configs:
+      - to: '${ALERT_EMAIL:-alerts@example.com}'
+        send_resolved: true
+
+  # Critical alerts - email + Telegram
+  - name: 'critical-receiver'
+    email_configs:
+      - to: '${ALERT_EMAIL:-alerts@example.com}'
+        send_resolved: true
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN:-}'
+        chat_id: '${TELEGRAM_CHAT_ID:-}'
+        send_resolved: true
+
+  # Circuit breaker - Telegram + SMS (Twilio via webhook)
+  - name: 'circuit-breaker-receiver'
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN:-}'
+        chat_id: '${TELEGRAM_CHAT_ID:-}'
+        send_resolved: true
+    webhook_configs:
+      - url: 'http://alertmanager-webhook:5001/twilio-sms'
+        send_resolved: true
+
+  # Loss limit - email + Telegram
+  - name: 'loss-limit-receiver'
+    email_configs:
+      - to: '${ALERT_EMAIL:-alerts@example.com}'
+        send_resolved: true
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN:-}'
+        chat_id: '${TELEGRAM_CHAT_ID:-}'
+        send_resolved: true

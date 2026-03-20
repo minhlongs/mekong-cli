@@ -13,7 +13,8 @@ import { pnlRouter } from './routes/pnl';
 import { signalsRouter } from './routes/signals';
 import { adminRouter } from './routes/admin';
 import { healthRouter } from './routes/health';
-import { errorHandler } from './middleware/error-handler';
+import { metricsMiddleware, getMetrics } from '../middleware/prometheus-metrics';
+import { errorHandler } from '../middleware/error-handler';
 
 export interface ApiConfig {
   port: number;
@@ -53,6 +54,9 @@ export class ApiServer {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
 
+    // Prometheus metrics middleware (track all requests)
+    this.app.use(metricsMiddleware);
+
     // Rate limiting
     const limiter = rateLimit({
       windowMs: this.config.rateLimitWindowMs,
@@ -68,7 +72,9 @@ export class ApiServer {
   private setupRoutes(): void {
     // Health checks (no rate limit)
     this.app.use('/health', healthRouter);
-    this.app.use('/metrics', healthRouter);
+
+    // Prometheus metrics endpoint (excluded from rate limiting)
+    this.app.get('/metrics', getMetrics);
 
     // API routes
     this.app.use('/api/trades', tradesRouter);

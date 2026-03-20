@@ -132,6 +132,7 @@ services:
       - '9090:9090'
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - promdata:/prometheus
     healthcheck:
       test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9090/-/healthy']
@@ -196,6 +197,74 @@ services:
         max-size: '10m'
         max-file: '3'
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Alertmanager (Alert Routing & Notifications)
+  # ─────────────────────────────────────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: algo-trader-alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9094'
+      - '--cluster.listen-address='
+    ports:
+      - '9094:9093'
+    volumes:
+      - ./infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanagerdata:/alertmanager
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9093/-/healthy']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - prometheus
+    networks:
+      - algo-trader-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Alert Webhook (SMS/Telegram notifications via Twilio)
+  # ─────────────────────────────────────────────────────────────────────────────
+  alert-webhook:
+    build:
+      context: ./infra/alertmanager
+      dockerfile: Dockerfile.webhook
+    container_name: algo-trader-alert-webhook
+    env_file:
+      - .env
+    environment:
+      WEBHOOK_PORT: '5001'
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
+      TWILIO_TO_NUMBER: ${TWILIO_TO_NUMBER:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    ports:
+      - '5001:5001'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:5001/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - alertmanager
+    networks:
+      - algo-trader-net
+    restart: unless-stopped
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Networks
 # ─────────────────────────────────────────────────────────────────────────────
@@ -217,4 +286,6 @@ volumes:
   promdata:
     driver: local
   grafanadata:
+    driver: local
+  alertmanagerdata:
     driver: local

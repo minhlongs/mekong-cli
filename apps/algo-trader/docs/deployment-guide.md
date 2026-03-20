@@ -1,4 +1,4 @@
-# Deployment Guide — Algo Trader v3.0.0
+# Deployment Guide — Algo-Trader v5.0
 
 ## Zero-Config Quickstart (Recommended)
 
@@ -31,7 +31,7 @@ npm run dev api:serve                # Start API on port 3000
 # Verify
 curl http://localhost:3000/health    # API health
 curl http://localhost:9090           # Prometheus UI
-open http://localhost:3001           # Grafana (admin/admin)
+open http://localhost:3002           # Grafana (admin/admin)
 ```
 
 ## Services
@@ -42,7 +42,9 @@ open http://localhost:3001           # Grafana (admin/admin)
 | postgres | 5432 | PostgreSQL 16 database |
 | redis | 6379 | BullMQ queues, Pub/Sub, rate limiter |
 | prometheus | 9090 | Metrics collection |
-| grafana | 3001 | Monitoring dashboards |
+| alertmanager | 9093 | Alert routing |
+| alert-webhook | 5001 | SMS/Telegram webhook |
+| grafana | 3002 | Monitoring dashboards |
 
 ## Environment Variables
 
@@ -51,17 +53,46 @@ open http://localhost:3001           # Grafana (admin/admin)
 |-----|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
 | `REDIS_URL` | Redis connection string |
-| `BINANCE_API_KEY` | Binance API key |
-| `BINANCE_SECRET` | Binance secret |
+| `POLAR_API_KEY` | Polar.sh API key for licensing |
+| `POLAR_WEBHOOK_SECRET` | Polar.sh webhook secret |
 
-### Optional
+### Database & Redis
 | Var | Default | Description |
 |-----|---------|-------------|
+| `DATABASE_URL` | postgresql://algo_trader:algo_trader_dev@postgres:5432/algo_trader | PostgreSQL connection |
+| `REDIS_URL` | redis://redis:6379 | Redis connection |
+| `POSTGRES_USER` | algo_trader | Database user |
+| `POSTGRES_PASSWORD` | algo_trader_dev | Database password |
+| `POSTGRES_DB` | algo_trader | Database name |
+
+### Application
+| Var | Default | Description |
+|-----|---------|-------------|
+| `NODE_ENV` | production | Environment |
 | `API_PORT` | 3000 | API server port |
+| `METRICS_PORT` | 3001 | Metrics endpoint |
 | `LOG_LEVEL` | info | Logging level |
-| `METRICS_ENABLED` | true | Enable /metrics endpoint |
-| `GRAFANA_PASSWORD` | admin | Grafana admin password |
-| `POSTGRES_PASSWORD` | algo_trader_dev | DB password |
+| `DRY_RUN` | true | Dry-run mode |
+
+### Grafana
+| Var | Default | Description |
+|-----|---------|-------------|
+| `GRAFANA_USER` | admin | Admin username |
+| `GRAFANA_PASSWORD` | admin | Admin password |
+| `GRAFANA_ROOT_URL` | http://localhost:3002 | Root URL |
+
+### Notification Services (Optional)
+| Var | Description |
+|-----|-------------|
+| `SENDGRID_API_KEY` | SendGrid API key for email alerts |
+| `SENDGRID_FROM_EMAIL` | From email address |
+| `SENDGRID_FROM_NAME` | From name |
+| `TWILIO_ACCOUNT_SID` | Twilio account SID |
+| `TWILIO_AUTH_TOKEN` | Twilio auth token |
+| `TWILIO_PHONE_NUMBER` | Twilio phone number |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
+
+See [notification-system.md](./notification-system.md) for setup details.
 
 ## Database Setup
 
@@ -74,6 +105,167 @@ npx prisma migrate deploy
 
 # Seed (optional)
 npx prisma db seed
+```
+
+## Monitoring Stack
+
+Algo-Trader includes a complete monitoring infrastructure with Prometheus, Grafana, and Alertmanager.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Algo-Trader Stack                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────┐     ┌──────────────┐     ┌─────────────────────────────┐ │
+│  │   App    │────▶│  Prometheus  │────▶│      Alertmanager           │ │
+│  │ :3000    │metrics│  :9090     │alerts│      :9093                  │ │
+│  └──────────┘     └──────────────┘     └───────────┬─────────────────┘ │
+│                          │                          │                    │
+│                     ┌────▼────┐              ┌──────▼────────┐         │
+│                     │ Grafana │              │ Alert Webhook │         │
+│                     │ :3002   │              │ :5001         │         │
+│                     └─────────┘              └───────┬────────┘         │
+│                                                      │                   │
+│                    ┌─────────────────────────────────┼───────┐          │
+│              ┌─────▼─────┐                    ┌──────▼──┐  ┌─▼────────┐│
+│              │  Email    │                    │ Telegram│  │  Twilio  ││
+│              │  (SMTP)   │                    │   Bot   │  │   SMS    ││
+│              └───────────┘                    └─────────┘  └──────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Prometheus Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `algo_trader_heap_used_bytes` | Gauge | Heap memory usage |
+| `algo_trader_uptime_seconds` | Gauge | Process uptime |
+| `algo_trader_trades_total` | Counter | Total executed trades |
+| `algo_trader_active_tenants` | Gauge | Active tenant count |
+| `algo_trader_open_positions` | Gauge | Open position count |
+| `algo_trader_circuit_breaker_state` | Gauge | 0=closed, 1=open, 2=half_open |
+| `algo_trader_daily_pnl_usd` | Gauge | Daily P&L |
+| `algo_trader_win_rate_percent` | Gauge | Win rate percentage |
+
+### Alert Rules
+
+| Alert | Severity | Condition | Duration |
+|-------|----------|-----------|----------|
+| CircuitBreakerOpen | critical | circuit_breaker_state == 1 | 1m |
+| DailyLossLimit | warning | daily_pnl_usd < -500 | 5m |
+| HighMemoryUsage | warning | memory > 0.8GB | 5m |
+| ServiceDown | critical | up == 0 | 2m |
+| HighErrorRate | warning | error rate > 5% | 5m |
+| ExchangeLatencyHigh | warning | latency > 2s | 3m |
+
+### Accessing Dashboards
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Grafana | http://localhost:3002 | admin/admin |
+| Prometheus | http://localhost:9090 | None |
+| Alertmanager | http://localhost:9094 | None |
+| Alert Webhook | http://localhost:5001 | None |
+
+### Starting Monitoring Services
+
+```bash
+# Start monitoring stack
+docker compose up -d prometheus grafana alertmanager alert-webhook
+
+# Verify Prometheus is scraping
+curl http://localhost:9090/api/v1/targets
+
+# Check Alertmanager status
+curl http://localhost:9094/api/v2/status
+```
+
+### Testing Alerts
+
+```bash
+# Trigger test alert (memory)
+curl -X POST http://localhost:3000/admin/test/alert/memory
+
+# Trigger test alert (circuit breaker)
+curl -X POST http://localhost:3000/admin/test/alert/circuit-breaker
+```
+
+For detailed monitoring setup, see [infra/MONITORING-README.md](../infra/MONITORING-README.md).
+
+## CI/CD Pipeline
+
+Algo-Trader uses GitHub Actions for automated testing and deployment.
+
+### Pipeline Stages
+
+```
+push → Build & Test → Docker Build & Push → Deploy to VPS → Health Check
+```
+
+### Workflow File
+
+Location: `.github/workflows/deploy.yml`
+
+### Stages
+
+#### 1. Build & Test
+- Runs on: `push`, `pull_request` to `main`
+- Node.js 20, pnpm 8
+- Steps: checkout → install → test → build
+- Timeout: 15 minutes
+
+#### 2. Docker Build & Push
+- Runs on: `push` to `main` (after tests pass)
+- Builds Docker image with SHA and branch tags
+- Pushes to GitHub Container Registry (ghcr.io)
+
+#### 3. Deploy to VPS
+- Runs on: `push` to `main` (after Docker push)
+- SSH deployment to VPS
+- Steps:
+  1. Pull latest code
+  2. Pull Docker image
+  3. Stop old containers
+  4. Start new containers
+  5. Health check wait (30s)
+  6. Verify health endpoint
+
+#### 4. Health Check
+- Runs on: `push` to `main` (after deploy)
+- Verifies production endpoints:
+  - `/health` - API health
+  - `/metrics` - Prometheus metrics
+  - `/grafana/login` - Grafana UI
+
+### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `VPS_HOST` | VPS hostname/IP |
+| `VPS_USER` | SSH username |
+| `SSH_PRIVATE_KEY` | SSH private key for deployment |
+
+### Manual Deployment
+
+```bash
+# Build Docker image
+docker build -f Dockerfile -t algo-trader .
+
+# Run locally
+docker run -p 3000:3000 \
+  -e DATABASE_URL=... \
+  -e REDIS_URL=... \
+  algo-trader
+
+# Deploy to VPS manually
+ssh user@vps-host << 'EOF'
+  cd /opt/algo-trader
+  git pull origin main
+  docker compose pull
+  docker compose up -d
+  docker compose logs -f app
+EOF
 ```
 
 ## Docker Build
@@ -97,20 +289,55 @@ docker run -p 3000:3000 \
 | `/ready` | GET | Readiness probe — 200 when ready, 503 otherwise |
 | `/metrics` | GET | Prometheus metrics (text format) |
 
-## Monitoring
+## Production Deployment
 
-### Prometheus Metrics
-- `algo_trader_heap_used_bytes` — Heap memory
-- `algo_trader_uptime_seconds` — Process uptime
-- `algo_trader_trades_total` — Total executed trades
-- `algo_trader_active_tenants` — Active tenant count
-- `algo_trader_open_positions` — Open position count
-- `algo_trader_circuit_breaker_state` — 0=closed, 1=open, 2=half_open
-- `algo_trader_daily_pnl_usd` — Daily P&L
+### Docker Compose (Single Server)
+```bash
+docker compose -f docker-compose.yml up -d
+```
 
-### Grafana
-- Default datasource: Prometheus (auto-provisioned)
-- Access: `http://localhost:3001` (admin / `GRAFANA_PASSWORD`)
+### Kubernetes
+```yaml
+# Deployment resource limits (recommended)
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+```
+
+### Scaling
+- **Horizontal**: Multiple algo-trader replicas behind load balancer
+- **Redis**: Single instance sufficient for <100 tenants
+- **PostgreSQL**: Read replicas for analytics queries
+
+## Notification Services
+
+Algo-Trader supports multi-channel alerts for usage monitoring and trading events:
+
+| Channel | Provider | Threshold | Description |
+|---------|----------|-----------|-------------|
+| Email | SendGrid | 80%+ | Standard usage alerts |
+| SMS | Twilio | 90%+ | Critical alerts only |
+| Telegram | Bot API | 80%+ | Instant push notifications |
+
+### Quick Setup
+
+```bash
+# Add to .env
+SENDGRID_API_KEY=SG.your_key
+SENDGRID_FROM_EMAIL=alerts@yourdomain.com
+
+TWILIO_ACCOUNT_SID=AC_your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=+1234567890
+
+TELEGRAM_BOT_TOKEN=1234567890:ABCdef...
+```
+
+For complete notification setup and usage, see [notification-system.md](./notification-system.md).
 
 ## Production Deployment
 
@@ -145,5 +372,35 @@ resources:
 | 401 on API calls | Verify API key in `x-api-key` header |
 | Circuit breaker tripped | Check `/metrics` for `algo_trader_circuit_breaker_state` |
 | High memory | Check `algo_trader_heap_used_bytes` in Grafana |
+| Prometheus not scraping | Verify `http://localhost:3000/metrics` responds |
+| Grafana shows no data | Check Prometheus targets at `http://localhost:9090/targets` |
+| Alerts not firing | Check rules at `http://localhost:9090/rules` |
+| Email not sending | Verify `SENDGRID_API_KEY`, check sender verification |
+| SMS failing | Confirm `TWILIO_ACCOUNT_SID` and phone number format |
+| Telegram not responding | Check bot token, ensure bot is started (`/start`) |
 
-Updated: 2026-03-02
+## Production Checklist
+
+Before deploying to production:
+
+- [ ] All environment variables configured
+- [ ] Database migrations applied
+- [ ] SSL certificates configured (reverse proxy)
+- [ ] Monitoring stack verified (Grafana dashboards loading)
+- [ ] Alert thresholds configured
+- [ ] Notification channels tested
+- [ ] Backup strategy implemented
+- [ ] SSH keys rotated
+- [ ] Health checks passing
+- [ ] CI/CD pipeline green
+
+## References
+
+- [Monitoring README](../infra/MONITORING-README.md) — Detailed monitoring setup
+- [Notification System](./notification-system.md) — Alert configuration
+- [System Architecture](./system-architecture.md) — Architecture overview
+- [API Reference](./api-reference.md) — API documentation
+
+---
+
+Updated: 2026-03-20

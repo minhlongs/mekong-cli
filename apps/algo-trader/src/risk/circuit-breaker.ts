@@ -1,16 +1,20 @@
 /**
  * Circuit Breaker
- * Halts trading on anomalies (loss streak, latency spike, volatility)
+ * Halts trading on anomalies (loss streak, latency spike, volatility, drawdown)
+ *
+ * Week 3-4: Risk Management - Enhanced with 5% daily drawdown trigger
  */
 
 import { Redis } from 'ioredis';
 import { getRedisClient } from '../redis';
+import { DrawdownMonitor } from './drawdown-monitor';
 
 export interface CircuitBreakerConfig {
   maxLossStreak: number;
   maxLatencyMs: number;
   maxVolatilityPercent: number;
   cooldownMs: number;
+  maxDailyDrawdown: number; // 5% default
 }
 
 export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
@@ -27,10 +31,12 @@ export class CircuitBreaker {
   private config: CircuitBreakerConfig;
   private state: CircuitState = 'CLOSED';
   private triggeredAt?: number;
+  private drawdownMonitor?: DrawdownMonitor;
 
   constructor(
     redis?: Redis,
-    config?: Partial<CircuitBreakerConfig>
+    config?: Partial<CircuitBreakerConfig>,
+    drawdownMonitor?: DrawdownMonitor
   ) {
     this.redis = redis || getRedisClient();
     this.config = {
@@ -38,8 +44,10 @@ export class CircuitBreaker {
       maxLatencyMs: 1000,
       maxVolatilityPercent: 5.0,
       cooldownMs: 300000, // 5 minutes
+      maxDailyDrawdown: 0.05, // 5% daily drawdown
       ...config,
     };
+    this.drawdownMonitor = drawdownMonitor;
   }
 
   /**
@@ -176,5 +184,25 @@ export class CircuitBreaker {
    */
   async halt(reason: string): Promise<void> {
     await this.trip('Manual halt', reason);
+  }
+
+  /**
+   * Check daily drawdown - trip if exceeds 5%
+   * Week 3-4: Auto-pause on 5% daily drawdown
+   */
+  async checkDailyDrawdown(): Promise<boolean> {
+    if (!this.drawdownMonitor) {
+      return true;
+    }
+
+    const metrics = await this.drawdownMonitor.getMetrics();
+    if (metrics.dailyDrawdown >= this.config.maxDailyDrawdown) {
+      await this.trip(
+        'Daily drawdown breach',
+        `${(metrics.dailyDrawdown * 100).toFixed(2)}% exceeds ${(this.config.maxDailyDrawdown * 100).toFixed(2)}%`
+      );
+      return false;
+    }
+    return true;
   }
 }

@@ -5,6 +5,10 @@
 
 import { EventEmitter } from 'events';
 import { UsageMeteringService, ThresholdAlert } from '../metering/usage-metering-service';
+import { emailService } from '../notifications/email-service';
+import { smsService } from '../notifications/sms-service';
+import { telegramBotService } from '../telegram/bot';
+import { formatAlert, getActionMessage } from '../notifications/alert-formatter';
 
 export interface AlertHandler {
   (alert: ThresholdAlert): Promise<void> | void;
@@ -20,9 +24,37 @@ export interface AlertNotification {
   action?: string;
 }
 
+export interface AlertRecipient {
+  email?: string;
+  phone?: string;
+  telegramChatId?: number;
+}
+
+export interface AlertChannelConfig {
+  email: {
+    enabled: boolean;
+    minThreshold: number; // 80 = send at 80%+
+  };
+  sms: {
+    enabled: boolean;
+    minThreshold: number; // 90 = only send at 90%+
+  };
+  telegram: {
+    enabled: boolean;
+    minThreshold: number; // 80 = send at 80%+
+  };
+}
+
 export class ThresholdAlerts extends EventEmitter {
   private static instance: ThresholdAlerts;
   private handlers: Map<number, AlertHandler[]> = new Map();
+  private recipients: Map<string, AlertRecipient> = new Map(); // licenseKey -> recipient
+  private channelConfig: AlertChannelConfig = {
+    email: { enabled: true, minThreshold: 80 },
+    sms: { enabled: true, minThreshold: 90 },
+    telegram: { enabled: true, minThreshold: 80 },
+  };
+  private initialized: boolean = false;
 
   private constructor() {
     super();
@@ -36,11 +68,40 @@ export class ThresholdAlerts extends EventEmitter {
     return ThresholdAlerts.instance;
   }
 
+  initialize(): void {
+    if (this.initialized) return;
+
+    // Initialize notification services
+    const emailInitialized = emailService.initialize();
+    const smsInitialized = smsService.initialize();
+    const telegramInitialized = telegramBotService.initialize();
+
+    console.log('[ThresholdAlerts] Services initialized:', {
+      email: emailInitialized,
+      sms: smsInitialized,
+      telegram: telegramInitialized,
+    });
+
+    // Start Telegram bot if initialized
+    if (telegramInitialized) {
+      telegramBotService.start().catch(err => {
+        console.error('[ThresholdAlerts] Failed to start Telegram bot:', err);
+      });
+    }
+
+    this.initialized = true;
+  }
+
   private setupDefaultHandlers(): void {
     const meteringService = UsageMeteringService.getInstance();
 
     meteringService.on('threshold_alert', (alert: ThresholdAlert) => {
       this.emit('alert', alert);
+
+      // Dispatch to all notification channels
+      this.dispatchAlert(alert).catch(err => {
+        console.error('[ThresholdAlerts] Failed to dispatch alert:', err);
+      });
 
       const handlers = this.handlers.get(alert.threshold) || [];
       for (const handler of handlers) {
@@ -117,7 +178,14 @@ export class ThresholdAlerts extends EventEmitter {
   }
 
   private generateEmailBody(notification: AlertNotification): string {
-    const urgency = notification.action?.toUpperCase() || 'INFO';
+    const { urgency } = formatAlert({
+      licenseKey: notification.licenseKey,
+      threshold: notification.threshold,
+      currentUsage: notification.currentUsage,
+      dailyLimit: notification.dailyLimit,
+      percentUsed: notification.percentUsed,
+    });
+    const actionMessage = getActionMessage(notification.threshold);
 
     return `
 USAGE THRESHOLD ALERT [${urgency}]
@@ -129,32 +197,125 @@ Daily Limit: ${notification.dailyLimit.toLocaleString()} calls
 Percent Used: ${notification.percentUsed.toFixed(1)}%
 Time: ${notification.timestamp}
 
-${this.getActionMessage(notification)}
+${actionMessage}
 
 Please review your usage and consider upgrading your tier if needed.
     `.trim();
   }
 
   private generateSmsBody(notification: AlertNotification): string {
-    return `USAGE ALERT: ${notification.threshold}% reached. ${notification.currentUsage}/${notification.dailyLimit} calls. ${notification.action?.toUpperCase()}`;
+    const { urgency, shortKey } = formatAlert({
+      licenseKey: notification.licenseKey,
+      threshold: notification.threshold,
+      currentUsage: notification.currentUsage,
+      dailyLimit: notification.dailyLimit,
+      percentUsed: notification.percentUsed,
+    });
+
+    return `USAGE ALERT: ${notification.threshold}% reached. ${notification.currentUsage}/${notification.dailyLimit} calls. ${urgency}`;
   }
 
   private getActionMessage(notification: AlertNotification): string {
-    switch (notification.action) {
-      case 'warn':
-        return 'Your usage is approaching the daily limit.';
-      case 'urgent':
-        return 'Your usage is near the daily limit. Overage charges may apply.';
-      case 'critical':
-        return 'You have reached or exceeded your daily limit. Overage charges are being applied.';
-      default:
-        return 'Please review your usage.';
-    }
+    return getActionMessage(notification.threshold);
   }
 
   logAlert(alert: ThresholdAlert): void {
     const notification = this.createNotification(alert);
     console.log('[THRESHOLD ALERT]', JSON.stringify(notification, null, 2));
+  }
+
+  async dispatchAlert(alert: ThresholdAlert): Promise<void> {
+    const recipient = this.recipients.get(alert.licenseKey);
+    if (!recipient) {
+      console.log(`[ThresholdAlerts] No recipient found for ${alert.licenseKey}`);
+      return;
+    }
+
+    const promises: Promise<boolean>[] = [];
+
+    // Email notification
+    if (
+      this.channelConfig.email.enabled &&
+      alert.threshold >= this.channelConfig.email.minThreshold &&
+      recipient.email
+    ) {
+      promises.push(
+        emailService.sendThresholdAlert(
+          recipient.email,
+          alert.licenseKey,
+          alert.threshold,
+          alert.currentUsage,
+          alert.dailyLimit,
+          alert.percentUsed
+        )
+      );
+    }
+
+    // SMS notification (only for critical thresholds)
+    if (
+      this.channelConfig.sms.enabled &&
+      alert.threshold >= this.channelConfig.sms.minThreshold &&
+      recipient.phone
+    ) {
+      promises.push(
+        smsService.sendThresholdAlert(
+          recipient.phone,
+          alert.licenseKey,
+          alert.threshold,
+          alert.currentUsage,
+          alert.dailyLimit,
+          alert.percentUsed
+        )
+      );
+    }
+
+    // Telegram notification
+    if (
+      this.channelConfig.telegram.enabled &&
+      alert.threshold >= this.channelConfig.telegram.minThreshold &&
+      recipient.telegramChatId
+    ) {
+      promises.push(
+        telegramBotService.sendThresholdAlert(
+          recipient.telegramChatId,
+          alert.licenseKey,
+          alert.threshold,
+          alert.currentUsage,
+          alert.dailyLimit,
+          alert.percentUsed
+        )
+      );
+    }
+
+    const results = await Promise.allSettled(promises);
+    const successCount = results.filter(
+      r => r.status === 'fulfilled' && r.value === true
+    ).length;
+
+    console.log(
+      `[ThresholdAlerts] Dispatched ${successCount}/${results.length} notifications for ${alert.licenseKey} at ${alert.threshold}%`
+    );
+  }
+
+  registerRecipient(licenseKey: string, recipient: AlertRecipient): void {
+    this.recipients.set(licenseKey, recipient);
+    console.log(`[ThresholdAlerts] Registered recipient for ${licenseKey}`);
+  }
+
+  unregisterRecipient(licenseKey: string): void {
+    this.recipients.delete(licenseKey);
+    console.log(`[ThresholdAlerts] Unregistered recipient for ${licenseKey}`);
+  }
+
+  updateChannelConfig(config: Partial<AlertChannelConfig>): void {
+    this.channelConfig = {
+      ...this.channelConfig,
+      ...config,
+      email: { ...this.channelConfig.email, ...config.email },
+      sms: { ...this.channelConfig.sms, ...config.sms },
+      telegram: { ...this.channelConfig.telegram, ...config.telegram },
+    };
+    console.log('[ThresholdAlerts] Updated channel config:', this.channelConfig);
   }
 }
 

@@ -1,12 +1,18 @@
 apiVersion: 1
 
 providers:
-  - name: 'default'
+  # ─────────────────────────────────────────────────────────────────────
+  # Algo Trader Dashboards
+  # ─────────────────────────────────────────────────────────────────────
+  - name: 'algo-trader'
     orgId: 1
     folder: 'Algo Trader'
+    folderUid: 'algo-trader'
     type: file
     disableDeletion: false
     editable: true
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
     options:
-      path: /etc/grafana/provisioning/dashboards
-      foldersFromFilesStructure: false
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

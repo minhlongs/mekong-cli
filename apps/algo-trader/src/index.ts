@@ -1,10 +1,12 @@
 /**
  * Algo Trader - Main entry point
- * Algorithmic trading platform
+ * Algorithmic trading platform with zero-config onboarding
  */
 
 import { Command } from 'commander';
 import { runGruStrategy } from './commands/gru-strategy';
+import { runSetupWizard } from './commands/setup-wizard';
+import { runQuickstart } from './commands/quickstart';
 
 export const version = '1.0.0';
 
@@ -20,7 +22,7 @@ if (!isTest) {
 
   program
     .name('algo-trader')
-    .description('Algorithmic trading bot with ML strategies')
+    .description('Algorithmic trading bot with ML strategies and zero-config onboarding')
     .version(version);
 
   program
@@ -41,6 +43,20 @@ if (!isTest) {
         symbol: options.symbol,
         mode: options.mode as 'live' | 'backtest',
       });
+    });
+
+  program
+    .command('setup')
+    .description('Interactive setup wizard - configure API keys, risk preferences, trading mode')
+    .action(async () => {
+      await runSetupWizard();
+    });
+
+  program
+    .command('quickstart')
+    .description('Zero-config start - instant trading with defaults')
+    .action(async () => {
+      await runQuickstart();
     });
 
   program.parse(process.argv);

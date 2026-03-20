@@ -31,6 +31,15 @@
       "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
       "stack": "nextjs",
       "deploy_cmd": "npm run build"
+    },
+    "4": {
+      "project": "opus-strategic",
+      "dir": "",
+      "model": "claude-opus-4-6",
+      "endpoint": "",
+      "stack": "strategic",
+      "deploy_cmd": "",
+      "note": "Opus uses native claude CLI auth — no DashScope"
     }
   },
   "daemon": {

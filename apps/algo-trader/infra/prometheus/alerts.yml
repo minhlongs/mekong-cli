@@ -1,0 +1,86 @@
+groups:
+  - name: algo-trader-alerts
+    interval: 30s
+    rules:
+      # ─────────────────────────────────────────────────────────────────────
+      # 1. Circuit Breaker Alert - Trading halted due to losses
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state{job="algo-trader"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker is OPEN - Trading halted"
+          description: "Circuit breaker triggered for {{ $labels.instance }}. Trading suspended due to excessive losses."
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Circuit-Breaker-Runbook"
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 2. Daily Loss Limit Alert - Approaching or exceeded loss threshold
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: DailyLossLimit
+        expr: daily_pnl_usd{job="algo-trader"} < -500
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Daily loss limit exceeded"
+          description: "Daily P&L is ${{ $value }} USD, below -$500 threshold for {{ $labels.instance }}"
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Daily-Loss-Limit-Runbook"
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 3. High Memory Usage Alert - Process memory > 80%
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="algo-trader"} / 1073741824 > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Process memory usage is {{ $value | humanizePercentage }} of 1GB limit on {{ $labels.instance }}"
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Memory-Management-Runbook"
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 4. Service Down Alert - App instance unreachable
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: ServiceDown
+        expr: up{job="algo-trader"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Algo-Trader service is DOWN"
+          description: "Instance {{ $labels.instance }} has been unreachable for more than 2 minutes"
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Service-Recovery-Runbook"
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 5. High Error Rate Alert - HTTP 5xx errors > 5%
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="algo-trader", status=~"5.."}[5m])
+            /
+            rate(http_requests_total{job="algo-trader"}[5m])
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanize }}% on {{ $labels.instance }}, exceeding 5% threshold"
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Error-Handling-Runbook"
+
+      # ─────────────────────────────────────────────────────────────────────
+      # 6. Exchange Latency High Alert - API response time > 2s
+      # ─────────────────────────────────────────────────────────────────────
+      - alert: ExchangeLatencyHigh
+        expr: exchange_api_latency_seconds{job="algo-trader"} > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High exchange API latency"
+          description: "Exchange API latency is {{ $value | humanizeDuration }} on {{ $labels.exchange }} ({{ $labels.instance }})"
+          runbook_url: "https://github.com/longtho638-jpg/algo-trader/wiki/Exchange-Latency-Runbook"

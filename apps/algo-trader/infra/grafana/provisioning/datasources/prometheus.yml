@@ -1,9 +1,29 @@
 apiVersion: 1
 
 datasources:
+  # ─────────────────────────────────────────────────────────────────────
+  # Prometheus Datasource
+  # ─────────────────────────────────────────────────────────────────────
   - name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+    editable: true
+    uid: prometheus
+    jsonData:
+      timeInterval: '15s'
+      queryTimeout: '60s'
+      httpMethod: 'POST'
+
+  # ─────────────────────────────────────────────────────────────────────
+  # Alertmanager Datasource (optional - for Grafana alerting)
+  # ─────────────────────────────────────────────────────────────────────
+  - name: Alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
     editable: false
+    uid: alertmanager
+    jsonData:
+      implementation: 'prometheus'

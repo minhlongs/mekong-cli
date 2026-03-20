@@ -13,9 +13,23 @@ const mockRedis = {
   get: vi.fn().mockResolvedValue(null),
   set: vi.fn().mockResolvedValue('OK'),
   del: vi.fn().mockResolvedValue(1),
-  keys: vi.fn().mockResolvedValue([]),
+  keys: vi.fn().mockImplementation(async () => ['key1', 'key2', 'key3']),
   ping: vi.fn().mockResolvedValue('PONG'),
-  info: vi.fn().mockResolvedValue('used_memory:1000000'),
+  info: vi.fn().mockImplementation(async () => {
+    // Return properly formatted Redis INFO response
+    return [
+      '# Server',
+      'redis_version:7.0.0',
+      'uptime_in_seconds:86400',
+      '# Memory',
+      'used_memory:1048576',
+      'used_memory_human:1.00M',
+      'used_memory_rss:2097152',
+      '# Stats',
+      'total_connections_received:100',
+      'total_commands_processed:5000',
+    ].join('\r\n');
+  }),
 };
 
 vi.mock('../../redis', () => ({
@@ -86,9 +100,10 @@ describe('API Server', () => {
       expect(res.body.redis).toBe('ok');
     });
 
-    it('GET /metrics should return system metrics', async () => {
-      const res = await request(app).get('/metrics');
+    it('GET /health/metrics should return system metrics', async () => {
+      const res = await request(app).get('/health/metrics');
 
+      console.log('Metrics response:', res.body);
       expect(res.status).toBe(200);
       expect(res.body.redis).toBeDefined();
       expect(res.body.keys).toBeDefined();
