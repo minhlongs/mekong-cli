@@ -40,22 +40,22 @@ PANE_ROLE_2="cong_binh"    # Build tasks: /cook build, /fix, /code, /backend-api
 PANE_ROLE_3="hien_binh"    # Review tasks: /review, /test, /check-and-commit
 
 # Role-specific fallback tasks (indexed arrays — bash 3.2 compatible)
-ROLE_FB_0_0='/plan hard "Analyze monorepo architecture — packages/ dependency graph and build order"'
-ROLE_FB_0_1='/eng-tech-debt "Audit mekong-cli TypeScript errors and dead code across all packages"'
-ROLE_FB_0_2='/ops-health-sweep "Run health checks on all packages — build, lint, test status"'
+ROLE_FB_0_0='/idea "OpenClaw RaaS Gateway: Robot-as-a-Service platform API. Metered AI agent execution, multi-tenant billing, Cloudflare edge. Target: SaaS founders. Revenue: MCU billing."'
+ROLE_FB_0_1='/cook "Read .mekong/company.json and execute next 5-layer command toward $1M ARR. If no company.json, run /idea first."'
+ROLE_FB_0_2='/studio-strategy "Portfolio analysis: evaluate all apps/ projects for RaaS readiness and $1M ARR potential."'
 ROLE_FB_0_COUNT=3
 
-ROLE_FB_1_0='/plan hard "Analyze mekong-engine architecture — identify gaps for RaaS launch readiness"'
-ROLE_FB_1_1='/cook "Implement missing governance features — check spec vs implementation gaps"'
-ROLE_FB_1_2='/debug "Analyze and fix any TypeScript errors across all packages"'
+ROLE_FB_1_0='/idea "Algo-Trader: AI-powered crypto arbitrage engine. Multi-exchange spread detection, automated execution. Target: institutional traders. Revenue: SaaS + performance fees."'
+ROLE_FB_1_1='/cook "Read .mekong/company.json and execute 5-layer GTM toward $1M ARR. Focus: fix bugs → build features → deploy production."'
+ROLE_FB_1_2='/sales-pipeline-build "Build sales pipeline for current project. ICP, outreach sequences, deal stages."'
 ROLE_FB_1_COUNT=3
 
-ROLE_FB_2_0='/cook "Fix and polish raas-landing — check build, fix errors, improve SEO"'
+ROLE_FB_2_0='/idea "WellNexus: B2B healthcare platform for VN hospitals. Patient management, telemedicine, pharmacy integration. Target: 1000+ private clinics. Revenue: SaaS per-clinic."'
 ROLE_FB_2_1='/cook "Harden mekong-engine API — input validation on all routes"'
 ROLE_FB_2_2='/cook "Build missing frontend components in dashboard pages"'
 ROLE_FB_2_COUNT=3
 
-ROLE_FB_3_0='/review "Review packages/mekong-engine/src/routes/ for code quality and security"'
+ROLE_FB_3_0='/idea "Sophia AI Factory: AI proposal generator for agencies. Auto-generates pitch decks, SOWs, contracts. Target: digital agencies. Revenue: tiered SaaS."'
 ROLE_FB_3_1='/test "Run all tests in packages/mekong-engine — fix any failures"'
 ROLE_FB_3_2='/cook "Add error handling and edge case coverage to API endpoints"'
 ROLE_FB_3_COUNT=3
