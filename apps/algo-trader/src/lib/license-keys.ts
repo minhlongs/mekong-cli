@@ -35,7 +35,38 @@ const TIER_PREFIXES: Record<string, string> = {
   enterprise: 'ent',
 };
 
-const ACTIVATION_SECRET = process.env.LICENSE_ACTIVATION_SECRET || 'algo-trader-beta-2026';
+/**
+ * Get activation secret from environment variable
+ * CRITICAL: Must be set - no fallback for security
+ */
+const ACTIVATION_SECRET = process.env.LICENSE_ACTIVATION_SECRET;
+if (!ACTIVATION_SECRET) {
+  throw new Error('LICENSE_ACTIVATION_SECRET environment variable is required. Generate a secure random string and add it to your .env file.');
+}
+
+/**
+ * Get encryption key from environment variable
+ * Must be 32 characters for AES-256 encryption
+ */
+const ENCRYPTION_KEY = process.env.LICENSE_ENCRYPTION_KEY;
+
+/**
+ * Validate encryption key is present and correct length
+ */
+function getEncryptionKey(): Buffer {
+  if (!ENCRYPTION_KEY) {
+    throw new Error(
+      'LICENSE_ENCRYPTION_KEY is not set. Generate a 32-character key and add it to your .env file.'
+    );
+  }
+  if (ENCRYPTION_KEY.length !== 32) {
+    throw new Error(
+      `LICENSE_ENCRYPTION_KEY must be exactly 32 characters (current: ${ENCRYPTION_KEY.length}). ` +
+        'Generate one with: openssl rand -hex 16'
+    );
+  }
+  return Buffer.from(ENCRYPTION_KEY, 'utf-8');
+}
 
 /**
  * Generate a unique license key
@@ -117,6 +148,42 @@ export function extractTierFromKey(key: string): 'free' | 'pro' | 'enterprise' |
     default:
       return null;
   }
+}
+
+/**
+ * Encrypt license key for secure storage using AES-256-CBC
+ */
+export function encryptLicenseKey(key: string): string {
+  const encryptionKey = getEncryptionKey();
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', encryptionKey, iv);
+
+  let encrypted = cipher.update(key, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+
+  // Return IV + encrypted data (IV needed for decryption)
+  return iv.toString('hex') + ':' + encrypted;
+}
+
+/**
+ * Decrypt license key from storage
+ */
+export function decryptLicenseKey(encrypted: string): string {
+  const encryptionKey = getEncryptionKey();
+  const parts = encrypted.split(':');
+
+  if (parts.length !== 2) {
+    throw new Error('Invalid encrypted license key format');
+  }
+
+  const iv = Buffer.from(parts[0], 'hex');
+  const encryptedData = parts[1];
+
+  const decipher = crypto.createDecipheriv('aes-256-cbc', encryptionKey, iv);
+  let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+
+  return decrypted;
 }
 
 /**
