@@ -113,10 +113,12 @@ governanceRoutes.post('/stakeholders', payloadSizeLimit(), handleAsync(async (c)
 governanceRoutes.get('/stakeholders', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const role = c.req.query('role')
+  const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
+
   const query = role
-    ? 'SELECT * FROM stakeholders WHERE tenant_id = ? AND role = ? ORDER BY governance_level DESC, reputation_score DESC'
-    : 'SELECT * FROM stakeholders WHERE tenant_id = ? ORDER BY governance_level DESC, reputation_score DESC'
-  const params = role ? [tenant.id, role] : [tenant.id]
+    ? 'SELECT * FROM stakeholders WHERE tenant_id = ? AND role = ? ORDER BY governance_level DESC, reputation_score DESC LIMIT ?'
+    : 'SELECT * FROM stakeholders WHERE tenant_id = ? ORDER BY governance_level DESC, reputation_score DESC LIMIT ?'
+  const params = role ? [tenant.id, role, limit] : [tenant.id, limit]
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB.prepare(query).bind(...params).all()
@@ -174,10 +176,12 @@ governanceRoutes.post('/proposals', payloadSizeLimit(), handleAsync(async (c) =>
 governanceRoutes.get('/proposals', handleAsync(async (c) => {
   const tenant = c.get('tenant')
   const status = c.req.query('status')
+  const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
+
   const query = status
-    ? 'SELECT * FROM proposals WHERE tenant_id = ? AND status = ? ORDER BY created_at DESC LIMIT 50'
-    : 'SELECT * FROM proposals WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50'
-  const params = status ? [tenant.id, status] : [tenant.id]
+    ? 'SELECT * FROM proposals WHERE tenant_id = ? AND status = ? ORDER BY created_at DESC LIMIT ?'
+    : 'SELECT * FROM proposals WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?'
+  const params = status ? [tenant.id, status, limit] : [tenant.id, limit]
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB.prepare(query).bind(...params).all()

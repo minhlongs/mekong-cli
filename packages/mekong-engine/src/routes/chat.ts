@@ -8,6 +8,7 @@ import type { Bindings } from '../index'
 import { webhookRateLimit } from '../raas/rate-limit-middleware'
 import { handleAsync, handleDb, createError } from '../types/error'
 import { isDuplicateWebhookEvent, recordWebhookEvent } from '../lib/webhook-utils'
+import { constantTimeCompare } from '../lib/crypto-utils'
 
 // Zod schemas for webhook payloads
 const zaloWebhookSchema = z.object({
@@ -64,7 +65,9 @@ chatRoutes.post('/webhook/zalo', webhookRateLimit(), handleAsync(async (c) => {
     const expectedHex = Array.from(new Uint8Array(expectedSig))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    if (signature !== expectedHex) {
+
+    // Constant-time comparison to prevent timing attacks
+    if (!constantTimeCompare(signature, expectedHex)) {
       return c.json(createError('UNAUTHORIZED', 'Invalid Zalo signature'), 401)
     }
   }
@@ -161,7 +164,9 @@ chatRoutes.post('/webhook/facebook', webhookRateLimit(), handleAsync(async (c) =
     const expectedHex = Array.from(new Uint8Array(expectedSig))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    if (signature !== expectedHex) {
+
+    // Constant-time comparison to prevent timing attacks
+    if (!constantTimeCompare(signature, expectedHex)) {
       return c.json(createError('UNAUTHORIZED', 'Invalid Facebook signature'), 401)
     }
   }

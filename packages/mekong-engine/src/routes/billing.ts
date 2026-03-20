@@ -17,6 +17,7 @@ import {
   emitLicenseEvent,
 } from '../raas/dunning'
 import { requireActiveLicense } from '../raas/license-middleware'
+import { constantTimeCompare } from '../lib/crypto-utils'
 
 const billingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
@@ -95,7 +96,9 @@ billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
     const expectedSig = Array.from(new Uint8Array(sigBuffer))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')
-    if (signature !== expectedSig) {
+
+    // Constant-time comparison to prevent timing attacks
+    if (!constantTimeCompare(signature, expectedSig)) {
       return c.json({ error: 'Invalid webhook signature' }, 401)
     }
   }

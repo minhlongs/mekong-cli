@@ -69,14 +69,22 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tag = c.req.query('tag')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
+  // Validate tag parameter to prevent SQL injection
+  const TAG_PATTERN = /^[a-zA-Z0-9_-\s]+$/
+  if (tag && !TAG_PATTERN.test(tag)) {
+    return c.json(createError('VALIDATION_ERROR', 'Invalid tag format. Only alphanumeric, spaces, hyphens, and underscores allowed'), 400)
+  }
+
   let contacts: Contact[]
   if (tag) {
+    // Use LIKE with proper escaping instead of json_each for safety
+    const escapedTag = tag.replace(/['"%]/g, '')
     const result = await handleDb(
       async () => {
         const r = await c.env.DB.prepare(
-          `SELECT * FROM contacts WHERE tenant_id = ? AND json_each.value = ? LIMIT ?`
+          `SELECT * FROM contacts WHERE tenant_id = ? AND tags LIKE ? ORDER BY last_contact_at DESC LIMIT ?`
         )
-          .bind(tenant.id, tag, limit)
+          .bind(tenant.id, `%"${escapedTag}"%`, limit)
           .all()
         return r as { results?: Contact[] }
       },

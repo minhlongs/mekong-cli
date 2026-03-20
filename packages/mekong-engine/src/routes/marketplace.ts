@@ -4,36 +4,53 @@ import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
 import { payloadSizeLimit } from '../raas/payload-limiter'
 import { handleAsync, handleDb, createError, validateJsonBody } from '../types/error'
+import { z } from 'zod'
 
 type Variables = { tenant: Tenant }
 const marketplaceRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 marketplaceRoutes.use('*', authMiddleware)
+
+// Config schema validation - max depth 3, max 50 keys
+const configSchemaItemSchema = z.object({
+  type: z.enum(['string', 'number', 'boolean', 'select']),
+  label: z.string().max(100),
+  required: z.boolean().optional().default(false),
+  default: z.unknown().optional(),
+  options: z.array(z.string()).max(20).optional(),
+})
+
+const configSchemaSchema = z.record(configSchemaItemSchema).refine(
+  (data) => Object.keys(data).length <= 50,
+  'Config schema must have at most 50 keys'
+)
 
 // POST /v1/marketplace/plugins — publish a plugin
 marketplaceRoutes.post('/plugins', payloadSizeLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json(createError('SERVICE_UNAVAILABLE', 'D1 not configured'), 503)
   const tenant = c.get('tenant')
 
-  let body: {
-    developer_id: string
-    name: string
-    slug: string
-    description?: string
-    category?: string
-    version?: string
-    pricing_type?: string
-    price_credits?: number
-    webhook_url?: string
-    config_schema?: Record<string, unknown>
-  }
-  try {
-    body = await c.req.json()
-  } catch {
-    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
-  }
+  // Define validation schema
+  const pluginSchema = z.object({
+    developer_id: z.string().uuid('developer_id must be a valid UUID'),
+    name: z.string().min(1, 'name is required').max(200, 'name must be ≤200 chars'),
+    slug: z.string().min(1, 'slug is required').max(100, 'slug must be ≤100 chars'),
+    description: z.string().max(500, 'description must be ≤500 chars').optional(),
+    category: z.string().max(100, 'category must be ≤100 chars').optional(),
+    version: z.string().max(20, 'version must be ≤20 chars').optional().default('1.0.0'),
+    pricing_type: z.enum(['free', 'paid', 'freemium']).optional().default('free'),
+    price_credits: z.number().int().positive('price_credits must be positive').max(10_000, 'price too high').optional().default(0),
+    webhook_url: z.string().url('webhook_url must be a valid URL').max(500, 'webhook_url too long').optional(),
+    config_schema: configSchemaSchema.optional(),
+  })
 
-  if (!body.developer_id || !body.name || !body.slug) {
-    return c.json(createError('VALIDATION_ERROR', 'developer_id, name, slug are required'), 400)
+  let body: z.infer<typeof pluginSchema>
+  try {
+    body = pluginSchema.parse(await c.req.json())
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
+    }
+    return c.json(createError('BAD_REQUEST', 'Invalid JSON'), 400)
   }
 
   const id = crypto.randomUUID()
