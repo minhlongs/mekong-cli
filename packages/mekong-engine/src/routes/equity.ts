@@ -3,8 +3,9 @@ import { z } from 'zod'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
 import { authMiddleware } from '../raas/auth-middleware'
-import { createError, handleAsync, handleDb } from '../types/error'
+import { createError, handleAsync, handleDb, HttpError } from '../types/error'
 import { payloadSizeLimit } from '../raas/payload-limiter'
+import { logger } from '../lib/monitoring'
 
 type Variables = { tenant: Tenant }
 
@@ -45,6 +46,53 @@ type CreateGrantBody = z.infer<typeof createGrantSchema>
 type CreateSafeBody = z.infer<typeof createSafeSchema>
 type ConvertSafeBody = z.infer<typeof convertSafeSchema>
 
+// Type definitions for equity entities
+type EquityEntity = {
+  id: string
+  tenant_id: string
+  name: string
+  entity_type: string
+  total_authorized_shares: number
+  jurisdiction: string
+  created_at: string
+}
+
+type EquityGrant = {
+  id: string
+  entity_id: string
+  stakeholder_id: string
+  share_class_id: string
+  grant_type: string
+  shares: number
+  price_per_share: number
+  vesting_months: number
+  cliff_months: number
+  vesting_start_date: string
+  effective_date: string
+}
+
+type SafeNote = {
+  id: string
+  entity_id: string
+  investor_stakeholder_id: string
+  principal_amount: number
+  valuation_cap: number | null
+  discount_rate: number
+  status: string
+  conversion_date: string | null
+  converted_shares: number | null
+  display_name: string
+}
+
+type CapTableHolder = {
+  stakeholder_id: string
+  display_name: string
+  role: string
+  share_class: string
+  total_granted: number
+  total_cancelled: number
+}
+
 const equityRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 equityRoutes.use('*', authMiddleware)
 
@@ -60,7 +108,7 @@ equityRoutes.post('/entities', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    console.error('Failed to parse createEntity request:', { error, tenant_id: tenant.id })
+    logger.error('Failed to parse createEntity request', { error: error instanceof Error ? error.message : String(error), tenant_id: tenant.id })
     throw error
   }
 
@@ -98,7 +146,7 @@ equityRoutes.get('/entities', handleAsync(async (c) => {
   const rowsResult = await handleDb(
     async () => {
       const r = await c.env.DB!.prepare('SELECT * FROM equity_entities WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenant.id, limit).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: EquityEntity[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch entities'
@@ -118,7 +166,7 @@ equityRoutes.post('/grants', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    console.error('Failed to parse createGrant request:', { error, tenant_id: tenant.id })
+    logger.error('Failed to parse createGrant request', { error: error instanceof Error ? error.message : String(error), tenant_id: tenant.id })
     throw error
   }
 
@@ -149,7 +197,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
   const entity = await handleDb(
     async () => {
       const r = await c.env.DB!.prepare('SELECT * FROM equity_entities WHERE id = ? AND tenant_id = ?').bind(entityId, tenant.id).first()
-      return r as Record<string, any> | null
+      return r as EquityEntity | null
     },
     'DATABASE_ERROR',
     'Failed to fetch entity'
@@ -170,7 +218,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
       GROUP BY g.stakeholder_id, sc.name
       ORDER BY total_granted DESC
     `).bind(entityId).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: CapTableHolder[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch cap table grants'
@@ -183,13 +231,13 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
       const r = await c.env.DB!.prepare(
         'SELECT * FROM equity_grants WHERE entity_id = ? ORDER BY effective_date'
       ).bind(entityId).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: EquityGrant[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch grant details'
   )
 
-  const vestingDetails = (detailedGrantsResult.results || []).map((g: any) => {
+  const vestingDetails = (detailedGrantsResult.results || []).map((g: EquityGrant) => {
     if (!g.vesting_months || g.vesting_months === 0) return { ...g, vested_shares: g.shares, vested_pct: 100 }
     const start = new Date(g.vesting_start_date || g.effective_date)
     const monthsElapsed = Math.max(0, (now.getTime() - start.getTime()) / (30.44 * 24 * 60 * 60 * 1000))
@@ -212,13 +260,13 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
       GROUP BY g.stakeholder_id, sc.name
       ORDER BY total_granted DESC
     `).bind(entityId).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: CapTableHolder[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch cap table grants'
   )
 
-  const totalOutstanding = (grantsResult.results || []).reduce((sum: number, g: any) =>
+  const totalOutstanding = (grantsResult.results || []).reduce((sum: number, g: CapTableHolder) =>
     sum + (g.total_granted - g.total_cancelled), 0)
 
   // SAFE notes
@@ -227,7 +275,7 @@ equityRoutes.get('/cap-table/:entityId', handleAsync(async (c) => {
       const r = await c.env.DB!.prepare(
         'SELECT sn.*, s.display_name FROM safe_notes sn JOIN stakeholders s ON s.id = sn.investor_stakeholder_id WHERE sn.entity_id = ?'
       ).bind(entityId).all()
-      return r as { results?: any[] }
+      return r as unknown as { results?: SafeNote[] }
     },
     'DATABASE_ERROR',
     'Failed to fetch SAFE notes'
@@ -254,7 +302,7 @@ equityRoutes.post('/safe', payloadSizeLimit(), handleAsync(async (c) => {
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    console.error('Failed to parse createSafe request:', { error, tenant_id: tenant.id })
+    logger.error('Failed to parse createSafe request', { error: error instanceof Error ? error.message : String(error), tenant_id: tenant.id })
     throw error
   }
 
@@ -285,7 +333,7 @@ equityRoutes.post('/safe/:id/convert', payloadSizeLimit(), handleAsync(async (c)
     if (error instanceof z.ZodError) {
       return c.json(createError('VALIDATION_ERROR', 'Validation failed', error.errors), 400)
     }
-    console.error('Failed to parse convertSafe request:', { error, tenant_id: tenant.id, safeId })
+    logger.error('Failed to parse convertSafe request', { error: error instanceof Error ? error.message : String(error), tenant_id: tenant.id, safeId })
     throw error
   }
 

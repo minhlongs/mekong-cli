@@ -2,6 +2,8 @@
  * Cryptographic utilities for secure data handling
  */
 
+import { logger } from './monitoring'
+
 /**
  * Constant-time string comparison to prevent timing attacks
  * Compares two hex strings in constant time
@@ -112,7 +114,7 @@ export async function decryptPaymentMetadata(
 
     return JSON.parse(new TextDecoder().decode(decrypted))
   } catch (error) {
-    console.error('Failed to decrypt payment metadata:', error)
+    logger.error('Failed to decrypt payment metadata', { error: error instanceof Error ? error.message : String(error) })
     throw new Error('Invalid or tampered payment metadata')
   }
 }

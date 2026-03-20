@@ -48,6 +48,7 @@ export type Bindings = {
   MOMO_SECRET_KEY?: string
   MOMO_ACCESS_KEY?: string
   VNPAY_HASH_SECRET?: string
+  PAYMENT_METADATA_SECRET?: string
 }
 
 // Track server start time for uptime calculation
