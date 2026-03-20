@@ -1,6 +1,5 @@
 """Test API error handling and input validation."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 from src.gateway import app
@@ -97,7 +96,7 @@ class TestWebhookTestValidation:
         """Reject test request with empty URL."""
         response = client.post("/v1/webhook/test", json={"webhook_url": ""})
         assert response.status_code == 200  # Returns success=False
-        assert response.json()["success"] == False
+        assert response.json()["success"] is False
 
     def test_invalid_url_format(self):
         """Reject test request with non-HTTP URL."""
@@ -106,7 +105,7 @@ class TestWebhookTestValidation:
             json={"webhook_url": "ftp://example.com"},
         )
         assert response.status_code == 200  # Returns success=False
-        assert response.json()["success"] == False
+        assert response.json()["success"] is False
 
 
 class TestMissionNotFound:
