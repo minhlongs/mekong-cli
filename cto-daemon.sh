@@ -864,6 +864,8 @@ dispatch_worker() {
   # Skip gate if WORKER_DIR not yet loaded (first cycle race condition)
   if [[ -n "$project_dir" && "$project_dir" != "." ]]; then
     local company_file="${MEKONG_DIR}/${project_dir}/.mekong/company.json"
+    # Fallback: absolute path
+    [[ ! -f "$company_file" ]] && company_file="${HOME}/mekong-cli/${project_dir}/.mekong/company.json"
     if [[ ! -f "$company_file" ]]; then
       log "P${pane_idx} (${name}): NO company.json at ${project_dir} — dispatching /idea"
       local fallback_cmd=$(get_fallback_cmd "$pane_idx")
@@ -882,6 +884,8 @@ dispatch_worker() {
   local project_dir_p0="${WORKER_DIR[$pane_idx]:-}"
   if [[ -n "$project_dir_p0" && "$project_dir_p0" != "." ]]; then
     local cjf="${MEKONG_DIR}/${project_dir_p0}/.mekong/company.json"
+    # Fallback: also check absolute path (daemon bg process path issue)
+    [[ ! -f "$cjf" ]] && cjf="${HOME}/mekong-cli/${project_dir_p0}/.mekong/company.json"
     if [[ -f "$cjf" ]]; then
       local next_cmd
       next_cmd=$(python3 -c "
