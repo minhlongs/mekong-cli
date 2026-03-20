@@ -8,9 +8,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  turbopack: {
-    root: __dirname,
-  },
+  // Disable Turbopack due to workspace root issue
+  // turbopack: {
+  //   root: __dirname,
+  // },
 }
 
 module.exports = nextConfig
