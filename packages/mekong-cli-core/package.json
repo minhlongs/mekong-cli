@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "type": "module",
   "bin": {
-    "mekong": "./dist/cli/index.js"
+    "mekong": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/cli/index.ts --format esm --dts",
