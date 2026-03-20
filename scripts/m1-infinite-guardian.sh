@@ -52,14 +52,14 @@ check_cc_cli_pane() {
   # Check if pane is stuck/idle (waiting for input with no activity)
   if [[ "$last_line" == *"❯"* && "$last_line" != *"⏵⏵"* ]]; then
     # Agent finished or stuck — re-send bootstrap
-    log "🔄 Pane $pane idle — re-sending /bootstrap:auto:parallel"
-    tmux send-keys -t "${TMUX_SESSION}:${pane}" "/bootstrap:auto:parallel" Enter
+    log "🔄 Pane $pane idle — re-sending /bootstrap --auto --parallel"
+    tmux send-keys -t "${TMUX_SESSION}:${pane}" "/bootstrap --auto --parallel" Enter
   elif [[ "$last_line" == *"Context low"* || "$last_line" == *"0% remaining"* ]]; then
     # Context exhausted — compact and restart
     log "🧹 Pane $pane context exhausted — compacting and restarting"
     tmux send-keys -t "${TMUX_SESSION}:${pane}" "/compact" Enter
     sleep 10
-    tmux send-keys -t "${TMUX_SESSION}:${pane}" "/bootstrap:auto:parallel" Enter
+    tmux send-keys -t "${TMUX_SESSION}:${pane}" "/bootstrap --auto --parallel" Enter
   fi
 }
 
