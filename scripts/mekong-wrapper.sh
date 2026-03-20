@@ -10,9 +10,20 @@ source "$MEKONG_ROOT/mekong/adapters/registry.sh"
 TOOL="${MEKONG_TOOL:-auto}" MODEL="${MEKONG_MODEL:-}" CWD="${MEKONG_CWD:-$MEKONG_ROOT}"
 PROMPT="" INTERACTIVE=false ACTION="run"
 
+# Provider→Tool+Model mapping (provider names that aren't CLI binaries)
+_resolve_provider() {
+  case "$1" in
+    qwen)    TOOL="claude"; MODEL="${MODEL:-qwen3.5-plus}";;
+    opus)    TOOL="claude"; MODEL="${MODEL:-claude-opus-4-6-20250901}";;
+    sonnet)  TOOL="claude"; MODEL="${MODEL:-claude-sonnet-4-6-20250514}";;
+    haiku)   TOOL="claude"; MODEL="${MODEL:-claude-haiku-4-5-20251001}";;
+    *)       TOOL="$1";;  # Direct tool name (claude, gemini, etc.)
+  esac
+}
+
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --tool|-t|--provider) TOOL="$2"; shift 2;; --model|-m) MODEL="$2"; shift 2;;
+    --tool|-t) TOOL="$2"; shift 2;; --provider) _resolve_provider "$2"; shift 2;; --model|-m) MODEL="$2"; shift 2;;
     --cwd) CWD="$2"; shift 2;; --interactive|-i) INTERACTIVE=true; shift;;
     --list-tools) ACTION="list"; shift;; --status) ACTION="status"; shift;;
     --help|-h) ACTION="help"; shift;; --quiet|-q) shift;; --) shift; PROMPT="$*"; break;;
