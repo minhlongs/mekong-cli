@@ -1,0 +1,206 @@
+{
+  "version": "2.0.0",
+  "name": "bizplan-os",
+  "title": "Agentic BizPlan OS — Zero to IPO (Consolidated for mekong-cli)",
+  "stages": [
+    {
+      "id": "zero_psf",
+      "name": "Zero → Problem–Solution Fit",
+      "typical_signals": [
+        "Ý tưởng mới, chưa có khách hàng trả tiền.",
+        "Đang thử nghiệm nhiều phiên bản giải pháp, nói chuyện khách hàng nhiều hơn là build tính năng.",
+        "Chưa có mô hình tài chính rõ, chủ yếu là hypothesis."
+      ]
+    },
+    {
+      "id": "pmf_early_scale",
+      "name": "Product–Market Fit → Early Scale",
+      "typical_signals": [
+        "Đã có khách hàng trả tiền liên tục.",
+        "Một số kênh acquisition bắt đầu chứng minh hiệu quả.",
+        "Unit economics ở mức 'chấp nhận được' hoặc đang cải thiện."
+      ]
+    },
+    {
+      "id": "scale_up",
+      "name": "Scale-Up → Growth (Series B/C)",
+      "typical_signals": [
+        "Doanh thu tăng trưởng ổn định theo năm.",
+        "Có tổ chức sale/marketing/ops rõ ràng.",
+        "Bắt đầu quan tâm nhiều đến chuẩn hóa, hệ thống, risk & compliance."
+      ]
+    },
+    {
+      "id": "pre_ipo_ipo",
+      "name": "Pre-IPO → IPO",
+      "typical_signals": [
+        "3 năm BCTC kiểm toán.",
+        "Cấu trúc governance rõ, có board & committee.",
+        "Chuẩn bị hoặc đang làm hồ sơ niêm yết tại HOSE/HNX/SGX/v.v."
+      ]
+    }
+  ],
+  "tri_layer": [
+    {
+      "name": "Business",
+      "label": "[Business]",
+      "focus": "Chiến lược, mô hình kinh doanh, thị trường, sản phẩm, tài chính, vận hành."
+    },
+    {
+      "name": "Agentic",
+      "label": "[Agentic]",
+      "focus": "Vai trò của AI/Agent, quy trình auto, input/output của agent, KPI cho agent."
+    },
+    {
+      "name": "Governance",
+      "label": "[Governance/IPO]",
+      "focus": "Kiểm soát nội bộ, pháp lý, rủi ro, chuẩn IPO, board, audit, compliance."
+    }
+  ],
+  "skills": [
+    {
+      "id": "01_SKILL-Refactor-Old-BizPlan-to-2026-Frame",
+      "title": "SKILL – Refactor Old Business Plan to 2026 Agentic Zero→IPO Frame",
+      "description": "",
+      "mekong_cmd": "/plan"
+    },
+    {
+      "id": "02_SKILL-Agentic-Mapping-and-Design",
+      "title": "SKILL – Agentic Mapping and Design for Business Plan 2026",
+      "description": "",
+      "mekong_cmd": "/cto-architect"
+    },
+    {
+      "id": "03_SKILL-SEA-VN-IPO-Readiness",
+      "title": "SKILL – SEA/VN IPO Readiness Assessment for Business Plan 2026",
+      "description": "",
+      "mekong_cmd": "/founder-ipo"
+    },
+    {
+      "id": "04_SKILL-Gap-Report-and-Roadmap",
+      "title": "SKILL – Gap Report & Roadmap for Business Plan 2026 – Agentic Zero→IPO",
+      "description": "",
+      "mekong_cmd": "/analyst-report"
+    },
+    {
+      "id": "05_SKILL-Business-Model-Patterns-and-Unit-Economics",
+      "title": "Skill – Business Model Patterns & Unit Economics",
+      "description": "Kỹ năng nhận diện pattern mô hình kinh doanh và phác hoạ Unit Economics cốt lõi từ một business idea hoặc Business Plan 2026 – Agentic Zero→IPO.",
+      "mekong_cmd": "/business-revenue-engine"
+    },
+    {
+      "id": "06_SKILL-Customer-Psychology-and-Personas",
+      "title": "Skill – Customer Psychology & Personas (Reiss / Freud / Rogers)",
+      "description": "Kỹ năng phân tích khách hàng mục tiêu ở lớp tâm lý học: phân khúc, đau ẩn, dream state, động cơ theo Steven Reiss, góc nhìn Freud/Rogers và sinh bộ pe",
+      "mekong_cmd": "/design-user-research"
+    },
+    {
+      "id": "07_SKILL-Brand-Positioning-and-Identity",
+      "title": "Skill – Brand Positioning & Identity System",
+      "description": "Kỹ năng chuyển một business idea hoặc Business Plan 2026 thành hệ thống brand positioning & identity (định vị, USP, tagline, voice & tone, guideline c",
+      "mekong_cmd": "/marketing-content-engine"
+    },
+    {
+      "id": "08_SKILL-Content-Pillars-and-Top-of-Funnel",
+      "title": "Skill – Content Pillars & Top-of-Funnel System",
+      "description": "Kỹ năng thiết kế chiến lược nội dung cho Top-of-Funnel (TOF): content pillars, ý tưởng nội dung đa kênh, hook & angle theo persona, kết nối với brand ",
+      "mekong_cmd": "/writer-blog"
+    },
+    {
+      "id": "09_SKILL-Website-and-Landing-Narrative",
+      "title": "Skill – Website & Landing Page Narrative System",
+      "description": "Kỹ năng chuyển brand positioning, psychology và offer thành cấu trúc & nội dung website/landing page tối ưu chuyển đổi (storyline, sections, microcopy",
+      "mekong_cmd": "/frontend-ui-build"
+    },
+    {
+      "id": "10_SKILL-Performance-Ads-and-Intro-Creatives",
+      "title": "Skill – Performance Ads & Intro Creatives System",
+      "description": "Kỹ năng thiết kế bộ creative nền tảng cho paid/organic performance: ad concepts, hooks, copy khung cho Facebook/Instagram/LinkedIn/TikTok/YouTube, kèm",
+      "mekong_cmd": "/marketing-campaign-run"
+    },
+    {
+      "id": "11_SKILL-Adventorial-and-Longform-Storytelling",
+      "title": "Skill – Adventorial & Long-Form Storytelling for Conversion",
+      "description": "Kỹ năng viết bài advertorial / long-form narrative (blog, email dài, bài PR native) để giáo dục, thuyết phục và dẫn traffic/conversion về offer chính,",
+      "mekong_cmd": "/writer-newsletter"
+    },
+    {
+      "id": "12_SKILL-Email-and-Lifecycle-Sequences",
+      "title": "Skill – Email & Lifecycle Sequences (Onboarding, Nurture, Win-back)",
+      "description": "Kỹ năng thiết kế chuỗi email/lifecycle đa giai đoạn: onboarding, nurture, sales, activation, retention và win-back, khớp với business model, hành trìn",
+      "mekong_cmd": "/marketing-campaign-run"
+    },
+    {
+      "id": "13_SKILL-Sales-Process-and-Channels",
+      "title": "Skill – Sales Process & Channels (Online / Offline / B2B / B2C)",
+      "description": "Kỹ năng thiết kế quy trình sales end-to-end và lựa chọn kênh bán hàng phù hợp với mô hình kinh doanh (B2B/B2C/community/platform), đảm bảo gắn chặt vớ",
+      "mekong_cmd": "/sales-pipeline-build"
+    },
+    {
+      "id": "14_SKILL-GTM-Experiments-and-Bullseye",
+      "title": "Skill – Go-To-Market Experiments, Bullseye & Growth Loops",
+      "description": "Kỹ năng thiết kế chiến lược Go-To-Market (GTM) theo style Bullseye, chạy thử nghiệm có kiểm soát, gắn với AARRR & Lean Analytics để tìm channel-fit và",
+      "mekong_cmd": "/growth-experiment"
+    },
+    {
+      "id": "15_SKILL-AARRR-and-Lean-Analytics",
+      "title": "Skill – AARRR Funnel & Lean Analytics Stages OS",
+      "description": "Kỹ năng thiết kế hệ thống chỉ số (metrics OS) theo AARRR & Lean Analytics cho Zero → IPO, giúp chọn đúng North Star, chỉ số đầu vào (input metrics) và",
+      "mekong_cmd": "/analyst-report"
+    },
+    {
+      "id": "16_SKILL-Fundraising-and-VC-Narrative",
+      "title": "Skill – Fundraising, VC Narrative & Investor Deck Zero → IPO",
+      "description": "Kỹ năng thiết kế chiến lược gọi vốn & câu chuyện VC-ready cho startup từ Zero → Pre-IPO, bao gồm: lý do đầu tư, rủi ro, phản biện như VC, và khung sli",
+      "mekong_cmd": "/founder-raise"
+    },
+    {
+      "id": "17_SKILL-Risk-Downside-and-Scenario-OS",
+      "title": "Skill – Risk, Downside & Scenario Operating System",
+      "description": "Kỹ năng xây dựng bản đồ rủi ro, kịch bản downside & playbook ứng phó cho startup từ Zero → IPO, phù hợp bối cảnh VN/SEA và các mô hình có Agentic/AI l",
+      "mekong_cmd": "/ops-disaster-recovery"
+    },
+    {
+      "id": "18_SKILL-Talent-and-Org-Design-OS",
+      "title": "Skill – Talent, Team & Org Design Operating System",
+      "description": "Kỹ năng thiết kế đội ngũ, cấu trúc tổ chức, văn hoá & lộ trình tuyển dụng cho startup từ Zero → IPO, phù hợp bối cảnh VN/SEA và các mô hình có Agentic",
+      "mekong_cmd": "/hr-recruit"
+    },
+    {
+      "id": "19_SKILL-Industry-Patterns-and-IPO-Archetypes-Asia",
+      "title": "Skill – Industry Patterns & IPO Archetypes (VN/SEA)",
+      "description": "Kỹ năng nhận diện pattern ngành, mô hình tăng trưởng & archetype IPO phổ biến tại VN/SEA, dùng để hiệu chỉnh Business Plan & Zero→IPO roadmap theo bối",
+      "mekong_cmd": "/studio-strategy"
+    },
+    {
+      "id": "20_SKILL-Data-Room-and-Investor-Materials-OS",
+      "title": "Skill – Data Room & Investor Materials OS (VN/SEA)",
+      "description": "Kỹ năng thiết kế Data Room & bộ tài liệu nhà đầu tư (deck, memo, KPI, hợp đồng chính) phù hợp từng giai đoạn Seed → Series B → Pre-IPO trong bối cảnh ",
+      "mekong_cmd": "/studio-audit"
+    },
+    {
+      "id": "21_SKILL-Agentic-Execution-and-OKR-OS",
+      "title": "Skill – Agentic Execution & OKR Operating System",
+      "description": "Kỹ năng chuyển Business Plan 2026 thành hệ thống thực thi: OKR, roadmap quý, sprint, Agentic workflow & nhịp vận hành (operating cadence) cho đội ngũ ",
+      "mekong_cmd": "/pm-okr"
+    },
+    {
+      "id": "22_SKILL-Board-Governance-and-IPO-Ready-Structure-OS",
+      "title": "Skill – Board, Governance & IPO-Ready Structure OS",
+      "description": "Kỹ năng thiết kế cấu trúc Board, governance & cơ chế giám sát phù hợp với lộ trình Zero → IPO trong bối cảnh VN/SEA, không thay thế tư vấn pháp lý như",
+      "mekong_cmd": "/legal-compliance-check"
+    },
+    {
+      "id": "23_SKILL-ESG-and-Impact-Readiness-OS",
+      "title": "Skill – ESG, Impact & Sustainability Readiness OS",
+      "description": "Kỹ năng đánh giá & thiết kế khung ESG/Impact/Sustainability cho doanh nghiệp Zero → IPO, phù hợp bối cảnh VN/SEA và yêu cầu ngày càng tăng từ nhà đầu ",
+      "mekong_cmd": "/ops-health-sweep"
+    },
+    {
+      "id": "24_SKILL-Crisis-and-Reputation-OS",
+      "title": "Skill – Crisis, Reputation & Post-IPO Incident OS",
+      "description": "Kỹ năng thiết kế khung quản trị khủng hoảng (crisis), truyền thông & danh tiếng (reputation) xuyên suốt hành trình Zero → IPO, phù hợp bối cảnh số, mạ",
+      "mekong_cmd": "/ops-security-audit"
+    }
+  ]
+}
