@@ -44,6 +44,13 @@ import { conversionAnalytics } from './conversion-analytics';
 import { missionTimeline } from './mission-timeline';
 import { sdkGenerator } from './sdk-generator';
 import { rateLimitDashboard } from './rate-limit-dashboard';
+import { developerPortal } from './developer-portal';
+import { changelog } from './changelog';
+import { tenantImpersonation } from './tenant-impersonation';
+import { tenantExport } from './tenant-export';
+import { sso } from './sso';
+import { statusBadge } from './status-badge';
+import { notificationPreferences } from './notification-preferences';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -79,6 +86,13 @@ export function createRoutes() {
   routes.route('/v1/timeline', missionTimeline);
   routes.route('/sdk', sdkGenerator);
   routes.route('/', rateLimitDashboard);
+  routes.route('/', developerPortal);
+  routes.route('/', changelog);
+  routes.route('/', tenantImpersonation);
+  routes.route('/', tenantExport);
+  routes.route('/', sso);
+  routes.route('/', statusBadge);
+  routes.route('/', notificationPreferences);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -310,6 +324,25 @@ export function createRoutes() {
         '/v1/rate-limits': { get: { summary: 'Tenant rate limit status', tags: ['Rate Limits'], security: [{ bearer: [] }] } },
         '/v1/rate-limits/history': { get: { summary: 'Rate limit hit history', tags: ['Rate Limits'], security: [{ bearer: [] }] } },
         '/admin/rate-limits/violations': { get: { summary: 'Rate limit violations', tags: ['Rate Limits'] } },
+        '/developers': { get: { summary: 'Developer portal', tags: ['Portal'] } },
+        '/changelog': { get: { summary: 'Changelog entries', tags: ['Portal'] } },
+        '/changelog/latest': { get: { summary: 'Latest changelog', tags: ['Portal'] } },
+        '/changelog/rss': { get: { summary: 'Changelog RSS feed', tags: ['Portal'] } },
+        '/admin/impersonate': { post: { summary: 'Impersonate tenant', tags: ['Admin'] } },
+        '/admin/impersonate/active': { get: { summary: 'Active impersonation sessions', tags: ['Admin'] } },
+        '/admin/isolation/violations': { get: { summary: 'Isolation violations', tags: ['Admin'] } },
+        '/v1/export': { get: { summary: 'Export tenant data (GDPR)', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data': { delete: { summary: 'GDPR delete request', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/admin/tenants/{id}/export': { get: { summary: 'Admin export tenant data', tags: ['Admin'] } },
+        '/admin/tenants/{id}/data': { delete: { summary: 'Admin delete tenant data', tags: ['Admin'] } },
+        '/v1/sso/config': { get: { summary: 'SSO config', tags: ['SSO'], security: [{ bearer: [] }] }, post: { summary: 'Update SSO config', tags: ['SSO'], security: [{ bearer: [] }] } },
+        '/v1/sso/metadata': { get: { summary: 'SAML metadata', tags: ['SSO'] } },
+        '/badge/status': { get: { summary: 'Status badge SVG', tags: ['Badges'] } },
+        '/badge/version': { get: { summary: 'Version badge SVG', tags: ['Badges'] } },
+        '/badge/missions': { get: { summary: 'Missions count badge', tags: ['Badges'] } },
+        '/v1/notifications/preferences': { get: { summary: 'Notification preferences', tags: ['Notifications'], security: [{ bearer: [] }] }, put: { summary: 'Update notification preferences', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/channels': { get: { summary: 'Available channels', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/test': { post: { summary: 'Send test notification', tags: ['Notifications'], security: [{ bearer: [] }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
