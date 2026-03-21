@@ -1,13 +1,13 @@
 # @mekong/raas-sdk
 
-Typed TypeScript SDK for the [Mekong RaaS Gateway](https://raas-gateway.agencyos-openclaw.workers.dev).
+TypeScript SDK for the Mekong RaaS (Robot-as-a-Service) API.
 
 - Zero external dependencies (native `fetch`)
 - Full type coverage for all endpoints
-- Built-in retry with exponential backoff (3 attempts)
+- Built-in retry with exponential backoff (default: 3 attempts)
 - Typed error classes per HTTP status
 
-## Install
+## Installation
 
 ```bash
 npm install @mekong/raas-sdk
@@ -18,114 +18,114 @@ npm install @mekong/raas-sdk
 ```typescript
 import { MekongClient } from '@mekong/raas-sdk';
 
-// Auth via JWT (after signup)
-const client = new MekongClient({ jwt: 'your-jwt-token' });
-
-// Auth via API key
-const client = new MekongClient({ apiKey: 'mk_live_...' });
-```
-
-## Signup & Auth
-
-```typescript
+// Create client and signup
 const client = new MekongClient();
 const { token, tenant } = await client.tenants.signup({
   name: 'Acme Corp',
   email: 'admin@acme.com',
 });
-client.setJwt(token); // auto-auth subsequent calls
-```
+client.setJwt(token); // auto-auth all subsequent requests
 
-## Missions
-
-```typescript
-// Submit
+// Submit a mission
 const mission = await client.missions.submit({
   goal: 'Write a blog post about AI trends in 2026',
   complexity: 'standard',
 });
 
 // Poll until done
-let result = await client.missions.poll(mission.id);
-while (result.status === 'pending' || result.status === 'processing') {
+let poll = await client.missions.poll(mission.id);
+while (poll.status === 'pending' || poll.status === 'processing') {
   await new Promise(r => setTimeout(r, 2000));
-  result = await client.missions.poll(mission.id);
+  poll = await client.missions.poll(mission.id);
 }
 
 // Get full result
 const full = await client.missions.get(mission.id);
 console.log(full.result);
-
-// Batch submit (pro+)
-const batch = await client.missions.batch({
-  missions: [
-    { goal: 'Task 1', complexity: 'simple' },
-    { goal: 'Task 2', complexity: 'complex' },
-  ],
-});
-
-// Share publicly
-const { share_url } = await client.missions.share(mission.id);
 ```
 
-## Credits
+## Authentication
+
+Two auth methods — mutually exclusive:
 
 ```typescript
-const { balance } = await client.credits.getBalance();
+// JWT (recommended after signup/login)
+const client = new MekongClient({ jwt: 'eyJhbGciOiJ...' });
 
-// Pre-check cost before submitting
-const check = await client.credits.check({ complexity: 'complex' });
-if (check.can_proceed) { /* ... */ }
+// API Key (for server-to-server)
+const client = new MekongClient({ apiKey: 'mk_live_...' });
 
-// Redeem coupon
-await client.credits.redeem({ code: 'WELCOME50' });
+// Update JWT dynamically after login
+client.setJwt(newToken);
 ```
 
-## Billing
+## Resources
+
+### Missions
 
 ```typescript
-const pricing = await client.billing.getPricing();
-const packs = await client.billing.getCreditPacks();
-
-const { checkout_url } = await client.billing.createCheckout({
-  pack_id: packs[0].id,
-  success_url: 'https://app.example.com/success',
-});
+client.missions.submit(params)        // Submit new mission (1–5 MCU)
+client.missions.get(id)               // Get mission + full result
+client.missions.list(params?)         // List missions (paginated)
+client.missions.poll(id)              // Lightweight status poll
+client.missions.cancel(id)            // Cancel + refund credits
+client.missions.share(id)             // Generate public share URL
+client.missions.batch(params)         // Batch submit (pro+)
+client.missions.listTemplates(cat?)   // Browse mission templates
 ```
 
-## Marketplace
+### Tenants
 
 ```typescript
-const results = await client.marketplace.search({ q: 'blog post', limit: 20 });
-const featured = await client.marketplace.getFeatured();
-await client.marketplace.submitReview(missionId, { rating: 5, comment: 'Great!' });
+client.tenants.signup(params)         // Create account → JWT + 10 credits
+client.tenants.getProfile()           // Get tenant info
+client.tenants.updateSettings(params) // Update webhook URL, notifications
+client.tenants.createApiKey(params?)  // Create API key
+client.tenants.listApiKeys()          // List all API keys
+client.tenants.revokeApiKey(id)       // Revoke API key
+client.tenants.getUsage()             // Usage stats for current period
+client.tenants.getInvoices(params?)   // Credit transaction history
+client.tenants.extendTrial()          // Extend trial period
 ```
 
-## Tenants
+### Credits
 
 ```typescript
-const profile = await client.tenants.getProfile();
-await client.tenants.updateSettings({ webhook_url: 'https://...' });
-
-const { key } = await client.tenants.createApiKey({ name: 'CI bot' });
-const keys = await client.tenants.listApiKeys();
-await client.tenants.revokeApiKey(keys[0].id);
+client.credits.getBalance()           // Current balance + total spent
+client.credits.check(params)          // Pre-check cost before submitting
+client.credits.getHistory()           // Transaction history
+client.credits.redeem(params)         // Redeem coupon code
+client.credits.submitFeedback(params) // Submit feedback for bonus credits
 ```
 
-## Licenses
+### Billing
 
 ```typescript
-const license = await client.licenses.create({ type: 'team', email: 'dev@acme.com' });
-const { valid } = await client.licenses.verify(license.key);
-await client.licenses.activate(license.key);
+client.billing.getPricing()           // Subscription tiers + pricing
+client.billing.getCreditPacks()       // One-time credit packs
+client.billing.createCheckout(params) // Create Stripe checkout session
 ```
 
-## Status & Health
+### Marketplace
 
 ```typescript
-const health = await client.health.check();
-const sys = await client.status.get();
-const incidents = await client.status.getIncidents();
+client.marketplace.search(params?)          // Search public missions
+client.marketplace.getFeatured()            // Featured/trending missions
+client.marketplace.getStats()               // Platform-wide stats
+client.marketplace.getLeaderboard()         // Top referrers
+client.marketplace.getReviews(missionId)    // Reviews for a mission
+client.marketplace.submitReview(id, params) // Submit a review
+```
+
+### System
+
+```typescript
+client.health.check()           // Basic health check
+client.health.deep()            // Deep health + component checks
+client.status.get()             // System status page data
+client.status.getIncidents()    // Active + recent incidents
+client.public.getStats()        // Public platform stats
+client.public.joinWaitlist(email) // Join waitlist
 ```
 
 ## Error Handling
@@ -163,8 +163,8 @@ const client = new MekongClient({
   baseUrl: 'https://raas-gateway.agencyos-openclaw.workers.dev', // default
   jwt: 'your-jwt',
   apiKey: 'mk_live_...',
-  maxRetries: 3,    // retry on 5xx (default: 3)
-  timeoutMs: 30000, // request timeout ms (default: 30s)
+  maxRetries: 3,    // retry on 5xx/network errors (default: 3)
+  timeoutMs: 30000, // request timeout in ms (default: 30s)
 });
 ```
 
