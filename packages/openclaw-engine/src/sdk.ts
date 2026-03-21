@@ -3,6 +3,9 @@
  * Clean TypeScript API for mission orchestration, intelligence, and reliability
  */
 
+import type { EngineModules } from './engine-modules.js';
+import { buildEngineModules } from './engine-module-loader.js';
+
 // --- Types ---
 
 export interface MissionConfig {
@@ -62,6 +65,7 @@ export class OpenClawEngine {
   private missionsFailed = 0;
   private circuitState: 'closed' | 'open' | 'half-open' = 'closed';
   private circuitTimer: ReturnType<typeof setTimeout> | null = null;
+  private _modules: EngineModules | null = null;
 
   constructor(config: Partial<EngineConfig> = {}) {
     this.config = {
@@ -150,6 +154,16 @@ export class OpenClawEngine {
         this.circuitTimer = null;
       }, 30_000);
     }
+  }
+
+  /**
+   * Typed access to underlying sub-module implementations.
+   * Lazily builds the module bag on first access; subsequent calls return the
+   * cached instance. See engine-module-loader.ts for wiring details.
+   */
+  get modules(): EngineModules {
+    if (!this._modules) this._modules = buildEngineModules();
+    return this._modules;
   }
 
   /** Clean up timers. Call when shutting down the engine. */
