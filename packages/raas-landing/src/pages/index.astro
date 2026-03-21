@@ -2,21 +2,21 @@
 import BaseLayout from '../layouts/base-layout.astro';
 
 const features = [
-  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.' },
-  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.' },
-  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.' },
-  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.' },
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.', outcome: 'Không còn khách chờ đợi → tăng tỷ lệ chốt đơn 40%' },
+  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.', outcome: 'Đăng bài đều đặn → tăng reach 2.3x, không tốn thời gian nghĩ ý tưởng' },
+  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.', outcome: 'Khách cũ quay lại 2.3x nhiều hơn → tăng LTV đáng kể' },
+  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.', outcome: 'Ra quyết định dựa trên data → tối ưu chi tiêu marketing 35%' },
 ];
 
 const steps = [
   { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
-  { num: '02', title: 'Kết nối Zalo / FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
+  { num: '02', title: 'Kết nối Zalo/FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
   { num: '03', title: 'AI vận hành tự động', time: '24/7', desc: 'Hệ thống tự học, tự trả lời, tự báo cáo từ phút đầu.' },
 ];
 
 const plans = [
   { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter', price: '$8', period: '/mo', tag: '', features: ['500 credits/tháng', 'AI Receptionist 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Starter', price: '$8', period: '/mo', tag: '', features: ['500 credits/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
   { name: 'Pro', price: '$20', period: '/mo', tag: 'Phổ biến nhất', features: ['2.000 credits/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
   { name: 'Enterprise', price: '$120', period: '/mo', tag: '', features: ['Credits không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
 ];
@@ -292,12 +292,12 @@ const breadcrumbSchema = {
 ---
 
 <BaseLayout
-  title="OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động | Tăng 35% Doanh Thu"
-  description="AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày. 500+ doanh nghiệp Việt tin dùng. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
+  title="OpenClaw — AI Làm Việc Thay Bạn 24/7 | Tự Động 100%, Trả Lời Trong 3 Giây"
+  description="AI Receptionist cho Zalo & Facebook — CRM thông minh — Tạo content tự động. Miễn phí 14 ngày, không cần thẻ tín dụng. 500+ doanh nghiệp Việt tin dùng. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
   lang="vi"
   type="website"
   canonical="/"
-  keywords="AI tự động hóa, tự động hóa doanh nghiệp, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam, AI Receptionist, Zalo automation, Facebook automation, phần mềm CRM, chatbot Zalo, trả lời tự động, tăng doanh thu, tiết kiệm thời gian, AI marketing, business automation Vietnam"
+  keywords="AI tự động hóa, AI Receptionist, Zalo automation, Facebook automation, CRM thông minh, tạo content tự động, trả lời khách 24/7, tăng doanh thu, tiết kiệm thời gian, business automation Vietnam, SaaS Vietnam, Polar.sh"
   ogTitle="OpenClaw — AI Làm Việc Thay Bạn 24/7 | Tăng 35% Doanh Thu"
   ogDescription="AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. 500+ doanh nghiệp Việt tin dùng. Dùng thử miễn phí 14 ngày."
   twitterTitle="OpenClaw — AI Vận Hành Doanh Nghiệp 24/7"
@@ -329,7 +329,7 @@ const breadcrumbSchema = {
         <!-- Main Hero Badge -->
         <div class="hero-badge animate-in" style="margin-bottom:24px;">
           <span class="badge-icon" aria-hidden="true">✨</span>
-          <span class="badge-text">AI Receptionist cho Zalo & Facebook — Trả lời trong 3 giây</span>
+          <span class="badge-text">AI Receptionist cho Zalo & Facebook — CRM thông minh — Tạo content tự động</span>
         </div>
 
         <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
@@ -338,7 +338,7 @@ const breadcrumbSchema = {
         </h1>
 
         <p class="hero-description animate-in" style="margin-bottom:28px;">
-          Tiết kiệm <span class="highlight">20+ giờ/tuần</span> · Tăng <span class="highlight">35% doanh thu</span> · CRM thông minh · Tạo content tự động
+          MIễn phí 14 ngày, không cần thẻ tín dụng · 500+ doanh nghiệp Việt tin dùng · Phản hồi trong 3 giây
         </p>
 
         <!-- Enhanced CTA Buttons with Stronger Animations -->
@@ -370,6 +370,18 @@ const breadcrumbSchema = {
           <span class="trust-badge" role="listitem">
             <span class="trust-icon" aria-hidden="true">✓</span>
             <span>Không cần thẻ tín dụng</span>
+          </span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">⚡</span>
+            <span>Setup 2 phút</span>
+          </span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">🏆</span>
+            <span>Top 1 AI VN 2025</span>
+          </span>
+          <span class="trust-badge" role="listitem">
+            <span class="trust-icon" aria-hidden="true">⭐</span>
+            <span>4.9/5 từ 500+ reviews</span>
           </span>
         </div>
 
@@ -470,6 +482,66 @@ const breadcrumbSchema = {
     </div>
   </section>
 
+  <!-- VALUE PROPOSITION -->
+  <section style="background:var(--md-surface-container);">
+    <div class="container">
+      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
+        <div class="badge" style="margin-bottom:16px;">Giá trị cốt lõi</div>
+        <h2 class="headline">OpenClaw không phải <span class="gradient-text">chatbot</span>. Là nhân viên AI thực thụ.</h2>
+      </div>
+      <div class="comparison-table animate-on-scroll">
+        <div class="comparison-header">
+          <div class="comparison-col before">
+            <span class="comparison-label">Trước (Không có AI)</span>
+          </div>
+          <div class="comparison-col after">
+            <span class="comparison-label">Sau (Có OpenClaw)</span>
+          </div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-col before">
+            <span class="comparison-icon" aria-hidden="true">❌</span>
+            <span>Trả lời khách chậm → mất đơn hàng</span>
+          </div>
+          <div class="comparison-col after">
+            <span class="comparison-icon" aria-hidden="true">✅</span>
+            <span>Phản hồi trong 3s → chốt đơn ngay</span>
+          </div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-col before">
+            <span class="comparison-icon" aria-hidden="true">❌</span>
+            <span>Content đăng manual → không đều</span>
+          </div>
+          <div class="comparison-col after">
+            <span class="comparison-icon" aria-hidden="true">✅</span>
+            <span>Lịch 7 ngày tự động → đều đặn mỗi ngày</span>
+          </div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-col before">
+            <span class="comparison-icon" aria-hidden="true">❌</span>
+            <span>Khách cũ không remarketing → mất cơ hội</span>
+          </div>
+          <div class="comparison-col after">
+            <span class="comparison-icon" aria-hidden="true">✅</span>
+            <span>CRM thông minh → gợi ý đúng lúc</span>
+          </div>
+        </div>
+        <div class="comparison-row">
+          <div class="comparison-col before">
+            <span class="comparison-icon" aria-hidden="true">❌</span>
+            <span>Báo cáo thủ công → sai số, chậm</span>
+          </div>
+          <div class="comparison-col after">
+            <span class="comparison-icon" aria-hidden="true">✅</span>
+            <span>Dashboard real-time → quyết định nhanh</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FEATURES -->
   <section id="features" style="background:var(--md-surface);">
     <div class="container">
@@ -484,6 +556,7 @@ const breadcrumbSchema = {
             <div class="icon-container">{f.icon}</div>
             <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:10px;">{f.title}</h3>
             <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.65;">{f.desc}</p>
+            <p style="color:var(--md-primary);font-size:0.85rem;font-weight:500;margin-top:12px;">{f.outcome}</p>
           </div>
         ))}
       </div>
@@ -701,6 +774,76 @@ const breadcrumbSchema = {
 
   <style>
     details[open] summary svg { transform: rotate(180deg); }
+
+    /* Value Proposition Comparison Table */
+    .comparison-table {
+      background: var(--md-surface);
+      border-radius: var(--md-radius);
+      border: 1px solid var(--md-outline);
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: linear-gradient(135deg, rgba(0,188,212,0.1), rgba(124,77,255,0.1));
+      border-bottom: 2px solid var(--md-outline);
+    }
+    .comparison-col {
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .comparison-col.before {
+      background: rgba(244, 67, 54, 0.05);
+    }
+    .comparison-col.after {
+      background: rgba(76, 175, 80, 0.05);
+      border-left: 1px solid var(--md-outline);
+    }
+    .comparison-label {
+      font-weight: 700;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .comparison-col.before .comparison-label {
+      color: #f44336;
+    }
+    .comparison-col.after .comparison-label {
+      color: #4caf50;
+    }
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--md-outline);
+    }
+    .comparison-row:last-child {
+      border-bottom: none;
+    }
+    .comparison-row:nth-child(odd) {
+      background: rgba(0,0,0,0.02);
+    }
+    .comparison-icon {
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
+    .comparison-col {
+      padding: 20px 24px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      .comparison-header,
+      .comparison-row {
+        grid-template-columns: 1fr;
+      }
+      .comparison-col.after {
+        border-left: none;
+        border-top: 1px solid var(--md-outline);
+      }
+    }
   </style>
 
 </BaseLayout>
