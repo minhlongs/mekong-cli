@@ -25,6 +25,7 @@ import type { WorkerDeps } from '../agents/worker.js';
 import type { SopRun } from '../types/sop.js';
 import { LicenseGate } from '../license/gate.js';
 import type { LicenseTier } from '../license/types.js';
+import { OpenClawEngine } from '@openclaw/engine';
 
 export interface EngineOptions {
   configOverrides?: Partial<MekongConfig>;
@@ -41,6 +42,7 @@ export class MekongEngine {
   budget!: BudgetTracker;
   license!: LicenseGate;
   gateway!: Gateway;
+  openclaw!: OpenClawEngine;
   private initialized = false;
   private currentTier: LicenseTier = 'free';
 
@@ -90,6 +92,14 @@ export class MekongEngine {
     // Gateway — ROIaaS command routing with delegation chain
     this.gateway = new Gateway(this);
 
+    // OpenClaw Engine — mission orchestration, circuit breaker, AGI scoring
+    this.openclaw = new OpenClawEngine({
+      maxConcurrency: this.config.agents.max_iterations,
+      defaultTimeout: (this.config.agents.timeout_seconds ?? 300) * 1000,
+      enableLearning: true,
+      enableCircuitBreaker: true,
+    });
+
     // License gate — non-blocking background check
     this.license = new LicenseGate();
     this.initialized = true;
@@ -114,6 +124,11 @@ export class MekongEngine {
     this.ensureInitialized();
     await this.session.append({ type: 'user_input', content: input });
 
+    // OpenClaw complexity classification drives timeout and retry strategy
+    const complexity = this.openclaw.classifyComplexity(input);
+    const timeoutMultiplier = complexity === 'epic' ? 3 : complexity === 'complex' ? 2 : 1;
+    const maxRetries = complexity === 'trivial' ? 1 : 3;
+
     const task = {
       id: `task-${Date.now()}`,
       description: input,
@@ -121,16 +136,24 @@ export class MekongEngine {
       priority: 'normal' as const,
       inputs: {},
       expectedOutputs: [],
-      timeout: this.config.agents.timeout_seconds,
+      timeout: (this.config.agents.timeout_seconds ?? 300) * timeoutMultiplier,
       retryCount: 0,
-      maxRetries: 3,
+      maxRetries,
     };
+
+    // Track mission through OpenClaw for health metrics and circuit breaking
+    const mission = await this.openclaw.submitMission({ goal: input, complexity });
 
     const plan = this.orchestrator.plan([task]);
     const result = await this.orchestrator.execute(plan, 'default');
     const content = result.results.map(r => r.payload.content).join('\n');
 
-    await this.session.append({ type: 'agent_response', content });
+    await this.session.append({
+      type: 'agent_response',
+      content,
+      missionId: mission.id,
+      creditsUsed: mission.creditsUsed,
+    } as any);
     return content;
   }
 
@@ -151,8 +174,9 @@ export class MekongEngine {
     return run;
   }
 
-  /** Get engine status */
+  /** Get engine status including OpenClaw health metrics */
   getStatus() {
+    const openclawHealth = this.initialized ? this.openclaw.getHealth() : null;
     return {
       initialized: this.initialized,
       providers: this.initialized ? this.llm.getProviders() : [],
@@ -160,11 +184,18 @@ export class MekongEngine {
       sessionId: this.initialized ? this.session.sessionId : null,
       usage: this.initialized ? this.llm.getUsageSummary() : null,
       tier: this.currentTier,
+      openclaw: openclawHealth ? {
+        missionsCompleted: openclawHealth.missionsCompleted,
+        agiScore: openclawHealth.agiScore,
+        circuitBreaker: openclawHealth.circuitBreakerState,
+        uptime: openclawHealth.uptime,
+      } : null,
     };
   }
 
   /** Shutdown cleanly */
   async shutdown(): Promise<void> {
+    this.openclaw?.destroy();
     emit('engine:stopped', {});
     this.initialized = false;
   }

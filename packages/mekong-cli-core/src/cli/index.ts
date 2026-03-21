@@ -29,6 +29,7 @@ import { registerCloudAuthCommand } from './commands/cloud-auth.js';
 import { registerCloudMissionCommand } from './commands/cloud-missions.js';
 import { registerCloudBillingCommand } from './commands/cloud-billing.js';
 import { registerCloudRunCommand } from './commands/cloud-run.js';
+import { registerRaasDemoCommand } from './commands/raas-demo.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -90,6 +91,7 @@ export async function main(argv?: string[]): Promise<void> {
   registerCloudMissionCommand(program);
   registerCloudBillingCommand(program);
   registerCloudRunCommand(program);
+  registerRaasDemoCommand(program, engine);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
