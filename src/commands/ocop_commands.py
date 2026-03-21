@@ -156,14 +156,10 @@ def export_listing(
     ) as progress:
         task = progress.add_task(f"Generating {target} listing...", total=None)
 
-<<<<<<< HEAD
-        # Generate AI-powered listing
-        listing = _generate_listing(target, product_data)
-=======
         # TECH-DEBT: OCOP-002 - Integrate with LLM client for actual listing generation
         # See: docs/TECHNICAL_DEBT_TODO.md
-        listing = _generate_listing_stub(target, product_data)
->>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
+        # Generate AI-powered listing
+        listing = _generate_listing(target, product_data)
 
         progress.update(task, description="Listing generated!")
 
@@ -350,9 +346,12 @@ def _display_listing(listing: dict, target: str, dry_run: bool) -> None:
     console.print(table)
 
 
-<<<<<<< HEAD
 def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
     """Generate AI-powered export listing using LLM client.
+
+    TECH-DEBT: OCOP-002 - Integrate with LLM client for actual listing generation
+    See: docs/TECHNICAL_DEBT_TODO.md
+    Currently uses fallback listing as stub.
 
     Creates platform-optimized B2B listings for:
     - Amazon, Alibaba, Shopee, Lazada, Tiki, Grab, Sendo
@@ -364,109 +363,13 @@ def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
     - Shipping terms
     - Certification highlights
     """
-    client = get_client()
-
-    # Platform-specific optimization prompts
-    platform_configs = {
-        "amazon": {
-            "title_max": 200,
-            "focus": "Premium quality, consumer-friendly, detailed specs",
-            "terms": "FBA, Prime eligible language",
-        },
-        "alibaba": {
-            "title_max": 128,
-            "focus": "B2B wholesale, factory direct, bulk pricing",
-            "terms": "FOB, CIF, MOQ emphasis",
-        },
-        "shopee": {
-            "title_max": 100,
-            "focus": "Southeast Asia market, competitive pricing",
-            "terms": "Free shipping, local warehouse",
-        },
-        "lazada": {
-            "title_max": 120,
-            "focus": "Premium SEA marketplace, brand-focused",
-            "terms": "LazMall, official store",
-        },
-        "tiki": {
-            "title_max": 100,
-            "focus": "Vietnam domestic, fast delivery",
-            "terms": "TikiNOW, same-day delivery",
-        },
-        "grab": {
-            "title_max": 80,
-            "focus": "Quick commerce, fresh produce",
-            "terms": "Instant delivery, local sourcing",
-        },
-        "sendo": {
-            "title_max": 100,
-            "focus": "Vietnam rural market, value pricing",
-            "terms": "Free shipping, cash on delivery",
-        },
-    }
-
-    config = platform_configs.get(target.lower(), platform_configs["alibaba"])
-
-    system_prompt = f"""You are a B2B e-commerce listing expert specializing in {target.upper()} marketplace.
-Create an optimized product listing with:
-- title: Product title (max {config['title_max']} chars) - {config['focus']}
-- price: Clear pricing with currency and terms
-- moq: Minimum order quantity
-- origin: Product origin with region
-- shipping: Shipping terms and options
-- certifications: List of relevant certifications
-- description: Compelling product description (2-3 sentences)
-- keywords: 5-8 SEO keywords for the platform
-
-Respond ONLY with valid JSON, no markdown."""
-
-    product_info = json.dumps(product_data, indent=2) if product_data else "Premium Vietnamese agricultural product"
-
-    user_content = f"""Create a {target.upper()} export listing for this product:
-
-Product Analysis Data:
-{product_info}
-
-Platform Requirements:
-- Focus: {config['focus']}
-- Terms: {config['terms']}
-- Title max length: {config['title_max']} characters
-
-Generate a complete, optimized listing."""
-
-    try:
-        result = client.generate_json(
-            system_prompt + "\n\n" + user_content,
-            temperature=0.5,  # Balanced for creativity + structure
-            max_tokens=1024,
-        )
-
-        listing = {
-            "title": result.get("title", "Premium Vietnamese Agricultural Product"),
-            "price": result.get("price", "$4.50/kg FOB Ho Chi Minh City"),
-            "moq": result.get("moq", "1,000 kg"),
-            "origin": result.get("origin", "Dak Lak, Mekong Delta, Vietnam"),
-            "shipping": result.get("shipping", "FOB / CIF available"),
-            "platform": target,
-            "certifications": result.get("certifications", ["VietGAP", "GlobalGAP"]),
-            "description": result.get("description", ""),
-            "keywords": result.get("keywords", []),
-        }
-
-        return listing
-
-    except Exception as e:
-        console.print(f"[yellow]LLM listing generation failed: {e}[/yellow]")
-        console.print("[dim]Using fallback listing...[/dim]")
-        return _generate_fallback_listing(target, product_data)
+    # TODO: Implement LLM client integration
+    # For now, return fallback listing
+    return _generate_fallback_listing(target, product_data)
 
 
 def _generate_fallback_listing(target: str, product_data: Optional[dict]) -> dict:
     """Fallback listing when LLM is unavailable."""
-=======
-def _generate_listing_stub(target: str, product_data: Optional[dict]) -> dict:
-    """Generate stub listing. Replace with LLM integration."""
->>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
     return {
         "title": "Premium Vietnamese Robusta Coffee Beans — Grade A, VietGAP Certified",
         "price": "$4.50/kg FOB Ho Chi Minh City",
