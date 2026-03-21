@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-GATEWAY_URL="${MEKONG_GATEWAY_URL:-https://raas-gateway.agencyos-openclaw.workers.dev}"
+GATEWAY_URL="${MEKONG_GATEWAY_URL:-https://raas.agencyos.network}"
 CREDS_FILE="${HOME}/.mekong/credentials"
 
 # Color helpers
@@ -165,6 +165,40 @@ print('Save this key — it cannot be retrieved again.')
 "
 }
 
+cmd_upgrade() {
+  load_token
+  api GET /v1/tenants/upgrade | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+c=d.get('currentTier',{})
+print(f'Current: {c.get(\"name\")} (\${c.get(\"price\",0)}/mo)')
+print()
+for u in d.get('upgrades',[]):
+    print(f'  {u[\"name\"]:10s} \${u[\"price\"]:>5}/mo  {u[\"credits\"]} MCU  {u.get(\"dailyLimit\",-1)} missions/day')
+    print(f'            {u.get(\"checkoutUrl\",\"\")}')
+"
+}
+
+cmd_templates() {
+  curl -s "${GATEWAY_URL}/v1/missions/templates" | python3 -c "
+import sys,json
+for t in json.load(sys.stdin):
+    print(f'  [{t[\"complexity\"]:8s}] {t[\"id\"]:20s} {t[\"goal\"][:60]}')
+"
+}
+
+cmd_referral() {
+  load_token
+  api GET /v1/tenants/referrals | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(f'Code:     {d.get(\"referralCode\")}')
+print(f'Link:     {d.get(\"referralLink\")}')
+print(f'Referred: {d.get(\"totalReferred\")} users')
+print(f'Earned:   {d.get(\"creditsEarned\")} MCU')
+"
+}
+
 cmd_pricing() {
   curl -s "${GATEWAY_URL}/billing/pricing" | python3 -c "
 import sys,json
@@ -188,6 +222,9 @@ cmd_help() {
   echo "  missions     List your missions"
   echo "  profile      View tenant profile"
   echo "  apikey       Generate API key"
+  echo "  upgrade      Compare tier upgrades"
+  echo "  templates    Mission templates"
+  echo "  referral     Referral stats + link"
   echo "  pricing      View pricing tiers"
   echo ""
   echo "Usage:"
@@ -206,6 +243,9 @@ case "${1:-help}" in
   missions) cmd_missions ;;
   profile)  cmd_profile ;;
   apikey)   shift; cmd_apikey "${1:-CLI Key}" ;;
+  upgrade)  cmd_upgrade ;;
+  templates) cmd_templates ;;
+  referral) cmd_referral ;;
   pricing)  cmd_pricing ;;
   help|*)   cmd_help ;;
 esac
