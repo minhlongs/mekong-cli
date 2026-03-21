@@ -1,7 +1,16 @@
 {
   "name": "@mekong/cli-core",
   "version": "0.3.0",
+  "private": false,
+  "description": "Mekong CLI core — AI-operated business platform with 319 commands across 5 layers",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mekong-cli/mekong-cli.git",
+    "directory": "packages/mekong-cli-core"
+  },
+  "keywords": ["mekong", "cli", "ai-agents", "business-automation", "raas", "openclaw"],
   "bin": {
     "mekong": "./dist/index.js"
   },
