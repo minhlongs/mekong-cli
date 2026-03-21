@@ -30,12 +30,16 @@ billing.post('/webhook', authRateLimit(), async (c) => {
     );
   }
 
-  // Get webhook signature
+  // Get Standard Webhooks headers
   const signature = c.req.header('webhook-signature') || '';
+  const webhookId = c.req.header('webhook-id') || '';
+  const webhookTimestamp = c.req.header('webhook-timestamp') || '';
   const rawBody = await c.req.text();
 
-  // Verify signature
-  const validSignature = await billingService.verifySignature(rawBody, signature);
+  // Verify signature (Standard Webhooks format)
+  const validSignature = await billingService.verifySignature(
+    rawBody, signature, webhookId, webhookTimestamp
+  );
   if (!validSignature) {
     return json(
       { error: 'Invalid webhook signature', code: 'INVALID_SIGNATURE' },

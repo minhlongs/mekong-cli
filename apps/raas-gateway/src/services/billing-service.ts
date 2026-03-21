@@ -67,37 +67,58 @@ export class BillingService {
   constructor(private env: Env) {}
 
   /**
-   * Verify Polar webhook signature
-   * Returns true if signature is valid (or no secret configured)
+   * Verify Polar webhook signature (Standard Webhooks format)
+   *
+   * Standard Webhooks uses:
+   * - Header: webhook-signature = "v1,<base64-signature>"
+   * - Signed content: "{webhook-id}.{webhook-timestamp}.{body}"
+   * - Secret: base64-encoded key (strip "whsec_" prefix)
    */
-  async verifySignature(payload: string, signature: string): Promise<boolean> {
+  async verifySignature(
+    payload: string,
+    signature: string,
+    webhookId?: string,
+    webhookTimestamp?: string
+  ): Promise<boolean> {
     const secret = this.env.POLAR_WEBHOOK_SECRET;
 
-    // Skip verification if no secret (dev mode)
     if (!secret) {
       console.warn('[BillingService] No POLAR_WEBHOOK_SECRET configured, skipping verification');
       return true;
     }
 
     try {
-      // HMAC-SHA256 verification
-      const keyData = new TextEncoder().encode(secret);
-      const msgData = new TextEncoder().encode(payload);
+      // Extract base64 key — strip "whsec_" prefix if present
+      const keyBase64 = secret.startsWith('whsec_') ? secret.slice(6) : secret;
+
+      // Decode base64 secret to raw bytes
+      const keyBytes = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+
+      // Build signed content: "{webhook-id}.{webhook-timestamp}.{body}"
+      const signedContent = `${webhookId || ''}.${webhookTimestamp || ''}.${payload}`;
+      const msgData = new TextEncoder().encode(signedContent);
 
       const cryptoKey = await crypto.subtle.importKey(
         'raw',
-        keyData,
+        keyBytes,
         { name: 'HMAC', hash: 'SHA-256' },
         false,
         ['sign']
       );
 
       const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-      const expectedSig = Array.from(new Uint8Array(sigBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 
-      return signature === expectedSig;
+      // webhook-signature header format: "v1,<base64>" (may have multiple sigs)
+      const signatures = signature.split(' ');
+      for (const sig of signatures) {
+        const parts = sig.split(',');
+        if (parts.length === 2 && parts[0] === 'v1' && parts[1] === expectedSig) {
+          return true;
+        }
+      }
+
+      return false;
     } catch (error) {
       console.error('[BillingService] Signature verification error:', error);
       return false;
