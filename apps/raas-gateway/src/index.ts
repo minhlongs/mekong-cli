@@ -11,6 +11,7 @@ import { requestId } from './middleware/request-id';
 import { createRoutes } from './routes';
 import { errorResponse } from './utils/response';
 import { ApiError } from './utils/errors';
+import { handleScheduled } from './services/scheduled-handler';
 
 export interface Env {
   DB: D1Database;
@@ -62,11 +63,8 @@ export default {
     return app.fetch(request, env, ctx);
   },
 
-  // Scheduled handler — processes queued missions every minute
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    const { MissionExecutor } = await import('./services/mission-executor');
-    const executor = new MissionExecutor(env);
-    const result = await executor.processQueue();
-    console.log(`[Scheduled] Processed: ${result.processed}, Failed: ${result.failed}`);
+  // Scheduled handler — orchestrates all periodic background tasks
+  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(handleScheduled(env));
   },
 };

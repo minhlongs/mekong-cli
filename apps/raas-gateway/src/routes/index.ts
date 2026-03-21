@@ -51,6 +51,10 @@ import { tenantExport } from './tenant-export';
 import { sso } from './sso';
 import { statusBadge } from './status-badge';
 import { notificationPreferences } from './notification-preferences';
+import { models } from './models';
+import { affiliates } from './affiliates';
+import { salesPipeline } from './sales-pipeline';
+import { salesTools } from './sales-tools';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -93,6 +97,12 @@ export function createRoutes() {
   routes.route('/', sso);
   routes.route('/', statusBadge);
   routes.route('/', notificationPreferences);
+
+  // Wave 19-20 routes
+  routes.route('/v1/models', models);
+  routes.route('/v1/affiliates', affiliates);
+  routes.route('/admin/sales', salesPipeline);
+  routes.route('/', salesTools);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -343,6 +353,26 @@ export function createRoutes() {
         '/v1/notifications/preferences': { get: { summary: 'Notification preferences', tags: ['Notifications'], security: [{ bearer: [] }] }, put: { summary: 'Update notification preferences', tags: ['Notifications'], security: [{ bearer: [] }] } },
         '/v1/notifications/channels': { get: { summary: 'Available channels', tags: ['Notifications'], security: [{ bearer: [] }] } },
         '/v1/notifications/test': { post: { summary: 'Send test notification', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/models': { get: { summary: 'List AI models', tags: ['Models'], security: [{ bearer: [] }] } },
+        '/v1/models/{id}': { get: { summary: 'Get model details', tags: ['Models'], security: [{ bearer: [] }] } },
+        '/v1/models/select': { post: { summary: 'Auto-select optimal model', tags: ['Models'], security: [{ bearer: [] }] } },
+        '/v1/affiliates/register': { post: { summary: 'Register as affiliate', tags: ['Affiliates'], security: [{ bearer: [] }] } },
+        '/v1/affiliates/stats': { get: { summary: 'Affiliate stats', tags: ['Affiliates'], security: [{ bearer: [] }] } },
+        '/v1/affiliates/commissions': { get: { summary: 'Affiliate commissions', tags: ['Affiliates'], security: [{ bearer: [] }] } },
+        '/v1/affiliates/referrals': { get: { summary: 'Affiliate referrals', tags: ['Affiliates'], security: [{ bearer: [] }] } },
+        '/v1/affiliates/admin': { get: { summary: 'List all partners', tags: ['Admin'] } },
+        '/v1/affiliates/admin/leaderboard': { get: { summary: 'Affiliate leaderboard', tags: ['Admin'] } },
+        '/admin/sales/leads': { post: { summary: 'Create sales lead', tags: ['Sales'] }, get: { summary: 'List leads', tags: ['Sales'] } },
+        '/admin/sales/leads/{id}': { get: { summary: 'Lead details', tags: ['Sales'] }, put: { summary: 'Update lead', tags: ['Sales'] } },
+        '/admin/sales/leads/{id}/stage': { put: { summary: 'Update lead stage', tags: ['Sales'] } },
+        '/admin/sales/pipeline': { get: { summary: 'Pipeline view', tags: ['Sales'] } },
+        '/admin/sales/forecast': { get: { summary: 'Revenue forecast', tags: ['Sales'] } },
+        '/tools/roi-calculator': { post: { summary: 'Calculate ROI', tags: ['Sales Tools'] } },
+        '/tools/demo/request': { post: { summary: 'Request demo sandbox', tags: ['Sales Tools'] } },
+        '/tools/trial/signup': { post: { summary: 'Start free trial', tags: ['Sales Tools'] } },
+        '/admin/sales/demos': { get: { summary: 'List demo sandboxes', tags: ['Admin'] } },
+        '/admin/sales/trials': { get: { summary: 'List trial signups', tags: ['Admin'] } },
+        '/admin/sales/trials/metrics': { get: { summary: 'Trial conversion metrics', tags: ['Admin'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
