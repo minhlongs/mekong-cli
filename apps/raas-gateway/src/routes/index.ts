@@ -19,6 +19,8 @@ import { dunning } from './dunning';
 import { licenses } from './licenses';
 import { webhooks } from './webhooks';
 import { status } from './status';
+import { dashboard } from './dashboard';
+import { playground } from './playground';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -37,6 +39,8 @@ export function createRoutes() {
   routes.route('/v1/licenses', licenses);
 
   routes.route('/v1', api);
+  routes.route('/v1', dashboard);
+  routes.route('/', playground);
   routes.route('/v1/alerts', alerts);
   routes.route('/credits', credits);
   routes.route('/billing', billing);
@@ -185,6 +189,8 @@ export function createRoutes() {
         '/v1/missions/{id}/share': { post: { summary: 'Make mission public', tags: ['Missions'], security: [{ bearer: [] }] } },
         '/v1/missions/{id}/poll': { get: { summary: 'Lightweight status poll', tags: ['Missions'], security: [{ bearer: [] }] } },
         '/v1/missions/batch': { post: { summary: 'Batch submit (pro+)', tags: ['Missions'], security: [{ bearer: [] }] } },
+        '/v1/dashboard': { get: { summary: 'Tenant aggregated stats', tags: ['Dashboard'], security: [{ bearer: [] }], responses: { '200': { description: 'Mission counts, credit summary, webhook success rate, recent missions' } } } },
+        '/playground': { get: { summary: 'Interactive API explorer', tags: ['System'], responses: { '200': { description: 'HTML page with API playground UI' } } } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });

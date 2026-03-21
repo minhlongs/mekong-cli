@@ -5,6 +5,7 @@
 import { Hono } from 'hono';
 import { cors } from './middleware/cors';
 import { logger } from './middleware/logger';
+import { securityHeaders } from './middleware/security-headers';
 import { createRoutes } from './routes';
 import { errorResponse } from './utils/response';
 import { ApiError } from './utils/errors';
@@ -32,6 +33,7 @@ export const app = new Hono<{ Bindings: Env }>();
 // Global middleware
 app.use('*', logger());
 app.use('*', cors());
+app.use('*', securityHeaders());
 
 // Mount routes
 app.route('/', createRoutes());
