@@ -83,6 +83,12 @@ import { marketplacePayments } from './marketplace-payments';
 import { scheduledMissions } from './scheduled-missions';
 import { pricingPlans } from './pricing-plans';
 import { rbac } from './rbac';
+import { auditStreaming } from './audit-streaming';
+import { ipAllowlist } from './ip-allowlist';
+import { dataRetention } from './data-retention';
+import { errorBudgets } from './error-budgets';
+import { usageForecasting } from './usage-forecasting';
+import { complianceReports } from './compliance-reports';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -153,6 +159,14 @@ export function createRoutes() {
   routes.route('/v1/environments', environments);
   routes.route('/v1/marketplace-payments', marketplacePayments);
   routes.route('/v1/pricing', pricingPlans);
+
+  // Wave 31-32 routes
+  routes.route('/v1/audit-streaming', auditStreaming);
+  routes.route('/v1/ip-allowlist', ipAllowlist);
+  routes.route('/v1/data-retention', dataRetention);
+  routes.route('/v1/error-budgets', errorBudgets);
+  routes.route('/v1/usage-forecast', usageForecasting);
+  routes.route('/v1/compliance', complianceReports);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -631,6 +645,45 @@ export function createRoutes() {
         '/v1/pricing/cancel': { post: { summary: 'Cancel subscription', tags: ['Pricing'], security: [{ bearer: [] }] } },
         '/v1/pricing/check-access': { get: { summary: 'Check feature access', tags: ['Pricing'], security: [{ bearer: [] }] } },
         '/v1/pricing/check-limit': { get: { summary: 'Check plan limit', tags: ['Pricing'], security: [{ bearer: [] }] } },
+        // Wave 31: Audit Streaming
+        '/v1/audit-streaming/configs': { get: { summary: 'List stream configs', tags: ['Audit Streaming'], security: [{ bearer: [] }] }, post: { summary: 'Create stream config', tags: ['Audit Streaming'], security: [{ bearer: [] }] } },
+        '/v1/audit-streaming/configs/{id}': { put: { summary: 'Update stream config', tags: ['Audit Streaming'], security: [{ bearer: [] }] }, delete: { summary: 'Delete stream config', tags: ['Audit Streaming'], security: [{ bearer: [] }] } },
+        '/v1/audit-streaming/stats': { get: { summary: 'Delivery statistics', tags: ['Audit Streaming'], security: [{ bearer: [] }] } },
+        '/v1/audit-streaming/publish': { post: { summary: 'Publish audit event', tags: ['Audit Streaming'], security: [{ bearer: [] }] } },
+        // Wave 31: IP Allowlist
+        '/v1/ip-allowlist/rules': { get: { summary: 'List IP rules', tags: ['IP Allowlist'], security: [{ bearer: [] }] }, post: { summary: 'Add IP rule', tags: ['IP Allowlist'], security: [{ bearer: [] }] } },
+        '/v1/ip-allowlist/rules/{id}': { put: { summary: 'Update IP rule', tags: ['IP Allowlist'], security: [{ bearer: [] }] }, delete: { summary: 'Delete IP rule', tags: ['IP Allowlist'], security: [{ bearer: [] }] } },
+        '/v1/ip-allowlist/check': { post: { summary: 'Check IP allowed', tags: ['IP Allowlist'], security: [{ bearer: [] }] } },
+        '/v1/ip-allowlist/logs': { get: { summary: 'Access logs', tags: ['IP Allowlist'], security: [{ bearer: [] }] } },
+        // Wave 31: Data Retention
+        '/v1/data-retention/policies': { get: { summary: 'List retention policies', tags: ['Data Retention'], security: [{ bearer: [] }] }, post: { summary: 'Create retention policy', tags: ['Data Retention'], security: [{ bearer: [] }] } },
+        '/v1/data-retention/policies/{id}': { put: { summary: 'Update policy', tags: ['Data Retention'], security: [{ bearer: [] }] }, delete: { summary: 'Delete policy', tags: ['Data Retention'], security: [{ bearer: [] }] } },
+        '/v1/data-retention/stats': { get: { summary: 'Retention impact stats', tags: ['Data Retention'], security: [{ bearer: [] }] } },
+        '/v1/data-retention/purge/{id}': { post: { summary: 'Manual purge', tags: ['Data Retention'], security: [{ bearer: [] }] } },
+        '/v1/data-retention/seed': { post: { summary: 'Seed default policies', tags: ['Data Retention'], security: [{ bearer: [] }] } },
+        // Wave 32: Error Budgets
+        '/v1/error-budgets/slos': { get: { summary: 'List SLOs', tags: ['Error Budgets'], security: [{ bearer: [] }] }, post: { summary: 'Create SLO', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/slos/{id}': { put: { summary: 'Update SLO', tags: ['Error Budgets'], security: [{ bearer: [] }] }, delete: { summary: 'Delete SLO', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/summary': { get: { summary: 'Error budget summary', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/slos/{id}/budget': { get: { summary: 'SLO budget details', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/slos/{id}/measure': { post: { summary: 'Record SLI measurement', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/alerts': { get: { summary: 'Budget alerts', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        '/v1/error-budgets/seed': { post: { summary: 'Seed default SLOs', tags: ['Error Budgets'], security: [{ bearer: [] }] } },
+        // Wave 32: Usage Forecasting
+        '/v1/usage-forecast/snapshots': { get: { summary: 'Historical snapshots', tags: ['Usage Forecast'], security: [{ bearer: [] }] }, post: { summary: 'Record snapshot', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        '/v1/usage-forecast/generate': { post: { summary: 'Generate forecast', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        '/v1/usage-forecast/forecast': { get: { summary: 'Get forecast', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        '/v1/usage-forecast/all': { get: { summary: 'All metric forecasts', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        '/v1/usage-forecast/anomalies': { get: { summary: 'Detect anomalies', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        '/v1/usage-forecast/capacity-alert': { get: { summary: 'Capacity alerts', tags: ['Usage Forecast'], security: [{ bearer: [] }] } },
+        // Wave 32: Compliance Reports
+        '/v1/compliance/reports': { get: { summary: 'List compliance reports', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/reports/generate': { post: { summary: 'Generate compliance report', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/reports/{id}': { get: { summary: 'Get report detail', tags: ['Compliance'], security: [{ bearer: [] }] }, delete: { summary: 'Delete report', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/checks': { get: { summary: 'Run compliance checks', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/score': { get: { summary: 'Compliance score', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/summary': { get: { summary: 'Cross-category summary', tags: ['Compliance'], security: [{ bearer: [] }] } },
+        '/v1/compliance/frameworks': { get: { summary: 'Supported frameworks', tags: ['Compliance'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
