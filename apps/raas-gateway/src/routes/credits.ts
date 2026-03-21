@@ -149,11 +149,11 @@ credits.post('/purchase', creditMetering({ cost: 0 }), async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const pack = body.pack || 'credits-50';
 
-  const packs: Record<string, { credits: number; price: number; name: string }> = {
-    'credits-10':  { credits: 10,  price: 5,   name: '10 MCU Pack' },
-    'credits-50':  { credits: 50,  price: 20,  name: '50 MCU Pack' },
-    'credits-100': { credits: 100, price: 35,  name: '100 MCU Pack' },
-    'credits-500': { credits: 500, price: 150, name: '500 MCU Pack' },
+  const packs: Record<string, { credits: number; price: number; name: string; polarId: string }> = {
+    'credits-10':  { credits: 10,  price: 5,   name: '10 MCU Pack',  polarId: 'cd05c250-42dd-4333-a041-4f55b48044fb' },
+    'credits-50':  { credits: 50,  price: 20,  name: '50 MCU Pack',  polarId: '5c0a8be0-b358-47ea-a006-681920f59676' },
+    'credits-100': { credits: 100, price: 35,  name: '100 MCU Pack', polarId: 'c81ca25b-eb3a-43be-8224-de2578c64a94' },
+    'credits-500': { credits: 500, price: 150, name: '500 MCU Pack', polarId: '9a6757bf-51da-40fc-80db-204a4aa0c61e' },
   };
 
   const selected = packs[pack];
@@ -164,13 +164,12 @@ credits.post('/purchase', creditMetering({ cost: 0 }), async (c) => {
     );
   }
 
-  // Return checkout info (tenant would use Polar checkout URL)
   return json({
     pack,
     credits: selected.credits,
     price: selected.price,
     currency: 'USD',
-    checkoutUrl: `https://polar.sh/mekong-cli`,
+    checkoutUrl: `https://polar.sh/checkout/${selected.polarId}`,
     message: `Purchase ${selected.name} ($${selected.price}) — credits added automatically via webhook`,
   });
 });
