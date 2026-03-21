@@ -6,19 +6,8 @@
     {
       "type": "build",
       "severity": "critical",
-      "file": "@mekong/algo-trader:build: src/commands/setup-wizard.ts",
-      "line": 174,
-      "code": "TS2769",
-      "message": "No overload matches this call.",
-      "project": "mekong-cli"
-    },
-    {
-      "type": "build",
-      "severity": "critical",
-      "file": "@mekong/algo-trader:build: src/commands/setup-wizard.ts",
-      "line": 188,
-      "code": "TS2322",
-      "message": "Type 'Promise<unknown>' is not assignable to type 'string'.",
+      "file": "package.json",
+      "message": "Build failed exit null. npm warn Unknown project config \"public-hoist-pattern\". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options. npm warn Unknown project config \"sha...",
       "project": "mekong-cli"
     }
   ],

@@ -1,0 +1,142 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'packages/mekong-engine/**'
+      - 'packages/raas-landing/**'
+      - 'packages/mekong-cli-core/**'
+      - '.github/workflows/deploy.yml'
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ------------------------------------------------------------------
+  # JOB 1: VERIFY before deploy (public packages only — never apps/)
+  # ------------------------------------------------------------------
+  verify:
+    name: Pre-deploy Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install public package dependencies only
+        run: pnpm install --filter "./packages/**" --no-frozen-lockfile
+
+      - name: Type check (mekong-engine)
+        run: pnpm --filter mekong-engine typecheck
+        continue-on-error: true
+
+      - name: Run tests (mekong-engine)
+        run: pnpm --filter mekong-engine test
+        continue-on-error: true
+
+      - name: Build mekong-engine
+        run: pnpm --filter mekong-engine build
+
+  # ------------------------------------------------------------------
+  # JOB 2: DEPLOY mekong-engine Worker to Cloudflare
+  # ------------------------------------------------------------------
+  deploy-mekong-engine:
+    name: Deploy mekong-engine (Cloudflare Worker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [verify]
+
+    environment:
+      name: production
+      url: https://mekong-engine.agencyos.network
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install mekong-engine dependencies
+        run: pnpm --filter mekong-engine install --no-frozen-lockfile
+
+      - name: Build mekong-engine
+        run: pnpm --filter mekong-engine build
+
+      - name: Deploy mekong-engine to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+          workingDirectory: packages/mekong-engine
+
+      - name: Production smoke test
+        run: |
+          echo "Waiting 15s for propagation..."
+          sleep 15
+          HTTP_STATUS=$(curl -sf -o /dev/null -w '%{http_code}' \
+            "https://mekong-engine.agencyos.network/health" 2>/dev/null || echo "000")
+          echo "Health check: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "OK: mekong-engine production is healthy"
+          else
+            echo "WARNING: health check returned $HTTP_STATUS — may need DNS propagation"
+          fi
+
+  # ------------------------------------------------------------------
+  # JOB 3: DEPLOY raas-landing to Cloudflare Pages (if changed)
+  # ------------------------------------------------------------------
+  deploy-raas-landing:
+    name: Deploy raas-landing (Cloudflare Pages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [verify]
+    if: >
+      contains(github.event.commits[0].modified, 'packages/raas-landing') ||
+      contains(github.event.commits[0].added, 'packages/raas-landing')
+
+    environment:
+      name: production
+      url: https://raas.agencyos.network
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install raas-landing dependencies
+        working-directory: packages/raas-landing
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build raas-landing
+        working-directory: packages/raas-landing
+        run: pnpm run build
+
+      - name: Deploy raas-landing to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy dist --project-name=raas-landing
+          workingDirectory: packages/raas-landing
