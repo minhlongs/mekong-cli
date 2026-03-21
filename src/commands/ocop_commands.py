@@ -85,15 +85,10 @@ def analyze(
 
         progress.update(task, description="Sending to AI Agent for analysis...")
 
-<<<<<<< HEAD
-        # Generate AI-powered analysis
-        analysis = _generate_analysis(product_data, file_path)
-=======
         # TECH-DEBT: OCOP-001 - Integrate with LLM client for actual analysis
         # See: docs/TECHNICAL_DEBT_TODO.md
-        # For now, generate structured output from input
-        analysis = _generate_analysis_stub(product_data, file_path)
->>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
+        # Generate AI-powered analysis
+        analysis = _generate_analysis(product_data, file_path)
 
         progress.update(task, description="Analysis complete!")
 
