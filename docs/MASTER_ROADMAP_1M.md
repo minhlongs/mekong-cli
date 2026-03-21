@@ -142,6 +142,11 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 - [x] npm publish workflow — updated to include openclaw-engine (4 packages total)
 - [x] ProductHunt Launch Kit — PH listing, assets checklist, launch schedule, social templates
 - [x] Enterprise Pilot Campaign — ICP, email sequences, ROI calculator, pilot structure, objections
+- [x] Deep OpenClaw→MekongEngine integration — complexity classification, circuit breaker, health metrics
+- [x] PEV Bridge OpenClaw wiring — auto-complexity classification for cloud missions
+- [x] RaaS Demo CLI — `mekong demo roi/pitch/walkthrough/tiers` for enterprise sales
+- [x] License Gate module — `src/lib/raas-gate.ts` with 30 tests (LicenseService singleton)
+- [x] Test suite fix — vitest config + 1,063 tests ALL GREEN (63 files, 0 failures)
 
 ---
 
@@ -155,7 +160,7 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 | GitHub Stars  | 500      | 0         |
 | npm Packages  | 4        | 4 (ready) |
 | Gateway Waves | 20       | 20        |
-| Test Coverage | 1,000+   | 1,028+    |
+| Test Coverage | 1,000+   | 1,063+    |
 | RaaS Commands | 15       | 15        |
 
 ---
