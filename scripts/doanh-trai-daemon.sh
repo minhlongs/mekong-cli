@@ -7,6 +7,12 @@
 # ═══════════════════════════════════════════════════════════════
 set -uo pipefail
 
+# Require bash 4+ for associative arrays
+if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+  echo "[FATAL] Bash 4+ required (found ${BASH_VERSION}). Use: /opt/homebrew/bin/bash $0" >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MEKONG_DIR="${PROJECT_ROOT}/.mekong"
@@ -25,6 +31,33 @@ CODE_DEPTS="sales docs ops design"
 
 mkdir -p "$MEKONG_DIR"
 
+# ---- STARTUP VALIDATION ----
+startup_validate() {
+  local ok=true
+  if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "[FATAL] Config not found: $CONFIG_FILE" >&2; ok=false
+  fi
+  if ! command -v python3 &>/dev/null; then
+    echo "[FATAL] python3 not in PATH" >&2; ok=false
+  fi
+  if ! python3 -c "import yaml" 2>/dev/null; then
+    echo "[FATAL] PyYAML not installed (pip install pyyaml)" >&2; ok=false
+  fi
+  if ! command -v tmux &>/dev/null; then
+    echo "[FATAL] tmux not in PATH" >&2; ok=false
+  fi
+  if [[ ! -f "$TASK_RUNNER" ]]; then
+    echo "[FATAL] Task runner not found: $TASK_RUNNER" >&2; ok=false
+  fi
+  [[ "$ok" == true ]] || { echo "[FATAL] Startup validation failed — exiting." >&2; exit 1; }
+}
+startup_validate
+
+# ---- RESPAWN LIMITS ----
+declare -A RESPAWN_COUNT
+MAX_RESPAWN=5
+RESPAWN_RESET_CYCLES=10
+
 # ---- LOGGING ----
 log() {
   local ts
@@ -42,16 +75,27 @@ log() {
 parse_departments() {
   python3 -c "
 import yaml, sys
-with open('${CONFIG_FILE}') as f:
-    cfg = yaml.safe_load(f)
-for name, dept in cfg.get('departments', {}).items():
-    if dept.get('existing', False):
-        continue  # Skip engineering (managed by cto-daemon.sh)
-    session = dept.get('session', '')
-    panes = dept.get('panes', 2)
-    tasks = '|||'.join(dept.get('fallback_tasks', []))
-    print(f'{name}|{session}|{panes}|{tasks}')
-" 2>/dev/null
+try:
+    with open('${CONFIG_FILE}') as f:
+        cfg = yaml.safe_load(f)
+    if not cfg or 'departments' not in cfg:
+        print('PARSE_ERROR: no departments key in config', file=sys.stderr)
+        sys.exit(1)
+    for name, dept in cfg.get('departments', {}).items():
+        if dept.get('existing', False):
+            continue
+        session = dept.get('session', '')
+        panes = dept.get('panes', 2)
+        tasks = '|||'.join(dept.get('fallback_tasks', []))
+        print(f'{name}|{session}|{panes}|{tasks}')
+except Exception as e:
+    print(f'PARSE_ERROR: {e}', file=sys.stderr)
+    sys.exit(1)
+"
+  if [[ $? -ne 0 ]]; then
+    log "FATAL: Failed to parse ${CONFIG_FILE} — daemon cannot start"
+    exit 1
+  fi
 }
 
 # ---- IDLE DETECTION ----
@@ -175,13 +219,27 @@ while true; do
     fi
 
     for ((pane_idx=0; pane_idx<panes; pane_idx++)); do
+      # FIX #22: Validate pane exists in tmux before capture (prevents dead pane respawn spam)
+      if ! tmux list-panes -t "${session}:0" -F '#{pane_index}' 2>/dev/null | grep -qx "$pane_idx"; then
+        continue  # Pane doesn't exist, skip silently
+      fi
+
       output=$(capture_pane "$session" "$pane_idx")
 
       if [[ -z "$output" ]]; then
-        log "${dept_name} P${pane_idx}: DEAD — respawning"
+        rc="${RESPAWN_COUNT[${session}-${pane_idx}]:-0}"
+        if [[ $rc -ge $MAX_RESPAWN ]]; then
+          log "${dept_name} P${pane_idx}: DEAD — respawn limit reached (${rc}/${MAX_RESPAWN}), skipping"
+          continue
+        fi
+        log "${dept_name} P${pane_idx}: DEAD — respawning [${rc}/${MAX_RESPAWN}]"
         respawn_pane "$session" "$pane_idx"
+        RESPAWN_COUNT[${session}-${pane_idx}]=$((rc + 1))
         continue
       fi
+
+      # Reset respawn counter on healthy output
+      RESPAWN_COUNT[${session}-${pane_idx}]=0
 
       # Context 90%+ or 100% → /clear (hard reset)
       if echo "$output" | tail -10 | grep -qE "Context:.*100%|Context:.*9[0-9]%|auto-compact|Auto-compacting"; then
@@ -249,6 +307,18 @@ while true; do
         continue
       fi
 
+      # FIX #22: Brain cold cooldown — only fallback every 5 minutes (not every cycle)
+      cooldown_file="${PANE_LOCK_DIR}/${session}-${pane_idx}.cooldown"
+      if [[ -f "$cooldown_file" ]]; then
+        cd_age=$(( $(date +%s) - $(stat -f %m "$cooldown_file" 2>/dev/null || echo 0) ))
+        if [[ $cd_age -lt 300 ]]; then
+          log "${dept_name} P${pane_idx}: BRAIN COLD — cooldown ${cd_age}/300s"
+          release_pane_lock "$session" "$pane_idx"
+          continue
+        fi
+      fi
+      touch "$cooldown_file"
+
       # Fallback for code depts
       IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"
       if [[ ${#task_arr[@]} -gt 0 ]]; then
@@ -266,6 +336,16 @@ while true; do
       fi
     done
   done
+
+  # Reset respawn counters periodically (only non-maxed panes)
+  if [[ $((CYCLE % RESPAWN_RESET_CYCLES)) -eq 0 ]]; then
+    for key in "${!RESPAWN_COUNT[@]}"; do
+      if [[ "${RESPAWN_COUNT[$key]}" -lt "$MAX_RESPAWN" ]]; then
+        RESPAWN_COUNT[$key]=0
+      fi
+    done
+    log "RESPAWN counters reset (cycle ${CYCLE}, maxed panes kept)"
+  fi
 
   sleep "$POLL_INTERVAL"
 done

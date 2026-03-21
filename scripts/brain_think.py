@@ -9,6 +9,7 @@ import urllib.request
 import sys
 import re
 import os
+import time
 
 CMD_NAMES = (
     # Core commands
@@ -31,8 +32,8 @@ CMD_NAMES = (
 )
 
 
-def call_ollama(url, model, prompt, think=True, timeout=30):
-    """Call Ollama generate API, return parsed JSON."""
+def call_ollama(url, model, prompt, think=True, timeout=30, retries=3):
+    """Call Ollama generate API with retry + backoff, return parsed JSON."""
     payload = {
         "model": model,
         "prompt": prompt,
@@ -44,12 +45,22 @@ def call_ollama(url, model, prompt, think=True, timeout=30):
         payload["think"] = False
         payload["options"]["num_predict"] = 50
     data = json.dumps(payload).encode()
-    req = urllib.request.Request(
-        f"{url}/api/generate", data=data,
-        headers={"Content-Type": "application/json"},
-    )
-    resp = urllib.request.urlopen(req, timeout=timeout)
-    return json.loads(resp.read())
+    last_err = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(
+                f"{url}/api/generate", data=data,
+                headers={"Content-Type": "application/json"},
+            )
+            resp = urllib.request.urlopen(req, timeout=timeout)
+            return json.loads(resp.read())
+        except Exception as e:
+            last_err = e
+            if attempt < retries - 1:
+                wait = 2 ** attempt
+                print(f"BRAIN_RETRY: attempt {attempt+1}/{retries} failed ({e}), waiting {wait}s", file=sys.stderr)
+                time.sleep(wait)
+    raise last_err
 
 
 def extract_cmd(text):
