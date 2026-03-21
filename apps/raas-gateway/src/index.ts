@@ -7,6 +7,7 @@ import { cors } from './middleware/cors';
 import { logger } from './middleware/logger';
 import { securityHeaders } from './middleware/security-headers';
 import { requestMetrics } from './middleware/request-metrics';
+import { requestId } from './middleware/request-id';
 import { createRoutes } from './routes';
 import { errorResponse } from './utils/response';
 import { ApiError } from './utils/errors';
@@ -33,6 +34,7 @@ export interface Env {
 export const app = new Hono<{ Bindings: Env }>();
 
 // Global middleware
+app.use('*', requestId());
 app.use('*', logger());
 app.use('*', cors());
 app.use('*', securityHeaders());
@@ -46,7 +48,7 @@ app.onError((err, c) => {
   console.error(`[Error] ${err.name}: ${err.message}`, err.stack);
 
   if (err instanceof ApiError) {
-    return errorResponse(err.toJSON(), err.status);
+    return errorResponse(err.toJSON(c.get('requestId')), err.status);
   }
 
   return errorResponse(

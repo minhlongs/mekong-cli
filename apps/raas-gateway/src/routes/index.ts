@@ -32,6 +32,11 @@ import { team } from './team';
 import { webhookManagement } from './webhook-management';
 import { audit } from './audit';
 import { landing } from './landing';
+import { usageMetering } from './usage-metering';
+import { accountSuspension, adminSuspensions } from './suspension';
+import { apiKeyManagement } from './api-key-management';
+import { batchMissions } from './batch-missions';
+import { marketplaceTemplates, missionTemplates } from './mission-templates';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -49,6 +54,15 @@ export function createRoutes() {
   routes.route('/v1/onboarding', onboarding);
   // Licenses: verify + activate are PUBLIC; create + list require auth (per-route)
   routes.route('/v1/licenses', licenses);
+
+  // Wave 13-14 routes BEFORE /v1 api to avoid shadowing
+  routes.route('/v1/usage', usageMetering);
+  routes.route('/v1/missions', batchMissions);
+  routes.route('/v1/account', accountSuspension);
+  routes.route('/v1/api-keys', apiKeyManagement);
+  routes.route('/v1/templates', missionTemplates);
+  routes.route('/marketplace/templates', marketplaceTemplates);
+  routes.route('/admin/suspensions', adminSuspensions);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -211,7 +225,6 @@ export function createRoutes() {
         '/v1/licenses/activate/{key}': { post: { summary: 'Activate license (public)', tags: ['Licenses'], parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }] } },
         '/v1/missions/{id}/share': { post: { summary: 'Make mission public', tags: ['Missions'], security: [{ bearer: [] }] } },
         '/v1/missions/{id}/poll': { get: { summary: 'Lightweight status poll', tags: ['Missions'], security: [{ bearer: [] }] } },
-        '/v1/missions/batch': { post: { summary: 'Batch submit (pro+)', tags: ['Missions'], security: [{ bearer: [] }] } },
         '/v1/dashboard': { get: { summary: 'Tenant aggregated stats', tags: ['Dashboard'], security: [{ bearer: [] }], responses: { '200': { description: 'Mission counts, credit summary, webhook success rate, recent missions' } } } },
         '/playground': { get: { summary: 'Interactive API explorer', tags: ['System'], responses: { '200': { description: 'HTML page with API playground UI' } } } },
         '/v1/usage/export': { get: { summary: 'Export credit transactions as CSV', tags: ['Usage'], security: [{ bearer: [] }], parameters: [{ name: 'format', in: 'query', schema: { type: 'string', enum: ['csv'] } }, { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }], responses: { '200': { description: 'CSV file download', content: { 'text/csv': { schema: { type: 'string' } } } } } } },
@@ -236,6 +249,25 @@ export function createRoutes() {
         '/v1/webhooks/test': { post: { summary: 'Send test webhook', tags: ['Webhooks'], security: [{ bearer: [] }] } },
         '/v1/webhooks/config': { get: { summary: 'Webhook configuration', tags: ['Webhooks'], security: [{ bearer: [] }] } },
         '/v1/audit': { get: { summary: 'Tenant audit log', tags: ['Audit'], security: [{ bearer: [] }], parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer' } }, { name: 'offset', in: 'query', schema: { type: 'integer' } }] } },
+        '/v1/usage/current': { get: { summary: 'Current daily + monthly usage', tags: ['Usage'], security: [{ bearer: [] }] } },
+        '/v1/usage/history': { get: { summary: 'Usage history', tags: ['Usage'], security: [{ bearer: [] }], parameters: [{ name: 'days', in: 'query', schema: { type: 'integer' } }] } },
+        '/v1/usage/quotas': { post: { summary: 'Set usage quotas (admin)', tags: ['Usage'], security: [{ bearer: [] }] } },
+        '/v1/usage/overage': { get: { summary: 'Overage charges', tags: ['Usage'], security: [{ bearer: [] }] } },
+        '/v1/account/status': { get: { summary: 'Account suspension status', tags: ['Account'], security: [{ bearer: [] }] } },
+        '/v1/account/reactivate': { post: { summary: 'Reactivate suspended account', tags: ['Account'], security: [{ bearer: [] }] } },
+        '/admin/suspensions': { get: { summary: 'List suspended tenants', tags: ['Admin'] }, post: { summary: 'Suspend tenant', tags: ['Admin'] } },
+        '/admin/suspensions/{tenantId}': { delete: { summary: 'Resume tenant', tags: ['Admin'] } },
+        '/v1/api-keys': { post: { summary: 'Create API key with scope', tags: ['API Keys'], security: [{ bearer: [] }] }, get: { summary: 'List API keys', tags: ['API Keys'], security: [{ bearer: [] }] } },
+        '/v1/api-keys/{id}': { get: { summary: 'Get API key detail', tags: ['API Keys'], security: [{ bearer: [] }] }, put: { summary: 'Update API key', tags: ['API Keys'], security: [{ bearer: [] }] }, delete: { summary: 'Revoke API key', tags: ['API Keys'], security: [{ bearer: [] }] } },
+        '/v1/api-keys/{id}/rotate': { post: { summary: 'Rotate API key', tags: ['API Keys'], security: [{ bearer: [] }] } },
+        '/v1/missions/batch': { post: { summary: 'Batch submit missions (max 50)', tags: ['Missions'], security: [{ bearer: [] }] } },
+        '/v1/missions/batch/{batchId}': { get: { summary: 'Get batch status', tags: ['Missions'], security: [{ bearer: [] }] } },
+        '/marketplace/templates': { get: { summary: 'Browse mission templates', tags: ['Marketplace'] } },
+        '/marketplace/templates/{slug}': { get: { summary: 'Get template by slug', tags: ['Marketplace'] } },
+        '/v1/templates': { post: { summary: 'Create custom template', tags: ['Templates'], security: [{ bearer: [] }] }, get: { summary: 'List templates', tags: ['Templates'], security: [{ bearer: [] }] } },
+        '/v1/templates/{id}': { get: { summary: 'Get template', tags: ['Templates'], security: [{ bearer: [] }] }, put: { summary: 'Update template', tags: ['Templates'], security: [{ bearer: [] }] }, delete: { summary: 'Delete template', tags: ['Templates'], security: [{ bearer: [] }] } },
+        '/v1/templates/{id}/use': { post: { summary: 'Create mission from template', tags: ['Templates'], security: [{ bearer: [] }] } },
+        '/v1/templates/{id}/rate': { post: { summary: 'Rate template', tags: ['Templates'], security: [{ bearer: [] }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });

@@ -13,11 +13,12 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 
-  toJSON() {
+  toJSON(requestId?: string) {
     return {
       error: this.message,
       code: this.code,
-      details: this.details,
+      ...(this.details && { details: this.details }),
+      ...(requestId && { requestId }),
     };
   }
 }
