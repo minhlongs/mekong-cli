@@ -77,6 +77,12 @@ import { workflows } from './workflows';
 import { integrationHub } from './integration-hub';
 import { featureFlags } from './feature-flags';
 import { customerPortal } from './customer-portal';
+import { environments } from './environments';
+import { platformKpis } from './platform-kpis';
+import { marketplacePayments } from './marketplace-payments';
+import { scheduledMissions } from './scheduled-missions';
+import { pricingPlans } from './pricing-plans';
+import { rbac } from './rbac';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -85,6 +91,7 @@ export function createRoutes() {
   // Mount routes — public routes BEFORE /v1 api (which has auth middleware)
   routes.route('/admin', admin);
   routes.route('/admin/analytics', adminAnalytics);
+  routes.route('/admin/kpis', platformKpis);
   routes.route('/admin/dunning', dunning);
   routes.route('/admin/webhooks', webhooks);
   routes.route('/health', health);
@@ -139,6 +146,13 @@ export function createRoutes() {
   routes.route('/v1/integrations', integrationHub);
   routes.route('/v1/feature-flags', featureFlags);
   routes.route('/v1/customer-portal', customerPortal);
+
+  // Wave 29-30 routes
+  routes.route('/v1/rbac', rbac);
+  routes.route('/v1/scheduled-missions', scheduledMissions);
+  routes.route('/v1/environments', environments);
+  routes.route('/v1/marketplace-payments', marketplacePayments);
+  routes.route('/v1/pricing', pricingPlans);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -567,6 +581,56 @@ export function createRoutes() {
         '/v1/customer-portal/tickets/{id}/status': { put: { summary: 'Update ticket status', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
         '/v1/customer-portal/activity': { get: { summary: 'Activity log', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
         '/v1/customer-portal/invoices': { get: { summary: 'List invoices', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+
+        // Wave 29: RBAC
+        '/v1/rbac/roles': { get: { summary: 'List roles', tags: ['RBAC'], security: [{ bearer: [] }] }, post: { summary: 'Create role', tags: ['RBAC'], security: [{ bearer: [] }] } },
+        '/v1/rbac/roles/seed': { post: { summary: 'Seed default roles', tags: ['RBAC'], security: [{ bearer: [] }] } },
+        '/v1/rbac/roles/{id}': { get: { summary: 'Get role', tags: ['RBAC'], security: [{ bearer: [] }] }, put: { summary: 'Update role', tags: ['RBAC'], security: [{ bearer: [] }] }, delete: { summary: 'Delete role', tags: ['RBAC'], security: [{ bearer: [] }] } },
+        '/v1/rbac/users/{userId}/roles': { get: { summary: 'Get user roles', tags: ['RBAC'], security: [{ bearer: [] }] }, post: { summary: 'Assign role', tags: ['RBAC'], security: [{ bearer: [] }] } },
+        '/v1/rbac/users/{userId}/roles/{roleId}': { delete: { summary: 'Revoke role', tags: ['RBAC'], security: [{ bearer: [] }] } },
+        '/v1/rbac/check': { get: { summary: 'Check permission', tags: ['RBAC'], security: [{ bearer: [] }] } },
+
+        // Wave 29: Scheduled Missions
+        '/v1/scheduled-missions': { get: { summary: 'List scheduled missions', tags: ['Scheduled Missions'], security: [{ bearer: [] }] }, post: { summary: 'Create scheduled mission', tags: ['Scheduled Missions'], security: [{ bearer: [] }] } },
+        '/v1/scheduled-missions/due': { get: { summary: 'Get due missions', tags: ['Scheduled Missions'], security: [{ apiKey: [] }] } },
+        '/v1/scheduled-missions/{id}': { get: { summary: 'Get scheduled mission', tags: ['Scheduled Missions'], security: [{ bearer: [] }] }, put: { summary: 'Update', tags: ['Scheduled Missions'], security: [{ bearer: [] }] }, delete: { summary: 'Delete', tags: ['Scheduled Missions'], security: [{ bearer: [] }] } },
+        '/v1/scheduled-missions/{id}/pause': { post: { summary: 'Pause mission', tags: ['Scheduled Missions'], security: [{ bearer: [] }] } },
+        '/v1/scheduled-missions/{id}/resume': { post: { summary: 'Resume mission', tags: ['Scheduled Missions'], security: [{ bearer: [] }] } },
+        '/v1/scheduled-missions/{id}/runs': { get: { summary: 'Run history', tags: ['Scheduled Missions'], security: [{ bearer: [] }] } },
+
+        // Wave 29: Environments
+        '/v1/environments': { get: { summary: 'List environments', tags: ['Environments'], security: [{ bearer: [] }] }, post: { summary: 'Create environment', tags: ['Environments'], security: [{ bearer: [] }] } },
+        '/v1/environments/seed': { post: { summary: 'Seed defaults', tags: ['Environments'], security: [{ bearer: [] }] } },
+        '/v1/environments/{id}': { get: { summary: 'Get environment', tags: ['Environments'], security: [{ bearer: [] }] }, put: { summary: 'Update', tags: ['Environments'], security: [{ bearer: [] }] }, delete: { summary: 'Delete', tags: ['Environments'], security: [{ bearer: [] }] } },
+        '/v1/environments/{id}/clone': { post: { summary: 'Clone environment', tags: ['Environments'], security: [{ bearer: [] }] } },
+        '/v1/environments/{id}/variables': { get: { summary: 'List variables', tags: ['Environments'], security: [{ bearer: [] }] } },
+        '/v1/environments/{id}/variables/{key}': { put: { summary: 'Set variable', tags: ['Environments'], security: [{ bearer: [] }] }, delete: { summary: 'Delete variable', tags: ['Environments'], security: [{ bearer: [] }] } },
+
+        // Wave 30: Marketplace Payments
+        '/v1/marketplace-payments/sellers/register': { post: { summary: 'Register as seller', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+        '/v1/marketplace-payments/sellers/me': { get: { summary: 'My seller profile', tags: ['Marketplace Payments'], security: [{ bearer: [] }] }, put: { summary: 'Update profile', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+        '/v1/marketplace-payments/sellers/me/transactions': { get: { summary: 'My transactions', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+        '/v1/marketplace-payments/sellers/me/earnings': { get: { summary: 'My earnings', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+        '/v1/marketplace-payments/sellers/me/payouts': { get: { summary: 'Payout history', tags: ['Marketplace Payments'], security: [{ bearer: [] }] }, post: { summary: 'Request payout', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+        '/v1/marketplace-payments/purchase': { post: { summary: 'Record purchase', tags: ['Marketplace Payments'], security: [{ bearer: [] }] } },
+
+        // Wave 30: Platform KPIs
+        '/admin/kpis/overview': { get: { summary: 'KPI overview', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+        '/admin/kpis/revenue': { get: { summary: 'Revenue metrics', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+        '/admin/kpis/tenants': { get: { summary: 'Tenant metrics', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+        '/admin/kpis/churn': { get: { summary: 'Churn rate', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+        '/admin/kpis/top-tenants': { get: { summary: 'Top tenants', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+        '/admin/kpis/snapshot': { post: { summary: 'Take KPI snapshot', tags: ['Platform KPIs'], security: [{ apiKey: [] }] } },
+
+        // Wave 30: Pricing Plans
+        '/v1/pricing/plans': { get: { summary: 'List plans', tags: ['Pricing'] }, post: { summary: 'Create plan', tags: ['Pricing'], security: [{ apiKey: [] }] } },
+        '/v1/pricing/plans/seed': { post: { summary: 'Seed default plans', tags: ['Pricing'], security: [{ apiKey: [] }] } },
+        '/v1/pricing/plans/{id}': { get: { summary: 'Get plan', tags: ['Pricing'] }, put: { summary: 'Update plan', tags: ['Pricing'], security: [{ apiKey: [] }] }, delete: { summary: 'Delete plan', tags: ['Pricing'], security: [{ apiKey: [] }] } },
+        '/v1/pricing/subscription': { get: { summary: 'My subscription', tags: ['Pricing'], security: [{ bearer: [] }] } },
+        '/v1/pricing/subscribe': { post: { summary: 'Subscribe to plan', tags: ['Pricing'], security: [{ bearer: [] }] } },
+        '/v1/pricing/cancel': { post: { summary: 'Cancel subscription', tags: ['Pricing'], security: [{ bearer: [] }] } },
+        '/v1/pricing/check-access': { get: { summary: 'Check feature access', tags: ['Pricing'], security: [{ bearer: [] }] } },
+        '/v1/pricing/check-limit': { get: { summary: 'Check plan limit', tags: ['Pricing'], security: [{ bearer: [] }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
