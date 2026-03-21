@@ -94,9 +94,8 @@ checkout.post('/', async (c) => {
       body: JSON.stringify({
         product_id: fullProductId,
         customer_external_id: tenant.tenantId,
-        customer_email: tenantEmail,
+        ...(tenantEmail ? { customer_email: tenantEmail } : {}),
         success_url: successUrl,
-        payment_processor: 'stripe',
         metadata: { tenant_id: tenant.tenantId },
       }),
     });
