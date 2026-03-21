@@ -15,7 +15,7 @@ LOG_LEVEL = "info"
 binding = "DB"
 database_name = "mekong-raas-db"
 database_id = "a0aa4f88-da5b-4616-84aa-7e559e37c91c"
-migrations_dir = "migrations"
+migrations_dir = "./migrations"
 
 # KV Namespaces
 [[kv_namespaces]]
@@ -46,3 +46,6 @@ crons = ["* * * * *"]
 # POLAR_WEBHOOK_SECRET — for billing webhooks
 # TELEGRAM_BOT_TOKEN — for Telegram bot
 # SERVICE_TOKEN — for internal service auth
+# RESEND_API_KEY — for transactional emails (welcome, low-credits alerts)
+# STRIPE_SECRET_KEY — Stripe secret key (sk_live_... or sk_test_...)
+# STRIPE_WEBHOOK_SECRET — Stripe webhook signing secret (whsec_...)

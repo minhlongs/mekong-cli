@@ -30,6 +30,8 @@ import { apiDocs } from './api-docs';
 import { projects } from './projects';
 import { team } from './team';
 import { webhookManagement } from './webhook-management';
+import { audit } from './audit';
+import { landing } from './landing';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -52,6 +54,7 @@ export function createRoutes() {
   routes.route('/v1', dashboard);
   routes.route('/v1/usage', usageExport);
   routes.route('/v1/invoices', usageExport);
+  routes.route('/', landing);
   routes.route('/', playground);
   routes.route('/v1/alerts', alerts);
   routes.route('/credits', credits);
@@ -66,6 +69,7 @@ export function createRoutes() {
   routes.route('/v1/projects', projects);
   routes.route('/v1/team', team);
   routes.route('/v1/webhooks', webhookManagement);
+  routes.route('/v1/audit', audit);
 
   // Waitlist email capture (public)
   routes.post('/waitlist', async (c) => {
@@ -219,6 +223,19 @@ export function createRoutes() {
         '/metrics': { get: { summary: 'Request metrics (24h)', tags: ['System'] } },
         '/metrics/live': { get: { summary: 'Live metrics (current hour)', tags: ['System'] } },
         '/docs': { get: { summary: 'API reference docs', tags: ['System'] } },
+        '/v1/referrals/generate': { post: { summary: 'Generate referral code', tags: ['Referrals'], security: [{ bearer: [] }] } },
+        '/v1/referrals/stats': { get: { summary: 'Referral stats dashboard', tags: ['Referrals'], security: [{ bearer: [] }] } },
+        '/v1/referrals/apply': { post: { summary: 'Apply referral code', tags: ['Referrals'], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { code: { type: 'string' }, email: { type: 'string' } }, required: ['code', 'email'] } } } } } },
+        '/v1/projects': { post: { summary: 'Create project', tags: ['Projects'], security: [{ bearer: [] }] }, get: { summary: 'List projects', tags: ['Projects'], security: [{ bearer: [] }] } },
+        '/v1/projects/{id}': { get: { summary: 'Get project', tags: ['Projects'], security: [{ bearer: [] }] }, delete: { summary: 'Archive project', tags: ['Projects'], security: [{ bearer: [] }] } },
+        '/v1/projects/{id}/missions': { get: { summary: 'Project missions', tags: ['Projects'], security: [{ bearer: [] }] } },
+        '/v1/team/invite': { post: { summary: 'Invite team member (pro+)', tags: ['Team'], security: [{ bearer: [] }] } },
+        '/v1/team/members': { get: { summary: 'List team members', tags: ['Team'], security: [{ bearer: [] }] } },
+        '/v1/team/members/{id}': { put: { summary: 'Update member role', tags: ['Team'], security: [{ bearer: [] }] }, delete: { summary: 'Remove member', tags: ['Team'], security: [{ bearer: [] }] } },
+        '/v1/webhooks/events': { get: { summary: 'List webhook event types', tags: ['Webhooks'], security: [{ bearer: [] }] } },
+        '/v1/webhooks/test': { post: { summary: 'Send test webhook', tags: ['Webhooks'], security: [{ bearer: [] }] } },
+        '/v1/webhooks/config': { get: { summary: 'Webhook configuration', tags: ['Webhooks'], security: [{ bearer: [] }] } },
+        '/v1/audit': { get: { summary: 'Tenant audit log', tags: ['Audit'], security: [{ bearer: [] }], parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer' } }, { name: 'offset', in: 'query', schema: { type: 'integer' } }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
