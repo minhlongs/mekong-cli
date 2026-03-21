@@ -43,5 +43,4 @@ api.get('/me', (c) => {
 // Mission routes
 api.route('/missions', missions);
 
-// Placeholder — implemented later
-api.all('/tenants/*', async (c) => notFound('Tenants endpoint not yet implemented'));
+// Tenants routes (signup is public, mounted at route-level to bypass auth)
