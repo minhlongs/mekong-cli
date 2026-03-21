@@ -9,12 +9,12 @@
   "types": "./dist/sdk.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/sdk.js",
+      "import": "./src/sdk.ts",
       "require": "./dist/sdk.cjs",
       "types": "./dist/sdk.d.ts"
     },
     "./sdk": {
-      "import": "./dist/sdk.js",
+      "import": "./src/sdk.ts",
       "require": "./dist/sdk.cjs",
       "types": "./dist/sdk.d.ts"
     },
