@@ -11,6 +11,7 @@ on:
           - raas-sdk
           - raas-marketplace
           - mekong-cli-core
+          - openclaw-engine
           - all
   push:
     tags:
@@ -23,7 +24,7 @@ jobs:
       - name: Verify publish boundary
         run: |
           echo "Only packages/ directory is published — never apps/"
-          echo "Allowed: raas-sdk, raas-marketplace, mekong-cli-core"
+          echo "Allowed: raas-sdk, raas-marketplace, mekong-cli-core, openclaw-engine"
 
   publish:
     needs: safety-check
@@ -33,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.package == 'all' && fromJSON('["raas-sdk","raas-marketplace","mekong-cli-core"]') || fromJSON(format('["{0}"]', github.event.inputs.package))) || fromJSON('["raas-sdk","raas-marketplace","mekong-cli-core"]') }}
+        package: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.package == 'all' && fromJSON('["raas-sdk","raas-marketplace","mekong-cli-core","openclaw-engine"]') || fromJSON(format('["{0}"]', github.event.inputs.package))) || fromJSON('["raas-sdk","raas-marketplace","mekong-cli-core","openclaw-engine"]') }}
     steps:
       - uses: actions/checkout@v4
 

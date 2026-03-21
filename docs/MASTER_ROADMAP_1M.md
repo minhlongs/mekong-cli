@@ -107,10 +107,9 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 
 ## 🔄 IN PROGRESS
 
-- [ ] ProductHunt Launch preparation
-- [ ] Enterprise Pilot campaign (5 agencies @ $2k/month)
-- [ ] Deep OpenClaw SDK integration — sub-module facades
-- [ ] npm publish — trigger GitHub workflow for 4 packages
+- [ ] ProductHunt Launch — visual assets, schedule launch day
+- [ ] Enterprise Pilot — send Email 1 to 5 target agencies
+- [ ] npm publish — trigger workflow_dispatch for 4 packages (workflow updated, ready to trigger)
 
 ---
 
@@ -138,6 +137,9 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 - [x] OpenClaw Engine SDK v1.0 — publishable TypeScript facade
 - [x] Sale RaaS Documentation — onboarding, enterprise pitch, support SOP
 - [x] 1,028+ tests ALL GREEN across packages
+- [x] Deep OpenClaw SDK integration — RaaS module + 5 sub-module facades wired
+- [x] GTM 30-day launch checklist — ProductHunt + Enterprise pilot consolidated
+- [x] npm publish workflow — updated to include openclaw-engine (4 packages total)
 
 ---
 
