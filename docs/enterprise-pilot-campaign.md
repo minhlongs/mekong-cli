@@ -1,251 +1,140 @@
-# Enterprise Pilot Campaign — 5 Agencies @ $2k/month
+# Enterprise Pilot Campaign — Mekong CLI / OpenClaw RaaS
 
-Target: $10k MRR = $120k ARR from 5 enterprise pilots.
-
----
-
-## Ideal Customer Profile (ICP)
-
-### Segment 1: Digital Agencies (Primary)
-- **Size:** 10-50 employees
-- **Pain:** Scaling without hiring; developers expensive in US/EU ($120k+/yr)
-- **Budget:** $2k-10k/mo for AI tooling
-- **Decision maker:** CTO or VP Engineering
-- **Trigger event:** Lost a bid because couldn't staff fast enough
-
-### Segment 2: Dev Shops
-- **Size:** 5-30 developers
-- **Pain:** Manual code review, testing, deployment eating billable hours
-- **Budget:** $1k-5k/mo
-- **Decision maker:** Lead Developer or Technical Director
-- **Trigger event:** Client complained about delivery speed
-
-### Segment 3: Marketing Agencies
-- **Size:** 10-40 people
-- **Pain:** Content creation bottleneck, manual reporting for clients
-- **Budget:** $2k-8k/mo
-- **Decision maker:** Head of Digital or Operations Director
-- **Trigger event:** Lost client due to slow reporting turnaround
-
-### Segment 4: Consulting Firms
-- **Size:** 5-25 consultants
-- **Pain:** Research and report generation take 60%+ of billable time
-- **Budget:** $3k-15k/mo
-- **Decision maker:** Managing Partner
-- **Trigger event:** Consultant burnout / attrition
-
-### Segment 5: Startup Studios
-- **Size:** 3-15 people building multiple products
-- **Pain:** Need to ship MVPs fast; can't hire full team per project
-- **Budget:** $2k-10k/mo
-- **Decision maker:** Founder / Studio Director
-- **Trigger event:** Failed to launch on time, lost investor confidence
+**Target:** Agencies, dev shops, consultancies | **Pilot pricing:** $500 deposit → $2k/mo → $20k/yr annual
 
 ---
 
-## Cold Email Sequence
+## 1. Ideal Customer Profile (ICP)
 
-### Email 1: Problem Awareness (Day 0)
-
-**Subject:** Your team is doing $9,650/mo of work an AI should handle
-
-Hi [Name],
-
-I noticed [Company] ships [X type of work] — impressive portfolio.
-
-Quick question: how many hours per week does your team spend on code review, testing, deployment, and client reporting?
-
-For a typical 20-person agency, that's ~150 hours/month of repeatable work. At $65/hr blended rate, that's $9,750/month.
-
-We built Mekong CLI — an AI platform with 319 commands that handles engineering, sales, marketing, and ops tasks autonomously. The Plan-Execute-Verify loop means it doesn't just suggest — it executes and self-validates.
-
-Agencies using our pilot are replacing 150+ hours/month of manual work for $2,000/month. That's 80% cost reduction on repeatable tasks.
-
-Worth a 15-min call to see if this fits [Company]?
-
-[Name]
-
-### Email 2: Social Proof (Day 3)
-
-**Subject:** How [Similar Company] saved 150 hours/month
-
-Hi [Name],
-
-Following up — wanted to share a quick example.
-
-A 15-person dev shop was spending:
-- 40 hrs/mo on code review → now 4 hrs (AI does first pass)
-- 30 hrs/mo on test writing → now 3 hrs (auto-generated)
-- 20 hrs/mo on deployment → now 2 hrs (CI/CD automation)
-- 25 hrs/mo on client reporting → now 5 hrs (auto-generated)
-
-**Net result:** 106 hours saved/month. Cost: $2,000/month. ROI: 382%.
-
-The AI handles the repeatable 80%. Your team focuses on the creative 20% that clients actually pay premium for.
-
-We offer a 30-day pilot — $500 setup fee (credited toward first month if you convert). No long-term commitment.
-
-Interested in exploring this for [Company]?
-
-### Email 3: Scarcity + Offer (Day 7)
-
-**Subject:** 2 pilot slots left this quarter
-
-Hi [Name],
-
-Last follow-up — we're running 5 enterprise pilots this quarter and have 2 slots remaining.
-
-Each pilot includes:
-- Dedicated onboarding (Week 1)
-- Custom command configuration for your workflow
-- Weekly ROI tracking dashboard
-- Direct Slack channel with our team
-
-If the ROI isn't there after 30 days, you walk away. No questions asked.
-
-Pilot fee: $500 (credited toward Enterprise plan if you convert).
-
-Want one of the remaining slots?
+| Segment | Pain Points | Decision Maker | Budget Range |
+|---------|-------------|----------------|-------------|
+| Digital agencies (5-50 employees) | Scaling delivery without headcount, margin squeeze on retainers, repetitive task overhead | CEO / Head of Ops | $500-$2k/mo |
+| Dev shops / software consultancies | Context switching across 5+ client projects, QA bottlenecks, junior onboarding time | CTO / Engineering Lead | $500-$2k/mo |
+| Marketing agencies with tech needs | Campaign ops, report generation, content pipeline at scale, no in-house dev | VP Marketing / COO | $500-$1.5k/mo |
+| Management consulting firms | Research synthesis, deliverable drafting, analyst time on low-value work | Practice Lead / COO | $1k-$5k/mo |
+| Startup studios / venture builders | Building multiple products simultaneously, lean team, no DevOps bandwidth | Founder / CTO | $500-$2k/mo |
 
 ---
 
-## Warm Outreach (LinkedIn DM)
+## 2. Email 1 — Problem Awareness (Day 0)
 
-Hi [Name] — saw your post about [topic]. Really resonated.
+**Subject:** The 40-hour week you're paying for that AI could handle
 
-We built something that might help: Mekong CLI runs 319 AI commands across engineering, sales, and ops. Think of it as an AI CTO for agencies.
+Hi [First Name],
 
-Pilot agencies are seeing 150+ hrs/month saved on repeatable work. Would you be open to a quick look?
+Running [Company] means your best people spend ~30% of their week on tasks that don't need their expertise: briefs, status reports, QA passes, research summaries, deployment checks.
 
-No pitch deck — I'll just show you the terminal for 10 min.
+We built Mekong CLI / OpenClaw to automate that layer. 319 commands, 542 skills, works with any LLM you already use. Teams report 10x faster task completion and 80% cost reduction on ops overhead. No vendor lock-in. Self-hosted option available.
 
----
+Worth 20 minutes to see a live demo on a workflow your team does every week?
 
-## 30-Day Pilot Structure
-
-### Pilot Fee: $500 (credited if converted)
-
-| Week | Focus | Deliverable |
-|------|-------|-------------|
-| **Week 1** | Setup + Onboarding | CLI installed, team trained, 5 core commands configured |
-| **Week 2** | Integration | Connect to existing CI/CD, project management, comms |
-| **Week 3** | Value Demonstration | AI handles real tasks; measure hours saved |
-| **Week 4** | ROI Review | Present ROI report; discuss conversion |
-
-### SLA During Pilot
-- Response time: <4 hours during business hours
-- Dedicated Slack channel
-- Weekly 30-min check-in call
-- Custom command development (up to 5)
-
-### Conversion Terms
-- Enterprise plan: $2,000/month (unlimited credits)
-- Annual commitment: $1,800/month (10% discount)
-- No setup fee (pilot fee credited)
+[Your name] | [Calendar link]
 
 ---
 
-## ROI Calculator
+## 3. Email 2 — Social Proof (Day 3)
 
-### Inputs (adjust per prospect)
-| Item | Value |
-|------|-------|
-| Team size | 20 people |
-| Avg hourly rate (blended) | $65/hr |
-| Hours/mo on repeatable tasks | 150 hrs |
-| Mekong CLI automation rate | 70% |
+**Subject:** Re: The 40-hour week — quick proof points
 
-### Calculation
-| Metric | Value |
-|--------|-------|
-| Hours automated/month | 105 hrs |
-| Labor cost saved/month | $6,825 |
-| Quality improvement value | $825/mo (fewer bugs, faster delivery) |
-| **Total monthly value** | **$7,650** |
-| Mekong CLI cost | $2,000/mo |
-| **Net savings/month** | **$5,650** |
-| **ROI** | **382%** |
-| **Payback period** | **8 days** |
+Hi [First Name],
 
-### By Role
-| Role | Hours Saved/mo | Value Saved |
-|------|---------------|-------------|
-| Developers (code review, testing) | 60 hrs | $4,200 |
-| DevOps (deployment, monitoring) | 25 hrs | $1,750 |
-| Marketing (content, reporting) | 20 hrs | $1,100 |
-| Sales (outreach, follow-up) | 15 hrs | $825 |
-| Management (planning, status) | 10 hrs | $750 |
+A few data points:
+
+- Dev shops cut sprint QA time ~70% (automated review + test generation)
+- Marketing agencies run content pipelines end-to-end: brief → draft → publish → report
+- Consulting firms run research + synthesis missions overnight; analysts review in the morning
+- ROI positive in week 1 for teams billing over $100/hr
+
+Pricing starts at $49/mo (200 credits). Enterprise pilots: $500 deposit, $2k/mo during pilot.
+
+If you have 20 minutes this week, I'll run a demo on a real workflow from your ops.
+
+[Calendar link]
 
 ---
 
-## Objection Handling
+## 4. Email 3 — Scarcity + Offer (Day 7)
+
+**Subject:** Last call — 3 pilot spots left this quarter
+
+Hi [First Name],
+
+We're limiting enterprise pilots to 5 companies this quarter for white-glove onboarding. 3 spots remain.
+
+Pilot structure: Week 1 setup → Weeks 2-3 automate 3 real workflows → Week 4 ROI review, go/no-go.
+
+Pricing: $500 deposit (credited to first month), $2k/mo during pilot, annual lock-in at $20k/yr if you continue.
+
+Reply or book directly: [Calendar link]. If timing is off, I'll reach out next quarter.
+
+[Your name]
+
+---
+
+## 5. Warm Outreach — LinkedIn DM
+
+Hi [Name] — your work at [Company] on [specific detail] stands out.
+
+Quick pitch: Mekong CLI is an AI ops platform for agencies and dev shops. 319 commands, works with any LLM, self-hosted option. Teams automate the 30% of work that doesn't need a human.
+
+Running a limited pilot this quarter — 5 spots, $500 to start. Worth 20 min for a live demo on a workflow your team actually runs?
+
+---
+
+## 6. ROI Calculator
+
+Baseline: 10-person agency, $150/hr blended rate.
+
+| Variable | Value |
+|----------|-------|
+| Hours saved per week (automation) | 15 hrs |
+| Billable rate | $150/hr |
+| Working weeks per year | 50 |
+| Annual value of saved time | 15 x $150 x 50 = **$112,500** |
+| OpenClaw Enterprise annual cost | **$20,000** |
+| Net annual ROI | **$92,500 (462%)** |
+| Break-even | ~Week 7 |
+
+Smaller team ($75/hr, 8 hrs/week saved): $30,000 saved vs $20,000 cost = 50% ROI, break-even month 8.
+
+---
+
+## 7. 30-Day Pilot Structure
+
+| Week | Focus | Milestone | Success Criteria |
+|------|-------|-----------|-----------------|
+| 1 | Setup + first mission | CLI installed, first automated workflow live | 1 mission completed end-to-end |
+| 2 | Workflow expansion | 3 recurring ops automated (QA, reporting, research, or content) | Time saved measurable vs manual baseline |
+| 3 | Integration + edge cases | Connected to team's existing tools (Git, Slack, CRM) | Team runs missions independently |
+| 4 | ROI review + decision | Documented time saved, cost comparison, satisfaction check | Go/no-go with data |
+
+Touchpoints: 30-min calls end of weeks 1 and 4. Async Slack channel throughout.
+
+---
+
+## 8. Objection Handlers
 
 | Objection | Response |
 |-----------|----------|
-| **"Too expensive"** | $2k/mo replaces $7,650 in labor. It's the cheapest senior hire you'll ever make. |
-| **"We already use Copilot/Cursor"** | Those help write code. Mekong CLI runs your entire business — sales, marketing, finance, ops. Different category. |
-| **"Security concerns"** | CLI runs locally. Your code never leaves your machine. Gateway is on Cloudflare (SOC 2 compliant). |
-| **"Our team won't adopt it"** | That's what the pilot is for. Week 1 is pure onboarding. If adoption is <50% by Week 3, we part ways. |
-| **"AI isn't reliable enough"** | PEV loop (Plan-Execute-Verify) + circuit breakers + rollback. 1,028+ tests pass. The AI verifies its own work. |
-| **"We need custom features"** | Enterprise plan includes up to 10 custom commands. Plus marketplace recipes cover 500+ use cases. |
-| **"What if you shut down?"** | MIT open source. You can fork and self-host. Your investment is never lost. |
-| **"Need to talk to my team"** | Totally understand. Can I send a 2-page summary they can review? Happy to do a 15-min demo for the team. |
+| "We already use ChatGPT / Cursor." | Those are point tools. OpenClaw orchestrates multi-step missions, maintains memory, integrates with your git/deploy pipeline. Different layer. |
+| "No engineering resources to set it up." | Setup takes under 2 hours. We do it with you in week 1. Cloud-managed or self-hosted — your choice. |
+| "Security / data leaving our systems." | Self-hosted option: data never leaves your infra, you bring your own LLM keys. We have no access to your workflows. |
+| "ROI isn't clear yet." | Pilot defines a measurable baseline in week 1, measures against it in week 4. No data = no commitment to continue. |
+| "Too expensive." | Pilot starts at $500. One person billing 10 hrs/week at $100/hr breaks even in 5 weeks. Annual $20k = $1,667/mo — less than one junior hire's monthly salary. |
 
 ---
 
-## Success Metrics (Track During Pilot)
+## 9. Pilot Pricing
 
-| Metric | Target | How to Measure |
-|--------|--------|----------------|
-| Hours saved/week | 25+ hrs | Time tracking before/after |
-| Command adoption rate | >50% of team using daily | CLI usage analytics |
-| Task completion rate | >90% | Mission success metrics |
-| Time to first value | <3 days | First autonomous task completed |
-| Team satisfaction | >7/10 | Quick survey Week 2 + Week 4 |
-| Bug reduction | >20% | Compare defect rates |
+| Stage | Amount | Terms |
+|-------|--------|-------|
+| Pilot deposit | $500 | Credited to first month; refundable if no missions completed in week 1 |
+| Pilot monthly | $2,000/mo | During 30-day pilot |
+| Enterprise annual (post-pilot) | $20,000/yr ($1,667/mo) | Billed annually via Polar.sh; unlimited credits + priority support |
+| Enterprise monthly (no annual) | $2,500/mo | Month-to-month after pilot; same unlimited credits |
 
----
-
-## Conversion Playbook
-
-### Week 4 ROI Meeting Agenda (30 min)
-
-1. **Results review** (10 min) — Show hours saved, tasks completed, ROI calculation
-2. **Team feedback** (5 min) — Share survey results
-3. **Scaling plan** (5 min) — How to expand usage across more workflows
-4. **Pricing discussion** (5 min) — Enterprise plan details, annual discount
-5. **Decision** (5 min) — Close or set follow-up date
-
-### Follow-up by Outcome
-
-**If YES:** Send contract same day. Onboard remaining team members Week 5.
-
-**If MAYBE:** "What would need to be true for this to be a yes?" Address blockers. Set 1-week decision deadline.
-
-**If NO:** Thank them. Ask for referrals. Add to nurture sequence (monthly ROI case study emails).
+Payment: Polar.sh only. Invoice available for enterprise billing. Custom pricing for studios managing 10+ client accounts.
 
 ---
 
-## Target Outreach List (Sample Cohort)
-
-| # | Segment | Geography | Approach | Sequence Start |
-|---|---------|-----------|----------|---------------|
-| 1 | Digital Agency | US (NY/SF) | Cold email | Week 1 |
-| 2 | Dev Shop | EU (Berlin/London) | LinkedIn warm | Week 1 |
-| 3 | Marketing Agency | SEA (Singapore) | Cold email | Week 1 |
-| 4 | Consulting Firm | US (Remote) | Warm referral | Week 2 |
-| 5 | Startup Studio | VN (HCMC) | Direct network | Week 1 |
-
-**Batch all 5 pilots to start same week** — shared onboarding call saves 60% setup time.
-
----
-
-## Quick Reference
-
-**30-second pitch:**
-"Mekong CLI is an AI platform with 319 commands that runs your agency's repeatable work — code review, testing, deployment, reporting, outreach. Pilot agencies save 150+ hours/month for $2k/month. Want to see a 10-min demo?"
-
-**Positioning:**
-- NOT a chatbot → an operating system
-- NOT just for developers → covers all business functions
-- NOT a black box → open source, you own everything
+*Last updated: 2026-03-21 | Mekong CLI v5.0 | RaaS tiers: Starter $49 / Pro $149 / Enterprise $499*
