@@ -7,6 +7,7 @@ import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
 import { AuthService } from '../services/auth-service';
 import { EmailService } from '../services/email-service';
+import { RateLimitService } from '../services/rate-limit-service';
 import { json } from '../utils/response';
 
 export const tenants = new Hono<{ Bindings: Env }>();
@@ -161,6 +162,36 @@ tenants.post('/trial-extend', async (c) => {
   ).bind(crypto.randomUUID(), tenant.tenantId).run();
 
   return json({ credited: 10, message: 'Thank you for sharing! 10 bonus credits added.' });
+});
+
+/**
+ * GET /tenants/limits — Show current rate limits and usage quotas for this tenant
+ */
+tenants.get('/limits', async (c) => {
+  const tenant = getTenant(c);
+  const rateLimitService = new RateLimitService(c.env);
+
+  const [rateLimits, quota] = await Promise.all([
+    Promise.resolve(rateLimitService.getTierLimits(tenant.tier)),
+    rateLimitService.checkMonthlyQuota(tenant.tenantId, tenant.tier),
+  ]);
+
+  const percentUsed = quota.limit === -1
+    ? 0
+    : Math.round((quota.used / quota.limit) * 100);
+
+  return json({
+    tier: tenant.tier,
+    rateLimits: {
+      requestsPerMinute: rateLimits.requestsPerMinute,
+      monthlyMissions: rateLimits.monthlyMissions,
+    },
+    usage: {
+      missionsThisMonth: quota.used,
+      remaining: quota.remaining,
+      percentUsed,
+    },
+  });
 });
 
 /**

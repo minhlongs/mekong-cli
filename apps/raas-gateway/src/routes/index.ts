@@ -14,6 +14,7 @@ import { telegram } from './telegram';
 import { alerts } from './alerts';
 import { marketplace } from './marketplace';
 import { stripe } from './stripe';
+import { checkout } from './checkout';
 import { admin } from './admin';
 import { adminAnalytics } from './admin-analytics';
 import { dunning } from './dunning';
@@ -23,6 +24,8 @@ import { status } from './status';
 import { dashboard } from './dashboard';
 import { playground } from './playground';
 import { usageExport } from './usage-export';
+import { metrics } from './metrics';
+import { apiDocs } from './api-docs';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -51,7 +54,10 @@ export function createRoutes() {
   routes.route('/billing', billing);
   // Stripe: /billing/stripe/webhook is PUBLIC (no global auth), /billing/stripe/checkout has its own auth()
   routes.route('/billing/stripe', stripe);
+  routes.route('/billing/checkout', checkout);
   routes.route('/webhook/telegram', telegram);
+  routes.route('/metrics', metrics);
+  routes.route('/docs', apiDocs);
 
   // Waitlist email capture (public)
   routes.post('/waitlist', async (c) => {
@@ -199,6 +205,12 @@ export function createRoutes() {
         '/v1/usage/export': { get: { summary: 'Export credit transactions as CSV', tags: ['Usage'], security: [{ bearer: [] }], parameters: [{ name: 'format', in: 'query', schema: { type: 'string', enum: ['csv'] } }, { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }], responses: { '200': { description: 'CSV file download', content: { 'text/csv': { schema: { type: 'string' } } } } } } },
         '/v1/invoices': { get: { summary: 'List invoices (subscriptions + credit purchases)', tags: ['Billing'], security: [{ bearer: [] }], responses: { '200': { description: 'Invoice list with id, date, amount, currency, status, description, items' } } } },
         '/v1/invoices/{id}': { get: { summary: 'Get single invoice detail', tags: ['Billing'], security: [{ bearer: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Invoice detail' }, '404': { description: 'Invoice not found' } } } },
+        '/billing/checkout': { post: { summary: 'Create Polar checkout session', tags: ['Billing'], security: [{ bearer: [] }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { product_id: { type: 'string' }, success_url: { type: 'string' }, cancel_url: { type: 'string' } }, required: ['product_id'] } } } } } },
+        '/billing/checkout/products': { get: { summary: 'List purchasable products', tags: ['Billing'] } },
+        '/v1/tenants/limits': { get: { summary: 'Rate limits and usage quotas', tags: ['Tenants'], security: [{ bearer: [] }] } },
+        '/metrics': { get: { summary: 'Request metrics (24h)', tags: ['System'] } },
+        '/metrics/live': { get: { summary: 'Live metrics (current hour)', tags: ['System'] } },
+        '/docs': { get: { summary: 'API reference docs', tags: ['System'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });

@@ -17,14 +17,14 @@ export interface RateLimitResult {
   retryAfter?: number;   // Seconds until token available
 }
 
-// Requests per minute by tier
-const TIER_RATE_LIMITS: Record<string, number> = {
-  free: 10,
-  starter: 30,
-  pro: 60,
-  agency: 120,
-  master: 300,
-  enterprise: 1000,
+// Per-tier limits: requests per minute + monthly mission quota
+const TIER_LIMITS: Record<string, { requestsPerMinute: number; monthlyMissions: number }> = {
+  free:       { requestsPerMinute: 10,   monthlyMissions: 5 },
+  starter:    { requestsPerMinute: 30,   monthlyMissions: 50 },
+  pro:        { requestsPerMinute: 60,   monthlyMissions: 200 },
+  agency:     { requestsPerMinute: 120,  monthlyMissions: 500 },
+  master:     { requestsPerMinute: 300,  monthlyMissions: 2000 },
+  enterprise: { requestsPerMinute: 1000, monthlyMissions: -1 }, // unlimited
 };
 
 // Token bucket config derived from per-minute limits
@@ -39,7 +39,7 @@ export class RateLimitService {
    * Get rate limit config for tier — defaults to free if unknown
    */
   private getConfig(tier: string): RateLimitConfig {
-    const rpm = TIER_RATE_LIMITS[tier] ?? TIER_RATE_LIMITS.free;
+    const rpm = (TIER_LIMITS[tier] ?? TIER_LIMITS.free).requestsPerMinute;
     return tierConfig(rpm);
   }
 
@@ -47,7 +47,51 @@ export class RateLimitService {
    * Get requests-per-minute limit for tier
    */
   getLimit(tier: string): number {
-    return TIER_RATE_LIMITS[tier] ?? TIER_RATE_LIMITS.free;
+    return (TIER_LIMITS[tier] ?? TIER_LIMITS.free).requestsPerMinute;
+  }
+
+  /**
+   * Get full tier limits config (rpm + monthly missions)
+   */
+  getTierLimits(tier: string): { requestsPerMinute: number; monthlyMissions: number } {
+    return TIER_LIMITS[tier] ?? TIER_LIMITS.free;
+  }
+
+  /**
+   * Check monthly mission quota for tenant
+   * Returns allowed status, usage counts, and remaining missions
+   */
+  async checkMonthlyQuota(
+    tenantId: string,
+    tier: string,
+    env?: Env,
+  ): Promise<{ allowed: boolean; used: number; limit: number; remaining: number }> {
+    const db = (env ?? this.env).DB;
+    const { monthlyMissions: limit } = TIER_LIMITS[tier] ?? TIER_LIMITS.free;
+
+    try {
+      const row = await db
+        .prepare(
+          `SELECT COUNT(*) as count FROM missions
+           WHERE tenant_id = ? AND created_at >= date('now', 'start of month')`
+        )
+        .bind(tenantId)
+        .first<{ count: number }>();
+
+      const used = row?.count ?? 0;
+
+      // -1 means unlimited (enterprise)
+      if (limit === -1) {
+        return { allowed: true, used, limit, remaining: -1 };
+      }
+
+      const remaining = Math.max(0, limit - used);
+      return { allowed: used < limit, used, limit, remaining };
+    } catch (error) {
+      console.error('[RateLimitService] Error checking monthly quota:', error);
+      // Fail open on DB error
+      return { allowed: true, used: 0, limit, remaining: limit === -1 ? -1 : limit };
+    }
   }
 
   /**

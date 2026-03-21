@@ -6,6 +6,7 @@ import { Hono } from 'hono';
 import { cors } from './middleware/cors';
 import { logger } from './middleware/logger';
 import { securityHeaders } from './middleware/security-headers';
+import { requestMetrics } from './middleware/request-metrics';
 import { createRoutes } from './routes';
 import { errorResponse } from './utils/response';
 import { ApiError } from './utils/errors';
@@ -25,6 +26,7 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   ADMIN_API_KEY?: string;
   POLAR_API_TOKEN?: string;
+  POLAR_ACCESS_TOKEN?: string;
 }
 
 // Export app for test imports
@@ -34,6 +36,7 @@ export const app = new Hono<{ Bindings: Env }>();
 app.use('*', logger());
 app.use('*', cors());
 app.use('*', securityHeaders());
+app.use('*', requestMetrics());
 
 // Mount routes
 app.route('/', createRoutes());
