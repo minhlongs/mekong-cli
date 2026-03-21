@@ -16,9 +16,45 @@ Usage:
 import typer
 import os
 from rich.console import Console
-from typing import Optional
+from typing import Optional, Dict
 
 console = Console()
+
+# Time estimates (minutes) for manual vs CLI — synced with src/analytics/roi_dashboard.py
+TIME_ESTIMATES: Dict[str, Dict[str, int]] = {
+    # Commands
+    "cook": {"manual": 120, "cli": 5},      # 2h → 5min = 24x faster
+    "plan": {"manual": 60, "cli": 2},        # 1h → 2min = 30x faster
+    "fix": {"manual": 90, "cli": 10},        # 1.5h → 10min = 9x faster
+    "code": {"manual": 180, "cli": 15},      # 3h → 15min = 12x faster
+    "test": {"manual": 60, "cli": 5},        # 1h → 5min = 12x faster
+    "review": {"manual": 45, "cli": 3},      # 45min → 3min = 15x faster
+    "deploy": {"manual": 30, "cli": 2},      # 30min → 2min = 15x faster
+    "debug": {"manual": 120, "cli": 15},      # 2h → 15min = 8x faster
+    # Agents
+    "planner": {"manual": 90, "cli": 3},      # 1.5h → 3min = 30x faster
+    "researcher": {"manual": 180, "cli": 5},  # 3h → 5min = 36x faster
+    "fullstack-developer": {"manual": 240, "cli": 10},
+    "tester": {"manual": 60, "cli": 3},
+    "code-reviewer": {"manual": 90, "cli": 5},
+    "debugger": {"manual": 120, "cli": 10},
+    "docs-manager": {"manual": 60, "cli": 3},
+    "project-manager": {"manual": 45, "cli": 2},
+}
+
+# Cost per agent call (USD) — synced with src/analytics/roi_dashboard.py
+AGENT_COSTS: Dict[str, float] = {
+    "planner": 0.05,
+    "researcher": 0.08,
+    "fullstack-developer": 0.15,
+    "tester": 0.04,
+    "code-reviewer": 0.06,
+    "debugger": 0.10,
+    "docs-manager": 0.04,
+    "project-manager": 0.03,
+    "scout": 0.02,
+    "explorer": 0.03,
+}
 
 app = typer.Typer(
     name="analytics",
