@@ -15,6 +15,9 @@ alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-6-20250901 bash
 alias mekong-sonnet='MEKONG_TOOL=claude MEKONG_MODEL=claude-sonnet-4-6-20250514 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-qwen='MEKONG_TOOL=claude MEKONG_MODEL=qwen3-coder-plus bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
+# RaaS Gateway bridge
+alias mekong-raas='bash $MEKONG_ROOT/scripts/raas-bridge.sh'
+
 # Quick
 alias mek='mekong' mkc='mekong-claude' mkg='mekong-gemini'
 alias mekong-cto='bash $MEKONG_ROOT/cto-daemon.sh'
