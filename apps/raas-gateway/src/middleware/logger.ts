@@ -1,5 +1,5 @@
 /**
- * Request logging middleware with correlation IDs
+ * Request logging middleware — correlation IDs and response time tracking
  */
 
 import type { MiddlewareHandler, Context } from 'hono';
@@ -9,7 +9,7 @@ export function logger(): MiddlewareHandler {
     const startTime = Date.now();
     const correlationId = c.req.header('X-Correlation-ID') || crypto.randomUUID();
 
-    // Add correlation ID to response headers
+    // Add correlation ID to response headers and context
     c.header('X-Correlation-ID', correlationId);
     c.set('correlationId', correlationId);
 
@@ -22,6 +22,9 @@ export function logger(): MiddlewareHandler {
 
     const duration = Date.now() - startTime;
     const status = c.res.status;
+
+    // Attach response time header so clients can measure latency
+    c.header('X-Response-Time', `${duration}ms`);
 
     console.log(`[${correlationId}] <-- ${status} ${method} ${path} (${duration}ms)`);
   };

@@ -13,6 +13,7 @@ export function json<T>(data: T, init?: ResponseInit): Response {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      'X-API-Version': '2026-03-21',
       ...init?.headers,
     },
   });

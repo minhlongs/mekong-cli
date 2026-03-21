@@ -93,8 +93,12 @@ async function addCreditHeaders(c: any): Promise<void> {
     const balance = await creditService.getBalance(tenant.tenantId);
 
     c.header('X-Credits-Remaining', balance.toString());
-    if (balance < 5) {
+    if (balance === 0) {
       c.header('X-Credits-Warning', 'low');
+      c.header('X-Credits-Alert', 'exhausted');
+    } else if (balance < 5) {
+      c.header('X-Credits-Warning', 'low');
+      c.header('X-Credits-Alert', 'low');
     }
   } catch {
     // Non-critical — don't break the response

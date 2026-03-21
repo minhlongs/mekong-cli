@@ -6,6 +6,7 @@ import { Hono } from 'hono';
 import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
 import { AuthService } from '../services/auth-service';
+import { EmailService } from '../services/email-service';
 import { json } from '../utils/response';
 
 export const tenants = new Hono<{ Bindings: Env }>();
@@ -84,7 +85,13 @@ tenants.post('/signup', async (c) => {
   const authService = new AuthService(c.env);
   const token = await authService.generateJwt(tenantId, 'free', ['read', 'write']);
 
+  // Send welcome email — fire-and-forget, never blocks response
   const bonusCredits = refBy ? 15 : 10;
+  const emailService = new EmailService(c.env);
+  c.executionCtx.waitUntil(
+    emailService.sendWelcome(email, name, referralCode, bonusCredits)
+  );
+
   return json({
     tenantId,
     name,
@@ -128,6 +135,35 @@ tenants.post('/login', async (c) => {
 tenants.use('/*', auth());
 
 /**
+ * POST /tenants/trial-extend — One-time trial extension: +10 bonus credits for social share
+ * Idempotent: returns 409 if already claimed
+ */
+tenants.post('/trial-extend', async (c) => {
+  const tenant = getTenant(c);
+
+  // Guard: only one extension per tenant
+  const existing = await c.env.DB.prepare(
+    "SELECT id FROM credit_transactions WHERE tenant_id = ? AND description = 'Trial extension bonus'"
+  ).bind(tenant.tenantId).first();
+
+  if (existing) {
+    return json({ error: 'Trial already extended', code: 'ALREADY_EXTENDED' }, { status: 409 });
+  }
+
+  // Credit 10 bonus MCU to tenant balance
+  await c.env.DB.prepare(
+    'UPDATE tenants SET balance = balance + 10, total_earned = total_earned + 10 WHERE id = ?'
+  ).bind(tenant.tenantId).run();
+
+  await c.env.DB.prepare(
+    `INSERT INTO credit_transactions (id, tenant_id, amount, type, description, metadata, created_at)
+     VALUES (?, ?, 10, 'adjustment', 'Trial extension bonus', '{"source":"social_share"}', datetime('now'))`
+  ).bind(crypto.randomUUID(), tenant.tenantId).run();
+
+  return json({ credited: 10, message: 'Thank you for sharing! 10 bonus credits added.' });
+});
+
+/**
  * GET /tenants/profile — Get current tenant profile
  */
 tenants.get('/profile', async (c) => {
@@ -153,17 +189,43 @@ tenants.get('/profile', async (c) => {
 tenants.get('/upgrade', async (c) => {
   const tenant = getTenant(c);
 
+  const polarProductIds: Record<string, string> = {
+    starter: 'ce215739-4684-4deb-b257-8321ea4d844d',
+    pro: 'b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f',
+    agency: '0e752654-5cb6-4f48-a990-b2d3eb6a2429',
+    master: 'dc82a4bb-ad5d-473c-ac29-67b6397700ec',
+  };
+
   const tiers = [
     { id: 'free', name: 'Free', price: 0, credits: 10, dailyLimit: 3, features: ['Community support'] },
-    { id: 'starter', name: 'Starter', price: 29, credits: 50, dailyLimit: 15, features: ['Email support', 'All 5 layers'], checkoutUrl: 'https://polar.sh/checkout/ce215739-4684-4deb-b257-8321ea4d844d' },
-    { id: 'pro', name: 'Pro', price: 99, credits: 200, dailyLimit: 50, features: ['Priority support', 'Analytics', 'Premium models', 'Batch missions'], checkoutUrl: 'https://polar.sh/checkout/b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f' },
-    { id: 'agency', name: 'Agency', price: 199, credits: 500, dailyLimit: -1, features: ['Dedicated support', 'Unlimited missions', 'Webhook callbacks'], checkoutUrl: 'https://polar.sh/checkout/0e752654-5cb6-4f48-a990-b2d3eb6a2429' },
-    { id: 'master', name: 'Master', price: 399, credits: 1000, dailyLimit: -1, features: ['SSO', 'Audit logs', 'Custom integrations', 'Priority queue'], checkoutUrl: 'https://polar.sh/checkout/dc82a4bb-ad5d-473c-ac29-67b6397700ec' },
+    { id: 'starter', name: 'Starter', price: 29, credits: 50, dailyLimit: 15, features: ['Email support', 'All 5 layers'] },
+    { id: 'pro', name: 'Pro', price: 99, credits: 200, dailyLimit: 50, features: ['Priority support', 'Analytics', 'Premium models', 'Batch missions'] },
+    { id: 'agency', name: 'Agency', price: 199, credits: 500, dailyLimit: -1, features: ['Dedicated support', 'Unlimited missions', 'Webhook callbacks'] },
+    { id: 'master', name: 'Master', price: 399, credits: 1000, dailyLimit: -1, features: ['SSO', 'Audit logs', 'Custom integrations', 'Priority queue'] },
   ];
 
   const currentIdx = tiers.findIndex(t => t.id === tenant.tier);
   const current = tiers[currentIdx] || tiers[0];
   const upgrades = tiers.slice(Math.max(currentIdx + 1, 1));
+
+  // Generate dynamic Polar checkout URLs for upgrades
+  const polarToken = c.env.POLAR_API_TOKEN;
+  if (polarToken) {
+    for (const tier of upgrades) {
+      const productId = polarProductIds[tier.id];
+      if (productId) {
+        try {
+          const resp = await fetch('https://api.polar.sh/v1/checkouts/custom/', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${polarToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ product_id: productId, payment_processor: 'stripe', success_url: 'https://app.agencyos.network/dashboard?payment=success', metadata: { tenant_id: tenant.tenantId } }),
+          });
+          const checkout = await resp.json() as any;
+          if (checkout?.url) (tier as any).checkoutUrl = checkout.url;
+        } catch { /* fallback: no checkout URL */ }
+      }
+    }
+  }
 
   return json({ currentTier: current, upgrades });
 });
@@ -253,6 +315,114 @@ tenants.get('/digest', async (c) => {
     balance: credits?.balance ?? 0,
     recentGoals: topGoals.results.map(g => ({ goal: g.goal.slice(0, 80), status: g.status, cost: g.credits_cost })),
   });
+});
+
+/**
+ * GET /tenants/usage — Monthly usage summary for current billing period
+ */
+tenants.get('/usage', async (c) => {
+  const tenant = getTenant(c);
+  const tid = tenant.tenantId;
+
+  const [monthly, daily, byComplexity, byProject] = await Promise.all([
+    // This month's totals
+    c.env.DB.prepare(
+      `SELECT COUNT(*) as totalMissions,
+              SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed,
+              SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed,
+              COALESCE(SUM(credits_cost), 0) as totalCredits
+       FROM missions WHERE tenant_id = ?
+       AND created_at >= datetime('now', 'start of month')`
+    ).bind(tid).first(),
+
+    // Daily breakdown (last 30 days)
+    c.env.DB.prepare(
+      `SELECT date(created_at) as day, COUNT(*) as missions, SUM(credits_cost) as credits
+       FROM missions WHERE tenant_id = ? AND created_at >= datetime('now', '-30 days')
+       GROUP BY date(created_at) ORDER BY day DESC`
+    ).bind(tid).all(),
+
+    // By complexity
+    c.env.DB.prepare(
+      `SELECT complexity, COUNT(*) as count, SUM(credits_cost) as credits
+       FROM missions WHERE tenant_id = ? AND created_at >= datetime('now', 'start of month')
+       GROUP BY complexity`
+    ).bind(tid).all(),
+
+    // By project
+    c.env.DB.prepare(
+      `SELECT COALESCE(project, 'default') as project, COUNT(*) as missions, SUM(credits_cost) as credits
+       FROM missions WHERE tenant_id = ? AND created_at >= datetime('now', 'start of month')
+       GROUP BY project ORDER BY credits DESC LIMIT 10`
+    ).bind(tid).all(),
+  ]);
+
+  return json({
+    period: 'current_month',
+    summary: monthly || { totalMissions: 0, completed: 0, failed: 0, totalCredits: 0 },
+    daily: daily.results,
+    byComplexity: byComplexity.results,
+    byProject: byProject.results,
+  });
+});
+
+/**
+ * GET /tenants/invoices — Transaction history for billing
+ */
+tenants.get('/invoices', async (c) => {
+  const tenant = getTenant(c);
+  const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+  const offset = parseInt(c.req.query('offset') || '0');
+  const type = c.req.query('type'); // filter: purchase, adjustment, refund, deduction
+  const from = c.req.query('from'); // ISO date
+  const to = c.req.query('to'); // ISO date
+
+  let query = 'SELECT * FROM credit_transactions WHERE tenant_id = ?';
+  const bindings: any[] = [tenant.tenantId];
+
+  if (type) { query += ' AND type = ?'; bindings.push(type); }
+  if (from) { query += ' AND created_at >= ?'; bindings.push(from); }
+  if (to) { query += ' AND created_at <= ?'; bindings.push(to); }
+
+  // Get total count
+  const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+  const total = await c.env.DB.prepare(countQuery).bind(...bindings).first<{total: number}>();
+
+  query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  bindings.push(limit, offset);
+
+  const transactions = await c.env.DB.prepare(query).bind(...bindings).all();
+
+  // Summary
+  const summary = await c.env.DB.prepare(
+    `SELECT type, COUNT(*) as count, COALESCE(SUM(amount),0) as total_amount
+     FROM credit_transactions WHERE tenant_id = ?
+     GROUP BY type`
+  ).bind(tenant.tenantId).all();
+
+  return json({
+    transactions: transactions.results,
+    total: total?.total ?? 0,
+    pagination: { limit, offset },
+    summary: summary.results,
+  });
+});
+
+/**
+ * PUT /tenants/settings — Update tenant notification and webhook settings
+ */
+tenants.put('/settings', async (c) => {
+  const tenant = getTenant(c);
+  const body = await c.req.json().catch(() => ({}));
+  const webhookUrl = body.webhook_url?.trim() || null;
+  const notifyEmail = body.notify_email !== false;
+  const notifyTelegram = body.notify_telegram !== false;
+
+  await c.env.DB.prepare(
+    `UPDATE tenants SET webhook_url = ?, notify_email = ?, notify_telegram = ?, updated_at = datetime('now') WHERE id = ?`
+  ).bind(webhookUrl, notifyEmail ? 1 : 0, notifyTelegram ? 1 : 0, tenant.tenantId).run();
+
+  return json({ updated: true, webhookUrl, notifyEmail, notifyTelegram });
 });
 
 /**

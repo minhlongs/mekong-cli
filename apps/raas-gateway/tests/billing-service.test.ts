@@ -70,6 +70,7 @@ describe('BillingService', () => {
       ENVIRONMENT: 'test',
       LOG_LEVEL: 'debug',
       AI: {} as any,
+      TELEGRAM_BOT_TOKEN: 'test-bot-token',
     });
   });
 
@@ -141,6 +142,7 @@ describe('BillingService', () => {
         ENVIRONMENT: 'test',
         LOG_LEVEL: 'debug',
         AI: {} as any,
+      TELEGRAM_BOT_TOKEN: 'test-bot-token',
       });
       const result = await noSecretService.verifySignature('{}', 'any-signature');
       expect(result).toBe(false);

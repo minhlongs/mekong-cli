@@ -11,6 +11,24 @@ import { json } from '../utils/response';
 export const billing = new Hono<{ Bindings: Env }>();
 
 /**
+ * Tier-to-credits mapping — match by first 8 chars of product_id
+ */
+const TIER_CREDITS: Record<string, { tier: string; credits: number }> = {
+  'ce215739': { tier: 'starter', credits: 50 },
+  'b810b7eb': { tier: 'pro', credits: 200 },
+  '0e752654': { tier: 'agency', credits: 500 },
+  'dc82a4bb': { tier: 'master', credits: 1000 },
+};
+
+/**
+ * Resolve tier config from product_id (first 8 chars)
+ */
+function resolveTierFromProductId(productId: string): { tier: string; credits: number } | null {
+  const prefix = productId.slice(0, 8);
+  return TIER_CREDITS[prefix] || null;
+}
+
+/**
  * POST /billing/webhook — Polar.sh webhook endpoint
  *
  * Events handled:
@@ -18,6 +36,10 @@ export const billing = new Hono<{ Bindings: Env }>();
  * - subscription.active: Activate subscription, update tier
  * - subscription.canceled: Downgrade to starter
  * - refund.created: Deduct credits
+ * - subscription.created: Create subscription record, upgrade tier, add monthly credits
+ * - subscription.updated: Update period dates, reload monthly credits
+ * - subscription.cancelled: Mark cancelled, schedule tier downgrade at period end
+ * - subscription.revoked: Immediately downgrade to free tier, mark expired
  */
 billing.post('/webhook', authRateLimit(), async (c) => {
   const billingService = new BillingService(c.env);
@@ -104,6 +126,22 @@ billing.post('/webhook', authRateLimit(), async (c) => {
         result = await billingService.processRefund(event);
         break;
 
+      case 'subscription.created':
+        result = await handleSubscriptionCreated(c.env, event);
+        break;
+
+      case 'subscription.updated':
+        result = await handleSubscriptionUpdated(c.env, event);
+        break;
+
+      case 'subscription.cancelled':
+        result = await handleSubscriptionCancelled(c.env, event);
+        break;
+
+      case 'subscription.revoked':
+        result = await handleSubscriptionRevoked(c.env, event);
+        break;
+
       default:
         // Unknown event type - still acknowledge
         console.log('[BillingService] Unknown event type:', event.type);
@@ -146,6 +184,206 @@ billing.post('/webhook', authRateLimit(), async (c) => {
     );
   }
 });
+
+// ---------------------------------------------------------------------------
+// Subscription lifecycle handlers
+// ---------------------------------------------------------------------------
+
+/**
+ * subscription.created — create DB record, upgrade tier, add monthly credits
+ */
+async function handleSubscriptionCreated(
+  env: Env,
+  event: PolarEvent
+): Promise<{ success: boolean; credits?: number; tier?: string }> {
+  const sub = (event.data as any).subscription;
+  const customer = (event.data as any).customer;
+
+  const tenantId = customer?.external_id || (event.data as any).metadata?.tenant_id;
+  if (!tenantId || !sub) {
+    console.error('[Billing] subscription.created: missing tenantId or subscription data');
+    return { success: false };
+  }
+
+  const tierConfig = resolveTierFromProductId(sub.product_id || '');
+  if (!tierConfig) {
+    console.warn('[Billing] subscription.created: unknown product_id', sub.product_id);
+    return { success: false };
+  }
+
+  const now = new Date().toISOString();
+
+  // Upsert subscription record
+  await env.DB.prepare(
+    `INSERT INTO subscriptions
+       (id, tenant_id, polar_subscription_id, tier, status,
+        current_period_start, current_period_end, credits_per_period, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?)
+     ON CONFLICT(polar_subscription_id) DO UPDATE SET
+       status = 'active',
+       current_period_start = excluded.current_period_start,
+       current_period_end = excluded.current_period_end,
+       updated_at = excluded.updated_at`
+  )
+    .bind(
+      crypto.randomUUID(),
+      tenantId,
+      sub.id,
+      tierConfig.tier,
+      sub.current_period_start || now,
+      sub.current_period_end || now,
+      tierConfig.credits,
+      now,
+      now
+    )
+    .run();
+
+  // Upgrade tenant tier
+  await env.DB.prepare(
+    "UPDATE tenants SET tier = ?, updated_at = datetime('now') WHERE id = ?"
+  )
+    .bind(tierConfig.tier, tenantId)
+    .run();
+
+  // Add monthly credits via CreditService
+  const { CreditService } = await import('../services/credit-service');
+  const creditService = new CreditService(env);
+  await creditService.addCredits(
+    tenantId,
+    tierConfig.credits,
+    'purchase',
+    `Subscription started: ${tierConfig.tier}`,
+    { subscription_id: sub.id, event_id: event.id }
+  );
+
+  console.log(`[Billing] subscription.created: ${tenantId} → ${tierConfig.tier} +${tierConfig.credits} credits`);
+  return { success: true, tier: tierConfig.tier, credits: tierConfig.credits };
+}
+
+/**
+ * subscription.updated — update period dates, reload monthly credits (renewal)
+ */
+async function handleSubscriptionUpdated(
+  env: Env,
+  event: PolarEvent
+): Promise<{ success: boolean; credits?: number; tier?: string }> {
+  const sub = (event.data as any).subscription;
+  const customer = (event.data as any).customer;
+
+  const tenantId = customer?.external_id || (event.data as any).metadata?.tenant_id;
+  if (!tenantId || !sub) {
+    console.error('[Billing] subscription.updated: missing tenantId or subscription data');
+    return { success: false };
+  }
+
+  const now = new Date().toISOString();
+
+  // Fetch existing subscription to get credits_per_period
+  const existing = await env.DB.prepare(
+    'SELECT credits_per_period, tier FROM subscriptions WHERE polar_subscription_id = ?'
+  )
+    .bind(sub.id)
+    .first<{ credits_per_period: number; tier: string }>();
+
+  // Update period dates in DB
+  await env.DB.prepare(
+    `UPDATE subscriptions SET
+       current_period_start = ?,
+       current_period_end = ?,
+       status = 'active',
+       updated_at = ?
+     WHERE polar_subscription_id = ?`
+  )
+    .bind(
+      sub.current_period_start || now,
+      sub.current_period_end || now,
+      now,
+      sub.id
+    )
+    .run();
+
+  // Reload monthly credits if subscription found
+  const creditsToAdd = existing?.credits_per_period ?? 0;
+  const tier = existing?.tier ?? '';
+
+  if (creditsToAdd > 0) {
+    const { CreditService } = await import('../services/credit-service');
+    const creditService = new CreditService(env);
+    await creditService.addCredits(
+      tenantId,
+      creditsToAdd,
+      'rollover',
+      `Subscription renewal: ${tier}`,
+      { subscription_id: sub.id, event_id: event.id }
+    );
+    console.log(`[Billing] subscription.updated: ${tenantId} renewed +${creditsToAdd} credits`);
+    return { success: true, credits: creditsToAdd, tier };
+  }
+
+  console.log(`[Billing] subscription.updated: ${tenantId} period dates refreshed (no credits reloaded)`);
+  return { success: true };
+}
+
+/**
+ * subscription.cancelled — mark cancelled, keep tier until period end
+ */
+async function handleSubscriptionCancelled(
+  env: Env,
+  event: PolarEvent
+): Promise<{ success: boolean }> {
+  const sub = (event.data as any).subscription;
+  const customer = (event.data as any).customer;
+
+  const tenantId = customer?.external_id || (event.data as any).metadata?.tenant_id;
+  if (!tenantId || !sub) {
+    console.error('[Billing] subscription.cancelled: missing tenantId or subscription data');
+    return { success: false };
+  }
+
+  // Mark as cancelled — tier stays until current_period_end (Polar handles expiry via revoked)
+  await env.DB.prepare(
+    "UPDATE subscriptions SET status = 'cancelled', updated_at = datetime('now') WHERE polar_subscription_id = ?"
+  )
+    .bind(sub.id)
+    .run();
+
+  console.log(`[Billing] subscription.cancelled: ${tenantId} marked cancelled, tier active until period end`);
+  return { success: true };
+}
+
+/**
+ * subscription.revoked — immediately downgrade to free tier, mark expired
+ */
+async function handleSubscriptionRevoked(
+  env: Env,
+  event: PolarEvent
+): Promise<{ success: boolean; tier?: string }> {
+  const sub = (event.data as any).subscription;
+  const customer = (event.data as any).customer;
+
+  const tenantId = customer?.external_id || (event.data as any).metadata?.tenant_id;
+  if (!tenantId || !sub) {
+    console.error('[Billing] subscription.revoked: missing tenantId or subscription data');
+    return { success: false };
+  }
+
+  // Mark subscription as expired
+  await env.DB.prepare(
+    "UPDATE subscriptions SET status = 'expired', updated_at = datetime('now') WHERE polar_subscription_id = ?"
+  )
+    .bind(sub.id)
+    .run();
+
+  // Immediately downgrade tenant to free tier
+  await env.DB.prepare(
+    "UPDATE tenants SET tier = 'free', updated_at = datetime('now') WHERE id = ?"
+  )
+    .bind(tenantId)
+    .run();
+
+  console.log(`[Billing] subscription.revoked: ${tenantId} downgraded to free immediately`);
+  return { success: true, tier: 'free' };
+}
 
 /**
  * GET /billing/webhook/status — Check webhook service status

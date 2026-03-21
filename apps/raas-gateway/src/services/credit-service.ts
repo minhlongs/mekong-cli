@@ -140,7 +140,42 @@ export class CreditService {
         .run();
     }
 
+    // Insert credit alert if balance is low or exhausted
+    await this.insertCreditAlert(tenantId, newBalance);
+
     return { success: true, balance: newBalance };
+  }
+
+  /**
+   * Insert low_credits or credits_exhausted alert (fire-and-forget, non-critical)
+   */
+  private async insertCreditAlert(tenantId: string, balance: number): Promise<void> {
+    if (balance > 5) return;
+
+    const type = balance === 0 ? 'credits_exhausted' : 'low_credits';
+    const message =
+      balance === 0
+        ? 'Your credits are exhausted. Top up now to continue running missions: https://landing.agencyos.network#pricing'
+        : `Low credit balance: ${balance} MCU remaining. Upgrade to avoid interruptions: https://landing.agencyos.network#pricing`;
+
+    try {
+      // Avoid duplicate unread alerts of the same type
+      const existing = await this.env.DB.prepare(
+        'SELECT id FROM alerts WHERE tenant_id = ? AND type = ? AND read = 0 LIMIT 1'
+      )
+        .bind(tenantId, type)
+        .first<{ id: string }>();
+
+      if (!existing) {
+        await this.env.DB.prepare(
+          `INSERT INTO alerts (id, tenant_id, type, message) VALUES (?, ?, ?, ?)`
+        )
+          .bind(crypto.randomUUID(), tenantId, type, message)
+          .run();
+      }
+    } catch {
+      // Non-critical — don't break the deduction flow
+    }
   }
 
   /**
@@ -278,9 +313,12 @@ export class CreditService {
   }
 
   /**
-   * Get mission cost by complexity
+   * Get mission cost by complexity and optional model tier.
+   * Premium models (premium, premium_2x) cost 2x the base complexity cost.
    */
-  getMissionCost(complexity: 'simple' | 'standard' | 'complex'): number {
-    return MISSION_COSTS[complexity] || MISSION_COSTS.standard;
+  getMissionCost(complexity: 'simple' | 'standard' | 'complex', model?: string): number {
+    const base = MISSION_COSTS[complexity] || MISSION_COSTS.standard;
+    if (model === 'premium' || model === 'premium_2x') return base * 2;
+    return base;
   }
 }

@@ -43,6 +43,8 @@ telegram.post('/', async (c) => {
     const [cmd, ...args] = text.split(/\s+/);
     const arg = args.join(' ');
 
+    let reply = '';
+
     switch (cmd.toLowerCase()) {
       case '/start':
         await handleStart(c.env, telegramId, msg.from?.first_name || 'User', send);
@@ -57,6 +59,21 @@ telegram.post('/', async (c) => {
       case '/missions':
         await handleMissions(c.env, telegramId, send);
         break;
+      case '/marketplace': {
+        const featured = await c.env.DB.prepare(
+          `SELECT goal, complexity FROM missions WHERE is_public = 1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 5`
+        ).all();
+        const items = featured.results.map((m: any, i: number) => `${i+1}. [${m.complexity}] ${m.goal.slice(0, 60)}`).join('\n');
+        reply = items ? `🏪 *Featured Missions:*\n${items}` : 'No public missions yet.';
+        await send(reply);
+        break;
+      }
+      case '/buy':
+        reply = `💰 *Credit Packs:*\n\n` +
+          `• 10 MCU — $5\n• 50 MCU — $20\n• 100 MCU — $35\n• 500 MCU — $150\n\n` +
+          `Visit dashboard to purchase: https://app.agencyos.network/dashboard`;
+        await send(reply);
+        break;
       case '/help':
         await send(
           'Mekong CLI Bot\n\n' +
@@ -64,6 +81,8 @@ telegram.post('/', async (c) => {
           '/submit <goal> — Submit mission\n' +
           '/credits — Check balance\n' +
           '/missions — List missions\n' +
+          '/marketplace — Browse featured missions\n' +
+          '/buy — View credit packs\n' +
           '/help — Show this help'
         );
         break;

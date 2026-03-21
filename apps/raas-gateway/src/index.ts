@@ -19,6 +19,11 @@ export interface Env {
   TELEGRAM_BOT_TOKEN: string;
   ENVIRONMENT: string;
   LOG_LEVEL: string;
+  RESEND_API_KEY?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  ADMIN_API_KEY?: string;
+  POLAR_API_TOKEN?: string;
 }
 
 // Export app for test imports

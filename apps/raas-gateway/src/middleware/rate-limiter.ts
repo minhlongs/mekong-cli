@@ -21,6 +21,7 @@ export function rateLimit(): MiddlewareHandler<{ Bindings: Env }> {
     const result = await rateLimitService.checkLimit(tenant.tenantId, tenant.tier);
 
     // Set rate limit headers on all responses
+    c.header('X-RateLimit-Limit', result.limit.toString());
     c.header('X-RateLimit-Remaining', result.remaining.toString());
     c.header('X-RateLimit-Reset', result.resetAt.toString());
 

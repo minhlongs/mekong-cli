@@ -11,6 +11,37 @@ import { json } from '../utils/response';
 export const missions = new Hono<{ Bindings: Env }>();
 
 /**
+ * GET /missions/templates — List mission templates from DB
+ * Supports ?category=content|code|research|marketing|sales|support filter
+ */
+missions.get('/templates', async (c) => {
+  const category = c.req.query('category')?.trim();
+
+  let query = 'SELECT * FROM mission_templates';
+  const bindings: string[] = [];
+
+  if (category) {
+    query += ' WHERE category = ?';
+    bindings.push(category);
+  }
+
+  query += ' ORDER BY category, estimated_credits ASC';
+
+  const result = await c.env.DB.prepare(query).bind(...bindings).all<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    default_complexity: string;
+    estimated_credits: number;
+    example_goal: string;
+    created_at: string;
+  }>();
+
+  return json({ templates: result.results, total: result.results.length });
+});
+
+/**
  * POST /missions — Submit a new mission
  * Deducts credits based on complexity (simple=1, standard=3, complex=5)
  */
@@ -57,13 +88,13 @@ missions.post('/', async (c) => {
     const is402 = result.code === 'INSUFFICIENT_CREDITS' || result.code === 'DAILY_LIMIT_REACHED';
     const upgrade = is402 ? {
       creditPacks: {
-        'credits-10': 'https://polar.sh/checkout/cd05c250-42dd-4333-a041-4f55b48044fb',
-        'credits-50': 'https://polar.sh/checkout/5c0a8be0-b358-47ea-a006-681920f59676',
-        'credits-100': 'https://polar.sh/checkout/c81ca25b-eb3a-43be-8224-de2578c64a94',
+        'credits-10': 'https://landing.agencyos.network#pricing',
+        'credits-50': 'https://landing.agencyos.network#pricing',
+        'credits-100': 'https://landing.agencyos.network#pricing',
       },
       subscriptions: {
-        starter: 'https://polar.sh/checkout/ce215739-4684-4deb-b257-8321ea4d844d',
-        pro: 'https://polar.sh/checkout/b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f',
+        starter: 'https://landing.agencyos.network#pricing',
+        pro: 'https://landing.agencyos.network#pricing',
       },
     } : undefined;
     return json({ error: result.error, code: result.code, upgrade }, { status: is402 ? 402 : 400 });
@@ -117,20 +148,42 @@ missions.post('/batch', async (c) => {
 });
 
 /**
- * GET /missions — List tenant's missions
+ * GET /missions — List tenant's missions with search/filter support
+ * Supports: ?status=completed, ?from=2026-01-01&to=2026-03-21, ?q=keyword, ?tag=marketing
  */
 missions.get('/', async (c) => {
   const tenant = getTenant(c);
   const status = c.req.query('status');
-  const limit = parseInt(c.req.query('limit') || '20', 10);
+  const limit = Math.min(parseInt(c.req.query('limit') || '20', 10), 100);
   const offset = parseInt(c.req.query('offset') || '0', 10);
+  const from = c.req.query('from');
+  const to = c.req.query('to');
+  const q = c.req.query('q')?.trim();
+  const tag = c.req.query('tag')?.trim();
 
-  const missionService = new MissionService(c.env);
-  const { missions: list, total } = await missionService.list(tenant.tenantId, {
-    status, limit, offset,
+  // Build dynamic query with filters
+  let where = 'tenant_id = ?';
+  const bindings: (string | number)[] = [tenant.tenantId];
+
+  if (status) { where += ' AND status = ?'; bindings.push(status); }
+  if (from) { where += ' AND created_at >= ?'; bindings.push(from); }
+  if (to) { where += ' AND created_at <= ?'; bindings.push(to); }
+  if (q) { where += ' AND goal LIKE ?'; bindings.push(`%${q}%`); }
+  if (tag) { where += ' AND tags LIKE ?'; bindings.push(`%"${tag}"%`); }
+
+  const countRow = await c.env.DB.prepare(
+    `SELECT COUNT(*) as total FROM missions WHERE ${where}`
+  ).bind(...bindings).first<{ total: number }>();
+
+  const list = await c.env.DB.prepare(
+    `SELECT * FROM missions WHERE ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+  ).bind(...bindings, limit, offset).all();
+
+  return json({
+    missions: list.results,
+    total: countRow?.total ?? 0,
+    pagination: { limit, offset },
   });
-
-  return json({ missions: list, total, pagination: { limit, offset } });
 });
 
 /**
@@ -159,16 +212,26 @@ missions.get('/:id/poll', async (c) => {
   const missionId = c.req.param('id');
 
   const mission = await c.env.DB.prepare(
-    "SELECT status, completed_at, CASE WHEN result IS NOT NULL THEN 1 ELSE 0 END as hasResult FROM missions WHERE id = ? AND tenant_id = ?"
-  ).bind(missionId, tenant.tenantId).first<{ status: string; completed_at: string; hasResult: number }>();
+    "SELECT status, completed_at, created_at, CASE WHEN result IS NOT NULL THEN 1 ELSE 0 END as hasResult FROM missions WHERE id = ? AND tenant_id = ?"
+  ).bind(missionId, tenant.tenantId).first<{ status: string; completed_at: string; created_at: string; hasResult: number }>();
 
   if (!mission) return json({ error: 'Not found' }, { status: 404 });
+
+  // Include queue position for queued missions (count missions submitted before this one)
+  let queuePosition: number | undefined;
+  if (mission.status === 'queued') {
+    const posRow = await c.env.DB.prepare(
+      "SELECT COUNT(*) as pos FROM missions WHERE status = 'queued' AND created_at < ?"
+    ).bind(mission.created_at).first<{ pos: number }>();
+    queuePosition = (posRow?.pos ?? 0) + 1;
+  }
 
   return json({
     id: missionId,
     status: mission.status,
     hasResult: !!mission.hasResult,
     completedAt: mission.completed_at,
+    ...(queuePosition !== undefined && { queuePosition }),
   });
 });
 

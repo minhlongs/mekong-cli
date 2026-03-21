@@ -55,6 +55,7 @@ describe('CreditService', () => {
       ENVIRONMENT: 'test',
       LOG_LEVEL: 'debug',
       AI: {} as any,
+      TELEGRAM_BOT_TOKEN: 'test-bot-token',
     });
   });
 

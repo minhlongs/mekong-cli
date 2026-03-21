@@ -10,34 +10,30 @@ import { credits } from './credits';
 import { billing } from './billing';
 import { tenants } from './tenants';
 import { telegram } from './telegram';
+import { alerts } from './alerts';
+import { marketplace } from './marketplace';
+import { stripe } from './stripe';
+import { admin } from './admin';
+import { licenses } from './licenses';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
   const routes = new Hono<{ Bindings: Env }>();
 
   // Mount routes — public routes BEFORE /v1 api (which has auth middleware)
+  routes.route('/admin', admin);
   routes.route('/health', health);
+  routes.route('/marketplace', marketplace);
   routes.route('/v1/tenants', tenants);
-
-  // Public mission templates (no auth needed)
-  routes.get('/v1/missions/templates', (c) => {
-    return c.json([
-      { id: 'rest-api', goal: 'Build a REST API with authentication and CRUD endpoints', complexity: 'standard', category: 'Engineering' },
-      { id: 'landing-page', goal: 'Create a modern landing page with hero, features, and pricing sections', complexity: 'standard', category: 'Engineering' },
-      { id: 'business-plan', goal: 'Write a lean business plan with market analysis and financial projections', complexity: 'complex', category: 'Founder' },
-      { id: 'marketing-copy', goal: 'Write compelling marketing copy for product launch email campaign', complexity: 'simple', category: 'Business' },
-      { id: 'code-review', goal: 'Review codebase for security vulnerabilities and performance issues', complexity: 'complex', category: 'Engineering' },
-      { id: 'seo-audit', goal: 'Perform SEO audit and provide actionable optimization recommendations', complexity: 'standard', category: 'Business' },
-      { id: 'pitch-deck', goal: 'Create a 10-slide pitch deck outline for seed funding round', complexity: 'complex', category: 'Founder' },
-      { id: 'database-schema', goal: 'Design database schema for e-commerce platform with users, products, orders', complexity: 'standard', category: 'Engineering' },
-      { id: 'social-strategy', goal: 'Create 30-day social media content strategy with post templates', complexity: 'standard', category: 'Business' },
-      { id: 'deploy-guide', goal: 'Write deployment guide for Docker + CI/CD pipeline setup', complexity: 'simple', category: 'Ops' },
-    ]);
-  });
+  // Licenses: verify + activate are PUBLIC; create + list require auth (per-route)
+  routes.route('/v1/licenses', licenses);
 
   routes.route('/v1', api);
+  routes.route('/v1/alerts', alerts);
   routes.route('/credits', credits);
   routes.route('/billing', billing);
+  // Stripe: /billing/stripe/webhook is PUBLIC (no global auth), /billing/stripe/checkout has its own auth()
+  routes.route('/billing/stripe', stripe);
   routes.route('/webhook/telegram', telegram);
 
   // Waitlist email capture (public)
@@ -125,6 +121,14 @@ export function createRoutes() {
         '/credits/check': { post: { summary: 'Pre-check cost', tags: ['Credits'], security: [{ bearer: [] }] } },
         '/billing/pricing': { get: { summary: 'Pricing tiers', tags: ['Billing'] } },
         '/billing/webhook': { post: { summary: 'Polar webhook', tags: ['Billing'] } },
+        '/marketplace': { get: { summary: 'Browse public missions', tags: ['Marketplace'], parameters: [{ name: 'q', in: 'query', schema: { type: 'string' } }, { name: 'limit', in: 'query', schema: { type: 'integer' } }] } },
+        '/marketplace/featured': { get: { summary: 'Featured missions', tags: ['Marketplace'] } },
+        '/marketplace/stats': { get: { summary: 'Marketplace statistics', tags: ['Marketplace'] } },
+        '/v1/alerts': { get: { summary: 'List unread alerts', tags: ['Alerts'], security: [{ bearer: [] }] } },
+        '/v1/alerts/count': { get: { summary: 'Unread alert count', tags: ['Alerts'], security: [{ bearer: [] }] } },
+        '/billing/stripe/packs': { get: { summary: 'List credit packs', tags: ['Billing'] } },
+        '/billing/stripe/checkout': { post: { summary: 'Create Stripe checkout', tags: ['Billing'], security: [{ bearer: [] }] } },
+        '/billing/stripe/webhook': { post: { summary: 'Stripe webhook', tags: ['Billing'] } },
         '/health': { get: { summary: 'Health check', tags: ['System'] } },
         '/stats': { get: { summary: 'Public stats', tags: ['System'] } },
       },
