@@ -4,6 +4,7 @@
 
 import type { MiddlewareHandler } from 'hono';
 import { AuthService } from '../services/auth-service';
+import { CreditService } from '../services/credit-service';
 import type { Env } from '../index';
 import type { TenantContext } from '../types/auth';
 import { AuthenticationError } from '../utils/errors';
@@ -35,6 +36,7 @@ export function auth(): MiddlewareHandler<{ Bindings: Env }> {
         c.set('tenant', result.tenant);
         c.set('authService', authService);
         await next();
+        await addCreditHeaders(c);
         return;
       }
     }
@@ -48,6 +50,7 @@ export function auth(): MiddlewareHandler<{ Bindings: Env }> {
         c.set('tenant', result.tenant);
         c.set('authService', authService);
         await next();
+        await addCreditHeaders(c);
         return;
       }
     }
@@ -76,4 +79,24 @@ export function getTenant(c: { get: (key: string) => any }): TenantContext {
  */
 export function getAuthService(c: { get: (key: string) => any }): AuthService {
   return c.get('authService');
+}
+
+/**
+ * Add credit balance + warning headers to response
+ */
+async function addCreditHeaders(c: any): Promise<void> {
+  try {
+    const tenant = c.get('tenant');
+    if (!tenant?.tenantId || !c.env?.DB) return;
+
+    const creditService = new CreditService(c.env);
+    const balance = await creditService.getBalance(tenant.tenantId);
+
+    c.header('X-Credits-Remaining', balance.toString());
+    if (balance < 5) {
+      c.header('X-Credits-Warning', 'low');
+    }
+  } catch {
+    // Non-critical — don't break the response
+  }
 }

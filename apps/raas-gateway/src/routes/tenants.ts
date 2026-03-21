@@ -69,6 +69,31 @@ tenants.post('/signup', async (c) => {
   }, { status: 201 });
 });
 
+/**
+ * POST /tenants/login — Get new JWT for existing account (public)
+ */
+tenants.post('/login', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const email = body.email?.trim()?.toLowerCase();
+
+  if (!email) {
+    return json({ error: 'Email required', code: 'INVALID_EMAIL' }, { status: 400 });
+  }
+
+  const tenant = await c.env.DB.prepare(
+    'SELECT id, name, tier, active FROM tenants WHERE email = ?'
+  ).bind(email).first<{ id: string; name: string; tier: string; active: number }>();
+
+  if (!tenant || !tenant.active) {
+    return json({ error: 'Account not found or inactive', code: 'NOT_FOUND' }, { status: 404 });
+  }
+
+  const authService = new AuthService(c.env);
+  const token = await authService.generateJwt(tenant.id, tenant.tier, ['read', 'write']);
+
+  return json({ tenantId: tenant.id, name: tenant.name, tier: tenant.tier, token });
+});
+
 // All routes below require auth
 tenants.use('/*', auth());
 

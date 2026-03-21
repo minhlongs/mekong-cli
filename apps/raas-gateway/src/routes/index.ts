@@ -15,9 +15,26 @@ import { notFound } from '../utils/response';
 export function createRoutes() {
   const routes = new Hono<{ Bindings: Env }>();
 
-  // Mount routes (tenants before api — signup is public, must bypass api auth)
+  // Mount routes — public routes BEFORE /v1 api (which has auth middleware)
   routes.route('/health', health);
   routes.route('/v1/tenants', tenants);
+
+  // Public mission templates (no auth needed)
+  routes.get('/v1/missions/templates', (c) => {
+    return c.json([
+      { id: 'rest-api', goal: 'Build a REST API with authentication and CRUD endpoints', complexity: 'standard', category: 'Engineering' },
+      { id: 'landing-page', goal: 'Create a modern landing page with hero, features, and pricing sections', complexity: 'standard', category: 'Engineering' },
+      { id: 'business-plan', goal: 'Write a lean business plan with market analysis and financial projections', complexity: 'complex', category: 'Founder' },
+      { id: 'marketing-copy', goal: 'Write compelling marketing copy for product launch email campaign', complexity: 'simple', category: 'Business' },
+      { id: 'code-review', goal: 'Review codebase for security vulnerabilities and performance issues', complexity: 'complex', category: 'Engineering' },
+      { id: 'seo-audit', goal: 'Perform SEO audit and provide actionable optimization recommendations', complexity: 'standard', category: 'Business' },
+      { id: 'pitch-deck', goal: 'Create a 10-slide pitch deck outline for seed funding round', complexity: 'complex', category: 'Founder' },
+      { id: 'database-schema', goal: 'Design database schema for e-commerce platform with users, products, orders', complexity: 'standard', category: 'Engineering' },
+      { id: 'social-strategy', goal: 'Create 30-day social media content strategy with post templates', complexity: 'standard', category: 'Business' },
+      { id: 'deploy-guide', goal: 'Write deployment guide for Docker + CI/CD pipeline setup', complexity: 'simple', category: 'Ops' },
+    ]);
+  });
+
   routes.route('/v1', api);
   routes.route('/credits', credits);
   routes.route('/billing', billing);

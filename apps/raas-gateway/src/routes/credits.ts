@@ -140,3 +140,37 @@ credits.post('/topup', creditMetering({ cost: 0 }), async (c) => {
     message: `Added ${amount} credits`,
   });
 });
+
+/**
+ * POST /v1/credits/purchase — Get Polar checkout URL for credit pack
+ */
+credits.post('/purchase', creditMetering({ cost: 0 }), async (c) => {
+  const tenant = getTenant(c);
+  const body = await c.req.json().catch(() => ({}));
+  const pack = body.pack || 'credits-50';
+
+  const packs: Record<string, { credits: number; price: number; name: string }> = {
+    'credits-10':  { credits: 10,  price: 5,   name: '10 MCU Pack' },
+    'credits-50':  { credits: 50,  price: 20,  name: '50 MCU Pack' },
+    'credits-100': { credits: 100, price: 35,  name: '100 MCU Pack' },
+    'credits-500': { credits: 500, price: 150, name: '500 MCU Pack' },
+  };
+
+  const selected = packs[pack];
+  if (!selected) {
+    return json(
+      { error: 'Invalid pack. Options: credits-10, credits-50, credits-100, credits-500', code: 'INVALID_PACK' },
+      { status: 400 }
+    );
+  }
+
+  // Return checkout info (tenant would use Polar checkout URL)
+  return json({
+    pack,
+    credits: selected.credits,
+    price: selected.price,
+    currency: 'USD',
+    checkoutUrl: `https://polar.sh/mekong-cli`,
+    message: `Purchase ${selected.name} ($${selected.price}) — credits added automatically via webhook`,
+  });
+});
