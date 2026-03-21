@@ -731,11 +731,29 @@ check_jidoka() {
     local alert="🚨 STOP-THE-LINE P${pane_idx}: $(echo "$output" | grep -iE 'BREAKING|security|migration|schema' | tail -1)"
     log "$alert"
     echo "$alert" >> "$JIDOKA_FILE"
+    _telegram_alert "$alert"
     return 0  # jidoka triggered
   fi
   return 1  # no jidoka
 }
 
+<<<<<<< HEAD
+# Telegram alert notification (called on Jidoka triggers)
+_telegram_alert() {
+  local msg="$1"
+  local token="${MEKONG_TELEGRAM_TOKEN:-}"
+  local chat_id="${MEKONG_TELEGRAM_CHAT_ID:-}"
+  if [[ -n "$token" && -n "$chat_id" ]]; then
+    curl -s "https://api.telegram.org/bot${token}/sendMessage" \
+      -d "chat_id=${chat_id}" \
+      -d "text=🚨 Jidoka Alert: ${msg}" \
+      -d "parse_mode=Markdown" > /dev/null 2>&1 &
+  fi
+}
+
+# ---- PHASE 2: PLAN — Build delegation task ----
+# Per spec: specific title, definition of done, constraints
+=======
 # ---- COMMAND CATALOG (config/cto-command-catalog.json) ----
 CATALOG_FILE="${PROJECT_ROOT}/config/cto-command-catalog.json"
 
@@ -820,6 +838,7 @@ extract_error_context() {
 }
 
 # Build the right mekong-cli command based on pane state + project profile from catalog
+>>>>>>> origin/main
 build_delegation_task() {
   local pane_idx=$1
   local pane_output="${2:-}"

@@ -86,10 +86,28 @@ def register_recipe_commands(app: typer.Typer) -> None:
 
     @app.command()
     def run(
-        recipe: str = typer.Argument(..., help="Recipe file path (.md) or name"),
+        recipe: str = typer.Argument(..., help="Recipe file path (.md/.json) or name"),
     ) -> None:
-        """Run a recipe workflow"""
-        if not recipe.endswith(".md") and not Path(recipe).exists():
+        """Run a recipe workflow (supports .md and .json DAG recipes)"""
+        recipe_path = Path(recipe)
+
+        # JSON DAG recipe support (e.g., recipes/raas/create.json)
+        if recipe.endswith(".json") or (recipe_path.exists() and recipe_path.suffix == ".json"):
+            if not recipe_path.exists():
+                # Try recipes/ directory
+                recipe_path = Path("recipes") / recipe
+            if not recipe_path.exists():
+                console.print(f"[bold red]❌ Error:[/bold red] JSON recipe not found: {recipe}")
+                raise typer.Exit(code=1)
+            try:
+                _run_dag_recipe(recipe_path)
+                return
+            except Exception as e:
+                console.print(f"[bold red]❌ DAG Error:[/bold red] {str(e)}")
+                raise typer.Exit(code=1)
+
+        # Legacy: lookup by name
+        if not recipe.endswith(".md") and not recipe_path.exists():
             registry = RecipeRegistry()
             found = registry.get_recipe(recipe)
             if found:
@@ -103,7 +121,7 @@ def register_recipe_commands(app: typer.Typer) -> None:
                     console.print(f"[bold red]❌ Execution Error:[/bold red] {str(e)}")
                     raise typer.Exit(code=1)
 
-        recipe_path = Path(recipe)
+        # .md file path
         if not recipe_path.exists():
             console.print(f"[bold red]❌ Error:[/bold red] Recipe file not found: {recipe}")
             raise typer.Exit(code=1)
@@ -117,7 +135,6 @@ def register_recipe_commands(app: typer.Typer) -> None:
                 raise typer.Exit(code=1)
         except Exception as e:
             console.print(f"[bold red]❌ Execution Error:[/bold red] {str(e)}")
-            # raise e  # Uncomment for debugging
             raise typer.Exit(code=1)
 
     @app.command()
@@ -182,3 +199,64 @@ def register_recipe_commands(app: typer.Typer) -> None:
 
         console.print("\n[dim]Press Enter to exit...[/dim]")
         input()
+
+
+def _run_dag_recipe(recipe_path: Path) -> None:
+    """Execute a JSON DAG recipe — groups run in dependency order."""
+    import json
+    import subprocess
+
+    data = json.loads(recipe_path.read_text())
+    name = data.get("name", recipe_path.stem)
+    groups = data.get("dag", {}).get("groups", [])
+
+    if not groups:
+        console.print(f"[yellow]Recipe '{name}' has no DAG groups[/yellow]")
+        return
+
+    console.print(Panel(
+        f"[bold]{name}[/bold]\n{data.get('description', '')}\n"
+        f"Groups: {len(groups)} | Est: {data.get('estimated_minutes', '?')} min | "
+        f"Credits: {data.get('estimated_credits', '?')}",
+        title="DAG Recipe", border_style="cyan",
+    ))
+
+    completed: set[str] = set()
+
+    for group in groups:
+        group_id = group["id"]
+        deps = group.get("depends_on", [])
+
+        # Check dependencies
+        for dep in deps:
+            if dep not in completed:
+                console.print(f"[red]Dependency '{dep}' not completed for group '{group_id}'[/red]")
+                return
+
+        console.print(f"\n[bold cyan]--- Group: {group['name']} ({group['mode']}) ---[/bold cyan]")
+
+        commands = group.get("commands", [])
+        for cmd in commands:
+            cmd_id = cmd.get("id", "unknown")
+            cmd_args = cmd.get("args", "")
+            full_cmd = f"mekong {cmd_id} {cmd_args}".strip()
+
+            console.print(f"  [dim]>[/dim] {full_cmd}")
+            try:
+                result = subprocess.run(
+                    full_cmd, shell=True, capture_output=True, text=True,
+                    timeout=600, cwd=str(Path.home() / "mekong-cli"),
+                )
+                if result.returncode == 0:
+                    console.print(f"  [green]OK[/green] {cmd_id}")
+                else:
+                    console.print(f"  [red]FAIL[/red] {cmd_id}: {result.stderr[:100]}")
+                    return
+            except subprocess.TimeoutExpired:
+                console.print(f"  [red]TIMEOUT[/red] {cmd_id} (>600s)")
+                return
+
+        completed.add(group_id)
+        console.print(f"  [green]Group '{group_id}' complete[/green]")
+
+    console.print(f"\n[bold green]DAG Recipe '{name}' completed successfully[/bold green]")

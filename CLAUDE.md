@@ -1,8 +1,8 @@
-# MEKONG CLI v5.0 — OPENCLAW CONSTITUTION
+# MEKONG CLI v6.0 — OPENCLAW CONSTITUTION
 *"I am OpenClaw. I run this company."*
 
 **Mekong CLI** — AI-operated business platform. Open source. Universal LLM.
-**Version:** 5.0.0 | **License:** MIT | **Language:** English
+**Version:** 6.0.0 | **License:** MIT | **Language:** English
 
 ---
 
@@ -11,7 +11,7 @@
 | Location | Content |
 |----------|---------|
 | `.claude/skills/` | 542 skill definitions (SKILL.md) |
-| `.claude/commands/` | 319 command definitions (.md) |
+| `.claude/commands/` | 342+ command definitions (.md) — dispatch to `mekong` engine |
 | `mekong/agents/` | Agent definitions |
 | `mekong/adapters/` | LLM provider configs |
 | `mekong/infra/` | 3-layer deploy templates (CF-only) |
@@ -23,6 +23,17 @@ CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
 
 ---
 
+<<<<<<< HEAD
+## EXECUTION RULE — CRITICAL
+
+ALL slash commands MUST execute via `mekong` CLI engine.
+
+- WRONG: Manually create directories, write JSON files, read configs
+- RIGHT: Run `mekong <namespace> <command> $ARGUMENTS`
+
+The `.claude/commands/*.md` files are DISPATCHERS only.
+The real logic lives in the mekong CLI Python/TypeScript engine.
+=======
 ## UNIFIED WRAPPER — `mekong` is the ONLY entry point
 
 ```
@@ -56,6 +67,7 @@ mekong-status       # Show current API config
 | `mekong --provider gemini` | google | `gemini` | gemini default |
 
 All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` discovery.
+>>>>>>> origin/main
 
 ---
 
@@ -92,14 +104,15 @@ All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` disc
          └────────────────────┘
 ```
 
-### 5 Layers
+### 6 Layers
 
 ```
-👑 Founder    /annual /okr /fundraise /swot         — Strategy & fundraising (46 cmds)
-💼 Business   /sales /marketing /finance /hr         — Revenue & operations (32 cmds)
-🎯 Product    /plan /sprint /roadmap /brainstorm     — Product management (17 cmds)
-⚙️ Engineering /cook /code /test /deploy /review      — Build & ship (47 cmds)
-🔧 Ops        /audit /health /security /status       — Monitor & maintain (27 cmds)
+🏯 Studio     /studio:launch /dealflow /venture /expert  — VC studio ops (23 cmds)
+👑 Founder    /annual /okr /fundraise /swot               — Strategy (52 cmds)
+💼 Business   /sales /marketing /finance /hr               — Revenue (71 cmds)
+🎯 Product    /plan /sprint /roadmap /brainstorm           — Product (31 cmds)
+⚙️ Engineering /cook /code /test /deploy /review           — Build (66 cmds)
+🔧 Ops        /audit /health /security /status             — Monitor (41 cmds)
 ```
 
 ---
@@ -127,7 +140,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | ⚙️ Engineering | `cook`, `fix`, `code`, `test`, `deploy`, `review` | 1-5 |
 | 🔧 Ops | `audit`, `health`, `security`, `status`, `clean` | 0-3 |
 
-Total: 319 commands (230 base + 89 super). Run `mekong help` for full list.
+Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekong help` for full list.
 
 ---
 

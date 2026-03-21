@@ -1,13 +1,26 @@
 'use client'
 
+import { STATS } from '@/data/stats'
+
 const LAYERS = [
+  {
+    id: 'studio',
+    href: '/studio',
+    icon: '🏯',
+    role: 'STUDIO',
+    desc: 'VC Platform — portfolio management, deal flow, expert matching, founder support',
+    width: 'max-w-xs',
+    border: 'border-[var(--md-outline-variant)] hover:border-violet-500/50',
+    glow: 'hover:shadow-violet-500/10',
+    badge: 'text-violet-400 bg-violet-400/10',
+  },
   {
     id: 'founder',
     href: '/founder',
     icon: '👑',
     role: 'FOUNDER',
     desc: '46 commands · 6 super workflows — fundraise, validate, launch, negotiate, IPO',
-    width: 'max-w-xs',
+    width: 'max-w-sm',
     border: 'border-[var(--md-outline-variant)] hover:border-[var(--md-tertiary-container)]',
     glow: 'hover:shadow-[var(--md-tertiary)]/10',
     badge: 'text-[var(--md-tertiary)] bg-[var(--md-tertiary-container)]',
@@ -18,7 +31,7 @@ const LAYERS = [
     icon: '🏢',
     role: 'BUSINESS',
     desc: '32 commands · 6 super workflows — revenue engine, campaigns, hiring, financial close',
-    width: 'max-w-sm',
+    width: 'max-w-md',
     border: 'border-[var(--md-outline-variant)] hover:border-blue-500/50',
     glow: 'hover:shadow-blue-500/10',
     badge: 'text-blue-400 bg-blue-400/10',
@@ -29,7 +42,7 @@ const LAYERS = [
     icon: '📦',
     role: 'PRODUCT',
     desc: '17 commands · 5 super workflows — discovery, sprint planning, feature launch',
-    width: 'max-w-md',
+    width: 'max-w-lg',
     border: 'border-[var(--md-outline-variant)] hover:border-[var(--md-secondary-container)]',
     glow: 'hover:shadow-[var(--md-secondary)]/10',
     badge: 'text-[var(--md-secondary)] bg-[var(--md-secondary-container)]',
@@ -40,7 +53,7 @@ const LAYERS = [
     icon: '⚙️',
     role: 'ENGINEERING',
     desc: '47 commands · 4 super workflows — ship, refactor, incident response, new service',
-    width: 'max-w-lg',
+    width: 'max-w-xl',
     border: 'border-[var(--md-outline-variant)] hover:border-[var(--md-primary-container)]',
     glow: 'hover:shadow-[var(--md-primary)]/10',
     badge: 'text-[var(--md-primary)] bg-[var(--md-primary-container)]',
@@ -72,7 +85,7 @@ export default function PyramidHero() {
         {/* Badge */}
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)] px-4 py-1.5 text-xs text-[var(--md-on-surface-variant)] backdrop-blur-sm">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--md-primary)]" />
-          5-Layer Pyramid — Founder to Operations
+          6-Layer Pyramid — Studio Platform v6.0
         </div>
 
         {/* Headline */}
@@ -83,7 +96,7 @@ export default function PyramidHero() {
 
         {/* Stats row */}
         <p className="mx-auto mb-14 max-w-2xl text-base text-[var(--md-on-surface-variant)] sm:text-lg pyramid-fade-in">
-          <span className="font-mono font-semibold text-[var(--md-primary)]">319 commands.</span>{' '}
+          <span className="font-mono font-semibold text-[var(--md-primary)]">{STATS.commands} commands.</span>{' '}
           <span className="font-mono font-semibold text-indigo-400">463 skills.</span>{' '}
           <span className="font-mono font-semibold text-[var(--md-secondary)]">127 AI agents.</span>{' '}
           One unified system.

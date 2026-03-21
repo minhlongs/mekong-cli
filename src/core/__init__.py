@@ -12,7 +12,10 @@ from .orchestrator import (
     StepResult,
 )
 from .parser import Recipe, RecipeParser, RecipeStep
+from .pipeline_manager import PipelineManager, PipelineResult, PipelineStage, PipelineStatus
 from .planner import PlanningContext, RecipePlanner, TaskComplexity, VerificationCriteria
+from .progress_tracker import ProgressCallback, ProgressPhase, ProgressSnapshot, ProgressTracker
+from .task_queue import PriorityTaskQueue, TaskPriority as QueueTaskPriority
 from .plugin_loader import PluginLoader
 from .plugin_registry import PluginManifest, PluginRegistry, PluginStatus, PluginType
 from .protocols import AgentProtocol, StreamingMixin
@@ -25,6 +28,10 @@ from .providers import (
 )
 from .registry import RecipeRegistry, RegistryIndex
 from .telegram_client import TelegramClient, TelegramConfig, send_alert
+from .pev_structured_logger import PEVStructuredLogger, get_pev_logger
+from .pev_metrics_collector import PEVMetricsCollector, get_pev_metrics
+from .pev_dashboard_data import PEVDashboardData, get_dashboard_data
+from .pev_health_checks import register_pev_health_checks, get_pev_health_summary
 from .verifier import (
     ExecutionResult,
     RecipeVerifier,
@@ -56,6 +63,11 @@ __all__ = [
     "OpenAICompatibleProvider",
     "OrchestrationResult",
     "OrchestrationStatus",
+    # Pipeline Manager
+    "PipelineManager",
+    "PipelineResult",
+    "PipelineStage",
+    "PipelineStatus",
     "PlanningContext",
     # Plugin System
     "PluginLoader",
@@ -86,7 +98,24 @@ __all__ = [
     "VerificationCriteria",
     "VerificationReport",
     "VerificationStatus",
+    # Progress Tracker
+    "ProgressCallback",
+    "ProgressPhase",
+    "ProgressSnapshot",
+    "ProgressTracker",
+    # Task Queue
+    "PriorityTaskQueue",
+    "QueueTaskPriority",
     "get_alert_router",
     "send_alert",
     "validate_dag",
+    # PEV Telemetry & Monitoring (Phase 7)
+    "PEVStructuredLogger",
+    "get_pev_logger",
+    "PEVMetricsCollector",
+    "get_pev_metrics",
+    "PEVDashboardData",
+    "get_dashboard_data",
+    "register_pev_health_checks",
+    "get_pev_health_summary",
 ]

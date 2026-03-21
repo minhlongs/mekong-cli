@@ -8,6 +8,7 @@ Triggers auto-recovery on crash detection (Phase 5).
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -141,7 +142,8 @@ class CrashDetector:
         )
 
         # Trigger auto-recovery (Phase 5)
-        self._trigger_recovery(exit_code, command)
+        # Fire-and-forget: schedule coroutine without awaiting to avoid blocking
+        self._schedule_recovery(exit_code, command)
 
         # Persist to disk
         self._persist_crash(crash)
@@ -151,6 +153,30 @@ class CrashDetector:
         )
 
         return crash
+
+    def _schedule_recovery(
+        self,
+        exit_code: int,
+        command: str,
+    ) -> None:
+        """Schedule recovery task, handling both sync and async contexts.
+
+        Args:
+            exit_code: Exit code from crashed process
+            command: Command that crashed
+        """
+        try:
+            # Check if event loop is running
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Event loop is running - create task normally
+                loop.create_task(self._trigger_recovery(exit_code, command))
+            else:
+                # Event loop exists but not running - run synchronously
+                loop.run_until_complete(self._trigger_recovery(exit_code, command))
+        except RuntimeError:
+            # No event loop - run synchronously with new loop
+            asyncio.run(self._trigger_recovery(exit_code, command))
 
     async def _trigger_recovery(
         self,

@@ -56,18 +56,29 @@ function canRespawn() {
 // --- Claude command generator ---
 
 /**
- * 虛實 — DashScope Direct Command Generator (SINGLE SOURCE OF TRUTH).
- * Model mapping: settings.json env → DashScope Anthropic-compatible API.
- * NO proxy. CC CLI reads ~/.claude/settings.json for ANTHROPIC_BASE_URL + model aliases.
+ * 虛實 — DashScope Dual Endpoint Command Generator (SINGLE SOURCE OF TRUTH).
+ * Reads PANE_CONFIG for per-pane endpoint + apiKey.
+ * Coding Plan (coding-intl): faster, sk-sp keys
+ * General API (dashscope-intl): text model keys
  */
-function generateClaudeCommand(intent = 'API') {
-	// DashScope Direct: keep ANTHROPIC_BASE_URL + ANTHROPIC_API_KEY from settings.json
-	// ONLY unset CLAUDE_CONFIG_DIR to avoid config conflicts between panes
-	// Export CLAUDE_CODE_SUBAGENT_MODEL so subagents spawned by CC CLI use Qwen model
+function generateClaudeCommand(intent = 'API', paneIdx = 0) {
+	const paneConf = config.PANE_CONFIG[paneIdx] || config.PANE_CONFIG[0];
+	const isCodingPlan = paneConf.endpoint === 'coding-intl';
+	const baseUrl = isCodingPlan ? config.CODING_PLAN_URL : config.GENERAL_API_URL;
+	const apiKey = paneConf.apiKey || process.env.ANTHROPIC_API_KEY;
+	const model = paneConf.model || config.MODEL_NAME;
+	// Coding Plan: ANTHROPIC_AUTH_TOKEN (unset API_KEY)
+	// General API: ANTHROPIC_API_KEY (unset AUTH_TOKEN)
+	const keyExport = isCodingPlan
+		? `unset ANTHROPIC_API_KEY && export ANTHROPIC_AUTH_TOKEN=${apiKey}`
+		: `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY=${apiKey}`;
 	return (
 		`unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` +
 		` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
 		` && export CLAUDE_CODE_SUBAGENT_MODEL=${config.SUBAGENT_MODEL}` +
+		` && export ANTHROPIC_BASE_URL=${baseUrl}` +
+		` && ${keyExport}` +
+		` && export ANTHROPIC_MODEL=${model}` +
 		` && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`
 	);
 }
@@ -116,10 +127,13 @@ function isBrainAlive(paneTarget = `${config.TMUX_SESSION}:0.0`) {
 		const hasShellOnly = /[$%]\s*$/.test(tail5) && !hasCCCLI;
 
 		if (hasShellOnly) {
-			const pIdx = paneTarget.split('.').pop();
-			log(`[🩺 RESPAWN][P${pIdx}] Shell prompt detected — auto-restarting CC CLI`);
+			const pIdx = parseInt(paneTarget.split('.').pop(), 10);
+			const pConf = config.PANE_CONFIG[pIdx];
+			const endpoint = pConf ? pConf.endpoint : 'dashscope-intl';
+			log(`[🩺 RESPAWN][P${pIdx}] Shell prompt detected — auto-restarting CC CLI (endpoint: ${endpoint})`);
 			try {
-				execSync(`tmux send-keys -t ${paneTarget} "claude --dangerously-skip-permissions --continue"`, { timeout: 8000 });
+				const cmd = generateClaudeCommand('API', pIdx);
+				execSync(`tmux send-keys -t ${paneTarget} "${cmd}"`, { timeout: 8000 });
 				execSync(`tmux send-keys -t ${paneTarget} Enter`, { timeout: 3000 });
 			} catch (e) {
 				log(`[🩺 RESPAWN][P${pIdx}] restart failed: ${e.message}`);

@@ -13,6 +13,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 # ── Data Models ──────────────────────────────────────────────────────
 
 @dataclass
@@ -22,12 +23,14 @@ class EarningsCalendar:
     filing_deadline: str
     quiet_period_start: str
 
+
 @dataclass
 class GuidanceModel:
     revenue_low: float
     revenue_high: float
     growth_pct: float
     confidence_level: float = 0.92
+
 
 @dataclass
 class QuarterlyMetrics:
@@ -40,6 +43,7 @@ class QuarterlyMetrics:
     fcf: float
     guidance_beat_pct: float = 0.0
 
+
 @dataclass
 class MaterialEvent:
     event_type: str
@@ -47,12 +51,14 @@ class MaterialEvent:
     filing_required: str
     deadline_days: int = 4
 
+
 @dataclass
 class PublicCoPackage:
     earnings_calendar: list[EarningsCalendar]
     current_metrics: QuarterlyMetrics | None = None
     guidance: GuidanceModel | None = None
     material_events: list[MaterialEvent] = field(default_factory=list)
+
 
 # ── Constants ─────────────────────────────────────────────────────────
 
@@ -67,6 +73,7 @@ _MATERIAL_EVENT_DATA = (
     ("Unregistered Equity Sale", "Private placement or unregistered equity sale", "8-K Item 3.02"),
     ("Financial Restatement", "Prior financials should no longer be relied upon", "8-K Item 4.02"),
 )
+
 
 MATERIAL_EVENT_TYPES: list[dict] = [
     {"event_type": e, "description": d, "filing_required": f, "deadline_days": 4}
@@ -89,6 +96,7 @@ EARNINGS_CALL_STRUCTURE: dict = {
         "Distribute 8-K with press release before call",
     ],
 }
+
 
 # ── Core Functions ────────────────────────────────────────────────────
 
@@ -170,6 +178,7 @@ def build_public_co_package(
         ),
         material_events=get_material_events(),
     )
+
 
 # ── Save Functions ────────────────────────────────────────────────────
 

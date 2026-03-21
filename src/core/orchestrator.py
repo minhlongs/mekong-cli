@@ -30,7 +30,13 @@ from rich.table import Table
 
 from .dag_scheduler import DAGScheduler, validate_dag
 from .event_bus import EventType, get_event_bus
+from .execution_context import ExecutionContext
 from .execution_history import EventKind, ExecutionEvent, ExecutionHistory
+from .execution_hooks import (
+    HookRegistry,
+    logging_after_hook,
+    logging_before_hook,
+)
 from .executor import RecipeExecutor
 from .health_endpoint import (
     register_component_check,
@@ -42,9 +48,12 @@ from .parser import Recipe, RecipeStep
 from .planner import PlanningContext, RecipePlanner
 from .retry_policy import RetryPolicy
 from .telemetry import TelemetryCollector
+from .timeout_manager import TimeoutConfig, TimeoutManager
 from .verifier import RecipeVerifier, VerificationReport
 from .workflow_state import StepStatus, WorkflowState, WorkflowStatus
 from .command_sanitizer import CommandSanitizer
+from .license_checker import get_license_checker, LicenseCheckResult
+from .context_flow import ContextFlow
 
 # ROIaaS Phase Completion Handler
 from ..raas.phase_completion_detector import get_detector
@@ -110,6 +119,8 @@ class StepExecutor:
         self.llm_client = llm_client
         self.history = history
         self.telemetry = telemetry
+        self.console = Console()
+        self._reflection: Any | None = None
 
     def execute_and_verify(
         self,
@@ -196,6 +207,23 @@ class StepExecutor:
                 self_healed=self_healed,
                 agent=step.agent,
             )
+
+        # Post-execution review (Water Protocol — SubagentReviewer)
+        if execution_result.exit_code == 0 and self.llm_client:
+            try:
+                from .subagent_reviewer import SubagentReviewer
+                reviewer = SubagentReviewer(self.llm_client)
+                spec_result = reviewer.review_spec(step.description, execution_result.stdout or "")
+                if not spec_result.compliant and spec_result.severity == "critical":
+                    logger.warning(
+                        "SubagentReviewer: step %d spec non-compliant (critical): %s",
+                        step.order, spec_result.issues,
+                    )
+                    # Mark verification as failed
+                    verification_report.passed = False
+                    verification_report.errors.extend(spec_result.issues)
+            except Exception as e:
+                logger.debug("SubagentReviewer skipped: %s", e)
 
         return StepResult(
             step=step,
@@ -782,12 +810,61 @@ class RecipeOrchestrator:
         except Exception as e:
             self.console.print(f"[yellow]⚠ Phase completion check error: {e}[/yellow]")
 
+    def _check_license_gate(self, recipe: Recipe) -> LicenseCheckResult | None:
+        """Check RAAS license gate before premium pipeline execution.
+
+        Determines task profile from recipe metadata and checks tier access.
+        Returns None if access is allowed, or a LicenseCheckResult if blocked.
+        """
+        checker = get_license_checker()
+
+        # Determine task profile from recipe metadata
+        metadata = recipe.metadata or {}
+        profile = metadata.get("task_profile", "simple")
+
+        # Check profile access
+        result = checker.check_pipeline_access(profile)
+        if not result.allowed:
+            return result
+
+        # Check parallel execution feature if DAG recipe
+        has_deps = any(
+            (s.params or {}).get("depends_on") for s in recipe.steps
+        )
+        if has_deps:
+            dag_check = checker.check_feature("dag_scheduling")
+            if not dag_check.allowed:
+                return dag_check
+
+        # Check swarm feature
+        if metadata.get("use_swarm"):
+            swarm_check = checker.check_feature("swarm_mode")
+            if not swarm_check.allowed:
+                return swarm_check
+
+        return None
+
     def run_from_recipe(
         self,
         recipe: Recipe,
         progress_callback: Callable[..., None] | None = None,
     ) -> OrchestrationResult:
         """Execute existing recipe with verification."""
+        # RAAS License Gate: check tier access before execution
+        gate_result = self._check_license_gate(recipe)
+        if gate_result is not None and not gate_result.allowed:
+            self.console.print(
+                f"[red]🔒 License Gate:[/red] {gate_result.reason}"
+            )
+            if gate_result.upgrade_hint:
+                self.console.print(f"[yellow]💡 {gate_result.upgrade_hint}[/yellow]")
+            return OrchestrationResult(
+                status=OrchestrationStatus.FAILED,
+                recipe=recipe,
+                total_steps=len(recipe.steps),
+                errors=[f"License gate: {gate_result.reason}"],
+            )
+
         workflow_id = uuid.uuid4().hex[:12]
         result = OrchestrationResult(
             status=OrchestrationStatus.SUCCESS,
@@ -811,7 +888,26 @@ class RecipeOrchestrator:
             "\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]",
         )
 
-        executor = RecipeExecutor(recipe)
+        # Create Phase 2 modules: context, timeout manager, hook registry
+        exec_ctx = ExecutionContext()
+        timeout_cfg = TimeoutConfig(
+            step_timeout=300.0,
+            global_timeout=None,
+        )
+        timeout_mgr = TimeoutManager(config=timeout_cfg)
+        timeout_mgr.start_workflow()
+
+        hook_registry = HookRegistry()
+        hook_registry.register_before("logging", logging_before_hook)
+        hook_registry.register_after("logging", logging_after_hook)
+
+        executor = RecipeExecutor(
+            recipe,
+            context=exec_ctx,
+            timeout_mgr=timeout_mgr,
+            hooks=hook_registry,
+            retry_policy=self.retry_policy,
+        )
         step_executor = self._init_step_executor(executor)
 
         dag = DAGScheduler(recipe.steps)
@@ -844,8 +940,31 @@ class RecipeOrchestrator:
 
         self.console.print("[dim]DAG mode: parallel execution enabled[/dim]")
 
+        # Water Protocol: context flows between DAG steps
+        _dag_flow = ContextFlow(task_id=workflow_id)
+
         def _dag_executor(step: RecipeStep) -> StepResult:
-            return step_executor.execute_and_verify(step, workflow_id, step.order)
+            # Enrich step with context from prior steps
+            prior_context = _dag_flow.get_context_for(step.agent or "default")
+            if prior_context and step.description:
+                step = RecipeStep(
+                    order=step.order,
+                    title=step.title,
+                    description=f"{prior_context}\n\n{step.description}",
+                    agent=step.agent,
+                    params=step.params,
+                )
+
+            result = step_executor.execute_and_verify(step, workflow_id, step.order)
+
+            # Record output into flow for subsequent steps
+            output_text = ""
+            if result.execution and hasattr(result.execution, 'stdout'):
+                output_text = (result.execution.stdout or "")[:1000]
+            status = "DONE" if result.verification.passed else "BLOCKED"
+            _dag_flow.add(step.agent or f"step-{step.order}", output_text, status=status)
+
+            return result
 
         def _on_dag_complete(order: int, dag_result: Any) -> None:
             if dag_result.success:
@@ -907,6 +1026,16 @@ class RecipeOrchestrator:
     ) -> OrchestrationResult:
         """Run sequential step execution."""
         for step in recipe.steps:
+            # Check global timeout before each step
+            tmgr = getattr(step_executor.executor, "timeout_mgr", None)
+            if tmgr is not None:
+                try:
+                    tmgr.check_global_timeout()
+                except Exception as timeout_exc:
+                    result.status = OrchestrationStatus.FAILED
+                    result.errors.append(f"Global timeout exceeded before step {step.order}: {timeout_exc}")
+                    break
+
             self.history.append(
                 ExecutionEvent.create(
                     EventKind.STEP_SCHEDULED,

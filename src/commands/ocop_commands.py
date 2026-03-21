@@ -85,8 +85,15 @@ def analyze(
 
         progress.update(task, description="Sending to AI Agent for analysis...")
 
+<<<<<<< HEAD
         # Generate AI-powered analysis
         analysis = _generate_analysis(product_data, file_path)
+=======
+        # TECH-DEBT: OCOP-001 - Integrate with LLM client for actual analysis
+        # See: docs/TECHNICAL_DEBT_TODO.md
+        # For now, generate structured output from input
+        analysis = _generate_analysis_stub(product_data, file_path)
+>>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
 
         progress.update(task, description="Analysis complete!")
 
@@ -154,8 +161,14 @@ def export_listing(
     ) as progress:
         task = progress.add_task(f"Generating {target} listing...", total=None)
 
+<<<<<<< HEAD
         # Generate AI-powered listing
         listing = _generate_listing(target, product_data)
+=======
+        # TECH-DEBT: OCOP-002 - Integrate with LLM client for actual listing generation
+        # See: docs/TECHNICAL_DEBT_TODO.md
+        listing = _generate_listing_stub(target, product_data)
+>>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
 
         progress.update(task, description="Listing generated!")
 
@@ -342,6 +355,7 @@ def _display_listing(listing: dict, target: str, dry_run: bool) -> None:
     console.print(table)
 
 
+<<<<<<< HEAD
 def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
     """Generate AI-powered export listing using LLM client.
 
@@ -454,6 +468,10 @@ Generate a complete, optimized listing."""
 
 def _generate_fallback_listing(target: str, product_data: Optional[dict]) -> dict:
     """Fallback listing when LLM is unavailable."""
+=======
+def _generate_listing_stub(target: str, product_data: Optional[dict]) -> dict:
+    """Generate stub listing. Replace with LLM integration."""
+>>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
     return {
         "title": "Premium Vietnamese Robusta Coffee Beans — Grade A, VietGAP Certified",
         "price": "$4.50/kg FOB Ho Chi Minh City",
