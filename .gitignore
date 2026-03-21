@@ -105,6 +105,7 @@ Thumbs.db
 .ag_proxies/
 .warp_config.json
 .tom_hum_state.json
+*.cto-scan-state.json
 
 # Open Core - Private Business Strategy (Binh Pháp)
 plans/internal/
