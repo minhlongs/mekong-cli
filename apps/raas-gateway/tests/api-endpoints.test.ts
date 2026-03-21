@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import app from '../src/index';
+import { app } from '../src/index';
 import type { Env } from '../src/index';
 
 // Mock KV and D1

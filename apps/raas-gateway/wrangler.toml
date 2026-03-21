@@ -32,7 +32,12 @@ preview_id = "ba8c93a931524b7e97027dbad43b31c0"
 [ai]
 binding = "AI"
 
+# Cron trigger — process queued missions every minute
+[triggers]
+crons = ["* * * * *"]
+
 # Secrets (set via: wrangler secret put <NAME>)
 # JWT_SECRET=REDACTED — for API key validation
 # POLAR_WEBHOOK_SECRET — for billing webhooks
+# TELEGRAM_BOT_TOKEN — for Telegram bot
 # SERVICE_TOKEN — for internal service auth

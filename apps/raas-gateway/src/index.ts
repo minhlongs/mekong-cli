@@ -16,11 +16,13 @@ export interface Env {
   AI: Ai;
   JWT_SECRET=REDACTED: string;
   POLAR_WEBHOOK_SECRET: string;
+  TELEGRAM_BOT_TOKEN: string;
   ENVIRONMENT: string;
   LOG_LEVEL: string;
 }
 
-const app = new Hono<{ Bindings: Env }>();
+// Export app for test imports
+export const app = new Hono<{ Bindings: Env }>();
 
 // Global middleware
 app.use('*', logger());
@@ -43,14 +45,16 @@ app.onError((err, c) => {
   );
 });
 
-export default app;
-
-export const handler = {
-  async fetch(
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<Response> {
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     return app.fetch(request, env, ctx);
+  },
+
+  // Scheduled handler — processes queued missions every minute
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    const { MissionExecutor } = await import('./services/mission-executor');
+    const executor = new MissionExecutor(env);
+    const result = await executor.processQueue();
+    console.log(`[Scheduled] Processed: ${result.processed}, Failed: ${result.failed}`);
   },
 };

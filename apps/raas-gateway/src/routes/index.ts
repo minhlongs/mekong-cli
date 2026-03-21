@@ -9,6 +9,7 @@ import { api } from './api';
 import { credits } from './credits';
 import { billing } from './billing';
 import { tenants } from './tenants';
+import { telegram } from './telegram';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -20,6 +21,7 @@ export function createRoutes() {
   routes.route('/v1', api);
   routes.route('/credits', credits);
   routes.route('/billing', billing);
+  routes.route('/webhook/telegram', telegram);
 
   // Catch-all 404
   routes.notFound((c) => {
