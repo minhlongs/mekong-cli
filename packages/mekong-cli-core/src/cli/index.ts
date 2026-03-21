@@ -25,6 +25,9 @@ import { registerRaasMarketplaceCommand } from './commands/raas-marketplace.js';
 import { registerSwarmDashboardCommand } from './commands/swarm-dashboard.js';
 import { registerSoloOsCommand } from './commands/solo-os.js';
 import { registerVcGovernanceCommand } from './commands/vc-governance.js';
+import { registerCloudAuthCommand } from './commands/cloud-auth.js';
+import { registerCloudMissionCommand } from './commands/cloud-missions.js';
+import { registerCloudBillingCommand } from './commands/cloud-billing.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -82,6 +85,9 @@ export async function main(argv?: string[]): Promise<void> {
   registerSwarmDashboardCommand(program, engine);
   registerSoloOsCommand(program, engine);
   registerVcGovernanceCommand(program, engine);
+  registerCloudAuthCommand(program);
+  registerCloudMissionCommand(program);
+  registerCloudBillingCommand(program);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();

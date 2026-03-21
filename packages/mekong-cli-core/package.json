@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@mekong/raas-sdk": "file:../raas-sdk",
     "@mekong/observability": "file:../observability",
     "@openclaw/cli-adapter": "file:../cli-adapter",
     "@openclaw/agi-evolution": "file:../agi-evolution",

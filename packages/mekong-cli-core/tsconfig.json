@@ -24,7 +24,8 @@
       "@mekong/raas-marketplace/*": ["../raas-marketplace/src/*"],
       "@openclaw/solo-os/*": ["../solo-os/src/*"],
       "@openclaw/rd-engine/*": ["../rd-engine/src/*"],
-      "@openclaw/vc-governance/*": ["../vc-governance/src/*"]
+      "@openclaw/vc-governance/*": ["../vc-governance/src/*"],
+      "@mekong/raas-sdk": ["../raas-sdk/src/index.ts"]
     }
   },
   "include": ["src/**/*", "src/types/**/*.d.ts"],
