@@ -27,6 +27,9 @@ import { usageExport } from './usage-export';
 import { referrals } from './referrals';
 import { metrics } from './metrics';
 import { apiDocs } from './api-docs';
+import { projects } from './projects';
+import { team } from './team';
+import { webhookManagement } from './webhook-management';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -60,6 +63,9 @@ export function createRoutes() {
   routes.route('/metrics', metrics);
   routes.route('/docs', apiDocs);
   routes.route('/v1/referrals', referrals);
+  routes.route('/v1/projects', projects);
+  routes.route('/v1/team', team);
+  routes.route('/v1/webhooks', webhookManagement);
 
   // Waitlist email capture (public)
   routes.post('/waitlist', async (c) => {
