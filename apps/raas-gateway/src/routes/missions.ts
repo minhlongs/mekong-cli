@@ -38,7 +38,9 @@ missions.post('/', async (c) => {
     : 'standard';
 
   const missionService = new MissionService(c.env);
-  const result = await missionService.submit(tenant.tenantId, goal, complexity, body.project);
+  const result = await missionService.submit(
+    tenant.tenantId, goal, complexity, body.project, body.callback_url
+  );
 
   if (!result.success) {
     const status = result.code === 'INSUFFICIENT_CREDITS' ? 402 : 400;

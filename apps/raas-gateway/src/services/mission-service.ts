@@ -42,7 +42,8 @@ export class MissionService {
     tenantId: string,
     goal: string,
     complexity: 'simple' | 'standard' | 'complex' = 'standard',
-    project?: string
+    project?: string,
+    callbackUrl?: string
   ): Promise<SubmitResult> {
     const cost = MISSION_COSTS[complexity] || MISSION_COSTS.standard;
 
@@ -65,11 +66,12 @@ export class MissionService {
     const missionId = crypto.randomUUID();
     const now = new Date().toISOString();
 
+    const metadata = callbackUrl ? JSON.stringify({ callback_url: callbackUrl }) : '{}';
     await this.env.DB.prepare(
-      `INSERT INTO missions (id, tenant_id, goal, complexity, status, credits_cost, project, created_at)
-       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?)`
+      `INSERT INTO missions (id, tenant_id, goal, complexity, status, credits_cost, project, metadata, created_at)
+       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?)`
     )
-      .bind(missionId, tenantId, goal, complexity, cost, project || null, now)
+      .bind(missionId, tenantId, goal, complexity, cost, project || null, metadata, now)
       .run();
 
     return {

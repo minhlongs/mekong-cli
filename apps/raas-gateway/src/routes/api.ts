@@ -8,6 +8,7 @@ import { auth, getTenant } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limiter';
 import { json, notFound } from '../utils/response';
 import { missions } from './missions';
+import { analytics } from './analytics';
 
 export const api = new Hono<{ Bindings: Env }>();
 
@@ -42,5 +43,8 @@ api.get('/me', (c) => {
 
 // Mission routes
 api.route('/missions', missions);
+
+// Analytics
+api.route('/analytics', analytics);
 
 // Tenants routes (signup is public, mounted at route-level to bypass auth)

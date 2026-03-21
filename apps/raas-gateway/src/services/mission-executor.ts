@@ -74,17 +74,31 @@ export class MissionExecutor {
     }
 
     // Update mission as completed with result
+    const completedAt = new Date().toISOString();
     await this.env.DB.prepare(
       `UPDATE missions SET status = 'completed', completed_at = ?, result = ?,
        metadata = ? WHERE id = ?`
     )
       .bind(
-        new Date().toISOString(),
+        completedAt,
         result,
         JSON.stringify({ executor: 'workers-ai', model: 'llama-3.1-8b-instruct' }),
         mission.id
       )
       .run();
+
+    // Fire webhook callback if configured
+    const callbackUrl = await this.getCallbackUrl(mission.id);
+    if (callbackUrl) {
+      await this.fireCallback(callbackUrl, {
+        event: 'mission.completed',
+        mission_id: mission.id,
+        tenant_id: mission.tenant_id,
+        status: 'completed',
+        result,
+        completed_at: completedAt,
+      });
+    }
   }
 
   /**
@@ -96,6 +110,36 @@ export class MissionExecutor {
     )
       .bind(new Date().toISOString(), errorMessage.slice(0, 500), missionId)
       .run();
+  }
+
+  /**
+   * Get callback URL from mission metadata
+   */
+  private async getCallbackUrl(missionId: string): Promise<string | null> {
+    const row = await this.env.DB.prepare(
+      'SELECT metadata FROM missions WHERE id = ?'
+    ).bind(missionId).first<{ metadata: string }>();
+
+    if (!row?.metadata) return null;
+    try {
+      const meta = JSON.parse(row.metadata);
+      return meta.callback_url || null;
+    } catch { return null; }
+  }
+
+  /**
+   * Fire webhook callback (best-effort, no retry)
+   */
+  private async fireCallback(url: string, payload: Record<string, unknown>): Promise<void> {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.error(`[Executor] Callback to ${url} failed:`, error);
+    }
   }
 
   /**
