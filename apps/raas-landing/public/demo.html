@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Try Mekong CLI — Interactive Demo</title>
+  <meta name="description" content="Try Mekong CLI in your browser. 319 commands, 542 skills, 5 business layers.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root{--c:#22d3ee;--g:#4ade80;--bg:#0a0a0a;--tr:#1a1a1a;--b:#333;--t:#e5e5e5;--m:#666}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+    a{color:var(--c);text-decoration:none}
+    header{display:flex;align-items:center;gap:1rem;padding:1rem 1.5rem;border-bottom:1px solid var(--b)}
+    header a{color:var(--m);font-size:.9rem} header a:hover{color:var(--c)} header span{color:var(--b)}
+    main{max-width:860px;margin:0 auto;padding:3rem 1.5rem 4rem}
+    h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;margin-bottom:.75rem} h1 span{color:var(--c)}
+    .sub{color:var(--m);font-size:1.1rem;margin-bottom:2rem}
+    .term{background:var(--tr);border:1px solid var(--b);border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);margin-bottom:1.5rem}
+    .chrome{display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;background:#222;border-bottom:1px solid var(--b)}
+    .dot{width:12px;height:12px;border-radius:50%}
+    .dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+    .title{flex:1;text-align:center;font-family:monospace;font-size:.8rem;color:var(--m)}
+    #out{padding:1.25rem;font-family:'Courier New',monospace;font-size:.9rem;min-height:280px;max-height:420px;overflow-y:auto}
+    .ln{line-height:1.7;white-space:pre-wrap}
+    .cy{color:var(--c)}.gr{color:var(--g)}.yl{color:#fbbf24}.mu{color:var(--m)}
+    .inp-row{display:flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;border-top:1px solid var(--b);background:#161616}
+    .pr{color:var(--c);font-family:monospace;font-size:.9rem;white-space:nowrap}
+    #cmd{flex:1;background:transparent;border:none;outline:none;color:var(--t);font-family:'Courier New',monospace;font-size:.9rem;caret-color:var(--c)}
+    .chips{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:2rem}
+    .chip{padding:.35rem .9rem;border:1px solid var(--b);border-radius:20px;font-family:monospace;font-size:.82rem;color:var(--c);cursor:pointer;transition:all .2s;background:transparent}
+    .chip:hover{background:rgba(34,211,238,.1);border-color:var(--c)}
+    .cta{text-align:center;padding:2.5rem;border:1px solid var(--b);border-radius:12px;background:rgba(34,211,238,.03)}
+    .cta p{color:var(--m);margin-bottom:1.25rem}
+    .btn{display:inline-block;padding:.75rem 2rem;background:var(--c);color:#000;border-radius:8px;font-weight:700;font-size:1rem}
+    .btn:hover{opacity:.85;color:#000}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .cur{display:inline-block;width:8px;height:15px;background:var(--c);animation:blink 1s step-start infinite;vertical-align:text-bottom;margin-left:1px}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">← Back to Home</a><span>|</span>
+    <span style="color:var(--c);font-weight:700;font-size:.9rem">Try Mekong CLI</span>
+  </header>
+  <main>
+    <h1>Try <span>Mekong CLI</span></h1>
+    <p class="sub">No installation required. Type a command below to see AI-powered business automation.</p>
+    <div class="term">
+      <div class="chrome">
+        <div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div>
+        <div class="title">mekong-cli v5.0 — interactive demo</div>
+      </div>
+      <div id="out">
+        <div class="ln cy">Welcome to Mekong CLI v5.0 Interactive Demo</div>
+        <div class="ln mu">Type a command or click a suggestion below...</div>
+        <div class="ln">&nbsp;</div>
+      </div>
+      <div class="inp-row">
+        <span class="pr">mekong&nbsp;$&nbsp;</span>
+        <input id="cmd" type="text" placeholder="try: mekong help" autocomplete="off" spellcheck="false">
+        <span class="cur"></span>
+      </div>
+    </div>
+    <div class="chips">
+      <button class="chip" onclick="run('mekong help')">mekong help</button>
+      <button class="chip" onclick="run('mekong cook &quot;landing page&quot;')">mekong cook</button>
+      <button class="chip" onclick="run('mekong deploy')">mekong deploy</button>
+      <button class="chip" onclick="run('mekong sales &quot;generate 10 leads&quot;')">mekong sales</button>
+      <button class="chip" onclick="run('mekong audit')">mekong audit</button>
+    </div>
+    <div class="cta">
+      <h2 style="margin-bottom:.5rem">Ready to automate your business?</h2>
+      <p>Join 400+ founders using Mekong CLI as their AI CTO. From $49/month.</p>
+      <a href="/#pricing" class="btn">Get Started →</a>
+    </div>
+  </main>
+  <script>
+    const out=document.getElementById('out'), inp=document.getElementById('cmd');
+    let busy=false;
+    const C={
+      'mekong help':[
+        {c:'cy',s:'🐉 Mekong CLI v5.0 — AI-Operated Business Platform\n'},
+        {c:'mu',s:'5 Layers  •  319 Commands  •  542 Skills\n\n'},
+        {c:'',s:'👑 Founder     /annual /okr /fundraise /pitch\n'},
+        {c:'',s:'💼 Business    /sales /marketing /finance /hr\n'},
+        {c:'',s:'🎯 Product     /plan /sprint /roadmap\n'},
+        {c:'',s:'⚙️  Engineering /cook /code /test /deploy\n'},
+        {c:'',s:'🔧 Ops         /audit /health /security\n\n'},
+        {c:'mu',s:'Type a command to try it...'}
+      ],
+      'mekong cook "landing page"':[
+        {c:'cy',s:'🍳 Cooking: landing page\n'},{c:'mu',s:'━━━━━━━━━━━━━━━━━━━━━━━━\n\n'},
+        {c:'',s:'📋 Planning...    '},{c:'gr',s:'✓ (2s)\n'},{c:'mu',s:'   → 3 phases identified\n\n'},
+        {c:'',s:'🔍 Research...    '},{c:'gr',s:'✓ (3s)\n'},{c:'mu',s:'   → React 19 + Tailwind v4 recommended\n\n'},
+        {c:'',s:'⚙️  Implementing... '},{c:'gr',s:'✓ (8s)\n'},
+        {c:'mu',s:'   → src/pages/Landing.tsx\n   → src/components/Hero.tsx\n   → src/components/Pricing.tsx\n\n'},
+        {c:'',s:'🧪 Testing...     '},{c:'gr',s:'✓ (2s)\n'},{c:'mu',s:'   → 12/12 tests passed\n\n'},
+        {c:'gr',s:'✅ Done! Feature implemented in 15 seconds.\n'},{c:'yl',s:'   Cost: 3 MCU ($0.45)'}
+      ],
+      'mekong deploy':[
+        {c:'cy',s:'🚀 Deploying to Cloudflare...\n'},{c:'mu',s:'━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'},
+        {c:'',s:'📦 Building...             '},{c:'gr',s:'✓ (4s)\n'},
+        {c:'',s:'☁️  Uploading to CF Pages... '},{c:'gr',s:'✓ (2s)\n'},
+        {c:'',s:'🔒 SSL configured...        '},{c:'gr',s:'✓\n'},
+        {c:'cy',s:'🌐 Live at: https://your-app.pages.dev\n\n'},
+        {c:'gr',s:'✅ Deployed! Zero downtime.\n'},{c:'yl',s:'   Cost: $0.'}
+      ],
+      'mekong sales "generate 10 leads"':[
+        {c:'cy',s:'🎯 Sales Agent activated\n'},{c:'mu',s:'━━━━━━━━━━━━━━━━━━━━━━\n\n'},
+        {c:'',s:'🔍 Scanning market...  '},{c:'gr',s:'✓\n'},
+        {c:'',s:'📧 10 qualified leads found:\n'},
+        {c:'mu',s:'   1. TechVN Corp (Enterprise, $499/mo potential)\n   2. GrowthHQ Agency (Pro, $199/mo potential)\n   ... (8 more)\n\n'},
+        {c:'cy',s:'📊 Total Pipeline: $2,847/mo potential MRR\n'},
+        {c:'gr',s:'✅ Leads exported to CRM.\n'},{c:'yl',s:'   Cost: 2 MCU ($0.30)'}
+      ],
+      'mekong audit':[
+        {c:'cy',s:'🔧 Running system audit...\n'},{c:'mu',s:'━━━━━━━━━━━━━━━━━━━━━━━\n\n'},
+        {c:'gr',s:'✓ '},{c:'',s:'Security headers: OK\n'},
+        {c:'gr',s:'✓ '},{c:'',s:'Dependencies: 0 critical CVEs\n'},
+        {c:'gr',s:'✓ '},{c:'',s:'API endpoints: 23 secured\n'},
+        {c:'yl',s:'⚠ '},{c:'',s:'Missing DMARC record on email domain\n'},
+        {c:'yl',s:'⚠ '},{c:'',s:'Redis cache hit rate: 67% (target 90%)\n\n'},
+        {c:'cy',s:'📊 Score: 82/100 (Production Ready)\n'},
+        {c:'mu',s:'   2 issues to fix. Run: mekong fix --audit'}
+      ]
+    };
+
+    const d=ms=>new Promise(r=>setTimeout(r,ms));
+    function add(cls,txt){const e=document.createElement('div');e.className='ln'+(cls?' '+cls:'');e.textContent=txt;out.appendChild(e);out.scrollTop=out.scrollHeight;}
+    async function typeSegs(segs){for(const s of segs){let b='';const e=document.createElement('div');e.className='ln'+(s.c?' '+s.c:'');out.appendChild(e);for(const ch of s.s){b+=ch;e.textContent=b;out.scrollTop=out.scrollHeight;await d(ch==='\n'?55:16);}}}
+
+    async function run(cmd){
+      if(busy)return; busy=true; inp.value=''; inp.blur();
+      add('cy','$ '+cmd); await d(180);
+      const segs=C[cmd];
+      if(segs){add('','');await typeSegs(segs);}
+      else add('mu','Command not found. Try: mekong help');
+      add('',''); busy=false; inp.focus();
+    }
+
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&inp.value.trim())run(inp.value.trim());});
+    document.querySelector('.term').addEventListener('click',()=>inp.focus());
+    inp.focus();
+  </script>
+</body>
+</html>
