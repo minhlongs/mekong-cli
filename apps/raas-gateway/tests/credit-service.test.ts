@@ -107,6 +107,16 @@ describe('CreditService', () => {
     });
 
     it('should return TENANT_NOT_FOUND for non-existent tenant', async () => {
+      // Atomic UPDATE returns 0 changes for non-existent tenant
+      const origPrepare = mockDB.prepare.bind(mockDB);
+      mockDB.prepare = (query: string) => {
+        const builder = origPrepare(query);
+        if (query.includes('UPDATE tenants SET balance')) {
+          builder.run = async () => ({ success: true, meta: { changes: 0 } });
+        }
+        return builder;
+      };
+
       const result = await creditService.deduct('non-existent', 10, 'mission', 'test');
       expect(result.success).toBe(false);
       expect(result.error).toBe('TENANT_NOT_FOUND');
@@ -114,6 +124,16 @@ describe('CreditService', () => {
 
     it('should return INSUFFICIENT_CREDITS when balance too low', async () => {
       mockDB.tables.set('tenants', [{ id: 'tenant-1', balance: 5, total_spent: 0 }]);
+
+      // Atomic UPDATE returns 0 changes when balance < amount
+      const origPrepare = mockDB.prepare.bind(mockDB);
+      mockDB.prepare = (query: string) => {
+        const builder = origPrepare(query);
+        if (query.includes('UPDATE tenants SET balance')) {
+          builder.run = async () => ({ success: true, meta: { changes: 0 } });
+        }
+        return builder;
+      };
 
       const result = await creditService.deduct('tenant-1', 10, 'mission', 'test');
       expect(result.success).toBe(false);

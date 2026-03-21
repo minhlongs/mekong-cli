@@ -59,12 +59,14 @@ describe('BillingService', () => {
   beforeEach(() => {
     mockDB = new MockD1();
     mockKV = new MockKV();
+    // Secret must be valid base64 for Standard Webhooks
+    const testSecretBase64 = btoa('test-webhook-secret-key-32bytes!!');
     billingService = new BillingService({
       DB: mockDB as any,
       RATE_LIMIT_KV: mockKV as any,
       SESSION_KV: mockKV as any,
       JWT_SECRET=REDACTED: 'test-secret',
-      POLAR_WEBHOOK_SECRET: 'test-webhook-secret',
+      POLAR_WEBHOOK_SECRET: testSecretBase64,
       ENVIRONMENT: 'test',
       LOG_LEVEL: 'debug',
       AI: {} as any,
@@ -100,38 +102,48 @@ describe('BillingService', () => {
   });
 
   describe('verifySignature', () => {
-    it('should return true for valid signature', async () => {
+    it('should return true for valid Standard Webhooks signature', async () => {
+      const secretRaw = 'test-webhook-secret-key-32bytes!!';
+      const secretBase64 = btoa(secretRaw);
       const payload = JSON.stringify({ type: 'order.paid', data: {} });
-      const secret = 'test-webhook-secret';
+      const webhookId = 'msg_test123';
+      const webhookTimestamp = Math.floor(Date.now() / 1000).toString();
 
-      // Generate expected signature
-      const keyData = new TextEncoder().encode(secret);
-      const msgData = new TextEncoder().encode(payload);
+      // Generate Standard Webhooks signature using same decoding as service
+      const keyBytes = Uint8Array.from(atob(secretBase64), c => c.charCodeAt(0));
+      const signedContent = `${webhookId}.${webhookTimestamp}.${payload}`;
+      const msgData = new TextEncoder().encode(signedContent);
       const cryptoKey = await crypto.subtle.importKey(
-        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+        'raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
       );
       const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-      const expectedSig = Array.from(new Uint8Array(sigBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      const sigBase64 = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 
-      const result = await billingService.verifySignature(payload, expectedSig);
+      const result = await billingService.verifySignature(
+        payload, `v1,${sigBase64}`, webhookId, webhookTimestamp
+      );
       expect(result).toBe(true);
     });
 
     it('should return false for invalid signature', async () => {
       const payload = JSON.stringify({ type: 'order.paid', data: {} });
-      const result = await billingService.verifySignature(payload, 'invalid-signature');
+      const result = await billingService.verifySignature(payload, 'v1,invalid', 'msg_1', '123');
       expect(result).toBe(false);
     });
 
-    it('should return true when no secret configured', async () => {
+    it('should return false when no secret configured (fail closed)', async () => {
       const noSecretService = new BillingService({
-        ...billingService as any,
+        DB: mockDB as any,
+        RATE_LIMIT_KV: mockKV as any,
+        SESSION_KV: mockKV as any,
+        JWT_SECRET=REDACTED: 'test-secret',
         POLAR_WEBHOOK_SECRET: '',
+        ENVIRONMENT: 'test',
+        LOG_LEVEL: 'debug',
+        AI: {} as any,
       });
       const result = await noSecretService.verifySignature('{}', 'any-signature');
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 
