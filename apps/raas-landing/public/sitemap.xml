@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mekong-raas.pages.dev/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://raas.agencyos.network/billing/pricing</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://raas.agencyos.network/openapi.json</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://raas.agencyos.network/stats</loc><changefreq>daily</changefreq><priority>0.5</priority></url>
+</urlset>

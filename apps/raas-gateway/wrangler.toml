@@ -32,6 +32,11 @@ preview_id = "ba8c93a931524b7e97027dbad43b31c0"
 [ai]
 binding = "AI"
 
+# Custom domain
+routes = [
+  { pattern = "raas.agencyos.network/*", zone_name = "agencyos.network" }
+]
+
 # Cron trigger — process queued missions every minute
 [triggers]
 crons = ["* * * * *"]

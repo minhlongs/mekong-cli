@@ -1,0 +1,12 @@
+{
+  "name": "Mekong CLI",
+  "short_name": "Mekong",
+  "description": "AI-Operated Business Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#22d3ee",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
