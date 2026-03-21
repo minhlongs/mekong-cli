@@ -90,18 +90,22 @@ async function handleStart(
   ).bind(`tg_${telegramId}@mekong.bot`).first<{ id: string; balance: number }>();
 
   if (existing) {
+    // Update chat_id if not set
+    await env.DB.prepare('UPDATE tenants SET telegram_chat_id = ? WHERE id = ? AND telegram_chat_id IS NULL')
+      .bind(telegramId, existing.id).run();
     await send(`Welcome back! Balance: ${existing.balance} MCU\nType /submit <goal> to start.`);
     return;
   }
 
-  // Create tenant
+  // Create tenant with chat_id for result delivery
   const tenantId = crypto.randomUUID();
   const email = `tg_${telegramId}@mekong.bot`;
+  const refCode = tenantId.slice(0, 8);
 
   await env.DB.prepare(
-    `INSERT INTO tenants (id, name, email, tier, active, balance, total_earned, total_spent, created_at, updated_at)
-     VALUES (?, ?, ?, 'free', 1, 10, 10, 0, datetime('now'), datetime('now'))`
-  ).bind(tenantId, name, email).run();
+    `INSERT INTO tenants (id, name, email, tier, active, balance, total_earned, total_spent, telegram_chat_id, referral_code, created_at, updated_at)
+     VALUES (?, ?, ?, 'free', 1, 10, 10, 0, ?, ?, datetime('now'), datetime('now'))`
+  ).bind(tenantId, name, email, telegramId, refCode).run();
 
   // Record credits
   await env.DB.prepare(

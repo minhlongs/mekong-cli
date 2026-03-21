@@ -87,6 +87,9 @@ export class MissionExecutor {
       )
       .run();
 
+    // Notify Telegram user if they have chat_id
+    await this.notifyTelegram(mission.tenant_id, mission.id, result);
+
     // Fire webhook callback if configured
     const callbackUrl = await this.getCallbackUrl(mission.id);
     if (callbackUrl) {
@@ -110,6 +113,31 @@ export class MissionExecutor {
     )
       .bind(new Date().toISOString(), errorMessage.slice(0, 500), missionId)
       .run();
+  }
+
+  /**
+   * Send Telegram notification when mission completes
+   */
+  private async notifyTelegram(tenantId: string, missionId: string, result: string): Promise<void> {
+    const botToken = (this.env as any).TELEGRAM_BOT_TOKEN;
+    if (!botToken) return;
+
+    const tenant = await this.env.DB.prepare(
+      'SELECT telegram_chat_id FROM tenants WHERE id = ?'
+    ).bind(tenantId).first<{ telegram_chat_id: string }>();
+
+    if (!tenant?.telegram_chat_id) return;
+
+    const text = `Mission ${missionId.slice(0, 8)}... completed!\n\n${result.slice(0, 3500)}`;
+    try {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: parseInt(tenant.telegram_chat_id), text }),
+      });
+    } catch (error) {
+      console.error('[Executor] Telegram notify failed:', error);
+    }
   }
 
   /**

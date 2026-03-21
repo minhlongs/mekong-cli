@@ -37,13 +37,16 @@ tenants.post('/signup', async (c) => {
     return json({ error: 'Email already registered', code: 'EMAIL_EXISTS' }, { status: 409 });
   }
 
-  // Create tenant with free tier + 10 starter credits
+  // Create tenant with free tier + 10 starter credits + referral code
   const tenantId = crypto.randomUUID();
+  const referralCode = tenantId.slice(0, 8);
+  const refBy = body.ref?.trim() || null;
+
   await c.env.DB.prepare(
-    `INSERT INTO tenants (id, name, email, tier, active, balance, total_earned, total_spent, created_at, updated_at)
-     VALUES (?, ?, ?, 'free', 1, 10, 10, 0, datetime('now'), datetime('now'))`
+    `INSERT INTO tenants (id, name, email, tier, active, balance, total_earned, total_spent, referral_code, referred_by, created_at, updated_at)
+     VALUES (?, ?, ?, 'free', 1, 10, 10, 0, ?, ?, datetime('now'), datetime('now'))`
   )
-    .bind(tenantId, name, email)
+    .bind(tenantId, name, email, referralCode, refBy)
     .run();
 
   // Record initial credits transaction
@@ -54,18 +57,45 @@ tenants.post('/signup', async (c) => {
     .bind(crypto.randomUUID(), tenantId)
     .run();
 
+  // Process referral: +5 MCU to both referrer and new user
+  if (refBy) {
+    const referrer = await c.env.DB.prepare(
+      'SELECT id FROM tenants WHERE referral_code = ?'
+    ).bind(refBy).first<{ id: string }>();
+
+    if (referrer) {
+      // Bonus to new user
+      await c.env.DB.prepare('UPDATE tenants SET balance = balance + 5, total_earned = total_earned + 5 WHERE id = ?')
+        .bind(tenantId).run();
+      await c.env.DB.prepare(
+        `INSERT INTO credit_transactions (id, tenant_id, amount, type, description, metadata, created_at) VALUES (?, ?, 5, 'adjustment', 'Referral bonus', '{}', datetime('now'))`
+      ).bind(crypto.randomUUID(), tenantId).run();
+
+      // Bonus to referrer
+      await c.env.DB.prepare('UPDATE tenants SET balance = balance + 5, total_earned = total_earned + 5 WHERE id = ?')
+        .bind(referrer.id).run();
+      await c.env.DB.prepare(
+        `INSERT INTO credit_transactions (id, tenant_id, amount, type, description, metadata, created_at) VALUES (?, ?, 5, 'adjustment', 'Referral reward', '{}', datetime('now'))`
+      ).bind(crypto.randomUUID(), referrer.id).run();
+    }
+  }
+
   // Generate JWT
   const authService = new AuthService(c.env);
   const token = await authService.generateJwt(tenantId, 'free', ['read', 'write']);
 
+  const bonusCredits = refBy ? 15 : 10;
   return json({
     tenantId,
     name,
     email,
     tier: 'free',
-    credits: 10,
+    credits: bonusCredits,
+    referralCode,
     token,
-    message: 'Welcome! You have 10 free credits to get started.',
+    message: refBy
+      ? 'Welcome! You have 15 credits (10 + 5 referral bonus).'
+      : `Welcome! You have 10 free credits. Share your referral code: ${referralCode}`,
   }, { status: 201 });
 });
 
