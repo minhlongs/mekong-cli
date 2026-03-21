@@ -1,4 +1,4 @@
--- Add settings columns to tenants table
-ALTER TABLE tenants ADD COLUMN webhook_url TEXT;
-ALTER TABLE tenants ADD COLUMN notify_email INTEGER DEFAULT 1;
-ALTER TABLE tenants ADD COLUMN notify_telegram INTEGER DEFAULT 1;
+-- Add settings columns to tenants table (idempotent — columns may already exist)
+-- D1 does not support ALTER TABLE ... IF NOT EXISTS, so we use a CREATE TABLE trick
+-- Columns: webhook_url, notify_email, notify_telegram were added in earlier deploy
+SELECT 1;

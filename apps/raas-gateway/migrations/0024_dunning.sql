@@ -29,6 +29,6 @@ CREATE TABLE IF NOT EXISTS win_back_emails (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
 
-CREATE INDEX idx_dunning_tenant ON dunning_events(tenant_id);
-CREATE INDEX idx_dunning_status ON dunning_events(status);
-CREATE INDEX idx_winback_tenant ON win_back_emails(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_dunning_tenant ON dunning_events(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_dunning_status ON dunning_events(status);
+CREATE INDEX IF NOT EXISTS idx_winback_tenant ON win_back_emails(tenant_id);

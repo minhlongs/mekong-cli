@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS incident_updates (
   FOREIGN KEY (incident_id) REFERENCES incidents(id)
 );
 
-CREATE INDEX idx_incidents_status ON incidents(status);
-CREATE INDEX idx_incident_updates_incident ON incident_updates(incident_id);
+CREATE INDEX IF NOT EXISTS idx_incidents_status ON incidents(status);
+CREATE INDEX IF NOT EXISTS idx_incident_updates_incident ON incident_updates(incident_id);

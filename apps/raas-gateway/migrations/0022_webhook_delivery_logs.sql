@@ -15,6 +15,6 @@ CREATE TABLE IF NOT EXISTS webhook_delivery_logs (
   created_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
-CREATE INDEX idx_wdl_tenant ON webhook_delivery_logs(tenant_id);
-CREATE INDEX idx_wdl_status ON webhook_delivery_logs(status);
-CREATE INDEX idx_wdl_retry ON webhook_delivery_logs(status, next_retry_at);
+CREATE INDEX IF NOT EXISTS idx_wdl_tenant ON webhook_delivery_logs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_wdl_status ON webhook_delivery_logs(status);
+CREATE INDEX IF NOT EXISTS idx_wdl_retry ON webhook_delivery_logs(status, next_retry_at);

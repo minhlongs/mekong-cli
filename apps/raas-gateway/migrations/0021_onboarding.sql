@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS onboarding_progress (
   updated_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
-CREATE INDEX idx_onboarding_tenant ON onboarding_progress(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_onboarding_tenant ON onboarding_progress(tenant_id);

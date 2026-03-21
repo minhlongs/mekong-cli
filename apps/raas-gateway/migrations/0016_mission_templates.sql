@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS mission_templates (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-INSERT INTO mission_templates (id, title, description, category, default_complexity, estimated_credits, example_goal) VALUES
+INSERT OR IGNORE INTO mission_templates (id, title, description, category, default_complexity, estimated_credits, example_goal) VALUES
 ('tpl-content-blog', 'Blog Post Writer', 'Write a professional blog post on any topic', 'content', 'standard', 2, 'Write a 1000-word blog post about AI automation'),
 ('tpl-content-social', 'Social Media Pack', 'Create social media posts for multiple platforms', 'content', 'simple', 1, 'Create Twitter, LinkedIn, Instagram posts about product launch'),
 ('tpl-content-email', 'Email Campaign', 'Draft email marketing campaign', 'content', 'standard', 2, 'Write 5-email drip sequence for SaaS onboarding'),

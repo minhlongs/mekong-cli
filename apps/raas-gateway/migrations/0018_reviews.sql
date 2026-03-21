@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS reviews (
   FOREIGN KEY (tenant_id) REFERENCES tenants(id)
 );
 
-CREATE INDEX idx_reviews_mission ON reviews(mission_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_mission ON reviews(mission_id);
