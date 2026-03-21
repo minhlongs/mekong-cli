@@ -98,5 +98,37 @@ export function buildEngineModules(): EngineModules {
         return gate.check?.(tenantId) ?? { allowed: true, remaining: 1000 };
       },
     },
+    raas: {
+      async validateCommand(tenantId, command, credits) {
+        const api = await load('./raas/raas-api.js');
+        const result = api.handleValidate?.(tenantId, command, credits);
+        return result ?? { ok: false, status: 500 };
+      },
+      async getBalance(tenantId) {
+        const api = await load('./raas/raas-api.js');
+        const result = api.handleGetBalance?.(tenantId);
+        return result?.data ?? { tier: 'starter', used: 0, remaining: 200, limit: 200 };
+      },
+      async onboardTenant(req) {
+        const onboard = await load('./raas/raas-onboarding.js');
+        const result = onboard.handleOnboardTenant?.(req);
+        return result?.data ?? { apiKey: '', expiresAt: 0 };
+      },
+      async checkHealth() {
+        const health = await load('./raas/raas-health.js');
+        const result = health.checkHealth?.();
+        return result?.data ?? { status: 'healthy', version: '0.2.0', uptime: 0 };
+      },
+      async checkRateLimit(tenantId) {
+        const limiter = await load('./raas/raas-rate-limiter.js');
+        const result = limiter.checkRateLimit?.(tenantId);
+        return result ?? { allowed: true, remaining: 100, resetAt: Date.now() + 60000 };
+      },
+      async getUsageAnalytics(tenantId) {
+        const billing = await load('./raas/raas-billing.js');
+        const result = billing.getUsageAnalytics?.(tenantId);
+        return result?.data ?? { totalCalls: 0, creditsUsed: 0, avgLatencyMs: 0 };
+      },
+    },
   };
 }

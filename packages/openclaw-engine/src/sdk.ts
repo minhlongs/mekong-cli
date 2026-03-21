@@ -3,8 +3,10 @@
  * Clean TypeScript API for mission orchestration, intelligence, and reliability
  */
 
-import type { EngineModules } from './engine-modules.js';
+import type { EngineModules, RaaSModule } from './engine-modules.js';
 import { buildEngineModules } from './engine-module-loader.js';
+
+export type { RaaSModule } from './engine-modules.js';
 
 // --- Types ---
 

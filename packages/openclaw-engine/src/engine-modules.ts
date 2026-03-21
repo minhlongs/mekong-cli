@@ -42,6 +42,16 @@ export interface ObservabilityModule {
   checkRateLimit(tenantId: string): Promise<{ allowed: boolean; remaining: number }>;
 }
 
+/** RaaS: tenant management, billing, rate limiting, health */
+export interface RaaSModule {
+  validateCommand(tenantId: string, command: string, credits: number): Promise<{ ok: boolean; status: number; remaining?: number }>;
+  getBalance(tenantId: string): Promise<{ tier: string; used: number; remaining: number; limit: number }>;
+  onboardTenant(req: { tenantId: string; tier: string; email: string }): Promise<{ apiKey: string; expiresAt: number }>;
+  checkHealth(): Promise<{ status: string; version: string; uptime: number }>;
+  checkRateLimit(tenantId: string): Promise<{ allowed: boolean; remaining: number; resetAt: number }>;
+  getUsageAnalytics(tenantId: string): Promise<{ totalCalls: number; creditsUsed: number; avgLatencyMs: number }>;
+}
+
 /** Aggregated access to all engine sub-modules */
 export interface EngineModules {
   orchestration: OrchestrationModule;
@@ -49,4 +59,5 @@ export interface EngineModules {
   reliability: ReliabilityModule;
   safety: SafetyModule;
   observability: ObservabilityModule;
+  raas: RaaSModule;
 }
