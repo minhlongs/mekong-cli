@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RaaS Admin Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login">
+  <div class="login-card">
+    <h1>RaaS Admin</h1>
+    <p>Connect to your RaaS Gateway to manage tenants and missions.</p>
+    <label>Gateway URL</label>
+    <input id="gw-url" type="url" placeholder="https://your-gateway.workers.dev">
+    <label>Admin API Key</label>
+    <input id="admin-key" type="password" placeholder="X-Admin-Key value">
+    <div id="login-err" style="color:var(--err);font-size:.8rem;margin-bottom:.75rem;display:none"></div>
+    <button onclick="doLogin()">Connect</button>
+  </div>
+</div>
+
+<!-- App shell (hidden until logged in) -->
+<div id="app">
+  <header>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span class="status-dot"></span>
+      <h1>RaaS Admin Dashboard</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <span class="refresh-info" id="last-refresh">—</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="active" onclick="showTab('overview',this)">Overview</button>
+    <button onclick="showTab('tenants',this)">Tenants</button>
+    <button onclick="showTab('missions',this)">Missions</button>
+    <button onclick="showTab('credits',this)">Credits</button>
+  </nav>
+
+  <main>
+    <div id="error-banner"></div>
+
+    <div id="tab-overview" class="section active">
+      <div class="cards" id="overview-cards"><div class="loading">Loading…</div></div>
+    </div>
+
+    <div id="tab-tenants" class="section">
+      <div class="panel">
+        <h2>Tenants</h2>
+        <div id="tenants-body"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <div id="tab-missions" class="section">
+      <div class="panel">
+        <h2>Mission History</h2>
+        <div id="missions-body"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+
+    <div id="tab-credits" class="section">
+      <div class="panel">
+        <h2>Credit Ledger</h2>
+        <div id="credits-body"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { loadSavedConfig, saveConfig, clearConfig, startAutoRefresh } from './dashboard-api-client.js';
+
+window.showTab = function(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+};
+
+window.doLogin = function() {
+  const url = document.getElementById('gw-url').value.trim();
+  const key = document.getElementById('admin-key').value.trim();
+  const err = document.getElementById('login-err');
+  if (!url || !key) { err.textContent = 'Both fields required.'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  saveConfig(url, key);
+  showApp();
+};
+
+window.logout = function() {
+  clearConfig();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
+};
+
+function showApp() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  startAutoRefresh();
+}
+
+// Auto-connect if credentials saved
+if (loadSavedConfig()) showApp();
+</script>
+</body>
+</html>

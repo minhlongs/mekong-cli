@@ -2,7 +2,7 @@
 
 **Single Source of Truth** - Consolidates all PRDs and Revenue Plans
 
-Updated: 2026-02-28 | Status: EXECUTION (AGI Deep 10x Master Phase)
+Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete)
 
 ---
 
@@ -107,10 +107,30 @@ Updated: 2026-02-28 | Status: EXECUTION (AGI Deep 10x Master Phase)
 
 ## 🔄 IN PROGRESS
 
-- [ ] Engine Layer Deployment (Docker/GCP) - Next: scaling & monitoring
-- [ ] Advanced Economics Integration - ClawWork L11 full pipeline optimization
+- [ ] npm publish workflow for @mekong/raas-sdk, raas-marketplace, mekong-cli-core
+- [ ] RaaS Admin Dashboard (tenant/credit/mission management)
+- [ ] PEV Bridge (CLI cloud run → gateway mission execution)
+- [ ] ProductHunt Launch preparation
+- [ ] Enterprise Pilot outreach (5 agencies @ $2k/month)
 
 ---
+
+## ✅ RECENTLY COMPLETED (March 2026)
+
+- [x] RaaS Gateway v5.0 — 18 feature waves on Cloudflare Workers (Hono + D1/KV/R2)
+- [x] RaaS SDK (@mekong/raas-sdk) — typed TypeScript client for gateway API
+- [x] CLI Cloud Integration — 11 commands: signup/login/logout/whoami/mission/billing
+- [x] ROIaaS DNA v0.4 GATE — License key verification, HMAC, feature gating, tier enforcement
+- [x] ROIaaS DNA v0.5 LICENSE UI — Key generator, admin CRUD, audit log, tier migration
+- [x] ROIaaS DNA v0.6 WEBHOOK — Polar.sh webhooks, subscription manager, receipt store
+- [x] ROIaaS DNA v0.7 METERING — Event collector, JSONL store, analyzer, limiter, cost calculator
+- [x] ROIaaS DNA v0.8 ANALYTICS — ROI calculator, AGI scorer, revenue tracker, growth analyzer
+- [x] Skill Marketplace — Registry with publish/search/rate/getPopular
+- [x] Landing Page — 5 pages: hero, ROI calculator, case studies, CLI demo, pricing+checkout
+- [x] Polar.sh Checkout — Full flow: signup → JWT → checkout session → redirect
+- [x] Sales Collateral — Competitive battlecard, one-pager, objection handlers
+- [x] 979 tests ALL GREEN across 41 test files
+
 ---
 
 ## 📊 KPIs TO TRACK
@@ -120,12 +140,10 @@ Updated: 2026-02-28 | Status: EXECUTION (AGI Deep 10x Master Phase)
 | Pre-orders    | 100      | 0         |
 | MRR           | $10k     | $0        |
 | CLI Downloads | 1,000    | 0         |
-| Metric        | Target   | Current   |
-| --------      | -------- | --------- |
-| Pre-orders    | 100      | 0         |
-| MRR           | $10k     | $0        |
-| CLI Downloads | 1,000    | 0         |
 | GitHub Stars  | 500      | 0         |
+| npm Packages  | 3        | 0 (ready) |
+| Gateway Waves | 18       | 18        |
+| Test Coverage | 979      | 979       |
 
 ---
 
