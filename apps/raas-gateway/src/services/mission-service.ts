@@ -17,6 +17,8 @@ export interface Mission {
   startedAt?: string;
   completedAt?: string;
   errorMessage?: string;
+  result?: string;
+  metadata?: string;
 }
 
 export interface SubmitResult {
@@ -93,7 +95,7 @@ export class MissionService {
       `SELECT id, tenant_id as tenantId, goal, complexity, status,
               credits_cost as creditsCost, project, created_at as createdAt,
               started_at as startedAt, completed_at as completedAt,
-              error_message as errorMessage
+              error_message as errorMessage, result, metadata
        FROM missions WHERE id = ? AND tenant_id = ?`
     )
       .bind(missionId, tenantId)

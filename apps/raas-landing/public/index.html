@@ -66,6 +66,17 @@
     .signup-result.error { background: #2d0d0d; border-color: #5c1a1a; }
     .signup-result code { font-size: 0.85rem; word-break: break-all; }
 
+    /* Demo */
+    .demo { max-width: 600px; margin: 3rem auto; padding: 0 1.5rem; }
+    .demo h2 { text-align: center; font-size: 1.8rem; margin-bottom: 1rem; }
+    .demo-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .demo-box input { width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; }
+    .demo-box select { padding: 0.7rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 0.75rem; }
+    .demo-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .demo-row input { flex: 1; margin-bottom: 0; }
+    .demo-box button { padding: 0.7rem 1.5rem; background: var(--cyan); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .demo-result { margin-top: 1rem; padding: 1rem; border-radius: 8px; background: #1a1a1a; border: 1px solid var(--border); display: none; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; max-height: 300px; overflow-y: auto; }
+
     /* API Docs */
     .api-docs { max-width: 700px; margin: 3rem auto; padding: 0 1.5rem; }
     .api-docs h2 { text-align: center; font-size: 1.8rem; margin-bottom: 1.5rem; }
@@ -195,6 +206,22 @@
     </div>
   </section>
 
+  <section class="demo" id="demo">
+    <h2>Try It Live</h2>
+    <div class="demo-box">
+      <input type="text" id="demo-goal" placeholder="Describe your goal... e.g. Build a REST API with auth" />
+      <div class="demo-row">
+        <select id="demo-complexity">
+          <option value="simple">Simple (1 MCU)</option>
+          <option value="standard" selected>Standard (3 MCU)</option>
+          <option value="complex">Complex (5 MCU)</option>
+        </select>
+        <button onclick="submitDemo()">Submit Mission</button>
+      </div>
+      <div id="demo-result" class="demo-result"></div>
+    </div>
+  </section>
+
   <section class="api-docs" id="api">
     <h2>API Reference</h2>
     <table>
@@ -236,6 +263,57 @@
           el.innerHTML = data.error || 'Signup failed';
         }
       } catch (e) { el.className = 'signup-result error'; el.style.display = 'block'; el.innerHTML = 'Network error'; }
+    }
+
+    let demoToken = null;
+    async function submitDemo() {
+      const el = document.getElementById('demo-result');
+      const goal = document.getElementById('demo-goal').value.trim();
+      const complexity = document.getElementById('demo-complexity').value;
+      if (!goal) { el.style.display = 'block'; el.textContent = 'Please enter a goal.'; return; }
+
+      // Auto-signup if no token
+      if (!demoToken) {
+        el.style.display = 'block'; el.textContent = 'Creating demo account...';
+        const ts = Date.now();
+        const res = await fetch(API + '/v1/tenants/signup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'Demo User', email: `demo-${ts}@mekong.live` })
+        });
+        const data = await res.json();
+        if (!res.ok) { el.textContent = 'Signup: ' + (data.error || 'failed'); return; }
+        demoToken = data.token;
+      }
+
+      el.style.display = 'block'; el.textContent = 'Submitting mission...';
+      const mRes = await fetch(API + '/v1/missions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + demoToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal, complexity })
+      });
+      const mission = await mRes.json();
+      if (!mRes.ok) { el.textContent = mission.error || 'Failed'; return; }
+
+      el.textContent = `Mission ${mission.id.slice(0,8)}... queued (${mission.creditsCost} MCU)\nWaiting for result...`;
+
+      // Poll for result (max 30s)
+      for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        const rRes = await fetch(API + '/v1/missions/' + mission.id, {
+          headers: { 'Authorization': 'Bearer ' + demoToken }
+        });
+        const m = await rRes.json();
+        if (m.status === 'completed' && m.result) {
+          el.textContent = m.result;
+          return;
+        }
+        if (m.status === 'failed') {
+          el.textContent = 'Mission failed: ' + (m.errorMessage || 'Unknown');
+          return;
+        }
+        el.textContent = `Status: ${m.status}... (${i+1}/15)`;
+      }
+      el.textContent += '\nStill processing. Check back with the mission ID.';
     }
   </script>
 

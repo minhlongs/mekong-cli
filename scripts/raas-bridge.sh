@@ -115,6 +115,32 @@ for m in ms[:10]:
 "
 }
 
+cmd_result() {
+  load_token
+  local mission_id="${1:-}"
+  if [[ -z "$mission_id" ]]; then
+    echo "Usage: mekong-raas result <mission-id>" >&2
+    exit 1
+  fi
+  api GET "/v1/missions/${mission_id}" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+if 'error' in d:
+    print(f'Error: {d[\"error\"]}')
+else:
+    print(f'Mission: {d[\"id\"]}')
+    print(f'Status:  {d[\"status\"]}')
+    print(f'Goal:    {d[\"goal\"]}')
+    result = d.get('result')
+    if result:
+        print(f'\n--- Result ---\n{result}')
+    elif d['status'] == 'queued':
+        print('\nMission is queued — check back shortly.')
+    elif d['status'] == 'failed':
+        print(f'\nError: {d.get(\"errorMessage\",\"Unknown\")}')
+"
+}
+
 cmd_profile() {
   load_token
   api GET /v1/tenants/profile | python3 -c "
@@ -158,6 +184,7 @@ cmd_help() {
   echo "  login        Set API token"
   echo "  credits      Check credit balance"
   echo "  submit       Submit a mission"
+  echo "  result       Get mission result"
   echo "  missions     List your missions"
   echo "  profile      View tenant profile"
   echo "  apikey       Generate API key"
@@ -175,6 +202,7 @@ case "${1:-help}" in
   login)    cmd_login ;;
   credits)  cmd_credits ;;
   submit)   shift; cmd_submit "$@" ;;
+  result)   shift; cmd_result "$@" ;;
   missions) cmd_missions ;;
   profile)  cmd_profile ;;
   apikey)   shift; cmd_apikey "${1:-CLI Key}" ;;
