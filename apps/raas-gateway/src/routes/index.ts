@@ -55,6 +55,11 @@ import { models } from './models';
 import { affiliates } from './affiliates';
 import { salesPipeline } from './sales-pipeline';
 import { salesTools } from './sales-tools';
+import { aiRouter } from './ai-router';
+import { affiliateHooks } from './affiliate-hooks';
+import { tenantPortal } from './tenant-portal';
+import { graphql } from './graphql';
+import { advancedAnalytics } from './advanced-analytics';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -103,6 +108,13 @@ export function createRoutes() {
   routes.route('/v1/affiliates', affiliates);
   routes.route('/admin/sales', salesPipeline);
   routes.route('/', salesTools);
+
+  // Wave 21-22 routes
+  routes.route('/v1/ai-router', aiRouter);
+  routes.route('/v1/affiliate-hooks', affiliateHooks);
+  routes.route('/v1/portal', tenantPortal);
+  routes.route('/graphql', graphql);
+  routes.route('/admin/advanced-analytics', advancedAnalytics);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -373,6 +385,35 @@ export function createRoutes() {
         '/admin/sales/demos': { get: { summary: 'List demo sandboxes', tags: ['Admin'] } },
         '/admin/sales/trials': { get: { summary: 'List trial signups', tags: ['Admin'] } },
         '/admin/sales/trials/metrics': { get: { summary: 'Trial conversion metrics', tags: ['Admin'] } },
+        // Wave 21: AI Router
+        '/v1/ai-router': { get: { summary: 'Model recommendation for tenant', tags: ['AI Router'], security: [{ bearer: [] }] } },
+        '/v1/ai-router/select': { post: { summary: 'Select model for mission', tags: ['AI Router'], security: [{ bearer: [] }] } },
+        '/v1/ai-router/stats': { get: { summary: 'Model usage statistics', tags: ['AI Router'], security: [{ bearer: [] }] } },
+        '/v1/ai-router/usage': { get: { summary: 'Tenant model usage history', tags: ['AI Router'], security: [{ bearer: [] }] } },
+        // Wave 21: Affiliate Hooks
+        '/v1/affiliate-hooks/hooks/signup': { post: { summary: 'Internal signup referral hook', tags: ['Affiliate Hooks'] } },
+        '/v1/affiliate-hooks/hooks/payment': { post: { summary: 'Internal payment commission hook', tags: ['Affiliate Hooks'] } },
+        '/v1/affiliate-hooks/partner/earnings': { get: { summary: 'Partner earnings dashboard', tags: ['Affiliate Hooks'], security: [{ bearer: [] }] } },
+        '/v1/affiliate-hooks/partner/payout': { post: { summary: 'Request payout', tags: ['Affiliate Hooks'], security: [{ bearer: [] }] } },
+        // Wave 21: Tenant Portal
+        '/v1/portal/overview': { get: { summary: 'Account overview', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/usage': { get: { summary: 'Usage summary', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/billing': { get: { summary: 'Billing history', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/plan': { get: { summary: 'Current plan', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/plan/change': { post: { summary: 'Request plan change', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/api-keys': { get: { summary: 'API keys summary', tags: ['Portal'], security: [{ bearer: [] }] } },
+        '/v1/portal/notifications': { get: { summary: 'Notification settings', tags: ['Portal'], security: [{ bearer: [] }] }, put: { summary: 'Update notifications', tags: ['Portal'], security: [{ bearer: [] }] } },
+        // Wave 22: GraphQL
+        '/graphql': { post: { summary: 'GraphQL query endpoint', tags: ['GraphQL'], security: [{ bearer: [] }] } },
+        '/graphql/schema': { get: { summary: 'GraphQL schema introspection', tags: ['GraphQL'], security: [{ bearer: [] }] } },
+        // Wave 22: Advanced Analytics
+        '/admin/advanced-analytics/cohorts': { get: { summary: 'Cohort analysis', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/retention': { get: { summary: 'Retention curve', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/churn-risk': { get: { summary: 'Churn risk scores', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/ltv': { get: { summary: 'LTV calculations', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/revenue': { get: { summary: 'MRR/ARR/growth metrics', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/heatmap': { get: { summary: 'Usage heatmap', tags: ['Analytics'] } },
+        '/admin/advanced-analytics/summary': { get: { summary: 'Combined analytics dashboard', tags: ['Analytics'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
