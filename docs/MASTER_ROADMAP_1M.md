@@ -108,14 +108,16 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 ## 🔄 IN PROGRESS
 
 - [ ] ProductHunt Launch preparation
-- [ ] Enterprise Pilot outreach (5 agencies @ $2k/month)
-- [ ] OpenClaw Engine SDK — publishable package (in progress this session)
-- [ ] Sale RaaS documentation (in progress this session)
+- [ ] Enterprise Pilot campaign (5 agencies @ $2k/month)
+- [ ] Deep OpenClaw SDK integration — sub-module facades
+- [ ] npm publish — trigger GitHub workflow for 4 packages
 
 ---
 
 ## ✅ RECENTLY COMPLETED (March 2026)
 
+- [x] OpenClaw Engine SDK v1.0 — publishable TypeScript facade
+- [x] Sale RaaS Documentation — onboarding, enterprise pitch, support SOP
 - [x] RaaS Gateway v5.0 — 18 feature waves on Cloudflare Workers (Hono + D1/KV/R2)
 - [x] RaaS SDK (@mekong/raas-sdk) — typed TypeScript client for gateway API
 - [x] CLI Cloud Integration — 11 commands: signup/login/logout/whoami/mission/billing
