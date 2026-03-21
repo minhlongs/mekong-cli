@@ -39,11 +39,11 @@ v0.1 Core Engine
 
 | DNA Phase | Version | Status | Engineering ROI | Operational ROI |
 |-----------|---------|--------|-----------------|-----------------|
-| Phase 1 GATE | v0.4 | PLANNED | Dev Key gating for premium CLI commands | — |
-| Phase 2 LICENSE UI | v0.5 | PLANNED | Admin tools for key management | Owner dashboard for license ops |
-| Phase 3 WEBHOOK | v0.6 | PLANNED | Auto-provisioning via payment events | Self-service checkout → instant access |
-| Phase 4 METERING | v0.7 | PLANNED | Usage-based billing per LLM/tool/SOP | Cost visibility for business owners |
-| Phase 5 ANALYTICS | v0.8 | PLANNED | AGI Score + agent performance | ROI dashboard, revenue, growth KPIs |
+| Phase 1 GATE | v0.4 | DONE | Dev Key gating for premium CLI commands | — |
+| Phase 2 LICENSE UI | v0.5 | DONE | Admin tools for key management | Owner dashboard for license ops |
+| Phase 3 WEBHOOK | v0.6 | DONE | Auto-provisioning via payment events | Self-service checkout → instant access |
+| Phase 4 METERING | v0.7 | DONE | Usage-based billing per LLM/tool/SOP | Cost visibility for business owners |
+| Phase 5 ANALYTICS | v0.8 | DONE | AGI Score + agent performance | ROI dashboard, revenue, growth KPIs |
 
 ---
 
