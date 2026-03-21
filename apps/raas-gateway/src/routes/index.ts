@@ -72,6 +72,11 @@ import { multiCurrency } from './multi-currency';
 import { auditExport } from './audit-export';
 import { whiteLabel } from './white-label';
 import { apiVersioning } from './api-versioning';
+import { notifications } from './notifications';
+import { workflows } from './workflows';
+import { integrationHub } from './integration-hub';
+import { featureFlags } from './feature-flags';
+import { customerPortal } from './customer-portal';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -127,6 +132,13 @@ export function createRoutes() {
   routes.route('/v1/portal', tenantPortal);
   routes.route('/graphql', graphql);
   routes.route('/admin/advanced-analytics', advancedAnalytics);
+
+  // Wave 27-28 routes
+  routes.route('/v1/notifications', notifications);
+  routes.route('/v1/workflows', workflows);
+  routes.route('/v1/integrations', integrationHub);
+  routes.route('/v1/feature-flags', featureFlags);
+  routes.route('/v1/customer-portal', customerPortal);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -512,6 +524,49 @@ export function createRoutes() {
         '/sla/report': { get: { summary: 'SLA compliance report', tags: ['SLA'], security: [{ bearer: [] }] } },
         '/sla/breaches': { get: { summary: 'SLA breach history', tags: ['SLA'] } },
         '/sla/history': { get: { summary: 'Uptime check history', tags: ['SLA'] } },
+        // Wave 27: Notifications
+        '/v1/notifications': { get: { summary: 'List notifications', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/send': { post: { summary: 'Send notification', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/unread-count': { get: { summary: 'Unread count', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/{id}/read': { put: { summary: 'Mark as read', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/read-all': { put: { summary: 'Mark all read', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/templates': { post: { summary: 'Create template', tags: ['Notifications'], security: [{ bearer: [] }] }, get: { summary: 'List templates', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/templates/{id}/send': { post: { summary: 'Send from template', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        '/v1/notifications/preferences/{channel}': { put: { summary: 'Update channel preference', tags: ['Notifications'], security: [{ bearer: [] }] } },
+        // Wave 27: Workflows
+        '/v1/workflows': { post: { summary: 'Create workflow', tags: ['Workflows'], security: [{ bearer: [] }] }, get: { summary: 'List workflows', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/stats': { get: { summary: 'Workflow stats', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/{id}': { get: { summary: 'Get workflow', tags: ['Workflows'], security: [{ bearer: [] }] }, put: { summary: 'Update workflow', tags: ['Workflows'], security: [{ bearer: [] }] }, delete: { summary: 'Delete workflow', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/{id}/execute': { post: { summary: 'Execute workflow', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/{id}/executions': { get: { summary: 'List executions', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/executions/{executionId}': { get: { summary: 'Get execution', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        '/v1/workflows/executions/{executionId}/cancel': { post: { summary: 'Cancel execution', tags: ['Workflows'], security: [{ bearer: [] }] } },
+        // Wave 27: Integration Hub
+        '/v1/integrations/catalog': { get: { summary: 'Integration catalog', tags: ['Integrations'] } },
+        '/v1/integrations/catalog/{slug}': { get: { summary: 'Catalog item', tags: ['Integrations'] } },
+        '/v1/integrations/catalog/seed': { post: { summary: 'Seed catalog', tags: ['Integrations'] } },
+        '/v1/integrations': { get: { summary: 'Installed integrations', tags: ['Integrations'], security: [{ bearer: [] }] } },
+        '/v1/integrations/install': { post: { summary: 'Install integration', tags: ['Integrations'], security: [{ bearer: [] }] } },
+        '/v1/integrations/{id}': { get: { summary: 'Integration detail', tags: ['Integrations'], security: [{ bearer: [] }] }, put: { summary: 'Update integration', tags: ['Integrations'], security: [{ bearer: [] }] }, delete: { summary: 'Uninstall', tags: ['Integrations'], security: [{ bearer: [] }] } },
+        '/v1/integrations/{id}/events': { get: { summary: 'Integration events', tags: ['Integrations'], security: [{ bearer: [] }] } },
+        '/v1/integrations/events': { get: { summary: 'All events', tags: ['Integrations'], security: [{ bearer: [] }] } },
+        // Wave 28: Feature Flags
+        '/v1/feature-flags': { get: { summary: 'List flags', tags: ['Feature Flags'] }, post: { summary: 'Create flag', tags: ['Feature Flags'] } },
+        '/v1/feature-flags/evaluate': { get: { summary: 'Evaluate all flags', tags: ['Feature Flags'], security: [{ bearer: [] }] } },
+        '/v1/feature-flags/evaluate/{key}': { get: { summary: 'Evaluate single flag', tags: ['Feature Flags'], security: [{ bearer: [] }] } },
+        '/v1/feature-flags/{key}': { get: { summary: 'Flag details', tags: ['Feature Flags'] }, put: { summary: 'Update flag', tags: ['Feature Flags'] }, delete: { summary: 'Delete flag', tags: ['Feature Flags'] } },
+        '/v1/feature-flags/{key}/override/{tenantId}': { put: { summary: 'Set tenant override', tags: ['Feature Flags'] }, delete: { summary: 'Remove override', tags: ['Feature Flags'] } },
+        '/v1/feature-flags/{key}/stats': { get: { summary: 'Flag stats', tags: ['Feature Flags'] } },
+        // Wave 28: Customer Portal
+        '/v1/customer-portal/overview': { get: { summary: 'Portal overview', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/usage': { get: { summary: 'Usage summary', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/account': { get: { summary: 'Account settings', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/tickets': { post: { summary: 'Create ticket', tags: ['Customer Portal'], security: [{ bearer: [] }] }, get: { summary: 'List tickets', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/tickets/{id}': { get: { summary: 'Ticket detail', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/tickets/{id}/messages': { post: { summary: 'Add ticket message', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/tickets/{id}/status': { put: { summary: 'Update ticket status', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/activity': { get: { summary: 'Activity log', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
+        '/v1/customer-portal/invoices': { get: { summary: 'List invoices', tags: ['Customer Portal'], security: [{ bearer: [] }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
