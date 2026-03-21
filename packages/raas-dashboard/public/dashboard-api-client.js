@@ -42,11 +42,12 @@ export async function renderOverview() {
   const d = await apiFetch('/admin/stats');
   const t = d.tenants || {}; const m = d.missions || {}; const c = d.credits || {};
   const mrr = ((c.totalEarned || 0) / 100).toFixed(0);
+  const n = v => Number(v||0).toLocaleString();
   document.getElementById('overview-cards').innerHTML = `
-    <div class="card"><div class="label">Total Tenants</div><div class="val">${t.total||0}</div><div class="sub">${t.active||0} active</div></div>
-    <div class="card"><div class="label">Total Missions</div><div class="val">${m.total||0}</div><div class="sub">${m.completed||0} completed · ${m.failed||0} failed</div></div>
-    <div class="card"><div class="label">Credits Sold</div><div class="val">${(c.totalEarned||0).toLocaleString()}</div><div class="sub">${(c.totalSpent||0).toLocaleString()} spent</div></div>
-    <div class="card"><div class="label">MRR Est.</div><div class="val">$${Number(mrr).toLocaleString()}</div><div class="sub">credits × $0.01</div></div>`;
+    <div class="card"><div class="label">Total Tenants</div><div class="val">${n(t.total)}</div><div class="sub">${n(t.active)} active</div></div>
+    <div class="card"><div class="label">Total Missions</div><div class="val">${n(m.total)}</div><div class="sub">${n(m.completed)} completed · ${n(m.failed)} failed</div></div>
+    <div class="card"><div class="label">Credits Sold</div><div class="val">${n(c.totalEarned)}</div><div class="sub">${n(c.totalSpent)} spent</div></div>
+    <div class="card"><div class="label">MRR Est.</div><div class="val">$${n(mrr)}</div><div class="sub">credits × $0.01</div></div>`;
 }
 
 export async function renderTenants() {
