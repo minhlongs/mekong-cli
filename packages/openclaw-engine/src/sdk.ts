@@ -61,6 +61,7 @@ export class OpenClawEngine {
   private missionsCompleted = 0;
   private missionsFailed = 0;
   private circuitState: 'closed' | 'open' | 'half-open' = 'closed';
+  private circuitTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(config: Partial<EngineConfig> = {}) {
     this.config = {
@@ -77,8 +78,8 @@ export class OpenClawEngine {
    */
   classifyComplexity(goal: string): MissionConfig['complexity'] {
     const wordCount = goal.split(/\s+/).length;
-    const hasMultiStep = /and|then|after|also|plus/i.test(goal);
-    const hasTechnical = /deploy|migrate|refactor|architect/i.test(goal);
+    const hasMultiStep = /\b(and|then|after|also|plus)\b/i.test(goal);
+    const hasTechnical = /\b(deploy|migrate|refactor|architect)\b/i.test(goal);
 
     if (wordCount < 10 && !hasMultiStep) return 'trivial';
     if (hasTechnical && hasMultiStep) return 'epic';
@@ -105,28 +106,14 @@ export class OpenClawEngine {
       };
     }
 
-    try {
-      const result: MissionResult = {
-        id,
-        status: 'completed',
-        output: `Mission "${config.goal}" completed`,
-        creditsUsed: CREDIT_COSTS[config.complexity] ?? CREDIT_COSTS.standard,
-        durationMs: Date.now() - start,
-      };
-
-      this.missionsCompleted++;
-      return result;
-    } catch (err) {
-      this.missionsFailed++;
-      this.maybeOpenCircuitBreaker();
-      return {
-        id,
-        status: 'failed',
-        output: String(err),
-        creditsUsed: 0,
-        durationMs: Date.now() - start,
-      };
-    }
+    this.missionsCompleted++;
+    return {
+      id,
+      status: 'completed',
+      output: `Mission "${config.goal}" completed`,
+      creditsUsed: CREDIT_COSTS[config.complexity] ?? CREDIT_COSTS.standard,
+      durationMs: Date.now() - start,
+    };
   }
 
   /** Return current engine health metrics. */
@@ -157,9 +144,19 @@ export class OpenClawEngine {
     const failRate = this.missionsFailed / total;
     if (failRate > 0.5) {
       this.circuitState = 'open';
-      setTimeout(() => {
+      if (this.circuitTimer) clearTimeout(this.circuitTimer);
+      this.circuitTimer = setTimeout(() => {
         this.circuitState = 'half-open';
+        this.circuitTimer = null;
       }, 30_000);
+    }
+  }
+
+  /** Clean up timers. Call when shutting down the engine. */
+  destroy(): void {
+    if (this.circuitTimer) {
+      clearTimeout(this.circuitTimer);
+      this.circuitTimer = null;
     }
   }
 }

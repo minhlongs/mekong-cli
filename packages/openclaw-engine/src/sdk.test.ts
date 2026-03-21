@@ -75,11 +75,11 @@ describe('OpenClawEngine', () => {
       ).toBe('standard');
     });
 
-    it('returns complex for goal whose text contains a multi-step substring (e.g. "then" inside "authentication")', () => {
-      // "au-THEN-tication" triggers the /then/ substring match → complex
+    it('returns standard for moderate-length goal without multi-step keywords', () => {
+      // 10+ words, no multi-step keywords → standard
       expect(
-        engine.classifyComplexity('implement user authentication with JWT tokens for the API'),
-      ).toBe('complex');
+        engine.classifyComplexity('implement user authentication with JWT tokens for the backend API server'),
+      ).toBe('standard');
     });
 
     it('returns complex for goal containing "and" keyword', () => {
