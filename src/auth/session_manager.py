@@ -178,7 +178,7 @@ class SessionManager:
         Returns:
             User object if valid, None otherwise
         """
-        is_valid, payload, error = self.decode_token(token)
+        is_valid, payload, error = self.decode_token(token)  # noqa: F841 (error unused)
         if not is_valid:
             return None
 

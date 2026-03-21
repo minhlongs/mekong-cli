@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Added (2026-03-20 - Algo-Trader MVP — AI-Powered Crypto Arbitrage Engine)
 
 #### New Application: Algo-Trader (`apps/algo-trader/`)
@@ -493,6 +494,120 @@ vs 1 person × $5 = $5 direct, QF score = (√5)² - 5 = 5 - 5 = $0 matched → 
 - **Status**: GTM ready — 百川入海 (Binh Pháp VC Studio complete)
 
 ---
+=======
+### Added (2026-03-14 - Retention & Engagement System Phase 20 - COMPLETED)
+
+#### Engagement Tracking & Churn Prediction Engine
+- **SQLite Storage**: 4 tables (engagement_metrics, engagement_scores, churn_predictions, nudge_campaigns)
+- **Engagement Scoring**: 0-100 score based on recency (40%), frequency (35%), breadth (25%)
+- **Churn Prediction**: 4-tier classification (low/medium/high/critical) with risk scoring
+- **Re-engagement Nudges**: Max 3 active campaigns per workspace with personalized messaging
+- **Usage Streaks**: Gamification with 6 badges (streak_7, streak_30, streak_90, consistency, comeback, champion)
+- **Workspace Health Score**: A-F letter grades based on overall engagement health
+- **REST API Endpoints**: 9 endpoints at `/api/retention/*` for full CRUD + analytics operations
+- **Test Coverage**: 31 unit tests, 100% pass rate
+
+#### New Files Created
+- `src/retention/engagement_store.py` - Engagement metrics storage and queries
+- `src/retention/scoring_engine.py` - Engagement score calculation (recency/frequency/breadth)
+- `src/retention/churn_predictor.py` - Churn risk classification and prediction
+- `src/retention/nudge_engine.py` - Re-engagement campaign management
+- `src/retention/streaks_tracker.py` - Usage streak tracking with badge unlocks
+- `src/retention/health_calculator.py` - Workspace health score A-F grading
+- `src/api/retention_endpoints.py` - 9 REST endpoints for retention operations
+- `tests/test_engagement_store.py` - Engagement store tests (8 tests)
+- `tests/test_churn_predictor.py` - Churn prediction tests (7 tests)
+- `tests/test_nudge_engine.py` - Re-engagement nudge tests (6 tests)
+- `tests/test_streaks_tracker.py` - Usage streak tests (5 tests)
+- `tests/test_health_calculator.py` - Health score tests (5 tests)
+
+#### API Endpoints (9 total)
+- `GET /api/retention/engagement/{workspace_id}` - Get engagement metrics
+- `POST /api/retention/engagement/{workspace_id}` - Record engagement event
+- `GET /api/retention/churn-risk/{workspace_id}` - Get churn prediction
+- `GET /api/retention/nudges/{workspace_id}` - Get active nudges
+- `POST /api/retention/nudges/{workspace_id}` - Create nudge campaign
+- `PUT /api/retention/nudges/{campaign_id}` - Update nudge
+- `DELETE /api/retention/nudges/{campaign_id}` - Cancel nudge
+- `GET /api/retention/health/{workspace_id}` - Get workspace health score
+- `GET /api/retention/streaks/{workspace_id}` - Get usage streaks and badges
+
+#### Test Results
+- **Total Tests**: 31 unit tests
+- **Pass Rate**: 100%
+- **Test Files**: 5 test modules
+- **Coverage**: All core modules tested (scoring, churn, nudges, streaks, health)
+
+#### Key Features
+- Recency-weighted engagement scoring (40% recent activity weight)
+- Frequency-based activity tracking (35% activity count weight)
+- Breadth tracking (25% feature diversity weight)
+- Churn risk scoring with 4-tier thresholds (critical > 70, high 50-70, medium 25-50, low < 25)
+- Max 3 active nudges per workspace to avoid campaign fatigue
+- 6 gamification badges unlocked by usage milestones
+- Workspace health: A (excellent 80+), B (good 60-79), C (fair 40-59), D (poor 20-39), F (critical < 20)
+
+### Added (2026-03-14 - Dashboard Analytics UI Phase 5 - COMPLETED)
+
+#### Dashboard App & Onboarding Analytics
+- **Tech Stack**: Vite + React 19 + Tailwind CSS v4 + Recharts
+- **App Location**: `apps/dashboard/`
+- **Onboarding Analytics Page**: `/onboarding/analytics` with comprehensive analytics views
+- **Funnel Chart**: Visualize user conversion funnel with stage labels and percentages
+- **Conversion Metrics**: Real-time conversion rates by stage with trend indicators
+- **Drop-off Analysis**: Identify where users abandon onboarding flow
+- **Time-to-Complete**: Analyze onboarding completion time distribution
+- **Cohort Table**: Retention and completion metrics by cohort period (daily/weekly/monthly)
+- **API Integration**: Analytics client consuming existing Python backend endpoints
+
+#### New Files
+- `apps/dashboard/src/pages/onboarding-analytics.tsx` - Main analytics page with time period controls
+- `apps/dashboard/src/components/analytics/funnel-chart.tsx` - Funnel visualization component
+- `apps/dashboard/src/components/analytics/conversion-metrics.tsx` - Conversion rates display
+- `apps/dashboard/src/components/analytics/drop-off-analysis.tsx` - Drop-off point analysis
+- `apps/dashboard/src/components/analytics/time-to-complete.tsx` - Completion time metrics
+- `apps/dashboard/src/components/analytics/cohort-table.tsx` - Cohort retention table
+- `apps/dashboard/lib/analytics-client.ts` - Analytics API client with type definitions
+- `apps/dashboard/src/lib/analytics-client.ts` - Type-safe data fetching
+
+#### Features
+- **30/60/90-day time period selection** for analytics filtering
+- **Cohort analysis** with daily/weekly/monthly grouping
+- **Loading states** with error boundaries
+- **Type-safe data flow** with TypeScript interfaces
+- **Responsive design** using Tailwind CSS
+- **Real-time data updates** via Promise.all for efficient API calls
+
+#### Deployment
+- **Build**: `npm run build` in apps/dashboard
+- **Deploy**: Cloudflare Pages via `wrangler pages deploy`
+- **Environment**: Dev/Prod ready with API endpoint configuration
+
+### Added (2026-03-14 - Onboarding System Phase 6 Testing - COMPLETED)
+
+#### Test Suite for Onboarding Analytics & A/B Testing
+- **Total Tests**: 60 tests across 4 test files
+- **Pass Rate**: 100% (all tests passing)
+- **Coverage**: Complete coverage of onboarding funnel, analytics, A/B testing, and hints engine
+
+#### Test Files Created
+- `tests/test_onboarding_funnel_store.py` - OnboardingFunnelStore operations (15 tests)
+- `tests/test_onboarding_analytics.py` - Analytics calculations and cohort analysis (18 tests)
+- `tests/test_ab_test_service.py` - A/B test variant assignment and tracking (16 tests)
+- `tests/test_onboarding_hints_engine.py` - Contextual hints delivery (11 tests)
+
+#### Test Categories
+- **Funnel Management**: State updates, visitor tracking, progress calculations
+- **Analytics**: Conversion rates, drop-off analysis, cohort grouping, time-to-complete
+- **A/B Testing**: Variant assignment, consistency, experiment limits, results tracking
+- **Hints Engine**: Rule matching, personalization, state tracking, content loading
+
+#### Validation Results
+- All modules integrated and functional
+- Data consistency verified across components
+- Edge cases and error scenarios handled
+- Ready for production deployment
+>>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
 
 ### Added (2026-03-07 - Tier-Based Rate Limiting Phase 6 - COMPLETED)
 

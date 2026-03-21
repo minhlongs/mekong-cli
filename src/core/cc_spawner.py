@@ -33,6 +33,7 @@ class CCSession:
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:8])
     goal: str = ""
     cwd: str = ""
+    agent_role: str = ""  # NEW — which agent identity to use
     status: SessionStatus = SessionStatus.PENDING
     pid: int | None = None
     output_buffer: list[str] = field(default_factory=list)
@@ -62,6 +63,7 @@ class CCSession:
         return {
             "id": self.id,
             "goal": self.goal[:60],
+            "agent_role": self.agent_role,
             "status": self.status.value,
             "pid": self.pid,
             "duration": round(self.duration, 1),
@@ -110,6 +112,7 @@ class CCSpawner:
         cwd: str | None = None,
         timeout: int | None = None,
         project: str | None = None,
+        agent_role: str | None = None,  # NEW
     ) -> CCSession:
         """Spawn a new CC CLI session.
 
@@ -118,11 +121,13 @@ class CCSpawner:
             cwd: Working directory. Defaults to mekong-cli root.
             timeout: Timeout in seconds. Defaults to 600.
             project: Optional project name under apps/ (e.g. 'agencyos-web').
+            agent_role: Optional agent role for identity injection (e.g. 'cto', 'cfo').
 
         """
         session = CCSession(
             goal=goal,
             cwd=cwd or self.cwd,
+            agent_role=agent_role or "",  # NEW
             start_time=time.time(),
         )
 
@@ -148,15 +153,32 @@ class CCSpawner:
         """Run the CC CLI process and capture output."""
         session.status = SessionStatus.RUNNING
 
-        # Build command
+        # Build command with agent identity injection
         # Use --dangerously-skip-permissions for autonomous mode
         # Use --print for non-interactive output
         cmd = [
             "claude",
             "--dangerously-skip-permissions",
             "--print",
-            session.goal,
         ]
+
+        # Inject agent identity if specified (Water Protocol 水)
+        if session.agent_role:
+            from src.core.agent_dispatcher import load_agent_prompt
+            system_prompt = load_agent_prompt(session.agent_role)
+            # Prepend identity to goal
+            enriched_goal = (
+                f"[SYSTEM CONTEXT]\n"
+                f"You are the {session.agent_role.upper()} agent.\n"
+                f"{system_prompt[:1500]}\n\n"
+                f"[STATUS PROTOCOL]\n"
+                f"When done, end with: <status>DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT</status>\n\n"
+                f"[TASK]\n"
+                f"{session.goal}"
+            )
+            cmd.append(enriched_goal)
+        else:
+            cmd.append(session.goal)
 
         try:
             process = await asyncio.create_subprocess_exec(
@@ -204,6 +226,20 @@ class CCSpawner:
 
             if process.returncode == 0:
                 session.status = SessionStatus.COMPLETED
+                # Parse subagent status from output (Water Protocol)
+                _output = session.output
+                if "<status>BLOCKED</status>" in _output:
+                    session.status = SessionStatus.FAILED
+                    session.error = "subagent_blocked"
+                elif "<status>NEEDS_CONTEXT</status>" in _output:
+                    session.status = SessionStatus.FAILED
+                    session.error = "subagent_needs_context"
+                elif "<status>DONE_WITH_CONCERNS</status>" in _output:
+                    # Still completed but log concerns
+                    import re as _re
+                    _match = _re.search(r"<status>DONE_WITH_CONCERNS</status>\s*(.*)", _output, _re.DOTALL)
+                    if _match:
+                        session.error = f"concerns: {_match.group(1)[:200]}"
             else:
                 session.status = SessionStatus.FAILED
                 session.error = f"Exit code: {process.returncode}"

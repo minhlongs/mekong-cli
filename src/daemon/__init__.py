@@ -13,6 +13,20 @@ from .journal import LearningJournal
 from .dlq import DeadLetterQueue
 from .scheduler import DaemonScheduler
 
+# Session 11: Multi-Agent Orchestration
+from .worker_pool import WorkerPool, WorkerInfo, WorkerState
+from .task_router import TaskRouter, Task, TaskPriority, TaskStatus
+from .dispatcher import Dispatcher, DispatchResult, LoadBalanceStrategy
+
+# Session 12: Jidoka Autonomous Response
+from .circuit_breaker import CircuitBreaker, CircuitBreakerRegistry, CircuitState, CircuitBreakerStats
+from .jidoka import JidokaMonitor, ErrorSeverity, ErrorPattern, JidokaEvent
+
+# Session 13: Learning Journal + Memory
+from .learning_journal import LearningJournal as LearningJournalV2, MissionEntry, DailyStats
+from .pattern_library import PatternLibrary, Pattern, PatternMatch
+from .improvement_engine import ImprovementEngine, ImprovementTask, ImprovementRecommendation
+
 __all__ = [
     "TaskWatcher",
     "ComplexityClassifier",
@@ -21,4 +35,34 @@ __all__ = [
     "LearningJournal",
     "DeadLetterQueue",
     "DaemonScheduler",
+    # Session 11 exports
+    "WorkerPool",
+    "WorkerInfo",
+    "WorkerState",
+    "TaskRouter",
+    "Task",
+    "TaskPriority",
+    "TaskStatus",
+    "Dispatcher",
+    "DispatchResult",
+    "LoadBalanceStrategy",
+    # Session 12 exports
+    "CircuitBreaker",
+    "CircuitBreakerRegistry",
+    "CircuitState",
+    "CircuitBreakerStats",
+    "JidokaMonitor",
+    "ErrorSeverity",
+    "ErrorPattern",
+    "JidokaEvent",
+    # Session 13 exports
+    "LearningJournalV2",
+    "MissionEntry",
+    "DailyStats",
+    "PatternLibrary",
+    "Pattern",
+    "PatternMatch",
+    "ImprovementEngine",
+    "ImprovementTask",
+    "ImprovementRecommendation",
 ]

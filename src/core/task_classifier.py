@@ -51,6 +51,14 @@ DOMAIN_SIGNALS: dict[str, list[str]] = {
         "ticket", "user report", "error message", "help", "faq",
         "refund", "complaint", "confused", "error",
     ],
+    "finance": [
+        "revenue", "profit", "expense", "invoice", "budget", "cashflow",
+        "margin", "pricing", "financial", "cost", "roi", "funding",
+    ],
+    "editorial": [
+        "edit", "proofread", "review content", "documentation", "changelog",
+        "readme", "tutorial", "guide", "style guide", "grammar",
+    ],
 }
 
 DOMAIN_TO_AGENT: dict[str, str] = {
@@ -60,6 +68,8 @@ DOMAIN_TO_AGENT: dict[str, str] = {
     "analysis": "data",
     "sales": "sales",
     "support": "cs",
+    "finance": "cfo",
+    "editorial": "editor",
 }
 
 SENSITIVITY_KEYWORDS = {
@@ -85,7 +95,7 @@ def _count_signals(goal_lower: str, keywords: list[str]) -> int:
     return sum(1 for kw in keywords if kw in goal_lower)
 
 
-def _detect_domain(goal_lower: str) -> str:
+def _detect_domain(goal_lower: str) -> Literal["code", "creative", "ops", "analysis", "sales", "support"]:
     """Step 1: Detect domain from goal keywords."""
     scores = {
         domain: _count_signals(goal_lower, keywords)
@@ -97,9 +107,19 @@ def _detect_domain(goal_lower: str) -> str:
     return best
 
 
-def _assign_agent(goal_lower: str, domain: str) -> str:
+def _assign_agent(goal_lower: str, domain: str) -> Literal["cto", "cmo", "coo", "cfo", "cs", "sales", "editor", "data"]:
     """Step 2: Assign agent role with override rules."""
     agent = DOMAIN_TO_AGENT.get(domain, "cto")
+
+    # Override: finance-specific keywords → cfo
+    finance_words = {"revenue", "profit", "expense", "invoice", "budget", "cashflow", "financial", "pricing"}
+    if finance_words & set(goal_lower.split()):
+        return "cfo"
+
+    # Override: editorial-specific keywords → editor
+    editorial_words = {"proofread", "edit documentation", "changelog", "readme", "style guide"}
+    if any(kw in goal_lower for kw in editorial_words):
+        return "editor"
 
     # Override rules
     if any(kw in goal_lower for kw in ["changelog", "docs", "tutorial"]):
@@ -165,7 +185,7 @@ def _detect_creativity(goal_lower: str, domain: str) -> bool:
     return any(kw in goal_lower for kw in creativity_kws)
 
 
-def _detect_sensitivity(goal_lower: str) -> str:
+def _detect_sensitivity(goal_lower: str) -> Literal["public", "internal", "sensitive"]:
     """Step 5: Detect data sensitivity level."""
     for kw in SENSITIVITY_KEYWORDS["sensitive"]:
         if kw in goal_lower:
@@ -180,7 +200,7 @@ def _determine_tier(
     complexity: str,
     data_sensitivity: str,
     requires_reasoning: bool,
-) -> str:
+) -> Literal["local", "api_cheap", "api_mid", "api_best"]:
     """Determine preferred model tier."""
     if data_sensitivity == "sensitive":
         return "local"
@@ -225,3 +245,46 @@ def classify_task(goal: str, context: dict | None = None) -> TaskProfile:
         mcu_cost=mcu_cost,
         preferred_tier=preferred_tier,
     )
+
+
+# --- Multi-Agent Routing (Water Protocol 水) ---
+
+# Tasks that need multiple agents working together
+MULTI_AGENT_PATTERNS: dict[str, list[str]] = {
+    # Pattern: list of agent roles that should collaborate
+    "revenue report": ["cfo", "data"],
+    "content about financials": ["cfo", "cmo"],
+    "deploy and monitor": ["cto", "coo"],
+    "sales report": ["sales", "data"],
+    "technical blog": ["cto", "editor"],
+    "customer churn analysis": ["cs", "cfo", "data"],
+    "product launch": ["cmo", "cto", "sales"],
+    "incident response": ["coo", "cto"],
+    "onboard customer": ["cs", "sales"],
+    "investor update": ["cfo", "cmo", "editor"],
+}
+
+
+def classify_multi_agent(goal: str) -> list[str]:
+    """Detect if a goal needs multiple agents (Water Protocol).
+
+    Returns list of agent roles. Single-element list = single agent.
+    Multi-element list = agents should collaborate.
+
+    Args:
+        goal: User's high-level objective.
+
+    Returns:
+        List of agent role strings.
+    """
+    goal_lower = goal.lower()
+
+    # Check multi-agent patterns
+    for pattern, agents in MULTI_AGENT_PATTERNS.items():
+        pattern_words = pattern.split()
+        if all(word in goal_lower for word in pattern_words):
+            return agents
+
+    # Default: single agent from existing classifier
+    profile = classify_task(goal)
+    return [profile.agent_role]
