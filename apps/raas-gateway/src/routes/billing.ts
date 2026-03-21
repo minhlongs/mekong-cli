@@ -419,5 +419,11 @@ billing.get('/pricing', (c) => {
       standard: 3,
       complex: 5,
     },
+    annual_tiers: [
+      { id: 'starter-annual', name: 'Starter Annual', price: 290, monthly_equiv: 24.17, credits: 600, savings: '2 months free' },
+      { id: 'pro-annual', name: 'Pro Annual', price: 990, monthly_equiv: 82.50, credits: 2400, savings: '2 months free' },
+      { id: 'agency-annual', name: 'Agency Annual', price: 1990, monthly_equiv: 165.83, credits: 6000, savings: '2 months free' },
+      { id: 'master-annual', name: 'Master Annual', price: 3990, monthly_equiv: 332.50, credits: 12000, savings: '2 months free' },
+    ],
   });
 });

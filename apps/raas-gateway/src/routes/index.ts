@@ -9,12 +9,16 @@ import { api } from './api';
 import { credits } from './credits';
 import { billing } from './billing';
 import { tenants } from './tenants';
+import { onboarding } from './onboarding';
 import { telegram } from './telegram';
 import { alerts } from './alerts';
 import { marketplace } from './marketplace';
 import { stripe } from './stripe';
 import { admin } from './admin';
+import { dunning } from './dunning';
 import { licenses } from './licenses';
+import { webhooks } from './webhooks';
+import { status } from './status';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -22,9 +26,13 @@ export function createRoutes() {
 
   // Mount routes — public routes BEFORE /v1 api (which has auth middleware)
   routes.route('/admin', admin);
+  routes.route('/admin/dunning', dunning);
+  routes.route('/admin/webhooks', webhooks);
   routes.route('/health', health);
+  routes.route('/status', status);
   routes.route('/marketplace', marketplace);
   routes.route('/v1/tenants', tenants);
+  routes.route('/v1/onboarding', onboarding);
   // Licenses: verify + activate are PUBLIC; create + list require auth (per-route)
   routes.route('/v1/licenses', licenses);
 
@@ -155,6 +163,20 @@ export function createRoutes() {
         },
         '/admin/rate-limits/{tenantId}': { get: { summary: 'Rate limit status', tags: ['Admin'], security: [{ bearer: [] }], parameters: [{ name: 'tenantId', in: 'path', required: true, schema: { type: 'string' } }] } },
         '/admin/errors': { get: { summary: 'Error log', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/v1/onboarding/checklist': { get: { summary: 'Onboarding checklist', tags: ['Onboarding'], security: [{ bearer: [] }] } },
+        '/v1/onboarding/complete': { post: { summary: 'Complete onboarding step', tags: ['Onboarding'], security: [{ bearer: [] }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { step: { type: 'string' } }, required: ['step'] } } } } } },
+        '/v1/onboarding/tips': { get: { summary: 'Quickstart tips (public)', tags: ['Onboarding'] } },
+        '/admin/webhooks/logs': { get: { summary: 'Webhook delivery logs', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/webhooks/dead-letter': { get: { summary: 'Dead letter queue', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/webhooks/retry/{id}': { post: { summary: 'Retry webhook delivery', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/webhooks/stats': { get: { summary: 'Webhook delivery stats', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/status': { get: { summary: 'System status', tags: ['System'] } },
+        '/status/incidents': { get: { summary: 'Recent incidents', tags: ['System'] } },
+        '/status/history': { get: { summary: 'Uptime history', tags: ['System'] } },
+        '/admin/dunning/active': { get: { summary: 'Active dunning cases', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/dunning/stats': { get: { summary: 'Dunning statistics', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/dunning/resolve/{id}': { post: { summary: 'Resolve dunning case', tags: ['Admin'], security: [{ bearer: [] }] } },
+        '/admin/dunning/win-back': { get: { summary: 'Win-back campaign stats', tags: ['Admin'], security: [{ bearer: [] }] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
