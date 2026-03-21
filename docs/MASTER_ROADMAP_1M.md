@@ -107,9 +107,9 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 
 ## 🔄 IN PROGRESS
 
-- [ ] ProductHunt Launch — visual assets, schedule launch day
-- [ ] Enterprise Pilot — send Email 1 to 5 target agencies
-- [ ] npm publish — trigger workflow_dispatch for 4 packages (workflow updated, ready to trigger)
+- [ ] ProductHunt Launch — visual assets ready, schedule launch day (see docs/producthunt-launch-kit.md)
+- [ ] Enterprise Pilot — send Email 1 to 5 target agencies (see docs/enterprise-pilot-campaign.md)
+- [ ] npm publish — need NPM_TOKEN in GitHub secrets, then `gh workflow run npm-publish.yml -f package=all`
 
 ---
 
@@ -140,6 +140,8 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 - [x] Deep OpenClaw SDK integration — RaaS module + 5 sub-module facades wired
 - [x] GTM 30-day launch checklist — ProductHunt + Enterprise pilot consolidated
 - [x] npm publish workflow — updated to include openclaw-engine (4 packages total)
+- [x] ProductHunt Launch Kit — PH listing, assets checklist, launch schedule, social templates
+- [x] Enterprise Pilot Campaign — ICP, email sequences, ROI calculator, pilot structure, objections
 
 ---
 
