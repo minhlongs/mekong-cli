@@ -98,8 +98,8 @@
     <div class="hero-stats">
       <div><strong>319</strong><span>Commands</span></div>
       <div><strong>546</strong><span>Skills</span></div>
-      <div><strong>410</strong><span>Contracts</span></div>
-      <div><strong>5</strong><span>Business Layers</span></div>
+      <div><strong id="stat-tenants">0</strong><span>Users</span></div>
+      <div><strong id="stat-missions">0</strong><span>Missions Done</span></div>
     </div>
     <a href="#signup" class="hero-cta">Get Started Free</a>
   </section>
@@ -240,6 +240,12 @@
 
   <script>
     const API = 'https://raas-gateway.agencyos-openclaw.workers.dev';
+
+    // Load live stats
+    fetch(API + '/stats').then(r => r.json()).then(d => {
+      document.getElementById('stat-tenants').textContent = d.tenants || '0';
+      document.getElementById('stat-missions').textContent = d.missionsCompleted || '0';
+    }).catch(() => {});
     async function signup() {
       const name = document.getElementById('signup-name').value.trim();
       const email = document.getElementById('signup-email').value.trim();
@@ -318,7 +324,7 @@
   </script>
 
   <footer>
-    <p>Mekong CLI v5.0 &mdash; <a href="https://github.com/longtho638-jpg/mekong-cli">GitHub</a> &middot; <a href="https://docs.agencyos.dev">Docs</a> &middot; MIT License</p>
+    <p>Mekong CLI v5.0 &mdash; <a href="https://github.com/longtho638-jpg/mekong-cli">GitHub</a> &middot; <a href="https://raas-gateway.agencyos-openclaw.workers.dev/openapi.json">API Spec</a> &middot; MIT License</p>
     <p>Powered by <a href="https://polar.sh">Polar.sh</a> billing</p>
   </footer>
 

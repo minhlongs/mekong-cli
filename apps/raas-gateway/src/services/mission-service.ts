@@ -5,6 +5,16 @@
 import type { Env } from '../index';
 import { CreditService, MISSION_COSTS } from './credit-service';
 
+// Daily mission limits per tier
+const DAILY_LIMITS: Record<string, number> = {
+  free: 3,
+  starter: 15,
+  pro: 50,
+  agency: -1,     // unlimited
+  master: -1,     // unlimited
+  enterprise: -1, // unlimited
+};
+
 export interface Mission {
   id: string;
   tenantId: string;
@@ -46,6 +56,16 @@ export class MissionService {
     callbackUrl?: string
   ): Promise<SubmitResult> {
     const cost = MISSION_COSTS[complexity] || MISSION_COSTS.standard;
+
+    // Check daily mission limit for tenant's tier
+    const limitCheck = await this.checkDailyLimit(tenantId);
+    if (!limitCheck.allowed) {
+      return {
+        success: false,
+        error: `Daily limit reached (${limitCheck.used}/${limitCheck.limit}). Upgrade tier for more.`,
+        code: 'DAILY_LIMIT_REACHED',
+      };
+    }
 
     // Deduct credits first (atomic — prevents overdraw)
     const deductResult = await this.creditService.deduct(
@@ -144,6 +164,29 @@ export class MissionService {
       missions: results.results,
       total: countResult?.total ?? 0,
     };
+  }
+
+  /**
+   * Check if tenant has reached daily mission limit
+   */
+  private async checkDailyLimit(tenantId: string): Promise<{ allowed: boolean; used: number; limit: number }> {
+    // Get tenant tier
+    const tenant = await this.env.DB.prepare('SELECT tier FROM tenants WHERE id = ?')
+      .bind(tenantId).first<{ tier: string }>();
+    const tier = tenant?.tier || 'free';
+    const limit = DAILY_LIMITS[tier] ?? DAILY_LIMITS.free;
+
+    // Unlimited tier
+    if (limit < 0) return { allowed: true, used: 0, limit: -1 };
+
+    // Count today's missions
+    const count = await this.env.DB.prepare(
+      `SELECT COUNT(*) as c FROM missions
+       WHERE tenant_id = ? AND created_at >= datetime('now', 'start of day')`
+    ).bind(tenantId).first<{ c: number }>();
+
+    const used = count?.c ?? 0;
+    return { allowed: used < limit, used, limit };
   }
 
   /**

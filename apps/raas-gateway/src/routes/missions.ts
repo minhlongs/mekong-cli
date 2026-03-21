@@ -43,7 +43,7 @@ missions.post('/', async (c) => {
   );
 
   if (!result.success) {
-    const status = result.code === 'INSUFFICIENT_CREDITS' ? 402 : 400;
+    const status = (result.code === 'INSUFFICIENT_CREDITS' || result.code === 'DAILY_LIMIT_REACHED') ? 402 : 400;
     return json({ error: result.error, code: result.code }, { status });
   }
 
