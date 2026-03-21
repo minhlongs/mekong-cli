@@ -16,11 +16,23 @@ export class MissionExecutor {
     let processed = 0;
     let failed = 0;
 
-    // Fetch queued missions (oldest first)
+    // Fetch queued missions — paid tiers first, then oldest
     const queued = await this.env.DB.prepare(
-      `SELECT id, tenant_id, goal, complexity, credits_cost
-       FROM missions WHERE status = 'queued'
-       ORDER BY created_at ASC LIMIT ?`
+      `SELECT m.id, m.tenant_id, m.goal, m.complexity, m.credits_cost
+       FROM missions m
+       JOIN tenants t ON m.tenant_id = t.id
+       WHERE m.status = 'queued'
+       ORDER BY
+         CASE t.tier
+           WHEN 'enterprise' THEN 0
+           WHEN 'master' THEN 1
+           WHEN 'agency' THEN 2
+           WHEN 'pro' THEN 3
+           WHEN 'starter' THEN 4
+           ELSE 5
+         END,
+         m.created_at ASC
+       LIMIT ?`
     )
       .bind(MAX_MISSIONS_PER_RUN)
       .all<{ id: string; tenant_id: string; goal: string; complexity: string; credits_cost: number }>();

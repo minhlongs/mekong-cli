@@ -43,11 +43,66 @@ missions.post('/', async (c) => {
   );
 
   if (!result.success) {
-    const status = (result.code === 'INSUFFICIENT_CREDITS' || result.code === 'DAILY_LIMIT_REACHED') ? 402 : 400;
-    return json({ error: result.error, code: result.code }, { status });
+    const is402 = result.code === 'INSUFFICIENT_CREDITS' || result.code === 'DAILY_LIMIT_REACHED';
+    const upgrade = is402 ? {
+      creditPacks: {
+        'credits-10': 'https://polar.sh/checkout/cd05c250-42dd-4333-a041-4f55b48044fb',
+        'credits-50': 'https://polar.sh/checkout/5c0a8be0-b358-47ea-a006-681920f59676',
+        'credits-100': 'https://polar.sh/checkout/c81ca25b-eb3a-43be-8224-de2578c64a94',
+      },
+      subscriptions: {
+        starter: 'https://polar.sh/checkout/ce215739-4684-4deb-b257-8321ea4d844d',
+        pro: 'https://polar.sh/checkout/b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f',
+      },
+    } : undefined;
+    return json({ error: result.error, code: result.code, upgrade }, { status: is402 ? 402 : 400 });
   }
 
   return json(result.mission, { status: 201 });
+});
+
+/**
+ * POST /missions/batch — Submit up to 10 missions at once (pro+ only)
+ */
+missions.post('/batch', async (c) => {
+  const tenant = getTenant(c);
+
+  // Pro+ only
+  if (['free', 'starter'].includes(tenant.tier)) {
+    return json(
+      { error: 'Batch submission requires Pro tier or higher', code: 'TIER_REQUIRED' },
+      { status: 403 }
+    );
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const goals = body.goals as Array<{ goal: string; complexity?: string; project?: string }>;
+
+  if (!Array.isArray(goals) || goals.length === 0 || goals.length > 10) {
+    return json(
+      { error: 'Provide 1-10 goals in array', code: 'INVALID_BATCH' },
+      { status: 400 }
+    );
+  }
+
+  const missionService = new MissionService(c.env);
+  const results = [];
+
+  for (const item of goals) {
+    const complexity = (['simple', 'standard', 'complex'].includes(item.complexity || '')
+      ? item.complexity : 'standard') as 'simple' | 'standard' | 'complex';
+    const result = await missionService.submit(tenant.tenantId, item.goal, complexity, item.project);
+    results.push(result.success
+      ? { id: result.mission!.id, status: 'queued', cost: result.mission!.creditsCost }
+      : { error: result.error, code: result.code }
+    );
+  }
+
+  return json({
+    submitted: results.filter(r => 'id' in r).length,
+    failed: results.filter(r => 'error' in r).length,
+    missions: results,
+  }, { status: 201 });
 });
 
 /**

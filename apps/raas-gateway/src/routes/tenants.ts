@@ -148,6 +148,31 @@ tenants.get('/profile', async (c) => {
 });
 
 /**
+ * GET /tenants/referrals — View referral stats
+ */
+tenants.get('/referrals', async (c) => {
+  const tenant = getTenant(c);
+
+  const profile = await c.env.DB.prepare(
+    'SELECT referral_code FROM tenants WHERE id = ?'
+  ).bind(tenant.tenantId).first<{ referral_code: string }>();
+
+  const referred = await c.env.DB.prepare(
+    'SELECT COUNT(*) as count FROM tenants WHERE referred_by = ?'
+  ).bind(profile?.referral_code || '').first<{ count: number }>();
+
+  const creditsEarned = (referred?.count ?? 0) * 5;
+
+  return json({
+    referralCode: profile?.referral_code || null,
+    referralLink: `https://mekong-raas.pages.dev?ref=${profile?.referral_code || ''}`,
+    totalReferred: referred?.count ?? 0,
+    creditsEarned,
+    rewardPerReferral: 5,
+  });
+});
+
+/**
  * POST /tenants/api-keys — Generate a new API key
  */
 tenants.post('/api-keys', async (c) => {
