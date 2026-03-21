@@ -1,6 +1,8 @@
 {
   "name": "@openclaw/raas-marketplace",
   "version": "0.1.0",
+  "private": false,
+  "description": "Marketplace SDK for Mekong RaaS — product catalog, storefront, sales bot, analytics, affiliate program, skill registry",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
@@ -13,5 +15,11 @@
   },
   "scripts": { "build": "tsc", "test": "vitest run" },
   "devDependencies": { "typescript": "^5.7.0", "vitest": "^4.0.0" },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mekong-cli/mekong-cli.git",
+    "directory": "packages/raas-marketplace"
+  },
+  "keywords": ["mekong", "raas", "marketplace", "skill-registry", "sales-bot", "sdk"]
 }
