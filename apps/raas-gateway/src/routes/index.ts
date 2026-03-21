@@ -37,6 +37,13 @@ import { accountSuspension, adminSuspensions } from './suspension';
 import { apiKeyManagement } from './api-key-management';
 import { batchMissions } from './batch-missions';
 import { marketplaceTemplates, missionTemplates } from './mission-templates';
+import { tenantHealth } from './tenant-health';
+import { recurringMissions } from './recurring-missions';
+import { webhookDLQ } from './webhook-dlq';
+import { conversionAnalytics } from './conversion-analytics';
+import { missionTimeline } from './mission-timeline';
+import { sdkGenerator } from './sdk-generator';
+import { rateLimitDashboard } from './rate-limit-dashboard';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -63,6 +70,15 @@ export function createRoutes() {
   routes.route('/v1/templates', missionTemplates);
   routes.route('/marketplace/templates', marketplaceTemplates);
   routes.route('/admin/suspensions', adminSuspensions);
+
+  // Wave 15-16 routes BEFORE /v1 api to avoid shadowing
+  routes.route('/v1/health-score', tenantHealth);
+  routes.route('/v1/recurring', recurringMissions);
+  routes.route('/', webhookDLQ);
+  routes.route('/conversion', conversionAnalytics);
+  routes.route('/v1/timeline', missionTimeline);
+  routes.route('/sdk', sdkGenerator);
+  routes.route('/', rateLimitDashboard);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -268,6 +284,32 @@ export function createRoutes() {
         '/v1/templates/{id}': { get: { summary: 'Get template', tags: ['Templates'], security: [{ bearer: [] }] }, put: { summary: 'Update template', tags: ['Templates'], security: [{ bearer: [] }] }, delete: { summary: 'Delete template', tags: ['Templates'], security: [{ bearer: [] }] } },
         '/v1/templates/{id}/use': { post: { summary: 'Create mission from template', tags: ['Templates'], security: [{ bearer: [] }] } },
         '/v1/templates/{id}/rate': { post: { summary: 'Rate template', tags: ['Templates'], security: [{ bearer: [] }] } },
+        '/v1/health-score': { get: { summary: 'Current tenant health score', tags: ['Health Score'], security: [{ bearer: [] }] } },
+        '/v1/health-score/history': { get: { summary: 'Health score history', tags: ['Health Score'], security: [{ bearer: [] }] } },
+        '/v1/health-score/factors': { get: { summary: 'Health score factor breakdown', tags: ['Health Score'], security: [{ bearer: [] }] } },
+        '/v1/recurring': { post: { summary: 'Create recurring mission', tags: ['Recurring Missions'], security: [{ bearer: [] }] }, get: { summary: 'List recurring missions', tags: ['Recurring Missions'], security: [{ bearer: [] }] } },
+        '/v1/recurring/{id}': { get: { summary: 'Get recurring mission', tags: ['Recurring Missions'], security: [{ bearer: [] }] }, put: { summary: 'Update recurring mission', tags: ['Recurring Missions'], security: [{ bearer: [] }] }, delete: { summary: 'Deactivate recurring mission', tags: ['Recurring Missions'], security: [{ bearer: [] }] } },
+        '/v1/recurring/{id}/trigger': { post: { summary: 'Manually trigger recurring mission', tags: ['Recurring Missions'], security: [{ bearer: [] }] } },
+        '/v1/dlq': { get: { summary: 'Tenant DLQ entries', tags: ['Webhook DLQ'], security: [{ bearer: [] }] } },
+        '/v1/dlq/stats': { get: { summary: 'Tenant DLQ stats', tags: ['Webhook DLQ'], security: [{ bearer: [] }] } },
+        '/admin/dlq': { get: { summary: 'All DLQ entries (admin)', tags: ['Webhook DLQ'] } },
+        '/admin/dlq/{id}/replay': { post: { summary: 'Replay DLQ entry', tags: ['Webhook DLQ'] } },
+        '/admin/dlq/stats': { get: { summary: 'DLQ statistics', tags: ['Webhook DLQ'] } },
+        '/conversion/track': { post: { summary: 'Track conversion event', tags: ['Conversion Analytics'] } },
+        '/conversion/funnel': { get: { summary: 'Funnel visualization', tags: ['Conversion Analytics'] } },
+        '/conversion/rates': { get: { summary: 'Conversion rates', tags: ['Conversion Analytics'] } },
+        '/conversion/cohorts': { get: { summary: 'Cohort retention analysis', tags: ['Conversion Analytics'] } },
+        '/conversion/sources': { get: { summary: 'Top acquisition sources', tags: ['Conversion Analytics'] } },
+        '/v1/timeline/missions/{id}/timeline': { get: { summary: 'Mission timeline events', tags: ['Mission Timeline'], security: [{ bearer: [] }] } },
+        '/v1/timeline/missions/{id}/trace': { get: { summary: 'Mission trace summary', tags: ['Mission Timeline'], security: [{ bearer: [] }] } },
+        '/v1/timeline/traces': { get: { summary: 'List tenant traces', tags: ['Mission Timeline'], security: [{ bearer: [] }] } },
+        '/v1/timeline/performance': { get: { summary: 'Performance stats', tags: ['Mission Timeline'], security: [{ bearer: [] }] } },
+        '/sdk/endpoints': { get: { summary: 'List API endpoints for SDK', tags: ['SDK Generator'] } },
+        '/sdk/snippet': { get: { summary: 'Generate code snippet', tags: ['SDK Generator'] } },
+        '/sdk/{language}': { get: { summary: 'Generate full SDK client', tags: ['SDK Generator'] } },
+        '/v1/rate-limits': { get: { summary: 'Tenant rate limit status', tags: ['Rate Limits'], security: [{ bearer: [] }] } },
+        '/v1/rate-limits/history': { get: { summary: 'Rate limit hit history', tags: ['Rate Limits'], security: [{ bearer: [] }] } },
+        '/admin/rate-limits/violations': { get: { summary: 'Rate limit violations', tags: ['Rate Limits'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
