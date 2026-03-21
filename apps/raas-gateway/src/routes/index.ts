@@ -24,6 +24,7 @@ import { status } from './status';
 import { dashboard } from './dashboard';
 import { playground } from './playground';
 import { usageExport } from './usage-export';
+import { referrals } from './referrals';
 import { metrics } from './metrics';
 import { apiDocs } from './api-docs';
 import { notFound } from '../utils/response';
@@ -58,6 +59,7 @@ export function createRoutes() {
   routes.route('/webhook/telegram', telegram);
   routes.route('/metrics', metrics);
   routes.route('/docs', apiDocs);
+  routes.route('/v1/referrals', referrals);
 
   // Waitlist email capture (public)
   routes.post('/waitlist', async (c) => {
