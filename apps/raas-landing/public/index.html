@@ -295,7 +295,7 @@
           <li>All 5 business layers</li>
           <li>319 commands</li>
         </ul>
-        <a href="https://buy.polar.sh/mekong-cli/starter" class="btn btn-outline" target="_blank" rel="noopener">Get Starter</a>
+        <a href="#" onclick="startCheckout('ce215739','starter');return false" class="btn btn-outline">Get Starter</a>
       </div>
 
       <div class="plan featured">
@@ -310,7 +310,7 @@
           <li>DAG workflow recipes</li>
           <li>542 skills unlocked</li>
         </ul>
-        <a href="https://buy.polar.sh/mekong-cli/pro" class="btn btn-primary" target="_blank" rel="noopener">Get Pro</a>
+        <a href="#" onclick="startCheckout('b810b7eb','pro');return false" class="btn btn-primary">Get Pro</a>
       </div>
 
       <div class="plan">
@@ -404,6 +404,16 @@
   <script>
     const API = 'https://raas.agencyos.network';
 
+    // Handle checkout return
+    if (new URLSearchParams(location.search).get('checkout') === 'success') {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#22d3ee;color:#000;text-align:center;padding:1rem;font-weight:700;z-index:9999';
+      banner.textContent = '🎉 Payment successful! Your credits have been activated.';
+      document.body.prepend(banner);
+      setTimeout(() => banner.remove(), 8000);
+      history.replaceState({}, '', '/');
+    }
+
     // Load live stats — hero + stats bar
     fetch(API + '/stats').then(r => r.json()).then(d => {
       const missions = d.missionsCompleted || '0';
@@ -432,6 +442,37 @@
         </div>
       `).join('');
     }).catch(() => {});
+    // Checkout flow: signup if needed, then create Polar checkout session
+    async function startCheckout(productId, tier) {
+      let token = localStorage.getItem('raas_token');
+      if (!token) {
+        const email = prompt('Enter your email to get started:');
+        if (!email) return;
+        const name = prompt('Your name:');
+        if (!name) return;
+        try {
+          const res = await fetch(API + '/v1/tenants/signup', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email })
+          });
+          const data = await res.json();
+          if (!res.ok) { alert(data.error || 'Signup failed'); return; }
+          token = data.token;
+          localStorage.setItem('raas_token', token);
+        } catch { alert('Network error'); return; }
+      }
+      // Create checkout session
+      try {
+        const res = await fetch(API + '/billing/checkout', {
+          method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, success_url: location.origin + '/?checkout=success' })
+        });
+        const data = await res.json();
+        if (data.checkout_url) { window.open(data.checkout_url, '_blank'); }
+        else { alert(data.error || 'Checkout failed. Try again.'); localStorage.removeItem('raas_token'); }
+      } catch { alert('Network error'); }
+    }
+
     async function signup() {
       const name = document.getElementById('signup-name').value.trim();
       const email = document.getElementById('signup-email').value.trim();
