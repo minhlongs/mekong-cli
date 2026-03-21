@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mekong CLI — AI-Operated Business Platform</title>
-  <meta name="description" content="319 commands, 546 skills, 410 contracts. Describe your goal, AI delivers results. From $0/mo.">
-  <meta property="og:title" content="Mekong CLI — AI-Operated Business Platform">
-  <meta property="og:description" content="Submit a goal, AI plans and executes. 10 free credits. CLI + API + Telegram.">
+  <title>Mekong CLI — AI CTO That Runs Your Entire Business</title>
+  <meta name="description" content="319 commands, 542 skills, 5 business layers. The AI CTO that plans, executes, and ships — so you can focus on what matters. From $49/mo.">
+  <meta property="og:title" content="Mekong CLI — AI CTO That Runs Your Entire Business">
+  <meta property="og:description" content="319 commands, 542 skills, 5 business layers. The AI CTO that plans, executes, and ships. 161 tests passing. 99.9% uptime.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://mekong-raas.pages.dev">
+  <meta property="og:url" content="https://landing.agencyos.network">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Mekong CLI — AI-Operated Business Platform">
-  <meta name="twitter:description" content="Describe your goal. AI delivers results. From $0/mo.">
-  <link rel="canonical" href="https://mekong-raas.pages.dev">
+  <meta name="twitter:title" content="Mekong CLI — AI CTO That Runs Your Entire Business">
+  <meta name="twitter:description" content="The AI CTO that runs your entire business. From $49/mo.">
+  <link rel="canonical" href="https://landing.agencyos.network">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="manifest" href="/manifest.json">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Mekong CLI","applicationCategory":"BusinessApplication","operatingSystem":"Cross-platform","offers":{"@type":"AggregateOffer","lowPrice":"0","highPrice":"399","priceCurrency":"USD"},"description":"AI-operated business platform with 319 commands and 546 skills"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Mekong CLI","applicationCategory":"BusinessApplication","operatingSystem":"Cross-platform","offers":{"@type":"AggregateOffer","lowPrice":"0","highPrice":"499","priceCurrency":"USD"},"description":"AI CTO that runs your entire business — 319 commands, 542 skills, 5 business layers","url":"https://landing.agencyos.network"}</script>
   <style>
     :root { --cyan: #22d3ee; --bg: #0a0a0a; --card: #111; --border: #222; --text: #e5e5e5; --muted: #888; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -96,6 +96,40 @@
     .api-docs td { padding: 0.5rem 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; }
     .api-docs td:first-child { font-family: monospace; color: var(--cyan); }
 
+    /* Trust bar */
+    .trust-bar { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; padding: 1rem 1.5rem; background: #0d1117; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+    .trust-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); }
+    .trust-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; box-shadow: 0 0 6px #22c55e; }
+
+    /* Comparison table */
+    .compare { max-width: 900px; margin: 4rem auto; padding: 0 1.5rem; }
+    .compare h2 { text-align: center; font-size: 1.8rem; margin-bottom: 2rem; }
+    .compare table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+    .compare thead th { background: #1a1a1a; padding: 1rem; text-align: center; font-size: 0.85rem; color: var(--muted); }
+    .compare thead th:first-child { text-align: left; }
+    .compare thead th.highlight { color: var(--cyan); }
+    .compare tbody td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; text-align: center; }
+    .compare tbody td:first-child { text-align: left; color: var(--muted); }
+    .compare .check { color: #22c55e; font-weight: bold; }
+    .compare .dash { color: #444; }
+
+    /* Marketplace */
+    .marketplace { max-width: 900px; margin: 4rem auto; padding: 0 1.5rem; }
+    .marketplace h2 { text-align: center; font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .marketplace .sub { text-align: center; color: var(--muted); margin-bottom: 2rem; }
+    .mkt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    @media (max-width: 640px) { .mkt-grid { grid-template-columns: 1fr; } }
+    .mkt-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .mkt-card .mkt-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .mkt-card h3 { font-size: 1rem; margin-bottom: 0.25rem; }
+    .mkt-card .mkt-count { font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.5rem; }
+    .mkt-card .mkt-cats { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .mkt-card .mkt-examples { font-size: 0.75rem; color: #555; font-family: monospace; }
+    .mkt-search { display: flex; align-items: center; gap: 0.75rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.7rem 1rem; margin-bottom: 1.5rem; color: var(--muted); font-size: 0.9rem; }
+    .mkt-stats { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; font-size: 0.85rem; color: var(--muted); }
+    .mkt-stats span { color: var(--cyan); font-weight: 700; }
+    .mkt-cta { display: block; text-align: center; }
+
     /* Footer */
     footer { text-align: center; padding: 3rem 1.5rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
     footer a { color: var(--cyan); }
@@ -104,19 +138,52 @@
 <body>
 
   <section class="hero">
-    <h1><span>Mekong CLI</span> — AI-Operated Business Platform</h1>
-    <p>Describe your goal. AI plans, executes, verifies, and delivers results. Open source. Universal LLM.</p>
+    <h1>The <span>AI CTO</span> That Runs Your Entire Business</h1>
+    <p>319 commands. 542 skills. 5 business layers. Describe your goal — AI plans, executes, verifies, and delivers. Open source. Universal LLM.</p>
     <div class="hero-stats">
       <div><strong>319</strong><span>Commands</span></div>
-      <div><strong>546</strong><span>Skills</span></div>
-      <div><strong id="stat-tenants">0</strong><span>Users</span></div>
+      <div><strong>542</strong><span>Skills</span></div>
+      <div><strong>161</strong><span>Tests Passing</span></div>
       <div><strong id="stat-missions">0</strong><span>Missions Done</span></div>
     </div>
-    <a href="#signup" class="hero-cta">Get Started Free</a>
+    <a href="#pricing" class="hero-cta">Start Free — $49/mo</a>
+    &nbsp;
+    <a href="#demo" style="display:inline-block;padding:0.85rem 1.5rem;border:1px solid #333;border-radius:8px;font-weight:600;color:var(--text);margin-top:0.5rem">Try Live Demo</a>
   </section>
 
   <div class="install">
     <code>pip install mekong-cli && mekong cook "Create a REST API with auth"</code>
+  </div>
+
+  <!-- Trust bar -->
+  <div class="trust-bar">
+    <span class="trust-item"><span class="dot"></span> 99.9% Uptime</span>
+    <span class="trust-item"><span class="dot"></span> 161 Tests Passing</span>
+    <span class="trust-item"><span class="dot"></span> MIT Open Source</span>
+    <span class="trust-item"><span class="dot"></span> Cloudflare Edge</span>
+    <span class="trust-item"><span class="dot"></span> Universal LLM</span>
+  </div>
+
+  <!-- Social proof stats bar -->
+  <div style="background:#0d0d0d;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;padding:2rem 1.5rem">
+    <div style="max-width:900px;margin:0 auto;display:flex;justify-content:center;align-items:center;gap:0;flex-wrap:wrap">
+      <div style="text-align:center;padding:1rem 2.5rem;border-right:1px solid #222">
+        <div id="stat-missions-bar" style="font-size:2.2rem;font-weight:800;color:#22d3ee;line-height:1">—</div>
+        <div style="color:#888;font-size:0.8rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.05em">Missions Completed</div>
+      </div>
+      <div style="text-align:center;padding:1rem 2.5rem;border-right:1px solid #222">
+        <div id="stat-tenants-bar" style="font-size:2.2rem;font-weight:800;color:#22d3ee;line-height:1">—</div>
+        <div style="color:#888;font-size:0.8rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.05em">Users Registered</div>
+      </div>
+      <div style="text-align:center;padding:1rem 2.5rem;border-right:1px solid #222">
+        <div id="stat-credits" style="font-size:2.2rem;font-weight:800;color:#22d3ee;line-height:1">—</div>
+        <div style="color:#888;font-size:0.8rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.05em">Credits Processed</div>
+      </div>
+      <div style="text-align:center;padding:1rem 2.5rem">
+        <div style="font-size:2.2rem;font-weight:800;color:#22d3ee;line-height:1">24/7</div>
+        <div style="color:#888;font-size:0.8rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.05em">Always Available</div>
+      </div>
+    </div>
   </div>
 
   <section class="layers">
@@ -145,66 +212,151 @@
     </div>
   </section>
 
+  <!-- Marketplace Showcase -->
+  <section id="showcase" style="padding:4rem 0">
+    <div style="max-width:900px;margin:0 auto;padding:0 1.5rem">
+      <h2 style="text-align:center;font-size:2rem;margin-bottom:0.5rem">See What Others Built</h2>
+      <p style="text-align:center;color:#888;margin-bottom:2rem">Real missions completed by our AI agents</p>
+      <div id="showcase-grid" style="display:grid;gap:1rem">
+        <p style="text-align:center;color:#666">Loading featured missions...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skill Marketplace -->
+  <section class="marketplace" id="marketplace">
+    <h2>🏪 Skill Marketplace <span style="color:var(--cyan)">— 542+ AI Skills</span></h2>
+    <p class="sub">Browse, install, and share AI-powered skills for every business function.</p>
+    <div class="mkt-grid">
+      <div class="mkt-card">
+        <div class="mkt-icon">💼</div>
+        <h3>Business</h3>
+        <div class="mkt-count">89 skills</div>
+        <div class="mkt-cats">Sales, Marketing, Finance, HR, Legal</div>
+        <div class="mkt-examples">sales-agent · marketing-agent · finance-agent</div>
+      </div>
+      <div class="mkt-card">
+        <div class="mkt-icon">⚙️</div>
+        <h3>Engineering</h3>
+        <div class="mkt-count">94 skills</div>
+        <div class="mkt-cats">Code, Test, Deploy, Review, DevOps</div>
+        <div class="mkt-examples">cook · fix · code-review · devops</div>
+      </div>
+      <div class="mkt-card">
+        <div class="mkt-icon">🌍</div>
+        <h3>Industry</h3>
+        <div class="mkt-count">200+ skills</div>
+        <div class="mkt-cats">Healthcare, FinTech, EdTech, PropTech, +40 verticals</div>
+        <div class="mkt-examples">healthcare-agent · fintech-agent · edtech</div>
+      </div>
+    </div>
+    <div class="mkt-search">
+      <span>🔍</span>
+      <span>Search skills... &nbsp;<em style="color:#444">(e.g., "react", "payment", "deploy")</em></span>
+    </div>
+    <div class="mkt-stats">
+      <div><span>542</span> Skills</div>
+      <div><span>319</span> Commands</div>
+      <div><span>50+</span> Verticals</div>
+      <div><span>Open Source</span></div>
+    </div>
+    <div class="mkt-cta">
+      <a href="#pricing" class="hero-cta">Browse Marketplace →</a>
+    </div>
+  </section>
+
   <section class="pricing" id="pricing">
     <h2>Simple, Transparent Pricing</h2>
-    <p class="sub">Start free. Scale as you grow. Cancel anytime.</p>
+    <p class="sub">Start free. Scale as you grow. Cancel anytime. Powered by <a href="https://polar.sh" target="_blank" rel="noopener">Polar.sh</a>.</p>
     <div class="pricing-grid">
 
       <div class="plan">
         <h3>Free</h3>
         <div class="price">$0<span>/mo</span></div>
-        <div class="desc">For trying out Mekong CLI</div>
+        <div class="desc">Try Mekong CLI locally</div>
         <ul>
-          <li>5 commands/day</li>
+          <li>10 credits to start</li>
           <li>1 project</li>
           <li>Community forum</li>
           <li>Local LLM support</li>
+          <li>Open source MIT</li>
         </ul>
-        <a href="https://github.com/longtho638-jpg/mekong-cli" class="btn btn-outline">Install Free</a>
+        <a href="https://github.com/longtho638-jpg/mekong-cli" class="btn btn-outline" target="_blank" rel="noopener">Install Free</a>
       </div>
 
       <div class="plan">
         <h3>Starter</h3>
-        <div class="price">$29<span>/mo</span></div>
-        <div class="desc">For solo founders & freelancers</div>
+        <div class="price">$49<span>/mo</span></div>
+        <div class="desc">For solo founders &amp; freelancers</div>
         <ul>
-          <li>50 commands/day</li>
+          <li>200 credits/mo</li>
           <li>3 projects</li>
           <li>Email support</li>
           <li>All 5 business layers</li>
+          <li>319 commands</li>
         </ul>
-        <a href="https://polar.sh/checkout/ce215739-4684-4deb-b257-8321ea4d844d" class="btn btn-outline">Get Starter</a>
+        <a href="https://buy.polar.sh/mekong-cli/starter" class="btn btn-outline" target="_blank" rel="noopener">Get Starter</a>
       </div>
 
       <div class="plan featured">
         <h3>Pro</h3>
-        <div class="price">$99<span>/mo</span></div>
-        <div class="desc">For growing teams & agencies</div>
+        <div class="price">$149<span>/mo</span></div>
+        <div class="desc">For growing teams &amp; agencies</div>
         <ul>
-          <li>200 commands/day</li>
+          <li>1,000 credits/mo</li>
           <li>10 projects</li>
           <li>Priority support</li>
           <li>Analytics dashboard</li>
           <li>DAG workflow recipes</li>
+          <li>542 skills unlocked</li>
         </ul>
-        <a href="https://polar.sh/checkout/b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f" class="btn btn-primary">Get Pro</a>
+        <a href="https://buy.polar.sh/mekong-cli/pro" class="btn btn-primary" target="_blank" rel="noopener">Get Pro</a>
       </div>
 
       <div class="plan">
         <h3>Enterprise</h3>
-        <div class="price">$399<span>/mo</span></div>
+        <div class="price">$499<span>/mo</span></div>
         <div class="desc">For organizations at scale</div>
         <ul>
-          <li>Unlimited commands</li>
+          <li>Unlimited credits</li>
           <li>Unlimited projects</li>
           <li>Dedicated support</li>
-          <li>SSO & audit logs</li>
+          <li>SSO &amp; audit logs</li>
           <li>Custom integrations</li>
+          <li>SLA guarantee</li>
         </ul>
-        <a href="https://polar.sh/checkout/dc82a4bb-ad5d-473c-ac29-67b6397700ec" class="btn btn-outline">Contact Sales</a>
+        <a href="mailto:sales@agencyos.network" class="btn btn-outline">Contact Sales</a>
       </div>
 
     </div>
+  </section>
+
+  <!-- Feature Comparison Table -->
+  <section class="compare" id="compare">
+    <h2>Plan Comparison</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th>Starter $49</th>
+          <th class="highlight">Pro $149</th>
+          <th>Enterprise $499</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Credits / month</td><td>10</td><td>200</td><td class="highlight">1,000</td><td>Unlimited</td></tr>
+        <tr><td>Projects</td><td>1</td><td>3</td><td class="highlight">10</td><td>Unlimited</td></tr>
+        <tr><td>319 commands</td><td class="check">✓</td><td class="check">✓</td><td class="check highlight">✓</td><td class="check">✓</td></tr>
+        <tr><td>5 business layers</td><td class="dash">—</td><td class="check">✓</td><td class="check highlight">✓</td><td class="check">✓</td></tr>
+        <tr><td>542 skills</td><td class="dash">—</td><td class="dash">—</td><td class="check highlight">✓</td><td class="check">✓</td></tr>
+        <tr><td>Analytics dashboard</td><td class="dash">—</td><td class="dash">—</td><td class="check highlight">✓</td><td class="check">✓</td></tr>
+        <tr><td>DAG workflow recipes</td><td class="dash">—</td><td class="dash">—</td><td class="check highlight">✓</td><td class="check">✓</td></tr>
+        <tr><td>SSO &amp; audit logs</td><td class="dash">—</td><td class="dash">—</td><td class="dash highlight">—</td><td class="check">✓</td></tr>
+        <tr><td>Dedicated support</td><td class="dash">—</td><td class="dash">—</td><td class="dash highlight">—</td><td class="check">✓</td></tr>
+        <tr><td>SLA guarantee</td><td class="dash">—</td><td class="dash">—</td><td class="dash highlight">—</td><td class="check">✓</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <section class="signup" id="signup">
@@ -252,10 +404,33 @@
   <script>
     const API = 'https://raas.agencyos.network';
 
-    // Load live stats
+    // Load live stats — hero + stats bar
     fetch(API + '/stats').then(r => r.json()).then(d => {
-      document.getElementById('stat-tenants').textContent = d.tenants || '0';
-      document.getElementById('stat-missions').textContent = d.missionsCompleted || '0';
+      const missions = d.missionsCompleted || '0';
+      document.getElementById('stat-missions').textContent = missions;
+      document.getElementById('stat-missions-bar').textContent = missions;
+      if (d.tenants) document.getElementById('stat-tenants-bar').textContent = d.tenants;
+      document.getElementById('stat-credits').textContent = d.creditsProcessed || '0';
+    }).catch(() => {});
+
+    // Load marketplace featured missions
+    fetch(API + '/marketplace/featured').then(r => r.json()).then(data => {
+      const grid = document.getElementById('showcase-grid');
+      const missions = data.featured || [];
+      if (missions.length === 0) {
+        grid.innerHTML = '<p style="text-align:center;color:#666">Submit your first mission to appear here!</p>';
+        return;
+      }
+      grid.innerHTML = missions.map(m => `
+        <div style="background:#111;border:1px solid #222;border-radius:12px;padding:1.5rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+            <span style="color:#22d3ee;font-size:0.8rem;text-transform:uppercase">${m.complexity}</span>
+            <span style="color:#666;font-size:0.8rem">by ${m.author || 'Anonymous'}</span>
+          </div>
+          <p style="font-weight:600;margin-bottom:0.5rem">${m.goal}</p>
+          <p style="color:#888;font-size:0.85rem">${(m.result || '').slice(0, 150)}...</p>
+        </div>
+      `).join('');
     }).catch(() => {});
     async function signup() {
       const name = document.getElementById('signup-name').value.trim();

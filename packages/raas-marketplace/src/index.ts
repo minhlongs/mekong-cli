@@ -33,3 +33,18 @@ export {
   type CommissionSummary,
   type AffiliateStats,
 } from "./affiliate.js";
+
+export {
+  SkillRegistry,
+  type SearchOptions,
+  type ListOptions,
+} from "./skill-registry.js";
+
+export {
+  validateManifest,
+  createPackageId,
+  parsePackageId,
+  type SkillManifest,
+  type SkillPackage,
+  type SkillFile,
+} from "./skill-package.js";
