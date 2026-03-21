@@ -149,6 +149,11 @@ while true; do
     fi
 
     for ((pane_idx=0; pane_idx<panes; pane_idx++)); do
+      # FIX #22: Validate pane exists in tmux before capture
+      if ! tmux list-panes -t "${session}:0" -F '#{pane_index}' 2>/dev/null | grep -qx "$pane_idx"; then
+        continue
+      fi
+
       output=$(capture_pane "$session" "$pane_idx")
 
       if [[ -z "$output" ]]; then
@@ -213,6 +218,18 @@ while true; do
         send_to_pane "$session" "$pane_idx" "$brain_cmd"
         continue
       fi
+
+      # FIX #22: Brain cold cooldown — only fallback every 5 minutes
+      local cooldown_file="${PANE_LOCK_DIR}/${session}-${pane_idx}.cooldown"
+      if [[ -f "$cooldown_file" ]]; then
+        local cd_age=$(( $(date +%s) - $(stat -f %m "$cooldown_file" 2>/dev/null || echo 0) ))
+        if [[ $cd_age -lt 300 ]]; then
+          log "${dept_name} P${pane_idx}: BRAIN COLD — cooldown ${cd_age}/300s"
+          release_pane_lock "$session" "$pane_idx"
+          continue
+        fi
+      fi
+      touch "$cooldown_file"
 
       # Fallback for code depts
       IFS='|||' read -ra task_arr <<< "${DEPT_TASKS[$dept_name]}"

@@ -154,6 +154,36 @@ export class RaasClient {
     )
   }
 
+  // Marketplace
+  async getMarketplace(params?: { limit?: number; q?: string }): Promise<any> {
+    const sp = new URLSearchParams()
+    if (params?.limit) sp.set('limit', String(params.limit))
+    if (params?.q) sp.set('q', params.q)
+    return this.request<any>('GET', `/marketplace?${sp}`)
+  }
+
+  // Alerts
+  async getAlerts(): Promise<any> {
+    return this.request<any>('GET', '/v1/alerts')
+  }
+
+  async getAlertCount(): Promise<any> {
+    return this.request<any>('GET', '/v1/alerts/count')
+  }
+
+  async markAlertRead(alertId: string): Promise<any> {
+    return this.request<any>('POST', `/v1/alerts/${alertId}/read`)
+  }
+
+  // Stripe billing
+  async createStripeCheckout(packId: string): Promise<any> {
+    return this.request<any>('POST', '/billing/stripe/checkout', { packId })
+  }
+
+  async getStripePacks(): Promise<any> {
+    return this.request<any>('GET', '/billing/stripe/packs')
+  }
+
   // Public (no auth)
   static async getStats(baseUrl: string) {
     const res = await fetch(`${baseUrl}/stats`)

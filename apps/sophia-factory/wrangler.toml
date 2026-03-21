@@ -1,0 +1,26 @@
+name = "sophia-factory"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Account ID (replace with yours)
+# account_id = "your-account-id"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sophia-factory-db"
+# Create D1: wrangler d1 create sophia-factory-db → paste database_id here
+# database_id = "your-d1-database-id"
+
+[[kv_namespaces]]
+binding = "CACHE"
+# Create KV: wrangler kv namespace create CACHE → paste id here
+# id = "your-kv-id"
+
+[ai]
+binding = "AI"
+
+# Secrets (set via: wrangler secret put <NAME>)
+# SUPABASE_URL (for Auth only)
+# SUPABASE_ANON_KEY
+# OPENAI_API_KEY

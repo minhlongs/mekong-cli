@@ -9,12 +9,14 @@
 
 **Pricing Model**: MCU (Mekong Credit Unit) — consumption-based + subscription tiers
 
-**3 Tiers**:
-| Tier | Price/mo | Credits | Overage | Target |
-|------|----------|---------|---------|--------|
-| Starter | $49 | 200 MCU | $0.35/MCU | Indie devs, solo founders |
-| Pro | $149 | 1,000 MCU | $0.25/MCU | Small teams, agencies |
-| Enterprise | $499 | Unlimited | — | Corp, regulated industries |
+**5 Tiers**:
+| Tier | Price/mo | Credits | Daily Limit | Target |
+|------|----------|---------|-------------|--------|
+| Free | $0 | 10 MCU | 3/day | Trial users |
+| Starter | $29 | 50 MCU | 15/day | Indie devs, solo founders |
+| Pro | $99 | 200 MCU | 50/day | Power users, small teams |
+| Agency | $199 | 500 MCU | Unlimited | Agencies, growing teams |
+| Master | $399 | 1,000 MCU | Unlimited | Enterprise, high-volume |
 
 **Unit Economics**:
 - Gross Margin: 85% (target)
@@ -187,7 +189,33 @@ Break-even Customers (avg $250/mo) = 400 customers
 
 ---
 
-## 4. Competitive Positioning
+## 4. Source License Keys — One-time Revenue
+
+Open-source with commercial licensing:
+
+| License | Price | Devs | Updates | Support |
+|---------|-------|------|---------|---------|
+| Personal | $49 | 1 | 1 year | Community |
+| Team | $199 | 5 | 2 years | Priority |
+| Enterprise | $999 | Unlimited | Lifetime | SLA |
+| OEM | Custom | Unlimited | Lifetime | Dedicated |
+
+**Revenue model**: Recurring (subscriptions) + One-time (licenses) + Usage (credit packs)
+
+---
+
+## 5. Revenue Channels
+
+| Channel | Type | Products |
+|---------|------|----------|
+| Polar.sh | Subscriptions | 5 tiers ($0-$399/mo) |
+| Stripe | Credit packs | 4 packs ($5-$150) |
+| License Keys | One-time | 4 types ($49-$999) |
+| API Metering | Usage | MCU consumption |
+
+---
+
+## 6. Competitive Positioning
 
 | Competitor | Price/mo | Credits | $/Credit |
 |------------|----------|---------|----------|
@@ -208,7 +236,7 @@ Break-even Customers (avg $250/mo) = 400 customers
 
 ---
 
-## 5. Recommendations
+## 7. Recommendations
 
 ### Immediate Actions (Q2 2026)
 
@@ -231,7 +259,7 @@ Break-even Customers (avg $250/mo) = 400 customers
 
 ---
 
-## 6. Metrics Dashboard
+## 8. Metrics Dashboard
 
 **Weekly Tracking**:
 - MRR by tier

@@ -1,0 +1,33 @@
+{
+  "name": "@mekong/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for the Mekong RaaS Gateway API",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mekong",
+    "raas",
+    "sdk",
+    "ai",
+    "missions",
+    "agencyos"
+  ],
+  "author": "Mekong CLI",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

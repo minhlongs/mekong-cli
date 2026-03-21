@@ -36,7 +36,6 @@ export function useRealtimeUpdates(): RealtimeUpdatesState & { reconnect: () => 
   const mountedRef = useRef(true);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectDelayRef = useRef(1000);
-  const messageTimestampRef = useRef<Map<string, number>>(new Map());
   const latencySamplesRef = useRef<number[]>([]);
 
   const bufferRef = useRef<Record<string, unknown[]>>({});

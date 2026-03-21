@@ -15,6 +15,21 @@ export default {
       fontFamily: {
         mono: ['Menlo', 'Monaco', 'Courier New', 'monospace'],
       },
+      // Mobile-first breakpoints for responsive trading dashboard
+      screens: {
+        'sm': '640px',   // Mobile landscape
+        'md': '768px',   // Tablet
+        'lg': '1024px',  // Laptop
+        'xl': '1280px',  // Desktop
+        '2xl': '1536px', // Large desktop
+      },
+      // Touch-friendly sizing
+      minHeight: {
+        'touch': '44px', // Minimum tap target size
+      },
+      minWidth: {
+        'touch': '44px', // Minimum tap target size
+      },
     },
   },
   plugins: [],

@@ -1,5 +1,10 @@
 # 🏯 Mekong CLI
 
+[![CI](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml)
+[![Deploy](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/deploy.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+
 **AI-operated business platform. Open source. Universal LLM.**
 
 Describe your goal → AI plans → executes → verifies → delivers results.

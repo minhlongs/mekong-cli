@@ -11,6 +11,8 @@ export const config = {
 
   // License Configuration
   LICENSE_KEY_PREFIX: process.env.LICENSE_KEY_PREFIX || 'raas',
+  LICENSE_ACTIVATION_SECRET: process.env.LICENSE_ACTIVATION_SECRET || '',
+  LICENSE_ENCRYPTION_KEY: process.env.LICENSE_ENCRYPTION_KEY || '',
 
   // Usage Metering
   USAGE_METERING_ENABLED: process.env.USAGE_METERING_ENABLED || 'true',
@@ -66,6 +68,8 @@ const OPTIONAL_VARS = [
   'REDIS_HOST',
   'REDIS_PORT',
   'REDIS_PASSWORD',
+  'LICENSE_ACTIVATION_SECRET',
+  'LICENSE_ENCRYPTION_KEY',
 ] as const;
 
 /**

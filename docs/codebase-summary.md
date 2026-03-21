@@ -1,164 +1,346 @@
 # Mekong CLI — Codebase Summary
 
-**Version:** v3.0.0 (Open Source)
-**Generated:** 2026-03-02
-**Python:** 3.9+ | **License:** MIT
+**Version:** 5.0.0 | **Status:** Production | **Last Updated:** 2026-03-21
 
-## 1. Project Overview
+> AI-operated business platform. Open source. Universal LLM. 319 commands, 542 skills, 410 contracts.
 
-**Name:** Mekong CLI
-**Type:** Open-source AI agent orchestration framework
-**Description:** Python-based framework for autonomous task execution with Plan-Execute-Verify (PEV) pattern, pluggable LLM providers, and built-in credit billing for RaaS platforms.
+---
 
-## 2. Repository Structure
+## Executive Overview
+
+**Mekong CLI** is an orchestrated AI platform built on the Plan→Execute→Verify (PEV) engine. It enables automated business operations across 5 layers (Founder, Business, Product, Engineering, Ops) with 319+ commands and 542 skills.
+
+**Key Stats:**
+- **4,760 files** | 6.7M tokens | 26M characters
+- **Python 3.9+** | TypeScript/Node.js 18+ | Cloudflare Workers
+- **Monorepo structure:** Core SDK + 8 applications + 542 reusable skills
+- **Deployment:** 100% Cloudflare (Pages, Workers, D1, R2, KV)
+- **License:** MIT | Open source with commercial licensing
+
+---
+
+## Architecture Overview
 
 ```
-mekong-cli/
-├── src/
-│   ├── core/              # Orchestration engine (PEV pipeline)
-│   ├── agents/            # Pluggable agent system
-│   ├── raas/              # Multi-tenant credit billing
-│   ├── main.py            # CLI entry point (Typer)
-│   └── config.py          # Configuration
-├── tests/                 # Test suite (62+ tests)
-├── recipes/               # Recipe templates
-├── docs/                  # Documentation
-├── pyproject.toml         # Poetry config
-├── .env.example           # Environment template
-├── README.md              # Getting started
-└── LICENSE                # MIT License
+┌─────────────────────────────────────────────────────────┐
+│  CLI: mekong cook/fix/plan/deploy/... (319 commands)  │
+│  Dashboard: agencyos.network → /v1/missions            │
+└──────────────────┬──────────────────────────────────────┘
+                   │
+        ┌─────────▼──────────┐
+        │  API Gateway       │  FastAPI + auth + MCU metering
+        │  src/api/          │  HTTP 402 on zero balance
+        │  Hono/CF Workers   │
+        └─────────┬──────────┘
+                   │
+        ┌─────────▼──────────┐
+        │  PEV Engine        │  src/core/
+        │  planner.py        │  LLM task decomposition
+        │  executor.py       │  shell/LLM/API execution
+        │  verifier.py       │  quality gates + rollback
+        │  orchestrator.py   │  Plan→Execute→Verify loop
+        └─────────┬──────────┘
+                   │
+    ┌──────────────▼──────────────────┐
+    │  Agent Layer   src/agents/      │
+    │  GitAgent  FileAgent  ShellAgent│
+    │  LeadHunter  ContentWriter      │
+    └──────────────┬──────────────────┘
+                   │
+        ┌─────────▼──────────┐
+        │  LLM Router        │  src/core/llm_client.py
+        │  3 vars, any       │  Opus/Sonnet/Qwen/Ollama
+        │  provider          │
+        └────────────────────┘
 ```
 
-## 3. Core Modules
+**Data Plane:**
+- **Database:** Cloudflare D1 (SQLite) + PostgreSQL (optional)
+- **Cache:** Cloudflare KV + Redis (optional)
+- **Storage:** Cloudflare R2 (S3-compatible)
+- **Messaging:** Stripe/Polar webhooks + email
 
-| Module | Purpose | Files |
-|--------|---------|-------|
-| **Orchestrator** | PEV pipeline coordination | `orchestrator.py` |
-| **Planner** | LLM-powered task decomposition | `planner.py` |
-| **Executor** | Multi-mode task runner (shell/LLM/API) | `executor.py` |
-| **DAG Scheduler** | Parallel execution with dependencies | `dag_scheduler.py` |
-| **Verifier** | Quality gate validation | `verifier.py` |
-| **Agents** | Built-in agent system (Git, File, Shell) | `agents/*.py` |
-| **Providers** | LLM provider abstraction | `providers.py` |
-| **Plugins** | Custom agent/provider discovery | `plugin_loader.py` |
-| **RaaS/Billing** | Multi-tenant credit system | `raas/*.py` |
-| **API** | FastAPI + WebSocket gateway | `gateway.py` |
-| **Founder Complete OS** | Full-stack founder toolkit (VC, IPO, ops) | `founder_*.py`, `founder_vc/`, `founder_ipo/` |
+---
 
-## 4. Key Features
+## Directory Structure
 
-- ✅ **Plan-Execute-Verify Pipeline** — Reliable task orchestration with rollback
-- ✅ **Pluggable Agents** — Custom agents via PyPI or local plugins
-- ✅ **Multiple LLM Providers** — OpenAI, Gemini, offline models with auto-failover
-- ✅ **Parallel Execution** — DAG scheduler for efficient task orchestration
-- ✅ **Credit Billing** — Multi-tenant SQLite-based credit system
-- ✅ **Type Safety** — 100% type hints, zero `any` types
-- ✅ **Comprehensive Tests** — 62+ tests with >80% coverage
-- ✅ **Production Ready** — FastAPI server with WebSocket streaming
+### Core Packages
 
-## 5. Tech Stack
+```
+packages/
+├── mekong-cli-core/              # Main CLI binary
+│   ├── src/
+│   │   ├── core/
+│   │   │   ├── pev-engine/
+│   │   │   │   ├── planner.py
+│   │   │   │   ├── executor.py
+│   │   │   │   ├── verifier.py
+│   │   │   │   └── orchestrator.py
+│   │   │   ├── llm_client.py      # Router (3 env vars)
+│   │   │   ├── llm_providers.yaml
+│   │   │   ├── skill_loader.py
+│   │   │   └── config.py
+│   │   ├── api/
+│   │   │   ├── routes/
+│   │   │   │   ├── billing.py
+│   │   │   │   ├── payment.py
+│   │   │   │   ├── tasks.py
+│   │   │   │   └── ... (10+ route groups)
+│   │   ├── agents/
+│   │   └── tests/
+│   └── pyproject.toml
+└── openclaw-engine/               # Autonomous daemon
+    ├── src/
+    │   ├── daemon.ts
+    │   ├── task-queue.ts
+    │   └── webhook-handler.ts
+    └── package.json
+```
 
-| Category | Technologies |
-|----------|---------------|
-| **Language** | Python 3.9+ |
-| **CLI** | Typer + Rich |
-| **API Server** | FastAPI + Uvicorn |
-| **Data** | Pydantic, SQLite |
-| **Testing** | pytest, unittest.mock |
-| **Code Quality** | mypy, Black, Ruff |
-| **Package** | Poetry, PyPI |
+### Applications
 
-## 6. Dependencies
+```
+apps/
+├── algo-trader/          # Trading bot
+├── sophia-ai-factory/    # Content factory
+├── well/                 # Wellness
+├── 84tea/               # E-commerce
+├── raas-platform/       # Marketplace
+├── landing-page/        # Next.js 16
+└── ... (8+ apps)
+```
 
-**Core:**
-- `pydantic` — Data validation
-- `typer` — CLI framework
-- `rich` — Terminal formatting
-- `fastapi` — REST API
-- `uvicorn` — ASGI server
+### Commands & Skills
 
-**LLM Providers:**
-- `openai` — OpenAI API
-- `google-generativeai` — Gemini API
+```
+.claude/
+├── commands/             # 319 command definitions
+│   ├── founder/ (46 cmds)
+│   ├── business/ (32 cmds)
+│   ├── product/ (17 cmds)
+│   ├── engineering/ (47 cmds)
+│   └── ops/ (27 cmds)
+├── skills/              # 542 reusable skills
+└── agents/              # 32 role definitions
+```
 
-**Development:**
-- `pytest` — Testing
-- `mypy` — Type checking
-- `black` — Formatting
-- `ruff` — Linting
+---
 
-## 7. Testing
+## 5 Business Layers
 
-- **Framework:** pytest
-- **Coverage:** >80% of src/
-- **Total Tests:** 200+ (62 core + 146 Founder OS)
-- **Runtime:** ~3 minutes
+| Layer | Commands | Purpose |
+|-------|----------|---------|
+| 👑 Founder | 46 | Strategy, fundraising, IPO |
+| 💼 Business | 32 | Revenue, operations, HR |
+| 🎯 Product | 17 | Planning, roadmap, sprints |
+| ⚙️ Engineering | 47 | Build, test, deploy, review |
+| 🔧 Ops | 27 | Monitoring, security, health |
+
+**Total:** 319 root commands
+
+---
+
+## LLM Configuration
+
+**3 environment variables, any OpenAI-compatible provider:**
 
 ```bash
-python3 -m pytest tests/ -v
-python3 -m pytest --cov=src --cov-report=html
+export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_MODEL=anthropic/claude-sonnet-4
 ```
 
-## 8. Code Quality Standards
+**Supported Providers:**
+- OpenRouter (Claude, Qwen, DeepSeek)
+- Anthropic (Claude native)
+- OpenAI (GPT-4)
+- DashScope (Qwen)
+- Ollama (local free)
+- Google (Gemini)
 
-| Standard | Requirement | Status |
-|----------|-------------|--------|
-| Type Safety | 0 `any` types | ✅ 100% |
-| Type Hints | All functions | ✅ 100% |
-| Test Coverage | >80% critical | ✅ 84% |
-| File Size | <200 lines | ✅ All pass |
-| Docstrings | All public APIs | ✅ 100% |
-| Security | No hardcoded secrets | ✅ Verified |
+**Aliases:**
+- `mekong` — Default (Opus)
+- `mekong-sonnet` — Claude Sonnet 4
+- `mekong-qwen` — DashScope Qwen 3.5
+- `mekong-cto` — Daemon mode
 
-## 9. Configuration
+---
 
-**Environment Variables:**
+## API Gateway
+
+**FastAPI + Hono** with 15+ route groups:
+
+| Route | Purpose |
+|-------|---------|
+| `POST /billing/tenants` | Tenant creation |
+| `POST /v1/tasks` | Execute command |
+| `POST /v1/agents/spawn` | Spawn agent |
+| `POST /v1/chat/completions` | Chat API |
+| `POST /payment/webhook` | Polar.sh webhook |
+| `GET /v1/reports` | Analytics |
+
+**Middleware:**
+- `authMiddleware` — API key validation
+- `creditMeteringMiddleware` — MCU deduction
+- `errorHandler` — HTTP 402 on zero balance
+
+---
+
+## Database Schema
+
+**Cloudflare D1 (SQLite):**
+
+```sql
+CREATE TABLE tenants (
+  id TEXT PRIMARY KEY,
+  api_key TEXT UNIQUE,
+  name TEXT,
+  tier VARCHAR(20),
+  created_at TIMESTAMP
+);
+
+CREATE TABLE credits (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT,
+  balance INT,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+);
+
+CREATE TABLE tasks (
+  id TEXT PRIMARY KEY,
+  tenant_id TEXT,
+  command VARCHAR(100),
+  status VARCHAR(20),
+  mcu_cost INT,
+  created_at TIMESTAMP,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+);
+```
+
+---
+
+## MCU Billing
+
+**1 MCU = 1 credit. Consumption-based + subscription.**
+
+| Tier | Price/mo | Credits | Daily Limit |
+|------|----------|---------|-------------|
+| Free | $0 | 10 | 3/day |
+| Starter | $79 | 150 | 15/day |
+| Pro | $249 | 750 | 50/day |
+| Enterprise | $599 | Unlimited* | Unlimited |
+
+**Command Costs:**
+```
+/cook = 1 MCU (×1-3 for scope)
+/fix = 1 MCU (×1-2)
+/plan = 2 MCU (×1-5)
+/deploy = 2 MCU
+/audit = 1 MCU
+/help = 0 MCU
+```
+
+**COGS per MCU:**
+- LLM (Opus/Sonnet routing): $0.18
+- Caching (50% hit): $0.09
+- Infra + Support: $0.06
+- **Total: $0.15/MCU**
+
+---
+
+## Deployment
+
+**100% Cloudflare — 3 layers:**
+
+| Layer | Service | Cost |
+|-------|---------|------|
+| Frontend | Pages | $0 |
+| Edge API | Workers | $0 |
+| Backend | D1 + KV + R2 | Pay-per-use |
+
+**Deploy:**
 ```bash
-LLM_BASE_URL=https://api.openai.com/v1
-LLM_PROVIDER=openai
-LLM_API_KEY=sk-...
-RAAS_DB_PATH=~/.mekong/raas/tenants.db
-LOG_LEVEL=info
+bash mekong/infra/scaffold.sh myproject startup
+bash mekong/infra/scaffold.sh myproject scale
 ```
 
-See `.env.example` for complete list.
+**CI/CD:**
+- GitHub Actions (`.github/workflows/`)
+- Pre-commit linting + type checks
+- Pre-push tests
+- Auto-deploy on merge
 
-## 10. Extension Points
+---
 
-### Custom Agents
-Create agents by implementing `AgentProtocol` in:
-- PyPI packages (entry points)
-- Local plugins (`~/.mekong/plugins/*.py`)
+## Skills Catalog (542 Total)
 
-### Custom Providers
-Subclass `LLMProvider` for new LLM backends (local models, custom APIs, etc.)
+| Domain | Count |
+|--------|-------|
+| Code Review | 28 |
+| Testing | 35 |
+| Debugging | 22 |
+| Documentation | 18 |
+| DevOps | 42 |
+| AI/ML | 31 |
+| Data | 25 |
+| Web3 | 15 |
+| Compliance | 12 |
+| Business | 78 |
+| Other | 242 |
 
-### Recipes
-Add YAML/Markdown recipe templates in `recipes/` directory.
+---
 
-## 11. Performance Baseline
+## Code Standards
 
-| Operation | Target | Actual |
-|-----------|--------|--------|
-| CLI startup | <1s | 0.8s |
-| Plan generation | <2s | 1.5s |
-| Task execution | <30s | ~15s |
-| API response | <500ms | ~200ms |
+- **File Size:** < 200 lines per file
+- **Type Hints:** Required for all functions
+- **Docstrings:** Required for classes/methods
+- **Naming:** `snake_case` (Python), `kebab-case` (files)
+- **Secrets:** Never in code — use `.env`
+- **Testing:** `pytest` must pass before push
 
-## 12. Quick Start
+---
 
+## Key Entry Points
+
+**CLI:**
 ```bash
-# Install
-pip install mekong-cli
-
-# Configure
-export LLM_API_KEY=sk-...
-
-# Use
-mekong cook "Create a FastAPI app"
-
-# Or start API
-uvicorn src.core.gateway:app --port 8000
+source ~/mekong-cli/scripts/shell-init.sh
+mekong cook "Build a REST API"
+mekong-opus
+mekong-qwen
 ```
 
-See README.md and /docs for detailed guides.
+**API:**
+```bash
+curl -X POST https://api.agencyos.network/v1/tasks \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"command": "cook", "goal": "Build landing page"}'
+```
+
+**Contributing:**
+```bash
+git clone https://github.com/longtho638-jpg/mekong-cli.git
+cd mekong-cli
+pip install -e ".[dev]"
+pytest tests/
+```
+
+---
+
+## Dependencies
+
+**Python:** `fastapi`, `anthropic`, `langchain`, `pydantic`, `sqlalchemy`, `httpx`
+
+**Node.js:** `hono`, `wrangler`, `next.js`, `react`, `typescript`
+
+**CLI Tools:** `git`, `docker`, `claude`, `gemini-cli`
+
+---
+
+## Next Steps
+
+- **Getting Started:** `/docs/getting-started.md`
+- **API Reference:** `/docs/api-reference.md`
+- **Deployment:** `/docs/DEPLOYMENT_GUIDE.md`
+- **Contributing:** `/CONTRIBUTING.md`

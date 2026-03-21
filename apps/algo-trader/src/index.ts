@@ -7,6 +7,8 @@ import { Command } from 'commander';
 import { runGruStrategy } from './commands/gru-strategy';
 import { runSetupWizard } from './commands/setup-wizard';
 import { runQuickstart } from './commands/quickstart';
+import { runActivateCommand } from './commands/activate-license';
+import { runArbAuto } from './commands/arb-auto';
 
 export const version = '1.0.0';
 
@@ -57,6 +59,32 @@ if (!isTest) {
     .description('Zero-config start - instant trading with defaults')
     .action(async () => {
       await runQuickstart();
+    });
+
+  program
+    .command('activate [key]')
+    .description('Activate beta invite license key')
+    .action(async (key?: string) => {
+      await runActivateCommand(key);
+    });
+
+  program
+    .command('arb:auto')
+    .description('Autonomous arbitrage trading - WS feeds, spread detection, atomic execution')
+    .option('-s, --symbols <symbols>', 'Trading pairs (comma-separated)', 'BTC/USDT,ETH/USDT,SOL/USDT')
+    .option('-e, --exchanges <exchanges>', 'Exchanges (comma-separated)', 'binance,okx,bybit')
+    .option('--min-spread <percent>', 'Minimum spread percentage', '0.05')
+    .option('--dry-run', 'Dry run mode (no real trades)', true)
+    .option('--no-dry-run', 'Live trading mode (real trades)')
+    .option('-v, --verbose', 'Verbose logging', true)
+    .action(async (options: any) => {
+      await runArbAuto({
+        symbols: options.symbols,
+        exchanges: options.exchanges,
+        minSpread: parseFloat(options.minSpread),
+        dryRun: options.dryRun,
+        verbose: options.verbose,
+      });
     });
 
   program.parse(process.argv);

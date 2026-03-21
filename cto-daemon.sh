@@ -66,6 +66,9 @@ declare -A LAST_DISPATCH_CMD  # pane_idx → last command sent
 declare -A LAST_DISPATCH_TIME # pane_idx → epoch when sent
 declare -A PANE_RESPAWN_COUNT   # FIX #12: replace eval with associative array
 declare -A LAST_ANSWER_TIME     # FIX #12: replace eval with associative array
+declare -A ESCALATION_TIME      # FIX #19: circuit breaker — track when pane was escalated
+ESCALATION_COOLDOWN=600         # 10 minutes before re-trying escalated pane
+for _i in 0 1 2 3; do ESCALATION_TIME[$_i]=0; done
 DEDUP_MIN_INTERVAL=300        # seconds before allowing same command again
 
 # FIX #8: normalize commands for dedup (brain rephrasing no longer bypasses)
@@ -409,7 +412,7 @@ get_pane_config() {
 
 # Load worker names and dirs from unified panes config
 declare -A WORKER_NAME WORKER_DIR WORKER_DEPLOY WORKER_RETRIES
-for idx in 0 1 2 3; do
+for ((idx=0; idx<${PANE_COUNT:-4}; idx++)); do
   WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
   WORKER_DIR[$idx]=$(get_pane_config "$idx" "dir")
   WORKER_DEPLOY[$idx]=$(get_pane_config "$idx" "deploy_cmd")
@@ -424,7 +427,7 @@ done
 refresh_worker_mapping() {
   # Use config file as source of truth — NEVER auto-remap from pane path
   # CC CLI always runs from monorepo root, so pane_current_path is unreliable
-  for idx in 0 1 2 3; do
+  for ((idx=0; idx<${PANE_COUNT:-4}; idx++)); do
     # Only load from config if not already set (first run)
     if [[ -z "${WORKER_NAME[$idx]:-}" ]]; then
       WORKER_NAME[$idx]=$(get_pane_config "$idx" "project")
@@ -1013,7 +1016,15 @@ except: pass
     fi
     return
   fi
-  log "P${pane_idx} (${name}): BRAIN COLD/EMPTY — using role fallback"
+  # FIX #20: BRAIN COLD → skip dispatch if dispatched recently (prevent /idea spam)
+  local last_dispatch_var="LAST_DISPATCH_${pane_idx}"
+  local last_d="${!last_dispatch_var:-0}"
+  local brain_elapsed=$(($(date +%s) - last_d))
+  if [[ $brain_elapsed -lt 600 ]]; then
+    log "P${pane_idx} (${name}): BRAIN COLD — skipping (last dispatch ${brain_elapsed}s ago, wait 600s)"
+    return
+  fi
+  log "P${pane_idx} (${name}): BRAIN COLD/EMPTY — using role fallback (${brain_elapsed}s since last)"
 
   # Priority 3: Role-specific fallback (round-robin per pane role)
   local state="fresh"
@@ -1157,8 +1168,11 @@ verify_worker() {
       dispatch_worker "$pane_idx" "$output"
       save_memory "RE-DELEGATE" "P${pane_idx} retry ${WORKER_RETRIES[$pane_idx]}: ${error_msg}"
     else
-      log "VERIFY P${pane_idx}: MAX RETRIES REACHED — escalating"
+      log "VERIFY P${pane_idx}: MAX RETRIES REACHED — escalating (cooldown ${ESCALATION_COOLDOWN}s)"
+      ESCALATION_TIME[$pane_idx]=$(date +%s)
       save_memory "ESCALATE" "P${pane_idx} failed after 3 retries: ${error_msg}"
+      send_to_pane "$pane_idx" "/clear"
+      WORKER_RETRIES[$pane_idx]=0
     fi
     return 0
   fi
@@ -1208,6 +1222,12 @@ save_memory() {
     echo "- ${detail}"
     echo ""
   } >> "$MEMORY_FILE"
+  # FIX #21: Rotate memory file if > 2000 lines (was growing to 16K+)
+  local mem_lines
+  mem_lines=$(wc -l < "$MEMORY_FILE" 2>/dev/null || echo 0)
+  if [[ $mem_lines -gt 2000 ]]; then
+    tail -500 "$MEMORY_FILE" > "${MEMORY_FILE}.tmp" && mv "${MEMORY_FILE}.tmp" "$MEMORY_FILE"
+  fi
 }
 
 # ---- M1 HEALTH CHECK ----
@@ -1283,6 +1303,11 @@ else
   log "BOOTSTRAP: tmux session '${CTO_SESSION}' OK (${pane_count} panes)"
 fi
 
+# FIX #19: Dynamic pane count — never hardcode 4 (departments have 2)
+PANE_COUNT=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
+PANE_COUNT=${PANE_COUNT:-4}
+log "PANE_COUNT: ${PANE_COUNT}"
+
 # Warmup Ollama brain model before first cycle
 # Inline warmup — non-blocking (10s max), uses hardcoded OLLAMA_URL
 {
@@ -1329,15 +1354,23 @@ while true; do
   # PHASE 3+4: For each worker, DELEGATE if idle or VERIFY if active
   # FIX: max 1 dispatch per cycle (brain call takes 30s → prevents serial stuffing)
   dispatched_this_cycle=false
-  for pane_idx in 0 1 2 3; do
+  for ((pane_idx=0; pane_idx<PANE_COUNT; pane_idx++)); do
     # Guard: any failure in per-pane logic must not kill the loop
     {
       output=$(capture_pane "$pane_idx") || output=""
       name="${WORKER_NAME[$pane_idx]:-Worker-${pane_idx}}"
 
+      # FIX #19: Escalation circuit breaker — skip pane during cooldown
+      esc_time="${ESCALATION_TIME[$pane_idx]:-0}"
+      if [[ $esc_time -gt 0 && $((NOW - esc_time)) -lt $ESCALATION_COOLDOWN ]]; then
+        log "P${pane_idx} (${name}): ESCALATED — cooling down ($((NOW - esc_time))/${ESCALATION_COOLDOWN}s)"
+        continue
+      fi
+      [[ $esc_time -gt 0 ]] && ESCALATION_TIME[$pane_idx]=0
+
       if [[ -z "$output" ]]; then
         # Guard: limit respawns to prevent infinite restart loop
-        local respawn_count="${PANE_RESPAWN_COUNT[$pane_idx]:-0}"
+        respawn_count="${PANE_RESPAWN_COUNT[$pane_idx]:-0}"
         if [[ $respawn_count -ge 3 ]]; then
           log "P${pane_idx} (${name}): NO OUTPUT — respawn limit reached (${respawn_count}/3), skipping until next health cycle"
           continue
@@ -1427,7 +1460,7 @@ while true; do
     #   ollama_auto_recover || true
     # fi
     # Reset pane respawn counters every 5 cycles (allow retry)
-    PANE_RESPAWN_COUNT[1]=0; PANE_RESPAWN_COUNT[2]=0; PANE_RESPAWN_COUNT[3]=0
+    for ((idx=0; idx<PANE_COUNT; idx++)); do PANE_RESPAWN_COUNT[$idx]=0; done
   fi
 
   # Orphan node cleanup every 3 cycles (prevents RAM overflow)

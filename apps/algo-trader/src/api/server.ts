@@ -13,6 +13,7 @@ import { pnlRouter } from './routes/pnl';
 import { signalsRouter } from './routes/signals';
 import { adminRouter } from './routes/admin';
 import { healthRouter } from './routes/health';
+import { revenueRouter } from './routes/revenue';
 import { metricsMiddleware, getMetrics } from '../middleware/prometheus-metrics';
 import { errorHandler } from '../middleware/error-handler';
 
@@ -81,6 +82,7 @@ export class ApiServer {
     this.app.use('/api/pnl', pnlRouter);
     this.app.use('/api/signals', signalsRouter);
     this.app.use('/api/admin', adminRouter);
+    this.app.use('/api/revenue', revenueRouter);
 
     // 404 handler
     this.app.use((req, res) => {

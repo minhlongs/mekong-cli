@@ -89,6 +89,12 @@ import { dataRetention } from './data-retention';
 import { errorBudgets } from './error-budgets';
 import { usageForecasting } from './usage-forecasting';
 import { complianceReports } from './compliance-reports';
+import { cronOrchestrator } from './cron-orchestrator';
+import { platformHealth } from './platform-health';
+import { revenueAnalyticsV2 } from './revenue-analytics-v2';
+import { tenantLifecycle } from './tenant-lifecycle';
+import { onboardingV2 } from './onboarding-v2';
+import { adaptiveRateLimit } from './adaptive-rate-limit';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -167,6 +173,14 @@ export function createRoutes() {
   routes.route('/v1/error-budgets', errorBudgets);
   routes.route('/v1/usage-forecast', usageForecasting);
   routes.route('/v1/compliance', complianceReports);
+
+  // Wave 33-34 routes
+  routes.route('/v1/cron', cronOrchestrator);
+  routes.route('/platform-health', platformHealth);
+  routes.route('/v1/onboarding-v2', onboardingV2);
+  routes.route('/admin/revenue-v2', revenueAnalyticsV2);
+  routes.route('/v1/lifecycle', tenantLifecycle);
+  routes.route('/v1/adaptive-rate-limit', adaptiveRateLimit);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -684,6 +698,51 @@ export function createRoutes() {
         '/v1/compliance/score': { get: { summary: 'Compliance score', tags: ['Compliance'], security: [{ bearer: [] }] } },
         '/v1/compliance/summary': { get: { summary: 'Cross-category summary', tags: ['Compliance'], security: [{ bearer: [] }] } },
         '/v1/compliance/frameworks': { get: { summary: 'Supported frameworks', tags: ['Compliance'] } },
+        // Wave 33: Cron Orchestrator
+        '/v1/cron/jobs': { get: { summary: 'List cron jobs', tags: ['Cron'], security: [{ bearer: [] }] }, post: { summary: 'Register cron job', tags: ['Cron'], security: [{ bearer: [] }] } },
+        '/v1/cron/stats': { get: { summary: 'Cron job stats', tags: ['Cron'], security: [{ bearer: [] }] } },
+        '/v1/cron/seed': { post: { summary: 'Seed system jobs', tags: ['Cron'], security: [{ bearer: [] }] } },
+        '/v1/cron/jobs/{id}/status': { put: { summary: 'Update job status', tags: ['Cron'], security: [{ bearer: [] }] } },
+        '/v1/cron/jobs/{id}/logs': { get: { summary: 'Job execution logs', tags: ['Cron'], security: [{ bearer: [] }] } },
+        '/v1/cron/admin/overdue': { get: { summary: 'Overdue jobs', tags: ['Cron'] } },
+        '/v1/cron/admin/run': { post: { summary: 'Run all overdue', tags: ['Cron'] } },
+        // Wave 33: Onboarding V2
+        '/v1/onboarding-v2/status': { get: { summary: 'Onboarding status', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-v2/start': { post: { summary: 'Start onboarding', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-v2/complete/{step}': { post: { summary: 'Complete step', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-v2/skip/{step}': { post: { summary: 'Skip step', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-v2/recommendations': { get: { summary: 'Recommendations', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-v2/seed-defaults': { post: { summary: 'Seed defaults', tags: ['Onboarding V2'], security: [{ bearer: [] }] } },
+        // Wave 33: Platform Health
+        '/platform-health/overview': { get: { summary: 'Platform overview', tags: ['Platform Health'] } },
+        '/platform-health/services': { get: { summary: 'Service statuses', tags: ['Platform Health'] } },
+        '/platform-health/features': { get: { summary: 'Feature coverage', tags: ['Platform Health'] } },
+        '/platform-health/endpoints': { get: { summary: 'API endpoint count', tags: ['Platform Health'] } },
+        '/platform-health/degraded': { get: { summary: 'Degraded services', tags: ['Platform Health'] } },
+        '/platform-health/capacity': { get: { summary: 'System capacity', tags: ['Platform Health'] } },
+        // Wave 34: Revenue Analytics V2
+        '/admin/revenue-v2/mrr': { get: { summary: 'MRR breakdown', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/cohorts': { get: { summary: 'Cohort analysis', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/nrr': { get: { summary: 'Net revenue retention', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/segments': { get: { summary: 'Customer segments', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/expansion': { get: { summary: 'Expansion revenue', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/top-tenants': { get: { summary: 'Top revenue tenants', tags: ['Revenue V2'] } },
+        '/admin/revenue-v2/forecast': { get: { summary: 'Revenue forecast', tags: ['Revenue V2'] } },
+        // Wave 34: Tenant Lifecycle
+        '/v1/lifecycle/stage': { get: { summary: 'Lifecycle stage', tags: ['Lifecycle'], security: [{ bearer: [] }] } },
+        '/v1/lifecycle/history': { get: { summary: 'Transition history', tags: ['Lifecycle'], security: [{ bearer: [] }] } },
+        '/v1/lifecycle/risk': { get: { summary: 'Risk score', tags: ['Lifecycle'], security: [{ bearer: [] }] } },
+        '/v1/lifecycle/admin/at-risk': { get: { summary: 'At-risk tenants', tags: ['Lifecycle'] } },
+        '/v1/lifecycle/admin/distribution': { get: { summary: 'Stage distribution', tags: ['Lifecycle'] } },
+        '/v1/lifecycle/admin/churn': { get: { summary: 'Churn analysis', tags: ['Lifecycle'] } },
+        '/v1/lifecycle/admin/evaluate': { post: { summary: 'Auto transitions', tags: ['Lifecycle'] } },
+        // Wave 34: Adaptive Rate Limiting
+        '/v1/adaptive-rate-limit/config': { get: { summary: 'Rate limit config', tags: ['Rate Limit V2'], security: [{ bearer: [] }] }, post: { summary: 'Set rate limit', tags: ['Rate Limit V2'], security: [{ bearer: [] }] } },
+        '/v1/adaptive-rate-limit/violations': { get: { summary: 'Violation history', tags: ['Rate Limit V2'], security: [{ bearer: [] }] } },
+        '/v1/adaptive-rate-limit/status': { get: { summary: 'Rate limit status', tags: ['Rate Limit V2'], security: [{ bearer: [] }] } },
+        '/v1/adaptive-rate-limit/admin/violators': { get: { summary: 'Top violators', tags: ['Rate Limit V2'] } },
+        '/v1/adaptive-rate-limit/admin/seed': { post: { summary: 'Seed tier defaults', tags: ['Rate Limit V2'] } },
+        '/v1/adaptive-rate-limit/admin/tier-defaults': { get: { summary: 'Tier defaults', tags: ['Rate Limit V2'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
