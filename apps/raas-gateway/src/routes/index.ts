@@ -66,6 +66,12 @@ import { webhookV2 } from './webhook-v2';
 import { rateLimitV2 } from './rate-limit-v2';
 import { tenantIsolationV2 } from './tenant-isolation';
 import { deepHealth } from './deep-health';
+import { slaMonitoring } from './sla-monitoring';
+import { bulkOperations } from './bulk-operations';
+import { multiCurrency } from './multi-currency';
+import { auditExport } from './audit-export';
+import { whiteLabel } from './white-label';
+import { apiVersioning } from './api-versioning';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -121,6 +127,14 @@ export function createRoutes() {
   routes.route('/v1/portal', tenantPortal);
   routes.route('/graphql', graphql);
   routes.route('/admin/advanced-analytics', advancedAnalytics);
+
+  // Wave 25-26 routes
+  routes.route('/v1/currencies', multiCurrency);
+  routes.route('/v1/audit', auditExport);
+  routes.route('/v1/branding', whiteLabel);
+  routes.route('/api/versions', apiVersioning);
+  routes.route('/v1/bulk', bulkOperations);
+  routes.route('/sla', slaMonitoring);
 
   // Wave 23-24 routes
   routes.route('/v1/events', eventStream);
@@ -459,6 +473,45 @@ export function createRoutes() {
         '/health/deep/d1': { get: { summary: 'D1 database health', tags: ['System'] } },
         '/health/deep/kv': { get: { summary: 'KV store health', tags: ['System'] } },
         '/health/deep/history': { get: { summary: 'Health history', tags: ['System'] } },
+        // Wave 25: Multi-Currency
+        '/v1/currencies': { get: { summary: 'Supported currencies', tags: ['Currency'] } },
+        '/v1/currencies/rates': { get: { summary: 'Exchange rates', tags: ['Currency'] } },
+        '/v1/currencies/convert': { post: { summary: 'Convert amount', tags: ['Currency'] } },
+        '/v1/currencies/pricing': { get: { summary: 'Pricing in currency', tags: ['Currency'] } },
+        '/v1/currencies/preference': { get: { summary: 'Tenant currency preference', tags: ['Currency'], security: [{ bearer: [] }] }, put: { summary: 'Set currency preference', tags: ['Currency'], security: [{ bearer: [] }] } },
+        // Wave 25: Audit Export
+        '/v1/audit/export': { post: { summary: 'Export audit logs', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/compliance': { get: { summary: 'Compliance checklist', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/retention': { get: { summary: 'Data retention policy', tags: ['Audit'], security: [{ bearer: [] }] }, put: { summary: 'Set retention policy', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/purge': { post: { summary: 'Purge expired data', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/gdpr-export': { get: { summary: 'GDPR data export', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/deletion-request': { post: { summary: 'Request data deletion', tags: ['Audit'], security: [{ bearer: [] }] } },
+        '/v1/audit/exports': { get: { summary: 'Export history', tags: ['Audit'], security: [{ bearer: [] }] } },
+        // Wave 25: White-Label
+        '/v1/branding': { get: { summary: 'Get branding config', tags: ['Branding'], security: [{ bearer: [] }] }, put: { summary: 'Update branding', tags: ['Branding'], security: [{ bearer: [] }] }, delete: { summary: 'Reset branding', tags: ['Branding'], security: [{ bearer: [] }] } },
+        '/v1/branding/features': { get: { summary: 'Available branding features', tags: ['Branding'], security: [{ bearer: [] }] } },
+        '/v1/branding/preview': { get: { summary: 'Preview branding CSS', tags: ['Branding'], security: [{ bearer: [] }] } },
+        '/v1/branding/domain/{domain}': { get: { summary: 'Lookup branding by domain', tags: ['Branding'] } },
+        // Wave 26: API Versioning
+        '/api/versions': { get: { summary: 'List API versions', tags: ['Versioning'] } },
+        '/api/versions/{version}': { get: { summary: 'Version details', tags: ['Versioning'] } },
+        '/api/versions/{version}/changelog': { get: { summary: 'Version changelog', tags: ['Versioning'] }, post: { summary: 'Add changelog entry', tags: ['Versioning'] } },
+        '/api/versions/usage': { get: { summary: 'Version usage stats', tags: ['Versioning'] } },
+        '/api/versions/migrate/{from}/{to}': { get: { summary: 'Migration guide', tags: ['Versioning'] } },
+        // Wave 26: Bulk Operations
+        '/v1/bulk/export': { post: { summary: 'Bulk export', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        '/v1/bulk/import': { post: { summary: 'Bulk import', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        '/v1/bulk/jobs': { get: { summary: 'List bulk jobs', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        '/v1/bulk/jobs/{id}': { get: { summary: 'Get bulk job', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        '/v1/bulk/jobs/{id}/cancel': { post: { summary: 'Cancel bulk job', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        '/v1/bulk/stats': { get: { summary: 'Bulk operation stats', tags: ['Bulk'], security: [{ bearer: [] }] } },
+        // Wave 26: SLA Monitoring
+        '/sla/targets': { get: { summary: 'SLA targets by tier', tags: ['SLA'] } },
+        '/sla/status': { get: { summary: 'Platform status', tags: ['SLA'] } },
+        '/sla/uptime': { get: { summary: 'Uptime percentage', tags: ['SLA'] } },
+        '/sla/report': { get: { summary: 'SLA compliance report', tags: ['SLA'], security: [{ bearer: [] }] } },
+        '/sla/breaches': { get: { summary: 'SLA breach history', tags: ['SLA'] } },
+        '/sla/history': { get: { summary: 'Uptime check history', tags: ['SLA'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
