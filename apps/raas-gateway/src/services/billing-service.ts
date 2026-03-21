@@ -83,8 +83,8 @@ export class BillingService {
     const secret = this.env.POLAR_WEBHOOK_SECRET;
 
     if (!secret) {
-      console.warn('[BillingService] No POLAR_WEBHOOK_SECRET configured, skipping verification');
-      return true;
+      console.error('[BillingService] POLAR_WEBHOOK_SECRET not configured — rejecting webhook');
+      return false;
     }
 
     try {
@@ -98,23 +98,24 @@ export class BillingService {
       const signedContent = `${webhookId || ''}.${webhookTimestamp || ''}.${payload}`;
       const msgData = new TextEncoder().encode(signedContent);
 
+      // Use verify mode for constant-time comparison (prevents timing attacks)
       const cryptoKey = await crypto.subtle.importKey(
         'raw',
         keyBytes,
         { name: 'HMAC', hash: 'SHA-256' },
         false,
-        ['sign']
+        ['verify']
       );
-
-      const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
-      const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)));
 
       // webhook-signature header format: "v1,<base64>" (may have multiple sigs)
       const signatures = signature.split(' ');
       for (const sig of signatures) {
         const parts = sig.split(',');
-        if (parts.length === 2 && parts[0] === 'v1' && parts[1] === expectedSig) {
-          return true;
+        if (parts.length === 2 && parts[0] === 'v1') {
+          // Decode candidate signature from base64
+          const candidateBytes = Uint8Array.from(atob(parts[1]), c => c.charCodeAt(0));
+          const valid = await crypto.subtle.verify('HMAC', cryptoKey, candidateBytes, msgData);
+          if (valid) return true;
         }
       }
 

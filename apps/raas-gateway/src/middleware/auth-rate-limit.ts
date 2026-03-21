@@ -71,8 +71,11 @@ export function authRateLimit(): MiddlewareHandler<{ Bindings: Env }> {
       await next();
     } catch (error) {
       console.error('[RateLimit] Webhook rate limit error:', error);
-      // Fail open - allow request if KV fails
-      await next();
+      // Fail closed — reject if KV unavailable (prevents abuse during outage)
+      return c.json(
+        { error: 'Rate limiting unavailable', code: 'SERVICE_UNAVAILABLE' },
+        { status: 503 }
+      );
     }
   };
 }

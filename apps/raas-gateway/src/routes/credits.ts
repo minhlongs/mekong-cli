@@ -104,6 +104,15 @@ credits.post('/check', creditMetering({ cost: 0 }), async (c) => {
  */
 credits.post('/topup', creditMetering({ cost: 0 }), async (c) => {
   const tenant = getTenant(c);
+
+  // Admin-only endpoint
+  if (!tenant.permissions.includes('admin')) {
+    return json(
+      { error: 'Admin permission required', code: 'FORBIDDEN' },
+      { status: 403 }
+    );
+  }
+
   const body = await c.req.json().catch(() => ({}));
   const amount = parseInt(body.amount || '0', 10);
   const reason = body.reason || 'Manual topup';

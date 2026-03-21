@@ -79,28 +79,30 @@ export class CreditService {
       throw new Error('Deduction amount must be positive');
     }
 
-    // Get current balance
-    const tenant = await this.env.DB.prepare(
-      'SELECT id, balance, total_spent FROM tenants WHERE id = ?'
+    // Atomic deduction: UPDATE only if balance >= amount (prevents race conditions)
+    const updateResult = await this.env.DB.prepare(
+      'UPDATE tenants SET balance = balance - ?, total_spent = total_spent + ? WHERE id = ? AND balance >= ?'
     )
-      .bind(tenantId)
-      .first<{ id: string; balance: number; total_spent: number }>();
+      .bind(amount, amount, tenantId, amount)
+      .run();
 
-    if (!tenant) {
-      return { success: false, error: 'TENANT_NOT_FOUND' as const };
-    }
+    if (!updateResult.success || updateResult.meta.changes === 0) {
+      // Check if tenant exists vs insufficient credits
+      const exists = await this.env.DB.prepare('SELECT id, balance FROM tenants WHERE id = ?')
+        .bind(tenantId)
+        .first<{ id: string; balance: number }>();
 
-    if (tenant.balance < amount) {
+      if (!exists) {
+        return { success: false, error: 'TENANT_NOT_FOUND' as const };
+      }
       return { success: false, error: 'INSUFFICIENT_CREDITS' as const };
     }
 
-    // Update tenant balance
-    const newBalance = tenant.balance - amount;
-    await this.env.DB.prepare(
-      'UPDATE tenants SET balance = ?, total_spent = total_spent + ? WHERE id = ?'
-    )
-      .bind(newBalance, amount, tenantId)
-      .run();
+    // Get new balance after atomic update
+    const updated = await this.env.DB.prepare('SELECT balance FROM tenants WHERE id = ?')
+      .bind(tenantId)
+      .first<{ balance: number }>();
+    const newBalance = updated?.balance ?? 0;
 
     // Record transaction
     const transactionId = crypto.randomUUID();
