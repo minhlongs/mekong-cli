@@ -2,7 +2,7 @@
 
 **Single Source of Truth** - Consolidates all PRDs and Revenue Plans
 
-Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete)
+Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete + Dashboard Ready)
 
 ---
 
@@ -107,11 +107,10 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete)
 
 ## 🔄 IN PROGRESS
 
-- [ ] npm publish workflow for @mekong/raas-sdk, raas-marketplace, mekong-cli-core
-- [ ] RaaS Admin Dashboard (tenant/credit/mission management)
-- [ ] PEV Bridge (CLI cloud run → gateway mission execution)
 - [ ] ProductHunt Launch preparation
 - [ ] Enterprise Pilot outreach (5 agencies @ $2k/month)
+- [ ] OpenClaw Engine SDK — publishable package (in progress this session)
+- [ ] Sale RaaS documentation (in progress this session)
 
 ---
 
@@ -129,7 +128,14 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete)
 - [x] Landing Page — 5 pages: hero, ROI calculator, case studies, CLI demo, pricing+checkout
 - [x] Polar.sh Checkout — Full flow: signup → JWT → checkout session → redirect
 - [x] Sales Collateral — Competitive battlecard, one-pager, objection handlers
-- [x] 979 tests ALL GREEN across 41 test files
+- [x] npm publish workflow — GitHub Actions for 3 public packages (@mekong/raas-sdk, raas-marketplace, mekong-cli-core)
+- [x] RaaS Admin Dashboard — tenant/credit/mission management UI (packages/raas-dashboard/public/)
+- [x] PEV Bridge — CLI cloud run with Plan→Execute→Verify loop (packages/mekong-cli-core/src/core/pev-bridge.ts)
+- [x] E2E Integration Tests — 13 tests covering CLI→Gateway→Polar flow
+- [x] XSS Security Fix — dashboard numeric sanitization
+- [x] OpenClaw Engine SDK v1.0 — publishable TypeScript facade
+- [x] Sale RaaS Documentation — onboarding, enterprise pitch, support SOP
+- [x] 1,028+ tests ALL GREEN across packages
 
 ---
 
@@ -141,9 +147,10 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete)
 | MRR           | $10k     | $0        |
 | CLI Downloads | 1,000    | 0         |
 | GitHub Stars  | 500      | 0         |
-| npm Packages  | 3        | 0 (ready) |
-| Gateway Waves | 18       | 18        |
-| Test Coverage | 979      | 979       |
+| npm Packages  | 4        | 4 (ready) |
+| Gateway Waves | 20       | 20        |
+| Test Coverage | 1,000+   | 1,028+    |
+| RaaS Commands | 15       | 15        |
 
 ---
 

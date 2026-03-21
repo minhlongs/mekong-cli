@@ -1,18 +1,56 @@
 {
   "name": "@mekong/openclaw-engine",
-  "version": "0.2.0",
-  "private": true,
-  "description": "OpenClaw orchestration engine — promoted from apps/openclaw-worker",
-  "main": "index.js",
+  "version": "1.0.0",
+  "private": false,
+  "description": "OpenClaw mission orchestration engine — TypeScript SDK for mission dispatch, complexity classification, and reliability patterns",
+  "type": "module",
+  "main": "./dist/sdk.cjs",
+  "module": "./dist/sdk.js",
+  "types": "./dist/sdk.d.ts",
   "exports": {
-    ".": "./index.js",
+    ".": {
+      "import": "./dist/sdk.js",
+      "require": "./dist/sdk.cjs",
+      "types": "./dist/sdk.d.ts"
+    },
+    "./sdk": {
+      "import": "./dist/sdk.js",
+      "require": "./dist/sdk.cjs",
+      "types": "./dist/sdk.d.ts"
+    },
     "./raas": "./src/raas/index.ts",
-    "./raas/*": "./src/raas/*.ts",
-    "./orchestration/auto-cto-pilot": "./src/orchestration/auto-cto-pilot.js"
+    "./raas/*": "./src/raas/*",
+    "./orchestration/*": "./src/orchestration/*",
+    "./intelligence/*": "./src/intelligence/*",
+    "./reliability/*": "./src/reliability/*",
+    "./safety/*": "./src/safety/*",
+    "./observability/*": "./src/observability/*",
+    "./core/*": "./src/core/*",
+    "./_bridge/*": "./src/_bridge/*"
   },
   "scripts": {
-    "build": "node --check index.js && echo '✅ openclaw-engine syntax OK'",
-    "test": "echo 'no tests yet'"
+    "build": "tsup src/sdk.ts --format esm,cjs --dts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
-  "license": "MIT"
+  "author": "Mekong CLI <hello@mekong.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mekong-cli/mekong-cli.git",
+    "directory": "packages/openclaw-engine"
+  },
+  "keywords": [
+    "mekong",
+    "openclaw",
+    "mission-orchestration",
+    "ai-engine",
+    "circuit-breaker",
+    "sdk"
+  ],
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
 }
