@@ -4,6 +4,7 @@
 
 import type { Env } from '../index';
 import { CreditService, MISSION_COSTS } from './credit-service';
+import { WebhookDeliveryService } from './webhook-delivery-service';
 
 // Daily mission limits per tier
 const DAILY_LIMITS: Record<string, number> = {
@@ -190,6 +191,57 @@ export class MissionService {
 
     const used = count?.c ?? 0;
     return { allowed: used < limit, used, limit };
+  }
+
+  /**
+   * Mark a mission completed or failed, then dispatch webhook if tenant has one configured
+   */
+  async completeMission(
+    missionId: string,
+    tenantId: string,
+    result: string,
+    status: 'completed' | 'failed',
+    errorMessage?: string,
+  ): Promise<void> {
+    // Update mission record
+    await this.env.DB.prepare(
+      `UPDATE missions
+       SET status = ?, result = ?, completed_at = datetime('now'), error_message = ?
+       WHERE id = ? AND tenant_id = ?`
+    )
+      .bind(status, result, errorMessage ?? null, missionId, tenantId)
+      .run();
+
+    // Fetch tenant webhook_url
+    const tenant = await this.env.DB.prepare(
+      'SELECT webhook_url FROM tenants WHERE id = ?'
+    ).bind(tenantId).first<{ webhook_url: string | null }>();
+
+    if (!tenant?.webhook_url) return;
+
+    // Fetch mission details for payload
+    const mission = await this.env.DB.prepare(
+      `SELECT goal, complexity, credits_cost as creditsCost, completed_at as completedAt
+       FROM missions WHERE id = ? AND tenant_id = ?`
+    ).bind(missionId, tenantId).first<Pick<Mission, 'goal' | 'complexity' | 'creditsCost'> & { completedAt: string }>();
+
+    if (!mission) return;
+
+    const webhookService = new WebhookDeliveryService(this.env);
+    await webhookService.queueDelivery(
+      tenantId,
+      status === 'completed' ? 'mission.completed' : 'mission.failed',
+      {
+        missionId,
+        goal: mission.goal,
+        complexity: mission.complexity,
+        status,
+        result,
+        creditsCost: mission.creditsCost,
+        completedAt: mission.completedAt,
+      },
+      tenant.webhook_url,
+    );
   }
 
   /**

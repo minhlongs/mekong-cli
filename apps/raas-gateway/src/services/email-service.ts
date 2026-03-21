@@ -4,12 +4,18 @@
  * Fire-and-forget — never blocks API responses
  */
 
+interface D1Database {
+  prepare(query: string): { bind(...values: unknown[]): { run(): Promise<unknown> } };
+}
+
 export class EmailService {
   private apiKey: string;
+  private db: D1Database | null;
   private fromEmail = 'Mekong RaaS <noreply@agencyos.network>';
 
-  constructor(env: { RESEND_API_KEY?: string }) {
+  constructor(env: { RESEND_API_KEY?: string; DB?: D1Database }) {
     this.apiKey = env.RESEND_API_KEY || '';
+    this.db = env.DB ?? null;
   }
 
   /**
@@ -74,6 +80,61 @@ export class EmailService {
         <p>Hi ${name}, you have <strong>${balance} MCU</strong> remaining.</p>
         <p>Top up to keep your missions running:</p>
         <a href="https://landing.agencyos.network#pricing" style="display:inline-block;background:#06b6d4;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Buy Credits &rarr;</a>
+        <p style="color:#666;margin-top:20px;font-size:12px">Mekong RaaS by AgencyOS</p>
+      </div>
+      `
+    );
+  }
+
+  /**
+   * Win-back email — records attempt in DB then sends offer to churned tenant
+   */
+  async sendWinBackEmail(tenantId: string, email: string, offerCode: string): Promise<boolean> {
+    if (this.db) {
+      const id = crypto.randomUUID();
+      await this.db
+        .prepare(
+          `INSERT INTO win_back_emails (id, tenant_id, email, offer_code, status, sent_at)
+           VALUES (?, ?, ?, ?, 'sent', datetime('now'))`
+        )
+        .bind(id, tenantId, email, offerCode)
+        .run();
+    }
+    return this.send(
+      email,
+      "We miss you! Here's a special offer to come back",
+      `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:20px">
+        <h2 style="color:#06b6d4">We miss you!</h2>
+        <p>We noticed you cancelled your Mekong subscription. We'd love to have you back!</p>
+        <p>Use code <strong>${offerCode}</strong> to get 20% off your next month.</p>
+        <a href="https://landing.agencyos.network#pricing" style="display:inline-block;background:#06b6d4;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Come Back &rarr;</a>
+        <p style="color:#666;margin-top:20px;font-size:12px">Mekong RaaS by AgencyOS</p>
+      </div>
+      `
+    );
+  }
+
+  /**
+   * Weekly mission digest — summarises completed missions and credit usage
+   */
+  async sendMissionDigest(
+    _tenantId: string,
+    email: string,
+    stats: { completed: number; totalCredits: number; topGoals: string[]; period: string }
+  ): Promise<boolean> {
+    const goalsList = stats.topGoals.map((g) => `<li>${g}</li>`).join('');
+    return this.send(
+      email,
+      `Your Mekong Weekly Digest — ${stats.completed} missions completed`,
+      `
+      <div style="font-family:system-ui;max-width:600px;margin:0 auto;padding:20px">
+        <h2 style="color:#06b6d4">Weekly Summary (${stats.period})</h2>
+        <p>Missions completed: <strong>${stats.completed}</strong></p>
+        <p>Credits used: <strong>${stats.totalCredits} MCU</strong></p>
+        <h3>Top missions:</h3>
+        <ul>${goalsList}</ul>
+        <p>Keep building!</p>
         <p style="color:#666;margin-top:20px;font-size:12px">Mekong RaaS by AgencyOS</p>
       </div>
       `

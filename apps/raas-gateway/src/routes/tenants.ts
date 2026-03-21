@@ -410,6 +410,7 @@ tenants.get('/invoices', async (c) => {
 
 /**
  * PUT /tenants/settings — Update tenant notification and webhook settings
+ * Accepts: webhook_url (must be https://), notify_email, notify_telegram
  */
 tenants.put('/settings', async (c) => {
   const tenant = getTenant(c);
@@ -417,6 +418,18 @@ tenants.put('/settings', async (c) => {
   const webhookUrl = body.webhook_url?.trim() || null;
   const notifyEmail = body.notify_email !== false;
   const notifyTelegram = body.notify_telegram !== false;
+
+  // Validate webhook_url must be https:// if provided
+  if (webhookUrl !== null) {
+    try {
+      const parsed = new URL(webhookUrl);
+      if (parsed.protocol !== 'https:') {
+        return json({ error: 'webhook_url must use https://', code: 'INVALID_WEBHOOK_URL' }, { status: 400 });
+      }
+    } catch {
+      return json({ error: 'webhook_url is not a valid URL', code: 'INVALID_WEBHOOK_URL' }, { status: 400 });
+    }
+  }
 
   await c.env.DB.prepare(
     `UPDATE tenants SET webhook_url = ?, notify_email = ?, notify_telegram = ?, updated_at = datetime('now') WHERE id = ?`

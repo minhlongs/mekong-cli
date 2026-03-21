@@ -347,6 +347,20 @@ async function handleSubscriptionCancelled(
     .bind(sub.id)
     .run();
 
+  // Auto-create dunning event
+  await env.DB.prepare(
+    `INSERT INTO dunning_events (id, tenant_id, event_type, amount_cents, retry_count, status, grace_period_end, created_at)
+     VALUES (?, ?, 'subscription_cancelled', 0, 0, 'pending', datetime('now', '+7 days'), datetime('now'))`
+  ).bind(crypto.randomUUID(), tenantId).run();
+
+  // Notify tenant via webhook if configured
+  const tenantRow = await env.DB.prepare('SELECT webhook_url FROM tenants WHERE id = ?').bind(tenantId).first<{webhook_url: string | null}>();
+  if (tenantRow?.webhook_url) {
+    const { WebhookDeliveryService } = await import('../services/webhook-delivery-service');
+    const wds = new WebhookDeliveryService(env);
+    await wds.queueDelivery(tenantId, event.type, { subscriptionId: sub.id, tier: 'free' }, tenantRow.webhook_url);
+  }
+
   console.log(`[Billing] subscription.cancelled: ${tenantId} marked cancelled, tier active until period end`);
   return { success: true };
 }
@@ -380,6 +394,20 @@ async function handleSubscriptionRevoked(
   )
     .bind(tenantId)
     .run();
+
+  // Auto-create dunning event for revoked subscription
+  await env.DB.prepare(
+    `INSERT INTO dunning_events (id, tenant_id, event_type, amount_cents, retry_count, status, grace_period_end, created_at)
+     VALUES (?, ?, 'subscription_revoked', 0, 0, 'active', datetime('now', '+3 days'), datetime('now'))`
+  ).bind(crypto.randomUUID(), tenantId).run();
+
+  // Notify tenant via webhook if configured
+  const tenantRow = await env.DB.prepare('SELECT webhook_url FROM tenants WHERE id = ?').bind(tenantId).first<{webhook_url: string | null}>();
+  if (tenantRow?.webhook_url) {
+    const { WebhookDeliveryService } = await import('../services/webhook-delivery-service');
+    const wds = new WebhookDeliveryService(env);
+    await wds.queueDelivery(tenantId, event.type, { subscriptionId: sub.id, tier: 'free' }, tenantRow.webhook_url);
+  }
 
   console.log(`[Billing] subscription.revoked: ${tenantId} downgraded to free immediately`);
   return { success: true, tier: 'free' };
