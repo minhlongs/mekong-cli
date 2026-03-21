@@ -53,9 +53,11 @@ export class MissionService {
     goal: string,
     complexity: 'simple' | 'standard' | 'complex' = 'standard',
     project?: string,
-    callbackUrl?: string
+    callbackUrl?: string,
+    model: string = 'auto'
   ): Promise<SubmitResult> {
-    const cost = MISSION_COSTS[complexity] || MISSION_COSTS.standard;
+    const baseCost = MISSION_COSTS[complexity] || MISSION_COSTS.standard;
+    const cost = model === 'premium' ? baseCost * 2 : baseCost;
 
     // Check daily mission limit for tenant's tier
     const limitCheck = await this.checkDailyLimit(tenantId);
@@ -86,12 +88,13 @@ export class MissionService {
     const missionId = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    const metadata = callbackUrl ? JSON.stringify({ callback_url: callbackUrl }) : '{}';
+    const meta: Record<string, string> = {};
+    if (callbackUrl) meta.callback_url = callbackUrl;
     await this.env.DB.prepare(
-      `INSERT INTO missions (id, tenant_id, goal, complexity, status, credits_cost, project, metadata, created_at)
-       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?)`
+      `INSERT INTO missions (id, tenant_id, goal, complexity, status, credits_cost, project, model, metadata, created_at)
+       VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?)`
     )
-      .bind(missionId, tenantId, goal, complexity, cost, project || null, metadata, now)
+      .bind(missionId, tenantId, goal, complexity, cost, project || null, model, JSON.stringify(meta), now)
       .run();
 
     return {

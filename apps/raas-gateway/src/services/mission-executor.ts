@@ -68,10 +68,15 @@ export class MissionExecutor {
     // Build prompt based on complexity
     const systemPrompt = this.buildSystemPrompt(mission.complexity);
 
+    // Get model preference
+    const modelRow = await this.env.DB.prepare('SELECT model FROM missions WHERE id = ?')
+      .bind(mission.id).first<{ model: string }>();
+    const modelId = this.resolveModel(modelRow?.model || 'auto');
+
     // Call Workers AI
     let result: string;
     try {
-      const aiResponse = await this.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      const aiResponse = await this.env.AI.run(modelId as any, {
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: mission.goal },
@@ -94,7 +99,7 @@ export class MissionExecutor {
       .bind(
         completedAt,
         result,
-        JSON.stringify({ executor: 'workers-ai', model: 'llama-3.1-8b-instruct' }),
+        JSON.stringify({ executor: 'workers-ai', model: modelId }),
         mission.id
       )
       .run();
@@ -180,6 +185,19 @@ export class MissionExecutor {
     } catch (error) {
       console.error(`[Executor] Callback to ${url} failed:`, error);
     }
+  }
+
+  /**
+   * Resolve model name to Workers AI model ID
+   */
+  private resolveModel(model: string): string {
+    const models: Record<string, string> = {
+      'auto': '@cf/meta/llama-3.1-8b-instruct',
+      'fast': '@cf/meta/llama-3.1-8b-instruct',
+      'balanced': '@cf/meta/llama-3.1-8b-instruct',
+      'premium': '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+    };
+    return models[model] || models.auto;
   }
 
   /**

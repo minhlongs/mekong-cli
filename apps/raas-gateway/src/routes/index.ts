@@ -40,6 +40,51 @@ export function createRoutes() {
   routes.route('/billing', billing);
   routes.route('/webhook/telegram', telegram);
 
+  // Waitlist email capture (public)
+  routes.post('/waitlist', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const email = body.email?.trim()?.toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return c.json({ error: 'Valid email required' }, 400);
+    }
+    try {
+      await c.env.DB.prepare(
+        "INSERT OR IGNORE INTO waitlist (id, email, source, created_at) VALUES (?, ?, ?, datetime('now'))"
+      ).bind(crypto.randomUUID(), email, body.source || 'landing').run();
+      return c.json({ success: true, message: 'You\'re on the list!' });
+    } catch {
+      return c.json({ success: true, message: 'Already on the list!' });
+    }
+  });
+
+  // Public mission sharing (no auth)
+  routes.get('/share/:id', async (c) => {
+    const missionId = c.req.param('id');
+    const mission = await c.env.DB.prepare(
+      `SELECT goal, complexity, status, result, credits_cost, created_at, completed_at
+       FROM missions WHERE id = ? AND is_public = 1`
+    ).bind(missionId).first<any>();
+
+    if (!mission) {
+      return c.json({ error: 'Mission not found or not public' }, 404);
+    }
+
+    // Return as HTML for social sharing
+    const html = `<!DOCTYPE html><html><head>
+      <title>Mekong Mission Result</title>
+      <meta property="og:title" content="AI Mission: ${mission.goal.slice(0, 60)}">
+      <meta property="og:description" content="${(mission.result || '').slice(0, 150)}">
+      <style>body{font-family:system-ui;background:#0a0a0a;color:#e5e5e5;max-width:700px;margin:2rem auto;padding:1rem}
+      h1{color:#22d3ee;font-size:1.2rem}pre{background:#111;padding:1rem;border-radius:8px;white-space:pre-wrap;font-size:0.9rem}
+      .meta{color:#888;font-size:0.85rem}a{color:#22d3ee}</style></head><body>
+      <h1>${mission.goal}</h1>
+      <p class="meta">${mission.complexity} | ${mission.credits_cost} MCU | ${mission.status}</p>
+      <pre>${mission.result || 'Processing...'}</pre>
+      <p class="meta">Powered by <a href="https://mekong-raas.pages.dev">Mekong CLI</a></p>
+      </body></html>`;
+    return c.html(html);
+  });
+
   // Public stats — cached in KV for 5 min
   routes.get('/stats', async (c) => {
     const cached = await c.env.RATE_LIMIT_KV.get('public:stats', 'json') as any;

@@ -37,9 +37,20 @@ missions.post('/', async (c) => {
     ? body.complexity
     : 'standard';
 
+  const model = ['auto', 'fast', 'balanced', 'premium'].includes(body.model || '')
+    ? body.model : 'auto';
+
+  // Premium model requires pro+ tier
+  if (model === 'premium' && ['free', 'starter'].includes(tenant.tier)) {
+    return json(
+      { error: 'Premium model requires Pro tier or higher', code: 'TIER_REQUIRED' },
+      { status: 403 }
+    );
+  }
+
   const missionService = new MissionService(c.env);
   const result = await missionService.submit(
-    tenant.tenantId, goal, complexity, body.project, body.callback_url
+    tenant.tenantId, goal, complexity, body.project, body.callback_url, model
   );
 
   if (!result.success) {
@@ -137,6 +148,28 @@ missions.get('/:id', async (c) => {
   }
 
   return json(mission);
+});
+
+/**
+ * POST /missions/:id/share — Make mission result public + get share URL
+ */
+missions.post('/:id/share', async (c) => {
+  const tenant = getTenant(c);
+  const missionId = c.req.param('id');
+
+  const mission = await c.env.DB.prepare(
+    "SELECT id, status FROM missions WHERE id = ? AND tenant_id = ?"
+  ).bind(missionId, tenant.tenantId).first<{ id: string; status: string }>();
+
+  if (!mission) return json({ error: 'Mission not found' }, { status: 404 });
+  if (mission.status !== 'completed') return json({ error: 'Only completed missions can be shared' }, { status: 400 });
+
+  await c.env.DB.prepare('UPDATE missions SET is_public = 1 WHERE id = ?').bind(missionId).run();
+
+  return json({
+    shared: true,
+    shareUrl: `https://raas-gateway.agencyos-openclaw.workers.dev/share/${missionId}`,
+  });
 });
 
 /**

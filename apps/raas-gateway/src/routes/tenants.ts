@@ -205,6 +205,36 @@ tenants.get('/api-keys', async (c) => {
 });
 
 /**
+ * GET /tenants/digest — Weekly usage summary for email integration
+ */
+tenants.get('/digest', async (c) => {
+  const tenant = getTenant(c);
+  const tid = tenant.tenantId;
+
+  const [missions, credits, topGoals] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT COUNT(*) as total,
+              SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed,
+              SUM(credits_cost) as cost
+       FROM missions WHERE tenant_id = ? AND created_at >= datetime('now', '-7 days')`
+    ).bind(tid).first<{ total: number; completed: number; cost: number }>(),
+    c.env.DB.prepare('SELECT balance FROM tenants WHERE id = ?').bind(tid).first<{ balance: number }>(),
+    c.env.DB.prepare(
+      `SELECT goal, status, credits_cost FROM missions
+       WHERE tenant_id = ? AND created_at >= datetime('now', '-7 days')
+       ORDER BY created_at DESC LIMIT 5`
+    ).bind(tid).all<{ goal: string; status: string; credits_cost: number }>(),
+  ]);
+
+  return json({
+    period: 'last_7_days',
+    missions: { total: missions?.total ?? 0, completed: missions?.completed ?? 0, creditsUsed: missions?.cost ?? 0 },
+    balance: credits?.balance ?? 0,
+    recentGoals: topGoals.results.map(g => ({ goal: g.goal.slice(0, 80), status: g.status, cost: g.credits_cost })),
+  });
+});
+
+/**
  * DELETE /tenants/api-keys/:id — Revoke an API key
  */
 tenants.delete('/api-keys/:id', async (c) => {
