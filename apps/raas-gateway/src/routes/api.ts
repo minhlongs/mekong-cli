@@ -7,6 +7,7 @@ import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
 import { rateLimit } from '../middleware/rate-limiter';
 import { json, notFound } from '../utils/response';
+import { missions } from './missions';
 
 export const api = new Hono<{ Bindings: Env }>();
 
@@ -39,6 +40,8 @@ api.get('/me', (c) => {
   });
 });
 
-// Placeholder routes — implemented in Phase 6
-api.all('/missions/*', async (c) => notFound('Missions endpoint not yet implemented'));
+// Mission routes
+api.route('/missions', missions);
+
+// Placeholder — implemented later
 api.all('/tenants/*', async (c) => notFound('Tenants endpoint not yet implemented'));
