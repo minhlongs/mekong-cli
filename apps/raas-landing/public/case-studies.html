@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Studies — Mekong CLI</title>
+  <meta name="description" content="Real results from real businesses using Mekong CLI. See how FinTech and E-Commerce companies transformed their operations.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root { --cyan: #22d3ee; --bg: #0a0a0a; --card: #111; --border: #222; --text: #e5e5e5; --muted: #888; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { opacity: 0.8; }
+
+    .nav { padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+    .nav-back { font-size: 0.9rem; color: var(--muted); }
+    .nav-back:hover { color: var(--cyan); }
+    .nav-logo { font-weight: 700; color: var(--text); }
+    .nav-logo span { color: var(--cyan); }
+
+    .hero { text-align: center; padding: 4rem 1.5rem 3rem; max-width: 700px; margin: 0 auto; }
+    .hero-eyebrow { font-size: 0.85rem; color: var(--cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
+    .hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 1rem; }
+    .hero h1 span { color: var(--cyan); }
+    .hero p { color: var(--muted); font-size: 1.1rem; }
+
+    .cases { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 5rem; display: flex; flex-direction: column; gap: 3rem; }
+
+    .case-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .case-header { padding: 2rem 2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1.25rem; }
+    .case-icon { font-size: 2.5rem; line-height: 1; flex-shrink: 0; }
+    .case-meta { flex: 1; }
+    .case-tag { display: inline-block; background: rgba(34,211,238,0.1); color: var(--cyan); font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 4px; margin-bottom: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase; }
+    .case-company { font-size: 1.2rem; font-weight: 700; }
+    .case-tier { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .case-tier span { color: var(--cyan); }
+
+    .case-body { padding: 1.75rem 2rem; }
+
+    .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0.5rem; align-items: start; margin-bottom: 1.75rem; }
+    .flow-step { background: #161616; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+    .flow-label { font-size: 0.72rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 0.4rem; }
+    .flow-text { font-size: 0.875rem; color: var(--muted); }
+    .flow-arrow { color: var(--border); font-size: 1.2rem; align-self: center; padding-top: 0.5rem; }
+
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.75rem; }
+    .metric { background: rgba(34,211,238,0.05); border: 1px solid rgba(34,211,238,0.15); border-radius: 8px; padding: 1rem; text-align: center; }
+    .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--cyan); display: block; }
+    .metric-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .quote-block { background: #0f0f0f; border-left: 3px solid var(--cyan); border-radius: 0 8px 8px 0; padding: 1.25rem 1.5rem; display: flex; gap: 1rem; align-items: flex-start; }
+    .quote-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #22d3ee22, #22d3ee44); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .quote-text { font-size: 0.92rem; color: var(--text); font-style: italic; line-height: 1.7; }
+
+    .cta { text-align: center; padding: 4rem 1.5rem; border-top: 1px solid var(--border); }
+    .cta h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.75rem; }
+    .cta p { color: var(--muted); margin-bottom: 2rem; }
+    .cta-btn { display: inline-block; background: var(--cyan); color: #000; padding: 0.85rem 2.2rem; border-radius: 8px; font-weight: 700; font-size: 1rem; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.85; color: #000; }
+
+    @media (max-width: 640px) {
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { display: none; }
+      .case-header { flex-direction: column; gap: 0.75rem; }
+      .case-body { padding: 1.25rem 1.25rem; }
+      .case-header { padding: 1.5rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="/" class="nav-back">&#8592; Back</a>
+    <span class="nav-logo">Mekong <span>CLI</span></span>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-eyebrow">Customer Success</div>
+    <h1>Real Results from <span>Real Businesses</span></h1>
+    <p>How companies use Mekong CLI to automate operations, cut costs, and scale faster.</p>
+  </header>
+
+  <main class="cases">
+
+    <!-- Case Study 1: Algo-Trader -->
+    <article class="case-card">
+      <div class="case-header">
+        <div class="case-icon">📈</div>
+        <div class="case-meta">
+          <div class="case-tag">FinTech</div>
+          <div class="case-company">Stealth FinTech Startup — Vietnam</div>
+          <div class="case-tier">Plan: <span>Enterprise ($499/mo)</span></div>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-label">Problem</div>
+            <div class="flow-text">Manual trading analysis consuming 40+ hours/week. Missed opportunities due to slow signal detection.</div>
+          </div>
+          <div class="flow-arrow">&#8594;</div>
+          <div class="flow-step">
+            <div class="flow-label">Solution</div>
+            <div class="flow-text">Mekong CLI algo-trader app — automated market scanning, signal generation, and trade execution.</div>
+          </div>
+          <div class="flow-arrow">&#8594;</div>
+          <div class="flow-step">
+            <div class="flow-label">Outcome</div>
+            <div class="flow-text">Trading desk transformed from reactive to proactive. Opportunities caught 10x faster.</div>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span class="metric-value">10x</span><div class="metric-label">Faster market analysis</div></div>
+          <div class="metric"><span class="metric-value">85%</span><div class="metric-label">Trade signal accuracy</div></div>
+          <div class="metric"><span class="metric-value">$50K</span><div class="metric-label">Annual savings</div></div>
+          <div class="metric"><span class="metric-value">420%</span><div class="metric-label">ROI in 6 months</div></div>
+        </div>
+        <div class="quote-block">
+          <div class="quote-avatar">👤</div>
+          <div class="quote-text">"Mekong CLI turned our trading desk from reactive to proactive. We catch opportunities 10x faster now."<br><strong style="font-style:normal; color: var(--muted); font-size:0.82rem;">— CTO, Stealth FinTech Startup</strong></div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Case Study 2: WellNexus -->
+    <article class="case-card">
+      <div class="case-header">
+        <div class="case-icon">🌿</div>
+        <div class="case-meta">
+          <div class="case-tag">E-Commerce / MLM</div>
+          <div class="case-company">WellNexus Health Products — Ho Chi Minh City</div>
+          <div class="case-tier">Plan: <span>Pro ($149/mo)</span></div>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-label">Problem</div>
+            <div class="flow-text">Complex MLM commission calculation taking 3 days. Manual reporting and slow payouts hurt distributor retention.</div>
+          </div>
+          <div class="flow-arrow">&#8594;</div>
+          <div class="flow-step">
+            <div class="flow-label">Solution</div>
+            <div class="flow-text">Mekong CLI well app — real-time dashboard, 8-level cascade commission engine, automated payout processing.</div>
+          </div>
+          <div class="flow-arrow">&#8594;</div>
+          <div class="flow-step">
+            <div class="flow-label">Outcome</div>
+            <div class="flow-text">200+ distributors managed automatically. Instant earnings visibility boosted distributor retention by 35%.</div>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric"><span class="metric-value">5 min</span><div class="metric-label">Commission calc (was 3 days)</div></div>
+          <div class="metric"><span class="metric-value">99.9%</span><div class="metric-label">Calculation accuracy</div></div>
+          <div class="metric"><span class="metric-value">200+</span><div class="metric-label">Distributors automated</div></div>
+          <div class="metric"><span class="metric-value">$30K</span><div class="metric-label">Annual savings</div></div>
+        </div>
+        <div class="quote-block">
+          <div class="quote-avatar">👤</div>
+          <div class="quote-text">"The real-time dashboard changed everything. Our distributors see their earnings instantly, which boosted retention by 35%."<br><strong style="font-style:normal; color: var(--muted); font-size:0.82rem;">— Operations Lead, WellNexus Health Products</strong></div>
+        </div>
+      </div>
+    </article>
+
+  </main>
+
+  <section class="cta">
+    <h2>Start Your Success Story</h2>
+    <p>Join businesses already running on Mekong CLI. From $49/mo.</p>
+    <a href="/#pricing" class="cta-btn">Get Started &#8594;</a>
+  </section>
+
+</body>
+</html>
