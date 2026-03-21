@@ -15,12 +15,14 @@ import { alerts } from './alerts';
 import { marketplace } from './marketplace';
 import { stripe } from './stripe';
 import { admin } from './admin';
+import { adminAnalytics } from './admin-analytics';
 import { dunning } from './dunning';
 import { licenses } from './licenses';
 import { webhooks } from './webhooks';
 import { status } from './status';
 import { dashboard } from './dashboard';
 import { playground } from './playground';
+import { usageExport } from './usage-export';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -28,6 +30,7 @@ export function createRoutes() {
 
   // Mount routes — public routes BEFORE /v1 api (which has auth middleware)
   routes.route('/admin', admin);
+  routes.route('/admin/analytics', adminAnalytics);
   routes.route('/admin/dunning', dunning);
   routes.route('/admin/webhooks', webhooks);
   routes.route('/health', health);
@@ -40,6 +43,8 @@ export function createRoutes() {
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
+  routes.route('/v1/usage', usageExport);
+  routes.route('/v1/invoices', usageExport);
   routes.route('/', playground);
   routes.route('/v1/alerts', alerts);
   routes.route('/credits', credits);
@@ -191,6 +196,9 @@ export function createRoutes() {
         '/v1/missions/batch': { post: { summary: 'Batch submit (pro+)', tags: ['Missions'], security: [{ bearer: [] }] } },
         '/v1/dashboard': { get: { summary: 'Tenant aggregated stats', tags: ['Dashboard'], security: [{ bearer: [] }], responses: { '200': { description: 'Mission counts, credit summary, webhook success rate, recent missions' } } } },
         '/playground': { get: { summary: 'Interactive API explorer', tags: ['System'], responses: { '200': { description: 'HTML page with API playground UI' } } } },
+        '/v1/usage/export': { get: { summary: 'Export credit transactions as CSV', tags: ['Usage'], security: [{ bearer: [] }], parameters: [{ name: 'format', in: 'query', schema: { type: 'string', enum: ['csv'] } }, { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }], responses: { '200': { description: 'CSV file download', content: { 'text/csv': { schema: { type: 'string' } } } } } } },
+        '/v1/invoices': { get: { summary: 'List invoices (subscriptions + credit purchases)', tags: ['Billing'], security: [{ bearer: [] }], responses: { '200': { description: 'Invoice list with id, date, amount, currency, status, description, items' } } } },
+        '/v1/invoices/{id}': { get: { summary: 'Get single invoice detail', tags: ['Billing'], security: [{ bearer: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Invoice detail' }, '404': { description: 'Invoice not found' } } } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
