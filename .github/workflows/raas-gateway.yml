@@ -1,0 +1,78 @@
+name: RaaS Gateway CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/raas-gateway/**'
+      - '.github/workflows/raas-gateway.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/raas-gateway/**'
+
+env:
+  NODE_VERSION: '20'
+  WORKING_DIRECTORY: apps/raas-gateway
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/raas-gateway
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/raas-gateway/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/raas-gateway/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/raas-gateway
+        run: npm install
+
+      - name: Deploy via Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: apps/raas-gateway
+
+      - name: Smoke test
+        run: |
+          sleep 10
+          STATUS=$(curl -sf https://raas-gateway.agencyos-openclaw.workers.dev/health | jq -r '.status' 2>/dev/null || echo "unreachable")
+          echo "Health status: $STATUS"
+          [ "$STATUS" = "healthy" ] && echo "Deploy OK" || (echo "Smoke test failed: status=$STATUS" && exit 1)
