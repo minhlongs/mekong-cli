@@ -55,6 +55,25 @@
     .plan .btn-outline { border: 1px solid var(--border); color: var(--text); }
     .plan .btn:hover { opacity: 0.85; }
 
+    /* Signup */
+    .signup { max-width: 500px; margin: 3rem auto; padding: 0 1.5rem; }
+    .signup h2 { text-align: center; font-size: 1.8rem; margin-bottom: 1rem; }
+    .signup-form { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+    .signup-form input { width: 100%; padding: 0.7rem 1rem; margin-bottom: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; }
+    .signup-form button { width: 100%; padding: 0.8rem; background: var(--cyan); color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; }
+    .signup-form button:hover { opacity: 0.85; }
+    .signup-result { margin-top: 1rem; padding: 1rem; border-radius: 8px; background: #0d2d1b; border: 1px solid #1a5c2e; display: none; }
+    .signup-result.error { background: #2d0d0d; border-color: #5c1a1a; }
+    .signup-result code { font-size: 0.85rem; word-break: break-all; }
+
+    /* API Docs */
+    .api-docs { max-width: 700px; margin: 3rem auto; padding: 0 1.5rem; }
+    .api-docs h2 { text-align: center; font-size: 1.8rem; margin-bottom: 1.5rem; }
+    .api-docs table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
+    .api-docs th { background: #1a1a1a; padding: 0.6rem 1rem; text-align: left; font-size: 0.85rem; color: var(--muted); }
+    .api-docs td { padding: 0.5rem 1rem; border-top: 1px solid var(--border); font-size: 0.85rem; }
+    .api-docs td:first-child { font-family: monospace; color: var(--cyan); }
+
     /* Footer */
     footer { text-align: center; padding: 3rem 1.5rem; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
     footer a { color: var(--cyan); }
@@ -71,7 +90,7 @@
       <div><strong>410</strong><span>Contracts</span></div>
       <div><strong>5</strong><span>Business Layers</span></div>
     </div>
-    <a href="#pricing" class="hero-cta">Get Started Free</a>
+    <a href="#signup" class="hero-cta">Get Started Free</a>
   </section>
 
   <div class="install">
@@ -165,6 +184,60 @@
 
     </div>
   </section>
+
+  <section class="signup" id="signup">
+    <h2>Get Started in 30 Seconds</h2>
+    <div class="signup-form">
+      <input type="text" id="signup-name" placeholder="Your name" required>
+      <input type="email" id="signup-email" placeholder="you@company.com" required>
+      <button onclick="signup()">Create Free Account</button>
+      <div id="signup-result" class="signup-result"></div>
+    </div>
+  </section>
+
+  <section class="api-docs" id="api">
+    <h2>API Reference</h2>
+    <table>
+      <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      <tr><td>POST /v1/tenants/signup</td><td>Public</td><td>Create account + get JWT</td></tr>
+      <tr><td>POST /v1/missions</td><td>Auth</td><td>Submit mission (1-5 MCU)</td></tr>
+      <tr><td>GET /v1/missions</td><td>Auth</td><td>List your missions</td></tr>
+      <tr><td>GET /credits</td><td>Auth</td><td>Check credit balance</td></tr>
+      <tr><td>POST /v1/tenants/api-keys</td><td>Auth</td><td>Generate API key</td></tr>
+      <tr><td>GET /billing/pricing</td><td>Public</td><td>View pricing tiers</td></tr>
+    </table>
+    <p style="text-align:center; margin-top:1rem; color:var(--muted); font-size:0.85rem;">
+      Base URL: <code style="background:#1a1a1a; padding:0.2rem 0.5rem; border-radius:4px;">https://raas-gateway.agencyos-openclaw.workers.dev</code>
+    </p>
+  </section>
+
+  <script>
+    const API = 'https://raas-gateway.agencyos-openclaw.workers.dev';
+    async function signup() {
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const el = document.getElementById('signup-result');
+      if (!name || !email) { el.className = 'signup-result error'; el.style.display = 'block'; el.innerHTML = 'Please fill in all fields'; return; }
+      try {
+        const res = await fetch(API + '/v1/tenants/signup', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          el.className = 'signup-result'; el.style.display = 'block';
+          el.innerHTML = '<strong>Account created!</strong><br><br>' +
+            '<code>Your API Token (save it!):</code><br>' +
+            '<code style="font-size:0.75rem">' + data.token + '</code><br><br>' +
+            '<code>Quick test:</code><br>' +
+            '<code style="font-size:0.8rem">curl -H "Authorization: Bearer ' + data.token.slice(0,20) + '..." ' + API + '/credits</code>';
+        } else {
+          el.className = 'signup-result error'; el.style.display = 'block';
+          el.innerHTML = data.error || 'Signup failed';
+        }
+      } catch (e) { el.className = 'signup-result error'; el.style.display = 'block'; el.innerHTML = 'Network error'; }
+    }
+  </script>
 
   <footer>
     <p>Mekong CLI v5.0 &mdash; <a href="https://github.com/longtho638-jpg/mekong-cli">GitHub</a> &middot; <a href="https://docs.agencyos.dev">Docs</a> &middot; MIT License</p>
