@@ -60,6 +60,12 @@ import { affiliateHooks } from './affiliate-hooks';
 import { tenantPortal } from './tenant-portal';
 import { graphql } from './graphql';
 import { advancedAnalytics } from './advanced-analytics';
+import { eventStream } from './event-stream';
+import { eventBus } from './event-bus';
+import { webhookV2 } from './webhook-v2';
+import { rateLimitV2 } from './rate-limit-v2';
+import { tenantIsolationV2 } from './tenant-isolation';
+import { deepHealth } from './deep-health';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -115,6 +121,14 @@ export function createRoutes() {
   routes.route('/v1/portal', tenantPortal);
   routes.route('/graphql', graphql);
   routes.route('/admin/advanced-analytics', advancedAnalytics);
+
+  // Wave 23-24 routes
+  routes.route('/v1/events', eventStream);
+  routes.route('/v1/event-bus', eventBus);
+  routes.route('/v1/webhooks-v2', webhookV2);
+  routes.route('/v1/rate-limits', rateLimitV2);
+  routes.route('/v1/isolation', tenantIsolationV2);
+  routes.route('/health/deep', deepHealth);
 
   routes.route('/v1', api);
   routes.route('/v1', dashboard);
@@ -232,7 +246,6 @@ export function createRoutes() {
         '/billing/stripe/checkout': { post: { summary: 'Create Stripe checkout', tags: ['Billing'], security: [{ bearer: [] }] } },
         '/billing/stripe/webhook': { post: { summary: 'Stripe webhook', tags: ['Billing'] } },
         '/health': { get: { summary: 'Health check', tags: ['System'] } },
-        '/health/deep': { get: { summary: 'Deep health check', tags: ['System'] } },
         '/stats': { get: { summary: 'Public stats', tags: ['System'] } },
         '/marketplace/leaderboard': { get: { summary: 'Referral leaderboard', tags: ['Marketplace'] } },
         '/marketplace/{id}/reviews': {
@@ -414,6 +427,38 @@ export function createRoutes() {
         '/admin/advanced-analytics/revenue': { get: { summary: 'MRR/ARR/growth metrics', tags: ['Analytics'] } },
         '/admin/advanced-analytics/heatmap': { get: { summary: 'Usage heatmap', tags: ['Analytics'] } },
         '/admin/advanced-analytics/summary': { get: { summary: 'Combined analytics dashboard', tags: ['Analytics'] } },
+        // Wave 23: Event Streaming
+        '/v1/events/stream': { get: { summary: 'SSE event stream', tags: ['Events'], security: [{ bearer: [] }] } },
+        '/v1/events/missions/{missionId}': { get: { summary: 'SSE stream for single mission', tags: ['Events'], security: [{ bearer: [] }] } },
+        '/v1/events/publish': { post: { summary: 'Publish mission event', tags: ['Events'], security: [{ bearer: [] }] } },
+        '/v1/events/active': { get: { summary: 'Active stream count', tags: ['Events'], security: [{ bearer: [] }] } },
+        // Wave 23: Event Bus
+        '/v1/event-bus/events': { get: { summary: 'List tenant events', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        '/v1/event-bus/stats': { get: { summary: 'Event statistics', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        '/v1/event-bus/subscribe': { post: { summary: 'Subscribe to events', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        '/v1/event-bus/subscriptions': { get: { summary: 'List subscriptions', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        '/v1/event-bus/subscriptions/{id}': { delete: { summary: 'Unsubscribe', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        '/v1/event-bus/emit': { post: { summary: 'Emit event', tags: ['EventBus'], security: [{ bearer: [] }] } },
+        // Wave 23: Webhook v2
+        '/v1/webhooks-v2': { post: { summary: 'Create webhook v2', tags: ['WebhooksV2'], security: [{ bearer: [] }] }, get: { summary: 'List webhooks v2', tags: ['WebhooksV2'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v2/{id}': { get: { summary: 'Get webhook details', tags: ['WebhooksV2'], security: [{ bearer: [] }] }, put: { summary: 'Update webhook', tags: ['WebhooksV2'], security: [{ bearer: [] }] }, delete: { summary: 'Delete webhook', tags: ['WebhooksV2'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v2/{id}/deliveries': { get: { summary: 'Delivery report', tags: ['WebhooksV2'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v2/{id}/test': { post: { summary: 'Send test event', tags: ['WebhooksV2'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v2/stats': { get: { summary: 'Webhook stats', tags: ['WebhooksV2'], security: [{ bearer: [] }] } },
+        // Wave 24: Rate Limiting v2
+        '/v1/rate-limits/custom': { put: { summary: 'Set custom rate limits', tags: ['RateLimits'] } },
+        '/v1/rate-limits/top-limited': { get: { summary: 'Top rate-limited tenants', tags: ['RateLimits'] } },
+        '/v1/rate-limits/tiers': { get: { summary: 'Tier limit configs', tags: ['RateLimits'] } },
+        // Wave 24: Tenant Isolation
+        '/v1/isolation/status': { get: { summary: 'Isolation context', tags: ['Isolation'], security: [{ bearer: [] }] } },
+        '/v1/isolation/scope': { get: { summary: 'Data scope', tags: ['Isolation'], security: [{ bearer: [] }] } },
+        '/v1/isolation/score': { get: { summary: 'Isolation score', tags: ['Isolation'], security: [{ bearer: [] }] } },
+        '/v1/isolation/violations': { get: { summary: 'Violation history', tags: ['Isolation'], security: [{ bearer: [] }] } },
+        // Wave 24: Deep Health
+        '/health/deep': { get: { summary: 'Deep health check', tags: ['System'] } },
+        '/health/deep/d1': { get: { summary: 'D1 database health', tags: ['System'] } },
+        '/health/deep/kv': { get: { summary: 'KV store health', tags: ['System'] } },
+        '/health/deep/history': { get: { summary: 'Health history', tags: ['System'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
