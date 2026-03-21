@@ -151,6 +151,28 @@ missions.get('/:id', async (c) => {
 });
 
 /**
+ * GET /missions/:id/poll — Lightweight status check (for polling)
+ * Returns only status + result availability, no full payload
+ */
+missions.get('/:id/poll', async (c) => {
+  const tenant = getTenant(c);
+  const missionId = c.req.param('id');
+
+  const mission = await c.env.DB.prepare(
+    "SELECT status, completed_at, CASE WHEN result IS NOT NULL THEN 1 ELSE 0 END as hasResult FROM missions WHERE id = ? AND tenant_id = ?"
+  ).bind(missionId, tenant.tenantId).first<{ status: string; completed_at: string; hasResult: number }>();
+
+  if (!mission) return json({ error: 'Not found' }, { status: 404 });
+
+  return json({
+    id: missionId,
+    status: mission.status,
+    hasResult: !!mission.hasResult,
+    completedAt: mission.completed_at,
+  });
+});
+
+/**
  * POST /missions/:id/share — Make mission result public + get share URL
  */
 missions.post('/:id/share', async (c) => {

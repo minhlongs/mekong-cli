@@ -148,6 +148,27 @@ tenants.get('/profile', async (c) => {
 });
 
 /**
+ * GET /tenants/upgrade — Compare current tier vs available upgrades
+ */
+tenants.get('/upgrade', async (c) => {
+  const tenant = getTenant(c);
+
+  const tiers = [
+    { id: 'free', name: 'Free', price: 0, credits: 10, dailyLimit: 3, features: ['Community support'] },
+    { id: 'starter', name: 'Starter', price: 29, credits: 50, dailyLimit: 15, features: ['Email support', 'All 5 layers'], checkoutUrl: 'https://polar.sh/checkout/ce215739-4684-4deb-b257-8321ea4d844d' },
+    { id: 'pro', name: 'Pro', price: 99, credits: 200, dailyLimit: 50, features: ['Priority support', 'Analytics', 'Premium models', 'Batch missions'], checkoutUrl: 'https://polar.sh/checkout/b810b7eb-97f9-4ed0-9c26-07f4bfbbf58f' },
+    { id: 'agency', name: 'Agency', price: 199, credits: 500, dailyLimit: -1, features: ['Dedicated support', 'Unlimited missions', 'Webhook callbacks'], checkoutUrl: 'https://polar.sh/checkout/0e752654-5cb6-4f48-a990-b2d3eb6a2429' },
+    { id: 'master', name: 'Master', price: 399, credits: 1000, dailyLimit: -1, features: ['SSO', 'Audit logs', 'Custom integrations', 'Priority queue'], checkoutUrl: 'https://polar.sh/checkout/dc82a4bb-ad5d-473c-ac29-67b6397700ec' },
+  ];
+
+  const currentIdx = tiers.findIndex(t => t.id === tenant.tier);
+  const current = tiers[currentIdx] || tiers[0];
+  const upgrades = tiers.slice(Math.max(currentIdx + 1, 1));
+
+  return json({ currentTier: current, upgrades });
+});
+
+/**
  * GET /tenants/referrals — View referral stats
  */
 tenants.get('/referrals', async (c) => {
