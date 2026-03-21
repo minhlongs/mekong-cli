@@ -349,10 +349,6 @@ def _display_listing(listing: dict, target: str, dry_run: bool) -> None:
 def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
     """Generate AI-powered export listing using LLM client.
 
-    TECH-DEBT: OCOP-002 - Integrate with LLM client for actual listing generation
-    See: docs/TECHNICAL_DEBT_TODO.md
-    Currently uses fallback listing as stub.
-
     Creates platform-optimized B2B listings for:
     - Amazon, Alibaba, Shopee, Lazada, Tiki, Grab, Sendo
 
@@ -363,9 +359,59 @@ def _generate_listing(target: str, product_data: Optional[dict]) -> dict:
     - Shipping terms
     - Certification highlights
     """
-    # TODO: Implement LLM client integration
-    # For now, return fallback listing
-    return _generate_fallback_listing(target, product_data)
+    client = get_client()
+
+    # Build prompt for platform-specific listing generation
+    system_prompt = f"""You are an e-commerce listing expert for {target.upper()} platform.
+Generate a B2B export listing optimized for this marketplace.
+
+Respond ONLY with valid JSON containing:
+- title: Product title (optimized for {target})
+- price: Price with shipping terms (FOB/CIF)
+- moq: Minimum order quantity
+- origin: Product origin
+- shipping: Shipping options
+- certifications: List of certifications
+- description: Product description
+- keywords: List of search keywords
+
+Respond ONLY with valid JSON, no markdown."""
+
+    product_info = json.dumps(product_data, indent=2) if product_data else "No product data provided"
+
+    user_content = f"""Create a {target.upper()} export listing for this agricultural product:
+
+{product_info}
+
+Platform: {target}
+Target audience: B2B buyers on {target}"""
+
+    try:
+        result = client.generate_json(
+            system_prompt + "\n\n" + user_content,
+            temperature=0.3,
+            max_tokens=1024,
+        )
+
+        # Ensure all required fields exist with defaults
+        listing = {
+            "title": result.get("title", "Premium Vietnamese Agricultural Product"),
+            "price": result.get("price", "$4.50/kg FOB"),
+            "moq": result.get("moq", "1,000 kg"),
+            "origin": result.get("origin", "Vietnam"),
+            "shipping": result.get("shipping", "FOB / CIF available"),
+            "platform": target,
+            "certifications": result.get("certifications", ["VietGAP", "GlobalGAP"]),
+            "description": result.get("description", ""),
+            "keywords": result.get("keywords", []),
+        }
+
+        return listing
+
+    except Exception as e:
+        console.print(f"[yellow]LLM listing generation failed: {e}[/yellow]")
+        console.print("[dim]Using fallback listing...[/dim]")
+        return _generate_fallback_listing(target, product_data)
 
 
 def _generate_fallback_listing(target: str, product_data: Optional[dict]) -> dict:
