@@ -31,9 +31,12 @@ STOP_FILE = Path(os.path.expanduser("~/.openclaw/STOP"))
 
 # Worker definitions — capability maps to tmux pane
 WORKER_DEFS = [
-    {"name": "mekong-cli",   "pane": 0, "dir": ".",                    "deploy": "pnpm run build",    "capability": "builder"},
-    {"name": "algo-trader",  "pane": 1, "dir": "apps/algo-trader",     "deploy": "npx tsc --noEmit",  "capability": "tester"},
-    {"name": "well",         "pane": 2, "dir": "apps/well",            "deploy": "npm run build",     "capability": "reviewer"},
+    {"name": "mekong-cli",   "pane": 0, "dir": ".",                       "deploy": "pnpm run build",    "capability": "builder"},
+    {"name": "algo-trader",  "pane": 1, "dir": "apps/algo-trader",        "deploy": "npx tsc --noEmit",  "capability": "tester"},
+    {"name": "well",         "pane": 2, "dir": "apps/well",               "deploy": "npm run build",     "capability": "reviewer"},
+    {"name": "raas-landing", "pane": 5, "dir": "apps/raas-landing",       "deploy": "npm run build",     "capability": "builder"},
+    {"name": "sophia-factory","pane": 6, "dir": "apps/sophia-factory",    "deploy": "npm run build",     "capability": "builder"},
+    {"name": "saas-dashboard","pane": 7, "dir": "apps/saas-dashboard",    "deploy": "npx tsc --noEmit",  "capability": "tester"},
 ]
 
 # --- TMUX EXECUTION LAYER (proven, unchanged) ---

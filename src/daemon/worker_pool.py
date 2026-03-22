@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import subprocess
 import time
 from dataclasses import dataclass
@@ -84,8 +85,20 @@ class WorkerPool:
         self._health_check_interval = 30  # seconds
         self._last_health_check = 0.0
 
+    def _pm2_available(self) -> bool:
+        """Check if PM2 is installed and available in PATH."""
+        return shutil.which("pm2") is not None
+
     def _run_pm2(self, args: list[str]) -> subprocess.CompletedProcess:
-        """Run PM2 command."""
+        """Run PM2 command. Returns failed result if PM2 not installed."""
+        if not self._pm2_available():
+            logger.debug("[WorkerPool] PM2 not installed — skipping pm2 command")
+            return subprocess.CompletedProcess(
+                args=["pm2"] + args,
+                returncode=1,
+                stdout="",
+                stderr="PM2 not installed",
+            )
         env = {**__import__("os").environ, "MEKONG_ROOT": str(MEKONG_ROOT)}
         return subprocess.run(
             ["pm2"] + args,

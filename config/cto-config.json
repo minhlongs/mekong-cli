@@ -39,7 +39,31 @@
       "endpoint": "",
       "stack": "strategic",
       "deploy_cmd": "",
-      "note": "Opus uses native claude CLI auth — no DashScope"
+      "note": "Opus uses native claude CLI auth \u2014 no DashScope"
+    },
+    "5": {
+      "project": "raas-landing",
+      "dir": "apps/raas-landing",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "static",
+      "deploy_cmd": "npm run build"
+    },
+    "6": {
+      "project": "sophia-factory",
+      "dir": "apps/sophia-factory",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "nextjs",
+      "deploy_cmd": "npm run build"
+    },
+    "7": {
+      "project": "saas-dashboard",
+      "dir": "apps/saas-dashboard",
+      "model": "qwen3.5-plus",
+      "endpoint": "https://coding-intl.dashscope.aliyuncs.com/apps/anthropic",
+      "stack": "typescript",
+      "deploy_cmd": "npx tsc --noEmit"
     }
   },
   "daemon": {
