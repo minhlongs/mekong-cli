@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [CTO] %(message)s")
 log = logging.getLogger("cto")
 
 SESSION = os.environ.get("CTO_SESSION", "openclaw")
-INTERVAL = int(os.environ.get("CTO_INTERVAL", "45"))
+INTERVAL = int(os.environ.get("CTO_INTERVAL", "20"))
 PROJECT_ROOT = Path(os.path.expanduser("~/mekong-cli"))
 STOP_FILE = Path(os.path.expanduser("~/.openclaw/STOP"))
 
