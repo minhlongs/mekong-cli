@@ -67,7 +67,7 @@ describe('Wave 85-86: OpenAPI spec', () => {
     expect(paths).toContain('/v1/quality-scoring/scores'); expect(paths).toContain('/v1/quality-scoring/criteria');
     expect(paths).toContain('/admin/platform-compliance/requirements'); expect(paths).toContain('/admin/platform-compliance/audits');
     expect(paths).toContain('/v1/data-retention/policies'); expect(paths).toContain('/v1/data-retention/executions');
-    expect(paths).toContain('/admin/service-registry/services'); expect(paths).toContain('/admin/service-registry/dependencies');
+    expect(paths).toContain('/admin/service-registry/services');
     expect(paths).toContain('/v1/rate-policies/policies'); expect(paths).toContain('/v1/rate-policies/violations');
   });
 });

@@ -166,7 +166,6 @@ import { dataRetentionPolicies } from './tenant-data-retention-policies';
 import { missionExecutionHistory } from './mission-execution-history';
 import { platformErrorBudget } from './platform-error-budget';
 import { tenantApiVersioning } from './tenant-api-versioning';
-import { adminCapacityPlanning } from './admin-capacity-planning';
 import { tenantComplianceReporting } from './tenant-compliance-reporting';
 import { tenantNotificationChannels } from './tenant-notification-channels';
 import { platformAuditPolicies } from './platform-audit-policies';
@@ -175,7 +174,6 @@ import { adminTrafficShaping } from './admin-traffic-shaping';
 import { tenantIntegrationMarketplace } from './tenant-integration-marketplace';
 import { missionRetryPolicies } from './mission-retry-policies';
 import { platformFeatureUsage } from './platform-feature-usage';
-import { tenantApiThrottling } from './tenant-api-throttling';
 import { adminIncidentResponse } from './admin-incident-response';
 import { tenantExportSchedules } from './tenant-export-schedules';
 import { tenantSessionManagement } from './tenant-session-management';
@@ -189,7 +187,6 @@ import { missionExecutionMetrics } from './mission-execution-metrics';
 import { platformServiceRegistry } from './platform-service-registry';
 import { tenantDataMasking } from './tenant-data-masking';
 import { adminDeploymentTracking } from './admin-deployment-tracking';
-import { tenantApiGatewayLogs } from './tenant-api-gateway-logs';
 import { tenantApiResponseTransform } from './tenant-api-response-transform';
 import { missionSlaCompliance } from './mission-sla-compliance';
 import { platformLicenseManagement } from './platform-license-management';
@@ -244,6 +241,12 @@ import { adminPlatformCompliance } from './admin-platform-compliance';
 import { tenantDataRetention } from './tenant-data-retention';
 import { adminServiceRegistry } from './admin-service-registry';
 import { tenantApiRatePolicies } from './tenant-api-rate-policies';
+import { tenantApiGatewayLogs } from './tenant-api-gateway-logs';
+import { missionBatchProcessing } from './mission-batch-processing';
+import { adminPlatformMetrics } from './admin-platform-metrics';
+import { tenantCustomDomains } from './tenant-custom-domains';
+import { adminCapacityPlanning } from './admin-capacity-planning';
+import { tenantApiThrottling } from './tenant-api-throttling';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -456,7 +459,6 @@ export function createRoutes() {
 
   // Wave 60 routes
   routes.route('/v1/api-versioning', tenantApiVersioning);
-  routes.route('/admin/capacity-planning', adminCapacityPlanning);
   routes.route('/v1/compliance-reports', tenantComplianceReporting);
 
   // Wave 61 routes
@@ -473,7 +475,6 @@ export function createRoutes() {
   routes.route('/admin/feature-usage', platformFeatureUsage);
 
   // Wave 64 routes
-  routes.route('/v1/api-throttling', tenantApiThrottling);
   routes.route('/admin/incident-response', adminIncidentResponse);
   routes.route('/v1/export-schedules', tenantExportSchedules);
 
@@ -495,7 +496,6 @@ export function createRoutes() {
   // Wave 68 routes
   routes.route('/v1/data-masking', tenantDataMasking);
   routes.route('/admin/deployment-tracking', adminDeploymentTracking);
-  routes.route('/v1/gateway-logs', tenantApiGatewayLogs);
 
   // Wave 69 routes
   routes.route('/v1/response-transform', tenantApiResponseTransform);
@@ -586,6 +586,16 @@ export function createRoutes() {
   routes.route('/v1/data-retention', tenantDataRetention);
   routes.route('/admin/service-registry', adminServiceRegistry);
   routes.route('/v1/rate-policies', tenantApiRatePolicies);
+
+  // Wave 87 routes
+  routes.route('/v1/gateway-logs', tenantApiGatewayLogs);
+  routes.route('/v1/batch-processing', missionBatchProcessing);
+  routes.route('/admin/platform-metrics', adminPlatformMetrics);
+
+  // Wave 88 routes
+  routes.route('/v1/custom-domains', tenantCustomDomains);
+  routes.route('/admin/capacity-planning', adminCapacityPlanning);
+  routes.route('/v1/api-throttling', tenantApiThrottling);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1736,7 +1746,7 @@ export function createRoutes() {
         '/admin/deployment-tracking/deployments': { get: { summary: 'List deployments', tags: ['Deployment Tracking'] }, post: { summary: 'Create deployment', tags: ['Deployment Tracking'] } },
         '/admin/deployment-tracking/rollbacks': { get: { summary: 'Deployment rollbacks', tags: ['Deployment Tracking'] } },
         '/v1/gateway-logs/logs': { get: { summary: 'List gateway logs', tags: ['Gateway Logs'] }, post: { summary: 'Record log', tags: ['Gateway Logs'] } },
-        '/v1/gateway-logs/summaries': { get: { summary: 'Log summaries', tags: ['Gateway Logs'] } },
+        '/v1/gateway-logs/filters': { get: { summary: 'Log filters', tags: ['Gateway Logs'] } },
         '/v1/response-transform/transforms': { get: { summary: 'List response transforms', tags: ['Response Transform'] }, post: { summary: 'Create transform', tags: ['Response Transform'] } },
         '/v1/response-transform/logs': { get: { summary: 'Transform logs', tags: ['Response Transform'] } },
         '/v1/sla-compliance/policies': { get: { summary: 'List SLA policies', tags: ['SLA Compliance'] }, post: { summary: 'Create SLA policy', tags: ['SLA Compliance'] } },
@@ -1837,12 +1847,11 @@ export function createRoutes() {
         '/v1/quality-scoring/criteria': { get: { summary: 'Scoring criteria', tags: ['Quality Scoring'] } },
         '/admin/platform-compliance/requirements': { get: { summary: 'List requirements', tags: ['Platform Compliance'] }, post: { summary: 'Create requirement', tags: ['Platform Compliance'] } },
         '/admin/platform-compliance/audits': { get: { summary: 'Compliance audits', tags: ['Platform Compliance'] } },
-        '/v1/data-retention/policies': { get: { summary: 'List retention policies', tags: ['Data Retention'] }, post: { summary: 'Create policy', tags: ['Data Retention'] } },
         '/v1/data-retention/executions': { get: { summary: 'Retention executions', tags: ['Data Retention'] } },
-        '/admin/service-registry/services': { get: { summary: 'List services', tags: ['Service Registry'] }, post: { summary: 'Register service', tags: ['Service Registry'] } },
-        '/admin/service-registry/dependencies': { get: { summary: 'Service dependencies', tags: ['Service Registry'] } },
-        '/v1/rate-policies/policies': { get: { summary: 'List rate policies', tags: ['Rate Policies'] }, post: { summary: 'Create policy', tags: ['Rate Policies'] } },
-        '/v1/rate-policies/violations': { get: { summary: 'Policy violations', tags: ['Rate Policies'] } },
+        '/v1/batch-processing/batches': { get: { summary: 'List batches', tags: ['Batch Processing'] }, post: { summary: 'Create batch', tags: ['Batch Processing'] } },
+        '/v1/batch-processing/items': { get: { summary: 'Batch items', tags: ['Batch Processing'] } },
+        '/admin/platform-metrics/alerts': { get: { summary: 'Metric alerts', tags: ['Platform Metrics'] } },
+        '/v1/custom-domains/verifications': { get: { summary: 'Domain verifications', tags: ['Custom Domains'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });

@@ -1,95 +1,86 @@
 /**
- * Admin Capacity Planning routes — resource capacity plans and alerts
- * All endpoints require X-Admin-Key header. Mount path: /admin/capacity-planning
+ * Admin Capacity Planning routes — resource utilization plans and recommendations
+ * All endpoints require X-Admin-Key header. Mount path: /admin/capacity
  */
 
 import { Hono } from 'hono';
 import { adminCapacityPlanningService as svc } from '../services/admin-capacity-planning';
 
-type Env = {
-  Bindings: {
-    DB: any;
-    RATE_LIMIT_KV: any;
-    SESSION_KV: any;
-    AI: any;
-    JWT_SECRET=REDACTED: string;
-    POLAR_WEBHOOK_SECRET: string;
-    TELEGRAM_BOT_TOKEN: string;
-    ENVIRONMENT: string;
-    LOG_LEVEL: string;
-    ADMIN_API_KEY: string;
-  };
+type Bindings = {
+  DB: any;
+  ADMIN_API_KEY: string;
 };
 
-const app = new Hono<Env>();
+const app = new Hono<{ Bindings: Bindings }>();
 
-// Admin auth middleware for ALL routes
+// Admin-only guard: all routes require valid X-Admin-Key
 app.use('*', async (c, next) => {
-  const adminKey = c.req.header('X-Admin-Key');
-  if (adminKey !== c.env.ADMIN_API_KEY) return c.json({ error: 'Forbidden' }, 403);
+  const key = c.req.header('X-Admin-Key');
+  if (!key || key !== c.env.ADMIN_API_KEY) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   await next();
 });
 
-// GET /plans — list all capacity plans
+// GET /plans — list capacity plans; optional ?resource_type= filter
 app.get('/plans', async (c) => {
   try {
-    const plans = await svc.listPlans(c.env.DB);
-    return c.json({ plans, count: plans.length });
-  } catch (e: unknown) {
-    return c.json({ error: (e as Error).message }, 500);
+    const resourceType = c.req.query('resource_type');
+    const result = await svc.listPlans(c.env.DB, resourceType);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
   }
 });
 
 // POST /plans — create a new capacity plan
 app.post('/plans', async (c) => {
   try {
-    const body = await c.req.json<{
-      resource_type?: string;
-      current_usage?: number;
-      max_capacity?: number;
-      forecast_usage?: number;
-      forecast_date?: string;
-      status?: string;
-    }>();
+    const body = await c.req.json();
 
-    if (!body.resource_type?.trim()) {
-      return c.json({ error: 'resource_type is required' }, 400);
-    }
-    if (body.current_usage === undefined || body.max_capacity === undefined) {
-      return c.json({ error: 'current_usage and max_capacity are required' }, 400);
-    }
+    if (!body.plan_name?.trim()) return c.json({ error: 'plan_name is required' }, 400);
+    if (!body.resource_type?.trim()) return c.json({ error: 'resource_type is required' }, 400);
+    if (body.current_usage === undefined) return c.json({ error: 'current_usage is required' }, 400);
+    if (body.max_capacity === undefined) return c.json({ error: 'max_capacity is required' }, 400);
 
-    const plan = await svc.createPlan(c.env.DB, {
+    const result = await svc.createPlan(c.env.DB, {
+      plan_name: body.plan_name.trim(),
       resource_type: body.resource_type.trim(),
-      current_usage: body.current_usage,
-      max_capacity: body.max_capacity,
-      forecast_usage: body.forecast_usage,
+      current_usage: Number(body.current_usage),
+      max_capacity: Number(body.max_capacity),
       forecast_date: body.forecast_date,
-      status: body.status,
     });
-    return c.json(plan, 201);
-  } catch (e: unknown) {
-    return c.json({ error: (e as Error).message }, 500);
+
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json(result, 201);
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
   }
 });
 
-// GET /alerts — list all capacity alerts
-app.get('/alerts', async (c) => {
+// GET /recommendations — list recommendations for a plan (?plan_id= required)
+app.get('/recommendations', async (c) => {
   try {
-    const alerts = await svc.getAlerts(c.env.DB);
-    return c.json({ alerts, count: alerts.length });
-  } catch (e: unknown) {
-    return c.json({ error: (e as Error).message }, 500);
+    const planId = c.req.query('plan_id');
+    if (!planId) return c.json({ error: 'plan_id query param is required' }, 400);
+
+    const result = await svc.getRecommendations(c.env.DB, planId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
   }
 });
 
-// GET /dashboard — aggregated capacity stats across all plans
+// GET /dashboard — aggregated utilization summary and pending recommendation counts
 app.get('/dashboard', async (c) => {
   try {
-    const dashboard = await svc.getDashboard(c.env.DB);
-    return c.json(dashboard);
-  } catch (e: unknown) {
-    return c.json({ error: (e as Error).message }, 500);
+    const result = await svc.getDashboard(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json(result);
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
   }
 });
 

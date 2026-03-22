@@ -150,8 +150,8 @@ describe('Wave 68: Tenant API Gateway Logs', () => {
     const res = await req('/v1/gateway-logs/logs', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ method: 'GET', path: '/v1/missions', status_code: 200, response_time_ms: 45 }) });
     expect([200, 201, 400, 500]).toContain(res.status);
   });
-  it('GET /v1/gateway-logs/summaries — summaries (auth)', async () => {
-    const res = await req('/v1/gateway-logs/summaries', { headers: { Authorization: `Bearer ${token}` } });
+  it('GET /v1/gateway-logs/filters — summaries (auth)', async () => {
+    const res = await req('/v1/gateway-logs/filters', { headers: { Authorization: `Bearer ${token}` } });
     expect(res.status).toBeLessThan(500);
   });
   it('GET /v1/gateway-logs/admin/overview — admin', async () => {
@@ -178,6 +178,6 @@ describe('Wave 67-68: OpenAPI spec', () => {
     expect(paths).toContain('/admin/deployment-tracking/deployments');
     expect(paths).toContain('/admin/deployment-tracking/rollbacks');
     expect(paths).toContain('/v1/gateway-logs/logs');
-    expect(paths).toContain('/v1/gateway-logs/summaries');
+    expect(paths).toContain('/v1/gateway-logs/filters');
   });
 });
