@@ -172,6 +172,11 @@ import { platformErrorBudget } from './platform-error-budget';
 import { tenantApiVersioning } from './tenant-api-versioning';
 import { adminCapacityPlanning } from './admin-capacity-planning';
 import { tenantComplianceReporting } from './tenant-compliance-reporting';
+import { tenantNotificationChannels } from './tenant-notification-channels';
+import { platformAuditPolicies } from './platform-audit-policies';
+import { tenantDataEncryptionKeys } from './tenant-data-encryption-keys';
+import { adminTrafficShaping } from './admin-traffic-shaping';
+import { tenantIntegrationMarketplace } from './tenant-integration-marketplace';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -388,6 +393,16 @@ export function createRoutes() {
   routes.route('/v1/api-versioning', tenantApiVersioning);
   routes.route('/admin/capacity-planning', adminCapacityPlanning);
   routes.route('/v1/compliance-reports', tenantComplianceReporting);
+
+  // Wave 61 routes
+  routes.route('/v1/notification-channels', tenantNotificationChannels);
+  routes.route('/v1/cost-tracking', missionCostTracking);
+  routes.route('/admin/audit-policies', platformAuditPolicies);
+
+  // Wave 62 routes
+  routes.route('/v1/encryption-keys', tenantDataEncryptionKeys);
+  routes.route('/admin/traffic-shaping', adminTrafficShaping);
+  routes.route('/v1/integrations', tenantIntegrationMarketplace);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1484,6 +1499,22 @@ export function createRoutes() {
         '/admin/capacity-planning/dashboard': { get: { summary: 'Capacity dashboard', tags: ['Capacity Planning'] } },
         '/v1/compliance-reports/reports': { get: { summary: 'List compliance reports', tags: ['Compliance Reports'] }, post: { summary: 'Create compliance report', tags: ['Compliance Reports'] } },
         '/v1/compliance-reports/rules': { get: { summary: 'List compliance rules', tags: ['Compliance Reports'] } },
+        // Wave 61
+        '/v1/notification-channels/channels': { get: { summary: 'List notification channels', tags: ['Notification Channels'] }, post: { summary: 'Create channel', tags: ['Notification Channels'] } },
+        '/v1/notification-channels/deliveries': { get: { summary: 'List deliveries', tags: ['Notification Channels'] } },
+        '/v1/cost-tracking/costs': { get: { summary: 'List mission costs', tags: ['Cost Tracking'] }, post: { summary: 'Record cost', tags: ['Cost Tracking'] } },
+        '/v1/cost-tracking/budgets': { get: { summary: 'List cost budgets', tags: ['Cost Tracking'] } },
+        '/admin/audit-policies/policies': { get: { summary: 'List audit policies', tags: ['Audit Policies'] }, post: { summary: 'Create audit policy', tags: ['Audit Policies'] } },
+        '/admin/audit-policies/violations': { get: { summary: 'List violations', tags: ['Audit Policies'] } },
+        '/admin/audit-policies/dashboard': { get: { summary: 'Audit dashboard', tags: ['Audit Policies'] } },
+        // Wave 62
+        '/v1/encryption-keys/keys': { get: { summary: 'List encryption keys', tags: ['Encryption Keys'] }, post: { summary: 'Create key', tags: ['Encryption Keys'] } },
+        '/v1/encryption-keys/usage': { get: { summary: 'Key usage logs', tags: ['Encryption Keys'] } },
+        '/admin/traffic-shaping/rules': { get: { summary: 'List traffic rules', tags: ['Traffic Shaping'] }, post: { summary: 'Create traffic rule', tags: ['Traffic Shaping'] } },
+        '/admin/traffic-shaping/events': { get: { summary: 'Traffic events', tags: ['Traffic Shaping'] } },
+        '/admin/traffic-shaping/dashboard': { get: { summary: 'Traffic dashboard', tags: ['Traffic Shaping'] } },
+        '/v1/integrations/integrations': { get: { summary: 'List integrations', tags: ['Integrations'] }, post: { summary: 'Create integration', tags: ['Integrations'] } },
+        '/v1/integrations/logs': { get: { summary: 'Integration logs', tags: ['Integrations'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
