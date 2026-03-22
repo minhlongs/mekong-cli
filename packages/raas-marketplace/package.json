@@ -4,17 +4,22 @@
   "private": false,
   "description": "Marketplace SDK for Mekong RaaS — product catalog, storefront, sales bot, analytics, affiliate program, skill registry",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./catalog": "./src/catalog.ts",
     "./storefront": "./src/storefront.ts",
     "./sales-bot": "./src/sales-bot.ts",
     "./analytics": "./src/analytics.ts",
     "./affiliate": "./src/affiliate.ts"
   },
-  "scripts": { "build": "tsc", "test": "vitest run" },
-  "devDependencies": { "typescript": "^5.7.0", "vitest": "^4.0.0" },
+  "files": ["dist", "src", "README.md"],
+  "scripts": { "build": "tsup src/index.ts --format esm --dts", "test": "vitest run" },
+  "devDependencies": { "tsup": "^8.0.0", "typescript": "^5.7.0", "vitest": "^4.0.0" },
   "license": "MIT",
   "repository": {
     "type": "git",
