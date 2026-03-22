@@ -1,22 +1,11 @@
-/**
- * sales-campaign.ts — Sales campaign automation CLI commands
- * Create, send, track, and report on outreach campaigns
- */
+/** sales-campaign.ts — Campaign automation: create, send, track, report. OpenClaw Engine wired for AI subject lines and complexity estimation. */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 interface Campaign {
-  id: string;
-  name: string;
-  template: string;
-  audience: string;
-  status: string;
-  sent: number;
-  opened: number;
-  clicked: number;
-  replied: number;
-  converted: number;
-  createdAt: string;
+  id: string; name: string; template: string; audience: string; status: string;
+  sent: number; opened: number; clicked: number; replied: number; converted: number; createdAt: string;
 }
 
 const CAMPAIGNS: Campaign[] = [
@@ -26,23 +15,42 @@ const CAMPAIGNS: Campaign[] = [
   { id: 'camp_004', name: 'Churned Users Re-engage', template: 're-engage', audience: 'churned-30d', status: 'draft', sent: 0, opened: 0, clicked: 0, replied: 0, converted: 0, createdAt: '2026-03-21' },
 ];
 
+const TEMPLATE_PREVIEWS: Record<string, string> = {
+  'cold-outreach': '  "Hi {name}, saw {company} is scaling fast — we help teams like yours automate ops with AI."',
+  'nurture':       '  "You\'ve been using Mekong for 2 weeks — here\'s what top teams unlock in week 3..."',
+  'upsell':        '  "Your team is hitting Pro limits. Upgrade to Enterprise and get unlimited missions + CSM."',
+  're-engage':     '  "We noticed you haven\'t logged in for 30 days — here\'s what\'s new + a 20% comeback offer."',
+};
+
 function pct(num: number, denom: number): string {
-  if (denom === 0) return '—';
-  return `${Math.round((num / denom) * 100)}%`;
+  return denom === 0 ? '—' : `${Math.round((num / denom) * 100)}%`;
 }
 
-export function registerSalesCampaignCommand(program: Command): void {
+/** Show OpenClaw engine health stats as a footer section. Non-fatal if engine unavailable. */
+function showEngineStatus(engine?: MekongEngine): void {
+  try {
+    if (engine?.openclaw) {
+      const h = engine.openclaw.getHealth();
+      divider();
+      heading('Engine Status');
+      keyValue('AGI score', String(h.agiScore));
+      keyValue('Uptime', `${Math.round(h.uptime / 60)}m`);
+    }
+  } catch (_) { /* non-fatal */ }
+}
+
+export function registerSalesCampaignCommand(program: Command, engine?: MekongEngine): void {
   const campaign = program
     .command('sales-campaign')
     .description('Sales campaign automation — create, send, track, report');
 
   campaign
     .command('create')
-    .description('Create a new outreach campaign')
+    .description('Create a new outreach campaign with AI-optimized subject line')
     .option('--name <name>', 'Campaign name', 'New Campaign')
     .option('--template <type>', 'Template: cold-outreach|nurture|upsell|re-engage', 'cold-outreach')
     .option('--audience <segment>', 'Audience segment identifier', 'all-leads')
-    .action((opts: { name: string; template: string; audience: string }) => {
+    .action(async (opts: { name: string; template: string; audience: string }) => {
       const validTemplates = ['cold-outreach', 'nurture', 'upsell', 're-engage'];
       const template = validTemplates.includes(opts.template) ? opts.template : 'cold-outreach';
       const newId = `camp_${String(CAMPAIGNS.length + 1).padStart(3, '0')}`;
@@ -56,14 +64,24 @@ export function registerSalesCampaignCommand(program: Command): void {
       keyValue('Created', '2026-03-22');
       divider();
 
+      // AI-generated subject line via OpenClaw
+      try {
+        if (engine?.openclaw) {
+          const complexity = engine.openclaw.classifyComplexity(
+            `Generate campaign copy for template: ${template}, audience: ${opts.audience}`
+          );
+          const mission = await engine.openclaw.submitMission({
+            goal: `Generate campaign copy for template: ${template}, audience: ${opts.audience}`,
+            complexity,
+          });
+          if (mission.status === 'completed' && mission.output) {
+            keyValue('AI-generated subject', mission.output.slice(0, 100));
+          }
+        }
+      } catch (_) { /* fallback to template preview */ }
+
       info('Template preview:');
-      const previews: Record<string, string> = {
-        'cold-outreach': '  "Hi {name}, saw {company} is scaling fast — we help teams like yours automate ops with AI."',
-        'nurture':       '  "You\'ve been using Mekong for 2 weeks — here\'s what top teams unlock in week 3..."',
-        'upsell':        '  "Your team is hitting Pro limits. Upgrade to Enterprise and get unlimited missions + CSM."',
-        're-engage':     '  "We noticed you haven\'t logged in for 30 days — here\'s what\'s new + a 20% comeback offer."',
-      };
-      info(previews[template] ?? '');
+      info(TEMPLATE_PREVIEWS[template] ?? '');
       divider();
       success(`Campaign ${newId} created — status: DRAFT`);
       info(`Next: mekong sales-campaign send --id ${newId}`);
@@ -75,14 +93,10 @@ export function registerSalesCampaignCommand(program: Command): void {
     .description('Send a campaign (use --test for dry-run to self)')
     .option('--id <id>', 'Campaign ID', 'camp_004')
     .option('--test', 'Test mode — send to self only')
-    .action((opts: { id: string; test?: boolean }) => {
+    .action(async (opts: { id: string; test?: boolean }) => {
       const camp = CAMPAIGNS.find(c => c.id === opts.id);
-
       heading('Campaign Send');
-      if (!camp) {
-        warn(`Campaign ${opts.id} not found. Use: mekong sales-campaign report`);
-        return;
-      }
+      if (!camp) { warn(`Campaign ${opts.id} not found. Use: mekong sales-campaign report`); return; }
 
       if (opts.test) {
         info(`[TEST MODE] Sending "${camp.name}" to: you@openclaw.io only`);
@@ -94,11 +108,18 @@ export function registerSalesCampaignCommand(program: Command): void {
         return;
       }
 
-      const estimatedRecipients = camp.status === 'draft' ? 45 : camp.sent;
+      // Estimate delivery complexity via OpenClaw before sending
+      try {
+        if (engine?.openclaw) {
+          const complexity = engine.openclaw.classifyComplexity(camp.name);
+          keyValue('Delivery complexity', complexity);
+        }
+      } catch (_) { /* non-fatal */ }
+
       keyValue('Campaign', camp.name);
       keyValue('Template', camp.template);
       keyValue('Audience', camp.audience);
-      keyValue('Recipients', `~${estimatedRecipients} contacts`);
+      keyValue('Recipients', `~${camp.status === 'draft' ? 45 : camp.sent} contacts`);
       divider();
       success(`Campaign ${opts.id} queued for delivery`);
       info('Delivery window: next 2 hours (throttled for deliverability)');
@@ -112,12 +133,8 @@ export function registerSalesCampaignCommand(program: Command): void {
     .option('--id <id>', 'Campaign ID', 'camp_001')
     .action((opts: { id: string }) => {
       const camp = CAMPAIGNS.find(c => c.id === opts.id);
-
       heading('Campaign Tracker');
-      if (!camp) {
-        warn(`Campaign ${opts.id} not found.`);
-        return;
-      }
+      if (!camp) { warn(`Campaign ${opts.id} not found.`); return; }
 
       keyValue('Campaign', camp.name);
       keyValue('Template', camp.template);
@@ -141,6 +158,7 @@ export function registerSalesCampaignCommand(program: Command): void {
 
       divider();
       keyValue('Revenue attributed', `$${camp.converted * 149}/mo`);
+      showEngineStatus(engine);
       info('');
     });
 
@@ -149,16 +167,16 @@ export function registerSalesCampaignCommand(program: Command): void {
     .description('Campaign performance report across all campaigns')
     .option('--period <range>', 'Period: week|month|quarter', 'month')
     .action((opts: { period: string }) => {
+      const periodLabel = opts.period === 'week' ? '2026-03-16 to 2026-03-22' : opts.period === 'quarter' ? 'Q1 2026' : 'March 2026';
       heading(`Campaign Report — This ${opts.period.charAt(0).toUpperCase() + opts.period.slice(1)}`);
-      keyValue('Period', opts.period === 'week' ? '2026-03-16 to 2026-03-22' : opts.period === 'quarter' ? 'Q1 2026' : 'March 2026');
+      keyValue('Period', periodLabel);
       keyValue('Total campaigns', `${CAMPAIGNS.length}`);
       divider();
 
       info('ID         Name                           Sent  Open%  Click%  Conv  Revenue');
       info('─'.repeat(82));
       for (const c of CAMPAIGNS) {
-        const revenue = `$${c.converted * 149}`;
-        const line = `${c.id}  ${c.name.substring(0, 30).padEnd(31)} ${String(c.sent).padStart(4)}  ${pct(c.opened, c.sent).padEnd(6)} ${pct(c.clicked, c.sent).padEnd(7)} ${String(c.converted).padStart(4)}  ${revenue}`;
+        const line = `${c.id}  ${c.name.substring(0, 30).padEnd(31)} ${String(c.sent).padStart(4)}  ${pct(c.opened, c.sent).padEnd(6)} ${pct(c.clicked, c.sent).padEnd(7)} ${String(c.converted).padStart(4)}  $${c.converted * 149}`;
         if (c.converted >= 2) success(line);
         else if (c.status === 'draft') warn(line);
         else info(line);
@@ -167,10 +185,10 @@ export function registerSalesCampaignCommand(program: Command): void {
       divider();
       const totalSent = CAMPAIGNS.reduce((s, c) => s + c.sent, 0);
       const totalConverted = CAMPAIGNS.reduce((s, c) => s + c.converted, 0);
-      const totalRevenue = totalConverted * 149;
       keyValue('Total sent', `${totalSent}`);
       keyValue('Total converted', `${totalConverted} (${pct(totalConverted, totalSent)} overall)`);
-      success(`Total revenue attributed: $${totalRevenue}/mo`);
+      success(`Total revenue attributed: $${totalConverted * 149}/mo`);
+      showEngineStatus(engine);
       info('');
     });
 }

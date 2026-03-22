@@ -124,10 +124,10 @@ export async function main(argv?: string[]): Promise<void> {
   registerOpenClawHealthCommand(program, engine);
   registerOpenClawCostCommand(program, engine);
   registerOpenClawBenchmarkCommand(program, engine);
-  registerSalesCrmCommand(program);
-  registerSalesCampaignCommand(program);
-  registerSalesReportCommand(program);
-  registerSalesFunnelCommand(program);
+  registerSalesCrmCommand(program, engine);
+  registerSalesCampaignCommand(program, engine);
+  registerSalesReportCommand(program, engine);
+  registerSalesFunnelCommand(program, engine);
   registerTeamCommand(program);
   registerDeployCommand(program);
   registerGtmCommand(program);
