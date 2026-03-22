@@ -4,6 +4,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 type Period = 'day' | 'week' | 'month';
 
@@ -31,7 +32,7 @@ const PERIOD_STATS: Record<Period, { totalTokens: number; totalCost: number; mis
   month: { totalTokens: 3_240_000, totalCost: 14.18, missions: 87 },
 };
 
-export function registerOpenClawCostCommand(program: Command): void {
+export function registerOpenClawCostCommand(program: Command, engine: MekongEngine): void {
   const cost = program
     .command('openclaw-cost')
     .description('OpenClaw cost tracking — summary, breakdown, budget, optimize');
@@ -49,15 +50,29 @@ export function registerOpenClawCostCommand(program: Command): void {
       heading(`Cost Summary — Last ${period.charAt(0).toUpperCase() + period.slice(1)}`);
       divider();
 
+      // Pull live engine stats where available
+      try {
+        const health = engine.openclaw?.getHealth();
+        if (health) {
+          keyValue('Source', 'Live engine data');
+          keyValue('Missions completed', `${health.missionsCompleted}`);
+          keyValue('Missions failed', `${health.missionsFailed}`);
+          keyValue('AGI score', `${health.agiScore}`);
+          divider();
+        }
+      } catch {
+        // engine not ready — skip live stats
+      }
+
       keyValue('Period', period);
-      keyValue('Missions run', `${stats.missions}`);
-      keyValue('Total tokens', stats.totalTokens.toLocaleString());
-      keyValue('Total cost', `$${stats.totalCost.toFixed(4)}`);
+      keyValue('Missions run (demo)', `${stats.missions}`);
+      keyValue('Total tokens (demo)', stats.totalTokens.toLocaleString());
+      keyValue('Total cost (demo)', `$${stats.totalCost.toFixed(4)}`);
       keyValue('Avg cost / mission', `$${avgCost}`);
       keyValue('Avg tokens / mission', avgTokens);
       divider();
 
-      info('Model breakdown (this period):');
+      info('Model breakdown (demo data):');
       info('  claude-haiku-3    42% of missions   ~$0.04/mission  (recommended for simple tasks)');
       info('  claude-sonnet-4   58% of missions   ~$0.24/mission  (used for complex tasks)');
       divider();
@@ -82,6 +97,7 @@ export function registerOpenClawCostCommand(program: Command): void {
       keyValue('Mission ID', mc.id);
       keyValue('Date', mc.date);
       keyValue('Model', mc.model);
+      keyValue('Source', 'Demo data');
       divider();
 
       keyValue('Input tokens', mc.inputTokens.toLocaleString());
@@ -134,7 +150,33 @@ export function registerOpenClawCostCommand(program: Command): void {
       heading('Cost Optimization Recommendations');
       divider();
 
-      info('Analysis complete. Found 3 optimization opportunities:');
+      // Use real engine health for failure rate and AGI score analysis
+      try {
+        const health = engine.openclaw?.getHealth();
+        if (health) {
+          const total = health.missionsCompleted + health.missionsFailed;
+          const failRate = total > 0 ? ((health.missionsFailed / total) * 100).toFixed(1) : '0.0';
+          info(`Live engine stats:`);
+          keyValue('  Failure rate', `${failRate}% (${health.missionsFailed}/${total})`);
+          keyValue('  AGI score', `${health.agiScore}/100`);
+          if (health.missionsFailed > 0) {
+            warn(`  ${health.missionsFailed} failed missions detected — review task complexity settings`);
+          }
+          if (health.agiScore < 80) {
+            warn('  AGI score below 80 — consider reducing concurrent missions');
+          } else {
+            success('  AGI score healthy — engine performing well');
+          }
+          if (health.circuitBreakerState !== 'closed') {
+            warn(`  Circuit breaker is ${health.circuitBreakerState} — reduce mission load`);
+          }
+          divider();
+        }
+      } catch {
+        // engine not ready — show demo tips only
+      }
+
+      info('General optimization tips (demo):');
       info('');
 
       warn('1. Model downgrade opportunity (HIGH IMPACT)');
