@@ -166,6 +166,12 @@ import { platformEventLog } from './platform-event-log';
 import { tenantAccessTokens } from './tenant-access-tokens';
 import { adminTenantAnalytics } from './admin-tenant-analytics';
 import { apiEndpointMonitoring } from './api-endpoint-monitoring';
+import { dataRetentionPolicies } from './tenant-data-retention-policies';
+import { missionExecutionHistory } from './mission-execution-history';
+import { platformErrorBudget } from './platform-error-budget';
+import { tenantApiVersioning } from './tenant-api-versioning';
+import { adminCapacityPlanning } from './admin-capacity-planning';
+import { tenantComplianceReporting } from './tenant-compliance-reporting';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -372,6 +378,16 @@ export function createRoutes() {
   routes.route('/v1/access-tokens', tenantAccessTokens);
   routes.route('/admin/tenant-analytics', adminTenantAnalytics);
   routes.route('/admin/endpoint-monitoring', apiEndpointMonitoring);
+
+  // Wave 59 routes
+  routes.route('/v1/data-retention', dataRetentionPolicies);
+  routes.route('/v1/execution-history', missionExecutionHistory);
+  routes.route('/admin/error-budget', platformErrorBudget);
+
+  // Wave 60 routes
+  routes.route('/v1/api-versioning', tenantApiVersioning);
+  routes.route('/admin/capacity-planning', adminCapacityPlanning);
+  routes.route('/v1/compliance-reports', tenantComplianceReporting);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1453,6 +1469,21 @@ export function createRoutes() {
         '/admin/endpoint-monitoring/alerts/{id}': { put: { summary: 'Update alert', tags: ['Endpoint Monitoring'] }, delete: { summary: 'Delete alert', tags: ['Endpoint Monitoring'] } },
         '/admin/endpoint-monitoring/slow': { get: { summary: 'Slow endpoints', tags: ['Endpoint Monitoring'] } },
         '/admin/endpoint-monitoring/dashboard': { get: { summary: 'Monitoring dashboard', tags: ['Endpoint Monitoring'] } },
+        // Wave 59
+        '/v1/data-retention/runs': { get: { summary: 'List retention runs', tags: ['Data Retention'] } },
+        '/v1/execution-history/executions': { get: { summary: 'List execution history', tags: ['Execution History'] }, post: { summary: 'Record execution', tags: ['Execution History'] } },
+        '/v1/execution-history/metrics': { get: { summary: 'Execution metrics', tags: ['Execution History'] } },
+        '/admin/error-budget/budgets': { get: { summary: 'List error budgets', tags: ['Error Budget'] }, post: { summary: 'Create error budget', tags: ['Error Budget'] } },
+        '/admin/error-budget/events': { get: { summary: 'Budget events', tags: ['Error Budget'] } },
+        '/admin/error-budget/dashboard': { get: { summary: 'Error budget dashboard', tags: ['Error Budget'] } },
+        // Wave 60
+        '/v1/api-versioning/versions': { get: { summary: 'List API versions', tags: ['API Versioning'] }, post: { summary: 'Create API version', tags: ['API Versioning'] } },
+        '/v1/api-versioning/mappings': { get: { summary: 'List version mappings', tags: ['API Versioning'] } },
+        '/admin/capacity-planning/plans': { get: { summary: 'List capacity plans', tags: ['Capacity Planning'] }, post: { summary: 'Create capacity plan', tags: ['Capacity Planning'] } },
+        '/admin/capacity-planning/alerts': { get: { summary: 'Capacity alerts', tags: ['Capacity Planning'] } },
+        '/admin/capacity-planning/dashboard': { get: { summary: 'Capacity dashboard', tags: ['Capacity Planning'] } },
+        '/v1/compliance-reports/reports': { get: { summary: 'List compliance reports', tags: ['Compliance Reports'] }, post: { summary: 'Create compliance report', tags: ['Compliance Reports'] } },
+        '/v1/compliance-reports/rules': { get: { summary: 'List compliance rules', tags: ['Compliance Reports'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
