@@ -1,92 +1,88 @@
 /**
- * Tenant API Documentation Routes
- * Per-tenant documentation page and version management.
+ * Tenant API Documentation routes
+ * Mount at: /v1/api-documentation
  *
- * GET  /pages           — list doc pages (auth)
- * POST /pages           — create doc page (auth)
- * GET  /versions        — list doc versions (auth)
- * GET  /admin/overview  — admin stats (X-Admin-Key)
+ * GET  /pages           — list doc pages (auth required)
+ * POST /pages           — create doc page (auth required)
+ * GET  /versions        — list page versions (auth required, ?page_id=)
+ * GET  /admin/overview  — platform-wide stats (X-Admin-Key required)
  */
 
 import { Hono } from 'hono';
-import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
 import { tenantApiDocumentationService } from '../services/tenant-api-documentation';
 
-const app = new Hono<{ Bindings: Env }>();
+type Bindings = {
+  DB: any;
+  ADMIN_KEY?: string;
+  [key: string]: any;
+};
 
-// GET /pages — list all documentation pages for authenticated tenant
+const app = new Hono<{ Bindings: Bindings }>();
+
+/** GET /pages — list documentation pages for authenticated tenant */
 app.get('/pages', auth(), async (c) => {
   try {
-    const { tenantId } = getTenant(c);
-    const pages = await tenantApiDocumentationService.listPages(c.env.DB, tenantId);
-    return c.json({ pages, total: pages.length });
+    const tenant = getTenant(c);
+    const limit = Math.min(parseInt(c.req.query('limit') ?? '50', 10) || 50, 200);
+    const offset = parseInt(c.req.query('offset') ?? '0', 10) || 0;
+    const result = await tenantApiDocumentationService.listPages(c.env.DB, tenant.tenantId, limit, offset);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
-    return c.json({ error: 'Failed to list doc pages' }, 500);
+    return c.json({ error: String(err) }, 500);
   }
 });
 
-// POST /pages — create a new documentation page
+/** POST /pages — create a new documentation page for authenticated tenant */
 app.post('/pages', auth(), async (c) => {
   try {
-    const { tenantId } = getTenant(c);
-    const body = await c.req.json().catch(() => ({})) as {
-      title?: string;
-      slug?: string;
-      content?: string;
-      category?: string;
-      sort_order?: number;
-      is_published?: number;
-    };
-
-    const title = body.title?.trim();
-    const slug = body.slug?.trim();
-
-    if (!title) {
-      return c.json({ error: 'title is required', code: 'VALIDATION_ERROR' }, 400);
-    }
-    if (!slug) {
-      return c.json({ error: 'slug is required', code: 'VALIDATION_ERROR' }, 400);
-    }
-
-    const page = await tenantApiDocumentationService.createPage(c.env.DB, tenantId, {
-      title,
+    const tenant = getTenant(c);
+    const body = await c.req.json();
+    const pageTitle = (body.page_title ?? body.title ?? '').trim();
+    const slug = (body.slug ?? '').trim();
+    if (!pageTitle) return c.json({ error: 'page_title is required' }, 400);
+    if (!slug) return c.json({ error: 'slug is required' }, 400);
+    const result = await tenantApiDocumentationService.createPage(c.env.DB, tenant.tenantId, {
+      pageTitle,
       slug,
       content: body.content,
       category: body.category,
-      sort_order: body.sort_order,
-      is_published: body.is_published,
+      published: body.published,
     });
-
-    return c.json(page, 201);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data }, 201);
   } catch (err) {
-    return c.json({ error: 'Failed to create doc page' }, 500);
+    return c.json({ error: String(err) }, 500);
   }
 });
 
-// GET /versions — list all doc versions for authenticated tenant
+/** GET /versions — list version history for a doc page (requires ?page_id=) */
 app.get('/versions', auth(), async (c) => {
   try {
-    const { tenantId } = getTenant(c);
-    const versions = await tenantApiDocumentationService.getVersions(c.env.DB, tenantId);
-    return c.json({ versions, total: versions.length });
+    const tenant = getTenant(c);
+    const pageId = c.req.query('page_id') ?? '';
+    if (!pageId) return c.json({ error: 'page_id query param is required' }, 400);
+    const result = await tenantApiDocumentationService.getVersions(c.env.DB, tenant.tenantId, pageId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
-    return c.json({ error: 'Failed to list doc versions' }, 500);
+    return c.json({ error: String(err) }, 500);
   }
 });
 
-// GET /admin/overview — cross-tenant stats (X-Admin-Key required)
+/** GET /admin/overview — platform-wide stats, requires X-Admin-Key header */
 app.get('/admin/overview', async (c) => {
-  const adminKey = c.req.header('X-Admin-Key');
-  if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
-    return c.json({ error: 'Forbidden', code: 'FORBIDDEN' }, 403);
-  }
-
   try {
-    const overview = await tenantApiDocumentationService.getAdminOverview(c.env.DB);
-    return c.json(overview);
+    const adminKey = c.req.header('X-Admin-Key');
+    if (!adminKey || adminKey !== c.env.ADMIN_KEY) {
+      return c.json({ error: 'Forbidden' }, 403);
+    }
+    const result = await tenantApiDocumentationService.getAdminOverview(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
-    return c.json({ error: 'Failed to get admin overview' }, 500);
+    return c.json({ error: String(err) }, 500);
   }
 });
 

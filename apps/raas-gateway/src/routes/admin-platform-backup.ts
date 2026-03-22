@@ -1,13 +1,17 @@
 /**
- * Admin Platform Backup routes — backup and restore point management
+ * Admin Platform Backup routes — backup records and schedule management
  * All endpoints require X-Admin-Key header. Mount path: /admin/platform-backup
  */
 
 import { Hono } from 'hono';
-import { Env } from '../index';
-import { adminPlatformBackupService } from '../services/admin-platform-backup-service';
+import { adminPlatformBackupService } from '../services/admin-platform-backup';
 
-const app = new Hono<{ Bindings: Env }>();
+type Bindings = {
+  DB: any;
+  ADMIN_API_KEY: string;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
 
 // Admin auth guard for ALL routes
 app.use('*', async (c, next) => {
@@ -18,12 +22,12 @@ app.use('*', async (c, next) => {
   await next();
 });
 
-// GET /backups — list all backups, optional ?status= filter
+// GET /backups — list all platform backups
 app.get('/backups', async (c) => {
   try {
-    const status = c.req.query('status');
-    const backups = await adminPlatformBackupService.listBackups(c.env.DB, status);
-    return c.json({ backups, count: backups.length });
+    const result = await adminPlatformBackupService.listBackups(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (e: unknown) {
     return c.json({ error: (e as Error).message }, 500);
   }
@@ -33,35 +37,37 @@ app.get('/backups', async (c) => {
 app.post('/backups', async (c) => {
   try {
     const body = await c.req.json() as {
+      backup_name: string;
       backup_type?: string;
-      storage_location: string;
       size_bytes?: number;
-      initiated_by?: string;
+      storage_path?: string;
     };
-    if (!body.storage_location) return c.json({ error: 'storage_location is required' }, 400);
-    const backup = await adminPlatformBackupService.createBackup(c.env.DB, body);
-    return c.json(backup, 201);
+    if (!body.backup_name) return c.json({ error: 'backup_name is required' }, 400);
+    const result = await adminPlatformBackupService.createBackup(c.env.DB, body);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data }, 201);
   } catch (e: unknown) {
     return c.json({ error: (e as Error).message }, 500);
   }
 });
 
-// GET /restore-points — list restore points, optional ?backup_id= filter
-app.get('/restore-points', async (c) => {
+// GET /schedules — list all backup schedules
+app.get('/schedules', async (c) => {
   try {
-    const backupId = c.req.query('backup_id');
-    const points = await adminPlatformBackupService.getRestorePoints(c.env.DB, backupId);
-    return c.json({ restore_points: points, count: points.length });
+    const result = await adminPlatformBackupService.getSchedules(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (e: unknown) {
     return c.json({ error: (e as Error).message }, 500);
   }
 });
 
-// GET /dashboard — summary counts by status/type, recent restores
+// GET /dashboard — backup summary by status and type
 app.get('/dashboard', async (c) => {
   try {
-    const dashboard = await adminPlatformBackupService.getDashboard(c.env.DB);
-    return c.json(dashboard);
+    const result = await adminPlatformBackupService.getDashboard(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (e: unknown) {
     return c.json({ error: (e as Error).message }, 500);
   }

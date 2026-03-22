@@ -179,7 +179,6 @@ import { tenantExportSchedules } from './tenant-export-schedules';
 import { tenantSessionManagement } from './tenant-session-management';
 import { missionQualityGates } from './mission-quality-gates';
 import { platformResourcePools } from './platform-resource-pools';
-import { tenantApiDocumentation } from './tenant-api-documentation';
 import { adminChangeManagement } from './admin-change-management';
 import { tenantUsageAlerts } from './tenant-usage-alerts';
 import { tenantApiRateQuotas } from './tenant-api-rate-quotas';
@@ -191,8 +190,6 @@ import { tenantApiResponseTransform } from './tenant-api-response-transform';
 import { missionSlaCompliance } from './mission-sla-compliance';
 import { platformLicenseManagement } from './platform-license-management';
 import { tenantDataPipeline } from './tenant-data-pipeline';
-import { adminPlatformBackup } from './admin-platform-backup';
-import { tenantApiMockServer } from './tenant-api-mock-server';
 import { tenantWebhookTemplates } from './tenant-webhook-templates';
 import { missionCostOptimization } from './mission-cost-optimization';
 import { platformTenantGrouping } from './platform-tenant-grouping';
@@ -263,6 +260,13 @@ import { missionCollaboration } from './mission-collaboration';
 import { adminPlatformHealthDashboard } from './admin-platform-health-dashboard';
 import { tenantApiAccessLogs } from './tenant-api-access-logs';
 import { adminConfigurationDrift } from './admin-configuration-drift';
+import { tenantIntegrationConnectors } from './tenant-integration-connectors';
+import { tenantApiMockServer } from './tenant-api-mock-server';
+import { missionAnalyticsDashboard } from './mission-analytics-dashboard';
+import { adminCostOptimization } from './admin-cost-optimization';
+import { tenantGeoRouting } from './tenant-geo-routing';
+import { adminPlatformBackup } from './admin-platform-backup';
+import { tenantApiDocumentation } from './tenant-api-documentation';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -520,8 +524,6 @@ export function createRoutes() {
 
   // Wave 70 routes
   routes.route('/v1/data-pipeline', tenantDataPipeline);
-  routes.route('/admin/platform-backup', adminPlatformBackup);
-  routes.route('/v1/api-mocks', tenantApiMockServer);
 
   // Wave 71 routes
   routes.route('/v1/webhook-templates', tenantWebhookTemplates);
@@ -637,9 +639,20 @@ export function createRoutes() {
   routes.route('/v1/collaboration', missionCollaboration);
   routes.route('/admin/health-dashboard', adminPlatformHealthDashboard);
 
-  // Wave 94 routes (partial — 2 of 3)
+  // Wave 94 routes
   routes.route('/v1/access-logs', tenantApiAccessLogs);
   routes.route('/admin/config-drift', adminConfigurationDrift);
+  routes.route('/v1/integration-connectors', tenantIntegrationConnectors);
+
+  // Wave 95 routes
+  routes.route('/v1/mock-server', tenantApiMockServer);
+  routes.route('/v1/analytics-dashboard', missionAnalyticsDashboard);
+  routes.route('/admin/cost-optimization', adminCostOptimization);
+
+  // Wave 96 routes
+  routes.route('/v1/geo-routing', tenantGeoRouting);
+  routes.route('/admin/platform-backup', adminPlatformBackup);
+  routes.route('/v1/api-docs-mgmt', tenantApiDocumentation);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1927,6 +1940,13 @@ export function createRoutes() {
         '/v1/access-logs/exports': { get: { summary: 'Log exports', tags: ['Access Logs'] } },
         '/admin/config-drift/detections': { get: { summary: 'List detections', tags: ['Config Drift'] }, post: { summary: 'Create detection', tags: ['Config Drift'] } },
         '/admin/config-drift/baselines': { get: { summary: 'Drift baselines', tags: ['Config Drift'] } },
+        '/v1/integration-connectors/connectors': { get: { summary: 'List connectors', tags: ['Integration Connectors'] }, post: { summary: 'Create connector', tags: ['Integration Connectors'] } },
+        '/v1/integration-connectors/logs': { get: { summary: 'Connector logs', tags: ['Integration Connectors'] } },
+        '/v1/geo-routing/rules': { get: { summary: 'List geo rules', tags: ['Geo Routing'] }, post: { summary: 'Create rule', tags: ['Geo Routing'] } },
+        '/v1/geo-routing/analytics': { get: { summary: 'Geo analytics', tags: ['Geo Routing'] } },
+        '/admin/platform-backup/schedules': { get: { summary: 'Backup schedules', tags: ['Platform Backup'] } },
+        '/v1/api-docs-mgmt/pages': { get: { summary: 'List doc pages', tags: ['API Documentation'] }, post: { summary: 'Create page', tags: ['API Documentation'] } },
+        '/v1/api-docs-mgmt/versions': { get: { summary: 'Page versions', tags: ['API Documentation'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });

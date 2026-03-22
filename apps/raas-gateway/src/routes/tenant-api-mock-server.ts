@@ -1,85 +1,102 @@
 /**
  * Tenant API Mock Server routes
  * Mount at: /v1/mock
+ *
+ * GET  /mocks          — list mock endpoints for authenticated tenant
+ * POST /mocks          — create a new mock endpoint
+ * GET  /requests       — list logged mock requests for authenticated tenant
+ * GET  /admin/overview — platform-wide stats (X-Admin-Key required)
  */
 
 import { Hono } from 'hono';
-import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
-import { tenantApiMockServerService as svc } from '../services/tenant-api-mock-server-service';
+import { tenantApiMockServerService as svc } from '../services/tenant-api-mock-server';
 
-const app = new Hono<{ Bindings: Env }>();
+// Inline Bindings — avoids tight coupling to index.ts Env shape
+type Bindings = {
+  DB: any;
+  ADMIN_API_KEY?: string;
+  [key: string]: any;
+};
 
-// All tenant routes require authentication
-app.use('*', auth());
+const app = new Hono<{ Bindings: Bindings }>();
 
 /**
- * GET /v1/mock/mocks — List all active mocks for the authenticated tenant
+ * GET /mocks — list all mock endpoints for the authenticated tenant
  */
-app.get('/mocks', async (c) => {
+app.get('/mocks', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const mocks = await svc.listMocks(c.env.DB, tenantId);
-    return c.json({ success: true, data: mocks });
+    const result = await svc.listMocks(c.env.DB, tenantId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
     console.error('[mock GET /mocks] error:', err);
-    return c.json({ success: false, error: 'Failed to list mocks' }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
 /**
- * POST /v1/mock/mocks — Create a new mock endpoint
- * Body: { mock_path, method?, response_status?, response_body_json?, response_headers_json?, delay_ms? }
+ * POST /mocks — create a new mock endpoint for the authenticated tenant
+ * Body: { mock_name, path_pattern, method?, response_status?, response_body?, response_headers?, delay_ms? }
  */
-app.post('/mocks', async (c) => {
+app.post('/mocks', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const body = await c.req.json();
-    if (!body?.mock_path) {
-      return c.json({ success: false, error: 'mock_path is required' }, 400);
+    const body = await c.req.json().catch(() => null);
+
+    if (!body || typeof body !== 'object') {
+      return c.json({ error: 'Invalid JSON body' }, 400);
     }
-    const created = await svc.createMock(c.env.DB, tenantId, body);
-    return c.json({ success: true, data: created }, 201);
+
+    const result = await svc.createMock(c.env.DB, tenantId, body);
+    if (!result.success) {
+      const status = result.error === 'mock_name and path_pattern are required' ? 400 : 500;
+      return c.json({ error: result.error }, status);
+    }
+    return c.json({ success: true, data: result.data }, 201);
   } catch (err) {
     console.error('[mock POST /mocks] error:', err);
-    return c.json({ success: false, error: 'Failed to create mock' }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
 /**
- * GET /v1/mock/requests?mock_id=&limit= — Request log for a mock endpoint
+ * GET /requests — list recent mock request logs for the authenticated tenant
+ * Query param: limit (default 50, max 200)
  */
-app.get('/requests', async (c) => {
+app.get('/requests', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const mockId = c.req.query('mock_id');
-    if (!mockId) {
-      return c.json({ success: false, error: 'mock_id query param is required' }, 400);
-    }
     const limit = parseInt(c.req.query('limit') ?? '50', 10) || 50;
-    const requests = await svc.getRequests(c.env.DB, tenantId, mockId, limit);
-    return c.json({ success: true, data: requests });
+    const result = await svc.getRequests(c.env.DB, tenantId, limit);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
     console.error('[mock GET /requests] error:', err);
-    return c.json({ success: false, error: 'Failed to fetch requests' }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
 /**
- * GET /v1/mock/admin/overview — Platform-wide stats (admin only)
+ * GET /admin/overview — platform-wide mock stats (admin only)
  * Requires X-Admin-Key header matching ADMIN_API_KEY env var
  */
 app.get('/admin/overview', async (c) => {
   try {
-    const adminKey = c.req.header('X-Admin-Key');
-    if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
-      return c.json({ success: false, error: 'Forbidden' }, 403);
+    const key = c.req.header('X-Admin-Key');
+    const expected = c.env.ADMIN_API_KEY;
+
+    if (!expected || key !== expected) {
+      return c.json({ error: 'Forbidden' }, 403);
     }
-    const overview = await svc.getAdminOverview(c.env.DB);
-    return c.json({ success: true, data: overview });
+
+    const result = await svc.getAdminOverview(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
   } catch (err) {
     console.error('[mock GET /admin/overview] error:', err);
-    return c.json({ success: false, error: 'Failed to fetch admin overview' }, 500);
+    return c.json({ error: 'Internal server error' }, 500);
   }
 });
 
