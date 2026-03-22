@@ -8,6 +8,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 /** Mock backup records */
 const MOCK_BACKUPS = [
@@ -27,7 +28,21 @@ const MOCK_SCHEDULE = {
   target: 's3',
 };
 
-export function registerBackupCommand(program: Command): void {
+/** DRY helper — show OpenClaw engine health footer */
+function showEngineHealth(engine?: MekongEngine, label = 'Engine Status'): void {
+  try {
+    const health = engine?.openclaw?.getHealth();
+    if (!health) return;
+    divider();
+    info(label);
+    keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+    keyValue('  Missions completed', `${health.missionsCompleted}`);
+    keyValue('  AGI score', `${health.agiScore}/100`);
+    keyValue('  Circuit breaker', health.circuitBreakerState);
+  } catch { /* engine not ready */ }
+}
+
+export function registerBackupCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('backup').description('Backup management');
 
   // ── backup create ───────────────────────────────────────────────────────────
@@ -41,8 +56,16 @@ export function registerBackupCommand(program: Command): void {
       const sizeMap: Record<string, string> = { full: '2.4 GB', incremental: '112 MB', snapshot: '1.1 GB' };
       const size = sizeMap[opts.type] ?? '2.4 GB';
 
-      info(`Type:   ${opts.type}`);
-      info(`Target: ${opts.target}`);
+      // Classify backup complexity via OpenClaw before executing
+      let complexity: 'trivial' | 'standard' | 'complex' | 'epic' = 'standard';
+      try {
+        const classified = engine?.openclaw?.classifyComplexity(opts.type);
+        if (classified) complexity = classified as typeof complexity;
+      } catch { /* engine not ready */ }
+
+      info(`Type:       ${opts.type}`);
+      info(`Target:     ${opts.target}`);
+      info(`Complexity: ${complexity}`);
       info('Compressing data...');
       info('Encrypting payload...');
       info('Uploading to target...');
@@ -57,6 +80,8 @@ export function registerBackupCommand(program: Command): void {
       divider();
       success(`Backup created: ${id}`);
       info('Verify with: mekong backup list');
+
+      showEngineHealth(engine, 'Engine Status');
     });
 
   // ── backup restore ──────────────────────────────────────────────────────────
@@ -96,6 +121,14 @@ export function registerBackupCommand(program: Command): void {
       } else {
         success(`Restore complete: ${backupId}`);
         info('Verification status: PASSED');
+
+        // Fire-and-forget: submit restore verification mission to OpenClaw
+        try {
+          void engine?.openclaw?.submitMission({
+            goal: `Verify restore integrity for backup ${backupId}`,
+            complexity: 'standard',
+          });
+        } catch { /* engine not ready */ }
       }
     });
 
@@ -125,10 +158,10 @@ export function registerBackupCommand(program: Command): void {
         keyValue('  Date', b.date);
         keyValue('  Target', b.target);
       }
-      divider();
 
       const failed = displayed.filter(b => b.status === 'failed').length;
       info(`Showing ${displayed.length} backup(s) — ${failed} failed`);
+      showEngineHealth(engine, 'Engine Stats');
     });
 
   // ── backup schedule ─────────────────────────────────────────────────────────
@@ -158,5 +191,6 @@ export function registerBackupCommand(program: Command): void {
       keyValue('Next run', MOCK_SCHEDULE.nextRun);
       divider();
       info('Edit schedule: mekong.yaml → backup.schedule');
+      showEngineHealth(engine, 'Engine Status');
     });
 }

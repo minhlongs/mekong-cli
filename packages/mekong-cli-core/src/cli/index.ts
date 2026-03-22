@@ -130,12 +130,12 @@ export async function main(argv?: string[]): Promise<void> {
   registerSalesFunnelCommand(program, engine);
   registerTeamCommand(program, engine);
   registerDeployCommand(program, engine);
-  registerGtmCommand(program);
+  registerGtmCommand(program, engine);
   registerMonitorCommand(program, engine);
   registerWorkflowCommand(program, engine);
-  registerNotificationCommand(program);
-  registerBackupCommand(program);
-  registerMigrationCommand(program);
+  registerNotificationCommand(program, engine);
+  registerBackupCommand(program, engine);
+  registerMigrationCommand(program, engine);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
