@@ -7,6 +7,7 @@
  *   mekong migration plan      Show pending migrations plan
  */
 import type { Command } from 'commander';
+import type { MekongEngine } from '../../core/engine.js';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
 
 /** Mock migration records */
@@ -20,21 +21,26 @@ const MOCK_APPLIED = [
 ];
 
 const MOCK_PENDING = [
-  {
-    version: '007', name: '007_add_backup_metadata_table', type: 'schema',
-    estimatedDuration: '1.0s', dependencies: ['006'],
-  },
-  {
-    version: '008', name: '008_backfill_agent_cost_data',  type: 'data',
-    estimatedDuration: '12.0s', dependencies: ['007'],
-  },
-  {
-    version: '009', name: '009_add_cost_index_on_runs',    type: 'index',
-    estimatedDuration: '3.5s', dependencies: ['008'],
-  },
+  { version: '007', name: '007_add_backup_metadata_table', type: 'schema', estimatedDuration: '1.0s', dependencies: ['006'] },
+  { version: '008', name: '008_backfill_agent_cost_data',  type: 'data',   estimatedDuration: '12.0s', dependencies: ['007'] },
+  { version: '009', name: '009_add_cost_index_on_runs',    type: 'index',  estimatedDuration: '3.5s', dependencies: ['008'] },
 ];
 
-export function registerMigrationCommand(program: Command): void {
+/** DRY helper — renders engine health footer */
+function showEngineHealth(engine?: MekongEngine, label = 'Engine Status'): void {
+  try {
+    const health = engine?.openclaw?.getHealth();
+    if (!health) return;
+    divider();
+    info(label);
+    keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+    keyValue('  Missions completed', `${health.missionsCompleted}`);
+    keyValue('  AGI score', `${health.agiScore}/100`);
+    keyValue('  Circuit breaker', health.circuitBreakerState);
+  } catch { /* engine not ready */ }
+}
+
+export function registerMigrationCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('migration').description('Database migration management');
 
   // ── migration status ────────────────────────────────────────────────────────
@@ -54,6 +60,8 @@ export function registerMigrationCommand(program: Command): void {
       } else {
         warn(`${MOCK_PENDING.length} pending migration(s) — run: mekong migration run`);
       }
+
+      showEngineHealth(engine, 'Engine Status');
     });
 
   // ── migration run ───────────────────────────────────────────────────────────
@@ -78,6 +86,13 @@ export function registerMigrationCommand(program: Command): void {
         return;
       }
 
+      // AI risk assessment via engine
+      try {
+        const migrationSummary = toRun.map(m => `${m.name} (${m.type})`).join(', ');
+        const complexity = engine?.openclaw?.classifyComplexity(migrationSummary);
+        if (complexity) keyValue('AI risk assessment', complexity);
+      } catch { /* engine not ready */ }
+
       info(`${toRun.length} migration(s) to apply`);
       divider();
 
@@ -96,6 +111,11 @@ export function registerMigrationCommand(program: Command): void {
       } else {
         success(`Applied ${toRun.length} migration(s) successfully`);
         keyValue('New DB version', `v${toRun[toRun.length - 1]?.version}`);
+        // Fire-and-forget AI migration analysis
+        void engine?.openclaw?.submitMission({
+          goal: `Analyze applied migrations: ${toRun.map(m => m.name).join(', ')}`,
+          complexity: 'standard',
+        });
       }
     });
 
@@ -107,6 +127,13 @@ export function registerMigrationCommand(program: Command): void {
       heading('Rolling Back Migrations');
       const steps = Math.max(1, parseInt(opts.steps ?? '1', 10));
       const toRevert = MOCK_APPLIED.slice(0, steps);
+
+      // AI rollback risk level
+      try {
+        const rollbackSummary = toRevert.map(m => `${m.name} (${m.type})`).join(', ');
+        const risk = engine?.openclaw?.classifyComplexity(rollbackSummary);
+        if (risk) keyValue('AI rollback risk level', risk);
+      } catch { /* engine not ready */ }
 
       info(`Rolling back ${steps} migration(s)`);
       divider();
@@ -152,5 +179,11 @@ export function registerMigrationCommand(program: Command): void {
       keyValue('Total migrations', String(MOCK_PENDING.length));
       keyValue('Estimated total duration', `${totalEstimate.toFixed(1)}s`);
       info('Apply with: mekong migration run');
+
+      // Fire-and-forget AI planning recommendations
+      void engine?.openclaw?.submitMission({
+        goal: `Generate migration planning recommendations for: ${MOCK_PENDING.map(m => m.name).join(', ')}`,
+        complexity: 'complex',
+      });
     });
 }

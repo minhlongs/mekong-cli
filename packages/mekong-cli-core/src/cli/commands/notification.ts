@@ -8,6 +8,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 const VALID_CHANNELS = ['email', 'slack', 'webhook', 'sms'] as const;
 type Channel = typeof VALID_CHANNELS[number];
@@ -29,7 +30,21 @@ const CHANNEL_CONFIG: Record<Channel, { configured: boolean; rateLimit: string }
   sms:     { configured: false, rateLimit: '100/day'  },
 };
 
-export function registerNotificationCommand(program: Command): void {
+/** DRY helper — show OpenClaw engine health footer */
+function showEngineHealth(engine?: MekongEngine, label = 'Engine Status'): void {
+  try {
+    const health = engine?.openclaw?.getHealth();
+    if (!health) return;
+    divider();
+    info(label);
+    keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+    keyValue('  Missions completed', `${health.missionsCompleted}`);
+    keyValue('  AGI score', `${health.agiScore}/100`);
+    keyValue('  Circuit breaker', health.circuitBreakerState);
+  } catch { /* engine not ready */ }
+}
+
+export function registerNotificationCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('notification').description('Notification management');
 
   // ── notification send ──────────────────────────────────────────────────────
@@ -47,14 +62,8 @@ export function registerNotificationCommand(program: Command): void {
         warn(`Unknown channel "${channel}". Valid: ${VALID_CHANNELS.join(', ')}`);
         return;
       }
-      if (!to) {
-        warn('Recipient --to is required');
-        return;
-      }
-      if (!message) {
-        warn('Message --message is required');
-        return;
-      }
+      if (!to) { warn('Recipient --to is required'); return; }
+      if (!message) { warn('Message --message is required'); return; }
       if (!CHANNEL_CONFIG[channel].configured) {
         warn(`Channel "${channel}" is not configured. Run: mekong notification config`);
         return;
@@ -70,6 +79,14 @@ export function registerNotificationCommand(program: Command): void {
       keyValue('Sent At', new Date().toISOString().replace('T', ' ').slice(0, 16));
       divider();
       success(`Notification sent via ${channel} to "${to}"`);
+
+      // Fire-and-forget: submit delivery optimization mission to OpenClaw
+      try {
+        void engine?.openclaw?.submitMission({
+          goal: `Optimize notification delivery via ${channel} to ${to}`,
+          complexity: 'trivial',
+        });
+      } catch { /* engine not ready */ }
     });
 
   // ── notification list ──────────────────────────────────────────────────────
@@ -95,8 +112,9 @@ export function registerNotificationCommand(program: Command): void {
         const tag = n.status === 'sent' ? 'SENT   ' : n.status === 'failed' ? 'FAILED ' : 'PENDING';
         console.log(`  [${tag}] ${n.id}  ${n.channel.padEnd(7)} ${n.to.padEnd(28)} ${n.sentAt}`);
       }
-      divider();
+
       info(`Showing ${Math.min(rows.length, limit)} of ${rows.length} notifications`);
+      showEngineHealth(engine, 'Engine Status');
     });
 
   // ── notification config ────────────────────────────────────────────────────
@@ -115,8 +133,8 @@ export function registerNotificationCommand(program: Command): void {
         const state = cfg.configured ? 'enabled ' : 'disabled';
         console.log(`  ${ch.padEnd(8)} [${state}]  rate limit: ${cfg.rateLimit}`);
       }
-      divider();
       success('Configuration loaded');
+      showEngineHealth(engine, 'Engine Status');
     });
 
   // ── notification channels ──────────────────────────────────────────────────
