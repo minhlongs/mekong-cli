@@ -16,7 +16,7 @@
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "tsup src/cli/index.ts --format esm --dts --noExternal @mekong/raas-sdk --noExternal @mekong/observability --noExternal @openclaw/cli-adapter --noExternal @openclaw/agi-evolution --noExternal @openclaw/engine --noExternal @openclaw/raas-marketplace --noExternal @openclaw/vc-governance --noExternal @openclaw/solo-os --noExternal @openclaw/rd-engine --noExternal @openclaw/agencyos-dashboard --noExternal @openclaw/cli-orchestrator",
+    "build": "tsup src/cli/index.ts --format esm --dts",
     "dev": "tsx watch src/cli/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
