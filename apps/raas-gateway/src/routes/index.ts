@@ -267,6 +267,12 @@ import { adminCostOptimization } from './admin-cost-optimization';
 import { tenantGeoRouting } from './tenant-geo-routing';
 import { adminPlatformBackup } from './admin-platform-backup';
 import { tenantApiDocumentation } from './tenant-api-documentation';
+import { tenantApiEventSourcing } from './tenant-api-event-sourcing';
+import { missionExecutionLogs } from './mission-execution-logs';
+import { adminPlatformNotifications } from './admin-platform-notifications';
+import { tenantApiFeatureFlags } from './tenant-api-feature-flags';
+import { adminSystemConfiguration } from './admin-system-configuration';
+import { tenantUsageQuotasManagement } from './tenant-usage-quotas-management';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -653,6 +659,16 @@ export function createRoutes() {
   routes.route('/v1/geo-routing', tenantGeoRouting);
   routes.route('/admin/platform-backup', adminPlatformBackup);
   routes.route('/v1/api-docs-mgmt', tenantApiDocumentation);
+
+  // Wave 97 routes
+  routes.route('/v1/event-sourcing', tenantApiEventSourcing);
+  routes.route('/v1/execution-logs', missionExecutionLogs);
+  routes.route('/admin/platform-notifications', adminPlatformNotifications);
+
+  // Wave 98 routes
+  routes.route('/v1/feature-flags-mgmt', tenantApiFeatureFlags);
+  routes.route('/admin/system-config', adminSystemConfiguration);
+  routes.route('/v1/usage-quotas', tenantUsageQuotasManagement);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1947,6 +1963,18 @@ export function createRoutes() {
         '/admin/platform-backup/schedules': { get: { summary: 'Backup schedules', tags: ['Platform Backup'] } },
         '/v1/api-docs-mgmt/pages': { get: { summary: 'List doc pages', tags: ['API Documentation'] }, post: { summary: 'Create page', tags: ['API Documentation'] } },
         '/v1/api-docs-mgmt/versions': { get: { summary: 'Page versions', tags: ['API Documentation'] } },
+        '/v1/event-sourcing/events': { get: { summary: 'List events', tags: ['Event Sourcing'] }, post: { summary: 'Create event', tags: ['Event Sourcing'] } },
+        '/v1/event-sourcing/snapshots': { get: { summary: 'Event snapshots', tags: ['Event Sourcing'] } },
+        '/v1/execution-logs/logs': { get: { summary: 'List execution logs', tags: ['Execution Logs'] }, post: { summary: 'Create log', tags: ['Execution Logs'] } },
+        '/v1/execution-logs/summaries': { get: { summary: 'Execution summaries', tags: ['Execution Logs'] } },
+        '/admin/platform-notifications/notifications': { get: { summary: 'List notifications', tags: ['Platform Notifications'] }, post: { summary: 'Create notification', tags: ['Platform Notifications'] } },
+        '/admin/platform-notifications/deliveries': { get: { summary: 'Notification deliveries', tags: ['Platform Notifications'] } },
+        '/v1/feature-flags-mgmt/flags': { get: { summary: 'List flags', tags: ['Feature Flags'] }, post: { summary: 'Create flag', tags: ['Feature Flags'] } },
+        '/v1/feature-flags-mgmt/evaluations': { get: { summary: 'Flag evaluations', tags: ['Feature Flags'] } },
+        '/admin/system-config/configs': { get: { summary: 'List system configs', tags: ['System Config'] }, post: { summary: 'Create config', tags: ['System Config'] } },
+        '/admin/system-config/history': { get: { summary: 'Config history', tags: ['System Config'] } },
+        '/v1/usage-quotas/quotas': { get: { summary: 'List quotas', tags: ['Usage Quotas'] }, post: { summary: 'Create quota', tags: ['Usage Quotas'] } },
+        '/v1/usage-quotas/alerts': { get: { summary: 'Quota alerts', tags: ['Usage Quotas'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
