@@ -3,11 +3,7 @@
 import asyncio, json, logging, os, subprocess, sys, time, re
 from pathlib import Path
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [CTO] %(message)s",
-
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [CTO] %(message)s")
 log = logging.getLogger("cto")
 
 SESSION = os.environ.get("CTO_SESSION", "openclaw")
