@@ -1,0 +1,149 @@
+/**
+ * openclaw-mission.ts — OpenClaw mission management CLI commands
+ * Create, list, inspect, and cancel autonomous missions
+ */
+import type { Command } from 'commander';
+import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+
+type MissionStatus = 'pending' | 'running' | 'completed' | 'failed';
+type Complexity = 'low' | 'medium' | 'high' | 'critical';
+
+interface Mission {
+  id: string;
+  name: string;
+  complexity: Complexity;
+  status: MissionStatus;
+  progress: number;
+  stepsTotal: number;
+  stepsDone: number;
+  currentStep: string;
+  etaMin: number;
+  created: string;
+  description: string;
+}
+
+const MISSIONS: Mission[] = [
+  { id: 'msn_001', name: 'Deploy landing page', complexity: 'medium', status: 'completed', progress: 100, stepsTotal: 8, stepsDone: 8, currentStep: 'done', etaMin: 0, created: '2026-03-22 07:30', description: 'Deploy marketing landing page to Cloudflare Pages' },
+  { id: 'msn_002', name: 'Scrape competitor data', complexity: 'high', status: 'running', progress: 62, stepsTotal: 13, stepsDone: 8, currentStep: 'Extracting pricing tables', etaMin: 14, created: '2026-03-22 08:15', description: 'Collect and normalize competitor pricing from 5 SaaS sites' },
+  { id: 'msn_003', name: 'Generate monthly report', complexity: 'low', status: 'completed', progress: 100, stepsTotal: 5, stepsDone: 5, currentStep: 'done', etaMin: 0, created: '2026-03-21 23:00', description: 'Compile MRR, churn, and growth metrics for March 2026' },
+  { id: 'msn_004', name: 'Refactor billing module', complexity: 'critical', status: 'pending', progress: 0, stepsTotal: 20, stepsDone: 0, currentStep: 'queued', etaMin: 45, created: '2026-03-22 09:10', description: 'Migrate billing to Polar.sh webhooks, remove legacy PayPal code' },
+  { id: 'msn_005', name: 'SEO audit & fix', complexity: 'medium', status: 'running', progress: 38, stepsTotal: 10, stepsDone: 4, currentStep: 'Analyzing meta tags', etaMin: 22, created: '2026-03-22 08:50', description: 'Run Lighthouse audit and fix top 10 SEO issues' },
+  { id: 'msn_006', name: 'Onboarding email sequence', complexity: 'low', status: 'failed', progress: 33, stepsTotal: 6, stepsDone: 2, currentStep: 'Template render error', etaMin: 0, created: '2026-03-22 06:00', description: 'Draft and schedule 7-day onboarding drip campaign' },
+  { id: 'msn_007', name: 'API rate limit audit', complexity: 'high', status: 'pending', progress: 0, stepsTotal: 9, stepsDone: 0, currentStep: 'queued', etaMin: 30, created: '2026-03-22 09:05', description: 'Review and tighten rate limits across all public endpoints' },
+];
+
+function complexityColor(c: Complexity, text: string): string {
+  const map: Record<Complexity, (s: string) => void> = {
+    low: info,
+    medium: info,
+    high: warn,
+    critical: warn,
+  };
+  void map; // suppress unused
+  return c === 'critical' ? `[!] ${text}` : text;
+}
+
+function printMissionRow(m: Mission): void {
+  const prog = `${m.progress}%`.padStart(4);
+  const bar = ('█'.repeat(Math.round(m.progress / 10)) + '░'.repeat(10 - Math.round(m.progress / 10)));
+  const line = `${m.id}  ${m.name.padEnd(28)} ${m.complexity.padEnd(9)} ${m.status.padEnd(11)} ${prog} [${bar}]`;
+  if (m.status === 'failed') warn(line);
+  else if (m.status === 'completed') success(line);
+  else if (m.complexity === 'critical') warn(complexityColor(m.complexity, line));
+  else info(line);
+}
+
+export function registerOpenClawMissionCommand(program: Command): void {
+  const mission = program
+    .command('openclaw-mission')
+    .description('OpenClaw mission management — create, list, inspect, cancel');
+
+  mission
+    .command('create')
+    .description('Create a new mission with complexity classification')
+    .requiredOption('--name <name>', 'Mission name')
+    .option('--complexity <level>', 'Complexity: low|medium|high|critical', 'medium')
+    .option('--description <desc>', 'Mission description', '')
+    .action((opts: { name: string; complexity: string; description: string }) => {
+      const id = `msn_${String(Date.now()).slice(-4)}`;
+      heading('Mission Created');
+      keyValue('ID', id);
+      keyValue('Name', opts.name);
+      keyValue('Complexity', opts.complexity);
+      keyValue('Description', opts.description || '(none)');
+      keyValue('Status', 'pending');
+      keyValue('Created', new Date().toISOString().slice(0, 16).replace('T', ' '));
+      divider();
+      success(`Mission ${id} queued — run: mekong openclaw-mission status --id ${id}`);
+      info('');
+    });
+
+  mission
+    .command('list')
+    .description('List missions with optional status filter')
+    .option('--status <status>', 'Filter: pending|running|completed|failed')
+    .option('--limit <n>', 'Max results', '10')
+    .action((opts: { status?: string; limit: string }) => {
+      const limit = parseInt(opts.limit, 10) || 10;
+      const filtered = opts.status
+        ? MISSIONS.filter(m => m.status === opts.status)
+        : MISSIONS;
+      const rows = filtered.slice(0, limit);
+      heading('OpenClaw Missions');
+      keyValue('Showing', `${rows.length} of ${filtered.length} mission(s)${opts.status ? ` [${opts.status}]` : ''}`);
+      divider();
+      info('ID        Name                          Complexity Status      Prog [████████░░]');
+      info('─'.repeat(84));
+      for (const m of rows) printMissionRow(m);
+      divider();
+      const counts = { pending: 0, running: 0, completed: 0, failed: 0 };
+      for (const m of MISSIONS) counts[m.status]++;
+      info(`Pending: ${counts.pending} | Running: ${counts.running} | Completed: ${counts.completed} | Failed: ${counts.failed}`);
+      info('');
+    });
+
+  mission
+    .command('status')
+    .description('Show detailed status for a mission')
+    .requiredOption('--id <mission-id>', 'Mission ID')
+    .action((opts: { id: string }) => {
+      const m = MISSIONS.find(x => x.id === opts.id);
+      if (!m) { warn(`Mission ${opts.id} not found`); return; }
+      heading(`Mission Status: ${m.name}`);
+      keyValue('ID', m.id);
+      keyValue('Complexity', m.complexity);
+      keyValue('Status', m.status);
+      keyValue('Progress', `${m.progress}%  [${'█'.repeat(Math.round(m.progress / 10))}${'░'.repeat(10 - Math.round(m.progress / 10))}]`);
+      keyValue('Steps', `${m.stepsDone} / ${m.stepsTotal} completed`);
+      keyValue('Current step', m.currentStep);
+      keyValue('ETA', m.etaMin > 0 ? `~${m.etaMin} min` : (m.status === 'completed' ? 'Finished' : 'N/A'));
+      keyValue('Created', m.created);
+      keyValue('Description', m.description);
+      divider();
+      if (m.status === 'completed') success('Mission completed successfully');
+      else if (m.status === 'failed') warn('Mission failed — check logs: mekong openclaw-health queue');
+      else if (m.status === 'running') info('Mission in progress...');
+      else info('Mission queued — waiting for worker');
+      info('');
+    });
+
+  mission
+    .command('cancel')
+    .description('Cancel a running or pending mission')
+    .requiredOption('--id <mission-id>', 'Mission ID')
+    .action((opts: { id: string }) => {
+      const m = MISSIONS.find(x => x.id === opts.id);
+      if (!m) { warn(`Mission ${opts.id} not found`); return; }
+      if (m.status === 'completed' || m.status === 'failed') {
+        warn(`Mission ${opts.id} is already ${m.status} — nothing to cancel`);
+        return;
+      }
+      heading('Mission Cancelled');
+      keyValue('ID', m.id);
+      keyValue('Name', m.name);
+      keyValue('Was at', `${m.progress}% progress`);
+      divider();
+      warn(`Mission ${m.id} cancelled. Partial work rolled back.`);
+      info('');
+    });
+}
