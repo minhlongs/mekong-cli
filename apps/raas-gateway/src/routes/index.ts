@@ -213,6 +213,12 @@ import { platformComplianceAudit } from './platform-compliance-audit';
 import { tenantSecretVault } from './tenant-secret-vault';
 import { adminPlatformMigration } from './admin-platform-migration';
 import { tenantEventReplay } from './tenant-event-replay';
+import { tenantApiDeprecation } from './tenant-api-deprecation';
+import { missionArtifactStorage } from './mission-artifact-storage';
+import { platformTenantScoring } from './platform-tenant-scoring';
+import { tenantCustomMetrics } from './tenant-custom-metrics';
+import { adminPlatformScaling } from './admin-platform-scaling';
+import { tenantNotificationDigest } from './tenant-notification-digest';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -499,6 +505,16 @@ export function createRoutes() {
   routes.route('/v1/secret-vault', tenantSecretVault);
   routes.route('/admin/platform-migration', adminPlatformMigration);
   routes.route('/v1/event-replay', tenantEventReplay);
+
+  // Wave 75 routes
+  routes.route('/v1/api-deprecation', tenantApiDeprecation);
+  routes.route('/v1/artifact-storage', missionArtifactStorage);
+  routes.route('/admin/tenant-scoring', platformTenantScoring);
+
+  // Wave 76 routes
+  routes.route('/v1/custom-metrics', tenantCustomMetrics);
+  routes.route('/admin/platform-scaling', adminPlatformScaling);
+  routes.route('/v1/notification-digest', tenantNotificationDigest);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1690,6 +1706,18 @@ export function createRoutes() {
         '/admin/platform-migration/rollbacks': { get: { summary: 'Migration rollbacks', tags: ['Platform Migration'] } },
         '/v1/event-replay/configs': { get: { summary: 'List replay configs', tags: ['Event Replay'] }, post: { summary: 'Create config', tags: ['Event Replay'] } },
         '/v1/event-replay/runs': { get: { summary: 'Replay runs', tags: ['Event Replay'] } },
+        '/v1/api-deprecation/notices': { get: { summary: 'List deprecation notices', tags: ['API Deprecation'] }, post: { summary: 'Create notice', tags: ['API Deprecation'] } },
+        '/v1/api-deprecation/acknowledgements': { get: { summary: 'Deprecation acknowledgements', tags: ['API Deprecation'] } },
+        '/v1/artifact-storage/artifacts': { get: { summary: 'List artifacts', tags: ['Artifact Storage'] }, post: { summary: 'Create artifact', tags: ['Artifact Storage'] } },
+        '/v1/artifact-storage/downloads': { get: { summary: 'Artifact downloads', tags: ['Artifact Storage'] } },
+        '/admin/tenant-scoring/scores': { get: { summary: 'List tenant scores', tags: ['Tenant Scoring'] }, post: { summary: 'Calculate score', tags: ['Tenant Scoring'] } },
+        '/admin/tenant-scoring/history': { get: { summary: 'Score history', tags: ['Tenant Scoring'] } },
+        '/v1/custom-metrics/metrics': { get: { summary: 'List custom metrics', tags: ['Custom Metrics'] }, post: { summary: 'Create metric', tags: ['Custom Metrics'] } },
+        '/v1/custom-metrics/data-points': { get: { summary: 'Metric data points', tags: ['Custom Metrics'] } },
+        '/admin/platform-scaling/rules': { get: { summary: 'List scaling rules', tags: ['Platform Scaling'] }, post: { summary: 'Create rule', tags: ['Platform Scaling'] } },
+        '/admin/platform-scaling/events': { get: { summary: 'Scaling events', tags: ['Platform Scaling'] } },
+        '/v1/notification-digest/configs': { get: { summary: 'List digest configs', tags: ['Notification Digest'] }, post: { summary: 'Create config', tags: ['Notification Digest'] } },
+        '/v1/notification-digest/deliveries': { get: { summary: 'Digest deliveries', tags: ['Notification Digest'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
