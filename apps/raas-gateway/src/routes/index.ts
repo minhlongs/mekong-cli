@@ -95,6 +95,12 @@ import { revenueAnalyticsV2 } from './revenue-analytics-v2';
 import { tenantLifecycle } from './tenant-lifecycle';
 import { onboardingV2 } from './onboarding-v2';
 import { adaptiveRateLimit } from './adaptive-rate-limit';
+import { apiSandbox } from './api-sandbox';
+import { tenantBackup } from './tenant-backup';
+import { apiUsageAnalytics } from './api-usage-analytics';
+import { webhookSimulator } from './webhook-simulator';
+import { platformAuditTrail } from './platform-audit-trail';
+import { multiRegionConfig } from './multi-region-config';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -181,6 +187,16 @@ export function createRoutes() {
   routes.route('/admin/revenue-v2', revenueAnalyticsV2);
   routes.route('/v1/lifecycle', tenantLifecycle);
   routes.route('/v1/adaptive-rate-limit', adaptiveRateLimit);
+
+  // Wave 35 routes
+  routes.route('/v1/sandbox', apiSandbox);
+  routes.route('/v1/backup', tenantBackup);
+  routes.route('/v1/webhook-simulator', webhookSimulator);
+  routes.route('/v1/api-analytics', apiUsageAnalytics);
+
+  // Wave 36 routes
+  routes.route('/admin/audit-trail', platformAuditTrail);
+  routes.route('/v1/region', multiRegionConfig);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -743,6 +759,50 @@ export function createRoutes() {
         '/v1/adaptive-rate-limit/admin/violators': { get: { summary: 'Top violators', tags: ['Rate Limit V2'] } },
         '/v1/adaptive-rate-limit/admin/seed': { post: { summary: 'Seed tier defaults', tags: ['Rate Limit V2'] } },
         '/v1/adaptive-rate-limit/admin/tier-defaults': { get: { summary: 'Tier defaults', tags: ['Rate Limit V2'] } },
+        // Wave 35: API Sandbox
+        '/v1/sandbox/environments': { get: { summary: 'List sandboxes', tags: ['Sandbox'], security: [{ bearer: [] }] }, post: { summary: 'Create sandbox', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        '/v1/sandbox/stats': { get: { summary: 'Sandbox stats', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        '/v1/sandbox/execute': { post: { summary: 'Execute sandbox request', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        '/v1/sandbox/environments/{id}': { get: { summary: 'Get sandbox', tags: ['Sandbox'], security: [{ bearer: [] }] }, delete: { summary: 'Delete sandbox', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        '/v1/sandbox/environments/{id}/mock': { post: { summary: 'Set mock response', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        '/v1/sandbox/environments/{id}/history': { get: { summary: 'Request history', tags: ['Sandbox'], security: [{ bearer: [] }] } },
+        // Wave 35: Webhook Simulator
+        '/v1/webhook-simulator/simulate': { post: { summary: 'Simulate webhook', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        '/v1/webhook-simulator/simulations': { get: { summary: 'List simulations', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        '/v1/webhook-simulator/stats': { get: { summary: 'Simulation stats', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        '/v1/webhook-simulator/sample/{eventType}': { get: { summary: 'Sample payload', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        '/v1/webhook-simulator/simulations/{id}': { get: { summary: 'Get simulation', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        '/v1/webhook-simulator/test-endpoints': { get: { summary: 'List test endpoints', tags: ['Webhook Sim'], security: [{ bearer: [] }] }, post: { summary: 'Create test endpoint', tags: ['Webhook Sim'], security: [{ bearer: [] }] } },
+        // Wave 35: API Usage Analytics
+        '/v1/api-analytics/summary': { get: { summary: 'Usage summary', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/endpoints': { get: { summary: 'Endpoint stats', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/top': { get: { summary: 'Top endpoints', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/slowest': { get: { summary: 'Slowest endpoints', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/errors': { get: { summary: 'Error breakdown', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/errors/hotspots': { get: { summary: 'Error hotspots', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/trend/latency': { get: { summary: 'Latency trend', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        '/v1/api-analytics/trend/volume': { get: { summary: 'Volume trend', tags: ['API Analytics'], security: [{ bearer: [] }] } },
+        // Wave 36: Tenant Backup
+        '/v1/backup/backups': { get: { summary: 'List backups', tags: ['Backup'], security: [{ bearer: [] }] }, post: { summary: 'Create backup', tags: ['Backup'], security: [{ bearer: [] }] } },
+        '/v1/backup/stats': { get: { summary: 'Backup stats', tags: ['Backup'], security: [{ bearer: [] }] } },
+        '/v1/backup/backups/{id}': { get: { summary: 'Get backup', tags: ['Backup'], security: [{ bearer: [] }] }, delete: { summary: 'Delete backup', tags: ['Backup'], security: [{ bearer: [] }] } },
+        '/v1/backup/backups/{id}/download': { get: { summary: 'Download backup', tags: ['Backup'], security: [{ bearer: [] }] } },
+        '/v1/backup/backups/{id}/restore': { post: { summary: 'Restore backup', tags: ['Backup'], security: [{ bearer: [] }] } },
+        // Wave 36: Multi-Region
+        '/v1/region/config': { get: { summary: 'Region config', tags: ['Region'], security: [{ bearer: [] }] }, put: { summary: 'Set region', tags: ['Region'], security: [{ bearer: [] }] } },
+        '/v1/region/optimal': { get: { summary: 'Optimal region', tags: ['Region'], security: [{ bearer: [] }] } },
+        '/v1/region/regions': { get: { summary: 'Available regions', tags: ['Region'] } },
+        '/v1/region/status': { get: { summary: 'Region status', tags: ['Region'] } },
+        '/v1/region/admin/seed': { post: { summary: 'Seed regions', tags: ['Region'] } },
+        '/v1/region/admin/stats': { get: { summary: 'Region stats', tags: ['Region'] } },
+        // Wave 36: Platform Audit Trail
+        '/admin/audit-trail/entries': { get: { summary: 'Audit entries', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/stats': { get: { summary: 'Audit stats', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/actor/{actorId}': { get: { summary: 'Actor history', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/resource/{type}/{id}': { get: { summary: 'Resource history', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/search': { get: { summary: 'Search audit', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/export': { get: { summary: 'Export audit', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/retention': { get: { summary: 'Retention configs', tags: ['Audit Trail'] }, post: { summary: 'Set retention', tags: ['Audit Trail'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
