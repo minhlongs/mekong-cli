@@ -247,6 +247,12 @@ import { adminPlatformMetrics } from './admin-platform-metrics';
 import { tenantCustomDomains } from './tenant-custom-domains';
 import { adminCapacityPlanning } from './admin-capacity-planning';
 import { tenantApiThrottling } from './tenant-api-throttling';
+import { tenantApiCircuitBreaker } from './tenant-api-circuit-breaker';
+import { missionResourceAllocation } from './mission-resource-allocation';
+import { adminPlatformAuditTrail } from './admin-platform-audit-trail';
+import { tenantApiCachingConfig } from './tenant-api-caching-config';
+import { adminReleaseManagement } from './admin-release-management';
+import { tenantErrorTracking } from './tenant-error-tracking';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -596,6 +602,16 @@ export function createRoutes() {
   routes.route('/v1/custom-domains', tenantCustomDomains);
   routes.route('/admin/capacity-planning', adminCapacityPlanning);
   routes.route('/v1/api-throttling', tenantApiThrottling);
+
+  // Wave 89 routes
+  routes.route('/v1/circuit-breaker', tenantApiCircuitBreaker);
+  routes.route('/v1/resource-allocation', missionResourceAllocation);
+  routes.route('/admin/audit-trail', adminPlatformAuditTrail);
+
+  // Wave 90 routes
+  routes.route('/v1/caching-config', tenantApiCachingConfig);
+  routes.route('/admin/release-management', adminReleaseManagement);
+  routes.route('/v1/error-tracking', tenantErrorTracking);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1195,7 +1211,6 @@ export function createRoutes() {
         '/v1/region/admin/seed': { post: { summary: 'Seed regions', tags: ['Region'] } },
         '/v1/region/admin/stats': { get: { summary: 'Region stats', tags: ['Region'] } },
         // Wave 36: Platform Audit Trail
-        '/admin/audit-trail/entries': { get: { summary: 'Audit entries', tags: ['Audit Trail'] } },
         '/admin/audit-trail/stats': { get: { summary: 'Audit stats', tags: ['Audit Trail'] } },
         '/admin/audit-trail/actor/{actorId}': { get: { summary: 'Actor history', tags: ['Audit Trail'] } },
         '/admin/audit-trail/resource/{type}/{id}': { get: { summary: 'Resource history', tags: ['Audit Trail'] } },
@@ -1852,6 +1867,18 @@ export function createRoutes() {
         '/v1/batch-processing/items': { get: { summary: 'Batch items', tags: ['Batch Processing'] } },
         '/admin/platform-metrics/alerts': { get: { summary: 'Metric alerts', tags: ['Platform Metrics'] } },
         '/v1/custom-domains/verifications': { get: { summary: 'Domain verifications', tags: ['Custom Domains'] } },
+        '/v1/circuit-breaker/breakers': { get: { summary: 'List breakers', tags: ['Circuit Breaker'] }, post: { summary: 'Create breaker', tags: ['Circuit Breaker'] } },
+        '/v1/circuit-breaker/events': { get: { summary: 'Breaker events', tags: ['Circuit Breaker'] } },
+        '/v1/resource-allocation/allocations': { get: { summary: 'List allocations', tags: ['Resource Allocation'] }, post: { summary: 'Create allocation', tags: ['Resource Allocation'] } },
+        '/v1/resource-allocation/pools': { get: { summary: 'Resource pools', tags: ['Resource Allocation'] } },
+        '/admin/audit-trail/entries': { get: { summary: 'List audit entries', tags: ['Audit Trail'] }, post: { summary: 'Create entry', tags: ['Audit Trail'] } },
+        '/admin/audit-trail/policies': { get: { summary: 'Audit policies', tags: ['Audit Trail'] } },
+        '/v1/caching-config/configs': { get: { summary: 'List cache configs', tags: ['Caching Config'] }, post: { summary: 'Create config', tags: ['Caching Config'] } },
+        '/v1/caching-config/stats': { get: { summary: 'Cache stats', tags: ['Caching Config'] } },
+        '/admin/release-management/releases': { get: { summary: 'List releases', tags: ['Release Management'] }, post: { summary: 'Create release', tags: ['Release Management'] } },
+        '/admin/release-management/notes': { get: { summary: 'Release notes', tags: ['Release Management'] } },
+        '/v1/error-tracking/errors': { get: { summary: 'List errors', tags: ['Error Tracking'] }, post: { summary: 'Report error', tags: ['Error Tracking'] } },
+        '/v1/error-tracking/rules': { get: { summary: 'Error rules', tags: ['Error Tracking'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
