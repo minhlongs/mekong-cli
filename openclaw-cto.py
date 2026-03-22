@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenClaw CTO v7.2 — context-aware dispatch + smart question answering."""
+"""OpenClaw CTO v7.3 — fix P1 false-busy + compact loop."""
 import asyncio, json, logging, os, subprocess, sys, time, re
 from pathlib import Path
 
@@ -41,12 +41,11 @@ def is_idle(output):
     tail = "\n".join(output.strip().split("\n")[-5:])
     if "\u276f" not in tail:
         return False
-    if any(x in tail.lower() for x in ["running", "thinking", "tokens", "gusting"]):
-        return False
-    low500 = output[-500:].lower()
-    if any(x in low500 for x in ["press up to edit", "queued", "pending"]):
-        return False
-    if "Next:" in output[-300:]:
+    # Only check busy indicators in tail — prompt present = idle
+    tail_low = tail.lower()
+    busy = ["running", "thinking", "tokens", "gusting", "crunching",
+            "precipitating", "processing", "compacting"]
+    if any(x in tail_low for x in busy):
         return False
     return True
 
@@ -198,7 +197,7 @@ def bootstrap():
 
 async def main():
     log.info("=" * 50)
-    log.info("OpenClaw CTO v7.2 — context-aware dispatch")
+    log.info("OpenClaw CTO v7.3 — fix false-busy + compact loop")
     mode = "HOT-RESTART" if NO_BOOTSTRAP else "FULL BOOTSTRAP"
     log.info(f"Session: {SESSION} | Interval: {INTERVAL}s | Workers: {len(WORKERS)} | {mode}")
     log.info("=" * 50)
@@ -211,6 +210,7 @@ async def main():
     last_dispatch = [0.0] * len(WORKERS)
     last_cmd = [""] * len(WORKERS)
     last_answer = [0.0] * len(WORKERS)
+    compact_attempts = [0] * len(WORKERS)  # track compact failures
     cycle = 0
     rr_start = 0
 
@@ -285,10 +285,22 @@ async def main():
                     continue
 
                 if ctx >= 85:
-                    send_cmd(pane, "/compact")
+                    if compact_attempts[i] >= 2:
+                        # Compact failed 2x — commit work and let worker continue
+                        log.warning(f"P{pane} ({worker['name']}): COMPACT FAILED {compact_attempts[i]}x at {ctx}% — committing instead")
+                        send_cmd(pane, f'/worker-commit "Project: {worker["name"]}. Save work before context reset." --fast')
+                        compact_attempts[i] = 0
+                    else:
+                        send_cmd(pane, "/compact")
+                        compact_attempts[i] += 1
+                        log.info(f"P{pane} ({worker['name']}): COMPACT attempt {compact_attempts[i]} [ctx:{ctx}%]")
                     last_dispatch[i] = now
                     dispatched += 1
                     continue
+
+                # Reset compact counter when ctx healthy
+                if ctx < 85:
+                    compact_attempts[i] = 0
 
                 # READ WORKER CONTEXT before dispatching
                 worker_ctx = read_worker_context(output)
