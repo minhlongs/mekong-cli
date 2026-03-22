@@ -107,6 +107,12 @@ import { agentMarketplace } from './agent-marketplace';
 import { usageAlerts } from './usage-alerts';
 import { migrationTools } from './migration-tools';
 import { notificationsHub } from './notifications-hub';
+import { tenantApiTokens } from './tenant-api-tokens';
+import { missionWebhooksV3 } from './mission-webhooks-v3';
+import { platformAnnouncements } from './platform-announcements';
+import { tenantQuotas } from './tenant-quotas';
+import { aiModelRegistry } from './ai-model-registry';
+import { platformMetricsDashboard } from './platform-metrics-dashboard';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -213,6 +219,16 @@ export function createRoutes() {
   routes.route('/v1/usage-alerts', usageAlerts);
   routes.route('/v1/migration', migrationTools);
   routes.route('/v1/notifications-hub', notificationsHub);
+
+  // Wave 39 routes
+  routes.route('/v1/api-tokens', tenantApiTokens);
+  routes.route('/v1/mission-webhooks-v3', missionWebhooksV3);
+  routes.route('/v1/announcements', platformAnnouncements);
+
+  // Wave 40 routes
+  routes.route('/v1/quotas', tenantQuotas);
+  routes.route('/v1/ai-models', aiModelRegistry);
+  routes.route('/admin/platform-metrics', platformMetricsDashboard);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -867,6 +883,50 @@ export function createRoutes() {
         '/v1/notifications-hub/templates/{eventType}': { put: { summary: 'Upsert template', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
         '/v1/notifications-hub/admin/seed-templates': { post: { summary: 'Seed defaults', tags: ['Notifications Hub'] } },
         '/v1/notifications-hub/admin/overview': { get: { summary: 'Platform overview', tags: ['Notifications Hub'] } },
+        // Wave 39: Tenant API Tokens
+        '/v1/api-tokens/tokens': { get: { summary: 'List API tokens', tags: ['API Tokens'], security: [{ bearer: [] }] }, post: { summary: 'Create token', tags: ['API Tokens'], security: [{ bearer: [] }] } },
+        '/v1/api-tokens/tokens/{tokenId}': { get: { summary: 'Token detail', tags: ['API Tokens'], security: [{ bearer: [] }] }, delete: { summary: 'Revoke token', tags: ['API Tokens'], security: [{ bearer: [] }] } },
+        '/v1/api-tokens/tokens/{tokenId}/rotate': { post: { summary: 'Rotate token', tags: ['API Tokens'], security: [{ bearer: [] }] } },
+        '/v1/api-tokens/validate': { post: { summary: 'Validate token', tags: ['API Tokens'] } },
+        '/v1/api-tokens/admin/overview': { get: { summary: 'Token overview', tags: ['API Tokens'] } },
+        // Wave 39: Mission Webhooks V3
+        '/v1/mission-webhooks-v3/subscriptions': { get: { summary: 'List webhook subs', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, post: { summary: 'Create subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/mission-webhooks-v3/subscriptions/{subId}': { get: { summary: 'Get subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, put: { summary: 'Update subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, delete: { summary: 'Delete subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/mission-webhooks-v3/deliveries': { get: { summary: 'Delivery history', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/mission-webhooks-v3/deliveries/{deliveryId}/retry': { post: { summary: 'Retry delivery', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/mission-webhooks-v3/stats': { get: { summary: 'Delivery stats', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/mission-webhooks-v3/admin/overview': { get: { summary: 'Webhook overview', tags: ['Webhooks V3'] } },
+        // Wave 39: Platform Announcements
+        '/v1/announcements/active': { get: { summary: 'Active announcements', tags: ['Announcements'], security: [{ bearer: [] }] } },
+        '/v1/announcements/maintenance': { get: { summary: 'Maintenance windows', tags: ['Announcements'] } },
+        '/v1/announcements/dismiss/{announcementId}': { post: { summary: 'Dismiss announcement', tags: ['Announcements'], security: [{ bearer: [] }] } },
+        '/v1/announcements/admin/create': { post: { summary: 'Create announcement', tags: ['Announcements'] } },
+        '/v1/announcements/admin/list': { get: { summary: 'List announcements', tags: ['Announcements'] } },
+        '/v1/announcements/admin/stats': { get: { summary: 'Announcement stats', tags: ['Announcements'] } },
+        // Wave 40: Tenant Quotas
+        '/v1/quotas/quotas': { get: { summary: 'Get quotas', tags: ['Quotas'], security: [{ bearer: [] }] } },
+        '/v1/quotas/usage': { get: { summary: 'Quota usage', tags: ['Quotas'], security: [{ bearer: [] }] } },
+        '/v1/quotas/check': { post: { summary: 'Check quota', tags: ['Quotas'], security: [{ bearer: [] }] } },
+        '/v1/quotas/history': { get: { summary: 'Quota history', tags: ['Quotas'], security: [{ bearer: [] }] } },
+        '/v1/quotas/tier-defaults/{tier}': { get: { summary: 'Tier defaults', tags: ['Quotas'] } },
+        '/v1/quotas/admin/overview': { get: { summary: 'Quota overview', tags: ['Quotas'] } },
+        // Wave 40: AI Model Registry
+        '/v1/ai-models/models': { get: { summary: 'List models', tags: ['AI Models'] } },
+        '/v1/ai-models/models/{id}': { get: { summary: 'Model detail', tags: ['AI Models'] } },
+        '/v1/ai-models/providers': { get: { summary: 'List providers', tags: ['AI Models'] } },
+        '/v1/ai-models/usage': { get: { summary: 'Model usage', tags: ['AI Models'], security: [{ bearer: [] }] } },
+        '/v1/ai-models/costs': { get: { summary: 'Cost breakdown', tags: ['AI Models'], security: [{ bearer: [] }] } },
+        '/v1/ai-models/admin/providers': { post: { summary: 'Register provider', tags: ['AI Models'] } },
+        '/v1/ai-models/admin/models': { post: { summary: 'Register model', tags: ['AI Models'] } },
+        '/v1/ai-models/admin/top-models': { get: { summary: 'Top models', tags: ['AI Models'] } },
+        '/v1/ai-models/admin/seed': { post: { summary: 'Seed models', tags: ['AI Models'] } },
+        // Wave 40: Platform Metrics Dashboard
+        '/admin/platform-metrics/dashboard': { get: { summary: 'Dashboard summary', tags: ['Platform Metrics'] } },
+        '/admin/platform-metrics/metrics': { get: { summary: 'Current metrics', tags: ['Platform Metrics'] } },
+        '/admin/platform-metrics/metrics/{metricName}': { get: { summary: 'Metric timeline', tags: ['Platform Metrics'] } },
+        '/admin/platform-metrics/growth': { get: { summary: 'Tenant growth', tags: ['Platform Metrics'] } },
+        '/admin/platform-metrics/revenue': { get: { summary: 'Revenue metrics', tags: ['Platform Metrics'] } },
+        '/admin/platform-metrics/goals': { get: { summary: 'List goals', tags: ['Platform Metrics'] }, post: { summary: 'Create goal', tags: ['Platform Metrics'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
