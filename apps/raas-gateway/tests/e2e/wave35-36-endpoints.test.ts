@@ -225,29 +225,29 @@ describe('Wave 36: Multi-Region Config', () => {
 
 // --- Wave 36: Platform Audit Trail ---
 
-describe('Wave 36: Platform Audit Trail', () => {
-  it('GET /admin/audit-trail/entries — audit entries (admin)', async () => {
-    const res = await req('/admin/audit-trail/entries', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
-    expect([200, 403, 500]).toContain(res.status);
+describe('Wave 36: Platform Audit Trail (upgraded in Wave 50)', () => {
+  it('GET /admin/audit-trail/logs — audit logs (auth via admin mount)', async () => {
+    const res = await req('/admin/audit-trail/logs', { headers: { Authorization: `Bearer ${token}` } });
+    expect(res.status).toBeLessThan(500);
   });
 
-  it('GET /admin/audit-trail/stats — audit stats (admin)', async () => {
-    const res = await req('/admin/audit-trail/stats', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
-    expect([200, 403, 500]).toContain(res.status);
+  it('GET /admin/audit-trail/stats — audit stats (auth)', async () => {
+    const res = await req('/admin/audit-trail/stats', { headers: { Authorization: `Bearer ${token}` } });
+    expect(res.status).toBeLessThan(500);
   });
 
-  it('GET /admin/audit-trail/search — search audit (admin)', async () => {
-    const res = await req('/admin/audit-trail/search?q=login', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
-    expect([200, 403, 500]).toContain(res.status);
+  it('GET /admin/audit-trail/retention — retention policies (auth)', async () => {
+    const res = await req('/admin/audit-trail/retention', { headers: { Authorization: `Bearer ${token}` } });
+    expect(res.status).toBeLessThan(500);
   });
 
-  it('GET /admin/audit-trail/export — export audit (admin)', async () => {
-    const res = await req('/admin/audit-trail/export', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
-    expect([200, 403, 500]).toContain(res.status);
+  it('GET /admin/audit-trail/exports — exports (auth)', async () => {
+    const res = await req('/admin/audit-trail/exports', { headers: { Authorization: `Bearer ${token}` } });
+    expect(res.status).toBeLessThan(500);
   });
 
-  it('GET /admin/audit-trail/retention — retention configs (admin)', async () => {
-    const res = await req('/admin/audit-trail/retention', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
+  it('GET /admin/audit-trail/admin/overview — admin overview', async () => {
+    const res = await req('/admin/audit-trail/admin/overview', { headers: { 'X-Admin-Key': ADMIN_API_KEY } });
     expect([200, 403, 500]).toContain(res.status);
   });
 });

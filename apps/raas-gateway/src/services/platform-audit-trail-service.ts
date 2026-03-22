@@ -1,176 +1,139 @@
 /**
- * Platform Audit Trail Service — admin action logging, change tracking, compliance audit
+ * Platform Audit Trail Service — Wave 50
+ * Centralized audit logging with retention policies and export management
  */
 
-export interface AuditEntry {
-  actorType: string;
-  actorId: string;
-  action: string;
-  resourceType: string;
-  resourceId?: string;
-  changes?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-  ipAddress?: string;
-  userAgent?: string;
-}
+export const platformAuditTrailService = {
+  /** Insert a new audit log entry */
+  async logEvent(db: D1Database, data: {
+    tenantId?: string; actorId?: string; actorType?: string;
+    action: string; resourceType: string; resourceId?: string;
+    detailsJson?: Record<string, unknown>; ipAddress?: string;
+    userAgent?: string; severity?: string;
+  }): Promise<{ id: string }> {
+    const id = crypto.randomUUID();
+    await db.prepare(
+      `INSERT INTO audit_logs
+        (id, tenant_id, actor_id, actor_type, action, resource_type, resource_id, details_json, ip_address, user_agent, severity)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      id, data.tenantId ?? null, data.actorId ?? null,
+      data.actorType ?? 'user', data.action, data.resourceType,
+      data.resourceId ?? null, JSON.stringify(data.detailsJson ?? {}),
+      data.ipAddress ?? null, data.userAgent ?? null, data.severity ?? 'info',
+    ).run();
+    return { id };
+  },
 
-export interface AuditFilters {
-  actorId?: string;
-  action?: string;
-  resourceType?: string;
-  resourceId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  limit?: number;
-  offset?: number;
-}
+  /** Paginated search with optional filters */
+  async searchLogs(db: D1Database, tenantId: string, filters?: {
+    action?: string; resourceType?: string; severity?: string;
+    dateFrom?: string; dateTo?: string; limit?: number; offset?: number;
+  }) {
+    const conditions = ['tenant_id = ?'];
+    const params: unknown[] = [tenantId];
+    if (filters?.action) { conditions.push('action = ?'); params.push(filters.action); }
+    if (filters?.resourceType) { conditions.push('resource_type = ?'); params.push(filters.resourceType); }
+    if (filters?.severity) { conditions.push('severity = ?'); params.push(filters.severity); }
+    if (filters?.dateFrom) { conditions.push('created_at >= ?'); params.push(filters.dateFrom); }
+    if (filters?.dateTo) { conditions.push('created_at <= ?'); params.push(filters.dateTo); }
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+    params.push(limit, offset);
+    const { results } = await db.prepare(
+      `SELECT * FROM audit_logs WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    ).bind(...params).all();
+    return { logs: results, limit, offset };
+  },
 
-/** Insert a new audit entry */
-export async function logAction(db: D1Database, entry: AuditEntry): Promise<{ id: string }> {
-  const id = crypto.randomUUID();
-  await db.prepare(
-    `INSERT INTO platform_audit_entries
-      (id, actor_type, actor_id, action, resource_type, resource_id, changes, metadata, ip_address, user_agent)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(
-    id,
-    entry.actorType,
-    entry.actorId,
-    entry.action,
-    entry.resourceType,
-    entry.resourceId ?? null,
-    JSON.stringify(entry.changes ?? {}),
-    JSON.stringify(entry.metadata ?? {}),
-    entry.ipAddress ?? null,
-    entry.userAgent ?? null,
-  ).run();
-  return { id };
-}
+  /** Get single log entry by id scoped to tenant */
+  async getLogDetail(db: D1Database, tenantId: string, id: string) {
+    const row = await db.prepare(
+      'SELECT * FROM audit_logs WHERE id = ? AND tenant_id = ?'
+    ).bind(id, tenantId).first();
+    return row ?? null;
+  },
 
-/** Query audit log with optional filters + pagination */
-export async function getAuditLog(db: D1Database, filters: AuditFilters = {}) {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
+  /** List all retention policies */
+  async listRetentionPolicies(db: D1Database) {
+    const { results } = await db.prepare(
+      'SELECT * FROM audit_retention_policies ORDER BY resource_type'
+    ).all();
+    return results;
+  },
 
-  if (filters.actorId) { conditions.push('actor_id = ?'); params.push(filters.actorId); }
-  if (filters.action) { conditions.push('action = ?'); params.push(filters.action); }
-  if (filters.resourceType) { conditions.push('resource_type = ?'); params.push(filters.resourceType); }
-  if (filters.resourceId) { conditions.push('resource_id = ?'); params.push(filters.resourceId); }
-  if (filters.dateFrom) { conditions.push('created_at >= ?'); params.push(filters.dateFrom); }
-  if (filters.dateTo) { conditions.push('created_at <= ?'); params.push(filters.dateTo); }
+  /** Upsert a retention policy for a resource type */
+  async updateRetentionPolicy(db: D1Database, resourceType: string, data: {
+    retentionDays?: number; autoArchive?: boolean;
+  }) {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    await db.prepare(
+      `INSERT INTO audit_retention_policies (id, resource_type, retention_days, auto_archive, updated_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(resource_type) DO UPDATE SET
+         retention_days = excluded.retention_days,
+         auto_archive = excluded.auto_archive,
+         updated_at = excluded.updated_at`
+    ).bind(
+      id, resourceType, data.retentionDays ?? 90,
+      data.autoArchive ? 1 : 0, now,
+    ).run();
+    return { resourceType, ...data };
+  },
 
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const limit = filters.limit ?? 50;
-  const offset = filters.offset ?? 0;
-  params.push(limit, offset);
+  /** Create an export request */
+  async requestExport(db: D1Database, tenantId: string, filters: Record<string, unknown>) {
+    const id = crypto.randomUUID();
+    await db.prepare(
+      `INSERT INTO audit_exports (id, tenant_id, filters_json, status)
+       VALUES (?, ?, ?, 'pending')`
+    ).bind(id, tenantId, JSON.stringify(filters)).run();
+    return { id, status: 'pending' };
+  },
 
-  const { results } = await db.prepare(
-    `SELECT * FROM platform_audit_entries ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`
-  ).bind(...params).all();
-  return results;
-}
+  /** List exports for a tenant */
+  async listExports(db: D1Database, tenantId: string) {
+    const { results } = await db.prepare(
+      'SELECT * FROM audit_exports WHERE tenant_id = ? ORDER BY requested_at DESC LIMIT 50'
+    ).bind(tenantId).all();
+    return results;
+  },
 
-/** All actions by a specific actor */
-export async function getActorHistory(db: D1Database, actorId: string, limit = 100) {
-  const { results } = await db.prepare(
-    'SELECT * FROM platform_audit_entries WHERE actor_id = ? ORDER BY created_at DESC LIMIT ?'
-  ).bind(actorId, limit).all();
-  return results;
-}
+  /** Per-tenant stats: action counts + severity distribution */
+  async getStats(db: D1Database, tenantId: string) {
+    const [actionCounts, severityDist] = await Promise.all([
+      db.prepare(
+        `SELECT action, COUNT(*) as count FROM audit_logs WHERE tenant_id = ?
+         GROUP BY action ORDER BY count DESC LIMIT 20`
+      ).bind(tenantId).all(),
+      db.prepare(
+        `SELECT severity, COUNT(*) as count FROM audit_logs WHERE tenant_id = ?
+         GROUP BY severity ORDER BY count DESC`
+      ).bind(tenantId).all(),
+    ]);
+    return { tenantId, actionCounts: actionCounts.results, severityDist: severityDist.results };
+  },
 
-/** All changes to a specific resource */
-export async function getResourceHistory(db: D1Database, resourceType: string, resourceId: string) {
-  const { results } = await db.prepare(
-    'SELECT * FROM platform_audit_entries WHERE resource_type = ? AND resource_id = ? ORDER BY created_at DESC'
-  ).bind(resourceType, resourceId).all();
-  return results;
-}
-
-/** Text search across action, resource_type, and changes */
-export async function searchAuditLog(db: D1Database, query: string) {
-  const q = `%${query}%`;
-  const { results } = await db.prepare(
-    `SELECT * FROM platform_audit_entries
-     WHERE action LIKE ? OR resource_type LIKE ? OR changes LIKE ?
-     ORDER BY created_at DESC LIMIT 200`
-  ).bind(q, q, q).all();
-  return results;
-}
-
-/** Aggregate stats: actions per day, top actors, actions, resource types */
-export async function getAuditStats(db: D1Database, days = 30) {
-  const since = new Date(Date.now() - days * 86400000).toISOString();
-  const [perDay, topActors, topActions, topResources] = await Promise.all([
-    db.prepare(
-      `SELECT substr(created_at,1,10) as day, COUNT(*) as count
-       FROM platform_audit_entries WHERE created_at >= ?
-       GROUP BY day ORDER BY day DESC`
-    ).bind(since).all(),
-    db.prepare(
-      `SELECT actor_id, actor_type, COUNT(*) as count
-       FROM platform_audit_entries WHERE created_at >= ?
-       GROUP BY actor_id ORDER BY count DESC LIMIT 10`
-    ).bind(since).all(),
-    db.prepare(
-      `SELECT action, COUNT(*) as count
-       FROM platform_audit_entries WHERE created_at >= ?
-       GROUP BY action ORDER BY count DESC LIMIT 10`
-    ).bind(since).all(),
-    db.prepare(
-      `SELECT resource_type, COUNT(*) as count
-       FROM platform_audit_entries WHERE created_at >= ?
-       GROUP BY resource_type ORDER BY count DESC LIMIT 10`
-    ).bind(since).all(),
-  ]);
-  return {
-    days,
-    perDay: perDay.results,
-    topActors: topActors.results,
-    topActions: topActions.results,
-    topResources: topResources.results,
-  };
-}
-
-/** Set retention config for a resource type */
-export async function setRetentionConfig(
-  db: D1Database,
-  resourceType: string,
-  retentionDays: number,
-  immutable = false,
-) {
-  const id = crypto.randomUUID();
-  await db.prepare(
-    `INSERT INTO audit_retention_configs (id, resource_type, retention_days, is_immutable)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(resource_type) DO UPDATE SET retention_days=excluded.retention_days, is_immutable=excluded.is_immutable`
-  ).bind(id, resourceType, retentionDays, immutable ? 1 : 0).run();
-  return { resourceType, retentionDays, immutable };
-}
-
-/** List all retention configs */
-export async function getRetentionConfigs(db: D1Database) {
-  const { results } = await db.prepare('SELECT * FROM audit_retention_configs ORDER BY resource_type').all();
-  return results;
-}
-
-/** Delete entries past their retention period, skip immutable resource types */
-export async function cleanExpiredEntries(db: D1Database): Promise<{ deleted: number }> {
-  const { results: configs } = await db.prepare(
-    'SELECT resource_type, retention_days FROM audit_retention_configs WHERE is_immutable = 0'
-  ).all() as { results: Array<{ resource_type: string; retention_days: number }> };
-
-  let deleted = 0;
-  for (const cfg of configs) {
-    const cutoff = new Date(Date.now() - cfg.retention_days * 86400000).toISOString();
-    const result = await db.prepare(
-      'DELETE FROM platform_audit_entries WHERE resource_type = ? AND created_at < ?'
-    ).bind(cfg.resource_type, cutoff).run();
-    deleted += result.meta?.changes ?? 0;
-  }
-  return { deleted };
-}
-
-/** Export filtered entries as array (for CSV/JSON export) */
-export async function exportAuditLog(db: D1Database, filters: AuditFilters = {}) {
-  return getAuditLog(db, { ...filters, limit: filters.limit ?? 10000, offset: filters.offset ?? 0 });
-}
+  /** Admin overview: global stats + storage usage estimate */
+  async getAdminOverview(db: D1Database) {
+    const [total, bySeverity, byTenant, recentExports] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as total FROM audit_logs').first<{ total: number }>(),
+      db.prepare(
+        'SELECT severity, COUNT(*) as count FROM audit_logs GROUP BY severity'
+      ).all(),
+      db.prepare(
+        'SELECT tenant_id, COUNT(*) as count FROM audit_logs GROUP BY tenant_id ORDER BY count DESC LIMIT 10'
+      ).all(),
+      db.prepare(
+        'SELECT status, COUNT(*) as count FROM audit_exports GROUP BY status'
+      ).all(),
+    ]);
+    return {
+      totalLogs: total?.total ?? 0,
+      bySeverity: bySeverity.results,
+      topTenants: byTenant.results,
+      exportsByStatus: recentExports.results,
+    };
+  },
+};

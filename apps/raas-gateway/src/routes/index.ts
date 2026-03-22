@@ -137,6 +137,11 @@ import { adminUserManagement } from './admin-user-management';
 import { tenantBillingHistory } from './tenant-billing-history';
 import { apiGatewayMiddleware } from './api-gateway-middleware';
 import { platformCapacityPlanning } from './platform-capacity-planning';
+import { platformNotificationCenter } from './platform-notification-center';
+import { missionTemplateLibrary } from './mission-template-library';
+import { tenantApiKeyManagement as tenantApiKeyMgmt } from './tenant-api-key-management';
+import { adminFeatureFlags } from './admin-feature-flags';
+import { tenantResourceQuotas } from './tenant-resource-quotas';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -293,6 +298,16 @@ export function createRoutes() {
   routes.route('/v1/billing-history', tenantBillingHistory);
   routes.route('/v1/gateway-middleware', apiGatewayMiddleware);
   routes.route('/admin/capacity', platformCapacityPlanning);
+
+  // Wave 49 routes
+  routes.route('/v1/notification-center', platformNotificationCenter);
+  routes.route('/v1/mission-templates', missionTemplateLibrary);
+  routes.route('/v1/api-key-mgmt', tenantApiKeyMgmt);
+
+  // Wave 50 routes
+  routes.route('/v1/audit-trail', platformAuditTrail);
+  routes.route('/admin/feature-flags', adminFeatureFlags);
+  routes.route('/v1/resource-quotas', tenantResourceQuotas);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1156,6 +1171,51 @@ export function createRoutes() {
         '/admin/capacity/recommendations': { get: { summary: 'List recommendations', tags: ['Capacity Planning'] }, post: { summary: 'Create recommendation', tags: ['Capacity Planning'] } },
         '/admin/capacity/recommendations/{id}': { put: { summary: 'Update recommendation', tags: ['Capacity Planning'] } },
         '/admin/capacity/dashboard': { get: { summary: 'Capacity dashboard', tags: ['Capacity Planning'] } },
+        // Wave 49
+        '/v1/notification-center/notifications': { get: { summary: 'List notifications', tags: ['Notification Center'], security: [{ bearer: [] }] }, post: { summary: 'Create notification', tags: ['Notification Center'], security: [{ bearer: [] }] } },
+        '/v1/notification-center/notifications/{id}/read': { put: { summary: 'Mark as read', tags: ['Notification Center'], security: [{ bearer: [] }] } },
+        '/v1/notification-center/notifications/read-all': { post: { summary: 'Mark all read', tags: ['Notification Center'], security: [{ bearer: [] }] } },
+        '/v1/notification-center/preferences': { get: { summary: 'Get preferences', tags: ['Notification Center'], security: [{ bearer: [] }] } },
+        '/v1/notification-center/preferences/{channel}': { put: { summary: 'Update preference', tags: ['Notification Center'], security: [{ bearer: [] }] } },
+        '/v1/notification-center/templates': { get: { summary: 'Notification templates', tags: ['Notification Center'] } },
+        '/v1/notification-center/admin/overview': { get: { summary: 'Notification admin', tags: ['Notification Center'] } },
+        '/v1/mission-templates/templates': { get: { summary: 'List templates', tags: ['Mission Templates'], security: [{ bearer: [] }] }, post: { summary: 'Create template', tags: ['Mission Templates'], security: [{ bearer: [] }] } },
+        '/v1/mission-templates/templates/{id}': { get: { summary: 'Get template', tags: ['Mission Templates'], security: [{ bearer: [] }] }, put: { summary: 'Update template', tags: ['Mission Templates'], security: [{ bearer: [] }] }, delete: { summary: 'Delete template', tags: ['Mission Templates'], security: [{ bearer: [] }] } },
+        '/v1/mission-templates/categories': { get: { summary: 'List categories', tags: ['Mission Templates'] } },
+        '/v1/mission-templates/templates/{id}/instantiate': { post: { summary: 'Instantiate template', tags: ['Mission Templates'], security: [{ bearer: [] }] } },
+        '/v1/mission-templates/templates/{id}/versions': { get: { summary: 'Template versions', tags: ['Mission Templates'], security: [{ bearer: [] }] } },
+        '/v1/mission-templates/admin/overview': { get: { summary: 'Templates admin', tags: ['Mission Templates'] } },
+        '/v1/api-key-mgmt/keys': { get: { summary: 'List API keys', tags: ['API Key Management'], security: [{ bearer: [] }] }, post: { summary: 'Create API key', tags: ['API Key Management'], security: [{ bearer: [] }] } },
+        '/v1/api-key-mgmt/keys/{id}': { get: { summary: 'Get key', tags: ['API Key Management'], security: [{ bearer: [] }] }, delete: { summary: 'Revoke key', tags: ['API Key Management'], security: [{ bearer: [] }] } },
+        '/v1/api-key-mgmt/keys/{id}/rotate': { post: { summary: 'Rotate key', tags: ['API Key Management'], security: [{ bearer: [] }] } },
+        '/v1/api-key-mgmt/keys/{id}/scopes': { put: { summary: 'Update scopes', tags: ['API Key Management'], security: [{ bearer: [] }] } },
+        '/v1/api-key-mgmt/keys/{id}/usage': { get: { summary: 'Key usage logs', tags: ['API Key Management'], security: [{ bearer: [] }] } },
+        '/v1/api-key-mgmt/admin/overview': { get: { summary: 'API key admin', tags: ['API Key Management'] } },
+        // Wave 50
+        '/v1/audit-trail/logs': { get: { summary: 'Search audit logs', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/logs/{id}': { get: { summary: 'Log detail', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/retention': { get: { summary: 'Retention policies', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/retention/{resourceType}': { put: { summary: 'Update retention', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/exports': { get: { summary: 'List exports', tags: ['Audit Trail'], security: [{ bearer: [] }] }, post: { summary: 'Request export', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/stats': { get: { summary: 'Audit stats', tags: ['Audit Trail'], security: [{ bearer: [] }] } },
+        '/v1/audit-trail/admin/overview': { get: { summary: 'Audit admin', tags: ['Audit Trail'] } },
+        '/admin/feature-flags/flags': { get: { summary: 'List flags', tags: ['Feature Flags'] }, post: { summary: 'Create flag', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/flags/{id}': { get: { summary: 'Get flag', tags: ['Feature Flags'] }, put: { summary: 'Update flag', tags: ['Feature Flags'] }, delete: { summary: 'Delete flag', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/flags/{id}/toggle': { post: { summary: 'Toggle flag', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/evaluate/{flagKey}': { get: { summary: 'Evaluate flag', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/flags/{id}/overrides': { get: { summary: 'List overrides', tags: ['Feature Flags'] }, post: { summary: 'Set override', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/flags/{id}/overrides/{tenantId}': { delete: { summary: 'Remove override', tags: ['Feature Flags'] } },
+        '/admin/feature-flags/dashboard': { get: { summary: 'Flags dashboard', tags: ['Feature Flags'] } },
+        '/v1/resource-quotas/definitions': { get: { summary: 'Quota definitions', tags: ['Resource Quotas'] }, post: { summary: 'Create definition', tags: ['Resource Quotas'] } },
+        '/v1/resource-quotas/definitions/{resourceType}': { put: { summary: 'Update definition', tags: ['Resource Quotas'] } },
+        '/v1/resource-quotas/quotas': { get: { summary: 'Tenant quotas', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
+        '/v1/resource-quotas/quotas/{resourceType}': { put: { summary: 'Set quota', tags: ['Resource Quotas'] } },
+        '/v1/resource-quotas/check/{resourceType}': { get: { summary: 'Check quota', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
+        '/v1/resource-quotas/usage/{resourceType}': { post: { summary: 'Increment usage', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
+        '/v1/resource-quotas/reset/{resourceType}': { post: { summary: 'Reset usage', tags: ['Resource Quotas'] } },
+        '/v1/resource-quotas/alerts': { get: { summary: 'Quota alerts', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
+        '/v1/resource-quotas/alerts/{id}/acknowledge': { post: { summary: 'Acknowledge alert', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
+        '/v1/resource-quotas/admin/overview': { get: { summary: 'Quotas admin', tags: ['Resource Quotas'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
