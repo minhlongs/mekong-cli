@@ -207,6 +207,12 @@ import { platformTenantGrouping } from './platform-tenant-grouping';
 import { tenantApiSchemaValidation } from './tenant-api-schema-validation';
 import { adminPlatformAlerts } from './admin-platform-alerts';
 import { tenantWorkflowAutomation } from './tenant-workflow-automation';
+import { tenantApiChangelog } from './tenant-api-changelog';
+import { missionQueuePriority } from './mission-queue-priority';
+import { platformComplianceAudit } from './platform-compliance-audit';
+import { tenantSecretVault } from './tenant-secret-vault';
+import { adminPlatformMigration } from './admin-platform-migration';
+import { tenantEventReplay } from './tenant-event-replay';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -483,6 +489,16 @@ export function createRoutes() {
   routes.route('/v1/schema-validation', tenantApiSchemaValidation);
   routes.route('/admin/platform-alerts', adminPlatformAlerts);
   routes.route('/v1/workflow-automation', tenantWorkflowAutomation);
+
+  // Wave 73 routes
+  routes.route('/v1/api-changelog', tenantApiChangelog);
+  routes.route('/v1/queue-priority', missionQueuePriority);
+  routes.route('/admin/compliance-audit', platformComplianceAudit);
+
+  // Wave 74 routes
+  routes.route('/v1/secret-vault', tenantSecretVault);
+  routes.route('/admin/platform-migration', adminPlatformMigration);
+  routes.route('/v1/event-replay', tenantEventReplay);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1662,6 +1678,18 @@ export function createRoutes() {
         '/admin/platform-alerts/incidents': { get: { summary: 'Alert incidents', tags: ['Platform Alerts'] } },
         '/v1/workflow-automation/workflows': { get: { summary: 'List workflows', tags: ['Workflow Automation'] }, post: { summary: 'Create workflow', tags: ['Workflow Automation'] } },
         '/v1/workflow-automation/runs': { get: { summary: 'Workflow runs', tags: ['Workflow Automation'] } },
+        '/v1/api-changelog/entries': { get: { summary: 'List changelog entries', tags: ['API Changelog'] }, post: { summary: 'Create entry', tags: ['API Changelog'] } },
+        '/v1/api-changelog/subscriptions': { get: { summary: 'Changelog subscriptions', tags: ['API Changelog'] } },
+        '/v1/queue-priority/queues': { get: { summary: 'List priority queues', tags: ['Queue Priority'] }, post: { summary: 'Create queue', tags: ['Queue Priority'] } },
+        '/v1/queue-priority/items': { get: { summary: 'Queue items', tags: ['Queue Priority'] } },
+        '/admin/compliance-audit/checks': { get: { summary: 'List compliance checks', tags: ['Compliance Audit'] }, post: { summary: 'Create check', tags: ['Compliance Audit'] } },
+        '/admin/compliance-audit/results': { get: { summary: 'Compliance results', tags: ['Compliance Audit'] } },
+        '/v1/secret-vault/secrets': { get: { summary: 'List secrets', tags: ['Secret Vault'] }, post: { summary: 'Create secret', tags: ['Secret Vault'] } },
+        '/v1/secret-vault/access-logs': { get: { summary: 'Secret access logs', tags: ['Secret Vault'] } },
+        '/admin/platform-migration/migrations': { get: { summary: 'List migrations', tags: ['Platform Migration'] }, post: { summary: 'Create migration', tags: ['Platform Migration'] } },
+        '/admin/platform-migration/rollbacks': { get: { summary: 'Migration rollbacks', tags: ['Platform Migration'] } },
+        '/v1/event-replay/configs': { get: { summary: 'List replay configs', tags: ['Event Replay'] }, post: { summary: 'Create config', tags: ['Event Replay'] } },
+        '/v1/event-replay/runs': { get: { summary: 'Replay runs', tags: ['Event Replay'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
