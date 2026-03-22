@@ -130,7 +130,6 @@ import { missionReplayDebug } from './mission-replay-debug';
 import { apiRateLimitPolicies } from './api-rate-limit-policies';
 import { tenantOnboardingChecklist } from './tenant-onboarding-checklist';
 import { platformLocalization } from './platform-localization';
-import { adminIncidentManagement } from './admin-incident-management';
 import { missionApprovalWorkflow } from './mission-approval-workflow';
 import { platformSecurityPolicies } from './platform-security-policies';
 import { adminUserManagement } from './admin-user-management';
@@ -145,7 +144,6 @@ import { tenantResourceQuotas } from './tenant-resource-quotas';
 import { tenantWebhooksV3 } from './tenant-webhooks-v3';
 import { platformServiceMesh } from './platform-service-mesh';
 import { missionSchedulingEngine } from './mission-scheduling-engine';
-import { tenantDataExport } from './tenant-data-export';
 import { adminPlatformConfig } from './admin-platform-config';
 import { apiContractTesting } from './api-contract-testing';
 import { tenantSsoProviders } from './tenant-sso-providers';
@@ -156,7 +154,6 @@ import { adminDeploymentManager } from './admin-deployment-manager';
 import { apiDocGenerator } from './api-documentation-generator';
 import { platformRateLimitAnalytics } from './platform-rate-limit-analytics';
 import { tenantIpGeolocation } from './tenant-ip-geolocation';
-import { missionDependencyGraph } from './mission-dependency-graph';
 import { tenantTagSystem } from './tenant-tag-system';
 import { adminSystemHealth } from './admin-system-health';
 import { apiResponseCaching } from './api-response-caching';
@@ -231,6 +228,12 @@ import { platformFeatureGating } from './platform-feature-gating';
 import { tenantConsentManagement } from './tenant-consent-management';
 import { adminPlatformDiagnostics } from './admin-platform-diagnostics';
 import { tenantApiRateBurst } from './tenant-api-rate-burst';
+import { tenantApiKeyRotation } from './tenant-api-key-rotation';
+import { missionDependencyGraph } from './mission-dependency-graph';
+import { adminPlatformChangelog } from './admin-platform-changelog';
+import { tenantDataExport } from './tenant-data-export';
+import { adminIncidentManagement } from './admin-incident-management';
+import { tenantApiSandbox } from './tenant-api-sandbox';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -376,7 +379,6 @@ export function createRoutes() {
   // Wave 46 routes
   routes.route('/v1/onboarding-checklist', tenantOnboardingChecklist);
   routes.route('/v1/i18n', platformLocalization);
-  routes.route('/admin/incidents', adminIncidentManagement);
 
   // Wave 47 routes
   routes.route('/v1/mission-approvals', missionApprovalWorkflow);
@@ -404,7 +406,6 @@ export function createRoutes() {
   routes.route('/v1/scheduling', missionSchedulingEngine);
 
   // Wave 52 routes
-  routes.route('/v1/data-export', tenantDataExport);
   routes.route('/admin/platform-config', adminPlatformConfig);
   routes.route('/admin/contract-testing', apiContractTesting);
 
@@ -547,6 +548,16 @@ export function createRoutes() {
   routes.route('/v1/consent-management', tenantConsentManagement);
   routes.route('/admin/platform-diagnostics', adminPlatformDiagnostics);
   routes.route('/v1/rate-burst', tenantApiRateBurst);
+
+  // Wave 81 routes
+  routes.route('/v1/key-rotation', tenantApiKeyRotation);
+  routes.route('/v1/dependency-graph', missionDependencyGraph);
+  routes.route('/admin/platform-changelog', adminPlatformChangelog);
+
+  // Wave 82 routes
+  routes.route('/v1/data-export', tenantDataExport);
+  routes.route('/admin/incident-management', adminIncidentManagement);
+  routes.route('/v1/api-sandbox', tenantApiSandbox);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1774,6 +1785,16 @@ export function createRoutes() {
         '/admin/platform-diagnostics/reports': { get: { summary: 'Diagnostic reports', tags: ['Platform Diagnostics'] } },
         '/v1/rate-burst/configs': { get: { summary: 'List burst configs', tags: ['Rate Burst'] }, post: { summary: 'Create config', tags: ['Rate Burst'] } },
         '/v1/rate-burst/events': { get: { summary: 'Burst events', tags: ['Rate Burst'] } },
+        '/v1/key-rotation/rotations': { get: { summary: 'List key rotations', tags: ['Key Rotation'] }, post: { summary: 'Create rotation', tags: ['Key Rotation'] } },
+        '/v1/key-rotation/history': { get: { summary: 'Rotation history', tags: ['Key Rotation'] } },
+        '/v1/dependency-graph/dependencies': { get: { summary: 'List dependencies', tags: ['Dependency Graph'] }, post: { summary: 'Create dependency', tags: ['Dependency Graph'] } },
+        '/v1/dependency-graph/runs': { get: { summary: 'Dependency runs', tags: ['Dependency Graph'] } },
+        '/admin/platform-changelog/entries': { get: { summary: 'List changelog entries', tags: ['Platform Changelog'] }, post: { summary: 'Create entry', tags: ['Platform Changelog'] } },
+        '/admin/platform-changelog/subscribers': { get: { summary: 'List subscribers', tags: ['Platform Changelog'] } },
+        '/admin/incident-management/incidents': { get: { summary: 'List incidents', tags: ['Incident Management'] }, post: { summary: 'Create incident', tags: ['Incident Management'] } },
+        '/admin/incident-management/updates': { get: { summary: 'Incident updates', tags: ['Incident Management'] } },
+        '/v1/api-sandbox/sandboxes': { get: { summary: 'List sandboxes', tags: ['API Sandbox'] }, post: { summary: 'Create sandbox', tags: ['API Sandbox'] } },
+        '/v1/api-sandbox/requests': { get: { summary: 'Sandbox requests', tags: ['API Sandbox'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
