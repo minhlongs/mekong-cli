@@ -99,13 +99,32 @@ def smart_answer(q_type, q_text, worker):
     return "Yes, proceed with all suggested actions."
 
 def read_worker_context(output):
-    """Read last 20 lines to understand what worker just did/is doing."""
-    lines = output.strip().split("\n")[-20:]
-    text = "\n".join(lines).lower()
+    """Read lines AFTER last prompt to understand current state only."""
+    lines = output.strip().split("\n")
+    # Find last prompt line to only read FRESH output
+    last_prompt_idx = -1
+    for idx in range(len(lines) - 1, -1, -1):
+        if "\u276f" in lines[idx]:
+            last_prompt_idx = idx
+            break
+    # Read lines between second-to-last prompt and last prompt (= last command output)
+    if last_prompt_idx > 0:
+        prev_prompt_idx = -1
+        for idx in range(last_prompt_idx - 1, -1, -1):
+            if "\u276f" in lines[idx]:
+                prev_prompt_idx = idx
+                break
+        if prev_prompt_idx >= 0:
+            fresh = lines[prev_prompt_idx:last_prompt_idx]
+        else:
+            fresh = lines[:last_prompt_idx]
+    else:
+        fresh = lines[-15:]
+    text = "\n".join(fresh).lower()
     context = []
-    if "error" in text or "fail" in text or "blocked" in text:
+    if ("error" in text or "blocked" in text) and "0 error" not in text:
         context.append("has_errors")
-    if "conflict" in text or "<<<<<<" in text or "======" in text:
+    if "conflict" in text or "<<<<<<" in text:
         context.append("has_conflicts")
     if "commit" in text and ("success" in text or "created" in text):
         context.append("just_committed")
@@ -113,7 +132,7 @@ def read_worker_context(output):
         context.append("just_reviewed")
     if "test" in text and ("pass" in text or "green" in text):
         context.append("tests_passing")
-    if "test" in text and ("fail" in text or "red" in text):
+    if "test" in text and ("fail" in text or "red" in text) and "0 fail" not in text:
         context.append("tests_failing")
     if "build" in text and ("success" in text or "green" in text):
         context.append("build_passing")
@@ -307,15 +326,19 @@ async def main():
                 log.info(f"P{pane} ({worker['name']} @ {actual_dir}): IDLE ctx_signals={worker_ctx}")
 
                 # Context override: if worker has specific needs, skip brain
+                # But DEDUP: don't repeat same override — fall through to brain
                 override = context_override(worker, ctx, worker_ctx)
-                if override:
+                override_key = override.split()[0] if override else ""
+                if override and last_cmd[i] != override_key:
                     log.info(f"P{pane}: CONTEXT OVERRIDE -> {override[:80]}")
                     if send_cmd(pane, override):
                         last_dispatch[i] = now
-                        last_cmd[i] = override.split()[0]
+                        last_cmd[i] = override_key
                         dispatched += 1
-                        log.info(f"DELEGATED P{pane} ({worker['name']}) -> {override.split()[0]} [OVERRIDE]")
+                        log.info(f"DELEGATED P{pane} ({worker['name']}) -> {override_key} [OVERRIDE]")
                     continue
+                elif override:
+                    log.info(f"P{pane}: OVERRIDE DEDUP (already sent {override_key}) -> brain fallback")
 
                 # Normal brain dispatch
                 log.info(f"P{pane} ({worker['name']}): -> brain...")
