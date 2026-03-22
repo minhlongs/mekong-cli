@@ -101,6 +101,12 @@ import { apiUsageAnalytics } from './api-usage-analytics';
 import { webhookSimulator } from './webhook-simulator';
 import { platformAuditTrail } from './platform-audit-trail';
 import { multiRegionConfig } from './multi-region-config';
+import { customDomains } from './custom-domains';
+import { tenantCollaboration } from './tenant-collaboration';
+import { agentMarketplace } from './agent-marketplace';
+import { usageAlerts } from './usage-alerts';
+import { migrationTools } from './migration-tools';
+import { notificationsHub } from './notifications-hub';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -197,6 +203,16 @@ export function createRoutes() {
   // Wave 36 routes
   routes.route('/admin/audit-trail', platformAuditTrail);
   routes.route('/v1/region', multiRegionConfig);
+
+  // Wave 37 routes
+  routes.route('/v1/custom-domains', customDomains);
+  routes.route('/v1/collaboration', tenantCollaboration);
+  routes.route('/v1/agent-marketplace', agentMarketplace);
+
+  // Wave 38 routes
+  routes.route('/v1/usage-alerts', usageAlerts);
+  routes.route('/v1/migration', migrationTools);
+  routes.route('/v1/notifications-hub', notificationsHub);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -803,6 +819,54 @@ export function createRoutes() {
         '/admin/audit-trail/search': { get: { summary: 'Search audit', tags: ['Audit Trail'] } },
         '/admin/audit-trail/export': { get: { summary: 'Export audit', tags: ['Audit Trail'] } },
         '/admin/audit-trail/retention': { get: { summary: 'Retention configs', tags: ['Audit Trail'] }, post: { summary: 'Set retention', tags: ['Audit Trail'] } },
+        // Wave 37: Custom Domains
+        '/v1/custom-domains/domains': { get: { summary: 'List custom domains', tags: ['Custom Domains'], security: [{ bearer: [] }] }, post: { summary: 'Add custom domain', tags: ['Custom Domains'], security: [{ bearer: [] }] } },
+        '/v1/custom-domains/domains/{id}': { get: { summary: 'Get domain detail', tags: ['Custom Domains'], security: [{ bearer: [] }] }, delete: { summary: 'Remove domain', tags: ['Custom Domains'], security: [{ bearer: [] }] } },
+        '/v1/custom-domains/domains/{id}/verify': { post: { summary: 'Verify domain', tags: ['Custom Domains'], security: [{ bearer: [] }] } },
+        '/v1/custom-domains/stats': { get: { summary: 'Domain stats', tags: ['Custom Domains'], security: [{ bearer: [] }] } },
+        '/v1/custom-domains/lookup/{hostname}': { get: { summary: 'Lookup tenant by hostname', tags: ['Custom Domains'] } },
+        '/v1/custom-domains/admin/overview': { get: { summary: 'All domains overview', tags: ['Custom Domains'] } },
+        // Wave 37: Tenant Collaboration
+        '/v1/collaboration/comments/{missionId}': { get: { summary: 'List comments', tags: ['Collaboration'], security: [{ bearer: [] }] }, post: { summary: 'Add comment', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        '/v1/collaboration/comments/{commentId}': { delete: { summary: 'Delete comment', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        '/v1/collaboration/views': { get: { summary: 'List shared views', tags: ['Collaboration'], security: [{ bearer: [] }] }, post: { summary: 'Create shared view', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        '/v1/collaboration/views/{viewId}': { delete: { summary: 'Delete shared view', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        '/v1/collaboration/feed': { get: { summary: 'Activity feed', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        '/v1/collaboration/stats': { get: { summary: 'Collaboration stats', tags: ['Collaboration'], security: [{ bearer: [] }] } },
+        // Wave 37: AI Agent Marketplace
+        '/v1/agent-marketplace/browse': { get: { summary: 'Browse agents', tags: ['Agent Marketplace'] } },
+        '/v1/agent-marketplace/featured': { get: { summary: 'Featured agents', tags: ['Agent Marketplace'] } },
+        '/v1/agent-marketplace/agent/{slug}': { get: { summary: 'Agent detail', tags: ['Agent Marketplace'] } },
+        '/v1/agent-marketplace/agent/{slug}/reviews': { get: { summary: 'Agent reviews', tags: ['Agent Marketplace'] } },
+        '/v1/agent-marketplace/install/{agentId}': { post: { summary: 'Install agent', tags: ['Agent Marketplace'], security: [{ bearer: [] }] }, delete: { summary: 'Uninstall agent', tags: ['Agent Marketplace'], security: [{ bearer: [] }] } },
+        '/v1/agent-marketplace/installed': { get: { summary: 'Installed agents', tags: ['Agent Marketplace'], security: [{ bearer: [] }] } },
+        '/v1/agent-marketplace/publish': { post: { summary: 'Publish agent', tags: ['Agent Marketplace'], security: [{ bearer: [] }] } },
+        '/v1/agent-marketplace/publisher/stats': { get: { summary: 'Publisher stats', tags: ['Agent Marketplace'], security: [{ bearer: [] }] } },
+        '/v1/agent-marketplace/admin/stats': { get: { summary: 'Marketplace overview', tags: ['Agent Marketplace'] } },
+        // Wave 38: Usage Alerts
+        '/v1/usage-alerts/rules': { get: { summary: 'List alert rules', tags: ['Usage Alerts'], security: [{ bearer: [] }] }, post: { summary: 'Create alert rule', tags: ['Usage Alerts'], security: [{ bearer: [] }] } },
+        '/v1/usage-alerts/rules/{ruleId}': { put: { summary: 'Update rule', tags: ['Usage Alerts'], security: [{ bearer: [] }] }, delete: { summary: 'Delete rule', tags: ['Usage Alerts'], security: [{ bearer: [] }] } },
+        '/v1/usage-alerts/history': { get: { summary: 'Alert history', tags: ['Usage Alerts'], security: [{ bearer: [] }] } },
+        '/v1/usage-alerts/budget': { get: { summary: 'Get budget config', tags: ['Usage Alerts'], security: [{ bearer: [] }] }, put: { summary: 'Set budget config', tags: ['Usage Alerts'], security: [{ bearer: [] }] } },
+        '/v1/usage-alerts/check': { post: { summary: 'Check budget limit', tags: ['Usage Alerts'], security: [{ bearer: [] }] } },
+        '/v1/usage-alerts/admin/overview': { get: { summary: 'Alert overview', tags: ['Usage Alerts'] } },
+        // Wave 38: Migration Tools
+        '/v1/migration/jobs': { get: { summary: 'List migration jobs', tags: ['Migration'], security: [{ bearer: [] }] }, post: { summary: 'Create migration job', tags: ['Migration'], security: [{ bearer: [] }] } },
+        '/v1/migration/jobs/{jobId}': { get: { summary: 'Job status', tags: ['Migration'], security: [{ bearer: [] }] } },
+        '/v1/migration/import/{jobId}': { post: { summary: 'Upload import data', tags: ['Migration'], security: [{ bearer: [] }] } },
+        '/v1/migration/export': { get: { summary: 'Export tenant data', tags: ['Migration'], security: [{ bearer: [] }] } },
+        '/v1/migration/supported-platforms': { get: { summary: 'Supported platforms', tags: ['Migration'] } },
+        '/v1/migration/admin/stats': { get: { summary: 'Migration statistics', tags: ['Migration'] } },
+        // Wave 38: Notifications Hub
+        '/v1/notifications-hub/channels': { get: { summary: 'List channels', tags: ['Notifications Hub'], security: [{ bearer: [] }] }, post: { summary: 'Add channel', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/channels/{channelId}': { put: { summary: 'Update channel', tags: ['Notifications Hub'], security: [{ bearer: [] }] }, delete: { summary: 'Remove channel', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/send': { post: { summary: 'Send notification', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/log': { get: { summary: 'Notification log', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/stats': { get: { summary: 'Notification stats', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/templates': { get: { summary: 'List templates', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/templates/{eventType}': { put: { summary: 'Upsert template', tags: ['Notifications Hub'], security: [{ bearer: [] }] } },
+        '/v1/notifications-hub/admin/seed-templates': { post: { summary: 'Seed defaults', tags: ['Notifications Hub'] } },
+        '/v1/notifications-hub/admin/overview': { get: { summary: 'Platform overview', tags: ['Notifications Hub'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
