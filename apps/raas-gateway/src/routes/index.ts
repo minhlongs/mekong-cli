@@ -148,6 +148,12 @@ import { missionSchedulingEngine } from './mission-scheduling-engine';
 import { tenantDataExport } from './tenant-data-export';
 import { adminPlatformConfig } from './admin-platform-config';
 import { apiContractTesting } from './api-contract-testing';
+import { tenantSsoProviders } from './tenant-sso-providers';
+import { missionPriorityQueue } from './mission-priority-queue';
+import { platformAnalyticsDashboard } from './platform-analytics-dashboard';
+import { tenantCustomFields } from './tenant-custom-fields';
+import { adminDeploymentManager } from './admin-deployment-manager';
+import { apiDocGenerator } from './api-documentation-generator';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -324,6 +330,16 @@ export function createRoutes() {
   routes.route('/v1/data-export', tenantDataExport);
   routes.route('/admin/platform-config', adminPlatformConfig);
   routes.route('/admin/contract-testing', apiContractTesting);
+
+  // Wave 53 routes
+  routes.route('/v1/sso-providers', tenantSsoProviders);
+  routes.route('/v1/priority-queue', missionPriorityQueue);
+  routes.route('/v1/analytics-dashboard', platformAnalyticsDashboard);
+
+  // Wave 54 routes
+  routes.route('/v1/custom-fields', tenantCustomFields);
+  routes.route('/admin/deployments', adminDeploymentManager);
+  routes.route('/admin/api-docs', apiDocGenerator);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1279,6 +1295,47 @@ export function createRoutes() {
         '/admin/contract-testing/breaking-changes/{id}/acknowledge': { post: { summary: 'Acknowledge', tags: ['Contract Testing'] } },
         '/admin/contract-testing/compliance': { get: { summary: 'Compliance report', tags: ['Contract Testing'] } },
         '/admin/contract-testing/dashboard': { get: { summary: 'Testing dashboard', tags: ['Contract Testing'] } },
+        // Wave 53
+        '/v1/sso-providers/providers': { get: { summary: 'List SSO providers', tags: ['SSO Providers'], security: [{ bearer: [] }] }, post: { summary: 'Create provider', tags: ['SSO Providers'], security: [{ bearer: [] }] } },
+        '/v1/sso-providers/providers/{id}': { get: { summary: 'Get provider', tags: ['SSO Providers'], security: [{ bearer: [] }] }, put: { summary: 'Update provider', tags: ['SSO Providers'], security: [{ bearer: [] }] }, delete: { summary: 'Delete provider', tags: ['SSO Providers'], security: [{ bearer: [] }] } },
+        '/v1/sso-providers/providers/{id}/login': { post: { summary: 'Initiate login', tags: ['SSO Providers'], security: [{ bearer: [] }] } },
+        '/v1/sso-providers/sessions': { get: { summary: 'List sessions', tags: ['SSO Providers'], security: [{ bearer: [] }] } },
+        '/v1/sso-providers/sessions/{id}': { delete: { summary: 'Revoke session', tags: ['SSO Providers'], security: [{ bearer: [] }] } },
+        '/v1/sso-providers/admin/overview': { get: { summary: 'SSO admin', tags: ['SSO Providers'] } },
+        '/v1/priority-queue/enqueue': { post: { summary: 'Enqueue mission', tags: ['Priority Queue'], security: [{ bearer: [] }] } },
+        '/v1/priority-queue/dequeue': { post: { summary: 'Dequeue next', tags: ['Priority Queue'] } },
+        '/v1/priority-queue/peek': { get: { summary: 'Peek queue', tags: ['Priority Queue'] } },
+        '/v1/priority-queue/items/{id}': { get: { summary: 'Get item', tags: ['Priority Queue'], security: [{ bearer: [] }] }, delete: { summary: 'Cancel item', tags: ['Priority Queue'], security: [{ bearer: [] }] } },
+        '/v1/priority-queue/items/{id}/priority': { put: { summary: 'Reprioritize', tags: ['Priority Queue'], security: [{ bearer: [] }] } },
+        '/v1/priority-queue/rules': { get: { summary: 'List rules', tags: ['Priority Queue'], security: [{ bearer: [] }] }, post: { summary: 'Create rule', tags: ['Priority Queue'], security: [{ bearer: [] }] } },
+        '/v1/priority-queue/stats': { get: { summary: 'Queue stats', tags: ['Priority Queue'] } },
+        '/v1/priority-queue/admin/overview': { get: { summary: 'Queue admin', tags: ['Priority Queue'] } },
+        '/v1/analytics-dashboard/widgets': { get: { summary: 'List widgets', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] }, post: { summary: 'Create widget', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] } },
+        '/v1/analytics-dashboard/widgets/{id}': { put: { summary: 'Update widget', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] }, delete: { summary: 'Delete widget', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] } },
+        '/v1/analytics-dashboard/queries': { get: { summary: 'List queries', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] }, post: { summary: 'Create query', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] } },
+        '/v1/analytics-dashboard/queries/{id}/run': { post: { summary: 'Run query', tags: ['Analytics Dashboard'], security: [{ bearer: [] }] } },
+        '/v1/analytics-dashboard/snapshots': { get: { summary: 'Get snapshots', tags: ['Analytics Dashboard'] }, post: { summary: 'Create snapshot', tags: ['Analytics Dashboard'] } },
+        '/v1/analytics-dashboard/admin/overview': { get: { summary: 'Dashboard admin', tags: ['Analytics Dashboard'] } },
+        // Wave 54
+        '/v1/custom-fields/definitions': { get: { summary: 'List field definitions', tags: ['Custom Fields'], security: [{ bearer: [] }] }, post: { summary: 'Create definition', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/definitions/{id}': { get: { summary: 'Get definition', tags: ['Custom Fields'], security: [{ bearer: [] }] }, put: { summary: 'Update definition', tags: ['Custom Fields'], security: [{ bearer: [] }] }, delete: { summary: 'Delete definition', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/values/{entityId}': { get: { summary: 'Get values', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/values/{entityId}/{definitionId}': { put: { summary: 'Set value', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/values/{entityId}/bulk': { post: { summary: 'Bulk set values', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/search': { get: { summary: 'Search by field', tags: ['Custom Fields'], security: [{ bearer: [] }] } },
+        '/v1/custom-fields/admin/overview': { get: { summary: 'Fields admin', tags: ['Custom Fields'] } },
+        '/admin/deployments/deployments': { get: { summary: 'List deployments', tags: ['Deployments'] }, post: { summary: 'Create deployment', tags: ['Deployments'] } },
+        '/admin/deployments/deployments/{id}': { get: { summary: 'Get deployment', tags: ['Deployments'] } },
+        '/admin/deployments/deployments/{id}/start': { post: { summary: 'Start deploy', tags: ['Deployments'] } },
+        '/admin/deployments/deployments/{id}/rollback': { post: { summary: 'Rollback', tags: ['Deployments'] } },
+        '/admin/deployments/deployments/{id}/canary': { get: { summary: 'Canary config', tags: ['Deployments'] }, put: { summary: 'Set canary', tags: ['Deployments'] } },
+        '/admin/deployments/dashboard': { get: { summary: 'Deploy dashboard', tags: ['Deployments'] } },
+        '/admin/api-docs/endpoints': { get: { summary: 'List endpoints', tags: ['API Docs'] }, post: { summary: 'Create endpoint', tags: ['API Docs'] } },
+        '/admin/api-docs/endpoints/{id}': { get: { summary: 'Get endpoint', tags: ['API Docs'] }, put: { summary: 'Update endpoint', tags: ['API Docs'] }, delete: { summary: 'Delete endpoint', tags: ['API Docs'] } },
+        '/admin/api-docs/versions': { get: { summary: 'List versions', tags: ['API Docs'] }, post: { summary: 'Create version', tags: ['API Docs'] } },
+        '/admin/api-docs/versions/{id}/publish': { post: { summary: 'Publish version', tags: ['API Docs'] } },
+        '/admin/api-docs/endpoints/{id}/examples': { get: { summary: 'Get examples', tags: ['API Docs'] }, post: { summary: 'Add example', tags: ['API Docs'] } },
+        '/admin/api-docs/dashboard': { get: { summary: 'Docs dashboard', tags: ['API Docs'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
