@@ -131,6 +131,12 @@ import { apiRateLimitPolicies } from './api-rate-limit-policies';
 import { tenantOnboardingChecklist } from './tenant-onboarding-checklist';
 import { platformLocalization } from './platform-localization';
 import { adminIncidentManagement } from './admin-incident-management';
+import { missionApprovalWorkflow } from './mission-approval-workflow';
+import { platformSecurityPolicies } from './platform-security-policies';
+import { adminUserManagement } from './admin-user-management';
+import { tenantBillingHistory } from './tenant-billing-history';
+import { apiGatewayMiddleware } from './api-gateway-middleware';
+import { platformCapacityPlanning } from './platform-capacity-planning';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -277,6 +283,16 @@ export function createRoutes() {
   routes.route('/v1/onboarding-checklist', tenantOnboardingChecklist);
   routes.route('/v1/i18n', platformLocalization);
   routes.route('/admin/incidents', adminIncidentManagement);
+
+  // Wave 47 routes
+  routes.route('/v1/mission-approvals', missionApprovalWorkflow);
+  routes.route('/v1/security-policies', platformSecurityPolicies);
+  routes.route('/admin/user-mgmt', adminUserManagement);
+
+  // Wave 48 routes
+  routes.route('/v1/billing-history', tenantBillingHistory);
+  routes.route('/v1/gateway-middleware', apiGatewayMiddleware);
+  routes.route('/admin/capacity', platformCapacityPlanning);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1098,6 +1114,48 @@ export function createRoutes() {
         '/admin/incidents/{id}/postmortem': { get: { summary: 'Get postmortem', tags: ['Incidents'] }, post: { summary: 'Create postmortem', tags: ['Incidents'] } },
         '/admin/incidents/active': { get: { summary: 'Active incidents', tags: ['Incidents'] } },
         '/admin/incidents/dashboard': { get: { summary: 'Incident dashboard', tags: ['Incidents'] } },
+        // Wave 47
+        '/v1/mission-approvals/workflows': { get: { summary: 'List approval workflows', tags: ['Approval Workflow'], security: [{ bearer: [] }] }, post: { summary: 'Create workflow', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/workflows/{id}': { get: { summary: 'Get workflow', tags: ['Approval Workflow'], security: [{ bearer: [] }] }, put: { summary: 'Update workflow', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/submit': { post: { summary: 'Submit for approval', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/requests/{id}': { get: { summary: 'Get approval request', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/requests/{id}/decide': { post: { summary: 'Make decision', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/pending': { get: { summary: 'Pending approvals', tags: ['Approval Workflow'], security: [{ bearer: [] }] } },
+        '/v1/mission-approvals/admin/overview': { get: { summary: 'Approval admin overview', tags: ['Approval Workflow'] } },
+        '/v1/security-policies/policies': { get: { summary: 'List security policies', tags: ['Security Policies'], security: [{ bearer: [] }] }, post: { summary: 'Create policy', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/policies/{id}': { put: { summary: 'Update policy', tags: ['Security Policies'], security: [{ bearer: [] }] }, delete: { summary: 'Delete policy', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/templates': { get: { summary: 'Policy templates', tags: ['Security Policies'] } },
+        '/v1/security-policies/apply-template': { post: { summary: 'Apply template', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/violations': { get: { summary: 'List violations', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/violations/{id}/resolve': { post: { summary: 'Resolve violation', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/compliance': { get: { summary: 'Compliance score', tags: ['Security Policies'], security: [{ bearer: [] }] } },
+        '/v1/security-policies/admin/overview': { get: { summary: 'Security admin overview', tags: ['Security Policies'] } },
+        '/admin/user-mgmt/users': { get: { summary: 'List admin users', tags: ['Admin Users'] }, post: { summary: 'Create admin user', tags: ['Admin Users'] } },
+        '/admin/user-mgmt/users/{id}': { get: { summary: 'Get admin user', tags: ['Admin Users'] }, put: { summary: 'Update admin user', tags: ['Admin Users'] }, delete: { summary: 'Deactivate admin user', tags: ['Admin Users'] } },
+        '/admin/user-mgmt/roles': { get: { summary: 'List roles', tags: ['Admin Users'] }, post: { summary: 'Create role', tags: ['Admin Users'] } },
+        '/admin/user-mgmt/activity': { get: { summary: 'Activity log', tags: ['Admin Users'] } },
+        '/admin/user-mgmt/dashboard': { get: { summary: 'Admin dashboard', tags: ['Admin Users'] } },
+        // Wave 48
+        '/v1/billing-history/invoices': { get: { summary: 'List invoices', tags: ['Billing History'], security: [{ bearer: [] }] }, post: { summary: 'Create invoice', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/invoices/{id}': { get: { summary: 'Get invoice', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/invoices/{id}/void': { post: { summary: 'Void invoice', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/payments': { get: { summary: 'List payments', tags: ['Billing History'], security: [{ bearer: [] }] }, post: { summary: 'Record payment', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/statements/{month}': { get: { summary: 'Get statement', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/statements/generate': { post: { summary: 'Generate statement', tags: ['Billing History'], security: [{ bearer: [] }] } },
+        '/v1/billing-history/admin/overview': { get: { summary: 'Billing admin overview', tags: ['Billing History'] } },
+        '/v1/gateway-middleware/configs': { get: { summary: 'List middleware configs', tags: ['Gateway Middleware'], security: [{ bearer: [] }] }, post: { summary: 'Create config', tags: ['Gateway Middleware'], security: [{ bearer: [] }] } },
+        '/v1/gateway-middleware/configs/{id}': { put: { summary: 'Update config', tags: ['Gateway Middleware'], security: [{ bearer: [] }] }, delete: { summary: 'Delete config', tags: ['Gateway Middleware'], security: [{ bearer: [] }] } },
+        '/v1/gateway-middleware/reorder': { post: { summary: 'Reorder middleware', tags: ['Gateway Middleware'], security: [{ bearer: [] }] } },
+        '/v1/gateway-middleware/templates': { get: { summary: 'Middleware templates', tags: ['Gateway Middleware'] } },
+        '/v1/gateway-middleware/logs': { get: { summary: 'Execution logs', tags: ['Gateway Middleware'], security: [{ bearer: [] }] } },
+        '/v1/gateway-middleware/preview': { get: { summary: 'Preview chain', tags: ['Gateway Middleware'], security: [{ bearer: [] }] } },
+        '/v1/gateway-middleware/admin/overview': { get: { summary: 'Middleware admin overview', tags: ['Gateway Middleware'] } },
+        '/admin/capacity/snapshots': { get: { summary: 'Get snapshots', tags: ['Capacity Planning'] }, post: { summary: 'Record snapshot', tags: ['Capacity Planning'] } },
+        '/admin/capacity/current': { get: { summary: 'Current capacity', tags: ['Capacity Planning'] } },
+        '/admin/capacity/forecasts': { get: { summary: 'Get forecasts', tags: ['Capacity Planning'] }, post: { summary: 'Create forecast', tags: ['Capacity Planning'] } },
+        '/admin/capacity/recommendations': { get: { summary: 'List recommendations', tags: ['Capacity Planning'] }, post: { summary: 'Create recommendation', tags: ['Capacity Planning'] } },
+        '/admin/capacity/recommendations/{id}': { put: { summary: 'Update recommendation', tags: ['Capacity Planning'] } },
+        '/admin/capacity/dashboard': { get: { summary: 'Capacity dashboard', tags: ['Capacity Planning'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
