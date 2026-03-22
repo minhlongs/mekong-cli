@@ -1,9 +1,7 @@
-/**
- * sales-crm.ts — CRM lead management CLI commands
- * Add leads, list/filter by status, qualify with scores, schedule follow-ups
- */
+/** sales-crm.ts — CRM lead management: add, list, qualify, follow-up. OpenClaw Engine wired for AI qualification and live metrics. */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 interface Lead {
   id: string;
@@ -29,7 +27,7 @@ const LEADS: Lead[] = [
   { id: 'lead_008', name: 'Bui Van H', email: 'bvh@fintechvn.com', company: 'FinTech VN', source: 'referral', status: 'qualified', score: 79, notes: 'Needs compliance tools', followup: 'demo', createdAt: '2026-03-16' },
 ];
 
-export function registerSalesCrmCommand(program: Command): void {
+export function registerSalesCrmCommand(program: Command, engine?: MekongEngine): void {
   const crm = program
     .command('sales-crm')
     .description('CRM lead management — add, list, qualify, follow-up');
@@ -90,16 +88,29 @@ export function registerSalesCrmCommand(program: Command): void {
         .map(s => `${s}: ${LEADS.filter(l => l.status === s).length}`)
         .join(' | ');
       info(byStatus);
+
+      // CRM Engine Status — real metrics from OpenClaw when available
+      try {
+        if (engine?.openclaw) {
+          const h = engine.openclaw.getHealth();
+          divider();
+          heading('CRM Engine Status');
+          keyValue('Missions completed', String(h.missionsCompleted));
+          keyValue('AGI score', String(h.agiScore));
+          keyValue('Circuit breaker', h.circuitBreakerState);
+        }
+      } catch (_) { /* non-fatal */ }
+
       info('');
     });
 
   crm
     .command('qualify')
-    .description('Score and qualify a lead (1-10 scale)')
+    .description('Score and qualify a lead using AI analysis (1-10 scale)')
     .option('--id <id>', 'Lead ID', 'lead_001')
     .option('--score <n>', 'Qualification score 1-10', '7')
     .option('--notes <text>', 'Qualification notes', '')
-    .action((opts: { id: string; score: string; notes: string }) => {
+    .action(async (opts: { id: string; score: string; notes: string }) => {
       const lead = LEADS.find(l => l.id === opts.id);
       const rawScore = Math.min(10, Math.max(1, parseInt(opts.score, 10) || 7));
       const normalizedScore = rawScore * 10;
@@ -112,15 +123,36 @@ export function registerSalesCrmCommand(program: Command): void {
 
       keyValue('Lead', `${lead.name} @ ${lead.company}`);
       keyValue('Previous score', lead.score > 0 ? `${lead.score}/100` : 'unscored');
-      keyValue('New score', `${normalizedScore}/100`);
+
+      // AI-powered qualification via OpenClaw — fallback to manual score on any error
+      let finalScore = normalizedScore;
+      try {
+        if (engine?.openclaw) {
+          const complexity = engine.openclaw.classifyComplexity(`Qualify lead: ${lead.name} at ${lead.company}`);
+          const mission = await engine.openclaw.submitMission({
+            goal: `Qualify lead: ${lead.name} at ${lead.company}. Source: ${lead.source}. Notes: ${lead.notes || 'none'}`,
+            complexity,
+          });
+          if (mission.status === 'completed' && mission.output) {
+            const match = mission.output.match(/\b([0-9]{1,3})\b/);
+            if (match) {
+              const parsed = parseInt(match[1], 10);
+              if (parsed >= 0 && parsed <= 100) { finalScore = parsed; keyValue('AI analysis', mission.output.slice(0, 80)); }
+            }
+          }
+        }
+      } catch (_) { /* fallback to manual score */ }
+
+      keyValue('New score', `${finalScore}/100`);
       if (opts.notes) keyValue('Notes', opts.notes);
       divider();
 
-      const label = normalizedScore >= 80 ? 'HOT' : normalizedScore >= 60 ? 'WARM' : 'COLD';
-      const bar = '█'.repeat(rawScore) + '░'.repeat(10 - rawScore);
-      if (normalizedScore >= 80) success(`[${bar}] ${normalizedScore}/100 — ${label}: Schedule demo now`);
-      else if (normalizedScore >= 60) info(`[${bar}] ${normalizedScore}/100 — ${label}: Nurture sequence`);
-      else warn(`[${bar}] ${normalizedScore}/100 — ${label}: Low priority`);
+      const rawFinal = Math.round(finalScore / 10);
+      const label = finalScore >= 80 ? 'HOT' : finalScore >= 60 ? 'WARM' : 'COLD';
+      const bar = '█'.repeat(rawFinal) + '░'.repeat(10 - rawFinal);
+      if (finalScore >= 80) success(`[${bar}] ${finalScore}/100 — ${label}: Schedule demo now`);
+      else if (finalScore >= 60) info(`[${bar}] ${finalScore}/100 — ${label}: Nurture sequence`);
+      else warn(`[${bar}] ${finalScore}/100 — ${label}: Low priority`);
 
       success(`Lead ${opts.id} qualified — status updated to: QUALIFIED`);
       info('');
