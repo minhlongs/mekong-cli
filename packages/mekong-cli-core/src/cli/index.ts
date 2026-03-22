@@ -44,6 +44,10 @@ import { registerSalesCrmCommand } from './commands/sales-crm.js';
 import { registerSalesCampaignCommand } from './commands/sales-campaign.js';
 import { registerSalesReportCommand } from './commands/sales-report.js';
 import { registerSalesFunnelCommand } from './commands/sales-funnel.js';
+import { registerTeamCommand } from './commands/team.js';
+import { registerDeployCommand } from './commands/deploy.js';
+import { registerGtmCommand } from './commands/gtm.js';
+import { registerMonitorCommand } from './commands/monitor.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -120,6 +124,10 @@ export async function main(argv?: string[]): Promise<void> {
   registerSalesCampaignCommand(program);
   registerSalesReportCommand(program);
   registerSalesFunnelCommand(program);
+  registerTeamCommand(program);
+  registerDeployCommand(program);
+  registerGtmCommand(program);
+  registerMonitorCommand(program);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
