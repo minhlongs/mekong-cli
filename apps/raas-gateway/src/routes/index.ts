@@ -195,6 +195,12 @@ import { platformServiceRegistry } from './platform-service-registry';
 import { tenantDataMasking } from './tenant-data-masking';
 import { adminDeploymentTracking } from './admin-deployment-tracking';
 import { tenantApiGatewayLogs } from './tenant-api-gateway-logs';
+import { tenantApiResponseTransform } from './tenant-api-response-transform';
+import { missionSlaCompliance } from './mission-sla-compliance';
+import { platformLicenseManagement } from './platform-license-management';
+import { tenantDataPipeline } from './tenant-data-pipeline';
+import { adminPlatformBackup } from './admin-platform-backup';
+import { tenantApiMockServer } from './tenant-api-mock-server';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -451,6 +457,16 @@ export function createRoutes() {
   routes.route('/v1/data-masking', tenantDataMasking);
   routes.route('/admin/deployment-tracking', adminDeploymentTracking);
   routes.route('/v1/gateway-logs', tenantApiGatewayLogs);
+
+  // Wave 69 routes
+  routes.route('/v1/response-transform', tenantApiResponseTransform);
+  routes.route('/v1/sla-compliance', missionSlaCompliance);
+  routes.route('/admin/license-management', platformLicenseManagement);
+
+  // Wave 70 routes
+  routes.route('/v1/data-pipeline', tenantDataPipeline);
+  routes.route('/admin/platform-backup', adminPlatformBackup);
+  routes.route('/v1/api-mocks', tenantApiMockServer);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1606,6 +1622,18 @@ export function createRoutes() {
         '/admin/deployment-tracking/rollbacks': { get: { summary: 'Deployment rollbacks', tags: ['Deployment Tracking'] } },
         '/v1/gateway-logs/logs': { get: { summary: 'List gateway logs', tags: ['Gateway Logs'] }, post: { summary: 'Record log', tags: ['Gateway Logs'] } },
         '/v1/gateway-logs/summaries': { get: { summary: 'Log summaries', tags: ['Gateway Logs'] } },
+        '/v1/response-transform/transforms': { get: { summary: 'List response transforms', tags: ['Response Transform'] }, post: { summary: 'Create transform', tags: ['Response Transform'] } },
+        '/v1/response-transform/logs': { get: { summary: 'Transform logs', tags: ['Response Transform'] } },
+        '/v1/sla-compliance/policies': { get: { summary: 'List SLA policies', tags: ['SLA Compliance'] }, post: { summary: 'Create SLA policy', tags: ['SLA Compliance'] } },
+        '/v1/sla-compliance/violations': { get: { summary: 'SLA violations', tags: ['SLA Compliance'] } },
+        '/admin/license-management/licenses': { get: { summary: 'List licenses', tags: ['License Management'] }, post: { summary: 'Create license', tags: ['License Management'] } },
+        '/admin/license-management/activations': { get: { summary: 'License activations', tags: ['License Management'] } },
+        '/v1/data-pipeline/pipelines': { get: { summary: 'List pipelines', tags: ['Data Pipeline'] }, post: { summary: 'Create pipeline', tags: ['Data Pipeline'] } },
+        '/v1/data-pipeline/runs': { get: { summary: 'Pipeline runs', tags: ['Data Pipeline'] } },
+        '/admin/platform-backup/backups': { get: { summary: 'List backups', tags: ['Platform Backup'] }, post: { summary: 'Create backup', tags: ['Platform Backup'] } },
+        '/admin/platform-backup/restore-points': { get: { summary: 'Restore points', tags: ['Platform Backup'] } },
+        '/v1/api-mocks/mocks': { get: { summary: 'List mock endpoints', tags: ['API Mock Server'] }, post: { summary: 'Create mock', tags: ['API Mock Server'] } },
+        '/v1/api-mocks/requests': { get: { summary: 'Mock requests log', tags: ['API Mock Server'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
