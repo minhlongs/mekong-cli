@@ -10,6 +10,9 @@
 import { IExchange, IOrder, IBalance, IOrderBook } from '../interfaces/exchange-types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 // CCXT types are resolved at runtime via require() — typed as `unknown` at package boundary
 // to avoid requiring ccxt type declarations as a build-time dependency.
 
@@ -37,7 +40,8 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async connect(): Promise<void> {
-    await this.exchange.loadMarkets();
+    const ex = this.exchange as { loadMarkets: () => Promise<void> };
+    await ex.loadMarkets();
   }
 
   protected async retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
@@ -55,15 +59,17 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchTicker(symbol: string): Promise<number> {
-    const ticker = await this.retry(() => this.exchange.fetchTicker(symbol)) as { last?: number };
+    const ex = this.exchange as any;
+    const ticker = await this.retry(() => ex.fetchTicker(symbol)) as { last?: number };
     return ticker.last || 0;
   }
 
   async createMarketOrder(symbol: string, side: 'buy' | 'sell', amount: number): Promise<IOrder> {
-    const preciseAmountStr = this.exchange.amountToPrecision(symbol, amount);
+    const ex = this.exchange as any;
+    const preciseAmountStr = ex.amountToPrecision(symbol, amount);
     const preciseAmount = parseFloat(preciseAmountStr);
 
-    const market = this.exchange.markets?.[symbol];
+    const market = ex.markets?.[symbol];
     if (market) {
       const minAmount = market.limits?.amount?.min;
       const minCost = market.limits?.cost?.min;
@@ -79,7 +85,7 @@ export class ExchangeClientBase implements IExchange {
       }
     }
 
-    const order = await this.retry(() => this.exchange.createOrder(symbol, 'market', side, preciseAmount)) as {
+    const order = await this.retry(() => ex.createOrder(symbol, 'market', side, preciseAmount)) as {
       id: string; symbol: string; side: string; amount: number;
       average?: number; price?: number; status: string; timestamp: number;
     };
@@ -97,7 +103,8 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchOrderBook(symbol: string, limit = 20): Promise<IOrderBook> {
-    const book = await this.retry(() => this.exchange.fetchOrderBook(symbol, limit)) as {
+    const ex = this.exchange as any;
+    const book = await this.retry(() => ex.fetchOrderBook(symbol, limit)) as {
       bids?: number[][]; asks?: number[][]; timestamp?: number;
     };
     return {
@@ -109,7 +116,8 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchBalance(): Promise<Record<string, IBalance>> {
-    const balance = await this.retry(() => this.exchange.fetchBalance()) as {
+    const ex = this.exchange as any;
+    const balance = await this.retry(() => ex.fetchBalance()) as {
       total?: Record<string, number>; free?: Record<string, number>; used?: Record<string, number>;
     };
     const result: Record<string, IBalance> = {};
