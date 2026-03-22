@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenClaw CTO v7.1 — enforce worker dirs + all previous fixes."""
+"""OpenClaw CTO v7.2 — context-aware dispatch + smart question answering."""
 import asyncio, json, logging, os, subprocess, sys, time, re
 from pathlib import Path
 
@@ -12,7 +12,6 @@ PROJECT_ROOT = Path(os.path.expanduser("~/mekong-cli"))
 STOP_FILE = Path(os.path.expanduser("~/.openclaw/STOP"))
 NO_BOOTSTRAP = "--no-bootstrap" in sys.argv
 
-# WORKERS: each has assigned dir — CTO enforces this
 WORKERS = [
     {"name": "mekong-cli", "dir": ".", "deploy": "pnpm run build"},
     {"name": "algo-trader", "dir": "apps/algo-trader", "deploy": "npx tsc --noEmit"},
@@ -26,10 +25,9 @@ def tmux_run(args):
         return ""
 
 def capture(pane):
-    return tmux_run(["capture-pane", "-t", f"{SESSION}:0.{pane}", "-p", "-S", "-30"])
+    return tmux_run(["capture-pane", "-t", f"{SESSION}:0.{pane}", "-p", "-S", "-50"])
 
 def get_actual_dir(output):
-    """Extract actual working directory from CC CLI status bar."""
     match = re.findall(r'\U0001F4C1\s+(~?/[^\s]+)', output)
     if match:
         d = match[-1].replace("~", os.path.expanduser("~"))
@@ -43,7 +41,7 @@ def is_idle(output):
     tail = "\n".join(output.strip().split("\n")[-5:])
     if "\u276f" not in tail:
         return False
-    if any(x in tail.lower() for x in ["running", "thinking", "tokens"]):
+    if any(x in tail.lower() for x in ["running", "thinking", "tokens", "gusting"]):
         return False
     low500 = output[-500:].lower()
     if any(x in low500 for x in ["press up to edit", "queued", "pending"]):
@@ -53,22 +51,76 @@ def is_idle(output):
     return True
 
 def has_question(output):
-    """Only answer if real question in last 8 lines."""
+    """Detect real questions in last 8 lines — expanded markers."""
     if not is_idle(output):
-        return False, ""
+        return False, "", ""
     lines8 = output.strip().split("\n")[-8:]
-    tail_text = "\n".join(lines8).lower()
-    if "?" not in tail_text:
-        return False, ""
-    if "unresolved" in tail_text:
-        return False, ""
-    if "push" in tail_text and ("remote" in tail_text or "origin" in tail_text):
-        return True, "push"
-    question_markers = ["do you want", "shall i", "should i", "proceed", "confirm",
-                       "approve", "continue", "y/n", "yes/no"]
-    if any(m in tail_text for m in question_markers):
-        return True, "confirm"
-    return False, ""
+    tail_text = "\n".join(lines8)
+    tail_low = tail_text.lower()
+    if "?" not in tail_low:
+        return False, "", ""
+    if "unresolved" in tail_low:
+        return False, "", ""
+    # Push question
+    if "push" in tail_low and ("remote" in tail_low or "origin" in tail_low):
+        return True, "push", tail_text
+    # Choice question — worker asking which option
+    choice_markers = ["which", "choose", "select", "prefer", "option",
+                      "would you like", "like me to", "tackle", "pick one",
+                      "choose one", "what should"]
+    if any(m in tail_low for m in choice_markers):
+        return True, "choice", tail_text
+    # Yes/no confirmation
+    confirm_markers = ["do you want", "shall i", "should i", "proceed", "confirm",
+                       "approve", "continue", "y/n", "yes/no", "go ahead"]
+    if any(m in tail_low for m in confirm_markers):
+        return True, "confirm", tail_text
+    return False, "", ""
+
+def smart_answer(q_type, q_text, worker):
+    """Generate context-aware answer based on question type and content."""
+    low = q_text.lower()
+    if q_type == "push":
+        return "Yes, push to origin main"
+    if q_type == "choice":
+        # Priority: fix bugs > fix deps > fix imports > test > build > review
+        if "fix" in low and "dep" in low:
+            return "Fix the dependencies first — install missing packages."
+        if "fix" in low and ("import" in low or "circular" in low):
+            return "Fix the circular imports first."
+        if "fix" in low and ("bug" in low or "error" in low):
+            return "Fix the bugs first — that's highest priority."
+        if "test" in low:
+            return "Run the tests first to understand current state."
+        if "push" in low:
+            return "Push to remote after fixing all issues."
+        # Default for choice: pick first actionable option
+        return "Start with option 1 — the most impactful action first."
+    # Default confirm
+    return "Yes, proceed with all suggested actions."
+
+def read_worker_context(output):
+    """Read last 20 lines to understand what worker just did/is doing."""
+    lines = output.strip().split("\n")[-20:]
+    text = "\n".join(lines).lower()
+    context = []
+    if "error" in text or "fail" in text or "blocked" in text:
+        context.append("has_errors")
+    if "conflict" in text or "<<<<<<" in text or "======" in text:
+        context.append("has_conflicts")
+    if "commit" in text and ("success" in text or "created" in text):
+        context.append("just_committed")
+    if "review" in text and ("complete" in text or "done" in text):
+        context.append("just_reviewed")
+    if "test" in text and ("pass" in text or "green" in text):
+        context.append("tests_passing")
+    if "test" in text and ("fail" in text or "red" in text):
+        context.append("tests_failing")
+    if "build" in text and ("success" in text or "green" in text):
+        context.append("build_passing")
+    if "compact" in text:
+        context.append("compacting")
+    return context
 
 def send_cmd(pane, cmd):
     try:
@@ -103,6 +155,27 @@ def ask_brain(worker, ctx):
     except:
         return ""
 
+def context_override(worker, ctx, worker_ctx):
+    """Override brain decision based on what worker actually needs."""
+    d = worker["dir"]
+    name = worker["name"]
+    # Worker has merge conflicts — fix first
+    if "has_conflicts" in worker_ctx:
+        return f'/fix "Project: {name}. Resolve all merge conflicts in {d}." --fast'
+    # Worker has errors — fix first
+    if "has_errors" in worker_ctx and "tests_failing" not in worker_ctx:
+        return f'/fix "Project: {name}. Fix all errors in {d}." --fast'
+    # Tests failing — fix tests
+    if "tests_failing" in worker_ctx:
+        return f'/fix "Project: {name}. Fix failing tests in {d}." --fast'
+    # Just committed + tests passing → deploy/review
+    if "just_committed" in worker_ctx and "tests_passing" in worker_ctx:
+        return f'/cto-review "Project: {name}. Post-commit review." --fast'
+    # Just reviewed → next phase (build/test/ship)
+    if "just_reviewed" in worker_ctx:
+        return f'/cook "Project: {name}. Continue development in {d}." --fast'
+    return ""  # No override, let brain decide
+
 def bootstrap():
     subprocess.run(["tmux", "kill-session", "-t", SESSION], capture_output=True)
     time.sleep(1)
@@ -125,7 +198,7 @@ def bootstrap():
 
 async def main():
     log.info("=" * 50)
-    log.info("OpenClaw CTO v7.1 — enforce worker dirs")
+    log.info("OpenClaw CTO v7.2 — context-aware dispatch")
     mode = "HOT-RESTART" if NO_BOOTSTRAP else "FULL BOOTSTRAP"
     log.info(f"Session: {SESSION} | Interval: {INTERVAL}s | Workers: {len(WORKERS)} | {mode}")
     log.info("=" * 50)
@@ -137,7 +210,7 @@ async def main():
 
     last_dispatch = [0.0] * len(WORKERS)
     last_cmd = [""] * len(WORKERS)
-    last_answer = [0.0] * len(WORKERS)  # answer cooldown
+    last_answer = [0.0] * len(WORKERS)
     cycle = 0
     rr_start = 0
 
@@ -161,19 +234,17 @@ async def main():
                 if not output.strip():
                     log.info(f"P{pane} ({worker['name']}): EMPTY OUTPUT")
                     continue
+
                 ctx_match = re.findall(r'(\d+)%', output)
                 ctx = int(ctx_match[-1]) if ctx_match else 0
-
-                # Read actual dir from tmux
                 actual_dir = get_actual_dir(output)
                 expected_dir = worker["dir"]
 
-                # ENFORCE: if worker drifted to wrong dir, send cd to correct dir
+                # ENFORCE: drift correction via natural language
                 if actual_dir != expected_dir and actual_dir != ".":
                     log.warning(f"P{pane} ({worker['name']}): DRIFT! expected={expected_dir} actual={actual_dir}")
                     if is_idle(output):
                         target = str(PROJECT_ROOT / expected_dir) if expected_dir != "." else str(PROJECT_ROOT)
-                        # Use CC CLI !cd (shell escape) or plain prompt
                         try:
                             subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "-l",
                                           f"Change directory to {target} and work on project {worker['name']}"], timeout=8)
@@ -185,18 +256,14 @@ async def main():
                         log.info(f"P{pane} ({worker['name']}): CORRECTED -> cd {expected_dir}")
                     continue
 
-                # Priority 0: Answer questions (with 60s cooldown)
+                # Priority 0: Answer questions (60s cooldown) — SMART answers
                 now = time.time()
-                q_found, q_type = has_question(output)
+                q_found, q_type, q_text = has_question(output)
                 if q_found and (now - last_answer[i] > 60):
-                    if q_type == "push":
-                        if send_cmd(pane, "Yes, push to origin main"):
-                            log.info(f"P{pane} ({worker['name']}): ANSWERED push")
-                            last_answer[i] = now
-                    else:
-                        if send_cmd(pane, "Yes, proceed with all suggested actions."):
-                            log.info(f"P{pane} ({worker['name']}): ANSWERED confirm")
-                            last_answer[i] = now
+                    answer = smart_answer(q_type, q_text, worker)
+                    if send_cmd(pane, answer):
+                        log.info(f"P{pane} ({worker['name']}): ANSWERED [{q_type}] -> {answer[:60]}")
+                        last_answer[i] = now
                     continue
 
                 if not is_idle(output):
@@ -223,8 +290,23 @@ async def main():
                     dispatched += 1
                     continue
 
-                # Use ASSIGNED worker info for brain (not drifted dir)
-                log.info(f"P{pane} ({worker['name']} @ {actual_dir}): IDLE -> brain...")
+                # READ WORKER CONTEXT before dispatching
+                worker_ctx = read_worker_context(output)
+                log.info(f"P{pane} ({worker['name']} @ {actual_dir}): IDLE ctx_signals={worker_ctx}")
+
+                # Context override: if worker has specific needs, skip brain
+                override = context_override(worker, ctx, worker_ctx)
+                if override:
+                    log.info(f"P{pane}: CONTEXT OVERRIDE -> {override[:80]}")
+                    if send_cmd(pane, override):
+                        last_dispatch[i] = now
+                        last_cmd[i] = override.split()[0]
+                        dispatched += 1
+                        log.info(f"DELEGATED P{pane} ({worker['name']}) -> {override.split()[0]} [OVERRIDE]")
+                    continue
+
+                # Normal brain dispatch
+                log.info(f"P{pane} ({worker['name']}): -> brain...")
                 cmd = ask_brain(worker, ctx)
 
                 if cmd:
