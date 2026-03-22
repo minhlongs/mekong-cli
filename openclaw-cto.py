@@ -193,6 +193,14 @@ async def main():
                 # Auto-handle dialogs
                 if any(x in output[-200:] for x in ["Enter to select", "Esc to cancel"]):
                     subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"])
+                # Auto-answer worker questions (push, confirm, y/n)
+                tail500 = output[-500:].lower()
+                if "push" in tail500 and ("remote" in tail500 or "origin" in tail500):
+                    send_to_pane(pane, "Yes, push to origin main")
+                    log.info(f"P{pane}: AUTO-ANSWER push yes")
+                elif any(x in tail500 for x in ["y/n", "proceed?", "continue?", "confirm?"]):
+                    send_to_pane(pane, "yes")
+                    log.info(f"P{pane}: AUTO-ANSWER yes")
                 continue
 
             # Worker is idle — sync pool state
