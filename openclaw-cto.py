@@ -375,8 +375,9 @@ async def main():
                 actual_dir = get_actual_dir(output)
                 expected_dir = worker["dir"]
 
-                # Drift correction
-                if actual_dir != expected_dir and actual_dir != ".":
+                # Drift correction — v7.5.1 fix: also correct when at root but should be in subdir
+                is_drifted = (actual_dir != expected_dir) and (actual_dir != "." or expected_dir != ".")
+                if is_drifted:
                     log.warning(f"P{pane} ({worker['name']}): DRIFT! expected={expected_dir} actual={actual_dir}")
                     workers_status.append({"pane": i, "name": worker["name"], "status": "DRIFT", "ctx": ctx})
                     if is_idle(output):
