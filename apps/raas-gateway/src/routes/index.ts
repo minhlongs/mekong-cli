@@ -238,6 +238,12 @@ import { adminPlatformMaintenance } from './admin-platform-maintenance';
 import { tenantUsageAnalytics } from './tenant-usage-analytics';
 import { adminTenantMigration } from './admin-tenant-migration';
 import { tenantNotificationPreferences } from './tenant-notification-preferences';
+import { tenantApiVersioningConfig } from './tenant-api-versioning-config';
+import { missionQualityScoring } from './mission-quality-scoring';
+import { adminPlatformCompliance } from './admin-platform-compliance';
+import { tenantDataRetention } from './tenant-data-retention';
+import { adminServiceRegistry } from './admin-service-registry';
+import { tenantApiRatePolicies } from './tenant-api-rate-policies';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -570,6 +576,16 @@ export function createRoutes() {
   routes.route('/v1/usage-analytics', tenantUsageAnalytics);
   routes.route('/admin/tenant-migration', adminTenantMigration);
   routes.route('/v1/notification-preferences', tenantNotificationPreferences);
+
+  // Wave 85 routes
+  routes.route('/v1/versioning-config', tenantApiVersioningConfig);
+  routes.route('/v1/quality-scoring', missionQualityScoring);
+  routes.route('/admin/platform-compliance', adminPlatformCompliance);
+
+  // Wave 86 routes
+  routes.route('/v1/data-retention', tenantDataRetention);
+  routes.route('/admin/service-registry', adminServiceRegistry);
+  routes.route('/v1/rate-policies', tenantApiRatePolicies);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1815,6 +1831,18 @@ export function createRoutes() {
         '/admin/tenant-migration/steps': { get: { summary: 'Migration steps', tags: ['Tenant Migration'] } },
         '/v1/notification-preferences/preferences': { get: { summary: 'List preferences', tags: ['Notification Preferences'] }, post: { summary: 'Create preference', tags: ['Notification Preferences'] } },
         '/v1/notification-preferences/channels': { get: { summary: 'Notification channels', tags: ['Notification Preferences'] } },
+        '/v1/versioning-config/configs': { get: { summary: 'List versioning configs', tags: ['Versioning Config'] }, post: { summary: 'Create config', tags: ['Versioning Config'] } },
+        '/v1/versioning-config/mappings': { get: { summary: 'Version mappings', tags: ['Versioning Config'] } },
+        '/v1/quality-scoring/scores': { get: { summary: 'List quality scores', tags: ['Quality Scoring'] }, post: { summary: 'Create score', tags: ['Quality Scoring'] } },
+        '/v1/quality-scoring/criteria': { get: { summary: 'Scoring criteria', tags: ['Quality Scoring'] } },
+        '/admin/platform-compliance/requirements': { get: { summary: 'List requirements', tags: ['Platform Compliance'] }, post: { summary: 'Create requirement', tags: ['Platform Compliance'] } },
+        '/admin/platform-compliance/audits': { get: { summary: 'Compliance audits', tags: ['Platform Compliance'] } },
+        '/v1/data-retention/policies': { get: { summary: 'List retention policies', tags: ['Data Retention'] }, post: { summary: 'Create policy', tags: ['Data Retention'] } },
+        '/v1/data-retention/executions': { get: { summary: 'Retention executions', tags: ['Data Retention'] } },
+        '/admin/service-registry/services': { get: { summary: 'List services', tags: ['Service Registry'] }, post: { summary: 'Register service', tags: ['Service Registry'] } },
+        '/admin/service-registry/dependencies': { get: { summary: 'Service dependencies', tags: ['Service Registry'] } },
+        '/v1/rate-policies/policies': { get: { summary: 'List rate policies', tags: ['Rate Policies'] }, post: { summary: 'Create policy', tags: ['Rate Policies'] } },
+        '/v1/rate-policies/violations': { get: { summary: 'Policy violations', tags: ['Rate Policies'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
