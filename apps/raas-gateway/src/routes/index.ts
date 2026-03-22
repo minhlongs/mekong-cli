@@ -258,6 +258,11 @@ import { adminPlatformSecurityScan } from './admin-platform-security-scan';
 import { tenantApiSchemaValidation } from './tenant-api-schema-validation';
 import { adminDeploymentPipeline } from './admin-deployment-pipeline';
 import { tenantPerformanceProfiling } from './tenant-performance-profiling';
+import { tenantApiRequestTransform } from './tenant-api-request-transform';
+import { missionCollaboration } from './mission-collaboration';
+import { adminPlatformHealthDashboard } from './admin-platform-health-dashboard';
+import { tenantApiAccessLogs } from './tenant-api-access-logs';
+import { adminConfigurationDrift } from './admin-configuration-drift';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -626,6 +631,15 @@ export function createRoutes() {
   routes.route('/v1/schema-validation', tenantApiSchemaValidation);
   routes.route('/admin/deployment-pipeline', adminDeploymentPipeline);
   routes.route('/v1/performance-profiling', tenantPerformanceProfiling);
+
+  // Wave 93 routes
+  routes.route('/v1/request-transform', tenantApiRequestTransform);
+  routes.route('/v1/collaboration', missionCollaboration);
+  routes.route('/admin/health-dashboard', adminPlatformHealthDashboard);
+
+  // Wave 94 routes (partial — 2 of 3)
+  routes.route('/v1/access-logs', tenantApiAccessLogs);
+  routes.route('/admin/config-drift', adminConfigurationDrift);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1903,6 +1917,16 @@ export function createRoutes() {
         '/admin/deployment-pipeline/runs': { get: { summary: 'Pipeline runs', tags: ['Deployment Pipeline'] } },
         '/v1/performance-profiling/profiles': { get: { summary: 'List profiles', tags: ['Performance Profiling'] }, post: { summary: 'Create profile', tags: ['Performance Profiling'] } },
         '/v1/performance-profiling/baselines': { get: { summary: 'Perf baselines', tags: ['Performance Profiling'] } },
+        '/v1/request-transform/transforms': { get: { summary: 'List transforms', tags: ['Request Transform'] }, post: { summary: 'Create transform', tags: ['Request Transform'] } },
+        '/v1/request-transform/logs': { get: { summary: 'Transform logs', tags: ['Request Transform'] } },
+        '/v1/collaboration/collaborators': { get: { summary: 'List collaborators', tags: ['Collaboration'] }, post: { summary: 'Add collaborator', tags: ['Collaboration'] } },
+        '/v1/collaboration/comments': { get: { summary: 'Comments', tags: ['Collaboration'] } },
+        '/admin/health-dashboard/checks': { get: { summary: 'Health checks', tags: ['Health Dashboard'] }, post: { summary: 'Create check', tags: ['Health Dashboard'] } },
+        '/admin/health-dashboard/incidents': { get: { summary: 'Health incidents', tags: ['Health Dashboard'] } },
+        '/v1/access-logs/logs': { get: { summary: 'List access logs', tags: ['Access Logs'] }, post: { summary: 'Record log', tags: ['Access Logs'] } },
+        '/v1/access-logs/exports': { get: { summary: 'Log exports', tags: ['Access Logs'] } },
+        '/admin/config-drift/detections': { get: { summary: 'List detections', tags: ['Config Drift'] }, post: { summary: 'Create detection', tags: ['Config Drift'] } },
+        '/admin/config-drift/baselines': { get: { summary: 'Drift baselines', tags: ['Config Drift'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
