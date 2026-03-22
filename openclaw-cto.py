@@ -19,6 +19,8 @@ WORKERS = [
     {"name": "mekong-cli", "dir": ".", "deploy": "pnpm run build"},
     {"name": "algo-trader", "dir": "apps/algo-trader", "deploy": "npx tsc --noEmit"},
     {"name": "well", "dir": "apps/well", "deploy": "npm run build"},
+    {"name": "sophia-factory", "dir": "apps/sophia-factory", "deploy": "npm run build"},
+    {"name": "apex-os", "dir": "apps/apex-os", "deploy": "npm run build"},
 ]
 
 MISSION_DIR.mkdir(parents=True, exist_ok=True)
@@ -317,7 +319,7 @@ def bootstrap():
 
 async def main():
     log.info("=" * 50)
-    log.info("OpenClaw CTO v7.5 — smart dispatch, no false positives")
+    log.info("OpenClaw CTO v7.5.1 — 5 workers, brain v3, goal-oriented")
     mode = "HOT-RESTART" if NO_BOOTSTRAP else "FULL BOOTSTRAP"
     log.info(f"Session: {SESSION} | Interval: {INTERVAL}s | Workers: {len(WORKERS)} | {mode}")
     log.info("=" * 50)
