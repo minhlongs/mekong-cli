@@ -446,6 +446,13 @@ send_to_pane() {
   local pane_idx=$1; shift
   local cmd="$*"
   if [[ "$cmd" != "1" ]]; then
+    # ANTI-X2: If pane context > 30%, it already has work loaded — block new dispatch
+    local ctx_check
+    ctx_check=$(capture_pane "$pane_idx" 2>/dev/null | grep -oE '[0-9]+%' | tail -1 | tr -d '%')
+    if [[ -n "$ctx_check" && "$ctx_check" -gt 30 ]]; then
+      echo "[$(date '+%H:%M:%S')] ANTI-X2: P${pane_idx} context ${ctx_check}% > 30% — blocked: ${cmd:0:80}" >> "$LOG_FILE"
+      return 1
+    fi
     local fresh_output
     fresh_output=$(capture_pane "$pane_idx" 2>/dev/null || echo "")
     if [[ -n "$fresh_output" ]] && ! is_idle "$fresh_output"; then
@@ -474,14 +481,17 @@ send_to_pane() {
   if [[ "$cmd" == /* ]] && ! echo "$cmd" | grep -qE '^/(compact|clear)(\s|$)' && ! echo "$cmd" | grep -q '\-\-auto'; then
     cmd="${cmd} --auto"
   fi
-  # FIX: CC CLI Ink TUI needs Escape first to ensure input mode
-  # Without this, send-keys produces "not in a mode" error
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
-  sleep 0.3
-  # FIX #17: Send a second Escape to ensure TUI fully exits any mode (search/copy)
-  # First Escape may exit one mode but leave TUI in transition; the / char gets swallowed
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
-  sleep 0.5
+  # 7-LAYER FIX: Only Escape when in search/copy/rewind mode
+  local pane_check
+  pane_check=$(tmux capture-pane -t "${CTO_SESSION}:0.${pane_idx}" -p 2>/dev/null | tail -5)
+  if echo "$pane_check" | grep -qE "search:|copy mode|Rewind|Nothing to rewind"; then
+    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+    sleep 0.3
+    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+    sleep 0.5
+  else
+    sleep 0.2
+  fi
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" -l "$cmd"
   sleep 0.3
   tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
@@ -624,6 +634,11 @@ is_idle() {
     return 1
   fi
 
+  # ANTI-X2: queued messages = BUSY (never dispatch to pane with queue)
+  if echo "$output" | tail -5 | grep -qiE "Press up to edit queued|queued messages"; then
+    return 1  # BUSY — has queued messages
+  fi
+
   # PRIORITY CHECK: clean ❯ prompt = IDLE (check BEFORE busy guards)
   if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
     return 0
@@ -740,7 +755,6 @@ check_jidoka() {
   return 1  # no jidoka
 }
 
-<<<<<<< HEAD
 # Telegram alert notification (called on Jidoka triggers)
 _telegram_alert() {
   local msg="$1"
@@ -756,7 +770,6 @@ _telegram_alert() {
 
 # ---- PHASE 2: PLAN — Build delegation task ----
 # Per spec: specific title, definition of done, constraints
-=======
 # ---- COMMAND CATALOG (config/cto-command-catalog.json) ----
 CATALOG_FILE="${PROJECT_ROOT}/config/cto-command-catalog.json"
 
@@ -840,8 +853,11 @@ extract_error_context() {
   echo "$output" | tail -20 | grep -iE "error|failed|FAIL|Cannot|TypeError|SyntaxError" | head -3 | tr '\n' ' ' | cut -c1-200
 }
 
-# Build the right mekong-cli command based on pane state + project profile from catalog
->>>>>>> origin/main
+# Build the right mekong-cli command based on 7-Layer Manus Architecture
+# L1: Tier selection (Max/Standard/Lite) based on task complexity
+# L2: Run mode (Speed/Quality) based on pane state + keywords
+# L4: Knowledge Base entries triggered by context (max 3)
+# L6: Kill switch check before returning command
 build_delegation_task() {
   local pane_idx=$1
   local pane_output="${2:-}"
@@ -850,49 +866,176 @@ build_delegation_task() {
   local deploy="${WORKER_DEPLOY[$pane_idx]}"
   local retries="${WORKER_RETRIES[$pane_idx]}"
 
+  # ── L6: Kill switch — abort immediately if ~/.openclaw/STOP exists ──
+  if [[ -f "${HOME}/.openclaw/STOP" ]]; then
+    log "L6-KILLSWITCH: ~/.openclaw/STOP detected — build_delegation_task aborted for P${pane_idx} (${name})"
+    echo ""
+    return
+  fi
+
   local state="fresh"
   if [[ -n "$pane_output" ]]; then
     state=$(detect_pane_state "$pane_output")
   fi
 
-  # Read project profile from catalog
-  local layer idle_cmd error_cmd
-  layer=$(get_project_profile "$name" "layer")
-  idle_cmd=$(get_project_profile "$name" "idle_command")
-  error_cmd=$(get_project_profile "$name" "error_command")
-  # Defaults if catalog missing
-  layer="${layer:-engineering}"
-  idle_cmd="${idle_cmd:-/cook}"
-  error_cmd="${error_cmd:-/debug}"
+  # ── L1: Agent Preference — Tier selection ──
+  # Max: multi-file, architecture, plan, escalation, /idea
+  # Standard: bug fix, feature, single endpoint
+  # Lite: docs, config, rename, quick edit, commit
+  local tier="standard"
+  local tier_model=""
+  local tier_reason=""
 
-  local ctx="Project: ${name}, Dir: ${dir}"
+  # Check Ollama availability for local routing
+  local ollama_alive=false
+  if curl -sf "http://localhost:11434/" >/dev/null 2>&1; then
+    ollama_alive=true
+  fi
+
+  case "$state" in
+    error)
+      if [[ "$retries" -ge 3 ]]; then
+        tier="max"
+        tier_reason="escalation after ${retries} retries"
+      elif echo "$pane_output" | tail -20 | grep -qiE "SyntaxError|TypeError|ReferenceError|panic:|fatal:"; then
+        tier="standard"
+        tier_reason="runtime error fix"
+      else
+        tier="standard"
+        tier_reason="build error fix"
+      fi
+      ;;
+    test_fail)
+      tier="standard"
+      tier_reason="test failure fix"
+      ;;
+    lint_error)
+      tier="lite"
+      tier_reason="lint fix"
+      ;;
+    complete)
+      tier="lite"
+      tier_reason="commit completed work"
+      ;;
+    fresh|*)
+      # Read project profile for hints
+      local profile_layer
+      profile_layer=$(get_project_profile "$name" "layer")
+      case "${profile_layer:-engineering}" in
+        strategy|architecture|design) tier="max"; tier_reason="architecture layer" ;;
+        engineering|backend|api)      tier="standard"; tier_reason="engineering layer" ;;
+        docs|config|infra)            tier="lite"; tier_reason="docs/config layer" ;;
+        *)                            tier="standard"; tier_reason="default" ;;
+      esac
+      ;;
+  esac
+
+  # ── L1: Model routing (local first) ──
+  case "$tier" in
+    max)
+      tier_model="qwen3.5-plus"           # Bailian API — Max tier
+      ;;
+    standard)
+      if $ollama_alive; then
+        tier_model="qwen3:32b"            # Ollama local — FREE
+      else
+        tier_model="qwen3-coder-plus"     # Bailian API fallback
+      fi
+      ;;
+    lite)
+      if $ollama_alive; then
+        tier_model="qwen3:32b"            # Ollama local — FREE
+      else
+        tier_model="kimi-k2.5"            # Bailian API fallback
+      fi
+      ;;
+  esac
+
+  # ── L2: Run mode — Speed vs Quality ──
+  local run_mode="speed"
+  local run_flag="--fast"
+  # Quality triggers: max tier, escalation, plan/idea/architecture states, deep errors
+  if [[ "$tier" == "max" ]] || [[ "$retries" -ge 2 ]]; then
+    run_mode="quality"
+    run_flag="--auto"
+  elif [[ "$state" == "error" ]] && echo "$pane_output" | tail -10 | grep -qiE "panic:|fatal:|segmentation"; then
+    run_mode="quality"
+    run_flag="--auto"
+  fi
+  # Override: /idea always quality, /raas always speed
+  # (applied below in command selection)
+
+  # ── L4: Knowledge Base — load max 3 triggered entries ──
+  local kb_entries=()
+  local kb_ctx=""
+  # KB-1: RAAS Business Model
+  if [[ "${#kb_entries[@]}" -lt 3 ]] && echo "${name} ${dir}" | grep -qiE "raas|mekong|revenue|\$1M"; then
+    kb_entries+=("KB-1:RAAS")
+    kb_ctx+=" [KB-1:Target=\$1M ARR,Stack=Next.js+Polar.sh,MVP=7days]"
+  fi
+  # KB-2: Tech Stack
+  if [[ "${#kb_entries[@]}" -lt 3 ]] && [[ "$state" != "complete" ]]; then
+    kb_entries+=("KB-2:TechStack")
+    kb_ctx+=" [KB-2:TS-strict,Vitest,shadcn/ui]"
+  fi
+  # KB-4: Project Management
+  if [[ "${#kb_entries[@]}" -lt 3 ]] && [[ "$state" == "fresh" || "$retries" -ge 2 ]]; then
+    kb_entries+=("KB-4:Plans")
+    kb_ctx+=" [KB-4:plans/{date}-{slug}/]"
+  fi
+  # KB-5: Deploy
+  if [[ "${#kb_entries[@]}" -lt 3 ]] && echo "$deploy" | grep -qiE "build|deploy|push"; then
+    kb_entries+=("KB-5:Deploy")
+    kb_ctx+=" [KB-5:push-main→CI→verify-HTTP200]"
+  fi
+
+  # Log KB activations
+  if [[ ${#kb_entries[@]} -gt 0 ]]; then
+    echo "[$(date '+%H:%M:%S')] KB-ACTIVATED P${pane_idx}(${name}): ${kb_entries[*]}${kb_ctx}" >> "${HOME}/.openclaw/logs/kb-activations.log" 2>/dev/null || true
+  fi
+
+  # ── Build command strings ──
+  local profile_idle profile_error
+  profile_idle=$(get_project_profile "$name" "idle_command")
+  profile_error=$(get_project_profile "$name" "error_command")
+  profile_idle="${profile_idle:-/cook}"
+  profile_error="${profile_error:-/debug}"
+
+  local ctx="Project: ${name}, Dir: ${dir}${kb_ctx}"
   local constraints="Do NOT touch files outside ${dir}. Follow existing patterns."
+
+  # Log layer selections
+  log "L1-TIER P${pane_idx}(${name}): ${tier^^} (${tier_reason}) model=${tier_model} L2-MODE=${run_mode^^}"
 
   case "$state" in
     error)
       local error_ctx
       error_ctx=$(extract_error_context "$pane_output")
       if [[ "$retries" -ge 3 ]]; then
-        # Escalate: switch to /plan hard after 3 failed retries
+        # Max tier + Quality mode for escalation → /plan hard
+        run_flag="--auto"
         echo "/plan hard \"${ctx}. ESCALATION: ${retries} retries failed. Error: ${error_ctx}. Analyze root cause deeply, create plan before fixing.\""
       elif [[ "$retries" -gt 0 ]]; then
-        echo "${error_cmd} \"RETRY #${retries}. ${ctx}. Error: ${error_ctx}. Analyze root cause, fix, verify: ${deploy}\""
+        echo "${profile_error} ${run_flag} \"RETRY #${retries}. ${ctx}. Error: ${error_ctx}. Analyze root cause, fix, verify: ${deploy}\""
       else
-        echo "${error_cmd} \"${ctx}. Error: ${error_ctx}. Fix all errors then verify: ${deploy}\""
+        echo "${profile_error} ${run_flag} \"${ctx}. Error: ${error_ctx}. Fix all errors then verify: ${deploy}\""
       fi
       ;;
     test_fail)
-      echo "/test \"${ctx}. Tests failing. Analyze failures, fix source or tests. ${constraints}\""
+      echo "/test ${run_flag} \"${ctx}. Tests failing. Analyze failures, fix source or tests. ${constraints}\""
       ;;
     lint_error)
-      echo "/fix \"${ctx}. Lint errors detected. Fix all lint issues. ${constraints}\""
+      echo "/fix ${run_flag} \"${ctx}. Lint errors detected. Fix all lint issues. ${constraints}\""
       ;;
     complete)
-      echo "/git \"chore(${name}): auto-commit completed work\""
+      echo "/git ${run_flag} \"chore(${name}): auto-commit completed work\""
       ;;
     fresh|*)
-      # Use project-specific idle command from catalog
-      echo "${idle_cmd} \"${ctx}. Run: ${deploy}. Fix ALL errors. ${constraints}\""
+      # /idea → always Quality mode
+      if [[ "$profile_idle" == "/idea" ]]; then
+        run_flag="--auto"
+      fi
+      echo "${profile_idle} ${run_flag} \"${ctx}. Run: ${deploy}. Fix ALL errors. ${constraints}\""
       ;;
   esac
 }
@@ -903,6 +1046,12 @@ dispatch_worker() {
   local pane_idx=$1
   local pane_output="${2:-}"
   local name="${WORKER_NAME[$pane_idx]}"
+
+  # ── L6: Kill switch — halt ALL agent activity if ~/.openclaw/STOP exists ──
+  if [[ -f "${HOME}/.openclaw/STOP" ]]; then
+    log "L6-KILLSWITCH: ~/.openclaw/STOP detected — dispatch HALTED for P${pane_idx} (${name})"
+    return
+  fi
 
   # GATE 0: Context % check — NEVER dispatch to full pane (prevents OOM + queue stacking)
   local ctx_pct
@@ -957,7 +1106,7 @@ except: pass
         if [[ "$first_word" != /* ]]; then
           next_cmd="/cook \"$next_cmd\""
         fi
-        local full_cmd="${next_cmd} "Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.""
+        full_cmd="${next_cmd} "Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.""
         if ! is_duplicate_dispatch "$pane_idx" "$next_cmd"; then
           log "P${pane_idx} (${name}): COMPANY.JSON → ${next_cmd}"
           if send_to_pane "$pane_idx" "$full_cmd"; then
@@ -1007,6 +1156,17 @@ except: pass
       log "P${pane_idx} (${name}): DEDUP — skipping duplicate brain cmd"
       return
     fi
+    # 7-LAYER: Apply tier selection even for brain dispatch
+    local brain_tier="standard"
+    local brain_model="qwen3.5-plus"
+    if echo "$brain_cmd" | grep -qiE "/idea|/plan hard|architecture"; then
+      brain_tier="max"; brain_model="qwen3.5-plus"
+    elif echo "$brain_cmd" | grep -qiE "/cook|/debug|/fix|/test"; then
+      brain_tier="standard"; brain_model="qwen3.5-plus"
+    elif echo "$brain_cmd" | grep -qiE "/review|/git|/compact"; then
+      brain_tier="lite"; brain_model="qwen3:32b"
+    fi
+    log "L1-TIER P${pane_idx}(${name}): ${brain_tier^^} model=${brain_model} L2-MODE=BRAIN"
     log "P${pane_idx} (${name}): BRAIN WARM → ${brain_cmd}"
     if send_to_pane "$pane_idx" "$brain_cmd"; then
       record_dispatch "$pane_idx" "$brain_cmd"
@@ -1290,6 +1450,22 @@ if ! tmux has-session -t "${CTO_SESSION}" 2>/dev/null; then
   tmux split-window -t "${CTO_SESSION}:0" -v
   sleep 1
   log "BOOTSTRAP: tmux session '${CTO_SESSION}' created with 3 panes"
+
+  # 7-LAYER BOOTSTRAP: Start mekong CLI in each pane
+  sleep 2
+  for p_idx in 0 1 2; do
+    tmux send-keys -t "${CTO_SESSION}:0.${p_idx}" "source ~/.zshrc 2>/dev/null && mekong --interactive" Enter
+    log "BOOTSTRAP: P${p_idx} -> mekong --interactive"
+  done
+  sleep 10  # Wait for CC CLI boot + trust
+  for p_idx in 0 1 2; do
+    p_content=$(tmux capture-pane -t "${CTO_SESSION}:0.${p_idx}" -p 2>/dev/null | tail -10)
+    if echo "$p_content" | grep -q "trust this folder"; then
+      tmux send-keys -t "${CTO_SESSION}:0.${p_idx}" Enter
+      log "BOOTSTRAP: P${p_idx} -> confirmed trust"
+    fi
+  done
+  sleep 5
 else
   # Verify pane count
   pane_count=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
