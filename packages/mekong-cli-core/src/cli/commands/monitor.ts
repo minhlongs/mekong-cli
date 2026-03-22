@@ -8,6 +8,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 const NOW = new Date('2026-03-22T09:30:00Z');
 
@@ -20,7 +21,20 @@ function hoursAgo(n: number): string {
   return minutesAgo(n * 60);
 }
 
-export function registerMonitorCommand(program: Command): void {
+function showEngineHealth(engine?: MekongEngine, label = 'Engine Status'): void {
+  try {
+    const health = engine?.openclaw?.getHealth();
+    if (!health) return;
+    divider();
+    info(label);
+    keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+    keyValue('  Missions completed', `${health.missionsCompleted}`);
+    keyValue('  AGI score', `${health.agiScore}/100`);
+    keyValue('  Circuit breaker', health.circuitBreakerState);
+  } catch { /* engine not ready */ }
+}
+
+export function registerMonitorCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('monitor').description('Production monitoring & SLA');
 
   // --- uptime ---
@@ -31,10 +45,10 @@ export function registerMonitorCommand(program: Command): void {
       divider();
 
       const services = [
-        { name: 'API Gateway',    uptime: 99.98, latencyP95: 142, status: 'healthy',  since: hoursAgo(720) },
-        { name: 'Worker Pool',    uptime: 99.95, latencyP95: 287, status: 'healthy',  since: hoursAgo(720) },
-        { name: 'Dashboard',      uptime: 100.0, latencyP95: 89,  status: 'healthy',  since: hoursAgo(720) },
-        { name: 'Webhook Relay',  uptime: 99.91, latencyP95: 198, status: 'degraded', since: hoursAgo(2)   },
+        { name: 'API Gateway',   uptime: 99.98, latencyP95: 142, status: 'healthy',  since: hoursAgo(720) },
+        { name: 'Worker Pool',   uptime: 99.95, latencyP95: 287, status: 'healthy',  since: hoursAgo(720) },
+        { name: 'Dashboard',     uptime: 100.0, latencyP95: 89,  status: 'healthy',  since: hoursAgo(720) },
+        { name: 'Webhook Relay', uptime: 99.91, latencyP95: 198, status: 'degraded', since: hoursAgo(2)   },
       ];
 
       for (const svc of services) {
@@ -46,13 +60,13 @@ export function registerMonitorCommand(program: Command): void {
           warn(`  ${svc.name.padEnd(16)} ${uptimeStr}  ${latencyStr}  [${svc.status}]`);
         }
       }
-      divider();
 
+      showEngineHealth(engine, 'OpenClaw Engine');
+      divider();
       keyValue('Window',        'Last 30 days');
       keyValue('Overall',       '99.96% uptime');
       keyValue('SLA target',    '99.95%');
       keyValue('Target status', 'MET');
-
       success('Uptime dashboard loaded');
     });
 
@@ -102,6 +116,12 @@ export function registerMonitorCommand(program: Command): void {
       keyValue('Active alerts',   String(active));
       keyValue('Resolved (24h)', String(alerts.filter(a => a.status === 'resolved').length));
 
+      // Fire-and-forget: AI alert correlation analysis
+      void engine?.openclaw?.submitMission({
+        goal: `Correlate ${active} active alerts and identify root cause patterns`,
+        complexity: 'trivial',
+      });
+
       if (active === 0) success('No critical alerts');
       else warn(`${active} alert(s) require attention`);
     });
@@ -114,31 +134,11 @@ export function registerMonitorCommand(program: Command): void {
       divider();
 
       const incidents = [
-        {
-          id: 'INC-018', severity: 'P2', service: 'Worker Pool',
-          cause:    'Memory leak in recipe executor',
-          started:  hoursAgo(18 * 24), duration: 23, mttr: 23, resolved: true,
-        },
-        {
-          id: 'INC-017', severity: 'P3', service: 'Webhook Relay',
-          cause:    'TLS cert renewal delay',
-          started:  hoursAgo(35 * 24), duration: 8,  mttr: 8,  resolved: true,
-        },
-        {
-          id: 'INC-016', severity: 'P1', service: 'API Gateway',
-          cause:    'DDoS — rate limiter misconfiguration',
-          started:  hoursAgo(52 * 24), duration: 41, mttr: 41, resolved: true,
-        },
-        {
-          id: 'INC-015', severity: 'P3', service: 'Dashboard',
-          cause:    'Deploy regression in auth middleware',
-          started:  hoursAgo(68 * 24), duration: 12, mttr: 12, resolved: true,
-        },
-        {
-          id: 'INC-014', severity: 'P2', service: 'Worker Pool',
-          cause:    'LLM provider upstream outage',
-          started:  hoursAgo(90 * 24), duration: 67, mttr: 67, resolved: true,
-        },
+        { id: 'INC-018', severity: 'P2', service: 'Worker Pool',    cause: 'Memory leak in recipe executor',        started: hoursAgo(18 * 24), duration: 23, mttr: 23, resolved: true },
+        { id: 'INC-017', severity: 'P3', service: 'Webhook Relay',  cause: 'TLS cert renewal delay',                started: hoursAgo(35 * 24), duration: 8,  mttr: 8,  resolved: true },
+        { id: 'INC-016', severity: 'P1', service: 'API Gateway',    cause: 'DDoS — rate limiter misconfiguration',  started: hoursAgo(52 * 24), duration: 41, mttr: 41, resolved: true },
+        { id: 'INC-015', severity: 'P3', service: 'Dashboard',      cause: 'Deploy regression in auth middleware',  started: hoursAgo(68 * 24), duration: 12, mttr: 12, resolved: true },
+        { id: 'INC-014', severity: 'P2', service: 'Worker Pool',    cause: 'LLM provider upstream outage',          started: hoursAgo(90 * 24), duration: 67, mttr: 67, resolved: true },
       ];
 
       for (const inc of incidents) {
@@ -164,12 +164,12 @@ export function registerMonitorCommand(program: Command): void {
       divider();
 
       const metrics = [
-        { name: 'Uptime',          target: '99.95%',  actual: '99.96%', met: true  },
-        { name: 'API p95 latency', target: '<200ms',  actual: '142ms',  met: true  },
-        { name: 'MTTR (P1)',       target: '<60 min', actual: '41 min', met: true  },
+        { name: 'Uptime',          target: '99.95%',   actual: '99.96%', met: true  },
+        { name: 'API p95 latency', target: '<200ms',   actual: '142ms',  met: true  },
+        { name: 'MTTR (P1)',       target: '<60 min',  actual: '41 min', met: true  },
         { name: 'MTTR (P2)',       target: '<4 hours', actual: '45 min', met: true  },
-        { name: 'Error rate',      target: '<0.1%',   actual: '0.08%',  met: true  },
-        { name: 'Webhook p95',     target: '<150ms',  actual: '198ms',  met: false },
+        { name: 'Error rate',      target: '<0.1%',    actual: '0.08%',  met: true  },
+        { name: 'Webhook p95',     target: '<150ms',   actual: '198ms',  met: false },
       ];
 
       heading('Current Period (March 2026)');
@@ -181,8 +181,20 @@ export function registerMonitorCommand(program: Command): void {
           warn(`  ${status}  ${m.name.padEnd(20)} target: ${m.target.padEnd(10)} actual: ${m.actual}`);
         }
       }
-      divider();
 
+      // Show engine AGI score and circuit breaker state as SLA metrics
+      try {
+        const health = engine?.openclaw?.getHealth();
+        if (health) {
+          divider();
+          info('OpenClaw SLA Metrics');
+          keyValue('  AGI score',       `${health.agiScore}/100`);
+          keyValue('  Circuit breaker', health.circuitBreakerState);
+          keyValue('  Missions failed', `${health.missionsFailed}`);
+        }
+      } catch { /* engine not ready */ }
+
+      divider();
       const met = metrics.filter(m => m.met).length;
       keyValue('SLA compliance', `${met}/${metrics.length} metrics met`);
       keyValue('Overall status', met === metrics.length ? 'COMPLIANT' : 'PARTIAL BREACH');

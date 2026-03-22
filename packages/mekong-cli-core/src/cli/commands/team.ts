@@ -8,6 +8,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 /** Mock Vietnamese company teams for demo output */
 const MOCK_TEAMS = [
@@ -24,7 +25,7 @@ const MOCK_TASKS = [
   'Báo cáo hiệu suất tháng 3',
 ];
 
-export function registerTeamCommand(program: Command): void {
+export function registerTeamCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('team').description('Agent team management');
 
   // ── team create <name> ─────────────────────────────────────────────────────
@@ -42,6 +43,14 @@ export function registerTeamCommand(program: Command): void {
       divider();
       success(`Team "${name}" created with ${memberCount} members`);
       info('Use: mekong team assign <team> <task> to assign work');
+
+      // Fire-and-forget: AI team optimization recommendations
+      try {
+        void engine?.openclaw?.submitMission({
+          goal: `Analyze optimal configuration for new agent team "${name}" with ${memberCount} members`,
+          complexity: 'trivial',
+        });
+      } catch { /* engine not ready */ }
     });
 
   // ── team list ──────────────────────────────────────────────────────────────
@@ -59,7 +68,7 @@ export function registerTeamCommand(program: Command): void {
       }
       for (const t of teams) {
         const completion = Math.round((t.completed / t.tasks) * 100);
-        console.log(`  [${t.status === 'active' ? 'ACTIVE' : 'IDLE  '}] ${t.name.padEnd(20)} ${t.members} members  ${t.completed}/${t.tasks} tasks (${completion}%)`);
+        info(`  [${t.status === 'active' ? 'ACTIVE' : 'IDLE  '}] ${t.name.padEnd(20)} ${t.members} members  ${t.completed}/${t.tasks} tasks (${completion}%)`);
       }
       divider();
       info(`Total: ${teams.length} teams`);
@@ -77,6 +86,13 @@ export function registerTeamCommand(program: Command): void {
       keyValue('Task', task);
       keyValue('Priority', opts.priority ?? 'normal');
       keyValue('Assigned At', new Date().toISOString());
+
+      // Task complexity estimate via OpenClaw
+      try {
+        const complexity = engine?.openclaw?.classifyComplexity(task);
+        if (complexity) keyValue('Complexity Estimate', complexity);
+      } catch { /* engine not ready */ }
+
       divider();
       success(`Task "${task}" assigned to team "${team}"`);
       info(`Priority: ${opts.priority ?? 'normal'}`);
@@ -100,9 +116,21 @@ export function registerTeamCommand(program: Command): void {
 
       info('Pending Tasks:');
       for (const task of MOCK_TASKS) {
-        console.log(`  - ${task}`);
+        info(`  - ${task}`);
       }
       divider();
+
+      // Engine Status footer section
+      try {
+        const health = engine?.openclaw?.getHealth();
+        if (health) {
+          info('Engine Status:');
+          keyValue('  Missions Completed', String(health.missionsCompleted));
+          keyValue('  AGI Score', String(health.agiScore));
+          keyValue('  Circuit Breaker', health.circuitBreakerState);
+        }
+      } catch { /* engine not ready */ }
+
       success('Dashboard loaded');
     });
 }
