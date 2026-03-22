@@ -147,6 +147,10 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 - [x] RaaS Demo CLI — `mekong demo roi/pitch/walkthrough/tiers` for enterprise sales
 - [x] License Gate module — `src/lib/raas-gate.ts` with 30 tests (LicenseService singleton)
 - [x] Test suite fix — vitest config + 1,063 tests ALL GREEN (63 files, 0 failures)
+- [x] Wave 39-40 — Webhook CLI (list/add/remove/test/logs) + Analytics Insights CLI (overview/funnel/cohort/forecast)
+- [x] Wave 41-42 — Enterprise CLI (SLA/audit/tenants/compliance) + White-Label CLI (config/brand/domain/preview)
+- [x] openclaw-agents build fix — skipLibCheck for pg-pool type conflicts
+- [x] 1,100+ tests ALL GREEN across all packages
 
 ---
 
@@ -160,8 +164,8 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 | GitHub Stars  | 500      | 0         |
 | npm Packages  | 4        | 4 (ready) |
 | Gateway Waves | 20       | 20        |
-| Test Coverage | 1,000+   | 1,063+    |
-| RaaS Commands | 15       | 15        |
+| Test Coverage | 1,000+   | 1,100+    |
+| RaaS Commands | 15       | 35+       |
 
 ---
 
