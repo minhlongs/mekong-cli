@@ -119,6 +119,12 @@ import { missionDependencies } from './mission-dependencies';
 import { tenantInvoicing } from './tenant-invoicing';
 import { platformChangelogV2 } from './platform-changelog-v2';
 import { adminCommandCenter } from './admin-command-center';
+import { webhookAnalytics } from './webhook-analytics';
+import { ratePlanManagement } from './rate-plan-management';
+import { missionCostTracking } from './mission-cost-tracking';
+import { tenantAuditPolicies } from './tenant-audit-policies';
+import { platformFeatureRequests } from './platform-feature-requests';
+import { adminTenantManagement } from './admin-tenant-management';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -245,6 +251,16 @@ export function createRoutes() {
   routes.route('/v1/invoicing', tenantInvoicing);
   routes.route('/v1/changelog-v2', platformChangelogV2);
   routes.route('/admin/commands', adminCommandCenter);
+
+  // Wave 43 routes
+  routes.route('/v1/webhook-analytics', webhookAnalytics);
+  routes.route('/v1/rate-plans', ratePlanManagement);
+  routes.route('/v1/mission-costs', missionCostTracking);
+
+  // Wave 44 routes
+  routes.route('/v1/audit-policies', tenantAuditPolicies);
+  routes.route('/v1/feature-requests', platformFeatureRequests);
+  routes.route('/admin/tenant-mgmt', adminTenantManagement);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -986,6 +1002,42 @@ export function createRoutes() {
         '/admin/commands/scheduled': { get: { summary: 'List scheduled', tags: ['Command Center'] }, post: { summary: 'Create scheduled', tags: ['Command Center'] } },
         '/admin/commands/stats': { get: { summary: 'Command stats', tags: ['Command Center'] } },
         '/admin/commands/dashboard': { get: { summary: 'Dashboard summary', tags: ['Command Center'] } },
+        // Wave 43: Webhook Analytics
+        '/v1/webhook-analytics/stats': { get: { summary: 'Delivery stats', tags: ['Webhook Analytics'] } },
+        '/v1/webhook-analytics/timeline': { get: { summary: 'Delivery timeline', tags: ['Webhook Analytics'] } },
+        '/v1/webhook-analytics/endpoints': { get: { summary: 'Endpoint health', tags: ['Webhook Analytics'] } },
+        '/v1/webhook-analytics/overview': { get: { summary: 'Webhook overview', tags: ['Webhook Analytics'] } },
+        '/v1/webhook-analytics/admin/analytics': { get: { summary: 'Admin analytics', tags: ['Webhook Analytics'] } },
+        // Wave 43: Rate Plan Management
+        '/v1/rate-plans/plans': { get: { summary: 'List rate plans', tags: ['Rate Plans'] } },
+        '/v1/rate-plans/my-plan': { get: { summary: 'My rate plan', tags: ['Rate Plans'] } },
+        '/v1/rate-plans/my-limits': { get: { summary: 'Effective limits', tags: ['Rate Plans'] } },
+        '/v1/rate-plans/admin/plans': { post: { summary: 'Create plan', tags: ['Rate Plans'] } },
+        '/v1/rate-plans/admin/overview': { get: { summary: 'Admin overview', tags: ['Rate Plans'] } },
+        // Wave 43: Mission Cost Tracking
+        '/v1/mission-costs/costs': { get: { summary: 'Cost breakdown', tags: ['Mission Costs'] } },
+        '/v1/mission-costs/costs/by-model': { get: { summary: 'Cost by model', tags: ['Mission Costs'] } },
+        '/v1/mission-costs/costs/by-day': { get: { summary: 'Daily costs', tags: ['Mission Costs'] } },
+        '/v1/mission-costs/budget': { get: { summary: 'Budget config', tags: ['Mission Costs'] }, put: { summary: 'Set budget', tags: ['Mission Costs'] } },
+        '/v1/mission-costs/summary': { get: { summary: 'Cost summary', tags: ['Mission Costs'] } },
+        '/v1/mission-costs/admin/overview': { get: { summary: 'Admin cost overview', tags: ['Mission Costs'] } },
+        // Wave 44: Tenant Audit Policies
+        '/v1/audit-policies/policies': { get: { summary: 'List policies', tags: ['Audit Policies'] }, post: { summary: 'Create policy', tags: ['Audit Policies'] } },
+        '/v1/audit-policies/policies/{policyId}': { get: { summary: 'Get policy', tags: ['Audit Policies'] }, put: { summary: 'Update policy', tags: ['Audit Policies'] }, delete: { summary: 'Delete policy', tags: ['Audit Policies'] } },
+        '/v1/audit-policies/violations': { get: { summary: 'List violations', tags: ['Audit Policies'] } },
+        '/v1/audit-policies/admin/overview': { get: { summary: 'Admin overview', tags: ['Audit Policies'] } },
+        // Wave 44: Feature Requests
+        '/v1/feature-requests/requests': { get: { summary: 'List requests', tags: ['Feature Requests'] }, post: { summary: 'Submit request', tags: ['Feature Requests'] } },
+        '/v1/feature-requests/requests/{requestId}': { get: { summary: 'Get request', tags: ['Feature Requests'] } },
+        '/v1/feature-requests/requests/{requestId}/vote': { post: { summary: 'Vote', tags: ['Feature Requests'] }, delete: { summary: 'Remove vote', tags: ['Feature Requests'] } },
+        '/v1/feature-requests/requests/{requestId}/comments': { get: { summary: 'List comments', tags: ['Feature Requests'] }, post: { summary: 'Add comment', tags: ['Feature Requests'] } },
+        '/v1/feature-requests/admin/overview': { get: { summary: 'Admin overview', tags: ['Feature Requests'] } },
+        // Wave 44: Admin Tenant Management
+        '/admin/tenant-mgmt/tenants/{tenantId}/notes': { get: { summary: 'List notes', tags: ['Tenant Mgmt'] }, post: { summary: 'Add note', tags: ['Tenant Mgmt'] } },
+        '/admin/tenant-mgmt/tenants/{tenantId}/tags': { get: { summary: 'List tags', tags: ['Tenant Mgmt'] }, post: { summary: 'Add tag', tags: ['Tenant Mgmt'] } },
+        '/admin/tenant-mgmt/tenants/{tenantId}/risk': { get: { summary: 'Risk score', tags: ['Tenant Mgmt'] } },
+        '/admin/tenant-mgmt/at-risk': { get: { summary: 'At-risk tenants', tags: ['Tenant Mgmt'] } },
+        '/admin/tenant-mgmt/dashboard': { get: { summary: 'Tenant dashboard', tags: ['Tenant Mgmt'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
