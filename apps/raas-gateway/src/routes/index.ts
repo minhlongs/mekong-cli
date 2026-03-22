@@ -154,6 +154,12 @@ import { platformAnalyticsDashboard } from './platform-analytics-dashboard';
 import { tenantCustomFields } from './tenant-custom-fields';
 import { adminDeploymentManager } from './admin-deployment-manager';
 import { apiDocGenerator } from './api-documentation-generator';
+import { platformRateLimitAnalytics } from './platform-rate-limit-analytics';
+import { tenantIpGeolocation } from './tenant-ip-geolocation';
+import { missionDependencyGraph } from './mission-dependency-graph';
+import { tenantTagSystem } from './tenant-tag-system';
+import { adminSystemHealth } from './admin-system-health';
+import { apiResponseCaching } from './api-response-caching';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -340,6 +346,16 @@ export function createRoutes() {
   routes.route('/v1/custom-fields', tenantCustomFields);
   routes.route('/admin/deployments', adminDeploymentManager);
   routes.route('/admin/api-docs', apiDocGenerator);
+
+  // Wave 55 routes
+  routes.route('/v1/ip-geo', tenantIpGeolocation);
+  routes.route('/v1/dep-graph', missionDependencyGraph);
+  routes.route('/v1/rate-analytics', platformRateLimitAnalytics);
+
+  // Wave 56 routes
+  routes.route('/v1/tags', tenantTagSystem);
+  routes.route('/admin/system-health', adminSystemHealth);
+  routes.route('/admin/response-cache', apiResponseCaching);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1336,6 +1352,49 @@ export function createRoutes() {
         '/admin/api-docs/versions/{id}/publish': { post: { summary: 'Publish version', tags: ['API Docs'] } },
         '/admin/api-docs/endpoints/{id}/examples': { get: { summary: 'Get examples', tags: ['API Docs'] }, post: { summary: 'Add example', tags: ['API Docs'] } },
         '/admin/api-docs/dashboard': { get: { summary: 'Docs dashboard', tags: ['API Docs'] } },
+        // Wave 55
+        '/v1/ip-geo/lookup/{ip}': { get: { summary: 'Lookup IP', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/rules': { get: { summary: 'List geo rules', tags: ['IP Geolocation'], security: [{ bearer: [] }] }, post: { summary: 'Create rule', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/rules/{id}': { put: { summary: 'Update rule', tags: ['IP Geolocation'], security: [{ bearer: [] }] }, delete: { summary: 'Delete rule', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/check': { post: { summary: 'Check access', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/logs': { get: { summary: 'Access logs', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/analytics': { get: { summary: 'Geo analytics', tags: ['IP Geolocation'], security: [{ bearer: [] }] } },
+        '/v1/ip-geo/admin/overview': { get: { summary: 'Geo admin', tags: ['IP Geolocation'] } },
+        '/v1/dep-graph/dependencies': { post: { summary: 'Add dependency', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/dependencies/{id}': { delete: { summary: 'Remove dependency', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/dependencies/{missionId}': { get: { summary: 'Get dependencies', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/graph/{rootMissionId}': { get: { summary: 'Get graph', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/groups': { get: { summary: 'List groups', tags: ['Dependency Graph'], security: [{ bearer: [] }] }, post: { summary: 'Create group', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/analyze/{rootMissionId}': { post: { summary: 'Analyze path', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/analyses': { get: { summary: 'List analyses', tags: ['Dependency Graph'], security: [{ bearer: [] }] } },
+        '/v1/dep-graph/admin/overview': { get: { summary: 'Graph admin', tags: ['Dependency Graph'] } },
+        '/v1/rate-analytics/events': { get: { summary: 'Rate events', tags: ['Rate Limit Analytics'], security: [{ bearer: [] }] } },
+        '/v1/rate-analytics/abuse': { get: { summary: 'Abuse list', tags: ['Rate Limit Analytics'] } },
+        '/v1/rate-analytics/history': { get: { summary: 'Throttle history', tags: ['Rate Limit Analytics'], security: [{ bearer: [] }] } },
+        '/v1/rate-analytics/stats': { get: { summary: 'Rate stats', tags: ['Rate Limit Analytics'], security: [{ bearer: [] }] } },
+        '/v1/rate-analytics/admin/overview': { get: { summary: 'Rate admin', tags: ['Rate Limit Analytics'] } },
+        // Wave 56
+        '/v1/tags/tags': { get: { summary: 'List tags', tags: ['Tag System'], security: [{ bearer: [] }] }, post: { summary: 'Create tag', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/tags/{id}': { put: { summary: 'Update tag', tags: ['Tag System'], security: [{ bearer: [] }] }, delete: { summary: 'Delete tag', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/entities/{entityType}/{entityId}/tags': { get: { summary: 'Entity tags', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/entities/{entityType}/{entityId}/tags/{tagId}': { post: { summary: 'Tag entity', tags: ['Tag System'], security: [{ bearer: [] }] }, delete: { summary: 'Untag entity', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/tags/{id}/entities': { get: { summary: 'Find by tag', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/analytics': { get: { summary: 'Tag analytics', tags: ['Tag System'], security: [{ bearer: [] }] } },
+        '/v1/tags/admin/overview': { get: { summary: 'Tags admin', tags: ['Tag System'] } },
+        '/admin/system-health/metrics/{name}': { get: { summary: 'Get metrics', tags: ['System Health'] } },
+        '/admin/system-health/components': { get: { summary: 'List components', tags: ['System Health'] }, put: { summary: 'Update component', tags: ['System Health'] } },
+        '/admin/system-health/uptime/{component}': { get: { summary: 'Uptime history', tags: ['System Health'] } },
+        '/admin/system-health/alerts': { get: { summary: 'Alert rules', tags: ['System Health'] }, post: { summary: 'Create alert', tags: ['System Health'] } },
+        '/admin/system-health/alerts/{id}': { put: { summary: 'Update alert', tags: ['System Health'] }, delete: { summary: 'Delete alert', tags: ['System Health'] } },
+        '/admin/system-health/check-alerts': { post: { summary: 'Check alerts', tags: ['System Health'] } },
+        '/admin/system-health/dashboard': { get: { summary: 'Health dashboard', tags: ['System Health'] } },
+        '/admin/response-cache/rules': { get: { summary: 'Cache rules', tags: ['Response Cache'] }, post: { summary: 'Create rule', tags: ['Response Cache'] } },
+        '/admin/response-cache/rules/{id}': { put: { summary: 'Update rule', tags: ['Response Cache'] }, delete: { summary: 'Delete rule', tags: ['Response Cache'] } },
+        '/admin/response-cache/entries/{cacheKey}': { get: { summary: 'Get entry', tags: ['Response Cache'] } },
+        '/admin/response-cache/invalidate/path': { post: { summary: 'Invalidate path', tags: ['Response Cache'] } },
+        '/admin/response-cache/purge': { post: { summary: 'Purge expired', tags: ['Response Cache'] } },
+        '/admin/response-cache/analytics': { get: { summary: 'Cache analytics', tags: ['Response Cache'] } },
+        '/admin/response-cache/dashboard': { get: { summary: 'Cache dashboard', tags: ['Response Cache'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
