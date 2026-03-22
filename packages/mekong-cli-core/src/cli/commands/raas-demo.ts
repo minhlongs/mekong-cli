@@ -161,4 +161,64 @@ export function registerRaasDemoCommand(program: Command, engine: MekongEngine):
       warn('  Target: $1M ARR = ~83 enterprise customers');
       info('');
     });
+
+  demo
+    .command('pricing-calc [customers] [distribution]')
+    .description('Revenue projection calculator — model different customer mixes')
+    .option('--churn <percent>', 'Monthly churn rate', '5')
+    .option('--months <n>', 'Projection months', '12')
+    .action((_customers?: string, _dist?: string, opts?: { churn: string; months: string }) => {
+      const totalCustomers = parseInt(_customers ?? '100', 10);
+      const churn = parseInt(opts?.churn ?? '5', 10) / 100;
+      const months = parseInt(opts?.months ?? '12', 10);
+      // distribution format: "20/60/20" for starter/pro/enterprise
+      const [s, p, e] = (_dist ?? '20/60/20').split('/').map(Number);
+      const sum = s + p + e;
+      const dist = { starter: s / sum, pro: p / sum, enterprise: e / sum };
+
+      info('');
+      info('═══════════════════════════════════════════════════════');
+      info('   MEKONG CLI — REVENUE PROJECTION CALCULATOR');
+      info('═══════════════════════════════════════════════════════');
+      info(`   Customers: ${totalCustomers}  |  Churn: ${(churn * 100).toFixed(0)}%/mo  |  Months: ${months}`);
+      info(`   Mix: ${Math.round(dist.starter * 100)}% Starter / ${Math.round(dist.pro * 100)}% Pro / ${Math.round(dist.enterprise * 100)}% Enterprise`);
+      info('───────────────────────────────────────────────────────');
+
+      let cumRevenue = 0;
+      let active = totalCustomers;
+
+      for (let m = 1; m <= months; m++) {
+        const starterRev = Math.round(active * dist.starter) * TIERS.starter.price;
+        const proRev = Math.round(active * dist.pro) * TIERS.pro.price;
+        const entRev = Math.round(active * dist.enterprise) * TIERS.enterprise.price;
+        const mrr = starterRev + proRev + entRev;
+        cumRevenue += mrr;
+
+        if (m <= 3 || m === 6 || m === months) {
+          const bar = '\u2588'.repeat(Math.min(Math.round(mrr / 500), 40));
+          info(`   M${String(m).padStart(2)}  ${bar} $${mrr.toLocaleString()} MRR  (${Math.round(active)} active)`);
+        }
+
+        active = Math.max(1, active * (1 - churn));
+      }
+
+      info('───────────────────────────────────────────────────────');
+      const avgMRR = Math.round(cumRevenue / months);
+      const arr = avgMRR * 12;
+      success(`   Total ${months}-month revenue: $${cumRevenue.toLocaleString()}`);
+      success(`   Average MRR:            $${avgMRR.toLocaleString()}`);
+      success(`   Projected ARR:          $${arr.toLocaleString()}`);
+
+      if (arr >= 1_000_000) {
+        success('   STATUS: $1M ARR TARGET ACHIEVABLE');
+      } else {
+        const needed = Math.ceil(1_000_000 / 12 / (avgMRR / totalCustomers));
+        warn(`   Need ~${needed} customers for $1M ARR`);
+      }
+
+      info('');
+      info('   Try: mekong demo pricing-calc 200 10/50/40 --churn 3');
+      info('═══════════════════════════════════════════════════════');
+      info('');
+    });
 }

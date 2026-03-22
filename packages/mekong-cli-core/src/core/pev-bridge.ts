@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'node:events';
 import { requireCloudClient } from './raas-client.js';
-import type { Mission, MissionStatus } from '@mekong/raas-sdk';
+import type { Mission, MissionStatus, Complexity } from '@mekong/raas-sdk';
 import { OpenClawEngine } from '@openclaw/engine';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -37,9 +37,14 @@ export interface PEVEvents {
 export class PEVBridge extends EventEmitter {
   private readonly engine = new OpenClawEngine({ enableCircuitBreaker: true });
 
-  /** Classify goal complexity before submission */
-  classify(goal: string) {
-    return this.engine.classifyComplexity(goal);
+  /** Classify goal complexity, mapping OpenClaw levels to RaaS SDK Complexity */
+  classify(goal: string): Complexity {
+    const raw = this.engine.classifyComplexity(goal);
+    // Map OpenClaw 4-tier to RaaS SDK 3-tier
+    const mapping: Record<string, Complexity> = {
+      trivial: 'simple', standard: 'standard', complex: 'complex', epic: 'complex',
+    };
+    return mapping[raw] ?? 'standard';
   }
 
   /** Submit mission to gateway with type='plan' to get task breakdown */
