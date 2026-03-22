@@ -160,6 +160,12 @@ import { missionDependencyGraph } from './mission-dependency-graph';
 import { tenantTagSystem } from './tenant-tag-system';
 import { adminSystemHealth } from './admin-system-health';
 import { apiResponseCaching } from './api-response-caching';
+import { tenantWorkspaceSettings } from './tenant-workspace-settings';
+import { missionResultStorage } from './mission-result-storage';
+import { platformEventLog } from './platform-event-log';
+import { tenantAccessTokens } from './tenant-access-tokens';
+import { adminTenantAnalytics } from './admin-tenant-analytics';
+import { apiEndpointMonitoring } from './api-endpoint-monitoring';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -356,6 +362,16 @@ export function createRoutes() {
   routes.route('/v1/tags', tenantTagSystem);
   routes.route('/admin/system-health', adminSystemHealth);
   routes.route('/admin/response-cache', apiResponseCaching);
+
+  // Wave 57 routes
+  routes.route('/v1/workspace', tenantWorkspaceSettings);
+  routes.route('/v1/results', missionResultStorage);
+  routes.route('/admin/event-log', platformEventLog);
+
+  // Wave 58 routes
+  routes.route('/v1/access-tokens', tenantAccessTokens);
+  routes.route('/admin/tenant-analytics', adminTenantAnalytics);
+  routes.route('/admin/endpoint-monitoring', apiEndpointMonitoring);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1395,6 +1411,48 @@ export function createRoutes() {
         '/admin/response-cache/purge': { post: { summary: 'Purge expired', tags: ['Response Cache'] } },
         '/admin/response-cache/analytics': { get: { summary: 'Cache analytics', tags: ['Response Cache'] } },
         '/admin/response-cache/dashboard': { get: { summary: 'Cache dashboard', tags: ['Response Cache'] } },
+        // Wave 57
+        '/v1/workspace/settings': { get: { summary: 'Get workspace settings', tags: ['Workspace'], security: [{ bearer: [] }] }, put: { summary: 'Update settings', tags: ['Workspace'], security: [{ bearer: [] }] } },
+        '/v1/workspace/settings/reset': { post: { summary: 'Reset settings', tags: ['Workspace'], security: [{ bearer: [] }] } },
+        '/v1/workspace/invitations': { get: { summary: 'List invitations', tags: ['Workspace'], security: [{ bearer: [] }] }, post: { summary: 'Create invitation', tags: ['Workspace'], security: [{ bearer: [] }] } },
+        '/v1/workspace/invitations/{id}': { delete: { summary: 'Cancel invitation', tags: ['Workspace'], security: [{ bearer: [] }] } },
+        '/v1/workspace/invitations/{id}/accept': { post: { summary: 'Accept invitation', tags: ['Workspace'] } },
+        '/v1/workspace/admin/overview': { get: { summary: 'Workspace admin', tags: ['Workspace'] } },
+        '/v1/results/results': { post: { summary: 'Store result', tags: ['Result Storage'], security: [{ bearer: [] }] } },
+        '/v1/results/results/{missionId}': { get: { summary: 'Get result', tags: ['Result Storage'], security: [{ bearer: [] }] } },
+        '/v1/results/results/{missionId}/versions': { get: { summary: 'Result versions', tags: ['Result Storage'], security: [{ bearer: [] }] } },
+        '/v1/results/results/{resultId}/attachments': { get: { summary: 'List attachments', tags: ['Result Storage'], security: [{ bearer: [] }] }, post: { summary: 'Add attachment', tags: ['Result Storage'], security: [{ bearer: [] }] } },
+        '/v1/results/stats': { get: { summary: 'Storage stats', tags: ['Result Storage'], security: [{ bearer: [] }] } },
+        '/v1/results/admin/overview': { get: { summary: 'Results admin', tags: ['Result Storage'] } },
+        '/admin/event-log/events': { get: { summary: 'List events', tags: ['Event Log'] }, post: { summary: 'Log event', tags: ['Event Log'] } },
+        '/admin/event-log/events/{id}': { get: { summary: 'Get event', tags: ['Event Log'] } },
+        '/admin/event-log/categories': { get: { summary: 'List categories', tags: ['Event Log'] }, post: { summary: 'Create category', tags: ['Event Log'] } },
+        '/admin/event-log/retention': { get: { summary: 'Retention configs', tags: ['Event Log'] } },
+        '/admin/event-log/retention/{category}': { put: { summary: 'Update retention', tags: ['Event Log'] } },
+        '/admin/event-log/stats': { get: { summary: 'Event stats', tags: ['Event Log'] } },
+        '/admin/event-log/dashboard': { get: { summary: 'Event dashboard', tags: ['Event Log'] } },
+        // Wave 58
+        '/v1/access-tokens/tokens': { get: { summary: 'List tokens', tags: ['Access Tokens'], security: [{ bearer: [] }] }, post: { summary: 'Create token', tags: ['Access Tokens'], security: [{ bearer: [] }] } },
+        '/v1/access-tokens/tokens/{id}': { delete: { summary: 'Revoke token', tags: ['Access Tokens'], security: [{ bearer: [] }] } },
+        '/v1/access-tokens/tokens/{id}/usage': { get: { summary: 'Token usage', tags: ['Access Tokens'], security: [{ bearer: [] }] } },
+        '/v1/access-tokens/introspect': { post: { summary: 'Introspect token', tags: ['Access Tokens'] } },
+        '/v1/access-tokens/refresh': { post: { summary: 'Refresh token', tags: ['Access Tokens'] } },
+        '/v1/access-tokens/revoke-all': { post: { summary: 'Revoke all', tags: ['Access Tokens'], security: [{ bearer: [] }] } },
+        '/v1/access-tokens/admin/overview': { get: { summary: 'Tokens admin', tags: ['Access Tokens'] } },
+        '/admin/tenant-analytics/health': { get: { summary: 'Health scores', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/health/{tenantId}': { get: { summary: 'Tenant health', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/health/{tenantId}/calculate': { post: { summary: 'Calculate health', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/trends/{tenantId}': { get: { summary: 'Usage trends', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/risks': { get: { summary: 'Risk indicators', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/report/{tenantId}': { get: { summary: 'Tenant report', tags: ['Tenant Analytics'] } },
+        '/admin/tenant-analytics/dashboard': { get: { summary: 'Analytics dashboard', tags: ['Tenant Analytics'] } },
+        '/admin/endpoint-monitoring/metrics/{path}': { get: { summary: 'Endpoint metrics', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/stats/{path}': { get: { summary: 'Endpoint stats', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/availability': { get: { summary: 'Availability list', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/alerts': { get: { summary: 'Monitoring alerts', tags: ['Endpoint Monitoring'] }, post: { summary: 'Create alert', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/alerts/{id}': { put: { summary: 'Update alert', tags: ['Endpoint Monitoring'] }, delete: { summary: 'Delete alert', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/slow': { get: { summary: 'Slow endpoints', tags: ['Endpoint Monitoring'] } },
+        '/admin/endpoint-monitoring/dashboard': { get: { summary: 'Monitoring dashboard', tags: ['Endpoint Monitoring'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
