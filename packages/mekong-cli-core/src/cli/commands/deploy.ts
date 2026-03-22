@@ -8,6 +8,7 @@
  */
 import type { Command } from 'commander';
 import { success, info, warn, heading, keyValue, divider } from '../ui/output.js';
+import type { MekongEngine } from '../../core/engine.js';
 
 /** Mock deployment environments */
 const MOCK_ENVS = [
@@ -48,7 +49,7 @@ const MOCK_CONFIG = {
   branch: 'main',
 };
 
-export function registerDeployCommand(program: Command): void {
+export function registerDeployCommand(program: Command, engine?: MekongEngine): void {
   const cmd = program.command('deploy').description('Deployment management');
 
   // ── deploy status ──────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ export function registerDeployCommand(program: Command): void {
       }
       for (const env of envs) {
         const statusIcon = env.status === 'healthy' ? '[OK]' : '[WARN]';
-        console.log(`\n  ${statusIcon} ${env.name.toUpperCase()}`);
+        info(`\n  ${statusIcon} ${env.name.toUpperCase()}`);
         keyValue('  URL', env.url);
         keyValue('  Version', env.version);
         keyValue('  Deployed', env.deployedAt);
@@ -79,6 +80,18 @@ export function registerDeployCommand(program: Command): void {
       } else {
         warn(`${envs.length - healthyCount}/${envs.length} environments degraded`);
       }
+
+      // Platform Engine footer
+      try {
+        const health = engine?.openclaw?.getHealth();
+        if (health) {
+          divider();
+          info('Platform Engine:');
+          keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+          keyValue('  AGI Score', String(health.agiScore));
+          keyValue('  Circuit Breaker', health.circuitBreakerState);
+        }
+      } catch { /* engine not ready */ }
     });
 
   // ── deploy logs [env] ──────────────────────────────────────────────────────
@@ -97,7 +110,7 @@ export function registerDeployCommand(program: Command): void {
       const limit = parseInt(opts.lines ?? '10', 10);
       const displayed = logs.slice(-limit);
       for (const line of displayed) {
-        console.log(`  ${line}`);
+        info(`  ${line}`);
       }
       divider();
       info(`Showing ${displayed.length} of ${logs.length} log entries`);
@@ -121,6 +134,14 @@ export function registerDeployCommand(program: Command): void {
       keyValue('Current Version', envData.version);
       keyValue('Rollback Target', targetVersion);
       keyValue('Initiated', new Date().toISOString());
+
+      // Rollback risk assessment via OpenClaw
+      try {
+        const rollbackDesc = `Rollback ${env} from ${envData.version} to ${targetVersion}`;
+        const complexity = engine?.openclaw?.classifyComplexity(rollbackDesc);
+        if (complexity) keyValue('Risk Assessment', complexity);
+      } catch { /* engine not ready */ }
+
       divider();
       success(`Rollback initiated: ${envData.version} → ${targetVersion}`);
       info('Monitor with: mekong deploy status');
@@ -139,6 +160,20 @@ export function registerDeployCommand(program: Command): void {
       keyValue('Auto Deploy', String(MOCK_CONFIG.autoDeploy));
       keyValue('Deploy Branch', MOCK_CONFIG.branch);
       divider();
+
+      // Engine health alongside config
+      try {
+        const health = engine?.openclaw?.getHealth();
+        if (health) {
+          info('Engine Health:');
+          keyValue('  Uptime', `${Math.round(health.uptime / 1000)}s`);
+          keyValue('  Missions Completed', String(health.missionsCompleted));
+          keyValue('  AGI Score', String(health.agiScore));
+          keyValue('  Circuit Breaker', health.circuitBreakerState);
+          divider();
+        }
+      } catch { /* engine not ready */ }
+
       info('Edit config: mekong.yaml');
     });
 }

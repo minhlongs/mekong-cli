@@ -128,11 +128,11 @@ export async function main(argv?: string[]): Promise<void> {
   registerSalesCampaignCommand(program, engine);
   registerSalesReportCommand(program, engine);
   registerSalesFunnelCommand(program, engine);
-  registerTeamCommand(program);
-  registerDeployCommand(program);
+  registerTeamCommand(program, engine);
+  registerDeployCommand(program, engine);
   registerGtmCommand(program);
-  registerMonitorCommand(program);
-  registerWorkflowCommand(program);
+  registerMonitorCommand(program, engine);
+  registerWorkflowCommand(program, engine);
   registerNotificationCommand(program);
   registerBackupCommand(program);
   registerMigrationCommand(program);
