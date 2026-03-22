@@ -48,6 +48,10 @@ import { registerTeamCommand } from './commands/team.js';
 import { registerDeployCommand } from './commands/deploy.js';
 import { registerGtmCommand } from './commands/gtm.js';
 import { registerMonitorCommand } from './commands/monitor.js';
+import { registerWorkflowCommand } from './commands/workflow.js';
+import { registerNotificationCommand } from './commands/notification.js';
+import { registerBackupCommand } from './commands/backup.js';
+import { registerMigrationCommand } from './commands/migration.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -128,6 +132,10 @@ export async function main(argv?: string[]): Promise<void> {
   registerDeployCommand(program);
   registerGtmCommand(program);
   registerMonitorCommand(program);
+  registerWorkflowCommand(program);
+  registerNotificationCommand(program);
+  registerBackupCommand(program);
+  registerMigrationCommand(program);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
