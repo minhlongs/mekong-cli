@@ -1,7 +1,6 @@
 import { MonorepoIndexer } from './indexer';
 import { HealthMonitor, ProjectHealth } from './health-monitor';
-import { PackageInfo } from './types';
-import * as path from 'path';
+import { PackageInfo, HealthStatus } from './types';
 
 export interface DashboardReport {
   timestamp: number;
@@ -16,7 +15,7 @@ export interface DashboardReport {
     };
   };
   projects: ProjectHealth[];
-  serviceStatus: Record<string, unknown>;
+  serviceStatus: HealthStatus;
 }
 
 export class PerceptionDashboard {
