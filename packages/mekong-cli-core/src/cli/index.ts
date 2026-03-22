@@ -120,10 +120,10 @@ export async function main(argv?: string[]): Promise<void> {
   registerInsightsCommand(program);
   registerEnterpriseCommand(program);
   registerWhiteLabelCommand(program);
-  registerOpenClawMissionCommand(program);
-  registerOpenClawHealthCommand(program);
-  registerOpenClawCostCommand(program);
-  registerOpenClawBenchmarkCommand(program);
+  registerOpenClawMissionCommand(program, engine);
+  registerOpenClawHealthCommand(program, engine);
+  registerOpenClawCostCommand(program, engine);
+  registerOpenClawBenchmarkCommand(program, engine);
   registerSalesCrmCommand(program);
   registerSalesCampaignCommand(program);
   registerSalesReportCommand(program);
