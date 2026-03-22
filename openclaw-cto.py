@@ -180,7 +180,25 @@ def read_worker_context(output):
     return context
 
 
-def send_cmd(pane, cmd):
+def ensure_correct_dir(pane, worker):
+    """Ensure pane is in correct directory before sending commands."""
+    expected = worker["dir"]
+    if expected == ".":
+        target = str(PROJECT_ROOT)
+    else:
+        target = str(PROJECT_ROOT / expected)
+    # Use cd command (shell-level) via tmux — reliable, no parsing needed
+    try:
+        subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}",
+                        "-l", f"cd {target}"], timeout=5)
+        time.sleep(0.2)
+        subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"], timeout=5)
+        time.sleep(0.5)
+    except:
+        pass
+
+
+def send_cmd(pane, cmd, worker=None):
     try:
         output = capture(pane)
         if not is_idle(output):
@@ -189,6 +207,9 @@ def send_cmd(pane, cmd):
         cmd = cmd.split("\n")[0].strip()
         if " /" in cmd and not cmd.startswith("/"):
             cmd = "/" + cmd.lstrip("/ ")
+        # v7.5.1: Always ensure correct dir before dispatch
+        if worker:
+            ensure_correct_dir(pane, worker)
         subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "-l", cmd], timeout=8)
         time.sleep(0.3)
         subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"], timeout=5)
@@ -375,29 +396,14 @@ async def main():
                 actual_dir = get_actual_dir(output)
                 expected_dir = worker["dir"]
 
-                # Drift correction — v7.5.1 fix: also correct when at root but should be in subdir
-                is_drifted = (actual_dir != expected_dir) and (actual_dir != "." or expected_dir != ".")
-                if is_drifted:
-                    log.warning(f"P{pane} ({worker['name']}): DRIFT! expected={expected_dir} actual={actual_dir}")
-                    workers_status.append({"pane": i, "name": worker["name"], "status": "DRIFT", "ctx": ctx})
-                    if is_idle(output):
-                        target = str(PROJECT_ROOT / expected_dir) if expected_dir != "." else str(PROJECT_ROOT)
-                        try:
-                            subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "-l",
-                                          f"Change directory to {target} and work on project {worker['name']}"], timeout=8)
-                            time.sleep(0.3)
-                            subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"], timeout=5)
-                        except:
-                            pass
-                        last_dispatch[i] = time.time()
-                    continue
+                # v7.5.1: No more drift detection — ensure_correct_dir() handles it in send_cmd()
 
                 # Priority 0: Answer questions (60s cooldown)
                 now = time.time()
                 q_found, q_type, q_text = has_question(output)
                 if q_found and (now - last_answer[i] > 60):
                     answer = smart_answer(q_type, q_text, worker)
-                    if send_cmd(pane, answer):
+                    if send_cmd(pane, answer, worker):
                         log.info(f"P{pane} ({worker['name']}): ANSWERED [{q_type}] -> {answer[:60]}")
                         last_answer[i] = now
                     continue
@@ -428,7 +434,7 @@ async def main():
                 if ctx >= 85:
                     if compact_attempts[i] >= 2:
                         log.warning(f"P{pane} ({worker['name']}): COMPACT FAILED {compact_attempts[i]}x — committing")
-                        send_cmd(pane, f'/worker-commit "Project: {worker["name"]}. Save work before context reset." --fast')
+                        send_cmd(pane, f'/worker-commit "Project: {worker["name"]}. Save work before context reset." --fast', worker)
                         compact_attempts[i] = 0
                     else:
                         send_cmd(pane, "/compact")
@@ -460,7 +466,7 @@ async def main():
                     else:
                         override_attempts[i][category] = attempts + 1
                         log.info(f"P{pane}: OVERRIDE [{category} #{attempts+1}] -> {override[:80]}")
-                        if send_cmd(pane, override):
+                        if send_cmd(pane, override, worker):
                             last_dispatch[i] = now
                             last_cmd[i] = override.split()[0]
                             dispatched += 1
@@ -477,7 +483,7 @@ async def main():
                     if m_cmd and (not m_project or m_project == worker["name"]):
                         if claim_mission(mission, worker["name"]):
                             log.info(f"P{pane}: MISSION -> {m_cmd[:80]}")
-                            if send_cmd(pane, m_cmd):
+                            if send_cmd(pane, m_cmd, worker):
                                 last_dispatch[i] = now
                                 last_cmd[i] = m_cmd.split()[0]
                                 dispatched += 1
@@ -506,7 +512,7 @@ async def main():
                         log.info(f"P{pane}: DEDUP rotate -> {cmd_key}")
 
                     log.info(f"BRAIN -> P{pane} ({worker['name']}): {cmd[:80]}")
-                    if send_cmd(pane, cmd):
+                    if send_cmd(pane, cmd, worker):
                         last_dispatch[i] = now
                         last_cmd[i] = cmd_key
                         dispatched += 1
