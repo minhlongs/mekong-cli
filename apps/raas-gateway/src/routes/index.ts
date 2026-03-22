@@ -225,6 +225,12 @@ import { platformCostDashboard } from './platform-cost-dashboard';
 import { tenantDataClassification } from './tenant-data-classification';
 import { adminTenantCommunication } from './admin-tenant-communication';
 import { tenantIntegrationTesting } from './tenant-integration-testing';
+import { tenantApiPlaygroundConfigs } from './tenant-api-playground-configs';
+import { missionChainOrchestration } from './mission-chain-orchestration';
+import { platformFeatureGating } from './platform-feature-gating';
+import { tenantConsentManagement } from './tenant-consent-management';
+import { adminPlatformDiagnostics } from './admin-platform-diagnostics';
+import { tenantApiRateBurst } from './tenant-api-rate-burst';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -531,6 +537,16 @@ export function createRoutes() {
   routes.route('/v1/data-classification', tenantDataClassification);
   routes.route('/admin/tenant-communication', adminTenantCommunication);
   routes.route('/v1/integration-testing', tenantIntegrationTesting);
+
+  // Wave 79 routes
+  routes.route('/v1/playground-configs', tenantApiPlaygroundConfigs);
+  routes.route('/v1/chain-orchestration', missionChainOrchestration);
+  routes.route('/admin/feature-gating', platformFeatureGating);
+
+  // Wave 80 routes
+  routes.route('/v1/consent-management', tenantConsentManagement);
+  routes.route('/admin/platform-diagnostics', adminPlatformDiagnostics);
+  routes.route('/v1/rate-burst', tenantApiRateBurst);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1746,6 +1762,18 @@ export function createRoutes() {
         '/admin/tenant-communication/templates': { get: { summary: 'Message templates', tags: ['Tenant Communication'] } },
         '/v1/integration-testing/configs': { get: { summary: 'List test configs', tags: ['Integration Testing'] }, post: { summary: 'Create test config', tags: ['Integration Testing'] } },
         '/v1/integration-testing/results': { get: { summary: 'Test results', tags: ['Integration Testing'] } },
+        '/v1/playground-configs/configs': { get: { summary: 'List playground configs', tags: ['Playground Configs'] }, post: { summary: 'Create config', tags: ['Playground Configs'] } },
+        '/v1/playground-configs/executions': { get: { summary: 'Playground executions', tags: ['Playground Configs'] } },
+        '/v1/chain-orchestration/chains': { get: { summary: 'List mission chains', tags: ['Chain Orchestration'] }, post: { summary: 'Create chain', tags: ['Chain Orchestration'] } },
+        '/v1/chain-orchestration/runs': { get: { summary: 'Chain runs', tags: ['Chain Orchestration'] } },
+        '/admin/feature-gating/gates': { get: { summary: 'List feature gates', tags: ['Feature Gating'] }, post: { summary: 'Create gate', tags: ['Feature Gating'] } },
+        '/admin/feature-gating/overrides': { get: { summary: 'Gate overrides', tags: ['Feature Gating'] } },
+        '/v1/consent-management/records': { get: { summary: 'List consent records', tags: ['Consent Management'] }, post: { summary: 'Record consent', tags: ['Consent Management'] } },
+        '/v1/consent-management/policies': { get: { summary: 'Consent policies', tags: ['Consent Management'] } },
+        '/admin/platform-diagnostics/checks': { get: { summary: 'List diagnostic checks', tags: ['Platform Diagnostics'] }, post: { summary: 'Run check', tags: ['Platform Diagnostics'] } },
+        '/admin/platform-diagnostics/reports': { get: { summary: 'Diagnostic reports', tags: ['Platform Diagnostics'] } },
+        '/v1/rate-burst/configs': { get: { summary: 'List burst configs', tags: ['Rate Burst'] }, post: { summary: 'Create config', tags: ['Rate Burst'] } },
+        '/v1/rate-burst/events': { get: { summary: 'Burst events', tags: ['Rate Burst'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
