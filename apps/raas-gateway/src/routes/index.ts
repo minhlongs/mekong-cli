@@ -177,6 +177,12 @@ import { platformAuditPolicies } from './platform-audit-policies';
 import { tenantDataEncryptionKeys } from './tenant-data-encryption-keys';
 import { adminTrafficShaping } from './admin-traffic-shaping';
 import { tenantIntegrationMarketplace } from './tenant-integration-marketplace';
+import { tenantWebhookSignatures } from './tenant-webhook-signatures';
+import { missionRetryPolicies } from './mission-retry-policies';
+import { platformFeatureUsage } from './platform-feature-usage';
+import { tenantApiThrottling } from './tenant-api-throttling';
+import { adminIncidentResponse } from './admin-incident-response';
+import { tenantExportSchedules } from './tenant-export-schedules';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -403,6 +409,16 @@ export function createRoutes() {
   routes.route('/v1/encryption-keys', tenantDataEncryptionKeys);
   routes.route('/admin/traffic-shaping', adminTrafficShaping);
   routes.route('/v1/integrations', tenantIntegrationMarketplace);
+
+  // Wave 63 routes
+  routes.route('/v1/webhook-signatures', tenantWebhookSignatures);
+  routes.route('/v1/retry-policies', missionRetryPolicies);
+  routes.route('/admin/feature-usage', platformFeatureUsage);
+
+  // Wave 64 routes
+  routes.route('/v1/api-throttling', tenantApiThrottling);
+  routes.route('/admin/incident-response', adminIncidentResponse);
+  routes.route('/v1/export-schedules', tenantExportSchedules);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1515,6 +1531,22 @@ export function createRoutes() {
         '/admin/traffic-shaping/dashboard': { get: { summary: 'Traffic dashboard', tags: ['Traffic Shaping'] } },
         '/v1/integrations/integrations': { get: { summary: 'List integrations', tags: ['Integrations'] }, post: { summary: 'Create integration', tags: ['Integrations'] } },
         '/v1/integrations/logs': { get: { summary: 'Integration logs', tags: ['Integrations'] } },
+        // Wave 63
+        '/v1/webhook-signatures/signatures': { get: { summary: 'List webhook signatures', tags: ['Webhook Signatures'] }, post: { summary: 'Create signature', tags: ['Webhook Signatures'] } },
+        '/v1/webhook-signatures/verifications': { get: { summary: 'List verifications', tags: ['Webhook Signatures'] } },
+        '/v1/retry-policies/policies': { get: { summary: 'List retry policies', tags: ['Retry Policies'] }, post: { summary: 'Create retry policy', tags: ['Retry Policies'] } },
+        '/v1/retry-policies/attempts': { get: { summary: 'List retry attempts', tags: ['Retry Policies'] } },
+        '/admin/feature-usage/usage': { get: { summary: 'Feature usage stats', tags: ['Feature Usage'] }, post: { summary: 'Record usage', tags: ['Feature Usage'] } },
+        '/admin/feature-usage/adoption': { get: { summary: 'Feature adoption', tags: ['Feature Usage'] } },
+        '/admin/feature-usage/dashboard': { get: { summary: 'Usage dashboard', tags: ['Feature Usage'] } },
+        // Wave 64
+        '/v1/api-throttling/rules': { get: { summary: 'List throttle rules', tags: ['API Throttling'] }, post: { summary: 'Create throttle rule', tags: ['API Throttling'] } },
+        '/v1/api-throttling/events': { get: { summary: 'Throttle events', tags: ['API Throttling'] } },
+        '/admin/incident-response/incidents': { get: { summary: 'List incidents', tags: ['Incident Response'] }, post: { summary: 'Create incident', tags: ['Incident Response'] } },
+        '/admin/incident-response/updates': { get: { summary: 'Incident updates', tags: ['Incident Response'] } },
+        '/admin/incident-response/dashboard': { get: { summary: 'Incident dashboard', tags: ['Incident Response'] } },
+        '/v1/export-schedules/schedules': { get: { summary: 'List export schedules', tags: ['Export Schedules'] }, post: { summary: 'Create schedule', tags: ['Export Schedules'] } },
+        '/v1/export-schedules/runs': { get: { summary: 'Export runs', tags: ['Export Schedules'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
