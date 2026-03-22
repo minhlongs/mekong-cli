@@ -58,14 +58,21 @@ def get_actual_dir(output):
 
 
 def is_idle(output):
-    tail = "\n".join(output.strip().split("\n")[-5:])
+    tail = "\n".join(output.strip().split("\n")[-8:])
     if "\u276f" not in tail:
         return False
     tail_low = tail.lower()
+    # v7.5.2: Expanded busy detection
     busy = ["running", "thinking", "tokens", "gusting", "crunching",
             "precipitating", "processing", "compacting", "considering",
-            "smooshing", "mulling", "sautéed"]
+            "smooshing", "mulling", "sautéed", "flummoxing", "harmonizing",
+            "worked for", "working"]
     if any(x in tail_low for x in busy):
+        return False
+    # v7.5.2: Not idle if queued messages or interactive menus
+    blocked = ["press up to edit", "queued message", "enter to select",
+               "esc to cancel", "↑/↓ to navigate", "tab to toggle"]
+    if any(x in tail_low for x in blocked):
         return False
     return True
 
@@ -410,13 +417,23 @@ async def main():
 
                 if not is_idle(output):
                     workers_status.append({"pane": i, "name": worker["name"], "status": "WORKING", "ctx": ctx})
-                    log.info(f"P{pane} ({worker['name']} @ {actual_dir}): WORKING [ctx:{ctx}%]")
-                    # Auto-dismiss menus
-                    if any(x in output[-200:] for x in ["Enter to select", "Esc to cancel"]):
+                    tail200 = output[-200:]
+                    # v7.5.2: Smart menu handling — select option 1 (most impactful)
+                    if "Enter to select" in tail200 and "navigate" in tail200:
+                        log.info(f"P{pane} ({worker['name']}): MENU detected -> selecting first option")
                         try:
                             subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"], timeout=5)
                         except:
                             pass
+                    # v7.5.2: Dismiss queued messages prompt
+                    elif "Press up to edit" in tail200 or "queued message" in tail200.lower():
+                        log.info(f"P{pane} ({worker['name']}): QUEUED MSG -> pressing Escape")
+                        try:
+                            subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Escape"], timeout=5)
+                        except:
+                            pass
+                    else:
+                        log.info(f"P{pane} ({worker['name']} @ {actual_dir}): WORKING [ctx:{ctx}%]")
                     continue
 
                 workers_status.append({"pane": i, "name": worker["name"], "status": "IDLE", "ctx": ctx})
@@ -496,7 +513,16 @@ async def main():
 
                 if cmd:
                     cmd_key = cmd.split()[0]
+                    # v7.5.2: Track brain repeat count
+                    if not hasattr(main, '_brain_repeats'):
+                        main._brain_repeats = [0] * len(WORKERS)
                     if last_cmd[i] == cmd_key:
+                        main._brain_repeats[i] += 1
+                        if main._brain_repeats[i] >= 3:
+                            log.info(f"P{pane}: BRAIN STUCK ({cmd_key} x{main._brain_repeats[i]}) -> rest")
+                            last_dispatch[i] = now
+                            main._brain_repeats[i] = 0
+                            continue
                         rotation = {
                             "/cook": f'/worker-build "Project: {worker["name"]}. Dir: {expected_dir}. Build+test." --fast',
                             "/worker-build": f'/eng-tech-debt "Project: {worker["name"]}. Dir: {expected_dir}. Scan." --fast',
@@ -510,6 +536,9 @@ async def main():
                         cmd = rotation.get(cmd_key, f'/cook "Project: {worker["name"]}. Dir: {expected_dir}. Continue." --fast')
                         cmd_key = cmd.split()[0]
                         log.info(f"P{pane}: DEDUP rotate -> {cmd_key}")
+
+                    else:
+                        main._brain_repeats[i] = 0  # New command, reset counter
 
                     log.info(f"BRAIN -> P{pane} ({worker['name']}): {cmd[:80]}")
                     if send_cmd(pane, cmd, worker):
