@@ -125,6 +125,12 @@ import { missionCostTracking } from './mission-cost-tracking';
 import { tenantAuditPolicies } from './tenant-audit-policies';
 import { platformFeatureRequests } from './platform-feature-requests';
 import { adminTenantManagement } from './admin-tenant-management';
+import { tenantDataEncryption } from './tenant-data-encryption';
+import { missionReplayDebug } from './mission-replay-debug';
+import { apiRateLimitPolicies } from './api-rate-limit-policies';
+import { tenantOnboardingChecklist } from './tenant-onboarding-checklist';
+import { platformLocalization } from './platform-localization';
+import { adminIncidentManagement } from './admin-incident-management';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -261,6 +267,16 @@ export function createRoutes() {
   routes.route('/v1/audit-policies', tenantAuditPolicies);
   routes.route('/v1/feature-requests', platformFeatureRequests);
   routes.route('/admin/tenant-mgmt', adminTenantManagement);
+
+  // Wave 45 routes
+  routes.route('/v1/encryption', tenantDataEncryption);
+  routes.route('/v1/mission-debug', missionReplayDebug);
+  routes.route('/v1/rate-policies', apiRateLimitPolicies);
+
+  // Wave 46 routes
+  routes.route('/v1/onboarding-checklist', tenantOnboardingChecklist);
+  routes.route('/v1/i18n', platformLocalization);
+  routes.route('/admin/incidents', adminIncidentManagement);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1038,6 +1054,50 @@ export function createRoutes() {
         '/admin/tenant-mgmt/tenants/{tenantId}/risk': { get: { summary: 'Risk score', tags: ['Tenant Mgmt'] } },
         '/admin/tenant-mgmt/at-risk': { get: { summary: 'At-risk tenants', tags: ['Tenant Mgmt'] } },
         '/admin/tenant-mgmt/dashboard': { get: { summary: 'Tenant dashboard', tags: ['Tenant Mgmt'] } },
+        // Wave 45
+        '/v1/encryption/keys': { get: { summary: 'List encryption keys', tags: ['Encryption'], security: [{ bearer: [] }] }, post: { summary: 'Create key', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/keys/{id}/rotate': { post: { summary: 'Rotate key', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/keys/{id}/revoke': { post: { summary: 'Revoke key', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/audit': { get: { summary: 'Encryption audit trail', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/fields': { get: { summary: 'List encrypted fields', tags: ['Encryption'], security: [{ bearer: [] }] }, post: { summary: 'Register field', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/stats': { get: { summary: 'Key statistics', tags: ['Encryption'], security: [{ bearer: [] }] } },
+        '/v1/encryption/admin/overview': { get: { summary: 'Encryption admin overview', tags: ['Encryption'] } },
+        '/v1/mission-debug/missions/{missionId}/steps': { get: { summary: 'Execution steps', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/missions/{missionId}/trace': { get: { summary: 'Full trace', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/sessions': { post: { summary: 'Create debug session', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/sessions/{id}': { get: { summary: 'Get debug session', tags: ['Mission Debug'], security: [{ bearer: [] }] }, put: { summary: 'Update session', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/replay': { post: { summary: 'Start replay', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/replay/{id}': { get: { summary: 'Replay status', tags: ['Mission Debug'], security: [{ bearer: [] }] } },
+        '/v1/mission-debug/admin/overview': { get: { summary: 'Debug admin overview', tags: ['Mission Debug'] } },
+        '/v1/rate-policies/policies': { get: { summary: 'List rate policies', tags: ['Rate Policies'], security: [{ bearer: [] }] }, post: { summary: 'Create policy', tags: ['Rate Policies'], security: [{ bearer: [] }] } },
+        '/v1/rate-policies/policies/{id}': { put: { summary: 'Update policy', tags: ['Rate Policies'], security: [{ bearer: [] }] }, delete: { summary: 'Delete policy', tags: ['Rate Policies'], security: [{ bearer: [] }] } },
+        '/v1/rate-policies/templates': { get: { summary: 'List templates', tags: ['Rate Policies'] }, post: { summary: 'Create template', tags: ['Rate Policies'] } },
+        '/v1/rate-policies/apply-template': { post: { summary: 'Apply template', tags: ['Rate Policies'], security: [{ bearer: [] }] } },
+        '/v1/rate-policies/violations': { get: { summary: 'Get violations', tags: ['Rate Policies'], security: [{ bearer: [] }] } },
+        '/v1/rate-policies/stats': { get: { summary: 'Policy stats', tags: ['Rate Policies'], security: [{ bearer: [] }] } },
+        '/v1/rate-policies/admin/overview': { get: { summary: 'Rate policies admin', tags: ['Rate Policies'] } },
+        // Wave 46
+        '/v1/onboarding-checklist': { get: { summary: 'Get checklist', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/init': { post: { summary: 'Initialize checklist', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/steps/{stepKey}/complete': { post: { summary: 'Complete step', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/steps/{stepKey}/claim': { post: { summary: 'Claim reward', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/progress': { get: { summary: 'Get progress', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/milestones': { get: { summary: 'Get milestones', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/milestones/{key}/achieve': { post: { summary: 'Achieve milestone', tags: ['Onboarding Checklist'], security: [{ bearer: [] }] } },
+        '/v1/onboarding-checklist/admin/overview': { get: { summary: 'Checklist admin', tags: ['Onboarding Checklist'] } },
+        '/v1/i18n/config': { get: { summary: 'Get locale config', tags: ['Localization'], security: [{ bearer: [] }] }, put: { summary: 'Update locale config', tags: ['Localization'], security: [{ bearer: [] }] } },
+        '/v1/i18n/translations/{locale}': { get: { summary: 'Get translations', tags: ['Localization'] } },
+        '/v1/i18n/translations': { post: { summary: 'Upsert translation', tags: ['Localization'] } },
+        '/v1/i18n/keys': { get: { summary: 'List translation keys', tags: ['Localization'] }, post: { summary: 'Create key', tags: ['Localization'] } },
+        '/v1/i18n/namespaces/{ns}/{locale}': { get: { summary: 'Namespace translations', tags: ['Localization'] } },
+        '/v1/i18n/locales': { get: { summary: 'Supported locales', tags: ['Localization'] } },
+        '/v1/i18n/admin/overview': { get: { summary: 'Localization admin', tags: ['Localization'] } },
+        '/admin/incidents': { get: { summary: 'List incidents', tags: ['Incidents'] }, post: { summary: 'Create incident', tags: ['Incidents'] } },
+        '/admin/incidents/{id}': { get: { summary: 'Get incident', tags: ['Incidents'] }, put: { summary: 'Update incident', tags: ['Incidents'] } },
+        '/admin/incidents/{id}/updates': { get: { summary: 'Get updates', tags: ['Incidents'] }, post: { summary: 'Add update', tags: ['Incidents'] } },
+        '/admin/incidents/{id}/postmortem': { get: { summary: 'Get postmortem', tags: ['Incidents'] }, post: { summary: 'Create postmortem', tags: ['Incidents'] } },
+        '/admin/incidents/active': { get: { summary: 'Active incidents', tags: ['Incidents'] } },
+        '/admin/incidents/dashboard': { get: { summary: 'Incident dashboard', tags: ['Incidents'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
