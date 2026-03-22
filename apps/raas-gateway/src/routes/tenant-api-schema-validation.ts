@@ -1,6 +1,11 @@
 /**
- * Tenant API Schema Validation routes
+ * Tenant API Schema Validation Routes
  * Mount at: /v1/schema-validation
+ *
+ * GET  /schemas          — list schemas (auth)
+ * POST /schemas          — create schema (auth)
+ * GET  /violations       — list violations (auth)
+ * GET  /admin/overview   — cross-tenant stats (X-Admin-Key)
  */
 
 import { Hono } from 'hono';
@@ -8,85 +13,82 @@ import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
 import { tenantApiSchemaValidationService as svc } from '../services/tenant-api-schema-validation-service';
 
-export const tenantApiSchemaValidation = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env }>();
 
-// All non-admin routes require tenant auth
-tenantApiSchemaValidation.use('/rules', auth());
-tenantApiSchemaValidation.use('/violations', auth());
-
-/**
- * GET /v1/schema-validation/rules — List schema rules for the authenticated tenant
- */
-tenantApiSchemaValidation.get('/rules', async (c) => {
+// GET /schemas — list all schema definitions for the authenticated tenant
+app.get('/schemas', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const rules = await svc.listRules(c.env.DB, tenantId);
-    return c.json({ success: true, data: rules });
-  } catch (err) {
-    console.error('[schemaValidation GET /rules]', err);
-    return c.json({ success: false, error: 'Failed to list schema rules' }, 500);
+    const result = await svc.listSchemas(c.env.DB, tenantId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
+    return c.json({ error: 'Failed to list schemas' }, 500);
   }
 });
 
-/**
- * POST /v1/schema-validation/rules — Create a new schema rule for the authenticated tenant
- * Body: { endpoint_pattern, schema_json, validation_mode? }
- */
-tenantApiSchemaValidation.post('/rules', async (c) => {
+// POST /schemas — create a new schema definition for the authenticated tenant
+// Body: { schema_name, endpoint_pattern, request_schema?, response_schema?, enabled? }
+app.post('/schemas', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const body = await c.req.json();
+    const body = await c.req.json().catch(() => ({})) as {
+      schema_name?: string;
+      endpoint_pattern?: string;
+      request_schema?: string;
+      response_schema?: string;
+      enabled?: boolean;
+    };
 
-    if (!body.endpoint_pattern || !body.schema_json) {
-      return c.json({ success: false, error: 'endpoint_pattern and schema_json are required' }, 400);
+    if (!body.schema_name?.trim()) {
+      return c.json({ error: 'schema_name is required' }, 400);
+    }
+    if (!body.endpoint_pattern?.trim()) {
+      return c.json({ error: 'endpoint_pattern is required' }, 400);
     }
 
-    const rule = await svc.createRule(c.env.DB, {
-      id: crypto.randomUUID(),
-      tenant_id: tenantId,
-      endpoint_pattern: body.endpoint_pattern,
-      schema_json: typeof body.schema_json === 'string'
-        ? body.schema_json
-        : JSON.stringify(body.schema_json),
-      validation_mode: body.validation_mode,
+    const result = await svc.createSchema(c.env.DB, tenantId, {
+      schema_name: body.schema_name.trim(),
+      endpoint_pattern: body.endpoint_pattern.trim(),
+      request_schema: body.request_schema,
+      response_schema: body.response_schema,
+      enabled: body.enabled,
     });
-    return c.json({ success: true, data: rule }, 201);
-  } catch (err) {
-    console.error('[schemaValidation POST /rules]', err);
-    return c.json({ success: false, error: 'Failed to create schema rule' }, 500);
+
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data }, 201);
+  } catch {
+    return c.json({ error: 'Failed to create schema' }, 500);
   }
 });
 
-/**
- * GET /v1/schema-validation/violations — Recent violations for the authenticated tenant
- * Query param: limit (default 50, max 200)
- */
-tenantApiSchemaValidation.get('/violations', async (c) => {
+// GET /violations — recent violations for the authenticated tenant
+// Query: schema_id? (filter by specific schema)
+app.get('/violations', auth(), async (c) => {
   try {
     const { tenantId } = getTenant(c);
-    const limit = parseInt(c.req.query('limit') ?? '50', 10) || 50;
-    const violations = await svc.getViolations(c.env.DB, tenantId, limit);
-    return c.json({ success: true, data: violations });
-  } catch (err) {
-    console.error('[schemaValidation GET /violations]', err);
-    return c.json({ success: false, error: 'Failed to fetch violations' }, 500);
+    const schemaId = c.req.query('schema_id') ?? undefined;
+    const result = await svc.getViolations(c.env.DB, tenantId, schemaId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
+    return c.json({ error: 'Failed to fetch violations' }, 500);
   }
 });
 
-/**
- * GET /v1/schema-validation/admin/overview — Cross-tenant rule + violation summary
- * Requires X-Admin-Key header
- */
-tenantApiSchemaValidation.get('/admin/overview', async (c) => {
+// GET /admin/overview — cross-tenant aggregate stats (X-Admin-Key required)
+app.get('/admin/overview', async (c) => {
+  const adminKey = c.req.header('X-Admin-Key');
+  if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   try {
-    const adminKey = c.req.header('X-Admin-Key');
-    if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
-      return c.json({ success: false, error: 'Forbidden' }, 403);
-    }
-    const overview = await svc.getAdminOverview(c.env.DB);
-    return c.json({ success: true, data: overview });
-  } catch (err) {
-    console.error('[schemaValidation GET /admin/overview]', err);
-    return c.json({ success: false, error: 'Failed to fetch admin overview' }, 500);
+    const result = await svc.getAdminOverview(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
+    return c.json({ error: 'Failed to fetch admin overview' }, 500);
   }
 });
+
+export { app as tenantApiSchemaValidation };

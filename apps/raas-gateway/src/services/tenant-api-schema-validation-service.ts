@@ -1,127 +1,185 @@
 /**
  * Tenant API Schema Validation Service
- * Manages per-tenant endpoint schema rules and violation records
+ * Manages per-tenant JSON schema definitions for request/response validation
+ * and records schema violations for observability.
  */
 
-// Plain DB row shapes used for casts after .all()
-interface SchemaRuleRow {
+/** A schema definition record stored in D1 */
+export interface ApiSchemaDefinition {
   id: string;
   tenant_id: string;
+  schema_name: string;
   endpoint_pattern: string;
-  schema_json: string;
-  validation_mode: string;
-  is_active: number;
+  request_schema: string | null;
+  response_schema: string | null;
+  enabled: number;
   created_at: string;
   updated_at: string;
 }
 
-interface ViolationRow {
+/** A schema violation record stored in D1 */
+export interface ApiSchemaViolation {
   id: string;
   tenant_id: string;
-  rule_id: string;
-  request_path: string;
-  violation_details: string;
-  severity: string;
+  schema_id: string;
+  violation_type: string;
+  endpoint: string | null;
+  details: string | null;
   created_at: string;
 }
 
-export interface CreateRuleInput {
-  id: string;
-  tenant_id: string;
+/** Input for creating a new schema definition */
+export interface CreateSchemaInput {
+  schema_name: string;
   endpoint_pattern: string;
-  schema_json: string;
-  validation_mode?: string;
+  request_schema?: string;
+  response_schema?: string;
+  enabled?: boolean;
 }
 
-export interface AdminOverviewRow {
-  tenant_id: string;
-  rule_count: number;
-  violation_count: number;
+/** List all schema definitions for a tenant */
+async function listSchemas(
+  db: any,
+  tenantId: string,
+): Promise<{ success: boolean; data?: ApiSchemaDefinition[]; error?: string }> {
+  try {
+    const result = await db
+      .prepare(
+        `SELECT id, tenant_id, schema_name, endpoint_pattern,
+                request_schema, response_schema, enabled, created_at, updated_at
+         FROM api_schema_definitions
+         WHERE tenant_id = ?
+         ORDER BY created_at DESC`,
+      )
+      .bind(tenantId)
+      .all();
+
+    return { success: true, data: (result.results ?? []) as ApiSchemaDefinition[] };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
 }
 
-// Named export object — no class, no generic type args on db
+/** Create a new schema definition for a tenant */
+async function createSchema(
+  db: any,
+  tenantId: string,
+  input: CreateSchemaInput,
+): Promise<{ success: boolean; data?: ApiSchemaDefinition; error?: string }> {
+  try {
+    const id = crypto.randomUUID();
+    const enabled = input.enabled === false ? 0 : 1;
+    const now = new Date().toISOString();
+
+    await db
+      .prepare(
+        `INSERT INTO api_schema_definitions
+           (id, tenant_id, schema_name, endpoint_pattern, request_schema, response_schema, enabled, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        id,
+        tenantId,
+        input.schema_name,
+        input.endpoint_pattern,
+        input.request_schema ?? null,
+        input.response_schema ?? null,
+        enabled,
+        now,
+        now,
+      )
+      .run();
+
+    const row = await db
+      .prepare(
+        `SELECT id, tenant_id, schema_name, endpoint_pattern,
+                request_schema, response_schema, enabled, created_at, updated_at
+         FROM api_schema_definitions WHERE id = ?`,
+      )
+      .bind(id)
+      .first();
+
+    if (!row) throw new Error('Insert succeeded but row not found');
+
+    return { success: true, data: row as ApiSchemaDefinition };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
+/** Get violations for a tenant, optionally filtered by schema_id */
+async function getViolations(
+  db: any,
+  tenantId: string,
+  schemaId?: string,
+): Promise<{ success: boolean; data?: ApiSchemaViolation[]; error?: string }> {
+  try {
+    const query = schemaId
+      ? `SELECT id, tenant_id, schema_id, violation_type, endpoint, details, created_at
+         FROM api_schema_violations
+         WHERE tenant_id = ? AND schema_id = ?
+         ORDER BY created_at DESC LIMIT 200`
+      : `SELECT id, tenant_id, schema_id, violation_type, endpoint, details, created_at
+         FROM api_schema_violations
+         WHERE tenant_id = ?
+         ORDER BY created_at DESC LIMIT 200`;
+
+    const stmt = schemaId
+      ? db.prepare(query).bind(tenantId, schemaId)
+      : db.prepare(query).bind(tenantId);
+
+    const result = await stmt.all();
+    return { success: true, data: (result.results ?? []) as ApiSchemaViolation[] };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
+/** Admin overview — aggregate counts across all tenants */
+async function getAdminOverview(db: any): Promise<{
+  success: boolean;
+  data?: {
+    total_schemas: number;
+    enabled_schemas: number;
+    total_violations: number;
+    tenants_with_schemas: number;
+  };
+  error?: string;
+}> {
+  try {
+    const [schemas, violations, tenants] = await Promise.all([
+      db
+        .prepare(
+          `SELECT COUNT(*) as total, SUM(enabled) as enabled_count FROM api_schema_definitions`,
+        )
+        .first(),
+      db
+        .prepare(`SELECT COUNT(*) as total FROM api_schema_violations`)
+        .first(),
+      db
+        .prepare(
+          `SELECT COUNT(DISTINCT tenant_id) as count FROM api_schema_definitions`,
+        )
+        .first(),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        total_schemas: schemas?.total ?? 0,
+        enabled_schemas: schemas?.enabled_count ?? 0,
+        total_violations: violations?.total ?? 0,
+        tenants_with_schemas: tenants?.count ?? 0,
+      },
+    };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
 export const tenantApiSchemaValidationService = {
-  /**
-   * List all active schema rules for a tenant
-   */
-  async listRules(db: any, tenantId: string): Promise<SchemaRuleRow[]> {
-    try {
-      const result = await db
-        .prepare('SELECT * FROM api_schema_rules WHERE tenant_id = ? ORDER BY created_at DESC')
-        .bind(tenantId)
-        .all();
-      return (result.results ?? []) as SchemaRuleRow[];
-    } catch (err) {
-      console.error('[schemaValidationSvc] listRules error:', err);
-      throw err;
-    }
-  },
-
-  /**
-   * Create a new schema rule for a tenant
-   */
-  async createRule(db: any, input: CreateRuleInput): Promise<SchemaRuleRow> {
-    try {
-      const now = new Date().toISOString();
-      const mode = input.validation_mode ?? 'warn';
-      await db
-        .prepare(
-          `INSERT INTO api_schema_rules
-             (id, tenant_id, endpoint_pattern, schema_json, validation_mode, is_active, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, 1, ?, ?)`
-        )
-        .bind(input.id, input.tenant_id, input.endpoint_pattern, input.schema_json, mode, now, now)
-        .run();
-      const row = await db
-        .prepare('SELECT * FROM api_schema_rules WHERE id = ?')
-        .bind(input.id)
-        .first();
-      return row as SchemaRuleRow;
-    } catch (err) {
-      console.error('[schemaValidationSvc] createRule error:', err);
-      throw err;
-    }
-  },
-
-  /**
-   * Get violations for a tenant, newest first, capped at 200
-   */
-  async getViolations(db: any, tenantId: string, limit = 50): Promise<ViolationRow[]> {
-    try {
-      const safeLimit = Math.min(Math.max(1, limit), 200);
-      const result = await db
-        .prepare(
-          'SELECT * FROM api_schema_violations WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?'
-        )
-        .bind(tenantId, safeLimit)
-        .all();
-      return (result.results ?? []) as ViolationRow[];
-    } catch (err) {
-      console.error('[schemaValidationSvc] getViolations error:', err);
-      throw err;
-    }
-  },
-
-  /**
-   * Admin overview: rule + violation counts per tenant
-   */
-  async getAdminOverview(db: any): Promise<AdminOverviewRow[]> {
-    try {
-      const result = await db
-        .prepare(
-          `SELECT r.tenant_id,
-                  COUNT(DISTINCT r.id)  AS rule_count,
-                  COUNT(DISTINCT v.id)  AS violation_count
-           FROM api_schema_rules r
-           LEFT JOIN api_schema_violations v ON v.tenant_id = r.tenant_id
-           GROUP BY r.tenant_id
-           ORDER BY violation_count DESC`
-        )
-        .all();
-      return (result.results ?? []) as AdminOverviewRow[];
-    } catch (err) {
-      console.error('[schemaValidationSvc] getAdminOverview error:', err);
-      throw err;
-    }
-  },
+  listSchemas,
+  createSchema,
+  getViolations,
+  getAdminOverview,
 };

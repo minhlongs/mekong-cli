@@ -196,7 +196,6 @@ import { tenantApiMockServer } from './tenant-api-mock-server';
 import { tenantWebhookTemplates } from './tenant-webhook-templates';
 import { missionCostOptimization } from './mission-cost-optimization';
 import { platformTenantGrouping } from './platform-tenant-grouping';
-import { tenantApiSchemaValidation } from './tenant-api-schema-validation';
 import { adminPlatformAlerts } from './admin-platform-alerts';
 import { tenantWorkflowAutomation } from './tenant-workflow-automation';
 import { tenantApiChangelog } from './tenant-api-changelog';
@@ -253,6 +252,12 @@ import { adminPlatformAuditTrail } from './admin-platform-audit-trail';
 import { tenantApiCachingConfig } from './tenant-api-caching-config';
 import { adminReleaseManagement } from './admin-release-management';
 import { tenantErrorTracking } from './tenant-error-tracking';
+import { tenantApiLoadBalancing } from './tenant-api-load-balancing';
+import { missionWorkflowEngine } from './mission-workflow-engine';
+import { adminPlatformSecurityScan } from './admin-platform-security-scan';
+import { tenantApiSchemaValidation } from './tenant-api-schema-validation';
+import { adminDeploymentPipeline } from './admin-deployment-pipeline';
+import { tenantPerformanceProfiling } from './tenant-performance-profiling';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -519,7 +524,6 @@ export function createRoutes() {
   routes.route('/admin/tenant-grouping', platformTenantGrouping);
 
   // Wave 72 routes
-  routes.route('/v1/schema-validation', tenantApiSchemaValidation);
   routes.route('/admin/platform-alerts', adminPlatformAlerts);
   routes.route('/v1/workflow-automation', tenantWorkflowAutomation);
 
@@ -612,6 +616,16 @@ export function createRoutes() {
   routes.route('/v1/caching-config', tenantApiCachingConfig);
   routes.route('/admin/release-management', adminReleaseManagement);
   routes.route('/v1/error-tracking', tenantErrorTracking);
+
+  // Wave 91 routes
+  routes.route('/v1/load-balancing', tenantApiLoadBalancing);
+  routes.route('/v1/workflow-engine', missionWorkflowEngine);
+  routes.route('/admin/security-scan', adminPlatformSecurityScan);
+
+  // Wave 92 routes
+  routes.route('/v1/schema-validation', tenantApiSchemaValidation);
+  routes.route('/admin/deployment-pipeline', adminDeploymentPipeline);
+  routes.route('/v1/performance-profiling', tenantPerformanceProfiling);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1879,6 +1893,16 @@ export function createRoutes() {
         '/admin/release-management/notes': { get: { summary: 'Release notes', tags: ['Release Management'] } },
         '/v1/error-tracking/errors': { get: { summary: 'List errors', tags: ['Error Tracking'] }, post: { summary: 'Report error', tags: ['Error Tracking'] } },
         '/v1/error-tracking/rules': { get: { summary: 'Error rules', tags: ['Error Tracking'] } },
+        '/v1/load-balancing/configs': { get: { summary: 'List LB configs', tags: ['Load Balancing'] }, post: { summary: 'Create config', tags: ['Load Balancing'] } },
+        '/v1/load-balancing/targets': { get: { summary: 'LB targets', tags: ['Load Balancing'] } },
+        '/v1/workflow-engine/workflows': { get: { summary: 'List workflows', tags: ['Workflow Engine'] }, post: { summary: 'Create workflow', tags: ['Workflow Engine'] } },
+        '/v1/workflow-engine/executions': { get: { summary: 'Workflow executions', tags: ['Workflow Engine'] } },
+        '/admin/security-scan/scans': { get: { summary: 'List scans', tags: ['Security Scan'] }, post: { summary: 'Create scan', tags: ['Security Scan'] } },
+        '/admin/security-scan/findings': { get: { summary: 'Scan findings', tags: ['Security Scan'] } },
+        '/admin/deployment-pipeline/pipelines': { get: { summary: 'List pipelines', tags: ['Deployment Pipeline'] }, post: { summary: 'Create pipeline', tags: ['Deployment Pipeline'] } },
+        '/admin/deployment-pipeline/runs': { get: { summary: 'Pipeline runs', tags: ['Deployment Pipeline'] } },
+        '/v1/performance-profiling/profiles': { get: { summary: 'List profiles', tags: ['Performance Profiling'] }, post: { summary: 'Create profile', tags: ['Performance Profiling'] } },
+        '/v1/performance-profiling/baselines': { get: { summary: 'Perf baselines', tags: ['Performance Profiling'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
