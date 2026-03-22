@@ -113,6 +113,12 @@ import { platformAnnouncements } from './platform-announcements';
 import { tenantQuotas } from './tenant-quotas';
 import { aiModelRegistry } from './ai-model-registry';
 import { platformMetricsDashboard } from './platform-metrics-dashboard';
+import { tenantSsoV2 } from './tenant-sso-v2';
+import { apiGatewayCaching } from './api-gateway-caching';
+import { missionDependencies } from './mission-dependencies';
+import { tenantInvoicing } from './tenant-invoicing';
+import { platformChangelogV2 } from './platform-changelog-v2';
+import { adminCommandCenter } from './admin-command-center';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -229,6 +235,16 @@ export function createRoutes() {
   routes.route('/v1/quotas', tenantQuotas);
   routes.route('/v1/ai-models', aiModelRegistry);
   routes.route('/admin/platform-metrics', platformMetricsDashboard);
+
+  // Wave 41 routes
+  routes.route('/v1/sso', tenantSsoV2);
+  routes.route('/v1/cache', apiGatewayCaching);
+  routes.route('/v1/mission-chains', missionDependencies);
+
+  // Wave 42 routes
+  routes.route('/v1/invoicing', tenantInvoicing);
+  routes.route('/v1/changelog-v2', platformChangelogV2);
+  routes.route('/admin/commands', adminCommandCenter);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -927,6 +943,49 @@ export function createRoutes() {
         '/admin/platform-metrics/growth': { get: { summary: 'Tenant growth', tags: ['Platform Metrics'] } },
         '/admin/platform-metrics/revenue': { get: { summary: 'Revenue metrics', tags: ['Platform Metrics'] } },
         '/admin/platform-metrics/goals': { get: { summary: 'List goals', tags: ['Platform Metrics'] }, post: { summary: 'Create goal', tags: ['Platform Metrics'] } },
+        // Wave 41: Tenant SSO V2
+        '/v1/sso/configs': { get: { summary: 'List SSO configs', tags: ['SSO'] }, post: { summary: 'Create SSO config', tags: ['SSO'] } },
+        '/v1/sso/configs/{configId}': { get: { summary: 'Get SSO config', tags: ['SSO'] }, put: { summary: 'Update SSO config', tags: ['SSO'] }, delete: { summary: 'Delete SSO config', tags: ['SSO'] } },
+        '/v1/sso/login/{configId}': { post: { summary: 'Initiate SSO login', tags: ['SSO'] } },
+        '/v1/sso/callback': { post: { summary: 'SSO callback', tags: ['SSO'] } },
+        '/v1/sso/stats': { get: { summary: 'SSO stats', tags: ['SSO'] } },
+        '/v1/sso/admin/overview': { get: { summary: 'Admin SSO overview', tags: ['SSO'] } },
+        // Wave 41: API Gateway Caching
+        '/v1/cache/configs': { get: { summary: 'List cache configs', tags: ['Caching'] }, post: { summary: 'Create cache config', tags: ['Caching'] } },
+        '/v1/cache/configs/{configId}': { put: { summary: 'Update cache config', tags: ['Caching'] }, delete: { summary: 'Delete cache config', tags: ['Caching'] } },
+        '/v1/cache/invalidate': { post: { summary: 'Invalidate cache', tags: ['Caching'] } },
+        '/v1/cache/stats': { get: { summary: 'Cache stats', tags: ['Caching'] } },
+        '/v1/cache/analytics': { get: { summary: 'Cache analytics', tags: ['Caching'] } },
+        '/v1/cache/admin/overview': { get: { summary: 'Admin cache overview', tags: ['Caching'] } },
+        // Wave 41: Mission Dependencies
+        '/v1/mission-chains/chains': { get: { summary: 'List mission chains', tags: ['Mission Chains'] }, post: { summary: 'Create chain', tags: ['Mission Chains'] } },
+        '/v1/mission-chains/chains/{chainId}': { get: { summary: 'Get chain', tags: ['Mission Chains'] } },
+        '/v1/mission-chains/chains/{chainId}/missions': { post: { summary: 'Add mission to chain', tags: ['Mission Chains'] } },
+        '/v1/mission-chains/chains/{chainId}/start': { post: { summary: 'Start chain', tags: ['Mission Chains'] } },
+        '/v1/mission-chains/chains/{chainId}/ready': { get: { summary: 'Get ready missions', tags: ['Mission Chains'] } },
+        '/v1/mission-chains/admin/overview': { get: { summary: 'Admin chains overview', tags: ['Mission Chains'] } },
+        // Wave 42: Tenant Invoicing
+        '/v1/invoicing/invoices': { get: { summary: 'List invoices', tags: ['Invoicing'] }, post: { summary: 'Create invoice', tags: ['Invoicing'] } },
+        '/v1/invoicing/invoices/{invoiceId}': { get: { summary: 'Get invoice', tags: ['Invoicing'] } },
+        '/v1/invoicing/invoices/{invoiceId}/items': { post: { summary: 'Add line item', tags: ['Invoicing'] } },
+        '/v1/invoicing/invoices/{invoiceId}/status': { put: { summary: 'Update invoice status', tags: ['Invoicing'] } },
+        '/v1/invoicing/summary': { get: { summary: 'Invoice summary', tags: ['Invoicing'] } },
+        '/v1/invoicing/admin/overview': { get: { summary: 'Admin invoice overview', tags: ['Invoicing'] } },
+        '/v1/invoicing/admin/overdue': { get: { summary: 'Overdue invoices', tags: ['Invoicing'] } },
+        // Wave 42: Platform Changelog V2
+        '/v1/changelog-v2/entries': { get: { summary: 'List changelog entries', tags: ['Changelog'] } },
+        '/v1/changelog-v2/entries/{entryId}': { get: { summary: 'Get changelog entry', tags: ['Changelog'] } },
+        '/v1/changelog-v2/unread': { get: { summary: 'Unread count', tags: ['Changelog'] } },
+        '/v1/changelog-v2/subscription': { get: { summary: 'Get subscription', tags: ['Changelog'] }, post: { summary: 'Subscribe', tags: ['Changelog'] } },
+        '/v1/changelog-v2/admin/entries': { post: { summary: 'Create entry', tags: ['Changelog'] } },
+        '/v1/changelog-v2/admin/stats': { get: { summary: 'Changelog stats', tags: ['Changelog'] } },
+        // Wave 42: Admin Command Center
+        '/admin/commands/execute': { post: { summary: 'Execute command', tags: ['Command Center'] } },
+        '/admin/commands/history': { get: { summary: 'Command history', tags: ['Command Center'] } },
+        '/admin/commands/available': { get: { summary: 'Available commands', tags: ['Command Center'] } },
+        '/admin/commands/scheduled': { get: { summary: 'List scheduled', tags: ['Command Center'] }, post: { summary: 'Create scheduled', tags: ['Command Center'] } },
+        '/admin/commands/stats': { get: { summary: 'Command stats', tags: ['Command Center'] } },
+        '/admin/commands/dashboard': { get: { summary: 'Dashboard summary', tags: ['Command Center'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
