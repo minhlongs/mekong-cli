@@ -201,6 +201,12 @@ import { platformLicenseManagement } from './platform-license-management';
 import { tenantDataPipeline } from './tenant-data-pipeline';
 import { adminPlatformBackup } from './admin-platform-backup';
 import { tenantApiMockServer } from './tenant-api-mock-server';
+import { tenantWebhookTemplates } from './tenant-webhook-templates';
+import { missionCostOptimization } from './mission-cost-optimization';
+import { platformTenantGrouping } from './platform-tenant-grouping';
+import { tenantApiSchemaValidation } from './tenant-api-schema-validation';
+import { adminPlatformAlerts } from './admin-platform-alerts';
+import { tenantWorkflowAutomation } from './tenant-workflow-automation';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -467,6 +473,16 @@ export function createRoutes() {
   routes.route('/v1/data-pipeline', tenantDataPipeline);
   routes.route('/admin/platform-backup', adminPlatformBackup);
   routes.route('/v1/api-mocks', tenantApiMockServer);
+
+  // Wave 71 routes
+  routes.route('/v1/webhook-templates', tenantWebhookTemplates);
+  routes.route('/v1/cost-optimization', missionCostOptimization);
+  routes.route('/admin/tenant-grouping', platformTenantGrouping);
+
+  // Wave 72 routes
+  routes.route('/v1/schema-validation', tenantApiSchemaValidation);
+  routes.route('/admin/platform-alerts', adminPlatformAlerts);
+  routes.route('/v1/workflow-automation', tenantWorkflowAutomation);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1634,6 +1650,18 @@ export function createRoutes() {
         '/admin/platform-backup/restore-points': { get: { summary: 'Restore points', tags: ['Platform Backup'] } },
         '/v1/api-mocks/mocks': { get: { summary: 'List mock endpoints', tags: ['API Mock Server'] }, post: { summary: 'Create mock', tags: ['API Mock Server'] } },
         '/v1/api-mocks/requests': { get: { summary: 'Mock requests log', tags: ['API Mock Server'] } },
+        '/v1/webhook-templates/templates': { get: { summary: 'List webhook templates', tags: ['Webhook Templates'] }, post: { summary: 'Create template', tags: ['Webhook Templates'] } },
+        '/v1/webhook-templates/usage': { get: { summary: 'Template usage', tags: ['Webhook Templates'] } },
+        '/v1/cost-optimization/rules': { get: { summary: 'List optimization rules', tags: ['Cost Optimization'] }, post: { summary: 'Create rule', tags: ['Cost Optimization'] } },
+        '/v1/cost-optimization/events': { get: { summary: 'Optimization events', tags: ['Cost Optimization'] } },
+        '/admin/tenant-grouping/groups': { get: { summary: 'List tenant groups', tags: ['Tenant Grouping'] }, post: { summary: 'Create group', tags: ['Tenant Grouping'] } },
+        '/admin/tenant-grouping/members': { get: { summary: 'Group members', tags: ['Tenant Grouping'] } },
+        '/v1/schema-validation/rules': { get: { summary: 'List schema rules', tags: ['Schema Validation'] }, post: { summary: 'Create schema rule', tags: ['Schema Validation'] } },
+        '/v1/schema-validation/violations': { get: { summary: 'Schema violations', tags: ['Schema Validation'] } },
+        '/admin/platform-alerts/rules': { get: { summary: 'List alert rules', tags: ['Platform Alerts'] }, post: { summary: 'Create alert rule', tags: ['Platform Alerts'] } },
+        '/admin/platform-alerts/incidents': { get: { summary: 'Alert incidents', tags: ['Platform Alerts'] } },
+        '/v1/workflow-automation/workflows': { get: { summary: 'List workflows', tags: ['Workflow Automation'] }, post: { summary: 'Create workflow', tags: ['Workflow Automation'] } },
+        '/v1/workflow-automation/runs': { get: { summary: 'Workflow runs', tags: ['Workflow Automation'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
