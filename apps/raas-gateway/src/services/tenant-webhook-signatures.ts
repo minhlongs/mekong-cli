@@ -1,141 +1,147 @@
 /**
  * Tenant Webhook Signatures Service
- * CRUD for webhook HMAC signatures + verification logs, and admin overview
+ * Manage webhook signing keys and verification logs for tenants
+ * Tables: webhook_signing_keys, webhook_signature_logs
  */
 
-export interface WebhookSignature {
-  id: string;
-  tenant_id: string;
-  algorithm: string;
-  secret_key: string;
-  is_active: number;
-  created_at: string;
-  updated_at: string;
-}
+// ---- list signing keys ------------------------------------------------------
 
-export interface SignatureVerification {
-  id: string;
-  tenant_id: string;
-  signature_id: string;
-  webhook_url: string;
-  status: string;
-  verified_at: string;
-}
-
-export interface CreateSignatureData {
-  algorithm?: string;
-  secret_key: string;
-  is_active?: number;
-}
-
-/** List all webhook signatures for a tenant */
-export async function listSignatures(db: any, tenantId: string): Promise<WebhookSignature[]> {
+async function listKeys(
+  db: any,
+  tenantId: string
+): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
-    const result = await db
-      .prepare('SELECT * FROM webhook_signatures WHERE tenant_id = ? ORDER BY created_at DESC')
+    const rows = await db
+      .prepare(
+        `SELECT id, tenant_id, key_name, algorithm, status, created_at, updated_at
+         FROM webhook_signing_keys
+         WHERE tenant_id = ?
+         ORDER BY created_at DESC`
+      )
       .bind(tenantId)
       .all();
-    return result.results as WebhookSignature[];
+    return { success: true, data: rows.results ?? [] };
   } catch (err) {
-    throw new Error(`listSignatures failed: ${String(err)}`);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to list keys' };
   }
 }
 
-/** Create a new webhook signature for a tenant */
-export async function createSignature(
+// ---- create signing key -----------------------------------------------------
+
+interface CreateKeyInput {
+  keyName: string;
+  secret: string;
+  algorithm?: string;
+}
+
+async function createKey(
   db: any,
   tenantId: string,
-  data: CreateSignatureData
-): Promise<WebhookSignature> {
+  input: CreateKeyInput
+): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
+    const { keyName, secret, algorithm = 'hmac-sha256' } = input;
+
+    if (!keyName || !secret) {
+      return { success: false, error: 'keyName and secret are required' };
+    }
+
+    // Hash the secret before storage — never persist raw secret
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
-    const algorithm = data.algorithm ?? 'sha256';
-    const isActive = data.is_active ?? 1;
 
     await db
       .prepare(
-        `INSERT INTO webhook_signatures (id, tenant_id, algorithm, secret_key, is_active, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO webhook_signing_keys
+           (id, tenant_id, key_name, secret_hash, algorithm, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, 'active', ?, ?)`
       )
-      .bind(id, tenantId, algorithm, data.secret_key, isActive, now, now)
+      .bind(id, tenantId, keyName, hashHex, algorithm, now, now)
       .run();
 
-    const row = await db
-      .prepare('SELECT * FROM webhook_signatures WHERE id = ?')
-      .bind(id)
-      .first();
-    return row as WebhookSignature;
-  } catch (err) {
-    throw new Error(`createSignature failed: ${String(err)}`);
-  }
-}
-
-/** List signature verification logs for a tenant */
-export async function getVerifications(db: any, tenantId: string): Promise<SignatureVerification[]> {
-  try {
-    const result = await db
-      .prepare('SELECT * FROM signature_verifications WHERE tenant_id = ? ORDER BY verified_at DESC')
-      .bind(tenantId)
-      .all();
-    return result.results as SignatureVerification[];
-  } catch (err) {
-    throw new Error(`getVerifications failed: ${String(err)}`);
-  }
-}
-
-/** Admin: platform-wide overview of webhook signatures */
-export async function getAdminOverview(db: any): Promise<{
-  total_signatures: number;
-  active_signatures: number;
-  total_verifications: number;
-  by_algorithm: Record<string, number>;
-  by_status: Record<string, number>;
-  recent_verifications: SignatureVerification[];
-}> {
-  try {
-    const [totalRow, activeRow, verifTotalRow, algorithmRows, statusRows, recentResult] =
-      await Promise.all([
-        db.prepare('SELECT COUNT(*) as total FROM webhook_signatures').first(),
-        db.prepare('SELECT COUNT(*) as total FROM webhook_signatures WHERE is_active = 1').first(),
-        db.prepare('SELECT COUNT(*) as total FROM signature_verifications').first(),
-        db
-          .prepare('SELECT algorithm, COUNT(*) as count FROM webhook_signatures GROUP BY algorithm')
-          .all(),
-        db
-          .prepare('SELECT status, COUNT(*) as count FROM signature_verifications GROUP BY status')
-          .all(),
-        db
-          .prepare('SELECT * FROM signature_verifications ORDER BY verified_at DESC LIMIT 10')
-          .all(),
-      ]);
-
-    const by_algorithm: Record<string, number> = {};
-    for (const row of algorithmRows.results as { algorithm: string; count: number }[]) {
-      by_algorithm[row.algorithm] = row.count;
-    }
-
-    const by_status: Record<string, number> = {};
-    for (const row of statusRows.results as { status: string; count: number }[]) {
-      by_status[row.status] = row.count;
-    }
-
     return {
-      total_signatures: (totalRow as { total: number } | null)?.total ?? 0,
-      active_signatures: (activeRow as { total: number } | null)?.total ?? 0,
-      total_verifications: (verifTotalRow as { total: number } | null)?.total ?? 0,
-      by_algorithm,
-      by_status,
-      recent_verifications: recentResult.results as SignatureVerification[],
+      success: true,
+      data: { id, tenantId, keyName, algorithm, status: 'active', createdAt: now },
     };
   } catch (err) {
-    throw new Error(`getAdminOverview failed: ${String(err)}`);
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to create key' };
   }
 }
 
+// ---- get signature logs -----------------------------------------------------
+
+async function getLogs(
+  db: any,
+  tenantId: string,
+  limit = 50
+): Promise<{ success: boolean; data?: unknown; error?: string }> {
+  try {
+    const safeLimit = Math.min(Math.max(1, limit), 200);
+    const rows = await db
+      .prepare(
+        `SELECT id, tenant_id, signing_key_id, webhook_url, verified, created_at
+         FROM webhook_signature_logs
+         WHERE tenant_id = ?
+         ORDER BY created_at DESC
+         LIMIT ?`
+      )
+      .bind(tenantId, safeLimit)
+      .all();
+    return { success: true, data: rows.results ?? [] };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Failed to fetch logs' };
+  }
+}
+
+// ---- admin overview ---------------------------------------------------------
+
+async function getAdminOverview(
+  db: any
+): Promise<{ success: boolean; data?: unknown; error?: string }> {
+  try {
+    const [keysRow, logsRow, verifiedRow] = await Promise.all([
+      db.prepare(`SELECT COUNT(*) as total FROM webhook_signing_keys`).first(),
+      db.prepare(`SELECT COUNT(*) as total FROM webhook_signature_logs`).first(),
+      db
+        .prepare(`SELECT COUNT(*) as total FROM webhook_signature_logs WHERE verified = 1`)
+        .first(),
+    ]);
+
+    const totalLogs = (logsRow as any)?.total ?? 0;
+    const totalVerified = (verifiedRow as any)?.total ?? 0;
+    const verificationRate =
+      totalLogs > 0 ? Math.round((totalVerified / totalLogs) * 100) : 0;
+
+    return {
+      success: true,
+      data: {
+        totalSigningKeys: (keysRow as any)?.total ?? 0,
+        totalSignatureLogs: totalLogs,
+        totalVerified,
+        verificationRate,
+        generatedAt: new Date().toISOString(),
+      },
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to fetch overview',
+    };
+  }
+}
+
+// ---- exports ----------------------------------------------------------------
+
 export const tenantWebhookSignaturesService = {
-  listSignatures,
-  createSignature,
-  getVerifications,
+  listKeys,
+  createKey,
+  getLogs,
   getAdminOverview,
 };

@@ -121,7 +121,6 @@ import { platformChangelogV2 } from './platform-changelog-v2';
 import { adminCommandCenter } from './admin-command-center';
 import { webhookAnalytics } from './webhook-analytics';
 import { ratePlanManagement } from './rate-plan-management';
-import { missionCostTracking } from './mission-cost-tracking';
 import { tenantAuditPolicies } from './tenant-audit-policies';
 import { platformFeatureRequests } from './platform-feature-requests';
 import { adminTenantManagement } from './admin-tenant-management';
@@ -174,7 +173,6 @@ import { platformAuditPolicies } from './platform-audit-policies';
 import { tenantDataEncryptionKeys } from './tenant-data-encryption-keys';
 import { adminTrafficShaping } from './admin-traffic-shaping';
 import { tenantIntegrationMarketplace } from './tenant-integration-marketplace';
-import { tenantWebhookSignatures } from './tenant-webhook-signatures';
 import { missionRetryPolicies } from './mission-retry-policies';
 import { platformFeatureUsage } from './platform-feature-usage';
 import { tenantApiThrottling } from './tenant-api-throttling';
@@ -234,6 +232,12 @@ import { adminPlatformChangelog } from './admin-platform-changelog';
 import { tenantDataExport } from './tenant-data-export';
 import { adminIncidentManagement } from './admin-incident-management';
 import { tenantApiSandbox } from './tenant-api-sandbox';
+import { tenantWebhookSignatures } from './tenant-webhook-signatures';
+import { missionCostTracking } from './mission-cost-tracking';
+import { adminPlatformMaintenance } from './admin-platform-maintenance';
+import { tenantUsageAnalytics } from './tenant-usage-analytics';
+import { adminTenantMigration } from './admin-tenant-migration';
+import { tenantNotificationPreferences } from './tenant-notification-preferences';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -451,7 +455,6 @@ export function createRoutes() {
 
   // Wave 61 routes
   routes.route('/v1/notification-channels', tenantNotificationChannels);
-  routes.route('/v1/cost-tracking', missionCostTracking);
   routes.route('/admin/audit-policies', platformAuditPolicies);
 
   // Wave 62 routes
@@ -460,7 +463,6 @@ export function createRoutes() {
   routes.route('/v1/integrations', tenantIntegrationMarketplace);
 
   // Wave 63 routes
-  routes.route('/v1/webhook-signatures', tenantWebhookSignatures);
   routes.route('/v1/retry-policies', missionRetryPolicies);
   routes.route('/admin/feature-usage', platformFeatureUsage);
 
@@ -558,6 +560,16 @@ export function createRoutes() {
   routes.route('/v1/data-export', tenantDataExport);
   routes.route('/admin/incident-management', adminIncidentManagement);
   routes.route('/v1/api-sandbox', tenantApiSandbox);
+
+  // Wave 83 routes
+  routes.route('/v1/webhook-signatures', tenantWebhookSignatures);
+  routes.route('/v1/cost-tracking', missionCostTracking);
+  routes.route('/admin/platform-maintenance', adminPlatformMaintenance);
+
+  // Wave 84 routes
+  routes.route('/v1/usage-analytics', tenantUsageAnalytics);
+  routes.route('/admin/tenant-migration', adminTenantMigration);
+  routes.route('/v1/notification-preferences', tenantNotificationPreferences);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1657,8 +1669,6 @@ export function createRoutes() {
         // Wave 61
         '/v1/notification-channels/channels': { get: { summary: 'List notification channels', tags: ['Notification Channels'] }, post: { summary: 'Create channel', tags: ['Notification Channels'] } },
         '/v1/notification-channels/deliveries': { get: { summary: 'List deliveries', tags: ['Notification Channels'] } },
-        '/v1/cost-tracking/costs': { get: { summary: 'List mission costs', tags: ['Cost Tracking'] }, post: { summary: 'Record cost', tags: ['Cost Tracking'] } },
-        '/v1/cost-tracking/budgets': { get: { summary: 'List cost budgets', tags: ['Cost Tracking'] } },
         '/admin/audit-policies/policies': { get: { summary: 'List audit policies', tags: ['Audit Policies'] }, post: { summary: 'Create audit policy', tags: ['Audit Policies'] } },
         '/admin/audit-policies/violations': { get: { summary: 'List violations', tags: ['Audit Policies'] } },
         '/admin/audit-policies/dashboard': { get: { summary: 'Audit dashboard', tags: ['Audit Policies'] } },
@@ -1671,8 +1681,6 @@ export function createRoutes() {
         '/v1/integrations/integrations': { get: { summary: 'List integrations', tags: ['Integrations'] }, post: { summary: 'Create integration', tags: ['Integrations'] } },
         '/v1/integrations/logs': { get: { summary: 'Integration logs', tags: ['Integrations'] } },
         // Wave 63
-        '/v1/webhook-signatures/signatures': { get: { summary: 'List webhook signatures', tags: ['Webhook Signatures'] }, post: { summary: 'Create signature', tags: ['Webhook Signatures'] } },
-        '/v1/webhook-signatures/verifications': { get: { summary: 'List verifications', tags: ['Webhook Signatures'] } },
         '/v1/retry-policies/policies': { get: { summary: 'List retry policies', tags: ['Retry Policies'] }, post: { summary: 'Create retry policy', tags: ['Retry Policies'] } },
         '/v1/retry-policies/attempts': { get: { summary: 'List retry attempts', tags: ['Retry Policies'] } },
         '/admin/feature-usage/usage': { get: { summary: 'Feature usage stats', tags: ['Feature Usage'] }, post: { summary: 'Record usage', tags: ['Feature Usage'] } },
@@ -1795,6 +1803,18 @@ export function createRoutes() {
         '/admin/incident-management/updates': { get: { summary: 'Incident updates', tags: ['Incident Management'] } },
         '/v1/api-sandbox/sandboxes': { get: { summary: 'List sandboxes', tags: ['API Sandbox'] }, post: { summary: 'Create sandbox', tags: ['API Sandbox'] } },
         '/v1/api-sandbox/requests': { get: { summary: 'Sandbox requests', tags: ['API Sandbox'] } },
+        '/v1/webhook-signatures/keys': { get: { summary: 'List signing keys', tags: ['Webhook Signatures'] }, post: { summary: 'Create key', tags: ['Webhook Signatures'] } },
+        '/v1/webhook-signatures/logs': { get: { summary: 'Signature logs', tags: ['Webhook Signatures'] } },
+        '/v1/cost-tracking/costs': { get: { summary: 'List costs', tags: ['Cost Tracking'] }, post: { summary: 'Record cost', tags: ['Cost Tracking'] } },
+        '/v1/cost-tracking/budgets': { get: { summary: 'Cost budgets', tags: ['Cost Tracking'] } },
+        '/admin/platform-maintenance/windows': { get: { summary: 'List windows', tags: ['Platform Maintenance'] }, post: { summary: 'Create window', tags: ['Platform Maintenance'] } },
+        '/admin/platform-maintenance/notifications': { get: { summary: 'Maintenance notifications', tags: ['Platform Maintenance'] } },
+        '/v1/usage-analytics/analytics': { get: { summary: 'List analytics', tags: ['Usage Analytics'] }, post: { summary: 'Record analytic', tags: ['Usage Analytics'] } },
+        '/v1/usage-analytics/summaries': { get: { summary: 'Usage summaries', tags: ['Usage Analytics'] } },
+        '/admin/tenant-migration/migrations': { get: { summary: 'List migrations', tags: ['Tenant Migration'] }, post: { summary: 'Create migration', tags: ['Tenant Migration'] } },
+        '/admin/tenant-migration/steps': { get: { summary: 'Migration steps', tags: ['Tenant Migration'] } },
+        '/v1/notification-preferences/preferences': { get: { summary: 'List preferences', tags: ['Notification Preferences'] }, post: { summary: 'Create preference', tags: ['Notification Preferences'] } },
+        '/v1/notification-preferences/channels': { get: { summary: 'Notification channels', tags: ['Notification Preferences'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
