@@ -183,6 +183,12 @@ import { platformFeatureUsage } from './platform-feature-usage';
 import { tenantApiThrottling } from './tenant-api-throttling';
 import { adminIncidentResponse } from './admin-incident-response';
 import { tenantExportSchedules } from './tenant-export-schedules';
+import { tenantSessionManagement } from './tenant-session-management';
+import { missionQualityGates } from './mission-quality-gates';
+import { platformResourcePools } from './platform-resource-pools';
+import { tenantApiDocumentation } from './tenant-api-documentation';
+import { adminChangeManagement } from './admin-change-management';
+import { tenantUsageAlerts } from './tenant-usage-alerts';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -419,6 +425,16 @@ export function createRoutes() {
   routes.route('/v1/api-throttling', tenantApiThrottling);
   routes.route('/admin/incident-response', adminIncidentResponse);
   routes.route('/v1/export-schedules', tenantExportSchedules);
+
+  // Wave 65 routes
+  routes.route('/v1/sessions', tenantSessionManagement);
+  routes.route('/v1/quality-gates', missionQualityGates);
+  routes.route('/admin/resource-pools', platformResourcePools);
+
+  // Wave 66 routes
+  routes.route('/v1/api-docs-tenant', tenantApiDocumentation);
+  routes.route('/admin/change-management', adminChangeManagement);
+  routes.route('/v1/usage-alerts', tenantUsageAlerts);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1547,6 +1563,21 @@ export function createRoutes() {
         '/admin/incident-response/dashboard': { get: { summary: 'Incident dashboard', tags: ['Incident Response'] } },
         '/v1/export-schedules/schedules': { get: { summary: 'List export schedules', tags: ['Export Schedules'] }, post: { summary: 'Create schedule', tags: ['Export Schedules'] } },
         '/v1/export-schedules/runs': { get: { summary: 'Export runs', tags: ['Export Schedules'] } },
+        // Wave 65
+        '/v1/sessions/sessions': { get: { summary: 'List sessions', tags: ['Sessions'] }, post: { summary: 'Create session', tags: ['Sessions'] } },
+        '/v1/sessions/events': { get: { summary: 'Session events', tags: ['Sessions'] } },
+        '/v1/quality-gates/gates': { get: { summary: 'List quality gates', tags: ['Quality Gates'] }, post: { summary: 'Create gate', tags: ['Quality Gates'] } },
+        '/v1/quality-gates/evaluations': { get: { summary: 'Gate evaluations', tags: ['Quality Gates'] } },
+        '/admin/resource-pools/pools': { get: { summary: 'List resource pools', tags: ['Resource Pools'] }, post: { summary: 'Create pool', tags: ['Resource Pools'] } },
+        '/admin/resource-pools/allocations': { get: { summary: 'Pool allocations', tags: ['Resource Pools'] } },
+        '/admin/resource-pools/dashboard': { get: { summary: 'Resource dashboard', tags: ['Resource Pools'] } },
+        // Wave 66
+        '/v1/api-docs-tenant/pages': { get: { summary: 'List doc pages', tags: ['API Docs'] }, post: { summary: 'Create doc page', tags: ['API Docs'] } },
+        '/v1/api-docs-tenant/versions': { get: { summary: 'Doc versions', tags: ['API Docs'] } },
+        '/admin/change-management/changes': { get: { summary: 'List changes', tags: ['Change Management'] }, post: { summary: 'Create change', tags: ['Change Management'] } },
+        '/admin/change-management/logs': { get: { summary: 'Change logs', tags: ['Change Management'] } },
+        '/admin/change-management/dashboard': { get: { summary: 'Change dashboard', tags: ['Change Management'] } },
+        '/v1/usage-alerts/triggers': { get: { summary: 'Alert triggers', tags: ['Usage Alerts'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
