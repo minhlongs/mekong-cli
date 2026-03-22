@@ -151,6 +151,8 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 - [x] Wave 41-42 — Enterprise CLI (SLA/audit/tenants/compliance) + White-Label CLI (config/brand/domain/preview)
 - [x] openclaw-agents build fix — skipLibCheck for pg-pool type conflicts
 - [x] 1,100+ tests ALL GREEN across all packages
+- [x] Wave 43-44 — OpenClaw Deep CLI (mission/health/cost/benchmark) — 4 commands, 8 subcommands
+- [x] Wave 45-46 — Sale RaaS Automation CLI (crm/campaign/report/funnel) — 4 commands, 16 subcommands
 
 ---
 
@@ -165,7 +167,7 @@ Updated: 2026-03-21 | Status: EXECUTION (RaaS GTM Phase — Full Stack Complete 
 | npm Packages  | 4        | 4 (ready) |
 | Gateway Waves | 20       | 20        |
 | Test Coverage | 1,000+   | 1,100+    |
-| RaaS Commands | 15       | 35+       |
+| RaaS Commands | 15       | 43+       |
 
 ---
 
