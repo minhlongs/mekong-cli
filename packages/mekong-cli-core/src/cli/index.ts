@@ -36,6 +36,14 @@ import { registerWebhookCommand } from './commands/webhook.js';
 import { registerInsightsCommand } from './commands/analytics-dashboard.js';
 import { registerEnterpriseCommand } from './commands/enterprise.js';
 import { registerWhiteLabelCommand } from './commands/white-label.js';
+import { registerOpenClawMissionCommand } from './commands/openclaw-mission.js';
+import { registerOpenClawHealthCommand } from './commands/openclaw-health.js';
+import { registerOpenClawCostCommand } from './commands/openclaw-cost.js';
+import { registerOpenClawBenchmarkCommand } from './commands/openclaw-benchmark.js';
+import { registerSalesCrmCommand } from './commands/sales-crm.js';
+import { registerSalesCampaignCommand } from './commands/sales-campaign.js';
+import { registerSalesReportCommand } from './commands/sales-report.js';
+import { registerSalesFunnelCommand } from './commands/sales-funnel.js';
 import { attachLicenseMiddleware } from '../license/middleware.js';
 import { LicenseGate } from '../license/gate.js';
 
@@ -104,6 +112,14 @@ export async function main(argv?: string[]): Promise<void> {
   registerInsightsCommand(program);
   registerEnterpriseCommand(program);
   registerWhiteLabelCommand(program);
+  registerOpenClawMissionCommand(program);
+  registerOpenClawHealthCommand(program);
+  registerOpenClawCostCommand(program);
+  registerOpenClawBenchmarkCommand(program);
+  registerSalesCrmCommand(program);
+  registerSalesCampaignCommand(program);
+  registerSalesReportCommand(program);
+  registerSalesFunnelCommand(program);
 
   // Attach license gate middleware (after all commands registered)
   const gate = new LicenseGate();
