@@ -142,6 +142,12 @@ import { missionTemplateLibrary } from './mission-template-library';
 import { tenantApiKeyManagement as tenantApiKeyMgmt } from './tenant-api-key-management';
 import { adminFeatureFlags } from './admin-feature-flags';
 import { tenantResourceQuotas } from './tenant-resource-quotas';
+import { tenantWebhooksV3 } from './tenant-webhooks-v3';
+import { platformServiceMesh } from './platform-service-mesh';
+import { missionSchedulingEngine } from './mission-scheduling-engine';
+import { tenantDataExport } from './tenant-data-export';
+import { adminPlatformConfig } from './admin-platform-config';
+import { apiContractTesting } from './api-contract-testing';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -308,6 +314,16 @@ export function createRoutes() {
   routes.route('/v1/audit-trail', platformAuditTrail);
   routes.route('/admin/feature-flags', adminFeatureFlags);
   routes.route('/v1/resource-quotas', tenantResourceQuotas);
+
+  // Wave 51 routes
+  routes.route('/v1/webhooks-v3', tenantWebhooksV3);
+  routes.route('/admin/service-mesh', platformServiceMesh);
+  routes.route('/v1/scheduling', missionSchedulingEngine);
+
+  // Wave 52 routes
+  routes.route('/v1/data-export', tenantDataExport);
+  routes.route('/admin/platform-config', adminPlatformConfig);
+  routes.route('/admin/contract-testing', apiContractTesting);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1216,6 +1232,53 @@ export function createRoutes() {
         '/v1/resource-quotas/alerts': { get: { summary: 'Quota alerts', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
         '/v1/resource-quotas/alerts/{id}/acknowledge': { post: { summary: 'Acknowledge alert', tags: ['Resource Quotas'], security: [{ bearer: [] }] } },
         '/v1/resource-quotas/admin/overview': { get: { summary: 'Quotas admin', tags: ['Resource Quotas'] } },
+        // Wave 51
+        '/v1/webhooks-v3/subscriptions': { get: { summary: 'List webhook subscriptions', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, post: { summary: 'Create subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/subscriptions/{id}': { get: { summary: 'Get subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, put: { summary: 'Update subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] }, delete: { summary: 'Delete subscription', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/subscriptions/{id}/test': { post: { summary: 'Test webhook', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/subscriptions/{id}/deliveries': { get: { summary: 'Delivery history', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/deliveries/{id}/retry': { post: { summary: 'Retry delivery', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/event-types': { get: { summary: 'Event types', tags: ['Webhooks V3'] } },
+        '/v1/webhooks-v3/stats': { get: { summary: 'Delivery stats', tags: ['Webhooks V3'], security: [{ bearer: [] }] } },
+        '/v1/webhooks-v3/admin/overview': { get: { summary: 'Webhooks admin', tags: ['Webhooks V3'] } },
+        '/admin/service-mesh/services': { get: { summary: 'List services', tags: ['Service Mesh'] }, post: { summary: 'Register service', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/services/{id}': { get: { summary: 'Get service', tags: ['Service Mesh'] }, put: { summary: 'Update service', tags: ['Service Mesh'] }, delete: { summary: 'Deregister', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/services/{id}/health': { post: { summary: 'Health check', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/services/{id}/circuit-breaker': { get: { summary: 'Get breaker', tags: ['Service Mesh'] }, put: { summary: 'Update breaker', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/traffic-rules': { get: { summary: 'Traffic rules', tags: ['Service Mesh'] }, post: { summary: 'Create rule', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/topology': { get: { summary: 'Mesh topology', tags: ['Service Mesh'] } },
+        '/admin/service-mesh/dashboard': { get: { summary: 'Mesh dashboard', tags: ['Service Mesh'] } },
+        '/v1/scheduling/jobs': { get: { summary: 'List scheduled jobs', tags: ['Scheduling'], security: [{ bearer: [] }] }, post: { summary: 'Create job', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}': { get: { summary: 'Get job', tags: ['Scheduling'], security: [{ bearer: [] }] }, put: { summary: 'Update job', tags: ['Scheduling'], security: [{ bearer: [] }] }, delete: { summary: 'Delete job', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}/pause': { post: { summary: 'Pause job', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}/resume': { post: { summary: 'Resume job', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}/trigger': { post: { summary: 'Trigger job', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}/executions': { get: { summary: 'Job executions', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/jobs/{id}/skip-rules': { get: { summary: 'Skip rules', tags: ['Scheduling'], security: [{ bearer: [] }] }, post: { summary: 'Add skip rule', tags: ['Scheduling'], security: [{ bearer: [] }] } },
+        '/v1/scheduling/admin/overview': { get: { summary: 'Scheduling admin', tags: ['Scheduling'] } },
+        // Wave 52
+        '/v1/data-export/exports': { get: { summary: 'List exports', tags: ['Data Export'], security: [{ bearer: [] }] }, post: { summary: 'Request export', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data-export/exports/{id}': { get: { summary: 'Get export', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data-export/exports/{id}/cancel': { post: { summary: 'Cancel export', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data-export/exports/{id}/download': { get: { summary: 'Download export', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data-export/templates': { get: { summary: 'Export templates', tags: ['Data Export'] } },
+        '/v1/data-export/templates/{id}/export': { post: { summary: 'Export from template', tags: ['Data Export'], security: [{ bearer: [] }] } },
+        '/v1/data-export/admin/overview': { get: { summary: 'Export admin', tags: ['Data Export'] } },
+        '/admin/platform-config/configs': { get: { summary: 'List configs', tags: ['Platform Config'] } },
+        '/admin/platform-config/configs/{key}': { get: { summary: 'Get config', tags: ['Platform Config'] }, put: { summary: 'Set config', tags: ['Platform Config'] }, delete: { summary: 'Delete config', tags: ['Platform Config'] } },
+        '/admin/platform-config/configs/{key}/effective': { get: { summary: 'Effective config', tags: ['Platform Config'] } },
+        '/admin/platform-config/configs/{key}/overrides': { get: { summary: 'List overrides', tags: ['Platform Config'] }, post: { summary: 'Set override', tags: ['Platform Config'] } },
+        '/admin/platform-config/configs/{key}/history': { get: { summary: 'Config history', tags: ['Platform Config'] } },
+        '/admin/platform-config/configs/{key}/rollback': { post: { summary: 'Rollback config', tags: ['Platform Config'] } },
+        '/admin/platform-config/dashboard': { get: { summary: 'Config dashboard', tags: ['Platform Config'] } },
+        '/admin/contract-testing/contracts': { get: { summary: 'List contracts', tags: ['Contract Testing'] }, post: { summary: 'Create contract', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/contracts/{id}': { get: { summary: 'Get contract', tags: ['Contract Testing'] }, put: { summary: 'Update contract', tags: ['Contract Testing'] }, delete: { summary: 'Delete contract', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/contracts/{id}/validate': { post: { summary: 'Validate contract', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/contracts/{id}/validations': { get: { summary: 'Validations', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/breaking-changes': { get: { summary: 'Breaking changes', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/breaking-changes/{id}/acknowledge': { post: { summary: 'Acknowledge', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/compliance': { get: { summary: 'Compliance report', tags: ['Contract Testing'] } },
+        '/admin/contract-testing/dashboard': { get: { summary: 'Testing dashboard', tags: ['Contract Testing'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
