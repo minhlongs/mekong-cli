@@ -189,6 +189,12 @@ import { platformResourcePools } from './platform-resource-pools';
 import { tenantApiDocumentation } from './tenant-api-documentation';
 import { adminChangeManagement } from './admin-change-management';
 import { tenantUsageAlerts } from './tenant-usage-alerts';
+import { tenantApiRateQuotas } from './tenant-api-rate-quotas';
+import { missionExecutionMetrics } from './mission-execution-metrics';
+import { platformServiceRegistry } from './platform-service-registry';
+import { tenantDataMasking } from './tenant-data-masking';
+import { adminDeploymentTracking } from './admin-deployment-tracking';
+import { tenantApiGatewayLogs } from './tenant-api-gateway-logs';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -435,6 +441,16 @@ export function createRoutes() {
   routes.route('/v1/api-docs-tenant', tenantApiDocumentation);
   routes.route('/admin/change-management', adminChangeManagement);
   routes.route('/v1/usage-alerts', tenantUsageAlerts);
+
+  // Wave 67 routes
+  routes.route('/v1/api-rate-quotas', tenantApiRateQuotas);
+  routes.route('/v1/execution-metrics', missionExecutionMetrics);
+  routes.route('/admin/service-registry', platformServiceRegistry);
+
+  // Wave 68 routes
+  routes.route('/v1/data-masking', tenantDataMasking);
+  routes.route('/admin/deployment-tracking', adminDeploymentTracking);
+  routes.route('/v1/gateway-logs', tenantApiGatewayLogs);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1578,6 +1594,18 @@ export function createRoutes() {
         '/admin/change-management/logs': { get: { summary: 'Change logs', tags: ['Change Management'] } },
         '/admin/change-management/dashboard': { get: { summary: 'Change dashboard', tags: ['Change Management'] } },
         '/v1/usage-alerts/triggers': { get: { summary: 'Alert triggers', tags: ['Usage Alerts'] } },
+        '/v1/api-rate-quotas/quotas': { get: { summary: 'List rate quotas', tags: ['API Rate Quotas'] }, post: { summary: 'Create rate quota', tags: ['API Rate Quotas'] } },
+        '/v1/api-rate-quotas/usage': { get: { summary: 'Quota usage stats', tags: ['API Rate Quotas'] } },
+        '/v1/execution-metrics/metrics': { get: { summary: 'List execution metrics', tags: ['Execution Metrics'] }, post: { summary: 'Record metric', tags: ['Execution Metrics'] } },
+        '/v1/execution-metrics/aggregates': { get: { summary: 'Execution aggregates', tags: ['Execution Metrics'] } },
+        '/admin/service-registry/services': { get: { summary: 'List services', tags: ['Service Registry'] }, post: { summary: 'Register service', tags: ['Service Registry'] } },
+        '/admin/service-registry/health-checks': { get: { summary: 'Service health checks', tags: ['Service Registry'] } },
+        '/v1/data-masking/policies': { get: { summary: 'List masking policies', tags: ['Data Masking'] }, post: { summary: 'Create masking policy', tags: ['Data Masking'] } },
+        '/v1/data-masking/events': { get: { summary: 'Masking events', tags: ['Data Masking'] } },
+        '/admin/deployment-tracking/deployments': { get: { summary: 'List deployments', tags: ['Deployment Tracking'] }, post: { summary: 'Create deployment', tags: ['Deployment Tracking'] } },
+        '/admin/deployment-tracking/rollbacks': { get: { summary: 'Deployment rollbacks', tags: ['Deployment Tracking'] } },
+        '/v1/gateway-logs/logs': { get: { summary: 'List gateway logs', tags: ['Gateway Logs'] }, post: { summary: 'Record log', tags: ['Gateway Logs'] } },
+        '/v1/gateway-logs/summaries': { get: { summary: 'Log summaries', tags: ['Gateway Logs'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
