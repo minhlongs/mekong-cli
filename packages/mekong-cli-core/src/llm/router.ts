@@ -171,20 +171,20 @@ export class LlmRouter {
         }
       }
 
-      // CF Workers AI from env
-      const cfAccount = process.env.CF_ACCOUNT_ID;
-      const cfToken = process.env.CF_API_TOKEN;
-      if (cfAccount && cfToken) {
-        this.providers.set('cloudflare', new LocalProvider({
-          backend: 'cloudflare-workers-ai',
-          accountId: cfAccount,
-          apiToken: cfToken,
-        }));
-      }
-
       // Always add Ollama as last-resort local fallback
       const ollamaUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
       this.providers.set('ollama', new OllamaProvider(ollamaUrl));
+    }
+
+    // CF Workers AI from env (always check, even if other providers exist)
+    const cfAccount = process.env.CF_ACCOUNT_ID;
+    const cfToken = process.env.CF_API_TOKEN;
+    if (cfAccount && cfToken) {
+      this.providers.set('cloudflare', new LocalProvider({
+        backend: 'cloudflare-workers-ai',
+        accountId: cfAccount,
+        apiToken: cfToken,
+      }));
     }
   }
 
