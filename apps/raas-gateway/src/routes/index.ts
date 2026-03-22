@@ -219,6 +219,12 @@ import { platformTenantScoring } from './platform-tenant-scoring';
 import { tenantCustomMetrics } from './tenant-custom-metrics';
 import { adminPlatformScaling } from './admin-platform-scaling';
 import { tenantNotificationDigest } from './tenant-notification-digest';
+import { tenantApiAccessControl } from './tenant-api-access-control';
+import { missionFeedbackLoop } from './mission-feedback-loop';
+import { platformCostDashboard } from './platform-cost-dashboard';
+import { tenantDataClassification } from './tenant-data-classification';
+import { adminTenantCommunication } from './admin-tenant-communication';
+import { tenantIntegrationTesting } from './tenant-integration-testing';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -515,6 +521,16 @@ export function createRoutes() {
   routes.route('/v1/custom-metrics', tenantCustomMetrics);
   routes.route('/admin/platform-scaling', adminPlatformScaling);
   routes.route('/v1/notification-digest', tenantNotificationDigest);
+
+  // Wave 77 routes
+  routes.route('/v1/access-control', tenantApiAccessControl);
+  routes.route('/v1/feedback-loop', missionFeedbackLoop);
+  routes.route('/admin/cost-dashboard', platformCostDashboard);
+
+  // Wave 78 routes
+  routes.route('/v1/data-classification', tenantDataClassification);
+  routes.route('/admin/tenant-communication', adminTenantCommunication);
+  routes.route('/v1/integration-testing', tenantIntegrationTesting);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1718,6 +1734,18 @@ export function createRoutes() {
         '/admin/platform-scaling/events': { get: { summary: 'Scaling events', tags: ['Platform Scaling'] } },
         '/v1/notification-digest/configs': { get: { summary: 'List digest configs', tags: ['Notification Digest'] }, post: { summary: 'Create config', tags: ['Notification Digest'] } },
         '/v1/notification-digest/deliveries': { get: { summary: 'Digest deliveries', tags: ['Notification Digest'] } },
+        '/v1/access-control/rules': { get: { summary: 'List access rules', tags: ['Access Control'] }, post: { summary: 'Create access rule', tags: ['Access Control'] } },
+        '/v1/access-control/audit': { get: { summary: 'Access audit log', tags: ['Access Control'] } },
+        '/v1/feedback-loop/feedback': { get: { summary: 'List feedback', tags: ['Feedback Loop'] }, post: { summary: 'Submit feedback', tags: ['Feedback Loop'] } },
+        '/v1/feedback-loop/actions': { get: { summary: 'Feedback actions', tags: ['Feedback Loop'] } },
+        '/admin/cost-dashboard/entries': { get: { summary: 'List cost entries', tags: ['Cost Dashboard'] }, post: { summary: 'Create cost entry', tags: ['Cost Dashboard'] } },
+        '/admin/cost-dashboard/budgets': { get: { summary: 'Cost budgets', tags: ['Cost Dashboard'] } },
+        '/v1/data-classification/classifications': { get: { summary: 'List classifications', tags: ['Data Classification'] }, post: { summary: 'Create classification', tags: ['Data Classification'] } },
+        '/v1/data-classification/scans': { get: { summary: 'Classification scans', tags: ['Data Classification'] } },
+        '/admin/tenant-communication/messages': { get: { summary: 'List messages', tags: ['Tenant Communication'] }, post: { summary: 'Send message', tags: ['Tenant Communication'] } },
+        '/admin/tenant-communication/templates': { get: { summary: 'Message templates', tags: ['Tenant Communication'] } },
+        '/v1/integration-testing/configs': { get: { summary: 'List test configs', tags: ['Integration Testing'] }, post: { summary: 'Create test config', tags: ['Integration Testing'] } },
+        '/v1/integration-testing/results': { get: { summary: 'Test results', tags: ['Integration Testing'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
