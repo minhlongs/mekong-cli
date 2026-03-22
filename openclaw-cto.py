@@ -122,16 +122,26 @@ async def main():
             ctx_match = re.findall(r'(\d+)%', output)
             ctx = int(ctx_match[-1]) if ctx_match else 0
 
+            # ALWAYS check last 45 lines for unanswered questions (before idle check)
+            last45 = "
+".join(output.strip().split("
+")[-45:])
+            if "?" in last45 and "❯" in output[-100:]:
+                # Worker asked a question — answer it
+                tail_low = last45.lower()
+                if "push" in tail_low and ("remote" in tail_low or "origin" in tail_low):
+                    send_cmd(pane, "Yes, push to origin main")
+                    log.info(f"P{pane}: ANSWER push")
+                else:
+                    send_cmd(pane, "Yes, proceed with all suggested actions.")
+                    log.info(f"P{pane}: ANSWER yes-proceed")
+                continue
+
             if not is_idle(output):
                 log.info(f"P{pane} ({worker['name']}): WORKING [ctx:{ctx}%]")
                 # Auto-handle dialogs
                 if any(x in output[-200:] for x in ["Enter to select", "Esc to cancel"]):
                     subprocess.run(["tmux", "send-keys", "-t", f"{SESSION}:0.{pane}", "Enter"])
-                # Auto-answer push questions
-                tail_low = output[-500:].lower()
-                if "push" in tail_low and ("remote" in tail_low or "origin" in tail_low) and "?" in tail_low:
-                    send_cmd(pane, "Yes, push to origin main")
-                    log.info(f"P{pane}: AUTO-ANSWER push")
                 continue
 
             if dispatched >= 1:
