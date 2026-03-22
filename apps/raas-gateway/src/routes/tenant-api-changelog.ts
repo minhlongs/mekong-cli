@@ -1,87 +1,108 @@
 /**
- * Tenant API Changelog Routes
- * Per-tenant changelog entries and email subscriptions.
+ * Tenant API Changelog routes
  *
- * GET  /entries        — list changelog entries (auth)
- * POST /entries        — create changelog entry (auth)
- * GET  /subscriptions  — list email subscriptions (auth)
- * GET  /admin/overview — cross-tenant stats (X-Admin-Key)
+ * Tenant (auth required):
+ *   GET  /entries        — list published changelog entries for tenant
+ *   POST /entries        — create a new changelog entry
+ *   GET  /subscriptions  — list subscriptions for tenant
+ *
+ * Admin (X-Admin-Key):
+ *   GET  /admin/overview — platform-wide entry + subscription counts
  */
 
 import { Hono } from 'hono';
-import type { Env } from '../index';
 import { auth, getTenant } from '../middleware/auth';
-import { tenantApiChangelogService } from '../services/tenant-api-changelog-service';
+import { listEntries, createEntry, getSubscriptions, getAdminOverview } from '../services/tenant-api-changelog';
 
-const app = new Hono<{ Bindings: Env }>();
+interface Bindings {
+  DB: D1Database;
+  ADMIN_API_KEY?: string;
+  [key: string]: unknown;
+}
 
-// GET /entries — list changelog entries for authenticated tenant
+const app = new Hono<{ Bindings: Bindings }>();
+
+// ---------------------------------------------------------------------------
+// Tenant routes (auth required)
+// ---------------------------------------------------------------------------
+
+/** GET /entries — list published changelog entries for the authenticated tenant */
 app.get('/entries', auth(), async (c) => {
+  const tenant = getTenant(c);
+  const limit = parseInt(c.req.query('limit') ?? '20', 10);
+  const offset = parseInt(c.req.query('offset') ?? '0', 10);
+
   try {
-    const { tenantId } = getTenant(c);
-    const entries = await tenantApiChangelogService.listEntries(c.env.DB, tenantId);
-    return c.json({ entries, total: entries.length });
-  } catch (err) {
+    const result = await listEntries(c.env.DB, tenant.tenantId, { limit, offset });
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
     return c.json({ error: 'Failed to list changelog entries' }, 500);
   }
 });
 
-// POST /entries — create a new changelog entry for authenticated tenant
+/** POST /entries — create a changelog entry for the authenticated tenant */
 app.post('/entries', auth(), async (c) => {
+  const tenant = getTenant(c);
+
+  let body: Record<string, unknown>;
   try {
-    const { tenantId } = getTenant(c);
-    const body = await c.req.json().catch(() => ({})) as {
-      change_type?: string;
-      endpoint?: string;
-      description?: string;
-      breaking?: number;
-      version?: string;
-    };
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400);
+  }
 
-    const endpoint = body.endpoint?.trim();
-    const description = body.description?.trim();
-    const version = body.version?.trim();
+  const version = body.version as string | undefined;
+  const title = body.title as string | undefined;
+  if (!version || !title) {
+    return c.json({ error: 'version and title are required' }, 400);
+  }
 
-    if (!endpoint)    return c.json({ error: 'endpoint is required', code: 'VALIDATION_ERROR' }, 400);
-    if (!description) return c.json({ error: 'description is required', code: 'VALIDATION_ERROR' }, 400);
-    if (!version)     return c.json({ error: 'version is required', code: 'VALIDATION_ERROR' }, 400);
-
-    const entry = await tenantApiChangelogService.createEntry(c.env.DB, tenantId, {
-      change_type: body.change_type,
-      endpoint,
-      description,
-      breaking: body.breaking,
+  try {
+    const result = await createEntry(c.env.DB, tenant.tenantId, {
       version,
+      title,
+      description: body.description as string | undefined,
+      change_type: body.change_type as string | undefined,
+      published: Boolean(body.published),
     });
-
-    return c.json(entry, 201);
-  } catch (err) {
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data }, 201);
+  } catch {
     return c.json({ error: 'Failed to create changelog entry' }, 500);
   }
 });
 
-// GET /subscriptions — list email subscriptions for authenticated tenant
+/** GET /subscriptions — list changelog subscriptions for the authenticated tenant */
 app.get('/subscriptions', auth(), async (c) => {
+  const tenant = getTenant(c);
+
   try {
-    const { tenantId } = getTenant(c);
-    const subscriptions = await tenantApiChangelogService.getSubscriptions(c.env.DB, tenantId);
-    return c.json({ subscriptions, total: subscriptions.length });
-  } catch (err) {
+    const result = await getSubscriptions(c.env.DB, tenant.tenantId);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
     return c.json({ error: 'Failed to list subscriptions' }, 500);
   }
 });
 
-// GET /admin/overview — cross-tenant stats (X-Admin-Key required)
+// ---------------------------------------------------------------------------
+// Admin route (X-Admin-Key)
+// ---------------------------------------------------------------------------
+
+/** GET /admin/overview — platform-wide changelog stats */
 app.get('/admin/overview', async (c) => {
   const adminKey = c.req.header('X-Admin-Key');
-  if (!adminKey || adminKey !== c.env.ADMIN_API_KEY) {
-    return c.json({ error: 'Forbidden', code: 'FORBIDDEN' }, 403);
+  if (!c.env.ADMIN_API_KEY || adminKey !== c.env.ADMIN_API_KEY) {
+    return c.json({ error: 'Forbidden' }, 403);
   }
+
   try {
-    const overview = await tenantApiChangelogService.getAdminOverview(c.env.DB);
-    return c.json(overview);
-  } catch (err) {
-    return c.json({ error: 'Failed to get admin overview' }, 500);
+    const result = await getAdminOverview(c.env.DB);
+    if (!result.success) return c.json({ error: result.error }, 500);
+    return c.json({ success: true, data: result.data });
+  } catch {
+    return c.json({ error: 'Failed to fetch admin overview' }, 500);
   }
 });
 

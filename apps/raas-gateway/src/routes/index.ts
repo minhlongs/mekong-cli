@@ -195,7 +195,6 @@ import { missionCostOptimization } from './mission-cost-optimization';
 import { platformTenantGrouping } from './platform-tenant-grouping';
 import { adminPlatformAlerts } from './admin-platform-alerts';
 import { tenantWorkflowAutomation } from './tenant-workflow-automation';
-import { tenantApiChangelog } from './tenant-api-changelog';
 import { missionQueuePriority } from './mission-queue-priority';
 import { platformComplianceAudit } from './platform-compliance-audit';
 import { tenantSecretVault } from './tenant-secret-vault';
@@ -273,6 +272,12 @@ import { adminPlatformNotifications } from './admin-platform-notifications';
 import { tenantApiFeatureFlags } from './tenant-api-feature-flags';
 import { adminSystemConfiguration } from './admin-system-configuration';
 import { tenantUsageQuotasManagement } from './tenant-usage-quotas-management';
+import { tenantApiHealthMonitor } from './tenant-api-health-monitor';
+import { missionOutputArtifacts } from './mission-output-artifacts';
+import { adminPlatformUsageReport } from './admin-platform-usage-report';
+import { tenantApiChangelog } from './tenant-api-changelog';
+import { adminPlatformDashboardSummary } from './admin-platform-dashboard-summary';
+import { missionCompletionCertificates } from './mission-completion-certificates';
 import { notFound } from '../utils/response';
 
 export function createRoutes() {
@@ -669,6 +674,16 @@ export function createRoutes() {
   routes.route('/v1/feature-flags-mgmt', tenantApiFeatureFlags);
   routes.route('/admin/system-config', adminSystemConfiguration);
   routes.route('/v1/usage-quotas', tenantUsageQuotasManagement);
+
+  // Wave 99 routes
+  routes.route('/v1/health-monitor', tenantApiHealthMonitor);
+  routes.route('/v1/output-artifacts', missionOutputArtifacts);
+  routes.route('/admin/usage-report', adminPlatformUsageReport);
+
+  // Wave 100 routes — THE FINAL WAVE!
+  routes.route('/v1/api-changelog', tenantApiChangelog);
+  routes.route('/admin/dashboard-summary', adminPlatformDashboardSummary);
+  routes.route('/v1/completion-certificates', missionCompletionCertificates);
 
   // Wave 25-26 routes
   routes.route('/v1/currencies', multiCurrency);
@@ -1975,6 +1990,16 @@ export function createRoutes() {
         '/admin/system-config/history': { get: { summary: 'Config history', tags: ['System Config'] } },
         '/v1/usage-quotas/quotas': { get: { summary: 'List quotas', tags: ['Usage Quotas'] }, post: { summary: 'Create quota', tags: ['Usage Quotas'] } },
         '/v1/usage-quotas/alerts': { get: { summary: 'Quota alerts', tags: ['Usage Quotas'] } },
+        '/v1/health-monitor/monitors': { get: { summary: 'List health monitors', tags: ['Health Monitor'] }, post: { summary: 'Create monitor', tags: ['Health Monitor'] } },
+        '/v1/health-monitor/results': { get: { summary: 'Monitor results', tags: ['Health Monitor'] } },
+        '/v1/output-artifacts/artifacts': { get: { summary: 'List artifacts', tags: ['Output Artifacts'] }, post: { summary: 'Create artifact', tags: ['Output Artifacts'] } },
+        '/v1/output-artifacts/downloads': { get: { summary: 'Artifact downloads', tags: ['Output Artifacts'] } },
+        '/admin/usage-report/reports': { get: { summary: 'List usage reports', tags: ['Usage Report'] }, post: { summary: 'Create report', tags: ['Usage Report'] } },
+        '/admin/usage-report/sections': { get: { summary: 'Report sections', tags: ['Usage Report'] } },
+        '/admin/dashboard-summary/widgets': { get: { summary: 'List dashboard widgets', tags: ['Dashboard Summary'] }, post: { summary: 'Create widget', tags: ['Dashboard Summary'] } },
+        '/admin/dashboard-summary/snapshots': { get: { summary: 'Dashboard snapshots', tags: ['Dashboard Summary'] } },
+        '/v1/completion-certificates/certificates': { get: { summary: 'List certificates', tags: ['Completion Certificates'] }, post: { summary: 'Create certificate', tags: ['Completion Certificates'] } },
+        '/v1/completion-certificates/templates': { get: { summary: 'Certificate templates', tags: ['Completion Certificates'] } },
       },
       components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer' }, apiKey: { type: 'apiKey', in: 'header', name: 'X-API-Key' } } },
     });
