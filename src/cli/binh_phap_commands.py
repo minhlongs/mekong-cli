@@ -161,3 +161,14 @@ def immortal() -> None:
 def monitor() -> None:
     """Alias for immortal."""
     run_immortal_loop()
+
+
+@app.command()
+def daemon(
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Show actions without executing"),
+    cycles: int = typer.Option(0, help="Max cycles (0=infinite)"),
+    interval: int = typer.Option(10, help="Seconds between cycles"),
+) -> None:
+    """CTO Daemon: Autonomous 3D topology dispatch loop for M1 Max."""
+    from src.binh_phap.cto_daemon import run_daemon
+    run_daemon(dry_run=dry_run, max_cycles=cycles, interval_seconds=interval)
