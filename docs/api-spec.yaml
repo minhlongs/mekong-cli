@@ -1,0 +1,1324 @@
+openapi: 3.0.3
+info:
+  title: Mekong Engine API
+  description: |
+    AI-operated business platform API with RaaS (Agent-as-a-Service) architecture.
+    
+    ## Authentication
+    All API requests require Bearer token authentication using tenant API keys.
+    
+    ## Credit System
+    Most endpoints consume MCU (Mission Control Unit) credits based on operation complexity.
+  version: 5.0.0
+  license:
+    name: MIT
+  contact:
+    name: Mekong CLI
+
+servers:
+  - url: https://api.mekong.engine
+    description: Production
+  - url: http://localhost:8787
+    description: Local Development
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: tasks
+    description: Mission execution with credit metering and SSE streaming
+  - name: agents
+    description: Agent execution (git, file, shell, lead-hunter, content-writer, recipe-crawler)
+  - name: billing
+    description: Tenant creation, API keys, Polar.sh webhook handling
+  - name: chat
+    description: Zalo OA and Facebook Messenger webhooks
+  - name: content
+    description: AI content generation
+  - name: crm
+    description: Contact management, remarketing campaigns
+  - name: settings
+    description: LLM provider configuration (BYOK - Bring Your Own Key)
+  - name: reports
+    description: Analytics with AI summaries
+  - name: onboarding
+    description: 4-step tenant onboarding flow
+  - name: payment-vn
+    description: Vietnamese payment integration (MoMo, VNPAY)
+  - name: governance
+    description: Stakeholders, proposals, voting, reputation, Ngũ Sự framework
+  - name: ledger
+    description: Double-entry accounting transfers, topups, balance queries
+  - name: equity
+    description: Equity management, cap tables, SAFE note conversion
+  - name: revenue
+    description: Revenue split distribution (Binh Pháp tam giác ngược)
+  - name: funding
+    description: Quadratic funding rounds and calculations
+  - name: matching
+    description: Stakeholder matching algorithm
+  - name: conflicts
+    description: 5-level conflict resolution system
+  - name: decentralization
+    description: 4-phase progressive power transfer
+  - name: rbac
+    description: Role-based access control policy checking
+
+paths:
+  /v1/tasks:
+    get:
+      tags: [tasks]
+      summary: List all tasks
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+    post:
+      tags: [tasks]
+      summary: Create and execute a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [goal]
+              properties:
+                goal:
+                  type: string
+                  description: Task objective
+                params:
+                  type: object
+                  description: Task parameters
+                stream:
+                  type: boolean
+                  description: Enable SSE streaming
+      responses:
+        '202':
+          description: Task accepted for execution
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, running, completed, failed]
+
+  /v1/tasks/{taskId}:
+    get:
+      tags: [tasks]
+      summary: Get task status and results
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /v1/agents:
+    get:
+      tags: [agents]
+      summary: List available agents
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Agent'
+
+  /v1/agents/{name}/run:
+    post:
+      tags: [agents]
+      summary: Execute an agent
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [git, file, shell, lead-hunter, content-writer, recipe-crawler]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  description: Command to execute
+                params:
+                  type: object
+                  description: Command parameters
+      responses:
+        '202':
+          description: Agent execution queued
+        '404':
+          description: Agent not found
+
+  /v1/tenants:
+    post:
+      tags: [billing]
+      summary: Create a new tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                plan:
+                  type: string
+                  enum: [free, starter, pro, enterprise]
+      responses:
+        '201':
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+
+  /v1/tenants/{id}/api-keys:
+    post:
+      tags: [billing]
+      summary: Generate new API key for tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: API key generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key:
+                    type: string
+                  key_id:
+                    type: string
+
+  /v1/billing/webhooks/polar:
+    post:
+      tags: [billing]
+      summary: Polar.sh webhook handler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed
+
+  /v1/channels/zalo/oa:
+    post:
+      tags: [chat]
+      summary: Zalo OA webhook handler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Message processed
+
+  /v1/channels/facebook/messenger:
+    post:
+      tags: [chat]
+      summary: Facebook Messenger webhook handler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Message processed
+
+  /v1/content/generate:
+    post:
+      tags: [content]
+      summary: Generate AI content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, prompt]
+              properties:
+                type:
+                  type: string
+                  enum: [social_post, blog, email, ad_copy]
+                prompt:
+                  type: string
+                tone:
+                  type: string
+                length:
+                  type: string
+      responses:
+        '200':
+          description: Generated content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+
+  /v1/crm/contacts:
+    get:
+      tags: [crm]
+      summary: List contacts
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+    post:
+      tags: [crm]
+      summary: Create contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Contact created
+
+  /v1/crm/remarketing:
+    post:
+      tags: [crm]
+      summary: Create remarketing campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, audience]
+              properties:
+                name:
+                  type: string
+                audience:
+                  type: object
+                message:
+                  type: string
+      responses:
+        '201':
+          description: Campaign created
+
+  /v1/settings/llm:
+    get:
+      tags: [settings]
+      summary: Get LLM provider settings
+      responses:
+        '200':
+          description: LLM configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LLMConfig'
+    post:
+      tags: [settings]
+      summary: Update LLM provider settings (BYOK)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                api_key:
+                  type: string
+                base_url:
+                  type: string
+                model:
+                  type: string
+      responses:
+        '200':
+          description: Settings updated
+
+  /v1/reports/analytics:
+    get:
+      tags: [reports]
+      summary: Get analytics report
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month, year]
+      responses:
+        '200':
+          description: Analytics report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+
+  /v1/onboarding/status:
+    get:
+      tags: [onboarding]
+      summary: Get onboarding progress
+      responses:
+        '200':
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  step:
+                    type: integer
+                  completed:
+                    type: boolean
+                  steps:
+                    type: array
+                    items:
+                      type: string
+
+  /v1/onboarding/profile:
+    post:
+      tags: [onboarding]
+      summary: Step 1 - Save business profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [business_name]
+              properties:
+                business_name:
+                  type: string
+                industry:
+                  type: string
+                address:
+                  type: string
+                phone:
+                  type: string
+                hours:
+                  type: string
+                logo_url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Profile saved
+
+  /v1/onboarding/channel:
+    post:
+      tags: [onboarding]
+      summary: Step 2 - Connect channel (Zalo/FB)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, external_id]
+              properties:
+                type:
+                  type: string
+                  enum: [zalo_oa, facebook_page]
+                external_id:
+                  type: string
+                access_token:
+                  type: string
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Channel connected
+
+  /v1/onboarding/menu:
+    post:
+      tags: [onboarding]
+      summary: Step 3 - Upload menu + auto-generate FAQ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [menu_data]
+              properties:
+                menu_data:
+                  type: object
+      responses:
+        '200':
+          description: Menu uploaded, FAQ generated
+
+  /v1/onboarding/activate:
+    post:
+      tags: [onboarding]
+      summary: Step 4 - Complete onboarding
+      responses:
+        '200':
+          description: Onboarding complete
+
+  /v1/payment-vn/create:
+    post:
+      tags: [payment-vn]
+      summary: Create payment URL (MoMo/VNPAY)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, tenant_id, amount, credits]
+              properties:
+                method:
+                  type: string
+                  enum: [momo, vnpay]
+                tenant_id:
+                  type: string
+                plan:
+                  type: string
+                amount:
+                  type: number
+                credits:
+                  type: integer
+      responses:
+        '200':
+          description: Payment URL created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment_url:
+                    type: string
+                    format: uri
+
+  /v1/payment-vn/momo/ipn:
+    post:
+      tags: [payment-vn]
+      summary: MoMo Instant Payment Notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Payment processed
+
+  /v1/payment-vn/vnpay/ipn:
+    get:
+      tags: [payment-vn]
+      summary: VNPAY Return + IPN handler
+      parameters:
+        - name: vnp_ResponseCode
+          in: query
+          schema:
+            type: string
+        - name: vnp_OrderInfo
+          in: query
+          schema:
+            type: string
+        - name: vnp_TxnRef
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment processed
+
+  /v1/payment-vn/pricing-vn:
+    get:
+      tags: [payment-vn]
+      summary: Get VND pricing tiers
+      responses:
+        '200':
+          description: Pricing tiers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tiers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PricingTier'
+
+  /v1/governance/stakeholders:
+    get:
+      tags: [governance]
+      summary: List stakeholders
+      responses:
+        '200':
+          description: List of stakeholders
+    post:
+      tags: [governance]
+      summary: Add stakeholder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, role]
+              properties:
+                name:
+                  type: string
+                role:
+                  type: string
+                stake:
+                  type: number
+      responses:
+        '201':
+          description: Stakeholder added
+
+  /v1/governance/proposals:
+    get:
+      tags: [governance]
+      summary: List proposals
+      responses:
+        '200':
+          description: List of proposals
+    post:
+      tags: [governance]
+      summary: Create proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                type:
+                  type: string
+      responses:
+        '201':
+          description: Proposal created
+
+  /v1/governance/proposals/{id}/vote:
+    post:
+      tags: [governance]
+      summary: Vote on proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vote]
+              properties:
+                vote:
+                  type: string
+                  enum: [for, against, abstain]
+      responses:
+        '200':
+          description: Vote recorded
+
+  /v1/ledger/accounts:
+    get:
+      tags: [ledger]
+      summary: List ledger accounts
+      responses:
+        '200':
+          description: List of accounts
+    post:
+      tags: [ledger]
+      summary: Create ledger account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, account_type]
+              properties:
+                code:
+                  type: string
+                account_type:
+                  type: string
+                  enum: [asset, liability, equity, revenue, expense]
+      responses:
+        '201':
+          description: Account created
+
+  /v1/ledger/transfer:
+    post:
+      tags: [ledger]
+      summary: Execute double-entry transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to, amount, description]
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                amount:
+                  type: number
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Transfer executed
+
+  /v1/ledger/topup:
+    post:
+      tags: [ledger]
+      summary: Top up tenant credits
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [account, amount]
+              properties:
+                account:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: Top up completed
+
+  /v1/ledger/balance:
+    get:
+      tags: [ledger]
+      summary: Query account balance
+      parameters:
+        - name: account
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account balance
+
+  /v1/equity/entities:
+    get:
+      tags: [equity]
+      summary: List equity entities
+      responses:
+        '200':
+          description: List of entities
+    post:
+      tags: [equity]
+      summary: Create equity entity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+      responses:
+        '201':
+          description: Entity created
+
+  /v1/equity/grants:
+    post:
+      tags: [equity]
+      summary: Create equity grant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity_id, recipient_id, shares]
+              properties:
+                entity_id:
+                  type: string
+                recipient_id:
+                  type: string
+                shares:
+                  type: integer
+                vesting_months:
+                  type: integer
+      responses:
+        '201':
+          description: Grant created
+
+  /v1/equity/cap-table/{entityId}:
+    get:
+      tags: [equity]
+      summary: Get cap table for entity
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cap table
+
+  /v1/equity/safe:
+    post:
+      tags: [equity]
+      summary: Create SAFE note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entity_id, principal_amount]
+              properties:
+                entity_id:
+                  type: string
+                principal_amount:
+                  type: number
+                valuation_cap:
+                  type: number
+                discount_rate:
+                  type: number
+      responses:
+        '201':
+          description: SAFE created
+
+  /v1/equity/safe/{id}/convert:
+    post:
+      tags: [equity]
+      summary: Convert SAFE to equity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [price_per_share]
+              properties:
+                price_per_share:
+                  type: number
+      responses:
+        '200':
+          description: SAFE converted
+
+  /v1/revenue/split:
+    post:
+      tags: [revenue]
+      summary: Execute revenue split (6-way distribution)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total_credits, customer_account, description]
+              properties:
+                total_credits:
+                  type: number
+                customer_account:
+                  type: string
+                expert_account:
+                  type: string
+                developer_account:
+                  type: string
+                description:
+                  type: string
+                split_override:
+                  type: object
+      responses:
+        '201':
+          description: Split executed
+
+  /v1/revenue/split-config:
+    get:
+      tags: [revenue]
+      summary: Get current split percentages
+      responses:
+        '200':
+          description: Split configuration
+
+  /v1/revenue/summary:
+    get:
+      tags: [revenue]
+      summary: Revenue summary by account
+      responses:
+        '200':
+          description: Revenue summary
+
+  /v1/funding/rounds:
+    get:
+      tags: [funding]
+      summary: List funding rounds
+      responses:
+        '200':
+          description: List of rounds
+    post:
+      tags: [funding]
+      summary: Create funding round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, matching_pool]
+              properties:
+                title:
+                  type: string
+                matching_pool:
+                  type: number
+                duration_days:
+                  type: integer
+      responses:
+        '201':
+          description: Round created
+
+  /v1/funding/projects:
+    post:
+      tags: [funding]
+      summary: Create project in funding round
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [round_id, name]
+              properties:
+                round_id:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Project created
+
+  /v1/funding/contribute:
+    post:
+      tags: [funding]
+      summary: Contribute to project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, stakeholder_id, amount]
+              properties:
+                project_id:
+                  type: string
+                stakeholder_id:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: Contribution recorded
+
+  /v1/funding/rounds/{id}/calculate:
+    post:
+      tags: [funding]
+      summary: Calculate quadratic funding distribution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: QF calculation results
+
+  /v1/matching/profiles:
+    get:
+      tags: [matching]
+      summary: List matching profiles
+      responses:
+        '200':
+          description: List of profiles
+    post:
+      tags: [matching]
+      summary: Create matching profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skills, industry]
+              properties:
+                skills:
+                  type: array
+                  items:
+                    type: string
+                industry:
+                  type: string
+                reputation:
+                  type: number
+      responses:
+        '201':
+          description: Profile created
+
+  /v1/matching/requests:
+    get:
+      tags: [matching]
+      summary: List matching requests
+      responses:
+        '200':
+          description: List of requests
+    post:
+      tags: [matching]
+      summary: Create matching request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skills_needed]
+              properties:
+                skills_needed:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Request created
+
+  /v1/matching/matches:
+    patch:
+      tags: [matching]
+      summary: Update match status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Match updated
+
+  /v1/conflicts:
+    get:
+      tags: [conflicts]
+      summary: List conflicts
+      responses:
+        '200':
+          description: List of conflicts
+    post:
+      tags: [conflicts]
+      summary: Create conflict case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, parties]
+              properties:
+                title:
+                  type: string
+                parties:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Conflict created
+
+  /v1/conflicts/{id}/resolve:
+    post:
+      tags: [conflicts]
+      summary: Resolve conflict at specified level
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resolution_level:
+                  type: integer
+                  enum: [1, 2, 3, 4, 5]
+                resolution:
+                  type: string
+      responses:
+        '200':
+          description: Conflict resolved
+
+  /v1/decentralization/status:
+    get:
+      tags: [decentralization]
+      summary: Get decentralization phase status
+      responses:
+        '200':
+          description: Current phase and power distribution
+
+  /v1/decentralization/transfer:
+    post:
+      tags: [decentralization]
+      summary: Execute power transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                percentage:
+                  type: number
+      responses:
+        '200':
+          description: Transfer executed
+
+  /v1/rbac/policies:
+    get:
+      tags: [rbac]
+      summary: List RBAC policies
+      responses:
+        '200':
+          description: List of policies
+
+  /v1/rbac/check:
+    post:
+      tags: [rbac]
+      summary: Check permission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stakeholder_id, resource, action]
+              properties:
+                stakeholder_id:
+                  type: string
+                resource:
+                  type: string
+                action:
+                  type: string
+      responses:
+        '200':
+          description: Permission check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allowed:
+                    type: boolean
+                  reason:
+                    type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Tenant API key
+
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        goal:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        result:
+          type: object
+
+    Agent:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        plan:
+          type: string
+        credits:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    PricingTier:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price_vnd:
+          type: integer
+        credits:
+          type: integer
+        description:
+          type: string
+
+    Content:
+      type: object
+      properties:
+        type:
+          type: string
+        content:
+          type: string
+        tokens_used:
+          type: integer
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    LLMConfig:
+      type: object
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        base_url:
+          type: string
+
+    Report:
+      type: object
+      properties:
+        period:
+          type: string
+        metrics:
+          type: object
+        ai_summary:
+          type: string
