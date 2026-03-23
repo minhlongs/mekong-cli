@@ -1,4 +1,0 @@
-description = "Dev review command. Delegates to worker level."
-[steps]
-[steps.run]
-command = "mekong dev-review {{args}}"

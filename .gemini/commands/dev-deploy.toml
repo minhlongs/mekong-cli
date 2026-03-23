@@ -1,4 +1,0 @@
-description = "Dev deploy command. Delegates to worker level."
-[steps]
-[steps.run]
-command = "mekong dev-deploy {{args}}"

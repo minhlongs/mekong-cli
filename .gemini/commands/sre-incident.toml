@@ -1,4 +1,0 @@
-description = "SRE incident — triage, mitigate, verify, report in 10 min"
-[steps]
-[steps.run]
-command = "mekong sre-incident {{args}}"

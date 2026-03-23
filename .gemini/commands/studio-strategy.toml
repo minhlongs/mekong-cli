@@ -1,4 +1,0 @@
-description = "Strategic planning session. 8 credits, ~30 min."
-[steps]
-[steps.run]
-command = "mekong studio-strategy {{args}}"

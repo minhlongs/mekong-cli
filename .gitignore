@@ -103,9 +103,27 @@ Thumbs.db
 .anthropic/
 .opencode/
 .ag_proxies/
+.agencyos/
+.agent/
+.openclaw/
+.openclaw-config.json
 .warp_config.json
 .tom_hum_state.json
 *.cto-scan-state.json
+.turboignore
+.dockerignore
+.editorconfig
+.flake8
+.python-version
+.eslintignore
+.npmrc
+.pre-commit-config.yaml
+.gitmodules
+CHANGELOG.md
+FORK.md
+poetry.lock
+uv.lock
+/config/
 
 # Open Core - Private Business Strategy (Binh Pháp)
 plans/internal/

@@ -1,4 +1,0 @@
-description = "Break task and delegate to dev level. 3 credits, ~10 min."
-[steps]
-[steps.run]
-command = "mekong pm-delegate {{args}}"

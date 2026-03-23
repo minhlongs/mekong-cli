@@ -1,3 +1,0 @@
-# Ignore nested skill directories in workspaces
-**/.claude/skills/**
-**/.opencode/skills/**

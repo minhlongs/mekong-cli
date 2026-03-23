@@ -1,4 +1,0 @@
-description = "Resume analysis, score candidates, interview questions. 2 commands, ~8 min."
-[steps]
-[steps.run]
-command = "mekong recruiter-screen {{args}}"

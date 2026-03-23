@@ -1,4 +1,0 @@
-description = "Frontend responsive fix — audit breakpoints, fix issues, test viewports in 8 min"
-[steps]
-[steps.run]
-command = "mekong frontend-responsive-fix {{args}}"
