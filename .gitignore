@@ -361,6 +361,36 @@ apps/api/
 apps/developers/
 AGENTS.md
 
+# Vietnamese / obsolete docs (not useful for devs)
+HIEN-PHAP-*.md
+HUONG-DAN-*.md
+HEARTBEAT*.md
+IMPLEMENTATION-SPEC-*.md
+SOUL.md
+ROIAAS-ROADMAP.md
+LICENSING-FAQ.md
+doanh-trai-*.sh
+cto-daemon*.sh
+m1-cooler.sh
+monitor-all.sh
+api-switch.sh
+raas-sales-gen.sh
+brain_think.py
+byteplus-*.js
+openclaw-cto.py
+sales_deck_raas.md
+litellm_config.yaml
+
+# Junk directories (not public)
+generated-sales-deck/
+sales-templates/
+sales/
+sops/
+constitution/
+design-assets/
+frontend/
+reports/
+
 # Internal scripts & runtime
 GEMINI.md
 README.vi.md
@@ -381,12 +411,7 @@ antigravity/
 /config/
 !config/cto-config.json
 docker/
-<<<<<<< HEAD
 lib/
-# (cleaned: sophia-proposal is private)
-=======
-/lib/
->>>>>>> origin/main
 locales/
 # mekong/ — tracked (core namespace)
 # templates/ — tracked for business SOPs
