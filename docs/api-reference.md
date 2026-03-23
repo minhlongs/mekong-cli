@@ -33,9 +33,8 @@
 - [Database Schema](#database-schema)
 - [SDK Examples](#sdk-examples)
 
-<<<<<<< HEAD
 ---
-=======
+
 Response:
 ```json
 {"status": "ok", "version": "1.0.0", "engine": "Plan-Execute-Verify"}
@@ -354,7 +353,6 @@ Check if a goal passes governance rules.
 
 ### GET /governance/audit
 View governance audit log.
->>>>>>> 19db995ffa7172913d930f4f52fca3caf89a364b
 
 ## Authentication
 
