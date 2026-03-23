@@ -394,6 +394,14 @@ class RecipeOrchestrator:
         self._heartbeat_interval = 30  # seconds
         self._last_heartbeat: float | None = None
 
+        # Binh Phap 3D Topology integration
+        self._binh_phap = None
+        try:
+            from .binh_phap_dispatcher import BinhPhapDispatcher
+            self._binh_phap = BinhPhapDispatcher()
+        except Exception:
+            logger.debug("Binh Phap dispatcher not available")
+
         # AGI v2 module wiring
         self._reflection = self._init_agi_module(
             "src.core.reflection", "ReflectionEngine")
@@ -702,6 +710,18 @@ class RecipeOrchestrator:
         goal_start_time = time.time()
         self.telemetry.start_trace(goal)
 
+        # Binh Phap: log topology context if available
+        if self._binh_phap:
+            try:
+                bp_status = self._binh_phap.get_status()
+                self.console.print(
+                    f"[dim]Binh Phap: {bp_status['dimension']} | "
+                    f"next=/{bp_status['next_command']} | "
+                    f"cycle={bp_status['cycle']}[/dim]"
+                )
+            except Exception:
+                pass
+
         # NLU Phase
         intent_result = self.nlu.classify(goal)
         if intent_result.confidence > 0.7 and intent_result.suggested_recipe:
@@ -767,6 +787,19 @@ class RecipeOrchestrator:
             recipe_used=result.recipe.name if result.recipe else "",
         )
         self.memory.record(entry)
+
+        # Binh Phap: feed result back to topology engine
+        if self._binh_phap:
+            try:
+                cmd = result.recipe.name if result.recipe else goal[:20]
+                self._binh_phap.report_result(
+                    command=cmd,
+                    success=result.status == OrchestrationStatus.SUCCESS,
+                    duration_ms=int((time.time() - goal_start_time) * 1000),
+                    error=result.errors[0] if result.errors else "",
+                )
+            except Exception:
+                pass
 
         # ROIaaS Phase 6: Check if all phases are operational after successful workflow
         if result.status == OrchestrationStatus.SUCCESS:
