@@ -1,39 +1,65 @@
-# Quickstart — Fork Your Own AI Agency
+# Quickstart
 
-## 5 phút setup
+Get running in under 5 minutes.
 
-1. **Clone:**
+## Option A: Full Platform (clone)
+
 ```bash
-git clone https://github.com/longtho638-jpg/mekong-cli.git my-agency
-cd my-agency
+git clone https://github.com/longtho638-jpg/mekong-cli.git
+cd mekong-cli
+source scripts/shell-init.sh    # Adds 'mekong' aliases to your shell
 ```
 
-2. **Install:**
-```bash
-make setup
-```
+Configure your LLM (pick one):
 
-3. **Configure LLM (chọn 1):**
 ```bash
-# Option A: OpenRouter ($5 free signup)
-echo 'LLM_BASE_URL=https://openrouter.ai/api/v1' >> .env
-echo 'LLM_API_KEY=sk-or-v1-yourkey' >> .env
-echo 'LLM_MODEL=anthropic/claude-sonnet-4' >> .env
+# OpenRouter (easiest, $5 free credit on signup)
+export LLM_BASE_URL=https://openrouter.ai/api/v1
+export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_MODEL=anthropic/claude-sonnet-4
 
-# Option B: Ollama (free, local)
-curl -fsSL https://ollama.ai/install.sh | sh
+# Or: Ollama (free, runs locally)
 ollama pull qwen2.5-coder
-echo 'OLLAMA_BASE_URL=http://localhost:11434/v1' >> .env
+export LLM_BASE_URL=http://localhost:11434/v1
 ```
 
-4. **Verify:**
+Run your first command:
+
 ```bash
-mekong cook "Create hello.py"
+mekong cook "Create a Python REST API with FastAPI"
 ```
 
-5. **Scaffold your project:**
+## Option B: SDK Only (npm)
+
 ```bash
-bash mekong/infra/scaffold.sh myproject startup
+npm install @mekongcli/openclaw-engine
 ```
 
-## Done. You have an AI agency.
+```typescript
+import { OpenClawEngine } from '@mekongcli/openclaw-engine';
+
+const engine = new OpenClawEngine();
+const complexity = engine.classifyComplexity("Deploy microservice");
+const result = await engine.submitMission({
+  goal: "Create user auth system",
+  layer: "engineering",
+});
+```
+
+## Verify Setup
+
+```bash
+# Check mekong is available
+mekong status
+
+# Run tests (optional)
+cd packages/mekong-cli-core && pnpm test   # 1,263 TS tests
+python3 -m pytest tests/ -q                 # 4,450 Python tests
+```
+
+## Next Steps
+
+- Run `mekong help` to see all 300+ commands
+- Try `mekong plan "your feature idea"` to generate an implementation plan
+- Try `mekong founder:validate "your business idea"` for PMF analysis
+- See [README.md](README.md) for full documentation

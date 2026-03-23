@@ -636,3 +636,7 @@ packages/integrations/
 packages/vibe/
 packages/ui/
 packages/mekong-docs/
+
+# WIP packages (not ready for public)
+packages/core/
+public/
