@@ -22,6 +22,12 @@ from src.binh_phap.reactions import (
     ReactionEngine,
 )
 
+from src.core.binh_phap_escalation import (
+    ESCALATION_PROVIDERS,
+    resolve_llm_provider,
+    create_provider_for_level,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -191,6 +197,52 @@ class BinhPhapDispatcher:
 
         event = Event(type=event_type, source=src, data=data or {})
         return self.reactions.react(event)
+
+    def get_llm_for_command(self, command: str) -> dict[str, Any]:
+        """Get LLM provider config for a command based on escalation level.
+
+        Returns dict with: base_url, model, provider_name, escalation_level.
+        """
+        llm_level = self.topology.get_llm_provider(command)
+        config = resolve_llm_provider(llm_level)
+        config["escalation_level"] = llm_level
+        return config
+
+    def create_llm_client_for_command(self, command: str) -> Any:
+        """Create an LLMClient configured for the right escalation level.
+
+        Returns LLMClient with provider matching the command's escalation.
+        Falls back to default LLMClient if provider creation fails.
+        """
+        try:
+            from .llm_client import LLMClient
+        except ImportError:
+            return None
+
+        llm_level = self.topology.get_llm_provider(command)
+        provider = create_provider_for_level(llm_level)
+
+        if provider:
+            return LLMClient(providers=[provider])
+
+        # Fallback: if local MLX fails, try ollama fallback
+        if llm_level == "local_mlx":
+            config = resolve_llm_provider(llm_level)
+            try:
+                from .providers import OpenAICompatibleProvider
+                fallback = OpenAICompatibleProvider(
+                    base_url=config.get("fallback_url", "http://localhost:11434/v1"),
+                    api_key="local",
+                    model=config.get("fallback_model", "qwen2.5-coder:32b"),
+                    provider_name=config.get("fallback_name", "ollama-fallback"),
+                    timeout=120,
+                )
+                return LLMClient(providers=[fallback])
+            except Exception:
+                pass
+
+        # Final fallback: default env-based client
+        return LLMClient()
 
     def get_status(self) -> dict[str, Any]:
         """Get current topology status for dashboard/CLI."""

@@ -91,3 +91,51 @@ class TestBinhPhapDispatcher:
         actions = d.handle_event("unknown.event.type")
         assert len(actions) == 1
         assert actions[0]["commands"] == []
+
+
+class TestEscalationRouting:
+    """Test LLM escalation routing — local_mlx → cloud_sonnet → cloud_opus."""
+
+    def test_resolve_local_mlx(self) -> None:
+        from src.core.binh_phap_escalation import resolve_llm_provider
+        config = resolve_llm_provider("local_mlx")
+        assert "11435" in config["base_url"]
+        assert config["provider_name"] == "m1max-mlx"
+        assert "fallback_url" in config
+
+    def test_resolve_cloud_sonnet(self) -> None:
+        from src.core.binh_phap_escalation import resolve_llm_provider
+        config = resolve_llm_provider("cloud_sonnet")
+        assert "anthropic" in config["base_url"]
+        assert "sonnet" in config["model"]
+
+    def test_resolve_cloud_opus(self) -> None:
+        from src.core.binh_phap_escalation import resolve_llm_provider
+        config = resolve_llm_provider("cloud_opus")
+        assert "anthropic" in config["base_url"]
+        assert "opus" in config["model"]
+
+    def test_resolve_unknown_defaults_to_local(self) -> None:
+        from src.core.binh_phap_escalation import resolve_llm_provider
+        config = resolve_llm_provider("unknown_level")
+        assert config["provider_name"] == "m1max-mlx"
+
+    def test_get_llm_for_command(self, tmp_company: str) -> None:
+        from src.core.binh_phap_dispatcher import BinhPhapDispatcher
+        d = BinhPhapDispatcher(company_json=tmp_company)
+        # standup = AUTONOMOUS → local_mlx
+        config = d.get_llm_for_command("standup")
+        assert config["escalation_level"] == "local_mlx"
+        # launch = APPROVE → cloud_sonnet
+        config = d.get_llm_for_command("launch")
+        assert config["escalation_level"] == "cloud_sonnet"
+        # pivot = STRATEGIC → cloud_opus
+        config = d.get_llm_for_command("pivot")
+        assert config["escalation_level"] == "cloud_opus"
+
+    def test_escalation_provider_configs_complete(self) -> None:
+        from src.core.binh_phap_escalation import ESCALATION_PROVIDERS
+        for level, config in ESCALATION_PROVIDERS.items():
+            assert "base_url" in config, f"{level} missing base_url"
+            assert "model" in config, f"{level} missing model"
+            assert "provider_name" in config, f"{level} missing provider_name"
