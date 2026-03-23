@@ -7,8 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mekong-cli/mekong-cli.git",
+    "url": "https://github.com/longtho638-jpg/mekong-cli.git",
     "directory": "packages/mekong-cli-core"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": ["mekong", "cli", "ai-agents", "business-automation", "raas", "openclaw"],
   "bin": {
