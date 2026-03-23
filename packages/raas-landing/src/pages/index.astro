@@ -2,31 +2,31 @@
 import BaseLayout from '../layouts/base-layout.astro';
 
 const features = [
-  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.', outcome: 'Không còn khách chờ đợi → tăng tỷ lệ chốt đơn 40%' },
-  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.', outcome: 'Đăng bài đều đặn → tăng reach 2.3x, không tốn thời gian nghĩ ý tưởng' },
-  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.', outcome: 'Khách cũ quay lại 2.3x nhiều hơn → tăng LTV đáng kể' },
-  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.', outcome: 'Ra quyết định dựa trên data → tối ưu chi tiêu marketing 35%' },
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Không bao giờ bỏ lỡ tin nhắn nữa — AI trả lời Zalo & Facebook trong vòng 3 giây, 24/7, kể cả 2 giờ sáng khi bạn đang ngủ.', outcome: '→ Chốt đơn ngay lập tức, tăng conversion 40%' },
+  { icon: '✍️', title: 'Content Creator', desc: 'Lịch đăng bài 7 ngày được tạo sẵn mỗi tuần. Bạn không cần nghĩ ý tưởng, không cần viết — chỉ cần bấm đăng.', outcome: '→ Reach tăng 2.3x, không tốn 1 giờ nào' },
+  { icon: '📊', title: 'CRM Thông Minh', desc: 'Mỗi khách hàng được lưu hồ sơ tự động, phân loại "nóng/lạnh", và được remarketing đúng lúc họ sắp mua lại.', outcome: '→ Khách cũ quay lại 2.3x nhiều hơn' },
+  { icon: '📈', title: 'Báo Cáo Tức Thời', desc: 'Không cần làm báo cáo tay. Dashboard real-time cho bạn thấy chính xác kênh nào đang ra tiền, tuần nào cần đẩy mạnh.', outcome: '→ Tiết kiệm 20+ giờ/tuần, tối ưu 35% chi phí' },
 ];
 
 const steps = [
-  { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
-  { num: '02', title: 'Kết nối Zalo/FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
-  { num: '03', title: 'AI vận hành tự động', time: '24/7', desc: 'Hệ thống tự học, tự trả lời, tự báo cáo từ phút đầu.' },
+  { num: '01', title: 'Đăng ký miễn phí', time: '2 phút', desc: 'Tạo tài khoản, không cần thẻ tín dụng. Nhập email xong là vào được ngay.' },
+  { num: '02', title: 'Kết nối Zalo & Facebook', time: '5 phút', desc: 'Vài cú click là xong. Không cần biết code, không cần gọi IT.' },
+  { num: '03', title: 'Xem kết quả ngay hôm nay', time: '24/7', desc: 'AI bắt đầu trả lời khách, tạo content, và báo cáo — tự động từ phút đầu tiên.' },
 ];
 
 const plans = [
-  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
-  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
+  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Thử ngay, miễn phí 100%', href: 'https://app.agencyos.network/signup', featured: false },
+  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Bắt đầu 14 ngày miễn phí', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Tôi muốn tăng trưởng →', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
+  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI riêng cho bạn', 'White-label thương hiệu', 'Onboarding 1-1 tận tay', 'SLA 99.99%'], cta: 'Nói chuyện với chúng tôi', href: 'mailto:hello@agencyos.network', featured: false },
 ];
 
 const faqs = [
-  { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong 5 phút đầu tiên.' },
-  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
-  { q: 'Thanh toán bằng gì?', a: 'Thanh toán qua Polar.sh với Visa/Mastercard. Hỗ trợ toàn cầu, giá USD.' },
-  { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ.' },
-  { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
+  { q: 'Có cần biết lập trình không?', a: 'Không cần. Giao diện bấm-và-kết-nối, ai cũng setup được trong 5 phút.' },
+  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, fashion, cửa hàng tiện lợi — bất kỳ ngành nào có khách nhắn tin.' },
+  { q: 'Thanh toán như thế nào?', a: 'Visa/Mastercard qua Polar.sh. Bảo mật, không lưu thẻ, huỷ tự do.' },
+  { q: 'Huỷ có mất phí không?', a: 'Không. Huỷ 1 click, không hỏi thêm, không phí phạt. Dữ liệu giữ 30 ngày để bạn export nếu cần.' },
+  { q: 'Dữ liệu khách hàng của tôi có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end. Không bao giờ chia sẻ với bên thứ ba — dữ liệu là của bạn.' },
 ];
 
 const platformStats = [
@@ -54,11 +54,11 @@ const customerLogos = [
 ];
 
 const testimonials = [
-  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼', result: '+40% năng suất', verified: true },
-  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼', result: '+40% conversion', verified: true },
-  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻', result: '-90% chi phí', verified: true },
-  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳', result: '+35% doanh thu', verified: true },
-  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention', verified: true },
+  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Team 1 người, làm được việc của 5 người. Đó là OpenClaw trong một câu.', avatar: '👨‍💼', result: '+40% năng suất', verified: true },
+  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'Tôi thức dậy là thấy đơn mới. AI đã chốt khách lúc 2 giờ sáng thay tôi rồi.', avatar: '👩‍💼', result: '+40% conversion', verified: true },
+  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Billing, metering, tự trả lời — zero-cost trên Cloudflare Workers. Build chuẩn.', avatar: '👨‍💻', result: '-90% chi phí', verified: true },
+  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Tuần 2 đã thấy ROI. AI follow-up đúng lúc khách định quay lại, doanh thu tăng 35%.', avatar: '👩‍🍳', result: '+35% doanh thu', verified: true },
+  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'Tưởng CRM chỉ để lưu số điện thoại. Hóa ra nó remarketing luôn, tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention', verified: true },
 ];
 
 // SoftwareApplication JSON-LD (RaaS Product)
@@ -329,22 +329,22 @@ const breadcrumbSchema = {
         <!-- Main Hero Badge -->
         <div class="hero-badge animate-in" style="margin-bottom:24px;">
           <span class="badge-icon" aria-hidden="true">✨</span>
-          <span class="badge-text">AI Receptionist cho Zalo & Facebook — CRM thông minh — Tạo content tự động</span>
+          <span class="badge-text">AI trả lời Zalo & Facebook · Tạo content tự động · CRM thông minh</span>
         </div>
 
         <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Làm Việc Thay Bạn</span><br />
-          24/7 <span class="gradient-text-highlight">Tự Động 100%</span>
+          <span class="gradient-text">Đừng trả lời khách nữa.</span><br />
+          Để AI làm — <span class="gradient-text-highlight">24/7, 3 giây/tin</span>
         </h1>
 
         <p class="hero-description animate-in" style="margin-bottom:28px;">
-          MIễn phí 14 ngày, không cần thẻ tín dụng · 500+ doanh nghiệp Việt tin dùng · Phản hồi trong 3 giây
+          Dành cho chủ shop, founder nhỏ, và team muốn bán nhiều hơn mà không thuê thêm người. Bắt đầu miễn phí, kết quả trong ngày đầu tiên.
         </p>
 
         <!-- Enhanced CTA Buttons with Stronger Animations -->
         <div class="hero-cta animate-in" style="margin-bottom:24px;" role="group" aria-label="Hành động nhanh">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow btn-cta-primary" aria-label="Dùng thử miễn phí 14 ngày, không cần thẻ tín dụng">
-            <span class="cta-text">Dùng thử miễn phí 14 ngày</span>
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse btn-glow btn-cta-primary" aria-label="Bắt đầu miễn phí ngay, không cần thẻ tín dụng">
+            <span class="cta-text">Bắt đầu miễn phí ngay</span>
             <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
@@ -487,7 +487,7 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
         <div class="badge" style="margin-bottom:16px;">Giá trị cốt lõi</div>
-        <h2 class="headline">OpenClaw không phải <span class="gradient-text">chatbot</span>. Là nhân viên AI thực thụ.</h2>
+        <h2 class="headline">Chatbot chỉ trả lời. <span class="gradient-text">OpenClaw chốt đơn.</span></h2>
       </div>
       <div class="comparison-table animate-on-scroll">
         <div class="comparison-header">
@@ -547,8 +547,8 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Tính năng</div>
-        <h2 class="headline">Mọi thứ bạn cần để <span class="gradient-text">bán hàng hiệu quả</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI làm thay những việc lặp lại, bạn tập trung vào tăng trưởng.</p>
+        <h2 class="headline">Bốn thứ giúp bạn <span class="gradient-text">bán nhiều hơn mà không làm nhiều hơn</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI xử lý việc lặp lại. Bạn xử lý việc quan trọng.</p>
       </div>
       <div class="grid-4">
         {features.map((f, i) => (
@@ -568,7 +568,7 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Bắt đầu</div>
-        <h2 class="headline">Chỉ <span class="gradient-text">3 bước</span> là xong</h2>
+        <h2 class="headline">Chỉ <span class="gradient-text">7 phút</span> để AI bắt đầu làm việc</h2>
       </div>
       <!-- Connector dots (desktop only) -->
       <div style="display:flex;align-items:center;gap:0;margin-bottom:-20px;padding:0 calc(100%/6 - 20px);position:relative;z-index:1;" class="animate-on-scroll">
@@ -618,9 +618,9 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
         <div class="badge" style="margin-bottom:16px;">Testimonials</div>
-        <h2 class="headline">Kết quả <span class="gradient-text">thực tế</span> từ founder Việt</h2>
+        <h2 class="headline">Họ không quảng cáo. <span class="gradient-text">Họ chia sẻ số thật.</span></h2>
         <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">
-          Những con số biết nói từ doanh nghiệp đã triển khai OpenClaw
+          Founder Việt, kết quả thật, sau tuần đầu dùng OpenClaw.
         </p>
       </div>
 
@@ -699,8 +699,8 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:0;">
         <div class="badge" style="margin-bottom:16px;">Bảng giá</div>
-        <h2 class="headline">Minh bạch, <span class="gradient-text">không phí ẩn</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14 ngày dùng thử miễn phí. Huỷ bất cứ lúc nào.</p>
+        <h2 class="headline">Trả theo giá trị. <span class="gradient-text">Không trả cho những gì không dùng.</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14 ngày thử tất cả tính năng, miễn phí. Huỷ 1 click, không hỏi.</p>
         <!-- Toggle (visual only) -->
         <div style="display:flex;justify-content:center;margin-bottom:48px;">
           <div class="pricing-toggle">
@@ -763,9 +763,9 @@ const breadcrumbSchema = {
       <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;position:relative;overflow:hidden;">
         <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;"></div>
         <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.1),transparent 70%);pointer-events:none;"></div>
-        <h2 class="headline" style="margin-bottom:16px;position:relative;">Sẵn sàng để AI <span class="gradient-text">làm việc cho bạn?</span></h2>
+        <h2 class="headline" style="margin-bottom:16px;position:relative;">Khách đang nhắn tin. <span class="gradient-text">AI của bạn đã sẵn sàng chưa?</span></h2>
         <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;position:relative;">
-          Tham gia cùng 500+ doanh nghiệp đang tiết kiệm 20+ giờ/tuần với OpenClaw.
+          500+ doanh nghiệp Việt đã không còn ngồi trả lời tin nhắn tay. Setup 2 phút, kết quả ngay hôm nay.
         </p>
         <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Bắt đầu miễn phí ngay →</a>
       </div>

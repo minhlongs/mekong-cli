@@ -2,31 +2,31 @@
 import BaseLayout from '../../layouts/base-layout.astro';
 
 const features = [
-  { icon: '🤖', title: 'AI Receptionist', desc: 'Replies to Zalo & Facebook 24/7, never missing a message. Response under 3 seconds.' },
-  { icon: '✍️', title: 'Content Creator', desc: 'AI drafts 7 days of content on schedule. You just review and post.' },
-  { icon: '📊', title: 'Smart CRM', desc: 'Auto-saves customer profiles, classifies leads, retargets at the right moment.' },
-  { icon: '📈', title: 'Real-time Reports', desc: 'Visual dashboard. AI analyzes and suggests actions every week.' },
+  { icon: '🤖', title: 'AI Receptionist', desc: 'Never miss a customer message again. AI replies on Zalo & Facebook in under 3 seconds — closing leads while you sleep.' },
+  { icon: '✍️', title: 'Content Creator', desc: 'A full week of posts, drafted and scheduled automatically. Stop staring at a blank screen — just review and hit publish.' },
+  { icon: '📊', title: 'Smart CRM', desc: 'Every customer auto-profiled, hot leads flagged, past buyers re-engaged at exactly the right moment. Your memory, supercharged.' },
+  { icon: '📈', title: 'Real-time Reports', desc: 'No more manual reporting. See exactly which channel is making money, which week to push harder — live data, zero spreadsheets.' },
 ];
 
 const steps = [
-  { num: '01', title: 'Sign Up', time: '2 min', desc: 'Create a free account — no credit card required.' },
-  { num: '02', title: 'Connect Zalo / FB', time: '5 min', desc: 'Link your sales channels with just a few clicks.' },
-  { num: '03', title: 'AI starts running', time: '24/7', desc: 'System learns, replies and reports automatically from minute one.' },
+  { num: '01', title: 'Sign up free', time: '2 min', desc: 'Email in, account created. No credit card, no forms, no sales call.' },
+  { num: '02', title: 'Connect your channels', time: '5 min', desc: 'Point-and-click Zalo/Facebook integration. No code, no IT ticket.' },
+  { num: '03', title: 'Watch it work', time: '24/7', desc: 'AI starts replying, creating content, and reporting — automatically, from the first minute.' },
 ];
 
 const plans = [
-  { name: 'Free',       price: '$0',   period: '/mo', tag: '', features: ['50 credits/month', 'Basic AI Receptionist', '3 days content/month', 'CRM: 50 contacts'], cta: 'Get started free', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter',   price: '$49',  period: '/mo', tag: '', features: ['200 MCU credits/month', '24/7 AI Receptionist', '7 days content/week', 'Unlimited CRM', 'Weekly reports'], cta: 'Try free 14 days', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro',        price: '$149', period: '/mo', tag: 'Most popular', features: ['1,000 MCU credits/month', 'Multi-channel (Zalo+FB+Web)', 'Industry-tuned AI', 'API access', 'SLA 99.9%'], cta: 'Choose Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
-  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['Unlimited MCU credits', 'Dedicated AI model', 'White-label', '1-on-1 onboarding', 'SLA 99.99%'], cta: 'Contact sales', href: 'mailto:hello@agencyos.network', featured: false },
+  { name: 'Free',       price: '$0',   period: '/mo', tag: '', features: ['50 credits/month', 'Basic AI Receptionist', '3 days content/month', 'CRM: 50 contacts'], cta: 'See results in 5 minutes', href: 'https://app.agencyos.network/signup', featured: false },
+  { name: 'Starter',   price: '$49',  period: '/mo', tag: '', features: ['200 MCU credits/month', '24/7 AI Receptionist', '7 days content/week', 'Unlimited CRM', 'Weekly reports'], cta: 'Start free for 14 days →', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro',        price: '$149', period: '/mo', tag: 'Most popular', features: ['1,000 MCU credits/month', 'Multi-channel (Zalo+FB+Web)', 'Industry-tuned AI', 'API access', 'SLA 99.9%'], cta: 'I want to scale →', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
+  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['Unlimited MCU credits', 'Your own dedicated AI model', 'Full white-label', '1-on-1 onboarding', 'SLA 99.99%'], cta: "Let's talk", href: 'mailto:hello@agencyos.network', featured: false },
 ];
 
 const faqs = [
-  { q: 'Do I need to know how to code?', a: 'No. The interface is fully visual — anyone can get started within 5 minutes.' },
-  { q: 'Which industries are supported?', a: 'Cafes, restaurants, spas, salons, gyms, fashion shops, convenience stores and most retail businesses.' },
-  { q: 'What payment methods are accepted?', a: 'Payment via Polar.sh with Visa/Mastercard. Global support, USD pricing.' },
-  { q: 'Can I cancel my subscription?', a: 'Cancel anytime with no penalty. Your data is retained for 30 days after cancellation.' },
-  { q: 'Is my customer data safe?', a: 'Runs on Cloudflare Workers with end-to-end encryption. Never shared with third parties.' },
+  { q: 'Do I need to know how to code?', a: 'No. Point-and-click setup. If you can use Facebook, you can use OpenClaw.' },
+  { q: 'Which industries work best?', a: 'Any business where customers send messages: cafes, restaurants, spas, gyms, fashion, e-commerce, convenience stores.' },
+  { q: 'How does billing work?', a: 'Visa/Mastercard via Polar.sh. Secure checkout, no card stored after trial, cancel anytime.' },
+  { q: 'What happens if I cancel?', a: '1-click cancel, no questions asked, no penalty. Your data stays for 30 days so you can export it.' },
+  { q: 'Who has access to my customer data?', a: 'Nobody but you. Runs on Cloudflare Workers with end-to-end encryption. We never sell or share data.' },
 ];
 
 const platformStats = [
@@ -38,9 +38,9 @@ const platformStats = [
 ];
 
 const testimonials = [
-  { name: 'Minh Tuan', role: 'CEO, FoodTech Startup', text: 'Since using OpenClaw, my one-person team handles the workload of a 5-person team.' },
-  { name: 'Ha Linh', role: 'Founder, Beauty Brand', text: 'AI replies to Zalo messages 24/7 — I never miss a customer, even at 2 AM.' },
-  { name: 'Duc Anh', role: 'CTO, SaaS Platform', text: 'Billing + metering running zero-cost on Cloudflare Workers. Impressive.' },
+  { name: 'Minh Tuan', role: 'CEO, FoodTech Startup', text: 'One-person team, 5-person output. That\'s OpenClaw in one sentence.' },
+  { name: 'Ha Linh', role: 'Founder, Beauty Brand', text: 'I wake up to closed orders. AI handled the 2 AM messages so I didn\'t have to.' },
+  { name: 'Duc Anh', role: 'CTO, SaaS Platform', text: 'Billing, metering, auto-replies — zero-cost on Cloudflare Workers. This thing is engineered right.' },
 ];
 
 // JSON-LD Structured Data
@@ -111,12 +111,12 @@ const breadcrumbSchema = {
 
     <div class="container" style="position:relative;z-index:1;padding:80px 24px;">
       <div style="max-width:760px;">
-        <div class="badge animate-in" style="margin-bottom:28px;" role="status">✨ New — AI Receptionist for Zalo & Facebook</div>
+        <div class="badge animate-in" style="margin-bottom:28px;" role="status">✨ AI that replies, sells, and reports — while you sleep</div>
         <h1 class="display animate-in" style="margin-bottom:24px;animation-delay:0.1s;">
-          <span class="gradient-text">AI-Powered</span><br />Business Automation
+          Stop answering<br /><span class="gradient-text">customer messages.</span>
         </h1>
         <p style="font-size:clamp(1rem,2vw,1.2rem);color:var(--md-on-surface-muted);max-width:520px;margin-bottom:16px;" class="animate-in">
-          24/7 customer replies · Auto content creation · Smart CRM
+          For solo founders and small teams who want to sell more without hiring more. AI handles replies, content, and CRM — automatically.
         </p>
         <!-- Stats row -->
         <div style="display:flex;gap:32px;margin-bottom:24px;flex-wrap:wrap;" class="animate-in" role="list" aria-label="Platform statistics">
@@ -129,12 +129,12 @@ const breadcrumbSchema = {
         </div>
         <!-- Social proof badges -->
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;" class="animate-in" role="list" aria-label="Trust badges">
-          <span class="proof-badge" role="listitem"><span class="dot"></span>Trusted by 500+ businesses</span>
-          <span class="proof-badge" role="listitem">🏆 #1 in Vietnam 2025</span>
+          <span class="proof-badge" role="listitem"><span class="dot"></span>500+ businesses automated</span>
+          <span class="proof-badge" role="listitem">🏆 #1 AI tool in Vietnam 2025</span>
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;" class="animate-in" role="group" aria-label="Quick actions">
-          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;" aria-label="Start free 14-day trial, no credit card required">Try free for 14 days →</a>
-          <a href="#features" class="btn-outline" aria-label="View OpenClaw features">See features</a>
+          <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;" aria-label="Start automating free, no credit card required">Start automating free →</a>
+          <a href="#features" class="btn-outline" aria-label="View OpenClaw features">See how it works</a>
         </div>
       </div>
 
@@ -160,8 +160,8 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Features</div>
-        <h2 class="headline">Everything you need to <span class="gradient-text">grow faster</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI handles repetitive tasks so you can focus on growth.</p>
+        <h2 class="headline">Four things that let you <span class="gradient-text">sell more without doing more</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI does the repetitive work. You do the important work.</p>
       </div>
       <div class="grid-4">
         {features.map((f, i) => (
@@ -180,7 +180,7 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Get Started</div>
-        <h2 class="headline">Up and running in <span class="gradient-text">3 steps</span></h2>
+        <h2 class="headline">Running in <span class="gradient-text">under 10 minutes</span></h2>
       </div>
       <!-- Connector dots (desktop only) -->
       <div style="display:flex;align-items:center;gap:0;margin-bottom:-20px;padding:0 calc(100%/6 - 20px);position:relative;z-index:1;" class="animate-on-scroll">
@@ -207,8 +207,8 @@ const breadcrumbSchema = {
     <div class="container" style="position:relative;z-index:1;">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
         <div class="badge" style="margin-bottom:16px;">Platform</div>
-        <h2 class="headline">The power <span class="gradient-text">behind every command</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">The largest AI ecosystem for business automation — built by top engineers.</p>
+        <h2 class="headline">An AI platform <span class="gradient-text">built for real business scale</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">Not a chatbot wrapper. A full automation engine with 540 skills, 17 agents, and 410 pre-built contracts.</p>
       </div>
       <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
         {platformStats.map((s, i) => (
@@ -230,7 +230,7 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
         <div class="badge" style="margin-bottom:16px;">What customers say</div>
-        <h2 class="headline"><span class="gradient-text">Trusted</span> by founders</h2>
+        <h2 class="headline">Real numbers. <span class="gradient-text">Real founders.</span></h2>
       </div>
       <div class="grid-3">
         {testimonials.map((t, i) => (
@@ -254,8 +254,8 @@ const breadcrumbSchema = {
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:0;">
         <div class="badge" style="margin-bottom:16px;">Pricing</div>
-        <h2 class="headline">Simple, <span class="gradient-text">transparent pricing</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14-day free trial. Cancel anytime. No hidden fees.</p>
+        <h2 class="headline">Pay for what you use. <span class="gradient-text">Stop when you want.</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">Full 14-day trial, no credit card. 1-click cancel, no questions.</p>
         <!-- Toggle (visual only) -->
         <div style="display:flex;justify-content:center;margin-bottom:48px;">
           <div class="pricing-toggle">
@@ -318,11 +318,11 @@ const breadcrumbSchema = {
       <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;position:relative;overflow:hidden;">
         <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;"></div>
         <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.1),transparent 70%);pointer-events:none;"></div>
-        <h2 class="headline" style="margin-bottom:16px;position:relative;">Ready to let AI <span class="gradient-text">work for you?</span></h2>
+        <h2 class="headline" style="margin-bottom:16px;position:relative;">Customers are messaging right now. <span class="gradient-text">Is your AI ready?</span></h2>
         <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;position:relative;">
-          Join 500+ businesses saving 20+ hours per week with OpenClaw.
+          500+ businesses stopped replying manually. Setup takes 7 minutes. Results start today.
         </p>
-        <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Start for free →</a>
+        <a href="https://app.agencyos.network/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Start automating free →</a>
       </div>
     </div>
   </section>
