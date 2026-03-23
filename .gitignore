@@ -430,6 +430,34 @@ packages/openclaw-agents/
 packages/raas-sdk/
 packages/raas-marketplace/
 
+# Junk GitHub workflows
+.github/workflows/algo-trader-*.yml
+.github/workflows/jules-*.yml
+.github/workflows/stale-*.yml
+.github/workflows/rollback-*.yml
+
+# Sales/marketing docs (not public SDK docs)
+docs/raas-sales*.md
+docs/raas-competitive*.md
+docs/raas-enterprise*.md
+docs/raas-customer*.md
+docs/raas-support*.md
+docs/raas-onboarding*.md
+docs/raas-one-page*.md
+docs/raas-brochure*.md
+docs/raas-marketing/
+docs/sales-*.md
+docs/social-media*.md
+docs/marketing-landing*.md
+docs/pitch-decks/
+docs/GO_LIVE_REPORT.md
+docs/GRAFANA_DASHBOARD.md
+docs/INCIDENT_RESPONSE.md
+
+# Build artifacts (never track)
+**/dist/
+**/build/
+
 # Internal scripts & runtime
 GEMINI.md
 README.vi.md
