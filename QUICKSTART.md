@@ -5,7 +5,7 @@ Get running in under 5 minutes.
 ## Option A: Full Platform (clone)
 
 ```bash
-git clone https://github.com/longtho638-jpg/mekong-cli.git
+git clone --depth 1 https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli
 source scripts/shell-init.sh    # Adds 'mekong' aliases to your shell
 ```

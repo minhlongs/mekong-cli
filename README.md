@@ -34,7 +34,7 @@ npm install @mekongcli/cli-core           # Full CLI with 300+ commands
 ### Full Platform
 
 ```bash
-git clone https://github.com/longtho638-jpg/mekong-cli.git
+git clone --depth 1 https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli && source scripts/shell-init.sh
 
 # Set any OpenAI-compatible LLM (3 env vars)
