@@ -452,9 +452,13 @@ antigravity/
 docker/
 lib/
 locales/
-# mekong/ — tracked (core namespace)
+# mekong/commands and mekong/skills are duplicates of .claude/
+# .claude/commands/ = authoritative (82% machine-ready)
+# .claude/skills/ = authoritative (248 skills)
+mekong/commands/
+mekong/skills/
+
 # templates/ — tracked for business SOPs
-!templates/
 !packages/**/templates/
 plans/
 tasks/
