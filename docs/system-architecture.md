@@ -1,4 +1,16 @@
-# System Architecture: Mekong CLI v3.1.0 (OpenClaw v2026.3.8)
+# System Architecture: Mekong CLI v5.0.0 (OpenClaw v2026.3.23)
+
+**Last Updated:** 2026-03-23 | **Status:** Production
+
+### Platform Endpoints
+
+| Service | URL | Type |
+|---------|-----|------|
+| Landing | agencyos.network | CF Pages |
+| Dashboard | app.agencyos.network | CF Pages |
+| API | api.agencyos.network | CF Workers v5.0.0 |
+| Docs | docs.agencyos.network | CF Pages |
+| LLM | 192.168.11.111:11434 | Ollama (M1 Max) |
 
 ## 1. High-Level Overview
 
@@ -256,6 +268,13 @@ class LLMProvider(ABC):
 1. **OpenAICompatibleProvider** — Works with OpenAI API and compatible services
 2. **GeminiProvider** — Google Gemini API
 3. **OfflineProvider** — Local models (via Ollama/LlamaCPP)
+
+**Local LLM Configuration (M1 Max):**
+- **Endpoint:** 192.168.11.111:11434 (Ollama)
+- **Models Deployed:**
+  - qwen2.5-coder:32b (coding tasks)
+  - qwen3:32b (reasoning tasks)
+- **Usage:** Fallback provider when cloud API unavailable
 
 **Failover Strategy:**
 - Primary provider unavailable → Try next in chain

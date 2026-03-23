@@ -8,10 +8,17 @@ Mekong CLI RaaS uses Cloudflare's serverless infrastructure:
 
 ## Environments
 
-| Environment | Worker URL | Pages URL | Purpose |
-|-------------|-----------|-----------|---------|
-| Staging | `mekong-engine-staging.<account>.workers.dev` | `raas-landing-staging.pages.dev` | Testing, pre-prod verification |
-| Production | `mekong-engine.agencyos.network` | `raas-landing.pages.dev` | Live production |
+| Service | Production URL | Type | Status |
+|---------|---------|------|--------|
+| API Gateway | api.agencyos.network | CF Workers v5.0.0 | Active |
+| Dashboard | app.agencyos.network | CF Pages | Active (signup/login ready) |
+| Landing | agencyos.network | CF Pages | Active |
+| Docs | docs.agencyos.network | CF Pages | Active |
+| LLM Fallback | 192.168.11.111:11434 | Ollama (M1 Max) | Active |
+
+**Legacy Endpoints (deprecated):**
+- `mekong-engine-staging.*.workers.dev` → migrate to api.agencyos.network
+- `raas-landing.pages.dev` → use agencyos.network instead
 
 ---
 

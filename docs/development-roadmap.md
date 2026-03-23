@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-03-14
-**Current Status**: Session 20 (Retention & Engagement) - COMPLETED
+**Last Updated**: 2026-03-23
+**Current Status**: $1M ARR Roadmap in progress (6 phases, 7 planning files)
 
 ---
 
@@ -158,6 +158,25 @@ All significant project milestones and phases tracked here.
 - All 20 tests passing (0.34s runtime)
 
 **Files Changed**: 76 in src/core/, 5 in tests/python/
+
+---
+
+## $1M ARR Roadmap (2026-03-23)
+
+**Strategic Initiative:** Scale AgencyOS to $1M ARR within 12 months
+
+**Planning Status:** 6 phases defined, 7 planning files created in `plans/260323-1053-raas-1m-arr-roadmap/`
+
+**Key Infrastructure Updates (2026-03-23):**
+- All 279 D1 migrations applied (524 tables)
+- Custom domain: api.agencyos.network → raas-gateway v5.0.0
+- Dashboard signup/login pages deployed
+- Unified pricing: Free $0/50MCU, Starter $49/200, Pro $149/1000, Enterprise $499/unlimited
+- Webhook failover: KV outage no longer blocks payments
+- 73 OpenClaw CLI tests added (benchmark, cost, health, mission)
+- M1 Max LLM configured: Ollama qwen2.5-coder + qwen3 (local fallback)
+
+**Reference:** `/Users/macbookprom1/mekong-cli/plans/260323-1053-raas-1m-arr-roadmap/`
 
 ---
 

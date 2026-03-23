@@ -1,6 +1,6 @@
 # Mekong CLI — Codebase Summary
 
-**Version:** 5.0.0 | **Status:** Production | **Last Updated:** 2026-03-21
+**Version:** 5.0.0 | **Status:** Production | **Last Updated:** 2026-03-23
 
 > AI-operated business platform. Open source. Universal LLM. 319 commands, 542 skills, 410 contracts.
 
@@ -11,10 +11,10 @@
 **Mekong CLI** is an orchestrated AI platform built on the Plan→Execute→Verify (PEV) engine. It enables automated business operations across 5 layers (Founder, Business, Product, Engineering, Ops) with 319+ commands and 542 skills.
 
 **Key Stats:**
-- **4,760 files** | 6.7M tokens | 26M characters
-- **Python 3.9+** | TypeScript/Node.js 18+ | Cloudflare Workers
+- **4,002 files** | 5.8M tokens | 23M characters
+- **Python 3.9+** | TypeScript/Node.js 18+ | Cloudflare Workers + local LLM
 - **Monorepo structure:** Core SDK + 8 applications + 542 reusable skills
-- **Deployment:** 100% Cloudflare (Pages, Workers, D1, R2, KV)
+- **Deployment:** 100% Cloudflare (Pages, Workers, D1, R2, KV) + M1 Max LLM (192.168.11.111:11434)
 - **License:** MIT | Open source with commercial licensing
 
 ---
@@ -189,6 +189,10 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 ## Database Schema
 
 **Cloudflare D1 (SQLite):**
+
+**Status:** All 279 migrations applied | 524 total tables | Last run: 2026-03-23
+
+**Core Tables:**
 
 ```sql
 CREATE TABLE tenants (

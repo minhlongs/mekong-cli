@@ -7,7 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<<<<<<< HEAD
+### Changed (2026-03-23 - Production Hardening & $1M ARR Roadmap)
+
+#### Infrastructure & DevOps
+- **Database Migration:** All 279 D1 migrations applied (524 total tables)
+- **Custom Domain:** api.agencyos.network → raas-gateway v5.0.0 (certificate auto-renewed)
+- **Dashboard Deployment:** Signup/login pages live on app.agencyos.network
+- **Pricing Unified:** Free $0/50MCU, Starter $49/200, Pro $149/1000, Enterprise $499/unlimited
+
+#### Bug Fixes
+- **Webhook Reliability:** KV outage no longer blocks payment processing (fail-OPEN pattern)
+- **Billing Service:** Credit amounts aligned (200/1000/-1 MCU per tier)
+- **Polar Integration:** Product name lookup fixed (lowercased matching)
+- **Git Security:** Removed `!apps/` negation that leaked 699 private files from tracking
+
+#### Testing & CLI
+- **OpenClaw CLI Tests:** 73 new tests added (benchmark, cost, health, mission modules)
+- **Test Coverage:** All passing, ready for CI/CD
+- **Commands Added:** openclaw-benchmark, openclaw-cost, openclaw-health, openclaw-mission
+
+#### LLM & AI
+- **M1 Max Ollama Setup:** 192.168.11.111:11434 configured with 2 models
+- **Models Deployed:**
+  - qwen2.5-coder:32b (code generation, debugging)
+  - qwen3:32b (reasoning, analysis)
+- **Use Case:** Local fallback when cloud API unavailable (reduces costs)
+
+#### Platform Status
+- **Landing:** agencyos.network (CF Pages)
+- **Dashboard:** app.agencyos.network (CF Pages, signup/login ready)
+- **API:** api.agencyos.network (CF Workers v5.0.0)
+- **Docs:** docs.agencyos.network (CF Pages)
+- **LLM:** 192.168.11.111:11434 (Ollama, M1 Max)
+
+#### Strategic Roadmap
+- **$1M ARR Initiative:** 6-phase roadmap created (plans/260323-1053-raas-1m-arr-roadmap/)
+- **Timeline:** Q1 setup, Q2-Q4 growth phases
+- **Focus:** Pricing, onboarding, metrics, retention
+
 ### Added (2026-03-20 - Algo-Trader MVP — AI-Powered Crypto Arbitrage Engine)
 
 #### New Application: Algo-Trader (`apps/algo-trader/`)

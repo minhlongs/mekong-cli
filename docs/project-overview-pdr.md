@@ -1,9 +1,10 @@
-# Mekong CLI v3.0.0 — Project Overview & PDR
+# Mekong CLI v5.0.0 — Project Overview & PDR
 
-**Version:** 3.0.0 (Open Source)
-**Status:** Public MIT License
-**Target:** Python 3.9+, PyPI distribution
-**Repository:** https://github.com/yourusername/mekong-cli
+**Version:** 5.0.0 (Open Source)
+**Status:** Production | Public MIT License
+**Updated:** 2026-03-23
+**Target:** Python 3.9+, TypeScript 18+, Cloudflare Workers
+**Repository:** https://github.com/longtho638-jpg/mekong-cli
 
 ## 1. Project Overview
 
