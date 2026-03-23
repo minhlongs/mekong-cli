@@ -120,8 +120,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
   const TIERS = {
     free: { name: 'Free', mcu: 50, color: '#6366f1' },
     starter: { name: 'Starter', mcu: 200, color: '#10b981' },
-    pro: { name: 'Pro', mcu: 500, color: '#f59e0b' },
-    growth: { name: 'Growth', mcu: 1000, color: '#8b5cf6' },
+    pro: { name: 'Pro', mcu: 1000, color: '#f59e0b' },
     enterprise: { name: 'Enterprise', mcu: 999999, color: '#ef4444' }
   };
 
@@ -150,6 +149,19 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
       document.getElementById('mcu-consumed').textContent = `${consumed.toLocaleString()} đã dùng`;
       document.getElementById('mcu-remaining').textContent = `${(100 - usedPercent).toFixed(0)}% còn lại`;
       document.getElementById('mcu-progress-fill').style.width = `${usedPercent}%`;
+
+      // Low-credit upgrade prompt (< 20% remaining)
+      const upgradeBtn = document.getElementById('upgrade-btn');
+      if (tierConfig.mcu !== 999999 && usedPercent >= 80) {
+        document.getElementById('mcu-progress-fill').style.background = '#ef4444';
+        upgradeBtn.textContent = 'Sắp hết credits — Nâng cấp ngay!';
+        upgradeBtn.style.background = '#ef4444';
+        upgradeBtn.style.animation = 'pulse 2s infinite';
+      } else if (tier !== 'enterprise') {
+        upgradeBtn.textContent = 'Nâng cấp';
+      } else {
+        upgradeBtn.style.display = 'none';
+      }
 
       // Load overview
       const overviewRes = await fetch(API + '/v1/reports/overview', { headers });

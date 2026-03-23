@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-03-23 - Phase 1 & Phase 6 Launch Hardening)
+
+#### Critical Fixes
+- **Free Tier MCU:** 10 → 50 MCU credits (enables better PLG free tier testing)
+  - Updated: tenants.ts, telegram.ts, email-service.ts, onboarding.ts, billing.ts
+- **Subscription Double-Credit Bug:** subscription.created no longer adds credits (order.paid only)
+  - Prevents 2x billing on same order lifecycle
+- **Import Path Fix:** @mekong/openclaw-engine export aligned with package.json exports
+  - Ensures TS consumers can import from monorepo
+
+#### Features Launched
+- **MLX LaunchAgent (M1 Max):** Auto-starts Ollama + funding rate monitor on boot
+  - RunAtLoad=true in launchctl services
+  - qwen2.5-coder:32b always available for fallback inference
+- **Funding Rate Monitor:** Polymarket funding rate scanner running on M1 Max
+  - Tracks intraday funding rate changes for algo-trader
+  - Daily alerts for >10% funding rate events
+- **Paper Trading v3:** Polymarket simulator live
+  - Backtests 59 identified settlement arbitrage opportunities
+  - Expected return: $2K-$5K/mo with $50K capital
+
+#### Deploy & Content
+- **Gateway Deploy:** Version 15f37878 with all Phase 1 fixes
+  - api.agencyos.network GREEN, health check passing
+- **Content Pipeline:** Show HN + ProductHunt drafts created
+  - Show HN: "I built an AI agent that runs 342 business commands for $49/mo"
+  - ProductHunt: Full product story with 15 screenshots
+
 ### Changed (2026-03-23 - Production Hardening & $1M ARR Roadmap)
 
 #### Infrastructure & DevOps
