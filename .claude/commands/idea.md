@@ -115,9 +115,71 @@ Generate 5 mission files in `tasks/` that OpenClaw will execute immediately:
 - `HIGH_mission_<project>_marketing_launch.txt`
 - `HIGH_mission_<project>_deploy_production.txt`
 
+## Binh Phap Auto-Chain (NEW)
+
+After generating company.json + blueprint, OpenClaw MUST auto-dispatch the **Binh Phap 13-Chapter Liên Hoàn Lệnh** — a chained sequence of commands that takes the project from idea to revenue.
+
+Reference: `docs/BINH_PHAP_MASTER.md` for chapter→command mapping.
+Reference: `docs/BINH_PHAP_1M_BATTLE_PLAN.md` for campaign strategy.
+
+### Chain Sequence (auto-execute after blueprint)
+
+```
+PHASE 1: INTELLIGENCE (Chapters 1, 13)
+  /swot "$ARGUMENTS"                    → SWOT analysis
+  /venture:five-factors "$ARGUMENTS"    → 5-factor assessment
+  /audit "project readiness"            → Technical audit
+
+PHASE 2: STRATEGY (Chapters 3, 10)
+  /plan "MVP features for $ARGUMENTS"   → Implementation plan
+  /venture:terrain "market analysis"    → Market terrain mapping
+  /brainstorm "GTM strategy"            → Go-to-market options
+
+PHASE 3: BUILD (Chapters 4, 7, 9)
+  /cook "Build MVP per plan"            → End-to-end implementation
+  /test "Full test suite"               → Quality verification
+  /deploy "Production deployment"       → Ship it
+
+PHASE 4: REVENUE (Chapters 5, 12, 2)
+  /marketing "Launch campaign"          → Marketing push
+  /sales "Pipeline setup"              → Sales outreach
+  /launch "Product launch"             → Coordinated launch
+  /pricing "Monetization strategy"      → Revenue optimization
+
+PHASE 5: SCALE (Chapters 6, 8, 11)
+  /competitive "Market positioning"     → Competitive intel
+  /growth:experiment "Growth loops"     → Growth experiments
+  /finance "Financial tracking"         → Revenue monitoring
+```
+
+### Dispatch Rules
+- Each phase MUST complete before the next begins
+- If any command fails → Chapter 8 (Nine Variations): adapt and retry
+- After Phase 4 → enter Growth Loop (Chapter 9: The March)
+- Growth Loop runs indefinitely: `/standup` → `/sprint` → `/market` → `/growth` → `/audit`
+
+### company.json Enhancement
+
+Add `binh_phap_state` to track chain progress:
+```json
+{
+  "binh_phap_state": {
+    "current_chapter": 1,
+    "current_phase": "intelligence",
+    "completed_chapters": [],
+    "chain_status": "active",
+    "next_command": "/swot",
+    "campaign": "first_blood",
+    "target_mrr": 1000
+  }
+}
+```
+
 ## IMPORTANT
 - This is the ENTRY POINT for every new project
 - OpenClaw reads `.mekong/company.json` on boot
 - If no company.json → suggest running `/idea` first
-- After /idea completes → CTO daemon auto-executes the 5-layer flow
+- After /idea completes → auto-dispatch Binh Phap Chain (5 phases, 15+ commands)
+- Each chain execution = 1 campaign cycle toward $1M ARR
+- User can interrupt at any phase gate: "pause" stops, "continue" resumes
 - Target: $1M ARR per project within GTM 2026
