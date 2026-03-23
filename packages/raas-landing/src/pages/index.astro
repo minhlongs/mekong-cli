@@ -824,6 +824,88 @@ const breadcrumbSchema = {
       btnMonthly.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAnnual(false); } });
       btnAnnual.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAnnual(true); } });
     })();
+
+    // A/B test: Starter price $49 (variant A) vs $39 (variant B)
+    (function() {
+      var AB_API = 'https://api.agencyos.network/v1/landing/ab-event';
+
+      // Assign or retrieve sticky variant
+      var variant = localStorage.getItem('pricing_variant');
+      if (!variant) {
+        variant = Math.random() < 0.5 ? 'A' : 'B';
+        localStorage.setItem('pricing_variant', variant);
+      }
+
+      // Mark pricing section with variant for analytics
+      var pricingSection = document.getElementById('pricing');
+      if (pricingSection) pricingSection.setAttribute('data-variant', variant);
+
+      // Apply variant B pricing to Starter card
+      if (variant === 'B') {
+        document.querySelectorAll('.pricing-card').forEach(function(card) {
+          // Target Starter card only (monthly $49 → $39, annual $39 → $31)
+          if (card.dataset.monthlyPrice === '$49') {
+            card.dataset.monthlyPrice = '$39';
+            card.dataset.annualPrice = '$31';
+            // Update visible price (respects current toggle state)
+            var isAnnual = document.getElementById('toggle-annual')
+              && document.getElementById('toggle-annual').classList.contains('active');
+            var priceEl = card.querySelector('.plan-price');
+            if (priceEl) priceEl.textContent = isAnnual ? '$31' : '$39';
+            // Update annual billed text
+            var billedEl = card.querySelector('.annual-billed');
+            if (billedEl) billedEl.textContent = 'tính $372/năm';
+          }
+        });
+      }
+
+      // Send tracking beacon (non-blocking)
+      function trackEvent(event) {
+        try {
+          navigator.sendBeacon(AB_API, JSON.stringify({
+            variant: variant,
+            event: event,
+            page: window.location.pathname
+          }));
+        } catch (e) { /* silent */ }
+      }
+
+      // Track pricing section view via IntersectionObserver
+      var pricingEl = document.getElementById('pricing');
+      if (pricingEl && 'IntersectionObserver' in window) {
+        var viewFired = false;
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting && !viewFired) {
+              viewFired = true;
+              trackEvent('view');
+              observer.disconnect();
+            }
+          });
+        }, { threshold: 0.2 });
+        observer.observe(pricingEl);
+      }
+
+      // Track Starter CTA clicks
+      document.querySelectorAll('.pricing-card').forEach(function(card) {
+        if (card.dataset.monthlyPrice === '$49' || card.dataset.monthlyPrice === '$39') {
+          var cta = card.querySelector('.plan-cta');
+          if (cta) {
+            cta.addEventListener('click', function() { trackEvent('click_starter'); });
+          }
+        }
+      });
+
+      // Track Pro CTA clicks
+      document.querySelectorAll('.pricing-card').forEach(function(card) {
+        if (card.dataset.monthlyPrice === '$149') {
+          var cta = card.querySelector('.plan-cta');
+          if (cta) {
+            cta.addEventListener('click', function() { trackEvent('click_pro'); });
+          }
+        }
+      });
+    })();
   </script>
 
   <style>
