@@ -8,7 +8,7 @@ cd mekong-cli
 pnpm install
 
 # TypeScript packages
-cd packages/mekong-cli-core && pnpm test    # 1,263 tests
+cd packages/mekong-cli-core && pnpm test    # 1,263 TS tests
 cd packages/openclaw-engine && pnpm test     # Engine tests
 
 # Python (requires Python 3.11+)
@@ -44,7 +44,7 @@ All of these must pass before merge:
 
 | Check | What it does |
 |-------|-------------|
-| Test Suite | `vitest run` on all packages (1,263 tests) |
+| Test Suite | `vitest run` (1,263 TS tests) + `pytest` (4,450 Python tests) |
 | Factory Integrity | Validates 388 JSON contracts against schema |
 | Security Hardening | Scans for secrets, validates attestation |
 | Ruff Lint | Python linter (pre-commit hook) |

@@ -3,7 +3,7 @@
 [![CI](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml)
 [![npm openclaw-engine](https://img.shields.io/npm/v/@mekongcli/openclaw-engine?label=openclaw-engine)](https://www.npmjs.com/package/@mekongcli/openclaw-engine)
 [![npm cli-core](https://img.shields.io/npm/v/@mekongcli/cli-core?label=cli-core)](https://www.npmjs.com/package/@mekongcli/cli-core)
-[![Tests](https://img.shields.io/badge/tests-1263%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-5713%20passing-brightgreen)]()
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
 
 **Describe your goal. AI plans, executes, verifies, delivers.**
@@ -200,7 +200,7 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 | Commands | 300+ across 5 layers |
 | Machine Contracts | 388 (typed JSON I/O) |
 | Skills | 248 |
-| Tests | 1,263 passing |
+| Tests | 5,713 passing (1,263 TS + 4,450 Python) |
 | npm Packages | 2 published |
 
 ## Contributing
