@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Clean",
     "icon": "",
-    "description_en": "Clean build artifacts"
+    "description_en": "Clean project — remove build artifacts, caches, temp files"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "devops"
     ],
     "hub": "ops-hub",
-    "complexity": "standard",
+    "complexity": "simple",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 0,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,36 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "targets": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "build",
+            "cache",
+            "deps",
+            "all"
+          ]
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "files_removed": {
+        "type": "integer"
       },
-      "files_modified": {
+      "space_freed_mb": {
+        "type": "number"
+      },
+      "paths_cleaned": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },

@@ -6,14 +6,14 @@
   "display": {
     "name_en": "Campaign",
     "icon": "",
-    "description_en": "Campaign VN"
+    "description_en": "Marketing campaign — multi-channel execution plan"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cmo",
+      "editor"
     ],
-    "hub": "business-hub",
+    "hub": "marketing-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,29 +26,50 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "channels": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "budget": {
+        "type": "number"
+      },
+      "duration_days": {
+        "type": "integer"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "timeline": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "day": {
+              "type": "integer"
+            },
+            "channel": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            }
+          }
+        }
       },
-      "files_modified": {
+      "budget_breakdown": {
+        "type": "object"
+      },
+      "kpis": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },

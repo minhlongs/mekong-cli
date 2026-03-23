@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Benchmark",
     "icon": "",
-    "description_en": "Benchmark performance"
+    "description_en": "Performance benchmark — latency, throughput, resource usage"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "devops"
     ],
     "hub": "ops-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 1,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,37 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "target": {
+        "type": "string"
+      },
+      "iterations": {
+        "type": "integer",
+        "default": 100
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "p50_ms": {
+        "type": "number"
       },
-      "files_modified": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
+      "p95_ms": {
+        "type": "number"
       },
-      "credits_used": {
-        "type": "integer"
+      "p99_ms": {
+        "type": "number"
+      },
+      "throughput_rps": {
+        "type": "number"
+      },
+      "memory_mb": {
+        "type": "number"
+      },
+      "cpu_percent": {
+        "type": "number"
       }
     }
   },

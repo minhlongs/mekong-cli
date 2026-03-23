@@ -6,12 +6,12 @@
   "display": {
     "name_en": "Refactor",
     "icon": "",
-    "description_en": "Code refactoring"
+    "description_en": "Refactor code — improve structure without changing behavior"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "fullstack-developer",
+      "code-reviewer"
     ],
     "hub": "engineering-hub",
     "complexity": "standard",
@@ -26,34 +26,52 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "scope": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "file",
+          "module",
+          "system"
+        ]
+      },
+      "target_files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
       "files_modified": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
+      "lines_removed": {
         "type": "integer"
+      },
+      "complexity_reduction": {
+        "type": "string"
+      },
+      "tests_passing": {
+        "type": "boolean"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "test",
+        "target_layer": "engineering"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

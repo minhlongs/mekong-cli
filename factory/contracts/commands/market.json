@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Market",
     "icon": "",
-    "description_en": "Market research"
+    "description_en": "Market analysis — trends, opportunities, competitive landscape"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "researcher",
+      "strategist"
     ],
-    "hub": "ops-hub",
+    "hub": "business-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +26,47 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "industry": {
+        "type": "string"
+      },
+      "depth": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "quick",
+          "standard",
+          "deep"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "market_size": {
+        "type": "number"
       },
-      "files_modified": {
+      "growth_rate": {
+        "type": "number"
+      },
+      "key_players": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "trends": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "opportunities": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },

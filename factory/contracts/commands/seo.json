@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Seo",
     "icon": "",
-    "description_en": "Phn tch v ti u SEO"
+    "description_en": "SEO analysis — keywords, rankings, optimization recommendations"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "researcher",
+      "cmo"
     ],
-    "hub": "business-hub",
+    "hub": "marketing-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +26,50 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "url": {
+        "type": "string"
+      },
+      "target_keywords": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "score": {
+        "type": "number"
       },
-      "files_modified": {
+      "keywords": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "keyword": {
+              "type": "string"
+            },
+            "volume": {
+              "type": "integer"
+            },
+            "difficulty": {
+              "type": "number"
+            },
+            "position": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "recommendations": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },

@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Scope",
     "icon": "",
-    "description_en": "Define scope"
+    "description_en": "Scope definition — boundaries, requirements, acceptance criteria"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "pm",
+      "planner"
     ],
     "hub": "product-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 1,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +26,52 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "scope_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "feature",
+          "sprint",
+          "project"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "in_scope": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "out_of_scope": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "acceptance_criteria": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "effort_estimate": {
+        "type": "string"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "plan",
+        "target_layer": "product"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

@@ -6,18 +6,17 @@
   "display": {
     "name_en": "Migrate",
     "icon": "",
-    "description_en": "Database migration"
+    "description_en": "Database migration — schema changes, data transforms"
   },
   "execution": {
     "agents": [
-      "planner",
       "fullstack-developer"
     ],
     "hub": "engineering-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
-    "requires_approval": false
+    "credit_cost": 2,
+    "requires_approval": true
   },
   "input": {
     "type": "object",
@@ -26,29 +25,39 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "database": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "d1",
+          "postgres",
+          "supabase"
+        ]
+      },
+      "direction": {
+        "type": "string",
+        "enum": [
+          "up",
+          "down"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "migration_file": {
         "type": "string"
       },
-      "files_modified": {
+      "tables_affected": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "rollback_available": {
+        "type": "boolean"
       }
     }
   },

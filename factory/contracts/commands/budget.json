@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Budget",
     "icon": "",
-    "description_en": "Budget planning"
+    "description_en": "Budget planning — allocation, forecasting, variance analysis"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cfo"
     ],
-    "hub": "business-hub",
+    "hub": "finance-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,49 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "period": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "monthly",
+          "quarterly",
+          "annual"
+        ]
+      },
+      "departments": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "total_budget": {
+        "type": "number"
       },
-      "files_modified": {
+      "allocations": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "department": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            },
+            "percent": {
+              "type": "number"
+            }
+          }
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "forecast": {
+        "type": "object"
       }
     }
   },
