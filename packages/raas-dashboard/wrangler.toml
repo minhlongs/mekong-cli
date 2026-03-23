@@ -1,8 +1,0 @@
-name = "mekong-raas-dashboard"
-compatibility_date = "2024-09-02"
-
-[site]
-bucket = "./public"
-
-[env.production]
-name = "mekong-raas-dashboard"

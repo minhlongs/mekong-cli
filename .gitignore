@@ -503,3 +503,16 @@ conftest.py
 # Only apps/raas-gateway/ is whitelisted (line 124)
 mekong/daemon/
 mekong/hooks/
+
+# Non-public packages (SaaS frontends, internal tooling)
+packages/raas-dashboard/
+packages/raas-landing/
+packages/build-optimizer/
+packages/agents/
+packages/docs/
+packages/business/
+packages/tooling/
+packages/integrations/
+packages/vibe/
+packages/ui/
+packages/mekong-docs/
