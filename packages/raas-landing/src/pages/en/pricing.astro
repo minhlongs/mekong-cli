@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/base-layout.astro';
 
 const rows = [
-  { feature: 'Credits / month',   free: '50',        starter: '500',         pro: '2,000',              enterprise: 'Unlimited' },
+  { feature: 'MCU Credits / month', free: '50',       starter: '200',         pro: '1,000',              enterprise: 'Unlimited' },
   { feature: 'AI Receptionist',   free: 'Basic',     starter: '24/7',        pro: '24/7 Multi-channel', enterprise: 'Dedicated AI' },
   { feature: 'Content Creator',   free: '3 days/mo', starter: '7 days/week', pro: '7 days + calendar',  enterprise: 'Fully custom' },
   { feature: 'CRM',               free: '50 contacts',starter: 'Unlimited', pro: 'Unlimited + API',    enterprise: 'Enterprise CRM' },
@@ -16,9 +16,9 @@ const rows = [
 
 const plans = [
   { name: 'Free',       price: '$0',    href: 'https://app.agencyos.network/signup',              featured: false },
-  { name: 'Starter',   price: '$8/mo', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro',        price: '$20/mo',href: 'https://app.agencyos.network/signup?plan=pro',    featured: true  },
-  { name: 'Enterprise', price: '$120/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
+  { name: 'Starter',   price: '$49/mo', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro',        price: '$149/mo',href: 'https://app.agencyos.network/signup?plan=pro',   featured: true  },
+  { name: 'Enterprise', price: '$499/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
 ];
 
 // JSON-LD Structured Data
@@ -35,16 +35,16 @@ const productSchema = {
   "offers": plans.map(plan => ({
     "@type": "Offer",
     "name": `${plan.name} Plan`,
-    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '8' : plan.name === 'Pro' ? '20' : '120',
+    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '49' : plan.name === 'Pro' ? '149' : '499',
     "priceCurrency": "USD",
     "priceValidUntil": new Date(new Date().getFullYear() + 1, 0, 1).toISOString().split('T')[0],
     "availability": "https://schema.org/InStock",
     "url": plan.href,
     "category": "SoftwareApplication",
     "description": plan.name === 'Free' ? 'Free forever with 50 credits/month' :
-                  plan.name === 'Starter' ? '500 credits/month, 24/7 AI Receptionist' :
-                  plan.name === 'Pro' ? '2,000 credits/month, multi-channel, API access' :
-                  'Unlimited credits, dedicated AI model, white-label'
+                  plan.name === 'Starter' ? '200 MCU credits/month, 24/7 AI Receptionist' :
+                  plan.name === 'Pro' ? '1,000 MCU credits/month, multi-channel, API access' :
+                  'Unlimited MCU credits, dedicated AI model, white-label'
   }))
 };
 

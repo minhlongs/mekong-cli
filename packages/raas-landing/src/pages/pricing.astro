@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/base-layout.astro';
 
 const rows = [
-  { feature: 'MCU / tháng',           free: '5',           starter: '200',          pro: '1.000',                enterprise: '5.000' },
+  { feature: 'MCU / tháng',           free: '50',          starter: '200',          pro: '1.000',                enterprise: 'Không giới hạn' },
   { feature: 'AI Receptionist',       free: '—',           starter: '24/7',         pro: '24/7 Multi-channel',  enterprise: 'Dedicated AI' },
   { feature: 'Content Creator',       free: '—',           starter: '7 ngày/tuần',  pro: '7 ngày + lịch',       enterprise: 'Toàn quyền tùy chỉnh' },
   { feature: 'CRM',                   free: '—',           starter: 'Không giới hạn',pro: 'Không giới hạn + API',enterprise: 'Enterprise CRM' },
@@ -17,7 +17,7 @@ const rows = [
 const plans = [
   { name: 'Free',       price: '$0',   href: 'https://app.agencyos.network/signup',              featured: false },
   { name: 'Starter',   price: '$49/mo', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro',        price: '$199/mo',href: 'https://app.agencyos.network/signup?plan=pro',    featured: true  },
+  { name: 'Pro',        price: '$149/mo',href: 'https://app.agencyos.network/signup?plan=pro',   featured: true  },
   { name: 'Enterprise', price: '$499/mo',href: 'mailto:hello@agencyos.network',                  featured: false },
 ];
 
@@ -35,16 +35,16 @@ const productSchema = {
   "offers": plans.map(plan => ({
     "@type": "Offer",
     "name": `${plan.name} Plan`,
-    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '49' : plan.name === 'Pro' ? '199' : '499',
+    "price": plan.name === 'Free' ? '0' : plan.name === 'Starter' ? '49' : plan.name === 'Pro' ? '149' : '499',
     "priceCurrency": "USD",
     "priceValidUntil": new Date(new Date().getFullYear() + 1, 0, 1).toISOString().split('T')[0],
     "availability": "https://schema.org/InStock",
     "url": plan.href,
     "category": "SoftwareApplication",
-    "description": plan.name === 'Free' ? 'Miễn phí mãi mãi với 50 credits/tháng' :
-                  plan.name === 'Starter' ? '500 credits/tháng, AI Receptionist 24/7' :
-                  plan.name === 'Pro' ? '2.000 credits/tháng, multi-channel, API access' :
-                  'Credits không giới hạn, dedicated AI model, white-label'
+    "description": plan.name === 'Free' ? 'Miễn phí mãi mãi với 50 MCU/tháng' :
+                  plan.name === 'Starter' ? '200 MCU/tháng, AI Receptionist 24/7' :
+                  plan.name === 'Pro' ? '1.000 MCU/tháng, multi-channel, API access' :
+                  'MCU không giới hạn, dedicated AI model, white-label'
   }))
 };
 

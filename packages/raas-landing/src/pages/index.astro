@@ -16,9 +16,9 @@ const steps = [
 
 const plans = [
   { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter', price: '$8', period: '/mo', tag: '', features: ['500 credits/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro', price: '$20', period: '/mo', tag: 'Phổ biến nhất', features: ['2.000 credits/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
-  { name: 'Enterprise', price: '$120', period: '/mo', tag: '', features: ['Credits không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
+  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
+  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
+  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
 ];
 
 const faqs = [
@@ -95,7 +95,7 @@ const softwareAppSchema = {
         "priceCurrency": "USD",
         "priceSpecification": {
           "@type": "UnitPriceSpecification",
-          "price": "8",
+          "price": "49",
           "priceCurrency": "USD",
           "referenceQuantity": {
             "@type": "QuantitativeValue",
@@ -103,16 +103,16 @@ const softwareAppSchema = {
             "unitCode": "MON"
           }
         },
-        "description": "500 credits, AI 24/7, 7 ngày content/tuần"
+        "description": "200 MCU, AI 24/7, 7 ngày content/tuần"
       },
       {
         "@type": "Offer",
         "name": "Pro",
-        "price": "20",
+        "price": "149",
         "priceCurrency": "USD",
         "priceSpecification": {
           "@type": "UnitPriceSpecification",
-          "price": "20",
+          "price": "149",
           "priceCurrency": "USD",
           "referenceQuantity": {
             "@type": "QuantitativeValue",
@@ -120,15 +120,15 @@ const softwareAppSchema = {
             "unitCode": "MON"
           }
         },
-        "description": "2.000 credits, Multi-channel, AI tùy chỉnh",
+        "description": "1.000 MCU, Multi-channel, AI tùy chỉnh",
         "bestOffer": "true"
       },
       {
         "@type": "Offer",
         "name": "Enterprise",
-        "price": "120",
+        "price": "499",
         "priceCurrency": "USD",
-        "description": "Credits không giới hạn, Dedicated AI, White-label"
+        "description": "MCU không giới hạn, Dedicated AI, White-label"
       }
     ]
   },
@@ -240,7 +240,7 @@ const raasServiceSchema = {
         "itemOffered": {
           "@type": "Service",
           "name": "Starter Tier",
-          "description": "500 credits/tháng, AI 24/7, 7 ngày content/tuần, CRM không giới hạn"
+          "description": "200 MCU/tháng, AI 24/7, 7 ngày content/tuần, CRM không giới hạn"
         }
       },
       {
@@ -248,7 +248,7 @@ const raasServiceSchema = {
         "itemOffered": {
           "@type": "Service",
           "name": "Pro Tier",
-          "description": "2.000 credits/tháng, Multi-channel, AI tùy chỉnh, API access, SLA 99.9%"
+          "description": "1.000 MCU/tháng, Multi-channel, AI tùy chỉnh, API access, SLA 99.9%"
         }
       },
       {
