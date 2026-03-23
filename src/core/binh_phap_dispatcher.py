@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.binh_phap.topology import (
-    CHAPTER_COMMANDS,
     TopologyEngine,
     CommandResult,
     CycleLesson,
