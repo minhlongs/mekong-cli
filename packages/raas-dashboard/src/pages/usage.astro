@@ -41,6 +41,51 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
     </div>
   </div>
 
+  <!-- Credit Depletion Forecast -->
+  <div class="card forecast-card" id="forecast-card">
+    <div class="forecast-header">
+      <div>
+        <h3>Credit Depletion Forecast</h3>
+        <p class="forecast-subtitle">Based on last 7 days of usage</p>
+      </div>
+      <span id="forecast-badge" class="forecast-badge"></span>
+    </div>
+    <div class="forecast-body">
+      <div class="forecast-stats">
+        <div class="forecast-stat">
+          <div class="forecast-stat-label">Current Balance</div>
+          <div class="forecast-stat-value" id="fc-balance">—</div>
+        </div>
+        <div class="forecast-stat">
+          <div class="forecast-stat-label">Avg Daily Usage</div>
+          <div class="forecast-stat-value" id="fc-avg-daily">—</div>
+        </div>
+        <div class="forecast-stat">
+          <div class="forecast-stat-label">Days Remaining</div>
+          <div class="forecast-stat-value" id="fc-days">—</div>
+        </div>
+        <div class="forecast-stat">
+          <div class="forecast-stat-label">Depletion Date</div>
+          <div class="forecast-stat-value" id="fc-date">—</div>
+        </div>
+      </div>
+      <div class="forecast-bar-wrap">
+        <div class="forecast-bar-track">
+          <div class="forecast-bar-fill" id="fc-bar"></div>
+        </div>
+        <div class="forecast-bar-labels">
+          <span>0</span>
+          <span id="fc-bar-max">—</span>
+        </div>
+      </div>
+    </div>
+    <div id="forecast-cta" class="forecast-cta" style="display:none">
+      <span class="forecast-cta-icon">⚠</span>
+      <span>Less than 7 days of credits remaining.</span>
+      <a href="/billing" class="btn btn-primary btn-sm">Upgrade Plan</a>
+    </div>
+  </div>
+
   <!-- Main Chart -->
   <div class="card chart-card-large">
     <div class="chart-header">
@@ -123,9 +168,85 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
   const pageSize = 20;
 
   async function load() {
-    await loadUsageData(currentPeriod);
+    await Promise.all([loadUsageData(currentPeriod), loadForecast()]);
     renderAllCharts();
     renderTable();
+  }
+
+  async function loadForecast() {
+    try {
+      const billingRes = await fetch('https://api.agencyos.network/billing/credits', { headers });
+      const billing = await billingRes.json().catch(() => ({}));
+      const balance = billing.balance ?? billing.credits ?? 0;
+
+      // Fetch last 7 days for avg
+      const statsRes = await fetch(API + '/v1/usage/stats?days=7', { headers });
+      const stats = await statsRes.json().catch(() => ({ daily: [] }));
+      const daily7 = stats.daily || [];
+      const total7 = daily7.reduce((sum, d) => sum + (d.consumed || 0), 0);
+      const avgDaily = daily7.length > 0 ? total7 / daily7.length : 0;
+
+      renderForecast(balance, avgDaily);
+    } catch {
+      renderForecast(0, 0);
+    }
+  }
+
+  function renderForecast(balance, avgDaily) {
+    const daysRemaining = avgDaily > 0 ? balance / avgDaily : Infinity;
+    const depletionDate = avgDaily > 0
+      ? new Date(Date.now() + daysRemaining * 86400000)
+      : null;
+
+    document.getElementById('fc-balance').textContent = balance.toLocaleString() + ' MCU';
+    document.getElementById('fc-avg-daily').textContent = avgDaily > 0
+      ? Math.round(avgDaily).toLocaleString() + ' MCU/day'
+      : 'No usage';
+    document.getElementById('fc-days').textContent = isFinite(daysRemaining)
+      ? Math.floor(daysRemaining) + ' days'
+      : '∞';
+    document.getElementById('fc-date').textContent = depletionDate
+      ? depletionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'N/A';
+
+    // Progress bar — percentage of balance consumed (fill = used portion)
+    // We treat the "full" bar as balance + (7-day total consumed)
+    // so the bar shows how much runway is left.
+    // Simpler: bar fill = remaining / (remaining + consumed7) capped 0-100
+    const pct = isFinite(daysRemaining) ? Math.min(100, Math.max(0, (daysRemaining / 90) * 100)) : 100;
+    const bar = document.getElementById('fc-bar');
+    bar.style.width = pct + '%';
+
+    // Color thresholds
+    if (daysRemaining < 7) {
+      bar.className = 'forecast-bar-fill bar-red';
+    } else if (daysRemaining < 14) {
+      bar.className = 'forecast-bar-fill bar-yellow';
+    } else {
+      bar.className = 'forecast-bar-fill bar-green';
+    }
+
+    // Badge
+    const badge = document.getElementById('forecast-badge');
+    if (!isFinite(daysRemaining)) {
+      badge.textContent = 'No usage data';
+      badge.className = 'forecast-badge badge-gray';
+    } else if (daysRemaining < 7) {
+      badge.textContent = 'Critical';
+      badge.className = 'forecast-badge badge-red';
+    } else if (daysRemaining < 14) {
+      badge.textContent = 'Low';
+      badge.className = 'forecast-badge badge-yellow';
+    } else {
+      badge.textContent = 'Healthy';
+      badge.className = 'forecast-badge badge-green';
+    }
+
+    document.getElementById('fc-bar-max').textContent = '90d';
+
+    // Show upgrade CTA if < 7 days
+    document.getElementById('forecast-cta').style.display =
+      isFinite(daysRemaining) && daysRemaining < 7 ? 'flex' : 'none';
   }
 
   async function loadUsageData(days) {
@@ -627,6 +748,118 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
     align-items: center;
     padding: 16px;
     border-top: 1px solid var(--border);
+  }
+
+  /* Forecast Card */
+  .forecast-card {
+    margin-bottom: 24px;
+  }
+
+  .forecast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .forecast-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+  }
+
+  .forecast-subtitle {
+    font-size: 12px;
+    color: var(--text2);
+    margin: 0;
+  }
+
+  .forecast-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+
+  .badge-green  { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+  .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .badge-red    { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
+  .badge-gray   { background: var(--bg3);               color: var(--text2); }
+
+  .forecast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .forecast-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .forecast-stat-label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .forecast-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .forecast-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .forecast-bar-track {
+    height: 10px;
+    background: var(--bg3);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .forecast-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease, background 0.4s ease;
+  }
+
+  .bar-green  { background: #10b981; }
+  .bar-yellow { background: #f59e0b; }
+  .bar-red    { background: #ef4444; }
+
+  .forecast-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .forecast-cta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  .forecast-cta-icon {
+    color: #ef4444;
+    font-size: 15px;
+  }
+
+  .forecast-cta span:not(.forecast-cta-icon) {
+    flex: 1;
+    color: var(--text);
   }
 
   /* Responsive */
