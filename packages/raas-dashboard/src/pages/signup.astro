@@ -29,9 +29,14 @@
 
     <div class="card">
       <div class="form-group">
+        <label for="name">Tên của bạn</label>
+        <input type="text" id="name" placeholder="Nguyễn Văn A" autocomplete="name" />
+      </div>
+      <div class="form-group">
         <label for="email">Email doanh nghiệp</label>
         <input type="email" id="email" placeholder="you@company.com" autocomplete="email" />
       </div>
+      <p class="success-msg" id="signup-ref-note">Bạn được giới thiệu — nhận thêm 25 credits miễn phí!</p>
       <button class="btn btn-primary btn-full" id="btn-signup">Tạo tài khoản miễn phí</button>
       <div class="error-msg" id="error-msg"></div>
       <div class="success-msg" id="success-msg"></div>
@@ -62,16 +67,27 @@
     document.getElementById('error-msg').style.display = 'none';
   }
 
+  // Extract referral code from URL (?ref=CODE)
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get('ref');
+  if (refCode) {
+    document.getElementById('signup-ref-note').style.display = 'block';
+  }
+
   document.getElementById('btn-signup').addEventListener('click', async () => {
+    const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
+    if (!name) { showError('Vui lòng nhập tên.'); return; }
     if (!email) { showError('Vui lòng nhập email.'); return; }
     const btn = document.getElementById('btn-signup');
     btn.textContent = 'Đang tạo...'; btn.disabled = true;
     try {
-      const res = await fetch(API + '/billing/tenants', {
+      const payload = { name, email };
+      if (refCode) payload.ref = refCode;
+      const res = await fetch(API + '/v1/tenants/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) { showError(data.error || 'Lỗi tạo tài khoản.'); return; }
