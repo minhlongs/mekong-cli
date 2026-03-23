@@ -74,7 +74,7 @@ def _dispatch_command(command: str, llm_level: str) -> dict:
         return {
             "success": False,
             "output": "",
-            "error": f"Timeout after 300s",
+            "error": "Timeout after 300s",
             "duration_ms": int((time.time() - start) * 1000),
         }
     except FileNotFoundError:
