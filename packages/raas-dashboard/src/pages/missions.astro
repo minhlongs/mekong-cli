@@ -51,6 +51,21 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
     </div>
   </div>
 
+  <!-- Low Credits Upgrade CTA -->
+  <div class="card upgrade-banner" id="upgrade-banner" style="display:none;">
+    <div class="upgrade-banner-body">
+      <div class="upgrade-banner-icon">⚡</div>
+      <div class="upgrade-banner-content">
+        <div class="upgrade-banner-title">Credits đang thấp — nâng cấp để tiếp tục chạy missions</div>
+        <div class="upgrade-banner-meta" id="upgrade-banner-meta"></div>
+      </div>
+    </div>
+    <div class="upgrade-banner-actions">
+      <a href="/billing" class="btn btn-primary btn-sm">Nâng cấp ngay &rarr;</a>
+      <button class="btn btn-secondary btn-sm" id="btn-dismiss-upgrade">Bỏ qua</button>
+    </div>
+  </div>
+
   <!-- Mission Result Modal -->
   <div id="result-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
@@ -295,8 +310,46 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
     submitSpinner.style.display = loading ? 'inline' : 'none';
   }
 
+  // Upgrade CTA — check tier + balance
+  const TIER_LIMITS: Record<string, number> = { free: 0, starter: 200, pro: 1000, enterprise: Infinity };
+  const DISMISS_KEY = 'upgrade_banner_dismissed';
+
+  async function checkUpgradeCTA() {
+    if (sessionStorage.getItem(DISMISS_KEY)) return;
+    try {
+      const res = await fetch(API + '/v1/tenants/me', { headers });
+      if (!res.ok) return;
+      const tenant = await res.json();
+      const tier: string = (tenant.tier || 'free').toLowerCase();
+      const balance: number = tenant.balance ?? tenant.mcu_balance ?? tenant.credits ?? 0;
+
+      if (tier === 'enterprise') return;
+      const limit = TIER_LIMITS[tier] ?? 200;
+      const threshold = limit > 0 ? limit * 0.2 : 40;
+
+      if (balance < threshold || limit === 0) {
+        const meta = document.getElementById('upgrade-banner-meta');
+        if (meta) {
+          const limitLabel = limit > 0 ? limit + ' MCU/tháng' : 'không có credits';
+          meta.textContent = `Số dư: ${balance} MCU · Gói hiện tại: ${tier} (${limitLabel})`;
+        }
+        const banner = document.getElementById('upgrade-banner');
+        if (banner) banner.style.display = 'flex';
+      }
+    } catch {
+      // Silent fail — CTA is non-critical
+    }
+  }
+
+  document.getElementById('btn-dismiss-upgrade')?.addEventListener('click', () => {
+    sessionStorage.setItem(DISMISS_KEY, '1');
+    const banner = document.getElementById('upgrade-banner');
+    if (banner) banner.style.display = 'none';
+  });
+
   // Init
   loadMissions();
+  checkUpgradeCTA();
 </script>
 
 <style>
@@ -611,6 +664,50 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
 
   .upgrade-cta-text strong {
     color: #818cf8;
+  }
+
+  /* Upgrade Banner */
+  .upgrade-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    flex-wrap: wrap;
+  }
+
+  .upgrade-banner-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .upgrade-banner-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .upgrade-banner-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .upgrade-banner-meta {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .upgrade-banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   /* Responsive */

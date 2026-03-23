@@ -15,10 +15,10 @@ const steps = [
 ];
 
 const plans = [
-  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Thử ngay, miễn phí 100%', href: 'https://app.agencyos.network/signup', featured: false },
-  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Bắt đầu 14 ngày miễn phí', href: 'https://app.agencyos.network/signup?plan=starter', featured: false },
-  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Tôi muốn tăng trưởng →', href: 'https://app.agencyos.network/signup?plan=pro', featured: true },
-  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI riêng cho bạn', 'White-label thương hiệu', 'Onboarding 1-1 tận tay', 'SLA 99.99%'], cta: 'Nói chuyện với chúng tôi', href: 'mailto:hello@agencyos.network', featured: false },
+  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Thử ngay, miễn phí 100%', href: 'https://app.agencyos.network/signup', featured: false, annualPrice: '$0', annualBilled: '', annualSaving: '', annualHref: 'https://app.agencyos.network/signup' },
+  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Bắt đầu 14 ngày miễn phí', href: 'https://app.agencyos.network/signup?plan=starter', featured: false, annualPrice: '$39', annualBilled: 'tính $468/năm', annualSaving: 'Tiết kiệm 20%', annualHref: 'https://app.agencyos.network/signup?plan=starter&billing=annual' },
+  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Tôi muốn tăng trưởng →', href: 'https://app.agencyos.network/signup?plan=pro', featured: true, annualPrice: '$119', annualBilled: 'tính $1,428/năm', annualSaving: 'Tiết kiệm 20%', annualHref: 'https://app.agencyos.network/signup?plan=pro&billing=annual' },
+  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI riêng cho bạn', 'White-label thương hiệu', 'Onboarding 1-1 tận tay', 'SLA 99.99%'], cta: 'Nói chuyện với chúng tôi', href: 'mailto:hello@agencyos.network', featured: false, annualPrice: '$399', annualBilled: 'tính $4,788/năm', annualSaving: 'Tiết kiệm 20%', annualHref: 'mailto:hello@agencyos.network' },
 ];
 
 const faqs = [
@@ -701,26 +701,37 @@ const breadcrumbSchema = {
         <div class="badge" style="margin-bottom:16px;">Bảng giá</div>
         <h2 class="headline">Trả theo giá trị. <span class="gradient-text">Không trả cho những gì không dùng.</span></h2>
         <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14 ngày thử tất cả tính năng, miễn phí. Huỷ 1 click, không hỏi.</p>
-        <!-- Toggle (visual only) -->
+        <!-- Billing toggle -->
         <div style="display:flex;justify-content:center;margin-bottom:48px;">
-          <div class="pricing-toggle">
-            <span class="toggle-opt active">Hàng tháng</span>
-            <span class="toggle-opt">Hàng năm <span style="font-size:0.7rem;color:#4ade80;margin-left:4px;">-20%</span></span>
+          <div class="pricing-toggle" id="billing-toggle" role="group" aria-label="Chọn chu kỳ thanh toán">
+            <span class="toggle-opt active" id="toggle-monthly" role="button" tabindex="0" aria-pressed="true">Hàng tháng</span>
+            <span class="toggle-opt" id="toggle-annual" role="button" tabindex="0" aria-pressed="false">Hàng năm <span style="font-size:0.7rem;color:#4ade80;margin-left:4px;">tiết kiệm 20%</span></span>
           </div>
         </div>
       </div>
-      <div class="grid-4" style="align-items:start;">
+      <div class="grid-4" style="align-items:start;" id="pricing-grid">
         {plans.map((p, i) => (
-          <div class={`animate-on-scroll${p.featured ? ' pricing-featured' : ' card'}`} style={`animation-delay:${i*0.1}s;border-radius:var(--md-radius);padding:28px;position:relative;${!p.featured ? 'background:var(--md-surface-container);border:1px solid var(--md-outline);' : ''}`}>
+          <div class={`animate-on-scroll pricing-card${p.featured ? ' pricing-featured' : ' card'}`}
+               data-monthly-price={p.price}
+               data-annual-price={p.annualPrice}
+               data-monthly-href={p.href}
+               data-annual-href={p.annualHref}
+               style={`animation-delay:${i*0.1}s;border-radius:var(--md-radius);padding:28px;position:relative;${!p.featured ? 'background:var(--md-surface-container);border:1px solid var(--md-outline);' : ''}`}>
             {p.tag && (
               <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00BCD4,#7C4DFF);color:#fff;font-size:0.72rem;font-weight:700;padding:4px 14px;border-radius:100px;white-space:nowrap;">{p.tag}</div>
             )}
             <div style="margin-bottom:20px;">
               <div style="font-size:0.85rem;color:var(--md-on-surface-muted);margin-bottom:6px;">{p.name}</div>
-              <div style="display:flex;align-items:baseline;gap:2px;">
-                <span style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.2rem;font-weight:800;">{p.price}</span>
+              <div style="display:flex;align-items:baseline;gap:2px;flex-wrap:wrap;">
+                <span class="plan-price" style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.2rem;font-weight:800;">{p.price}</span>
                 <span style="font-size:0.85rem;color:var(--md-on-surface-muted);">{p.period}</span>
+                {p.annualSaving && (
+                  <span class="annual-badge" style="display:none;font-size:0.7rem;font-weight:700;color:#4ade80;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:100px;padding:2px 8px;margin-left:6px;">{p.annualSaving}</span>
+                )}
               </div>
+              {p.annualBilled && (
+                <div class="annual-billed" style="display:none;font-size:0.75rem;color:var(--md-on-surface-muted);margin-top:4px;">{p.annualBilled}</div>
+              )}
             </div>
             <ul style="list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:10px;">
               {p.features.map(feat => (
@@ -729,7 +740,7 @@ const breadcrumbSchema = {
                 </li>
               ))}
             </ul>
-            <a href={p.href} class={p.featured ? 'btn-primary' : 'btn-outline'} style="display:flex;justify-content:center;width:100%;text-align:center;">{p.cta}</a>
+            <a href={p.href} class={`plan-cta ${p.featured ? 'btn-primary' : 'btn-outline'}`} style="display:flex;justify-content:center;width:100%;text-align:center;">{p.cta}</a>
           </div>
         ))}
       </div>
@@ -771,6 +782,49 @@ const breadcrumbSchema = {
       </div>
     </div>
   </section>
+
+  <script>
+    // Billing toggle: monthly <-> annual
+    (function() {
+      var btnMonthly = document.getElementById('toggle-monthly');
+      var btnAnnual = document.getElementById('toggle-annual');
+      if (!btnMonthly || !btnAnnual) return;
+
+      function setAnnual(isAnnual) {
+        // Update toggle button states
+        btnMonthly.classList.toggle('active', !isAnnual);
+        btnAnnual.classList.toggle('active', isAnnual);
+        btnMonthly.setAttribute('aria-pressed', String(!isAnnual));
+        btnAnnual.setAttribute('aria-pressed', String(isAnnual));
+
+        // Update each pricing card
+        document.querySelectorAll('.pricing-card').forEach(function(card) {
+          var price = card.querySelector('.plan-price');
+          var annualBadge = card.querySelector('.annual-badge');
+          var annualBilled = card.querySelector('.annual-billed');
+          var cta = card.querySelector('.plan-cta');
+
+          if (price) {
+            price.textContent = isAnnual
+              ? (card.dataset.annualPrice || card.dataset.monthlyPrice || '')
+              : (card.dataset.monthlyPrice || '');
+          }
+          if (annualBadge) annualBadge.style.display = isAnnual ? 'inline-flex' : 'none';
+          if (annualBilled) annualBilled.style.display = isAnnual ? 'block' : 'none';
+          if (cta) {
+            cta.href = isAnnual
+              ? (card.dataset.annualHref || card.dataset.monthlyHref || '#')
+              : (card.dataset.monthlyHref || '#');
+          }
+        });
+      }
+
+      btnMonthly.addEventListener('click', function() { setAnnual(false); });
+      btnAnnual.addEventListener('click', function() { setAnnual(true); });
+      btnMonthly.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAnnual(false); } });
+      btnAnnual.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAnnual(true); } });
+    })();
+  </script>
 
   <style>
     details[open] summary svg { transform: rotate(180deg); }
