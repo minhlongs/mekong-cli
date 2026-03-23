@@ -1,5 +1,5 @@
 {
-  "name": "@mekong/openclaw-engine",
+  "name": "@mekongcli/openclaw-engine",
   "version": "1.0.0",
   "private": false,
   "description": "OpenClaw mission orchestration engine — TypeScript SDK for mission dispatch, complexity classification, and reliability patterns",

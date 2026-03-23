@@ -1,5 +1,5 @@
 {
-  "name": "@mekong/cli-core",
+  "name": "@mekongcli/cli-core",
   "version": "0.3.0",
   "private": false,
   "description": "Mekong CLI core — AI-operated business platform with 319 commands across 5 layers",
@@ -26,7 +26,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@mekong/openclaw-engine": "workspace:*",
+    "@mekongcli/openclaw-engine": "^1.0.0",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
     "cron": "^4.4.0",
