@@ -82,20 +82,22 @@
 
 ---
 
-## PHASE 2: ProductHunt Launch (Week 3-4, Apr 7-20) — 5% PARTIAL
+## PHASE 2: ProductHunt Launch (Week 3-4, Apr 7-20) — 26% PARTIAL
 
 ### Pre-Launch Assets (Week 3)
 - [ ] 5 product screenshots (dashboard, mission, credits, CLI, results)
 - [ ] 60s demo video: "Submit goal → AI executes → results"
 - [ ] 3 GIFs: CLI, dashboard mission, credit purchase
-- [ ] PH listing: name, tagline, description, topics, pricing
+- [x] PH listing: name, tagline, description, topics, maker comment — DONE (Batch 6)
 - [ ] Community warm-up: notify free users, Twitter "coming soon"
 - [ ] Engage 20+ PH community members
 - [ ] Ask 5-10 dev friends for reviews
 
 ### Launch Day
-- [ ] Hour-by-hour execution plan (00:01-22:00 PST)
-- [ ] Maker comment posted
+- [x] Hour-by-hour execution plan (00:01-24:00 PST) — DONE (Batch 6)
+- [x] Pre-launch checklist (T-7 to T-1) — DONE (Batch 6)
+- [x] Social media launch copy (Twitter thread, LinkedIn, Reddit, HN) — DONE (Batch 6)
+- [ ] Maker comment posted (live on launch day)
 - [ ] Share on Twitter/X, LinkedIn, Reddit
 - [ ] Reply every PH comment < 15 min
 
@@ -116,7 +118,7 @@
 
 ---
 
-## PHASE 3: PLG Growth Engine (Week 5-8, Apr 21 - May 18) — 85% DONE
+## PHASE 3: PLG Growth Engine (Week 5-8, Apr 21 - May 18) — 80% NEAR-DONE
 
 ### Content Marketing
 - [x] Blog #1: "How I Built AI Agent 342 Commands" (founder story)
@@ -126,7 +128,7 @@
 - [x] EN blog mirrors
 - [x] Blog nav links (header + footer)
 - [ ] Twitter 2/day, LinkedIn 2/week, YouTube 1/week
-- [ ] SEO: "AI agent platform", "automate business AI"
+- [x] SEO meta optimization for target keywords — DONE (Batch 6)
 - [x] JSON-LD structured data (already existed)
 - [x] Sitemap via @astrojs/sitemap
 
@@ -146,7 +148,7 @@
 - [x] Community nav link
 - [ ] Discord server (#general, #showcase, #bugs, #feature-requests)
 - [ ] Weekly "Mission Monday"
-- [ ] GitHub Discussions
+- [x] GitHub Discussions enabled — DONE (Batch 6)
 - [ ] First community call
 
 ### Success Criteria
@@ -158,7 +160,7 @@
 
 ---
 
-## PHASE 4: Scale to $10K MRR (Week 9-12, May 19 - Jun 15) — 70% PARTIAL
+## PHASE 4: Scale to $10K MRR (Week 9-12, May 19 - Jun 15) — 75% PARTIAL
 
 ### Enterprise Sales
 - [x] Enterprise sales page with ROI calculator (VI + EN)
@@ -171,11 +173,13 @@
 ### API Marketplace
 - [x] OpenAPI 3.0.3 spec + /docs/openapi endpoint
 - [ ] Zapier integration (3 triggers)
-- [ ] GitHub Actions integration
+- [x] GitHub Actions openclaw integration (reusable workflow) — DONE (Batch 6)
 - [ ] Slack /openclaw command
 - [ ] VS Code extension
 - [ ] RapidAPI listing
-- [ ] n8n/Make.com templates
+- [x] n8n webhook template — DONE (Batch 6)
+- [x] Make.com scenario blueprint — DONE (Batch 6)
+- [x] Integration docs README — DONE (Batch 6)
 
 ### Pricing Optimization
 - [x] A/B test $49 vs $39 Starter (tracking + client-side)
@@ -280,20 +284,21 @@
 | Phase | Status | Progress | Next Action |
 |-------|--------|----------|-------------|
 | 1. First Revenue | In Progress | 97% | Manual: test purchase + post launch content |
-| 2. PH Launch | Partial | 5% | Crisp done; screenshots + demo video (Apr 7) |
-| 3. PLG Engine | Near-Done | 85% | Discord server + ongoing social posting |
-| 4. Scale $10K | Partial | 70% | Zapier + LinkedIn outreach (May 19) |
+| 2. PH Launch | Partial | 26% | Screenshots + demo video + GIFs (Apr 7) |
+| 3. PLG Engine | Near-Done | 80% | Discord server + ongoing social posting |
+| 4. Scale $10K | Partial | 75% | Zapier + Slack + LinkedIn outreach (May 19) |
 | 5. $1M ARR | Pending | 0% | Hiring + verticals (Jul 2026) |
 | 6. Algo-Trading | Early | 10% | Wake M1 Max, validate paper trade |
 
-### Session Stats (23/03/2026) — Batches 1-5
-- 60+ tasks completed, 30+ agents spawned
+### Session Stats (23/03/2026) — Batches 1-6
+- 70+ tasks completed, 30+ agents spawned
 - 10+ commits, 15+ deploys
 - 1,190+ tests passed, 8 bugs fixed, 25+ features shipped
 - Batches 1-2: core infra + payment + email + launch kit
 - Batch 3: blog x4 (EN+VI) + community page + SEO + nav
 - Batch 4: enterprise page + OpenAPI + A/B test + trial + NPS + overage
 - Batch 5: PEV wiring + weekly digest + churn alerts + D1 migrations 0281-0284
+- Batch 6: PH listing + launch execution plan + pre-launch checklist + social copy + SEO meta + GH Discussions + GitHub Actions integration + n8n webhook + Make.com blueprint + integration docs
 
 ### Critical Path (This Week)
 1. **ANH**: Test purchase $49 → verify MCU credited
