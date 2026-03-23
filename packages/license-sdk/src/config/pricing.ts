@@ -31,9 +31,9 @@ export const PRICING_CONFIG: Record<string, BrandPricing> = {
     brand: 'MEKONG',
     tiers: [
       { tier: 'free',       name: 'Free',       priceUsd: 0,   polarProductId: '',               features: ['5 commands/day', 'Community forum'],                                           quotas: { commands: 5,    projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Starter',    priceUsd: 29,  polarProductId: 'mekong-starter',  features: ['50 commands/day', '3 projects', 'Email support'],                              quotas: { commands: 50,   projects: 3,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',        priceUsd: 99,  polarProductId: 'mekong-pro',      features: ['200 commands/day', '10 projects', 'Priority support', 'Analytics'],            quotas: { commands: 200,  projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Enterprise', priceUsd: 299, polarProductId: 'mekong-enterprise', features: ['Unlimited commands', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
+      { tier: 'starter',    name: 'Starter',    priceUsd: 49,  polarProductId: 'mekong-starter',  features: ['200 MCU/mo', '3 projects', 'Email support'],                              quotas: { commands: 200,   projects: 3,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',        priceUsd: 149, polarProductId: 'mekong-pro',      features: ['1000 MCU/mo', '10 projects', 'Priority support', 'Analytics'],            quotas: { commands: 1000,  projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Enterprise', priceUsd: 499, polarProductId: 'mekong-enterprise', features: ['Unlimited MCU', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
     ],
   },
   SOPHIA: {
