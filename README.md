@@ -13,13 +13,28 @@ Mekong CLI is an AI-operated business platform. One natural-language command tri
 ```
 $ mekong cook "Create a SaaS landing page with Stripe checkout"
 
-  Planning...  3 phases identified
-  Phase 1/3:   Scaffold Next.js + Tailwind (12 files)
-  Phase 2/3:   Wire Stripe checkout + webhook handler
-  Phase 3/3:   Deploy to Cloudflare Pages
-  Verify:      Build OK, tests pass, live at https://...
+  ◐ Planning...   3 phases identified
+  ✓ Phase 1/3:    Scaffold Next.js + Tailwind        (12 files created)
+  ✓ Phase 2/3:    Wire Stripe checkout + webhook handler
+  ✓ Phase 3/3:    Deploy to Cloudflare Pages
+  ✓ Verify:       Build OK ─ 14 tests pass ─ live at https://app.example.com
 
-  Done. 3 MCU credits used.
+  ✅ Done in 4m 23s.  3 MCU credits used.
+
+$ mekong founder:raise "Series A for AI platform"
+
+  ◐ Dispatching 8 agents in parallel...
+  ✓ Group 1:  Unit Economics + TAM + Moat Audit      (3 parallel)
+  ✓ Group 2:  Financial Model + Data Room            (2 parallel)
+  ✓ Group 3:  Cap Table → Pitch Deck → VC Map        (3 sequential)
+
+  ✅ Raise-ready kit at reports/raise-ready-kit/
+
+$ mekong status
+
+  OpenClaw v6.0 ─ 342 commands ─ 5 layers ─ CI: GREEN
+  LLM:     anthropic/claude-sonnet-4  via OpenRouter
+  Credits: 847 / 1000 MCU remaining
 ```
 
 ## Install
@@ -75,15 +90,7 @@ PEV Engine -----> Planner: 4 steps identified
 Verifier: build OK, 12 tests pass, deployed
 ```
 
-Commands compose into **DAG workflows** -- parallel where possible, sequential where required:
-
-```bash
-$ mekong founder:raise "Series A for AI platform"
-  Group 1 (parallel): /unit-economics + /tam + /moat-audit
-  Group 2 (parallel): /financial-model + /data-room
-  Group 3 (sequential): /cap-table -> /pitch -> /vc-map
-  Output: reports/raise-ready-kit/
-```
+Commands compose into **DAG workflows** -- parallel where possible, sequential where required. The `founder:raise` demo above shows 8 agents dispatched across 3 dependency groups, finishing in one command.
 
 ## 5 Business Layers, 300+ Commands
 
