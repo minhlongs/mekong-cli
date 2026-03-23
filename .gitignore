@@ -81,9 +81,6 @@ products/paid/*.zip
 
 # Stale monorepo configs
 fly.toml
-pnpm-lock.yaml
-pnpm-workspace.yaml
-turbo.json
 
 # OS
 .DS_Store
