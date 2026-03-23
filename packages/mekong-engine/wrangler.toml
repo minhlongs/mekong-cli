@@ -3,11 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
-<<<<<<< HEAD
-# Cloudflare Account ID
-=======
-# Replace with YOUR Cloudflare account ID (Dashboard → Overview → right sidebar)
->>>>>>> origin/main
 account_id = "f691e83094f776311a1bfe3f8b126f1c"
 
 [vars]
@@ -17,22 +12,12 @@ FB_VERIFY_TOKEN = "mekong_verify"
 
 [[d1_databases]]
 binding = "DB"
-<<<<<<< HEAD
 database_name = "mekong-db"
 database_id = "231c8d3a-4e59-46e6-86a5-7bb0af3b0810"
-=======
-database_name = "mekong-raas-db"
-# Create D1: wrangler d1 create mekong-db → paste database_id here
-database_id = "a0aa4f88-da5b-4616-84aa-7e559e37c91c"
->>>>>>> origin/main
 migrations_dir = "migrations"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-<<<<<<< HEAD
-=======
-# Create KV: wrangler kv namespace create RATE_LIMIT_KV → paste id here
->>>>>>> origin/main
 id = "982a12a5ea414244988a51d743eb14e7"
 
 [ai]
@@ -58,7 +43,7 @@ vars = { ENVIRONMENT = "staging", DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-ins
 
 [[env.staging.d1_databases]]
 binding = "DB"
-database_name = "mekong-raas-db-staging"
+database_name = "mekong-db-staging"
 database_id = ""
 
 [[env.staging.kv_namespaces]]
