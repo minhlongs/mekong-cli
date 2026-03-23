@@ -18,16 +18,15 @@ try:
         StandardCheck,
         get_raas_standards,
         get_oss_standards,
-        get_anima_standards,
+        get_project_standards,
     )
 except ImportError:
-    # Fallback if running as script from root
     sys.path.append(os.getcwd())
     from src.binh_phap.standards import (
         StandardCheck,
         get_raas_standards,
         get_oss_standards,
-        get_anima_standards,
+        get_project_standards,
     )
 
 console = Console()
@@ -49,24 +48,24 @@ def run_audit(standards: Dict[str, "StandardCheck"]) -> Dict[str, "StandardCheck
     return results
 
 
-def calculate_score(raas_results: Dict[str, "StandardCheck"], oss_results: Dict[str, "StandardCheck"], anima_results: Dict[str, "StandardCheck"]) -> int:
+def calculate_score(raas_results: Dict[str, "StandardCheck"], oss_results: Dict[str, "StandardCheck"], project_results: Dict[str, "StandardCheck"]) -> int:
     """Calculate overall quality score as percentage of passed checks.
 
     Args:
         raas_results: RaaS standard check results.
         oss_results: OSS standard check results.
-        anima_results: Anima standard check results.
+        project_results: Anima standard check results.
 
     Returns:
         Integer 0-100 representing percentage of checks that passed.
     """
-    total_checks = len(raas_results) + len(oss_results) + len(anima_results)
+    total_checks = len(raas_results) + len(oss_results) + len(project_results)
     if total_checks == 0:
         return 0
     passed = (
         sum(1 for c in raas_results.values() if c.status)
         + sum(1 for c in oss_results.values() if c.status)
-        + sum(1 for c in anima_results.values() if c.status)
+        + sum(1 for c in project_results.values() if c.status)
     )
     return int((passed / total_checks) * 100)
 
@@ -109,7 +108,7 @@ def main() -> None:
 
     raas_standards = get_raas_standards()
     oss_standards = get_oss_standards()
-    anima_standards = get_anima_standards()
+    project_standards = get_project_standards()
 
     loop_count = 0
 
@@ -120,8 +119,8 @@ def main() -> None:
         # 1. Audit
         raas_results = run_audit(raas_standards)
         oss_results = run_audit(oss_standards)
-        anima_results = run_audit(anima_standards)
-        score = calculate_score(raas_results, oss_results, anima_results)
+        project_results = run_audit(project_standards)
+        score = calculate_score(raas_results, oss_results, project_results)
 
         # 2. Visualize
         table = Table(title=f"Loop #{loop_count} @ {timestamp} | Score: {score}/100")
@@ -144,11 +143,11 @@ def main() -> None:
                 failures.append(res)
             table.add_row("Mekong CLI OSS", res.name, status_icon, res.details)
 
-        for key, res in anima_results.items():
+        for key, res in project_results.items():
             status_icon = "✅" if res.status else "❌"
             if not res.status:
                 failures.append(res)
-            table.add_row("Anima Pharma", res.name, status_icon, res.details)
+            table.add_row("Project", res.name, status_icon, res.details)
 
         console.clear()
         console.print(table)

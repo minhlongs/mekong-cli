@@ -1,54 +1,48 @@
 ---
 name: binh-phap-strategy
-description: Binh Pháp strategic workflow for agency operations
+description: Binh Phap strategic workflow — 5 factors assessment + WIN-WIN-WIN gate
 ---
 
-# Binh Pháp Strategy Workflow
+# Binh Phap Strategy Workflow
 
-## Ngũ Sự (5 Factors)
+## 5 Factors Assessment
 
 Before any decision, assess:
 
 | Factor | Question |
 |--------|----------|
-| **Đạo** (Way) | Lợi ích có aligned không? |
-| **Thiên** (Heaven) | Timing có phù hợp không? |
-| **Địa** (Earth) | Vị thế có tối ưu không? |
-| **Tướng** (General) | Leadership có rõ ràng không? |
-| **Pháp** (Law) | Quy trình có chuẩn không? |
+| **Dao** (Way) | Are interests aligned? |
+| **Tian** (Heaven) | Is the timing right? |
+| **Di** (Earth) | Is the position optimal? |
+| **Jiang** (General) | Is leadership clear? |
+| **Fa** (Law) | Are processes standardized? |
 
 ## WIN-WIN-WIN Gate
 
 ```
-Trước MỖI quyết định, hỏi:
-┌───────────────────────────────────────────────────┐
-│  👑 ANH (Owner) WIN gì?                           │
-│  🏢 AGENCY WIN gì?                                │
-│  🚀 STARTUP/CLIENT WIN gì?                        │
-│                                                   │
-│  ❌ Nếu bất kỳ bên nào LOSE → DỪNG LẠI           │
-│  ✅ Cả 3 WIN → Tiến hành                          │
-└───────────────────────────────────────────────────┘
+Before EVERY decision, ask:
++---------------------------------------------------+
+|  Owner: What do WE win?                           |
+|  Platform: What does the PLATFORM win?            |
+|  Customer: What does the CUSTOMER win?            |
+|                                                   |
+|  If ANY party loses -> STOP                       |
+|  All 3 win -> PROCEED                             |
++---------------------------------------------------+
 ```
 
 ## 13 Chapter Services
 
-Map client needs to appropriate service:
-
-1. **Kế Hoạch** → Strategy Assessment
-2. **Tác Chiến** → Runway Workshop
-3. **Mưu Công** → Win-Without-Fighting
-4. **Hình Thế** → Moat Audit
-5. **Thế Trận** → Growth Consulting
-6. **Hư Thực** → Anti-Dilution Shield
-7. **Quân Tranh** → Speed Sprint
-8. **Cửu Biến** → Pivot Workshop
-9. **Hành Quân** → OKR Implementation
-10. **Địa Hình** → Market Entry
-11. **Cửu Địa** → Crisis Retainer
-12. **Hỏa Công** → Disruption Strategy
-13. **Dụng Gián** → VC Intelligence
-
----
-
-🏯 *Thượng binh phạt mưu*
+1. **Strategy** -> Assessment & Planning
+2. **Operations** -> Runway & Resource Management
+3. **Tactics** -> Win-Without-Fighting
+4. **Position** -> Moat Audit
+5. **Momentum** -> Growth Consulting
+6. **Flexibility** -> Anti-Dilution Shield
+7. **Competition** -> Speed Sprint
+8. **Adaptation** -> Pivot Workshop
+9. **Movement** -> OKR Implementation
+10. **Terrain** -> Market Entry
+11. **Situations** -> Crisis Retainer
+12. **Attack** -> Disruption Strategy
+13. **Intelligence** -> Competitive Intel

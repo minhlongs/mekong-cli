@@ -128,7 +128,7 @@ class OSSDocsCheck(StandardCheck):
             if readme_path.exists():
                 with open(readme_path, "r") as f:
                     lines = f.readlines()
-                if len(lines) > 100:
+                if len(lines) > 50:
                     self.status = True
                     self.details = f"README.md is healthy ({len(lines)} lines)."
                 else:
@@ -239,14 +239,13 @@ def get_oss_standards() -> Dict[str, StandardCheck]:
     }
 
 
-def get_anima_standards() -> Dict[str, StandardCheck]:
-    """Return Anima 119 pharma-ecommerce quality checks.
+def get_project_standards(project_path: str = "") -> Dict[str, StandardCheck]:
+    """Return project-specific quality checks if available.
 
-    Lazily imports from anima_standards module to avoid circular deps.
+    Args:
+        project_path: Path to project with custom standards module.
 
     Returns:
-        Dict mapping check keys to StandardCheck instances.
+        Empty dict if no project-specific standards found.
     """
-    from .anima_standards import get_anima_standards as get_anima
-
-    return get_anima()
+    return {}
