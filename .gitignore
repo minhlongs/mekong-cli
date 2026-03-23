@@ -294,7 +294,16 @@ tmp/
 cc/
 bin/
 configs/
-# (cleaned: algo-trader has own repo)
+# (cleaned: algo-trader has own repo — github.com/longtho638-jpg/algo-trader)
+# Explicitly excluded even though apps/ rule covers them:
+apps/algo-trader/
+apps/algo-trader-remote/
+
+# Expect scripts and research delivery artifacts (root-level, not for public repo)
+RESEARCH-DELIVERY-COMPLETE.txt
+ssh_cmd.exp
+ssh_find.exp
+ssh_interact.exp
 
 # Agent benchmarks (private testing results)
 .agent/
