@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Expense",
     "name_en": "Expense",
     "icon": "",
-    "description_vi": "Expense tracking",
     "description_en": "Expense tracking"
   },
   "execution": {

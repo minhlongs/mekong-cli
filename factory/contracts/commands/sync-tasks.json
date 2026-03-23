@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Tasks",
     "name_en": "Sync Tasks",
     "icon": "",
-    "description_vi": "Sync Task Groups & Task List documentation from Antigravity",
     "description_en": "Sync Task Groups & Task List documentation from Antigravity"
   },
   "execution": {

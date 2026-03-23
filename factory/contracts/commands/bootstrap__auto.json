@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Auto",
     "name_en": "Auto",
     "icon": "",
-    "description_vi": "⚡⚡⚡⚡ Bootstrap a new project automatically",
     "description_en": "Bootstrap a new project automatically"
   },
   "execution": {

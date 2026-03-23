@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Providers",
     "name_en": "Sync Providers",
     "icon": "",
-    "description_vi": "Auto-sync documentation patterns from Google Antigravity into AgencyOS",
     "description_en": "Auto-sync documentation patterns from Google Antigravity into AgencyOS"
   },
   "execution": {

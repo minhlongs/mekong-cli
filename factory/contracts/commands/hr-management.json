@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Hr Management",
     "name_en": "Hr Management",
     "icon": "",
-    "description_vi": "HR management",
     "description_en": "HR management"
   },
   "execution": {

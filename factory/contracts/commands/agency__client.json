@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Client",
     "name_en": "Client",
     "icon": "",
-    "description_vi": "Execute Client command",
     "description_en": "Execute Client command"
   },
   "execution": {

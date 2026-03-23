@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Goals",
     "name_en": "Goals",
     "icon": "",
-    "description_vi": "Goal setting",
     "description_en": "Goal setting"
   },
   "execution": {

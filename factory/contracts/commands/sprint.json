@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Sprint",
     "name_en": "Sprint",
     "icon": "",
-    "description_vi": "Execute Sprint command",
     "description_en": "Execute Sprint command"
   },
   "execution": {

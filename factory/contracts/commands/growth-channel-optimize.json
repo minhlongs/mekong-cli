@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Growth Channel Optimize",
     "name_en": "Growth Channel Optimize",
     "icon": "",
-    "description_vi": "Channel audit, performance analysis, optimization plan. 3 commands, ~12 min.",
     "description_en": "Channel audit, performance analysis, optimization plan. 3 commands, ~12 min."
   },
   "execution": {

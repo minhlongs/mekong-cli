@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Estimate",
     "name_en": "Estimate",
     "icon": "",
-    "description_vi": "Estimate work",
     "description_en": "Estimate work"
   },
   "execution": {

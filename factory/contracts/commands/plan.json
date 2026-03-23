@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Plan",
     "name_en": "Plan",
     "icon": "",
-    "description_vi": "Decompose goal thành subtasks với agent assignment, model routing, MCU estimate",
     "description_en": "Decompose goal thnh subtasks vi agent assignment, model routing, MCU estimate"
   },
   "execution": {

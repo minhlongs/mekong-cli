@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Devops Rollback",
     "name_en": "Devops Rollback",
     "icon": "",
-    "description_vi": "Emergency rollback → smoke test → health check → incident report",
     "description_en": "Emergency rollback  smoke test  health check  incident report"
   },
   "execution": {

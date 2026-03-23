@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Release Ship",
     "name_en": "Release Ship",
     "icon": "",
-    "description_vi": "Changelog → version bump → test → tag → deploy production release",
     "description_en": "Changelog  version bump  test  tag  deploy production release"
   },
   "execution": {

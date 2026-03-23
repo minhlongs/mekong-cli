@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Ads",
     "name_en": "Ads",
     "icon": "",
-    "description_vi": "Execute Ads command",
     "description_en": "Execute Ads command"
   },
   "execution": {

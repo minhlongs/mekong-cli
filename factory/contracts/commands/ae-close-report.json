@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Ae Close Report",
     "name_en": "Ae Close Report",
     "icon": "",
-    "description_vi": "Close report — win/loss analysis then CRM update. 2 commands, ~5 min.",
     "description_en": "Close report  win/loss analysis then CRM update. 2 commands, ~5 min."
   },
   "execution": {

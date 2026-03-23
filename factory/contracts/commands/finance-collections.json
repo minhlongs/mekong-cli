@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Finance Collections",
     "name_en": "Finance Collections",
     "icon": "",
-    "description_vi": "AR aging assessment, overdue invoice list, reminder emails, follow-up schedule. 3 commands, ~10 min.",
     "description_en": "AR aging assessment, overdue invoice list, reminder emails, follow-up schedule. 3 commands, ~10 min."
   },
   "execution": {

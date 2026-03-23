@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Ocop Analyze",
     "name_en": "Ocop Analyze",
     "icon": "",
-    "description_vi": "Execute Ocop Analyze command",
     "description_en": "Execute Ocop Analyze command"
   },
   "execution": {

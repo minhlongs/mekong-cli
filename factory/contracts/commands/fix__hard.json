@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Hard",
     "name_en": "Hard",
     "icon": "",
-    "description_vi": "⚡⚡⚡ Use subagents to plan and fix hard issues",
     "description_en": "Use subagents to plan and fix hard issues"
   },
   "execution": {

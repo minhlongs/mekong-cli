@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Bootstrap",
     "name_en": "Bootstrap",
     "icon": "",
-    "description_vi": "🤖 Bootstrap AGI RaaS service — research → plan → implement → verify",
     "description_en": "Bootstrap AGI RaaS service  research  plan  implement  verify"
   },
   "execution": {

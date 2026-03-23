@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Email",
     "name_en": "Email",
     "icon": "",
-    "description_vi": "Email marketing automation",
     "description_en": "Email marketing automation"
   },
   "execution": {

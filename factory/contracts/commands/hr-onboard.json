@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Hr Onboard",
     "name_en": "Hr Onboard",
     "icon": "",
-    "description_vi": "Employee onboarding — welcome kit → access setup → 30-60-90 plan → buddy assignment",
     "description_en": "Employee onboarding  welcome kit  access setup  30-60-90 plan  buddy assignment"
   },
   "execution": {

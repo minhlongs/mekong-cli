@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Financial Report",
     "name_en": "Financial Report",
     "icon": "",
-    "description_vi": "Financial reporting",
     "description_en": "Financial reporting"
   },
   "execution": {

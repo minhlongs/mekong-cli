@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sepay",
     "name_en": "Sepay",
     "icon": "",
-    "description_vi": "⚡⚡ Implement payment integration with SePay.vn",
     "description_en": "Implement payment integration with SePay.vn"
   },
   "execution": {

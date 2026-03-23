@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Market",
     "name_en": "Market",
     "icon": "",
-    "description_vi": "Market research",
     "description_en": "Market research"
   },
   "execution": {

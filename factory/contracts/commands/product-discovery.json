@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Product Discovery",
     "name_en": "Product Discovery",
     "icon": "",
-    "description_vi": "Product discovery sprint — personas, competitors, brainstorm, scope in 30 min",
     "description_en": "Product discovery sprint  personas, competitors, brainstorm, scope in 30 min"
   },
   "execution": {

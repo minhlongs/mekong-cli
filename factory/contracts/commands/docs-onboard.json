@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Docs Onboard",
     "name_en": "Docs Onboard",
     "icon": "",
-    "description_vi": "Onboarding documentation",
     "description_en": "Onboarding documentation"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Design User Research",
     "name_en": "Design User Research",
     "icon": "",
-    "description_vi": "UX research sprint — personas → user journeys → pain points → opportunity map",
     "description_en": "UX research sprint  personas  user journeys  pain points  opportunity map"
   },
   "execution": {

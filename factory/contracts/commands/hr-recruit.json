@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Hr Recruit",
     "name_en": "Hr Recruit",
     "icon": "",
-    "description_vi": "Recruiting pipeline — JD → sourcing → interview kit → offer template",
     "description_en": "Recruiting pipeline  JD  sourcing  interview kit  offer template"
   },
   "execution": {

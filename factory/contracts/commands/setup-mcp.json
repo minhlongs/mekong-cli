@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Setup Mcp",
     "name_en": "Setup Mcp",
     "icon": "",
-    "description_vi": "Setup MCP servers automatically - Zero effort required",
     "description_en": "Setup MCP servers automatically - Zero effort required"
   },
   "execution": {

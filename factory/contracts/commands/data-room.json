@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Data Room",
     "name_en": "Data Room",
     "icon": "",
-    "description_vi": "Due diligence data room — auto-generate and organize all documents VCs will request",
     "description_en": "Due diligence data room  auto-generate and organize all documents VCs will request"
   },
   "execution": {

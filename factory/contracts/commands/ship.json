@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Ship",
     "name_en": "Ship",
     "icon": "",
-    "description_vi": "Execute Ship command",
     "description_en": "Execute Ship command"
   },
   "execution": {

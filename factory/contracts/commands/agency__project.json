@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Project",
     "name_en": "Project",
     "icon": "",
-    "description_vi": "Execute Project command",
     "description_en": "Execute Project command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Ae Follow Up",
     "name_en": "Ae Follow Up",
     "icon": "",
-    "description_vi": "Meeting follow-up — follow-up email + next steps scheduled in parallel. 2 commands, ~5 min.",
     "description_en": "Meeting follow-up  follow-up email + next steps scheduled in parallel. 2 commands, ~5 min."
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Forecast",
     "name_en": "Forecast",
     "icon": "",
-    "description_vi": "Financial forecast",
     "description_en": "Financial forecast"
   },
   "execution": {

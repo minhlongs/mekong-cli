@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Founder Weekly",
     "name_en": "Founder Weekly",
     "icon": "",
-    "description_vi": "Weekly CEO rhythm — metrics, review, investor update in 15 min",
     "description_en": "Weekly CEO rhythm  metrics, review, investor update in 15 min"
   },
   "execution": {

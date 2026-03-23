@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Project Management",
     "name_en": "Project Management",
     "icon": "",
-    "description_vi": "Project management VN",
     "description_en": "Project management VN"
   },
   "execution": {

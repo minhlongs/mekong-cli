@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Status",
     "name_en": "Status",
     "icon": "",
-    "description_vi": "Kiểm tra sức khỏe toàn bộ hệ thống AgencyOS/Mekong",
     "description_en": "Kim tra sc khe ton b h thng AgencyOS/Mekong"
   },
   "execution": {

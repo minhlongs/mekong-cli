@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Pr",
     "name_en": "Pr",
     "icon": "",
-    "description_vi": "PR strategy & press release",
     "description_en": "PR strategy & press release"
   },
   "execution": {

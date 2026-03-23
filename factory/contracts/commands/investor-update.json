@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Investor Update",
     "name_en": "Investor Update",
     "icon": "",
-    "description_vi": "Monthly/quarterly investor update — auto-generate from metrics, wins, asks, runway",
     "description_en": "Monthly/quarterly investor update  auto-generate from metrics, wins, asks, runway"
   },
   "execution": {

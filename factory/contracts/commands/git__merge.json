@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Merge",
     "name_en": "Merge",
     "icon": "",
-    "description_vi": "Execute Merge command",
     "description_en": "Execute Merge command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Tech Migration",
     "name_en": "Tech Migration",
     "icon": "",
-    "description_vi": "Audit current → plan migration → generate scripts → test → verify",
     "description_en": "Audit current  plan migration  generate scripts  test  verify"
   },
   "execution": {

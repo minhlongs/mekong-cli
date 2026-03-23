@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Brainstorm",
     "name_en": "Brainstorm",
     "icon": "",
-    "description_vi": "⚡⚡ Brainstorm a feature",
     "description_en": "Brainstorm a feature"
   },
   "execution": {

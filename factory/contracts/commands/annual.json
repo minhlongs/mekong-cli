@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Annual",
     "name_en": "Annual",
     "icon": "",
-    "description_vi": "Annual plan",
     "description_en": "Annual plan"
   },
   "execution": {

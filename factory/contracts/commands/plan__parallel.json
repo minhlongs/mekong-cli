@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Parallel",
     "name_en": "Parallel",
     "icon": "",
-    "description_vi": "⚡⚡⚡ Create detailed plan with parallel-executable phases",
     "description_en": "Create detailed plan with parallel-executable phases"
   },
   "execution": {

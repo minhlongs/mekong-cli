@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Bootstrap",
     "name_en": "Bootstrap",
     "icon": "",
-    "description_vi": "Bootstrap vs raise decision — ramen profitability calculator, bootstrap playbook",
     "description_en": "Bootstrap vs raise decision  ramen profitability calculator, bootstrap playbook"
   },
   "execution": {

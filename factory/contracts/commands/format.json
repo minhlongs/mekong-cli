@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Format",
     "name_en": "Format",
     "icon": "",
-    "description_vi": "Format codebase",
     "description_en": "Format codebase"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ops Disaster Recovery",
     "name_en": "Ops Disaster Recovery",
     "icon": "",
-    "description_vi": "Disaster recovery test — backup, smoke test, integrity report in 15 min",
     "description_en": "Disaster recovery test  backup, smoke test, integrity report in 15 min"
   },
   "execution": {

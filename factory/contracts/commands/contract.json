@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Contract",
     "name_en": "Contract",
     "icon": "",
-    "description_vi": "Generate contract",
     "description_en": "Generate contract"
   },
   "execution": {

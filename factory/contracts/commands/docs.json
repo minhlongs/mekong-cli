@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Docs",
     "name_en": "Docs",
     "icon": "",
-    "description_vi": "Execute Docs command",
     "description_en": "Execute Docs command"
   },
   "execution": {

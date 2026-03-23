@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Unit Economics",
     "name_en": "Unit Economics",
     "icon": "",
-    "description_vi": "Unit economics deep dive — LTV, CAC, payback period, contribution margin, cohort analysis",
     "description_en": "Unit economics deep dive  LTV, CAC, payback period, contribution margin, cohort analysis"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Arch",
     "name_en": "Arch",
     "icon": "",
-    "description_vi": "List top-tier architecture references for agents",
     "description_en": "List top-tier architecture references for agents"
   },
   "execution": {

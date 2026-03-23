@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Chien Luoc Ban Hang",
     "name_en": "Chien Luoc Ban Hang",
     "icon": "",
-    "description_vi": "Execute Chien Luoc Ban Hang command",
     "description_en": "Execute Chien Luoc Ban Hang command"
   },
   "execution": {

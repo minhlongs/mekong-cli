@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Legal Compliance Check",
     "name_en": "Legal Compliance Check",
     "icon": "",
-    "description_vi": "Compliance check — privacy policy → terms → data handling → regulatory gaps",
     "description_en": "Compliance check  privacy policy  terms  data handling  regulatory gaps"
   },
   "execution": {

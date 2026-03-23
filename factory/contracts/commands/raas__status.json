@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Status",
     "name_en": "Status",
     "icon": "",
-    "description_vi": "📊 Health check toàn bộ AGI RaaS stack",
     "description_en": "Health check ton b AGI RaaS stack"
   },
   "execution": {

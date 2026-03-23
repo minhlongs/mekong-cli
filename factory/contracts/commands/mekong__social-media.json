@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Social Media",
     "name_en": "Social Media",
     "icon": "",
-    "description_vi": "Execute Social Media command",
     "description_en": "Execute Social Media command"
   },
   "execution": {

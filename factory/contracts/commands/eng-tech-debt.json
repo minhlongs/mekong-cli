@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Eng Tech Debt",
     "name_en": "Eng Tech Debt",
     "icon": "",
-    "description_vi": "Audit → prioritize → refactor → test → verify tech debt",
     "description_en": "Audit  prioritize  refactor  test  verify tech debt"
   },
   "execution": {

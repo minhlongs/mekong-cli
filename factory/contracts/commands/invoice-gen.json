@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Invoice Gen",
     "name_en": "Invoice Gen",
     "icon": "",
-    "description_vi": "Create invoice",
     "description_en": "Create invoice"
   },
   "execution": {

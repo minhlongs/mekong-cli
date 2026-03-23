@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Hire",
     "name_en": "Hire",
     "icon": "",
-    "description_vi": "Agentic recruiting — auto-generate JDs, interview kits, contractor briefs",
     "description_en": "Agentic recruiting  auto-generate JDs, interview kits, contractor briefs"
   },
   "execution": {

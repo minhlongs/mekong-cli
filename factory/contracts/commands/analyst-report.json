@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Analyst Report",
     "name_en": "Analyst Report",
     "icon": "",
-    "description_vi": "Data pull, analysis, executive summary. 2 commands, ~12 min.",
     "description_en": "Data pull, analysis, executive summary. 2 commands, ~12 min."
   },
   "execution": {

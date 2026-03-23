@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Analyst Forecast Update",
     "name_en": "Analyst Forecast Update",
     "icon": "",
-    "description_vi": "Pull actuals, compare, update model, variance report. 2 commands, ~8 min.",
     "description_en": "Pull actuals, compare, update model, variance report. 2 commands, ~8 min."
   },
   "execution": {

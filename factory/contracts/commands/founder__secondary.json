@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Secondary",
     "name_en": "Secondary",
     "icon": "",
-    "description_vi": "Founder liquidity — secondary sales, tender offers, SPV structures, tax optimization",
     "description_en": "Founder liquidity  secondary sales, tender offers, SPV structures, tax optimization"
   },
   "execution": {

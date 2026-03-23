@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Crisis",
     "name_en": "Crisis",
     "icon": "",
-    "description_vi": "Execute Crisis command",
     "description_en": "Execute Crisis command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "No Test",
     "name_en": "No Test",
     "icon": "",
-    "description_vi": "⚡⚡ Start coding an existing plan (no testing)",
     "description_en": "Start coding an existing plan (no testing)"
   },
   "execution": {

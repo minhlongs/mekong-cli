@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Platform Environment Setup",
     "name_en": "Platform Environment Setup",
     "icon": "",
-    "description_vi": "Init → install deps → configure MCP → verify environment setup",
     "description_en": "Init  install deps  configure MCP  verify environment setup"
   },
   "execution": {

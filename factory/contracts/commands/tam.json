@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Tam",
     "name_en": "Tam",
     "icon": "",
-    "description_vi": "Market sizing — TAM/SAM/SOM with top-down and bottom-up analysis, VC-ready market slide",
     "description_en": "Market sizing  TAM/SAM/SOM with top-down and bottom-up analysis, VC-ready market slide"
   },
   "execution": {

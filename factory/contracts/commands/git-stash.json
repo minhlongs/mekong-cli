@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Git Stash",
     "name_en": "Git Stash",
     "icon": "",
-    "description_vi": "Stash work",
     "description_en": "Stash work"
   },
   "execution": {

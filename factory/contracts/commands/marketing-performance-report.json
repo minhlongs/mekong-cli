@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Marketing Performance Report",
     "name_en": "Marketing Performance Report",
     "icon": "",
-    "description_vi": "Channel metrics, SEO health audit, ROI analysis, optimization recommendations. 3 commands, ~15 min.",
     "description_en": "Channel metrics, SEO health audit, ROI analysis, optimization recommendations. 3 commands, ~15 min."
   },
   "execution": {

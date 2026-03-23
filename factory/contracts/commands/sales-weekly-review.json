@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Sales Weekly Review",
     "name_en": "Sales Weekly Review",
     "icon": "",
-    "description_vi": "Pipeline health, revenue tracking, weekly forecast and action items. 3 commands, ~10 min.",
     "description_en": "Pipeline health, revenue tracking, weekly forecast and action items. 3 commands, ~10 min."
   },
   "execution": {

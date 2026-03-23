@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Timeline",
     "name_en": "Timeline",
     "icon": "",
-    "description_vi": "Create timeline",
     "description_en": "Create timeline"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Khach Hang",
     "name_en": "Khach Hang",
     "icon": "",
-    "description_vi": "Execute Khach Hang command",
     "description_en": "Execute Khach Hang command"
   },
   "execution": {

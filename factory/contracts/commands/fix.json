@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Fix",
     "name_en": "Fix",
     "icon": "",
-    "description_vi": "Debug và fix bug với mandatory SCAN phase + Jidoka safety gate",
     "description_en": "Debug v fix bug vi mandatory SCAN phase + Jidoka safety gate"
   },
   "execution": {

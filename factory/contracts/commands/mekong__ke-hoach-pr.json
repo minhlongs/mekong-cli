@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ke Hoach Pr",
     "name_en": "Ke Hoach Pr",
     "icon": "",
-    "description_vi": "Execute Ke Hoach Pr command",
     "description_en": "Execute Ke Hoach Pr command"
   },
   "execution": {

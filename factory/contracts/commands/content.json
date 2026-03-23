@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Content",
     "name_en": "Content",
     "icon": "",
-    "description_vi": "Content strategy & calendar",
     "description_en": "Content strategy & calendar"
   },
   "execution": {

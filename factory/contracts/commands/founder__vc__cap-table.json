@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Cap Table",
     "name_en": "Cap Table",
     "icon": "",
-    "description_vi": "Cap table modeling — dilution across rounds, ownership %, ESOP impact",
     "description_en": "Cap table modeling  dilution across rounds, ownership %, ESOP impact"
   },
   "execution": {

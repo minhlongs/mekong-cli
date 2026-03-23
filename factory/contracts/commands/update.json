@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Update",
     "name_en": "Update",
     "icon": "",
-    "description_vi": "Update all deps",
     "description_en": "Update all deps"
   },
   "execution": {

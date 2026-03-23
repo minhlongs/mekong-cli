@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Create",
     "name_en": "Create",
     "icon": "",
-    "description_vi": "Create a new agent skill",
     "description_en": "Create a new agent skill"
   },
   "execution": {

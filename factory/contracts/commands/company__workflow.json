@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Workflow",
     "name_en": "Workflow",
     "icon": "",
-    "description_vi": "Trigger và quản lý automated workflows — onboard, upsell, bug-pipeline, weekly-brief, deploy",
     "description_en": "Trigger v qun l automated workflows  onboard, upsell, bug-pipeline, weekly-brief, deploy"
   },
   "execution": {

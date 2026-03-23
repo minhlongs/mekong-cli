@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ke Hoach Kinh Doanh",
     "name_en": "Ke Hoach Kinh Doanh",
     "icon": "",
-    "description_vi": "Execute Ke Hoach Kinh Doanh command",
     "description_en": "Execute Ke Hoach Kinh Doanh command"
   },
   "execution": {

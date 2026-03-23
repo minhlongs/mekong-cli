@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Partnerships",
     "name_en": "Partnerships",
     "icon": "",
-    "description_vi": "Partner relations",
     "description_en": "Partner relations"
   },
   "execution": {

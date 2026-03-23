@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Agent",
     "name_en": "Agent",
     "icon": "",
-    "description_vi": "Quản lý 8 agents — list, ask, train, handoff, pause, resume",
     "description_en": "Qun l 8 agents  list, ask, train, handoff, pause, resume"
   },
   "execution": {

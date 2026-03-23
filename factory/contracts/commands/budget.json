@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Budget",
     "name_en": "Budget",
     "icon": "",
-    "description_vi": "Budget planning",
     "description_en": "Budget planning"
   },
   "execution": {

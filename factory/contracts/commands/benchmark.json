@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Benchmark",
     "name_en": "Benchmark",
     "icon": "",
-    "description_vi": "Benchmark performance",
     "description_en": "Benchmark performance"
   },
   "execution": {

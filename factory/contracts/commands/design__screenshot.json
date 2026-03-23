@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Screenshot",
     "name_en": "Screenshot",
     "icon": "",
-    "description_vi": "Create a design based on screenshot",
     "description_en": "Create a design based on screenshot"
   },
   "execution": {

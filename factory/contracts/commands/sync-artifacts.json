@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Artifacts",
     "name_en": "Sync Artifacts",
     "icon": "",
-    "description_vi": "Sync Artifacts documentation from Antigravity (Task List, Plans, Walkthroughs, etc.)",
     "description_en": "Sync Artifacts documentation from Antigravity (Task List, Plans, Walkthroughs, etc.)"
   },
   "execution": {

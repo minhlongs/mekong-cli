@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ke Hoach Tang Truong",
     "name_en": "Ke Hoach Tang Truong",
     "icon": "",
-    "description_vi": "Execute Ke Hoach Tang Truong command",
     "description_en": "Execute Ke Hoach Tang Truong command"
   },
   "execution": {

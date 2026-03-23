@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Founder Validate Sprint",
     "name_en": "Founder Validate Sprint",
     "icon": "",
-    "description_vi": "Business validation sprint — 5 commands parallel, PMF + economics + market in 25 min",
     "description_en": "Business validation sprint  5 commands parallel, PMF + economics + market in 25 min"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Auto",
     "name_en": "Auto",
     "icon": "",
-    "description_vi": "🤖 AUTO Bootstrap — zero-prompt sequential mode for CTO injection",
     "description_en": "AUTO Bootstrap  zero-prompt sequential mode for CTO injection"
   },
   "execution": {

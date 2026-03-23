@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Backend Db Task",
     "name_en": "Backend Db Task",
     "icon": "",
-    "description_vi": "Backend DB task — schema change, migration, seed, verify in 10 min",
     "description_en": "Backend DB task  schema change, migration, seed, verify in 10 min"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Parallel",
     "name_en": "Parallel",
     "icon": "",
-    "description_vi": "⚡⚡⚡⚡⚡ Bootstrap project with parallel execution",
     "description_en": "Bootstrap project with parallel execution"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Frontend Responsive Fix",
     "name_en": "Frontend Responsive Fix",
     "icon": "",
-    "description_vi": "Frontend responsive fix — audit breakpoints, fix issues, test viewports in 8 min",
     "description_en": "Frontend responsive fix  audit breakpoints, fix issues, test viewports in 8 min"
   },
   "execution": {

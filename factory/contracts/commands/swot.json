@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Swot",
     "name_en": "Swot",
     "icon": "",
-    "description_vi": "SWOT analysis",
     "description_en": "SWOT analysis"
   },
   "execution": {

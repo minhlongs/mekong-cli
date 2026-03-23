@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Hr",
     "name_en": "Hr",
     "icon": "",
-    "description_vi": "Execute Hr command",
     "description_en": "Execute Hr command"
   },
   "execution": {

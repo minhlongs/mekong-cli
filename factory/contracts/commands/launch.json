@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Launch",
     "name_en": "Launch",
     "icon": "",
-    "description_vi": "Tạo launch copy cho Product Hunt, Hacker News, Reddit và các platform khác",
     "description_en": "To launch copy cho Product Hunt, Hacker News, Reddit v cc platform khc"
   },
   "execution": {

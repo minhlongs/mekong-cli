@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Social",
     "name_en": "Social",
     "icon": "",
-    "description_vi": "Execute Social command",
     "description_en": "Execute Social command"
   },
   "execution": {

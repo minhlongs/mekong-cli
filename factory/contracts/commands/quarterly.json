@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Quarterly",
     "name_en": "Quarterly",
     "icon": "",
-    "description_vi": "QBR",
     "description_en": "QBR"
   },
   "execution": {

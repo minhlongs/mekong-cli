@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Finance Budget Plan",
     "name_en": "Finance Budget Plan",
     "icon": "",
-    "description_vi": "Department budgets, financial forecast, budget allocation and approval deck. 3 commands, ~20 min.",
     "description_en": "Department budgets, financial forecast, budget allocation and approval deck. 3 commands, ~20 min."
   },
   "execution": {

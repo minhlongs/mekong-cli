@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Git Tag",
     "name_en": "Git Tag",
     "icon": "",
-    "description_vi": "Create release tag",
     "description_en": "Create release tag"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ops Security Audit",
     "name_en": "Ops Security Audit",
     "icon": "",
-    "description_vi": "Security audit — vulnerability scan, code audit, remediation in 20 min",
     "description_en": "Security audit  vulnerability scan, code audit, remediation in 20 min"
   },
   "execution": {

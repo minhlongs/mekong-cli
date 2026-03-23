@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Product Competitive Intel",
     "name_en": "Product Competitive Intel",
     "icon": "",
-    "description_vi": "Competitive intelligence — market scan, competitor profiles, positioning in 25 min",
     "description_en": "Competitive intelligence  market scan, competitor profiles, positioning in 25 min"
   },
   "execution": {

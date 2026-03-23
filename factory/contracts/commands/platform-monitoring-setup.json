@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Platform Monitoring Setup",
     "name_en": "Platform Monitoring Setup",
     "icon": "",
-    "description_vi": "Health checks → alerts → dashboard → runbook for platform monitoring",
     "description_en": "Health checks  alerts  dashboard  runbook for platform monitoring"
   },
   "execution": {

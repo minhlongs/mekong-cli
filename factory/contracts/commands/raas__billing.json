@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Billing",
     "name_en": "Billing",
     "icon": "",
-    "description_vi": "💰 RaaS billing integration — Polar.sh + MCU metering",
     "description_en": "RaaS billing integration  Polar.sh + MCU metering"
   },
   "execution": {

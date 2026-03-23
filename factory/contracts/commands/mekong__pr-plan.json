@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Pr Plan",
     "name_en": "Pr Plan",
     "icon": "",
-    "description_vi": "Execute Pr Plan command",
     "description_en": "Execute Pr Plan command"
   },
   "execution": {

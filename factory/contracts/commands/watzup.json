@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Watzup",
     "name_en": "Watzup",
     "icon": "",
-    "description_vi": "⚡ Review recent changes and wrap up the work",
     "description_en": "Review recent changes and wrap up the work"
   },
   "execution": {

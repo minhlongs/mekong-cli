@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Marketing Content Engine",
     "name_en": "Marketing Content Engine",
     "icon": "",
-    "description_vi": "SEO research, content calendar, blog drafts, social posts, email sequences. 5 commands, ~35 min.",
     "description_en": "SEO research, content calendar, blog drafts, social posts, email sequences. 5 commands, ~35 min."
   },
   "execution": {

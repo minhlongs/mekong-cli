@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Ocop Export",
     "name_en": "Ocop Export",
     "icon": "",
-    "description_vi": "Execute Ocop Export command",
     "description_en": "Execute Ocop Export command"
   },
   "execution": {

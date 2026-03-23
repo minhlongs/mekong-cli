@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Ui Design Review",
     "name_en": "Ui Design Review",
     "icon": "",
-    "description_vi": "Audit components, check consistency, flag issues. 2 commands, ~8 min.",
     "description_en": "Audit components, check consistency, flag issues. 2 commands, ~8 min."
   },
   "execution": {

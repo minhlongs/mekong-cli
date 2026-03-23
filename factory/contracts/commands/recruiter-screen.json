@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Recruiter Screen",
     "name_en": "Recruiter Screen",
     "icon": "",
-    "description_vi": "Resume analysis, score candidates, interview questions. 2 commands, ~8 min.",
     "description_en": "Resume analysis, score candidates, interview questions. 2 commands, ~8 min."
   },
   "execution": {

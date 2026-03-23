@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Vc Map",
     "name_en": "Vc Map",
     "icon": "",
-    "description_vi": "VC landscape mapping — tier, sector focus, check size, founder-friendliness score",
     "description_en": "VC landscape mapping  tier, sector focus, check size, founder-friendliness score"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Ae Deal Prep",
     "name_en": "Ae Deal Prep",
     "icon": "",
-    "description_vi": "Deal prep — company research + competitive positioning, then proposal talking points. 3 commands, ~12 min.",
     "description_en": "Deal prep  company research + competitive positioning, then proposal talking points. 3 commands, ~12 min."
   },
   "execution": {

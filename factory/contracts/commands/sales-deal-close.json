@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Sales Deal Close",
     "name_en": "Sales Deal Close",
     "icon": "",
-    "description_vi": "Research buyer, build proposal, pricing strategy, closing playbook. 4 commands, ~20 min.",
     "description_en": "Research buyer, build proposal, pricing strategy, closing playbook. 4 commands, ~20 min."
   },
   "execution": {

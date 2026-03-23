@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Metrics",
     "name_en": "Metrics",
     "icon": "",
-    "description_vi": "Investor-grade metrics dashboard — KPIs, anomaly detection, weekly tracking",
     "description_en": "Investor-grade metrics dashboard  KPIs, anomaly detection, weekly tracking"
   },
   "execution": {

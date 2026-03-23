@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Fast",
     "name_en": "Fast",
     "icon": "",
-    "description_vi": "⚡ Analyze and fix small issues [FAST]",
     "description_en": "Analyze and fix small issues [FAST]"
   },
   "execution": {

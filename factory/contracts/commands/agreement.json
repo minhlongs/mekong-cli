@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Agreement",
     "name_en": "Agreement",
     "icon": "",
-    "description_vi": "Contract VN",
     "description_en": "Contract VN"
   },
   "execution": {

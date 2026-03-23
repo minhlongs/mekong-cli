@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Tax",
     "name_en": "Tax",
     "icon": "",
-    "description_vi": "Tax planning",
     "description_en": "Tax planning"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Cro",
     "name_en": "Cro",
     "icon": "",
-    "description_vi": "Create a CRO plan for the given content",
     "description_en": "Create a CRO plan for the given content"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Optimize",
     "name_en": "Optimize",
     "icon": "",
-    "description_vi": "Optimize performance",
     "description_en": "Optimize performance"
   },
   "execution": {

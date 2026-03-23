@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Summarize",
     "name_en": "Summarize",
     "icon": "",
-    "description_vi": "Execute Summarize command",
     "description_en": "Execute Summarize command"
   },
   "execution": {

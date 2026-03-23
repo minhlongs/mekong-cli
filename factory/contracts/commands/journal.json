@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Journal",
     "name_en": "Journal",
     "icon": "",
-    "description_vi": "⚡ Write some journal entries.",
     "description_en": "Write some journal entries."
   },
   "execution": {

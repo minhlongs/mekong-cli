@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sre Morning Check",
     "name_en": "Sre Morning Check",
     "icon": "",
-    "description_vi": "SRE morning check — health, status, benchmark in parallel, 5 min",
     "description_en": "SRE morning check  health, status, benchmark in parallel, 5 min"
   },
   "execution": {

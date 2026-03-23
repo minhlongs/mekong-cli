@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Init",
     "name_en": "Init",
     "icon": "",
-    "description_vi": "⚡⚡⚡⚡ Analyze the codebase and create initial documentation",
     "description_en": "Analyze the codebase and create initial documentation"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Codebase",
     "name_en": "Codebase",
     "icon": "",
-    "description_vi": "⚡⚡⚡ Scan & analyze the codebase.",
     "description_en": "Scan & analyze the codebase."
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Init",
     "name_en": "Init",
     "icon": "",
-    "description_vi": "Wizard khởi tạo solo agentic company — 8 agents + hybrid LLM routing config",
     "description_en": "Wizard khi to solo agentic company  8 agents + hybrid LLM routing config"
   },
   "execution": {

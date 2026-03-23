@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ops Sync All",
     "name_en": "Ops Sync All",
     "icon": "",
-    "description_vi": "Full system sync — agents, providers, MCP, artifacts, rules, tasks in parallel",
     "description_en": "Full system sync  agents, providers, MCP, artifacts, rules, tasks in parallel"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Crm",
     "name_en": "Crm",
     "icon": "",
-    "description_vi": "CRM setup & automation",
     "description_en": "CRM setup & automation"
   },
   "execution": {

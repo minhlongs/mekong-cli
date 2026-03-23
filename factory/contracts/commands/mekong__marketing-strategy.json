@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Marketing Strategy",
     "name_en": "Marketing Strategy",
     "icon": "",
-    "description_vi": "Execute Marketing Strategy command",
     "description_en": "Execute Marketing Strategy command"
   },
   "execution": {

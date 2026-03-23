@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Pricing",
     "name_en": "Pricing",
     "icon": "",
-    "description_vi": "💵 Pricing Strategy & Configuration — Tiers, Packages, Checkout",
     "description_en": "Pricing Strategy & Configuration  Tiers, Packages, Checkout"
   },
   "execution": {

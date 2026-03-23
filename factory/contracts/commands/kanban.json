@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Kanban",
     "name_en": "Kanban",
     "icon": "",
-    "description_vi": "Manage Vibe Kanban board and agents",
     "description_en": "Manage Vibe Kanban board and agents"
   },
   "execution": {

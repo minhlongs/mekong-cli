@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Thong Diep Tiep Thi",
     "name_en": "Thong Diep Tiep Thi",
     "icon": "",
-    "description_vi": "Execute Thong Diep Tiep Thi command",
     "description_en": "Execute Thong Diep Tiep Thi command"
   },
   "execution": {

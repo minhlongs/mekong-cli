@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Business Client Onboard",
     "name_en": "Business Client Onboard",
     "icon": "",
-    "description_vi": "Client onboarding — contract, project setup, kickoff, schedule in 15 min",
     "description_en": "Client onboarding  contract, project setup, kickoff, schedule in 15 min"
   },
   "execution": {

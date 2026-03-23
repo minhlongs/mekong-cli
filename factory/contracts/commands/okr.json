@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Okr",
     "name_en": "Okr",
     "icon": "",
-    "description_vi": "Execute Okr command",
     "description_en": "Execute Okr command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync All",
     "name_en": "Sync All",
     "icon": "",
-    "description_vi": "Sync ALL Antigravity documentation - One command, full sync",
     "description_en": "Sync ALL Antigravity documentation - One command, full sync"
   },
   "execution": {

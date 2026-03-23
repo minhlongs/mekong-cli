@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Ux Interview",
     "name_en": "Ux Interview",
     "icon": "",
-    "description_vi": "Interview script, discussion guide, insight synthesis. 2 commands, ~10 min.",
     "description_en": "Interview script, discussion guide, insight synthesis. 2 commands, ~10 min."
   },
   "execution": {

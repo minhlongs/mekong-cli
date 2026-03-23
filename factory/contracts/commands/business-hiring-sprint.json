@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Business Hiring Sprint",
     "name_en": "Business Hiring Sprint",
     "icon": "",
-    "description_vi": "Hiring sprint — JD, sourcing, interview kit, comp benchmarking in 20 min",
     "description_en": "Hiring sprint  JD, sourcing, interview kit, comp benchmarking in 20 min"
   },
   "execution": {

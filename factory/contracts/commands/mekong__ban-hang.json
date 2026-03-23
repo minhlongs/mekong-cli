@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ban Hang",
     "name_en": "Ban Hang",
     "icon": "",
-    "description_vi": "Execute Ban Hang command",
     "description_en": "Execute Ban Hang command"
   },
   "execution": {

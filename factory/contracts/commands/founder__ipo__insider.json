@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Insider",
     "name_en": "Insider",
     "icon": "",
-    "description_vi": "Post-IPO compliance — insider trading rules, lockup expiry, investor relations",
     "description_en": "Post-IPO compliance  insider trading rules, lockup expiry, investor relations"
   },
   "execution": {

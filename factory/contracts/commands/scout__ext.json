@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ext",
     "name_en": "Ext",
     "icon": "",
-    "description_vi": "Execute Ext command",
     "description_en": "Execute Ext command"
   },
   "execution": {

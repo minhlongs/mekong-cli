@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Fix Logs",
     "name_en": "Fix Logs",
     "icon": "",
-    "description_vi": "Fix the agent skill based on `logs.txt` file.",
     "description_en": "Fix the agent skill based on `logs.txt` file."
   },
   "execution": {

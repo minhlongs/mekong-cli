@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Goal Dashboard",
     "name_en": "Goal Dashboard",
     "icon": "",
-    "description_vi": "📊 $1M 2026 ARR goal dashboard",
     "description_en": "$1M 2026 ARR goal dashboard"
   },
   "execution": {

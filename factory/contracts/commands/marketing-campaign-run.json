@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Marketing Campaign Run",
     "name_en": "Marketing Campaign Run",
     "icon": "",
-    "description_vi": "Audience targeting, ad creatives, channel strategy, campaign launch checklist. 4 commands, ~25 min.",
     "description_en": "Audience targeting, ad creatives, channel strategy, campaign launch checklist. 4 commands, ~25 min."
   },
   "execution": {

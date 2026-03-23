@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Revenue",
     "name_en": "Revenue",
     "icon": "",
-    "description_vi": "Revenue analysis",
     "description_en": "Revenue analysis"
   },
   "execution": {

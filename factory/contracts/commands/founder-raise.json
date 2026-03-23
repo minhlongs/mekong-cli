@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Founder Raise",
     "name_en": "Founder Raise",
     "icon": "",
-    "description_vi": "Fundraise pipeline — validate, prepare, position in parallel. 8 commands chained via DAG.",
     "description_en": "Fundraise pipeline  validate, prepare, position in parallel. 8 commands chained via DAG."
   },
   "execution": {

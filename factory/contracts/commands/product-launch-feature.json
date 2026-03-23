@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Product Launch Feature",
     "name_en": "Product Launch Feature",
     "icon": "",
-    "description_vi": "Feature launch — spec, build, test, ship, announce in 40 min",
     "description_en": "Feature launch  spec, build, test, ship, announce in 40 min"
   },
   "execution": {

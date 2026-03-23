@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Financial Model",
     "name_en": "Financial Model",
     "icon": "",
-    "description_vi": "3-year financial model — revenue projections, expense plan, cash flow, scenario analysis",
     "description_en": "3-year financial model  revenue projections, expense plan, cash flow, scenario analysis"
   },
   "execution": {

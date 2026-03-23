@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Handoff",
     "name_en": "Handoff",
     "icon": "",
-    "description_vi": "Handoff deliverables",
     "description_en": "Handoff deliverables"
   },
   "execution": {

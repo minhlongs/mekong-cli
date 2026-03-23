@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Ipo Day",
     "name_en": "Ipo Day",
     "icon": "",
-    "description_vi": "IPO day execution — pricing night to bell ringing, first-trade ops",
     "description_en": "IPO day execution  pricing night to bell ringing, first-trade ops"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Billing",
     "name_en": "Billing",
     "icon": "",
-    "description_vi": "Execute Billing command",
     "description_en": "Execute Billing command"
   },
   "execution": {

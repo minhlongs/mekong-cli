@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Commodity",
     "name_en": "Commodity",
     "icon": "",
-    "description_vi": "Execute Commodity command",
     "description_en": "Execute Commodity command"
   },
   "execution": {

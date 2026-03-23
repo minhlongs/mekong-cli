@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Founder Negotiate",
     "name_en": "Founder Negotiate",
     "icon": "",
-    "description_vi": "Deal negotiation kit — term analysis, dilution sim, counter-strategy in 20 min",
     "description_en": "Deal negotiation kit  term analysis, dilution sim, counter-strategy in 20 min"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Runway",
     "name_en": "Runway",
     "icon": "",
-    "description_vi": "Burn rate and runway calculator — monthly burn, months remaining, zero-cash date, fundraise timing",
     "description_en": "Burn rate and runway calculator  monthly burn, months remaining, zero-cash date, fundraise timing"
   },
   "execution": {

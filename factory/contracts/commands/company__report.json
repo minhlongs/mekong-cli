@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Report",
     "name_en": "Report",
     "icon": "",
-    "description_vi": "Business intelligence reports — CEO brief, revenue, usage, agent performance, health",
     "description_en": "Business intelligence reports  CEO brief, revenue, usage, agent performance, health"
   },
   "execution": {

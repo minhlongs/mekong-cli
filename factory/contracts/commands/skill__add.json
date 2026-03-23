@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Add",
     "name_en": "Add",
     "icon": "",
-    "description_vi": "Execute Add command",
     "description_en": "Execute Add command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Git Rebase",
     "name_en": "Git Rebase",
     "icon": "",
-    "description_vi": "Rebase branch",
     "description_en": "Rebase branch"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Y Tuong Social Media",
     "name_en": "Y Tuong Social Media",
     "icon": "",
-    "description_vi": "Execute Y Tuong Social Media command",
     "description_en": "Execute Y Tuong Social Media command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Brand Identity",
     "name_en": "Brand Identity",
     "icon": "",
-    "description_vi": "Execute Brand Identity command",
     "description_en": "Execute Brand Identity command"
   },
   "execution": {

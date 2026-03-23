@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Business Quarterly Review",
     "name_en": "Business Quarterly Review",
     "icon": "",
-    "description_vi": "Quarterly business review — financials, performance, forecast in 30 min",
     "description_en": "Quarterly business review  financials, performance, forecast in 30 min"
   },
   "execution": {

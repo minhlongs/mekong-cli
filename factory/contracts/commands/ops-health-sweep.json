@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ops Health Sweep",
     "name_en": "Ops Health Sweep",
     "icon": "",
-    "description_vi": "Full health sweep — system, security, performance, status scan in 15 min",
     "description_en": "Full health sweep  system, security, performance, status scan in 15 min"
   },
   "execution": {

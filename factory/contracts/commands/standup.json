@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Standup",
     "name_en": "Standup",
     "icon": "",
-    "description_vi": "Standup notes",
     "description_en": "Standup notes"
   },
   "execution": {

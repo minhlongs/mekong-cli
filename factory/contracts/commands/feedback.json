@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Feedback",
     "name_en": "Feedback",
     "icon": "",
-    "description_vi": "Feedback collection",
     "description_en": "Feedback collection"
   },
   "execution": {

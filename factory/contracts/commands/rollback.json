@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Rollback",
     "name_en": "Rollback",
     "icon": "",
-    "description_vi": "Rollback deployment",
     "description_en": "Rollback deployment"
   },
   "execution": {

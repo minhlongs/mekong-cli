@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Create Task",
     "name_en": "Create Task",
     "icon": "",
-    "description_vi": "Create a new task on the Kanban board",
     "description_en": "Create a new task on the Kanban board"
   },
   "execution": {

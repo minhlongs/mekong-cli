@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Performance Review",
     "name_en": "Performance Review",
     "icon": "",
-    "description_vi": "Performance review",
     "description_en": "Performance review"
   },
   "execution": {

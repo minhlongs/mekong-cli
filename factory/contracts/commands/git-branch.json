@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Git Branch",
     "name_en": "Git Branch",
     "icon": "",
-    "description_vi": "Manage branches",
     "description_en": "Manage branches"
   },
   "execution": {

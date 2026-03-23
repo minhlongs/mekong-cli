@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Debug",
     "name_en": "Debug",
     "icon": "",
-    "description_vi": "⚡⚡ Debugging technical issues and providing solutions.",
     "description_en": "Debugging technical issues and providing solutions."
   },
   "execution": {

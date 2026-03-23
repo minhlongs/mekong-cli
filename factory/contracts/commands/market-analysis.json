@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Market Analysis",
     "name_en": "Market Analysis",
     "icon": "",
-    "description_vi": "Market analysis VN",
     "description_en": "Market analysis VN"
   },
   "execution": {

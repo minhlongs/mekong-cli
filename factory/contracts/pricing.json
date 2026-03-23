@@ -5,7 +5,6 @@
   "description": "OpenClaw RaaS pre-packaged service cards",
   "services": [
     {
-      "name_vi": "Kế hoạch kinh doanh hàng năm",
       "name_en": "Annual Business Plan",
       "credits": 5,
       "command": "annual",
@@ -13,7 +12,6 @@
       "description_en": "Full annual strategy: OKRs, financial forecast, roadmap"
     },
     {
-      "name_vi": "Landing Page / Web App",
       "name_en": "Landing Page",
       "credits": 3,
       "command": "cook",
@@ -21,7 +19,6 @@
       "description_en": "Build any feature or landing page via PEV pipeline"
     },
     {
-      "name_vi": "Kiểm tra SEO",
       "name_en": "SEO Audit",
       "credits": 3,
       "command": "seo",
@@ -29,7 +26,6 @@
       "description_en": "On-page SEO audit, keyword gaps, and fix recommendations"
     },
     {
-      "name_vi": "Phân tích đối thủ cạnh tranh",
       "name_en": "Competitor Analysis",
       "credits": 5,
       "command": "competitor",
@@ -37,7 +33,6 @@
       "description_en": "Deep-dive competitor landscape, positioning matrix, SWOT"
     },
     {
-      "name_vi": "Chiến lược bán hàng",
       "name_en": "Sales Strategy",
       "credits": 3,
       "command": "sales",
@@ -45,7 +40,6 @@
       "description_en": "Sales playbook, pipeline setup, outreach templates"
     },
     {
-      "name_vi": "Gây vốn đầu tư",
       "name_en": "Fundraising Playbook",
       "credits": 3,
       "command": "fundraise",
@@ -53,7 +47,6 @@
       "description_en": "VC targeting, pitch deck structure, due diligence checklist"
     },
     {
-      "name_vi": "Kế hoạch sản phẩm",
       "name_en": "Product Roadmap",
       "credits": 3,
       "command": "roadmap",
@@ -61,7 +54,6 @@
       "description_en": "Quarterly roadmap with priorities, story mapping, milestones"
     },
     {
-      "name_vi": "Kiểm toán bảo mật",
       "name_en": "Security Audit",
       "credits": 5,
       "command": "security",

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Rules",
     "name_en": "Sync Rules",
     "icon": "",
-    "description_vi": "Sync Rules & Workflows documentation from Antigravity",
     "description_en": "Sync Rules & Workflows documentation from Antigravity"
   },
   "execution": {

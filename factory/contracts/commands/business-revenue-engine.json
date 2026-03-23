@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Business Revenue Engine",
     "name_en": "Business Revenue Engine",
     "icon": "",
-    "description_vi": "Revenue engine pipeline — market research, pipeline, CRM, sales playbook in 40 min",
     "description_en": "Revenue engine pipeline  market research, pipeline, CRM, sales playbook in 40 min"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Vibe Code",
     "name_en": "Vibe Code",
     "icon": "",
-    "description_vi": "🚀 VIBE 6-step development workflow with Binh Pháp integration",
     "description_en": "VIBE 6-step development workflow with Binh Php integration"
   },
   "execution": {

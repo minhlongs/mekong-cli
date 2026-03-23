@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Refactor",
     "name_en": "Refactor",
     "icon": "",
-    "description_vi": "Code refactoring",
     "description_en": "Code refactoring"
   },
   "execution": {

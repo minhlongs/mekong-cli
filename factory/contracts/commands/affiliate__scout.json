@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Scout",
     "name_en": "Scout",
     "icon": "",
-    "description_vi": "Execute Scout command",
     "description_en": "Execute Scout command"
   },
   "execution": {

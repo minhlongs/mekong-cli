@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Design Sprint",
     "name_en": "Design Sprint",
     "icon": "",
-    "description_vi": "Design sprint — understand → sketch → decide → prototype → test",
     "description_en": "Design sprint  understand  sketch  decide  prototype  test"
   },
   "execution": {

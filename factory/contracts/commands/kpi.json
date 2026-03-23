@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Kpi",
     "name_en": "Kpi",
     "icon": "",
-    "description_vi": "Define KPIs",
     "description_en": "Define KPIs"
   },
   "execution": {

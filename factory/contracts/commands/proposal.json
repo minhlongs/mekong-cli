@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Proposal",
     "name_en": "Proposal",
     "icon": "",
-    "description_vi": "Proposal generator",
     "description_en": "Proposal generator"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Ads",
     "name_en": "Ads",
     "icon": "",
-    "description_vi": "Paid advertising strategy",
     "description_en": "Paid advertising strategy"
   },
   "execution": {

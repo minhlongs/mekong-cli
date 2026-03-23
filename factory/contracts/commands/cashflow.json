@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Cashflow",
     "name_en": "Cashflow",
     "icon": "",
-    "description_vi": "Cash flow analysis",
     "description_en": "Cash flow analysis"
   },
   "execution": {

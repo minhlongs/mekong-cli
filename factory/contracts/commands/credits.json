@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Credits",
     "name_en": "Credits",
     "icon": "",
-    "description_vi": "Tìm và filter startup credits/programs phù hợp với tech stack, tính tổng ROI",
     "description_en": "Tm v filter startup credits/programs ph hp vi tech stack, tnh tng ROI"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Growth Strategy",
     "name_en": "Growth Strategy",
     "icon": "",
-    "description_vi": "Execute Growth Strategy command",
     "description_en": "Execute Growth Strategy command"
   },
   "execution": {

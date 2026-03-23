@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Demo",
     "name_en": "Demo",
     "icon": "",
-    "description_vi": "Demo environment setup",
     "description_en": "Demo environment setup"
   },
   "execution": {

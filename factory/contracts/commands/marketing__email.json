@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Email",
     "name_en": "Email",
     "icon": "",
-    "description_vi": "Execute Email command",
     "description_en": "Execute Email command"
   },
   "execution": {

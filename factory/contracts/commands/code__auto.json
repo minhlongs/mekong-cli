@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Auto",
     "name_en": "Auto",
     "icon": "",
-    "description_vi": "⚡⚡⚡ [AUTO] Start coding & testing an existing plan (\"trust me bro\")",
     "description_en": "[AUTO] Start coding & testing an existing plan (\"trust me bro\")"
   },
   "execution": {

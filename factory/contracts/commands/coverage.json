@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Coverage",
     "name_en": "Coverage",
     "icon": "",
-    "description_vi": "Analyze coverage",
     "description_en": "Analyze coverage"
   },
   "execution": {

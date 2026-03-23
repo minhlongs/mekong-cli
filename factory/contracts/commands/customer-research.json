@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Customer Research",
     "name_en": "Customer Research",
     "icon": "",
-    "description_vi": "Customer research & personas",
     "description_en": "Customer research & personas"
   },
   "execution": {

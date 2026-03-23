@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "People Offboard",
     "name_en": "People Offboard",
     "icon": "",
-    "description_vi": "Exit checklist, access revocation, knowledge transfer. 2 commands, ~5 min.",
     "description_en": "Exit checklist, access revocation, knowledge transfer. 2 commands, ~5 min."
   },
   "execution": {

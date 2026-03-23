@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Use Mcp",
     "name_en": "Use Mcp",
     "icon": "",
-    "description_vi": "Utilize tools of Model Context Protocol (MCP) servers",
     "description_en": "Utilize tools of Model Context Protocol (MCP) servers"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Competitor",
     "name_en": "Competitor",
     "icon": "",
-    "description_vi": "Analyze competitors",
     "description_en": "Analyze competitors"
   },
   "execution": {

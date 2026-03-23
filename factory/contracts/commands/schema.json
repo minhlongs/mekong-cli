@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Schema",
     "name_en": "Schema",
     "icon": "",
-    "description_vi": "Design database schema",
     "description_en": "Design database schema"
   },
   "execution": {

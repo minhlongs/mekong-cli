@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Sales",
     "name_en": "Sales",
     "icon": "",
-    "description_vi": "Execute Sales command",
     "description_en": "Execute Sales command"
   },
   "execution": {

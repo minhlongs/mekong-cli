@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Editor",
     "name_en": "Sync Editor",
     "icon": "",
-    "description_vi": "Sync Editor documentation from Antigravity (Tab, Command, Side Panel, etc.)",
     "description_en": "Sync Editor documentation from Antigravity (Tab, Command, Side Panel, etc.)"
   },
   "execution": {

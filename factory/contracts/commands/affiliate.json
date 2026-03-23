@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Affiliate",
     "name_en": "Affiliate",
     "icon": "",
-    "description_vi": "Execute Affiliate command",
     "description_en": "Execute Affiliate command"
   },
   "execution": {

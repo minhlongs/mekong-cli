@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Engineering Refactor",
     "name_en": "Engineering Refactor",
     "icon": "",
-    "description_vi": "Refactor pipeline — audit, coverage, refactor, test, review in 40 min",
     "description_en": "Refactor pipeline  audit, coverage, refactor, test, review in 40 min"
   },
   "execution": {

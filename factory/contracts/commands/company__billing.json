@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Billing",
     "name_en": "Billing",
     "icon": "",
-    "description_vi": "Quản lý MCU balance, Polar subscription, billing history và reconciliation",
     "description_en": "Qun l MCU balance, Polar subscription, billing history v reconciliation"
   },
   "execution": {

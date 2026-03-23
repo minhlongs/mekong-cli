@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Runway",
     "name_en": "Runway",
     "icon": "",
-    "description_vi": "Execute Runway command",
     "description_en": "Execute Runway command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Leadgen",
     "name_en": "Leadgen",
     "icon": "",
-    "description_vi": "Lead generation strategy",
     "description_en": "Lead generation strategy"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Install",
     "name_en": "Install",
     "icon": "",
-    "description_vi": "Install dependencies",
     "description_en": "Install dependencies"
   },
   "execution": {

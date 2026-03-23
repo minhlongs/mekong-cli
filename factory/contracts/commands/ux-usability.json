@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Ux Usability",
     "name_en": "Ux Usability",
     "icon": "",
-    "description_vi": "Usability test — test plan, task scenarios, findings, recommendations in 10 min",
     "description_en": "Usability test  test plan, task scenarios, findings, recommendations in 10 min"
   },
   "execution": {

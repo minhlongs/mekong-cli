@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Releng Pre Release",
     "name_en": "Releng Pre Release",
     "icon": "",
-    "description_vi": "Release pre-release — full test suite, changelog, version bump, tag in 10 min",
     "description_en": "Release pre-release  full test suite, changelog, version bump, tag in 10 min"
   },
   "execution": {

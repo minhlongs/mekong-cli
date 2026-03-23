@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Two",
     "name_en": "Two",
     "icon": "",
-    "description_vi": "⚡⚡⚡⚡ Research & create an implementation plan with 2 approaches",
     "description_en": "Research & create an implementation plan with 2 approaches"
   },
   "execution": {

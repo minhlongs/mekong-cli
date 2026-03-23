@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Tiep Thi",
     "name_en": "Tiep Thi",
     "icon": "",
-    "description_vi": "Execute Tiep Thi command",
     "description_en": "Execute Tiep Thi command"
   },
   "execution": {

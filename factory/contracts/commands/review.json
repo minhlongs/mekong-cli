@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Review",
     "name_en": "Review",
     "icon": "",
-    "description_vi": "Code/content review với domain-specific checklist",
     "description_en": "Code/content review vi domain-specific checklist"
   },
   "execution": {

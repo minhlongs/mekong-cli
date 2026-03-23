@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Hr Performance Cycle",
     "name_en": "Hr Performance Cycle",
     "icon": "",
-    "description_vi": "Performance review cycle — self-assessment → manager review → calibration → feedback delivery",
     "description_en": "Performance review cycle  self-assessment  manager review  calibration  feedback delivery"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Tier Pricing",
     "name_en": "Tier Pricing",
     "icon": "",
-    "description_vi": "💰 Show Binh Pháp tier pricing matrix",
     "description_en": "Show Binh Php tier pricing matrix"
   },
   "execution": {

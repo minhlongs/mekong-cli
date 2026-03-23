@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Roadshow",
     "name_en": "Roadshow",
     "icon": "",
-    "description_vi": "IPO roadshow prep — 2-week sprint, Q&A simulation, pricing signal tracking",
     "description_en": "IPO roadshow prep  2-week sprint, Q&A simulation, pricing signal tracking"
   },
   "execution": {

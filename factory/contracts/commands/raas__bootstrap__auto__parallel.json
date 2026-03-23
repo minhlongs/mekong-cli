@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Parallel",
     "name_en": "Parallel",
     "icon": "",
-    "description_vi": "⚡🤖 AUTO Bootstrap AGI RaaS — parallel + zero-prompt — CTO injects this",
     "description_en": "AUTO Bootstrap AGI RaaS  parallel + zero-prompt  CTO injects this"
   },
   "execution": {

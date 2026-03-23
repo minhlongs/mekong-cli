@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Pipeline",
     "name_en": "Pipeline",
     "icon": "",
-    "description_vi": "Sales pipeline optimization",
     "description_en": "Sales pipeline optimization"
   },
   "execution": {

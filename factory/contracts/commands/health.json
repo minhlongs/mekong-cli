@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Health",
     "name_en": "Health",
     "icon": "",
-    "description_vi": "System health",
     "description_en": "System health"
   },
   "execution": {

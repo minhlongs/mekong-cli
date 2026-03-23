@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Schedule",
     "name_en": "Schedule",
     "icon": "",
-    "description_vi": "Work schedule",
     "description_en": "Work schedule"
   },
   "execution": {

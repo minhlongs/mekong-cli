@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Recruiter Source",
     "name_en": "Recruiter Source",
     "icon": "",
-    "description_vi": "Job requirements, candidate search, outreach. 2 commands, ~10 min.",
     "description_en": "Job requirements, candidate search, outreach. 2 commands, ~10 min."
   },
   "execution": {

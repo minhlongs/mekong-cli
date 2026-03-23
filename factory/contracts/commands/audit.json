@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Audit",
     "name_en": "Audit",
     "icon": "",
-    "description_vi": "Audit dependencies",
     "description_en": "Audit dependencies"
   },
   "execution": {

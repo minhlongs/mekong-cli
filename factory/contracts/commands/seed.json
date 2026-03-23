@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Seed",
     "name_en": "Seed",
     "icon": "",
-    "description_vi": "Seed database",
     "description_en": "Seed database"
   },
   "execution": {

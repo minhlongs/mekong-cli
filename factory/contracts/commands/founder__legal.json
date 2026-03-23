@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Legal",
     "name_en": "Legal",
     "icon": "",
-    "description_vi": "Legal checklist — incorporation, IP protection, contracts, privacy, terms",
     "description_en": "Legal checklist  incorporation, IP protection, contracts, privacy, terms"
   },
   "execution": {

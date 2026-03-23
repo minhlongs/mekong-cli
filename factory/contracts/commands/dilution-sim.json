@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Dilution Sim",
     "name_en": "Dilution Sim",
     "icon": "",
-    "description_vi": "Dilution simulator — model \"what if\" scenarios across multiple funding rounds",
     "description_en": "Dilution simulator  model \"what if\" scenarios across multiple funding rounds"
   },
   "execution": {

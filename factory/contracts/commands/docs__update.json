@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Update",
     "name_en": "Update",
     "icon": "",
-    "description_vi": "⚡⚡⚡ Analyze the codebase and update documentation",
     "description_en": "Analyze the codebase and update documentation"
   },
   "execution": {

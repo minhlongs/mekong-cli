@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Business Campaign Launch",
     "name_en": "Business Campaign Launch",
     "icon": "",
-    "description_vi": "Campaign launch — strategy, content, SEO, email, ads in 35 min",
     "description_en": "Campaign launch  strategy, content, SEO, email, ads in 35 min"
   },
   "execution": {

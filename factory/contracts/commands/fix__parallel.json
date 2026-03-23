@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Parallel",
     "name_en": "Parallel",
     "icon": "",
-    "description_vi": "⚡⚡ Analyze & fix issues with parallel fullstack-developer agents",
     "description_en": "Analyze & fix issues with parallel fullstack-developer agents"
   },
   "execution": {

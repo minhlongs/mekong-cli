@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Mission",
     "name_en": "Mission",
     "icon": "",
-    "description_vi": "🦞 Dispatch AGI mission qua Tôm Hùm — autonomous task execution",
     "description_en": "Dispatch AGI mission qua Tm Hm  autonomous task execution"
   },
   "execution": {

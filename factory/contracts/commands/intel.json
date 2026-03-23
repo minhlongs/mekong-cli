@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Intel",
     "name_en": "Intel",
     "icon": "",
-    "description_vi": "Execute Intel command",
     "description_en": "Execute Intel command"
   },
   "execution": {

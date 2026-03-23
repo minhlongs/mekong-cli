@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Term Sheet",
     "name_en": "Term Sheet",
     "icon": "",
-    "description_vi": "Term sheet analyzer — find traps, calculate real impact, compare to market standard",
     "description_en": "Term sheet analyzer  find traps, calculate real impact, compare to market standard"
   },
   "execution": {

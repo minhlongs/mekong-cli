@@ -4,10 +4,8 @@
   "layer": "product",
   "chapter": "謀攻 — Attack by Stratagem",
   "display": {
-    "name_vi": "Scope",
     "name_en": "Scope",
     "icon": "",
-    "description_vi": "Define scope",
     "description_en": "Define scope"
   },
   "execution": {

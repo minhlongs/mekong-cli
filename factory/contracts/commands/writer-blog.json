@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Writer Blog",
     "name_en": "Writer Blog",
     "icon": "",
-    "description_vi": "Blog pipeline — keyword research, then draft + SEO optimize in parallel. 3 commands, ~15 min.",
     "description_en": "Blog pipeline  keyword research, then draft + SEO optimize in parallel. 3 commands, ~15 min."
   },
   "execution": {

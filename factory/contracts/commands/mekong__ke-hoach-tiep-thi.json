@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Ke Hoach Tiep Thi",
     "name_en": "Ke Hoach Tiep Thi",
     "icon": "",
-    "description_vi": "Execute Ke Hoach Tiep Thi command",
     "description_en": "Execute Ke Hoach Tiep Thi command"
   },
   "execution": {

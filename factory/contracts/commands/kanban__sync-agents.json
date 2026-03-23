@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Agents",
     "name_en": "Sync Agents",
     "icon": "",
-    "description_vi": "Sync agent status with Kanban board",
     "description_en": "Sync agent status with Kanban board"
   },
   "execution": {

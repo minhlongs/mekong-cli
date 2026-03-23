@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Close",
     "name_en": "Close",
     "icon": "",
-    "description_vi": "Execute Close command",
     "description_en": "Execute Close command"
   },
   "execution": {

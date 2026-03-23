@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Sync Mcp",
     "name_en": "Sync Mcp",
     "icon": "",
-    "description_vi": "Sync MCP documentation from Antigravity - Zero effort auto-sync",
     "description_en": "Sync MCP documentation from Antigravity - Zero effort auto-sync"
   },
   "execution": {

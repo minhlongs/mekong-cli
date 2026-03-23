@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Finance",
     "name_en": "Finance",
     "icon": "",
-    "description_vi": "Execute Finance command",
     "description_en": "Execute Finance command"
   },
   "execution": {

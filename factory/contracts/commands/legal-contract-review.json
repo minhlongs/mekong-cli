@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Legal Contract Review",
     "name_en": "Legal Contract Review",
     "icon": "",
-    "description_vi": "Contract review — analyze contract → flag risks → suggest amendments → negotiation brief",
     "description_en": "Contract review  analyze contract  flag risks  suggest amendments  negotiation brief"
   },
   "execution": {

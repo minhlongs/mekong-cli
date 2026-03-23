@@ -4,10 +4,8 @@
   "layer": "founder",
   "chapter": "始計 — Initial Calculations",
   "display": {
-    "name_vi": "Pitch",
     "name_en": "Pitch",
     "icon": "",
-    "description_vi": "AI investor simulation — brutal feedback, YC-style questions, deck iteration",
     "description_en": "AI investor simulation  brutal feedback, YC-style questions, deck iteration"
   },
   "execution": {

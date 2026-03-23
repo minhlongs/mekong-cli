@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Clean",
     "name_en": "Clean",
     "icon": "",
-    "description_vi": "Clean build artifacts",
     "description_en": "Clean build artifacts"
   },
   "execution": {

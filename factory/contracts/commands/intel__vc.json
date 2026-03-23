@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Vc",
     "name_en": "Vc",
     "icon": "",
-    "description_vi": "Execute Vc command",
     "description_en": "Execute Vc command"
   },
   "execution": {

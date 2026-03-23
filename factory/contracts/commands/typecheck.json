@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Typecheck",
     "name_en": "Typecheck",
     "icon": "",
-    "description_vi": "Type check codebase",
     "description_en": "Type check codebase"
   },
   "execution": {

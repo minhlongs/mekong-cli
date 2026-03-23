@@ -1,0 +1,21 @@
+{
+  "id": "mission-004",
+  "name": "Security + Rate Limiting",
+  "priority": "MEDIUM",
+  "objective": "Implement per-tenant rate limiting and row-level security on D1 database tables",
+  "description": "Add security layer with per-tenant rate limits (requests/minute), row-level security policies on all D1 tables, and comprehensive audit logging for compliance.",
+  "success_criteria": [
+    "Rate limits enforced at Cloudflare Workers edge",
+    "Row-level security prevents cross-tenant data access",
+    "Audit log captures all data access events",
+    "Security audit passes with no critical findings",
+    "DDoS protection configured"
+  ],
+  "mcu_budget": 250,
+  "output_path": "packages/openclaw-engine/src/security/",
+  "dependencies": ["mission-001"],
+  "estimated_hours": 10,
+  "agent": "CTO Agent",
+  "layer": "Engineering",
+  "created_at": "2026-03-19T20:56:00-07:00"
+}

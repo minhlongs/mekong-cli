@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Video",
     "name_en": "Video",
     "icon": "",
-    "description_vi": "Create a design based on video",
     "description_en": "Create a design based on video"
   },
   "execution": {

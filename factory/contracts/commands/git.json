@@ -4,10 +4,8 @@
   "layer": "engineering",
   "chapter": "軍爭 — Military Contention",
   "display": {
-    "name_vi": "Git",
     "name_en": "Git",
     "icon": "",
-    "description_vi": "Execute Git command",
     "description_en": "Execute Git command"
   },
   "execution": {

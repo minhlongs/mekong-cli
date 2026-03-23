@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Marketing Plan",
     "name_en": "Marketing Plan",
     "icon": "",
-    "description_vi": "Tạo marketing plan toàn diện",
     "description_en": "To marketing plan ton din"
   },
   "execution": {

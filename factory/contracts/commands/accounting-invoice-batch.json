@@ -4,10 +4,8 @@
   "layer": "business",
   "chapter": "作戰 — Waging War",
   "display": {
-    "name_vi": "Accounting Invoice Batch",
     "name_en": "Accounting Invoice Batch",
     "icon": "",
-    "description_vi": "Generate invoices, send reminders, update AR. 2 commands, ~8 min.",
     "description_en": "Generate invoices, send reminders, update AR. 2 commands, ~8 min."
   },
   "execution": {

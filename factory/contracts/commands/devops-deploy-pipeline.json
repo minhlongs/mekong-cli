@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Devops Deploy Pipeline",
     "name_en": "Devops Deploy Pipeline",
     "icon": "",
-    "description_vi": "Lint → test → build → staging → smoke → production deployment pipeline",
     "description_en": "Lint  test  build  staging  smoke  production deployment pipeline"
   },
   "execution": {

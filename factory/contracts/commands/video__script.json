@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Script",
     "name_en": "Script",
     "icon": "",
-    "description_vi": "Execute Script command",
     "description_en": "Execute Script command"
   },
   "execution": {

@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Market Research",
     "name_en": "Market Research",
     "icon": "",
-    "description_vi": "Execute Market Research command",
     "description_en": "Execute Market Research command"
   },
   "execution": {

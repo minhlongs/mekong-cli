@@ -4,10 +4,8 @@
   "layer": "ops",
   "chapter": "九變 — Nine Variations",
   "display": {
-    "name_vi": "Help",
     "name_en": "Help",
     "icon": "",
-    "description_vi": "Hiển thị command reference — tự detect dev vs non-tech persona",
     "description_en": "Hin th command reference  t detect dev vs non-tech persona"
   },
   "execution": {
