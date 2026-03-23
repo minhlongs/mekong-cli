@@ -10,8 +10,8 @@
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "pm",
+      "planner"
     ],
     "hub": "product-hub",
     "complexity": "standard",
@@ -29,9 +29,23 @@
         "type": "string",
         "description": "Natural language task description"
       },
-      "project": {
+      "scope": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "feature",
+          "module",
+          "system"
+        ],
+        "description": "Scope level"
+      },
+      "priority": {
+        "type": "string",
+        "enum": [
+          "critical",
+          "high",
+          "medium",
+          "low"
+        ]
       }
     }
   },
@@ -41,14 +55,21 @@
       "summary": {
         "type": "string"
       },
-      "files_modified": {
+      "requirements": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "effort_estimate": {
+        "type": "string",
+        "description": "Effort in hours/days"
+      },
+      "dependencies": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },

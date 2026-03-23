@@ -25,36 +25,52 @@
     ],
     "properties": {
       "goal": {
-        "type": "string"
+        "type": "string",
+        "description": "Natural language task description"
       },
-      "project": {
-        "type": "string"
+      "services": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Target services"
+      },
+      "environment": {
+        "type": "string",
+        "enum": [
+          "local",
+          "staging",
+          "production"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
+      "summary": {
+        "type": "string"
+      },
       "status": {
         "type": "string",
         "enum": [
-          "on_track",
-          "at_risk",
-          "blocked",
+          "healthy",
+          "degraded",
+          "down",
           "completed"
         ]
       },
-      "progress_percent": {
-        "type": "number"
-      },
-      "blockers": {
+      "findings": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "next_milestone": {
-        "type": "string"
+      "actions_taken": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },

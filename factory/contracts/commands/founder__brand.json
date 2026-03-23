@@ -10,8 +10,8 @@
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "strategist",
+      "researcher"
     ],
     "hub": "founder-hub",
     "complexity": "simple",
@@ -29,9 +29,18 @@
         "type": "string",
         "description": "Natural language task description"
       },
-      "project": {
+      "context": {
         "type": "string",
-        "description": "Target project path"
+        "description": "Business context or background"
+      },
+      "urgency": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "description": "Priority level"
       }
     }
   },
@@ -39,16 +48,25 @@
     "type": "object",
     "properties": {
       "summary": {
-        "type": "string"
+        "type": "string",
+        "description": "Executive summary"
       },
-      "files_modified": {
+      "recommendations": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
       }
     }
   },

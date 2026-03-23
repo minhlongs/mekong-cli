@@ -10,8 +10,8 @@
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "fullstack-developer",
+      "code-reviewer"
     ],
     "hub": "engineering-hub",
     "complexity": "standard",
@@ -29,9 +29,16 @@
         "type": "string",
         "description": "Natural language task description"
       },
-      "project": {
+      "file_paths": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Target files"
+      },
+      "language": {
         "type": "string",
-        "description": "Target project path"
+        "description": "Programming language"
       }
     }
   },
@@ -47,7 +54,15 @@
           "type": "string"
         }
       },
-      "credits_used": {
+      "tests_status": {
+        "type": "string",
+        "enum": [
+          "passing",
+          "failing",
+          "skipped"
+        ]
+      },
+      "lines_changed": {
         "type": "integer"
       }
     }

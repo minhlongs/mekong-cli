@@ -25,36 +25,50 @@
     ],
     "properties": {
       "goal": {
-        "type": "string"
+        "type": "string",
+        "description": "Natural language task description"
       },
-      "project": {
-        "type": "string"
+      "scope": {
+        "type": "string",
+        "enum": [
+          "feature",
+          "module",
+          "system"
+        ],
+        "description": "Scope level"
+      },
+      "priority": {
+        "type": "string",
+        "enum": [
+          "critical",
+          "high",
+          "medium",
+          "low"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "yesterday": {
+      "summary": {
+        "type": "string"
+      },
+      "requirements": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "today": {
+      "effort_estimate": {
+        "type": "string",
+        "description": "Effort in hours/days"
+      },
+      "dependencies": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "blockers": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "metrics": {
-        "type": "object"
       }
     }
   },

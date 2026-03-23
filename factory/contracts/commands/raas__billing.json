@@ -10,8 +10,7 @@
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "devops"
     ],
     "hub": "ops-hub",
     "complexity": "simple",
@@ -29,9 +28,20 @@
         "type": "string",
         "description": "Natural language task description"
       },
-      "project": {
+      "services": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Target services"
+      },
+      "environment": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "local",
+          "staging",
+          "production"
+        ]
       }
     }
   },
@@ -41,14 +51,26 @@
       "summary": {
         "type": "string"
       },
-      "files_modified": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "degraded",
+          "down",
+          "completed"
+        ]
+      },
+      "findings": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "actions_taken": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },

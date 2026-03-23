@@ -10,8 +10,8 @@
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cmo",
+      "sales"
     ],
     "hub": "business-hub",
     "complexity": "standard",
@@ -29,9 +29,13 @@
         "type": "string",
         "description": "Natural language task description"
       },
-      "project": {
+      "target_audience": {
         "type": "string",
-        "description": "Target project path"
+        "description": "Target customer segment"
+      },
+      "budget": {
+        "type": "number",
+        "description": "Budget allocation"
       }
     }
   },
@@ -41,14 +45,19 @@
       "summary": {
         "type": "string"
       },
-      "files_modified": {
+      "action_items": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "metrics": {
+        "type": "object",
+        "description": "Key metrics and KPIs"
+      },
+      "roi_estimate": {
+        "type": "number",
+        "description": "Expected ROI"
       }
     }
   },
