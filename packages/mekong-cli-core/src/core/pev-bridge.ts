@@ -6,7 +6,7 @@
 import { EventEmitter } from 'node:events';
 import { requireCloudClient } from './raas-client.js';
 import type { Mission, MissionStatus, Complexity } from '@mekong/raas-sdk';
-import { OpenClawEngine } from '@openclaw/engine';
+import { OpenClawEngine } from '@mekong/openclaw-engine';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

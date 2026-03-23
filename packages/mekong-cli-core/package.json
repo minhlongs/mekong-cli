@@ -23,6 +23,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@mekong/openclaw-engine": "workspace:*",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
     "cron": "^4.4.0",

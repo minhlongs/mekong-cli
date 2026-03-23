@@ -25,7 +25,7 @@ import type { WorkerDeps } from '../agents/worker.js';
 import type { SopRun } from '../types/sop.js';
 import { LicenseGate } from '../license/gate.js';
 import type { LicenseTier } from '../license/types.js';
-import { OpenClawEngine } from '@openclaw/engine';
+import { OpenClawEngine } from '@mekong/openclaw-engine';
 
 export interface EngineOptions {
   configOverrides?: Partial<MekongConfig>;
