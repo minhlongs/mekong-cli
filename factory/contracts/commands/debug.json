@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Debug",
     "icon": "",
-    "description_en": "Debugging technical issues and providing solutions."
+    "description_en": "Systematic debugging with log analysis and root cause identification"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "debugger"
     ],
-    "hub": "engineering-hub",
+    "hub": "ops-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -27,33 +26,56 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Error or symptom description"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "logs": {
+        "type": "string"
+      },
+      "stack_trace": {
+        "type": "string"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "root_cause": {
         "type": "string"
       },
-      "files_modified": {
+      "affected_files": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "severity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      },
+      "fix_suggestion": {
+        "type": "string"
+      },
+      "related_issues": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "fix",
+        "target_layer": "engineering"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

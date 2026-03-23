@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Content",
     "icon": "",
-    "description_en": "Content strategy & calendar"
+    "description_en": "Content creation — blog posts, social media, email sequences"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "editor",
+      "cmo"
     ],
-    "hub": "business-hub",
+    "hub": "marketing-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +26,45 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "content_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "blog",
+          "social",
+          "email",
+          "docs",
+          "newsletter"
+        ]
+      },
+      "tone": {
+        "type": "string",
+        "enum": [
+          "professional",
+          "casual",
+          "technical"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "content": {
         "type": "string"
       },
-      "files_modified": {
+      "word_count": {
+        "type": "integer"
+      },
+      "seo_keywords": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "cta": {
+        "type": "string"
       }
     }
   },

@@ -28,13 +28,11 @@
     },
     "display": {
       "type": "object",
-      "required": ["name_vi", "name_en", "icon", "description_vi", "description_en"],
+      "required": ["name_en", "icon", "description_en"],
       "additionalProperties": false,
       "properties": {
-        "name_vi": {"type": "string"},
         "name_en": {"type": "string"},
         "icon": {"type": "string", "description": "Single emoji icon"},
-        "description_vi": {"type": "string"},
         "description_en": {"type": "string"}
       }
     },

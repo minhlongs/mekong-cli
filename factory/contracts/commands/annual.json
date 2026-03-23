@@ -6,12 +6,12 @@
   "display": {
     "name_en": "Annual",
     "icon": "",
-    "description_en": "Annual plan"
+    "description_en": "Annual business plan — vision, goals, financials, milestones"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "strategist",
+      "cfo"
     ],
     "hub": "founder-hub",
     "complexity": "standard",
@@ -26,34 +26,55 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "year": {
+        "type": "integer"
+      },
+      "current_mrr": {
+        "type": "number"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "vision": {
         "type": "string"
       },
-      "files_modified": {
+      "goals": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "revenue_target": {
+        "type": "number"
+      },
+      "milestones": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "quarter": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "okr",
+        "target_layer": "founder"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Audit",
     "icon": "",
-    "description_en": "Audit dependencies"
+    "description_en": "Security and code quality audit — deps, secrets, OWASP checks"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "security-reviewer",
+      "code-reviewer"
     ],
     "hub": "ops-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -27,28 +27,67 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Audit scope"
       },
-      "project": {
+      "audit_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "security",
+          "code",
+          "dependency",
+          "full"
+        ]
+      },
+      "severity_threshold": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "score": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10
       },
-      "files_modified": {
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "fix": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "critical_count": {
+        "type": "integer"
+      },
+      "high_count": {
+        "type": "integer"
+      },
+      "recommendations": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },
@@ -56,8 +95,11 @@
     "triggers": []
   },
   "validation": {
-    "output_must_contain": [],
-    "min_output_length": 50,
+    "output_must_contain": [
+      "score",
+      "findings"
+    ],
+    "min_output_length": 100,
     "max_credit_cost": 5
   }
 }

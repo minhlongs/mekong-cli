@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Brainstorm",
     "icon": "",
-    "description_en": "Brainstorm a feature"
+    "description_en": "Brainstorm solutions with trade-off analysis"
   },
   "execution": {
     "agents": [
       "planner",
-      "fullstack-developer"
+      "researcher"
     ],
     "hub": "product-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 1,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +26,70 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "constraints": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "max_options": {
+        "type": "integer",
+        "default": 5
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "options": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "pros": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "effort": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          }
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "recommendation": {
+        "type": "string"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "plan",
+        "target_layer": "product"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

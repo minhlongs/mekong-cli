@@ -6,12 +6,11 @@
   "display": {
     "name_en": "Review",
     "icon": "",
-    "description_en": "Code/content review vi domain-specific checklist"
+    "description_en": "Code review with security, quality, and performance checks"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "code-reviewer"
     ],
     "hub": "engineering-hub",
     "complexity": "simple",
@@ -26,29 +25,55 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "review_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "security",
+          "quality",
+          "performance",
+          "full"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "score": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10
       },
-      "files_modified": {
+      "issues": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string"
+            },
+            "file": {
+              "type": "string"
+            },
+            "line": {
+              "type": "integer"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "approved": {
+        "type": "boolean"
       }
     }
   },

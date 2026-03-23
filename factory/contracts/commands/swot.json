@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Swot",
     "icon": "",
-    "description_en": "SWOT analysis"
+    "description_en": "SWOT analysis — strengths, weaknesses, opportunities, threats"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "strategist",
+      "researcher"
     ],
     "hub": "founder-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -27,37 +27,79 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Company/product/market to analyze"
       },
-      "project": {
+      "focus": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "product",
+          "market",
+          "team",
+          "financial"
+        ],
+        "description": "Analysis focus area"
+      },
+      "competitors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Known competitors to compare"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "strengths": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "weaknesses": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "opportunities": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "threats": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "recommendation": {
+        "type": "string"
+      },
+      "confidence_score": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "plan",
+        "target_layer": "founder"
+      }
+    ]
   },
   "validation": {
-    "output_must_contain": [],
-    "min_output_length": 50,
+    "output_must_contain": [
+      "strengths",
+      "weaknesses"
+    ],
+    "min_output_length": 200,
     "max_credit_cost": 5
   }
 }

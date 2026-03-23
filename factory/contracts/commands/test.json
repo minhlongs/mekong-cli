@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Test",
     "icon": "",
-    "description_en": "Run tests locally and analyze the summary report."
+    "description_en": "Run test suite with coverage analysis and failure diagnosis"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "tester"
     ],
     "hub": "engineering-hub",
-    "complexity": "standard",
+    "complexity": "simple",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 1,
     "requires_approval": false
   },
   "input": {
@@ -27,36 +26,71 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Test scope or specific file"
       },
-      "project": {
+      "test_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "unit",
+          "integration",
+          "e2e",
+          "all"
+        ]
+      },
+      "coverage_threshold": {
+        "type": "number",
+        "default": 80
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "total_tests": {
+        "type": "integer"
       },
-      "files_modified": {
+      "passed": {
+        "type": "integer"
+      },
+      "failed": {
+        "type": "integer"
+      },
+      "skipped": {
+        "type": "integer"
+      },
+      "coverage_percent": {
+        "type": "number"
+      },
+      "failures": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "test": {
+              "type": "string"
+            },
+            "error": {
+              "type": "string"
+            }
+          }
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "deploy",
+        "target_layer": "engineering"
+      }
+    ]
   },
   "validation": {
-    "output_must_contain": [],
+    "output_must_contain": [
+      "total_tests",
+      "passed"
+    ],
     "min_output_length": 50,
     "max_credit_cost": 5
   }

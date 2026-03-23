@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Deploy",
     "icon": "",
-    "description_en": "Execute Deploy command"
+    "description_en": "Deploy to production — build, push, verify CI/CD, confirm green"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "devops"
     ],
     "hub": "engineering-hub",
-    "complexity": "complex",
+    "complexity": "standard",
     "timeout_ms": 300000,
-    "credit_cost": 5,
+    "credit_cost": 3,
     "requires_approval": true
   },
   "input": {
@@ -27,36 +26,66 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Deployment target or description"
       },
-      "project": {
+      "environment": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "staging",
+          "production"
+        ],
+        "default": "production"
+      },
+      "platform": {
+        "type": "string",
+        "enum": [
+          "cloudflare",
+          "vercel",
+          "docker"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "deploy_url": {
+        "type": "string",
+        "format": "uri"
+      },
+      "commit_sha": {
         "type": "string"
       },
-      "files_modified": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
+      "ci_status": {
+        "type": "string",
+        "enum": [
+          "success",
+          "failure",
+          "pending"
+        ]
       },
-      "credits_used": {
+      "http_status": {
         "type": "integer"
+      },
+      "deploy_time_seconds": {
+        "type": "number"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "audit",
+        "target_layer": "engineering"
+      }
+    ]
   },
   "validation": {
-    "output_must_contain": [],
+    "output_must_contain": [
+      "deploy_url",
+      "ci_status"
+    ],
     "min_output_length": 50,
     "max_credit_cost": 7
   }

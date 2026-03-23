@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Finance",
     "icon": "",
-    "description_en": "Execute Finance command"
+    "description_en": "Financial analysis — P&L, cash flow, unit economics"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cfo",
+      "data"
     ],
-    "hub": "business-hub",
+    "hub": "finance-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +26,52 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "period": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "monthly",
+          "quarterly",
+          "annual"
+        ]
+      },
+      "metrics": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "mrr": {
+        "type": "number"
       },
-      "files_modified": {
-        "type": "array",
-        "items": {
-          "type": "string"
+      "arr": {
+        "type": "number"
+      },
+      "burn_rate": {
+        "type": "number"
+      },
+      "runway_months": {
+        "type": "number"
+      },
+      "unit_economics": {
+        "type": "object",
+        "properties": {
+          "ltv": {
+            "type": "number"
+          },
+          "cac": {
+            "type": "number"
+          },
+          "ltv_cac_ratio": {
+            "type": "number"
+          }
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },

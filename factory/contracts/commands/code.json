@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Code",
     "icon": "",
-    "description_en": "Start coding & testing an existing plan"
+    "description_en": "Write code for a specific task — focused implementation"
   },
   "execution": {
     "agents": [
-      "planner",
       "fullstack-developer"
     ],
     "hub": "engineering-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,20 +25,24 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "language": {
+        "type": "string"
+      },
+      "file_path": {
+        "type": "string"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "files_created": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       },
       "files_modified": {
         "type": "array",
@@ -47,13 +50,27 @@
           "type": "string"
         }
       },
-      "credits_used": {
+      "lines_added": {
+        "type": "integer"
+      },
+      "lines_removed": {
         "type": "integer"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "test",
+        "target_layer": "engineering"
+      },
+      {
+        "pattern": ".*",
+        "suggest": "review",
+        "target_layer": "engineering"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

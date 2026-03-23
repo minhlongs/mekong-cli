@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Plan",
     "icon": "",
-    "description_en": "Decompose goal thnh subtasks vi agent assignment, model routing, MCU estimate"
+    "description_en": "Create implementation plan with phases, dependencies, and estimates"
   },
   "execution": {
     "agents": [
       "planner",
-      "fullstack-developer"
+      "researcher"
     ],
     "hub": "product-hub",
-    "complexity": "simple",
+    "complexity": "standard",
     "timeout_ms": 30000,
-    "credit_cost": 1,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -27,37 +27,77 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Feature or system to plan"
       },
-      "project": {
+      "constraints": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Technical/business constraints"
+      },
+      "deadline": {
         "type": "string",
-        "description": "Target project path"
+        "format": "date",
+        "description": "Target completion date"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "plan_path": {
+        "type": "string",
+        "description": "Path to plan.md file"
       },
-      "files_modified": {
+      "phases": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "effort_hours": {
+              "type": "number"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "total_effort_hours": {
+        "type": "number"
+      },
+      "risk_level": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "cook",
+        "target_layer": "product"
+      }
+    ]
   },
   "validation": {
-    "output_must_contain": [],
-    "min_output_length": 50,
+    "output_must_contain": [
+      "plan_path",
+      "phases"
+    ],
+    "min_output_length": 100,
     "max_credit_cost": 3
   }
 }

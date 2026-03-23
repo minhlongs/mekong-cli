@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Sprint",
     "icon": "",
-    "description_en": "Execute Sprint command"
+    "description_en": "Sprint planning — backlog grooming, task breakdown, assignments"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "pm",
+      "planner"
     ],
     "hub": "product-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +26,62 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "sprint_duration_days": {
+        "type": "integer",
+        "default": 14
+      },
+      "team_capacity_hours": {
+        "type": "number"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "sprint_goal": {
         "type": "string"
       },
-      "files_modified": {
+      "tasks": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "assignee": {
+              "type": "string"
+            },
+            "estimate_hours": {
+              "type": "number"
+            },
+            "priority": {
+              "type": "string",
+              "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+              ]
+            }
+          }
         }
       },
-      "credits_used": {
+      "total_points": {
         "type": "integer"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "cook",
+        "target_layer": "product"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

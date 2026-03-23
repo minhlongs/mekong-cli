@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Standup",
     "icon": "",
-    "description_en": "Standup notes"
+    "description_en": "Daily standup — yesterday, today, blockers"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "pm"
     ],
-    "hub": "product-hub",
-    "complexity": "standard",
+    "hub": "ops-hub",
+    "complexity": "simple",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 0,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,36 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
       "project": {
-        "type": "string",
-        "description": "Target project path"
+        "type": "string"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "yesterday": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "today": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "blockers": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "metrics": {
+        "type": "object"
       }
     }
   },

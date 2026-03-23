@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Okr",
     "icon": "",
-    "description_en": "Execute Okr command"
+    "description_en": "Set OKRs — objectives with measurable key results"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "strategist"
     ],
     "hub": "founder-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +25,60 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "quarter": {
+        "type": "string"
+      },
+      "focus_areas": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "objectives": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "objective": {
+              "type": "string"
+            },
+            "key_results": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "metric": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "type": "number"
+                  },
+                  "current": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "sprint",
+        "target_layer": "founder"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

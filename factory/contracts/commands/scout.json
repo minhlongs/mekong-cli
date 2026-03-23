@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Scout",
     "icon": "",
-    "description_en": "Execute Scout command"
+    "description_en": "Codebase scouting — file discovery, task context, architecture analysis"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "researcher"
     ],
     "hub": "ops-hub",
-    "complexity": "standard",
+    "complexity": "simple",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 1,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +25,55 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "scope": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "file",
+          "module",
+          "full"
+        ]
+      },
+      "pattern": {
+        "type": "string"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "files_found": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "architecture_summary": {
+        "type": "string"
+      },
+      "key_patterns": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "dependencies": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "plan",
+        "target_layer": "ops"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

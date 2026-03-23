@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Marketing",
     "icon": "",
-    "description_en": "Execute Marketing command"
+    "description_en": "Marketing strategy — channels, content, campaigns"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cmo",
+      "editor"
     ],
-    "hub": "business-hub",
+    "hub": "marketing-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,34 +26,68 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "channel": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "seo",
+          "social",
+          "email",
+          "ads",
+          "content",
+          "all"
+        ]
+      },
+      "budget": {
+        "type": "number"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "strategy": {
         "type": "string"
       },
-      "files_modified": {
+      "channels": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            },
+            "expected_roi": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "content_plan": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "content",
+        "target_layer": "business"
+      },
+      {
+        "pattern": ".*",
+        "suggest": "launch",
+        "target_layer": "business"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],

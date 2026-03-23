@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Security",
     "icon": "",
-    "description_en": "Security analysis"
+    "description_en": "Security scan — vulnerabilities, secrets, OWASP compliance"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "security-reviewer"
     ],
     "hub": "ops-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,47 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "scan_type": {
         "type": "string",
-        "description": "Target project path"
+        "enum": [
+          "dependency",
+          "code",
+          "config",
+          "full"
+        ]
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "files_modified": {
+      "vulnerabilities": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string"
+            },
+            "package": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "fix": {
+              "type": "string"
+            }
+          }
         }
       },
-      "credits_used": {
+      "secrets_found": {
         "type": "integer"
+      },
+      "owasp_score": {
+        "type": "number"
       }
     }
   },

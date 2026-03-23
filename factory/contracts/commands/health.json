@@ -6,17 +6,16 @@
   "display": {
     "name_en": "Health",
     "icon": "",
-    "description_en": "System health"
+    "description_en": "System health check — services, endpoints, dependencies"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "devops"
     ],
     "hub": "ops-hub",
-    "complexity": "standard",
+    "complexity": "simple",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 0,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +25,46 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "services": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "overall_status": {
+        "type": "string",
+        "enum": [
+          "healthy",
+          "degraded",
+          "down"
+        ]
       },
-      "files_modified": {
+      "services": {
         "type": "array",
         "items": {
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "latency_ms": {
+              "type": "number"
+            },
+            "uptime_percent": {
+              "type": "number"
+            }
+          }
         }
-      },
-      "credits_used": {
-        "type": "integer"
       }
     }
   },

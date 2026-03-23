@@ -6,15 +6,14 @@
   "display": {
     "name_en": "Status",
     "icon": "",
-    "description_en": "Kim tra sc khe ton b h thng AgencyOS/Mekong"
+    "description_en": "Project status report — progress, blockers, metrics"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "pm"
     ],
     "hub": "ops-hub",
-    "complexity": "trivial",
+    "complexity": "simple",
     "timeout_ms": 10000,
     "credit_cost": 0,
     "requires_approval": false
@@ -26,29 +25,36 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
       "project": {
-        "type": "string",
-        "description": "Target project path"
+        "type": "string"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "status": {
+        "type": "string",
+        "enum": [
+          "on_track",
+          "at_risk",
+          "blocked",
+          "completed"
+        ]
       },
-      "files_modified": {
+      "progress_percent": {
+        "type": "number"
+      },
+      "blockers": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "next_milestone": {
+        "type": "string"
       }
     }
   },

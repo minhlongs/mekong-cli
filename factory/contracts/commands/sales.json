@@ -6,17 +6,17 @@
   "display": {
     "name_en": "Sales",
     "icon": "",
-    "description_en": "Execute Sales command"
+    "description_en": "Sales strategy — pipeline, outreach, closing"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "sales",
+      "cmo"
     ],
-    "hub": "business-hub",
+    "hub": "sales-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
-    "credit_cost": 3,
+    "credit_cost": 2,
     "requires_approval": false
   },
   "input": {
@@ -26,29 +26,47 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
-        "type": "string",
-        "description": "Target project path"
+      "target_segment": {
+        "type": "string"
+      },
+      "deal_size": {
+        "type": "number"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "icp": {
+        "type": "object",
+        "properties": {
+          "industry": {
+            "type": "string"
+          },
+          "company_size": {
+            "type": "string"
+          },
+          "pain_points": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
-      "files_modified": {
+      "pipeline_stages": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "outreach_templates": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },

@@ -6,18 +6,18 @@
   "display": {
     "name_en": "Launch",
     "icon": "",
-    "description_en": "To launch copy cho Product Hunt, Hacker News, Reddit v cc platform khc"
+    "description_en": "Product launch — checklist, channels, announcements"
   },
   "execution": {
     "agents": [
-      "planner",
-      "fullstack-developer"
+      "cmo",
+      "pm"
     ],
-    "hub": "founder-hub",
+    "hub": "business-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
-    "requires_approval": false
+    "requires_approval": true
   },
   "input": {
     "type": "object",
@@ -26,34 +26,62 @@
     ],
     "properties": {
       "goal": {
-        "type": "string",
-        "description": "Natural language task description"
+        "type": "string"
       },
-      "project": {
+      "channels": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "launch_date": {
         "type": "string",
-        "description": "Target project path"
+        "format": "date"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
-        "type": "string"
+      "checklist": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string"
+            }
+          }
+        }
       },
-      "files_modified": {
+      "announcements": {
         "type": "array",
         "items": {
           "type": "string"
         }
       },
-      "credits_used": {
-        "type": "integer"
+      "metrics_to_track": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     }
   },
   "cascade": {
-    "triggers": []
+    "triggers": [
+      {
+        "pattern": ".*",
+        "suggest": "marketing",
+        "target_layer": "founder"
+      }
+    ]
   },
   "validation": {
     "output_must_contain": [],
