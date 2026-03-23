@@ -119,9 +119,9 @@ openclaw-key.json
 
 # Private Client Projects — ALL apps/ are LOCAL ONLY
 # Monorepo structure: apps stay on disk, NEVER pushed to public GitHub
-# Each sub-project has its own repo if needed
+# Only apps/raas-gateway/ is public (deployed as CF Worker)
 apps/
-!apps/algo-trader
+!apps/raas-gateway/
 
 # Private Orchestration (Tôm Hùm internal state)
 apps/openclaw-worker/data/
@@ -272,9 +272,7 @@ api/
 agents/
 !/agents/
 !packages/**/agents/
-!apps/algo-trader/src/api/
-!apps/algo-trader/src/jobs/workers/
-!apps/algo-trader/tests/jobs/workers/
+# algo-trader has its own repo: github.com/longtho638-jpg/algo-trader
 cli/
 !packages/**/cli/
 workers/
@@ -296,7 +294,7 @@ tmp/
 cc/
 bin/
 configs/
-\!apps/algo-trader/tests/jobs/workers/
+# (cleaned: algo-trader has own repo)
 
 # Agent benchmarks (private testing results)
 .agent/
@@ -376,8 +374,7 @@ antigravity/
 docker/
 <<<<<<< HEAD
 lib/
-!apps/sophia-proposal/lib/
-!apps/sophia-proposal/app/lib/
+# (cleaned: sophia-proposal is private)
 =======
 /lib/
 >>>>>>> origin/main
@@ -400,31 +397,7 @@ conftest.py
 .coveragerc
 .env*.local
 
-# Private apps — NOT for public repo
-# Exception: roi-calculator is public (sales tool)
-!apps/
-apps/84tea/
-apps/anima119/
-apps/sophia-ai-factory/
-apps/sa-dec-flower-hunt/
-apps/com-anh-duong/
-apps/com-anh-duong-10x/
-apps/well/
-apps/agencyos-web/
-apps/agencyos-landing/
-apps/dashboard/
-apps/admin/
-apps/analytics/
-apps/developers/
-apps/landing/
-apps/web/
-apps/stealth-engine/
-apps/vibe-coding-cafe/
-apps/agentic-brain/
-apps/gemini-proxy-clone/
-apps/antigravity-cli/
-apps/antigravity-gateway/
-apps/project/
-apps/sophia-proposal/
+# Private apps — ALL blocked by apps/ rule above (line 123)
+# Only apps/raas-gateway/ is whitelisted (line 124)
 mekong/daemon/
 mekong/hooks/

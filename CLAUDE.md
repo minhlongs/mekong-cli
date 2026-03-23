@@ -23,17 +23,6 @@ CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
 
 ---
 
-<<<<<<< HEAD
-## EXECUTION RULE — CRITICAL
-
-ALL slash commands MUST execute via `mekong` CLI engine.
-
-- WRONG: Manually create directories, write JSON files, read configs
-- RIGHT: Run `mekong <namespace> <command> $ARGUMENTS`
-
-The `.claude/commands/*.md` files are DISPATCHERS only.
-The real logic lives in the mekong CLI Python/TypeScript engine.
-=======
 ## UNIFIED WRAPPER — `mekong` is the ONLY entry point
 
 ```
@@ -67,7 +56,6 @@ mekong-status       # Show current API config
 | `mekong --provider gemini` | google | `gemini` | gemini default |
 
 All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` discovery.
->>>>>>> origin/main
 
 ---
 

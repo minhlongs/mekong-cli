@@ -1,9 +1,0 @@
-name = "mekong-raas-landing"
-compatibility_date = "2024-01-01"
-
-[env.production]
-name = "mekong-raas-landing"
-
-# Cloudflare Pages configuration
-# Deploy: npx wrangler pages deploy public --project-name mekong-raas
-# Or via: git push → GitHub Actions → CF Pages auto-deploy
