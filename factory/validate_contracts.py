@@ -80,7 +80,7 @@ def check_registry(path: Path, file_key: str) -> list[str]:
     for entry in entries:
         entry_path = entry.get("path", "")
         # Skip .claude/ paths (symlinked/gitignored — ClaudeKit managed)
-        if entry_path.startswith(".claude/") or entry_path.startswith("mekong/skills/"):
+        if entry_path.startswith(".claude/"):
             continue
         ref_path = REPO_ROOT / entry_path
         if not ref_path.exists():

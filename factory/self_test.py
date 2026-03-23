@@ -101,7 +101,7 @@ def check_skills_registry() -> CheckResult:
     for skill in skills:
         skill_path = skill.get("path", "")
         # Skip external/symlinked skills (ClaudeKit managed, not in repo)
-        if skill_path.startswith(".claude/skills/") or skill_path.startswith("mekong/skills/"):
+        if skill_path.startswith(".claude/skills/"):
             continue
         ref = REPO_ROOT / skill_path
         if not ref.exists():
