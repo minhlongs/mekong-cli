@@ -136,10 +136,7 @@ apps/dashboard-internal/
 openclaw-key.json
 
 # Private Client Projects — ALL apps/ are LOCAL ONLY
-# Monorepo structure: apps stay on disk, NEVER pushed to public GitHub
-# Only apps/raas-gateway/ is public (deployed as CF Worker)
 apps/
-!apps/raas-gateway/
 
 # Private Orchestration (Tôm Hùm internal state)
 apps/openclaw-worker/data/
@@ -408,6 +405,30 @@ constitution/
 design-assets/
 frontend/
 reports/
+
+# Internal plans & strategy (not public)
+plans/
+docs/internal/
+docs/archive/
+docs/case-studies/
+docs/PAYPAL_TESTING_GUIDE.md
+
+# Stub/internal packages
+packages/vibe-*/
+packages/trading-core/
+packages/agencyos-*/
+packages/agi-evolution/
+packages/solo-os/
+packages/vc-governance/
+packages/cli-adapter/
+packages/cli-orchestrator/
+packages/command-loader/
+packages/rd-engine/
+packages/mekong-sdk/
+packages/sdk/
+packages/openclaw-agents/
+packages/raas-sdk/
+packages/raas-marketplace/
 
 # Internal scripts & runtime
 GEMINI.md
