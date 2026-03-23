@@ -1,5 +1,35 @@
 ---
 import DashboardLayout from '../layouts/dashboard-layout.astro';
+
+const apiExample = `PUT https://api.agencyos.network/v1/tenants/me
+Authorization: Bearer &lt;YOUR_API_KEY&gt;
+Content-Type: application/json
+
+{"callback_url": "https://your-webhook-url.com/hook"}`;
+
+const missionPayload = `{
+  "event": "mission.completed",
+  "tenant_id": "ten_abc123",
+  "mission_id": "mis_xyz789",
+  "goal": "Write a market analysis report",
+  "status": "completed",
+  "result": "...",
+  "timestamp": "2026-03-23T10:00:00Z"
+}`;
+
+const creditsLowPayload = `{
+  "event": "credits.low",
+  "tenant_id": "ten_abc123",
+  "balance": 3,
+  "timestamp": "2026-03-23T10:00:00Z"
+}`;
+
+const creditsExhaustedPayload = `{
+  "event": "credits.exhausted",
+  "tenant_id": "ten_abc123",
+  "balance": 0,
+  "timestamp": "2026-03-23T10:00:00Z"
+}`;
 ---
 <DashboardLayout title="Integrations & Webhooks" activePage="/integrations">
   <h2 style="font-size:18px;margin-bottom:4px">Integrations & Webhooks</h2>
@@ -21,11 +51,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
     <div class="card">
       <strong style="display:block;margin-bottom:12px">Cách thiết lập qua API</strong>
       <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Gọi API để cập nhật callback URL:</p>
-      <pre style="background:var(--bg2,#1a1a2e);padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;line-height:1.6"><code>PUT https://api.agencyos.network/v1/tenants/me
-Authorization: Bearer &lt;YOUR_API_KEY&gt;
-Content-Type: application/json
-
-{"callback_url": "https://your-webhook-url.com/hook"}</code></pre>
+      <pre style="background:var(--bg2,#1a1a2e);padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;line-height:1.6"><code set:html={apiExample}></code></pre>
     </div>
 
     <!-- Webhook Events -->
@@ -36,37 +62,19 @@ Content-Type: application/json
         <div style="border-left:3px solid var(--primary,#6366f1);padding-left:12px">
           <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">mission.completed</div>
           <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi một mission hoàn thành.</div>
-          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
-  "event": "mission.completed",
-  "tenant_id": "ten_abc123",
-  "mission_id": "mis_xyz789",
-  "goal": "Write a market analysis report",
-  "status": "completed",
-  "result": "...",
-  "timestamp": "2026-03-23T10:00:00Z"
-}</code></pre>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code set:html={missionPayload}></code></pre>
         </div>
 
         <div style="border-left:3px solid #f59e0b;padding-left:12px">
           <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">credits.low</div>
           <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi số dư &le; 5 credits.</div>
-          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
-  "event": "credits.low",
-  "tenant_id": "ten_abc123",
-  "balance": 3,
-  "timestamp": "2026-03-23T10:00:00Z"
-}</code></pre>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code set:html={creditsLowPayload}></code></pre>
         </div>
 
         <div style="border-left:3px solid var(--danger,#ef4444);padding-left:12px">
           <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">credits.exhausted</div>
           <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi balance = 0.</div>
-          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
-  "event": "credits.exhausted",
-  "tenant_id": "ten_abc123",
-  "balance": 0,
-  "timestamp": "2026-03-23T10:00:00Z"
-}</code></pre>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code set:html={creditsExhaustedPayload}></code></pre>
         </div>
 
       </div>
