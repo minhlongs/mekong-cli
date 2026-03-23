@@ -14,7 +14,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
   </div>
 
   <!-- MCU Balance Banner -->
-  <div class="mcu-banner card">
+  <div class="mcu-banner card" role="region" aria-label="MCU Balance">
     <div class="mcu-content">
       <div class="mcu-icon">⚡</div>
       <div class="mcu-info">
@@ -37,7 +37,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
 
   <!-- Stats Grid -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card" role="status" aria-label="Tin nhắn hôm nay">
       <div class="stat-icon">💬</div>
       <div class="stat-content">
         <div class="stat-label">Tin nhắn hôm nay</div>
@@ -45,7 +45,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
         <div class="stat-change positive" id="messages-change">+0%</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" role="status" aria-label="Khách hàng">
       <div class="stat-icon">👥</div>
       <div class="stat-content">
         <div class="stat-label">Khách hàng</div>
@@ -53,7 +53,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
         <div class="stat-sub">Tổng liên hệ</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" role="status" aria-label="Commands tháng này">
       <div class="stat-icon">📊</div>
       <div class="stat-content">
         <div class="stat-label">Commands</div>
@@ -61,7 +61,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
         <div class="stat-sub">Tháng này</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" role="status" aria-label="Tỉ lệ thành công AI">
       <div class="stat-icon">✅</div>
       <div class="stat-content">
         <div class="stat-label">Tỉ lệ thành công</div>
@@ -82,13 +82,13 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
           <option value="90">90 ngày</option>
         </select>
       </div>
-      <canvas id="usage-chart"></canvas>
+      <canvas id="usage-chart" aria-label="Biểu đồ sử dụng MCU 30 ngày" role="img"></canvas>
     </div>
     <div class="card chart-card">
       <div class="chart-header">
         <h3>Commands theo loại</h3>
       </div>
-      <canvas id="commands-chart"></canvas>
+      <canvas id="commands-chart" aria-label="Biểu đồ commands theo loại" role="img"></canvas>
     </div>
   </div>
 
@@ -105,7 +105,7 @@ import DashboardLayout from '../layouts/dashboard-layout.astro';
 </DashboardLayout>
 
 <script>
-  const API = 'https://mekong-engine.agencyos.network';
+  const API = 'https://api.agencyos.network';
 
   // Auth check
   const apiKey = localStorage.getItem('mk_api_key');

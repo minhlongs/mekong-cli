@@ -254,7 +254,13 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
 <nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass" role="navigation" aria-label={isEn ? 'Main navigation' : 'Điều hướng chính'}>
   <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
     <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'OpenClaw Home' : 'Trang chủ OpenClaw'}>OpenClaw</a>
-    <div style="display:flex;align-items:center;gap:28px;" role="menubar">
+    <!-- Hamburger button (mobile only) -->
+    <button class="mobile-menu-btn" id="hamburger-btn" aria-label={isEn ? 'Open menu' : 'Mở menu'} aria-expanded="false" aria-controls="nav-links-mobile">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="nav-links" id="nav-links-mobile" role="menubar">
       <a href={`${base}/#features`} class="nav-link" role="menuitem" aria-label={isEn ? 'View features' : 'Xem tính năng'}>{labels.features}</a>
 
       <!-- 5-Layer Commands Mega Menu -->
@@ -285,8 +291,9 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
         <span style="color:var(--md-on-surface-muted);" role="separator">|</span>
         <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to English' : 'Chuyển sang tiếng Anh'} aria-current={isEn ? 'true' : 'false'} aria-pressed={isEn}>EN</a>
       </div>
-      <a href="https://app.agencyos.network/signup" class="btn-primary" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
     </div>
+    <!-- CTA always visible -->
+    <a href="https://app.agencyos.network/signup" class="btn-primary nav-cta" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
   </div>
 </nav>
 
@@ -300,7 +307,55 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   .dropdown-menu {
     backdrop-filter: blur(8px);
   }
+
+  /* Mobile hamburger menu */
+  .mobile-menu-btn { display: none; }
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--md-surface);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--md-outline);
+      gap: 12px;
+      z-index: 99;
+    }
+    .mobile-menu-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+      background: none;
+      border: none;
+    }
+    .mobile-menu-btn span {
+      width: 24px;
+      height: 2px;
+      background: var(--md-on-surface);
+      border-radius: 2px;
+      transition: 0.2s;
+    }
+    .dropdown-container { display: none !important; }
+    .nav-cta { order: 3; }
+  }
 </style>
+
+<script>
+  const btn = document.getElementById('hamburger-btn');
+  const navLinks = document.getElementById('nav-links-mobile');
+  if (btn && navLinks) {
+    btn.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
+  }
+</script>
 
 <main id="main-content" role="main" tabindex="-1"><slot /></main>
 
