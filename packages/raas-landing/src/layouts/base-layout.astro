@@ -286,6 +286,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
 
       <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
       <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
+      <a href={`${base}/blog`} class="nav-link" role="menuitem" aria-label="Blog">Blog</a>
       <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
         <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'} aria-pressed={!isEn}>VI</a>
         <span style="color:var(--md-on-surface-muted);" role="separator">|</span>
@@ -374,6 +375,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
         <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-product-label">
           <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Features' : 'Tính năng'}</a>
           <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Pricing' : 'Bảng giá'}</a>
+          <a href={`${base}/blog`} class="nav-link" style="font-size:0.875rem;" role="listitem">Blog</a>
           <a href="https://docs.agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">API Docs</a>
           <a href="https://dashboard.agencyos.network/dashboard" class="nav-link" style="font-size:0.875rem;" role="listitem">Dashboard</a>
         </div>

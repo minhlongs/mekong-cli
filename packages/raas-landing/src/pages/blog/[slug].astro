@@ -1,0 +1,249 @@
+---
+import { getCollection, getEntry } from 'astro:content';
+import BaseLayout from '../../layouts/base-layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({ params: { slug: post.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = await getEntry('blog', slug);
+if (!post) return Astro.redirect('/blog');
+
+const { Content } = await post.render();
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('vi-VN', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+}
+---
+
+<BaseLayout
+  title={`${post.data.title} — OpenClaw Blog`}
+  description={post.data.description}
+  lang="vi"
+  type="article"
+  canonical={`/blog/${slug}`}
+  publishedTime={post.data.date}
+  image={post.data.image || '/og-default.jpg'}
+  section="Blog"
+>
+  <article class="container article-wrap">
+    <!-- Back link -->
+    <a href="/blog" class="back-link">← Tất cả bài viết</a>
+
+    <!-- Header -->
+    <header class="article-header">
+      <div class="tag-list">
+        {post.data.tags.slice(0, 4).map(tag => (
+          <span class="tag">#{tag}</span>
+        ))}
+      </div>
+      <h1 class="article-title">{post.data.title}</h1>
+      <p class="article-desc">{post.data.description}</p>
+      <div class="article-meta">
+        <span class="meta-author">✍️ {post.data.author}</span>
+        <span class="meta-sep">·</span>
+        <time datetime={post.data.date}>
+          {formatDate(post.data.date)}
+        </time>
+      </div>
+    </header>
+
+    <hr class="divider" style="margin: 0 0 48px;" />
+
+    <!-- Markdown content -->
+    <div class="prose">
+      <Content />
+    </div>
+
+    <hr class="divider" style="margin: 64px 0 48px;" />
+
+    <!-- CTA -->
+    <div class="article-cta card-glass">
+      <p class="label" style="margin-bottom:10px;">Bắt đầu ngay hôm nay</p>
+      <h2 style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:12px;">
+        Thử OpenClaw miễn phí 14 ngày
+      </h2>
+      <p style="color:var(--md-on-surface-muted);font-size:0.95rem;margin-bottom:24px;max-width:480px;">
+        342 AI commands sẵn sàng. Không cần thẻ tín dụng. Setup trong 2 phút.
+      </p>
+      <a href="https://app.agencyos.network/signup" class="btn-primary">
+        Dùng miễn phí →
+      </a>
+    </div>
+
+    <a href="/blog" class="back-link" style="margin-top: 48px; display:inline-block;">← Quay lại Blog</a>
+  </article>
+</BaseLayout>
+
+<style>
+  .article-wrap {
+    max-width: 720px;
+    padding-top: 48px;
+    padding-bottom: 96px;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: var(--md-on-surface-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 40px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--md-primary); }
+
+  .article-header {
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--md-primary);
+    background: rgba(0, 188, 212, 0.1);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  .article-title {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--md-on-surface);
+  }
+
+  .article-desc {
+    font-size: 1rem;
+    color: var(--md-on-surface-muted);
+    line-height: 1.7;
+  }
+
+  .article-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--md-on-surface-muted);
+  }
+  .meta-author { font-weight: 600; }
+  .meta-sep { opacity: 0.5; }
+
+  /* Prose styles for markdown content */
+  .prose {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--md-on-surface);
+  }
+  .prose :global(h2) {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 40px 0 16px;
+    color: var(--md-on-surface);
+  }
+  .prose :global(h3) {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 32px 0 12px;
+    color: var(--md-on-surface);
+  }
+  .prose :global(p) {
+    margin-bottom: 20px;
+  }
+  .prose :global(ul), .prose :global(ol) {
+    margin: 0 0 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .prose :global(li) { line-height: 1.7; }
+  .prose :global(strong) { color: var(--md-on-surface); font-weight: 700; }
+  .prose :global(a) { color: var(--md-primary); }
+  .prose :global(a:hover) { text-decoration: underline; }
+  .prose :global(hr) {
+    border: none;
+    border-top: 1px solid var(--md-outline);
+    margin: 40px 0;
+  }
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--md-primary);
+    padding: 12px 20px;
+    margin: 24px 0;
+    background: rgba(0,188,212,0.05);
+    border-radius: 0 8px 8px 0;
+    color: var(--md-on-surface-muted);
+    font-style: italic;
+  }
+  .prose :global(code) {
+    background: var(--md-surface-variant);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.875em;
+    color: var(--md-primary);
+  }
+  .prose :global(pre) {
+    background: var(--md-surface-container);
+    border: 1px solid var(--md-outline);
+    border-radius: var(--md-radius-sm);
+    padding: 20px;
+    overflow-x: auto;
+    margin: 24px 0;
+  }
+  .prose :global(pre code) {
+    background: none;
+    padding: 0;
+    color: var(--md-on-surface);
+    font-size: 0.875rem;
+  }
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 0.9rem;
+  }
+  .prose :global(th) {
+    background: var(--md-surface-variant);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid var(--md-outline);
+  }
+  .prose :global(td) {
+    padding: 10px 14px;
+    border: 1px solid var(--md-outline);
+    color: var(--md-on-surface-muted);
+  }
+  .prose :global(tr:nth-child(even) td) {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .article-cta {
+    text-align: center;
+    padding: 48px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @media (max-width: 640px) {
+    .article-wrap { padding-top: 32px; }
+    .article-cta { padding: 32px 20px; }
+  }
+</style>

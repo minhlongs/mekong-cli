@@ -1,0 +1,135 @@
+---
+import DashboardLayout from '../layouts/dashboard-layout.astro';
+---
+<DashboardLayout title="Integrations & Webhooks" activePage="/integrations">
+  <h2 style="font-size:18px;margin-bottom:4px">Integrations & Webhooks</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:24px">Kết nối OpenClaw với Zapier, Make.com, n8n và các nền tảng khác.</p>
+
+  <div style="display:grid;gap:20px;max-width:720px">
+
+    <!-- Callback URL -->
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">Callback URL của bạn</strong>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="url" id="callback-url-input" placeholder="https://hooks.zapier.com/hooks/catch/..." style="flex:1;font-size:13px" />
+        <button class="btn btn-primary btn-sm" id="btn-save-callback">Lưu</button>
+      </div>
+      <p id="callback-status" style="font-size:11px;margin-top:8px;color:var(--text2)">Nhập URL để nhận webhook events.</p>
+    </div>
+
+    <!-- Setup Guide -->
+    <div class="card">
+      <strong style="display:block;margin-bottom:12px">Cách thiết lập qua API</strong>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">Gọi API để cập nhật callback URL:</p>
+      <pre style="background:var(--bg2,#1a1a2e);padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;line-height:1.6"><code>PUT https://api.agencyos.network/v1/tenants/me
+Authorization: Bearer &lt;YOUR_API_KEY&gt;
+Content-Type: application/json
+
+{"callback_url": "https://your-webhook-url.com/hook"}</code></pre>
+    </div>
+
+    <!-- Webhook Events -->
+    <div class="card">
+      <strong style="display:block;margin-bottom:16px">Webhook Events</strong>
+      <div style="display:grid;gap:14px">
+
+        <div style="border-left:3px solid var(--primary,#6366f1);padding-left:12px">
+          <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">mission.completed</div>
+          <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi một mission hoàn thành.</div>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
+  "event": "mission.completed",
+  "tenant_id": "ten_abc123",
+  "mission_id": "mis_xyz789",
+  "goal": "Write a market analysis report",
+  "status": "completed",
+  "result": "...",
+  "timestamp": "2026-03-23T10:00:00Z"
+}</code></pre>
+        </div>
+
+        <div style="border-left:3px solid #f59e0b;padding-left:12px">
+          <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">credits.low</div>
+          <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi số dư &le; 5 credits.</div>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
+  "event": "credits.low",
+  "tenant_id": "ten_abc123",
+  "balance": 3,
+  "timestamp": "2026-03-23T10:00:00Z"
+}</code></pre>
+        </div>
+
+        <div style="border-left:3px solid var(--danger,#ef4444);padding-left:12px">
+          <div style="font-family:monospace;font-size:13px;font-weight:600;margin-bottom:4px">credits.exhausted</div>
+          <div style="color:var(--text2);font-size:12px;margin-bottom:8px">Fired khi balance = 0.</div>
+          <pre style="background:var(--bg2,#1a1a2e);padding:10px;border-radius:6px;font-size:11px;overflow-x:auto"><code>{
+  "event": "credits.exhausted",
+  "tenant_id": "ten_abc123",
+  "balance": 0,
+  "timestamp": "2026-03-23T10:00:00Z"
+}</code></pre>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Zapier Setup -->
+    <div class="card">
+      <strong style="display:block;margin-bottom:14px">Hướng dẫn kết nối Zapier</strong>
+      <ol style="display:grid;gap:12px;padding-left:20px;font-size:13px;color:var(--text2)">
+        <li><strong style="color:var(--text)">Tạo Zap mới</strong> trên <a href="https://zapier.com" target="_blank" style="color:var(--primary,#6366f1)">zapier.com</a> → chọn Trigger: <em>"Webhooks by Zapier"</em></li>
+        <li>Chọn event <strong style="color:var(--text)">"Catch Hook"</strong> → nhấn Continue</li>
+        <li>Zapier cấp cho bạn một <strong style="color:var(--text)">Webhook URL</strong> (dạng <code>https://hooks.zapier.com/hooks/catch/...</code>)</li>
+        <li>Sao chép URL đó, dán vào ô <strong style="color:var(--text)">"Callback URL"</strong> ở trên → nhấn Lưu</li>
+        <li>Quay lại Zapier → nhấn <strong style="color:var(--text)">"Test Trigger"</strong>, sau đó chạy một mission trên dashboard để tạo event thực tế</li>
+        <li>Tiếp tục cấu hình <strong style="color:var(--text)">Action</strong> trong Zap (gửi Slack, email, Google Sheet, ...)</li>
+      </ol>
+      <div style="margin-top:14px;padding:10px 14px;background:var(--bg2,#1a1a2e);border-radius:8px;font-size:12px;color:var(--text2)">
+        Tương tự với <strong>Make.com</strong>: dùng module "Webhooks" → "Custom Webhook" → copy URL.<br/>
+        Tương tự với <strong>n8n</strong>: dùng node "Webhook" → copy Production URL.
+      </div>
+    </div>
+
+  </div>
+</DashboardLayout>
+
+<script>
+  const API = 'https://api.agencyos.network';
+  if (!localStorage.getItem('mk_api_key')) window.location.replace('/signup');
+
+  const key = localStorage.getItem('mk_api_key') || '';
+  const h = { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' };
+
+  async function loadCallback() {
+    try {
+      const res = await fetch(API + '/v1/tenants/me', { headers: h });
+      if (!res.ok) return;
+      const data = await res.json();
+      const inp = document.getElementById('callback-url-input') as HTMLInputElement;
+      if (inp && data.callback_url) inp.value = data.callback_url;
+    } catch { /* silent */ }
+  }
+
+  document.getElementById('btn-save-callback')?.addEventListener('click', async () => {
+    const inp = document.getElementById('callback-url-input') as HTMLInputElement;
+    const status = document.getElementById('callback-status');
+    const url = inp?.value?.trim();
+    if (!url) { if (status) { status.textContent = 'Vui lòng nhập URL hợp lệ.'; status.style.color = 'var(--danger,#ef4444)'; } return; }
+    const btn = document.getElementById('btn-save-callback') as HTMLButtonElement;
+    btn.disabled = true; btn.textContent = 'Đang lưu...';
+    try {
+      const res = await fetch(API + '/v1/tenants/me', { method: 'PUT', headers: h, body: JSON.stringify({ callback_url: url }) });
+      if (res.ok) {
+        if (status) { status.textContent = 'Da luu thanh cong!'; status.style.color = 'var(--success,#10b981)'; }
+      } else {
+        if (status) { status.textContent = 'Loi: ' + res.status; status.style.color = 'var(--danger,#ef4444)'; }
+      }
+    } catch {
+      if (status) { status.textContent = 'Loi ket noi.'; status.style.color = 'var(--danger,#ef4444)'; }
+    } finally {
+      btn.disabled = false; btn.textContent = 'Luu';
+      setTimeout(() => { if (status) { status.textContent = ''; status.style.color = 'var(--text2)'; } }, 3000);
+    }
+  });
+
+  loadCallback();
+</script>
