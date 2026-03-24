@@ -446,13 +446,13 @@
     </header>
 
     <!-- Contact Hero -->
-    <section class="contact-hero">
-        <h1>Liên Hệ</h1>
+    <section class="contact-hero" aria-labelledby="contactHeroTitle">
+        <h1 id="contactHeroTitle">Liên Hệ</h1>
         <p>Chúng tôi luôn sẵn sàng lắng nghe và phản hồi trong thời gian sớm nhất</p>
     </section>
 
     <!-- Contact Content -->
-    <main class="contact-page">
+    <main id="main-content" class="contact-page">
         <div class="contact-content">
             <div class="contact-grid">
                 <!-- Contact Form -->
@@ -565,8 +565,8 @@
                             <a href="https://tiktok.com/@fnbcontainer" class="social-btn" aria-label="TikTok" target="_blank" rel="noopener">
                                 <span class="material-symbols-outlined">play_arrow</span>
                             </a>
-                            <a href="javascript:void(0)" class="social-btn" aria-label="Zalo">
-                                <span class="material-symbols-outlined">chat</span>
+                            <a href="https://zalo.me/fnbcontainer" class="social-btn" aria-label="Zalo" target="_blank" rel="noopener">
+                                <span class="material-symbols-outlined" aria-hidden="true">chat</span>
                             </a>
                         </div>
                     </div>
@@ -587,17 +587,17 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="index.html" class="logo">
-                        <span class="material-symbols-outlined">local_cafe</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">local_cafe</span>
                         <span>F&B Caffe</span>
                     </a>
                     <p>Không gian cà phê container độc đáo tại Sa Đéc</p>
                 </div>
-                <div class="footer-links">
+                <div class="footer-links" role="navigation" aria-label="Liên kết nhanh">
                     <h4>Liên kết</h4>
                     <a href="index.html">Trang chủ</a>
                     <a href="index.html#about">Về chúng tôi</a>
@@ -606,14 +606,16 @@
                 </div>
                 <div class="footer-links">
                     <h4>Pháp lý</h4>
-                    <a href="javascript:void(0)" onclick="return false;">Điều khoản</a>
-                    <a href="javascript:void(0)" onclick="return false;">Bảo mật</a>
+                    <a href="terms.html">Điều khoản</a>
+                    <a href="privacy.html">Bảo mật</a>
                 </div>
                 <div class="footer-newsletter">
                     <h4>Đăng ký nhận tin</h4>
                     <div class="newsletter-form">
-                        <input type="email" id="newsletter-email" class="form-control" placeholder="Email của bạn">
-                        <md-filled-button id="newsletter-submit">Đăng ký</md-filled-button>
+                        <label for="newsletter-email" class="visually-hidden">Email đăng ký newsletter</label>
+                        <input type="email" id="newsletter-email" class="form-control" placeholder="Email của bạn" aria-describedby="newsletterHint" autocomplete="email">
+                        <span id="newsletterHint" class="visually-hidden">Nhập email để nhận khuyến mãi và tin tức từ F&B Caffe</span>
+                        <md-filled-button id="newsletter-submit" type="button">Đăng ký</md-filled-button>
                     </div>
                 </div>
             </div>

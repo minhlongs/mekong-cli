@@ -23,6 +23,15 @@ import {
   createReview,
   getReviewStats,
 } from './routes/reviews.js';
+import {
+  getLoyaltyTiers,
+  getLoyaltyTier,
+  getLoyaltyRewards,
+  getLoyaltyReward,
+  getLoyaltyEarningRules,
+  getLoyaltyConfig,
+  getLoyaltyFull,
+} from './routes/loyalty.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
@@ -117,6 +126,44 @@ export default {
       if (path.match(/^\/api\/reviews\/stats\/[^/]+$/) && method === 'GET') {
         const itemId = path.split('/')[4];
         return getReviewStats(request, env, itemId);
+      }
+
+      // Loyalty Routes
+      // GET /api/loyalty/full
+      if (path === '/api/loyalty/full' && method === 'GET') {
+        return getLoyaltyFull(request, env);
+      }
+
+      // GET /api/loyalty/tiers
+      if (path === '/api/loyalty/tiers' && method === 'GET') {
+        return getLoyaltyTiers(request, env);
+      }
+
+      // GET /api/loyalty/tiers/:id
+      if (path.match(/^\/api\/loyalty\/tiers\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[4];
+        return getLoyaltyTier(request, env, id);
+      }
+
+      // GET /api/loyalty/rewards
+      if (path === '/api/loyalty/rewards' && method === 'GET') {
+        return getLoyaltyRewards(request, env);
+      }
+
+      // GET /api/loyalty/rewards/:id
+      if (path.match(/^\/api\/loyalty\/rewards\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[4];
+        return getLoyaltyReward(request, env, id);
+      }
+
+      // GET /api/loyalty/earning-rules
+      if (path === '/api/loyalty/earning-rules' && method === 'GET') {
+        return getLoyaltyEarningRules(request, env);
+      }
+
+      // GET /api/loyalty/config
+      if (path === '/api/loyalty/config' && method === 'GET') {
+        return getLoyaltyConfig(request, env);
       }
 
       // 404 for unmatched routes

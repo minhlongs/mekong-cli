@@ -43,19 +43,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="F&amp;B Container">
 
-    <!-- Structured Data -->
+    <!-- Structured Data: LocalBusiness -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
         "@type": "CafeOrCoffeeShop",
-        "name": "F&amp;B Container Café",
-        "description": "Specialty coffee & rooftop bar trong không gian container cyberpunk độc đáo",
+        "name": "F&B Container Café",
+        "alternateName": "FNB Container",
+        "description": "Specialty coffee & rooftop bar trong không gian container cyberpunk độc đáo tại Sa Đéc",
         "url": "https://fnbcontainer.vn",
         "telephone": "+84901234567",
+        "email": "hello@fnbcontainer.vn",
         "address": {
             "@type": "PostalAddress",
-            "streetAddress": "Sa Đéc",
-            "addressLocality": "Đồng Tháp",
+            "streetAddress": "91 Hùng Vương, Phường Tân Phú Đông",
+            "addressLocality": "Sa Đéc",
+            "addressRegion": "Đồng Tháp",
+            "postalCode": "87000",
             "addressCountry": "VN"
         },
         "geo": {
@@ -69,14 +73,46 @@
             "opens": "07:00",
             "closes": "22:00"
         },
-        "priceRange": "50000-150000 VND",
-        "servesCuisine": "Coffee, Tea, Beverages, Snacks"
+        "priceRange": "30000-150000 VND",
+        "servesCuisine": "Coffee, Tea, Beverages, Snacks",
+        "menu": "https://fnbcontainer.vn/menu.html",
+        "acceptsReservations": "true",
+        "paymentAccepted": "Cash, MoMo, VNPay, PayOS",
+        "image": "https://fnbcontainer.vn/images/night-4k.png",
+        "sameAs": [
+            "https://facebook.com/fnbcontainer",
+            "https://instagram.com/fnbcontainer",
+            "https://tiktok.com/@fnbcontainer"
+        ],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "250",
+            "bestRating": "5",
+            "worstRating": "1"
+        },
+        "potentialAction": {
+            "@type": "OrderAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://fnbcontainer.vn/checkout.html",
+                "inLanguage": "vi-VN",
+                "actionPlatform": [
+                    "http://schema.org/DesktopWebPlatform",
+                    "http://schema.org/MobileWebPlatform"
+                ]
+            },
+            "deliveryMethod": "http://purl.org/goodrelations/v1#DeliveryModePickUp",
+            "paymentMethod": ["http://purl.org/goodrelations/v1#ByCash", "http://purl.org/goodrelations/v1#ByInvoice"]
+        }
     }
     </script>
 
     <!-- Preconnect & Preload Google Fonts - Space Grotesk + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
@@ -106,12 +142,16 @@
     <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/ui-enhancements.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/loyalty-styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/ui-enhancements.min.css"><link rel="stylesheet" href="css/loyalty-styles.min.css"></noscript>
+    <link rel="preload" href="css/accessibility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/ui-enhancements.min.css"><link rel="stylesheet" href="css/loyalty-styles.min.css"><link rel="stylesheet" href="css/accessibility.css"></noscript>
 </head>
 
 <body>
+    <!-- Skip Navigation Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
 
     <!-- ═══ M3 TOP APP BAR ═══ -->
+    <header class="m3-top-app-bar" id="topAppBar" role="banner">
     <header class="m3-top-app-bar" id="topAppBar">
         <div class="m3-top-app-bar__leading">
             <a href="index.html" class="logo">
@@ -130,7 +170,7 @@
             </a>
             <span class="m3-top-app-bar__title">F&amp;B CONTAINER</span>
         </div>
-        <nav class="nav-desktop">
+        <nav class="nav-desktop" role="navigation" aria-label="Chính">
             <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
             <a href="menu.html" data-i18n="nav.menu">Menu</a>
             <a href="#about" data-i18n="nav.about">Về Chúng Tôi</a>
@@ -139,58 +179,72 @@
             <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
         </nav>
         <div class="m3-top-app-bar__trailing">
-            <a href="javascript:void(0)" id="language-switcher" class="m3-chip" data-i18n="lang.switch">🌐 EN</a>
+            <button type="button" href="javascript:void(0)" id="language-switcher" class="m3-chip" data-i18n="lang.switch" aria-label="Chuyển đổi ngôn ngữ">🌐 EN</button>
             <button class="m3-icon-button theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-                <span class="theme-icon">🌙</span>
+                <span class="theme-icon" aria-hidden="true">🌙</span>
             </button>
-            <button class="m3-icon-button menu-toggle" id="menuToggle" aria-label="Menu">
-                <span class="material-symbols-outlined">☰</span>
+            <button class="m3-icon-button menu-toggle" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+                <span class="material-symbols-outlined" aria-hidden="true">☰</span>
             </button>
         </div>
     </header>
 
     <!-- ═══ MOBILE MENU DRAWER ═══ -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-menu-close" aria-label="Close">✕</button>
-        <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
-        <a href="menu.html" data-i18n="nav.menu">Menu</a>
-        <a href="#about" data-i18n="nav.about">Về Chúng Tôi</a>
-        <a href="loyalty.html" data-i18n="nav.loyalty">Tích Điểm</a>
-        <a href="table-reservation.html" data-i18n="nav.reservation">Đặt Bàn</a>
-        <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
+    <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu di động" hidden>
+        <button class="mobile-menu-close" aria-label="Close menu">✕</button>
+        <nav role="navigation" aria-label="Di động">
+            <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="#about" data-i18n="nav.about">Về Chúng Tôi</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Tích Điểm</a>
+            <a href="table-reservation.html" data-i18n="nav.reservation">Đặt Bàn</a>
+            <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
+        </nav>
         <button class="m3-filled-button mobile-order-btn" id="btnOrderMobile" data-i18n="nav.order" style="width: 100%; margin-top: 16px;">🛒 Đặt Hàng</button>
     </div>
 
     <!-- ═══ ORDER MODAL ═══ -->
-    <div class="order-modal" id="orderModal">
-        <div class="order-modal-overlay"></div>
+    <div class="order-modal" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle" hidden>
+        <div class="order-modal-overlay" aria-hidden="true"></div>
         <div class="order-modal-content">
             <button class="order-modal-close" aria-label="Close">✕</button>
             <div class="order-modal-header">
-                <span class="order-icon">🛒</span>
-                <h2 data-i18n="order.title">Đặt Hàng Online</h2>
+                <span class="order-icon" aria-hidden="true">🛒</span>
+                <h2 id="orderModalTitle" data-i18n="order.title">Đặt Hàng Online</h2>
                 <p data-i18n="order.subtitle">Nhận hàng sau 15-20 phút</p>
             </div>
             <div class="order-modal-body">
-                <div class="order-tabs">
-                    <button class="order-tab active" data-tab="menu" data-i18n="order.tab.menu">Menu</button>
-                    <button class="order-tab" data-tab="cart" data-i18n="order.tab.cart">Giỏ Hàng (<span id="cartCount">0</span>)</button>
+                <div class="order-tabs" role="tablist" aria-label="Chuyển đổi giữa Menu và Giỏ hàng">
+                    <button class="order-tab active"
+                            data-tab="menu"
+                            data-i18n="order.tab.menu"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="menuTab"
+                            id="menuTabBtn">Menu</button>
+                    <button class="order-tab"
+                            data-tab="cart"
+                            data-i18n="order.tab.cart"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="cartTab"
+                            id="cartTabBtn">Giỏ Hàng (<span id="cartCount" role="status" aria-live="polite">0</span>)</button>
                 </div>
-                <div class="order-tab-content active" id="menuTab">
-                    <div class="order-menu-categories">
-                        <button class="order-cat-btn active" data-cat="coffee">☕ Coffee</button>
-                        <button class="order-cat-btn" data-cat="signature">🍹 Signature</button>
-                        <button class="order-cat-btn" data-cat="snacks">🥐 Đồ ăn</button>
+                <div class="order-tab-content active" id="menuTab" role="tabpanel" aria-labelledby="menuTabBtn" tabindex="0">
+                    <div class="order-menu-categories" role="tablist" aria-label="Danh mục menu">
+                        <button class="order-cat-btn active" data-cat="coffee" role="tab" aria-selected="true">☕ Coffee</button>
+                        <button class="order-cat-btn" data-cat="signature" role="tab" aria-selected="false">🍹 Signature</button>
+                        <button class="order-cat-btn" data-cat="snacks" role="tab" aria-selected="false">🥐 Đồ ăn</button>
                     </div>
-                    <div class="order-items" id="orderItems">
+                    <div class="order-items" id="orderItems" role="list" aria-label="Danh sách món">
                         <!-- Items loaded by JS -->
                     </div>
                 </div>
-                <div class="order-tab-content" id="cartTab">
-                    <div class="cart-items" id="cartItems">
+                <div class="order-tab-content" id="cartTab" role="tabpanel" aria-labelledby="cartTabBtn" tabindex="0" hidden>
+                    <div class="cart-items" id="cartItems" role="list" aria-label="Giỏ hàng">
                         <p class="cart-empty" data-i18n="order.cart.empty">Giỏ hàng trống</p>
                     </div>
-                    <div class="cart-summary">
+                    <div class="cart-summary" role="region" aria-label="Tóm tắt giỏ hàng">
                         <div class="cart-row">
                             <span data-i18n="order.cart.subtotal">Tạm tính</span>
                             <span id="cartSubtotal">0đ</span>
@@ -212,46 +266,48 @@
         </div>
     </div>
 
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main id="main-content">
     <!-- ═══ HERO WITH M3 ELEVATED CARD ═══ -->
-    <section class="hero scroll-reveal" id="hero">
+    <section class="hero scroll-reveal" id="hero" aria-labelledby="heroTitle">
         <div class="hero-bg">
             <img src="images/night-4k.png" alt="F&amp;B Container Café Sa Đéc với đèn neon cyberpunk về đêm" loading="eager" fetchpriority="high" width="1920" height="1080" sizes="100vw" srcset="images/night-4k.png 1920w, images/night-2k.png 1280w, images/night-mobile.png 640w">
         </div>
         <div class="hero-content">
             <!-- M3 Elevated Card - Hero Badge -->
             <div class="m3-elevated-card" style="display: inline-flex; padding: 8px 16px; margin-bottom: 24px;">
-                <span class="pulse" style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; margin-right: 8px;"></span>
+                <span class="pulse" style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; margin-right: 8px;" aria-hidden="true"></span>
                 <span class="m3-filled-card__supporting" data-i18n="hero.badge" style="margin: 0;">
                     Mở Cửa Mỗi Ngày | 7:00 - 22:00
                 </span>
             </div>
 
-            <h1 class="hero-title">
+            <h1 class="hero-title" id="heroTitle">
                 <span class="line-1" data-i18n="hero.title.line1">F&amp;B</span>
                 <span class="line-2" data-i18n="hero.title.line2">CONTAINER</span>
             </h1>
             <p class="hero-subtitle" data-i18n="hero.subtitle">Specialty Coffee × Rooftop Bar × Check-in Cyberpunk</p>
             <div class="hero-actions">
-                <a href="menu.html" class="m3-filled-button" data-i18n="hero.btn.order">
-                    ☕ Xem Menu
+                <a href="menu.html" class="m3-filled-button" data-i18n="hero.btn.order" aria-label="Xem menu đồ uống">
+                    <span aria-hidden="true">☕</span> Xem Menu
                 </a>
-                <a href="#location" class="m3-tonal-button" data-i18n="hero.btn.location">
-                    📍 Chỉ Đường
+                <a href="#location" class="m3-tonal-button" data-i18n="hero.btn.location" aria-label="Chỉ đường đến quán">
+                    <span aria-hidden="true">📍</span> Chỉ Đường
                 </a>
             </div>
         </div>
-        <div class="hero-scroll">
+        <div class="hero-scroll" aria-hidden="true">
             <span></span>
         </div>
     </section>
 
     <!-- ═══ FEATURES WITH M3 FILLED CARDS ═══ -->
-    <section class="about-us scroll-reveal" id="about">
+    <section class="about-us scroll-reveal" id="about" aria-labelledby="aboutTitle">
         <div class="container">
             <div class="about-grid">
                 <div class="about-content reveal-left">
                     <span class="m3-chip" style="margin-bottom: 16px;" data-i18n="about.label">Câu Chuyện Của Chúng Tôi</span>
-                    <h2 class="section-title" data-i18n="about.title">
+                    <h2 class="section-title" id="aboutTitle" data-i18n="about.title">
                         Từ <span class="neon-cyan">Sa Đéc</span><br>
                         Với <span class="neon-magenta">Yêu Thương</span>
                     </h2>
@@ -260,33 +316,33 @@
                     </p>
 
                     <!-- M3 Filled Cards for Features -->
-                    <div class="about-highlights" style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px;">
-                        <div class="m3-filled-card m3-filled-card--feature">
-                            <div class="m3-filled-card__icon">🌱</div>
+                    <div class="about-highlights" style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px;" role="list" aria-label="Điểm nổi bật">
+                        <div class="m3-filled-card m3-filled-card--feature" role="listitem">
+                            <div class="m3-filled-card__icon" aria-hidden="true">🌱</div>
                             <div class="m3-filled-card__content">
                                 <h4 class="m3-filled-card__headline" data-i18n="about.highlight.1">100% cà phê nguyên chất từ Buon Ma Thuot</h4>
                             </div>
                         </div>
-                        <div class="m3-filled-card m3-filled-card--feature">
-                            <div class="m3-filled-card__icon">👨‍🍳</div>
+                        <div class="m3-filled-card m3-filled-card--feature" role="listitem">
+                            <div class="m3-filled-card__icon" aria-hidden="true">👨‍🍳</div>
                             <div class="m3-filled-card__content">
                                 <h4 class="m3-filled-card__headline" data-i18n="about.highlight.2">Rooftop bar view đồng lúa hoàng hôn</h4>
                             </div>
                         </div>
-                        <div class="m3-filled-card m3-filled-card--feature">
-                            <div class="m3-filled-card__icon">🏗️</div>
+                        <div class="m3-filled-card m3-filled-card--feature" role="listitem">
+                            <div class="m3-filled-card__icon" aria-hidden="true">🏗️</div>
                             <div class="m3-filled-card__content">
                                 <h4 class="m3-filled-card__headline" data-i18n="about.highlight.3">Không gian check-in cyberpunk độc đáo</h4>
                             </div>
                         </div>
                     </div>
                     <a href="#concept" class="m3-filled-button" style="display: inline-flex; margin-top: 24px;" data-i18n="about.btn.learn">
-                        Tìm Hiểu Thêm ➜
+                        Tìm Hiểu Thêm <span aria-hidden="true">➜</span>
                     </a>
                 </div>
                 <div class="about-image reveal-right">
                     <div class="about-image-wrapper">
-                        <img src="images/interior.png" alt="Không gian F&amp;B Container Café" loading="lazy" width="800" height="600" sizes="(max-width: 768px) 100vw, 50vw">
+                        <img src="images/interior.png" alt="Không gian nội thất F&amp;B Container Café với thiết kế industrial" loading="lazy" width="800" height="600" sizes="(max-width: 768px) 100vw, 50vw">
                         <div class="about-badge">
                             <span class="badge-year">2026</span>
                             <span class="badge-text" data-i18n="about.badge.established">Established</span>
@@ -586,37 +642,80 @@
         </div>
     </section>
 
+    </main>
+    <!-- End Main Content -->
+
     <!-- ═══ FOOTER ═══ -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <span class="brand-icon">F</span>
+                    <span class="brand-icon" aria-hidden="true">F</span>
                     F&amp;B CAFFE
                 </div>
-                <div class="footer-links">
+                <div class="footer-links" role="navigation" aria-label="Footer">
                     <a href="menu.html" data-i18n="footer.quick">Menu</a>
                     <a href="kitchen-display.html">Kitchen Display</a>
                 </div>
-                <div class="footer-social">
-                    <a href="javascript:void(0)" aria-label="Facebook">📘</a>
-                    <a href="javascript:void(0)" aria-label="Instagram">📸</a>
-                    <a href="javascript:void(0)" aria-label="TikTok">🎵</a>
-                    <a href="javascript:void(0)" aria-label="GitHub">🐙</a>
+                <div class="footer-social" role="list" aria-label="Mạng xã hội">
+                    <a href="https://facebook.com/fnbcontainer"
+                       target="_blank"
+                       rel="noopener"
+                       role="listitem"
+                       aria-label="Theo dõi chúng tôi trên Facebook (opens in new tab)">
+                        <span aria-hidden="true">📘</span>
+                    </a>
+                    <a href="https://instagram.com/fnbcontainer"
+                       target="_blank"
+                       rel="noopener"
+                       role="listitem"
+                       aria-label="Theo dõi chúng tôi trên Instagram (opens in new tab)">
+                        <span aria-hidden="true">📸</span>
+                    </a>
+                    <a href="https://tiktok.com/@fnbcontainer"
+                       target="_blank"
+                       rel="noopener"
+                       role="listitem"
+                       aria-label="Theo dõi chúng tôi trên TikTok (opens in new tab)">
+                        <span aria-hidden="true">🎵</span>
+                    </a>
+                    <a href="https://github.com/fnbcontainer"
+                       target="_blank"
+                       rel="noopener"
+                       role="listitem"
+                       aria-label="Ghé thăm GitHub của chúng tôi (opens in new tab)">
+                        <span aria-hidden="true">🐙</span>
+                    </a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="made-with">// built with ☕ & &lt;code&gt; in Sa Đéc</p>
+                <p class="made-with">// built with <span aria-hidden="true">☕</span> &amp; <span aria-hidden="true">&lt;code&gt;</span> in Sa Đéc</p>
                 <p style="margin-top: 6px;" data-i18n="footer.copyright">© 2026 F&amp;B Container Café. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <!-- ═══ M3 FAB - ORDER BUTTON ═══ -->
-    <button class="m3-fab m3-fab--extended" id="fabOrder" aria-label="Đặt hàng">
-        <span class="m3-fab__icon">☕</span>
+    <button class="m3-fab m3-fab--extended" id="fabOrder" aria-label="Đặt hàng ngay">
+        <span class="m3-fab__icon" aria-hidden="true">☕</span>
         <span class="m3-fab__label" data-i18n="nav.order">Đặt Hàng</span>
     </button>
+
+    <!-- ═══ TOAST NOTIFICATIONS (Accessible) ═══ -->
+    <div id="toastContainer"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true"
+         class="toast-container">
+    </div>
+
+    <!-- ═══ SCREEN READER ANNOUNCEMENTS ═══ -->
+    <div id="srAnnouncer"
+         class="visually-hidden"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true">
+    </div>
 
     <!-- i18n Script -->
     <script type="module" src="js/i18n.min.js" defer></script>

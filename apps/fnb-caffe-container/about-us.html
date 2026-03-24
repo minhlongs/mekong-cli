@@ -10,12 +10,25 @@
     <meta name="keywords" content="ve chung toi, lich su cafe, doi ngu barista, cafe container sa dec, F&B container">
     <meta name="author" content="F&B Container Team">
     <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#4a2c17">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Về Chúng Tôi | F&B Container Café">
-    <meta property="og:description" content="Câu chuyện hình thành F&B Container Café từ tình yêu Sa Đéc">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Về Chúng Tôi | F&B Container Café — Câu Chuyện & Đội Ngũ">
+    <meta property="og:description" content="Câu chuyện hình thành F&B Container Café từ tình yêu Sa Đéc. Đội ngũ barista chuyên nghiệp và không gian container độc đáo 3 tầng.">
     <meta property="og:image" content="images/night-4k.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fnbcontainer.vn/about-us.html">
+    <meta property="og:site_name" content="F&B Container Café">
+    <meta property="og:locale" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Về Chúng Tôi | F&B Container Café">
+    <meta name="twitter:description" content="Hành trình từ ý tưởng đến quán cà phê container 3 tầng tại Sa Đéc. Gặp gỡ đội ngũ của chúng tôi.">
+    <meta name="twitter:image" content="images/night-4k.png">
+    <meta name="twitter:creator" content="@fnbcontainer">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
@@ -25,6 +38,8 @@
     <!-- Google Fonts - Space Grotesk + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
@@ -33,9 +48,67 @@
     <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/ui-enhancements.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/about-m3.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/accessibility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/ui-enhancements.min.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/about-m3.min.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/accessibility.css"></noscript>
+</head>
+
+<body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
     <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/ui-enhancements.min.css"><link rel="stylesheet" href="css/about-m3.min.css"></noscript>
 
     <style>
+        /* About Page Specific Styles */
+        .about-hero {
+            position: relative;
+            height: 60vh;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--coffee-primary) 0%, var(--coffee-dark) 100%);
+            overflow: hidden;
+            margin-top: 60px;
+        }
+    </style>
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "F&B Container Café",
+        "alternateName": "FNB Container",
+        "url": "https://fnbcontainer.vn",
+        "logo": "https://fnbcontainer.vn/public/images/logo.svg",
+        "description": "Quán cà phê container 3 tầng với specialty coffee và rooftop bar tại Sa Đéc, Đồng Tháp",
+        "foundingDate": "2026-01-01",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "91 Hùng Vương, Phường Tân Phú Đông",
+            "addressLocality": "Sa Đéc",
+            "addressRegion": "Đồng Tháp",
+            "postalCode": "87000",
+            "addressCountry": "VN"
+        },
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+84-901-234-567",
+            "contactType": "customer service",
+            "availableLanguage": ["Vietnamese", "English"]
+        },
+        "email": "hello@fnbcontainer.vn",
+        "telephone": "+84-901-234-567",
+        "sameAs": [
+            "https://facebook.com/fnbcontainer",
+            "https://instagram.com/fnbcontainer",
+            "https://tiktok.com/@fnbcontainer"
+        ]
+    }
+    </script>
         /* About Page Specific Styles */
         .about-hero {
             position: relative;
@@ -328,11 +401,14 @@
 </head>
 
 <body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <!-- Navigation -->
-    <nav class="navbar" id="navbar">
+    <nav class="navbar" role="banner" aria-label="Chính">
         <div class="container">
             <a href="index.html" class="nav-brand">
-                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-label="F&B Container Logo">
+                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false">
                     <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
                     <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)"/>
                     <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)" opacity="0.7"/>
@@ -346,25 +422,25 @@
                 </svg>
                 <span>F&B CONTAINER</span>
             </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Trang Chủ</a></li>
-                <li><a href="menu.html">Menu</a></li>
-                <li><a href="about-us.html" class="active">Về Chúng Tôi</a></li>
-                <li><a href="loyalty.html">Tích Điểm</a></li>
-                <li><a href="index.html#contact-form">Liên Hệ</a></li>
+            <ul class="nav-links" role="list">
+                <li role="listitem"><a href="index.html">Trang Chủ</a></li>
+                <li role="listitem"><a href="menu.html">Menu</a></li>
+                <li role="listitem"><a href="about-us.html" class="active" aria-current="page">Về Chúng Tôi</a></li>
+                <li role="listitem"><a href="loyalty.html">Tích Điểm</a></li>
+                <li role="listitem"><a href="index.html#contact-form">Liên Hệ</a></li>
             </ul>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-                <span class="theme-icon">🌙</span>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
+                <span class="theme-icon" aria-hidden="true">🌙</span>
             </button>
-            <button class="hamburger" id="hamburger" aria-label="Menu">
-                <span></span><span></span><span></span>
+            <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu" type="button">
+                <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
             </button>
         </div>
     </nav>
 
     <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-menu-close" aria-label="Close">✕</button>
+    <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu di động" hidden>
+        <button class="mobile-menu-close" aria-label="Close menu" type="button">✕</button>
         <a href="index.html">Trang Chủ</a>
         <a href="menu.html">Menu</a>
         <a href="about-us.html" class="active">Về Chúng Tôi</a>
@@ -373,9 +449,10 @@
     </div>
 
     <!-- Hero Section -->
-    <section class="about-hero">
+    <main id="main-content">
+    <section class="about-hero" aria-labelledby="aboutHeroTitle">
         <div class="about-hero-content">
-            <h1>Về Chúng Tôi</h1>
+            <h1 id="aboutHeroTitle">Về Chúng Tôi</h1>
             <p>Từ tình yêu Sa Đéc đến không gian container độc đáo</p>
         </div>
     </section>
@@ -547,42 +624,42 @@
 
             <div class="gallery-grid">
                 <div class="gallery-item">
-                    <img src="images/exterior.png" alt="Mặt tiền F&B Container Café" loading="lazy">
+                    <img src="images/exterior.png" alt="Mặt tiền F&B Container Café" loading="lazy" width="800" height="600">
                     <div class="gallery-caption">Mặt tiền container cyberpunk</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/interior.png" alt="Không gian nội thất" loading="lazy">
+                    <img src="images/interior.png" alt="Không gian nội thất" loading="lazy" width="800" height="600">
                     <div class="gallery-caption">Nội thất industrial chic</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/night-4k.png" alt="F&B Container về đêm" loading="lazy">
+                    <img src="images/night-4k.png" alt="F&B Container về đêm" loading="lazy" width="1920" height="1080">
                     <div class="gallery-caption">Rực rỡ灯光 về đêm</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/rooftop.png" alt="Rooftop bar view đồng lúa" loading="lazy">
+                    <img src="images/rooftop.png" alt="Rooftop bar view đồng lúa" loading="lazy" width="1920" height="1080">
                     <div class="gallery-caption">Rooftop bar hoàng hôn</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/coffee-latte.png" alt="Latte art" loading="lazy">
+                    <img src="images/coffee-latte.png" alt="Latte art" loading="lazy" width="800" height="600">
                     <div class="gallery-caption">Latte art đỉnh cao</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/night-4k.png" alt="Không gian làm việc" loading="lazy">
+                    <img src="images/night-4k.png" alt="Không gian làm việc" loading="lazy" width="1920" height="1080">
                     <div class="gallery-caption">Work zone yên tĩnh</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/exterior.png" alt="Sự kiện tại quán" loading="lazy">
+                    <img src="images/exterior.png" alt="Sự kiện tại quán" loading="lazy" width="800" height="600">
                     <div class="gallery-caption">Sinh nhật & gathering</div>
                 </div>
 
                 <div class="gallery-item">
-                    <img src="images/interior.png" alt="Meeting room" loading="lazy">
+                    <img src="images/interior.png" alt="Meeting room" loading="lazy" width="800" height="600">
                     <div class="gallery-caption">Meeting room riêng tư</div>
                 </div>
             </div>
@@ -605,31 +682,43 @@
     </section>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <span class="brand-icon">F</span>
+                    <span class="brand-icon" aria-hidden="true">F</span>
                     F&B CAFFE
                 </div>
-                <div class="footer-links">
+                <div class="footer-links" role="navigation" aria-label="Liên kết nhanh">
                     <a href="menu.html">Menu</a>
                     <a href="about-us.html">Về Chúng Tôi</a>
                     <a href="kitchen-display.html">Kitchen Display</a>
                 </div>
-                <div class="footer-social">
-                    <a href="javascript:void(0)" aria-label="Facebook">📘</a>
-                    <a href="javascript:void(0)" aria-label="Instagram">📸</a>
-                    <a href="javascript:void(0)" aria-label="TikTok">🎵</a>
-                    <a href="javascript:void(0)" aria-label="GitHub">🐙</a>
+                <div class="footer-social" role="list" aria-label="Mạng xã hội">
+                    <a href="https://facebook.com/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên Facebook (opens in new tab)">
+                        <span aria-hidden="true">📘</span>
+                    </a>
+                    <a href="https://instagram.com/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên Instagram (opens in new tab)">
+                        <span aria-hidden="true">📸</span>
+                    </a>
+                    <a href="https://tiktok.com/@fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên TikTok (opens in new tab)">
+                        <span aria-hidden="true">🎵</span>
+                    </a>
+                    <a href="https://github.com/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên GitHub (opens in new tab)">
+                        <span aria-hidden="true">🐙</span>
+                    </a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p class="made-with">// built with ☕ & &lt;code&gt; in Sa Đéc</p>
+                <p class="made-with">// built with ☕ &amp; <code>code</code> in Sa Đéc</p>
                 <p style="margin-top: 6px;">© 2026 F&B Container Café. All rights reserved.</p>
             </div>
         </div>
     </footer>
+
+    </main>
+    <!-- Toast container with aria-live -->
+    <div id="toastContainer" role="status" aria-live="polite" aria-atomic="true" class="toast-container"></div>
 
     <!-- Scripts -->
     <script type="module" src="js/theme.min.js" defer></script>

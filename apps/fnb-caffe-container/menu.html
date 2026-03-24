@@ -43,7 +43,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="F&B Container">
 
-    <!-- Structured Data -->
+    <!-- Structured Data: Menu with all items -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -59,29 +59,58 @@
                     {
                         "@type": "MenuItem",
                         "name": "Espresso",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "45000",
-                            "priceCurrency": "VND"
-                        }
+                        "description": "Cà phê nguyên chất 100% Arabica, đậm đà, hậu vị đắng nhẹ",
+                        "offers": {"@type": "Offer", "price": "45000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "30ml"}]
                     },
                     {
                         "@type": "MenuItem",
                         "name": "Cappuccino",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "55000",
-                            "priceCurrency": "VND"
-                        }
+                        "description": "Espresso + sữa nóng đánh bọt + lớp foam dày",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "180ml"}]
                     },
                     {
                         "@type": "MenuItem",
                         "name": "Latte Art",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "60000",
-                            "priceCurrency": "VND"
-                        }
+                        "description": "Espresso + sữa tươi + nghệ thuật vẽ hình trên foam",
+                        "offers": {"@type": "Offer", "price": "60000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "240ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Cà Phê Sữa Đá",
+                        "description": "Cà phê phin truyền thống + sữa đặc + đá",
+                        "offers": {"@type": "Offer", "price": "35000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "200ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Bạc Xỉu Đá",
+                        "description": "Sữa nóng + foam + cà phê espresso, vị béo ngọt",
+                        "offers": {"@type": "Offer", "price": "35000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "200ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Cold Brew Tower (12h)",
+                        "description": "Cà phê ủ lạnh 12 giờ, vị mượt, ít axit",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "300ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Pour Over V60",
+                        "description": "Cà phê single-origin pha pour-over, hương vị tinh tế",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "200ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Caramel Macchiato",
+                        "description": "Espresso + vanilla syrup + caramel drizzle",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "350ml"}]
                     }
                 ]
             },
@@ -92,20 +121,140 @@
                     {
                         "@type": "MenuItem",
                         "name": "Container Special",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "85000",
-                            "priceCurrency": "VND"
-                        }
+                        "description": "Signature độc quyền: Espresso + tonic + cam slice",
+                        "offers": {"@type": "Offer", "price": "65000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "300ml"}]
                     },
                     {
                         "@type": "MenuItem",
-                        "name": "Neon Blueberry",
-                        "offers": {
-                            "@type": "Offer",
-                            "price": "75000",
-                            "priceCurrency": "VND"
-                        }
+                        "name": "Dirty Matcha Latte",
+                        "description": "Matcha Nhật Bản + espresso double shot",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "300ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Trà Sen Vàng",
+                        "description": "Trà sen + hạt sen + đường phèn",
+                        "offers": {"@type": "Offer", "price": "45000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "350ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Kombucha Tươi",
+                        "description": "Trà lên men tự nhiên, tốt cho tiêu hóa",
+                        "offers": {"@type": "Offer", "price": "45000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "300ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Soda Chanh Bạc Hà",
+                        "description": "Soda tươi + chanh + bạc hà + đá",
+                        "offers": {"@type": "Offer", "price": "40000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "300ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Trái Cây Nhiệt Đới",
+                        "description": "Xoài, dâu, thơm xay nhuyễn + sữa",
+                        "offers": {"@type": "Offer", "price": "50000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "400ml"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Matcha Latte",
+                        "description": "Bột matcha Nhật + sữa tươi nóng/lạnh",
+                        "offers": {"@type": "Offer", "price": "50000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot/Cold"}, {"@type": "MenuItem", "name": "300ml"}]
+                    }
+                ]
+            },
+            {
+                "@type": "MenuSection",
+                "name": "Đồ Ăn Nhẹ",
+                "hasMenuItem": [
+                    {
+                        "@type": "MenuItem",
+                        "name": "Bánh Mì Chả Lụa",
+                        "description": "Bánh mì baguette + chả lụa + đồ chua",
+                        "offers": {"@type": "Offer", "price": "35000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "1 ổ"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Sandwich Trứng",
+                        "description": "Bánh mì sandwich + trứng ốp la + xà lách",
+                        "offers": {"@type": "Offer", "price": "40000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "1 cái"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Croissant Bơ Pháp",
+                        "description": "Croissant nướng bơ Pháp, giòn tan",
+                        "offers": {"@type": "Offer", "price": "45000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "1 cái"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Granola Bowl",
+                        "description": "Granola + sữa chua Hy Lạp + trái cây tươi",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "300g"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Cookie Choco Chip",
+                        "description": "Cookie nướng giòn với sô cô la chip",
+                        "offers": {"@type": "Offer", "price": "30000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "2 cái"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Cheesecake Slice",
+                        "description": "Cheesecake New York slice, béo ngậy",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Cold"}, {"@type": "MenuItem", "name": "1 slice"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Khoai Tây Chiên",
+                        "description": "Khoai tây chiên giòn + sốt cà chua/mayo",
+                        "offers": {"@type": "Offer", "price": "45000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Hot"}, {"@type": "MenuItem", "name": "100g"}]
+                    }
+                ]
+            },
+            {
+                "@type": "MenuSection",
+                "name": "Combo",
+                "hasMenuItem": [
+                    {
+                        "@type": "MenuItem",
+                        "name": "Combo 2 Người",
+                        "description": "2 cà phê bất kỳ + 1 đồ ăn nhẹ",
+                        "offers": {"@type": "Offer", "price": "99000", "priceCurrency": "VND", "priceValidUntil": "2026-12-31"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Tiết kiệm 21K"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Combo Nhóm 4",
+                        "description": "4 đồ uống bất kỳ + 2 đồ ăn nhẹ",
+                        "offers": {"@type": "Offer", "price": "189000", "priceCurrency": "VND", "priceValidUntil": "2026-12-31"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Tiết kiệm 31K"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "Set Breakfast",
+                        "description": "1 cà phê + 1 bánh mì/sandwich (7:00-9:00)",
+                        "offers": {"@type": "Offer", "price": "55000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "7:00-9:00"}]
+                    },
+                    {
+                        "@type": "MenuItem",
+                        "name": "+ Phần Ăn Thêm",
+                        "description": "Thêm phần ăn nhẹ bất kỳ vào combo",
+                        "offers": {"@type": "Offer", "price": "25000", "priceCurrency": "VND"},
+                        "menuAddOn": [{"@type": "MenuItem", "name": "Add-on"}]
                     }
                 ]
             }
@@ -116,23 +265,31 @@
     <!-- Preconnect & Preload Google Fonts - Space Grotesk + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
 
     <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/ui-enhancements.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/accessibility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="css/main.min.css"></noscript>
     <noscript><link rel="stylesheet" href="css/ui-enhancements.min.css"></noscript>
+    <noscript><link rel="stylesheet" href="styles.min.css"></noscript>
+    <noscript><link rel="stylesheet" href="css/accessibility.css"></noscript>
 </head>
 
 <body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
 
     <!-- ═══ NAVIGATION ═══ -->
-    <nav class="navbar">
+    <nav class="navbar" role="banner" aria-label="Chính">
         <div class="container">
             <a href="index.html" class="nav-brand">
-                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-label="F&B Container Logo">
+                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false">
                     <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
                     <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)"/>
                     <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)" opacity="0.7"/>
@@ -146,27 +303,27 @@
                 </svg>
                 <span>F&B CONTAINER</span>
             </a>
-            <ul class="nav-links">
-                <li><a href="index.html#concept">Concept</a></li>
-                <li><a href="index.html#spaces">Không Gian</a></li>
-                <li><a href="#menu" class="active">Menu</a></li>
-                <li><a href="table-reservation.html">Đặt Bàn</a></li>
-                <li><a href="pages/reviews.html">Đánh Giá</a></li>
-                <li><a href="index.html#location">Liên Hệ</a></li>
+            <ul class="nav-links" role="list">
+                <li role="listitem"><a href="index.html#concept">Concept</a></li>
+                <li role="listitem"><a href="index.html#spaces">Không Gian</a></li>
+                <li role="listitem"><a href="#menu" class="active" aria-current="page">Menu</a></li>
+                <li role="listitem"><a href="table-reservation.html">Đặt Bàn</a></li>
+                <li role="listitem"><a href="pages/reviews.html">Đánh Giá</a></li>
+                <li role="listitem"><a href="index.html#location">Liên Hệ</a></li>
             </ul>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-                <span class="theme-icon">🌙</span>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
+                <span class="theme-icon" aria-hidden="true">🌙</span>
             </button>
-            <a href="tel:0901234567" class="nav-cta">📞 Đặt Bàn</a>
-            <button class="hamburger" id="hamburger" aria-label="Menu">
-                <span></span><span></span><span></span>
+            <a href="tel:0901234567" class="nav-cta" aria-label="Gọi đặt bàn: 0901234567">📞 Đặt Bàn</a>
+            <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu" type="button">
+                <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
             </button>
         </div>
     </nav>
 
     <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-menu-close" aria-label="Close">✕</button>
+    <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu di động" hidden>
+        <button class="mobile-menu-close" aria-label="Close menu" type="button">✕</button>
         <a href="index.html#concept">Concept</a>
         <a href="index.html#spaces">Không Gian</a>
         <a href="#menu">Menu</a>
@@ -176,13 +333,13 @@
     </div>
 
     <!-- ═══ MENU HERO ═══ -->
-    <section class="menu-hero">
+    <section class="menu-hero" aria-labelledby="menuHeroTitle">
         <div class="menu-hero-bg">
-            <img src="images/interior.png" alt="Menu F&B Container Café" loading="eager" width="1920" height="1080">
+            <img src="images/interior.png" alt="Không gian quán cà phê container với ánh đèn neon cyberpunk" loading="eager" width="1920" height="1080">
         </div>
         <div class="menu-hero-content">
             <span class="menu-badge">🔥 Menu 2026</span>
-            <h1 class="menu-hero-title">
+            <h1 class="menu-hero-title" id="menuHeroTitle">
                 <span class="neon-cyan">MENU</span>
                 <span class="menu-hero-subtitle">& Đồ Uống</span>
             </h1>
@@ -193,32 +350,32 @@
             <!-- M3 Search Bar -->
             <div class="m3-search-bar">
                 <div class="m3-search-wrapper">
-                    <span class="m3-search-icon">🔍</span>
-                    <input type="text" class="m3-search-input" id="menuSearch" placeholder="Tìm kiếm món uống, món ăn...">
-                    <button class="m3-search-clear" id="searchClear" aria-label="Xóa tìm kiếm">×</button>
+                    <span class="m3-search-icon" aria-hidden="true">🔍</span>
+                    <input type="text" class="m3-search-input" id="menuSearch" placeholder="Tìm kiếm món uống, món ăn..." aria-label="Tìm kiếm trong menu">
+                    <button class="m3-search-clear" id="searchClear" aria-label="Xóa tìm kiếm" type="button">×</button>
                 </div>
             </div>
 
             <!-- M3 Filter Chips -->
-            <div class="m3-filter-chips" id="filterChips">
-                <button class="m3-filter-chip active" data-filter="all">
-                    <span class="chip-icon">🍽️</span>
+            <div class="m3-filter-chips" id="filterChips" role="group" aria-label="Lọc menu">
+                <button class="m3-filter-chip active" data-filter="all" aria-pressed="true" aria-label="Lọc: Tất cả món" type="button">
+                    <span class="chip-icon" aria-hidden="true">🍽️</span>
                     Tất Cả
                 </button>
-                <button class="m3-filter-chip" data-filter="coffee">
-                    <span class="chip-icon">☕</span>
+                <button class="m3-filter-chip" data-filter="coffee" aria-pressed="false" aria-label="Lọc: Coffee" type="button">
+                    <span class="chip-icon" aria-hidden="true">☕</span>
                     Coffee
                 </button>
-                <button class="m3-filter-chip" data-filter="signature">
-                    <span class="chip-icon">🍹</span>
+                <button class="m3-filter-chip" data-filter="signature" aria-pressed="false" aria-label="Lọc: Signature Drinks" type="button">
+                    <span class="chip-icon" aria-hidden="true">🍹</span>
                     Signature
                 </button>
-                <button class="m3-filter-chip" data-filter="snacks">
-                    <span class="chip-icon">🥐</span>
+                <button class="m3-filter-chip" data-filter="snacks" aria-pressed="false" aria-label="Lọc: Đồ ăn nhẹ" type="button">
+                    <span class="chip-icon" aria-hidden="true">🥐</span>
                     Đồ Ăn
                 </button>
-                <button class="m3-filter-chip" data-filter="combo">
-                    <span class="chip-icon">🎯</span>
+                <button class="m3-filter-chip" data-filter="combo" aria-pressed="false" aria-label="Lọc: Combo tiết kiệm" type="button">
+                    <span class="chip-icon" aria-hidden="true">🎯</span>
                     Combo
                 </button>
             </div>
@@ -226,22 +383,24 @@
     </section>
 
     <!-- ═══ MENU GALLERY ═══ -->
-    <section class="menu-gallery" id="menu">
+    <main id="main-content">
+    <section class="menu-gallery" id="menu" aria-labelledby="menuSectionTitle">
+        <h2 id="menuSectionTitle" class="visually-hidden">Thực đơn đồ uống và món ăn</h2>
         <div class="container">
 
             <!-- === COFFEE CATEGORY === -->
             <div class="menu-category scroll-reveal" data-category="coffee">
                 <div class="category-header">
-                    <span class="category icon">☕</span>
+                    <span class="category icon" aria-hidden="true">☕</span>
                     <h2 class="category-title">Specialty Coffee</h2>
                     <span class="category-tag">Pha chế từ hạt Arabica nguyên chất</span>
                 </div>
-                <div class="menu-grid" id="coffeeMenuGrid">
+                <div class="menu-grid" id="coffeeMenuGrid" role="list">
                     <!-- Item 1 -->
-                    <div class="m3-menu-card stagger-item" data-category="coffee">
+                    <div class="m3-menu-card stagger-item" data-category="coffee" role="listitem">
                         <div class="m3-card-image-wrapper">
-                            <img src="images/interior.png" alt="Espresso" class="m3-card-image" loading="lazy" width="800" height="600">
-                            <span class="m3-card-badge">Best Seller</span>
+                            <img src="images/interior.png" alt="Ly espresso 30ml với lớp crema vàng nâu trên đĩa sứ trắng" class="m3-card-image" loading="lazy" width="800" height="600">
+                            <span class="m3-card-badge" aria-hidden="true">Best Seller</span>
                         </div>
                         <div class="m3-card-content">
                             <div class="m3-card-header">
@@ -250,20 +409,20 @@
                             </div>
                             <p class="m3-card-desc">Cà phê nguyên chất 100% Arabica, đậm đà, hậu vị đắng nhẹ</p>
                             <div class="m3-card-meta">
-                                <span class="m3-card-tag">Hot/Cold</span>
-                                <span class="m3-card-tag">30ml</span>
+                                <span class="m3-card-tag" aria-hidden="true">Hot/Cold</span>
+                                <span class="m3-card-tag" aria-hidden="true">30ml</span>
                             </div>
-                            <button class="m3-add-cart-btn" data-product='{"id":"c001","name":"Espresso","price":45000,"image":"images/interior.png"}'>
-                                <span class="btn-icon">🛒</span>
+                            <button class="m3-add-cart-btn" data-product='{"id":"c001","name":"Espresso","price":45000,"image":"images/interior.png"}' type="button" aria-label="Thêm Espresso vào giỏ hàng">
+                                <span class="btn-icon" aria-hidden="true">🛒</span>
                                 <span>Thêm vào giỏ</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Item 2 -->
-                    <div class="m3-menu-card stagger-item" data-category="coffee">
+                    <div class="m3-menu-card stagger-item" data-category="coffee" role="listitem">
                         <div class="m3-card-image-wrapper">
-                            <img src="images/interior.png" alt="Cappuccino" class="m3-card-image" loading="lazy" width="800" height="600">
+                            <img src="images/interior.png" alt="Ly cappuccino 180ml với lớp foam dày và nghệ thuật latte art" class="m3-card-image" loading="lazy" width="800" height="600">
                         </div>
                         <div class="m3-card-content">
                             <div class="m3-card-header">
@@ -923,11 +1082,11 @@
     </section>
 
     <!-- ═══ FOOTER ═══ -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40">
+                    <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false">
                         <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad2)" stroke-width="2"/>
                         <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad2)"/>
                         <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad2)" opacity="0.7"/>
@@ -942,13 +1101,13 @@
                     <h3>F&B CONTAINER</h3>
                     <p>Where Flavor Meets Design</p>
                 </div>
-                <div class="footer-links">
+                <div class="footer-links" role="navigation" aria-label="Liên kết nhanh">
                     <h4>Liên Kết</h4>
-                    <ul>
-                        <li><a href="index.html#concept">Concept</a></li>
-                        <li><a href="index.html#spaces">Không Gian</a></li>
-                        <li><a href="#menu">Menu</a></li>
-                        <li><a href="index.html#rooftop">Rooftop</a></li>
+                    <ul role="list">
+                        <li role="listitem"><a href="index.html#concept">Concept</a></li>
+                        <li role="listitem"><a href="index.html#spaces">Không Gian</a></li>
+                        <li role="listitem"><a href="#menu">Menu</a></li>
+                        <li role="listitem"><a href="index.html#rooftop">Rooftop</a></li>
                     </ul>
                 </div>
                 <div class="footer-contact">
@@ -959,11 +1118,19 @@
                 </div>
                 <div class="footer-social">
                     <h4>Theo Dõi</h4>
-                    <div class="social-links">
-                        <a href="javascript:void(0)" aria-label="Facebook">📘</a>
-                        <a href="javascript:void(0)" aria-label="Instagram">📷</a>
-                        <a href="javascript:void(0)" aria-label="TikTok">🎵</a>
-                        <a href="javascript:void(0)" aria-label="Zalo">💬</a>
+                    <div class="social-links" role="list" aria-label="Mạng xã hội">
+                        <a href="https://facebook.com/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên Facebook (opens in new tab)">
+                            <span aria-hidden="true">📘</span>
+                        </a>
+                        <a href="https://instagram.com/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên Instagram (opens in new tab)">
+                            <span aria-hidden="true">📷</span>
+                        </a>
+                        <a href="https://tiktok.com/@fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên TikTok (opens in new tab)">
+                            <span aria-hidden="true">🎵</span>
+                        </a>
+                        <a href="https://zalo.me/fnbcontainer" target="_blank" rel="noopener" role="listitem" aria-label="Theo dõi chúng tôi trên Zalo (opens in new tab)">
+                            <span aria-hidden="true">💬</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -972,6 +1139,10 @@
             </div>
         </div>
     </footer>
+
+    </main>
+    <!-- Toast container with aria-live -->
+    <div id="toastContainer" role="status" aria-live="polite" aria-atomic="true" class="toast-container"></div>
 
     <script src="js/script.min.js" defer></script>
     <script src="js/menu.min.js" defer></script>

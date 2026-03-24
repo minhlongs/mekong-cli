@@ -2,6 +2,11 @@
  * Jest Test Setup for F&B Caffe Container
  */
 
+// Polyfill TextEncoder/TextDecoder for jsdom (Node.js < 20)
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 // Mock global fetch
 global.fetch = jest.fn();
 

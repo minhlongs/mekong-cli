@@ -40,11 +40,10 @@
   ],
   "ignorePatterns": [
     "node_modules/",
-    "*.min.js",
+    "**/*.min.js",
     "coverage/",
     ".wrangler/",
     "public/*.min.js",
-    "js/*.min.js",
     "dashboard/*.min.js"
   ]
 }
