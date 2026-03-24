@@ -131,15 +131,19 @@
     <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/loyalty-styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="css/loyalty-m3.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/loyalty-styles.min.css"><link rel="stylesheet" href="css/loyalty-m3.min.css"></noscript>
+    <link rel="preload" href="css/accessibility.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/loyalty-styles.min.css"><link rel="stylesheet" href="css/loyalty-m3.min.css"><link rel="stylesheet" href="css/accessibility.css"></noscript>
 </head>
 
 <body>
+    <!-- Skip Navigation Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <!-- ═══ NAVIGATION ═══ -->
-    <nav class="navbar">
+    <nav class="navbar" role="banner" aria-label="Chính">
         <div class="container">
             <a href="index.html" class="nav-brand">
-                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40">
+                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-label="F&B Container Logo">
                     <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
                     <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)"/>
                     <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)" opacity="0.7"/>
@@ -153,40 +157,44 @@
                 </svg>
                 <span>F&B CONTAINER</span>
             </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Trang Chủ</a></li>
-                <li><a href="menu.html">Menu</a></li>
-                <li><a href="loyalty.html" class="active">Loyalty</a></li>
-                <li><a href="index.html#location">Liên Hệ</a></li>
+            <ul class="nav-links" role="list">
+                <li role="listitem"><a href="index.html">Trang Chủ</a></li>
+                <li role="listitem"><a href="menu.html">Menu</a></li>
+                <li role="listitem"><a href="loyalty.html" class="active" aria-current="page">Loyalty</a></li>
+                <li role="listitem"><a href="index.html#location">Liên Hệ</a></li>
             </ul>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-                <span class="theme-icon">🌙</span>
+            <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span class="theme-icon" aria-hidden="true">🌙</span>
             </button>
-            <a href="tel:0901234567" class="nav-cta">📞 Đặt Bàn</a>
-            <button class="hamburger" id="hamburger" aria-label="Menu">
-                <span></span><span></span><span></span>
+            <a href="tel:0901234567" class="nav-cta" aria-label="Gọi đặt bàn: 0901234567">📞 Đặt Bàn</a>
+            <button type="button" class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu">
+                <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
             </button>
         </div>
     </nav>
 
     <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <button class="mobile-menu-close" aria-label="Close">✕</button>
-        <a href="index.html">Trang Chủ</a>
-        <a href="menu.html">Menu</a>
-        <a href="loyalty.html">Loyalty</a>
-        <a href="index.html#location">Liên Hệ</a>
+    <div class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu di động" hidden>
+        <button type="button" class="mobile-menu-close" aria-label="Close menu">✕</button>
+        <nav role="navigation" aria-label="Di động">
+            <a href="index.html">Trang Chủ</a>
+            <a href="menu.html">Menu</a>
+            <a href="loyalty.html" aria-current="page">Loyalty</a>
+            <a href="index.html#location">Liên Hệ</a>
+        </nav>
     </div>
 
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main id="main-content">
     <!-- ═══ LOYALTY HERO ═══ -->
-    <section class="loyalty-hero">
+    <section class="loyalty-hero" aria-labelledby="loyaltyTitle">
         <div class="loyalty-hero-bg">
-            <img src="images/loyalty-bg.png" alt="F&B Loyalty Club" loading="eager" width="1920" height="1080">
+            <img src="images/loyalty-bg.png" alt="F&B Loyalty Club - Chương trình thành viên với 4 hạng đặc quyền" loading="eager" width="1920" height="1080">
         </div>
         <div class="container">
             <div class="loyalty-hero-content">
-                <span class="loyalty-badge">🎉 Thành Viên</span>
-                <h1 class="loyalty-title">F&B <span class="neon-cyan">Loyalty Club</span></h1>
+                <span class="loyalty-badge" aria-hidden="true">🎉 Thành Viên</span>
+                <h1 class="loyalty-title" id="loyaltyTitle">F&B <span class="neon-cyan">Loyalty Club</span></h1>
                 <p class="loyalty-tagline">Tích điểm đổi quà - Đặc quyền đẳng cấp</p>
             </div>
 
@@ -218,17 +226,17 @@
                             <button class="btn-copy-large" id="copyReferralBtnHero" title="Sao chép mã">📋</button>
                         </div>
 
-                        <div class="referral-share-buttons">
-                            <button class="btn-share btn-share-zalo" id="shareZalo">
-                                <span class="share-icon">💬</span>
+                        <div class="referral-share-buttons" role="group" aria-label="Chia sẻ mã giới thiệu">
+                            <button type="button" class="btn-share btn-share-zalo" id="shareZalo" aria-label="Chia sẻ mã giới thiệu qua Zalo">
+                                <span class="share-icon" aria-hidden="true">💬</span>
                                 <span>Chia sẻ qua Zalo</span>
                             </button>
-                            <button class="btn-share btn-share-facebook" id="shareFacebook">
-                                <span class="share-icon">📘</span>
+                            <button type="button" class="btn-share btn-share-facebook" id="shareFacebook" aria-label="Chia sẻ mã giới thiệu lên Facebook">
+                                <span class="share-icon" aria-hidden="true">📘</span>
                                 <span>Chia sẻ qua Facebook</span>
                             </button>
-                            <button class="btn-share btn-share-copy" id="shareCopy">
-                                <span class="share-icon">📋</span>
+                            <button type="button" class="btn-share btn-share-copy" id="shareCopy" aria-label="Sao chép mã giới thiệu">
+                                <span class="share-icon" aria-hidden="true">📋</span>
                                 <span>Sao chép & Gửi</span>
                             </button>
                         </div>
@@ -386,12 +394,15 @@
         </div>
     </section>
 
+    </main>
+    <!-- End Main Content -->
+
     <!-- ═══ FOOTER ═══ -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40">
+                    <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-label="F&B Container Logo">
                         <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad2)" stroke-width="2"/>
                         <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad2)"/>
                         <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad2)" opacity="0.7"/>
@@ -406,48 +417,77 @@
                     <h3>F&B CONTAINER</h3>
                     <p>Where Flavor Meets Design</p>
                 </div>
-                <div class="footer-links">
-                    <h4>Liên Kết</h4>
-                    <ul>
-                        <li><a href="index.html">Trang Chủ</a></li>
-                        <li><a href="menu.html">Menu</a></li>
-                        <li><a href="loyalty.html">Loyalty</a></li>
+                <div class="footer-links" role="navigation" aria-label="Footer">
+                    <h4 id="footerLinksTitle">Liên Kết</h4>
+                    <ul role="list" aria-labelledby="footerLinksTitle">
+                        <li role="listitem"><a href="index.html">Trang Chủ</a></li>
+                        <li role="listitem"><a href="menu.html">Menu</a></li>
+                        <li role="listitem"><a href="loyalty.html">Loyalty</a></li>
                     </ul>
                 </div>
                 <div class="footer-contact">
-                    <h4>Liên Hệ</h4>
-                    <p>📍 Sa Đéc, Đồng Tháp</p>
-                    <p>📞 0901 234 567</p>
-                    <p>✉️ hello@fnbcontainer.vn</p>
+                    <h4 id="footerContactTitle">Liên Hệ</h4>
+                    <p aria-label="Địa chỉ">📍 Sa Đéc, Đồng Tháp</p>
+                    <p aria-label="Số điện thoại">📞 0901 234 567</p>
+                    <p aria-label="Email">✉️ hello@fnbcontainer.vn</p>
                 </div>
                 <div class="footer-social">
-                    <h4>Theo Dõi</h4>
-                    <div class="social-links">
-                        <a href="javascript:void(0)" aria-label="Facebook">📘</a>
-                        <a href="javascript:void(0)" aria-label="Instagram">📷</a>
-                        <a href="javascript:void(0)" aria-label="TikTok">🎵</a>
-                        <a href="javascript:void(0)" aria-label="Zalo">💬</a>
+                    <h4 id="footerSocialTitle">Theo Dõi</h4>
+                    <div class="social-links" role="list" aria-labelledby="footerSocialTitle">
+                        <a href="https://facebook.com/fnbcontainer"
+                           target="_blank"
+                           rel="noopener"
+                           role="listitem"
+                           aria-label="Theo dõi chúng tôi trên Facebook (opens in new tab)">
+                            <span aria-hidden="true">📘</span>
+                        </a>
+                        <a href="https://instagram.com/fnbcontainer"
+                           target="_blank"
+                           rel="noopener"
+                           role="listitem"
+                           aria-label="Theo dõi chúng tôi trên Instagram (opens in new tab)">
+                            <span aria-hidden="true">📷</span>
+                        </a>
+                        <a href="https://tiktok.com/@fnbcontainer"
+                           target="_blank"
+                           rel="noopener"
+                           role="listitem"
+                           aria-label="Theo dõi chúng tôi trên TikTok (opens in new tab)">
+                            <span aria-hidden="true">🎵</span>
+                        </a>
+                        <a href="https://zalo.me/fnbcontainer"
+                           target="_blank"
+                           rel="noopener"
+                           role="listitem"
+                           aria-label="Kết nối với chúng tôi trên Zalo (opens in new tab)">
+                            <span aria-hidden="true">💬</span>
+                        </a>
                     </div>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 F&B Container Café. Made with ❤️ in Sa Đéc.</p>
+                <p>&copy; 2026 F&B Container Café. Made with <span aria-hidden="true">❤️</span> in Sa Đéc.</p>
             </div>
         </div>
     </footer>
 
     <!-- Redemption Modal -->
-    <div class="modal-overlay" id="redemptionModal">
+    <div class="modal-overlay" id="redemptionModal" role="dialog" aria-modal="true" aria-labelledby="redemptionModalTitle" hidden>
         <div class="modal-content">
-            <button class="modal-close" id="modalClose">&times;</button>
+            <button type="button" class="modal-close" id="modalClose" aria-label="Close modal">&times;</button>
             <div class="modal-body" id="redemptionModalBody">
                 <!-- Dynamic content -->
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Toast Notification (Accessible) -->
+    <div class="toast-container"
+         id="toastContainer"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true">
+    </div>
 
     <!-- Minified Scripts -->
     <script src="js/script.min.js" defer></script>

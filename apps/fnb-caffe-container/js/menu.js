@@ -7,8 +7,131 @@ import { reviews } from './reviews.js';
 let MENU_DATA = null;
 let CART = [];
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadMenuData();
+/**
+ * MenuManager Class - Handles menu filtering, search, and cart interactions
+ */
+class MenuManager {
+  constructor() {
+    this.currentCategory = 'all';
+    this.searchQuery = '';
+  }
+
+  init() {
+    this.bindFilterEvents();
+    this.bindSearchEvents();
+    this.bindAddToCartEvents();
+  }
+
+  bindFilterEvents() {
+    const filterChips = document.querySelectorAll('.m3-filter-chip');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        this.switchFilter(chip.dataset.filter);
+      });
+    });
+  }
+
+  switchFilter(category) {
+    this.currentCategory = category;
+    const filterChips = document.querySelectorAll('.m3-filter-chip');
+    filterChips.forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.filter === category);
+    });
+    this.filterMenuItems();
+  }
+
+  bindSearchEvents() {
+    const searchInput = document.getElementById('menuSearch');
+    const searchClear = document.getElementById('searchClear');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchQuery = e.target.value.trim();
+        this.filterMenuItems();
+        if (searchClear) {
+          searchClear.style.opacity = this.searchQuery ? '1' : '0';
+        }
+      });
+    }
+
+    if (searchClear) {
+      searchClear.addEventListener('click', () => {
+        if (searchInput) {
+          searchInput.value = '';
+          this.searchQuery = '';
+          searchClear.style.opacity = '0';
+          this.filterMenuItems();
+        }
+      });
+    }
+  }
+
+  filterMenuItems() {
+    const menuItems = document.querySelectorAll('.m3-menu-card');
+    menuItems.forEach(item => {
+      const category = item.dataset.category || '';
+      const title = item.querySelector('.m3-card-title');
+      const titleText = title ? title.textContent.toLowerCase() : '';
+      const matchesCategory = this.currentCategory === 'all' || category === this.currentCategory;
+      const matchesSearch = !this.searchQuery || titleText.includes(this.searchQuery.toLowerCase());
+      item.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
+    });
+  }
+
+  bindAddToCartEvents() {
+    const addToCartBtns = document.querySelectorAll('.m3-add-cart-btn');
+    addToCartBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const productData = btn.dataset.product;
+        if (productData) {
+          try {
+            const product = JSON.parse(productData);
+            this.addToCart(product);
+          } catch (_) {}
+        }
+      });
+    });
+  }
+
+  addToCart(product) {
+    if (window.cartManager && window.cartManager.add) {
+      window.cartManager.add(product);
+    }
+    this.showAddToast(product.name);
+  }
+
+  showAddToast(productName) {
+    const toast = document.createElement('div');
+    toast.className = 'm3-toast';
+    toast.innerHTML = `✓ Đã thêm <strong>${productName}</strong> vào giỏ hàng`;
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1612;
+      color: #faf8f5;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  }
+}
+
+window.MenuManager = MenuManager;
+const menuManagerInstance = new MenuManager();
+window.menuManager = menuManagerInstance;
+
+function initMenuModule() {
+  loadMenuData();
   initMenuFilter();
   initGalleryLightbox();
   initSmoothScroll();
@@ -16,10 +139,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   registerServiceWorker();
   initAddToCart();
   updateCartCount();
-  loadReviewsRatings(); // Load average ratings for menu items
-});
+  loadReviewsRatings();
+  menuManagerInstance.init();
+}
 
-// ─── Load Menu Data from JSON ───
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMenuModule);
+} else {
+  initMenuModule();
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { MenuManager };
+}
+
 async function loadMenuData() {
   try {
     const response = await fetch('data/menu-data.json');
@@ -27,16 +160,13 @@ async function loadMenuData() {
     renderCategoriesHeaders();
     renderMenuCategories();
     renderGallery();
-  } catch (error) {
-    // Fallback: render với data cứng nếu không load được JSON
+  } catch (_) {
     renderMenuCategories();
   }
 }
 
-// ─── Render Categories Headers ───
 function renderCategoriesHeaders() {
   if (!MENU_DATA?.categories) {return;}
-
   MENU_DATA.categories.forEach(cat => {
     const header = document.querySelector(`.menu-category[data-category="${cat.id}"] .category-header`);
     if (header) {
@@ -49,7 +179,6 @@ function renderCategoriesHeaders() {
   });
 }
 
-// ─── Render Menu Categories from Data ───
 function renderMenuCategories() {
   const categories = ['coffee', 'signature', 'snacks', 'combo'];
   const imageMap = MENU_DATA?.imageMap || {
@@ -62,20 +191,16 @@ function renderMenuCategories() {
   categories.forEach(catId => {
     const section = document.querySelector(`[data-category="${catId}"] .menu-grid`);
     if (!section) {return;}
-
     const items = MENU_DATA?.items?.filter(item => item.category === catId) || [];
-
     if (items.length > 0) {
       section.innerHTML = items.map(item => renderMenuItem(item, catId, imageMap)).join('');
     }
   });
 }
 
-// ─── Render Single Menu Item ───
 function renderMenuItem(item, category, imageMap) {
   const badgeClass = item.badge ? (item.badge.includes('Best') || item.badge.includes('Save') || item.badge.includes('Best Value') ? 'highlight' : 'neon-pulse') : '';
   const imageSrc = imageMap[category] || 'images/interior.png';
-
   let content = '';
 
   if (category === 'combo') {
@@ -122,11 +247,9 @@ function renderMenuItem(item, category, imageMap) {
     `;
 }
 
-// ─── Render Gallery from Data ───
 function renderGallery() {
   const galleryGrid = document.querySelector('.gallery-grid');
   if (!galleryGrid || !MENU_DATA?.gallery) {return;}
-
   const galleryItems = MENU_DATA.gallery;
   galleryGrid.innerHTML = galleryItems.map((item, index) => {
     const sizeClass = index === 0 ? 'large' : '';
@@ -141,7 +264,6 @@ function renderGallery() {
   }).join('');
 }
 
-// ─── Format Price ───
 function formatPrice(price) {
   return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 }

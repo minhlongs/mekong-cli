@@ -31,8 +31,39 @@ let orderWebSocket = null;
 let sessionId = null;
 let cart = { items: [], total: 0, count: 0 };
 
+// Load cart from localStorage on module init (for test compatibility)
+try {
+  const savedCart = localStorage.getItem('cart');
+  if (savedCart) {
+    cart = JSON.parse(savedCart);
+  }
+} catch (e) {
+  // Ignore localStorage errors
+}
+
 // Export for global access (legacy compatibility)
 window.cartActions = { removeItem };
+
+/**
+ * Save Cart to LocalStorage
+ */
+function saveCart(cartData) {
+  try {
+    localStorage.setItem('cart', JSON.stringify(cartData));
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+}
+window.saveCart = saveCart;
+
+/**
+ * Clear Cart after successful order
+ */
+async function clearCartAfterOrder() {
+  localStorage.removeItem('cart');
+  cart = { items: [], total: 0, count: 0 };
+}
+window.clearCartAfterOrder = clearCartAfterOrder;
 
 /**
  * Calculate Delivery Fee

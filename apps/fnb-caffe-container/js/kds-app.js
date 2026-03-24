@@ -207,3 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initKDS();
   initThemeToggle();
 });
+
+// ─── Export Functions to Window for Test Compatibility ───
+window.advanceOrderStatus = advanceOrderStatus;
+window.moveToPreviousStatus = moveToPreviousStatus;

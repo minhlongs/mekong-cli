@@ -14,10 +14,33 @@ const translations = {
     'nav.order': '📞 Đặt Bàn',
 
     // Hero Section
+    'hero.title': 'F&B Container Café',
     'hero.tagline': 'Where Flavor Meets Design',
     'hero.cta.primary': '🛒 Đặt Hàng Ngay',
     'hero.cta.secondary': '📍 Xem Vị Trí',
     'hero.hours': 'Mở cửa 7:00 - 22:00 hàng ngày',
+
+    // Menu
+    'menu.coffee': 'Cà Phê',
+    'menu.tea': 'Trà',
+    'menu.signature': 'Signature',
+    'menu.snacks': 'Ăn Vặt',
+    'menu.combo': 'Combo',
+
+    // Order
+    'order.cart': 'Giỏ Hàng',
+    'order.total': 'Tổng Cộng',
+    'order.payment': 'Thanh Toán',
+
+    // Contact
+    'contact.name': 'Họ Tên',
+    'contact.phone': 'Số Điện Thoại',
+    'contact.email': 'Email',
+    'contact.message': 'Lời Nhắn',
+    'contact.submit': 'Gửi Liên Hệ',
+
+    // Language Toggle
+    'lang.switch': 'Chuyển Ngôn Ngữ',
 
     // Features
     'feature.specialty': 'Specialty Coffee',
@@ -129,10 +152,33 @@ const translations = {
     'nav.order': '📞 Book Table',
 
     // Hero Section
+    'hero.title': 'F&B Container Café',
     'hero.tagline': 'Where Flavor Meets Design',
     'hero.cta.primary': '🛒 Order Now',
     'hero.cta.secondary': '📍 View Location',
     'hero.hours': 'Open 7:00 - 22:00 Daily',
+
+    // Menu
+    'menu.coffee': 'Coffee',
+    'menu.tea': 'Tea',
+    'menu.signature': 'Signature',
+    'menu.snacks': 'Snacks',
+    'menu.combo': 'Combo',
+
+    // Order
+    'order.cart': 'Cart',
+    'order.total': 'Total',
+    'order.payment': 'Payment',
+
+    // Contact
+    'contact.name': 'Full Name',
+    'contact.phone': 'Phone Number',
+    'contact.email': 'Email',
+    'contact.message': 'Message',
+    'contact.submit': 'Send Message',
+
+    // Language Toggle
+    'lang.switch': 'Switch Language',
 
     // Features
     'feature.specialty': 'Specialty Coffee',
@@ -237,14 +283,14 @@ const translations = {
 };
 
 // Ngôn ngữ hiện tại
-let currentLang = 'vi';
+let _currentLang = 'vi';
 
 /**
  * Lấy ngôn ngữ từ localStorage hoặc browser
  */
 function getPreferredLanguage() {
   // Ưu tiên localStorage
-  const saved = localStorage.getItem('fnb_lang');
+  const saved = localStorage.getItem('language');
   if (saved && translations[saved]) {
     return saved;
   }
@@ -258,9 +304,14 @@ function getPreferredLanguage() {
  * Khởi tạo i18n
  */
 function initI18n() {
-  currentLang = getPreferredLanguage();
-  document.documentElement.lang = currentLang;
+  _currentLang = getPreferredLanguage();
+  document.documentElement.lang = _currentLang;
+  // Sync to window.I18N for test compatibility
+  if (window.I18N) {
+    window.I18N.currentLang = _currentLang;
+  }
   applyTranslations();
+  addLanguageToggle();
 }
 
 /**
@@ -270,7 +321,9 @@ function initI18n() {
  * @returns {string} Translated text
  */
 function t(key, params = {}) {
-  const translation = translations[currentLang]?.[key] || translations.vi[key] || key;
+  // Check window.I18N.currentLang first (for test compatibility)
+  const lang = (window.I18N && window.I18N.currentLang) || _currentLang;
+  const translation = translations[lang]?.[key] || translations.vi[key] || key;
 
   // Replace parameters
   return Object.entries(params).reduce((str, [param, value]) => {
@@ -282,6 +335,8 @@ function t(key, params = {}) {
  * Áp dụng translations cho tất cả elements có data-i18n attribute
  */
 function applyTranslations() {
+  const lang = (window.I18N && window.I18N.currentLang) || _currentLang;
+
   // Text content
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -306,10 +361,10 @@ function applyTranslations() {
   });
 
   // Update lang attribute
-  document.documentElement.lang = currentLang;
+  document.documentElement.lang = lang;
 
   // Emit event for custom handling
-  window.dispatchEvent(new CustomEvent('i18n:updated', { detail: { lang: currentLang } }));
+  window.dispatchEvent(new CustomEvent('i18n:updated', { detail: { lang } }));
 }
 
 /**
@@ -321,23 +376,28 @@ function setLanguage(lang) {
     return;
   }
 
-  currentLang = lang;
-  localStorage.setItem('fnb_lang', lang);
-  applyTranslations();
+  _currentLang = lang;
+  // Sync to window.I18N for test compatibility
+  if (window.I18N) {
+    window.I18N.currentLang = lang;
+  }
+  localStorage.setItem('language', lang);
+  translatePage();
 }
 
 /**
  * Toggle giữa VI và EN
  */
 function toggleLanguage() {
-  setLanguage(currentLang === 'vi' ? 'en' : 'vi');
+  const newLang = ((window.I18N && window.I18N.currentLang) || _currentLang) === 'vi' ? 'en' : 'vi';
+  setLanguage(newLang);
 }
 
 /**
  * Lấy ngôn ngữ hiện tại
  */
 function getCurrentLang() {
-  return currentLang;
+  return (window.I18N && window.I18N.currentLang) || _currentLang;
 }
 
 /**
@@ -350,32 +410,155 @@ function getSupportedLanguages() {
   ];
 }
 
+/**
+ * Dịch toàn bộ trang
+ */
+function translatePage() {
+  // Text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+
+  // Placeholder
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = t(key);
+  });
+
+  // Title/aria-label
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    el.title = t(key);
+  });
+
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria');
+    el.setAttribute('aria-label', t(key));
+  });
+
+  // Update language toggle after translation
+  updateLanguageToggle();
+}
+
+/**
+ * Thêm language toggle button
+ */
+function addLanguageToggle() {
+  // Don't create if already exists
+  if (document.getElementById('langToggle')) {
+    return;
+  }
+
+  const lang = (window.I18N && window.I18N.currentLang) || _currentLang;
+  const toggle = document.createElement('button');
+  toggle.id = 'langToggle';
+  toggle.className = 'lang-toggle';
+  toggle.setAttribute('aria-label', 'Switch language');
+  toggle.innerHTML = `
+    <span class="lang-icon">🌐</span>
+    <span class="lang-text">${lang === 'vi' ? 'EN' : 'VI'}</span>
+  `;
+
+  toggle.addEventListener('click', () => {
+    toggleLanguage();
+  });
+
+  // Add to nav
+  const nav = document.querySelector('.nav-links');
+  if (nav) {
+    nav.appendChild(toggle);
+  } else {
+    document.body.appendChild(toggle);
+  }
+}
+
+/**
+ * Cập nhật language toggle text
+ */
+function updateLanguageToggle() {
+  const toggle = document.getElementById('langToggle');
+  if (!toggle) {
+    return;
+  }
+
+  const lang = (window.I18N && window.I18N.currentLang) || _currentLang;
+  const langText = toggle.querySelector('.lang-text');
+  if (langText) {
+    langText.textContent = lang === 'vi' ? 'EN' : 'VI';
+  }
+}
+
+/**
+ * Hiển thị toast notification
+ */
+function showToast(message) {
+  // Remove existing toast if any
+  const existingToast = document.querySelector('.toast-notification');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1a1612 0%, #2c2420 100%);
+    color: #faf8f5;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 9999;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(250, 248, 245, 0.1);
+  `;
+
+  document.body.appendChild(toast);
+
+  // Auto remove after 4 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(100px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
 // Export
-window.i18n = {
+const I18N = {
   init: initI18n,
   t,
   setLanguage,
   toggleLanguage,
   getCurrentLang,
   getSupportedLanguages,
-  translations
+  translations,
+  translatePage,
+  addLanguageToggle,
+  updateLanguageToggle,
+  showToast,
+  defaultLang: 'vi',
+  supportedLangs: ['vi', 'en'],
+  get currentLang() {
+    return _currentLang;
+  },
+  set currentLang(val) {
+    _currentLang = val;
+  }
 };
+
+window.i18n = I18N;
 
 // CommonJS export for Jest tests
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    I18N: {
-      init: initI18n,
-      t,
-      setLanguage,
-      toggleLanguage,
-      getCurrentLang,
-      getSupportedLanguages,
-      translations,
-      defaultLang: 'vi',
-      supportedLangs: ['vi', 'en']
-    }
-  };
+  module.exports = { I18N };
 }
 
 // Auto-init khi DOM ready

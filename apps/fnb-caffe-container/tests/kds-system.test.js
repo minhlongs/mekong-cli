@@ -9,12 +9,12 @@ const rootDir = path.join(__dirname, '..');
 
 describe('Kitchen Display System', () => {
     let kdsHtml;
-    let kdsOrdersJs;
+    let kdsJs;
     let kdsOrdersJs;
 
     beforeAll(() => {
         kdsHtml = fs.readFileSync(path.join(rootDir, 'kitchen-display.html'), 'utf8');
-        kdsOrdersJs = fs.readFileSync(path.join(rootDir, 'js/kds-app.js'), 'utf8');
+        kdsJs = fs.readFileSync(path.join(rootDir, 'js/kds-app.js'), 'utf8');
         kdsOrdersJs = fs.readFileSync(path.join(rootDir, 'js/kds-orders.js'), 'utf8');
     });
 
@@ -668,7 +668,7 @@ describe('KDS Integration', () => {
     });
 
     test('should link to kds-app.js or minified version', () => {
-        expect(kdsHtml).toMatch(/src="kds-app(\.min)?\.js"/);
+        expect(kdsHtml).toMatch(/src="(?:js\/)?kds-app(\.min)?\.js"/);
     });
 
     test('should have KDS styles in styles.css', () => {

@@ -549,8 +549,105 @@ window.DashboardUtils = {
 window.showOrderDetail = showOrderDetail;
 window.handleOrderAction = handleOrderAction;
 
+// ─── Export Data Function ───
+function exportData(data, filename) {
+  const headers = ['ID', 'Customer', 'Phone', 'Total', 'Status', 'Date'];
+  const csvContent = [
+    headers.join(','),
+    ...data.map(order => [
+      order.id,
+      order.customer?.full_name || '',
+      order.customer?.phone || '',
+      order.total,
+      order.order_status,
+      order.created_at
+    ].join(','))
+  ].join('\\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename || 'orders.csv';
+  link.click();
+}
+
+function exportToCSV(data) {
+  exportData(data, 'dashboard-export.csv');
+}
+
+// ─── Mock Data Methods for Testing ───
+function getMockStats() {
+  return {
+    revenue: 10000000,
+    orders: 50,
+    customers: 30,
+    products: 20
+  };
+}
+
+function getMockRevenue() {
+  return [
+    { date: '2026-03-18', revenue: 5000000 },
+    { date: '2026-03-19', revenue: 7000000 },
+    { date: '2026-03-20', revenue: 6000000 },
+    { date: '2026-03-21', revenue: 8000000 },
+    { date: '2026-03-22', revenue: 9000000 },
+    { date: '2026-03-23', revenue: 10000000 },
+    { date: '2026-03-24', revenue: 11000000 }
+  ];
+}
+
+function getMockOrders() {
+  return [
+    { id: 1, customer: { full_name: 'Nguyen Van A', phone: '0901234567' }, total: 100000, order_status: 'completed', created_at: '2026-03-24' },
+    { id: 2, customer: { full_name: 'Tran Thi B', phone: '0912345678' }, total: 150000, order_status: 'pending', created_at: '2026-03-24' },
+    { id: 3, customer: { full_name: 'Le Van C', phone: '0923456789' }, total: 200000, order_status: 'processing', created_at: '2026-03-23' }
+  ];
+}
+
+function getMockTopProducts() {
+  return [
+    { id: 1, name: 'Espresso', quantity: 100, revenue: 2900000 },
+    { id: 2, name: 'Capuchino', quantity: 80, revenue: 3920000 },
+    { id: 3, name: 'Tra Dao', quantity: 60, revenue: 2700000 }
+  ];
+}
+
+// ─── Search Input Handler ───
+function initSearchInput() {
+  const searchInput = document.getElementById('globalSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      DashboardState.searchQuery = query;
+      filterAndRenderOrders();
+    });
+  }
+}
+
 // ─── Initialize on DOM Ready ───
 document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     initThemeToggle();
+    initSearchInput();
+});
+
+// ─── Keyboard Shortcuts ───
+document.addEventListener('keydown', (e) => {
+    // Escape key to close modals
+    if (e.key === 'Escape') {
+        const modal = document.querySelector('.modal.active');
+        if (modal && window.Modal) {
+            Modal.close();
+        }
+    }
+
+    // Ctrl/Cmd + K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('globalSearch');
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }
 });
