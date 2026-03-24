@@ -1,0 +1,405 @@
+/* ═══════════════════════════════════════════════
+   PAGES/LOYALTY.CSS — Loyalty Program Styles
+   F&B CAFFE CONTAINER Design System
+   ═══════════════════════════════════════════════ */
+
+/* Loyalty Section */
+.loyalty-section {
+    padding: 80px 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(255, 184, 0, 0.05) 100%);
+}
+
+/* Loyalty Widget */
+.loyalty-widget {
+    background: linear-gradient(135deg, #1a1612 0%, #2d2420 100%);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Tier Badge */
+.tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tier-badge .tier-icon {
+    font-size: 1.3rem;
+}
+
+/* Points Balance */
+.points-balance {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.points-balance .points-value {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffb800, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.points-balance .points-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Tier Progress */
+.tier-progress {
+    margin-top: 16px;
+}
+
+.tier-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tier-progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.tier-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffb800, #ffd700);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Tier Benefits */
+.tier-benefits {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tier-benefits h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.tier-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.tier-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tier-benefits li::before {
+    content: '✓';
+    color: #ffb800;
+    font-weight: 700;
+}
+
+/* Loyalty Page Styles */
+.loyalty-page {
+    min-height: 100vh;
+    padding: 120px 0 60px;
+    background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-surface) 100%);
+}
+
+.loyalty-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.loyalty-header h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.loyalty-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Tier Cards */
+.tier-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin: 48px 0;
+}
+
+.tier-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.tier-card:hover {
+    border-color: var(--warm-amber);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-deep);
+}
+
+.tier-card.featured {
+    border-color: var(--warm-amber);
+    background: linear-gradient(135deg, rgba(245, 185, 94, 0.15), rgba(232, 168, 58, 0.1));
+    box-shadow: 0 0 40px rgba(245, 185, 94, 0.2);
+}
+
+.tier-card.featured .tier-name {
+    color: var(--warm-amber);
+}
+
+.tier-icon-large {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.tier-name {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.tier-requirement {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.tier-perks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tier-perks li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.tier-perks li::before {
+    content: '✨';
+    font-size: 1rem;
+}
+
+/* Rewards Grid */
+.rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 40px 0;
+}
+
+.reward-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-base);
+}
+
+.reward-card:hover {
+    border-color: var(--warm-amber);
+    transform: translateY(-4px);
+}
+
+.reward-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.reward-icon {
+    font-size: 2.5rem;
+}
+
+.reward-points {
+    background: rgba(245, 185, 94, 0.15);
+    color: var(--warm-amber);
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.reward-name {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.reward-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+}
+
+.redeem-btn {
+    margin-top: 16px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+    color: var(--coffee-espresso);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.redeem-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(245, 185, 94, 0.4);
+}
+
+.redeem-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* How It Works */
+.how-it-works {
+    margin: 60px 0;
+}
+
+.how-it-works h2 {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 40px;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+}
+
+.step-card {
+    text-align: center;
+    padding: 24px;
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+    color: var(--coffee-espresso);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 auto 16px;
+}
+
+.step-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.step-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Responsive Loyalty */
+@media (max-width: 900px) {
+    .tier-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .loyalty-page {
+        padding: 80px 0 40px;
+    }
+
+    .loyalty-widget {
+        padding: 24px;
+    }
+
+    .points-balance .points-value {
+        font-size: 2.5rem;
+    }
+
+    .tier-benefits ul {
+        grid-template-columns: 1fr;
+    }
+
+    .rewards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 375px) {
+    .points-balance .points-value {
+        font-size: 2rem;
+    }
+
+    .tier-icon-large {
+        font-size: 3rem;
+    }
+
+    .step-card {
+        padding: 16px;
+    }
+}

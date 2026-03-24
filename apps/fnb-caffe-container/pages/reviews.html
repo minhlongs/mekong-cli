@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh Giá — F&B Container Café | Review Khách Hàng</title>
+    <meta name="description" content="Xem và chia sẻ đánh giá về đồ uống tại F&B Container Café Sa Đéc">
+    <meta name="theme-color" content="#4a2c17">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/about-m3.css">
+
+    <style>
+        /* Review-specific styles */
+        .reviews-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 16px 80px;
+        }
+
+        .reviews-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .reviews-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1B5E3B;
+            margin-bottom: 8px;
+        }
+
+        .reviews-header p {
+            color: #666;
+            font-size: 15px;
+        }
+
+        /* Rating summary */
+        .rating-summary {
+            background: linear-gradient(135deg, #1B5E3B 0%, #2E7D32 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .rating-average {
+            text-align: center;
+        }
+
+        .rating-average .number {
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .rating-average .stars {
+            font-size: 28px;
+            margin: 8px 0;
+        }
+
+        .rating-average .count {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .rating-bars {
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
+        }
+
+        .rating-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .rating-bar-row .label {
+            font-size: 14px;
+            min-width: 50px;
+        }
+
+        .rating-bar-row .bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .rating-bar-row .fill {
+            height: 100%;
+            background: #FFD700;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .rating-bar-row .count {
+            font-size: 12px;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        /* Review form */
+        .review-form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-form-card h2 {
+            font-size: 20px;
+            color: #1B5E3B;
+            margin-bottom: 24px;
+        }
+
+        .star-rating-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .star-rating-input input[type="radio"] {
+            display: none;
+        }
+
+        .star-rating-input label {
+            font-size: 36px;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.2s, transform 0.1s;
+        }
+
+        .star-rating-input label:hover,
+        .star-rating-input input[type="radio"]:checked ~ label,
+        .star-rating-input input[type="radio"]:checked + label,
+        .star-rating-input label:hover ~ label {
+            color: #FFD700;
+        }
+
+        .star-rating-input input[type="radio"]:checked + label {
+            transform: scale(1.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1B5E3B;
+            box-shadow: 0 0 0 3px rgba(27, 94, 59, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #1B5E3B 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(27, 94, 59, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Review list */
+        .review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .review-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .review-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .review-card-header .customer-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .review-card-header .rating {
+            color: #FFD700;
+            font-size: 18px;
+        }
+
+        .review-card-header .date {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .review-card-item {
+            display: inline-block;
+            background: #E8F5E9;
+            color: #1B5E3B;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .review-card-comment {
+            color: #555;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .no-reviews {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-reviews p {
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Item selector */
+        .item-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .item-chip {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .item-chip:hover {
+            border-color: #1B5E3B;
+            background: #E8F5E9;
+        }
+
+        .item-chip.selected {
+            border-color: #1B5E3B;
+            background: #1B5E3B;
+            color: white;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #1B5E3B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .rating-summary {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .rating-bars {
+                width: 100%;
+            }
+
+            .reviews-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container header-content">
+            <a href="/" class="logo">
+                <span class="logo-icon">☕</span>
+                <span class="logo-text">F&B Container</span>
+            </a>
+            <nav class="main-nav">
+                <a href="/menu.html">Menu</a>
+                <a href="/#about">Về Chúng Tôi</a>
+                <a href="/#services">Dịch Vụ</a>
+                <a href="/contact.html">Liên Hệ</a>
+                <a href="/pages/reviews.html" class="active">Đánh Giá</a>
+            </nav>
+            <a href="/checkout.html" class="btn-order">Đặt Hàng</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="reviews-container">
+        <div class="reviews-header">
+            <h1>⭐ Đánh Giá Khách Hàng</h1>
+            <p>Chia sẻ trải nghiệm của bạn về đồ uống tại F&B Container Café</p>
+        </div>
+
+        <!-- Rating Summary -->
+        <div class="rating-summary" id="ratingSummary" style="display: none;">
+            <div class="rating-average">
+                <div class="number" id="avgRating">0.0</div>
+                <div class="stars" id="avgStars">☆☆☆☆☆</div>
+                <div class="count"><span id="totalReviews">0</span> đánh giá</div>
+            </div>
+            <div class="rating-bars">
+                <div class="rating-bar-row">
+                    <span class="label">5 sao</span>
+                    <div class="bar"><div class="fill" id="bar5" style="width: 0%"></div></div>
+                    <span class="count" id="count5">0</span>
+                </div>
+                <div class="rating-bar-row">
+                    <span class="label">4 sao</span>
+                    <div class="bar"><div class="fill" id="bar4" style="width: 0%"></div></div>
+                    <span class="count" id="count4">0</span>
+                </div>
+                <div class="rating-bar-row">
+                    <span class="label">3 sao</span>
+                    <div class="bar"><div class="fill" id="bar3" style="width: 0%"></div></div>
+                    <span class="count" id="count3">0</span>
+                </div>
+                <div class="rating-bar-row">
+                    <span class="label">2 sao</span>
+                    <div class="bar"><div class="fill" id="bar2" style="width: 0%"></div></div>
+                    <span class="count" id="count2">0</span>
+                </div>
+                <div class="rating-bar-row">
+                    <span class="label">1 sao</span>
+                    <div class="bar"><div class="fill" id="bar1" style="width: 0%"></div></div>
+                    <span class="count" id="count1">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="review-form-card">
+            <h2>✍️ Viết Đánh Giá Của Bạn</h2>
+            <form id="reviewForm">
+                <div class="form-group">
+                    <label for="menuItem">Chọn đồ uống *</label>
+                    <select id="menuItem" name="item_id" required>
+                        <option value="">-- Chọn món --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Đánh giá sao *</label>
+                    <div class="star-rating-input" id="starRating">
+                        <input type="radio" name="rating" value="5" id="star5">
+                        <label for="star5">★</label>
+                        <input type="radio" name="rating" value="4" id="star4">
+                        <label for="star4">★</label>
+                        <input type="radio" name="rating" value="3" id="star3">
+                        <label for="star3">★</label>
+                        <input type="radio" name="rating" value="2" id="star2">
+                        <label for="star2">★</label>
+                        <input type="radio" name="rating" value="1" id="star1">
+                        <label for="star1">★</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerName">Họ và tên *</label>
+                    <input type="text" id="customerName" name="customer_name" placeholder="Nguyễn Văn A" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerEmail">Email (không bắt buộc)</label>
+                    <input type="email" id="customerEmail" name="customer_email" placeholder="ban@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="comment">Nhận xét *</label>
+                    <textarea id="comment" name="comment" placeholder="Chia sẻ trải nghiệm của bạn về đồ uống..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">Gửi Đánh Giá</button>
+            </form>
+        </div>
+
+        <!-- Review List -->
+        <h2 style="font-size: 20px; color: #1B5E3B; margin-bottom: 16px;">📝 Đánh Giá Gần Đây</h2>
+        <div class="review-list" id="reviewList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Đang tải đánh giá...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 F&B Container Café. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/reviews.js"></script>
+</body>
+</html>

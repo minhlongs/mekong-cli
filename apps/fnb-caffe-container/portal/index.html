@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Customer Portal - F&B Caffe Container Sa Đéc">
+    <title>Customer Portal | F&B Caffe Container</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        /* Portal Specific Styles */
+        .portal-body {
+            min-height: 100vh;
+            background: var(--bg-dark);
+            padding-top: 80px;
+        }
+
+        .portal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Portal Header */
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .portal-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .portal-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .portal-nav {
+            display: flex;
+            gap: 12px;
+        }
+
+        .portal-nav-btn {
+            padding: 10px 20px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+
+        .portal-nav-btn:hover {
+            border-color: var(--warm-amber);
+            background: rgba(245, 185, 94, 0.1);
+        }
+
+        .portal-nav-btn.active {
+            background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+            color: var(--coffee-espresso);
+            border-color: transparent;
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-card) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--coffee-espresso);
+            box-shadow: 0 8px 24px rgba(212, 165, 116, 0.3);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .profile-name {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .profile-phone {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .profile-member-since {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .profile-btn {
+            padding: 10px 20px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .profile-btn:hover {
+            border-color: var(--warm-amber);
+            transform: translateY(-2px);
+        }
+
+        .profile-btn.primary {
+            background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+            color: var(--coffee-espresso);
+            border-color: transparent;
+        }
+
+        /* Main Grid */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* Section Cards */
+        .portal-section {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 1.5rem;
+        }
+
+        .section-action {
+            font-size: 0.85rem;
+            color: var(--warm-amber);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: color var(--transition-base);
+        }
+
+        .section-action:hover {
+            color: var(--warm-gold);
+        }
+
+        /* Loyalty Points Display */
+        .loyalty-card {
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, rgba(201, 169, 98, 0.08) 100%);
+            border: 1px solid rgba(212, 165, 116, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .loyalty-tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--warm-amber);
+            margin-bottom: 16px;
+        }
+
+        .loyalty-tier-badge .tier-icon {
+            font-size: 1.2rem;
+        }
+
+        .loyalty-points {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .loyalty-points .points-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            font-family: var(--font-heading);
+            background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .loyalty-points .points-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .loyalty-next-tier {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+
+        .loyalty-progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .loyalty-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--warm-amber), var(--warm-gold));
+            border-radius: 3px;
+            transition: width 0.5s var(--ease-out-expo);
+        }
+
+        /* Active Promotions */
+        .promotions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .promotion-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            transition: all var(--transition-base);
+        }
+
+        .promotion-item:hover {
+            border-color: var(--warm-amber);
+            transform: translateX(4px);
+        }
+
+        .promotion-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(245, 185, 94, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .promotion-info {
+            flex: 1;
+        }
+
+        .promotion-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .promotion-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .promotion-terms {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .promotion-badge {
+            padding: 4px 10px;
+            background: linear-gradient(135deg, var(--warm-amber), var(--warm-gold));
+            color: var(--coffee-espresso);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 100px;
+            white-space: nowrap;
+        }
+
+        /* Order History */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .order-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 16px;
+            align-items: center;
+            padding: 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .order-item:hover {
+            border-color: var(--warm-amber);
+            transform: translateY(-2px);
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .order-id {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+        }
+
+        .order-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .order-items-count {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .order-total {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--warm-amber);
+        }
+
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .order-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .order-status.pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .order-status.cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .order-arrow {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state .title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state .desc {
+            font-size: 0.9rem;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* Responsive */
+        /* Tablet & Below (1024px) */
+        @media (max-width: 1024px) {
+            .portal-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .profile-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .profile-actions {
+                justify-content: center;
+            }
+
+            .sidebar {
+                order: -1;
+            }
+        }
+
+        /* Mobile (768px) */
+        @media (max-width: 768px) {
+            .portal-header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .portal-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .portal-nav-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+
+            .profile-card {
+                padding: 20px;
+            }
+
+            .profile-avatar {
+                width: 64px;
+                height: 64px;
+                font-size: 1.5rem;
+                margin: 0 auto;
+            }
+
+            .profile-name {
+                font-size: 1.25rem;
+            }
+
+            .profile-phone {
+                justify-content: center;
+            }
+
+            .order-item {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .order-info {
+                align-items: center;
+            }
+
+            .loyalty-points .points-value {
+                font-size: 2.5rem;
+            }
+
+            .promotion-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .promotion-icon {
+                margin: 0 auto;
+            }
+        }
+
+        /* Small Mobile (480px) */
+        @media (max-width: 480px) {
+            .portal-container {
+                padding: 16px;
+            }
+
+            .portal-section {
+                padding: 16px;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .profile-btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px 16px;
+            }
+
+            .loyalty-points .points-value {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+
+            .navbar {
+                padding: 12px 16px;
+            }
+
+            .nav-brand span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="portal-body">
+    <!-- Portal Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <div class="brand-icon">F&B</div>
+                <span>Customer Portal</span>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Trang chủ</a>
+                <a href="../menu.html">Menu</a>
+                <a href="../loyalty.html">Loyalty</a>
+            </div>
+            <a href="../index.html#contact" class="btn-primary">Liên hệ</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="portal-container">
+        <!-- Portal Header -->
+        <header class="portal-header">
+            <div>
+                <h1 class="portal-title">Xin chào!</h1>
+                <p class="portal-subtitle">Quản lý đơn hàng và điểm thưởng của bạn</p>
+            </div>
+            <div class="portal-nav">
+                <button class="portal-nav-btn active" data-tab="overview">Tổng quan</button>
+                <button class="portal-nav-btn" data-tab="orders">Đơn hàng</button>
+                <button class="portal-nav-btn" data-tab="rewards">Đổi quà</button>
+            </div>
+        </header>
+
+        <!-- Profile Card -->
+        <section class="profile-card" id="profileCard">
+            <div class="profile-avatar" id="profileAvatar">K</div>
+            <div class="profile-info">
+                <h2 class="profile-name" id="profileName">Khách hàng</h2>
+                <p class="profile-phone">
+                    <span>📱</span>
+                    <span id="profilePhone">+84 XXX XXX XXXX</span>
+                </p>
+                <p class="profile-member-since" id="memberSince">Thành viên từ 2026</p>
+            </div>
+            <div class="profile-actions">
+                <button class="profile-btn" onclick="editProfile()">✏️ Sửa hồ sơ</button>
+                <button class="profile-btn primary" onclick="logout()">Đăng xuất</button>
+            </div>
+        </section>
+
+        <div class="portal-grid">
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Order History Section -->
+                <section class="portal-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <span class="icon">📦</span>
+                            Lịch sử đơn hàng
+                        </h3>
+                        <button class="section-action" onclick="viewAllOrders()">Xem tất cả →</button>
+                    </div>
+                    <div class="orders-list" id="ordersList">
+                        <!-- Orders will be loaded here -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Loyalty Points Card -->
+                <div class="loyalty-card" id="loyaltyCard">
+                    <div class="loyalty-tier-badge" id="tierBadge">
+                        <span class="tier-icon" id="tierIcon">🥉</span>
+                        <span id="tierName">Thành Viên Đồng</span>
+                    </div>
+                    <div class="loyalty-points">
+                        <span class="points-value" id="pointsValue">0</span>
+                        <span class="points-label">points</span>
+                    </div>
+                    <div class="loyalty-progress-bar">
+                        <div class="loyalty-progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <p class="loyalty-next-tier" id="nextTier">Còn 5,000 points để lên Bạc</p>
+                </div>
+
+                <!-- Active Promotions Section -->
+                <section class="portal-section">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <span class="icon">🎁</span>
+                            Khuyến mãi aktif
+                        </h3>
+                    </div>
+                    <div class="promotions-list" id="promotionsList">
+                        <!-- Promotions will be loaded here -->
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        // ═══════════════════════════════════════════════
+        // CUSTOMER PORTAL - MVP
+        // ═══════════════════════════════════════════════
+
+        // Mock data for demo (fallback)
+        const mockCustomer = {
+            name: 'Nguyễn Văn A',
+            phone: '0901234567',
+            avatar: 'NA',
+            memberSince: '2026-01-15',
+            points: 3500,
+            tier: 'dong'
+        };
+
+        const mockOrders = [
+            {
+                id: 'ORD-2026-001',
+                date: '2026-03-22T14:30:00',
+                items: 3,
+                total: 125000,
+                status: 'completed'
+            },
+            {
+                id: 'ORD-2026-002',
+                date: '2026-03-20T09:15:00',
+                items: 2,
+                total: 85000,
+                status: 'completed'
+            },
+            {
+                id: 'ORD-2026-003',
+                date: '2026-03-18T16:45:00',
+                items: 5,
+                total: 245000,
+                status: 'completed'
+            }
+        ];
+
+        const activePromotions = [
+            {
+                id: 'promo_001',
+                name: 'Happy Hour 50% OFF',
+                description: 'Giảm 50% tất cả đồ uống từ 14:00 - 16:00',
+                badge: 'Hot',
+                icon: '⏰',
+                terms: 'Áp dụng đến 31/03/2026'
+            },
+            {
+                id: 'promo_002',
+                name: 'Free Upgrade Large',
+                description: 'Miễn phí nâng size cho thành viên Bạc+',
+                badge: 'Member',
+                icon: '⬆️',
+                terms: 'Tự động áp dụng'
+            },
+            {
+                id: 'promo_003',
+                name: 'Buy 2 Get 1 Free',
+                description: 'Mua 2 tặng 1 cho Signature Drinks',
+                badge: 'Limited',
+                icon: '🎁',
+                terms: 'Đến hết 25/03/2026'
+            }
+        ];
+
+        // ═══════════════════════════════════════════════
+        // UTILITY FUNCTIONS
+        // ═══════════════════════════════════════════════
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                return 'Hôm nay, ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+            } else if (diffDays === 1) {
+                return 'Hôm qua';
+            } else if (diffDays < 7) {
+                return diffDays + ' ngày trước';
+            } else {
+                return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        // ═══════════════════════════════════════════════
+        // LOYALTY CONFIG LOADER
+        // ═══════════════════════════════════════════════
+
+        let loyaltyConfig = null;
+
+        async function loadLoyaltyConfig() {
+            try {
+                const response = await fetch('../data/loyalty-config.json');
+                loyaltyConfig = await response.json();
+                return loyaltyConfig;
+            } catch (error) {
+                console.error('Error loading loyalty config:', error);
+                return null;
+            }
+        }
+
+        function getTierInfo(points) {
+            if (!loyaltyConfig) return null;
+            return loyaltyConfig.tiers.find(tier => {
+                const min = tier.minPoints || 0;
+                const max = tier.maxPoints || Infinity;
+                return points >= min && points < max;
+            });
+        }
+
+        function getNextTier(currentTierId) {
+            if (!loyaltyConfig) return null;
+            const currentIndex = loyaltyConfig.tiers.findIndex(t => t.id === currentTierId);
+            if (currentIndex < loyaltyConfig.tiers.length - 1) {
+                return loyaltyConfig.tiers[currentIndex + 1];
+            }
+            return null;
+        }
+
+        // ═══════════════════════════════════════════════
+        // RENDER FUNCTIONS
+        // ═══════════════════════════════════════════════
+
+        function renderProfile(customer) {
+            document.getElementById('profileName').textContent = customer.name;
+            document.getElementById('profilePhone').textContent = customer.phone;
+            document.getElementById('profileAvatar').textContent = customer.avatar || getInitials(customer.name);
+            document.getElementById('memberSince').textContent =
+                'Thành viên từ ' + new Date(customer.memberSince).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+        }
+
+        function renderLoyaltyPoints(points) {
+            const tier = getTierInfo(points);
+            if (!tier) return;
+
+            document.getElementById('pointsValue').textContent = points.toLocaleString('vi-VN');
+            document.getElementById('tierName').textContent = tier.name;
+            document.getElementById('tierIcon').textContent = tier.icon;
+
+            // Calculate progress to next tier
+            const nextTier = getNextTier(tier.id);
+            if (nextTier) {
+                const progress = ((points - tier.minPoints) / (nextTier.minPoints - tier.minPoints)) * 100;
+                document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+                document.getElementById('nextTier').textContent =
+                    'Còn ' + (nextTier.minPoints - points).toLocaleString('vi-VN') + ' points để lên ' + nextTier.name;
+            } else {
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('nextTier').textContent = 'Đã đạt cấp cao nhất!';
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersList');
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📦</div>
+                        <h4 class="title">Chưa có đơn hàng</h4>
+                        <p class="desc">Bạn chưa có đơn hàng nào. Hãy đặt món ngay!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-item" onclick="viewOrderDetail('${order.id}')">
+                    <div class="order-info">
+                        <span class="order-id">${order.id}</span>
+                        <span class="order-date">${formatDate(order.date)}</span>
+                    </div>
+                    <span class="order-items-count">${order.items} món</span>
+                    <span class="order-total">${formatCurrency(order.total)}</span>
+                    <span class="order-status ${order.status}">
+                        ${order.status === 'completed' ? 'Hoàn thành' :
+                          order.status === 'pending' ? 'Đang chờ' : 'Đã hủy'}
+                    </span>
+                    <span class="order-arrow">→</span>
+                </div>
+            `).join('');
+        }
+
+        function renderPromotions() {
+            const container = document.getElementById('promotionsList');
+
+            // Use activePromotions array for current promotions
+            const promotions = activePromotions;
+
+            if (!promotions || promotions.length === 0) {
+                container.innerHTML = '<p class="empty-state">Không có khuyến mãi hiện tại</p>';
+                return;
+            }
+
+            container.innerHTML = promotions.map(promo => `
+                <div class="promotion-item">
+                    <div class="promotion-icon">${promo.icon}</div>
+                    <div class="promotion-info">
+                        <div class="promotion-name">
+                            ${promo.name}
+                            ${promo.badge ? `<span class="promotion-badge">${promo.badge}</span>` : ''}
+                        </div>
+                        <p class="promotion-desc">${promo.description}</p>
+                        <p class="promotion-terms">${promo.terms}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ═══════════════════════════════════════════════
+        // ACTION FUNCTIONS
+        // ═══════════════════════════════════════════════
+
+        function loadCustomerData() {
+            // Try to load from localStorage first
+            const stored = localStorage.getItem('fnb_customer');
+            const customer = stored ? JSON.parse(stored) : mockCustomer;
+
+            // Load orders from localStorage or use mock
+            const storedOrders = localStorage.getItem('fnb_orders');
+            const orders = storedOrders ? JSON.parse(storedOrders) : mockOrders;
+
+            // Sync points from loyalty storage if exists
+            const storedLoyalty = localStorage.getItem('fnb_loyalty');
+            if (storedLoyalty) {
+                try {
+                    const loyalty = JSON.parse(storedLoyalty);
+                    if (loyalty.points) customer.points = loyalty.points;
+                    if (loyalty.tier) customer.tier = loyalty.tier;
+                } catch (e) {
+                    console.warn('Could not parse loyalty data');
+                }
+            }
+
+            return { customer, orders };
+        }
+
+        function saveCustomerData(customer) {
+            localStorage.setItem('fnb_customer', JSON.stringify(customer));
+            // Also sync to loyalty storage
+            localStorage.setItem('fnb_loyalty', JSON.stringify({
+                points: customer.points,
+                tier: customer.tier,
+                memberSince: customer.memberSince
+            }));
+        }
+
+        function saveOrdersData(orders) {
+            localStorage.setItem('fnb_orders', JSON.stringify(orders));
+        }
+
+        function viewAllOrders() {
+            // Navigate to full orders page or show modal
+            alert('Tính năng xem tất cả đơn hàng sẽ sớm ra mắt!');
+        }
+
+        function viewOrderDetail(orderId) {
+            alert('Chi tiết đơn hàng: ' + orderId);
+        }
+
+        function editProfile() {
+            const newName = prompt('Nhập tên của bạn:', document.getElementById('profileName').textContent);
+            if (newName && newName.trim()) {
+                const customer = loadCustomerData().customer;
+                customer.name = newName;
+                customer.avatar = getInitials(newName);
+                saveCustomerData(customer);
+                renderProfile(customer);
+            }
+        }
+
+        function logout() {
+            if (confirm('Bạn có chắc muốn đăng xuất?')) {
+                // Clear session and redirect
+                window.location.href = '../index.html';
+            }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.portal-nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            // Add tab switching logic here
+            console.log('Switched to tab:', tabName);
+        }
+
+        // Add new order to localStorage (for testing)
+        function addSampleOrder() {
+            const { orders } = loadCustomerData();
+            const newOrder = {
+                id: 'ORD-2026-' + String(orders.length + 1).padStart(3, '0'),
+                date: new Date().toISOString(),
+                items: Math.floor(Math.random() * 5) + 1,
+                total: Math.floor(Math.random() * 300000) + 50000,
+                status: 'completed'
+            };
+            orders.unshift(newOrder);
+            saveOrdersData(orders);
+            renderOrders(orders);
+            return newOrder;
+        }
+
+        // Update customer points
+        function updateCustomerPoints(pointsToAdd) {
+            const { customer } = loadCustomerData();
+            customer.points += pointsToAdd;
+
+            // Check for tier upgrade
+            if (loyaltyConfig) {
+                const newTier = getTierInfo(customer.points);
+                if (newTier && newTier.id !== customer.tier) {
+                    customer.tier = newTier.id;
+                    alert('🎉 Chúc mừng! Bạn đã nâng hạng lên ' + newTier.name);
+                }
+            }
+
+            saveCustomerData(customer);
+            renderLoyaltyPoints(customer.points);
+            renderProfile(customer);
+        }
+
+        // ═══════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 F&B Customer Portal initialized');
+
+            // Load loyalty config
+            await loadLoyaltyConfig();
+
+            // Load customer data
+            const { customer, orders } = loadCustomerData();
+            console.log('📊 Loaded customer:', customer.name, '| Points:', customer.points, '| Orders:', orders.length);
+
+            // Render all components
+            renderProfile(customer);
+            renderLoyaltyPoints(customer.points);
+            renderOrders(orders);
+            renderPromotions();
+
+            // Tab event listeners
+            document.querySelectorAll('.portal-nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            // Expose functions for testing/debugging
+            window.PortalAPI = {
+                addSampleOrder,
+                updateCustomerPoints,
+                loadCustomerData,
+                getCustomer: () => loadCustomerData().customer
+            };
+
+            console.log('💡 PortalAPI exposed for debugging: window.PortalAPI');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display System — F&B Container Café</title>
+    <meta name="description" content="Hệ thống hiển thị nhà bếp KDS - Quản lý order real-time, theo dõi trạng thái đơn hàng và thời gian chế biến.">
+    <meta name="keywords" content="kds, kitchen display, quan ly bep, order management, fnb container">
+    <meta name="author" content="F&B Container Team">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#4a2c17">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/images/favicon-512x512.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F&B KDS">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://fnbcontainer.vn/kitchen-display">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Kitchen Display System — F&B Container Café">
+    <meta property="og:description" content="Quản lý order nhà bếp real-time với KDS">
+    <meta property="og:image" content="images/night-4k.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fnbcontainer.vn/kitchen-display">
+    <meta property="og:site_name" content="F&B Container Café">
+    <meta property="og:locale" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Kitchen Display System — F&B Container Café">
+    <meta name="twitter:description" content="Quản lý order nhà bếp real-time">
+    <meta name="twitter:image" content="images/night-4k.png">
+
+    <!-- Stylesheets with preload (non-blocking) -->
+    <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/kds-styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/kds-styles.min.css"></noscript>
+
+    <style>
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--md-sys-color-surface-variant, #f1f3f4);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 10000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="kds-body">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <!-- ═══ KDS HEADER ═══ -->
+    <header class="kds-header">
+        <div class="kds-header-left">
+            <div class="kds-logo">👨‍🍳</div>
+            <div>
+                <h1 class="kds-title">Kitchen Display System</h1>
+                <p class="kds-subtitle">F&B Container Café — Sa Đéc</p>
+            </div>
+        </div>
+        <div class="kds-header-center">
+            <div class="kds-clock" id="kdsClock">--:--:--</div>
+            <div class="kds-date" id="kdsDate">--/--/----</div>
+        </div>
+        <div class="kds-header-right">
+            <div class="kds-stats">
+                <div class="stat-item pending">
+                    <span class="stat-value" id="statPending">0</span>
+                    <span class="stat-label">Chờ</span>
+                </div>
+                <div class="stat-item preparing">
+                    <span class="stat-value" id="statPreparing">0</span>
+                    <span class="stat-label">Đang làm</span>
+                </div>
+                <div class="stat-item ready">
+                    <span class="stat-value" id="statReady">0</span>
+                    <span class="stat-label">Sẵn sàng</span>
+                </div>
+            </div>
+            <button class="kds-settings" id="kdsSettings" aria-label="Settings">⚙️</button>
+        </div>
+    </header>
+
+    <!-- ═══ KDS BOARD ═══ -->
+    <main class="kds-board">
+
+        <!-- COLUMN 1: PENDING ORDERS -->
+        <section class="kds-column" data-status="pending">
+            <div class="kds-column-header pending">
+                <span class="column-icon">📋</span>
+                <h2>Chờ Xử Lý</h2>
+                <span class="order-count" id="pendingCount">0</span>
+            </div>
+            <div class="kds-orders" id="pendingOrders">
+                <!-- Orders will be injected here -->
+            </div>
+        </section>
+
+        <!-- COLUMN 2: PREPARING ORDERS -->
+        <section class="kds-column" data-status="preparing">
+            <div class="kds-column-header preparing">
+                <span class="column-icon">🔥</span>
+                <h2>Đang Chế Biến</h2>
+                <span class="order-count" id="preparingCount">0</span>
+            </div>
+            <div class="kds-orders" id="preparingOrders">
+                <!-- Orders will be injected here -->
+            </div>
+        </section>
+
+        <!-- COLUMN 3: READY ORDERS -->
+        <section class="kds-column" data-status="ready">
+            <div class="kds-column-header ready">
+                <span class="column-icon">✅</span>
+                <h2>Sẵn Sàng</h2>
+                <span class="order-count" id="readyCount">0</span>
+            </div>
+            <div class="kds-orders" id="readyOrders">
+                <!-- Orders will be injected here -->
+            </div>
+        </section>
+
+        <!-- COLUMN 4: COMPLETED ORDERS -->
+        <section class="kds-column" data-status="completed">
+            <div class="kds-column-header completed">
+                <span class="column-icon">✔️</span>
+                <h2>Hoàn Thành</h2>
+                <span class="order-count" id="completedCount">0</span>
+            </div>
+            <div class="kds-orders" id="completedOrders">
+                <!-- Orders will be injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══ NEW ORDER ALERT ═══ -->
+    <div class="order-alert" id="orderAlert">
+        <div class="alert-icon">🔔</div>
+        <div class="alert-content">
+            <strong>Order Mới!</strong>
+            <span id="alertOrderId">#--</span>
+        </div>
+        <button class="alert-dismiss" id="alertDismiss">✕</button>
+    </div>
+
+    <!-- ═══ SETTINGS MODAL ═══ -->
+    <div class="kds-modal" id="kdsModal">
+        <div class="kds-modal-overlay"></div>
+        <div class="kds-modal-content">
+            <div class="kds-modal-header">
+                <h2>⚙️ Cài Đặt</h2>
+                <button class="kds-modal-close" id="kdsModalClose">✕</button>
+            </div>
+            <div class="kds-modal-body">
+                <div class="setting-row">
+                    <label>Âm Thanh Thông Báo</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggleSound" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label>Tự Động Làm Mới</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="toggleAutoRefresh" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <label>Refresh Interval (giây)</label>
+                    <input type="number" id="refreshInterval" value="5" min="3" max="60" class="setting-input">
+                </div>
+                <div class="setting-row">
+                    <label>Xem Tất Cả Orders</label>
+                    <button class="btn-secondary" id="btnViewAllOrders">📊 Xem Orders</button>
+                </div>
+                <div class="setting-row">
+                    <label>Test Mode</label>
+                    <button class="btn-primary" id="btnGenerateTestOrder">🧪 Tạo Order Test</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ORDER DETAIL MODAL ═══ -->
+    <div class="kds-modal" id="orderDetailModal">
+        <div class="kds-modal-overlay"></div>
+        <div class="order-detail-modal">
+            <div class="kds-modal-content">
+                <div class="kds-modal-header">
+                    <h2 id="orderDetailTitle">Order #--</h2>
+                    <button class="kds-modal-close" id="orderDetailClose">✕</button>
+                </div>
+                <div class="kds-modal-body" id="orderDetailBody">
+                    <!-- Order details injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Async minified script -->
+    <script type="module" src="js/kds-app.js" defer></script>
+
+    <!-- WebSocket Client for Real-time Updates -->
+    <script src="js/websocket-client.js" defer></script>
+
+    <!-- Theme Toggle Script -->
+    <script type="module" src="js/theme.min.js" defer></script>
+</body>
+</html>
