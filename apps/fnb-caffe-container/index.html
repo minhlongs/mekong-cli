@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F&amp;B Container Café — Specialty Coffee & Rooftop Bar | Sa Đéc</title>
+    <meta name="description"
+        content="F&amp;B Container Café tại Sa Đéc — Specialty coffee, rooftop bar với view đồng lúa, không gian check-in cyberpunk giữa lòng thành phố hoa. Mở cửa 7:00-22:00 hàng ngày.">
+    <meta name="keywords" content="cafe container, cafe sa đéc, rooftop bar, specialty coffee, check-in đồng tháp, cafe cyberpunk, cà phê container, dat hang online, giao hang ca phe">
+    <meta name="author" content="F&amp;B Container Team">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#4a2c17">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="F&amp;B Container Café — Check-in Container Cyberpunk Độc Đáo | Sa Đéc">
+    <meta property="og:description"
+        content="Trải nghiệm cà phê container 3 tầng với rooftop bar, specialty coffee và không gian neon cyberpunk. Địa điểm check-in mới lạ tại Sa Đéc, Đồng Tháp.">
+    <meta property="og:image" content="images/night-4k.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fnbcontainer.vn">
+    <meta property="og:site_name" content="F&amp;B Container Café">
+    <meta property="og:locale" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="F&amp;B Container Café — Check-in Container Cyberpunk Độc Đáo">
+    <meta name="twitter:description" content="Trải nghiệm cà phê container 3 tầng với rooftop bar tại Sa Đéc.">
+    <meta name="twitter:image" content="images/night-4k.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/images/favicon-512x512.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    <link rel="canonical" href="https://fnbcontainer.vn">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F&amp;B Container">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CafeOrCoffeeShop",
+        "name": "F&amp;B Container Café",
+        "description": "Specialty coffee & rooftop bar trong không gian container cyberpunk độc đáo",
+        "url": "https://fnbcontainer.vn",
+        "telephone": "+84901234567",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Sa Đéc",
+            "addressLocality": "Đồng Tháp",
+            "addressCountry": "VN"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "10.4938",
+            "longitude": "105.7594"
+        },
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            "opens": "07:00",
+            "closes": "22:00"
+        },
+        "priceRange": "50000-150000 VND",
+        "servesCuisine": "Coffee, Tea, Beverages, Snacks"
+    }
+    </script>
+
+    <!-- Preconnect & Preload Google Fonts - Space Grotesk + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"></noscript>
+
+    <!-- Preconnect to Google Maps -->
+    <link rel="preconnect" href="https://maps.googleapis.com">
+    <link rel="preconnect" href="https://maps.gstatic.com">
+    <link rel="preconnect" href="https://www.google.com">
+
+    <!-- Preload LCP image -->
+    <link rel="preload" as="image" href="images/night-4k.png" imagesrcset="images/night-4k.png 1920w, images/night-2k.png 1280w" imagesizes="100vw">
+
+    <!-- Critical CSS inline for above-the-fold with font-display: swap -->
+    <style>
+      /* Critical CSS: Loading state, navbar, hero */
+      .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(26,22,18,0.95);backdrop-filter:blur(10px);padding:1rem 2rem;transition:all .3s ease}
+      .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+      .btn-order{background:linear-gradient(135deg,#f5b95e,#e8a83a);color:#1a1612;border:none;padding:.75rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer;transition:all .3s ease}
+      .btn-order:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(245,185,94,0.4)}
+      .loading{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg-dark,#1a1612)}
+      .spinner{width:40px;height:40px;border:3px solid rgba(245,185,94,0.2);border-top-color:#f5b95e;border-radius:50%;animation:spin 1s linear infinite}
+      @keyframes spin{to{transform:rotate(360deg)}}
+      /* Font display swap for better FCP - Space Grotesk + Inter */
+    </style>
+
+    <!-- Stylesheets (deferred) -->
+    <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/ui-enhancements.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/loyalty-styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/ui-enhancements.min.css"><link rel="stylesheet" href="css/loyalty-styles.min.css"></noscript>
+</head>
+
+<body>
+
+    <!-- ═══ M3 TOP APP BAR ═══ -->
+    <header class="m3-top-app-bar" id="topAppBar">
+        <div class="m3-top-app-bar__leading">
+            <a href="index.html" class="logo">
+                <svg class="brand-logo" viewBox="0 0 40 40" width="32" height="32" aria-label="F&amp;B Container Logo">
+                    <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
+                    <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)"/>
+                    <rect x="22" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)" opacity="0.7"/>
+                    <rect x="8" y="24" width="24" height="4" rx="1" fill="url(#brandGrad)" opacity="0.5"/>
+                    <defs>
+                        <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00e5ff"/>
+                            <stop offset="100%" style="stop-color:#ff00ff"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </a>
+            <span class="m3-top-app-bar__title">F&amp;B CONTAINER</span>
+        </div>
+        <nav class="nav-desktop">
+            <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
+            <a href="menu.html" data-i18n="nav.menu">Menu</a>
+            <a href="#about" data-i18n="nav.about">Về Chúng Tôi</a>
+            <a href="loyalty.html" data-i18n="nav.loyalty">Tích Điểm</a>
+            <a href="table-reservation.html" data-i18n="nav.reservation">Đặt Bàn</a>
+            <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
+        </nav>
+        <div class="m3-top-app-bar__trailing">
+            <a href="javascript:void(0)" id="language-switcher" class="m3-chip" data-i18n="lang.switch">🌐 EN</a>
+            <button class="m3-icon-button theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span class="theme-icon">🌙</span>
+            </button>
+            <button class="m3-icon-button menu-toggle" id="menuToggle" aria-label="Menu">
+                <span class="material-symbols-outlined">☰</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══ MOBILE MENU DRAWER ═══ -->
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="mobile-menu-close" aria-label="Close">✕</button>
+        <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
+        <a href="menu.html" data-i18n="nav.menu">Menu</a>
+        <a href="#about" data-i18n="nav.about">Về Chúng Tôi</a>
+        <a href="loyalty.html" data-i18n="nav.loyalty">Tích Điểm</a>
+        <a href="table-reservation.html" data-i18n="nav.reservation">Đặt Bàn</a>
+        <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
+        <button class="m3-filled-button mobile-order-btn" id="btnOrderMobile" data-i18n="nav.order" style="width: 100%; margin-top: 16px;">🛒 Đặt Hàng</button>
+    </div>
+
+    <!-- ═══ ORDER MODAL ═══ -->
+    <div class="order-modal" id="orderModal">
+        <div class="order-modal-overlay"></div>
+        <div class="order-modal-content">
+            <button class="order-modal-close" aria-label="Close">✕</button>
+            <div class="order-modal-header">
+                <span class="order-icon">🛒</span>
+                <h2 data-i18n="order.title">Đặt Hàng Online</h2>
+                <p data-i18n="order.subtitle">Nhận hàng sau 15-20 phút</p>
+            </div>
+            <div class="order-modal-body">
+                <div class="order-tabs">
+                    <button class="order-tab active" data-tab="menu" data-i18n="order.tab.menu">Menu</button>
+                    <button class="order-tab" data-tab="cart" data-i18n="order.tab.cart">Giỏ Hàng (<span id="cartCount">0</span>)</button>
+                </div>
+                <div class="order-tab-content active" id="menuTab">
+                    <div class="order-menu-categories">
+                        <button class="order-cat-btn active" data-cat="coffee">☕ Coffee</button>
+                        <button class="order-cat-btn" data-cat="signature">🍹 Signature</button>
+                        <button class="order-cat-btn" data-cat="snacks">🥐 Đồ ăn</button>
+                    </div>
+                    <div class="order-items" id="orderItems">
+                        <!-- Items loaded by JS -->
+                    </div>
+                </div>
+                <div class="order-tab-content" id="cartTab">
+                    <div class="cart-items" id="cartItems">
+                        <p class="cart-empty" data-i18n="order.cart.empty">Giỏ hàng trống</p>
+                    </div>
+                    <div class="cart-summary">
+                        <div class="cart-row">
+                            <span data-i18n="order.cart.subtotal">Tạm tính</span>
+                            <span id="cartSubtotal">0đ</span>
+                        </div>
+                        <div class="cart-row">
+                            <span data-i18n="order.cart.delivery">Phí giao hàng</span>
+                            <span id="cartDelivery">15K</span>
+                        </div>
+                        <div class="cart-row cart-total">
+                            <span data-i18n="order.cart.total">Tổng cộng</span>
+                            <span id="cartTotal">0đ</span>
+                        </div>
+                    </div>
+                    <button class="btn-primary btn-checkout" id="btnCheckout" data-i18n="order.cart.checkout">
+                        📦 Gửi Order Qua Zalo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ HERO WITH M3 ELEVATED CARD ═══ -->
+    <section class="hero scroll-reveal" id="hero">
+        <div class="hero-bg">
+            <img src="images/night-4k.png" alt="F&amp;B Container Café Sa Đéc với đèn neon cyberpunk về đêm" loading="eager" fetchpriority="high" width="1920" height="1080" sizes="100vw" srcset="images/night-4k.png 1920w, images/night-2k.png 1280w, images/night-mobile.png 640w">
+        </div>
+        <div class="hero-content">
+            <!-- M3 Elevated Card - Hero Badge -->
+            <div class="m3-elevated-card" style="display: inline-flex; padding: 8px 16px; margin-bottom: 24px;">
+                <span class="pulse" style="width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; margin-right: 8px;"></span>
+                <span class="m3-filled-card__supporting" data-i18n="hero.badge" style="margin: 0;">
+                    Mở Cửa Mỗi Ngày | 7:00 - 22:00
+                </span>
+            </div>
+
+            <h1 class="hero-title">
+                <span class="line-1" data-i18n="hero.title.line1">F&amp;B</span>
+                <span class="line-2" data-i18n="hero.title.line2">CONTAINER</span>
+            </h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">Specialty Coffee × Rooftop Bar × Check-in Cyberpunk</p>
+            <div class="hero-actions">
+                <a href="menu.html" class="m3-filled-button" data-i18n="hero.btn.order">
+                    ☕ Xem Menu
+                </a>
+                <a href="#location" class="m3-tonal-button" data-i18n="hero.btn.location">
+                    📍 Chỉ Đường
+                </a>
+            </div>
+        </div>
+        <div class="hero-scroll">
+            <span></span>
+        </div>
+    </section>
+
+    <!-- ═══ FEATURES WITH M3 FILLED CARDS ═══ -->
+    <section class="about-us scroll-reveal" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-content reveal-left">
+                    <span class="m3-chip" style="margin-bottom: 16px;" data-i18n="about.label">Câu Chuyện Của Chúng Tôi</span>
+                    <h2 class="section-title" data-i18n="about.title">
+                        Từ <span class="neon-cyan">Sa Đéc</span><br>
+                        Với <span class="neon-magenta">Yêu Thương</span>
+                    </h2>
+                    <p class="about-desc" data-i18n="about.desc">
+                        F&amp;B Container Café được sinh ra từ tình yêu dành cho quê hương Sa Đéc. Chúng tôi mang đến không gian độc đáo với kiến trúc container industrial kết hợp với thiên nhiên rooftop, tạo nên điểm đến lý tưởng cho giới trẻ.
+                    </p>
+
+                    <!-- M3 Filled Cards for Features -->
+                    <div class="about-highlights" style="display: flex; flex-direction: column; gap: 12px; margin-top: 24px;">
+                        <div class="m3-filled-card m3-filled-card--feature">
+                            <div class="m3-filled-card__icon">🌱</div>
+                            <div class="m3-filled-card__content">
+                                <h4 class="m3-filled-card__headline" data-i18n="about.highlight.1">100% cà phê nguyên chất từ Buon Ma Thuot</h4>
+                            </div>
+                        </div>
+                        <div class="m3-filled-card m3-filled-card--feature">
+                            <div class="m3-filled-card__icon">👨‍🍳</div>
+                            <div class="m3-filled-card__content">
+                                <h4 class="m3-filled-card__headline" data-i18n="about.highlight.2">Rooftop bar view đồng lúa hoàng hôn</h4>
+                            </div>
+                        </div>
+                        <div class="m3-filled-card m3-filled-card--feature">
+                            <div class="m3-filled-card__icon">🏗️</div>
+                            <div class="m3-filled-card__content">
+                                <h4 class="m3-filled-card__headline" data-i18n="about.highlight.3">Không gian check-in cyberpunk độc đáo</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#concept" class="m3-filled-button" style="display: inline-flex; margin-top: 24px;" data-i18n="about.btn.learn">
+                        Tìm Hiểu Thêm ➜
+                    </a>
+                </div>
+                <div class="about-image reveal-right">
+                    <div class="about-image-wrapper">
+                        <img src="images/interior.png" alt="Không gian F&amp;B Container Café" loading="lazy" width="800" height="600" sizes="(max-width: 768px) 100vw, 50vw">
+                        <div class="about-badge">
+                            <span class="badge-year">2026</span>
+                            <span class="badge-text" data-i18n="about.badge.established">Established</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CONCEPT ═══ -->
+    <section class="concept scroll-reveal" id="concept">
+        <div class="container">
+            <div class="glow-line reveal" style="margin-bottom: 60px;"></div>
+            <div class="concept-grid">
+                <div class="concept-image reveal-left">
+                    <img src="images/exterior.png" loading="lazy" width="800" height="600" alt="Mặt tiền F&amp;B Container Café Sa Đéc — kiến trúc container 3 tầng với cây xanh và đèn neon" sizes="(max-width: 768px) 100vw, 50vw">
+                </div>
+                <div class="reveal-right">
+                    <span class="section-label" data-i18n="concept.label">Kiến Trúc Container</span>
+                    <h2 class="section-title" data-i18n="concept.title">
+                        3 Container.<br>
+                        <span class="neon-text">1 Trải Nghiệm Độc Bản</span>
+                    </h2>
+                    <p class="section-desc" data-i18n="concept.desc">
+                        Được dựng lên từ 1 container 40ft và 2 container 20ft trên mặt bằng 10×40m giữa lòng Sa Đéc. Kiến trúc industrial pha trộn cùng cây xanh nhiệt đới, đèn neon cyberpunk, và khung kính lớn mở ra view thành phố hoa.
+                    </p>
+                    <p class="section-desc" style="margin-top: 16px;" data-i18n="concept.desc2">
+                        Từ tầng trệt với specialty coffee bar, lên tầng 2 meeting room riêng tư, và rooftop deck lộng gió với view đồng lúa — mỗi tầng là một trải nghiệm ẩm thực và check-in độc đáo.
+                    </p>
+                    <div class="concept-stats" data-delay="200">
+                        <div class="stat">
+                            <div class="stat-value">3</div>
+                            <div class="stat-label" data-i18n="concept.stats.floors">Tầng Container</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">400</div>
+                            <div class="stat-label" data-i18n="concept.stats.area">m² Tổng Diện Tích</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">360°</div>
+                            <div class="stat-label" data-i18n="concept.stats.view">View Check-in</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ SPACES ═══ -->
+    <section class="spaces scroll-reveal" id="spaces">
+        <div class="container">
+            <div class="spaces-header reveal">
+                <span class="section-label" data-i18n="spaces.label">6 Zone Trải Nghiệm</span>
+                <h2 class="section-title" data-i18n="spaces.title">
+                    Mỗi Tầng Một <span class="neon-text">Vibe</span>
+                </h2>
+                <p class="section-desc" data-i18n="spaces.desc">
+                    Từ cafe sáng làm việc, họp trưa với đối tác, đến chiều chill trên rooftop và tối check-in cùng bạn bè.
+                </p>
+            </div>
+
+            <div class="spaces-grid">
+                <!-- Café Bar -->
+                <div class="space-card reveal" data-delay="0">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #1b2a0a 0%, #2d4a0e 100%);"></div>
+                        <div class="space-emoji">☕</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.cafe.name">Specialty Coffee Bar</h3>
+                        <p class="space-card-desc" data-i18n="spaces.cafe.desc">Quầy bar chính với cold brew tower, pour-over V60, và signature drinks. View ra sân vườn.</p>
+                        <span class="space-card-tag" data-i18n="spaces.cafe.location">Container 20ft — Tầng Trệt</span>
+                    </div>
+                </div>
+
+                <!-- Outdoor Terrace -->
+                <div class="space-card reveal" data-delay="100">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #2a1a0a 0%, #4a2d0e 100%);"></div>
+                        <div class="space-emoji">🌿</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.terrace.name">Sân Vườn Nhiệt Đới</h3>
+                        <p class="space-card-desc" data-i18n="spaces.terrace.desc">Không gian ngoài trời với cây xanh, ghế sofa, fairy lights về đêm. Khu vực check-in hot nhất.</p>
+                        <span class="space-card-tag" data-i18n="spaces.terrace.location">Ground Floor</span>
+                    </div>
+                </div>
+
+                <!-- Work Zone -->
+                <div class="space-card reveal" data-delay="200">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #0a192f 0%, #0d2137 100%);"></div>
+                        <div class="space-emoji">💻</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.work.name">Work Zone</h3>
+                        <p class="space-card-desc" data-i18n="spaces.work.desc">Bàn dài communal với ổ điện tích hợp, ánh sáng tối ưu cho làm việc và học tập.</p>
+                        <span class="space-card-tag" data-i18n="spaces.work.location">Container 40ft — Tầng 1</span>
+                    </div>
+                </div>
+
+                <!-- Meeting Room -->
+                <div class="space-card reveal" data-delay="300">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 100%);"></div>
+                        <div class="space-emoji">🤝</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.meeting.name">Meeting Room</h3>
+                        <p class="space-card-desc" data-i18n="spaces.meeting.desc">Phòng họp riêng tư 6-8 người. Whiteboard, TV 65", máy lạnh. Book trước khi đến.</p>
+                        <span class="space-card-tag" data-i18n="spaces.meeting.location">Container 20ft — Tầng 1</span>
+                    </div>
+                </div>
+
+                <!-- Rooftop -->
+                <div class="space-card reveal" data-delay="400">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #2a0a1a 0%, #4a0e2d 100%);"></div>
+                        <div class="space-emoji">🌅</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.rooftop.name">Rooftop Deck</h3>
+                        <p class="space-card-desc" data-i18n="spaces.rooftop.desc">Sân thượng lộng gió với bar ngoài trời, string lights, view đồng lúa và hoàng hôn Sa Đéc.</p>
+                        <span class="space-card-tag" data-i18n="spaces.rooftop.location">Tầng Thượng</span>
+                    </div>
+                </div>
+
+                <!-- Parking -->
+                <div class="space-card reveal" data-delay="500">
+                    <div class="space-card-visual">
+                        <div class="space-gradient"
+                            style="background: linear-gradient(135deg, #0a2a1a 0%, #0e4a2d 100%);"></div>
+                        <div class="space-emoji">🅿️</div>
+                    </div>
+                    <div class="space-card-body">
+                        <h3 class="space-card-name" data-i18n="spaces.parking.name">Bãi Đậu Xe</h3>
+                        <p class="space-card-desc" data-i18n="spaces.parking.desc">Bãi đậu xe rộng rãi, an toàn. Sức chứa 20+ xe máy và 2-3 ô tô.</p>
+                        <span class="space-card-tag" data-i18n="spaces.parking.location">Khuôn Viên</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ ROOFTOP ═══ -->
+    <section class="rooftop scroll-reveal" id="rooftop">
+        <div class="container">
+            <div class="reveal">
+                <div class="rooftop-parallax">
+                    <img src="images/rooftop.png" loading="lazy" width="1920" height="1080" alt="Rooftop F&amp;B Container Sa Đéc — view đồng lúa hoàng hôn" sizes="(max-width: 768px) 100vw, 100vw">
+                    <div class="rooftop-content">
+                        <span class="section-label" style="color: var(--neon-amber);" data-i18n="rooftop.label">Sunset Sessions</span>
+                        <h2 class="section-title" data-i18n="rooftop.title">
+                            Chill Trên<br>
+                            <span style="color: var(--neon-amber); text-shadow: 0 0 20px rgba(255,179,0,0.5);">Mây</span>
+                        </h2>
+                        <p class="section-desc" data-i18n="rooftop.desc">
+                            Rooftop deck nhìn ra đồng lúa bát ngát và skyline Sa Đéc. String lights, ghế sofa, và specialty drinks — điểm đến lý tưởng cho hoàng hôn và after-work hangs.
+                        </p>
+                        <div class="rooftop-highlights">
+                            <div class="highlight-chip" data-i18n="rooftop.highlight.view">
+                                <span class="chip-icon">🌾</span>
+                                View đồng lúa
+                            </div>
+                            <div class="highlight-chip" data-i18n="rooftop.highlight.lights">
+                                <span class="chip-icon">💡</span>
+                                String lights
+                            </div>
+                            <div class="highlight-chip" data-i18n="rooftop.highlight.bar">
+                                <span class="chip-icon">🍹</span>
+                                Rooftop bar
+                            </div>
+                            <div class="highlight-chip" data-i18n="rooftop.highlight.wifi">
+                                <span class="chip-icon">📶</span>
+                                WiFi全覆盖
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CONTACT FORM ═══ -->
+    <section class="contact-section scroll-reveal" id="contact-form">
+        <div class="container">
+            <div class="reveal" style="text-align: center; margin-bottom: 48px;">
+                <span class="section-label" data-i18n="contact.label">Liên Hệ</span>
+                <h2 class="section-title" data-i18n="contact.title">
+                    Kết Nối <span class="neon-text">Cùng Chúng Tôi</span>
+                </h2>
+                <p class="section-desc" data-i18n="contact.desc">
+                    Đặt bàn, tổ chức sự kiện, hay hợp tác kinh doanh. Chúng tôi phản hồi trong 24h.
+                </p>
+            </div>
+            <div class="contact-form-wrapper">
+                <form class="contact-form" id="contactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name" data-i18n="contact.form.name">Họ tên</label>
+                            <input type="text" id="name" name="name" data-i18n="contact.form.name.placeholder" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone" data-i18n="contact.form.phone">Số điện thoại</label>
+                            <input type="tel" id="phone" name="phone" data-i18n="contact.form.phone.placeholder" placeholder="0901234567" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" data-i18n="contact.form.email">Email</label>
+                        <input type="email" id="email" name="email" data-i18n="contact.form.email.placeholder" placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject" data-i18n="contact.form.subject">Chủ đề</label>
+                        <select id="subject" name="subject" required>
+                            <option value="" data-i18n="contact.form.subject.select">-- Chọn chủ đề --</option>
+                            <option value="reservation" data-i18n="contact.form.subject.reservation">Đặt bàn</option>
+                            <option value="event" data-i18n="contact.form.subject.event">Tổ chức sự kiện/sinh nhật</option>
+                            <option value="meeting" data-i18n="contact.form.subject.meeting">Thuê meeting room</option>
+                            <option value="partnership" data-i18n="contact.form.subject.partnership">Hợp tác kinh doanh</option>
+                            <option value="feedback" data-i18n="contact.form.subject.feedback">Góp ý khác</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message" data-i18n="contact.form.message">Tin nhắn</label>
+                        <textarea id="message" name="message" rows="5" data-i18n="contact.form.message.placeholder" placeholder="Nội dung tin nhắn..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;" data-i18n="contact.form.submit">
+                        📨 Gửi Tin Nhắn
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ LOCATION ═══ -->
+    <section class="location scroll-reveal" id="location">
+        <div class="container">
+            <div class="reveal" style="text-align: center; margin-bottom: 48px;">
+                <span class="section-label" data-i18n="location.label">Tìm Chúng Tôi</span>
+                <h2 class="section-title" data-i18n="location.title">
+                    Giữa Lòng <span class="neon-text">Thành Phố Hoa</span>
+                </h2>
+            </div>
+            <div class="location-grid">
+                <div class="location-map reveal-left">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3928.5!2d105.759!3d10.296!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z91IEjDO8zG5nIFbGsMahbmc!5e0!3m2!1svi!2svn!4v1000000000000"
+                        allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                        title="Vị trí F&amp;B CAFFE CONTAINER trên Google Maps">
+                    </iframe>
+                </div>
+                <div class="location-info reveal-right">
+                    <div class="location-address glass-card">
+                        <h3 style="font-family: var(--font-heading); font-weight: 600; font-size: 1.15rem; margin-bottom: 4px;">
+                            F&amp;B CAFFE CONTAINER</h3>
+                        <div class="address-line">
+                            <span class="addr-icon">📍</span>
+                            <span data-i18n="location.address">91 Hùng Vương, Tân Phú Đông,<br>Sa Đéc, Đồng Tháp, Việt Nam</span>
+                        </div>
+                        <div class="address-line">
+                            <span class="addr-icon">📞</span>
+                            <span data-i18n="location.phone">0xxx.xxx.xxx</span>
+                        </div>
+                        <div class="address-line">
+                            <span class="addr-icon">📧</span>
+                            <span data-i18n="location.email">hello@fnbcaffe.vn</span>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <a href="https://maps.app.goo.gl/aVJFZGK5kmcNcTeY9" target="_blank" rel="noopener"
+                                class="btn-primary" style="display: inline-flex; font-size: 0.85rem; padding: 12px 24px;"
+                                data-i18n="location.maps">
+                                🗺️ Open in Google Maps
+                            </a>
+                        </div>
+                    </div>
+                    <div class="location-hours glass-card">
+                        <h3 style="font-family: var(--font-heading); font-weight: 600; font-size: 1.15rem; margin-bottom: 16px;"
+                            data-i18n="location.hours.title">
+                            ⏰ Giờ mở cửa</h3>
+                        <div class="hours-row">
+                            <span class="day" data-i18n="location.hours.weekday">Thứ 2 — Thứ 6</span>
+                            <span class="time" data-i18n="location.hours.time">07:00 — 22:00</span>
+                        </div>
+                        <div class="hours-row">
+                            <span class="day" data-i18n="location.hours.weekend">Thứ 7 — Chủ Nhật</span>
+                            <span class="time" data-i18n="location.hours.time">07:00 — 22:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="brand-icon">F</span>
+                    F&amp;B CAFFE
+                </div>
+                <div class="footer-links">
+                    <a href="menu.html" data-i18n="footer.quick">Menu</a>
+                    <a href="kitchen-display.html">Kitchen Display</a>
+                </div>
+                <div class="footer-social">
+                    <a href="javascript:void(0)" aria-label="Facebook">📘</a>
+                    <a href="javascript:void(0)" aria-label="Instagram">📸</a>
+                    <a href="javascript:void(0)" aria-label="TikTok">🎵</a>
+                    <a href="javascript:void(0)" aria-label="GitHub">🐙</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="made-with">// built with ☕ & &lt;code&gt; in Sa Đéc</p>
+                <p style="margin-top: 6px;" data-i18n="footer.copyright">© 2026 F&amp;B Container Café. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ═══ M3 FAB - ORDER BUTTON ═══ -->
+    <button class="m3-fab m3-fab--extended" id="fabOrder" aria-label="Đặt hàng">
+        <span class="m3-fab__icon">☕</span>
+        <span class="m3-fab__label" data-i18n="nav.order">Đặt Hàng</span>
+    </button>
+
+    <!-- i18n Script -->
+    <script type="module" src="js/i18n.min.js" defer></script>
+    <script type="module" src="public/ui-animations.min.js" defer></script>
+    <script type="module" src="js/script.js" defer></script>
+    <script src="js/cart.min.js" defer></script>
+    <script src="js/loyalty.min.js" defer></script>
+    <script src="js/ui-enhancements.min.js" defer></script>
+    <script src="js/churn-prevention.js" defer></script>
+    <script type="module" src="js/theme.min.js" defer></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('✅ Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('❌ Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
+</body>
+</html>

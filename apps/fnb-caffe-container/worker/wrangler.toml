@@ -1,0 +1,20 @@
+name = "fnb-caffe-worker"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "FNB_DB"
+database_name = "fnb-caffe-db"
+database_id = "97ae7a5f-fc4d-460d-b019-8535332bd81f"
+
+# KV Namespace for Auth
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "789e7cf1894e4d4c9e8f8cd51b2dbe16"
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+CORS_ORIGIN = "*"
+JWT_SECRET=REDACTED = "your-super-secret-jwt-key-change-in-production"

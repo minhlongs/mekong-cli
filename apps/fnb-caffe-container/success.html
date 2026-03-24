@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Hàng Thành Công — F&B Container Café</title>
+    <meta name="description" content="Đơn hàng của bạn đã được xác nhận thành công.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#4a2c17">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/images/favicon-512x512.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F&B Container">
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://fnbcontainer.vn/success">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Đặt Hàng Thành Công — F&B Container Café">
+    <meta property="og:description" content="Đơn hàng của bạn đã được xác nhận thành công.">
+    <meta property="og:image" content="/public/images/night-4k.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fnbcontainer.vn/success">
+    <meta property="og:site_name" content="F&B Container Café">
+    <meta property="og:locale" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Đặt Hàng Thành Công — F&B Container Café">
+    <meta name="twitter:description" content="Đơn hàng đã được xác nhận">
+    <meta name="twitter:image" content="/public/images/night-4k.png">
+
+    <!-- Structured Data: OrderConfirmation -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "OrderConfirmation",
+      "orderStatus": "https://schema.org/OrderProcessing",
+      "merchant": {
+        "@type": "CafeOrCoffeeShop",
+        "name": "F&B Container Café",
+        "url": "https://fnbcontainer.vn",
+        "telephone": "+84-901-234-567"
+      },
+      "potentialAction": {
+        "@type": "ReviewAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://fnbcontainer.vn/reviews",
+          "actionPlatform": [
+            "http://schema.org/DesktopWebPlatform",
+            "http://schema.org/MobileWebPlatform"
+          ]
+        }
+      }
+    }
+    </script>
+
+    <!-- Stylesheets with preload (non-blocking) -->
+    <link rel="preload" href="css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="css/checkout-styles.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="css/main.min.css"><link rel="stylesheet" href="css/checkout-styles.min.css"></noscript>
+
+    <style>
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--md-sys-color-surface-variant, #f1f3f4);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .success-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 2rem;
+        }
+
+        .success-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #00e5ff 0%, #00ff88 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            animation: scaleIn 0.4s ease-out 0.2s both;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .order-info {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+        }
+
+        .order-label {
+            color: #666;
+        }
+
+        .order-value {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .order-value.highlight {
+            color: #00c853;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-success {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00e5ff 0%, #00ff88 100%);
+            color: #1a1a2e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #1a1a2e;
+        }
+
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+
+        .next-steps {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .next-steps-title {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #00e5ff 0%, #00ff88 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .success-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .success-title {
+                font-size: 1.5rem;
+            }
+
+            .success-actions {
+                flex-direction: column;
+            }
+
+            .btn-success {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <div class="success-page">
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+
+            <h1 class="success-title">Đặt Hàng Thành Công!</h1>
+
+            <p class="success-message">
+                Cảm ơn bạn đã đặt hàng tại F&B Container Café.
+                Chúng tôi sẽ liên hệ xác nhận trong vòng 5 phút.
+            </p>
+
+            <div class="order-info" id="orderInfo">
+                <div class="order-row">
+                    <span class="order-label">Mã đơn hàng</span>
+                    <span class="order-value" id="orderId">---</span>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">Tổng cộng</span>
+                    <span class="order-value highlight" id="orderTotal">---</span>
+                </div>
+                <div class="order-row">
+                    <span class="order-label">Phương thức thanh toán</span>
+                    <span class="order-value" id="paymentMethod">---</span>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a href="menu.html" class="btn-success btn-secondary">🛒 Đặt Thêm</a>
+                <a href="index.html" class="btn-success btn-primary">🏠 Về Trang Chủ</a>
+            </div>
+
+            <div class="next-steps">
+                <h3 class="next-steps-title">📋 Các Bước Tiếp Theo</h3>
+
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <p class="step-text">Chúng tôi sẽ gọi/xác nhận đơn qua Zalo trong 5 phút</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <p class="step-text">Chuẩn bị và đóng gói đồ uống</p>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <p class="step-text">Giao hàng trong 15-20 phút (hoặc sẵn sàng tại quán)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Client -->
+    <script src="js/websocket-client.js" defer></script>
+
+    <script>
+        let orderWebSocket = null;
+        let currentOrderId = null;
+
+        // Load order info from URL params or localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order_id');
+
+            // Try to load from localStorage
+            const pendingOrder = localStorage.getItem('pendingOrder');
+
+            if (pendingOrder) {
+                const order = JSON.parse(pendingOrder);
+                currentOrderId = order.id;
+                document.getElementById('orderId').textContent = '#' + order.id;
+                document.getElementById('orderTotal').textContent = formatPrice(order.total);
+                document.getElementById('paymentMethod').textContent = translatePaymentMethod(order.payment_method);
+            } else if (orderId) {
+                currentOrderId = orderId;
+                document.getElementById('orderId').textContent = '#' + orderId;
+                document.getElementById('orderTotal').textContent = 'Đang xử lý...';
+                document.getElementById('paymentMethod').textContent = 'COD';
+            }
+
+            // Clear pending order
+            localStorage.removeItem('pendingOrder');
+
+            // Initialize WebSocket tracking
+            if (currentOrderId) {
+                initializeWebSocketTracking(currentOrderId);
+            }
+        });
+
+        async function initializeWebSocketTracking(orderId) {
+            if (!window.WebSocketClient) {
+                console.warn('[Success] WebSocketClient not available');
+                return;
+            }
+
+            orderWebSocket = new window.WebSocketClient();
+
+            // Handle connection
+            orderWebSocket.on('connected', (data) => {
+                updateOrderStatus('connected', 'Đã kết nối hệ thống');
+            });
+
+            // Handle new order confirmation
+            orderWebSocket.on('new_order', (data) => {
+                updateOrderStatus('confirmed', 'Nhà hàng đã xác nhận đơn hàng');
+            });
+
+            // Handle order status updates
+            orderWebSocket.on('order_updated', (data) => {
+                updateOrderStatus(data.status, getStatusMessage(data.status));
+            });
+
+            // Handle order cancellation
+            orderWebSocket.on('order_cancelled', (data) => {
+                updateOrderStatus('cancelled', 'Đơn hàng đã bị hủy');
+            });
+
+            // Handle error
+            orderWebSocket.on('error', (data) => {
+                console.error('[Success] WebSocket error:', data);
+            });
+
+            // Connect to server
+            try {
+                const result = await orderWebSocket.connect('customer', orderId);
+                orderWebSocket.startHeartbeat(30000);
+            } catch (error) {
+                console.warn('[Success] WebSocket connection failed:', error);
+            }
+        }
+
+        function updateOrderStatus(status, message) {
+            const orderTotalEl = document.getElementById('orderTotal');
+            if (orderTotalEl) {
+                orderTotalEl.textContent = message;
+                orderTotalEl.className = 'order-value ' + getStatusColor(status);
+            }
+        }
+
+        function getStatusMessage(status) {
+            const messages = {
+                'pending': 'Chờ xác nhận...',
+                'confirmed': 'Nhà hàng đã xác nhận',
+                'preparing': 'Đang chuẩn bị',
+                'ready': 'Sẵn sàng giao',
+                'delivering': 'Đang giao hàng',
+                'completed': 'Hoàn thành',
+                'cancelled': 'Đã hủy'
+            };
+            return messages[status] || status;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': '',
+                'confirmed': 'highlight',
+                'preparing': 'highlight',
+                'ready': 'highlight',
+                'delivering': 'highlight',
+                'completed': 'highlight',
+                'cancelled': 'error'
+            };
+            return colors[status] || '';
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (orderWebSocket) {
+                orderWebSocket.disconnect();
+            }
+        });
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(price);
+        }
+
+        function translatePaymentMethod(method) {
+            const translations = {
+                cod: 'Tiền mặt (COD)',
+                momo: 'Ví MoMo',
+                payos: 'PayOS',
+                vnpay: 'VNPay'
+            };
+            return translations[method] || method;
+        }
+    </script>
+
+    <!-- Theme Toggle -->
+    <script type="module" src="js/theme.min.js" defer></script>
+</body>
+</html>
