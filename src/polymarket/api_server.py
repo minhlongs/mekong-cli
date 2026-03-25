@@ -220,7 +220,7 @@ async def public_signals(request: Request) -> dict:
 @router.get("/v1/markets")
 async def get_markets(auth: APIKeyInfo = Depends(require_auth)) -> dict:
     """Get scanned market opportunities."""
-    _get_pipeline()  # Ensure pipeline is initialized
+    _get_pipeline()  # Ensure pipeline initialized
     # Return scanner state (in production, cache scan results)
     return {
         "markets": [],

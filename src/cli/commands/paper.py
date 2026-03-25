@@ -5,13 +5,10 @@ from __future__ import annotations
 import signal
 import sys
 import logging
-from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.live import Live
 from rich.panel import Panel
-from rich.table import Table
 
 from src.polymarket.capital_tiers import get_progress_report
 from src.polymarket.kelly_position_sizer import KellyPositionSizer

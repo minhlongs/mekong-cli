@@ -12,7 +12,6 @@ from src.polymarket.types import (
     CircuitBreakerState,
     RiskCheckResult,
     Signal,
-    Trade,
 )
 
 logger = logging.getLogger(__name__)
