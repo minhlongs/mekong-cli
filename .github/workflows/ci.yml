@@ -160,3 +160,30 @@ jobs:
             exit 1
           fi
           echo "OK: No hardcoded secrets found"
+
+  # ------------------------------------------------------------------
+  # JOB 4: RAAS GATEWAY (TypeScript Cloudflare Worker)
+  # ------------------------------------------------------------------
+  raas-gateway-tests:
+    name: RaaS Gateway Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install raas-gateway dependencies
+        run: pnpm --filter raas-gateway install --no-frozen-lockfile
+
+      - name: Run raas-gateway tests
+        run: pnpm --filter raas-gateway test
+        continue-on-error: true

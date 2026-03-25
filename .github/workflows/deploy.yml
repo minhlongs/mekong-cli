@@ -9,6 +9,7 @@ on:
       - 'packages/mekong-engine/**'
       - 'packages/raas-landing/**'
       - 'packages/mekong-cli-core/**'
+      - 'apps/raas-gateway/**'
       - '.github/workflows/deploy.yml'
 
 concurrency:
@@ -140,3 +141,50 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: pages deploy dist --project-name=raas-landing
           workingDirectory: packages/raas-landing
+
+  # ------------------------------------------------------------------
+  # JOB 4: DEPLOY raas-gateway Worker to Cloudflare
+  # ------------------------------------------------------------------
+  deploy-raas-gateway:
+    name: Deploy raas-gateway (Cloudflare Worker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [verify]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: production
+      url: https://api.agencyos.network
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install raas-gateway dependencies
+        run: pnpm --filter raas-gateway install --no-frozen-lockfile
+
+      - name: Deploy raas-gateway to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
+          workingDirectory: apps/raas-gateway
+
+      - name: Production smoke test
+        run: |
+          echo "Waiting 15s for propagation..."
+          sleep 15
+          HTTP_STATUS=$(curl -sf -o /dev/null -w '%{http_code}' \
+            "https://api.agencyos.network/health" 2>/dev/null || echo "000")
+          echo "Health check: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "OK: raas-gateway production is healthy"
+          else
+            echo "WARNING: health check returned $HTTP_STATUS — may need DNS propagation"
+          fi

@@ -18,20 +18,48 @@ from src.models.user import User, UserSession
 from src.auth.user_repository import UserRepository
 
 
-# JWT Configuration from environment
-# In test environment, use a default secret; otherwise require explicit config
-JWT_SECRET=REDACTED = os.getenv("JWT_SECRET=REDACTED")
-if not JWT_SECRET=REDACTED:
-    if os.getenv("CI") == "true" or os.getenv("PYTEST_CURRENT_TEST"):
-        # Test environment fallback
-        JWT_SECRET=REDACTED = "test-secret-for-ci-only-not-for-production"
-    else:
-        raise RuntimeError(
-            "JWT_SECRET=REDACTED environment variable is required. "
-            "Generate one with: secrets.token_urlsafe(32) "
-            "and add to your .env file."
-        )
+# JWT Configuration
+# JWT_SECRET=REDACTED starts as None and is resolved lazily via get_jwt_secret().
+# Keeping it as a module attribute allows tests to patch it directly:
+#   with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'): ...
+# PYTEST_CURRENT_TEST is only set during test execution, not collection, so
+# we cannot evaluate it at import time — deferred resolution fixes that.
+JWT_SECRET=REDACTED: Optional[str] = None
 JWT_ALGORITHM = "HS256"
+
+
+def get_jwt_secret() -> str:
+    """Return JWT secret, resolving from environment on first call.
+
+    Checks module-level JWT_SECRET=REDACTED first (supports unittest.mock.patch),
+    then falls back to JWT_SECRET=REDACTED env var, then to test/CI defaults.
+    Defers RuntimeError to actual usage so pytest collection succeeds.
+
+    Returns:
+        JWT secret string
+
+    Raises:
+        RuntimeError: If JWT_SECRET=REDACTED is not set outside test/CI environments
+    """
+    global JWT_SECRET=REDACTED
+    if JWT_SECRET=REDACTED is None:
+        JWT_SECRET=REDACTED = os.getenv("JWT_SECRET=REDACTED")
+        if not JWT_SECRET=REDACTED:
+            if (
+                os.getenv("CI") == "true"
+                or os.getenv("PYTEST_CURRENT_TEST")
+                or os.getenv("TESTING")
+            ):
+                JWT_SECRET=REDACTED = "test-secret-for-ci-only-not-for-production"
+            else:
+                raise RuntimeError(
+                    "JWT_SECRET=REDACTED environment variable is required. "
+                    "Generate one with: secrets.token_urlsafe(32) "
+                    "and add to your .env file."
+                )
+    return JWT_SECRET=REDACTED
+
+
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))
 
@@ -99,7 +127,7 @@ class SessionManager:
             role=role,
             token_type="access",
         )
-        return jwt.encode(claims, JWT_SECRET=REDACTED, algorithm=JWT_ALGORITHM)
+        return jwt.encode(claims, get_jwt_secret(), algorithm=JWT_ALGORITHM)
 
     def create_refresh_token(self, user: User) -> str:
         """Create JWT refresh token for user.
@@ -115,7 +143,7 @@ class SessionManager:
             email=user.email,
             token_type="refresh",
         )
-        return jwt.encode(claims, JWT_SECRET=REDACTED, algorithm=JWT_ALGORITHM)
+        return jwt.encode(claims, get_jwt_secret(), algorithm=JWT_ALGORITHM)
 
     def decode_token(self, token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """Decode and validate JWT token.
@@ -130,7 +158,7 @@ class SessionManager:
             - error: Error message if invalid, None otherwise
         """
         try:
-            payload = jwt.decode(token, JWT_SECRET=REDACTED, algorithms=[JWT_ALGORITHM])
+            payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
             return True, payload, None
         except jwt.ExpiredSignatureError:
             return False, None, "Token has expired"
