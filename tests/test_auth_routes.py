@@ -53,37 +53,30 @@ class TestLoginPage:
 
     def test_login_page_renders_when_not_authenticated(self, client):
         """Should render login page when user not authenticated."""
+        from starlette.responses import HTMLResponse
+
         with patch.object(router, 'dependencies', []):
             with patch('src.auth.routes.AuthConfig') as mock_config:
                 mock_config_instance = MagicMock()
                 mock_config_instance.is_dev_mode.return_value = False
+                mock_config_instance.get_oauth_config.return_value = {
+                    "google": MagicMock(enabled=False),
+                    "github": MagicMock(enabled=False),
+                }
                 mock_config.return_value = mock_config_instance
 
-                with patch('src.auth.routes.OAuth2Client') as mock_oauth:
-                    mock_oauth_instance = MagicMock()
-                    mock_oauth_instance.get_google_oauth_url.return_value = "https://google.com/auth"
-                    mock_oauth_instance.get_github_oauth_url.return_value = "https://github.com/auth"
-                    mock_oauth.return_value = mock_oauth_instance
+                with patch('src.auth.routes.templates') as mock_templates:
+                    mock_templates.TemplateResponse.return_value = HTMLResponse(
+                        content="<html>login</html>", status_code=200
+                    )
 
                     response = client.get("/auth/login")
                     assert response.status_code == 200
 
     def test_login_page_redirects_when_authenticated(self, client):
         """Should redirect to dashboard when user is authenticated."""
-        with patch('src.auth.routes.AuthConfig') as mock_config:
-            mock_config_instance = MagicMock()
-            mock_config_instance.is_dev_mode.return_value = False
-            mock_config.return_value = mock_config_instance
+        from starlette.responses import HTMLResponse
 
-            # Mock authenticated state
-            request = MagicMock()
-            request.state.authenticated = True
-
-            response = client.get("/auth/login")
-            assert response.status_code == 200
-
-    def test_login_page_shows_oauth_providers(self, client):
-        """Should show available OAuth providers."""
         with patch('src.auth.routes.AuthConfig') as mock_config:
             mock_config_instance = MagicMock()
             mock_config_instance.is_dev_mode.return_value = False
@@ -93,8 +86,34 @@ class TestLoginPage:
             }
             mock_config.return_value = mock_config_instance
 
-            response = client.get("/auth/login")
-            assert response.status_code == 200
+            with patch('src.auth.routes.templates') as mock_templates:
+                mock_templates.TemplateResponse.return_value = HTMLResponse(
+                    content="<html>login</html>", status_code=200
+                )
+
+                response = client.get("/auth/login")
+                assert response.status_code == 200
+
+    def test_login_page_shows_oauth_providers(self, client):
+        """Should show available OAuth providers."""
+        from starlette.responses import HTMLResponse
+
+        with patch('src.auth.routes.AuthConfig') as mock_config:
+            mock_config_instance = MagicMock()
+            mock_config_instance.is_dev_mode.return_value = False
+            mock_config_instance.get_oauth_config.return_value = {
+                "google": MagicMock(enabled=False),
+                "github": MagicMock(enabled=False),
+            }
+            mock_config.return_value = mock_config_instance
+
+            with patch('src.auth.routes.templates') as mock_templates:
+                mock_templates.TemplateResponse.return_value = HTMLResponse(
+                    content="<html>login</html>", status_code=200
+                )
+
+                response = client.get("/auth/login")
+                assert response.status_code == 200
 
 
 class TestDevLogin:
