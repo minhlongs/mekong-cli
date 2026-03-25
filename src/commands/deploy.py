@@ -13,7 +13,7 @@ console = Console()
 
 @app.command()
 def run(
-    platform: str = typer.Argument(..., help="Platform to deploy to: vercel, netlify, heroku, docker, custom"),
+    platform: str = typer.Argument(..., help="Platform to deploy to: cloudflare, docker, custom"),
     build_first: bool = typer.Option(True, "--build", help="Build before deploying"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Simulate deployment without executing"),
     env: str = typer.Option("production", "--env", "-e", help="Environment: production, staging, development"),
@@ -32,129 +32,50 @@ def run(
 
     console.print(f"[bold]🚀 Deploying to {platform} (environment: {env})...[/bold]")
 
-    if platform.lower() == "vercel":
-        deploy_vercel(env, verbose)
-    elif platform.lower() == "netlify":
-        deploy_netlify(env, verbose)
-    elif platform.lower() == "heroku":
-        deploy_heroku(env, verbose)
+    if platform.lower() == "cloudflare":
+        deploy_cloudflare(env, verbose)
     elif platform.lower() == "docker":
         deploy_docker(env, verbose)
     elif platform.lower() == "custom":
         deploy_custom(env, verbose)
     else:
-        console.print(f"[red]❌ Unsupported platform: {platform}[/red]")
-        console.print("[dim]Supported platforms: vercel, netlify, heroku, docker, custom[/dim]")
+        console.print(f"[red]Unsupported platform: {platform}[/red]")
+        console.print("[dim]Supported platforms: cloudflare, docker, custom[/dim]")
         raise typer.Exit(code=1)
 
 
-def deploy_vercel(env: str, verbose: bool):
-    """Deploy to Vercel"""
+def deploy_cloudflare(env: str, verbose: bool) -> None:
+    """Deploy to Cloudflare (Pages + Workers)."""
     try:
-        # Check if vercel CLI is installed
         result = subprocess.run(
-            ["vercel", "--version"],
+            ["wrangler", "--version"],
             capture_output=True, text=True, check=False
         )
         if result.returncode != 0:
-            console.print("[red]❌ Vercel CLI not found. Install with: npm install -g vercel[/red]")
+            console.print("[red]wrangler CLI not found. Install with: npm install -g wrangler[/red]")
             raise typer.Exit(code=1)
 
-        # Set environment-specific args
-        cmd = ["vercel", "--prod"] if env == "production" else ["vercel", "--staging"]
+        cmd = ["wrangler", "deploy"]
+        if env != "production":
+            cmd.extend(["--env", env])
 
         if verbose:
-            cmd.append("--debug")
+            cmd.append("--log-level=debug")
 
-        console.print("[blue]🌐 Deploying to Vercel...[/blue]")
+        console.print(f"[blue]Deploying to Cloudflare ({env})...[/blue]")
         result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
 
         if result.stdout:
-            console.print(Panel(result.stdout, title="Vercel Output"))
+            console.print(Panel(result.stdout, title="Wrangler Output"))
 
-        console.print("[green]✅ Deployed to Vercel successfully![/green]")
+        console.print("[green]Deployed to Cloudflare successfully![/green]")
 
     except subprocess.CalledProcessError as e:
-        console.print("[red]❌ Vercel deployment failed![/red]")
+        console.print("[red]Cloudflare deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
     except Exception as e:
-        console.print(f"[red]❌ Deployment failed: {str(e)}[/red]")
-
-
-def deploy_netlify(env: str, verbose: bool):
-    """Deploy to Netlify"""
-    try:
-        # Check if netlify CLI is installed
-        result = subprocess.run(
-            ["netlify", "--version"],
-            capture_output=True, text=True, check=False
-        )
-        if result.returncode != 0:
-            console.print("[red]❌ Netlify CLI not found. Install with: npm install -g netlify-cli[/red]")
-            raise typer.Exit(code=1)
-
-        # Set environment-specific args
-        cmd = ["netlify", "deploy"]
-
-        if env == "production":
-            cmd.append("--prod")
-        else:
-            cmd.append("--draft")  # For staging/dev
-
-        if verbose:
-            cmd.append("--verbose")
-
-        console.print("[blue]🌐 Deploying to Netlify...[/blue]")
-        result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
-
-        if result.stdout:
-            console.print(Panel(result.stdout, title="Netlify Output"))
-
-        console.print("[green]✅ Deployed to Netlify successfully![/green]")
-
-    except subprocess.CalledProcessError as e:
-        console.print("[red]❌ Netlify deployment failed![/red]")
-        if e.stderr:
-            console.print(Panel(e.stderr, title="Error"))
-    except Exception as e:
-        console.print(f"[red]❌ Deployment failed: {str(e)}[/red]")
-
-
-def deploy_heroku(env: str, verbose: bool):
-    """Deploy to Heroku"""
-    try:
-        # Check if heroku CLI is installed
-        result = subprocess.run(
-            ["heroku", "--version"],
-            capture_output=True, text=True, check=False
-        )
-        if result.returncode != 0:
-            console.print("[red]❌ Heroku CLI not found. Install with: https://devcenter.heroku.com/articles/heroku-cli[/red]")
-            raise typer.Exit(code=1)
-
-        # Git push to Heroku (assumes app exists)
-        if env == "production":
-            remote = "heroku"
-        else:
-            remote = "heroku-staging"  # Could be configured differently
-
-        cmd = ["git", "push", remote, "main"]
-
-        console.print(f"[blue]🌐 Deploying to Heroku ({remote})...[/blue]")
-        result = subprocess.run(cmd, cwd=Path.cwd(), check=True, capture_output=not verbose, text=True)
-
-        if result.stdout:
-            console.print(Panel(result.stdout, title="Heroku Output"))
-
-        console.print("[green]✅ Deployed to Heroku successfully![/green]")
-
-    except subprocess.CalledProcessError as e:
-        console.print("[red]❌ Heroku deployment failed![/red]")
-        if e.stderr:
-            console.print(Panel(e.stderr, title="Error"))
-    except Exception as e:
-        console.print(f"[red]❌ Deployment failed: {str(e)}[/red]")
+        console.print(f"[red]Deployment failed: {str(e)}[/red]")
 
 
 def deploy_docker(env: str, verbose: bool):
@@ -250,78 +171,36 @@ def deploy_custom(env: str, verbose: bool):
 
 
 @app.command()
-def status(platform: str = typer.Argument(..., help="Platform to check: vercel, netlify, heroku, docker")):
-    """Check deployment status"""
-    console.print(f"[bold]🔍 Checking deployment status for {platform}...[/bold]")
+def status(platform: str = typer.Argument(..., help="Platform to check: cloudflare, docker")):
+    """Check deployment status."""
+    console.print(f"[bold]Checking deployment status for {platform}...[/bold]")
 
-    if platform.lower() == "vercel":
-        check_vercel_status()
-    elif platform.lower() == "netlify":
-        check_netlify_status()
-    elif platform.lower() == "heroku":
-        check_heroku_status()
+    if platform.lower() == "cloudflare":
+        check_cloudflare_status()
     elif platform.lower() == "docker":
         check_docker_status()
     else:
-        console.print(f"[red]❌ Unsupported platform: {platform}[/red]")
-        console.print("[dim]Supported platforms: vercel, netlify, heroku, docker[/dim]")
+        console.print(f"[red]Unsupported platform: {platform}[/red]")
+        console.print("[dim]Supported platforms: cloudflare, docker[/dim]")
 
 
-def check_vercel_status():
-    """Check Vercel deployment status"""
+def check_cloudflare_status() -> None:
+    """Check Cloudflare Workers/Pages deployment status."""
     try:
         result = subprocess.run(
-            ["vercel", "list"],
+            ["wrangler", "deployments", "list"],
             capture_output=True, text=True, check=False
         )
 
         if result.returncode == 0:
-            console.print(Panel(result.stdout, title="Vercel Deployments"))
+            console.print(Panel(result.stdout, title="Cloudflare Deployments"))
         else:
-            console.print("[yellow]⚠️  Unable to fetch Vercel status[/yellow]")
+            console.print("[yellow]Unable to fetch Cloudflare status[/yellow]")
             if result.stderr:
                 console.print(Panel(result.stderr, title="Error"))
 
     except Exception as e:
-        console.print(f"[red]❌ Failed to check Vercel status: {str(e)}[/red]")
-
-
-def check_netlify_status():
-    """Check Netlify deployment status"""
-    try:
-        result = subprocess.run(
-            ["netlify", "status"],
-            capture_output=True, text=True, check=False
-        )
-
-        if result.returncode == 0:
-            console.print(Panel(result.stdout, title="Netlify Status"))
-        else:
-            console.print("[yellow]⚠️  Unable to fetch Netlify status[/yellow]")
-            if result.stderr:
-                console.print(Panel(result.stderr, title="Error"))
-
-    except Exception as e:
-        console.print(f"[red]❌ Failed to check Netlify status: {str(e)}[/red]")
-
-
-def check_heroku_status():
-    """Check Heroku deployment status"""
-    try:
-        result = subprocess.run(
-            ["heroku", "apps"],
-            capture_output=True, text=True, check=False
-        )
-
-        if result.returncode == 0:
-            console.print(Panel(result.stdout, title="Heroku Apps"))
-        else:
-            console.print("[yellow]⚠️  Unable to fetch Heroku status[/yellow]")
-            if result.stderr:
-                console.print(Panel(result.stderr, title="Error"))
-
-    except Exception as e:
-        console.print(f"[red]❌ Failed to check Heroku status: {str(e)}[/red]")
+        console.print(f"[red]Failed to check Cloudflare status: {str(e)}[/red]")
 
 
 def check_docker_status():

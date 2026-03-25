@@ -160,7 +160,7 @@ claudekit-engineer-dna/
 *.pid
 dump.rdb
 local_db.json
-.vercel
+.wrangler
 repomix-output.xml
 release-manifest.json
 

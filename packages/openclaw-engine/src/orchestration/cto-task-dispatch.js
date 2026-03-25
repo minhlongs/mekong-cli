@@ -85,7 +85,7 @@ const PROJECT_BACKLOGS = {
 	],
 	'sophia-ai-factory': [
 		'1. E2E test suite — Playwright tests for video upload, campaign creation, checkout flow',
-		'2. Deploy verify — TypeScript strict mode, build errors, verify Vercel deploy passes clean',
+		'2. Deploy verify — TypeScript strict mode, build errors, verify Cloudflare deploy passes clean',
 		'3. Security audit — check CSP headers, XSS prevention, API key exposure, input validation',
 		'4. Performance test — Lighthouse audit, bundle size analysis, image optimization check',
 		'5. Video pipeline — ffmpeg transcoding errors, timeout handling, retry logic, progress tracking',

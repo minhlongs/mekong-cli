@@ -12,7 +12,7 @@ Skills, commands, agents vẫn nằm ở locations gốc:
 mekong/ chứa:
   mekong/adapters/       ← CC CLI adapter, LLM router
   mekong/config/         ← Runtime configs
-  mekong/infra/          ← Deploy templates (CF, Vercel, Fly)
+  mekong/infra/          ← Deploy templates (Cloudflare-only)
 
 factory/contracts/ là REGISTRY trỏ tới tất cả files.
 KHÔNG dùng symlinks. KHÔNG move files. CC CLI đọc trực tiếp.

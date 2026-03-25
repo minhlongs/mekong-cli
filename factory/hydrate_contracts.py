@@ -98,7 +98,7 @@ HYDRATIONS: dict[str, dict] = {
             "properties": {
                 "goal": {"type": "string", "description": "Deployment target or description"},
                 "environment": {"type": "string", "enum": ["staging", "production"], "default": "production"},
-                "platform": {"type": "string", "enum": ["cloudflare", "vercel", "docker"]},
+                "platform": {"type": "string", "enum": ["cloudflare", "docker"]},
             },
         },
         "output": {

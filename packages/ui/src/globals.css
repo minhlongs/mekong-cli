@@ -1,0 +1,12 @@
+@import "@mekong/tokens/tokens.css";
+@import "@mekong/tokens/semantic.css";
+
+@layer base {
+  * { @apply border-[var(--border-default)]; }
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)];
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+}

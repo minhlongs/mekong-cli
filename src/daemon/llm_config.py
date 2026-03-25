@@ -8,7 +8,7 @@ Defines model configurations, base URLs, timeouts, and fallback chain.
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # ---------------------------------------------------------------------------
 # Model Configurations

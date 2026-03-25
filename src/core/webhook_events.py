@@ -60,7 +60,7 @@ class MissionCreatedPayload(BaseModel):
         "json_schema_extra": {
             "example": {
                 "mission_id": "msn_abc123",
-                "goal": "Deploy landing page to Vercel",
+                "goal": "Deploy landing page to Cloudflare Pages",
                 "tenant_id": "tenant_xyz",
                 "priority": "normal",
                 "webhook_url": "https://agencyos.app/webhooks/mekong",
@@ -242,7 +242,7 @@ class MissionDonePayload(BaseModel):
         "json_schema_extra": {
             "example": {
                 "mission_id": "msn_abc123",
-                "goal": "Deploy landing page to Vercel",
+                "goal": "Deploy landing page to Cloudflare Pages",
                 "status": "completed",
                 "total_duration_seconds": 180.5,
                 "total_steps": 5,
@@ -305,7 +305,7 @@ class MissionFailPayload(BaseModel):
         "json_schema_extra": {
             "example": {
                 "mission_id": "msn_abc123",
-                "goal": "Deploy landing page to Vercel",
+                "goal": "Deploy landing page to Cloudflare Pages",
                 "status": "failed",
                 "error_message": "Build failed: TypeScript errors in 3 files",
                 "error_type": "BuildError",
