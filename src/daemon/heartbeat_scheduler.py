@@ -1,20 +1,26 @@
 """
-HEARTBEAT Scheduler — reads HEARTBEAT.md, executes tasks on schedule.
+HEARTBEAT Scheduler — reads HEARTBEAT.md + .mekong/loops/*.json configs.
 
 Two-tier processing:
   Tier 1: Script/command check (subprocess, near-zero cost)
   Tier 2: LLM agent invocation (only if Tier 1 flags action needed)
 
+Loop configs (.mekong/loops/*.json) define autonomous ops loops:
+  - lead-scan, content-batch, support-triage, sales-ops, monitor
+  - Each loop has: schedule, tier1_check, tier2_prompt, verify criteria
+
 Usage:
   python3 -m src.daemon.heartbeat_scheduler
-  # Or via PM2: managed by ecosystem.config.js
+  python3 -m src.daemon.heartbeat_scheduler --dry-run
 """
 
 import asyncio
+import json
 import re
 import subprocess
 import logging
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -80,6 +86,84 @@ class HeartbeatScheduler:
                     if hb.exists():
                         results.append((ws.name, hb))
         return results
+
+    def discover_loops(self) -> list[ScheduledTask]:
+        """Load autonomous ops loops from .mekong/loops/*.json."""
+        loops_dir = self.mekong_dir / "loops"
+        if not loops_dir.exists():
+            return []
+
+        tasks = []
+        for loop_file in sorted(loops_dir.glob("*.json")):
+            try:
+                data = json.loads(loop_file.read_text())
+                if not data.get("enabled", True):
+                    logger.info(f"Loop disabled: {data.get('name', loop_file.stem)}")
+                    continue
+
+                # Parse cron schedule into interval/hour/weekday
+                cron = data.get("schedule", {}).get("cron", "0 * * * *")
+                interval, hour, weekday = self._parse_cron(cron)
+
+                # Build tier 1 command from tier1_check
+                tier1 = data.get("tier1_check", {})
+                command = tier1.get("command")
+
+                task = ScheduledTask(
+                    description=f"[{data.get('name', loop_file.stem)}] {data.get('description', '')}",
+                    command=command,
+                    interval_minutes=interval,
+                    cron_hour=hour,
+                    cron_weekday=weekday,
+                    workspace="solo-ops",
+                    tier=1 if command else 2,
+                )
+                # Store loop metadata for tier 2 escalation
+                task._loop_config = data  # type: ignore[attr-defined]
+                tasks.append(task)
+
+                dry = " (DRY RUN)" if data.get("dry_run", False) else ""
+                logger.info(f"Loaded loop: {data['name']} [{cron}]{dry}")
+
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.error(f"Failed to parse loop {loop_file}: {e}")
+
+        return tasks
+
+    @staticmethod
+    def _parse_cron(cron: str) -> tuple[int, Optional[int], Optional[int]]:
+        """Parse simple cron expression into (interval_minutes, hour, weekday).
+
+        Supports: */N * * * * | M H * * * | M H * * D,D
+        """
+        parts = cron.strip().split()
+        if len(parts) < 5:
+            return (60, None, None)
+
+        minute, hour, _dom, _month, dow = parts[:5]
+
+        # Every N minutes: */15 * * * *
+        if minute.startswith("*/"):
+            return (int(minute[2:]), None, None)
+
+        interval = 1440  # daily default
+        parsed_hour = None
+        parsed_weekday = None
+
+        # Fixed hour: 0 9 * * *
+        if hour != "*":
+            parsed_hour = int(hour)
+
+        # Day of week: 0 8 * * 1,3,5
+        if dow != "*":
+            # Take first day for scheduling, interval stays daily
+            first_day = dow.split(",")[0]
+            parsed_weekday = int(first_day) if first_day.isdigit() else None
+            # If multiple days, use daily interval (cron handles which days)
+            if "," in dow:
+                interval = 1440
+
+        return (interval, parsed_hour, parsed_weekday)
 
     def parse_heartbeat(self, workspace: str, hb_path: Path) -> list[ScheduledTask]:
         """Parse HEARTBEAT.md into ScheduledTask list."""
@@ -207,11 +291,17 @@ class HeartbeatScheduler:
         """Main scheduler loop."""
         logger.info("HEARTBEAT Scheduler starting...")
 
-        # Discover and parse all heartbeats
+        # Discover and parse all heartbeats (legacy HEARTBEAT.md)
         for ws_name, hb_path in self.discover_heartbeats():
             ws_tasks = self.parse_heartbeat(ws_name, hb_path)
             self.tasks.extend(ws_tasks)
             logger.info(f"Loaded {len(ws_tasks)} tasks from {ws_name}/HEARTBEAT.md")
+
+        # Discover and load autonomous ops loops (.mekong/loops/*.json)
+        loop_tasks = self.discover_loops()
+        self.tasks.extend(loop_tasks)
+        if loop_tasks:
+            logger.info(f"Loaded {len(loop_tasks)} autonomous ops loops")
 
         logger.info(f"Total: {len(self.tasks)} scheduled tasks across {len(set(t.workspace for t in self.tasks))} workspaces")
 
@@ -232,7 +322,24 @@ class HeartbeatScheduler:
 
 
 async def main():
+    dry_run = "--dry-run" in sys.argv
     scheduler = HeartbeatScheduler()
+
+    if dry_run:
+        logger.info("=== DRY RUN MODE ===")
+        # Load all tasks, show what would run
+        for ws_name, hb_path in scheduler.discover_heartbeats():
+            ws_tasks = scheduler.parse_heartbeat(ws_name, hb_path)
+            for t in ws_tasks:
+                logger.info(f"  [{ws_name}] {t.description} (every {t.interval_minutes}m, tier {t.tier})")
+
+        loop_tasks = scheduler.discover_loops()
+        for t in loop_tasks:
+            logger.info(f"  [loop] {t.description} (every {t.interval_minutes}m, tier {t.tier})")
+
+        logger.info(f"Total: {len(scheduler.tasks) + len(loop_tasks)} tasks would be scheduled")
+        return
+
     await scheduler.run_forever()
 
 
