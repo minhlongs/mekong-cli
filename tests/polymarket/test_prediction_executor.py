@@ -12,7 +12,7 @@ from src.polymarket.order_manager import OrderManager
 from src.polymarket.position_tracker import PositionTracker
 from src.polymarket.prediction_executor import PredictionExecutor
 from src.polymarket.risk_manager import RiskManager
-from src.polymarket.types import Prediction, Signal, TradeDirection
+from src.polymarket.types import Prediction, Signal
 
 
 def _make_signal(

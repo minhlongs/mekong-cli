@@ -18,9 +18,8 @@ import logging
 import os
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta
-from functools import wraps
-from typing import Any, Optional
+from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -221,7 +220,7 @@ async def public_signals(request: Request) -> dict:
 @router.get("/v1/markets")
 async def get_markets(auth: APIKeyInfo = Depends(require_auth)) -> dict:
     """Get scanned market opportunities."""
-    pipeline = _get_pipeline()
+    _get_pipeline()  # Ensure pipeline is initialized
     # Return scanner state (in production, cache scan results)
     return {
         "markets": [],

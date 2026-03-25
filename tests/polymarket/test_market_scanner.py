@@ -1,8 +1,10 @@
 """Tests for MarketScanner — filter boundary, combined logic, empty results."""
 
-from datetime import datetime, timedelta
+from __future__ import annotations
 
-import pytest
+from datetime import datetime, timedelta
+from typing import Optional, List
+
 
 from src.polymarket.market_scanner import MarketScanner, ScannerFilters
 from src.polymarket.types import Market
@@ -15,7 +17,7 @@ def _make_market(
     days_ahead: float = 14.0,
     yes_price: float = 0.55,
     no_price: float = 0.45,
-    outcomes: list[str] | None = None,
+    outcomes: Optional[List[str]] = None,
 ) -> Market:
     """Helper to create test markets."""
     return Market(

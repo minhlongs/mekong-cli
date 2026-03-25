@@ -1,8 +1,7 @@
 """Tests for TelegramMonitor — message formatting, config, disabled mode."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 from src.polymarket.telegram_monitor import TelegramConfig, TelegramMonitor
 

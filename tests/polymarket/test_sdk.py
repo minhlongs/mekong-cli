@@ -1,11 +1,11 @@
 """Tests for CashClaw SDK — tier gating, signal limits, init."""
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from src.polymarket.sdk import CashClaw, Tier, TierLimits, SDKSignal
+from src.polymarket.sdk import CashClaw, Tier, TierLimits
 
 
 class TestInit:

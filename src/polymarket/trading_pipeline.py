@@ -166,7 +166,6 @@ class TradingPipeline:
 
     def get_status(self) -> dict:
         """Get current pipeline status."""
-        portfolio = self.position_tracker.get_portfolio_state()
         tier = get_current_tier(self.config.db_path)
         progress = get_progress_report(self.config.db_path)
         return {

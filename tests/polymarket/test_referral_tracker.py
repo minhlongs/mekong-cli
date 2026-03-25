@@ -1,7 +1,6 @@
 """Tests for referral tracker — codes, attribution, rewards, leaderboard."""
 
 import os
-import sqlite3
 import tempfile
 
 import pytest

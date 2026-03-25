@@ -18,10 +18,7 @@ from src.polymarket.position_tracker import PositionTracker
 from src.polymarket.risk_manager import RiskManager
 from src.polymarket.types import (
     OrderStatus,
-    Prediction,
-    RiskCheckResult,
     Signal,
-    TradeDirection,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,7 +126,7 @@ class PredictionExecutor:
             )
 
         # 5. Track order
-        managed_order = self.order_manager.track_order(order_response)
+        self.order_manager.track_order(order_response)
 
         # 6. Update position tracker
         if order_response.status == OrderStatus.FILLED:

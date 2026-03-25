@@ -1,6 +1,5 @@
 """Tests for CashClaw billing — Polar.sh webhooks, subscriptions, tiers."""
 
-import json
 import os
 import sqlite3
 import tempfile

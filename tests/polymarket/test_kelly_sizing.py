@@ -1,9 +1,8 @@
 """Tests for Kelly position sizer — half-Kelly, caps, edge cases."""
 
-import pytest
 
 from src.polymarket.kelly_position_sizer import KellyPositionSizer, SizerConfig
-from src.polymarket.types import Prediction, TradeDirection
+from src.polymarket.types import Prediction
 
 
 def _make_prediction(

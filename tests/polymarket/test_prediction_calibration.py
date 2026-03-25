@@ -4,9 +4,7 @@ import os
 import sqlite3
 import tempfile
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
 
-import pytest
 
 from src.polymarket.prediction_loop import (
     DecisionLogger,
@@ -16,7 +14,7 @@ from src.polymarket.prediction_loop import (
     TemperatureScaler,
 )
 from src.polymarket.market_scanner import MarketScanner
-from src.polymarket.types import Market, TradeDirection
+from src.polymarket.types import Market
 
 
 def _make_market(market_id: str = "m1") -> Market:
@@ -101,7 +99,7 @@ class TestDecisionLogger:
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
             db_path = f.name
         try:
-            logger = DecisionLogger(db_path)
+            DecisionLogger(db_path)  # Initialize table
             with sqlite3.connect(db_path) as conn:
                 tables = conn.execute(
                     "SELECT name FROM sqlite_master WHERE type='table'"
@@ -169,7 +167,7 @@ class TestPredictionLoop:
                 config=LoopConfig(paper_trading=True, min_edge=0.0, db_path=db_path),
             )
             markets = [_make_market()]
-            signals = loop.run_cycle(markets)
+            loop.run_cycle(markets)
             assert loop.cycle_count == 1
             # Predictions should be logged
             with sqlite3.connect(db_path) as conn:

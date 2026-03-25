@@ -2,7 +2,6 @@
 
 import time
 
-import pytest
 
 from src.polymarket.risk_manager import RiskConfig, RiskManager
 from src.polymarket.types import CircuitBreakerState, Prediction, Signal

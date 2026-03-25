@@ -1,6 +1,5 @@
 """Tests for PositionTracker — open/close, P&L, drawdown, portfolio state."""
 
-import pytest
 
 from src.polymarket.position_tracker import PositionTracker
 from src.polymarket.types import TradeDirection
