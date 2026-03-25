@@ -118,8 +118,6 @@ class HeartbeatScheduler:
                     workspace="solo-ops",
                     tier=1 if command else 2,
                 )
-                # Store loop metadata for tier 2 escalation
-                task._loop_config = data  # type: ignore[attr-defined]
                 tasks.append(task)
 
                 dry = " (DRY RUN)" if data.get("dry_run", False) else ""
@@ -248,7 +246,8 @@ class HeartbeatScheduler:
         task.last_run = datetime.now()
 
         if task.tier == 1 and task.command:
-            # Tier 1: Direct command execution
+            # Tier 1: Direct command execution (shell=True needed for pipes/&&)
+            # Commands come from local .mekong/loops/*.json (trusted local config)
             try:
                 result = subprocess.run(
                     task.command, shell=True, capture_output=True, text=True,
@@ -268,11 +267,14 @@ class HeartbeatScheduler:
                 return False
         else:
             # Tier 2: Needs LLM — delegate to mekong engine
-            cmd = f"mekong {task.description.lower().replace(' ', '-')}"
-            logger.info(f"[{task.workspace}] Tier 2 → {cmd}")
+            # Sanitize: only allow alphanumeric + hyphens in command slug
+            slug = re.sub(r"[^a-z0-9\-]", "-", task.description.lower().strip())
+            slug = re.sub(r"-+", "-", slug).strip("-")[:80]
+            cmd_args = ["mekong", slug]
+            logger.info(f"[{task.workspace}] Tier 2 → {' '.join(cmd_args)}")
             try:
                 result = subprocess.run(
-                    cmd, shell=True, capture_output=True, text=True,
+                    cmd_args, capture_output=True, text=True,
                     timeout=600, cwd=str(self.root),
                 )
                 return result.returncode == 0
