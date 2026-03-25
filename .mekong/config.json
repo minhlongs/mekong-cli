@@ -1,0 +1,61 @@
+{
+  "version": "3.2.0",
+  "engine": "PEV",
+  "features": {
+    "skill_detection": {
+      "enabled": true,
+      "auto_inject": true,
+      "cache_ttl_seconds": 300,
+      "force_refresh_on_cook": false
+    },
+    "auto_recipe": {
+      "enabled": true,
+      "confidence_threshold": 0.7,
+      "fallback_to_planner": true
+    },
+    "parallel_review": {
+      "enabled": true,
+      "max_concurrent": 6,
+      "perspectives": [
+        "security",
+        "performance",
+        "maintainability",
+        "testing",
+        "architecture",
+        "correctness"
+      ]
+    },
+    "auto_mode": {
+      "enabled": false,
+      "skip_plan_review": true,
+      "auto_commit": false
+    },
+    "agi_dashboard": {
+      "enabled": true,
+      "refresh_interval_seconds": 30
+    }
+  },
+  "paths": {
+    "skills": "recipes/skills",
+    "recipes": "recipes",
+    "docs_output": "docs",
+    "plans": "plans"
+  },
+  "llm": {
+    "provider": "auto",
+    "fallback_chain": [
+      "openrouter",
+      "dashscope",
+      "deepseek",
+      "anthropic",
+      "openai",
+      "google",
+      "ollama",
+      "offline"
+    ]
+  },
+  "billing": {
+    "default_tier": "free",
+    "mcu_deduct_on_success_only": true
+  }
+}
