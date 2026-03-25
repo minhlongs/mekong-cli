@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.core.skill_detector import DetectedSkill, SkillDetector
+from src.core.skill_detector import SkillDetector
 
 
 @pytest.fixture

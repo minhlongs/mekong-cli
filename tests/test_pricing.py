@@ -3,7 +3,6 @@
 import pytest
 
 from src.raas.pricing import (
-    Plan,
     PlanTier,
     get_plan,
     get_projections,

@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.agents.review_agent import Perspective, ReviewAgent
+from src.agents.review_agent import ReviewAgent
 
 
 @pytest.fixture
