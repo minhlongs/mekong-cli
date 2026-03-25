@@ -5,7 +5,7 @@
 MEKONG_ROOT="${MEKONG_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." 2>/dev/null && pwd || echo "$HOME/mekong-cli")}"
 
 # Tool priority order
-TOOL_PRIORITY="claude gemini opencode aider codex amp"
+TOOL_PRIORITY="claude gemini qwen opencode aider codex amp"
 
 # ─── TOOL DATABASE (bash 3.2 compatible — no declare -A) ───
 _tool_binary() {
@@ -16,6 +16,7 @@ _tool_binary() {
     aider)    echo "aider";;
     codex)    echo "codex";;
     amp)      echo "amp";;
+    qwen)     echo "qwen";;
     *)        echo "";;
   esac
 }
@@ -24,6 +25,7 @@ _tool_idle() {
   case "$1" in
     claude)   echo "❯|bypass";;
     gemini)   echo "Type your message";;
+    qwen)     echo ">";;
     opencode) echo "^>";;
     aider)    echo "aider>";;
     codex)    echo "codex>";;
@@ -36,6 +38,7 @@ _tool_launch() {
   case "$1" in
     claude)   echo "claude --dangerously-skip-permissions";;
     gemini)   echo "gemini";;
+    qwen)     echo "qwen";;
     opencode) echo "opencode";;
     aider)    echo "aider --yes-always";;
     codex)    echo "codex --full-auto";;

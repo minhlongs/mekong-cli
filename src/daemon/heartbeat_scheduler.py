@@ -118,6 +118,8 @@ class HeartbeatScheduler:
                     workspace="solo-ops",
                     tier=1 if command else 2,
                 )
+                # Store model tier for Tier 2 agent routing
+                task._model_tier = data.get("model_tier", "fast")  # type: ignore[attr-defined]
                 tasks.append(task)
 
                 dry = " (DRY RUN)" if data.get("dry_run", False) else ""
@@ -266,18 +268,25 @@ class HeartbeatScheduler:
                 logger.error(f"[{task.workspace}] ❌ {task.description}: timeout 300s")
                 return False
         else:
-            # Tier 2: Needs LLM — delegate to mekong engine
-            # Sanitize: only allow alphanumeric + hyphens in command slug
-            slug = re.sub(r"[^a-z0-9\-]", "-", task.description.lower().strip())
-            slug = re.sub(r"-+", "-", slug).strip("-")[:80]
-            cmd_args = ["mekong", slug]
-            logger.info(f"[{task.workspace}] Tier 2 → {' '.join(cmd_args)}")
+            # Tier 2: LLM agent loop — call local LLM with tool use
+            from .agent_loop import run_agent_sync
+            # Determine model tier from loop config (default: fast)
+            model_tier = "fast"
+            if hasattr(task, '_model_tier'):
+                model_tier = task._model_tier  # type: ignore[attr-defined]
+            logger.info(f"[{task.workspace}] Tier 2 → agent_loop (tier={model_tier})")
             try:
-                result = subprocess.run(
-                    cmd_args, capture_output=True, text=True,
-                    timeout=600, cwd=str(self.root),
+                result = run_agent_sync(
+                    task=task.description,
+                    model_tier=model_tier,
+                    max_steps=5,
                 )
-                return result.returncode == 0
+                success = not result.startswith("Error:")
+                if success:
+                    logger.info(f"[{task.workspace}] ✅ Tier 2: {result[:100]}")
+                else:
+                    logger.warning(f"[{task.workspace}] ⚠️ Tier 2: {result[:200]}")
+                return success
             except Exception as e:
                 logger.error(f"[{task.workspace}] ❌ Tier 2 failed: {e}")
                 return False
