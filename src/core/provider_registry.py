@@ -1,6 +1,6 @@
 """Mekong CLI - Provider Registry.
 
-Maps Vercel AI SDK's createProviderRegistry() to Python.
+Multi-provider LLM registry (inspired by AI SDK provider pattern).
 Manages multi-provider LLM routing with colon-separated model refs.
 Example: "gemini:gemini-2.5-pro", "openai:gpt-4o", "proxy:gemini-3-pro-high"
 """
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @runtime_checkable
 class ProviderSpec(Protocol):
-    """Protocol matching Vercel AI SDK's LanguageModelV2 interface.
+    """Protocol for LLM provider implementations.
 
     Each provider implements: provider name, supported models, and generate.
     """
@@ -59,7 +59,7 @@ class ProviderConfig:
 class ProviderRegistry:
     """Central registry for LLM providers.
 
-    Maps Vercel AI SDK's createProviderRegistry() pattern.
+    Central provider registry with colon-separated model refs.
     Supports colon-separated model refs: "provider:model-id"
     """
 

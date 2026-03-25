@@ -47,7 +47,7 @@ DEFAULT_SIGNALS: list[ProjectSignal] = [
     ProjectSignal("go.mod", "go", 0.95, "Go project"),
     ProjectSignal(".claude/CLAUDE.md", "claude-project", 0.7, "Claude Code project"),
     ProjectSignal("wrangler.toml", "cloudflare-worker", 0.9, "Cloudflare Worker"),
-    ProjectSignal("vercel.json", "vercel", 0.85, "Vercel deployment"),
+    ProjectSignal("wrangler.jsonc", "cloudflare-pages", 0.85, "Cloudflare Pages"),
     ProjectSignal("supabase/config.toml", "supabase", 0.9, "Supabase project"),
 ]
 
@@ -56,13 +56,13 @@ RECIPE_MAP: dict[str, list[str]] = {
     "python": ["lint-python", "test-pytest", "build-python"],
     "node": ["lint-eslint", "test-jest", "build-npm"],
     "typescript": ["lint-tsc", "test-jest", "build-tsc"],
-    "nextjs": ["lint-nextjs", "test-jest", "build-next", "deploy-vercel"],
+    "nextjs": ["lint-nextjs", "test-jest", "build-next", "deploy-cf-pages"],
     "vite": ["lint-eslint", "test-vitest", "build-vite"],
     "docker": ["build-docker", "scan-docker"],
     "rust": ["build-cargo", "test-cargo", "lint-clippy"],
     "go": ["build-go", "test-go", "lint-golangci"],
     "cloudflare-worker": ["deploy-wrangler", "test-miniflare"],
-    "vercel": ["deploy-vercel", "preview-vercel"],
+    "cloudflare-pages": ["deploy-cf-pages", "preview-cf-pages"],
     "supabase": ["migrate-supabase", "test-supabase"],
 }
 

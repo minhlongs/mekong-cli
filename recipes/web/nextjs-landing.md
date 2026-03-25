@@ -308,4 +308,4 @@ npm run dev  # or pnpm dev
 - Add pricing table
 - Add contact form
 - Add blog section
-- Deploy to Vercel
+- Deploy to Cloudflare Pages

@@ -16,7 +16,7 @@
 | Planning | 謀攻 | planning, brainstorm, context-manager, agent-builder, mermaidjs-v11 |
 | Building | 軍爭 | cook, fix, coding-agent, cc-godmode, frontend-development, backend-development, databases, web-frameworks, better-auth, shopify, google-adk-python, mobile-development, react-best-practices |
 | Polish | 兵勢 | code-review, debug, web-testing, heimdall-security, openclaw-sec, ui-ux-pro-max, ui-styling, web-design-guidelines, frontend-design |
-| Handoff | 火攻 | devops, git, cloudflare-workers, vercel-deploy, skill-seekers, repomix, mintlify, docs-seeker |
+| Handoff | 火攻 | devops, git, cloudflare-workers, cf-pages-deploy, skill-seekers, repomix, mintlify, docs-seeker |
 
 ## Registry
 
@@ -83,7 +83,7 @@
 | tmux-sessions | 1.4kb | Meta | Building |
 | ui-styling | 9.4kb | Design | Polish |
 | ui-ux-pro-max | 13.2kb | Design | Polish |
-| vercel-deploy | 1.4kb | DevOps | Handoff |
+| cf-pages-deploy | 1.4kb | DevOps | Handoff |
 | web-design-guidelines | 1.2kb | Design | Polish |
 | web-frameworks | 8.8kb | Development | Building |
 | web-testing | 3.2kb | Quality | Polish |
@@ -96,7 +96,7 @@
 | Planning | 6 | planning, brainstorm, context-manager, agent-builder, problem-solving, plans-kanban |
 | Development | 10 | cook, fix, coding-agent, cc-godmode, frontend-development, backend-development, databases, web-frameworks, mobile-development, copywriting |
 | Quality | 6 | code-review, debug, web-testing, heimdall-security, openclaw-sec, chrome-devtools |
-| DevOps | 5 | devops, git, cloudflare-workers, vercel-deploy, proxy-manager |
+| DevOps | 5 | devops, git, cloudflare-workers, cf-pages-deploy, proxy-manager |
 | Design | 6 | frontend-design, ui-ux-pro-max, ui-styling, web-design-guidelines, shader, threejs |
 | Marketing | 2 | marketing-23, payment-integration |
 | AI/Media | 4 | ai-multimodal, ai-artist, fal-ai-gen, media-processing |
