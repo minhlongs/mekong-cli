@@ -170,7 +170,9 @@ const server = createServer(async (req, res) => {
   res.end('Not found');
 });
 
-server.listen(PORT, () => {
+// Bind localhost only — prevents LAN exposure without auth
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
   console.log(`Solo Ops Dashboard running → http://localhost:${PORT}`);
   console.log(`KPI API               → http://localhost:${PORT}/api/kpis`);
   console.log(`Logs dir              → ${LOGS_DIR}`);
