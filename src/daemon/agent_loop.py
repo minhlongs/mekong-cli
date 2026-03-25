@@ -32,13 +32,24 @@ logger = logging.getLogger(__name__)
 MEKONG_ROOT = Path(__file__).parent.parent.parent
 SANDBOX_DIR = MEKONG_ROOT / ".mekong"
 
-# LLM endpoints by tier
-TIER_URLS = {
-    "fast": os.getenv("NEMOTRON_URL", "http://192.168.11.111:11436/v1"),
-    "deep": os.getenv("DEEPSEEK_URL", "http://192.168.11.111:11435/v1"),
-    "coding": os.getenv("DASHSCOPE_URL",
-        "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
+# LLM endpoints + model IDs by tier
+TIER_CONFIG = {
+    "fast": {
+        "url": os.getenv("NEMOTRON_URL", "http://192.168.11.111:11436/v1"),
+        "model": "mlx-community/NVIDIA-Nemotron-3-Nano-30B-A3B-4bit",
+    },
+    "deep": {
+        "url": os.getenv("DEEPSEEK_URL", "http://192.168.11.111:11435/v1"),
+        "model": "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
+    },
+    "coding": {
+        "url": os.getenv("DASHSCOPE_URL",
+            "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
+        "model": "qwen3.5-plus",
+    },
 }
+# Legacy compat
+TIER_URLS = {k: v["url"] for k, v in TIER_CONFIG.items()}
 
 # Tool definitions (OpenAI function calling format)
 TOOLS = [
@@ -132,11 +143,13 @@ def execute_tool(name: str, args: dict[str, Any]) -> str:
         return f"Tool error ({name}): {e}"
 
 
-def _llm_call(messages: list, base_url: str, api_key: str = "local") -> dict:
+def _llm_call(
+    messages: list, base_url: str, model: str = "default", api_key: str = "local"
+) -> dict:
     """Call LLM via OpenAI-compatible API. Returns assistant message dict."""
     url = f"{base_url.rstrip('/')}/chat/completions"
     payload = json.dumps({
-        "model": "default",
+        "model": model,
         "messages": messages,
         "tools": TOOLS,
         "max_tokens": 2048,
@@ -161,7 +174,9 @@ def run_agent_sync(
     system_prompt: str = "",
 ) -> str:
     """Run agent loop synchronously. Returns final text response."""
-    base_url = TIER_URLS.get(model_tier, TIER_URLS["fast"])
+    tier = TIER_CONFIG.get(model_tier, TIER_CONFIG["fast"])
+    base_url = tier["url"]
+    model_id = tier["model"]
     api_key = os.getenv("DASHSCOPE_API_KEY", "local") if model_tier == "coding" else "local"
 
     messages = []
@@ -171,7 +186,7 @@ def run_agent_sync(
 
     for step in range(max_steps):
         try:
-            msg = _llm_call(messages, base_url, api_key)
+            msg = _llm_call(messages, base_url, model_id, api_key)
         except (URLError, Exception) as e:
             logger.error(f"LLM call failed (step {step}): {e}")
             return f"Error: LLM call failed — {e}"
