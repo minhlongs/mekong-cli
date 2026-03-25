@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mekong-cli"
-version = "1.0.0"
+version = "3.2.0"
 description = "AI-operated business platform with PEV Engine — 319 commands, universal LLM, Cloudflare deploy"
 authors = ["Binh Phap Venture Studio <admin@binhphap.io>"]
 license = "BSL-1.1"

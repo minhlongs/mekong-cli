@@ -202,5 +202,110 @@ class GitAgent(AgentBase):
         custom = cast(str, task.input.get("cmd", ""))
         return ["git"] + custom.split()
 
+    def semantic_commit(self, message: str = "") -> Result:
+        """Auto-detect commit type and create a conventional commit.
+
+        Inspects changed files to determine the commit type
+        (feat/fix/docs/test/chore) and generates a message.
+
+        Args:
+            message: Optional override message. If empty, auto-generates.
+
+        Returns:
+            Result from the git commit operation.
+        """
+        if not message:
+            message = self._auto_commit_message()
+
+        tasks = [
+            Task(id="git_add", description="Stage all changes", input={}),
+            Task(
+                id="git_commit",
+                description=f"Commit: {message}",
+                input={"message": message},
+            ),
+        ]
+        results: list[Result] = []
+        for task in tasks:
+            results.append(self.execute(task))
+        return results[-1] if results else Result(
+            task_id="semantic_commit", success=False, output=None, error="No tasks"
+        )
+
+    def _auto_commit_message(self) -> str:
+        """Detect commit type from changed files.
+
+        Returns:
+            Conventional commit message string.
+        """
+        try:
+            diff_result = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=self.cwd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            files = diff_result.stdout.strip().splitlines()
+            if not files:
+                # Check unstaged changes
+                diff_result = subprocess.run(
+                    ["git", "diff", "--name-only"],
+                    cwd=self.cwd,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                files = diff_result.stdout.strip().splitlines()
+        except (subprocess.TimeoutExpired, OSError):
+            return "chore: auto-commit via Mekong CLI"
+
+        commit_type = self._detect_type(files)
+        scope = self._detect_scope(files)
+        scope_str = f"({scope})" if scope else ""
+        return f"{commit_type}{scope_str}: update {len(files)} files"
+
+    @staticmethod
+    def _detect_type(files: List[str]) -> str:
+        """Detect conventional commit type from file paths.
+
+        Args:
+            files: List of changed file paths.
+
+        Returns:
+            Commit type string.
+        """
+        test_files = [f for f in files if "test" in f.lower()]
+        doc_files = [f for f in files if f.endswith(".md") or "docs/" in f]
+
+        if len(test_files) == len(files) and files:
+            return "test"
+        if len(doc_files) == len(files) and files:
+            return "docs"
+        if any("fix" in f.lower() for f in files):
+            return "fix"
+        return "feat"
+
+    @staticmethod
+    def _detect_scope(files: List[str]) -> str:
+        """Detect scope from common file path prefix.
+
+        Args:
+            files: List of changed file paths.
+
+        Returns:
+            Scope string or empty.
+        """
+        if not files:
+            return ""
+        dirs = set()
+        for f in files:
+            parts = f.split("/")
+            if len(parts) > 1:
+                dirs.add(parts[-2] if len(parts) > 2 else parts[0])
+        if len(dirs) == 1:
+            return dirs.pop()
+        return ""
+
 
 __all__ = ["GitAgent"]
