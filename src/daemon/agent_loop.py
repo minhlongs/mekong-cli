@@ -39,8 +39,8 @@ TIER_CONFIG = {
         "model": "mlx-community/NVIDIA-Nemotron-3-Nano-30B-A3B-4bit",
     },
     "deep": {
-        "url": os.getenv("DEEPSEEK_URL", "http://192.168.11.111:11435/v1"),
-        "model": "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
+        "url": os.getenv("QWEN_CODER_URL", "http://192.168.11.111:11435/v1"),
+        "model": "mlx-community/Qwen2.5-Coder-32B-Instruct-4bit",
     },
     "coding": {
         "url": os.getenv("DASHSCOPE_URL",

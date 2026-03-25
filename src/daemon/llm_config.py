@@ -73,15 +73,16 @@ FAST_MODEL = ModelConfig(
     description="Fast scanner: leads, triage, health checks, classification",
 )
 
-#: Deep reasoner — DeepSeek R1 32B (content writing, analysis, sales)
+#: Deep coder — Qwen2.5-Coder-32B (coding, content writing, analysis)
+#: Note: port 11435 was originally DeepSeek R1, model hot-swapped to Qwen Coder
 DEEP_MODEL = ModelConfig(
-    name="deepseek-r1",
-    model_id="mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
+    name="qwen-coder-local",
+    model_id="mlx-community/Qwen2.5-Coder-32B-Instruct-4bit",
     base_url=DEEPSEEK_BASE_URL,
     timeout=300,
     max_tokens=4096,
     temperature=0.1,
-    description="Deep reasoner: content, analysis, sales, complex reasoning",
+    description="Deep coder: content, analysis, sales, coding, complex reasoning",
 )
 
 #: Coding model — Qwen 3.5 Plus via DashScope API
