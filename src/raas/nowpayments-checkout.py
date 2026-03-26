@@ -26,12 +26,12 @@ PAYOUT_ADDRESS = os.getenv(
     "TC6FknawxFcgUn1jr8CN455wsSm87hByDQ",
 )
 
-# Subscription tiers — price in USD, credits per month
+# Subscription tiers — price in USD, credits per month, NOWPayments plan IDs
 TIERS: dict[str, dict[str, Any]] = {
-    "starter":    {"price_usd": 49,  "credits": 200,   "name": "Starter"},
-    "pro":        {"price_usd": 149, "credits": 1000,  "name": "Pro"},
-    "growth":     {"price_usd": 299, "credits": 3000,  "name": "Growth"},
-    "enterprise": {"price_usd": 499, "credits": 10000, "name": "Enterprise"},
+    "starter":    {"price_usd": 49,  "credits": 200,   "name": "Starter",    "plan_id": "16183071"},
+    "pro":        {"price_usd": 149, "credits": 1000,  "name": "Pro",        "plan_id": "1588854077"},
+    "growth":     {"price_usd": 299, "credits": 3000,  "name": "Growth",     "plan_id": "803179736"},
+    "enterprise": {"price_usd": 499, "credits": 10000, "name": "Enterprise", "plan_id": "90085897"},
 }
 
 
@@ -134,6 +134,15 @@ def create_invoice(
         payload["customer_email"] = customer_email
 
     return _api_request("invoice", method="POST", data=payload)
+
+
+def get_subscription_link(tier: str) -> str:
+    """Get NOWPayments subscription payment link for a tier."""
+    tier_config = TIERS.get(tier)
+    if not tier_config:
+        raise ValueError(f"Unknown tier: {tier}. Options: {list(TIERS)}")
+    plan_id = tier_config.get("plan_id", "")
+    return f"https://nowpayments.io/payment/?iid={plan_id}" if plan_id else ""
 
 
 def get_payment_status(payment_id: str) -> dict:
