@@ -591,3 +591,439 @@
         font-size: 2.5rem;
     }
 }
+
+/* ═══ ACHIEVEMENT BADGES SECTION ═══ */
+
+.achievements-section {
+    padding: 60px 0;
+    background: var(--md-sys-color-surface-variant);
+}
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.achievement-badge {
+    position: relative;
+    background: var(--md-sys-color-surface);
+    border-radius: 20px;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    border: 2px solid var(--md-sys-color-outline-variant);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.achievement-badge.unlocked {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 4px 16px rgba(103, 80, 164, 0.2);
+    transform: translateY(-4px);
+}
+
+.achievement-badge.unlocked:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(103, 80, 164, 0.3);
+}
+
+.achievement-badge.locked {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+}
+
+.achievement-badge .badge-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    background: var(--md-sys-color-surface-variant);
+    transition: all 0.3s ease;
+}
+
+.achievement-badge.unlocked .badge-icon {
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container), var(--md-sys-color-secondary-container));
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.achievement-badge .badge-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+}
+
+.achievement-badge .badge-description {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-outline);
+    line-height: 1.4;
+}
+
+.achievement-badge .badge-progress {
+    font-size: 0.7rem;
+    color: var(--md-sys-color-primary);
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.achievement-badge .badge-locked-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface);
+}
+
+/* Special badge variants */
+.achievement-badge.first-order .badge-icon {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+}
+
+.achievement-badge.order-10 .badge-icon {
+    background: linear-gradient(135deg, #C0C0C0, #808080);
+}
+
+.achievement-badge.order-50 .badge-icon {
+    background: linear-gradient(135deg, #CD7F32, #8B4513);
+}
+
+.achievement-badge.birthday .badge-icon {
+    background: linear-gradient(135deg, #FF69B4, #FF1493);
+}
+
+.achievement-badge.high-spender .badge-icon {
+    background: linear-gradient(135deg, #B9F2FF, #00CED1);
+}
+
+.achievement-badge.referrer .badge-icon {
+    background: linear-gradient(135deg, #98FB98, #32CD32);
+}
+
+/* ═══ POINTS HISTORY TIMELINE ═══ */
+
+.points-history-section {
+    padding: 60px 0;
+    background: var(--md-sys-color-surface);
+}
+
+.points-timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 32px auto 0;
+    padding-left: 40px;
+}
+
+.points-timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--md-sys-color-primary), var(--md-sys-color-surface-variant));
+}
+
+.timeline-item {
+    position: relative;
+    padding: 20px 24px;
+    background: var(--md-sys-color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 4px 12px rgba(103, 80, 164, 0.15);
+    transform: translateX(4px);
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 28px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid var(--md-sys-color-primary);
+    background: var(--md-sys-color-surface);
+    z-index: 1;
+}
+
+.timeline-item.earned::before {
+    border-color: #10b981;
+}
+
+.timeline-item.spent::before {
+    border-color: #ef4444;
+}
+
+.timeline-item.bonus::before {
+    border-color: #f59e0b;
+}
+
+.timeline-item.tier-upgrade::before {
+    border-color: var(--md-sys-color-tertiary);
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container), var(--md-sys-color-tertiary-container));
+}
+
+.timeline-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.timeline-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.timeline-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.timeline-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+}
+
+.timeline-date {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-outline);
+}
+
+.timeline-points {
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.timeline-points.positive {
+    color: #10b981;
+}
+
+.timeline-points.negative {
+    color: #ef4444;
+}
+
+.timeline-points.bonus {
+    color: #f59e0b;
+}
+
+/* Timeline empty state */
+.timeline-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--md-sys-color-outline);
+}
+
+.timeline-empty .empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* ═══ CONFETTI ANIMATION ═══ */
+
+.confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    opacity: 0;
+}
+
+.confetti.active {
+    animation: confetti-fall 3s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg) scale(0.5);
+    }
+}
+
+.confetti-shape-rectangle {
+    border-radius: 2px;
+}
+
+.confetti-shape-circle {
+    border-radius: 50%;
+}
+
+.confetti-shape-triangle {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* Tier upgrade modal */
+.tier-upgrade-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    animation: modal-fade-in 0.3s ease-out;
+}
+
+@keyframes modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.tier-upgrade-content {
+    background: var(--md-sys-color-surface);
+    border-radius: 24px;
+    padding: 48px 32px;
+    max-width: 400px;
+    text-align: center;
+    animation: modal-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+@keyframes modal-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.tier-upgrade-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    animation: icon-bounce 0.6s ease-in-out;
+}
+
+@keyframes icon-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.tier-upgrade-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 8px;
+}
+
+.tier-upgrade-message {
+    font-size: 1rem;
+    color: var(--md-sys-color-outline);
+    margin-bottom: 24px;
+}
+
+.tier-upgrade-new-tier {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container), var(--md-sys-color-surface-variant));
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.tier-upgrade-new-tier-icon {
+    font-size: 2rem;
+}
+
+.tier-upgrade-new-tier-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+}
+
+.tier-upgrade-btn {
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tier-upgrade-btn.primary {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+.tier-upgrade-btn.primary:hover {
+    box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Responsive for achievements and timeline */
+@media (max-width: 768px) {
+    .achievements-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+    }
+
+    .achievement-badge .badge-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 2rem;
+    }
+
+    .points-timeline {
+        padding-left: 32px;
+    }
+
+    .points-timeline::before {
+        left: 8px;
+    }
+
+    .timeline-item::before {
+        left: -28px;
+        width: 12px;
+        height: 12px;
+    }
+
+    .timeline-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .timeline-points {
+        align-self: flex-end;
+    }
+}

@@ -262,28 +262,76 @@
                 </h2>
             </div>
 
-            <div class="tier-progress-container">
-                <div class="tier-badges-row" id="tierBadgesRow">
-                    <!-- Dynamically rendered -->
+            <!-- M3 Tier Progress Container -->
+            <div class="m3-tier-progress-container">
+                <div class="m3-tier-progress-header">
+                    <div class="current-tier">
+                        <div class="current-tier-icon" id="currentTierIcon">🥉</div>
+                        <div class="current-tier-info">
+                            <h3 id="currentTierName">Hạng Đồng</h3>
+                            <p>Hạng hiện tại của bạn</p>
+                        </div>
+                    </div>
+                    <div class="next-tier">
+                        <h3 id="nextTierName">Hạng Bạc</h3>
+                        <p id="nextTierPoints">5.000 pts</p>
+                    </div>
                 </div>
 
-                <div class="progress-wrapper">
-                    <div class="progress-info">
-                        <span class="progress-label">Tiến độ nâng hạng</span>
-                        <span class="progress-points" id="tierProgressPoints">0 / 5000 điểm</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="tierProgressFill" style="width: 0%"></div>
-                    </div>
-                    <p class="progress-hint" id="tierProgressHint">
-                        Còn <strong id="pointsNeeded">5000</strong> điểm để lên hạng Bạc
-                    </p>
+                <!-- Tier Progress Bar -->
+                <div class="m3-progress-info">
+                    <span class="progress-points" id="tierProgressPoints">0 / 5.000 điểm</span>
+                    <span class="progress-percentage" id="tierProgressPercent">0%</span>
                 </div>
+                <div class="m3-progress-linear">
+                    <div class="progress-track"></div>
+                    <div class="progress-indicator tier-bronze" id="tierProgressFill" style="width: 0%"></div>
+                </div>
+                <p class="m3-progress-hint" id="tierProgressHint">
+                    Còn <strong id="pointsNeeded">5.000</strong> điểm để lên hạng <strong>Bạc</strong>
+                </p>
+            </div>
+
+            <!-- Tier Badges Row -->
+            <div class="m3-tier-badges-row" id="tierBadgesRow">
+                <!-- Dynamically rendered -->
             </div>
 
             <!-- Tier Benefits -->
             <div class="tier-benefits" id="tierBenefits">
                 <!-- Dynamically rendered -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ ACHIEVEMENT BADGES SECTION ═══ -->
+    <section class="achievements-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Thành Tựu</span>
+                <h2 class="section-title">
+                    Huy Hiệu <span class="neon-text">Đã Đạt</span>
+                </h2>
+            </div>
+
+            <div class="achievements-grid" id="achievementsGrid">
+                <!-- Dynamically rendered achievement badges -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ POINTS HISTORY TIMELINE ═══ -->
+    <section class="points-history-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Lịch Sử</span>
+                <h2 class="section-title">
+                    Dòng Thời Gian <span class="neon-text">Điểm Số</span>
+                </h2>
+            </div>
+
+            <div class="points-timeline" id="pointsTimeline">
+                <!-- Dynamically rendered timeline -->
             </div>
         </div>
     </section>
