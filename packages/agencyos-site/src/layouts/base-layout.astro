@@ -75,7 +75,7 @@ const organizationSchema = {
     : 'Nền tảng tự động hóa doanh nghiệp bằng AI cho doanh nghiệp hiện đại',
   "sameAs": [
     "https://twitter.com/agencyos",
-    "https://github.com/openclaw",
+    "https://github.com/longtho638-jpg/mekong-cli",
     "https://www.linkedin.com/company/agencyos"
   ],
   "contactPoint": {
@@ -271,7 +271,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
               <div style="font-size:0.65rem;color:var(--md-on-surface-muted);line-height:1.3;">{layer.desc}</div>
               <div style="display:flex;flex-direction:column;gap:4px;">
                 {layer.items.map(item => (
-                  <a href={`/docs/guides/commands#${item.toLowerCase()}`} style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item">{item}</a>
+                  <a href="/docs/guides/commands" style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item">{item}</a>
                 ))}
               </div>
             </div>
