@@ -1,0 +1,240 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# Traditional SaaS: you use the software
+# RaaS: the software uses AI to DO the work
+
+# SaaS (old model):
+curl -X POST /api/create-invoice \\
+  -d '{"customer": "Acme", "amount": 5000}'
+# → Creates record. You still write the invoice, chase payment.
+
+# RaaS (new model):
+mekong finance/invoice --customer="Acme" --amount=5000
+# → Drafts invoice, sends email, schedules follow-up, logs to CRM.
+# The robot handles the workflow, not just the data.`;
+
+const codeExample2 = `# Mekong RaaS API: submit a goal, get a result
+curl -X POST https://raas.agencyos.network/v1/missions \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "goal": "Research top 10 competitors for B2B invoicing SaaS, output comparison table",
+    "complexity": "standard"
+  }'
+
+# Response:
+{
+  "id": "mission_abc123",
+  "status": "queued",
+  "creditsCost": 3,
+  "estimatedMinutes": 5
+}
+
+# Poll for result:
+curl https://raas.agencyos.network/v1/missions/mission_abc123 \\
+  -H "Authorization: Bearer $TOKEN"
+# → { "status": "completed", "result": "## Competitor Analysis\\n..." }`;
+
+const codeExample3 = `# The PEV Engine: how Mekong executes missions
+# Plan → Execute → Verify (loop until quality gate passes)
+
+# 1. PLAN: LLM decomposes goal into sub-tasks
+goal = "Build REST API with auth and rate limiting"
+plan = planner.decompose(goal)
+# → [setup_project, create_auth_middleware, create_endpoints,
+#    add_rate_limiting, write_tests, deploy]
+
+# 2. EXECUTE: each sub-task runs with appropriate agent
+for task in plan:
+    agent = router.select(task)  # FileAgent, ShellAgent, LLMAgent...
+    result = agent.execute(task)
+
+# 3. VERIFY: quality gates check the output
+if verifier.check(result, criteria):
+    deliver(result)
+else:
+    replanner.adjust_and_retry(result, feedback)`;
+
+const codeExample4 = `# MCU (Mission Credit Units) pricing model
+# 1 MCU = 1 credit = $0.05 at standard tier
+
+Complexity   MCU Cost   Typical Tasks
+─────────────────────────────────────
+simple       1 MCU      Single file edit, quick query
+standard     3 MCU      Feature implementation, research report
+complex      5 MCU      Full system build, deep analysis
+
+# Economics vs. hiring:
+# Junior developer: $80K/yr = $38/hr = $0.63/minute
+# Mekong standard mission: 3 MCU = $0.15, runs in 5 minutes
+# Cost ratio: 200:1 in favor of RaaS for routine tasks`;
+---
+<MainLayout title="Robot-as-a-Service (RaaS): The Future of AI Task Execution" description="What is Robot-as-a-Service (RaaS)? How Mekong CLI implements RaaS with its PEV engine, MCU billing model, and mission-based AI task execution. The next evolution beyond SaaS.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">Robot-as-a-Service (RaaS): The Future of AI Task Execution</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 10 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Progression: SaaS → PaaS → AIaaS → RaaS</h2>
+      <p>Software delivery has evolved through distinct eras. Each era changed the fundamental question businesses ask when adopting technology.</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>On-premise (1980s-2000s):</strong> "Can we run this software on our servers?"</li>
+        <li><strong>SaaS (2000s-2010s):</strong> "Can we access this software via browser?"</li>
+        <li><strong>PaaS/IaaS (2010s):</strong> "Can we build faster with managed infrastructure?"</li>
+        <li><strong>AIaaS (2020-2024):</strong> "Can AI help us work faster?"</li>
+        <li><strong>RaaS (2025+):</strong> "Can AI do the work <em>for</em> us?"</li>
+      </ul>
+      <p>Robot-as-a-Service is the answer to that last question. It is the paradigm where you submit a goal — not a request for a tool — and receive a completed outcome. The "robot" handles all the intermediate steps: research, planning, execution, verification, and delivery.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>RaaS vs. SaaS: The Fundamental Difference</h2>
+      <p>The cleanest way to understand RaaS is to contrast it with traditional SaaS:</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>SaaS gives you a tool. RaaS executes a workflow. SaaS requires you to know how to use the software. RaaS requires only that you can describe what you want.</p>
+      <p>This is not a small distinction. It is the difference between a hammer and a carpenter. SaaS vendors sell you the hammer. RaaS vendors send the carpenter — an AI agent that knows how to frame the entire house.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>How Mekong Implements RaaS: The Mission Model</h2>
+      <p>Mekong CLI's cloud platform (the RaaS layer) is built around the concept of <strong>missions</strong>. A mission is a unit of work: a goal, a complexity level, and a credit cost. You submit a mission, the platform executes it, and you receive a result.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>The mission model creates a clean interface: you express intent, the system handles implementation. This is fundamentally different from API calls to AI models (where you get tokens back and still have to do something with them). Missions deliver <em>outcomes</em>.</p>
+
+      <h3>Mission Complexity Tiers</h3>
+      <p>Not all tasks are equal. Mekong's complexity system ensures you're only paying for the compute your task actually needs:</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Simple (1 MCU):</strong> Single-step tasks. Quick lookups, file edits, format conversions.</li>
+        <li><strong>Standard (3 MCU):</strong> Multi-step workflows. Feature implementation, research reports, data analysis.</li>
+        <li><strong>Complex (5 MCU):</strong> Full system builds. Architecture design, deep competitive analysis, multi-file codebases.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The PEV Engine: What Runs Your Missions</h2>
+      <p>Behind every mission is Mekong's Plan-Execute-Verify (PEV) engine — the orchestration layer that turns your goal into a completed outcome.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <p>The PEV loop is what makes RaaS reliable. Traditional AI tools fail when tasks are complex because they execute once and deliver whatever comes out. The PEV engine loops: if the verifier finds the output doesn't meet quality criteria, it feeds that feedback back to the planner and retries with adjustments.</p>
+      <p>This is why Mekong missions have a higher success rate on complex tasks than raw LLM API calls. The system self-corrects.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Agent Layer: Specialists for Every Task Type</h2>
+      <p>The execution layer routes each sub-task to a specialized agent based on what it needs to do:</p>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Agent</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Handles</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Example Task</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">FileAgent</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Read/write/transform files</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Refactor TypeScript module</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">ShellAgent</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Execute shell commands</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Run tests, npm install</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">GitAgent</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Version control operations</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Branch, commit, PR creation</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">LeadHunter</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Sales prospecting</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Find and score 50 leads</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">ContentWriter</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Long-form content generation</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Blog post, investor memo</td>
+        </tr>
+      </table>
+      <p>This specialization is what separates RaaS from "just calling GPT-4." A general-purpose model handles everything poorly. Specialized agents handle specific task types well, and the orchestrator routes intelligently between them.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Economics of RaaS</h2>
+      <p>RaaS is economically transformative for businesses because it converts fixed labor costs into variable compute costs:</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+      <p>This does not mean RaaS replaces all human work. It means RaaS handles the 80% of routine, repeatable tasks at a fraction of the cost — freeing humans for the 20% that genuinely requires judgment, relationships, and creativity.</p>
+      <p>For solo founders and small teams, this is the difference between being able to compete and not.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>RaaS Use Cases Today</h2>
+      <p>The most common RaaS missions on the Mekong platform today:</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Code generation and refactoring</strong> — implementing features, migrating codebases, updating APIs</li>
+        <li><strong>Research and competitive intelligence</strong> — market analysis, competitor teardowns, technology evaluations</li>
+        <li><strong>Content production</strong> — technical documentation, blog posts, investor materials</li>
+        <li><strong>Sales automation</strong> — lead research, outreach drafting, CRM enrichment</li>
+        <li><strong>Financial analysis</strong> — P&amp;L synthesis, burn rate modeling, pricing analysis</li>
+        <li><strong>Security auditing</strong> — dependency scanning, code vulnerability review, configuration checks</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Getting Started with RaaS</h2>
+      <p>Mekong CLI is the open-source layer — install it locally and connect any LLM. The cloud RaaS platform adds hosted execution, credit billing, the mission marketplace, and team management.</p>
+      <p>See the <a href="/docs/guides/quickstart">quickstart guide</a> for local setup, or jump straight to the <a href="/docs/pricing">pricing page</a> for cloud RaaS credits. Your first 10 missions are free.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Submit Your First Mission</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">10 free credits. No card required. Describe your goal — AI delivers the result.</p>
+      <md-elevated-button onclick="location.href='/'">Start Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+  .blog-post li {
+    margin-bottom: 0.5rem;
+  }
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .blog-post pre {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .blog-post pre code {
+    background: none;
+    padding: 0;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

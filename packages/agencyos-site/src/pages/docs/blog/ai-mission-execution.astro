@@ -1,0 +1,257 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const missionLoop = `User Input: "Write 5 LinkedIn posts about AI agents"
+         ↓
+Plan Phase: Break into subtasks
+         ↓
+Execute Phase: AI executes each subtask
+         ↓
+Verify Phase: Quality check and iteration
+         ↓
+Output: Finalized LinkedIn posts ready to publish`;
+
+const cliExample1 = `mekong cook "Write 5 LinkedIn posts about AI agents"`;
+
+const cliExample2 = `# Proposed Plan
+## Task 1: Research AI agent trends
+- Search for latest AI agent frameworks
+- Identify 3 key themes
+
+## Task 2: Write 5 posts
+- Post 1: What are AI agents? (Introduction)
+- Post 2: Why agents beat traditional APIs
+- Post 3: Building agents with LangChain
+- Post 4: Real-world agent use cases
+- Post 5: The future of autonomous AI
+
+Approve? [y/n]`;
+
+const cliExample3 = `🚀 Executing: Write 5 LinkedIn posts about AI agents
+
+[1/5] Writing: "What are AI agents?" ...
+✓ Generated 280 chars, optimized for engagement
+[2/5] Writing: "Why agents beat APIs?" ...
+✓ Generated 315 chars with comparison metrics`;
+
+const useCaseExample = `mekong cook "Review this TypeScript PR for security and performance"`;
+---
+<MainLayout title="AI Mission Execution: Automate Business Tasks from Your Terminal" description="What are AI missions? How does mission execution work? Learn about use cases like marketing copy, code review, and business planning. See the CLI workflow in action.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">AI Mission Execution: Automate Business Tasks from Your Terminal</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 7 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>What's a Mission?</h2>
+      <p>A <strong>mission</strong> is a structured task that breaks down business work into executable steps. Instead of hiring someone to "write marketing copy" or "review code," you describe what you want, and the AI executes it—with planning, verification, and fallback strategies built in.</p>
+      <p>Think of it as giving instructions to a freelancer, but instant, deterministic, and repeatable.</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">The Mission Loop</h3>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{missionLoop}</code></pre>
+      <p><strong>Key difference:</strong> Traditional APIs just return text. Missions return verified, polished results.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>How Mission Execution Works</h2>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Step 1: Define the Mission</h3>
+      <p>You provide a goal and context. The system breaks it into a plan.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{cliExample1}</code></pre>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Step 2: Plan (Optional, but Recommended)</h3>
+      <p>The system generates a plan before execution. You review and approve.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{cliExample2}</code></pre>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Step 3: Execute</h3>
+      <p>AI executes each task in sequence, with progress updates.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{cliExample3}</code></pre>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Use Cases: What Missions Solve</h2>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">1. Marketing & Content</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Blog posts:</strong> "Write 3 SEO-optimized posts on SaaS pricing" → 3,000+ word articles with headings, CTAs, internal links</li>
+        <li><strong>Email sequences:</strong> "Create a 5-email onboarding drip campaign" → copy, subject lines, segmentation logic</li>
+        <li><strong>Social content:</strong> "Generate weekly LinkedIn content calendar" → posts, threads, engagement hooks</li>
+        <li><strong>Landing page copy:</strong> "Write headline + 3 value props for a CLI tool" → A/B test variants included</li>
+      </ul>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">2. Engineering & Code</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Code review:</strong> "Review this TypeScript PR for security and performance" → detailed feedback, suggested fixes</li>
+        <li><strong>Bug analysis:</strong> "Debug this API timeout issue" → root cause, reproduction steps, fix</li>
+        <li><strong>Architecture:</strong> "Design a credit-based billing system" → schema, API endpoints, edge cases</li>
+        <li><strong>Documentation:</strong> "Generate API docs from this codebase" → OpenAPI spec, code examples</li>
+      </ul>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">3. Business & Strategy</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Business plans:</strong> "Write a 1-year business plan for a CLI tool startup" → market analysis, revenue model, milestones</li>
+        <li><strong>Competitive analysis:</strong> "Compare 5 AI CLI tools" → feature matrix, pricing, positioning</li>
+        <li><strong>Fundraising docs:</strong> "Create investor pitch deck outline" → problem, solution, market, traction, ask</li>
+        <li><strong>Pricing strategy:</strong> "Design a fair billing model" → tiers, features, willingness-to-pay</li>
+      </ul>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">4. Research & Analysis</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Market research:</strong> "Analyze trends in generative AI" → key findings, data sources, implications</li>
+        <li><strong>User research synthesis:</strong> "Summarize 20 customer interviews" → themes, quotes, actionable insights</li>
+        <li><strong>Technical specs:</strong> "Write system design doc for event streaming" → architecture, trade-offs, implementation plan</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Why Missions > Direct API Calls</h2>
+
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Feature</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Direct API</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Missions</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Planning</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Nope—just raw response</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Yes—breaks task into steps</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Verification</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">You review manually</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Built-in quality checks</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Iteration</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Retry manually</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Auto-iterate on failure</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Cost</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Per token</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Per completed mission (1-5 MCU)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Result quality</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Variable—depends on prompt</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Consistent—verification enforces standards</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:1rem"><strong>Example:</strong> Writing a blog post via API might take 3 retries because the first two are too short. With missions, the system auto-retries and verifies length/quality before returning.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Pricing: How Missions Use MCU Credits</h2>
+
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Task Type</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Complexity</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">MCU Cost</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Blog post (500 words)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Low (research + write + verify)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">2-3 MCU</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Email sequence (5 emails)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Medium (copy + personalization)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">3-4 MCU</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Code review</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Medium (analysis + feedback)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">2-3 MCU</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Business plan (1 year)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">High (research + planning + writing)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">8-10 MCU</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Competitive analysis (5 tools)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">High (research + matrix + insights)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">5-7 MCU</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:1rem"><strong>Pro tip:</strong> Use the <code>--estimate</code> flag to see MCU cost before executing.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Getting Started</h2>
+      <p>Missions are available in OpenClaw (our CLI framework). Try your first mission:</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`# Install
+npm install -g openclaw
+
+# Sign up for free
+openclaw auth:signup
+
+# Run a mission (10 free credits to start)
+openclaw cook "Write a marketing email for a new SaaS product"`}</code></pre>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Try AI Missions Free</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">Automate your business tasks. 10 free MCU credits, no card required.</p>
+      <md-elevated-button onclick="location.href='/'">Run Your First Mission</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+
+  .blog-post li {
+    margin-bottom: 0.5rem;
+  }
+
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  .blog-post pre {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  .blog-post pre code {
+    background: none;
+    padding: 0;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

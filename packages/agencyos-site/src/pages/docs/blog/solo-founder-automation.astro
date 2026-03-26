@@ -1,0 +1,196 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# One command, full company context
+mekong annual   # Annual strategy, OKRs, board report
+mekong okr      # Quarterly goals with tracking
+mekong swot     # Competitive landscape analysis
+mekong pitch    # Investor deck in minutes`;
+
+const codeExample2 = `# Full revenue pipeline automation
+mekong sales/prospect --niche="B2B SaaS founders"
+# → researches 50 leads, scores them, drafts outreach
+
+mekong sales/follow-up --deal="Acme Corp"
+# → reads CRM history, writes personalized follow-up
+
+mekong marketing/content --channel=twitter --topic="AI tools"
+# → 7-day content calendar, drafted and scheduled`;
+
+const codeExample3 = `# Engineering runs itself
+mekong cook "Add Stripe webhook handler with retry logic"
+# Plans → codes → tests → deploys. Zero hand-holding.
+
+mekong review    # Code review on every PR
+mekong deploy    # CI/CD pipeline management
+mekong security  # Weekly security audit`;
+
+const codeExample4 = `# Morning startup routine (automated)
+mekong status    # Health check: infra, payments, errors
+mekong finance   # P&L update, burn rate, runway
+mekong hr/pulse  # Team check-in (or customer pulse if solo)
+# Total time: 3 minutes reading, 0 minutes doing`;
+---
+<MainLayout title="How Solo Founders Use AI to Run Entire Companies" description="How solo founders are using AI CLI tools like Mekong CLI to automate business operations across sales, engineering, finance, and strategy — running entire companies alone.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">How Solo Founders Use AI to Run Entire Companies</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 9 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The One-Person Company Is No Longer a Compromise</h2>
+      <p>In 2020, building a SaaS alone meant choosing your battles. You could write code or do sales — not both. Marketing meant hiring an agency. Finance meant Googling "how to read a P&L." You were always one emergency away from collapse.</p>
+      <p>In 2026, the solo founder playbook is completely different. A new class of operator has emerged: founders who run $1M+ revenue businesses with zero employees, using AI as their entire team. Not AI as a chatbot. AI as an autonomous business operating system.</p>
+      <p>This is the <strong>solo founder automation</strong> era — and the tool that makes it real is the AI CLI.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Why CLI Over Chat for Business Automation?</h2>
+      <p>The difference between using ChatGPT for business and using an AI CLI like Mekong is the difference between asking a consultant for advice and having an employee execute the work.</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Chat = conversational.</strong> You get text back. You still do the work.</li>
+        <li><strong>CLI = operational.</strong> You run a command. The system does the work.</li>
+        <li><strong>Chat = stateless.</strong> Every session starts from zero.</li>
+        <li><strong>CLI = contextual.</strong> Reads your codebase, your CRM, your financials.</li>
+        <li><strong>Chat = generalist.</strong> Same interface for everything.</li>
+        <li><strong>CLI = specialized.</strong> 319 purpose-built commands for specific business functions.</li>
+      </ul>
+      <p>When a solo founder runs <code>mekong sales/prospect</code>, the AI reads their ICP definition, searches LinkedIn/GitHub, scores leads against criteria, and drafts personalized outreach — all without a human writing a single word.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The 5 Business Layers That Run Themselves</h2>
+      <p>Mekong CLI organizes every business function into five layers. A solo founder with AI automation covers all five:</p>
+
+      <h3>Layer 1: Founder / Strategy</h3>
+      <p>The hardest layer to automate was always strategic thinking. But modern LLMs can now synthesize market data, competitive intelligence, and financial metrics into actionable strategy — with your specific business context loaded.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>A solo founder at <strong>Mekong RaaS</strong> runs their quarterly board-style review in 20 minutes. The AI reads six months of metrics, identifies trends, and produces a strategy memo that would take a consultant two weeks to write.</p>
+
+      <h3>Layer 2: Business / Revenue</h3>
+      <p>Sales and marketing are where solo founders historically fail — not because they lack skills but because the volume of repetitive work overwhelms one person. AI automation changes the math entirely.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>One founder we spoke with runs 200 personalized outreach emails per week with zero manual writing. Response rates are 3x better than templated sequences because AI personalizes each message based on the prospect's public activity.</p>
+
+      <h3>Layer 3: Product</h3>
+      <p>Product management for a solo founder is brutal. You have to write specs, prioritize backlogs, define sprints, and communicate roadmap to customers — while also building the product. AI handles the documentation and synthesis, so you focus on the actual decisions.</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><code>mekong plan</code> — converts customer feedback into ranked feature specs</li>
+        <li><code>mekong sprint</code> — breaks specs into engineering tasks with estimates</li>
+        <li><code>mekong roadmap</code> — generates public roadmap from internal priorities</li>
+        <li><code>mekong brainstorm</code> — structured ideation sessions with market context</li>
+      </ul>
+
+      <h3>Layer 4: Engineering</h3>
+      <p>Most solo founder AI automation stories are about this layer — the obvious one. AI writes code, reviews PRs, manages deployments. But the real unlock is how the engineering layer connects to the business layers.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <p>When a customer reports a bug, <code>mekong fix</code> reads the error logs, identifies the root cause, writes the fix, runs tests, and opens a PR — all while the founder is on a sales call.</p>
+
+      <h3>Layer 5: Operations</h3>
+      <p>Ops is the invisible layer that keeps companies alive: infrastructure monitoring, security audits, compliance checks, financial reconciliation. Every failed startup has a post-mortem that mentions "we didn't notice until it was too late." AI automation changes this.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Real Numbers: What One Person Can Accomplish</h2>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Function</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Without AI</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">With AI CLI</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Weekly outreach</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">20 emails (manual)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">200 personalized emails</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Code shipped/week</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">3-5 features</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">15-20 features</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Support tickets resolved</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">10-20/week</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">50-100/week (AI draft, founder approves)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Time on admin/reporting</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">8 hours/week</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1 hour/week (review only)</td>
+        </tr>
+        <tr style="background:var(--md-sys-color-surface-container);font-weight:bold">
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Effective team size</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1 person</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1 person + 5 AI agents running 24/7</td>
+        </tr>
+      </table>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Mindset Shift: From Doer to Director</h2>
+      <p>The most successful solo founders using AI automation describe a fundamental shift in how they think about their role. They stopped thinking of themselves as the person who does the work. They became the person who <em>directs</em> the work.</p>
+      <p>This requires a different skill set: writing clear prompts (like writing clear briefs for employees), reviewing AI output critically, and knowing which decisions require human judgment versus which can be delegated to automation.</p>
+      <p>The founders who fail with AI automation are the ones who try to micromanage every output. The ones who succeed set clear objectives, trust the system to execute, and spend their time on the decisions only they can make: customer relationships, strategic direction, and product vision.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Getting Started: Your First Week of Automation</h2>
+      <p>The fastest path to running your company with AI is to start with one layer and master it before expanding. Most founders start with engineering (it's where the leverage is most obvious) and then move to sales.</p>
+      <p>Read the <a href="/docs/guides/quickstart">quickstart guide</a> to get Mekong CLI running in under 10 minutes. For pricing on the RaaS platform (cloud-hosted AI agents), see <a href="/docs/pricing">the pricing page</a>.</p>
+      <p>The one-person company is no longer a liability. It is an advantage. Low overhead, fast decisions, and now — unlimited execution capacity.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Run Your Company with AI</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">Start with 10 free credits. No card required. 319 commands across all 5 business layers.</p>
+      <md-elevated-button onclick="location.href='/'">Get Started Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+  .blog-post li {
+    margin-bottom: 0.5rem;
+  }
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .blog-post pre {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .blog-post pre code {
+    background: none;
+    padding: 0;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

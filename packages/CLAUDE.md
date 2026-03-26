@@ -8,6 +8,7 @@
 
 | Package | Path | Purpose |
 |---------|------|---------|
+| `agencyos-site` | `packages/agencyos-site/` | Unified marketing site (landing, docs, dashboard) |
 | `ui` | `packages/ui/` | Shared UI component library |
 | `build-optimizer` | `packages/build-optimizer/` | Build pipeline optimization |
 

@@ -1,0 +1,197 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# GUI workflow: Create a REST endpoint
+# 1. Open IDE → click File → New → TypeScript File (3 clicks)
+# 2. Type code manually (5-15 minutes)
+# 3. Open terminal → npm test (context switch)
+# 4. Fix errors → switch back to IDE
+# 5. Open browser → test endpoint manually
+# Total: 20-40 minutes, 8 context switches
+
+# CLI workflow: Same task
+mekong cook "Create REST endpoint /users/:id with auth middleware and tests"
+# Plans, codes, tests, and verifies in 3-5 minutes. Zero switches.`;
+
+const codeExample2 = `# Batch operations — where CLI truly shines
+# GUI: rename 50 files → click each one, F2, type, Enter (50x)
+# CLI:
+for f in src/**/*.component.ts; do
+  mv "\$f" "\${f/.component.ts/.comp.ts}"
+done
+# Time: 2 seconds
+
+# Search across entire codebase
+grep -r "deprecated_function" src/ --include="*.ts" -l
+# Time: instant. GUI equivalent: 3 minutes with IDE search panels.`;
+
+const codeExample3 = `# Terminal-first development stack (2026)
+mekong cook "implement feature"    # code generation
+mekong review                      # AI code review
+mekong test                        # run + analyze tests
+mekong deploy                      # deploy pipeline
+mekong status                      # monitor health
+
+# All from one terminal. No tab switching. No mouse.
+# Context stays loaded. Cognitive load: minimal.`;
+
+const codeExample4 = `# Composability — the terminal superpower
+# Chain operations that no GUI can match:
+mekong sales/prospect --niche="fintech" | \\
+  mekong sales/score --criteria="./icp.json" | \\
+  mekong sales/draft-outreach --template=founder \\
+  > leads-ready-to-send.md
+
+# Or pipe data between tools:
+curl https://api.github.com/repos/myorg/myapp/issues | \\
+  jq '.[] | select(.labels[].name=="bug")' | \\
+  mekong fix --context=issues`;
+---
+<MainLayout title="CLI vs GUI: Why Terminal-First Tools Win for Developers" description="An honest comparison of CLI vs GUI developer workflows. Why terminal-first tools produce faster, more composable, and more automatable development workflows for professional developers.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">CLI vs GUI: Why Terminal-First Tools Win for Developers</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 9 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Eternal Debate, Settled by Data</h2>
+      <p>Every few years, a new generation of developers discovers GUIs and declares the terminal dead. Visual Studio Code with its click-to-run buttons. GitHub Desktop with its friendly merge conflict UI. Docker Desktop. Postman. Jira.</p>
+      <p>And every year, the highest-output developers — the ones shipping production code at 3x the rate of their peers — are terminal-first operators who treat their keyboard as the only valid input device.</p>
+      <p>This is not nostalgia. It is not gatekeeping. It is a productivity gap that compounds over time. This article explains why <strong>CLI productivity</strong> consistently outperforms GUI workflows for professional software development, and what that means in the age of AI tooling.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Hidden Cost of GUI: Context Switching</h2>
+      <p>The most expensive thing in knowledge work is not slow computers or slow internet — it is context switching. Every time you move your hand to the mouse, your brain partially disengages from the problem you were solving. Every window switch costs 15-30 seconds of cognitive reorientation.</p>
+      <p>GUI-heavy workflows are context-switching machines.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>Studies of developer productivity consistently show that engineers in flow states — uninterrupted focus periods of 25+ minutes — produce 5-10x more output than engineers in fragmented states. GUI workflows fragment attention by design. Terminal workflows consolidate it.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Where CLI Wins: Batch Operations and Automation</h2>
+      <p>The clearest demonstration of CLI superiority is batch operations. Anything you do once in a GUI, you must do manually again every time. Anything you do in the terminal, you script once and automate forever.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>This is not a marginal difference. A developer who uses CLI tools for repetitive operations will — over the course of a year — save hundreds of hours compared to a developer who reaches for a GUI every time. More importantly, the CLI developer builds a <em>library of automation</em> that compounds. The GUI developer starts from scratch every time.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Developer Workflow That Terminal-First Enables</h2>
+      <p>Modern <strong>terminal tools</strong> have evolved far beyond simple command execution. The best developer CLIs in 2026 are AI-powered operating environments for your entire workflow:</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <p>The key insight is that terminal-first tools keep your context loaded. When you run <code>mekong review</code> after <code>mekong cook</code>, the AI already has the full context of what was just built. There is no copy-pasting between windows, no re-explaining the situation to a new tool. The information flows through the pipeline.</p>
+
+      <h3>Speed Benchmarks: CLI vs GUI for Common Tasks</h3>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Task</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">GUI Time</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">CLI Time</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Create new API endpoint</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">25-40 min</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">3-5 min (with AI CLI)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Search/replace across 100 files</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">5-10 min</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">5 seconds</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Deploy to production</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">10-15 min (multiple dashboards)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1 command, 30 seconds</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Run full test suite + review results</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">8-12 min</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">2 min (automated analysis)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Security audit</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">2-4 hours (manual scan)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">15 min (<code>mekong security</code>)</td>
+        </tr>
+      </table>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Composability: The Feature No GUI Can Match</h2>
+      <p>The most underappreciated advantage of terminal-first development is composability. CLI tools follow the Unix philosophy: do one thing well, and connect with everything else via standard pipes.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+      <p>No GUI can do this. GUIs are monolithic. They are designed to do a specific set of things in a specific way. When your workflow doesn't fit the GUI's assumptions, you're stuck. CLIs compose infinitely — each tool adds to a growing toolkit of automation.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>When GUIs Win (Being Honest)</h2>
+      <p>Terminal-first does not mean "terminal-only." GUIs genuinely win in specific scenarios:</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Visual design work:</strong> Figma, design tools. No CLI equivalent makes sense.</li>
+        <li><strong>Data exploration:</strong> TablePlus, database GUIs for one-off queries are faster to prototype in.</li>
+        <li><strong>Merge conflict resolution:</strong> Visual diff tools surface conflicts more clearly than terminal output.</li>
+        <li><strong>Monitoring dashboards:</strong> Grafana, Datadog — visual patterns in time-series data beat text output.</li>
+      </ul>
+      <p>The professional answer is: terminal-first, with GUI tools loaded for the specific tasks where visual representation matters. The mistake is defaulting to GUIs for everything because they feel familiar.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The AI CLI Inflection Point</h2>
+      <p>The arrival of AI-native CLIs changes the equation permanently. Tools like Mekong CLI don't just automate shell commands — they understand <em>intent</em>. You describe what you want in natural language, and the system plans, executes, and verifies across your entire stack.</p>
+      <p>This combines the speed of CLI with the accessibility of natural language. The barrier to terminal-first development drops dramatically. And the ceiling — what one developer can accomplish — rises dramatically.</p>
+      <p>Start with the <a href="/docs/guides/quickstart">quickstart guide</a> to see how Mekong CLI fits into your workflow. For cloud-hosted AI agents, check the <a href="/docs/pricing">pricing page</a>.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Try Terminal-First Development</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">Mekong CLI: 319 AI-powered commands. Install free, run anywhere.</p>
+      <md-elevated-button onclick="location.href='/'">Get Started Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+  .blog-post li {
+    margin-bottom: 0.5rem;
+  }
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .blog-post pre {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  .blog-post pre code {
+    background: none;
+    padding: 0;
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

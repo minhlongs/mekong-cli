@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://agencyos.network/</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://agencyos.network/en/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://agencyos.network/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://agencyos.network/"/>
+    <video:video>
+      <video:thumbnail_loc>https://agencyos.network/og-default.jpg</video:thumbnail_loc>
+      <video:title>OpenClaw — AI Vận Hành Doanh Nghiệp Tự Động</video:title>
+      <video:description>AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu.</video:description>
+      <video:content_loc>https://agencyos.network/</video:content_loc>
+      <video:player_loc>https://agencyos.network/#demo</video:player_loc>
+      <video:duration>PT30S</video:duration>
+      <video:publication_date>2026-03-19</video:publication_date>
+    </video:video>
+  </url>
+
+  <!-- English Homepage -->
+  <url>
+    <loc>https://agencyos.network/en/</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://agencyos.network/en/"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://agencyos.network/"/>
+  </url>
+
+  <!-- Pricing Page -->
+  <url>
+    <loc>https://agencyos.network/pricing</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://agencyos.network/en/pricing"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://agencyos.network/pricing"/>
+  </url>
+
+  <!-- English Pricing Page -->
+  <url>
+    <loc>https://agencyos.network/en/pricing</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://agencyos.network/en/pricing"/>
+    <xhtml:link rel="alternate" hreflang="vi" href="https://agencyos.network/pricing"/>
+  </url>
+
+  <!-- Features Section -->
+  <url>
+    <loc>https://agencyos.network/#features</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- FAQ Section -->
+  <url>
+    <loc>https://agencyos.network/#faq</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Signup Page -->
+  <url>
+    <loc>https://agencyos.network/signup</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- English Signup Page -->
+  <url>
+    <loc>https://agencyos.network/en/signup</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Demo Page -->
+  <url>
+    <loc>https://agencyos.network/demo</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://agencyos.network/privacy</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://agencyos.network/terms</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Documentation -->
+  <url>
+    <loc>https://docs.agencyos.network/</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Dashboard (noindex, but include for completeness) -->
+  <url>
+    <loc>https://dashboard.agencyos.network/dashboard</loc>
+    <lastmod>2026-03-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://dashboard.agencyos.network/en/dashboard"/>
+  </url>
+
+</urlset>

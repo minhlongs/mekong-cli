@@ -1,0 +1,135 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# Webhook payload structure — standard envelope
+{
+  "id": "evt_01HXYZ9ABC...",
+  "type": "mission.completed",
+  "created_at": "2026-03-21T14:32:00Z",
+  "api_version": "2026-01",
+  "data": {
+    "mission_id": "msn_01HXYZ...",
+    "command": "sales/qualify",
+    "status": "success",
+    "result": { "qualified": 12, "rejected": 38 },
+    "mcu_used": 3,
+    "duration_ms": 8420
+  }
+}`;
+
+const codeExample2 = `# Webhook signature verification (HMAC-SHA256)
+import hmac, hashlib
+
+def verify_webhook(payload: bytes, signature: str, secret: str) -> bool:
+    expected = hmac.new(
+        secret.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    received = signature.replace("sha256=", "")
+    # Constant-time comparison prevents timing attacks
+    return hmac.compare_digest(expected, received)
+
+# Replay protection: reject events older than 5 minutes
+def is_replay(event_timestamp: str) -> bool:
+    age = time.time() - int(event_timestamp)
+    return age > 300`;
+
+const codeExample3 = `# Reliable webhook consumer with idempotency
+processed_events = set()  # Use Redis in production
+
+async def handle_webhook(request):
+    event_id = request.headers["X-Event-ID"]
+
+    # Idempotency: skip already-processed events
+    if event_id in processed_events:
+        return {"status": "already_processed"}
+
+    # Verify signature before any processing
+    if not verify_webhook(await request.body(),
+                          request.headers["X-Signature"],
+                          WEBHOOK_SECRET):
+        raise HTTPException(403, "Invalid signature")
+
+    # Return 200 immediately, process async
+    background_tasks.add_task(process_event, event_id)
+    processed_events.add(event_id)
+    return {"status": "accepted"}`;
+
+const codeExample4 = `# Mekong webhook system — full event catalog
+# Subscribe via CLI:
+mekong webhooks/subscribe \\
+  --url="https://yourapp.com/webhooks/mekong" \\
+  --events="mission.*,billing.*" \\
+  --secret="\${WEBHOOK_SECRET}"
+
+# Event types:
+# mission.queued      — mission accepted, processing starting
+# mission.completed   — result ready in payload
+# mission.failed      — error details + retry recommendation
+# billing.low_balance — credits below 20% threshold
+# billing.recharged   — new credits added`;
+---
+<MainLayout title="Webhook-Driven Architecture: Building Real-Time Event Systems" description="How to design, secure, and operate webhook-driven architecture for real-time event systems. Covers payload design, HMAC signatures, replay protection, retry logic, and dead-letter queues.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">Webhook-Driven Architecture: Building Real-Time Event Systems</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 8 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>What Are Webhooks and Why They Power Modern Systems</h2>
+      <p>Webhooks are HTTP callbacks — your system registers a URL, and when an event occurs in a remote service, that service pushes the event to your URL via POST request. No polling. No wasted requests. Events arrive the moment they happen.</p>
+      <p>The contrast with polling is stark. A polling architecture asks "did anything happen?" every N seconds, consuming compute and bandwidth regardless of whether events occurred. A webhook architecture says "tell me when something happens" — zero cost at rest, instant delivery when events fire.</p>
+      <p>For AI-powered platforms where operations take seconds to minutes, webhooks are not optional — they are the only viable real-time delivery mechanism. Polling an AI task API would require aggressive intervals to feel responsive, creating unnecessary load for both sides.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Webhook Payload Design Patterns</h2>
+      <p>Well-designed webhook payloads follow a consistent envelope pattern: a unique event ID, event type, timestamp, API version, and a <code>data</code> object containing the event-specific payload. This consistency means consumers can write generic middleware before handling event-specific logic.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>Always include the API version in the envelope. When you evolve your event schema, consumers can negotiate handling based on version rather than trying to detect schema changes. Include <code>created_at</code> as an ISO 8601 timestamp — you will need this for replay protection.</p>
+      <h3>Fat vs Thin Events</h3>
+      <p><strong>Fat events</strong> include the full resource state in the payload. Consumers can act immediately without fetching additional data. This reduces round trips but increases payload size and couples consumers to your data model.</p>
+      <p><strong>Thin events</strong> include only the event type and resource ID. Consumers fetch the current resource state via API. This decouples the event schema from the resource schema but requires an additional API call per event.</p>
+      <p>For AI task results, fat events win: consumers need the result immediately, and an additional API call for every completion event adds latency in a latency-sensitive context.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Security: Signatures and Replay Protection</h2>
+      <p>Any public HTTPS endpoint that executes business logic on receipt is an attack surface. Webhook security requires two controls: signature verification (proving the request came from the expected sender) and replay protection (preventing an attacker from re-submitting captured valid requests).</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>Use HMAC-SHA256 for signatures. The sender computes an HMAC of the raw request body using a shared secret, and includes it in a header. The receiver recomputes and compares. Use <code>hmac.compare_digest</code> for constant-time comparison — standard string equality is vulnerable to timing attacks that can extract the secret.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Reliability: Retries, Idempotency, and Dead-Letter Queues</h2>
+      <p>Webhook delivery is inherently unreliable. Your endpoint may be temporarily unavailable, return a 5xx, or time out. Robust webhook systems implement exponential backoff retry schedules (e.g., 5s, 30s, 2m, 10m, 1h) and give up after a defined attempt count.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <p>Because webhooks may be retried, your handler <strong>must be idempotent</strong>. Store processed event IDs (Redis with TTL works well) and skip re-processing. The pattern: acknowledge immediately with 200, process asynchronously. Never do slow work inside the webhook handler — you will time out and trigger retries.</p>
+      <p>Events that exhaust all retry attempts go to a dead-letter queue. Alert on DLQ accumulation — it indicates systemic consumer issues. Provide a replay API so consumers can reprocess DLQ events after fixing the underlying issue.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Mekong's Webhook System</h2>
+      <p>Mekong uses webhooks as the primary delivery mechanism for all asynchronous AI operations. When you submit a mission via CLI or API, the result arrives at your registered webhook URL rather than blocking the connection until completion.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+      <p>The system retries failed deliveries up to 7 times over 24 hours. Events that fail all attempts are held for 72 hours and can be replayed via the CLI. Every event is signed with HMAC-SHA256 using your webhook secret, which you rotate independently per endpoint.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Build Real-Time Integrations with Mekong</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">Webhook-native API. HMAC-signed events. 7-attempt retry with 72h replay window.</p>
+      <md-elevated-button onclick="location.href='/'">Get Started Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--md-sys-color-on-surface); }
+  .blog-post p { line-height: 1.8; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post ul, .blog-post ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+  .blog-post li { margin-bottom: 0.5rem; }
+  .blog-post code { font-family: 'Monaco', 'Menlo', monospace; background: rgba(0, 188, 212, 0.1); padding: 2px 4px; border-radius: 3px; font-size: 0.9em; }
+  .blog-post pre { border-radius: 8px; overflow-x: auto; }
+  .blog-post pre code { background: none; padding: 0; }
+  .gradient-text { background: linear-gradient(135deg, #00bcd4, #0097a7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+</style>

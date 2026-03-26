@@ -1,0 +1,143 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# Flat-rate vs credit-based: the math
+# Flat-rate problem: 80% of users use < 20% of value
+# You're subsidizing heavy users and undercharging power users
+
+# Credit-based aligns incentives:
+# Light user (50 credits/mo):  pays proportionally less
+# Power user (2,000 credits/mo): pays proportionally more
+# Revenue scales with value delivered, not seat count`;
+
+const codeExample2 = `# Mekong MCU (Mekong Credit Unit) system
+# 1 MCU = 1 unit of AI computation delivered
+
+# Credit costs by command complexity:
+mekong status          # 0 MCU  — read-only ops
+mekong cook "..."      # 1-3 MCU — standard generation
+mekong sales/prospect  # 3-5 MCU — research + generation
+mekong annual          # 5 MCU  — multi-step analysis
+
+# Billing logic:
+# Deduct ONLY after successful delivery
+# Zero balance → HTTP 402, no partial execution
+# Monthly rollover on Pro+ plans`;
+
+const codeExample3 = `# Pricing tier implementation
+tiers = {
+  "starter": {
+    "credits": 200,
+    "price_usd": 49,
+    "price_per_credit": 0.245,
+    "overage_per_credit": 0.35
+  },
+  "pro": {
+    "credits": 1000,
+    "price_usd": 149,
+    "price_per_credit": 0.149,
+    "overage_per_credit": 0.20
+  },
+  "enterprise": {
+    "credits": "unlimited",
+    "price_usd": 499,
+    "price_per_credit": 0,
+    "overage_per_credit": 0
+  }
+}`;
+---
+<MainLayout title="Credit-Based Pricing for SaaS: Why Usage-Based Billing Wins" description="Why credit-based and usage-based pricing outperforms flat-rate SaaS subscriptions. Implementation guide, conversion tips, and a real-world case study from Mekong CLI's MCU system.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">Credit-Based Pricing for SaaS: Why Usage-Based Billing Wins</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 7 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Problem With Flat-Rate SaaS</h2>
+      <p>Flat-rate subscription pricing made sense in 2010 when SaaS was primarily selling access to software features. You paid for a seat, you got the software, the cost to serve you was roughly the same regardless of usage.</p>
+      <p>That model breaks for AI-powered products where compute cost varies dramatically by user and task. A user who runs 10 AI operations per month costs you 100x less to serve than a user who runs 1,000. Flat-rate pricing forces you to either overprice for light users (killing conversion) or underprice for heavy users (killing margins).</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>The compounding problem: heavy users evangelize your product most. If your pricing punishes them, you lose your best growth engine. Credit-based pricing rewards heavy users with volume discounts while protecting margins on your compute costs.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>How Credit-Based Pricing Works</h2>
+      <p>In a credit system, customers purchase a pool of credits that deplete as they consume value. One credit represents a defined unit of value — an API call, a computation, a generated artifact, a task completed. Credits are pre-purchased, so you collect revenue before delivery.</p>
+      <p>The key design decisions:</p>
+      <ul style="color:var(--md-sys-color-on-surface);line-height:1.8">
+        <li><strong>What does 1 credit represent?</strong> Define it clearly and tie it to a unit customers understand as valuable.</li>
+        <li><strong>How do you price credits at each tier?</strong> Volume discounts incentivize higher-tier commitment.</li>
+        <li><strong>What happens at zero balance?</strong> Hard stop, grace period, or auto-recharge — each has different conversion implications.</li>
+        <li><strong>Do credits roll over?</strong> Monthly reset reduces revenue predictability but increases willingness to buy.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Implementation Guide</h2>
+      <p>Build your credit system with three core components: a credit ledger (tracks balance and transactions), a gate middleware (checks balance before executing), and a webhook consumer (processes payments from Polar.sh or Stripe).</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>The gate middleware pattern is critical: check balance before execution, not after. Partial execution with a failed credit deduction creates bad UX and support tickets. Full atomic transactions — execute and deduct together, or neither.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Tier</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Credits</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Price</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Per Credit</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Starter</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">200 MCU</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$49/mo</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$0.245</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Pro</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1,000 MCU</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$149/mo</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$0.149</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Enterprise</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Unlimited</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$499/mo</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$0</td>
+        </tr>
+      </table>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Case Study: Mekong MCU System</h2>
+      <p>Mekong CLI uses MCU (Mekong Credit Units) as its billing primitive. Each MCU maps to one AI-powered task delivered successfully. Simple read operations cost 0 MCU. Complex multi-step analyses like annual strategy documents cost 5 MCU.</p>
+      <p>Critical design choice: <strong>deduct only on successful delivery</strong>. If the agent fails, the customer pays nothing. This aligns incentives perfectly — Mekong is motivated to deliver quality results because revenue depends on it.</p>
+      <p>The HTTP 402 response on zero balance prevents partial execution entirely. Customers who hit the limit get a clear signal to upgrade or purchase additional credits — not a degraded partial experience.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Conversion Optimization for Credit-Based Products</h2>
+      <p>Credit-based pricing requires different conversion tactics than flat-rate subscriptions:</p>
+      <ul style="color:var(--md-sys-color-on-surface);line-height:1.8">
+        <li><strong>Free credits on signup:</strong> Give enough to experience real value, not just a demo. 20-50 credits is the typical range.</li>
+        <li><strong>Low-balance notifications at 20%:</strong> Prompt upgrade before the user hits zero and churns out of frustration.</li>
+        <li><strong>Usage-based upsell triggers:</strong> Users who consistently hit 80%+ of their monthly allocation are prime upgrade candidates.</li>
+        <li><strong>Annual pre-purchase discount:</strong> 20% off annual credits vs monthly drives cash flow and reduces churn.</li>
+      </ul>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Try Mekong CLI — Pay Only for What You Use</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">Credit-based pricing. Free credits on signup. No flat fees for unused capacity.</p>
+      <md-elevated-button onclick="location.href='/'">Get Started Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--md-sys-color-on-surface); }
+  .blog-post p { line-height: 1.8; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post ul, .blog-post ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+  .blog-post li { margin-bottom: 0.5rem; }
+  .blog-post code { font-family: 'Monaco', 'Menlo', monospace; background: rgba(0, 188, 212, 0.1); padding: 2px 4px; border-radius: 3px; font-size: 0.9em; }
+  .blog-post pre { border-radius: 8px; overflow-x: auto; }
+  .blog-post pre code { background: none; padding: 0; }
+  .gradient-text { background: linear-gradient(135deg, #00bcd4, #0097a7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+</style>

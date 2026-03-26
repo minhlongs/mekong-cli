@@ -1,0 +1,22 @@
+{
+  "name": "@openclaw/agencyos-site",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "npx wrangler pages deploy dist --project-name agencyos-site"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "@astrojs/sitemap": "^3.7.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "@material/web": "^2.0.0",
+    "chart.js": "^4.4.0",
+    "chartjs-adapter-date-fns": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

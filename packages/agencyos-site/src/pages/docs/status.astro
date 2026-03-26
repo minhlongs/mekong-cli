@@ -1,0 +1,313 @@
+---
+import MainLayout from '../../layouts/docs-layout.astro';
+
+const API_BASE = 'https://raas-gateway.agencyos-openclaw.workers.dev';
+
+// Fetch status server-side at build time; fallback gracefully if unavailable
+let statusData: any = null;
+let incidents: any[] = [];
+
+try {
+  const [statusRes, incidentsRes] = await Promise.all([
+    fetch(`${API_BASE}/status`),
+    fetch(`${API_BASE}/status/incidents?limit=10`),
+  ]);
+  if (statusRes.ok) statusData = await statusRes.json();
+  if (incidentsRes.ok) {
+    const data = await incidentsRes.json();
+    incidents = data.incidents || [];
+  }
+} catch {
+  // Render degraded gracefully when API unreachable
+}
+
+const overall = statusData?.status ?? 'unknown';
+const uptime = statusData?.uptime ?? null;
+const components: any[] = statusData?.components ?? [];
+const activeIncidents: any[] = statusData?.activeIncidents ?? [];
+const recentResolved = incidents.filter((i: any) => i.status === 'resolved').slice(0, 5);
+
+const statusLabel: Record<string, string> = {
+  operational: 'All Systems Operational',
+  degraded: 'Partial Degradation',
+  outage: 'Major Outage',
+  unknown: 'Status Unavailable',
+};
+
+const statusColor: Record<string, string> = {
+  operational: 'var(--color-success)',
+  degraded: 'var(--color-warning)',
+  outage: 'var(--color-error)',
+  unknown: 'var(--md-sys-color-on-surface-variant)',
+};
+---
+
+<MainLayout
+  title="System Status — OpenClaw"
+  description="Real-time status of OpenClaw RaaS platform. Check uptime, incidents, and component health."
+>
+  <section class="status-hero">
+    <div class="status-inner">
+      <h1 class="section-title">System Status</h1>
+
+      <!-- Overall indicator -->
+      <div class="overall-badge glass" style={`border-color: ${statusColor[overall]}`}>
+        <span class="status-dot" style={`background: ${statusColor[overall]}`}></span>
+        <span class="status-text" style={`color: ${statusColor[overall]}`}>
+          {statusLabel[overall]}
+        </span>
+        {uptime !== null && (
+          <span class="uptime-badge">{uptime}% uptime (30d)</span>
+        )}
+      </div>
+
+      <!-- Active incidents banner -->
+      {activeIncidents.length > 0 && (
+        <div class="incident-banner glass">
+          <strong>Active Incidents ({activeIncidents.length})</strong>
+          {activeIncidents.map((inc: any) => (
+            <div class="incident-row">
+              <span class={`severity-tag severity-${inc.severity}`}>{inc.severity}</span>
+              <span>{inc.title}</span>
+              <span class="incident-time">{new Date(inc.started_at).toUTCString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <!-- Component grid -->
+      {components.length > 0 && (
+        <div class="components-section">
+          <h2 class="subsection-title">Components</h2>
+          <div class="components-grid">
+            {components.map((comp: any) => (
+              <div class="component-card glass">
+                <span class="comp-name">{comp.name}</span>
+                <span
+                  class={`comp-status ${comp.status === 'operational' ? 'comp-ok' : 'comp-degraded'}`}
+                >
+                  {comp.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Recent resolved incidents -->
+      {recentResolved.length > 0 && (
+        <div class="history-section">
+          <h2 class="subsection-title">Recent Incidents</h2>
+          <div class="incident-list">
+            {recentResolved.map((inc: any) => (
+              <div class="incident-item glass">
+                <div class="incident-header">
+                  <span class={`severity-tag severity-${inc.severity}`}>{inc.severity}</span>
+                  <strong>{inc.title}</strong>
+                  <span class="resolved-badge">Resolved</span>
+                </div>
+                {inc.description && <p class="incident-desc">{inc.description}</p>}
+                <div class="incident-meta">
+                  <span>Started: {new Date(inc.started_at).toUTCString()}</span>
+                  {inc.resolved_at && (
+                    <span>Resolved: {new Date(inc.resolved_at).toUTCString()}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- API link -->
+      <p class="api-link-note">
+        Programmatic access:
+        <a href={`${API_BASE}/status`} target="_blank" rel="noopener">{API_BASE}/status</a>
+      </p>
+    </div>
+  </section>
+</MainLayout>
+
+<style>
+  .status-hero {
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .status-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .overall-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: 12px;
+    border: 1px solid;
+    flex-wrap: wrap;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .uptime-badge {
+    margin-left: auto;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-medium-size);
+  }
+
+  .incident-banner {
+    padding: var(--spacing-lg);
+    border-radius: 12px;
+    border-left: 4px solid var(--color-warning, #f59e0b);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .incident-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    padding-top: var(--spacing-xs);
+  }
+
+  .incident-time {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-small-size);
+    margin-left: auto;
+  }
+
+  .subsection-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .component-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: 10px;
+    gap: var(--spacing-sm);
+  }
+
+  .comp-name {
+    font-size: var(--md-sys-typescale-body-medium-size);
+    font-weight: 500;
+  }
+
+  .comp-status {
+    font-size: var(--md-sys-typescale-label-small-size);
+    font-weight: 600;
+    text-transform: capitalize;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .comp-ok {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.12);
+  }
+
+  .comp-degraded {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+  }
+
+  .incident-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .incident-item {
+    padding: var(--spacing-lg);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .incident-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+  }
+
+  .resolved-badge {
+    margin-left: auto;
+    color: #22c55e;
+    font-size: var(--md-sys-typescale-label-small-size);
+    font-weight: 600;
+    background: rgba(34, 197, 94, 0.12);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .incident-desc {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-medium-size);
+    margin: 0;
+  }
+
+  .incident-meta {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-small-size);
+  }
+
+  .severity-tag {
+    font-size: var(--md-sys-typescale-label-small-size);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+
+  .severity-minor { color: #60a5fa; background: rgba(96, 165, 250, 0.12); }
+  .severity-major { color: #f59e0b; background: rgba(245, 158, 11, 0.12); }
+  .severity-critical { color: #ef4444; background: rgba(239, 68, 68, 0.12); }
+
+  .api-link-note {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--md-sys-typescale-body-small-size);
+  }
+
+  .api-link-note a {
+    color: var(--md-sys-color-primary);
+  }
+</style>

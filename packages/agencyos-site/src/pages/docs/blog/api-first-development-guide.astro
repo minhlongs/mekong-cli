@@ -1,0 +1,137 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# openapi.yaml — define the contract first
+openapi: 3.1.0
+info:
+  title: Mekong RaaS API
+  version: 2.0.0
+paths:
+  /v1/missions:
+    post:
+      summary: Submit an AI mission
+      requestBody:
+        content:
+          application/json:
+            schema:
+              \$ref: '#/components/schemas/MissionRequest'
+      responses:
+        '202':
+          description: Mission accepted
+          content:
+            application/json:
+              schema:
+                \$ref: '#/components/schemas/MissionResponse'`;
+
+const codeExample2 = `# Versioning strategy — never break existing clients
+GET /v1/missions          # stable, long-term support
+GET /v2/missions          # new capabilities, parallel support
+GET /v2/missions?fields=  # sparse fieldsets for bandwidth
+
+# Headers for negotiation
+Accept: application/json; version=2
+Deprecation: true
+Sunset: Sat, 01 Jan 2027 00:00:00 GMT`;
+
+const codeExample3 = `# Auth patterns — choose per use case
+# API Key (server-to-server, simple)
+Authorization: Bearer mek_live_xxxxxxxxxxxx
+
+# JWT (user context, short-lived)
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9...
+
+# OAuth2 (third-party delegation)
+POST /oauth/token
+  grant_type=client_credentials
+  &scope=missions:write agents:read`;
+
+const codeExample4 = `# Mekong RaaS — call AI agents via REST
+curl -X POST https://api.agencyos.network/v1/missions \\
+  -H "Authorization: Bearer \${MEKONG_API_KEY}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "command": "sales/qualify",
+    "args": { "source": "crm", "limit": 50 },
+    "webhook_url": "https://yourapp.com/webhooks/mekong"
+  }'
+
+# Response
+{
+  "mission_id": "msn_01HXYZ...",
+  "status": "queued",
+  "estimated_ms": 8000
+}'`;
+---
+<MainLayout title="API-First Development: Why Every Modern Product Starts with APIs" description="A complete guide to API-first development: design principles, OpenAPI specs, versioning strategies, authentication patterns, and how to build developer-friendly APIs in 2026.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">API-First Development: Why Every Modern Product Starts with APIs</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 7 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>What Is API-First Development?</h2>
+      <p>API-first development means designing your API contract before writing a single line of implementation code. The API is not an afterthought bolted onto a UI — it <em>is</em> the product. Every interface (web, mobile, CLI, integrations) is a consumer of the same API layer.</p>
+      <p>This approach inverts the traditional build order. Instead of building features first and exposing them through APIs later, you define the contract in OpenAPI or similar, review it with stakeholders, generate client SDKs, and only then implement the server.</p>
+      <p>The result is a product where every surface is first-class. Your web app, mobile client, third-party integration, and CLI all have identical access to capabilities — none privileged over the others.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Why API-First Wins for Modern Products</h2>
+      <p>The compounding benefits of API-first development appear over months and years:</p>
+      <ul style="color:var(--md-sys-color-on-surface);line-height:1.8">
+        <li><strong>Parallel development:</strong> Frontend and backend teams build simultaneously against the spec. No blocking.</li>
+        <li><strong>Automatic documentation:</strong> The OpenAPI spec generates interactive docs. Docs are always accurate because they are the source of truth.</li>
+        <li><strong>SDK generation:</strong> Generate typed client libraries for any language from a single spec. Customers integrate in hours, not days.</li>
+        <li><strong>Easier testing:</strong> Contract tests verify behavior at the API boundary. Integration tests become simpler and more reliable.</li>
+        <li><strong>Ecosystem extensibility:</strong> Third-party developers build on your platform without asking permission.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Design Principles: OpenAPI, Versioning, and Auth</h2>
+      <p>Start with an OpenAPI 3.1 specification. Define every endpoint, request schema, response schema, and error code before touching implementation. This takes a day upfront and saves weeks of refactoring later.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>Version your API from day one. Use URL versioning (<code>/v1/</code>) for major breaking changes and header negotiation for minor variations. Always support at least two major versions simultaneously to give clients migration time.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+      <p>Authentication patterns depend on your use case. Server-to-server integrations use long-lived API keys. User-context operations use short-lived JWTs. Third-party delegated access uses OAuth2. Support all three from launch — retrofitting auth is painful.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Mekong RaaS API: API-First in Practice</h2>
+      <p>Mekong's Runtime-as-a-Service API is built API-first. Every capability available in the CLI is also available via REST. This means developers can embed Mekong's 319 AI agents into any product — a Slack bot, a CRM integration, a mobile app — using a single authenticated POST request.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+      <p>Mission results are delivered via webhook. Long-running tasks (market research, full sales campaigns) run asynchronously. The API caller gets an immediate response with a mission ID, then receives results when ready.</p>
+      <p>This pattern — optimistic acceptance, async execution, webhook delivery — is the gold standard for AI agent APIs where latency is variable by design.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Getting Started: Your API-First Checklist</h2>
+      <ol style="color:var(--md-sys-color-on-surface);line-height:1.8;margin:1rem 0 1rem 2rem">
+        <li style="margin-bottom:0.75rem">Write your OpenAPI spec before any implementation code</li>
+        <li style="margin-bottom:0.75rem">Set up mock server from spec so frontend can start immediately</li>
+        <li style="margin-bottom:0.75rem">Generate server stubs — let the spec drive the implementation skeleton</li>
+        <li style="margin-bottom:0.75rem">Add contract tests that run against the spec, not the mock</li>
+        <li style="margin-bottom:0.75rem">Publish interactive docs at <code>/docs</code> from day one</li>
+        <li style="margin-bottom:0.75rem">Generate SDK for your primary client language, ship it with your launch</li>
+      </ol>
+      <p>The upfront investment in spec design pays back in every sprint that follows. Teams that skip this step spend 30-50% of engineering cycles on API incompatibility issues that never disappear.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Build on Mekong's API</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">319 AI agent capabilities available via REST. Full OpenAPI spec included.</p>
+      <md-elevated-button onclick="location.href='/'">Get Started Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--md-sys-color-on-surface); }
+  .blog-post p { line-height: 1.8; margin-bottom: 1rem; color: var(--md-sys-color-on-surface); }
+  .blog-post ul, .blog-post ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+  .blog-post li { margin-bottom: 0.5rem; }
+  .blog-post code { font-family: 'Monaco', 'Menlo', monospace; background: rgba(0, 188, 212, 0.1); padding: 2px 4px; border-radius: 3px; font-size: 0.9em; }
+  .blog-post pre { border-radius: 8px; overflow-x: auto; }
+  .blog-post pre code { background: none; padding: 0; }
+  .gradient-text { background: linear-gradient(135deg, #00bcd4, #0097a7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+</style>

@@ -1,0 +1,622 @@
+---
+import '../styles/global.css';
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: 'vi' | 'en';
+  canonical?: string;
+  image?: string;
+  keywords?: string;
+  noindex?: boolean;
+  publishedTime?: string;
+  modifiedTime?: string;
+  section?: string;
+  type?: 'website' | 'article';
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+}
+const {
+  title = 'OpenClaw — AI Agent Platform: Robot as a Service cho Doanh Nghiệp',
+  description = 'OpenClaw: nền tảng AI agent tự động hóa doanh nghiệp (Robot as a Service). Trả lời khách 24/7, tạo content, CRM thông minh. Miễn phí 14 ngày.',
+  lang = 'vi',
+  canonical,
+  image = '/og-default.jpg',
+  keywords,
+  noindex = false,
+  publishedTime,
+  modifiedTime,
+  section,
+  type = 'website',
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
+} = Astro.props;
+const isEn = lang === 'en';
+const base = isEn ? '/en' : '';
+const siteUrl = 'https://agencyos.network';
+const canonicalUrl = canonical ? `${siteUrl}${canonical}` : `${siteUrl}${Astro.url.pathname.replace(/\/$/, '')}`;
+const viUrl = canonicalUrl.replace('/en', '');
+const enUrl = canonicalUrl.includes('/en') ? canonicalUrl : canonicalUrl.replace(siteUrl, siteUrl + '/en');
+const labels = isEn
+  ? { features: 'Features', pricing: 'Pricing', faq: 'FAQ', cta: 'Start Free', pLink: '/en/pricing', commands: 'Commands' }
+  : { features: 'Tính năng', pricing: 'Bảng giá', faq: 'FAQ', cta: 'Dùng miễn phí', pLink: '/pricing', commands: 'Lệnh' };
+
+// 5-Layer Command Hierarchy Navigation
+const commandLayers = [
+  { name: isEn ? '👑 Founder' : '👑 Founder', desc: isEn ? 'Strategy & Fundraising' : 'Chiến lược & Gọi vốn', items: ['OKR', 'Fundraise', 'IPO', 'Negotiate'] },
+  { name: isEn ? '💼 Business' : '💼 Business', desc: isEn ? 'Revenue & Operations' : 'Doanh thu & Vận hành', items: ['Sales', 'Marketing', 'Finance', 'HR'] },
+  { name: isEn ? '🎯 Product' : '🎯 Product', desc: isEn ? 'Product Management' : 'Quản lý Sản phẩm', items: ['Plan', 'Sprint', 'Roadmap', 'Discovery'] },
+  { name: isEn ? '⚙️ Engineering' : '⚙️ Engineering', desc: isEn ? 'Build & Ship' : 'Xây dựng & Triển khai', items: ['Code', 'Test', 'Deploy', 'Review'] },
+  { name: isEn ? '🔧 Ops' : '🔧 Ops', desc: isEn ? 'Monitor & Maintain' : 'Giám sát & Duy trì', items: ['Health', 'Security', 'Audit', 'Recovery'] },
+];
+
+// Default keywords per language
+const defaultKeywords = isEn
+  ? 'AI agent platform, robot as a service, AI business automation, automate business AI, openclaw, business automation, CRM, content creation, customer service, SaaS, enterprise AI, marketing automation, Vietnam'
+  : 'AI agent platform, robot as a service, openclaw, AI tự động hóa, tự động hóa doanh nghiệp, automate business AI, CRM, tạo content, dịch vụ khách hàng, SaaS, AI doanh nghiệp, marketing tự động, Việt Nam';
+const pageKeywords = keywords || defaultKeywords;
+
+// Robots directive
+const robotsDirective = noindex ? 'noindex, nofollow' : 'index, follow';
+
+// Organization JSON-LD
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "OpenClaw",
+  "alternateName": "AgencyOS",
+  "url": siteUrl,
+  "logo": `${siteUrl}/logo.jpg`,
+  "description": isEn
+    ? 'AI-powered business automation platform for modern enterprises'
+    : 'Nền tảng tự động hóa doanh nghiệp bằng AI cho doanh nghiệp hiện đại',
+  "sameAs": [
+    "https://twitter.com/agencyos",
+    "https://github.com/openclaw",
+    "https://www.linkedin.com/company/agencyos"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "hello@agencyos.network",
+    "contactType": "customer service",
+    "availableLanguage": ["Vietnamese", "English"]
+  },
+  "areaServed": ["VN", "US", "SG"],
+  "foundingDate": "2025"
+};
+
+// WebSite JSON-LD
+const webSiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "OpenClaw",
+  "alternateName": "AgencyOS",
+  "url": siteUrl,
+  "description": isEn
+    ? 'AI-powered business automation platform'
+    : 'Nền tảng tự động hóa doanh nghiệp bằng AI',
+  "inLanguage": lang,
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": `${siteUrl}/search?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
+
+// Article JSON-LD (for blog posts)
+const articleSchema = type === 'article' && publishedTime ? {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": title,
+  "description": description,
+  "inLanguage": lang,
+  "datePublished": publishedTime,
+  "dateModified": modifiedTime || publishedTime,
+  "author": {
+    "@type": "Organization",
+    "name": "OpenClaw Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "OpenClaw",
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${siteUrl}/logo.jpg`
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": canonicalUrl
+  }
+} : null;
+
+// Combine schemas
+const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ? [articleSchema] : []);
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary Meta Tags -->
+  <title>{title}</title>
+  <meta name="title" content={title} />
+  <meta name="description" content={description} />
+  <meta name="keywords" content={pageKeywords} />
+  <meta name="author" content="OpenClaw by AgencyOS" />
+  <meta name="robots" content={robotsDirective} />
+  <meta name="googlebot" content={robotsDirective} />
+  <link rel="canonical" href={canonicalUrl} />
+
+  <!-- Hreflang Tags for i18n -->
+  <link rel="alternate" hreflang="vi" href={viUrl} />
+  <link rel="alternate" hreflang="en" href={enUrl} />
+  <link rel="alternate" hreflang="x-default" href={siteUrl} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content={type} />
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:title" content={ogTitle || title} />
+  <meta property="og:description" content={ogDescription || description} />
+  <meta property="og:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={isEn ? 'OpenClaw — AI Business Automation Platform Dashboard' : 'OpenClaw — Nền tảng AI tự động hóa doanh nghiệp'} />
+  <meta property="og:site_name" content="OpenClaw" />
+  <meta property="og:locale" content={isEn ? 'en_US' : 'vi_VN'} />
+  <meta property="og:locale:alternate" content="vi_VN" />
+  <meta property="og:locale:alternate" content="en_US" />
+  {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+  {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+  {section && <meta property="article:section" content={section} />}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={canonicalUrl} />
+  <meta name="twitter:title" content={twitterTitle || title} />
+  <meta name="twitter:description" content={twitterDescription || description} />
+  <meta name="twitter:image" content={image.startsWith('http') ? image : `${siteUrl}${image}`} />
+  <meta name="twitter:image:alt" content={isEn ? 'OpenClaw Platform Screenshot' : 'Chụp màn hình nền tảng OpenClaw'} />
+  <meta name="twitter:site" content="@agencyos" />
+  <meta name="twitter:creator" content="@agencyos" />
+  <meta name="twitter:label1" content={isEn ? 'Reading time' : 'Thời gian đọc'} />
+  <meta name="twitter:data1" content="5 min" />
+  {isEn && <meta name="twitter:label2" content="Pricing" />}
+  {isEn && <meta name="twitter:data2" content="From $0/mo" />}
+  {!isEn && <meta name="twitter:label2" content="Giá" />}
+  {!isEn && <meta name="twitter:data2" content="Từ $0/tháng" />}
+
+  <!-- Google / Search Engine -->
+  <meta name="theme-color" content="#00BCD4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="OpenClaw" />
+  <meta name="application-name" content="OpenClaw" />
+  <meta name="msapplication-TileColor" content="#00BCD4" />
+  <meta name="msapplication-config" content="/browserconfig.xml" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="/logo.jpg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo.jpg" />
+  <link rel="icon" sizes="32x32" href="/logo.jpg" />
+  <link rel="icon" sizes="16x16" href="/logo.jpg" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- DNS Prefetch -->
+  <link rel="dns-prefetch" href="https://agencyos.network" />
+
+  <!-- Font Preload (critical fonts) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+  <!-- Critical CSS Preload -->
+  <link rel="preload" as="style" href="/src/styles/global.css" />
+</head>
+<body>
+<!-- Skip to Content Link (Accessibility) -->
+<a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;">
+  {isEn ? 'Skip to main content' : 'Chuyển đến nội dung chính'}
+</a>
+
+<!-- Structured Data JSON-LD -->
+<script type="application/ld+json" set:html={JSON.stringify(jsonLdSchemas)} />
+
+<!-- Skip Link Focus Style -->
+<style>
+  .skip-link:focus {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    width: auto;
+    height: auto;
+    padding: 12px 20px;
+    background: #00BCD4;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    z-index: 9999;
+    outline: 3px solid #7C4DFF;
+    outline-offset: 2px;
+  }
+</style>
+
+<!-- Sticky nav -->
+<nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass" role="navigation" aria-label={isEn ? 'Main navigation' : 'Điều hướng chính'}>
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
+    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'OpenClaw Home' : 'Trang chủ OpenClaw'}>OpenClaw</a>
+    <!-- Hamburger button (mobile only) -->
+    <button class="mobile-menu-btn" id="hamburger-btn" aria-label={isEn ? 'Open menu' : 'Mở menu'} aria-expanded="false" aria-controls="nav-links-mobile">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="nav-links" id="nav-links-mobile" role="menubar">
+      <a href={`${base}/#features`} class="nav-link" role="menuitem" aria-label={isEn ? 'View features' : 'Xem tính năng'}>{labels.features}</a>
+
+      <!-- 5-Layer Commands Mega Menu -->
+      <div style="position:relative;" class="dropdown-container" role="menuitem" aria-haspopup="true" aria-expanded="false">
+        <button class="nav-link" style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:inherit;color:inherit;" aria-label={isEn ? 'Browse commands by layer' : 'Duyệt lệnh theo tầng'}>
+          {labels.commands}
+          <span style="margin-left:4px;">▼</span>
+        </button>
+        <div class="dropdown-menu" style="position:absolute;top:100%;left:0;background:var(--md-surface);border:1px solid var(--md-outline);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:16px;min-width:600px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;opacity:0;visibility:hidden;transform:translateY(-8px);transition:all 0.2s ease;">
+          {commandLayers.map((layer, idx) => (
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-weight:700;font-size:0.75rem;line-height:1.2;">{layer.name}</div>
+              <div style="font-size:0.65rem;color:var(--md-on-surface-muted);line-height:1.3;">{layer.desc}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                {layer.items.map(item => (
+                  <a href="#" style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item" onMouseOver={(e) => e.target.style.background='rgba(0,188,212,0.08)'} onMouseOut={(e) => e.target.style.background=''}>{item}</a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
+      <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
+      <a href={`${base}/blog`} class="nav-link" role="menuitem" aria-label="Blog">Blog</a>
+      <a href={`${base}/community`} class="nav-link" role="menuitem" aria-label={isEn ? 'Community' : 'Cộng đồng'}>{isEn ? 'Community' : 'Cộng Đồng'}</a>
+      <a href={`${base}/enterprise`} class="nav-link" role="menuitem" aria-label={isEn ? 'Enterprise' : 'Doanh Nghiệp'}>{isEn ? 'Enterprise' : 'Doanh Nghiệp'}</a>
+      <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
+        <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'} aria-pressed={!isEn}>VI</a>
+        <span style="color:var(--md-on-surface-muted);" role="separator">|</span>
+        <a href="/en" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to English' : 'Chuyển sang tiếng Anh'} aria-current={isEn ? 'true' : 'false'} aria-pressed={isEn}>EN</a>
+      </div>
+    </div>
+    <!-- CTA always visible -->
+    <a href="/dashboard/signup" class="btn-primary nav-cta" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
+  </div>
+</nav>
+
+<style>
+  /* 5-Layer Dropdown */
+  .dropdown-container:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .dropdown-menu {
+    backdrop-filter: blur(8px);
+  }
+
+  /* Mobile hamburger menu */
+  .mobile-menu-btn { display: none; }
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      background: var(--md-surface);
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--md-outline);
+      gap: 12px;
+      z-index: 99;
+    }
+    .mobile-menu-btn {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+      background: none;
+      border: none;
+    }
+    .mobile-menu-btn span {
+      width: 24px;
+      height: 2px;
+      background: var(--md-on-surface);
+      border-radius: 2px;
+      transition: 0.2s;
+    }
+    .dropdown-container { display: none !important; }
+    .nav-cta { order: 3; }
+  }
+</style>
+
+<script>
+  const btn = document.getElementById('hamburger-btn');
+  const navLinks = document.getElementById('nav-links-mobile');
+  if (btn && navLinks) {
+    btn.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
+  }
+</script>
+
+<main id="main-content" role="main" tabindex="-1"><slot /></main>
+
+<!-- Footer -->
+<footer style="background:var(--md-surface-container);border-top:1px solid var(--md-outline);padding:64px 0 32px;" role="contentinfo">
+  <div class="container">
+    <div class="grid-3" style="margin-bottom:48px;">
+      <div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:12px;" class="gradient-text">OpenClaw</div>
+        <p style="color:var(--md-on-surface-muted);font-size:0.875rem;line-height:1.7;max-width:240px;">
+          {isEn ? 'AI-powered business automation for modern enterprises.' : 'Nền tảng tự động hóa doanh nghiệp bằng AI hiện đại.'}
+        </p>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-product-label">{isEn ? 'Product' : 'Sản phẩm'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-product-label">
+          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Features' : 'Tính năng'}</a>
+          <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Pricing' : 'Bảng giá'}</a>
+          <a href={`${base}/blog`} class="nav-link" style="font-size:0.875rem;" role="listitem">Blog</a>
+          <a href={`${base}/community`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Community' : 'Cộng Đồng'}</a>
+          <a href="/docs" class="nav-link" style="font-size:0.875rem;" role="listitem">API Docs</a>
+          <a href="/dashboard" class="nav-link" style="font-size:0.875rem;" role="listitem">Dashboard</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-company-label">{isEn ? 'Company' : 'Công ty'}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-company-label">
+          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'About' : 'Về chúng tôi'}</a>
+          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Contact' : 'Liên hệ'}</a>
+        </div>
+      </div>
+    </div>
+    <hr class="divider" />
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
+        <span class="built-badge">⚡ Built with AI</span>
+      </div>
+      <div style="display:flex;gap:20px;" role="navigation" aria-label={isEn ? 'Legal links' : 'Liên kết pháp lý'}>
+        <a href="/privacy" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Privacy' : 'Bảo mật'}</a>
+        <a href="/terms" style="color:var(--md-on-surface-muted);text-decoration:none;font-size:0.8rem;">{isEn ? 'Terms' : 'Điều khoản'}</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Intersection Observer for scroll animations
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('animate-in'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.animate-on-scroll').forEach(el => obs.observe(el));
+
+  // Counter Animation for Hero Section
+  const counters = document.querySelectorAll('.counter-value');
+  const speed = 2000; // Animation duration in ms
+
+  const animateCounter = (counter) => {
+    const target = +counter.getAttribute('data-target');
+    const increment = target / (speed / 16); // 60fps
+    let current = 0;
+
+    const updateCounter = () => {
+      current += increment;
+      if (current < target) {
+        counter.textContent = Math.floor(current).toLocaleString();
+        requestAnimationFrame(updateCounter);
+      } else {
+        counter.textContent = target.toLocaleString();
+      }
+    };
+    updateCounter();
+  };
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(counter => counterObserver.observe(counter));
+
+  // Testimonial Carousel
+  const track = document.getElementById('testimonialTrack');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const dotsContainer = document.getElementById('carouselDots');
+
+  if (track && prevBtn && nextBtn) {
+    let currentIndex = 0;
+    let isAutoPlaying = true;
+    let autoplayInterval;
+    let autoplayProgressInterval;
+    const cardWidth = 320; // Approximate card width + gap
+    const visibleCards = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
+    const maxIndex = Math.max(0, track.children.length - visibleCards);
+    const autoplayDelay = 5000; // 5 seconds per slide
+
+    // Create dots
+    const totalDots = Math.min(5, Math.ceil(track.children.length / 2));
+    for (let i = 0; i < totalDots; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      dot.setAttribute('tabindex', i === 0 ? '0' : '-1');
+      dot.addEventListener('click', () => goToSlide(i));
+      dot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goToSlide(i);
+        }
+      });
+      dotsContainer.appendChild(dot);
+    }
+
+    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+
+    function updateCarousel() {
+      const translateX = -currentIndex * cardWidth;
+      track.style.transform = `translateX(${translateX}px)`;
+
+      // Update dots
+      const activeDotIndex = Math.min(Math.floor(currentIndex / (track.children.length / 2 / totalDots)), dots.length - 1);
+      dots.forEach((dot, i) => {
+        const isActive = i === activeDotIndex;
+        dot.classList.toggle('active', isActive);
+        dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        dot.setAttribute('tabindex', isActive ? '0' : '-1');
+      });
+
+      // Announce slide change for screen readers
+      track.setAttribute('aria-live', 'polite');
+      track.setAttribute('aria-label', `Testimonial ${currentIndex + 1} of ${maxIndex + 1}`);
+    }
+
+    function goToSlide(index) {
+      currentIndex = Math.max(0, Math.min(index, maxIndex));
+      updateCarousel();
+      resetAutoplay();
+    }
+
+    function nextSlide() {
+      if (currentIndex >= maxIndex) {
+        currentIndex = 0; // Loop back to start
+      } else {
+        currentIndex++;
+      }
+      updateCarousel();
+    }
+
+    function prevSlide() {
+      if (currentIndex <= 0) {
+        currentIndex = maxIndex; // Loop to end
+      } else {
+        currentIndex--;
+      }
+      updateCarousel();
+    }
+
+    function startAutoplay() {
+      autoplayInterval = setInterval(nextSlide, autoplayDelay);
+      isAutoPlaying = true;
+    }
+
+    function stopAutoplay() {
+      clearInterval(autoplayInterval);
+      isAutoPlaying = false;
+    }
+
+    function resetAutoplay() {
+      stopAutoplay();
+      setTimeout(() => {
+        if (!isHovering) startAutoplay();
+      }, 3000);
+    }
+
+    let isHovering = false;
+    const carousel = document.querySelector('.testimonial-carousel');
+
+    if (carousel) {
+      carousel.addEventListener('mouseenter', () => {
+        isHovering = true;
+        stopAutoplay();
+      });
+      carousel.addEventListener('mouseleave', () => {
+        isHovering = false;
+        startAutoplay();
+      });
+    }
+
+    // Event listeners for buttons
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+      resetAutoplay();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+      resetAutoplay();
+    });
+
+    // Keyboard navigation for carousel
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement === carousel || carousel.contains(document.activeElement)) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          prevSlide();
+          resetAutoplay();
+          prevBtn.focus();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          nextSlide();
+          resetAutoplay();
+          nextBtn.focus();
+        }
+      }
+    });
+
+    // Touch support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      stopAutoplay();
+    }, { passive: true });
+
+    track.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+      resetAutoplay();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      }
+    }
+
+    // Initialize
+    updateCarousel();
+    startAutoplay();
+  }
+</script>
+
+<!-- Crisp Live Chat -->
+<script is:inline>
+  window.$crisp=[];window.CRISP_WEBSITE_ID="openclaw-placeholder";
+  (function(){var d=document;var s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s)})();
+</script>
+</body>
+</html>

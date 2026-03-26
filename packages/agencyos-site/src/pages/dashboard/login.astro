@@ -1,0 +1,341 @@
+---
+import AuthLayout from '../../layouts/auth-layout.astro';
+---
+<AuthLayout>
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo">
+          <span class="logo-icon">🐯</span>
+          <h1>OpenClaw RaaS</h1>
+        </div>
+        <p class="subtitle">Đăng nhập để quản lý doanh nghiệp AI của bạn</p>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="ban@congty.com"
+            required
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mật khẩu</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          />
+        </div>
+
+        <div class="form-actions">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember" />
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+          <a href="/forgot-password" class="link">Quên mật khẩu?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="submit-btn">
+          Đăng nhập
+        </button>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+      </form>
+
+      <div class="auth-divider">
+        <span>hoặc</span>
+      </div>
+
+      <div class="auth-footer">
+        <p>Chưa có tài khoản? <a href="/dashboard/signup" class="link">Đăng ký ngay</a></p>
+      </div>
+
+      <div class="auth-alt">
+        <p class="alt-text">
+          <a href="/dashboard/onboarding" class="link-alt">Dùng thử không cần đăng ký →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { getSupabaseClient, isSupabaseConfigured } from '../../lib/supabase.ts';
+
+    const supabaseConfigured = isSupabaseConfigured();
+
+    // Redirect if already logged in
+    const existingKey = localStorage.getItem('mk_api_key');
+    if (existingKey) {
+      window.location.replace('/dashboard');
+    }
+
+    const form = document.getElementById('login-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const errorEl = document.getElementById('error-message');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = (document.getElementById('email') as HTMLInputElement).value;
+      const password = (document.getElementById('password') as HTMLInputElement).value;
+
+      submitBtn!.disabled = true;
+      submitBtn!.textContent = 'Đang đăng nhập...';
+      errorEl!.style.display = 'none';
+
+      try {
+        if (supabaseConfigured) {
+          // Supabase auth
+          const supabase = getSupabaseClient();
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) throw error;
+
+          // Load profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+          // Store tenant context
+          if (profile?.tenant_id) {
+            localStorage.setItem('mk_api_key', `mk_${profile.tenant_id}`);
+            localStorage.setItem('mk_biz_name', profile.full_name || email);
+          }
+
+          window.location.replace('/dashboard');
+        } else {
+          // Fallback: API key login
+          const apiKey = `mk_${email.split('@')[0]}`;
+          const response = await fetch('https://mekong-engine.agencyos.network/v1/verify', {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('mk_api_key', apiKey);
+            localStorage.setItem('mk_biz_name', data.tenant_id || email);
+            window.location.replace('/dashboard');
+          } else {
+            throw new Error('Thông tin đăng nhập không đúng');
+          }
+        }
+      } catch (err: any) {
+        errorEl!.textContent = err.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+        errorEl!.style.display = 'block';
+        submitBtn!.disabled = false;
+        submitBtn!.textContent = 'Đăng nhập';
+      }
+    });
+  </script>
+</AuthLayout>
+
+<style>
+  .auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #0f1117 0%, #1a1d27 100%);
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: #1a1d27;
+    border: 1px solid #2e3248;
+    border-radius: 12px;
+    padding: 40px;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    font-size: 32px;
+  }
+
+  .logo h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #6366f1;
+    margin: 0;
+  }
+
+  .subtitle {
+    color: #a3b0c2;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    color: #a3b0c2;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .form-group input {
+    padding: 12px 16px;
+    border: 1px solid #2e3248;
+    border-radius: 8px;
+    background: #242736;
+    color: #e2e8f0;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-group input:focus {
+    border-color: #6366f1;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #a3b0c2;
+    cursor: pointer;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #6366f1;
+  }
+
+  .link {
+    color: #818cf8;
+    text-decoration: none;
+  }
+
+  .link:hover {
+    text-decoration: underline;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: #6366f1;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+
+  .btn-full {
+    width: 100%;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    color: #a3b0c2;
+    font-size: 13px;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2e3248;
+  }
+
+  .auth-footer {
+    text-align: center;
+    color: #a3b0c2;
+    font-size: 14px;
+  }
+
+  .auth-alt {
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .alt-text {
+    color: #a3b0c2;
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .link-alt {
+    color: #818cf8;
+    text-decoration: none;
+  }
+
+  .link-alt:hover {
+    text-decoration: underline;
+  }
+</style>

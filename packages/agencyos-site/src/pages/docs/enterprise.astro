@@ -1,0 +1,231 @@
+---
+import MainLayout from '../../layouts/docs-layout.astro';
+---
+
+<MainLayout
+  title="Enterprise — OpenClaw"
+  description="Enterprise-grade AI operations for large teams. SSO/SAML, 99.99% SLA, dedicated support, custom models, and audit logs."
+>
+  <!-- Hero -->
+  <section style="background:linear-gradient(135deg,#0a0a0a 60%,rgba(34,211,238,0.06) 100%);padding:80px 24px 60px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div style="max-width:720px;margin:0 auto;">
+      <div style="display:inline-block;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);border-radius:20px;padding:4px 16px;font-size:0.75rem;font-weight:700;color:#22d3ee;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px;">
+        Enterprise
+      </div>
+      <h1 style="font-size:clamp(2rem,5vw,3.25rem);font-weight:800;line-height:1.15;margin-bottom:20px;color:#f1f5f9;">
+        Enterprise-Grade<br /><span style="background:linear-gradient(135deg,#22d3ee,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI Operations</span>
+      </h1>
+      <p style="font-size:1.15rem;color:#94a3b8;line-height:1.7;margin-bottom:36px;">
+        Run your entire company on Mekong RaaS with the security, compliance, and support that enterprise teams demand.
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="#contact" style="background:linear-gradient(135deg,#22d3ee,#0891b2);color:#0a0a0a;font-weight:700;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:0.95rem;transition:opacity 0.2s;">
+          Contact Sales
+        </a>
+        <a href="/docs/pricing" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:#f1f5f9;font-weight:600;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:0.95rem;">
+          View Pricing
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section style="max-width:1100px;margin:0 auto;padding:72px 24px;">
+    <h2 style="text-align:center;font-size:1.75rem;font-weight:700;color:#f1f5f9;margin-bottom:12px;">Everything your enterprise needs</h2>
+    <p style="text-align:center;color:#94a3b8;margin-bottom:56px;font-size:1rem;">Built for security, compliance, and scale from day one.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;">
+      <!-- SSO/SAML -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">🔐</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">SSO / SAML 2.0</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Integrate with Okta, Azure AD, Google Workspace. One login for your entire team.</p>
+      </div>
+
+      <!-- SLA -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">📈</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">99.99% SLA</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Guaranteed uptime with financial penalties. Cloudflare-backed global edge infrastructure.</p>
+      </div>
+
+      <!-- Custom Models -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">🧠</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Custom Models</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Bring your own model or fine-tune on your data. BYOK (Bring Your Own Keys) supported.</p>
+      </div>
+
+      <!-- Dedicated Support -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">🎯</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Dedicated Support</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Named CSM, Slack Connect, and 2-hour response SLA. We're on-call when you need us.</p>
+      </div>
+
+      <!-- Audit Logs -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">📋</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Audit Logs</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Full tamper-proof audit trail of every mission, API call, and user action. Export to SIEM.</p>
+      </div>
+
+      <!-- Priority Queue -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">⚡</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Priority Queue</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Your missions always run first. Dedicated worker capacity with zero cold-start latency.</p>
+      </div>
+
+      <!-- Custom Integrations -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">🔗</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Custom Integrations</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Webhook callbacks, custom API connectors, Slack/Teams bots, and bespoke workflow automation.</p>
+      </div>
+
+      <!-- Volume Pricing -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='rgba(34,211,238,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'">
+        <div style="font-size:1.75rem;margin-bottom:12px;">💰</div>
+        <h3 style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Volume Pricing</h3>
+        <p style="color:#94a3b8;font-size:0.875rem;line-height:1.6;">Custom credit packages, annual billing discounts, and negotiated rates for high-volume usage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Placeholder -->
+  <section style="background:rgba(34,211,238,0.03);border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);padding:64px 24px;">
+    <div style="max-width:900px;margin:0 auto;text-align:center;">
+      <h2 style="font-size:1.5rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Trusted by forward-thinking teams</h2>
+      <p style="color:#94a3b8;margin-bottom:48px;font-size:0.9rem;">Early access customers — more stories coming soon</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;text-align:left;">
+          <p style="color:#94a3b8;font-size:0.9rem;line-height:1.7;margin-bottom:20px;font-style:italic;">"Mekong RaaS replaced three SaaS subscriptions and saved us 20+ hours per week on content ops."</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22d3ee,#9333ea);"></div>
+            <div>
+              <div style="font-weight:600;color:#f1f5f9;font-size:0.875rem;">Alex K.</div>
+              <div style="color:#64748b;font-size:0.8rem;">Founder, SaaS Studio</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;text-align:left;">
+          <p style="color:#94a3b8;font-size:0.9rem;line-height:1.7;margin-bottom:20px;font-style:italic;">"The audit logs and SSO integration made our security team very happy. Rolled out org-wide in 2 days."</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#22d3ee);"></div>
+            <div>
+              <div style="font-weight:600;color:#f1f5f9;font-size:0.875rem;">Maria T.</div>
+              <div style="color:#64748b;font-size:0.8rem;">CTO, Growth Agency</div>
+            </div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:28px;text-align:left;">
+          <p style="color:#94a3b8;font-size:0.9rem;line-height:1.7;margin-bottom:20px;font-style:italic;">"Priority queue means zero wait time during peak hours. The dedicated support is genuinely world-class."</p>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0891b2,#9333ea);"></div>
+            <div>
+              <div style="font-weight:600;color:#f1f5f9;font-size:0.875rem;">James R.</div>
+              <div style="color:#64748b;font-size:0.8rem;">DevOps Lead, Tech Corp</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Form -->
+  <section id="contact" style="max-width:640px;margin:0 auto;padding:72px 24px;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <h2 style="font-size:1.75rem;font-weight:700;color:#f1f5f9;margin-bottom:8px;">Talk to our team</h2>
+      <p style="color:#94a3b8;font-size:0.95rem;">We'll respond within 2 business hours.</p>
+    </div>
+
+    <div id="form-container" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:40px;">
+      <form id="enterprise-form" style="display:flex;flex-direction:column;gap:20px;">
+        <div>
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Full Name *</label>
+          <input
+            type="text"
+            id="inp-name"
+            required
+            placeholder="Jane Smith"
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;color:#f1f5f9;font-size:0.95rem;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#22d3ee'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          />
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Work Email *</label>
+          <input
+            type="email"
+            id="inp-email"
+            required
+            placeholder="jane@company.com"
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;color:#f1f5f9;font-size:0.95rem;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#22d3ee'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          />
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Company *</label>
+          <input
+            type="text"
+            id="inp-company"
+            required
+            placeholder="Acme Corp"
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;color:#f1f5f9;font-size:0.95rem;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#22d3ee'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          />
+        </div>
+        <div>
+          <label style="display:block;font-size:0.8rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Message</label>
+          <textarea
+            id="inp-message"
+            rows="4"
+            placeholder="Tell us about your use case, team size, and any specific requirements..."
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;color:#f1f5f9;font-size:0.95rem;outline:none;box-sizing:border-box;resize:vertical;transition:border-color 0.2s;font-family:inherit;"
+            onfocus="this.style.borderColor='#22d3ee'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          ></textarea>
+        </div>
+        <button
+          type="submit"
+          style="background:linear-gradient(135deg,#22d3ee,#0891b2);color:#0a0a0a;font-weight:700;padding:14px;border-radius:8px;border:none;cursor:pointer;font-size:0.95rem;width:100%;transition:opacity 0.2s;"
+          onmouseover="this.style.opacity='0.85'"
+          onmouseout="this.style.opacity='1'"
+        >
+          Send Message
+        </button>
+      </form>
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  const form = document.getElementById('enterprise-form') as HTMLFormElement;
+  const container = document.getElementById('form-container') as HTMLElement;
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = (document.getElementById('inp-name') as HTMLInputElement).value.trim();
+    const email = (document.getElementById('inp-email') as HTMLInputElement).value.trim();
+    const company = (document.getElementById('inp-company') as HTMLInputElement).value.trim();
+    const message = (document.getElementById('inp-message') as HTMLTextAreaElement).value.trim();
+
+    // Open mailto with prefilled content
+    const subject = encodeURIComponent(`Enterprise Inquiry — ${company}`);
+    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\nCompany: ${company}\n\n${message}`);
+    window.location.href = `mailto:sales@agencyos.network?subject=${subject}&body=${body}`;
+
+    // Show thank you state
+    container.innerHTML = `
+      <div style="text-align:center;padding:20px;">
+        <div style="font-size:3rem;margin-bottom:16px;">✅</div>
+        <h3 style="color:#22d3ee;font-size:1.25rem;font-weight:700;margin-bottom:8px;">Thank you, ${name}!</h3>
+        <p style="color:#94a3b8;line-height:1.6;">Your message has been prepared. If your email client didn't open, email us directly at <a href="mailto:sales@agencyos.network" style="color:#22d3ee;">sales@agencyos.network</a>.</p>
+        <p style="color:#64748b;font-size:0.85rem;margin-top:16px;">We'll respond within 2 business hours.</p>
+      </div>
+    `;
+  });
+</script>

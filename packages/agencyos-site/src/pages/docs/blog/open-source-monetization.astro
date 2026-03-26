@@ -1,0 +1,317 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const flowExample = `User runs CLI command
+         ↓
+System checks: Is this feature AI-powered?
+         ↓
+If YES:
+  - Check user's MCU balance
+  - If balance greater than 0: Execute task, deduct 1 MCU
+  - If balance equals 0: Show insufficient credits message
+         ↓
+If NO:
+  - Execute freely (no cost)`;
+
+const pricingTiers = `// Pricing tiers (Polar.sh)
+Starter: $49/mo → 200 MCU credits
+  - Good for: Side projects, hobby CLI usage
+
+Pro: $149/mo → 1,000 MCU credits
+  - Good for: Teams, production tools
+
+Enterprise: $499/mo → Unlimited MCU credits
+  - Good for: Large teams, commercial use`;
+
+const stripePacks = `// Stripe credit packs
+10 MCU credits: $5 (50 cents per MCU)
+50 MCU credits: $20 (40 cents per MCU)
+100 MCU credits: $35 (35 cents per MCU)`;
+---
+<MainLayout title="Open Source Monetization: Credit-Based Billing for CLI Tools" description="How to monetize an open-source CLI tool using MCU credits, Polar subscriptions, Stripe, and license keys. Architecture patterns + code examples.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">Open Source Monetization: Credit-Based Billing for CLI Tools</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 9 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Open Source Monetization Problem</h2>
+      <p>You've built a beloved open-source CLI tool. Thousands of stars on GitHub. Active community. But you're not making money.</p>
+      <p>Traditional options are terrible:</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Patreon/Open Collective:</strong> Gets you $500-2K/month if you're lucky. Doesn't scale.</li>
+        <li><strong>SaaS conversion:</strong> Removes the open-source advantage. Users abandon you for free forks.</li>
+        <li><strong>Sponsorships:</strong> Feels like selling out. Requires constant pitching.</li>
+        <li><strong>Support contracts:</strong> High friction. Only works if you have enterprise users.</li>
+      </ul>
+      <p><strong>The solution?</strong> Credit-based billing. Keep your CLI open-source and free, but charge for AI-powered features or high-volume usage.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The MCU Credit Model</h2>
+      <p><strong>MCU = Mission Completion Unit.</strong> One credit equals one meaningful task completion (writing, coding, analysis).</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">How It Works</h3>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{flowExample}</code></pre>
+
+      <p>Examples of free vs. paid:</p>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Feature</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Cost</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Why</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)"><code>mekong list</code> - List files</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Free</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Local filesystem operation</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)"><code>mekong cook</code> - AI mission</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">1-5 MCU</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">LLM inference costs money</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)"><code>mekong fix</code> - Debug issue</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">2-3 MCU</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Requires analysis + generation</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)"><code>mekong deploy</code> - Deploy code</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Free</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Just orchestrates your infrastructure</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)"><code>mekong review</code> - Code review</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">3 MCU</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Analysis-heavy, requires LLM</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:1rem"><strong>Key insight:</strong> Users don't pay for the CLI. They pay for the AI computations it enables.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Monetization Architecture (4 Revenue Streams)</h2>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 1: MCU Credit Subscriptions (Recurring)</h3>
+      <p>Users subscribe to monthly credit allowances via Polar.sh webhooks.</p>
+
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{pricingTiers}</code></pre>
+
+      <p><strong>Revenue model:</strong> 80% of revenue (assuming 200 users on Pro at $149/mo = $29,800 MRR)</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 2: Pay-As-You-Go (Variable)</h3>
+      <p>Users without subscriptions can buy credits à la carte via Stripe.</p>
+
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{stripePacks}</code></pre>
+
+      <p><strong>Revenue model:</strong> 10% of revenue (impulse buyers, infrequent usage)</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 3: Seat Licenses (Enterprise)</h3>
+      <p>Team of 5+ users? Sell per-seat annual licenses for commercial use.</p>
+
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`// Annual licenses (via Polar.sh)
+Team License: $299/year per seat
+  - 5 seats = $1,495/year
+  - Features: Shared credit pool, team management
+
+Business License: $699/year per seat
+  - For companies over 100 employees
+  - Features: All Team + dedicated support`}</code></pre>
+
+      <p><strong>Revenue model:</strong> 10% of revenue (converts 5-10% of user base to team licenses)</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 4: API Tier (Programmatic Access)</h3>
+      <p>Developers building on top of your CLI pay per API call.</p>
+
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`// HTTP API (for embedding Mekong in other tools)
+POST https://api.agencyos.network/v1/missions
+Authorization: Bearer sk_live_...
+Content-Type: application/json
+
+{
+  "command": "mekong cook 'write marketing email'",
+  "user_id": "user_123"
+}
+
+// API pricing (pay-as-you-go only)
+$0.50 per API call (1 MCU equivalent)
+No free tier, starts with $50 prepaid credits`}</code></pre>
+
+      <p><strong>Revenue model:</strong> Negligible initially, but upside as ecosystem grows</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Financial Projections</h2>
+
+      <p><strong>Assumptions:</strong> 1,000 total users at steady state</p>
+
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Segment</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Users</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">MRR/User</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Total MRR</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Free tier (10 MCU)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">700</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$0</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$0</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Pay-as-you-go (occasional)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">150</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$5</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$750</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Starter ($49)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">80</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$49</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$3,920</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Pro ($149)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">50</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$149</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$7,450</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Enterprise ($499)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">20</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$499</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$9,980</td>
+        </tr>
+        <tr style="background:var(--md-sys-color-surface-container);font-weight:bold">
+          <td colspan="3" style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">TOTAL MRR</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$22,100</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:1rem"><strong>At 1,000 users:</strong> $22,100 MRR = $265K ARR (before payment processor fees)</p>
+
+      <p><strong>Path to $1M ARR:</strong></p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li>Reach 4,500 users (10x growth)</li>
+        <li>Convert 10% to paid (instead of 2% currently)</li>
+        <li>Increase average LTV through upsells</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Key Learnings</h2>
+
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Free tier is essential:</strong> 70% of users will try free. Remove friction.</li>
+        <li><strong>Freemium works:</strong> Credit model converts 2-5% of free users to paid. That's your TAM.</li>
+        <li><strong>Subscription wins:</strong> $149/mo users generate 30x more ARR than $5 one-time buyers.</li>
+        <li><strong>Polar.sh is simple:</strong> Webhooks handle subscriptions automatically. No billing infrastructure needed.</li>
+        <li><strong>HTTP 402 is underused:</strong> Most apps ignore it. Use it clearly for payment-required errors.</li>
+        <li><strong>Transparency wins:</strong> Show cost before execution. Users will upgrade if the value is clear.</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>How to Start</h2>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">1. Add credit tracking to your database</h3>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE,
+  mcu_balance INT DEFAULT 10,
+  subscription_tier TEXT,
+  created_at DATETIME
+);
+
+CREATE TABLE transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  action TEXT,
+  amount_mcu INT,
+  source TEXT,
+  timestamp DATETIME
+);`}</code></pre>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">2. Add middleware for credit checking</h3>
+      <p>Implement a middleware that checks user balance before executing paid features.</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">3. Set up Polar.sh webhooks</h3>
+      <p>Listen for subscription.created, subscription.updated, and subscription.cancelled events.</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">4. Update your CLI</h3>
+      <p>Show balance before execution. Return HTTP 402 when credits run out.</p>
+
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">5. Launch</h3>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`mekong deploy --platform cloudflare
+# Your API is live on workers.dev
+
+# Update CLI to point to your API
+export LLM_API_BASE=https://your-api.cloudflare.dev
+
+# Announce the feature
+# "Now monetized! Free tier for everyone."`}</code></pre>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Fork & Deploy Your Own</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">The full Mekong RaaS billing architecture is open-source. Deploy in 30 minutes.</p>
+      <md-elevated-button onclick="location.href='https://github.com/openclaw/mekong-cli'">View on GitHub</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+
+  .blog-post li {
+    margin-bottom: 0.5rem;
+  }
+
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  .blog-post pre {
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  .blog-post pre code {
+    background: none;
+    padding: 0;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

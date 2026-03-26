@@ -1,0 +1,56 @@
+---
+// Static terminal demo — no props needed
+---
+
+<div class="terminal glass">
+  <div class="terminal-bar">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+    <span class="terminal-title">mekong-cli</span>
+  </div>
+  <pre class="terminal-body"><code><span class="t-prompt">$</span> mekong cook "Launch marketing campaign for SaaS product"
+<span class="t-info">OpenClaw online. Planning mission...</span>
+
+<span class="t-step">▸ Step 1/5</span> Analyzing market position
+<span class="t-step">▸ Step 2/5</span> Generating copy variants (3 angles)
+<span class="t-step">▸ Step 3/5</span> Creating email sequence (7 emails)
+<span class="t-step">▸ Step 4/5</span> Scheduling social posts (30 days)
+<span class="t-step">▸ Step 5/5</span> Publishing landing page
+
+<span class="t-success">✓ Mission complete</span> — 5 MCU consumed
+<span class="t-prompt">$</span> mekong plan "Q1 fundraise — Series A"
+<span class="t-info">Generating pitch deck, financial model, data room...</span>
+<span class="t-success">✓ VC package ready</span> — docs/pitch-deck.pdf</code></pre>
+</div>
+
+<style>
+  .terminal { overflow: hidden; }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.red { background: #FF5F57; }
+  .dot.yellow { background: #FFBD2E; }
+  .dot.green { background: #28CA41; }
+  .terminal-title {
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .terminal-body {
+    padding: var(--spacing-lg);
+    background: none;
+    border: none;
+    border-radius: 0;
+  }
+  .t-prompt { color: var(--md-sys-color-primary); font-weight: 700; }
+  .t-info { color: var(--md-sys-color-on-surface-variant); }
+  .t-step { color: #9C27B0; }
+  .t-success { color: #4CAF50; }
+</style>

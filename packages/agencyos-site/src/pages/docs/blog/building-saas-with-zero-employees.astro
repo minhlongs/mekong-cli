@@ -1,0 +1,217 @@
+---
+import MainLayout from '../../../layouts/docs-layout.astro';
+const codeExample1 = `# The zero-employee tech stack (2026)
+Infrastructure:  Cloudflare Workers + D1 + KV + R2  → $0-5/mo
+Payments:        Polar.sh webhooks                   → 0% platform fee
+Support:         AI-drafted responses, founder reviews → 2 hrs/week
+Code:            mekong cook / fix / deploy           → 1 engineer-equivalent
+Sales:           mekong sales/prospect + outreach     → 200 emails/week, 0 manual
+Marketing:       mekong marketing/content             → 30 posts/month, 0 hrs
+Finance:         mekong finance + Stripe dashboard    → 1 hr/week review
+Total headcount: 1 founder + AI agents               → $1M ARR possible`;
+
+const codeExample2 = `# Week 1: Foundation
+mekong cook "scaffold SaaS with auth, billing, and dashboard"
+# → Cloudflare Workers API + D1 schema + JWT auth + Polar.sh billing
+# → Complete in 4 hours. Would take a team 2 weeks.
+
+# Week 2: Core product
+mekong cook "implement [core feature] with tests and API docs"
+mekong deploy   # CI/CD pipeline configured automatically
+mekong security # Vulnerability scan before launch
+
+# Week 3: Growth infrastructure
+mekong marketing/landing --niche="[your ICP]"
+mekong sales/icp --describe="who pays you and why"
+mekong plan "go-to-market for [product] targeting [segment]"`;
+
+const codeExample3 = `# Daily operating routine (total: 45 minutes)
+08:00  mekong status          # 5 min: infra health, errors, payments
+08:05  mekong finance         # 5 min: daily revenue, churn, runway
+08:10  Review AI-drafted support replies    # 10 min: approve/edit
+08:20  Review AI-drafted outreach queue    # 10 min: approve/send
+08:30  mekong sprint --review             # 5 min: what shipped overnight
+08:35  One strategic decision or customer call  # The human part
+# Remaining 7+ hours: deep work, customer calls, or personal time`;
+
+const codeExample4 = `# The referral growth flywheel
+mekong cook "implement referral system with unique codes and credit rewards"
+# → Referral tracking in D1
+# → Unique code per user
+# → 5 credits per successful referral
+# → Leaderboard API for social proof
+
+# Result: users recruit other users.
+# Customer acquisition cost: $0 cash, 5 credits ($0.25 at cost)
+# vs. paid acquisition: $50-200 per customer in B2B SaaS`;
+---
+<MainLayout title="Building a SaaS with Zero Employees: The Mekong CLI Playbook" description="A practical playbook for building and running a SaaS business with zero employees using AI agents. Real workflows, real economics, and the exact Mekong CLI commands used to automate every business function.">
+  <article class="blog-post" style="max-width:800px;margin:0 auto;padding:2rem">
+    <h1 class="gradient-text">Building a SaaS with Zero Employees: The Mekong CLI Playbook</h1>
+    <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:2rem">Published March 21, 2026 · 11 min read</p>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Zero-Employee Company Is Not a Myth</h2>
+      <p>When Pieter Levels built Nomad List and Remote OK to millions in revenue as a solo founder, the tech world treated it as an anomaly — a quirky exception that proved the rule that startups need teams. That was 2015.</p>
+      <p>In 2026, the zero-employee SaaS is no longer a quirk. It is a deliberate strategy. A growing cohort of founders are building businesses to $500K, $1M, even $5M ARR without hiring a single full-time employee. Not because they can't afford to hire, but because they've discovered that a <strong>zero employee company</strong> running on AI agents outperforms a five-person team on every metric that matters: speed, cost, and adaptability.</p>
+      <p>This is the playbook we use at Mekong RaaS. We will walk through every layer of the business, the exact tools and commands used to automate each one, and the real economics that make it work.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Stack: What a Zero-Employee SaaS Actually Runs On</h2>
+      <p>The zero-employee company requires two things to work: infrastructure costs near zero (so revenue is mostly profit) and AI agents covering every business function (so founder time is spent on decisions, not execution).</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample1}</code></pre>
+      <p>The infrastructure math is critical. A traditional SaaS with AWS + Postgres + Redis + monitoring runs $500-2,000/mo before a single paying customer. At 30% net margins, you need $7,000/mo revenue just to break even on infrastructure. With Cloudflare's edge stack, you need $17/mo. You are profitable from customer one.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Phase 1: Build the Product (Weeks 1-4)</h2>
+      <p>The first month is product development. With AI-assisted coding, a solo founder can ship a complete, production-ready SaaS in four weeks. Not an MVP with duct tape — a real product with auth, billing, tests, and documentation.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
+
+      <h3>What AI handles in product development</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Architecture decisions:</strong> <code>mekong design "multi-tenant SaaS architecture on Cloudflare"</code></li>
+        <li><strong>Database schema:</strong> <code>mekong cook "D1 schema for [product] with migrations"</code></li>
+        <li><strong>API implementation:</strong> Feature-by-feature with tests and error handling</li>
+        <li><strong>Security audit:</strong> <code>mekong security</code> before every deployment</li>
+        <li><strong>Documentation:</strong> <code>mekong docs</code> generates API docs from code</li>
+      </ul>
+
+      <h3>What the founder handles</h3>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li>Core product decisions: what to build, in what order, and why</li>
+        <li>Customer conversations: the 10-20 early user calls that define product direction</li>
+        <li>Quality review: approving or redirecting AI-generated code before merge</li>
+      </ul>
+      <p>The ratio is roughly 80% AI execution, 20% human judgment. The founder's job is to be the product director, not the engineer.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Phase 2: Launch and First Revenue (Weeks 5-8)</h2>
+      <p>The launch phase is where most solo founders stall. They have a product but no audience. Traditional marketing requires content, distribution, and outreach at scale — which traditionally requires people.</p>
+
+      <h3>Content marketing at scale without a team</h3>
+      <p><code>mekong marketing/content --strategy="SEO + Twitter + newsletter"</code> generates a full 90-day content calendar based on your ICP and keyword research. Each piece is drafted by AI and reviewed (not written) by the founder. Output: 3-4 blog posts per week, daily social posts, bi-weekly newsletter.</p>
+
+      <h3>Outbound sales without a sales team</h3>
+      <p><code>mekong sales/prospect --niche="[your ICP]"</code> researches leads from public sources, scores them against your ICP criteria, and drafts personalized outreach for founder review. At 200 emails/week with personalization, even a 3% response rate is 6 qualified conversations per week — without hiring an SDR.</p>
+
+      <h3>Support without a support team</h3>
+      <p>Connect your support inbox to Mekong. <code>mekong support/triage</code> categorizes tickets, drafts responses (pulling from your docs and codebase for technical questions), and flags anything needing founder attention. Founder reviews and approves — 10-15 minutes per day for most early-stage products.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>The Daily Operating Routine</h2>
+      <p>Once the zero-employee SaaS is running, the founder's day looks fundamentally different from a traditional startup founder. Less firefighting, more decision-making.</p>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>
+      <p>The remaining hours go to product strategy, customer relationships, and the work that actually requires a human. The operational work — the execution that consumes most startup founders — is handled by AI agents running continuously.</p>
+      <p>This is the key mindset shift: you are not an operator who uses AI tools. You are a director whose operational staff are AI agents. Your job is to set direction and make the decisions only you can make.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Phase 3: Growth Engine (Months 3-12)</h2>
+      <p>Reaching $100K ARR solo is about finding one growth channel that compounds. For most B2B SaaS, this is either content SEO (compounds over 12-24 months) or referrals (compounds faster if the product has network effects).</p>
+
+      <h3>The referral flywheel</h3>
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample4}</code></pre>
+
+      <h3>Economics at scale</h3>
+      <table style="width:100%;border-collapse:collapse;margin:1rem 0">
+        <tr style="background:var(--md-sys-color-surface-container)">
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Metric</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Traditional 5-person team</th>
+          <th style="padding:0.75rem;text-align:left;border:1px solid var(--md-sys-color-outline)">Zero-employee AI SaaS</th>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Monthly fixed costs</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$50-80K (salaries + infra)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$500-2K (AI tools + infra)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Revenue to break even</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$150-250K MRR</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">$2-5K MRR</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Net margin at $1M ARR</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">20-30%</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">70-85%</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Decision speed</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Days (coordination overhead)</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Hours (no coordination)</td>
+        </tr>
+        <tr>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">Runway at $500K raised</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">6-8 months</td>
+          <td style="padding:0.75rem;border:1px solid var(--md-sys-color-outline)">4+ years</td>
+        </tr>
+      </table>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>What You Cannot Automate (Yet)</h2>
+      <p>Intellectual honesty requires acknowledging the limits. Three things genuinely require humans in 2026:</p>
+      <ul style="color:var(--md-sys-color-on-surface-variant);line-height:1.8">
+        <li><strong>Relationship-driven enterprise sales.</strong> Large contracts (&gt;$50K ACV) still close through trust built over months of human interaction. AI can handle the pipeline, but the close requires presence.</li>
+        <li><strong>Novel strategic decisions.</strong> AI is excellent at executing known playbooks. When you're doing something genuinely new — entering a new market, pivoting the product, deciding whether to raise — human judgment is still superior.</li>
+        <li><strong>Community building.</strong> The authentic founder story, the Twitter presence, the conference talk. These are human signals that AI-generated content cannot replicate at the same authenticity level.</li>
+      </ul>
+      <p>The zero-employee company does not eliminate the founder. It focuses the founder on the 20% of work that actually requires a human, and automates the 80% that does not.</p>
+    </section>
+
+    <section style="margin-bottom:2rem">
+      <h2>Start the Playbook</h2>
+      <p>The full Mekong CLI toolkit is open source and free to use locally with your own LLM. The cloud RaaS platform adds hosted execution, mission history, and team features. See the <a href="/docs/guides/quickstart">quickstart guide</a> to install and run your first commands, or see <a href="/docs/pricing">pricing</a> for cloud credits.</p>
+      <p>The zero-employee SaaS is not about being cheap. It is about being fast, lean, and structurally profitable from day one. The founders building this way are not cutting corners — they are building the most defensible businesses in the market.</p>
+    </section>
+
+    <div style="margin-top:3rem;padding:2rem;background:var(--md-sys-color-surface-container);border-radius:12px;text-align:center">
+      <h3>Build Your Zero-Employee SaaS</h3>
+      <p style="color:var(--md-sys-color-on-surface-variant)">10 free credits. Open source. Works with any LLM. No card required.</p>
+      <md-elevated-button onclick="location.href='/'">Start Building Free</md-elevated-button>
+    </div>
+  </article>
+</MainLayout>
+
+<style>
+  .blog-post h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post h3 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post p {
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+  .blog-post ul, .blog-post ol {
+    margin: 1rem 0 1rem 2rem;
+    line-height: 1.8;
+  }
+  .blog-post li { margin-bottom: 0.5rem; }
+  .blog-post code {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: rgba(0, 188, 212, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .blog-post pre { border-radius: 8px; overflow-x: auto; }
+  .blog-post pre code { background: none; padding: 0; }
+  .gradient-text {
+    background: linear-gradient(135deg, #00bcd4, #0097a7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>
