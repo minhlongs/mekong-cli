@@ -16,15 +16,15 @@ const steps = [
 
 const plans = [
   { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: '/dashboard/signup', featured: false },
-  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: '/dashboard/signup?plan=starter', featured: false },
-  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: '/dashboard/signup?plan=pro', featured: true },
+  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://nowpayments.io/payment/?iid=6245075877', featured: false },
+  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://nowpayments.io/payment/?iid=5438578229', featured: true },
   { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
 ];
 
 const faqs = [
   { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong 5 phút đầu tiên.' },
   { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
-  { q: 'Thanh toán bằng gì?', a: 'Thanh toán qua Polar.sh với Visa/Mastercard. Hỗ trợ toàn cầu, giá USD.' },
+  { q: 'Thanh toán bằng gì?', a: 'Thanh toán bằng USDT (TRC20) qua NOWPayments. Hỗ trợ toàn cầu, giá USD.' },
   { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ.' },
   { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
 ];
