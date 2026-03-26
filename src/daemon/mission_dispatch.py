@@ -119,8 +119,8 @@ def dispatch_task(item: Any) -> MissionResult:
     if task.capability in AGENT_CAPABILITIES:
         try:
             from .agent_loop import run_agent_sync
-            # Map capability to tier: coding-capable → coding, else fast
-            tier = "coding" if task.capability in {"builder", "reviewer"} else "fast"
+            # Map capability to tier: coding-capable → deep, else fast
+            tier = "deep" if task.capability in {"builder", "reviewer"} else "fast"
             output = run_agent_sync(item.description, model_tier=tier)
             result = MissionResult(success=True, output=output, exit_code=0)
             router.record_success(model_config)
