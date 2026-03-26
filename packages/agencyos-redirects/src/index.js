@@ -9,7 +9,7 @@ export default {
     const path = url.pathname;
 
     const redirectMap = {
-      'sophia.agencyos.network': 'https://agencyos.network/',
+      // sophia.agencyos.network removed — now a standalone Vercel app, DNS handles it directly
       'landing.agencyos.network': 'https://agencyos.network/',
       'app.agencyos.network': `https://agencyos.network/dashboard${path}`,
       'dashboard.agencyos.network': `https://agencyos.network/dashboard${path}`,
