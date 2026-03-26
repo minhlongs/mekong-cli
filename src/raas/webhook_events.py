@@ -143,7 +143,7 @@ def credits_depleted_event(
         payload={
             "balance": balance,
             "plan": plan,
-            "upgrade_url": "https://polar.sh/mekong",
+            "upgrade_url": "https://agencyos.network/pricing",
         },
     )
 

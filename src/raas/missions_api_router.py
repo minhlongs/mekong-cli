@@ -72,7 +72,7 @@ def submit_mission(
         raise HTTPException(
             status_code=402,
             detail=str(exc),
-            headers={"X-Upgrade-URL": "https://polar.sh/mekong"},
+            headers={"X-Upgrade-URL": "https://agencyos.network/pricing"},
         ) from exc
     except Exception as exc:
         logger.exception("Mission submit error: %s", exc)
