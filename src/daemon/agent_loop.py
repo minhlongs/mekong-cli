@@ -32,42 +32,24 @@ logger = logging.getLogger(__name__)
 MEKONG_ROOT = Path(__file__).parent.parent.parent
 SANDBOX_DIR = MEKONG_ROOT / ".mekong"
 
-# LLM endpoints + model IDs by tier
+# Dual-model MLX local only (no cloud API)
+# Nemotron A3B ~45 tok/s | DeepSeek R1 32B ~10 tok/s
 TIER_CONFIG = {
     "fast": {
         "url": os.getenv("NEMOTRON_URL", "http://192.168.11.111:11436/v1"),
         "model": "mlx-community/NVIDIA-Nemotron-3-Nano-30B-A3B-4bit",
+        "max_tokens": 256,
+        "timeout": 30,
     },
     "deep": {
-        "url": os.getenv("QWEN_CODER_URL", "http://192.168.11.111:11435/v1"),
-        "model": "mlx-community/Qwen2.5-Coder-32B-Instruct-4bit",
-    },
-    "coding": {
-        "url": os.getenv("CODING_PLAN_URL",
-            "https://coding-intl.dashscope.aliyuncs.com/v1"),
-        "model": "qwen3.5-plus",
+        "url": os.getenv("DEEPSEEK_R1_URL", "http://192.168.11.111:11435/v1"),
+        "model": "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
+        "max_tokens": 512,
+        "timeout": 180,
     },
 }
 # Legacy compat
 TIER_URLS = {k: v["url"] for k, v in TIER_CONFIG.items()}
-
-# Coding Plan key rotation (2 accounts = 180K req/mo total)
-_coding_keys: list[str] = []
-_coding_key_idx = 0
-
-def _get_coding_key() -> str:
-    """Rotate between available Coding Plan API keys."""
-    global _coding_keys, _coding_key_idx
-    if not _coding_keys:
-        keys = []
-        k1 = os.getenv("BAILIAN_CODING_PLAN_API_KEY", os.getenv("DASHSCOPE_API_KEY", ""))
-        k2 = os.getenv("BAILIAN_CODING_PLAN_API_KEY_2", os.getenv("DASHSCOPE_API_KEY_2", ""))
-        if k1: keys.append(k1)
-        if k2: keys.append(k2)
-        _coding_keys = keys if keys else ["local"]
-    key = _coding_keys[_coding_key_idx % len(_coding_keys)]
-    _coding_key_idx += 1
-    return key
 
 # Tool definitions (OpenAI function calling format)
 TOOLS = [
@@ -162,7 +144,8 @@ def execute_tool(name: str, args: dict[str, Any]) -> str:
 
 
 def _llm_call(
-    messages: list, base_url: str, model: str = "default", api_key: str = "local"
+    messages: list, base_url: str, model: str = "default",
+    api_key: str = "local", max_tokens: int = 512, timeout: int = 120,
 ) -> dict:
     """Call LLM via OpenAI-compatible API. Returns assistant message dict."""
     url = f"{base_url.rstrip('/')}/chat/completions"
@@ -170,7 +153,7 @@ def _llm_call(
         "model": model,
         "messages": messages,
         "tools": TOOLS,
-        "max_tokens": 2048,
+        "max_tokens": max_tokens,
         "temperature": 0.3,
     }).encode("utf-8")
 
@@ -179,7 +162,7 @@ def _llm_call(
         headers["Authorization"] = f"Bearer {api_key}"
 
     req = Request(url, data=payload, headers=headers)
-    with urlopen(req, timeout=120) as resp:
+    with urlopen(req, timeout=timeout) as resp:
         data = json.loads(resp.read())
 
     return data["choices"][0]["message"]
@@ -195,7 +178,9 @@ def run_agent_sync(
     tier = TIER_CONFIG.get(model_tier, TIER_CONFIG["fast"])
     base_url = tier["url"]
     model_id = tier["model"]
-    api_key = _get_coding_key() if model_tier == "coding" else "local"
+    api_key = "local"
+    max_tok = tier.get("max_tokens", 512)
+    timeout = tier.get("timeout", 120)
 
     messages = []
     if system_prompt:
@@ -204,7 +189,8 @@ def run_agent_sync(
 
     for step in range(max_steps):
         try:
-            msg = _llm_call(messages, base_url, model_id, api_key)
+            msg = _llm_call(messages, base_url, model_id, api_key,
+                            max_tokens=max_tok, timeout=timeout)
         except (URLError, Exception) as e:
             logger.error(f"LLM call failed (step {step}): {e}")
             return f"Error: LLM call failed — {e}"
