@@ -1,21 +1,21 @@
 {
-  "name": "F&B Caffe Container",
-  "short_name": "F&B Caffe",
+  "name": "FnB Caffe Container",
+  "short_name": "FnB Caffe",
   "description": "Không gian cà phê container độc đáo với trải nghiệm hiện đại",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFBFE",
-  "theme_color": "#6750A4",
+  "theme_color": "#4a2c17",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "assets/icons/favicon-192.png",
+      "src": "/public/images/favicon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/favicon-512.png",
+      "src": "/public/images/favicon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

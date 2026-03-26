@@ -1,6 +1,13 @@
 /**
  * Menu Routes
  * API endpoints cho menu operations
+ *
+ * RATE LIMITING RECOMMENDATIONS:
+ * - GET /api/menu: 100 req/min per IP (public read-only)
+ * - GET /api/menu/:id: 100 req/min per IP
+ *
+ * These are public endpoints with high cacheability. Consider using
+ * Cloudflare Cache for even better performance.
  */
 
 import { jsonResponse, errorResponse } from '../middleware/cors.js';

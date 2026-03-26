@@ -5,6 +5,9 @@
  * This file coordinates between cart, payment, and validation modules
  * to handle the complete checkout flow.
  *
+ * SECURITY: All user inputs are sanitized using escapeHtml() from validation.js
+ * (DOMPurify pattern - DOM-based escaping via createElement.textContent)
+ *
  * @module checkout
  */
 
@@ -249,6 +252,7 @@ function sendOrderToWebSocket(order) {
 
 /**
  * Send Order to Zalo
+ * SECURITY: All user inputs sanitized with escapeHtml() (DOMPurify pattern)
  */
 function sendOrderToZalo(order) {
   const itemsText = order.items.map(item =>
@@ -280,6 +284,7 @@ ${order.discount > 0 ? `🏷️ Giảm giá: -${Payment.formatPrice(order.discou
 
 /**
  * Show Success Modal
+ * SECURITY: Order data sanitized with escapeHtml() (DOMPurify pattern)
  */
 function showSuccessModal(order) {
   const modal = document.getElementById('successModal');

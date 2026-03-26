@@ -1,6 +1,15 @@
 /**
  * Auth Routes
  * API endpoints cho authentication operations
+ *
+ * RATE LIMITING RECOMMENDATIONS (CRITICAL for auth endpoints):
+ * - POST /api/auth/login: 5 req/min per IP (prevent brute force)
+ * - POST /api/auth/register: 3 req/min per IP (prevent spam accounts)
+ * - POST /api/auth/logout: 30 req/min per IP
+ * - GET /api/auth/me: 60 req/min per IP
+ *
+ * Implement using Cloudflare Rate Limiting with strict limits.
+ * Consider adding account lockout after failed login attempts.
  */
 
 import { jsonResponse, errorResponse } from '../middleware/cors.js';

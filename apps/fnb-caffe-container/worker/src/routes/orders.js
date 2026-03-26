@@ -1,6 +1,14 @@
 /**
  * Orders Routes
  * API endpoints cho order operations
+ *
+ * RATE LIMITING RECOMMENDATIONS:
+ * - POST /api/orders: 20 req/min per IP (prevent spam orders)
+ * - GET /api/orders/:id: 60 req/min per IP
+ * - PATCH /api/orders/:id: 10 req/min per IP (admin operations)
+ * - GET /api/admin/orders: 30 req/min per IP (admin dashboard)
+ *
+ * Implement using Cloudflare Rate Limiting or Workers KV for custom logic.
  */
 
 import { jsonResponse, errorResponse } from '../middleware/cors.js';

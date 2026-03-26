@@ -8,12 +8,100 @@
  * - Menu fetching
  * - Order management (create, read, update)
  * - Admin operations
+ *
+ * Features:
+ * - Comprehensive error handling with try-catch
+ * - Offline detection with navigator.onLine
+ * - Custom error events for monitoring
+ * - Request timeout with AbortController
  */
 
 import { API_CONFIG } from './config.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
+
+// ─── Error Types ───
+
+/**
+ * Custom error class for API errors
+ */
+export class APIError extends Error {
+  constructor(message, statusCode, response) {
+    super(message);
+    this.name = 'APIError';
+    this.statusCode = statusCode;
+    this.response = response;
+    this.timestamp = new Date().toISOString();
+  }
+}
+
+/**
+ * Custom error class for network errors
+ */
+export class NetworkError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'NetworkError';
+    this.timestamp = new Date().toISOString();
+  }
+}
+
+/**
+ * Custom error class for timeout errors
+ */
+export class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'TimeoutError';
+    this.timestamp = new Date().toISOString();
+  }
+}
+
+// ─── Offline Detection ───
+
+/**
+ * Check if app is currently offline
+ * @returns {boolean} True if offline
+ */
+export function isOffline() {
+  return !navigator.onLine;
+}
+
+/**
+ * Throw error if offline
+ * @throws {NetworkError} If offline
+ */
+export function checkOnlineStatus() {
+  if (isOffline()) {
+    throw new NetworkError('Network error: App is offline');
+  }
+}
+
+// ─── Error Event Dispatcher ───
+
+/**
+ * Dispatch custom error event for monitoring
+ * @param {string} type - Error type
+ * @param {Error} error - Error object
+ * @param {object} context - Additional context
+ */
+function dispatchErrorEvent(type, error, context = {}) {
+  const event = new CustomEvent('fnb:error', {
+    detail: {
+      type,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      context,
+      timestamp: new Date().toISOString()
+    }
+  });
+  window.dispatchEvent(event);
+  console.error(`[FNB API ${type}]`, error.message, context);
+}
 
 // ─── API Client Core ───
 const apiClient = {
@@ -22,13 +110,22 @@ const apiClient = {
      * @param {string} endpoint - API endpoint
      * @param {object} options - Fetch options
      * @returns {Promise<any>} Response data
+     * @throws {NetworkError|TimeoutError|APIError}
      */
   async get(endpoint, options = {}) {
     const url = `${API_CONFIG.BASE}${endpoint}`;
 
+    // Check online status before making request
+    checkOnlineStatus();
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        dispatchErrorEvent('TIMEOUT', new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`), { endpoint, method: 'GET' });
+      }, API_CONFIG.TIMEOUT);
+
+      if (DEBUG) {console.log(`[FNB API GET] ${url}`);}
 
       const response = await fetch(url, {
         method: 'GET',
@@ -43,12 +140,39 @@ const apiClient = {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const error = new APIError(
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+        dispatchErrorEvent('HTTP_ERROR', error, { endpoint, status: response.status });
+        throw error;
       }
 
       return await response.json();
     } catch (error) {
-      if (DEBUG) {console.error(`API GET error (${endpoint}):`, error.message);}
+      // Handle abort/timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`);
+        dispatchErrorEvent('TIMEOUT', timeoutError, { endpoint, method: 'GET' });
+        throw timeoutError;
+      }
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new NetworkError(`Network error: Unable to reach server (${endpoint})`);
+        dispatchErrorEvent('NETWORK', networkError, { endpoint, method: 'GET' });
+        throw networkError;
+      }
+
+      // Re-throw API errors (already dispatched)
+      if (error instanceof APIError || error instanceof TimeoutError || error instanceof NetworkError) {
+        throw error;
+      }
+
+      // Handle unknown errors
+      dispatchErrorEvent('UNKNOWN', error, { endpoint, method: 'GET' });
       throw error;
     }
   },
@@ -58,13 +182,22 @@ const apiClient = {
      * @param {string} endpoint - API endpoint
      * @param {object} data - Request body
      * @returns {Promise<any>} Response data
+     * @throws {NetworkError|TimeoutError|APIError}
      */
   async post(endpoint, data = {}) {
     const url = `${API_CONFIG.BASE}${endpoint}`;
 
+    // Check online status before making request
+    checkOnlineStatus();
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        dispatchErrorEvent('TIMEOUT', new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`), { endpoint, method: 'POST' });
+      }, API_CONFIG.TIMEOUT);
+
+      if (DEBUG) {console.log(`[FNB API POST] ${url}`, data);}
 
       const response = await fetch(url, {
         method: 'POST',
@@ -78,28 +211,64 @@ const apiClient = {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const error = new APIError(
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+        dispatchErrorEvent('HTTP_ERROR', error, { endpoint, status: response.status, method: 'POST' });
+        throw error;
       }
 
       return await response.json();
     } catch (error) {
-      if (DEBUG) {console.error(`API POST error (${endpoint}):`, error.message);}
+      // Handle abort/timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`);
+        dispatchErrorEvent('TIMEOUT', timeoutError, { endpoint, method: 'POST' });
+        throw timeoutError;
+      }
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new NetworkError(`Network error: Unable to reach server (${endpoint})`);
+        dispatchErrorEvent('NETWORK', networkError, { endpoint, method: 'POST' });
+        throw networkError;
+      }
+
+      // Re-throw API errors (already dispatched)
+      if (error instanceof APIError || error instanceof TimeoutError || error instanceof NetworkError) {
+        throw error;
+      }
+
+      // Handle unknown errors
+      dispatchErrorEvent('UNKNOWN', error, { endpoint, method: 'POST' });
       throw error;
     }
   },
 
   /**
-     * Generic PUT request
+     * Generic PUT request with error handling
      * @param {string} endpoint - API endpoint
      * @param {object} data - Request body
      * @returns {Promise<any>} Response data
+     * @throws {NetworkError|TimeoutError|APIError}
      */
   async put(endpoint, data = {}) {
     const url = `${API_CONFIG.BASE}${endpoint}`;
 
+    // Check online status before making request
+    checkOnlineStatus();
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        dispatchErrorEvent('TIMEOUT', new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`), { endpoint, method: 'PUT' });
+      }, API_CONFIG.TIMEOUT);
+
+      if (DEBUG) {console.log(`[FNB API PUT] ${url}`, data);}
 
       const response = await fetch(url, {
         method: 'PUT',
@@ -113,12 +282,111 @@ const apiClient = {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const error = new APIError(
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+        dispatchErrorEvent('HTTP_ERROR', error, { endpoint, status: response.status, method: 'PUT' });
+        throw error;
       }
 
       return await response.json();
     } catch (error) {
-      if (DEBUG) {console.error(`API PUT error (${endpoint}):`, error.message);}
+      // Handle abort/timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`);
+        dispatchErrorEvent('TIMEOUT', timeoutError, { endpoint, method: 'PUT' });
+        throw timeoutError;
+      }
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new NetworkError(`Network error: Unable to reach server (${endpoint})`);
+        dispatchErrorEvent('NETWORK', networkError, { endpoint, method: 'PUT' });
+        throw networkError;
+      }
+
+      // Re-throw API errors (already dispatched)
+      if (error instanceof APIError || error instanceof TimeoutError || error instanceof NetworkError) {
+        throw error;
+      }
+
+      // Handle unknown errors
+      dispatchErrorEvent('UNKNOWN', error, { endpoint, method: 'PUT' });
+      throw error;
+    }
+  },
+
+  /**
+     * Generic DELETE request with error handling
+     * @param {string} endpoint - API endpoint
+     * @param {object} options - Request options
+     * @returns {Promise<any>} Response data
+     * @throws {NetworkError|TimeoutError|APIError}
+     */
+  async delete(endpoint, options = {}) {
+    const url = `${API_CONFIG.BASE}${endpoint}`;
+
+    // Check online status before making request
+    checkOnlineStatus();
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        dispatchErrorEvent('TIMEOUT', new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`), { endpoint, method: 'DELETE' });
+      }, API_CONFIG.TIMEOUT);
+
+      if (DEBUG) {console.log(`[FNB API DELETE] ${url}`);}
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        signal: controller.signal,
+        ...options
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const error = new APIError(
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status,
+          errorData
+        );
+        dispatchErrorEvent('HTTP_ERROR', error, { endpoint, status: response.status, method: 'DELETE' });
+        throw error;
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Handle abort/timeout
+      if (error.name === 'AbortError') {
+        const timeoutError = new TimeoutError(`Request timeout after ${API_CONFIG.TIMEOUT}ms`);
+        dispatchErrorEvent('TIMEOUT', timeoutError, { endpoint, method: 'DELETE' });
+        throw timeoutError;
+      }
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new NetworkError(`Network error: Unable to reach server (${endpoint})`);
+        dispatchErrorEvent('NETWORK', networkError, { endpoint, method: 'DELETE' });
+        throw networkError;
+      }
+
+      // Re-throw API errors (already dispatched)
+      if (error instanceof APIError || error instanceof TimeoutError || error instanceof NetworkError) {
+        throw error;
+      }
+
+      // Handle unknown errors
+      dispatchErrorEvent('UNKNOWN', error, { endpoint, method: 'DELETE' });
       throw error;
     }
   }
