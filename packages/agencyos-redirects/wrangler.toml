@@ -1,0 +1,12 @@
+name = "agencyos-redirects"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+# Routes need zone-level Workers Routes permission
+# For now deploy to workers.dev, then add routes via CF dashboard
+# routes = [
+#   { pattern = "landing.agencyos.network/*", zone_name = "agencyos.network" },
+#   { pattern = "app.agencyos.network/*", zone_name = "agencyos.network" },
+#   { pattern = "dashboard.agencyos.network/*", zone_name = "agencyos.network" },
+#   { pattern = "docs.agencyos.network/*", zone_name = "agencyos.network" }
+# ]
