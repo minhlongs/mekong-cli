@@ -1,0 +1,33 @@
+# ==============================================================================
+# Mekong CLI — Quick Start
+# docker compose -f docker/docker-compose.yaml up -d
+# Then open: http://localhost:3001 (Claude Code UI)
+# API: http://localhost:8000 (Mekong Gateway)
+# ==============================================================================
+
+services:
+  mekong:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: mekong-dev:latest
+    container_name: mekong-dev
+    hostname: mekong-dev
+    restart: unless-stopped
+    shm_size: 2g
+    network_mode: bridge
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    ports:
+      - "3001:3001"    # CloudCLI web UI
+      - "8000:8000"    # Mekong Gateway API
+    volumes:
+      - ./data/claude:/home/claude/.claude
+      - ../:/workspace
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - GIT_USER_NAME=OpenClaw
+      - GIT_USER_EMAIL=openclaw@binhphap.io
