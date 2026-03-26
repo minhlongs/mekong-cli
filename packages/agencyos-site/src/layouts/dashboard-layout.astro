@@ -8,20 +8,20 @@ const navLayers = [
   { label: 'Missions', icon: '🎯', href: '/dashboard/missions', layer: 'missions' },
   { label: 'Sử dụng', icon: '📈', href: '/dashboard/usage', layer: 'overview' },
   { label: 'Thanh toán', icon: '💳', href: '/dashboard/billing', layer: 'overview' },
-  { label: 'Founder', icon: '👑', href: '#', layer: 'founder', children: [
-    { href: '#', label: 'OKR' }, { href: '#', label: 'Fundraise' }, { href: '#', label: 'IPO' }
+  { label: 'Founder', icon: '👑', href: '/dashboard/founder', layer: 'founder', children: [
+    { href: '/dashboard/founder', label: 'OKR' }, { href: '/dashboard/founder', label: 'Fundraise' }, { href: '/dashboard/founder', label: 'IPO' }
   ]},
-  { label: 'Business', icon: '💼', href: '#', layer: 'business', children: [
+  { label: 'Business', icon: '💼', href: '/dashboard/contacts', layer: 'business', children: [
     { href: '/dashboard/contacts', label: 'CRM' }, { href: '/dashboard/messages', label: 'Sales' }, { href: '/dashboard/content', label: 'Marketing' }
   ]},
-  { label: 'Product', icon: '🎯', href: '#', layer: 'product', children: [
-    { href: '#', label: 'Plan' }, { href: '#', label: 'Sprint' }, { href: '#', label: 'Roadmap' }
+  { label: 'Product', icon: '🎯', href: '/dashboard/missions', layer: 'product', children: [
+    { href: '/dashboard/missions', label: 'Plan' }, { href: '/dashboard/missions', label: 'Sprint' }, { href: '/dashboard/missions', label: 'Roadmap' }
   ]},
-  { label: 'Engineering', icon: '⚙️', href: '#', layer: 'engineering', children: [
-    { href: '#', label: 'Code' }, { href: '#', label: 'Test' }, { href: '#', label: 'Deploy' }
+  { label: 'Engineering', icon: '⚙️', href: '/dashboard/missions', layer: 'engineering', children: [
+    { href: '/dashboard/missions', label: 'Code' }, { href: '/dashboard/missions', label: 'Test' }, { href: '/dashboard/missions', label: 'Deploy' }
   ]},
-  { label: 'Ops', icon: '🔧', href: '#', layer: 'ops', children: [
-    { href: '#', label: 'Health' }, { href: '#', label: 'Security' }, { href: '/dashboard/reports', label: 'Audit' }
+  { label: 'Ops', icon: '🔧', href: '/dashboard/reports', layer: 'ops', children: [
+    { href: '/dashboard/reports', label: 'Health' }, { href: '/dashboard/settings', label: 'Security' }, { href: '/dashboard/reports', label: 'Audit' }
   ]},
   { label: 'Integrations', icon: '🔗', href: '/dashboard/integrations', layer: 'integrations' },
   { label: 'Nâng cấp', icon: '⭐', href: '/dashboard/upgrade', layer: 'upgrade' },

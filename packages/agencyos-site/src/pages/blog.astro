@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/base-layout.astro';
+---
+
+<BaseLayout title="Blog — OpenClaw" description="Tin tức, hướng dẫn và cập nhật mới nhất từ OpenClaw." lang="vi">
+  <section style="background:linear-gradient(135deg,#0a0f1a,#0a1a30);padding:80px 0 56px;text-align:center;">
+    <div class="container">
+      <h1 class="display animate-in">Blog</h1>
+      <p style="color:var(--md-on-surface-muted);max-width:520px;margin:0 auto;" class="animate-in">
+        Tin tức, hướng dẫn và cập nhật mới nhất từ OpenClaw.
+      </p>
+    </div>
+  </section>
+
+  <section style="background:var(--md-surface);padding:64px 0;">
+    <div class="container" style="max-width:720px;text-align:center;">
+      <div class="animate-on-scroll" style="padding:48px 32px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
+        <p style="font-size:3rem;margin:0 0 16px;">📝</p>
+        <h2 style="font-size:1.25rem;font-weight:700;color:var(--md-on-surface);margin:0 0 12px;">Sắp ra mắt</h2>
+        <p style="color:var(--md-on-surface-muted);margin:0 0 24px;">
+          Blog đang được chuẩn bị. Theo dõi để nhận thông báo khi có bài viết mới.
+        </p>
+        <a href="/" class="btn-outline">← Về trang chủ</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

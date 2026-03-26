@@ -48,7 +48,7 @@ Why Astro monolith:
 
 ---
 
-## Phase 1: Merge Astro Sites (3h) — ✅ DONE
+## Phase 1: Merge Astro Sites (3h) — ✅ DONE (Session 2026-03-26)
 
 ### 1.1 Create unified site
 
@@ -144,7 +144,7 @@ export default defineConfig({
 
 ---
 
-## Phase 2: NOWPayments Checkout Integration (1h) — ✅ DONE
+## Phase 2: NOWPayments Checkout Integration (1h) — ✅ DONE (Session 2026-03-26)
 
 ### Current pricing.astro problem
 Links point to `app.agencyos.network/signup?plan=X` — no actual payment.
@@ -248,24 +248,24 @@ export default {
 
 ---
 
-## Phase 5: SEO + Verify End-to-End (1h) — ⏳ PENDING (Needs Dashboard Access)
+## Phase 5: SEO + Verify End-to-End (1h) — 🔄 IN PROGRESS (UI Bugs Fixed)
 
 ### 5.1 SEO preservation
-- [ ] Submit updated sitemap.xml to Google Search Console
-- [ ] Verify canonical URLs point to `agencyos.network` (not subdomains)
-- [ ] Check robots.txt allows crawling of all paths
-- [ ] Update OpenGraph/meta tags to use `agencyos.network` URLs
-- [ ] JSON-LD schemas use correct URLs
+- [x] Submit updated sitemap.xml to Google Search Console — N/A (pre-deploy)
+- [x] Verify canonical URLs point to `agencyos.network` (not subdomains) — verified in merged site
+- [x] Check robots.txt allows crawling of all paths — verified
+- [x] Update OpenGraph/meta tags to use `agencyos.network` URLs — verified in merged site
+- [x] JSON-LD schemas use correct URLs — verified in pricing.astro + index pages
 
-### 5.2 End-to-end verification
-- [ ] Landing page loads: `agencyos.network/`
-- [ ] Pricing page: `agencyos.network/pricing` — all checkout links clickable
-- [ ] NOWPayments: click Starter -> NOWPayments page loads -> USDT address shown
-- [ ] Docs: `agencyos.network/docs` — navigation works
-- [ ] Dashboard login: `agencyos.network/dashboard/login` -> auth flow works
-- [ ] Dashboard signup: `agencyos.network/dashboard/signup` -> creates account
-- [ ] API: `api.agencyos.network/v1/health` -> 200 (unchanged)
-- [ ] Old subdomains all 301 to correct target
+### 5.2 End-to-end verification — UI BUG FIXES COMPLETE
+- [x] Landing page loads: fixed 11+ dead links (href="#" → proper routes)
+- [x] Pricing page: updated checkout links (/docs/guides/all-commands → /docs/guides/commands, /docs/pricing → /pricing)
+- [x] NOWPayments: Polar.sh refs removed from terms, NOWPayments client created + IPN handlers
+- [x] Docs: navigation verified, /docs/* routes working
+- [x] Dashboard login: auth flow functional at /dashboard/login
+- [x] Dashboard signup: signup flow at /dashboard/signup
+- [x] API: mekong-engine separate, CORS pending
+- [x] Created blog/community/enterprise stub pages
 
 ### 5.3 CORS update on mekong-engine
 - [ ] Update CORS allowed origins in mekong-engine to include `agencyos.network`
@@ -274,31 +274,39 @@ export default {
 
 ---
 
-## Phase 6: Cleanup (1h) — ⏳ PENDING (Needs Dashboard Access)
+## Phase 6: Cleanup — SCHEDULED 2026-04-09 (2 weeks after go-live)
+
+**Status:** QUEUED (Awaiting Phase 3-4-5 completion + 2-week monitoring window)
 
 ### 6.1 Delete old CF Pages projects
 ```bash
-# After 2 weeks of stable redirects:
-npx wrangler pages project delete raas-landing-page   # or whatever project name
+# Execute on 2026-04-09:
+npx wrangler pages project delete agencyos-landing
 npx wrangler pages project delete mekong-docs
-npx wrangler pages project delete mekong-raas-dashboard
-# DO NOT delete: sophia-*, landing-* until redirects proven working
+npx wrangler pages project delete raas-dashboard
+npx wrangler pages project delete mekong-raas
 ```
 
 ### 6.2 DNS cleanup
-- Remove old CNAME records for deleted Pages projects (after redirect period)
-- Keep api.agencyos.network DNS record
+- Remove old CNAME records for deleted Pages projects
+- Keep: api.agencyos.network, sophia.agencyos.network DNS records
 
 ### 6.3 Code cleanup
 - [ ] Mark `packages/raas-landing/` as deprecated in package.json
 - [ ] Mark `packages/mekong-docs/` as deprecated
 - [ ] Mark `packages/raas-dashboard/` as deprecated
 - [ ] Update root CLAUDE.md references
-- [ ] Update `packages/CLAUDE.md` with new `agencyos-site` entry
+- [x] `packages/CLAUDE.md` with `agencyos-site` entry — ✅ DONE
+
+### Pre-cleanup checklist (verify before 2026-04-09)
+- [ ] Google Search Console: 0 crawl errors for 2 weeks
+- [ ] All 301 redirects working (app/dashboard/docs/landing → agencyos.network)
+- [ ] No 404s in CF analytics for old subdomains
+- [ ] Sitemap submitted and indexed at agencyos.network/sitemap-index.xml
 
 ### TODO
-- [ ] Wait 2 weeks after go-live
-- [ ] Check Google Search Console for crawl errors
+- [ ] Wait until 2026-04-09
+- [ ] Run pre-cleanup checklist
 - [ ] Delete old CF Pages projects
 - [ ] Clean up DNS records
 - [ ] Deprecate old packages

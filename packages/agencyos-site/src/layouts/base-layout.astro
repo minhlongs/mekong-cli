@@ -99,11 +99,9 @@ const webSiteSchema = {
     ? 'AI-powered business automation platform'
     : 'Nền tảng tự động hóa doanh nghiệp bằng AI',
   "inLanguage": lang,
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": `${siteUrl}/search?q={search_term_string}`,
-    "query-input": "required name=search_term_string"
-  }
+  "sameAs": [
+    "https://github.com/longtho638-jpg/mekong-cli"
+  ]
 };
 
 // Article JSON-LD (for blog posts)
@@ -197,14 +195,14 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <meta name="apple-mobile-web-app-title" content="OpenClaw" />
   <meta name="application-name" content="OpenClaw" />
   <meta name="msapplication-TileColor" content="#00BCD4" />
-  <meta name="msapplication-config" content="/browserconfig.xml" />
+  <!-- msapplication-config removed — no browserconfig.xml needed for this site -->
 
   <!-- Favicon -->
   <link rel="icon" type="image/jpeg" href="/logo.jpg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/logo.jpg" />
   <link rel="icon" sizes="32x32" href="/logo.jpg" />
   <link rel="icon" sizes="16x16" href="/logo.jpg" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <!-- site.webmanifest removed — not a PWA -->
 
   <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -273,7 +271,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
               <div style="font-size:0.65rem;color:var(--md-on-surface-muted);line-height:1.3;">{layer.desc}</div>
               <div style="display:flex;flex-direction:column;gap:4px;">
                 {layer.items.map(item => (
-                  <a href="#" style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item" onMouseOver={(e) => e.target.style.background='rgba(0,188,212,0.08)'} onMouseOut={(e) => e.target.style.background=''}>{item}</a>
+                  <a href={`/docs/guides/commands#${item.toLowerCase()}`} style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item">{item}</a>
                 ))}
               </div>
             </div>
