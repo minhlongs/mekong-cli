@@ -12,7 +12,7 @@ If YES:
 If NO:
   - Execute freely (no cost)`;
 
-const pricingTiers = `// Pricing tiers (Polar.sh)
+const pricingTiers = `// Pricing tiers (NOWPayments)
 Starter: $49/mo → 200 MCU credits
   - Good for: Side projects, hobby CLI usage
 
@@ -93,7 +93,7 @@ const stripePacks = `// Stripe credit packs
       <h2>Monetization Architecture (4 Revenue Streams)</h2>
 
       <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 1: MCU Credit Subscriptions (Recurring)</h3>
-      <p>Users subscribe to monthly credit allowances via Polar.sh webhooks.</p>
+      <p>Users subscribe to monthly credit allowances via NOWPayments webhooks.</p>
 
       <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{pricingTiers}</code></pre>
 
@@ -109,7 +109,7 @@ const stripePacks = `// Stripe credit packs
       <h3 style="font-size:1.1rem;margin-top:1.5rem">Stream 3: Seat Licenses (Enterprise)</h3>
       <p>Team of 5+ users? Sell per-seat annual licenses for commercial use.</p>
 
-      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`// Annual licenses (via Polar.sh)
+      <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{`// Annual licenses (via NOWPayments)
 Team License: $299/year per seat
   - 5 seats = $1,495/year
   - Features: Shared credit pool, team management
@@ -205,7 +205,7 @@ No free tier, starts with $50 prepaid credits`}</code></pre>
         <li><strong>Free tier is essential:</strong> 70% of users will try free. Remove friction.</li>
         <li><strong>Freemium works:</strong> Credit model converts 2-5% of free users to paid. That's your TAM.</li>
         <li><strong>Subscription wins:</strong> $149/mo users generate 30x more ARR than $5 one-time buyers.</li>
-        <li><strong>Polar.sh is simple:</strong> Webhooks handle subscriptions automatically. No billing infrastructure needed.</li>
+        <li><strong>NOWPayments is simple:</strong> Webhooks handle subscriptions automatically. No billing infrastructure needed.</li>
         <li><strong>HTTP 402 is underused:</strong> Most apps ignore it. Use it clearly for payment-required errors.</li>
         <li><strong>Transparency wins:</strong> Show cost before execution. Users will upgrade if the value is clear.</li>
       </ul>
@@ -235,7 +235,7 @@ CREATE TABLE transactions (
       <h3 style="font-size:1.1rem;margin-top:1.5rem">2. Add middleware for credit checking</h3>
       <p>Implement a middleware that checks user balance before executing paid features.</p>
 
-      <h3 style="font-size:1.1rem;margin-top:1.5rem">3. Set up Polar.sh webhooks</h3>
+      <h3 style="font-size:1.1rem;margin-top:1.5rem">3. Set up NOWPayments webhooks</h3>
       <p>Listen for subscription.created, subscription.updated, and subscription.cancelled events.</p>
 
       <h3 style="font-size:1.1rem;margin-top:1.5rem">4. Update your CLI</h3>

@@ -54,7 +54,6 @@ const fullTitle = title.includes('Mekong Docs') ? title : `${title} | Mekong Doc
         <nav class="main-nav" aria-label="Main navigation">
           <a href="/docs" class:list={['nav-link', { active: currentPath === '/docs' }]}>Home</a>
           <a href="/docs/guides" class:list={['nav-link', { active: currentPath.startsWith('/docs/guides') }]}>Guides</a>
-          <a href="/docs/pricing" class:list={['nav-link', { active: currentPath === '/docs/pricing' }]}>Pricing</a>
           <a href="/docs/enterprise" class:list={['nav-link', { active: currentPath === '/docs/enterprise' }]}>Enterprise</a>
           <a href="/docs/status" class:list={['nav-link', { active: currentPath === '/docs/status' }]}>Status</a>
         </nav>

@@ -72,7 +72,7 @@ tiers = {
 
     <section style="margin-bottom:2rem">
       <h2>Implementation Guide</h2>
-      <p>Build your credit system with three core components: a credit ledger (tracks balance and transactions), a gate middleware (checks balance before executing), and a webhook consumer (processes payments from Polar.sh or Stripe).</p>
+      <p>Build your credit system with three core components: a credit ledger (tracks balance and transactions), a gate middleware (checks balance before executing), and a webhook consumer (processes payments from NOWPayments or Stripe).</p>
       <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample2}</code></pre>
       <p>The gate middleware pattern is critical: check balance before execution, not after. Partial execution with a failed credit deduction creates bad UX and support tickets. Full atomic transactions — execute and deduct together, or neither.</p>
       <pre style="background:var(--md-sys-color-surface-container);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.85rem;margin:1rem 0"><code>{codeExample3}</code></pre>

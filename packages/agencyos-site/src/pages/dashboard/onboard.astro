@@ -129,9 +129,117 @@
   </div>
 </div>
 
-<script type="module">
+<script>
+  // Auth guard
   if (!localStorage.getItem('mk_api_key')) window.location.replace('/dashboard/signup');
-  import { initIndustry, initBizInfo, initChannel, initMenu, initActivate } from '/scripts/onboard-wizard.js';
+
+  // --- State ---
+  let currentStep = 0;
+  const state = { industry: '', bizName: '', bizAddress: '', bizPhone: '', bizHours: '', channel: 'zalo', zaloOaId: '', zaloToken: '', fbPageId: '', fbToken: '', menuItems: [] };
+  const totalSteps = 5;
+
+  // --- Helpers ---
+  function showStep(idx) {
+    document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.classList.remove('active', 'done');
+      if (i < idx) d.classList.add('done');
+      else if (i === idx) d.classList.add('active');
+    });
+    currentStep = idx;
+  }
+
+  function showErr(id, show) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? 'block' : 'none';
+  }
+
+  // --- Step 0: Industry ---
+  function initIndustry() {
+    document.querySelectorAll('.industry-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.industry-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.industry = btn.dataset.v;
+      });
+    });
+    document.getElementById('next-0').addEventListener('click', () => {
+      if (!state.industry) { showErr('err-0', true); return; }
+      showErr('err-0', false);
+      showStep(1);
+    });
+  }
+
+  // --- Step 1: Business info ---
+  function initBizInfo() {
+    document.getElementById('back-1').addEventListener('click', () => showStep(0));
+    document.getElementById('next-1').addEventListener('click', () => {
+      const name = document.getElementById('biz-name').value.trim();
+      if (!name) { showErr('err-1', true); return; }
+      showErr('err-1', false);
+      state.bizName = name;
+      state.bizAddress = document.getElementById('biz-address').value.trim();
+      state.bizPhone = document.getElementById('biz-phone').value.trim();
+      state.bizHours = document.getElementById('biz-hours').value.trim();
+      document.getElementById('confirm-biz-name').textContent = name;
+      showStep(2);
+    });
+  }
+
+  // --- Step 2: Channel ---
+  function initChannel() {
+    document.querySelectorAll('input[name="channel"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        state.channel = radio.value;
+        document.getElementById('zalo-fields').style.display = radio.value === 'zalo' ? '' : 'none';
+        document.getElementById('fb-fields').style.display = radio.value === 'facebook' ? '' : 'none';
+      });
+    });
+    document.getElementById('back-2').addEventListener('click', () => showStep(1));
+    document.getElementById('next-2').addEventListener('click', () => {
+      state.zaloOaId = document.getElementById('zalo-oa-id').value.trim();
+      state.zaloToken = document.getElementById('zalo-token').value.trim();
+      state.fbPageId = document.getElementById('fb-page-id').value.trim();
+      state.fbToken = document.getElementById('fb-token').value.trim();
+      showStep(3);
+    });
+  }
+
+  // --- Step 3: Menu ---
+  function initMenu() {
+    function addMenuItem(name, price) {
+      const div = document.createElement('div');
+      div.className = 'menu-item';
+      div.innerHTML = `<input placeholder="Tên món/dịch vụ" value="${name || ''}" class="item-name" /><input placeholder="Giá (VND)" value="${price || ''}" class="item-price" style="width:100px" /><button class="btn btn-sm" style="padding:4px 8px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius);cursor:pointer">✕</button>`;
+      div.querySelector('button').addEventListener('click', () => { div.remove(); });
+      document.getElementById('menu-list').appendChild(div);
+    }
+    addMenuItem('', ''); // Start with one empty row
+    document.getElementById('add-item').addEventListener('click', () => addMenuItem('', ''));
+    document.getElementById('back-3').addEventListener('click', () => showStep(2));
+    document.getElementById('next-3').addEventListener('click', () => {
+      state.menuItems = [];
+      document.querySelectorAll('#menu-list .menu-item').forEach(row => {
+        const n = row.querySelector('.item-name').value.trim();
+        const p = row.querySelector('.item-price').value.trim();
+        if (n) state.menuItems.push({ name: n, price: p });
+      });
+      showStep(4);
+    });
+  }
+
+  // --- Step 4: Activate ---
+  function initActivate() {
+    document.getElementById('back-4').addEventListener('click', () => showStep(3));
+    document.getElementById('btn-activate').addEventListener('click', () => {
+      showErr('err-4', false);
+      localStorage.setItem('mk_onboard', JSON.stringify(state));
+      // Redirect to dashboard with onboard complete flag
+      window.location.replace('/dashboard/?onboard=done&industry=' + encodeURIComponent(state.industry));
+    });
+  }
+
+  // Boot
   initIndustry();
   initBizInfo();
   initChannel();

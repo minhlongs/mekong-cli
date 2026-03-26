@@ -10,8 +10,8 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
   </div>
 
   <div class="card" style="max-width:480px">
-    <strong style="display:block;margin-bottom:12px">Thanh toán USD (Polar.sh)</strong>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Dành cho khách hàng quốc tế. Thanh toán bằng thẻ tín dụng qua Polar.</p>
+    <strong style="display:block;margin-bottom:12px">Thanh toán USD (NOWPayments USDT)</strong>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Dành cho khách hàng quốc tế. Thanh toán bằng USDT qua NOWPayments.</p>
     <div style="display:flex;flex-wrap:wrap;gap:8px" id="polar-links">
       <!-- rendered by JS -->
     </div>
@@ -28,7 +28,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
   const TIERS = [
     { id: 'starter',    label: 'Starter',    price: '490.000đ', usd: '$49',  credits: 200,  features: ['200 MCU/tháng', 'Trả lời tự động', 'Báo cáo tuần', '1 kênh'] },
     { id: 'pro',        label: 'Pro',         price: '1.490.000đ', usd: '$149', credits: 1000, features: ['1.000 MCU/tháng', 'Tất cả Starter', 'Content AI 30 ngày', '3 kênh', 'CRM nâng cao'], popular: true },
-    { id: 'growth',     label: 'Growth',      price: '1.490.000đ', usd: '$149', credits: 1000, features: ['1.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
+    { id: 'growth',     label: 'Growth',      price: '2.990.000đ', usd: '$299', credits: 3000, features: ['3.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
     { id: 'enterprise', label: 'Enterprise',  price: 'Liên hệ',  usd: '$499', credits: 999999, features: ['Không giới hạn MCU', 'Tất cả Growth', 'Tích hợp riêng', 'SLA 99.9%', 'Account manager'] },
   ];
 

@@ -117,12 +117,12 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
           <div class="plan-icon">📈</div>
           <h3>Growth</h3>
           <div class="plan-price">
-            <span class="price-vnd">1.490.000₫</span>
-            <span class="price-usd">$149</span>
+            <span class="price-vnd">2.990.000₫</span>
+            <span class="price-usd">$299</span>
           </div>
         </div>
         <ul class="plan-features-list">
-          <li class="feature-item">✓ 1.000 MCU/tháng</li>
+          <li class="feature-item">✓ 3.000 MCU/tháng</li>
           <li class="feature-item">✓ Tất cả tính năng Pro</li>
           <li class="feature-item">✓ Phân tích nâng cao</li>
           <li class="feature-item">✓ 5 kênh liên lạc</li>
@@ -206,7 +206,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
       <div class="payment-option">
         <div class="payment-icon">💳</div>
         <div class="payment-info">
-          <div class="payment-name">Thẻ tín dụng (Polar.sh)</div>
+          <div class="payment-name">Thẻ tín dụng (NOWPayments)</div>
           <div class="payment-desc">Visa, Mastercard, American Express</div>
         </div>
         <span class="badge badge-green">Khuyến nghị</span>
@@ -217,7 +217,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
           <div class="payment-name">Chuyển khoản ngân hàng</div>
           <div class="payment-desc">Dành cho gói Enterprise</div>
         </div>
-        <a href="mailto:billing@openclaw.ai" class="btn btn-sm btn-secondary">Liên hệ</a>
+        <a href="mailto:hello@agencyos.network" class="btn btn-sm btn-secondary">Liên hệ</a>
       </div>
     </div>
   </div>
@@ -232,7 +232,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
       <div class="modal-body">
         <p id="modal-message">Bạn đang chọn gói <strong id="selected-tier-name"></strong></p>
         <div class="payment-info-box">
-          <p>Bạn sẽ được chuyển đến trang thanh toán an toàn của Polar.sh</p>
+          <p>Bạn sẽ được chuyển đến trang thanh toán an toàn của NOWPayments</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -254,7 +254,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
     free: { name: 'Free', mcu: 50, features: ['50 MCU/tháng', 'Commands cơ bản', 'Báo cáo tuần'] },
     starter: { name: 'Starter', mcu: 200, features: ['200 MCU/tháng', 'Trả lời tự động', 'Báo cáo tuần', '1 kênh'] },
     pro: { name: 'Pro', mcu: 500, features: ['500 MCU/tháng', 'Tất cả Starter', 'Content AI 30 ngày', '3 kênh', 'CRM nâng cao'] },
-    growth: { name: 'Growth', mcu: 1000, features: ['1.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
+    growth: { name: 'Growth', mcu: 3000, features: ['3.000 MCU/tháng', 'Tất cả Pro', 'Phân tích nâng cao', '5 kênh', 'Ưu tiên hỗ trợ'] },
     enterprise: { name: 'Enterprise', mcu: 999999, features: ['Không giới hạn MCU', 'Tất cả Growth', 'Tích hợp riêng', 'SLA 99.9%', 'Account manager'] }
   };
 
@@ -335,7 +335,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
       if (tier === currentTier) return;
 
       if (tier === 'enterprise') {
-        window.open('mailto:sales@openclaw.ai?subject=Enterprise Inquiry', '_blank');
+        window.open('mailto:hello@agencyos.network?subject=Enterprise Inquiry', '_blank');
         return;
       }
 

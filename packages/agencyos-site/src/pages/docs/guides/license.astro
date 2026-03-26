@@ -2,7 +2,7 @@
 import MainLayout from '../../../layouts/docs-layout.astro';
 ---
 
-<MainLayout title="License & Activation — OpenClaw" description="OpenClaw MCU (Mission Credit Unit) billing via Polar.sh. Activate your license, manage seats, and top up credits. Credits only consumed on successful task delivery.">
+<MainLayout title="License & Activation — OpenClaw" description="OpenClaw MCU (Mission Credit Unit) billing via NOWPayments. Activate your license, manage seats, and top up credits. Credits only consumed on successful task delivery.">
   <div class="guide-page">
     <aside class="guide-sidebar">
       <a href="/docs/guides" class="back-link">← All Guides</a>
@@ -18,7 +18,7 @@ import MainLayout from '../../../layouts/docs-layout.astro';
       <header class="guide-header">
         <span class="guide-tag">Monetization</span>
         <h1>License <span class="gradient-text">Tiers & Activation</span></h1>
-        <p class="guide-lead">OpenClaw uses MCU (Mission Credit Units) billing via Polar.sh. Credits are only consumed on successful task delivery.</p>
+        <p class="guide-lead">OpenClaw uses MCU (Mission Credit Units) billing via NOWPayments. Credits are only consumed on successful task delivery.</p>
       </header>
 
       <section id="tiers">
@@ -50,7 +50,7 @@ import MainLayout from '../../../layouts/docs-layout.astro';
 
       <section id="activate">
         <h2>Activation</h2>
-        <p>After purchasing on Polar.sh, you receive a license key via email. Activate it:</p>
+        <p>After purchasing on NOWPayments, you receive a license key via email. Activate it:</p>
         <pre><code>mekong license activate &lt;YOUR_LICENSE_KEY&gt;</code></pre>
         <p>This stores the key in <code>~/.mekong/license.json</code> and verifies balance with the RaaS gateway.</p>
         <p>Check current license status anytime:</p>
@@ -72,7 +72,7 @@ import MainLayout from '../../../layouts/docs-layout.astro';
         </ol>
         <div class="callout glass">
           <md-icon>info</md-icon>
-          <p>All payments are processed by Polar.sh. OpenClaw never stores card details.</p>
+          <p>All payments are processed by NOWPayments. OpenClaw never stores card details.</p>
         </div>
       </section>
 

@@ -10,7 +10,7 @@ const mcuConfigExample = `{
 }`;
 ---
 
-<MainLayout title="RaaS Onboarding — OpenClaw" description="Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and Polar.sh billing in under an hour using OpenClaw's RaaS gateway on Cloudflare Workers.">
+<MainLayout title="RaaS Onboarding — OpenClaw" description="Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and NOWPayments billing in under an hour using OpenClaw's RaaS gateway on Cloudflare Workers.">
   <div class="guide-page">
     <aside class="guide-sidebar">
       <a href="/docs/guides" class="back-link">← All Guides</a>
@@ -19,7 +19,7 @@ const mcuConfigExample = `{
         <li><a href="#register">Register Tenant</a></li>
         <li><a href="#api-key">API Keys</a></li>
         <li><a href="#credits">Credit Management</a></li>
-        <li><a href="#webhook">Polar Webhook</a></li>
+        <li><a href="#webhook">NOWPayments Webhook</a></li>
       </ul>
     </aside>
 
@@ -27,7 +27,7 @@ const mcuConfigExample = `{
       <header class="guide-header">
         <span class="guide-tag">Monetization</span>
         <h1>RaaS <span class="gradient-text">Onboarding</span></h1>
-        <p class="guide-lead">Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and Polar.sh billing in under an hour.</p>
+        <p class="guide-lead">Repository-as-a-Service. Wrap any CLI or API with license gating, MCU metering, and NOWPayments billing in under an hour.</p>
       </header>
 
       <section id="overview">
@@ -36,7 +36,7 @@ const mcuConfigExample = `{
         <ul>
           <li><strong>License gate</strong> — HTTP 402 on zero balance, JWT verification</li>
           <li><strong>MCU metering</strong> — per-request credit deduction with rollback on failure</li>
-          <li><strong>Polar.sh webhooks</strong> — automatic credit top-up on subscription payment</li>
+          <li><strong>NOWPayments webhooks</strong> — automatic credit top-up on subscription payment</li>
           <li><strong>Audit trail</strong> — full transaction log per tenant</li>
           <li><strong>KV cache</strong> — Cloudflare KV for fast balance lookups</li>
         </ul>
@@ -82,7 +82,7 @@ Admin dashboard: https://raas.openclaw.ai/tenant/tenant_abc123</code></pre>
       </section>
 
       <section id="webhook">
-        <h2>Polar Webhook Setup</h2>
+        <h2>NOWPayments Webhook Setup</h2>
         <p>Connect NOWPayments to automatically credit users on payment:</p>
         <ol class="steps">
           <li>Go to your <a href="https://nowpayments.io" target="_blank" rel="noopener">NOWPayments dashboard</a></li>
@@ -92,7 +92,7 @@ Admin dashboard: https://raas.openclaw.ai/tenant/tenant_abc123</code></pre>
           <li>Copy the webhook secret and set it in your worker:</li>
         </ol>
         <pre><code>wrangler secret put POLAR_WEBHOOK_SECRET</code></pre>
-        <p>The gateway automatically maps Polar product IDs to MCU tiers defined in your config.</p>
+        <p>The gateway automatically maps NOWPayments product IDs to MCU tiers defined in your config.</p>
       </section>
 
       <div class="guide-nav">
