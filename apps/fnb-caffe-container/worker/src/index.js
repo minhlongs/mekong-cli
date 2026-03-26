@@ -38,6 +38,13 @@ import {
   getLoyaltyConfig,
   getLoyaltyFull,
 } from './routes/loyalty.js';
+import {
+  createReservation,
+  getReservations,
+  getReservationById,
+  updateReservation,
+  deleteReservation,
+} from './routes/reservations.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
@@ -170,6 +177,35 @@ export default {
       // GET /api/loyalty/config
       if (path === '/api/loyalty/config' && method === 'GET') {
         return getLoyaltyConfig(request, env);
+      }
+
+      // Reservation Routes
+      // POST /api/reservations
+      if (path === '/api/reservations' && method === 'POST') {
+        return createReservation(request, env);
+      }
+
+      // GET /api/reservations
+      if (path === '/api/reservations' && method === 'GET') {
+        return getReservations(request, env);
+      }
+
+      // GET /api/reservations/:id
+      if (path.match(/^\/api\/reservations\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[3];
+        return getReservationById(request, env, id);
+      }
+
+      // PATCH /api/reservations/:id
+      if (path.match(/^\/api\/reservations\/[^/]+$/) && method === 'PATCH') {
+        const id = path.split('/')[3];
+        return updateReservation(request, env, id);
+      }
+
+      // DELETE /api/reservations/:id
+      if (path.match(/^\/api\/reservations\/[^/]+$/) && method === 'DELETE') {
+        const id = path.split('/')[3];
+        return deleteReservation(request, env, id);
       }
 
       // 404 for unmatched routes

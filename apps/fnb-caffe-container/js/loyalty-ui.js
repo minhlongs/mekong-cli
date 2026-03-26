@@ -43,7 +43,15 @@ const ui = {
   redemptionModalBody: null,
   modalClose: null,
   toastContainer: null,
-  historyTabs: null
+  historyTabs: null,
+  // New gamification elements
+  achievementsGrid: null,
+  pointsTimeline: null,
+  currentTierIcon: null,
+  currentTierName: null,
+  nextTierName: null,
+  nextTierPoints: null,
+  tierProgressPercent: null
 };
 
 // ─── Initialize ───
@@ -80,6 +88,14 @@ function cacheElements() {
   ui.modalClose = document.getElementById('modalClose');
   ui.toastContainer = document.getElementById('toastContainer');
   ui.historyTabs = document.querySelectorAll('.history-tab');
+  // New gamification elements
+  ui.achievementsGrid = document.getElementById('achievementsGrid');
+  ui.pointsTimeline = document.getElementById('pointsTimeline');
+  ui.currentTierIcon = document.getElementById('currentTierIcon');
+  ui.currentTierName = document.getElementById('currentTierName');
+  ui.nextTierName = document.getElementById('nextTierName');
+  ui.nextTierPoints = document.getElementById('nextTierPoints');
+  ui.tierProgressPercent = document.getElementById('tierProgressPercent');
 }
 
 // ─── Initialize Loyalty UI ───
@@ -92,10 +108,15 @@ async function initLoyaltyUI() {
     renderTierBadges();
     renderTierProgress();
     renderTierBenefits();
+    renderAchievements();
+    renderPointsTimeline();
     renderRewards('all');
     renderTransactions();
     renderRedemptions();
     renderReferralCode();
+
+    // Listen for tier upgrade events
+    window.addEventListener('loyalty-tier-upgrade', handleTierUpgrade);
 
     showToast('🎉 Chào mừng đến F&B Loyalty Club!', 'success');
   } catch (error) {
@@ -174,13 +195,42 @@ function renderTierBadges() {
 function renderTierProgress() {
   const progress = getTierProgress();
   const currentTier = getCurrentTier();
+  const nextTier = getNextTier();
 
   ui.tierProgressFill.style.width = `${progress.percent}%`;
   ui.tierProgressPoints.textContent = `${formatNumber(progress.current)} / ${progress.isMaxTier ? '∞' : formatNumber(progress.current + progress.needed)}`;
 
+  // Update percentage
+  ui.tierProgressPercent.textContent = `${Math.round(progress.percent)}%`;
+
+  // Update tier icons and names
+  ui.currentTierIcon.textContent = currentTier.icon;
+  ui.currentTierName.textContent = currentTier.name;
+
+  if (nextTier) {
+    ui.nextTierName.textContent = nextTier.name;
+    ui.nextTierPoints.textContent = `${formatNumber(nextTier.minPoints)} pts`;
+  } else {
+    ui.nextTierName.textContent = 'Max Tier';
+    ui.nextTierPoints.textContent = '✓';
+  }
+
+  // Update progress bar color based on tier
+  const progressBar = ui.tierProgressFill;
+  progressBar.className = 'progress-indicator';
+  if (currentTier.id === 'dong') {
+    progressBar.classList.add('tier-bronze');
+  } else if (currentTier.id === 'bac') {
+    progressBar.classList.add('tier-silver');
+  } else if (currentTier.id === 'vang') {
+    progressBar.classList.add('tier-gold');
+  } else if (currentTier.id === 'kim-cuong') {
+    progressBar.classList.add('tier-diamond');
+  }
+
   if (progress.isMaxTier) {
     ui.tierProgressHint.innerHTML = '🏆 Bạn đã đạt hạng cao nhất!';
-    ui.tierProgressHint.className = 'progress-hint max-tier';
+    ui.tierProgressHint.className = 'm3-progress-hint max-tier';
   } else {
     ui.tierProgressHint.innerHTML = `
             Còn <strong id="pointsNeeded">${formatNumber(progress.needed)}</strong> điểm để lên
@@ -206,6 +256,236 @@ function renderTierBenefits() {
             `).join('')}
         </div>
     `;
+}
+
+// ─── Render Achievement Badges ───
+function renderAchievements() {
+  const summary = getUserLoyaltySummary();
+  const transactions = getTransactionHistory(100);
+
+  // Define all possible achievements
+  const achievements = [
+    {
+      id: 'first_order',
+      name: 'Đơn Đầu Tiên',
+      description: 'Hoàn thành đơn hàng đầu tiên',
+      icon: '🎯',
+      variant: 'first-order',
+      unlocked: transactions.some(t => t.source === 'purchase' || t.type === 'earn'),
+      progress: null
+    },
+    {
+      id: 'order_10',
+      name: 'Khách Quen',
+      description: 'Hoàn thành 10 đơn hàng',
+      icon: '⭐',
+      variant: 'order-10',
+      unlocked: transactions.filter(t => t.source === 'purchase').length >= 10,
+      progress: `${transactions.filter(t => t.source === 'purchase').length}/10`
+    },
+    {
+      id: 'order_50',
+      name: 'Thượng Khách',
+      description: 'Hoàn thành 50 đơn hàng',
+      icon: '👑',
+      variant: 'order-50',
+      unlocked: transactions.filter(t => t.source === 'purchase').length >= 50,
+      progress: `${transactions.filter(t => t.source === 'purchase').length}/50`
+    },
+    {
+      id: 'birthday',
+      name: 'Sinh Nhật Vui Vẻ',
+      description: 'Nhận quà sinh nhật',
+      icon: '🎂',
+      variant: 'birthday',
+      unlocked: transactions.some(t => t.source === 'birthday'),
+      progress: null
+    },
+    {
+      id: 'high_spender',
+      name: 'Chi Tiêu Mạnh Tay',
+      description: 'Tích lũy 10.000 điểm',
+      icon: '💰',
+      variant: 'high-spender',
+      unlocked: summary.lifetimePoints >= 10000,
+      progress: `${formatNumber(summary.lifetimePoints)}/10.000`
+    },
+    {
+      id: 'referrer',
+      name: 'Người Giới Thiệu',
+      description: 'Giới thiệu 5 bạn bè',
+      icon: '👥',
+      variant: 'referrer',
+      unlocked: transactions.filter(t => t.source === 'referral').length >= 5,
+      progress: `${transactions.filter(t => t.source === 'referral').length}/5`
+    },
+    {
+      id: 'tier_silver',
+      name: 'Hạng Bạc',
+      description: 'Đạt hạng thành viên Bạc',
+      icon: '🥈',
+      variant: 'tier-silver',
+      unlocked: summary.tier.id === 'bac' || summary.tier.id === 'vang' || summary.tier.id === 'kim-cuong',
+      progress: null
+    },
+    {
+      id: 'tier_gold',
+      name: 'Hạng Vàng',
+      description: 'Đạt hạng thành viên Vàng',
+      icon: '🥇',
+      variant: 'tier-gold',
+      unlocked: summary.tier.id === 'vang' || summary.tier.id === 'kim-cuong',
+      progress: null
+    },
+    {
+      id: 'tier_diamond',
+      name: 'Hạng Kim Cương',
+      description: 'Đạt hạng thành viên Kim Cương',
+      icon: '💎',
+      variant: 'tier-diamond',
+      unlocked: summary.tier.id === 'kim-cuong',
+      progress: null
+    }
+  ];
+
+  if (ui.achievementsGrid) {
+    ui.achievementsGrid.innerHTML = achievements.map(ach => `
+            <div class="achievement-badge ${ach.variant} ${ach.unlocked ? 'unlocked' : 'locked'}">
+                <div class="badge-icon">
+                    ${ach.icon}
+                </div>
+                <div class="badge-name">${ach.name}</div>
+                <div class="badge-description">${ach.description}</div>
+                ${ach.progress ? `<div class="badge-progress">${ach.progress}</div>` : ''}
+                ${!ach.unlocked ? '<div class="badge-locked-overlay">🔒</div>' : ''}
+            </div>
+        `).join('');
+  }
+}
+
+// ─── Render Points Timeline ───
+function renderPointsTimeline() {
+  const transactions = getTransactionHistory(20);
+
+  if (!ui.pointsTimeline) {return;}
+
+  if (transactions.length === 0) {
+    ui.pointsTimeline.innerHTML = `
+            <div class="timeline-empty">
+                <span class="empty-icon">📜</span>
+                <p>Chưa có lịch sử giao dịch nào</p>
+                <p class="timeline-hint">Thực hiện đơn hàng đầu tiên để bắt đầu tích điểm!</p>
+            </div>
+        `;
+    return;
+  }
+
+  ui.pointsTimeline.innerHTML = transactions.map(txn => {
+    const isPositive = txn.points > 0;
+    const typeClass = txn.source === 'birthday' ? 'bonus' :
+                       txn.source === 'tier_upgrade' ? 'tier-upgrade' :
+                       isPositive ? 'earned' : 'spent';
+    const icon = getTransactionIcon(txn.source || txn.type);
+
+    return `
+            <div class="timeline-item ${typeClass}">
+                <div class="timeline-content">
+                    <span class="timeline-icon">${icon}</span>
+                    <div class="timeline-info">
+                        <div class="timeline-title">${txn.description || txn.source}</div>
+                        <div class="timeline-date">${formatDate(txn.timestamp)}</div>
+                    </div>
+                    <div class="timeline-points ${isPositive ? 'positive' : 'negative'} ${txn.source === 'birthday' ? 'bonus' : ''}">
+                        ${isPositive ? '+' : ''}${formatNumber(txn.points)} pts
+                    </div>
+                </div>
+            </div>
+        `;
+  }).join('');
+}
+
+// ─── Handle Tier Upgrade ───
+function handleTierUpgrade(event) {
+  const { newTier, message } = event.detail;
+
+  // Show confetti animation
+  startConfetti();
+
+  // Show tier upgrade modal
+  setTimeout(() => {
+    showTierUpgradeModal(newTier, message);
+  }, 500);
+
+  // Refresh UI components
+  setTimeout(() => {
+    renderTierProgress();
+    renderTierBadges();
+    renderAchievements();
+  }, 1000);
+}
+
+// ─── Show Tier Upgrade Modal ───
+function showTierUpgradeModal(newTier, message) {
+  const modal = document.createElement('div');
+  modal.className = 'tier-upgrade-modal';
+  modal.id = 'tierUpgradeModal';
+  modal.innerHTML = `
+        <div class="tier-upgrade-content">
+            <div class="tier-upgrade-icon">${newTier.icon}</div>
+            <h2 class="tier-upgrade-title">🎉 Chúc Mừng!</h2>
+            <p class="tier-upgrade-message">${message || `Bạn đã nâng hạng lên ${newTier.name}!`}</p>
+            <div class="tier-upgrade-new-tier">
+                <span class="tier-upgrade-new-tier-icon">${newTier.icon}</span>
+                <span class="tier-upgrade-new-tier-name">${newTier.name}</span>
+            </div>
+            <button class="tier-upgrade-btn primary" id="closeTierModal">Tuyệt Vời!</button>
+        </div>
+    `;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('closeTierModal').addEventListener('click', () => {
+    modal.remove();
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+}
+
+// ─── Start Confetti Animation ───
+function startConfetti() {
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  container.id = 'confettiContainer';
+
+  const colors = ['#FFD700', '#C0C0C0', '#CD7F32', '#00e5ff', '#ff00ff', '#10b981', '#f59e0b'];
+  const shapes = ['confetti-shape-rectangle', 'confetti-shape-circle', 'confetti-shape-triangle'];
+  const confettiCount = 150;
+
+  for (let i = 0; i < confettiCount; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = `confetti ${shapes[Math.floor(Math.random() * shapes.length)]}`;
+    confetti.style.left = `${Math.random() * 100}%`;
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+    confetti.style.animationDuration = `${2 + Math.random() * 2}s`;
+    container.appendChild(confetti);
+
+    // Trigger animation
+    setTimeout(() => {
+      confetti.classList.add('active');
+    }, 10);
+  }
+
+  document.body.appendChild(container);
+
+  // Remove after animation
+  setTimeout(() => {
+    container.remove();
+  }, 4000);
 }
 
 // ─── Render Rewards Grid ───
@@ -295,6 +575,9 @@ function renderTransactions() {
             </div>
         `;
   }).join('');
+
+  // Also update the timeline
+  renderPointsTimeline();
 }
 
 // ─── Render Redemptions ───
@@ -574,7 +857,11 @@ window.LoyaltyUI = {
   renderRewards,
   renderTransactions,
   renderRedemptions,
-  showToast
+  renderAchievements,
+  renderPointsTimeline,
+  showToast,
+  startConfetti,
+  handleTierUpgrade
 };
 
 // ─── Dark Mode Theme Toggle ───
