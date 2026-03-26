@@ -118,6 +118,13 @@ def execute_tool(name: str, args: dict[str, Any]) -> str:
             url = args["url"]
             if not url.startswith("http"):
                 return "Error: URL must start with http"
+            # Block SSRF: reject private/internal IPs
+            from urllib.parse import urlparse
+            host = urlparse(url).hostname or ""
+            if host in ("localhost", "127.0.0.1", "0.0.0.0") or host.startswith(
+                ("10.", "172.16.", "192.168.", "169.254.")
+            ):
+                return "Error: internal/private URLs blocked"
             req = Request(url, headers={"User-Agent": "MekongAgent/1.0"})
             with urlopen(req, timeout=10) as resp:
                 return resp.read().decode("utf-8", errors="replace")[:4000]
