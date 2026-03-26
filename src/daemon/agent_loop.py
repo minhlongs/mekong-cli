@@ -43,13 +43,31 @@ TIER_CONFIG = {
         "model": "mlx-community/Qwen2.5-Coder-32B-Instruct-4bit",
     },
     "coding": {
-        "url": os.getenv("DASHSCOPE_URL",
-            "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"),
+        "url": os.getenv("CODING_PLAN_URL",
+            "https://coding-intl.dashscope.aliyuncs.com/v1"),
         "model": "qwen3.5-plus",
     },
 }
 # Legacy compat
 TIER_URLS = {k: v["url"] for k, v in TIER_CONFIG.items()}
+
+# Coding Plan key rotation (2 accounts = 180K req/mo total)
+_coding_keys: list[str] = []
+_coding_key_idx = 0
+
+def _get_coding_key() -> str:
+    """Rotate between available Coding Plan API keys."""
+    global _coding_keys, _coding_key_idx
+    if not _coding_keys:
+        keys = []
+        k1 = os.getenv("BAILIAN_CODING_PLAN_API_KEY", os.getenv("DASHSCOPE_API_KEY", ""))
+        k2 = os.getenv("BAILIAN_CODING_PLAN_API_KEY_2", os.getenv("DASHSCOPE_API_KEY_2", ""))
+        if k1: keys.append(k1)
+        if k2: keys.append(k2)
+        _coding_keys = keys if keys else ["local"]
+    key = _coding_keys[_coding_key_idx % len(_coding_keys)]
+    _coding_key_idx += 1
+    return key
 
 # Tool definitions (OpenAI function calling format)
 TOOLS = [
@@ -177,7 +195,7 @@ def run_agent_sync(
     tier = TIER_CONFIG.get(model_tier, TIER_CONFIG["fast"])
     base_url = tier["url"]
     model_id = tier["model"]
-    api_key = os.getenv("DASHSCOPE_API_KEY", "local") if model_tier == "coding" else "local"
+    api_key = _get_coding_key() if model_tier == "coding" else "local"
 
     messages = []
     if system_prompt:

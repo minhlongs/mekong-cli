@@ -48,12 +48,13 @@ M1_MAX_HOST = os.getenv("M1_MAX_HOST", "192.168.11.111")
 DEEPSEEK_BASE_URL = f"http://{M1_MAX_HOST}:11435/v1"
 NEMOTRON_BASE_URL = f"http://{M1_MAX_HOST}:11436/v1"
 
-#: DashScope API for coding/validation
+#: DashScope Coding Plan API (sk-sp-* keys, /v1 NOT /compatible-mode/v1)
 DASHSCOPE_BASE_URL = os.getenv(
-    "DASHSCOPE_BASE_URL",
-    "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    "CODING_PLAN_URL",
+    "https://coding-intl.dashscope.aliyuncs.com/v1",
 )
-DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
+DASHSCOPE_API_KEY = os.getenv("BAILIAN_CODING_PLAN_API_KEY",
+    os.getenv("DASHSCOPE_API_KEY", ""))
 
 #: Bailian / DashScope fallback (legacy compat)
 BAILIAN_BASE_URL = os.getenv(
