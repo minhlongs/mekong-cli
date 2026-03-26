@@ -1,0 +1,260 @@
+---
+import BaseLayout from '../../layouts/base-layout.astro';
+
+const plans = [
+  {
+    name: 'Starter',
+    price: '$199',
+    period: '/mo',
+    tag: '',
+    mcu: '100 MCU/tháng',
+    features: [
+      'AI tạo proposal tự động',
+      'RaaS licensing cơ bản',
+      '100 MCU/tháng',
+      'CRM & pipeline cơ bản',
+      'Email outreach',
+      'Báo cáo hàng tuần',
+      'Hỗ trợ chat',
+    ],
+    cta: 'Bắt đầu Starter',
+    href: 'https://nowpayments.io/payment/?iid=6075842741',
+    featured: false,
+  },
+  {
+    name: 'Growth',
+    price: '$399',
+    period: '/mo',
+    tag: 'Phổ biến nhất',
+    mcu: '500 MCU/tháng',
+    features: [
+      'Tất cả Starter +',
+      'Outreach đa kênh (Email + Telegram)',
+      '500 MCU/tháng',
+      'Analytics nâng cao',
+      'GDPR compliance & audit log',
+      'Content automation',
+      'Báo cáo thời gian thực',
+      'Hỗ trợ chat + phone',
+    ],
+    cta: 'Chọn Growth',
+    href: 'https://nowpayments.io/payment/?iid=5213459112',
+    featured: true,
+  },
+  {
+    name: 'Premium',
+    price: '$799',
+    period: '/mo',
+    tag: '',
+    mcu: '2.000 MCU/tháng',
+    features: [
+      'Tất cả Growth +',
+      'White-label capabilities',
+      'Custom AI theo ngành',
+      '2.000 MCU/tháng',
+      'Multi-workspace',
+      'API access đầy đủ',
+      'SLA 99.9%',
+      'Onboarding 1-1',
+    ],
+    cta: 'Chọn Premium',
+    href: 'https://nowpayments.io/payment/?iid=5321792819',
+    featured: false,
+  },
+  {
+    name: 'Master',
+    price: '$4,999',
+    period: '/mo',
+    tag: 'Enterprise',
+    mcu: 'Unlimited MCU',
+    features: [
+      'Tất cả Premium +',
+      'MCU không giới hạn',
+      'Dedicated AI model',
+      'Dedicated support manager',
+      'Custom integrations',
+      'On-premise deployment',
+      'SLA 99.99%',
+      'Security audit report',
+    ],
+    cta: 'Liên hệ tư vấn',
+    href: 'mailto:hello@agencyos.network',
+    featured: false,
+  },
+];
+
+const faqs = [
+  {
+    q: 'MCU là gì?',
+    a: 'MCU (Mekong Compute Unit) là đơn vị tính toán của Sophia. Mỗi lần AI tạo proposal, gửi outreach, hoặc xử lý tác vụ thì tiêu thụ MCU. Bạn chỉ trả theo lượng dùng thực tế.',
+  },
+  {
+    q: 'BYOK là gì? Tôi cần chuẩn bị gì?',
+    a: 'BYOK = Bring Your Own Key. Bạn cần có API key từ nhà cung cấp LLM (OpenAI, Anthropic, v.v.). Sophia kết nối qua key đó và chạy trên infra của bạn — không lưu bất kỳ secret nào trên server chúng tôi.',
+  },
+  {
+    q: 'Thanh toán bằng gì?',
+    a: 'Hiện tại thanh toán bằng USDT (TRC20) qua NOWPayments. Hỗ trợ toàn cầu, giá USD. Chúng tôi đang tích hợp thêm các phương thức thanh toán khác.',
+  },
+  {
+    q: 'Dữ liệu khách hàng của tôi có an toàn không?',
+    a: 'Tuyệt đối. Với BYOK model, data proposal và thông tin khách hàng chạy qua API key của bạn và lưu trên infra của bạn. Chúng tôi không có quyền truy cập vào dữ liệu đó.',
+  },
+  {
+    q: 'Có thể white-label Sophia không?',
+    a: 'Có, từ gói Premium trở lên. Bạn có thể đặt logo, màu sắc, domain riêng để khách hàng của agency bạn nhìn thấy thương hiệu của bạn, không phải Sophia.',
+  },
+  {
+    q: 'Có thể nâng cấp hoặc huỷ không?',
+    a: 'Nâng cấp bất cứ lúc nào — có hiệu lực ngay. Huỷ đăng ký bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ để bạn xuất ra nếu cần.',
+  },
+];
+
+const sophiaPricingSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Sophia AI Factory',
+  description: 'AI-powered proposal & sales automation platform cho digital agencies tại Đông Nam Á',
+  brand: {
+    '@type': 'Organization',
+    name: 'Sophia AI Factory',
+    url: 'https://agencyos.network/sophia',
+  },
+  offers: plans.map(p => ({
+    '@type': 'Offer',
+    name: `${p.name} Plan`,
+    price: p.name === 'Starter' ? '199' : p.name === 'Growth' ? '399' : p.name === 'Premium' ? '799' : '4999',
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+    url: `https://agencyos.network/sophia/pricing`,
+  })),
+};
+---
+
+<BaseLayout
+  title="Bảng giá Sophia AI Factory — Starter $199 đến Master $4,999"
+  description="So sánh các gói Sophia AI Factory. Từ Starter $199/mo đến Master $4,999/mo. BYOK model, thanh toán USDT (TRC20)."
+  lang="vi"
+  keywords="sophia ai pricing, ai proposal automation price, agency ai tools pricing, BYOK ai platform"
+>
+
+  <!-- Header -->
+  <section style="background:linear-gradient(135deg,#0a0f1a,#1a0a30 60%,#0a1a30);padding:80px 0 56px;text-align:center;">
+    <div class="container">
+      <div class="badge animate-in" style="margin-bottom:16px;background:rgba(124,77,255,0.15);border-color:rgba(124,77,255,0.3);color:#a78bfa;">
+        Sophia AI Factory
+      </div>
+      <h1 class="display animate-in" style="margin-bottom:16px;">
+        Bảng giá <span style="background:linear-gradient(135deg,#7C4DFF,#00BCD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">minh bạch</span>
+      </h1>
+      <p style="color:var(--md-on-surface-muted);max-width:480px;margin:0 auto 12px;" class="animate-in">
+        Không phí ẩn. BYOK model — bạn control data. Thanh toán USDT (TRC20).
+      </p>
+      <p style="color:#a78bfa;font-size:0.875rem;font-weight:600;" class="animate-in">
+        💳 Thanh toán bằng USDT TRC20 qua NOWPayments
+      </p>
+    </div>
+  </section>
+
+  <!-- Pricing cards -->
+  <section style="background:var(--md-surface);padding:64px 0;">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;align-items:start;">
+        {plans.map(p => (
+          <div
+            class="animate-on-scroll"
+            style={`position:relative;padding:32px 28px;border-radius:16px;border:1px solid ${p.featured ? 'rgba(124,77,255,0.5)' : p.tag === 'Enterprise' ? 'rgba(0,188,212,0.3)' : 'rgba(255,255,255,0.08)'};background:${p.featured ? 'rgba(124,77,255,0.07)' : 'rgba(255,255,255,0.02)'};display:flex;flex-direction:column;gap:20px;`}
+          >
+            {p.tag && (
+              <div style={`position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;background:${p.featured ? 'linear-gradient(135deg,#7C4DFF,#00BCD4)' : 'rgba(0,188,212,0.2)'};color:${p.featured ? '#fff' : '#67e8f9'};font-size:0.72rem;font-weight:700;padding:4px 14px;border-radius:100px;letter-spacing:0.05em;`}>
+                {p.tag}
+              </div>
+            )}
+
+            <div>
+              <h2 style="font-size:1.15rem;font-weight:700;color:var(--md-on-surface);margin:0 0 4px;">{p.name}</h2>
+              <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+                <span style={`font-size:2.2rem;font-weight:800;${p.featured ? 'background:linear-gradient(135deg,#7C4DFF,#00BCD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;' : 'color:var(--md-on-surface);'}`}>{p.price}</span>
+                <span style="color:var(--md-on-surface-muted);font-size:0.875rem;">{p.period}</span>
+              </div>
+              <div style="background:rgba(0,188,212,0.1);color:#67e8f9;font-size:0.78rem;font-weight:600;padding:4px 10px;border-radius:6px;display:inline-block;">
+                {p.mcu}
+              </div>
+            </div>
+
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;flex:1;">
+              {p.features.map(f => (
+                <li style="display:flex;align-items:flex-start;gap:8px;font-size:0.875rem;color:var(--md-on-surface-muted);">
+                  <span style="color:#7C4DFF;font-size:1rem;line-height:1.4;flex-shrink:0;">✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href={p.href}
+              class={p.featured ? 'btn-primary' : 'btn-outline'}
+              style={`text-align:center;justify-content:center;${p.featured ? 'background:linear-gradient(135deg,#7C4DFF,#00BCD4);border:none;' : ''}`}
+              target={p.href.startsWith('mailto') ? undefined : undefined}
+            >
+              {p.cta}
+            </a>
+
+            {p.name !== 'Master' && (
+              <p style="text-align:center;font-size:0.72rem;color:#f59e0b;font-weight:600;margin:0;">
+                Thanh toán bằng USDT (TRC20)
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <!-- USDT note -->
+      <div class="animate-on-scroll" style="margin-top:40px;padding:20px 24px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;text-align:center;max-width:680px;margin-left:auto;margin-right:auto;">
+        <p style="color:#fcd34d;font-size:0.9rem;margin:0;line-height:1.6;">
+          <strong>💳 Thanh toán bằng USDT (TRC20)</strong> — Chúng tôi sẽ gửi link thanh toán sau khi bạn liên hệ.
+          Hỗ trợ toàn cầu, giá USD. <a href="mailto:hello@agencyos.network" style="color:#fcd34d;text-decoration:underline;">Liên hệ ngay →</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section style="background:var(--md-surface-container);padding:72px 0;">
+    <div class="container" style="max-width:720px;">
+      <div style="text-align:center;margin-bottom:48px;">
+        <div class="badge animate-on-scroll" style="margin-bottom:12px;">FAQ</div>
+        <h2 class="headline animate-on-scroll">Câu hỏi thường gặp</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        {faqs.map(f => (
+          <div class="animate-on-scroll" style="padding:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;">
+            <h3 style="font-size:1rem;font-weight:700;color:var(--md-on-surface);margin:0 0 10px;">{f.q}</h3>
+            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;margin:0;">{f.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA footer -->
+  <section style="background:linear-gradient(135deg,#1a0a30,#0a1a30);padding:64px 0;text-align:center;">
+    <div class="container" style="max-width:560px;">
+      <h2 class="headline animate-on-scroll" style="margin-bottom:16px;">
+        Vẫn còn băn khoăn?
+      </h2>
+      <p style="color:var(--md-on-surface-muted);margin-bottom:32px;" class="animate-on-scroll">
+        Đội ngũ Sophia sẵn sàng tư vấn miễn phí. Chúng tôi sẽ giúp bạn chọn gói phù hợp nhất với agency của bạn.
+      </p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;" class="animate-on-scroll">
+        <a href="mailto:hello@agencyos.network" class="btn-primary" style="background:linear-gradient(135deg,#7C4DFF,#00BCD4);border:none;">
+          Liên hệ tư vấn miễn phí
+        </a>
+        <a href="/sophia" class="btn-outline">← Về trang Sophia</a>
+      </div>
+    </div>
+  </section>
+
+  <script type="application/ld+json" set:html={JSON.stringify(sophiaPricingSchema)} />
+
+</BaseLayout>
