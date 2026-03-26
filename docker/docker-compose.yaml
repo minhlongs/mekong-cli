@@ -17,10 +17,7 @@ services:
     shm_size: 2g
     network_mode: bridge
     cap_add:
-      - SYS_ADMIN
       - SYS_PTRACE
-    security_opt:
-      - seccomp=unconfined
     ports:
       - "3001:3001"    # CloudCLI web UI
       - "8000:8000"    # Mekong Gateway API

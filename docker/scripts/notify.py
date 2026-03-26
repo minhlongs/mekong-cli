@@ -44,8 +44,8 @@ def main():
         for url in urls:
             ap.add(url)
         ap.notify(title=title, body=body, notify_type=notify_type)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[notify] failed: {e}", file=sys.stderr)
 
     sys.exit(0)
 

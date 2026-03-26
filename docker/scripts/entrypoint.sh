@@ -32,7 +32,9 @@ export DISPLAY=:99
 SENTINEL="$CLAUDE_HOME/.claude/.mekong-bootstrapped"
 if [ ! -f "$SENTINEL" ]; then
     echo "[mekong] First boot — running bootstrap"
-    /usr/local/bin/bootstrap.sh || echo "[mekong] WARNING: bootstrap failed"
+    if ! /usr/local/bin/bootstrap.sh; then
+        echo "[mekong] ERROR: bootstrap failed — container may be misconfigured" >&2
+    fi
 fi
 
 echo "[mekong] Starting s6-overlay..."
