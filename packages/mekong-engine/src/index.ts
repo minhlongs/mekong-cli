@@ -89,7 +89,17 @@ app.onError((err, c) => {
 
 // Middleware
 app.use('*', payloadSizeLimit())
-app.use('*', cors())
+app.use('*', cors({
+  origin: [
+    'https://agencyos.network',
+    'https://api.agencyos.network',
+    'http://localhost:4321',  // astro dev
+    'http://localhost:3001',  // dashboard dev
+  ],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  maxAge: 86400,
+}))
 app.use('*', metricsMiddleware)
 app.use('*', requestLoggingMiddleware)
 app.use('*', rateLimitMiddleware())
@@ -104,7 +114,7 @@ initAlerts()
 app.get('/', (c) => c.json({
   service: 'mekong-engine',
   version: '3.2.0',
-  docs: 'https://docs.agencyos.network',
+  docs: 'https://agencyos.network/docs',
   health: '/health',
   api: '/v1',
 }))
