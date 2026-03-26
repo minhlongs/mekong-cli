@@ -1,6 +1,14 @@
 /**
  * Reviews Routes
  * API endpoints cho customer reviews operations
+ *
+ * RATE LIMITING RECOMMENDATIONS:
+ * - POST /api/reviews: 5 req/min per IP (prevent review spam)
+ * - GET /api/reviews: 60 req/min per IP
+ * - GET /api/reviews/stats/:id: 30 req/min per IP
+ *
+ * Implement using Cloudflare Rate Limiting or Workers KV for custom logic.
+ * Consider adding CAPTCHA for review submissions if spam persists.
  */
 
 import { jsonResponse, errorResponse } from '../middleware/cors.js';

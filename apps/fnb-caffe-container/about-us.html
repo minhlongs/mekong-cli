@@ -12,6 +12,10 @@
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#4a2c17">
 
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:8000 ws:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="Về Chúng Tôi | F&B Container Café — Câu Chuyện & Đội Ngũ">
     <meta property="og:description" content="Câu chuyện hình thành F&B Container Café từ tình yêu Sa Đéc. Đội ngũ barista chuyên nghiệp và không gian container độc đáo 3 tầng.">
@@ -34,6 +38,15 @@
     <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/images/favicon-512x512.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F&amp;B Container">
 
     <!-- Google Fonts - Space Grotesk + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

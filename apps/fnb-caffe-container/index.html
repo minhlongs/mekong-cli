@@ -12,6 +12,10 @@
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#4a2c17">
 
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:8000 ws:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content="F&amp;B Container Café — Check-in Container Cyberpunk Độc Đáo | Sa Đéc">
     <meta property="og:description"
@@ -179,7 +183,7 @@
             <a href="#contact-form" data-i18n="nav.contact">Liên Hệ</a>
         </nav>
         <div class="m3-top-app-bar__trailing">
-            <button type="button" href="javascript:void(0)" id="language-switcher" class="m3-chip" data-i18n="lang.switch" aria-label="Chuyển đổi ngôn ngữ">🌐 EN</button>
+            <button type="button" id="language-switcher" class="m3-chip" data-i18n="lang.switch" aria-label="Chuyển đổi ngôn ngữ">🌐 EN</button>
             <button class="m3-icon-button theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                 <span class="theme-icon" aria-hidden="true">🌙</span>
             </button>
@@ -709,6 +713,130 @@
          class="toast-container">
     </div>
 
+    <!-- ═══ PWA INSTALL PROMPT ═══ -->
+    <div id="pwaInstallPrompt" class="pwa-install-prompt" role="dialog" aria-modal="true" aria-labelledby="pwaInstallTitle" hidden>
+        <div class="pwa-install-prompt-overlay" aria-hidden="true"></div>
+        <div class="pwa-install-prompt-content">
+            <button class="pwa-install-close" aria-label="Close" id="pwaInstallClose">&times;</button>
+            <div class="pwa-install-icon" aria-hidden="true">📲</div>
+            <h3 id="pwaInstallTitle" data-i18n="pwa.install.title">Cài Đặt Ứng Dụng</h3>
+            <p data-i18n="pwa.install.description">Trải nghiệm FnB Caffe Container tốt hơn với ứng dụng PWA. Truy cập nhanh, đặt hàng dễ dàng, nhận thông báo đơn hàng!</p>
+            <div class="pwa-install-actions">
+                <button class="btn-primary" id="pwaInstallBtn" data-i18n="pwa.install.btn">
+                    📥 Cài Đặt Ngay
+                </button>
+                <button class="btn-tonal" id="pwaInstallLater" data-i18n="pwa.install.later">
+                    Để Sau
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* PWA Install Prompt Styles */
+        .pwa-install-prompt {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .pwa-install-prompt[hidden] {
+            display: none;
+        }
+        .pwa-install-prompt-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        .pwa-install-prompt-content {
+            position: relative;
+            background: #FFFBFE;
+            border-radius: 28px;
+            padding: 32px 24px;
+            max-width: 360px;
+            margin: 16px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            animation: pwaInstallSlideIn 0.3s ease-out;
+        }
+        @keyframes pwaInstallSlideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .pwa-install-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .pwa-install-close:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .pwa-install-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .pwa-install-prompt-content h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 12px;
+            color: #1a1a1a;
+        }
+        .pwa-install-prompt-content p {
+            font-size: 14px;
+            color: #666;
+            margin: 0 0 24px;
+            line-height: 1.5;
+        }
+        .pwa-install-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .pwa-install-actions .btn-primary,
+        .pwa-install-actions .btn-tonal {
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pwa-install-actions .btn-primary {
+            background: #4a2c17;
+            color: #fff;
+            border: none;
+        }
+        .pwa-install-actions .btn-primary:hover {
+            background: #3d2414;
+            transform: translateY(-1px);
+        }
+        .pwa-install-actions .btn-tonal {
+            background: transparent;
+            color: #4a2c17;
+            border: 1px solid #4a2c17;
+        }
+        .pwa-install-actions .btn-tonal:hover {
+            background: rgba(74, 44, 23, 0.05);
+        }
+        @media (max-width: 400px) {
+            .pwa-install-prompt-content {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+
     <!-- ═══ SCREEN READER ANNOUNCEMENTS ═══ -->
     <div id="srAnnouncer"
          class="visually-hidden"
@@ -727,19 +855,100 @@
     <script src="js/churn-prevention.js" defer></script>
     <script type="module" src="js/theme.min.js" defer></script>
 
-    <!-- PWA Service Worker Registration -->
+    <!-- PWA Service Worker Registration & Install Prompt -->
     <script>
+      // PWA Install Prompt Logic
+      let deferredPrompt = null;
+      const PROMPT_DISMISSED_KEY = 'pwa-prompt-dismissed';
+
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
+          navigator.serviceWorker.register('/js/sw.js')
             .then((registration) => {
               console.log('✅ Service Worker registered:', registration.scope);
+
+              // Check for update
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed') {
+                    console.log('🔄 New content available, please refresh.');
+                  }
+                });
+              });
             })
             .catch((error) => {
               console.log('❌ Service Worker registration failed:', error);
             });
         });
       }
+
+      // Handle beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show install prompt after 5 seconds if user hasn't dismissed
+        const hasDismissed = localStorage.getItem(PROMPT_DISMISSED_KEY);
+        if (!hasDismissed) {
+          setTimeout(() => {
+            showInstallPrompt();
+          }, 5000);
+        }
+      });
+
+      function showInstallPrompt() {
+        const prompt = document.getElementById('pwaInstallPrompt');
+        if (prompt) {
+          prompt.hidden = false;
+        }
+      }
+
+      function hideInstallPrompt() {
+        const prompt = document.getElementById('pwaInstallPrompt');
+        if (prompt) {
+          prompt.hidden = true;
+        }
+      }
+
+      // Install button click
+      document.getElementById('pwaInstallBtn')?.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+
+        if (outcome === 'accepted') {
+          console.log('✅ User accepted the install prompt');
+          localStorage.setItem(PROMPT_DISMISSED_KEY, 'installed');
+        } else if (outcome === 'dismissed') {
+          console.log('🚫 User dismissed the install prompt');
+          localStorage.setItem(PROMPT_DISMISSED_KEY, Date.now().toString());
+        }
+
+        deferredPrompt = null;
+        hideInstallPrompt();
+      });
+
+      // Install later button
+      document.getElementById('pwaInstallLater')?.addEventListener('click', () => {
+        localStorage.setItem(PROMPT_DISMISSED_KEY, Date.now().toString());
+        hideInstallPrompt();
+      });
+
+      // Close button
+      document.getElementById('pwaInstallClose')?.addEventListener('click', () => {
+        localStorage.setItem(PROMPT_DISMISSED_KEY, Date.now().toString());
+        hideInstallPrompt();
+      });
+
+      // Handle app installed event
+      window.addEventListener('appinstalled', () => {
+        console.log('🎉 PWA was installed successfully');
+        localStorage.setItem(PROMPT_DISMISSED_KEY, 'installed');
+        deferredPrompt = null;
+        hideInstallPrompt();
+      });
     </script>
 </body>
 </html>

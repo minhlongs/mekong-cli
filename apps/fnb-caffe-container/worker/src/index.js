@@ -1,6 +1,12 @@
 /**
  * F&B Caffe Container - Cloudflare Worker
  * Main entry point - Routes dispatcher
+ *
+ * RATE LIMITING:
+ * - API endpoints should implement rate limiting via Cloudflare's built-in Rate Limiting
+ * - Recommended limits: 100 req/min per IP for general endpoints, 10 req/min for write operations
+ * - Configure in Cloudflare Dashboard: Rules > Rate Limiting
+ * - For custom rate limiting, use Cloudflare Workers KV to track request counts per IP
  */
 
 import { corsHeaders, errorResponse } from './middleware/cors.js';

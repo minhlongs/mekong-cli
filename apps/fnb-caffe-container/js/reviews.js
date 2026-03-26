@@ -4,6 +4,9 @@
  *  Customer reviews with star ratings
  * ═══════════════════════════════════════════════
  *
+ * SECURITY: All user inputs are sanitized using escapeHtml()
+ * which uses the DOMPurify pattern (DOM-based escaping via createElement.textContent)
+ *
  * Usage:
  *   import { reviews } from '/js/reviews.js';
  *
@@ -348,7 +351,8 @@ export function initReviewsPage() {
   }
 
   /**
-   * Helper: Escape HTML
+   * Helper: Escape HTML - DOMPurify Pattern
+   * Uses DOM textContent to escape special characters, preventing XSS
    */
   function escapeHtml(text) {
     if (!text) {return '';}

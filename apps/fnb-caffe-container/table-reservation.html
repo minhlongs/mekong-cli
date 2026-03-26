@@ -8,15 +8,23 @@
     <meta name="keywords" content="dat ban, dat ban online, reservation, cafe sa dec, container cafe">
     <meta name="theme-color" content="#4a2c17">
 
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://localhost:8000 ws:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/public/images/favicon.svg">
     <link rel="icon" type="image/png" sizes="16x16" href="/public/images/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/public/images/favicon-32x32.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/public/images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/images/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/images/favicon-512x512.png">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/public/manifest.json">
-    <link rel="canonical" href="https://fnbcontainer.vn/table-reservation">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F&amp;B Container">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Đặt Bàn Online | F&B Container Café">
@@ -363,15 +371,18 @@
     </style>
 </head>
 <body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <div class="reservation-page">
         <!-- Header -->
-        <header class="reservation-header">
+        <header class="reservation-header" role="banner">
             <h1>🍽️ Đặt Bàn Online</h1>
             <p>Đặt bàn nhanh chóng tại F&B Container Café - Không gian độc đáo giữa lòng Sa Đéc</p>
         </header>
 
         <!-- Main Content -->
-        <main class="reservation-container">
+        <main id="main-content" class="reservation-container" role="main">
             <div class="reservation-form-card">
                 <form id="reservationForm">
                     <!-- Thông tin đặt bàn -->
@@ -384,33 +395,33 @@
                             </div>
                             <div class="form-group">
                                 <label for="guests">Số người <span class="required">*</span></label>
-                                <div class="guests-selector">
-                                    <button type="button" class="guests-btn" id="decreaseGuests">−</button>
-                                    <span class="guests-count" id="guestsCount">2</span>
-                                    <button type="button" class="guests-btn" id="increaseGuests">+</button>
+                                <div class="guests-selector" role="group" aria-label="Điều chỉnh số người">
+                                    <button type="button" class="guests-btn" id="decreaseGuests" aria-label="Giảm số người">−</button>
+                                    <span class="guests-count" id="guestsCount" aria-live="polite" aria-atomic="true">2</span>
+                                    <button type="button" class="guests-btn" id="increaseGuests" aria-label="Tăng số người">+</button>
                                 </div>
                                 <input type="hidden" id="guests" value="2" required>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label>Khung giờ <span class="required">*</span></label>
-                            <div class="time-slots" id="timeSlots">
-                                <div class="time-slot" data-time="07:00">07:00</div>
-                                <div class="time-slot" data-time="08:00">08:00</div>
-                                <div class="time-slot" data-time="09:00">09:00</div>
-                                <div class="time-slot" data-time="10:00">10:00</div>
-                                <div class="time-slot" data-time="11:00">11:00</div>
-                                <div class="time-slot" data-time="12:00">12:00</div>
-                                <div class="time-slot" data-time="13:00">13:00</div>
-                                <div class="time-slot" data-time="14:00">14:00</div>
-                                <div class="time-slot" data-time="15:00">15:00</div>
-                                <div class="time-slot" data-time="16:00">16:00</div>
-                                <div class="time-slot" data-time="17:00">17:00</div>
-                                <div class="time-slot" data-time="18:00">18:00</div>
-                                <div class="time-slot" data-time="19:00">19:00</div>
-                                <div class="time-slot" data-time="20:00">20:00</div>
-                                <div class="time-slot" data-time="21:00">21:00</div>
+                            <label for="timeSlotLabel">Khung giờ <span class="required">*</span></label>
+                            <div class="time-slots" id="timeSlots" role="group" aria-labelledby="timeSlotLabel">
+                                <button type="button" class="time-slot" data-time="07:00" aria-label="Chọn khung giờ 07:00" aria-pressed="false">07:00</button>
+                                <button type="button" class="time-slot" data-time="08:00" aria-label="Chọn khung giờ 08:00" aria-pressed="false">08:00</button>
+                                <button type="button" class="time-slot" data-time="09:00" aria-label="Chọn khung giờ 09:00" aria-pressed="false">09:00</button>
+                                <button type="button" class="time-slot" data-time="10:00" aria-label="Chọn khung giờ 10:00" aria-pressed="false">10:00</button>
+                                <button type="button" class="time-slot" data-time="11:00" aria-label="Chọn khung giờ 11:00" aria-pressed="false">11:00</button>
+                                <button type="button" class="time-slot" data-time="12:00" aria-label="Chọn khung giờ 12:00" aria-pressed="false">12:00</button>
+                                <button type="button" class="time-slot" data-time="13:00" aria-label="Chọn khung giờ 13:00" aria-pressed="false">13:00</button>
+                                <button type="button" class="time-slot" data-time="14:00" aria-label="Chọn khung giờ 14:00" aria-pressed="false">14:00</button>
+                                <button type="button" class="time-slot" data-time="15:00" aria-label="Chọn khung giờ 15:00" aria-pressed="false">15:00</button>
+                                <button type="button" class="time-slot" data-time="16:00" aria-label="Chọn khung giờ 16:00" aria-pressed="false">16:00</button>
+                                <button type="button" class="time-slot" data-time="17:00" aria-label="Chọn khung giờ 17:00" aria-pressed="false">17:00</button>
+                                <button type="button" class="time-slot" data-time="18:00" aria-label="Chọn khung giờ 18:00" aria-pressed="false">18:00</button>
+                                <button type="button" class="time-slot" data-time="19:00" aria-label="Chọn khung giờ 19:00" aria-pressed="false">19:00</button>
+                                <button type="button" class="time-slot" data-time="20:00" aria-label="Chọn khung giờ 20:00" aria-pressed="false">20:00</button>
+                                <button type="button" class="time-slot" data-time="21:00" aria-label="Chọn khung giờ 21:00" aria-pressed="false">21:00</button>
                             </div>
                             <input type="hidden" id="time" required>
                         </div>
@@ -450,8 +461,8 @@
                 </form>
 
                 <!-- Success Message -->
-                <div class="success-message" id="successMessage">
-                    <div class="success-icon">✅</div>
+                <div class="success-message" id="successMessage" role="status" aria-live="polite" aria-atomic="true" hidden>
+                    <div class="success-icon" aria-hidden="true">✅</div>
                     <h3>Đặt Bàn Thành Công!</h3>
                     <p>Cảm ơn bạn đã đặt bàn tại F&B Container Café</p>
                     <div class="reservation-details" id="reservationDetails"></div>
@@ -462,25 +473,30 @@
             </div>
 
             <!-- Info Cards -->
-            <div class="info-cards">
+            <div class="info-cards" role="region" aria-label="Thông tin quán">
                 <div class="info-card">
-                    <div class="info-card-icon">⏰</div>
+                    <div class="info-card-icon" aria-hidden="true">⏰</div>
                     <h4>Giờ Mở Cửa</h4>
                     <p>07:00 - 22:00<br>Tất cả các ngày trong tuần</p>
                 </div>
                 <div class="info-card">
-                    <div class="info-card-icon">📍</div>
+                    <div class="info-card-icon" aria-hidden="true">📍</div>
                     <h4>Địa Chỉ</h4>
                     <p>Sa Đéc, Đồng Tháp<br>Gần khu du lịch hoa hồng</p>
                 </div>
                 <div class="info-card">
-                    <div class="info-card-icon">📞</div>
+                    <div class="info-card-icon" aria-hidden="true">📞</div>
                     <h4>Liên Hệ</h4>
                     <p>Hotline: 0901 234 567<br>Email: contact@fnbcontainer.vn</p>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Footer -->
+    <footer role="contentinfo" style="text-align: center; padding: 24px; color: rgba(255,255,255,0.7);">
+        <p>&copy; 2026 F&B Container Café. All rights reserved.</p>
+    </footer>
 
     <script>
         // Date initialization
