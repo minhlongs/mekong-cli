@@ -5,14 +5,12 @@ Memory-aware intent-to-recipe routing.
 Maps NLU results to the best recipe, tool, browse action, or plan.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from .memory import MemoryStore
 from .nlu import Intent, IntentResult
+from .memory import MemoryStore
 
 
 @dataclass
@@ -28,7 +26,7 @@ class RouteResult:
 
 
 # Intent-to-recipe-tag mapping (AGI v2: includes all 10 intents)
-_INTENT_TAGS: dict[Intent, str] = {
+_INTENT_TAGS: Dict[Intent, str] = {
     Intent.DEPLOY: "deploy",
     Intent.AUDIT: "audit",
     Intent.CREATE: "create",
@@ -56,17 +54,17 @@ class SmartRouter:
 
     MIN_SUCCESS_RATE: float = 30.0
 
-    def __init__(self, memory_store: MemoryStore | None = None) -> None:
-        """Initialize router.
+    def __init__(self, memory_store: Optional[MemoryStore] = None) -> None:
+        """
+        Initialize router.
 
         Args:
             memory_store: Optional MemoryStore for viability checks
-
         """
         self.memory = memory_store
-        self._recipe_cache: dict[str, str] | None = None
-        self._tool_registry: Any | None = None
-        self._browser_agent: Any | None = None
+        self._recipe_cache: Optional[Dict[str, str]] = None
+        self._tool_registry: Optional[Any] = None
+        self._browser_agent: Optional[Any] = None
 
         # AGI v2: Lazy-load tool registry
         try:
@@ -76,7 +74,8 @@ class SmartRouter:
             pass
 
     def route(self, intent_result: IntentResult) -> RouteResult:
-        """Route an intent to the best recipe, tool, or action.
+        """
+        Route an intent to the best recipe, tool, or action.
 
         Priority:
         1. Exact recipe match
@@ -90,7 +89,6 @@ class SmartRouter:
 
         Returns:
             RouteResult with action and recipe details
-
         """
         if intent_result.intent == Intent.UNKNOWN:
             return RouteResult(action="plan", reason="Unknown intent")
@@ -111,13 +109,14 @@ class SmartRouter:
         if tag:
             recipes = self._scan_recipes()
             for name, path in recipes.items():
-                if tag in name.lower() and self._check_memory(name):
-                    return RouteResult(
-                        action="recipe",
-                        recipe_path=path,
-                        recipe_name=name,
-                        reason=f"Intent tag match: {tag}",
-                    )
+                if tag in name.lower():
+                    if self._check_memory(name):
+                        return RouteResult(
+                            action="recipe",
+                            recipe_path=path,
+                            recipe_name=name,
+                            reason=f"Intent tag match: {tag}",
+                        )
 
         # AGI v2: Route to ToolRegistry for tool-mapped intents
         tool_name = _INTENT_TOOLS.get(intent_result.intent, "")
@@ -155,7 +154,7 @@ class SmartRouter:
 
         return RouteResult(action="plan", reason="No viable recipe found")
 
-    def _find_recipe_by_name(self, name: str) -> str | None:
+    def _find_recipe_by_name(self, name: str) -> Optional[str]:
         """Find recipe file path by name."""
         recipes = self._scan_recipes()
         # Exact match
@@ -180,15 +179,14 @@ class SmartRouter:
         rate = (successes / len(recent)) * 100
         return rate >= self.MIN_SUCCESS_RATE
 
-    def _scan_recipes(self) -> dict[str, str]:
-        """Scan recipes/ directory recursively for .md files. Returns {name: path}."""
+    def _scan_recipes(self) -> Dict[str, str]:
+        """Scan recipes/ directory for .md files. Returns {name: path}."""
         if self._recipe_cache is not None:
             return self._recipe_cache
-        recipes: dict[str, str] = {}
+        recipes: Dict[str, str] = {}
         recipe_dir = Path("recipes")
         if recipe_dir.is_dir():
-            # AGI v2: rglob to discover auto-recipes in subdirectories
-            for f in recipe_dir.rglob("*.md"):
+            for f in recipe_dir.glob("*.md"):
                 recipes[f.stem] = str(f)
         self._recipe_cache = recipes
         return recipes
@@ -198,3 +196,4 @@ __all__ = [
     "RouteResult",
     "SmartRouter",
 ]
+

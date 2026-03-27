@@ -5,17 +5,12 @@ Hybrid intent classifier: keyword fast-path + LLM chain-of-thought fallback.
 Supports multi-intent, Vietnamese, conversation context, and structured JSON output.
 """
 
-from __future__ import annotations
-
 import json
-import logging
 import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-
-logger = logging.getLogger(__name__)
 
 
 class Intent(str, Enum):
@@ -40,7 +35,7 @@ class IntentResult:
 
     intent: Intent
     confidence: float  # 0.0-1.0
-    entities: dict[str, str] = field(default_factory=dict)
+    entities: Dict[str, str] = field(default_factory=dict)
     suggested_recipe: str = ""
     raw_goal: str = ""
     reasoning: str = ""  # LLM chain-of-thought explanation
@@ -96,7 +91,7 @@ class ConversationContext:
 
 
 # Keyword mapping: intent -> list of trigger words (EN + VN)
-KEYWORD_MAP: dict[Intent, list[str]] = {
+KEYWORD_MAP: Dict[Intent, List[str]] = {
     Intent.DEPLOY: [
         "deploy", "ship", "push", "publish",
         "trien khai", "triển khai", "đẩy lên",
@@ -209,21 +204,22 @@ class IntentClassifier:
 
     def __init__(
         self,
-        llm_client: Any | None = None,
-        conversation: "ConversationContext | None" = None,
+        llm_client: Optional[Any] = None,
+        conversation: Optional[ConversationContext] = None,
     ) -> None:
-        """Initialize classifier.
+        """
+        Initialize classifier.
 
         Args:
             llm_client: Optional LLM client for chain-of-thought classification
             conversation: Optional conversation context for multi-turn support
-
         """
         self.llm_client = llm_client
         self.conversation = conversation or ConversationContext()
 
     def classify(self, goal: str) -> IntentResult:
-        """Classify a goal string into an intent with entities.
+        """
+        Classify a goal string into an intent with entities.
 
         Uses keyword matching first (fast path, high confidence).
         Falls back to LLM chain-of-thought for ambiguous goals.
@@ -233,7 +229,6 @@ class IntentClassifier:
 
         Returns:
             IntentResult with intent, confidence, entities, and reasoning
-
         """
         # Record this goal in conversation context
         self.conversation.add_turn("user", goal)
@@ -260,7 +255,7 @@ class IntentClassifier:
 
         return result
 
-    def classify_batch(self, goals: list[str]) -> list[IntentResult]:
+    def classify_batch(self, goals: List[str]) -> List[IntentResult]:
         """Classify multiple goals."""
         return [self.classify(goal) for goal in goals]
 
@@ -271,7 +266,7 @@ class IntentClassifier:
             and hasattr(self.llm_client, "generate")
         )
 
-    def _keyword_match(self, goal: str) -> tuple[Intent, float]:
+    def _keyword_match(self, goal: str) -> Tuple[Intent, float]:
         """Match goal against keyword map. Returns (intent, confidence)."""
         goal_lower = goal.lower()
         matches: List[Tuple[Intent, float]] = []
@@ -292,9 +287,9 @@ class IntentClassifier:
         matches.sort(key=lambda x: x[1], reverse=True)
         return matches[0]
 
-    def _extract_entities(self, goal: str, intent: Intent) -> dict[str, str]:
+    def _extract_entities(self, goal: str, intent: Intent) -> Dict[str, str]:
         """Extract entities from goal string using regex patterns."""
-        entities: dict[str, str] = {}
+        entities: Dict[str, str] = {}
 
         # Project name
         match = _PROJECT_RE.search(goal)
@@ -325,7 +320,8 @@ class IntentClassifier:
         return entities
 
     def _llm_classify(self, goal: str) -> IntentResult:
-        """Use LLM with chain-of-thought to classify ambiguous goals.
+        """
+        Use LLM with chain-of-thought to classify ambiguous goals.
 
         Returns structured IntentResult with reasoning trace.
         """
@@ -420,10 +416,10 @@ class IntentClassifier:
 
 
 __all__ = [
-    "KEYWORD_MAP",
+    "Intent",
+    "IntentResult",
+    "IntentClassifier",
     "ConversationContext",
     "ConversationTurn",
-    "Intent",
-    "IntentClassifier",
-    "IntentResult",
+    "KEYWORD_MAP",
 ]

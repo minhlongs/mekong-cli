@@ -1,149 +1,59 @@
-"""Mekong CLI - Recipe Executor.
+"""
+Mekong CLI - Recipe Executor
 
 Executes recipes parsed from Markdown files.
 Returns ExecutionResult for orchestrator integration.
 """
 
-from __future__ import annotations
-
-import re
-import shlex
 import subprocess
 import time
-from typing import TYPE_CHECKING
-
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
 from src.core.parser import Recipe, RecipeStep
 from src.core.verifier import ExecutionResult
-from src.security.command_sanitizer import CommandSanitizer
-
-if TYPE_CHECKING:
-    from src.core.execution_context import ExecutionContext
-    from src.core.execution_hooks import HookRegistry
-    from src.core.retry_policy import RetryPolicy
-    from src.core.timeout_manager import TimeoutManager
-
-DANGEROUS_PATTERNS = [
-    "rm -rf /", "mkfs", "dd if=", ": (){",
-    "chmod -R 777 /", "curl.*|.*sh", "wget.*|.*sh",
-    "eval ", "exec(", "> /dev/sd", "shutdown", "reboot", "init 0",
-]
 
 
 class RecipeExecutor:
     """Executes a Recipe step by step, returning structured results."""
 
-    def __init__(
-        self,
-        recipe: Recipe,
-        context: ExecutionContext | None = None,
-        timeout_mgr: TimeoutManager | None = None,
-        hooks: HookRegistry | None = None,
-        retry_policy: RetryPolicy | None = None,
-    ) -> None:
+    def __init__(self, recipe: Recipe) -> None:
         """Initialize RecipeExecutor with a parsed recipe.
 
         Args:
             recipe: The Recipe object containing steps to execute.
-            context: Optional shared execution context for step output forwarding.
-            timeout_mgr: Optional timeout manager for per-step and global timeouts.
-            hooks: Optional hook registry for before/after/error hooks.
-            retry_policy: Optional retry policy (overrides step-level retry params).
-
         """
         self.recipe = recipe
-        self.context = context
-        self.timeout_mgr = timeout_mgr
-        self.hooks = hooks
-        self.retry_policy = retry_policy
         self.console = Console()
 
-    def _is_safe_command(self, command: str) -> bool:
-        """Check command against dangerous patterns before execution.
-
-        Args:
-            command: Shell command string to validate.
-
-        Returns:
-            False if any dangerous pattern matches, True if safe.
-
-        """
-        lower = command.lower()
-        for pattern in DANGEROUS_PATTERNS:
-            if re.search(pattern, lower, re.IGNORECASE):
-                return False
-        return True
-
     def execute_step(self, step: RecipeStep) -> ExecutionResult:
-        """Execute a single step.
-        Supports multiple execution modes: shell, llm, api.
-
-        Runs before-hooks before execution and after-hooks/error-hooks after.
-        Records step stdout into execution context if provided.
+        """
+        Execute a single step.
+        Supports multiple execution modes: shell, llm, api
 
         Returns:
             ExecutionResult with exit_code, stdout, stderr for verification
-
         """
         self.console.print(f"\n[bold blue]Step {step.order}:[/bold blue] {step.title}")
 
-        # Run before-hooks; allow hook to modify step or short-circuit
-        active_step = step
-        if self.hooks and self.context is not None:
-            hook_result = self.hooks.run_before(step, self.context)
-            if not hook_result.proceed:
-                skipped = ExecutionResult(
-                    exit_code=0,
-                    stdout="[SKIPPED] Before-hook short-circuited execution",
-                    stderr="",
-                    metadata={"mode": "skipped", "hook_skipped": True},
-                )
-                if self.context is not None:
-                    self.context.record_step_output(step.order, skipped.stdout)
-                return skipped
-            if hook_result.modified_step is not None:
-                active_step = hook_result.modified_step
-
         # Determine execution mode from step params or description
-        step_type = active_step.params.get("type", "shell") if active_step.params else "shell"
+        step_type = step.params.get("type", "shell") if step.params else "shell"
 
-        try:
-            # Handle different execution types
-            if step_type == "llm":
-                result = self._execute_llm_step(active_step)
-            elif step_type == "api":
-                result = self._execute_api_step(active_step)
-            elif step_type == "tool":
-                result = self._execute_tool_step(active_step)
-            elif step_type == "browse":
-                result = self._execute_browse_step(active_step)
-            else:
-                result = self._execute_shell_step(active_step)
-        except Exception as exc:
-            if self.hooks and self.context is not None:
-                self.hooks.run_error_hooks(step, self.context, exc)
-            raise
-
-        # Record step output in context
-        if self.context is not None:
-            self.context.record_step_output(step.order, result.stdout)
-
-        # Run after-hooks
-        if self.hooks and self.context is not None:
-            self.hooks.run_after(step, self.context, result)
-
-        # Run error-hooks if step failed (non-zero exit)
-        if result.exit_code != 0 and self.hooks and self.context is not None:
-            if result.error is not None:
-                self.hooks.run_error_hooks(step, self.context, result.error)
-
-        return result
+        # Handle different execution types
+        if step_type == "llm":
+            return self._execute_llm_step(step)
+        elif step_type == "api":
+            return self._execute_api_step(step)
+        elif step_type == "tool":
+            return self._execute_tool_step(step)
+        elif step_type == "browse":
+            return self._execute_browse_step(step)
+        else:
+            return self._execute_shell_step(step)
 
     def _execute_llm_step(self, step: RecipeStep) -> ExecutionResult:
-        """Execute LLM generation step via configured LLM provider (Universal LLM endpoint)."""
+        """Execute LLM generation step via Antigravity Proxy or OpenAI."""
         from src.core.llm_client import get_client
 
         self.console.print(f"[cyan][LLM] Generating:[/cyan] {step.description}")
@@ -175,7 +85,7 @@ class RecipeExecutor:
                     title=f"LLM Output ({response.model})",
                     border_style="cyan",
                     expand=False,
-                ),
+                )
             )
             return ExecutionResult(
                 exit_code=0,
@@ -185,7 +95,7 @@ class RecipeExecutor:
             )
 
         except Exception as e:
-            self.console.print(f"[bold red]LLM Error:[/bold red] {e!s}")
+            self.console.print(f"[bold red]LLM Error:[/bold red] {str(e)}")
             return ExecutionResult(
                 exit_code=1,
                 stdout="",
@@ -205,7 +115,7 @@ class RecipeExecutor:
 
         if not url:
             self.console.print(
-                "[yellow]⚠️  No URL specified — skipping API step[/yellow]",
+                "[yellow]⚠️  No URL specified — skipping API step[/yellow]"
             )
             return ExecutionResult(
                 exit_code=0,
@@ -220,13 +130,13 @@ class RecipeExecutor:
             response = req.request(method, url, json=body, headers=headers, timeout=30)
             status_color = "green" if response.ok else "red"
             self.console.print(
-                f"[{status_color}]Status: {response.status_code}[/{status_color}]",
+                f"[{status_color}]Status: {response.status_code}[/{status_color}]"
             )
 
             preview = response.text[:1000] if response.text else ""
             if preview:
                 self.console.print(
-                    Panel(preview, title="Response", border_style="dim", expand=False),
+                    Panel(preview, title="Response", border_style="dim", expand=False)
                 )
 
             return ExecutionResult(
@@ -241,7 +151,7 @@ class RecipeExecutor:
             )
 
         except req.exceptions.RequestException as e:
-            self.console.print(f"[bold red]API Error:[/bold red] {e!s}")
+            self.console.print(f"[bold red]API Error:[/bold red] {str(e)}")
             return ExecutionResult(
                 exit_code=1,
                 stdout="",
@@ -325,6 +235,7 @@ class RecipeExecutor:
 
             if browse_action == "check":
                 result = agent.check_status(url)
+                status_color = "green" if result.success else "red"
                 output = f"HTTP {result.status_code} ({result.duration_ms:.0f}ms)"
             elif browse_action == "links":
                 result = agent.get_links(url)
@@ -340,13 +251,13 @@ class RecipeExecutor:
                     f"Load Time: {result.load_time_ms:.0f}ms\n\n"
                     f"{result.text_content[:500]}"
                 )
+                status_color = "green" if result.status_code < 400 else "red"
 
-            browse_style = "green" if result.status_code < 400 else "red"
             self.console.print(
                 Panel(
                     output[:1000],
                     title=f"Browse: {url[:60]}",
-                    border_style=browse_style,
+                    border_style="cyan",
                     expand=False,
                 )
             )
@@ -385,64 +296,13 @@ class RecipeExecutor:
                 metadata={"mode": "shell", "skipped": True},
             )
 
-        # SECURITY: Quick pattern check before full sanitization
-        if not self._is_safe_command(command):
-            error_msg = "Command blocked by safety filter — matched dangerous pattern"
-            self.console.print(f"[bold red]SECURITY ERROR:[/bold red] {error_msg}")
-            return ExecutionResult(
-                exit_code=1,
-                stdout="",
-                stderr=f"SECURITY_BLOCKED: {error_msg}",
-                metadata={"mode": "shell", "command": command, "security_blocked": True},
-            )
-
-        # SECURITY: Sanitize command before execution
-        sanitizer = CommandSanitizer(strict_mode=True)
-        sanitization_result = sanitizer.sanitize(command)
-
-        if not sanitization_result.is_safe:
-            error_msg = f"Command blocked - dangerous patterns detected: {', '.join(sanitization_result.blocked_patterns)}"
-            self.console.print(f"[bold red]SECURITY ERROR:[/bold red] {error_msg}")
-            return ExecutionResult(
-                exit_code=1,
-                stdout="",
-                stderr=f"SECURITY_BLOCKED: {error_msg}",
-                metadata={
-                    "mode": "shell",
-                    "command": command,
-                    "security_blocked": True,
-                    "blocked_patterns": sanitization_result.blocked_patterns,
-                },
-            )
-
-        # Use sanitized command
-        command = sanitization_result.sanitized_command
-
-        # Log warnings if any
-        for warning in sanitization_result.warnings:
-            self.console.print(f"[yellow]Security Warning:[/yellow] {warning}")
-
-        # Determine retry configuration — RetryPolicy takes precedence over step params
-        if self.retry_policy is not None:
-            max_attempts = self.retry_policy.max_attempts
-        else:
-            max_attempts = step.params.get("retry", 1) + 1 if step.params else 2
+        max_attempts = step.params.get("retry", 1) + 1 if step.params else 2
         retry_delay = step.params.get("retry_delay", 2) if step.params else 2
-
-        # Determine per-step timeout
-        step_timeout: float
-        if self.timeout_mgr is not None:
-            step_timeout = self.timeout_mgr.get_step_timeout(step)
-        else:
-            step_timeout = float(step.params.get("timeout", 300)) if step.params else 300.0
 
         for attempt in range(1, max_attempts + 1):
             if attempt > 1:
-                # Compute delay via RetryPolicy if available
-                if self.retry_policy is not None:
-                    retry_delay = self.retry_policy.compute_delay(attempt - 1)
                 self.console.print(
-                    f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay:.1f}s...[/yellow]",
+                    f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay}s...[/yellow]"
                 )
                 time.sleep(retry_delay)
 
@@ -450,8 +310,7 @@ class RecipeExecutor:
 
             try:
                 process = subprocess.run(
-                    shlex.split(command), check=True, text=True, capture_output=True,
-                    timeout=step_timeout,
+                    command, shell=True, check=True, text=True, capture_output=True
                 )
 
                 if process.stdout:
@@ -461,7 +320,7 @@ class RecipeExecutor:
                             title="Output",
                             border_style="green",
                             expand=False,
-                        ),
+                        )
                     )
 
                 if process.stderr:
@@ -471,7 +330,7 @@ class RecipeExecutor:
                             title="Stderr",
                             border_style="yellow",
                             expand=False,
-                        ),
+                        )
                     )
 
                 return ExecutionResult(
@@ -485,47 +344,16 @@ class RecipeExecutor:
                     },
                 )
 
-            except subprocess.TimeoutExpired as e:
-                # Wrap in StepTimeoutError when timeout_mgr is present
-                self.console.print(
-                    f"[bold red]Step {step.order} timed out after {step_timeout}s[/bold red]",
-                )
-                if self.timeout_mgr is not None:
-                    from src.core.timeout_manager import StepTimeoutError
-                    raise StepTimeoutError(
-                        f"Step {step.order} timed out after {step_timeout}s",
-                        step_order=step.order,
-                        elapsed=step_timeout,
-                        limit=step_timeout,
-                    ) from e
-                return ExecutionResult(
-                    exit_code=1,
-                    stdout="",
-                    stderr=f"Step timed out after {step_timeout}s",
-                    error=e,
-                    metadata={
-                        "mode": "shell",
-                        "command": command,
-                        "attempt": attempt,
-                        "timeout": True,
-                    },
-                )
-
             except subprocess.CalledProcessError as e:
-                # Retry if not on last attempt (respecting retry_policy if set)
-                should_retry = attempt < max_attempts
-                if should_retry and self.retry_policy is not None:
-                    should_retry = self.retry_policy.should_retry(
-                        attempt, e.stderr or "", e.returncode
-                    )
-                if should_retry:
+                # Retry if not on last attempt
+                if attempt < max_attempts:
                     self.console.print(
-                        f"[yellow]Step {step.order} failed (exit {e.returncode})[/yellow]",
+                        f"[yellow]Step {step.order} failed (exit {e.returncode})[/yellow]"
                     )
                     continue
 
                 self.console.print(
-                    f"[bold red]Error executing step {step.order}[/bold red]",
+                    f"[bold red]Error executing step {step.order}[/bold red]"
                 )
                 if e.stdout:
                     self.console.print(
@@ -534,7 +362,7 @@ class RecipeExecutor:
                             title="Output (Partial)",
                             border_style="yellow",
                             expand=False,
-                        ),
+                        )
                     )
                 if e.stderr:
                     self.console.print(
@@ -543,7 +371,7 @@ class RecipeExecutor:
                             title="Error Output",
                             border_style="red",
                             expand=False,
-                        ),
+                        )
                     )
                 return ExecutionResult(
                     exit_code=e.returncode,
@@ -557,7 +385,7 @@ class RecipeExecutor:
                     },
                 )
             except Exception as e:
-                self.console.print(f"[bold red]Unexpected error:[/bold red] {e!s}")
+                self.console.print(f"[bold red]Unexpected error:[/bold red] {str(e)}")
                 return ExecutionResult(
                     exit_code=1,
                     stdout="",
@@ -585,7 +413,7 @@ class RecipeExecutor:
                 Text(self.recipe.description, style="italic"),
                 title=f"🚀 Running: {self.recipe.name}",
                 border_style="cyan",
-            ),
+            )
         )
 
         for step in self.recipe.steps:
@@ -595,6 +423,6 @@ class RecipeExecutor:
                 return False
 
         self.console.print(
-            f"\n[bold green]✨ Recipe '{self.recipe.name}' completed successfully![/bold green]",
+            f"\n[bold green]✨ Recipe '{self.recipe.name}' completed successfully![/bold green]"
         )
         return True

@@ -1,15 +1,14 @@
-"""Mekong CLI - Recipe Planner.
+"""
+Mekong CLI - Recipe Planner
 
 Converts high-level goals into executable task lists using LLM.
 Implements the PLAN phase of Plan-Execute-Verify pattern.
 """
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from .llm_client import LLMClient
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaskComplexity(Enum):
-    """Task complexity levels."""
+    """Task complexity levels"""
 
     SIMPLE = "simple"
     MODERATE = "moderate"
@@ -29,36 +28,36 @@ class TaskComplexity(Enum):
 
 @dataclass
 class PlanningContext:
-    """Context for planning operations."""
+    """Context for planning operations"""
 
     goal: str
-    constraints: dict[str, Any] = field(default_factory=dict)
-    project_info: dict[str, Any] = field(default_factory=dict)
-    available_agents: list[str] = field(default_factory=list)
+    constraints: Dict[str, Any] = field(default_factory=dict)
+    project_info: Dict[str, Any] = field(default_factory=dict)
+    available_agents: List[str] = field(default_factory=list)
     complexity: TaskComplexity = TaskComplexity.MODERATE
-    max_decomposition_depth: int = 2
 
 
 @dataclass
 class VerificationCriteria:
-    """Success criteria for a recipe step."""
+    """Success criteria for a recipe step"""
 
-    exit_code: int | None = 0
-    file_exists: list[str] = field(default_factory=list)
-    file_not_exists: list[str] = field(default_factory=list)
-    output_contains: list[str] = field(default_factory=list)
-    output_not_contains: list[str] = field(default_factory=list)
-    custom_checks: list[str] = field(default_factory=list)
+    exit_code: Optional[int] = 0
+    file_exists: List[str] = field(default_factory=list)
+    file_not_exists: List[str] = field(default_factory=list)
+    output_contains: List[str] = field(default_factory=list)
+    output_not_contains: List[str] = field(default_factory=list)
+    custom_checks: List[str] = field(default_factory=list)
 
 
 class RecipePlanner:
-    """Converts high-level goals into executable recipes with verification criteria.
+    """
+    Converts high-level goals into executable recipes with verification criteria.
 
     This is the PLAN phase of the Plan-Execute-Verify pattern.
     """
 
     # Keyword → agent mapping for smart routing
-    AGENT_KEYWORDS: dict[str, list[str]] = {
+    AGENT_KEYWORDS: Dict[str, List[str]] = {
         "git": ["git", "commit", "branch", "merge", "rebase", "diff", "log", "push", "pull", "clone", "stash"],
         "file": ["file", "read", "write", "copy", "move", "delete", "rename", "directory", "folder", "tree"],
         "shell": ["run", "execute", "script", "command", "install", "build", "compile"],
@@ -86,26 +85,26 @@ class RecipePlanner:
     }
 
     def __init__(self, llm_client: Optional["LLMClient"] = None) -> None:
-        """Initialize planner.
+        """
+        Initialize planner.
 
         Args:
             llm_client: Optional LLM client for AI-powered planning
-
         """
         self.llm_client = llm_client
 
-    def suggest_agent(self, goal: str) -> str | None:
-        """Suggest the best agent for a goal based on keyword matching.
+    def suggest_agent(self, goal: str) -> Optional[str]:
+        """
+        Suggest the best agent for a goal based on keyword matching.
 
         Args:
             goal: User's high-level objective
 
         Returns:
             Agent name from AGENT_REGISTRY or None
-
         """
         goal_lower = goal.lower()
-        scores: dict[str, int] = {}
+        scores: Dict[str, int] = {}
 
         for agent_name, keywords in self.AGENT_KEYWORDS.items():
             score = sum(1 for kw in keywords if kw in goal_lower)
@@ -154,139 +153,11 @@ class RecipePlanner:
         match = _re.search(r'https?://\S+|www\.\S+', goal)
         return match.group(0) if match else ""
 
-    # Compound patterns that signal a task is complex
-    _COMPOUND_PATTERNS = (
-        " and then ", " after that ", " followed by ",
-        " then ", " afterwards ", " subsequently ",
-    )
-
-    def _is_complex_task(self, task: dict[str, Any]) -> bool:
-        """Determine if a task warrants further decomposition.
-
-        A task is considered complex if any of these heuristics match:
-        - Description contains compound connectors (and then / followed by / etc.)
-        - Description length exceeds 100 characters
-        - Task is explicitly marked complexity=complex
-
-        Args:
-            task: Task dictionary with at least a 'description' key.
-
-        Returns:
-            True if the task should be recursively decomposed.
-
-        """
-        # Explicit marker takes precedence
-        if task.get("complexity") == "complex":
-            return True
-
-        description = task.get("description", "")
-
-        # Length heuristic
-        if len(description) > 100:
-            return True
-
-        # Compound-action heuristic (case-insensitive)
-        desc_lower = description.lower()
-        if any(pattern in desc_lower for pattern in self._COMPOUND_PATTERNS):
-            return True
-
-        return False
-
-    def _recursive_decompose(
-        self,
-        goal: str,
-        context: PlanningContext,
-        depth: int = 0,
-        max_depth: int = 2,
-        parent_goal: str = "",
-    ) -> list[dict[str, Any]]:
-        """Recursively decompose a goal, expanding complex sub-tasks.
-
-        Calls the base decomposition logic, then for each resulting task
-        that is deemed complex (and depth < max_depth), replaces it with
-        its own sub-decomposition.  Dependencies are adjusted so that the
-        flat output preserves the correct ordering.
-
-        Args:
-            goal: Goal string to decompose.
-            context: Planning context.
-            depth: Current recursion depth (0 = top-level call).
-            max_depth: Maximum allowed depth (default 2 per KISS).
-            parent_goal: Parent goal string for traceability metadata.
-
-        Returns:
-            Flat list of task dicts with correct dependencies.
-
-        """
-        # Base decomposition (LLM or rule-based)
-        if self.llm_client:
-            base_tasks = self._llm_decompose(goal, context)
-        else:
-            base_tasks = self._rule_based_decompose(goal, context)
-
-        # Tag every task with its parent goal
-        for task in base_tasks:
-            task["parent_goal"] = parent_goal or goal
-
-        # If we've hit the depth limit, return as-is
-        if depth >= max_depth:
-            return base_tasks
-
-        # Expand complex tasks
-        result: list[dict[str, Any]] = []
-        # index_offset tracks how many extra tasks we've inserted so far,
-        # so we can shift dependency indices of later tasks.
-        index_offset = 0
-
-        for task in base_tasks:
-            # Adjust this task's own dependencies for previously inserted tasks
-            adjusted_deps = [d + index_offset for d in task.get("dependencies", [])]
-            task = dict(task)  # shallow copy to avoid mutating original
-            task["dependencies"] = adjusted_deps
-
-            if not self._is_complex_task(task):
-                result.append(task)
-            else:
-                # Recursively decompose
-                sub_tasks = self._recursive_decompose(
-                    goal=task.get("description", task.get("title", "")),
-                    context=context,
-                    depth=depth + 1,
-                    max_depth=max_depth,
-                    parent_goal=goal,
-                )
-
-                # The sub-tasks slot into position orig_idx + index_offset.
-                # Their internal 0-based dependencies need to be shifted by
-                # the current result length.
-                insertion_base = len(result)
-                expanded_tasks = []
-                for sub_task in sub_tasks:
-                    sub_copy = dict(sub_task)
-                    sub_copy["dependencies"] = [
-                        d + insertion_base for d in sub_task.get("dependencies", [])
-                    ]
-                    expanded_tasks.append(sub_copy)
-
-                # Tasks that originally depended on orig_idx should now depend on
-                # the *last* sub-task (which represents completion of this expansion).
-                result.extend(expanded_tasks)
-
-                # Every subsequent task that pointed to orig_idx must now point to
-                # the last sub-task index.  We handle this by keeping the offset
-                # increment as (len(sub_tasks) - 1) extra slots.
-                index_offset += len(sub_tasks) - 1
-
-        return result
-
     def decompose_goal(
-        self, goal: str, context: PlanningContext,
-    ) -> list[dict[str, Any]]:
-        """Decompose high-level goal into atomic tasks.
-
-        Uses recursive multi-step reasoning: the base decomposition is
-        applied, then any task identified as complex is itself decomposed
-        up to context.max_decomposition_depth levels deep.
+        self, goal: str, context: PlanningContext
+    ) -> List[Dict[str, Any]]:
+        """
+        Decompose high-level goal into atomic tasks.
 
         Args:
             goal: User's high-level objective
@@ -294,19 +165,19 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries with title, description, dependencies
-
         """
-        return self._recursive_decompose(
-            goal=goal,
-            context=context,
-            depth=0,
-            max_depth=context.max_decomposition_depth,
-        )
+        # If LLM client available, use AI decomposition
+        if self.llm_client:
+            return self._llm_decompose(goal, context)
+
+        # Fallback: Rule-based decomposition
+        return self._rule_based_decompose(goal, context)
 
     def _rule_based_decompose(
-        self, goal: str, context: PlanningContext,
-    ) -> list[dict[str, Any]]:
-        """Rule-based task decomposition (fallback when no LLM).
+        self, goal: str, context: PlanningContext
+    ) -> List[Dict[str, Any]]:
+        """
+        Rule-based task decomposition (fallback when no LLM).
 
         Args:
             goal: User's objective
@@ -314,9 +185,8 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries
-
         """
-        tasks: list[dict[str, Any]] = []
+        tasks: List[Dict[str, Any]] = []
         suggested_agent = self.suggest_agent(goal)
 
         # Simple heuristic: check for common patterns
@@ -390,7 +260,7 @@ class RecipePlanner:
                         "description": "Run tests and validate",
                         "dependencies": [2],
                     },
-                ],
+                ]
             )
 
         # Pattern: "fix X" or "debug X"
@@ -412,7 +282,7 @@ class RecipePlanner:
                         "description": "Test that issue is resolved",
                         "dependencies": [1],
                     },
-                ],
+                ]
             )
 
         # Pattern: shell commands (user typed something like "find ...", "ls ...", "git ...")
@@ -458,7 +328,7 @@ class RecipePlanner:
                     "description": shell_cmd,
                     "dependencies": [],
                     "type": "shell",
-                },
+                }
             )
 
         # Pattern: list/show/search → map to shell find/grep
@@ -471,28 +341,29 @@ class RecipePlanner:
             else:
                 cmd = "find . -maxdepth 2 -not -path '*/.git/*' | sort | head -30"
             tasks.append(
-                {"title": goal, "description": cmd, "dependencies": [], "type": "shell"},
+                {"title": goal, "description": cmd, "dependencies": [], "type": "shell"}
             )
 
         # Default: delegate to LLM if available, else echo the goal
         else:
             tasks.append(
-                {"title": goal, "description": goal, "dependencies": [], "type": "llm"},
+                {"title": goal, "description": goal, "dependencies": [], "type": "llm"}
             )
 
         # Attach suggested agent to all tasks that don't already have one
         if suggested_agent:
             for task in tasks:
-                task_dict: dict[str, Any] = task
+                task_dict: Dict[str, Any] = task
                 if "agent" not in task_dict:
                     task_dict["agent"] = suggested_agent
 
         return tasks
 
     def _llm_decompose(
-        self, goal: str, context: PlanningContext,
-    ) -> list[dict[str, Any]]:
-        """LLM-powered task decomposition.
+        self, goal: str, context: PlanningContext
+    ) -> List[Dict[str, Any]]:
+        """
+        LLM-powered task decomposition.
 
         Args:
             goal: User's objective
@@ -500,7 +371,6 @@ class RecipePlanner:
 
         Returns:
             List of task dictionaries from LLM
-
         """
         from src.core.llm_client import get_client
 
@@ -547,26 +417,26 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                             "title": task.get("title", "Untitled"),
                             "description": task.get("description", ""),
                             "dependencies": task.get("dependencies", []),
-                        },
+                        }
                     )
 
             return validated if validated else self._rule_based_decompose(goal, context)
 
         except Exception as e:
-            logger.exception("[PLANNER] LLM decomposition failed: %s", e)
+            logger.error("[PLANNER] LLM decomposition failed: %s", e)
             return self._rule_based_decompose(goal, context)
 
     def generate_verification_criteria(
-        self, task: dict[str, Any],
+        self, task: Dict[str, Any]
     ) -> VerificationCriteria:
-        """Generate verification criteria for a task.
+        """
+        Generate verification criteria for a task.
 
         Args:
             task: Task dictionary with title and description
 
         Returns:
             VerificationCriteria object
-
         """
         criteria = VerificationCriteria()
 
@@ -594,8 +464,9 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
         return criteria
 
-    def plan(self, goal: str, context: PlanningContext | None = None) -> Recipe:
-        """Create executable recipe from high-level goal (AGI v2).
+    def plan(self, goal: str, context: Optional[PlanningContext] = None) -> Recipe:
+        """
+        Create executable recipe from high-level goal (AGI v2).
 
         Produces a DAG-aware recipe. Steps include dependency metadata
         enabling the DAGScheduler to run independent steps concurrently.
@@ -606,8 +477,6 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
         Returns:
             Recipe with steps, verification criteria, and DAG metadata
-
-
         """
         if context is None:
             context = PlanningContext(goal=goal)
@@ -637,7 +506,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 },
             )
             # Attach dependencies as attribute for DAGScheduler
-            step.dependencies = step_deps
+            step.dependencies = step_deps  # type: ignore[attr-defined]
             steps.append(step)
 
         # Step 3: Validate DAG (no circular deps)
@@ -647,8 +516,9 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             dag_error = validate_dag(steps)
             if dag_error:
                 logger.warning("[PLANNER] %s — falling back to sequential", dag_error)
+                # Remove dependencies to force sequential
                 for step in steps:
-                    step.dependencies = []
+                    step.dependencies = []  # type: ignore[attr-defined]
                     step.params["dependencies"] = []
                 has_deps = False
 
@@ -664,6 +534,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 "dag_enabled": has_deps,
             },
         )
+
         return recipe
 
     def replan_failed_branch(
@@ -743,7 +614,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                     ).__dict__,
                 },
             )
-            step.dependencies = step.params["dependencies"]
+            step.dependencies = step.params["dependencies"]  # type: ignore[attr-defined]
             kept_steps.append(step)
 
         recipe.steps = sorted(kept_steps, key=lambda s: s.order)
@@ -752,46 +623,27 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
         return recipe
 
-    def validate_plan(self, recipe: Recipe) -> list[str]:
-        """Validate recipe for common issues.
-
-        Deps in params use 1-based ordering (matching step.order values),
-        as produced by plan(). Self-reference: dep == step.order. Future dep:
-        dep >= step.order (dep must be strictly less than step.order).
+    def validate_plan(self, recipe: Recipe) -> List[str]:
+        """
+        Validate recipe for common issues.
 
         Args:
             recipe: Recipe to validate
 
         Returns:
             List of validation warnings/errors
-
         """
         issues = []
-        valid_orders = {s.order for s in recipe.steps}
 
+        # Check for circular dependencies
         for step in recipe.steps:
             deps = step.params.get("dependencies", [])
+            if step.order - 1 in deps:
+                issues.append(f"Step {step.order} has circular dependency on itself")
 
-            # Self-reference check (1-based)
-            if step.order in deps:
-                issues.append(f"Step {step.order} depends on itself")
-
-            # Non-existent dependency
-            non_existent = set()
             for dep in deps:
-                if dep not in valid_orders:
-                    non_existent.add(dep)
-                    issues.append(f"Step {step.order} depends on non-existent step {dep}")
-
-            # Future dependency: dep order must be strictly less than step order
-            # Skip deps already flagged as non-existent to avoid double-reporting
-            for dep in deps:
-                if dep not in non_existent and dep >= step.order:
-                    issues.append(f"Step {step.order} depends on future/same step {dep}")
-
-            # Duplicate dependencies
-            if len(deps) != len(set(deps)):
-                issues.append(f"Step {step.order} has duplicate dependencies")
+                if dep >= step.order - 1:
+                    issues.append(f"Step {step.order} depends on future step {dep + 1}")
 
         # Check for empty steps
         if not recipe.steps:
@@ -801,8 +653,8 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
 
 
 __all__ = [
-    "PlanningContext",
     "RecipePlanner",
-    "TaskComplexity",
+    "PlanningContext",
     "VerificationCriteria",
+    "TaskComplexity",
 ]

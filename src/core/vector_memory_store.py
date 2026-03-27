@@ -41,12 +41,13 @@ class VectorCollection:
 
     name: str
     dimension: int
-    entries: dict[str, VectorEntry] = field(default_factory=dict)
-    metadata: dict[str, Any] = field(default_factory=dict)
+    entries: Dict[str, VectorEntry] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class VectorMemoryStore:
-    """Persistent vector store with cosine similarity search.
+    """
+    Persistent vector store with cosine similarity search.
 
     Supports three memory types (episodic, semantic, procedural)
     and auto-persists to JSON.  Suitable for small-to-medium
@@ -67,7 +68,8 @@ class VectorMemoryStore:
     def create_collection(
         self, name: str, dimension: int,
     ) -> VectorCollection:
-        """Create a new vector collection.
+        """
+        Create a new vector collection.
 
         Args:
             name: Unique collection name.
@@ -78,11 +80,9 @@ class VectorMemoryStore:
 
         Raises:
             ValueError: If collection already exists.
-
         """
         if name in self._collections:
-            msg = f"Collection '{name}' already exists."
-            raise ValueError(msg)
+            raise ValueError(f"Collection '{name}' already exists.")
         collection = VectorCollection(name=name, dimension=dimension)
         self._collections[name] = collection
         self._auto_persist()
@@ -97,18 +97,9 @@ class VectorMemoryStore:
         return self.create_collection(name, dimension)
 
     def delete_collection(self, name: str) -> None:
-        """Delete a collection and all its entries.
-
-        Args:
-            name: Collection name to delete.
-
-        Raises:
-            KeyError: If collection does not exist.
-
-        """
+        """Delete a collection and all its entries."""
         if name not in self._collections:
-            msg = f"Collection '{name}' not found."
-            raise KeyError(msg)
+            raise KeyError(f"Collection '{name}' not found.")
         del self._collections[name]
         self._auto_persist()
 
@@ -120,7 +111,8 @@ class VectorMemoryStore:
         payload: Optional[Dict[str, Any]] = None,
         memory_type: MemoryType = MemoryType.EPISODIC,
     ) -> VectorEntry:
-        """Insert or update a vector entry in a collection.
+        """
+        Insert or update a vector entry in a collection.
 
         Args:
             collection: Target collection name.
@@ -131,16 +123,13 @@ class VectorMemoryStore:
 
         Returns:
             The upserted VectorEntry.
-
-        Raises:
-            KeyError: If collection does not exist.
-            ValueError: If vector dimension does not match collection.
-
         """
         col = self._get_collection(collection)
         if len(vector) != col.dimension:
-            msg = f"Vector dimension {len(vector)} != collection dimension {col.dimension}."
-            raise ValueError(msg)
+            raise ValueError(
+                f"Vector dimension {len(vector)} != "
+                f"collection dimension {col.dimension}."
+            )
         entry = VectorEntry(
             id=id, vector=vector, payload=payload or {},
             memory_type=memory_type,
@@ -156,7 +145,8 @@ class VectorMemoryStore:
         top_k: int = 5,
         memory_type: Optional[MemoryType] = None,
     ) -> List[Tuple[VectorEntry, float]]:
-        """Find nearest neighbors using cosine similarity.
+        """
+        Find nearest neighbors using cosine similarity.
 
         Args:
             collection: Collection name to search.
@@ -166,16 +156,13 @@ class VectorMemoryStore:
 
         Returns:
             List of (VectorEntry, score) sorted by descending similarity.
-
-        Raises:
-            KeyError: If collection does not exist.
-            ValueError: If query vector dimension does not match.
-
         """
         col = self._get_collection(collection)
         if len(query_vector) != col.dimension:
-            msg = f"Query dimension {len(query_vector)} != collection dimension {col.dimension}."
-            raise ValueError(msg)
+            raise ValueError(
+                f"Query dimension {len(query_vector)} != "
+                f"collection dimension {col.dimension}."
+            )
         if not col.entries:
             return []
 
@@ -196,7 +183,8 @@ class VectorMemoryStore:
         filters: Dict[str, Any],
         limit: int = 10,
     ) -> List[VectorEntry]:
-        """Search entries by payload field matching.
+        """
+        Search entries by payload field matching.
 
         Args:
             collection: Collection name.
@@ -219,20 +207,12 @@ class VectorMemoryStore:
         return results
 
     def delete_point(self, collection: str, id: str) -> None:
-        """Remove a single entry from a collection.
-
-        Args:
-            collection: Collection name.
-            id: Entry ID to remove.
-
-        Raises:
-            KeyError: If collection or entry does not exist.
-
-        """
+        """Remove a single entry from a collection."""
         col = self._get_collection(collection)
         if id not in col.entries:
-            msg = f"Entry '{id}' not found in collection '{collection}'."
-            raise KeyError(msg)
+            raise KeyError(
+                f"Entry '{id}' not found in collection '{collection}'."
+            )
         del col.entries[id]
         self._auto_persist()
 
@@ -242,18 +222,7 @@ class VectorMemoryStore:
         return len(col.entries)
 
     def get_collection_info(self, name: str) -> Dict[str, Any]:
-        """Return stats for a collection.
-
-        Args:
-            name: Collection name.
-
-        Returns:
-            Dict with 'name', 'dimension', 'count', 'memory_types', and 'metadata'.
-
-        Raises:
-            KeyError: If collection does not exist.
-
-        """
+        """Return stats for a collection."""
         col = self._get_collection(name)
         type_counts: Dict[str, int] = {}
         for entry in col.entries.values():
@@ -274,7 +243,8 @@ class VectorMemoryStore:
     # --- Persistence ---
 
     def save_snapshot(self, path: Optional[str] = None) -> str:
-        """Save entire store to JSON file.
+        """
+        Save entire store to JSON file.
 
         Args:
             path: File path. Uses init path if not specified.
@@ -348,7 +318,8 @@ class VectorMemoryStore:
 
     @staticmethod
     def text_to_hash_vector(text: str, dimension: int = 64) -> List[float]:
-        """Generate a deterministic pseudo-embedding from text using SHA-256.
+        """
+        Generate a deterministic pseudo-embedding from text using SHA-256.
 
         Not as good as a real embedding model, but works offline
         and is consistent across runs.
@@ -386,17 +357,8 @@ class VectorMemoryStore:
     # --- Internal helpers ---
 
     def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
-        """Compute cosine similarity between two vectors.
-
-        Args:
-            a: First vector.
-            b: Second vector.
-
-        Returns:
-            Similarity score in [-1.0, 1.0]. Returns 0.0 for zero-magnitude vectors.
-
-        """
-        dot = sum(x * y for x, y in zip(a, b, strict=False))
+        """Compute cosine similarity between two vectors."""
+        dot = sum(x * y for x, y in zip(a, b))
         mag_a = math.sqrt(sum(x * x for x in a))
         mag_b = math.sqrt(sum(x * x for x in b))
         if mag_a == 0.0 or mag_b == 0.0:
@@ -406,14 +368,13 @@ class VectorMemoryStore:
     def _get_collection(self, name: str) -> VectorCollection:
         """Retrieve collection or raise KeyError."""
         if name not in self._collections:
-            msg = f"Collection '{name}' not found."
-            raise KeyError(msg)
+            raise KeyError(f"Collection '{name}' not found.")
         return self._collections[name]
 
 
 __all__ = [
     "MemoryType",
-    "VectorCollection",
     "VectorEntry",
+    "VectorCollection",
     "VectorMemoryStore",
 ]

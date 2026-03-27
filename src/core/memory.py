@@ -7,17 +7,12 @@ Records goal outcomes, enables semantic search, and supports memory compression.
 Vector backend (VectorMemoryStore) provides semantic search alongside YAML.
 """
 
-from __future__ import annotations
-
 import hashlib
-import logging
-import threading
 import time
-from dataclasses import asdict, dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List
-
 import yaml  # type: ignore[import-untyped]
+from dataclasses import dataclass, field, asdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from .event_bus import EventType, get_event_bus
 from .vector_memory_store import MemoryType, VectorMemoryStore
@@ -27,8 +22,6 @@ try:
     _FACADE_AVAILABLE = True
 except ImportError:
     _FACADE_AVAILABLE = False
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,17 +45,15 @@ class MemoryStore:
     VECTOR_DIM: int = 64
     VECTOR_COLLECTION: str = "execution_memory"
 
-    def __init__(self, store_path: str | None = None, sync_save: bool = False) -> None:
-        """Initialize memory store.
+    def __init__(self, store_path: Optional[str] = None) -> None:
+        """
+        Initialize memory store.
 
         Args:
             store_path: Path to YAML file. Defaults to .mekong/memory.yaml
-            sync_save: If True, save synchronously (for testing).
-
         """
         self._path = Path(store_path) if store_path else Path(".mekong/memory.yaml")
-        self._sync_save = sync_save  # Flag for testing
-        self._entries: list[MemoryEntry] = []
+        self._entries: List[MemoryEntry] = []
         self._load()
 
         # Initialize vector store for semantic search
@@ -76,21 +67,15 @@ class MemoryStore:
             pass
 
     def record(self, entry: MemoryEntry) -> None:
-        """Record an execution outcome and persist (async I/O)."""
+        """Record an execution outcome and persist."""
         self._entries.append(entry)
         self._evict()
+        self._save()
         bus = get_event_bus()
         bus.emit(EventType.MEMORY_RECORDED, asdict(entry))
 
         # Index in vector store for semantic search
         self._index_entry(entry)
-
-        # Async save — does not block main thread (daemon thread)
-        # Unless sync_save flag is set (for testing)
-        if self._sync_save:
-            self._save()
-        else:
-            threading.Thread(target=self._save, daemon=True).start()
 
         # Mirror to external vector backend when available
         if _FACADE_AVAILABLE:
@@ -113,12 +98,9 @@ class MemoryStore:
             except Exception:
                 pass
 
-    def flush(self) -> None:
-        """Force synchronous save (for testing)."""
-        self._save()
-
-    def query(self, goal_pattern: str) -> list[MemoryEntry]:
-        """Find entries matching goal pattern.
+    def query(self, goal_pattern: str) -> List[MemoryEntry]:
+        """
+        Find entries matching goal pattern.
 
         Uses semantic vector search first, falls back to substring match.
         """
@@ -170,7 +152,7 @@ class MemoryStore:
         successes = sum(1 for e in entries if e.status == "success")
         return (successes / len(entries)) * 100
 
-    def get_last_failure(self, goal_pattern: str = "") -> MemoryEntry | None:
+    def get_last_failure(self, goal_pattern: str = "") -> Optional[MemoryEntry]:
         """Get most recent failed entry matching pattern."""
         entries = self.query(goal_pattern) if goal_pattern else self._entries
         failures = [e for e in entries if e.status != "success"]
@@ -188,19 +170,19 @@ class MemoryStore:
         unique_errors = list(dict.fromkeys(errors))
         return f"Common errors ({len(failures)} failures): " + "; ".join(unique_errors[:3])
 
-    def get_similar_successes(self, goal: str, top_k: int = 3) -> list[MemoryEntry]:
+    def get_similar_successes(self, goal: str, top_k: int = 3) -> List[MemoryEntry]:
         """Find successful executions similar to the given goal."""
         results = self._semantic_search(goal, top_k=top_k * 3)
         successes = [e for e in results if e.status == "success"]
         return successes[:top_k]
 
-    def recent(self, limit: int = 20) -> list[MemoryEntry]:
+    def recent(self, limit: int = 20) -> List[MemoryEntry]:
         """Return most recent entries."""
         return self._entries[-limit:]
 
-    def stats(self) -> dict[str, Any]:
+    def stats(self) -> Dict[str, Any]:
         """Return aggregate statistics."""
-        goal_counts: dict[str, int] = {}
+        goal_counts: Dict[str, int] = {}
         for e in self._entries:
             goal_counts[e.goal] = goal_counts.get(e.goal, 0) + 1
         top_goals = sorted(
@@ -385,8 +367,7 @@ class MemoryStore:
         try:
             data = yaml.safe_load(self._path.read_text()) or []
             self._entries = [MemoryEntry(**item) for item in data]
-        except Exception as e:
-            logger.debug("Failed to load memory entries: %s", e)
+        except Exception:
             self._entries = []
 
     def _save(self) -> None:

@@ -6,17 +6,12 @@ Coordinates NLU, Memory, Router, Orchestrator, Learner, RecipeGen,
 Governance, Reflection, and WorldModel.
 """
 
-from __future__ import annotations
-
-import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .event_bus import EventType, get_event_bus
 from .governance import ActionClass, AuditEntry, Governance, GovernanceDecision
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -55,7 +50,7 @@ class CycleResult:
     """Result of one autonomous cycle."""
 
     goal: str = ""
-    governance_decision: GovernanceDecision | None = None
+    governance_decision: Optional[GovernanceDecision] = None
     executed: bool = False
     result_status: str = ""
     recipe_generated: bool = False
@@ -72,8 +67,8 @@ class AutonomousEngine:
 
     def __init__(
         self,
-        orchestrator: Any | None = None,
-        governance: Governance | None = None,
+        orchestrator: Optional[Any] = None,
+        governance: Optional[Governance] = None,
     ) -> None:
         """Initialize autonomous engine."""
         self.orchestrator = orchestrator
@@ -91,9 +86,9 @@ class AutonomousEngine:
 
     def _init_subsystems(self) -> None:
         """Lazy load subsystems with LLM injection."""
-        import os
-
         from .llm_client import LLMClient
+
+        import os
         gemini_key = os.getenv("GEMINI_API_KEY", "")
         llm = LLMClient(gemini_key=gemini_key)
 
@@ -101,15 +96,15 @@ class AutonomousEngine:
             try:
                 from .memory import MemoryStore
                 self._memory = MemoryStore()
-            except Exception as e:
-                logger.debug("MemoryStore unavailable: %s", e)
+            except Exception:
+                pass
 
         if self._nlu is None:
             try:
                 from .nlu import IntentClassifier
                 self._nlu = IntentClassifier(llm_client=llm)
-            except Exception as e:
-                logger.debug("IntentClassifier unavailable: %s", e)
+            except Exception:
+                pass
 
         if self._recipe_gen is None:
             try:
@@ -124,8 +119,8 @@ class AutonomousEngine:
             self._router = (
                 SmartRouter(memory_store=self._memory) if self._memory else None
             )
-        except Exception as e:
-            logger.debug("SmartRouter unavailable: %s", e)
+        except Exception:
+            pass
 
         # AGI v2: Reflection Engine
         if self._reflection is None:
@@ -186,7 +181,7 @@ class AutonomousEngine:
                     action_class="forbidden",
                     approved=False,
                     result="blocked",
-                ),
+                )
             )
             bus = get_event_bus()
             bus.emit(
@@ -207,7 +202,7 @@ class AutonomousEngine:
                         action_class="review_required",
                         approved=False,
                         result="rejected",
-                    ),
+                    )
                 )
                 result.result_status = "rejected"
                 trace.result = "rejected"
@@ -228,8 +223,7 @@ class AutonomousEngine:
                 orch_result = self.orchestrator.run_from_goal(goal)
                 result.executed = True
                 result.result_status = orch_result.status.value
-            except Exception as e:
-                logger.warning("Orchestrator execution error for goal '%s': %s", goal, e)
+            except Exception:
                 result.executed = True
                 result.result_status = "error"
 
@@ -251,8 +245,10 @@ class AutonomousEngine:
             try:
                 patterns = self._learner.analyze_failures()
                 result.patterns_detected = len(patterns)
-            except Exception as e:
-                logger.warning("Failure analysis error: %s", e)
+            except Exception:
+                pass
+
+        # Generate recipe on success
         if self._recipe_gen and self._memory and result.result_status == "success":
             try:
                 from .memory import MemoryEntry
@@ -295,7 +291,7 @@ class AutonomousEngine:
                 action_class=decision.action_class.value,
                 approved=True,
                 result="executed" if result.executed else "skipped",
-            ),
+            )
         )
 
         # Store decision trace
