@@ -39,7 +39,7 @@ curl https://mekong-engine.agencyos-openclaw.workers.dev/health
 | 1 | **Tasks** | `/v1/tasks` | Bearer | Mission CRUD with credit deduction |
 | 2 | **Agents** | `/v1/agents` | Bearer | Agent execution (git, file, shell, etc.) |
 | 3 | **Settings** | `/v1/settings` | Bearer | BYOK LLM configuration |
-| 4 | **Billing** | `/billing` | Partial | Tenants, credits, Polar.sh webhooks |
+| 4 | **Billing** | `/billing` | Partial | Tenants, credits, NOWPayments webhooks |
 | 5 | **Chat** | `/v1/chat` | Webhook | Zalo/Facebook Messenger webhooks |
 | 6 | **Content** | `/v1/content` | Bearer | AI content generation (batch) |
 | 7 | **CRM** | `/v1/crm` | Bearer | Contacts, companies, campaigns |
@@ -69,7 +69,7 @@ Authorization: Bearer <API_KEY>
 ### Webhook Signature Verification
 - **Zalo:** HMAC-SHA256 (`x-zalo-signature` header)
 - **Facebook:** HMAC-SHA256 (`X-Hub-Signature-256` header)
-- **Polar.sh:** HMAC-SHA256 (`webhook-signature` header)
+- **NOWPayments:** HMAC-SHA256 (`webhook-signature` header)
 - **MoMo/VNPAY:** SHA512 (`signature` in payload)
 
 ## Route Groups Detail
@@ -198,13 +198,13 @@ BYOK LLM configuration with AES-256-GCM encryption.
 
 ### 4. Billing (`/billing`)
 
-Tenant management, credit ledger, Polar.sh webhooks.
+Tenant management, credit ledger, NOWPayments webhooks.
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | POST | `/billing/tenants` | ✗ | Create tenant → returns API key |
 | POST | `/billing/tenants/regenerate-key` | Rate limited | Regenerate API key |
-| POST | `/billing/webhook` | Signature | Polar.sh payment webhook |
+| POST | `/billing/webhook` | Signature | NOWPayments payment webhook |
 | GET | `/billing/pricing` | ✗ | Public pricing info |
 | GET | `/billing/credits` | ✓ | Credit balance |
 | GET | `/billing/credits/history` | ✓ | Credit history |
@@ -227,7 +227,7 @@ Tenant management, credit ledger, Polar.sh webhooks.
 }
 ```
 
-**Polar.sh Product Mapping:**
+**NOWPayments Product Mapping:**
 
 | Product | Credits | Tier |
 |---------|---------|------|
@@ -926,7 +926,7 @@ Plugin marketplace with reviews.
 | Variable | Purpose | Required |
 |----------|---------|----------|
 | `SERVICE_TOKEN` | Encryption key for BYOK + admin auth | Yes (for BYOK) |
-| `POLAR_WEBHOOK_SECRET` | Webhook signature validation | Yes (for payments) |
+| `NOWPAYMENTS_WEBHOOK_SECRET` | Webhook signature validation | Yes (for payments) |
 | `LLM_API_KEY` | Global fallback LLM key | Optional |
 | `LLM_BASE_URL` | Global fallback LLM endpoint | Optional |
 | `DEFAULT_LLM_MODEL` | Default model name | Optional |

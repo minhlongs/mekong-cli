@@ -205,7 +205,7 @@ vars = { ENVIRONMENT = "staging" }
 | `CLOUDFLARE_API_TOKEN` | Wrangler deployment auth |
 | `CLOUDFLARE_ACCOUNT_ID` | Account identifier |
 | `LLM_API_KEY` | LLM provider key (set via `wrangler secret put`) |
-| `POLAR_WEBHOOK_SECRET` | Polar.sh webhook verification |
+| `NOWPAYMENTS_WEBHOOK_SECRET` | NOWPayments webhook verification |
 
 ---
 

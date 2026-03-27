@@ -219,7 +219,7 @@ export async function emitLicenseEvent(
 }
 
 /**
- * Handle payment.succeeded webhook from Polar.sh
+ * Handle payment.succeeded webhook from NOWPayments
  * Auto-reactivates suspended tenants
  */
 export async function handlePaymentSucceeded(
@@ -241,7 +241,7 @@ export async function handlePaymentSucceeded(
 }
 
 /**
- * Handle payment.failed webhook from Polar.sh
+ * Handle payment.failed webhook from NOWPayments
  * Starts grace period for tenant
  */
 export async function handlePaymentFailed(
@@ -260,7 +260,7 @@ export async function handlePaymentFailed(
 }
 
 /**
- * Handle subscription.active webhook from Polar.sh
+ * Handle subscription.active webhook from NOWPayments
  * Ensures tenant status is active
  */
 export async function handleSubscriptionActive(
@@ -281,7 +281,7 @@ export async function handleSubscriptionActive(
 }
 
 /**
- * Handle subscription.expired webhook from Polar.sh
+ * Handle subscription.expired webhook from NOWPayments
  * Starts 7-day grace period
  */
 export async function handleSubscriptionExpired(
@@ -300,7 +300,7 @@ export async function handleSubscriptionExpired(
 }
 
 /**
- * Handle subscription.canceled webhook from Polar.sh
+ * Handle subscription.canceled webhook from NOWPayments
  * Marks tenant for suspension after grace period
  */
 export async function handleSubscriptionCanceled(

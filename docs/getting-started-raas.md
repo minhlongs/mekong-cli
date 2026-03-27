@@ -341,7 +341,7 @@ RaaS uses this priority order:
 
 **Fix:**
 - Check balance: `GET /billing/credits`
-- Purchase credits via Polar.sh checkout
+- Purchase credits via NOWPayments checkout
 - Wait for webhook to credit your account
 
 ---
@@ -421,7 +421,7 @@ After completing your first task:
    - See [`docs/api-reference.md`](./api-reference.md) for complete endpoint documentation
 
 3. **Subscribe for Credits**
-   - Visit pricing page or checkout Polar.sh products
+   - Visit pricing page or checkout NOWPayments products
    - Webhooks auto-credit your account within 5 minutes
 
 4. **Join AgencyOS Community**

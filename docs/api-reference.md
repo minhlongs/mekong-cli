@@ -425,7 +425,7 @@ Authorization: Bearer <tenant_api_key>
 
 ## 1. /billing
 
-**Purpose:** Tenant management, credit billing, and Polar.sh payment integration.
+**Purpose:** Tenant management, credit billing, and NOWPayments payment integration.
 
 **Base Path:** `/billing`
 
@@ -498,14 +498,14 @@ Authorization: Bearer <tenant_api_key>
 
 #### POST /billing/webhook
 
-**Purpose:** Polar.sh webhook handler for payment events.
+**Purpose:** NOWPayments webhook handler for payment events.
 
 **Authentication:** HMAC-SHA256 signature via `webhook-signature` header
 
 **Headers:**
 | Header | Purpose |
 |--------|---------|
-| `webhook-signature` | HMAC-SHA256 of raw body using `POLAR_WEBHOOK_SECRET` |
+| `webhook-signature` | HMAC-SHA256 of raw body using `NOWPAYMENTS_WEBHOOK_SECRET` |
 
 **Supported Events:**
 | Event | Action |
@@ -591,7 +591,7 @@ Authorization: Bearer <tenant_api_key>
       "type": "purchase",
       "amount": 50,
       "balance_after": 100,
-      "description": "Polar.sh: agencyos-starter (50 credits)",
+      "description": "NOWPayments: agencyos-starter (50 credits)",
       "created_at": "2026-03-18T10:30:00Z"
     }
   ],

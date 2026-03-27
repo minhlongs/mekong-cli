@@ -50,7 +50,7 @@ export type Bindings = {
   LLM_API_KEY?: string
   LLM_BASE_URL?: string
   SERVICE_TOKEN?: string
-  POLAR_WEBHOOK_SECRET?: string
+  NOWPAYMENTS_WEBHOOK_SECRET?: string
   ENVIRONMENT?: string
   DEFAULT_LLM_MODEL?: string
   FB_VERIFY_TOKEN?: string

@@ -39,9 +39,9 @@ cp .env.production.template .env.production
 # Required variables:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-POLAR_ACCESS_TOKEN=your_polar_token
-POLAR_PRO_PRODUCT_ID=pro_product_id
-POLAR_ENTERPRISE_PRODUCT_ID=enterprise_product_id
+NOWPAYMENTS_ACCESS_TOKEN=your_polar_token
+NOWPAYMENTS_PRO_PRODUCT_ID=pro_product_id
+NOWPAYMENTS_ENTERPRISE_PRODUCT_ID=enterprise_product_id
 ```
 
 #### Database Setup

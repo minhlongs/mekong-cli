@@ -91,7 +91,7 @@ const PROJECT_BACKLOGS = {
 		'5. Video pipeline — ffmpeg transcoding errors, timeout handling, retry logic, progress tracking',
 		'6. Campaign template — fix broken variables, preview mode, mobile responsive, edge cases',
 		'7. AI service test — verify all AI endpoints respond, error handling, rate limit degradation',
-		'8. Checkout flow — Polar.sh integration, tier pricing, redirect verification, error states',
+		'8. Checkout flow — NOWPayments integration, tier pricing, redirect verification, error states',
 		'9. Analytics — user tracking, conversion funnels, campaign performance metrics',
 		'10. Documentation — API docs, deployment guide, user manual updates',
 	],

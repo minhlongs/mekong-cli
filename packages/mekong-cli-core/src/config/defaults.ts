@@ -65,8 +65,8 @@ export const DEFAULT_CONFIG: MekongConfig = {
     background_check: true,
   },
   payments: {
-    polar_api_key_env: 'POLAR_API_KEY',
-    polar_webhook_secret_env: 'POLAR_WEBHOOK_SECRET',
+    nowpayments_api_key_env: 'NOWPAYMENTS_API_KEY',
+    nowpayments_ipn_secret_env: 'NOWPAYMENTS_IPN_SECRET',
     receipt_store_path: '~/.mekong/payments/receipts.jsonl',
     product_tier_map: {},
   },

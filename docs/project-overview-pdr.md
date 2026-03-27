@@ -49,7 +49,7 @@ Developers building AI-powered platforms need a framework that:
 | FR-PROVIDER-01 | Pluggable LLM providers with auto-failover | ✅ v3.0 |
 | FR-PLUGIN-01 | Community plugins (PyPI + local ~/.mekong/plugins/) | ✅ v3.0 |
 | FR-CREDIT-01 | Multi-tenant credit store (SQLite) | ✅ v3.0 |
-| FR-BILLING-01 | Polar.sh webhook integration for payments | ✅ v3.0 |
+| FR-BILLING-01 | NOWPayments webhook integration for payments | ✅ v3.0 |
 | FR-SDK-01 | Python SDK for submitting missions | ✅ v3.0 |
 | FR-ROLLBACK-01 | Automatic rollback on verification failure | ✅ v3.0 |
 
@@ -79,7 +79,7 @@ Developers building AI-powered platforms need a framework that:
 | **Core Engine** | Pydantic / Python | `src/core/` | PEV orchestration |
 | **Agents** | AgentProtocol | `src/agents/` + plugins | Task executors |
 | **Providers** | LLMProvider abstraction | `src/core/providers.py` | LLM backends |
-| **Billing** | SQLite + Polar.sh | `src/raas/` | Credit system |
+| **Billing** | SQLite + NOWPayments | `src/raas/` | Credit system |
 | **API Server** | FastAPI + WebSocket | `src/core/gateway.py` | REST + streaming |
 | **Testing** | pytest | `tests/` | 62+ tests |
 | **Package** | Poetry / PyPI | `pyproject.toml` | Distribution |

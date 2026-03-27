@@ -544,7 +544,7 @@
         "title": "How It Works",
         "step1": {
           "title": "Get Access",
-          "desc": "Sign up via Polar.sh. Instant delivery."
+          "desc": "Sign up via NOWPayments. Instant delivery."
         },
         "step2": {
           "title": "Open in IDE",
@@ -2273,7 +2273,7 @@
       },
       "methods": {
         "q": "What payment methods do you accept?",
-        "a": "Credit/Debit cards, PayPal, and Crypto (USDT/USDC). All payments secured by Polar.sh."
+        "a": "Credit/Debit cards, PayPal, and Crypto (USDT/USDC). All payments secured by NOWPayments."
       },
       "refund": {
         "q": "Can I get a refund?",

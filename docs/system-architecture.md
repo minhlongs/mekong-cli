@@ -68,7 +68,7 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ RaaS Gateway: Cloudflare KV (rate limiting cache) │  │
-│  │ Polar.sh Webhooks: payment → credit allocation    │  │
+│  │ NOWPayments Webhooks: payment → credit allocation    │  │
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────┬───────────────────────────────────────┘
                    │
@@ -144,7 +144,7 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ RaaS Gateway: Cloudflare KV (rate limiting cache) │  │
-│  │ Polar.sh Webhooks: payment → credit allocation    │  │
+│  │ NOWPayments Webhooks: payment → credit allocation    │  │
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -373,7 +373,7 @@ Multi-tenant billing with SQLite backend:
 - `tenant.py` — Tenant management (create, list, rotate API keys)
 - `credits.py` — Credit ledger (add, deduct, check balance)
 - `missions.py` — Mission lifecycle (create, execute, complete, cancel)
-- `billing.py` — Polar.sh webhook receiver
+- `billing.py` — NOWPayments webhook receiver
 - `sdk.py` — Python client SDK
 - `rate_limiter.py` — Fair-use rate limiting per tenant
 
@@ -386,7 +386,7 @@ Multi-tenant billing with SQLite backend:
 
 **Workflow:**
 1. User creates tenant → gets API key
-2. Admin adds credits via Polar.sh purchase
+2. Admin adds credits via NOWPayments purchase
 3. User submits mission via API
 4. Mission plan estimates credits → reserved
 5. Execution completes → credits deducted
@@ -424,7 +424,7 @@ GET    /api/v1/billing/usage    # Get tenant usage metrics
 
 **Billing Tiers:**
 - Free: 10 MCU/month included
-- Pro: Unlimited MCU, $9.99/month (via Polar.sh)
+- Pro: Unlimited MCU, $9.99/month (via NOWPayments)
 - Enterprise: Custom limits, custom support
 
 ### 2.11 RaaS Gateway (`apps/raas-gateway/`)
@@ -434,7 +434,7 @@ Cloudflare Workers edge gateway with distributed rate limiting:
 **Features:**
 - **Edge Auth** — JWT validation at Cloudflare edge (before reaching origin)
 - **KV Rate Limiter** — Distributed rate limiting cache (Cloudflare KV)
-- **Webhook Handler** — Polar.sh payment events → credit allocation
+- **Webhook Handler** — NOWPayments payment events → credit allocation
 - **Edge Computing** — Process requests globally without database latency
 
 **Architecture:**
@@ -448,7 +448,7 @@ Cloudflare Edge (auth + rate limit)
 
 **Webhook Flow:**
 ```
-Polar.sh payment completed
+NOWPayments payment completed
   → POST /webhooks/polar
   → Verify signature + idempotency key
   → Allocate credits to tenant

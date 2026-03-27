@@ -198,7 +198,7 @@ describe('Billing Checkout Flow (mock fetch)', () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        checkout_url: 'https://polar.sh/checkout/session-abc123',
+        checkout_url: 'https://nowpayments.io/checkout/session-abc123',
         session_id: 'session-abc123',
         pack_id: 'pack-starter',
       }),
@@ -211,7 +211,7 @@ describe('Billing Checkout Flow (mock fetch)', () => {
       cancel_url: 'https://example.com/cancel',
     });
 
-    expect(result.checkout_url).toContain('polar.sh');
+    expect(result.checkout_url).toContain('nowpayments.io');
     expect(result.checkout_url).toContain('session-abc123');
   });
 });

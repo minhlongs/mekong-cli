@@ -229,7 +229,7 @@ Deploy: CF Pages (frontend via `git push`) + CF Workers (backend via `wrangler d
 | Enterprise | Unlimited | $499 |
 
 - Zero balance → HTTP 402
-- Polar.sh webhooks = only payment source
+- NOWPayments webhooks = only payment source
 - Audit trail for every transaction
 
 ---

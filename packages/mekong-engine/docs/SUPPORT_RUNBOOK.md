@@ -105,7 +105,7 @@ curl -X POST https://.../billing/tenants/regenerate-key \
 
 | Cause | Diagnosis | Fix |
 |-------|-----------|-----|
-| Credit balance zero | `GET /billing/credits` returns 0 | Purchase credits via Polar.sh |
+| Credit balance zero | `GET /billing/credits` returns 0 | Purchase credits via NOWPayments |
 | Subscription expired | Tier downgraded | Renew subscription |
 
 **Resolution Steps:**
@@ -115,7 +115,7 @@ curl https://mekong-engine.agencyos-openclaw.workers.dev/billing/credits \
   -H "Authorization: Bearer mk_xxx"
 
 # 2. Guide customer to purchase
-# Navigate to: https://polar.sh/agencyos/products
+# Navigate to: https://nowpayments.io/agencyos/products
 ```
 
 ---
@@ -181,7 +181,7 @@ curl -X POST https://.../ai/test \
 ### Issue: Webhook Failures
 
 **Symptoms:**
-- Polar.sh/Zalo/Facebook webhooks not processing
+- NOWPayments/Zalo/Facebook webhooks not processing
 - 401/403 errors on webhook endpoint
 
 **Root Causes:**
@@ -195,11 +195,11 @@ curl -X POST https://.../ai/test \
 **Resolution Steps:**
 ```bash
 # 1. Check webhook secret
-# Polar.sh: Dashboard → Developers → Webhooks → Signing secret
+# NOWPayments: Dashboard → Developers → Webhooks → Signing secret
 # Zalo: OA Dashboard → API → Secret key
 
 # 2. Update secret
-wrangler secret put POLAR_WEBHOOK_SECRET
+wrangler secret put NOWPAYMENTS_WEBHOOK_SECRET
 wrangler secret put ZALO_WEBHOOK_SECRET
 
 # 3. Test webhook
@@ -427,7 +427,7 @@ Post-mortem scheduled for: {DATE/TIME}
 | Variable | Purpose | How to Set |
 |----------|---------|------------|
 | `SERVICE_TOKEN` | Encryption key + admin auth | `wrangler secret put SERVICE_TOKEN` |
-| `POLAR_WEBHOOK_SECRET` | Polar.sh webhook validation | `wrangler secret put POLAR_WEBHOOK_SECRET` |
+| `NOWPAYMENTS_WEBHOOK_SECRET` | NOWPayments webhook validation | `wrangler secret put NOWPAYMENTS_WEBHOOK_SECRET` |
 | `LLM_API_KEY` | Global LLM fallback | `wrangler secret put LLM_API_KEY` |
 | `LLM_BASE_URL` | Global LLM endpoint | `.dev.vars` (local) / `wrangler secret` (prod) |
 | `DEFAULT_LLM_MODEL` | Default model name | Optional config |

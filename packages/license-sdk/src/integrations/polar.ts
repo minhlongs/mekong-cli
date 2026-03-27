@@ -6,7 +6,7 @@ import type { Brand, LicenseTier } from '../core/tiers.js';
 // Types
 // ---------------------------------------------------------------------------
 
-export interface PolarWebhookEvent {
+export interface NowPaymentsWebhookEvent {
   type: string;
   data: {
     product_id: string;
@@ -34,7 +34,7 @@ interface ProductConfig {
 // Product map — 18 products across 6 brands
 // ---------------------------------------------------------------------------
 
-export const POLAR_PRODUCTS: Record<string, ProductConfig> = {
+export const NOWPAYMENTS_PRODUCTS: Record<string, ProductConfig> = {
   'mekong-starter':    { brand: 'MEKONG',    tier: 'starter',    price: 29 },
   'mekong-pro':        { brand: 'MEKONG',    tier: 'pro',        price: 99 },
   'mekong-enterprise': { brand: 'MEKONG',    tier: 'enterprise', price: 299 },
@@ -60,10 +60,10 @@ export const POLAR_PRODUCTS: Record<string, ProductConfig> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Verify a Polar.sh webhook signature using HMAC-SHA256.
- * Polar sends: `webhook-signature: sha256=<hex>`
+ * Verify a NOWPayments webhook signature using HMAC-SHA256.
+ * NOWPayments sends: x-nowpayments-sig header
  */
-export function verifyPolarSignature(
+export function verifyNowPaymentsSignature(
   payload: string,
   signature: string,
   secret: string,
@@ -86,14 +86,14 @@ export function verifyPolarSignature(
 // ---------------------------------------------------------------------------
 
 /**
- * Route a Polar webhook event and return a structured result.
- * Supports: checkout.completed, subscription.cancelled
+ * Route a NOWPayments webhook event and return a structured result.
+ * Supports: payment_status_changed events
  */
-export function handlePolarWebhook(event: PolarWebhookEvent): WebhookResult {
+export function handleNowPaymentsWebhook(event: NowPaymentsWebhookEvent): WebhookResult {
   const { type, data } = event;
 
   if (type === 'checkout.completed') {
-    const config = POLAR_PRODUCTS[data.product_id];
+    const config = NOWPAYMENTS_PRODUCTS[data.product_id];
 
     if (!config) {
       return {
@@ -120,7 +120,7 @@ export function handlePolarWebhook(event: PolarWebhookEvent): WebhookResult {
   }
 
   if (type === 'subscription.cancelled') {
-    const config = POLAR_PRODUCTS[data.product_id];
+    const config = NOWPAYMENTS_PRODUCTS[data.product_id];
 
     return {
       success: true,

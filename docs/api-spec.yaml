@@ -30,7 +30,7 @@ tags:
   - name: agents
     description: Agent execution (git, file, shell, lead-hunter, content-writer, recipe-crawler)
   - name: billing
-    description: Tenant creation, API keys, Polar.sh webhook handling
+    description: Tenant creation, API keys, NOWPayments webhook handling
   - name: chat
     description: Zalo OA and Facebook Messenger webhooks
   - name: content
@@ -236,7 +236,7 @@ paths:
   /v1/billing/webhooks/polar:
     post:
       tags: [billing]
-      summary: Polar.sh webhook handler
+      summary: NOWPayments webhook handler
       requestBody:
         required: true
         content:

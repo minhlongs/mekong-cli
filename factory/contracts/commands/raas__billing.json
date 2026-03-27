@@ -6,7 +6,7 @@
   "display": {
     "name_en": "Billing",
     "icon": "",
-    "description_en": "RaaS billing integration  Polar.sh + MCU metering"
+    "description_en": "RaaS billing integration  NOWPayments + MCU metering"
   },
   "execution": {
     "agents": [

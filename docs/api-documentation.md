@@ -296,7 +296,7 @@ Execute a specific agent with a command and optional parameters.
 
 ### Billing
 
-Tenant creation, API key management, Polar.sh webhook handling, credit balance, and pricing.
+Tenant creation, API key management, NOWPayments webhook handling, credit balance, and pricing.
 
 #### `POST /v1/billing/tenants`
 
@@ -401,7 +401,7 @@ Get credit transaction history with pagination.
       "id": "crd_abc123",
       "tenant_id": "tn_abc123",
       "amount": 200,
-      "reason": "Polar.sh: agencyos-pro (200 credits)",
+      "reason": "NOWPayments: agencyos-pro (200 credits)",
       "created_at": "2024-01-15T10:30:00Z"
     },
     {
@@ -425,7 +425,7 @@ Get credit transaction history with pagination.
 
 #### `POST /v1/billing/webhook`
 
-Handle Polar.sh payment webhooks. Verifies HMAC-SHA256 signature and 5-minute replay window.
+Handle NOWPayments payment webhooks. Verifies HMAC-SHA256 signature and 5-minute replay window.
 
 **Headers:**
 ```
@@ -447,7 +447,7 @@ Content-Type: application/json
 ```
 
 **Security:**
-- Signature verification via `POLAR_WEBHOOK_SECRET`
+- Signature verification via `NOWPAYMENTS_WEBHOOK_SECRET`
 - 5-minute replay attack prevention (validates timestamp)
 - Rejects events with future timestamps
 

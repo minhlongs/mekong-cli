@@ -1,13 +1,13 @@
 /**
- * PolarClient — Polar.sh API client using native fetch.
+ * NOWPaymentsClient — NOWPayments API client using native fetch.
  * Supports checkSubscription, listProducts with retry + backoff.
- * Phase 5 of v0.6 Payment Webhook.
+ * Migrated from Polar.sh to NOWPayments.
  */
 import type { Result } from '../types/common.js';
 import { ok, err } from '../types/common.js';
 import type { PolarProduct, PolarSubscription } from './types.js';
 
-const POLAR_API_BASE = 'https://api.polar.sh';
+const NOWPAYMENTS_API_BASE = 'https://api.nowpayments.io';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 500;
@@ -33,19 +33,19 @@ export class PolarClient {
 
   constructor(opts: PolarClientOptions) {
     this.apiKey = opts.apiKey;
-    this.baseUrl = opts.baseUrl ?? POLAR_API_BASE;
+    this.baseUrl = opts.baseUrl ?? NOWPAYMENTS_API_BASE;
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxRetries = opts.maxRetries ?? MAX_RETRIES;
   }
 
   /** Check if a customer has an active subscription */
   async checkSubscription(customerId: string): Promise<Result<SubscriptionCheckResult, Error>> {
-    const result = await this.fetchWithRetry<{ items: PolarSubscription[]; pagination: unknown }>(
-      `/v1/subscriptions?customer_id=${encodeURIComponent(customerId)}&active=true`,
+    const result = await this.fetchWithRetry<{ data: PolarSubscription[]; total: number }>(
+      `/v1/subscriptions?customer_id=${encodeURIComponent(customerId)}&status=active`,
     );
     if (!result.ok) return result;
 
-    const items = result.value.items ?? [];
+    const items = result.value.data ?? [];
     const active = items.filter((s) => s.status === 'active');
 
     return ok({
@@ -55,22 +55,22 @@ export class PolarClient {
     });
   }
 
-  /** List all products in the Polar organization */
+  /** List all products */
   async listProducts(): Promise<Result<PolarProduct[], Error>> {
-    const result = await this.fetchWithRetry<{ items: PolarProduct[]; pagination: unknown }>(
-      '/v1/products',
+    const result = await this.fetchWithRetry<{ data: PolarProduct[] }>(
+      '/v1/currencies',
     );
     if (!result.ok) return result;
-    return ok(result.value.items ?? []);
+    return ok(result.value.data ?? []);
   }
 
   /**
-   * Get a specific subscription by ID.
-   * @param subscriptionId - Polar subscription ID
+   * Get a specific payment by ID.
+   * @param subscriptionId - NOWPayments payment ID
    */
   async getSubscription(subscriptionId: string): Promise<Result<PolarSubscription, Error>> {
     return this.fetchWithRetry<PolarSubscription>(
-      `/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
+      `/v1/payment/${encodeURIComponent(subscriptionId)}`,
     );
   }
 
@@ -84,7 +84,7 @@ export class PolarClient {
     try {
       const response = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
+          'x-api-key': this.apiKey,
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
@@ -103,7 +103,7 @@ export class PolarClient {
 
       if (!response.ok) {
         const body = await response.text().catch(() => '');
-        return err(new Error(`Polar API error ${response.status}: ${body}`));
+        return err(new Error(`NOWPayments API error ${response.status}: ${body}`));
       }
 
       const data = (await response.json()) as T;
@@ -116,19 +116,19 @@ export class PolarClient {
         await sleep(delayMs);
         return this.fetchWithRetry<T>(path, attempt + 1);
       }
-      return err(new Error(`Polar API request failed: ${String(e)}`));
+      return err(new Error(`NOWPayments API request failed: ${String(e)}`));
     }
   }
 }
 
 /**
- * Create a PolarClient from environment variables.
- * @returns error if `POLAR_API_KEY` is not set
+ * Create a PolarClient (NOWPayments backend) from environment variables.
+ * @returns error if `NOWPAYMENTS_API_KEY` is not set
  */
 export function createPolarClientFromEnv(baseUrl?: string): Result<PolarClient, Error> {
-  const apiKey = process.env['POLAR_API_KEY'];
+  const apiKey = process.env['NOWPAYMENTS_API_KEY'];
   if (!apiKey) {
-    return err(new Error('POLAR_API_KEY environment variable not set'));
+    return err(new Error('NOWPAYMENTS_API_KEY environment variable not set'));
   }
   return ok(new PolarClient({ apiKey, baseUrl }));
 }

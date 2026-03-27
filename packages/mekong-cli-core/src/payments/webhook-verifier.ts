@@ -1,7 +1,7 @@
 /**
- * WebhookVerifier — verify Polar.sh webhook signatures.
- * Polar uses HMAC-SHA256 on raw body with webhook secret.
- * Phase 1 of v0.6 Payment Webhook.
+ * WebhookVerifier — verify NOWPayments webhook signatures.
+ * NOWPayments uses HMAC-SHA256 on raw body with webhook secret.
+ * Migrated from Polar.sh to NOWPayments.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Result } from '../types/common.js';
@@ -11,37 +11,37 @@ import type { WebhookPayload } from './types.js';
 export interface VerifyOptions {
   /** Raw request body as string or Buffer */
   rawBody: string | Buffer;
-  /** Polar-Signature header value */
+  /** NOWPayments-Signature header value */
   signature: string;
-  /** Webhook secret from POLAR_WEBHOOK_SECRET env */
+  /** Webhook secret from NOWPAYMENTS_IPN_SECRET env */
   secret: string;
   /** Max age in seconds before rejecting (default: 300) */
   maxAgeSeconds?: number;
-  /** Polar-Webhook-ID header for dedup */
+  /** NOWPayments-Webhook-ID header for dedup */
   webhookId?: string;
-  /** Polar-Webhook-Timestamp header */
+  /** NOWPayments-Webhook-Timestamp header */
   timestamp?: string;
 }
 
-/** Polar Standard Webhooks signature format: v1,<hex-signature> */
+/** NOWPayments Standard Webhooks signature format: v1,<hex-signature> */
 const SIG_PREFIX = 'v1,';
 
 /**
- * Verify Polar.sh webhook signature.
- * Polar uses Standard Webhooks spec: sign "id.timestamp.body" with HMAC-SHA256.
+ * Verify NOWPayments webhook signature.
+ * NOWPayments uses Standard Webhooks spec: sign "id.timestamp.body" with HMAC-SHA256.
  */
 export function verifyWebhookSignature(opts: VerifyOptions): Result<void, Error> {
   const { rawBody, signature, secret, maxAgeSeconds = 300, webhookId, timestamp } = opts;
 
   if (!signature) {
-    return err(new Error('Missing Polar-Signature header'));
+    return err(new Error('Missing NOWPayments-Signature header'));
   }
   if (!secret) {
     return err(new Error('Webhook secret not configured'));
   }
 
   // Standard Webhooks format: sign "msgId.msgTimestamp.body"
-  // Polar sends: Polar-Webhook-ID, Polar-Webhook-Timestamp, Polar-Webhook-Signature
+  // Polar sends: NOWPayments-Signature-Id, NOWPayments-Timestamp
   if (webhookId && timestamp) {
     return verifyStandardWebhooks({ rawBody, signature, secret, maxAgeSeconds, webhookId, timestamp });
   }

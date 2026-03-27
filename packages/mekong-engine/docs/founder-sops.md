@@ -137,7 +137,7 @@ MCU = Mekong Credit Unit. 1 simple task = 1 MCU, complex = 5 MCU.
 |--------|-----------|
 | Health trả `503` | D1/AI binding thiếu → check Cloudflare dashboard |
 | `401 Invalid API key` | Key sai hoặc tenant đã xóa |
-| `402 Insufficient credits` | Hết credits → nạp thêm qua Polar.sh |
+| `402 Insufficient credits` | Hết credits → nạp thêm qua NOWPayments |
 | `503 SERVICE_TOKEN not configured` | Chưa set secret → `wrangler secret put SERVICE_TOKEN` |
 | BYOK key không hoạt động | Kiểm tra key đúng provider, chưa hết hạn |
 
@@ -148,7 +148,7 @@ MCU = Mekong Credit Unit. 1 simple task = 1 MCU, complex = 5 MCU.
 - **Production:** https://mekong-engine.agencyos-openclaw.workers.dev
 - **Cloudflare Dashboard:** https://dash.cloudflare.com
 - **D1 Console:** Dashboard → Workers & Pages → D1 → mekong-db
-- **Polar.sh:** https://polar.sh (payment provider)
+- **NOWPayments:** https://nowpayments.io (payment provider)
 
 ---
 

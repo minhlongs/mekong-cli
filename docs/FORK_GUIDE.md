@@ -7,7 +7,7 @@ How to fork mekong-cli and run your own autonomous CTO agent.
 - Python 3.11+
 - Node.js 18+ and pnpm
 - Supabase account (or use SQLite for local dev)
-- Polar.sh account (for billing)
+- NOWPayments account (for billing)
 - Anthropic API key or Antigravity proxy
 
 ## Quick Start
@@ -61,8 +61,8 @@ This runs `generate_contracts.py` and `self_test.py`. All contracts in
 Set these environment variables:
 
 ```
-POLAR_ACCESS_TOKEN=your_polar_token
-POLAR_WEBHOOK_SECRET=your_webhook_secret
+NOWPAYMENTS_ACCESS_TOKEN=your_polar_token
+NOWPAYMENTS_WEBHOOK_SECRET=your_webhook_secret
 SUPABASE_URL=your_supabase_url
 SUPABASE_KEY=your_supabase_anon_key
 ```
@@ -140,7 +140,7 @@ To offer your commands as paid services, add entries to `factory/contracts/prici
 }
 ```
 
-Credits are billed via Polar.sh webhooks → `src/raas/credits.py`.
+Credits are billed via NOWPayments webhooks → `src/raas/credits.py`.
 1 MCU (Mekong Credit Unit) = 1 credit = configurable USD price.
 
 ## License

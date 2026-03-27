@@ -1,7 +1,7 @@
 /**
- * WebhookHandler — process Polar.sh webhook events end-to-end.
+ * WebhookHandler — process NOWPayments webhook events end-to-end.
  * Verifies signature, parses payload, delegates to SubscriptionManager, persists receipt.
- * Phase 2 of v0.6 Payment Webhook.
+ * Migrated from Polar.sh to NOWPayments.
  */
 import type { Result } from '../types/common.js';
 import { ok, err } from '../types/common.js';
@@ -17,7 +17,7 @@ import type {
 import { resolveTierFromProduct } from './types.js';
 
 export interface WebhookHandlerOptions {
-  /** POLAR_WEBHOOK_SECRET */
+  /** NOWPAYMENTS_IPN_SECRET */
   secret: string;
   registryPath?: string;
   auditLogPath?: string;
@@ -26,11 +26,11 @@ export interface WebhookHandlerOptions {
 
 export interface IncomingWebhook {
   rawBody: string;
-  /** Polar-Webhook-Signature header */
+  /** NOWPayments-Signature header */
   signature: string;
-  /** Polar-Webhook-ID header */
+  /** NOWPayments-Signature-Id header */
   webhookId?: string;
-  /** Polar-Webhook-Timestamp header */
+  /** NOWPayments-Timestamp header */
   timestamp?: string;
 }
 

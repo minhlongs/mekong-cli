@@ -24,7 +24,7 @@
         "commands": [
           { "id": "cook", "args": "Build landing page with hero, features grid, pricing for $ARGUMENTS" },
           { "id": "cook", "args": "Build dashboard with auth, stats cards, navigation for $ARGUMENTS" },
-          { "id": "cook", "args": "Build billing integration with Polar.sh webhooks for $ARGUMENTS" }
+          { "id": "cook", "args": "Build billing integration with NOWPayments webhooks for $ARGUMENTS" }
         ],
         "depends_on": ["scaffold"]
       },

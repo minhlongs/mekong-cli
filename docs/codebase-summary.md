@@ -176,7 +176,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | `POST /v1/tasks` | Execute command |
 | `POST /v1/agents/spawn` | Spawn agent |
 | `POST /v1/chat/completions` | Chat API |
-| `POST /payment/webhook` | Polar.sh webhook |
+| `POST /payment/webhook` | NOWPayments webhook |
 | `GET /v1/reports` | Analytics |
 
 **Middleware:**

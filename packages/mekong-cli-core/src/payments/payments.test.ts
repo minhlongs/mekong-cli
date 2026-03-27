@@ -1,7 +1,7 @@
 /**
  * payments.test.ts — comprehensive tests for v0.6 Payment Webhook module.
  * Covers all 7 phases: types, verifier, handler, subscription, receipt-store,
- * polar-client, and integration wiring.
+ * nowpayments-client, and integration wiring.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
@@ -16,7 +16,7 @@ import { verifyWebhookSignature, parseWebhookPayload } from './webhook-verifier.
 import { ReceiptStore } from './receipt-store.js';
 import { SubscriptionManager } from './subscription.js';
 import { WebhookHandler } from './webhook-handler.js';
-import { PolarClient, createPolarClientFromEnv } from './polar-client.js';
+import { NowPaymentsClient, createNowPaymentsClientFromEnv } from './nowpayments-client.js';
 import { ConfigSchema } from '../types/config.js';
 import { DEFAULT_CONFIG } from '../config/defaults.js';
 import type { WebhookEvent, PolarCheckout, PolarSubscription } from './types.js';
@@ -28,11 +28,11 @@ const __dirname = dirname(__filename);
 
 describe('Phase 1 — types', () => {
   afterEach(() => {
-    delete process.env['POLAR_PRODUCT_MAP'];
+    delete process.env['NOWPAYMENTS_PRODUCT_MAP'];
   });
 
   it('resolveTierFromProduct uses env override', () => {
-    process.env['POLAR_PRODUCT_MAP'] = JSON.stringify({ prod_ent: 'enterprise' });
+    process.env['NOWPAYMENTS_PRODUCT_MAP'] = JSON.stringify({ prod_ent: 'enterprise' });
     expect(resolveTierFromProduct('prod_ent')).toBe('enterprise');
   });
 
@@ -53,7 +53,7 @@ describe('Phase 1 — types', () => {
   });
 
   it('resolveTierFromProduct handles malformed env JSON gracefully', () => {
-    process.env['POLAR_PRODUCT_MAP'] = '{bad json';
+    process.env['NOWPAYMENTS_PRODUCT_MAP'] = '{bad json';
     expect(() => resolveTierFromProduct('prod_pro')).not.toThrow();
   });
 });
@@ -521,29 +521,29 @@ describe('Phase 2 — webhook-handler', () => {
   });
 });
 
-// ── Phase 5: PolarClient ───────────────────────────────────────────────────────
+// ── Phase 5: NowPaymentsClient ───────────────────────────────────────────────────────
 
-describe('Phase 5 — polar-client', () => {
+describe('Phase 5 — nowpayments-client', () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    delete process.env['POLAR_API_KEY'];
+    delete process.env['NOWPAYMENTS_API_KEY'];
   });
 
-  it('createPolarClientFromEnv returns error without POLAR_API_KEY', () => {
-    delete process.env['POLAR_API_KEY'];
-    const result = createPolarClientFromEnv();
+  it('createNowPaymentsClientFromEnv returns error without NOWPAYMENTS_API_KEY', () => {
+    delete process.env['NOWPAYMENTS_API_KEY'];
+    const result = createNowPaymentsClientFromEnv();
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.message).toContain('POLAR_API_KEY');
+    if (!result.ok) expect(result.error.message).toContain('NOWPAYMENTS_API_KEY');
   });
 
-  it('createPolarClientFromEnv succeeds when key set', () => {
-    process.env['POLAR_API_KEY'] = 'test_key';
-    const result = createPolarClientFromEnv();
+  it('createNowPaymentsClientFromEnv succeeds when key set', () => {
+    process.env['NOWPAYMENTS_API_KEY'] = 'test_key';
+    const result = createNowPaymentsClientFromEnv();
     expect(result.ok).toBe(true);
   });
 
   it('checkSubscription returns active: false for empty items', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
     vi.stubGlobal('fetch', async () => ({
       ok: true,
       json: async () => ({ items: [], pagination: {} }),
@@ -557,7 +557,7 @@ describe('Phase 5 — polar-client', () => {
   });
 
   it('checkSubscription returns active: true with subscription', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
     const fakeSub = {
       id: 'sub_001', status: 'active', customer_id: 'cust_001', product_id: 'prod_pro',
       current_period_start: new Date().toISOString(),
@@ -577,7 +577,7 @@ describe('Phase 5 — polar-client', () => {
   });
 
   it('listProducts returns product array', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
     vi.stubGlobal('fetch', async () => ({
       ok: true,
       json: async () => ({ items: [{ id: 'prod_001', name: 'Starter', price_amount: 4900, price_currency: 'usd' }], pagination: {} }),
@@ -593,7 +593,7 @@ describe('Phase 5 — polar-client', () => {
   });
 
   it('returns error on API 403 status', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999', maxRetries: 0 });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999', maxRetries: 0 });
     vi.stubGlobal('fetch', async () => ({
       ok: false, status: 403, text: async () => 'Forbidden',
       headers: { get: () => null },
@@ -605,7 +605,7 @@ describe('Phase 5 — polar-client', () => {
   });
 
   it('retries on 429 and succeeds on second attempt', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999', maxRetries: 2 });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999', maxRetries: 2 });
     let calls = 0;
     vi.stubGlobal('fetch', async () => {
       calls++;
@@ -621,7 +621,7 @@ describe('Phase 5 — polar-client', () => {
   });
 
   it('getSubscription fetches single subscription', async () => {
-    const client = new PolarClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
+    const client = new NowPaymentsClient({ apiKey: 'test', baseUrl: 'http://localhost:19999' });
     const fakeSub = { id: 'sub_direct', status: 'active', customer_id: 'cust_x', product_id: 'prod_pro',
       current_period_start: new Date().toISOString(), current_period_end: new Date().toISOString() };
     vi.stubGlobal('fetch', async () => ({
@@ -758,14 +758,14 @@ describe('Phase 7 — integration end-to-end', () => {
   it('config schema includes payments section with defaults', () => {
     const parsed = ConfigSchema.parse({});
     expect(parsed.payments).toBeDefined();
-    expect(parsed.payments.polar_api_key_env).toBe('POLAR_API_KEY');
-    expect(parsed.payments.polar_webhook_secret_env).toBe('POLAR_WEBHOOK_SECRET');
+    expect(parsed.payments.nowpayments_api_key_env).toBe('NOWPAYMENTS_API_KEY');
+    expect(parsed.payments.nowpayments_ipn_secret_env).toBe('NOWPAYMENTS_IPN_SECRET');
     expect(parsed.payments.product_tier_map).toEqual({});
   });
 
   it('DEFAULT_CONFIG includes payments section', () => {
     expect(DEFAULT_CONFIG.payments).toBeDefined();
-    expect(DEFAULT_CONFIG.payments.polar_api_key_env).toBe('POLAR_API_KEY');
+    expect(DEFAULT_CONFIG.payments.nowpayments_api_key_env).toBe('NOWPAYMENTS_API_KEY');
     expect(DEFAULT_CONFIG.payments.receipt_store_path).toContain('receipts.jsonl');
   });
 

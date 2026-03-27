@@ -1,9 +1,9 @@
 /**
- * Verify Polar.sh webhook signature using HMAC-SHA256
+ * Verify NOWPayments webhook signature using HMAC-SHA256
  *
  * @param body - Parsed webhook request body
  * @param signature - X-Polar-Signature header value
- * @param secret - POLAR_WEBHOOK_SECRET environment variable
+ * @param secret - NOWPAYMENTS_WEBHOOK_SECRET environment variable
  * @returns true if signature is valid
  */
 export async function verifyPolarSignature(

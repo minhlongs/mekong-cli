@@ -13,7 +13,7 @@ async function openUrl(url: string): Promise<void> {
 }
 
 export function registerCloudBillingCommand(program: Command): void {
-  // Use 'cloud-billing' to avoid conflict with existing 'billing' (Polar.sh) command
+  // Use 'cloud-billing' to avoid conflict with existing 'billing' (NOWPayments) command
   const cb = program
     .command('cloud-billing')
     .description('Cloud billing — pricing tiers, credit packs, checkout, balance');

@@ -52,7 +52,7 @@ pip install -e .
 
 # Set up environment
 export LLM_API_KEY=your_key_here
-export POLAR_WEBHOOK_SECRET=your_secret_here
+export NOWPAYMENTS_WEBHOOK_SECRET=your_secret_here
 ```
 
 ### Run an Example

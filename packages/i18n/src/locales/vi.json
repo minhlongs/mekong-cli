@@ -410,7 +410,7 @@
         "title": "Cách thức hoạt động",
         "step1": {
           "title": "Nhận quyền truy cập",
-          "desc": "Đăng ký qua Polar.sh. Giao hàng tức thì."
+          "desc": "Đăng ký qua NOWPayments. Giao hàng tức thì."
         },
         "step2": {
           "title": "Mở trong IDE",
@@ -2076,7 +2076,7 @@
       },
       "methods": {
         "q": "Chấp nhận phương thức thanh toán nào?",
-        "a": "Thẻ tín dụng/ghi nợ, PayPal, và Crypto (USDT/USDC). Tất cả thanh toán được bảo mật bởi Polar.sh."
+        "a": "Thẻ tín dụng/ghi nợ, PayPal, và Crypto (USDT/USDC). Tất cả thanh toán được bảo mật bởi NOWPayments."
       },
       "refund": {
         "q": "Có được hoàn tiền không?",

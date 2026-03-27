@@ -92,8 +92,8 @@ export const ConfigSchema = z.object({
     background_check: z.boolean().default(true),
   }).default({}),
   payments: z.object({
-    polar_api_key_env: z.string().default('POLAR_API_KEY'),
-    polar_webhook_secret_env: z.string().default('POLAR_WEBHOOK_SECRET'),
+    nowpayments_api_key_env: z.string().default('NOWPAYMENTS_API_KEY'),
+    nowpayments_ipn_secret_env: z.string().default('NOWPAYMENTS_IPN_SECRET'),
     receipt_store_path: z.string().default('~/.mekong/payments/receipts.jsonl'),
     product_tier_map: z.record(z.string()).default({}),
   }).default({}),

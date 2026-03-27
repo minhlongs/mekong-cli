@@ -15,7 +15,7 @@ This document applies the 13 chapters of Binh Phap to the concrete path from $0 
 | RaaS Gateway API | LIVE v5.0.0 | api.agencyos.network |
 | Landing Page | LIVE | agencyos.network |
 | Dashboard | LIVE | dashboard.agencyos.network |
-| Billing (Polar.sh) | CONFIGURED | $49/$149/$499 tiers |
+| Billing (NOWPayments) | CONFIGURED | $49/$149/$499 tiers |
 | Mekong CLI | PUBLIC | github.com/longtho638-jpg/mekong-cli |
 | M1 Max Inference | READY | Local MLX + Ollama |
 | Algo-Trader | 100% TESTS | Ready for VPS delivery |

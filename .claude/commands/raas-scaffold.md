@@ -22,7 +22,7 @@ Generate a full Next.js SaaS project in apps/{project-name}/:
    - `app/page.tsx` (landing page with hero, features, pricing)
    - `app/dashboard/page.tsx` (protected dashboard)
    - `app/api/auth/route.ts` (auth endpoint)
-   - `app/api/billing/route.ts` (billing webhook — Polar.sh only)
+   - `app/api/billing/route.ts` (billing webhook — NOWPayments only)
    - `components/hero.tsx`
    - `components/pricing.tsx`
    - `components/dashboard-stats.tsx`
@@ -39,7 +39,7 @@ RaaS Project Scaffolded: {project-name}
   app/page.tsx              <- Landing page
   app/dashboard/page.tsx    <- Dashboard
   app/api/auth/route.ts     <- Auth
-  app/api/billing/route.ts  <- Billing (Polar.sh)
+  app/api/billing/route.ts  <- Billing (NOWPayments)
   components/               <- UI components
   lib/                      <- Business logic
 

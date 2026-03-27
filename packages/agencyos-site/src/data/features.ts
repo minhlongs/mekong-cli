@@ -15,7 +15,7 @@ export const FEATURES: Feature[] = [
   {
     icon: '💳',
     title: 'RaaS',
-    description: 'License + credit metering out of the box. Monetize any CLI or API with Polar.sh webhooks and MCU billing.',
+    description: 'License + credit metering out of the box. Monetize any CLI or API with NOWPayments webhooks and MCU billing.',
     tag: 'Monetize',
   },
   {

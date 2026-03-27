@@ -3,12 +3,12 @@
   "name": "Dashboard UI",
   "priority": "MEDIUM",
   "objective": "Build tenant dashboard for MCU credit balance, usage analytics, and API key management",
-  "description": "Create React dashboard where tenants can view credit balance, usage history, manage API keys, and top-up credits. Integrate with Polar.sh checkout for purchases.",
+  "description": "Create React dashboard where tenants can view credit balance, usage history, manage API keys, and top-up credits. Integrate with NOWPayments checkout for purchases.",
   "success_criteria": [
     "Dashboard shows current MCU credit balance",
     "Usage charts display credit consumption over time",
     "API key CRUD operations (create, revoke, rename)",
-    "Top-up button redirects to Polar.sh checkout",
+    "Top-up button redirects to NOWPayments checkout",
     "Responsive design (desktop + mobile)"
   ],
   "mcu_budget": 400,

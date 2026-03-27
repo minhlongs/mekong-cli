@@ -91,31 +91,31 @@ describe('RemoteLicenseClient — validate paths', () => {
   });
 });
 
-// ─── PolarClient — retry and error paths ──────────────────────────────────────
+// ─── NowPaymentsClient — retry and error paths ──────────────────────────────────────
 
-describe('PolarClient — createPolarClientFromEnv', () => {
-  afterEach(() => { delete process.env['POLAR_API_KEY']; });
+describe('NowPaymentsClient — createNowPaymentsClientFromEnv', () => {
+  afterEach(() => { delete process.env['NOWPAYMENTS_API_KEY']; });
 
-  it('returns err when POLAR_API_KEY not set', async () => {
-    delete process.env['POLAR_API_KEY'];
-    const { createPolarClientFromEnv } = await import('../payments/polar-client.js');
-    const result = createPolarClientFromEnv();
+  it('returns err when NOWPAYMENTS_API_KEY not set', async () => {
+    delete process.env['NOWPAYMENTS_API_KEY'];
+    const { createNowPaymentsClientFromEnv } = await import('../payments/nowpayments-client.js');
+    const result = createNowPaymentsClientFromEnv();
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.message).toContain('POLAR_API_KEY');
+    if (!result.ok) expect(result.error.message).toContain('NOWPAYMENTS_API_KEY');
   });
 
-  it('returns ok(PolarClient) when POLAR_API_KEY set', async () => {
-    process.env['POLAR_API_KEY'] = 'test-key-123';
-    const { createPolarClientFromEnv } = await import('../payments/polar-client.js');
-    const result = createPolarClientFromEnv();
+  it('returns ok(NowPaymentsClient) when NOWPAYMENTS_API_KEY set', async () => {
+    process.env['NOWPAYMENTS_API_KEY'] = 'test-key-123';
+    const { createNowPaymentsClientFromEnv } = await import('../payments/nowpayments-client.js');
+    const result = createNowPaymentsClientFromEnv();
     expect(result.ok).toBe(true);
   });
 });
 
-describe('PolarClient — HTTP errors', () => {
+describe('NowPaymentsClient — HTTP errors', () => {
   it('returns err on non-ok response', async () => {
-    const { PolarClient } = await import('../payments/polar-client.js');
-    const client = new PolarClient({
+    const { NowPaymentsClient } = await import('../payments/nowpayments-client.js');
+    const client = new NowPaymentsClient({
       apiKey: 'test', baseUrl: 'http://localhost:1', timeoutMs: 500, maxRetries: 0,
     });
     const result = await client.listProducts();
@@ -123,8 +123,8 @@ describe('PolarClient — HTTP errors', () => {
   });
 
   it('returns err when subscription check fails', async () => {
-    const { PolarClient } = await import('../payments/polar-client.js');
-    const client = new PolarClient({
+    const { NowPaymentsClient } = await import('../payments/nowpayments-client.js');
+    const client = new NowPaymentsClient({
       apiKey: 'test', baseUrl: 'http://localhost:1', timeoutMs: 500, maxRetries: 0,
     });
     const result = await client.checkSubscription('cust_123');
@@ -132,8 +132,8 @@ describe('PolarClient — HTTP errors', () => {
   });
 
   it('returns err when getSubscription fails', async () => {
-    const { PolarClient } = await import('../payments/polar-client.js');
-    const client = new PolarClient({
+    const { NowPaymentsClient } = await import('../payments/nowpayments-client.js');
+    const client = new NowPaymentsClient({
       apiKey: 'test', baseUrl: 'http://localhost:1', timeoutMs: 500, maxRetries: 0,
     });
     const result = await client.getSubscription('sub_123');

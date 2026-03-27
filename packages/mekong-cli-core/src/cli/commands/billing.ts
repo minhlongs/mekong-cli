@@ -1,7 +1,7 @@
 /**
  * `mekong billing` — Billing and subscription management subcommands.
  *
- *   mekong billing status          Show current subscription from Polar.sh
+ *   mekong billing status          Show current subscription from NOWPayments
  *   mekong billing receipts        List local payment receipt history
  *   mekong billing webhook-test    Simulate a webhook payload for local dev
  *
@@ -12,7 +12,7 @@ import { homedir } from 'node:os';
 import type { Command } from 'commander';
 import { ReceiptStore } from '../../payments/receipt-store.js';
 import { WebhookHandler } from '../../payments/webhook-handler.js';
-import { createPolarClientFromEnv } from '../../payments/polar-client.js';
+import { createPolarClientFromEnv as createNowPaymentsClientFromEnv } from '../../payments/polar-client.js';
 import { resolveTierFromProduct } from '../../payments/types.js';
 import type { WebhookEventType } from '../../payments/types.js';
 
@@ -23,24 +23,24 @@ const DEFAULT_AUDIT_LOG = join(homedir(), '.mekong', 'admin', 'audit.jsonl');
 export function registerBillingCommand(program: Command): void {
   const billing = program
     .command('billing')
-    .description('Billing and subscription management (Polar.sh)');
+    .description('Billing and subscription management (NOWPayments)');
 
   // ── billing status ──────────────────────────────────────────────────────────
   billing
     .command('status')
-    .description('Show current subscription status from Polar.sh')
+    .description('Show current subscription status from NOWPayments')
     .option('--customer <id>', 'Customer ID or email to check')
     .action(async (opts: { customer?: string }) => {
-      const clientResult = createPolarClientFromEnv();
+      const clientResult = createNowPaymentsClientFromEnv();
       if (!clientResult.ok) {
         console.error(`Error: ${clientResult.error.message}`);
-        console.error('Set POLAR_API_KEY environment variable to use billing status.');
+        console.error('Set NOWPAYMENTS_API_KEY environment variable to use billing status.');
         process.exit(1);
       }
 
-      const customerId = opts.customer ?? process.env['POLAR_CUSTOMER_ID'];
+      const customerId = opts.customer ?? process.env['NOWPAYMENTS_CUSTOMER_ID'];
       if (!customerId) {
-        console.error('Error: specify --customer <id> or set POLAR_CUSTOMER_ID env var.');
+        console.error('Error: specify --customer <id> or set NOWPAYMENTS_CUSTOMER_ID env var.');
         process.exit(1);
       }
 
@@ -126,7 +126,7 @@ export function registerBillingCommand(program: Command): void {
     .option('--customer-id <id>', 'Customer ID', 'cust_test_001')
     .option(
       '--secret <secret>',
-      'Webhook secret (default: POLAR_WEBHOOK_SECRET env)',
+      'Webhook secret (default: NOWPAYMENTS_WEBHOOK_SECRET env)',
     )
     .option('--dry-run', 'Print payload without processing', false)
     .action(
@@ -151,7 +151,7 @@ export function registerBillingCommand(program: Command): void {
         }
 
         const secret =
-          opts.secret ?? process.env['POLAR_WEBHOOK_SECRET'] ?? 'test-webhook-secret';
+          opts.secret ?? process.env['NOWPAYMENTS_WEBHOOK_SECRET'] ?? 'test-webhook-secret';
         const webhookId = `test_${Date.now()}`;
         const timestamp = String(Math.floor(Date.now() / 1000));
 

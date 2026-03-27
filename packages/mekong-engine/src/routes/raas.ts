@@ -16,13 +16,13 @@ raasRoutes.use('*', authMiddleware)
 const webhookRoutes = new Hono<{ Bindings: Bindings }>()
 webhookRoutes.use('/webhooks/*', webhookSecurityHeaders())
 
-// POST /webhooks/polar - Handle Polar.sh webhook events
+// POST /webhooks/polar - Handle NOWPayments webhook events
 webhookRoutes.post('/polar', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
   const body = await c.req.json()
   const signature = c.req.header('X-Polar-Signature')
-  const secret = c.env.POLAR_WEBHOOK_SECRET
+  const secret = c.env.NOWPAYMENTS_WEBHOOK_SECRET
 
   // Verify webhook signature
   const isValid = await verifyPolarSignature(body, signature, secret)

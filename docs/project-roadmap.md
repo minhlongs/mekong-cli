@@ -36,7 +36,7 @@ Mekong CLI is building the **de facto standard for AI-powered agent orchestratio
 
 ### v3.0 Milestones
 
-**RaaS Bootstrap (Phase 1-6):** Production REST API, JWT auth, credit system, Polar.sh webhooks, rate limiting, audit trails ✅
+**RaaS Bootstrap (Phase 1-6):** Production REST API, JWT auth, credit system, NOWPayments webhooks, rate limiting, audit trails ✅
 
 **Landing Page v5.0 (17 fixes):**
 - Stats updated to 319 commands, 89 super workflows, 463 skills, 127 agents

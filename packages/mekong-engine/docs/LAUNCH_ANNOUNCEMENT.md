@@ -19,7 +19,7 @@ Mekong Engine is a serverless PEV (Plan-Execute-Verify) platform running on Clou
 | Feature | Description |
 |---------|-------------|
 | **Mission-Based API** | Submit goals → AI plans → executes → verifies → refunds failures |
-| **Multi-Tenant Billing** | Credit ledger with Polar.sh integration |
+| **Multi-Tenant Billing** | Credit ledger with NOWPayments integration |
 | **BYOK LLM Support** | Bring Your Own Key (OpenAI, Google, Anthropic) or use Workers AI |
 | **21 Route Groups** | Tasks, Agents, CRM, Governance, Ledger, Equity, and more |
 | **Enterprise Ready** | RBAC, audit logging, rate limiting, quadratic voting |
@@ -44,7 +44,7 @@ Mekong Engine is a serverless PEV (Plan-Execute-Verify) platform running on Clou
 3. **Billing System** (`/billing`)
    - Tenant creation with API key generation
    - Credit ledger with double-entry accounting
-   - Polar.sh webhook integration
+   - NOWPayments webhook integration
    - Tier-based rate limiting (Free/Pro/Enterprise)
 
 4. **BYOK LLM** (`/v1/settings/llm`)

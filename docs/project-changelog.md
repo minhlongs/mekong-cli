@@ -121,7 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `pnl-service.ts` — Real-time P&L calculations
 
 - **Billing & Dunning** (`src/billing/`):
-  - Polar.sh webhook integration
+  - NOWPayments webhook integration
   - Subscription management
   - Payment processing
   - Dunning workflow for failed payments

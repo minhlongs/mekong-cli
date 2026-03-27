@@ -65,7 +65,7 @@ Mekong CLI is a full-stack SaaS application with:
 │                      EXTERNAL INTEGRATIONS                        │
 └────────────┬─────────────────────────────────────────────────────┘
              │
-             ├─→ Polar.sh API (payments)
+             ├─→ NOWPayments API (payments)
              ├─→ Supabase API (database/auth)
              ├─→ Gemini API (AI models)
              ├─→ Cloudflare (frontend + edge API)
@@ -544,7 +544,7 @@ PAYPAL_MODE=sandbox  # or 'live' for production
 
 **Configuration** (`.env`):
 ```bash
-POLAR_API_KEY=your_api_key_here
+NOWPAYMENTS_API_KEY=your_api_key_here
 ```
 
 **Key Features**:
@@ -842,7 +842,7 @@ def calculate_vn_tax(amount_vnd: float, quarter_total: float) -> dict:
 
 ### External Resources
 - [PayPal API Docs](https://developer.paypal.com/api/rest/)
-- [Polar API Docs](https://docs.polar.sh/api/)
+- [Polar API Docs](https://docs.nowpayments.io/api/)
 - [Supabase Docs](https://supabase.com/docs)
 - [Gemini API Docs](https://ai.google.dev/gemini-api/docs)
 - [Next.js Docs](https://nextjs.org/docs)
