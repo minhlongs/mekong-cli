@@ -65,7 +65,7 @@ billingRoutes.post('/tenants/regenerate-key', authRateLimit(), handleAsync(async
   })
 }))
 
-// Polar product -> credit mapping (match NOWPayments product names)
+// NOWPayments product -> credit mapping
 const NOWPAYMENTS_PRODUCT_CREDITS: Record<string, number> = {
   'agencyos-starter': 50,
   'agencyos-pro': 200,
@@ -76,7 +76,7 @@ const NOWPAYMENTS_PRODUCT_CREDITS: Record<string, number> = {
   'credits-100': 100,
 }
 
-// Polar tier -> tenant tier mapping
+// NOWPayments tier -> tenant tier mapping
 const NOWPAYMENTS_TIER_MAP: Record<string, string> = {
   'agencyos-starter': 'pro',
   'agencyos-pro': 'pro',
@@ -122,7 +122,7 @@ billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
   if (event.id) {
     const eventId: string = event.id // Type guard: narrow from string | undefined
     const isDuplicate = await handleDb(
-      () => isDuplicateWebhookEvent(db, 'polar', eventId),
+      () => isDuplicateWebhookEvent(db, 'nowpayments', eventId),
       'DATABASE_ERROR',
       'Failed to check for duplicate webhook event'
     ) as boolean
@@ -148,7 +148,7 @@ billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
   const data = event.data ?? {} as Record<string, any>
 
   if (event.type === 'order.paid') {
-    // Support both: direct tenant_id/credits OR Polar product mapping
+    // Support both: direct tenant_id/credits OR NOWPayments product mapping
     const typedData = data as { tenant_id?: string; metadata?: { tenant_id?: string }; customer?: { external_id?: string }; product_name?: string; product?: { name?: string }; credits?: number }
     const tenantId: string | undefined =
       typedData.tenant_id ?? typedData.metadata?.tenant_id ?? typedData.customer?.external_id
@@ -185,9 +185,9 @@ billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
   if (event.id) {
     const eventId: string = event.id // Type guard: narrow from string | undefined
     await handleDb(
-      () => recordWebhookEvent(db, 'polar', eventId, event.type),
+      () => recordWebhookEvent(db, 'nowpayments', eventId, event.type),
       'DATABASE_ERROR',
-      'Failed to record Polar webhook event'
+      'Failed to record NOWPayments webhook event'
     ) as void
   }
 

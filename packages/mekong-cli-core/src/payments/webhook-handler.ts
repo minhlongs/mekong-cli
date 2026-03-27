@@ -1,7 +1,7 @@
 /**
  * WebhookHandler — process NOWPayments webhook events end-to-end.
  * Verifies signature, parses payload, delegates to SubscriptionManager, persists receipt.
- * Migrated from Polar.sh to NOWPayments.
+ * NOWPayments webhook event processing.
  */
 import type { Result } from '../types/common.js';
 import { ok, err } from '../types/common.js';
@@ -11,8 +11,8 @@ import { ReceiptStore } from './receipt-store.js';
 import type {
   WebhookEvent,
   WebhookPayload,
-  PolarCheckout,
-  PolarSubscription,
+  NowPaymentsCheckout,
+  NowPaymentsSubscription,
 } from './types.js';
 import { resolveTierFromProduct } from './types.js';
 
@@ -103,7 +103,7 @@ export class WebhookHandler {
     try {
       switch (payload.type) {
         case 'checkout.completed': {
-          const checkout = payload.data as PolarCheckout;
+          const checkout = payload.data as NowPaymentsCheckout;
           const result = await this.subscriptions.handleCheckout(checkout);
           return {
             ...base,
@@ -119,7 +119,7 @@ export class WebhookHandler {
 
         case 'subscription.updated':
         case 'subscription.active': {
-          const sub = payload.data as PolarSubscription;
+          const sub = payload.data as NowPaymentsSubscription;
           const result = await this.subscriptions.handleUpdate(sub, sub.product_id);
           return {
             ...base,
@@ -135,7 +135,7 @@ export class WebhookHandler {
 
         case 'subscription.canceled':
         case 'subscription.revoked': {
-          const sub = payload.data as PolarSubscription;
+          const sub = payload.data as NowPaymentsSubscription;
           const result = await this.subscriptions.handleCancel(sub);
           return {
             ...base,

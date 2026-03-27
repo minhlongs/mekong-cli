@@ -16,7 +16,7 @@ export interface PaddleEvent {
   plan: string;
 }
 
-export interface PolarEvent {
+export interface NowPaymentsEvent {
   type: string;
   subscription: {
     id: string;
@@ -53,7 +53,7 @@ function tierFromPaddlePlan(plan: string): LicenseTier {
   return 'starter';
 }
 
-function tierFromPolarProduct(name: string | undefined, raw: string | undefined): LicenseTier {
+function tierFromNowPaymentsProduct(name: string | undefined, raw: string | undefined): LicenseTier {
   const src = (name ?? raw ?? '').toLowerCase();
   if (src.includes('enterprise')) return 'enterprise';
   if (src.includes('pro')) return 'pro';
@@ -63,7 +63,7 @@ function tierFromPolarProduct(name: string | undefined, raw: string | undefined)
 // --- Handler class ---
 
 /**
- * Handles inbound webhooks from Stripe, Paddle, and Polar.
+ * Handles inbound webhooks from Stripe, Paddle, and NOWPayments.
  * Generates a license key on successful payment/subscription events.
  */
 export class SalesWebhookHandler {
@@ -105,14 +105,14 @@ export class SalesWebhookHandler {
     }
   }
 
-  /** Polar: subscription.created → generate key */
-  handlePolarWebhook(payload: PolarEvent): WebhookResult {
+  /** NOWPayments: subscription.created → generate key */
+  handleNowPaymentsWebhook(payload: NowPaymentsEvent): WebhookResult {
     if (payload.type !== 'subscription.created') {
-      return { success: false, error: `Unhandled Polar event type: ${payload.type}` };
+      return { success: false, error: `Unhandled NOWPayments event type: ${payload.type}` };
     }
 
     try {
-      const tier = tierFromPolarProduct(
+      const tier = tierFromNowPaymentsProduct(
         payload.subscription.product?.name,
         payload.subscription.tier
       );

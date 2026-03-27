@@ -5,7 +5,7 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { handleAsync } from '../types/error'
 import { z } from 'zod'
 import * as dunning from '../raas/dunning'
-import { verifyPolarSignature } from '../raas/webhook-utils'
+import { verifyNowPaymentsSignature } from '../raas/webhook-utils'
 import { webhookSecurityHeaders } from '../middleware/security'
 
 type Variables = { tenant: Tenant }
@@ -16,16 +16,16 @@ raasRoutes.use('*', authMiddleware)
 const webhookRoutes = new Hono<{ Bindings: Bindings }>()
 webhookRoutes.use('/webhooks/*', webhookSecurityHeaders())
 
-// POST /webhooks/polar - Handle NOWPayments webhook events
-webhookRoutes.post('/polar', handleAsync(async (c) => {
+// POST /webhooks/nowpayments - Handle NOWPayments webhook events
+webhookRoutes.post('/nowpayments', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
   const body = await c.req.json()
-  const signature = c.req.header('X-Polar-Signature')
+  const signature = c.req.header('X-NOWPayments-Signature')
   const secret = c.env.NOWPAYMENTS_WEBHOOK_SECRET
 
   // Verify webhook signature
-  const isValid = await verifyPolarSignature(body, signature, secret)
+  const isValid = await verifyNowPaymentsSignature(body, signature, secret)
   if (!isValid) {
     return c.json({ error: 'Invalid signature' }, 401)
   }

@@ -49,7 +49,7 @@ export function rateLimitMiddleware(
 
 /**
  * Preset: Webhook rate limiting (strict - 10 req/min)
- * Use for Polar, MoMo, VNPAY, Zalo, Facebook webhooks
+ * Use for NOWPayments, MoMo, VNPAY, Zalo, Facebook webhooks
  */
 export const webhookRateLimit = () => rateLimitMiddleware('webhook', 10, 60000)
 

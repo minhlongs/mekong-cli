@@ -1,6 +1,6 @@
 /**
  * Payment types for NOWPayments webhook integration.
- * Migrated from Polar.sh to NOWPayments.
+ * NOWPayments webhook integration types.
  */
 import type { LicenseTier } from '../license/types.js';
 
@@ -29,7 +29,7 @@ export type SubscriptionState =
   | 'incomplete';
 
 /** NOWPayments product representation */
-export interface PolarProduct {
+export interface NowPaymentsProduct {
   id: string;
   name: string;
   description?: string;
@@ -40,7 +40,7 @@ export interface PolarProduct {
 }
 
 /** Checkout data in webhook payload */
-export interface PolarCheckout {
+export interface NowPaymentsCheckout {
   id: string;
   status: string;
   customer_email: string;
@@ -52,7 +52,7 @@ export interface PolarCheckout {
 }
 
 /** Subscription data in webhook payload */
-export interface PolarSubscription {
+export interface NowPaymentsSubscription {
   id: string;
   status: SubscriptionState;
   customer_id: string;
@@ -69,7 +69,7 @@ export interface WebhookPayload {
   type: WebhookEventType;
   id: string;
   created_at: string;
-  data: PolarCheckout | PolarSubscription | Record<string, unknown>;
+  data: NowPaymentsCheckout | NowPaymentsSubscription | Record<string, unknown>;
 }
 
 /** Processed webhook event record */

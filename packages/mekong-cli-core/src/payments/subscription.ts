@@ -10,7 +10,7 @@ import { ok, err } from '../types/common.js';
 import { LicenseAdmin } from '../license/admin.js';
 import { changeTier } from '../license/tier-manager.js';
 import type { LicenseTier, LicenseKey } from '../license/types.js';
-import type { PolarCheckout, PolarSubscription, WebhookEvent } from './types.js';
+import type { NowPaymentsCheckout, NowPaymentsSubscription, WebhookEvent } from './types.js';
 import { resolveTierFromProduct } from './types.js';
 
 const DEFAULT_REGISTRY = join(homedir(), '.mekong', 'admin', 'keys.json');
@@ -39,7 +39,7 @@ export class SubscriptionManager {
   /**
    * Handle checkout.completed — create a new license key for the customer.
    */
-  async handleCheckout(checkout: PolarCheckout): Promise<Result<LicenseKey, Error>> {
+  async handleCheckout(checkout: NowPaymentsCheckout): Promise<Result<LicenseKey, Error>> {
     const tier = resolveTierFromProduct(checkout.product_id);
     const owner = checkout.customer_email || checkout.customer_id || checkout.id;
     const expiryDays = parseInt(checkout.metadata?.['expiry_days'] ?? '0', 10) || DEFAULT_EXPIRY_DAYS;
@@ -54,7 +54,7 @@ export class SubscriptionManager {
    * Finds the most recent active key for this customer, applies tier change.
    */
   async handleUpdate(
-    subscription: PolarSubscription,
+    subscription: NowPaymentsSubscription,
     newProductId: string,
   ): Promise<Result<LicenseKey, Error>> {
     const newTier = resolveTierFromProduct(newProductId);
@@ -102,7 +102,7 @@ export class SubscriptionManager {
   /**
    * Handle subscription.canceled — revoke the customer's active license.
    */
-  async handleCancel(subscription: PolarSubscription): Promise<Result<void, Error>> {
+  async handleCancel(subscription: NowPaymentsSubscription): Promise<Result<void, Error>> {
     const owner = subscription.customer_email || subscription.customer_id;
 
     const listResult = await this.admin.listKeys();
@@ -127,7 +127,7 @@ export class SubscriptionManager {
 
   /**
    * Get subscription status for a customer (by email or ID).
-   * @param customerId - Polar customer email or ID
+   * @param customerId - NOWPayments customer email or ID
    * @returns latest active subscription record or null if none found
    */
   async getSubscription(customerId: string): Promise<Result<SubscriptionRecord | null, Error>> {
@@ -157,7 +157,7 @@ export class SubscriptionManager {
   /** Build a WebhookEvent record from a processed checkout */
   static buildCheckoutEvent(
     eventId: string,
-    checkout: PolarCheckout,
+    checkout: NowPaymentsCheckout,
     licenseKey?: LicenseKey,
     error?: string,
   ): WebhookEvent {

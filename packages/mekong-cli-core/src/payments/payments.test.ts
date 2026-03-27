@@ -19,7 +19,7 @@ import { WebhookHandler } from './webhook-handler.js';
 import { NowPaymentsClient, createNowPaymentsClientFromEnv } from './nowpayments-client.js';
 import { ConfigSchema } from '../types/config.js';
 import { DEFAULT_CONFIG } from '../config/defaults.js';
-import type { WebhookEvent, PolarCheckout, PolarSubscription } from './types.js';
+import type { WebhookEvent, NowPaymentsCheckout, NowPaymentsSubscription } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -268,7 +268,7 @@ describe('Phase 3 — subscription-manager', () => {
     );
   }
 
-  function makeCheckout(overrides: Partial<PolarCheckout> = {}): PolarCheckout {
+  function makeCheckout(overrides: Partial<NowPaymentsCheckout> = {}): NowPaymentsCheckout {
     return {
       id: 'chk_001',
       status: 'succeeded',
@@ -281,7 +281,7 @@ describe('Phase 3 — subscription-manager', () => {
     };
   }
 
-  function makeSub(overrides: Partial<PolarSubscription> = {}): PolarSubscription {
+  function makeSub(overrides: Partial<NowPaymentsSubscription> = {}): NowPaymentsSubscription {
     return {
       id: 'sub_001',
       status: 'active',

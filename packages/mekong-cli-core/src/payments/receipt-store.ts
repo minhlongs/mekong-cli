@@ -49,7 +49,7 @@ export class ReceiptStore {
 
   /**
    * Query events by customer ID.
-   * @param customerId - Polar customer ID or email
+   * @param customerId - NOWPayments customer ID or email
    */
   async findByCustomer(customerId: string): Promise<Result<WebhookEvent[], Error>> {
     const all = await this.readAll();

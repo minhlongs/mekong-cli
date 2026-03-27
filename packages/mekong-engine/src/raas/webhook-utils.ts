@@ -2,18 +2,18 @@
  * Verify NOWPayments webhook signature using HMAC-SHA256
  *
  * @param body - Parsed webhook request body
- * @param signature - X-Polar-Signature header value
+ * @param signature - X-NOWPayments-Signature header value
  * @param secret - NOWPAYMENTS_WEBHOOK_SECRET environment variable
  * @returns true if signature is valid
  */
-export async function verifyPolarSignature(
+export async function verifyNowPaymentsSignature(
   body: unknown,
   signature: string | undefined,
   secret: string | undefined,
 ): Promise<boolean> {
   if (!signature || !secret) return false
 
-  // Polar signature format: "v1=<hmac>"
+  // NOWPayments signature format: "v1=<hmac>"
   const parts = signature.split(',')
   const timestampPart = parts.find(p => p.startsWith('t='))
   const signaturePart = parts.find(p => p.startsWith('v1='))

@@ -1,7 +1,7 @@
 /**
  * WebhookVerifier — verify NOWPayments webhook signatures.
  * NOWPayments uses HMAC-SHA256 on raw body with webhook secret.
- * Migrated from Polar.sh to NOWPayments.
+ * NOWPayments webhook signature verification.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Result } from '../types/common.js';
@@ -41,7 +41,7 @@ export function verifyWebhookSignature(opts: VerifyOptions): Result<void, Error>
   }
 
   // Standard Webhooks format: sign "msgId.msgTimestamp.body"
-  // Polar sends: NOWPayments-Signature-Id, NOWPayments-Timestamp
+  // NOWPayments sends: NOWPayments-Signature-Id, NOWPayments-Timestamp
   if (webhookId && timestamp) {
     return verifyStandardWebhooks({ rawBody, signature, secret, maxAgeSeconds, webhookId, timestamp });
   }

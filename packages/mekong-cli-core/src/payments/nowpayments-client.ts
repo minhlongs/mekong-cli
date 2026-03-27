@@ -1,18 +1,17 @@
 /**
- * NOWPaymentsClient — NOWPayments API client using native fetch.
+ * NowPaymentsClient — NOWPayments API client using native fetch.
  * Supports checkSubscription, listProducts with retry + backoff.
- * Migrated from Polar.sh to NOWPayments.
  */
 import type { Result } from '../types/common.js';
 import { ok, err } from '../types/common.js';
-import type { PolarProduct, PolarSubscription } from './types.js';
+import type { NowPaymentsProduct, NowPaymentsSubscription } from './types.js';
 
 const NOWPAYMENTS_API_BASE = 'https://api.nowpayments.io';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 500;
 
-export interface PolarClientOptions {
+export interface NowPaymentsClientOptions {
   apiKey: string;
   baseUrl?: string;
   timeoutMs?: number;
@@ -22,16 +21,16 @@ export interface PolarClientOptions {
 export interface SubscriptionCheckResult {
   customerId: string;
   active: boolean;
-  subscription?: PolarSubscription;
+  subscription?: NowPaymentsSubscription;
 }
 
-export class PolarClient {
+export class NowPaymentsClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
   private readonly maxRetries: number;
 
-  constructor(opts: PolarClientOptions) {
+  constructor(opts: NowPaymentsClientOptions) {
     this.apiKey = opts.apiKey;
     this.baseUrl = opts.baseUrl ?? NOWPAYMENTS_API_BASE;
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
@@ -40,12 +39,12 @@ export class PolarClient {
 
   /** Check if a customer has an active subscription */
   async checkSubscription(customerId: string): Promise<Result<SubscriptionCheckResult, Error>> {
-    const result = await this.fetchWithRetry<{ data: PolarSubscription[]; total: number }>(
+    const result = await this.fetchWithRetry<{ items: NowPaymentsSubscription[]; pagination: unknown }>(
       `/v1/subscriptions?customer_id=${encodeURIComponent(customerId)}&status=active`,
     );
     if (!result.ok) return result;
 
-    const items = result.value.data ?? [];
+    const items = result.value.items ?? [];
     const active = items.filter((s) => s.status === 'active');
 
     return ok({
@@ -56,20 +55,20 @@ export class PolarClient {
   }
 
   /** List all products */
-  async listProducts(): Promise<Result<PolarProduct[], Error>> {
-    const result = await this.fetchWithRetry<{ data: PolarProduct[] }>(
+  async listProducts(): Promise<Result<NowPaymentsProduct[], Error>> {
+    const result = await this.fetchWithRetry<{ items: NowPaymentsProduct[] }>(
       '/v1/currencies',
     );
     if (!result.ok) return result;
-    return ok(result.value.data ?? []);
+    return ok(result.value.items ?? []);
   }
 
   /**
    * Get a specific payment by ID.
    * @param subscriptionId - NOWPayments payment ID
    */
-  async getSubscription(subscriptionId: string): Promise<Result<PolarSubscription, Error>> {
-    return this.fetchWithRetry<PolarSubscription>(
+  async getSubscription(subscriptionId: string): Promise<Result<NowPaymentsSubscription, Error>> {
+    return this.fetchWithRetry<NowPaymentsSubscription>(
       `/v1/payment/${encodeURIComponent(subscriptionId)}`,
     );
   }
@@ -122,15 +121,15 @@ export class PolarClient {
 }
 
 /**
- * Create a PolarClient (NOWPayments backend) from environment variables.
+ * Create a NowPaymentsClient from environment variables.
  * @returns error if `NOWPAYMENTS_API_KEY` is not set
  */
-export function createPolarClientFromEnv(baseUrl?: string): Result<PolarClient, Error> {
+export function createNowPaymentsClientFromEnv(baseUrl?: string): Result<NowPaymentsClient, Error> {
   const apiKey = process.env['NOWPAYMENTS_API_KEY'];
   if (!apiKey) {
     return err(new Error('NOWPAYMENTS_API_KEY environment variable not set'));
   }
-  return ok(new PolarClient({ apiKey, baseUrl }));
+  return ok(new NowPaymentsClient({ apiKey, baseUrl }));
 }
 
 function sleep(ms: number): Promise<void> {

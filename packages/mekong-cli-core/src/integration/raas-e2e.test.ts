@@ -1,5 +1,5 @@
 /**
- * raas-e2e.test.ts — E2E integration tests for RaaS flow: CLI → Gateway → Polar
+ * raas-e2e.test.ts — E2E integration tests for RaaS flow: CLI → Gateway → NOWPayments
  * Tests: credential store, MekongClient factory, signup, mission submit, billing checkout
  */
 
@@ -194,7 +194,7 @@ describe('Billing Checkout Flow (mock fetch)', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('creates checkout and returns Polar checkout URL', async () => {
+  it('creates checkout and returns NOWPayments checkout URL', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({

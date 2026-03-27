@@ -5,7 +5,7 @@ export { SalesWebhookHandler } from './sales-integration.js';
 export type {
   StripeEvent,
   PaddleEvent,
-  PolarEvent,
+  NowPaymentsEvent,
   WebhookResult,
 } from './sales-integration.js';
 

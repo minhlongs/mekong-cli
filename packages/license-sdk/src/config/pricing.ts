@@ -8,7 +8,7 @@ export interface TierPricing {
   tier: LicenseTier;
   name: string;
   priceUsd: number;
-  polarProductId: string;
+  nowpaymentsProductId: string;
   features: string[];
   quotas: {
     commands: number;   // -1 = unlimited
@@ -30,55 +30,55 @@ export const PRICING_CONFIG: Record<string, BrandPricing> = {
   MEKONG: {
     brand: 'MEKONG',
     tiers: [
-      { tier: 'free',       name: 'Free',       priceUsd: 0,   polarProductId: '',               features: ['5 commands/day', 'Community forum'],                                           quotas: { commands: 5,    projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Starter',    priceUsd: 49,  polarProductId: 'mekong-starter',  features: ['200 MCU/mo', '3 projects', 'Email support'],                              quotas: { commands: 200,   projects: 3,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',        priceUsd: 149, polarProductId: 'mekong-pro',      features: ['1000 MCU/mo', '10 projects', 'Priority support', 'Analytics'],            quotas: { commands: 1000,  projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Enterprise', priceUsd: 499, polarProductId: 'mekong-enterprise', features: ['Unlimited MCU', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',       priceUsd: 0,   nowpaymentsProductId: '',               features: ['5 commands/day', 'Community forum'],                                           quotas: { commands: 5,    projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Starter',    priceUsd: 49,  nowpaymentsProductId: 'mekong-starter',  features: ['200 MCU/mo', '3 projects', 'Email support'],                              quotas: { commands: 200,   projects: 3,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',        priceUsd: 149, nowpaymentsProductId: 'mekong-pro',      features: ['1000 MCU/mo', '10 projects', 'Priority support', 'Analytics'],            quotas: { commands: 1000,  projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Enterprise', priceUsd: 499, nowpaymentsProductId: 'mekong-enterprise', features: ['Unlimited MCU', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
     ],
   },
   SOPHIA: {
     brand: 'SOPHIA',
     tiers: [
-      { tier: 'free',       name: 'Free',    priceUsd: 0,   polarProductId: '',              features: ['3 AI tasks/day', 'Community forum'],                                              quotas: { commands: 3,    projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Creator', priceUsd: 19,  polarProductId: 'sophia-creator', features: ['30 AI tasks/day', '2 projects', 'Email support'],                                quotas: { commands: 30,   projects: 2,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',     priceUsd: 49,  polarProductId: 'sophia-pro',     features: ['150 AI tasks/day', '5 projects', 'Priority support', 'Advanced models'],         quotas: { commands: 150,  projects: 5,  support: 'priority' } },
-      { tier: 'enterprise', name: 'Agency',  priceUsd: 149, polarProductId: 'sophia-agency',  features: ['Unlimited tasks', 'Unlimited projects', 'Dedicated support', 'White-label', 'SSO'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',    priceUsd: 0,   nowpaymentsProductId: '',              features: ['3 AI tasks/day', 'Community forum'],                                              quotas: { commands: 3,    projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Creator', priceUsd: 19,  nowpaymentsProductId: 'sophia-creator', features: ['30 AI tasks/day', '2 projects', 'Email support'],                                quotas: { commands: 30,   projects: 2,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',     priceUsd: 49,  nowpaymentsProductId: 'sophia-pro',     features: ['150 AI tasks/day', '5 projects', 'Priority support', 'Advanced models'],         quotas: { commands: 150,  projects: 5,  support: 'priority' } },
+      { tier: 'enterprise', name: 'Agency',  priceUsd: 149, nowpaymentsProductId: 'sophia-agency',  features: ['Unlimited tasks', 'Unlimited projects', 'Dedicated support', 'White-label', 'SSO'], quotas: { commands: -1, projects: -1, support: 'dedicated' } },
     ],
   },
   WELL: {
     brand: 'WELL',
     tiers: [
-      { tier: 'free',       name: 'Free',       priceUsd: 0,   polarProductId: '',              features: ['Basic tracking', 'Community forum'],                                              quotas: { commands: 10,   projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Growth',     priceUsd: 29,  polarProductId: 'well-growth',    features: ['Full tracking', '3 programs', 'Email support'],                                 quotas: { commands: 100,  projects: 3,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',        priceUsd: 79,  polarProductId: 'well-pro',       features: ['Advanced analytics', '10 programs', 'Priority support', 'AI insights'],         quotas: { commands: 500,  projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Enterprise', priceUsd: 199, polarProductId: 'well-enterprise', features: ['Unlimited programs', 'Custom integrations', 'Dedicated support', 'SSO'],        quotas: { commands: -1,   projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',       priceUsd: 0,   nowpaymentsProductId: '',              features: ['Basic tracking', 'Community forum'],                                              quotas: { commands: 10,   projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Growth',     priceUsd: 29,  nowpaymentsProductId: 'well-growth',    features: ['Full tracking', '3 programs', 'Email support'],                                 quotas: { commands: 100,  projects: 3,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',        priceUsd: 79,  nowpaymentsProductId: 'well-pro',       features: ['Advanced analytics', '10 programs', 'Priority support', 'AI insights'],         quotas: { commands: 500,  projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Enterprise', priceUsd: 199, nowpaymentsProductId: 'well-enterprise', features: ['Unlimited programs', 'Custom integrations', 'Dedicated support', 'SSO'],        quotas: { commands: -1,   projects: -1, support: 'dedicated' } },
     ],
   },
   ALGO: {
     brand: 'ALGO',
     tiers: [
-      { tier: 'free',       name: 'Free',    priceUsd: 0,   polarProductId: '',           features: ['Paper trading only', 'Community forum'],                                            quotas: { commands: 5,   projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Trader',  priceUsd: 49,  polarProductId: 'algo-trader', features: ['Live trading', '2 strategies', 'Email support'],                                   quotas: { commands: 50,  projects: 2,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',     priceUsd: 149, polarProductId: 'algo-pro',    features: ['10 strategies', 'Backtesting', 'Priority support', 'Risk management'],              quotas: { commands: 200, projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Quant',   priceUsd: 499, polarProductId: 'algo-quant',  features: ['Unlimited strategies', 'HFT support', 'Dedicated support', 'Custom connectors'],    quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',    priceUsd: 0,   nowpaymentsProductId: '',           features: ['Paper trading only', 'Community forum'],                                            quotas: { commands: 5,   projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Trader',  priceUsd: 49,  nowpaymentsProductId: 'algo-trader', features: ['Live trading', '2 strategies', 'Email support'],                                   quotas: { commands: 50,  projects: 2,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',     priceUsd: 149, nowpaymentsProductId: 'algo-pro',    features: ['10 strategies', 'Backtesting', 'Priority support', 'Risk management'],              quotas: { commands: 200, projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Quant',   priceUsd: 499, nowpaymentsProductId: 'algo-quant',  features: ['Unlimited strategies', 'HFT support', 'Dedicated support', 'Custom connectors'],    quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
     ],
   },
   APEX: {
     brand: 'APEX',
     tiers: [
-      { tier: 'free',       name: 'Free',       priceUsd: 0,   polarProductId: '',               features: ['Basic features', 'Community forum'],                                             quotas: { commands: 10,  projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Starter',    priceUsd: 39,  polarProductId: 'apex-starter',    features: ['Core features', '3 projects', 'Email support'],                                 quotas: { commands: 100, projects: 3,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',        priceUsd: 99,  polarProductId: 'apex-pro',        features: ['Advanced features', '10 projects', 'Priority support', 'Analytics'],             quotas: { commands: 500, projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Enterprise', priceUsd: 299, polarProductId: 'apex-enterprise', features: ['All features', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',       priceUsd: 0,   nowpaymentsProductId: '',               features: ['Basic features', 'Community forum'],                                             quotas: { commands: 10,  projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Starter',    priceUsd: 39,  nowpaymentsProductId: 'apex-starter',    features: ['Core features', '3 projects', 'Email support'],                                 quotas: { commands: 100, projects: 3,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',        priceUsd: 99,  nowpaymentsProductId: 'apex-pro',        features: ['Advanced features', '10 projects', 'Priority support', 'Analytics'],             quotas: { commands: 500, projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Enterprise', priceUsd: 299, nowpaymentsProductId: 'apex-enterprise', features: ['All features', 'Unlimited projects', 'Dedicated support', 'SSO', 'Audit logs'], quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
     ],
   },
   AGENCYOS: {
     brand: 'AGENCYOS',
     tiers: [
-      { tier: 'free',       name: 'Free',    priceUsd: 0,  polarProductId: '',           features: ['1 SDK', 'Community forum'],                                                          quotas: { commands: 5,   projects: 1,  support: 'community' } },
-      { tier: 'starter',    name: 'Builder', priceUsd: 19, polarProductId: 'sdk-builder', features: ['5 SDKs', '3 projects', 'Email support'],                                            quotas: { commands: 50,  projects: 3,  support: 'email' } },
-      { tier: 'pro',        name: 'Pro',     priceUsd: 49, polarProductId: 'sdk-pro',     features: ['Unlimited SDKs', '10 projects', 'Priority support', 'Custom branding'],              quotas: { commands: 200, projects: 10, support: 'priority' } },
-      { tier: 'enterprise', name: 'Agency',  priceUsd: 99, polarProductId: 'sdk-agency',  features: ['Unlimited everything', 'White-label', 'Dedicated support', 'SSO', 'Audit logs'],    quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
+      { tier: 'free',       name: 'Free',    priceUsd: 0,  nowpaymentsProductId: '',           features: ['1 SDK', 'Community forum'],                                                          quotas: { commands: 5,   projects: 1,  support: 'community' } },
+      { tier: 'starter',    name: 'Builder', priceUsd: 19, nowpaymentsProductId: 'sdk-builder', features: ['5 SDKs', '3 projects', 'Email support'],                                            quotas: { commands: 50,  projects: 3,  support: 'email' } },
+      { tier: 'pro',        name: 'Pro',     priceUsd: 49, nowpaymentsProductId: 'sdk-pro',     features: ['Unlimited SDKs', '10 projects', 'Priority support', 'Custom branding'],              quotas: { commands: 200, projects: 10, support: 'priority' } },
+      { tier: 'enterprise', name: 'Agency',  priceUsd: 99, nowpaymentsProductId: 'sdk-agency',  features: ['Unlimited everything', 'White-label', 'Dedicated support', 'SSO', 'Audit logs'],    quotas: { commands: -1,  projects: -1, support: 'dedicated' } },
     ],
   },
 };

@@ -12,7 +12,7 @@ import { homedir } from 'node:os';
 import type { Command } from 'commander';
 import { ReceiptStore } from '../../payments/receipt-store.js';
 import { WebhookHandler } from '../../payments/webhook-handler.js';
-import { createPolarClientFromEnv as createNowPaymentsClientFromEnv } from '../../payments/polar-client.js';
+import { createNowPaymentsClientFromEnv } from '../../payments/nowpayments-client.js';
 import { resolveTierFromProduct } from '../../payments/types.js';
 import type { WebhookEventType } from '../../payments/types.js';
 
