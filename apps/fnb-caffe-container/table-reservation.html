@@ -51,6 +51,12 @@
             --coffee-accent: #C9A87C;
             --coffee-light: #F5E6D3;
             --coffee-dark: #3B2F2F;
+
+            /* Table status colors */
+            --table-available: #22c55e;
+            --table-occupied: #ef4444;
+            --table-reserved: #eab308;
+            --table-maintenance: #6b7280;
         }
 
         .reservation-page {
@@ -351,6 +357,362 @@
             font-size: 0.95rem;
         }
 
+        /* Table Grid Styles */
+        .table-grid-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid var(--coffee-light);
+        }
+
+        .table-grid-section h3 {
+            font-family: 'Space Grotesk', serif;
+            color: var(--coffee-dark);
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .table-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        #tableGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .table-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .table-card:focus {
+            outline: 2px solid var(--coffee-primary);
+            outline-offset: 2px;
+        }
+
+        .table-card.available { border-color: var(--table-available); }
+        .table-card.occupied { border-color: var(--table-occupied); }
+        .table-card.reserved { border-color: var(--table-reserved); }
+        .table-card.maintenance { border-color: var(--table-maintenance); }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .table-id {
+            font-family: 'Space Grotesk', serif;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--coffee-dark);
+        }
+
+        .table-seats {
+            font-size: 0.85rem;
+            color: #666;
+            background: var(--coffee-light);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .table-body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .table-status {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+            text-align: center;
+        }
+
+        .table-guests,
+        .table-timer {
+            font-size: 0.85rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .table-timer {
+            color: var(--table-occupied);
+            font-weight: 600;
+        }
+
+        .table-timer .timer-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--table-occupied);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .table-reserve-countdown {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--table-reserved);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Stats */
+        #tableStats {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--coffee-light);
+        }
+
+        .stat-card.available { background: rgba(34, 197, 94, 0.2); }
+        .stat-card.occupied { background: rgba(239, 68, 68, 0.2); }
+        .stat-card.reserved { background: rgba(234, 179, 8, 0.2); }
+        .stat-card.maintenance { background: rgba(107, 114, 128, 0.2); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Space Grotesk', serif;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        /* Modal Styles */
+        .table-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-modal.open {
+            display: flex;
+        }
+
+        .table-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .table-modal-content {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .table-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--coffee-light);
+        }
+
+        .table-modal-header h3 {
+            font-family: 'Space Grotesk', serif;
+            color: var(--coffee-dark);
+            margin: 0;
+        }
+
+        .table-modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .table-modal-close:hover {
+            color: var(--coffee-dark);
+        }
+
+        .table-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .table-info {
+            background: var(--coffee-light);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .table-info p {
+            margin: 8px 0;
+            color: var(--coffee-dark);
+        }
+
+        .table-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .table-action-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .table-action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .table-action-btn.btn-success {
+            background: var(--table-available);
+            color: white;
+        }
+
+        .table-action-btn.btn-warning {
+            background: var(--table-reserved);
+            color: white;
+        }
+
+        .table-action-btn.btn-danger {
+            background: var(--table-occupied);
+            color: white;
+        }
+
+        .table-action-btn.btn-primary {
+            background: var(--coffee-primary);
+            color: white;
+        }
+
+        .table-action-btn.btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .table-action-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .guests-input {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .guests-input label {
+            font-weight: 500;
+            color: var(--coffee-dark);
+        }
+
+        .guests-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .success-message {
             display: none;
             background: #e8f5e9;
@@ -566,6 +928,47 @@
                     <p>Hotline: 0901 234 567<br>Email: contact@fnbcontainer.vn</p>
                 </div>
             </div>
+
+            <!-- Table Grid Section -->
+            <div class="table-grid-section" role="region" aria-label="Sơ đồ bàn">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3>📊 Sơ Đồ Bàn Ăn</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="window.tableManager?.getReport()" class="table-action-btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
+                            📈 Xem báo cáo
+                        </button>
+                        <button onclick="window.tableManager?.exportReport()" class="table-action-btn btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">
+                            💾 Xuất báo cáo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="table-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--table-available)"></div>
+                        <span>Bàn trống</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--table-occupied)"></div>
+                        <span>Đang phục vụ</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--table-reserved)"></div>
+                        <span>Đã đặt</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--table-maintenance)"></div>
+                        <span>Bảo trì</span>
+                    </div>
+                </div>
+
+                <!-- Table Grid -->
+                <div id="tableGrid" role="grid" aria-label="Sơ đồ bàn ăn"></div>
+
+                <!-- Stats -->
+                <div id="tableStats"></div>
+            </div>
         </main>
     </div>
 
@@ -699,6 +1102,7 @@
         dateInput.addEventListener('change', updateAvailability);
         updateAvailability();
     </script>
+    <script type="module" src="js/table-manager.js" defer></script>
     <script type="module" src="js/theme.min.js" defer></script>
 </body>
 </html>

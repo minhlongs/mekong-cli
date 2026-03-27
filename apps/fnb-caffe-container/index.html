@@ -172,7 +172,10 @@
                     </defs>
                 </svg>
             </a>
-            <span class="m3-top-app-bar__title">F&amp;B CONTAINER</span>
+            <div style="display: flex; flex-direction: column;">
+                <span class="m3-top-app-bar__title">F&amp;B CONTAINER</span>
+                <span id="currentBranchName" style="font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant, #777); font-weight: 400; margin-top: 2px;"></span>
+            </div>
         </div>
         <nav class="nav-desktop" role="navigation" aria-label="Chính">
             <a href="index.html" data-i18n="nav.home">Trang Chủ</a>
@@ -184,6 +187,12 @@
             <a href="portal/" data-i18n="nav.portal">Portal</a>
         </nav>
         <div class="m3-top-app-bar__trailing">
+            <!-- Branch Switcher -->
+            <select id="branchSwitcher" onchange="branchManager.switchTo(this.value)"
+                style="padding: 6px 12px; border: 1px solid var(--md-sys-color-outline, #e0e0e0); border-radius: 8px; font-size: 0.85rem; background: var(--md-sys-color-surface, white); cursor: pointer; min-width: 180px; color: var(--md-sys-color-on-surface, #333);"
+                title="Chọn chi nhánh">
+                <option value="">Đang tải...</option>
+            </select>
             <button type="button" id="language-switcher" class="m3-chip" data-i18n="lang.switch" aria-label="Chuyển đổi ngôn ngữ">🌐 EN</button>
             <button class="m3-icon-button theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                 <span class="theme-icon" aria-hidden="true">🌙</span>
@@ -856,6 +865,137 @@
     <script src="js/ui-enhancements.min.js" defer></script>
     <script src="js/churn-prevention.js" defer></script>
     <script type="module" src="js/theme.min.js" defer></script>
+
+    <!-- Branch Manager Script -->
+    <script>
+    // Branch Management Module for Frontend
+    const branchManager = {
+        STORAGE_KEY: 'fnb_branches',
+        CURRENT_BRANCH_KEY: 'fnb_current_branch_id',
+
+        init() {
+            this.loadBranches();
+            this.displayBranch();
+            this.listenToChanges();
+        },
+
+        loadBranches() {
+            const stored = localStorage.getItem(this.STORAGE_KEY);
+            let branches = [];
+
+            if (stored) {
+                branches = JSON.parse(stored);
+            } else {
+                // Default branch
+                branches = [{
+                    id: 'default',
+                    name: 'F&B Container - Sa Đéc',
+                    address: '91 Hùng Vương, Phường Tân Phú Đông, Sa Đéc, Đồng Tháp',
+                    phone: '0901234567',
+                    email: 'hello@fnbcontainer.vn',
+                    openingHours: '07:00-22:00',
+                    status: 'active',
+                    notes: 'Chi nhánh chính'
+                }];
+            }
+
+            const switcher = document.getElementById('branchSwitcher');
+            if (!switcher) return;
+
+            const currentId = localStorage.getItem(this.CURRENT_BRANCH_KEY) || branches[0]?.id;
+
+            switcher.innerHTML = branches
+                .filter(b => b.status === 'active')
+                .map(b => `<option value="${b.id}" ${b.id === currentId ? 'selected' : ''}>${this.escapeHtml(b.name)}</option>`)
+                .join('');
+        },
+
+        displayBranch() {
+            const stored = localStorage.getItem(this.STORAGE_KEY);
+            if (!stored) return;
+
+            const branches = JSON.parse(stored);
+            const currentId = localStorage.getItem(this.CURRENT_BRANCH_KEY) || branches[0]?.id;
+            const branch = branches.find(b => b.id === currentId);
+
+            const branchEl = document.getElementById('currentBranchName');
+            if (branch && branchEl) {
+                branchEl.textContent = branch.name;
+                branchEl.title = branch.address + ' | ' + branch.openingHours;
+            }
+        },
+
+        switchTo(branchId) {
+            if (!branchId) return;
+
+            localStorage.setItem(this.CURRENT_BRANCH_KEY, branchId);
+            this.displayBranch();
+            this.loadBranches();
+
+            // Dispatch event for other components
+            window.dispatchEvent(new CustomEvent('branch-changed', { detail: { branchId } }));
+
+            // Show toast
+            this.showToast('Đã chuyển chi nhánh!');
+        },
+
+        listenToChanges() {
+            window.addEventListener('storage', () => {
+                this.loadBranches();
+                this.displayBranch();
+            });
+        },
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        },
+
+        showToast(message) {
+            const existing = document.querySelector('.toast-notification');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.innerHTML = `
+                <span class="material-symbols-outlined" style="margin-right: 8px;">check_circle</span>
+                ${message}
+            `;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #323232;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 24px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.9rem;
+                z-index: 10000;
+                animation: slideUp 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideDown 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    };
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => branchManager.init());
+    } else {
+        branchManager.init();
+    }
+    </script>
 
     <!-- PWA Service Worker Registration & Install Prompt -->
     <script>

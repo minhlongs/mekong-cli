@@ -621,6 +621,10 @@
                     <span class="material-symbols-outlined">inventory_2</span>
                     Tồn kho
                 </a>
+                <a href="branches.html" class="nav-item">
+                    <span class="material-symbols-outlined">store</span>
+                    Chi nhánh
+                </a>
                 <a href="#settings" class="nav-item">
                     <span class="material-symbols-outlined">settings</span>
                     Cài đặt
@@ -645,8 +649,19 @@
         <!-- Main Content -->
         <main class="admin-main">
             <header class="admin-header">
-                <h1>Dashboard</h1>
+                <div>
+                    <h1>Dashboard</h1>
+                    <span id="currentBranchName" style="font-size: 0.85rem; color: #666; margin-top: 4px; display: block;"></span>
+                </div>
                 <div class="header-actions">
+                    <!-- Branch Switcher -->
+                    <select id="branchSwitcher" onchange="branchManager.switchTo(this.value)" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; background: white; cursor: pointer; min-width: 200px;">
+                        <option value="">Đang tải...</option>
+                    </select>
+                    <a href="branches.html" class="filter-btn active" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">store</span>
+                        Quản lý
+                    </a>
                     <md-icon-button onclick="admin.refreshData()" title="Làm mới (F5)">
                         <span class="material-symbols-outlined">refresh</span>
                     </md-icon-button>
@@ -978,5 +993,8 @@
             qrGenerator.init();
         }
     </script>
+
+    <!-- Branch Manager Script -->
+    <script src="js/branch-manager.js" defer></script>
 </body>
 </html>
