@@ -15,6 +15,7 @@
 import * as Cart from './cart.js';
 import * as Payment from './payment.js';
 import * as Validation from './validation.js';
+import * as ReceiptGenerator from './receipt-generator.js';
 
 // Config
 const API_BASE = 'http://localhost:8000/api';
@@ -304,11 +305,11 @@ function showSuccessModal(order) {
 /**
  * Open Print Receipt Window
  * Opens a new window with the print-friendly receipt
+ * Uses ReceiptGenerator module for enhanced receipt display
  */
 function openPrintReceipt(order) {
   try {
-    // Serialize order data to URL-safe string
-    const orderData = encodeURIComponent(JSON.stringify({
+    const orderData = {
       id: order.id,
       customer: order.customer,
       items: order.items || [],
@@ -317,26 +318,48 @@ function openPrintReceipt(order) {
       shipping_fee: order.shipping_fee || 0,
       total: order.total,
       payment_method: order.payment_method,
+      payment_status: order.payment_status || 'paid',
       status: order.status || 'paid',
       created_at: order.created_at || new Date().toISOString()
-    }));
+    };
 
-    // Open receipt in new window
-    const printWindow = window.open(
-      `receipt-template.html?order=${orderData}`,
-      'print-receipt',
-      'width=400,height=600,scrollbars=yes,resizable=yes'
-    );
-
-    if (!printWindow) {
-      console.warn('Popup blocked - user may need to allow popups for this site');
-      // Fallback: open in same window
-      window.location.href = `receipt-template.html?order=${orderData}`;
-    }
+    // Use ReceiptGenerator for enhanced receipt
+    ReceiptGenerator.openReceipt(orderData);
   } catch (error) {
     console.error('Error opening print receipt:', error);
+    Cart.showToast('⚠️ Không thể mở hóa đơn', 'error');
   }
 }
+
+/**
+ * Download Receipt
+ * Downloads receipt as HTML file
+ */
+function downloadReceipt(order) {
+  try {
+    const orderData = {
+      id: order.id,
+      customer: order.customer,
+      items: order.items || [],
+      subtotal: order.subtotal || cart.total || 0,
+      discount: order.discount || discount.amount || 0,
+      shipping_fee: order.shipping_fee || 0,
+      total: order.total,
+      payment_method: order.payment_method,
+      payment_status: order.payment_status || 'paid',
+      created_at: order.created_at || new Date().toISOString()
+    };
+
+    ReceiptGenerator.downloadReceipt(orderData);
+    Cart.showToast('✅ Đã tải hóa đơn', 'success');
+  } catch (error) {
+    console.error('Error downloading receipt:', error);
+    Cart.showToast('⚠️ Không thể tải hóa đơn', 'error');
+  }
+}
+
+// Export for global access
+window.downloadReceipt = downloadReceipt;
 
 // Export for global access
 window.openPrintReceipt = openPrintReceipt;
@@ -355,6 +378,7 @@ async function handleCODSuccess(order) {
 
 /**
  * Handle Payment Methods
+ * Enhanced with Stripe-compatible payment intent flow
  */
 async function handlePayment(order, method) {
   const savePending = () => localStorage.setItem('pendingOrder', JSON.stringify(order));
@@ -363,43 +387,155 @@ async function handlePayment(order, method) {
   case 'cod':
     await handleCODSuccess(order);
     break;
+
+  case 'stripe':
   case 'momo':
-  case 'vnpay': {
-    try {
-      const response = await fetch(`${API_BASE}/payment/create-url?order_id=${order.id}&payment_method=${method}&amount=${order.total}`);
-      const result = await response.json();
-      if (result.success && result.payment_url) {
-        savePending();
-        sendOrderToWebSocket(order);
-        window.location.href = result.payment_url;
-      } else {
-        throw new Error('Không thể tạo liên kết thanh toán');
-      }
-    } catch (_) {
-      window.paymentQR.handlePayment(order, method);
-    }
-    break;
-  }
+  case 'vnpay':
   case 'payos': {
     try {
-      const response = await fetch(`${API_BASE}/payment/create-url?order_id=${order.id}&payment_method=${method}&amount=${order.total}`);
+      // Use POST instead of GET for payment intent creation
+      const response = await fetch(`${API_BASE}/payment/create-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: order.id,
+          payment_method: method,
+          amount: order.total,
+          return_url: window.location.origin + '/success.html'
+        })
+      });
+
       const result = await response.json();
+
       if (result.success && result.payment_url) {
+        // Store payment intent info for polling
+        localStorage.setItem('pendingPayment', JSON.stringify({
+          order_id: order.id,
+          payment_intent_id: result.payment_intent_id,
+          transaction_id: result.transaction_id,
+          method: method,
+          amount: order.total,
+          created_at: Date.now()
+        }));
+
         savePending();
         sendOrderToWebSocket(order);
-        window.location.href = result.payment_url;
+
+        // For Stripe-like flow, redirect to payment URL
+        if (method === 'stripe') {
+          // Open payment in same window
+          window.location.href = result.payment_url;
+        } else {
+          // For MoMo/VNPay/PayOS, redirect to gateway
+          window.location.href = result.payment_url;
+        }
       } else {
-        throw new Error('Không thể tạo liên kết thanh toán PayOS');
+        throw new Error(result.error || 'Không thể tạo liên kết thanh toán');
       }
-    } catch (_) {
-      await handleCODSuccess(order);
+    } catch (error) {
+      console.error('[Checkout] Payment creation error:', error);
+      // Fallback to QR code for MoMo/VNPay
+      if (method === 'momo' || method === 'vnpay') {
+        window.paymentQR.handlePayment(order, method);
+      } else if (method === 'payos' || method === 'stripe') {
+        // Fallback to COD for PayOS/Stripe errors
+        Cart.showToast('⚠️ Thanh toán lỗi, chuyển sang COD', 'error');
+        await handleCODSuccess(order);
+      }
     }
     break;
   }
+
   default:
     Cart.showToast('Phương thức thanh toán không hợp lệ', 'error');
   }
 }
+
+/**
+ * Check Payment Status (for polling after payment)
+ * @param {string} orderId - Order ID to check
+ * @param {Function} onSuccess - Callback when payment succeeds
+ * @param {Function} onPending - Callback when payment is pending
+ * @param {Function} onFailed - Callback when payment fails
+ */
+export async function checkPaymentStatus(orderId, onSuccess, onPending, onFailed) {
+  try {
+    const response = await fetch(`${API_BASE}/payment/status/${orderId}`);
+    const result = await response.json();
+
+    if (result.success && result.payment) {
+      const status = result.payment.status;
+
+      if (status === 'completed') {
+        if (onSuccess) { onSuccess(result); }
+        return { success: true, status: 'completed', payment: result.payment };
+      } else if (status === 'failed') {
+        if (onFailed) { onFailed(result); }
+        return { success: false, status: 'failed', payment: result.payment };
+      } else {
+        if (onPending) { onPending(result); }
+        return { success: true, status: status || 'pending', payment: result.payment };
+      }
+    }
+
+    return { success: false, status: 'unknown' };
+  } catch (error) {
+    console.error('[Checkout] Payment status check error:', error);
+    return { success: false, error: error.message, status: 'error' };
+  }
+}
+
+/**
+ * Poll Payment Status
+ * Polls every 3 seconds until payment is completed or failed
+ * @param {string} orderId - Order ID to poll
+ * @param {number} maxAttempts - Maximum number of poll attempts
+ * @param {number} interval - Poll interval in ms
+ */
+export async function pollPaymentStatus(orderId, maxAttempts = 20, interval = 3000) {
+  let attempts = 0;
+
+  return new Promise((resolve) => {
+    const poll = async () => {
+      attempts++;
+
+      const result = await checkPaymentStatus(orderId,
+        // onSuccess
+        (paymentResult) => {
+          console.log('[Checkout] Payment completed:', paymentResult);
+          resolve({ success: true, status: 'completed', payment: paymentResult.payment });
+        },
+        // onPending
+        (paymentResult) => {
+          console.log('[Checkout] Payment still pending:', paymentResult);
+        },
+        // onFailed
+        (paymentResult) => {
+          console.log('[Checkout] Payment failed:', paymentResult);
+          resolve({ success: false, status: 'failed', payment: paymentResult.payment });
+        }
+      );
+
+      if (result.status === 'completed' || result.status === 'failed') {
+        // Already resolved
+        return;
+      }
+
+      if (attempts >= maxAttempts) {
+        resolve({ success: false, status: 'timeout', error: 'Payment check timeout' });
+        return;
+      }
+
+      setTimeout(poll, interval);
+    };
+
+    poll();
+  });
+}
+
+// Export for global access
+window.checkPaymentStatus = checkPaymentStatus;
+window.pollPaymentStatus = pollPaymentStatus;
 
 /**
  * Initialize Submit Order

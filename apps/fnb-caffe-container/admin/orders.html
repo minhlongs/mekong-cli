@@ -353,6 +353,12 @@ Nhập số hành động:`);
         // Auto refresh every 30 seconds
         setInterval(() => loadOrders(currentFilter), 30000);
 
+    <!-- Auth Protection -->
+    <script type="module">
+        import { protectAdminPage } from '../js/auth.js';
+        protectAdminPage();
+    </script>
+
     <script type="module" src="js/theme.min.js" defer></script>
     <script src="js/branch-manager.js" defer></script>
 </body>

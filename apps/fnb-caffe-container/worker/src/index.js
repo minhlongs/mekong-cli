@@ -2,14 +2,27 @@
  * F&B Caffe Container - Cloudflare Worker
  * Main entry point - Routes dispatcher
  *
- * RATE LIMITING:
- * - API endpoints should implement rate limiting via Cloudflare's built-in Rate Limiting
- * - Recommended limits: 100 req/min per IP for general endpoints, 10 req/min for write operations
- * - Configure in Cloudflare Dashboard: Rules > Rate Limiting
- * - For custom rate limiting, use Cloudflare Workers KV to track request counts per IP
+ * Enhanced with:
+ * - CORS headers với whitelist support
+ * - Rate limiting (100 req/min per IP cho GET, 10 req/min cho write ops)
+ * - Error handling với proper HTTP status codes
+ * - Health check endpoint GET /api/health
+ *
+ * Rate Limiting:
+ * - General endpoints: 100 requests/phút
+ * - Write operations (POST/PUT/PATCH/DELETE): 10 requests/phút
+ * - Exempt paths: /api/health
  */
 
-import { corsHeaders, errorResponse } from './middleware/cors.js';
+import { corsHeaders } from './middleware/cors.js';
+import { rateLimiter, getRateLimitHeaders } from './middleware/rate-limiter.js';
+import {
+  errorResponse,
+  successResponse,
+  badRequest,
+  notFound,
+  internalError,
+} from './middleware/error-handler.js';
 import { getMenu, getMenuItem } from './routes/menu.js';
 import {
   createOrder,
@@ -49,6 +62,7 @@ import {
   sendOrderConfirmation,
   sendReservationConfirmation,
 } from './routes/notifications.js';
+import { getHealthStatus } from './routes/health.js';
 import {
   getStaff,
   getStaffById,
@@ -66,6 +80,12 @@ import {
   updateInventory,
   resolveAlert,
 } from './routes/inventory.js';
+import {
+  createPaymentIntent,
+  handleWebhook,
+  getPaymentStatus,
+  getPaymentIntent,
+} from './routes/payments.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
@@ -75,16 +95,33 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+    const origin = request.headers.get('Origin') || '*';
 
     // Handle CORS preflight
     if (method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(),
+        headers: corsHeaders(origin, true), // Use whitelist mode
       });
     }
 
     try {
+      // Health Check Endpoint (exempt from rate limiting)
+      if (path === '/api/health' && method === 'GET') {
+        return getHealthStatus(request, env);
+      }
+
+      // Rate Limiting Middleware
+      const rateLimitResult = await rateLimiter(request, env);
+      if (!rateLimitResult.allowed) {
+        return rateLimitResult.response;
+      }
+
+      // Store rate limit info for response headers
+      const rateLimitHeaders = rateLimitResult.limitInfo
+        ? getRateLimitHeaders(rateLimitResult.limitInfo)
+        : {};
+
       // Route matching
       // GET /api/menu
       if (path === '/api/menu' && method === 'GET') {
@@ -312,12 +349,35 @@ export default {
         return updateInventory(request, env, id);
       }
 
+      // Payment Routes
+      // POST /api/payment/create-url
+      if (path === '/api/payment/create-url' && method === 'POST') {
+        return createPaymentIntent(request, env);
+      }
+
+      // POST /api/payment/webhook
+      if (path === '/api/payment/webhook' && method === 'POST') {
+        return handleWebhook(request, env);
+      }
+
+      // GET /api/payment/status/:orderId
+      if (path.match(/^\/api\/payment\/status\/[^/]+$/) && method === 'GET') {
+        const orderId = path.split('/')[4];
+        return getPaymentStatus(request, env, orderId);
+      }
+
+      // GET /api/payment/intent/:paymentIntentId
+      if (path.match(/^\/api\/payment\/intent\/[^/]+$/) && method === 'GET') {
+        const paymentIntentId = path.split('/')[4];
+        return getPaymentIntent(request, env, paymentIntentId);
+      }
+
       // 404 for unmatched routes
-      return errorResponse('Not Found', 404);
+      return notFound('Endpoint not found');
 
     } catch (error) {
       if (DEBUG) {console.error('Worker error:', error);}
-      return errorResponse('Internal Server Error: ' + error.message, 500);
+      return internalError(error.message, DEBUG);
     }
   },
 };

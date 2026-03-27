@@ -4,8 +4,8 @@
 
 **Target:** 500 đơn/ngày | 50M VND/tháng
 
-[![Build Passing](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/huuthongdongthap/sadec-marketing-hub/actions)
-[![Tests Passing](https://img.shields.io/badge/tests-passing-brightgreen)](https://github.com/huuthongdongthap/sadec-marketing-hub/actions)
+[![CI/CD](https://github.com/huuthongdongthap/sadec-marketing-hub/actions/workflows/deploy.yml/badge.svg)](https://github.com/huuthongdongthap/sadec-marketing-hub/actions/workflows/deploy.yml)
+[![Tests](https://github.com/huuthongdongthap/sadec-marketing-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/huuthongdongthap/sadec-marketing-hub/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
