@@ -331,11 +331,44 @@
     </style>
 </head>
 <body>
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
     <!-- Theme Toggle -->
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
         <span class="theme-icon">🌙</span>
     </button>
 
+    <!-- Navigation -->
+    <nav class="navbar" role="banner" aria-label="Chính">
+        <div class="container">
+            <a href="index.html" class="nav-brand">
+                <svg class="brand-logo" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusInfo="false">
+                    <rect x="4" y="8" width="32" height="24" rx="3" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
+                    <rect x="8" y="12" width="10" height="8" rx="1" fill="url(#brandGrad)"/>
+                    <defs>
+                        <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00e5ff"/>
+                            <stop offset="100%" style="stop-color:#ff00ff"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>F&B CONTAINER</span>
+            </a>
+            <ul class="nav-links" role="list">
+                <li role="listitem"><a href="index.html">Trang Chủ</a></li>
+                <li role="listitem"><a href="menu.html">Menu</a></li>
+                <li role="listitem"><a href="checkout.html">Đặt Hàng</a></li>
+                <li role="listitem"><a href="about-us.html">Về Chúng Tôi</a></li>
+                <li role="listitem"><a href="loyalty.html">Tích Điểm</a></li>
+                <li role="listitem"><a href="contact.html">Liên Hệ</a></li>
+                <li role="listitem"><a href="portal/">Portal</a></li>
+            </ul>
+            <a href="checkout.html" class="btn-secondary nav-btn">← Quay Lại</a>
+        </div>
+    </nav>
+
+    <main id="main-content">
     <div class="failure-page">
         <div class="failure-card">
             <div class="failure-icon">❌</div>
@@ -457,6 +490,8 @@
             }
         }
     </script>
+
+    </main>
 
     <!-- Theme Toggle -->
     <script type="module" src="js/theme.min.js" defer></script>

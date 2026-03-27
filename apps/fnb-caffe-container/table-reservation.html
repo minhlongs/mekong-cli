@@ -59,6 +59,57 @@
             padding-top: 80px;
         }
 
+        /* Global Navigation */
+        .global-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(26, 22, 18, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .global-nav .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .global-nav .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .global-nav .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .global-nav .nav-links a:hover {
+            color: var(--warm-amber);
+        }
+
+        @media (max-width: 768px) {
+            .global-nav .nav-links {
+                display: none;
+            }
+        }
+
         .reservation-header {
             background: linear-gradient(135deg, var(--coffee-primary), var(--coffee-dark));
             padding: 60px 20px;
@@ -373,6 +424,24 @@
 <body>
     <!-- Skip Navigation Link -->
     <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
+
+    <!-- Global Navigation -->
+    <nav class="global-nav" role="banner" aria-label="Chính">
+        <a href="index.html" class="nav-brand">
+            <span class="material-symbols-outlined">local_cafe</span>
+            F&B Container
+        </a>
+        <ul class="nav-links" role="list">
+            <li role="listitem"><a href="index.html">Trang Chủ</a></li>
+            <li role="listitem"><a href="menu.html">Menu</a></li>
+            <li role="listitem"><a href="checkout.html">Đặt Hàng</a></li>
+            <li role="listitem"><a href="about-us.html">Về Chúng Tôi</a></li>
+            <li role="listitem"><a href="loyalty.html">Tích Điểm</a></li>
+            <li role="listitem"><a href="contact.html">Liên Hệ</a></li>
+            <li role="listitem"><a href="portal/">Portal</a></li>
+        </ul>
+        <a href="tel:0901234567" class="btn-order">📞 Đặt Bàn</a>
+    </nav>
 
     <div class="reservation-page">
         <!-- Header -->
