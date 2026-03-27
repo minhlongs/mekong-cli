@@ -1,27 +1,122 @@
 ---
+// NOTE: This file conflicts with src/pages/blog/index.astro for the /blog route.
+// Astro uses this file (blog.astro) over the directory (blog/index.astro).
+// Content is intentionally kept here as the actual blog page.
+// To remove conflict: delete this file when Astro enforces hard errors.
 import BaseLayout from '../layouts/base-layout.astro';
+
+const articles = [
+  {
+    slug: 'automate-business-with-ai',
+    title: 'Tự Động Hóa Kinh Doanh với AI Agent',
+    desc: 'Cách AI agent tự động hóa toàn bộ quy trình kinh doanh từ đầu đến cuối — từ trả lời khách đến tạo content.',
+    tag: 'Automation',
+    date: '2026-02-15',
+  },
+  {
+    slug: 'how-i-built-ai-agent-342-commands',
+    title: 'Tôi Xây Dựng AI Agent với 342 Lệnh Như Thế Nào',
+    desc: 'Hành trình xây dựng Mekong CLI — nền tảng AI agent với 342+ lệnh cho mọi tầng doanh nghiệp.',
+    tag: 'Story',
+    date: '2026-02-01',
+  },
+  {
+    slug: 'raas-vs-saas',
+    title: 'RaaS vs SaaS: Mô Hình Nào Phù Hợp 2026?',
+    desc: 'So sánh Robot as a Service và Software as a Service — tại sao RaaS đang thay thế SaaS truyền thống.',
+    tag: 'Business',
+    date: '2026-01-20',
+  },
+  {
+    slug: 'solo-dev-to-10k-mrr',
+    title: 'Solo Dev đến $10K MRR Không Có Nhân Viên',
+    desc: 'Bài học thực tế từ hành trình một mình xây dựng SaaS đến $10K Monthly Recurring Revenue.',
+    tag: 'Founder',
+    date: '2026-01-10',
+  },
+];
 ---
 
-<BaseLayout title="Blog — OpenClaw" description="Tin tức, hướng dẫn và cập nhật mới nhất từ OpenClaw." lang="vi">
+<BaseLayout
+  title="Blog — OpenClaw"
+  description="Tin tức, hướng dẫn và insights từ OpenClaw về AI agent, RaaS và tự động hóa doanh nghiệp."
+  lang="vi"
+  canonical="/blog"
+>
   <section style="background:linear-gradient(135deg,#0a0f1a,#0a1a30);padding:80px 0 56px;text-align:center;">
     <div class="container">
-      <h1 class="display animate-in">Blog</h1>
-      <p style="color:var(--md-on-surface-muted);max-width:520px;margin:0 auto;" class="animate-in">
-        Tin tức, hướng dẫn và cập nhật mới nhất từ OpenClaw.
+      <div class="badge animate-in" style="margin-bottom:16px;">Nhật ký Founder</div>
+      <h1 class="display animate-in"><span class="gradient-text">Blog</span></h1>
+      <p style="color:var(--md-on-surface-muted);max-width:520px;margin:16px auto 0;" class="animate-in">
+        Insights về AI agent, RaaS và tự động hóa doanh nghiệp từ đội ngũ OpenClaw.
       </p>
     </div>
   </section>
 
   <section style="background:var(--md-surface);padding:64px 0;">
-    <div class="container" style="max-width:720px;text-align:center;">
-      <div class="animate-on-scroll" style="padding:48px 32px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;">
-        <p style="font-size:3rem;margin:0 0 16px;">📝</p>
-        <h2 style="font-size:1.25rem;font-weight:700;color:var(--md-on-surface);margin:0 0 12px;">Sắp ra mắt</h2>
-        <p style="color:var(--md-on-surface-muted);margin:0 0 24px;">
-          Blog đang được chuẩn bị. Theo dõi để nhận thông báo khi có bài viết mới.
-        </p>
-        <a href="/" class="btn-outline">← Về trang chủ</a>
+    <div class="container" style="max-width:900px;">
+      <div class="post-grid">
+        {articles.map((a) => (
+          <a href={`/blog/${a.slug}`} class="post-card card">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <span style="font-size:0.7rem;font-weight:600;color:var(--md-primary);background:rgba(0,188,212,0.1);border:1px solid rgba(0,188,212,0.2);border-radius:6px;padding:2px 8px;text-transform:uppercase;letter-spacing:0.05em;">
+                #{a.tag}
+              </span>
+              <time style="font-size:0.75rem;color:var(--md-on-surface-muted);" datetime={a.date}>
+                {new Date(a.date).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </time>
+            </div>
+            <h2 class="post-title">{a.title}</h2>
+            <p class="post-desc">{a.desc}</p>
+            <span class="read-more">Đọc tiếp →</span>
+          </a>
+        ))}
+      </div>
+
+      <div class="text-center" style="margin-top:48px;">
+        <a href="/docs/blog" class="btn-outline" style="margin-right:12px;">Xem tài liệu kỹ thuật →</a>
       </div>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .post-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    gap: 10px;
+  }
+  .post-title {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--md-on-surface);
+    transition: color 0.2s;
+    margin: 0;
+  }
+  .post-card:hover .post-title { color: var(--md-primary); }
+  .post-desc {
+    font-size: 0.9rem;
+    color: var(--md-on-surface-muted);
+    line-height: 1.65;
+    flex: 1;
+    margin: 0;
+  }
+  .read-more {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--md-primary);
+    margin-top: 4px;
+  }
+  @media (max-width: 640px) {
+    .post-grid { grid-template-columns: 1fr; }
+  }
+</style>

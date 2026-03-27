@@ -381,7 +381,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       <div>
         <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-company-label">{isEn ? 'Company' : 'Công ty'}</div>
         <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-company-label">
-          <a href="https://agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'About' : 'Về chúng tôi'}</a>
+          <a href={`${base}/enterprise`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'About' : 'Về chúng tôi'}</a>
           <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Contact' : 'Liên hệ'}</a>
         </div>
       </div>

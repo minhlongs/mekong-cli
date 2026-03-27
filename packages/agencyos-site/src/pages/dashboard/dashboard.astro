@@ -264,7 +264,7 @@ import DashboardLayout from '../../layouts/dashboard-layout.astro';
       loadReferral();
 
     } catch (err) {
-      console.error('Dashboard load error:', err);
+      // Error loading dashboard data
       document.getElementById('recent-activity').innerHTML =
         '<div class="error">Không thể tải dữ liệu. Vui lòng thử lại sau.</div>';
     }
