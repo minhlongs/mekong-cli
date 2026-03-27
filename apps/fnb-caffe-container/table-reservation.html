@@ -377,8 +377,15 @@
     <div class="reservation-page">
         <!-- Header -->
         <header class="reservation-header" role="banner">
-            <h1>🍽️ Đặt Bàn Online</h1>
-            <p>Đặt bàn nhanh chóng tại F&B Container Café - Không gian độc đáo giữa lòng Sa Đéc</p>
+            <div class="header-content">
+                <div>
+                    <h1>🍽️ Đặt Bàn Online</h1>
+                    <p>Đặt bàn nhanh chóng tại F&B Container Café - Không gian độc đáo giữa lòng Sa Đéc</p>
+                </div>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" type="button">
+                    <span class="theme-icon" aria-hidden="true">🌙</span>
+                </button>
+            </div>
         </header>
 
         <!-- Main Content -->
@@ -623,5 +630,6 @@
         dateInput.addEventListener('change', updateAvailability);
         updateAvailability();
     </script>
+    <script type="module" src="js/theme.min.js" defer></script>
 </body>
 </html>

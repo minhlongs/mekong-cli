@@ -249,8 +249,10 @@ body {
     margin-bottom: 4px;
 }
 
-.qr-code svg {
+.qr-code svg,
+.qr-code img {
     display: block;
+    border-radius: 4px;
 }
 
 .qr-text {

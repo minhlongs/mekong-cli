@@ -302,13 +302,55 @@ function showSuccessModal(order) {
 }
 
 /**
+ * Open Print Receipt Window
+ * Opens a new window with the print-friendly receipt
+ */
+function openPrintReceipt(order) {
+  try {
+    // Serialize order data to URL-safe string
+    const orderData = encodeURIComponent(JSON.stringify({
+      id: order.id,
+      customer: order.customer,
+      items: order.items || [],
+      subtotal: order.subtotal || cart.total || 0,
+      discount: order.discount || discount.amount || 0,
+      shipping_fee: order.shipping_fee || 0,
+      total: order.total,
+      payment_method: order.payment_method,
+      status: order.status || 'paid',
+      created_at: order.created_at || new Date().toISOString()
+    }));
+
+    // Open receipt in new window
+    const printWindow = window.open(
+      `receipt-template.html?order=${orderData}`,
+      'print-receipt',
+      'width=400,height=600,scrollbars=yes,resizable=yes'
+    );
+
+    if (!printWindow) {
+      console.warn('Popup blocked - user may need to allow popups for this site');
+      // Fallback: open in same window
+      window.location.href = `receipt-template.html?order=${orderData}`;
+    }
+  } catch (error) {
+    console.error('Error opening print receipt:', error);
+  }
+}
+
+// Export for global access
+window.openPrintReceipt = openPrintReceipt;
+
+/**
  * Handle COD Success
  */
 async function handleCODSuccess(order) {
-  await Cart.clearCart();
+  await Cart.clearCartAfterOrder();
   showSuccessModal(order);
   sendOrderToZalo(order);
   sendOrderToWebSocket(order);
+  // Open print receipt after successful order
+  openPrintReceipt(order);
 }
 
 /**
