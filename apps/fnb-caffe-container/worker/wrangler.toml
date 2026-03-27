@@ -4,7 +4,7 @@ compatibility_date = "2025-01-01"
 
 # D1 Database Binding
 [[d1_databases]]
-binding = "FNB_DB"
+binding = "DB"
 database_name = "fnb-caffe-db"
 database_id = "97ae7a5f-fc4d-460d-b019-8535332bd81f"
 
@@ -13,8 +13,15 @@ database_id = "97ae7a5f-fc4d-460d-b019-8535332bd81f"
 binding = "AUTH_KV"
 id = "789e7cf1894e4d4c9e8f8cd51b2dbe16"
 
+# KV Namespace for Rate Limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "789e7cf1894e4d4c9e8f8cd51b2dbe16"
+
 # Environment Variables
 [vars]
 ENVIRONMENT = "production"
 CORS_ORIGIN = "*"
 JWT_SECRET=REDACTED = "your-super-secret-jwt-key-change-in-production"
+WORKER_VERSION = "2.0.0-enhanced"
+DEBUG = false

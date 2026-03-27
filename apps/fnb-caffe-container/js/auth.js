@@ -589,6 +589,88 @@ export function updateUserMenu() {
   }
 }
 
+/**
+ * ═══════════════════════════════════════════════
+ *  PROTECTED ROUTE CHECK — Admin Access Control
+ * ═══════════════════════════════════════════════
+ */
+
+/**
+ * Check if user is authenticated, redirect to login if not
+ * @param {string} [redirectUrl='/auth/login.html'] - Where to redirect if not logged in
+ * @returns {boolean} true if logged in, false otherwise
+ */
+export function requireAuth(redirectUrl = '/auth/login.html') {
+  if (!auth.isLoggedIn()) {
+    // Save current page for redirect back after login
+    sessionStorage.setItem('auth_redirect_after_login', window.location.pathname);
+    // Redirect to login
+    window.location.href = redirectUrl;
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Check if user has admin role
+ * @returns {boolean}
+ */
+export function isAdmin() {
+  const user = auth.getStoredUser();
+  return user && (user.role === 'admin' || user.role === 'manager' || user.role === 'owner');
+}
+
+/**
+ * Require admin role, redirect to dashboard if not admin
+ * @param {string} [redirectUrl='/'] - Where to redirect if not admin
+ * @returns {boolean} true if admin, false otherwise
+ */
+export function requireAdmin(redirectUrl = '/') {
+  if (!auth.isLoggedIn()) {
+    sessionStorage.setItem('auth_redirect_after_login', window.location.pathname);
+    window.location.href = '/auth/login.html';
+    return false;
+  }
+  if (!isAdmin()) {
+    alert('Bạn không có quyền truy cập trang này. Chỉ dành cho Admin.');
+    window.location.href = redirectUrl;
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Add auth check to admin pages - call this at the top of admin page scripts
+ */
+export function protectAdminPage() {
+  if (!requireAuth('/auth/login.html')) {
+    return false;
+  }
+  // Optional: Check admin role for sensitive pages
+  const isAdminPage = window.location.pathname.includes('/admin/');
+  if (isAdminPage && !isAdmin()) {
+    // Allow staff role for basic admin pages, redirect for sensitive ones
+    const user = auth.getStoredUser();
+    const sensitivePaths = ['/admin/settings', '/admin/finance', '/admin/reports'];
+    const isSensitive = sensitivePaths.some(path => window.location.pathname.includes(path));
+    if (isSensitive) {
+      alert('Bạn không có quyền truy cập trang này.');
+      window.location.href = '/admin/dashboard.html';
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Logout and redirect
+ * @param {string} [redirectUrl='/auth/login.html'] - Where to redirect after logout
+ */
+export async function logoutAndRedirect(redirectUrl = '/auth/login.html') {
+  await auth.logout();
+  window.location.href = redirectUrl;
+}
+
 // Auto-init on DOMContentLoaded
 if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', () => {

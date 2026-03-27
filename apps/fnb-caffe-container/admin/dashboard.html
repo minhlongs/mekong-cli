@@ -857,6 +857,32 @@
 
     <!-- Scripts -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/@material/web@1.0.0/all.min.js" defer></script>
+    <!-- Auth Protection -->
+    <script type="module">
+        import { protectAdminPage, logoutAndRedirect, auth, isAdmin } from '../js/auth.js';
+
+        // Check authentication on page load
+        if (!protectAdminPage()) {
+            // Redirecting to login...
+        } else {
+            // User is authenticated, update UI
+            document.addEventListener('DOMContentLoaded', () => {
+                const user = auth.getStoredUser();
+                const userEmailEl = document.getElementById('userEmail');
+                const userNameEl = document.querySelector('.user-info .user-name');
+
+                if (userEmailEl) {
+                    userEmailEl.textContent = user?.email || '';
+                }
+                if (userNameEl) {
+                    userNameEl.textContent = user?.name || 'Admin';
+                }
+            });
+        }
+
+        // Add logout functionality
+        window.logoutAndRedirect = logoutAndRedirect;
+    </script>
     <!-- Admin Modules -->
     <script type="module" src="admin-orders.js" defer></script>
     <script type="module" src="admin-analytics.js" defer></script>

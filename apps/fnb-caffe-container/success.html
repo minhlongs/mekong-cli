@@ -235,6 +235,45 @@
             background: #e8eaed;
         }
 
+        .payment-status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed,
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-pending {
+            animation: pulse 2s infinite;
+        }
+
         .next-steps {
             margin-top: 2rem;
             padding-top: 2rem;
@@ -357,11 +396,18 @@
                     <span class="order-label">Phương thức thanh toán</span>
                     <span class="order-value" id="paymentMethod">---</span>
                 </div>
+                <div class="order-row" id="paymentStatusRow" style="display: none;">
+                    <span class="order-label">Trạng thái thanh toán</span>
+                    <span class="order-value" id="paymentStatus">
+                        <span class="payment-status-badge status-pending">Chờ thanh toán</span>
+                    </span>
+                </div>
             </div>
 
-            <div class="success-actions">
+            <div class="success-actions" id="successActions">
                 <a href="menu.html" class="btn-success btn-secondary">🛒 Đặt Thêm</a>
-                <a href="index.html" class="btn-success btn-primary">🏠 Về Trang Chủ</a>
+                <button class="btn-success btn-primary" id="printReceiptBtn" onclick="printReceipt()">🖨️ In Hóa Đơn</button>
+                <button class="btn-success btn-secondary" id="downloadReceiptBtn" onclick="downloadReceipt()">💾 Tải PDF</button>
             </div>
 
             <div class="next-steps">
@@ -391,14 +437,25 @@
     <script>
         let orderWebSocket = null;
         let currentOrderId = null;
+        let paymentPollingInterval = null;
+        const API_BASE = 'http://localhost:8000/api';
 
         // Load order info from URL params or localStorage
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
+            const paymentIntent = urlParams.get('payment_intent');
+            const paymentStatus = urlParams.get('status');
+
+            // Check for Stripe-like callback
+            if (paymentIntent && paymentStatus === 'succeeded') {
+                // Payment succeeded via Stripe-like flow
+                showPaymentSuccess();
+            }
 
             // Try to load from localStorage
             const pendingOrder = localStorage.getItem('pendingOrder');
+            const pendingPayment = localStorage.getItem('pendingPayment');
 
             if (pendingOrder) {
                 const order = JSON.parse(pendingOrder);
@@ -406,6 +463,12 @@
                 document.getElementById('orderId').textContent = '#' + order.id;
                 document.getElementById('orderTotal').textContent = formatPrice(order.total);
                 document.getElementById('paymentMethod').textContent = translatePaymentMethod(order.payment_method);
+
+                // Show payment status for online payments
+                if (order.payment_method !== 'cod') {
+                    document.getElementById('paymentStatusRow').style.display = 'flex';
+                    startPaymentPolling(order.id);
+                }
             } else if (orderId) {
                 currentOrderId = orderId;
                 document.getElementById('orderId').textContent = '#' + orderId;
@@ -421,6 +484,205 @@
                 initializeWebSocketTracking(currentOrderId);
             }
         });
+
+        /**
+         * Show payment success message
+         */
+        function showPaymentSuccess() {
+            const paymentStatusEl = document.getElementById('paymentStatus');
+            const paymentStatusRow = document.getElementById('paymentStatusRow');
+
+            if (paymentStatusEl && paymentStatusRow) {
+                paymentStatusRow.style.display = 'flex';
+                paymentStatusEl.innerHTML = '<span class="payment-status-badge status-completed">Đã thanh toán ✅</span>';
+            }
+
+            // Show success toast
+            showToast('✅ Thanh toán thành công!', 'success');
+        }
+
+        /**
+         * Start polling payment status
+         */
+        function startPaymentPolling(orderId) {
+            const paymentStatusEl = document.getElementById('paymentStatus');
+
+            // Check immediately
+            checkPaymentStatus(orderId);
+
+            // Then poll every 3 seconds
+            paymentPollingInterval = setInterval(() => {
+                checkPaymentStatus(orderId);
+            }, 3000);
+        }
+
+        /**
+         * Check payment status from API
+         */
+        async function checkPaymentStatus(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/payment/status/${orderId}`);
+                const result = await response.json();
+
+                if (result.success && result.payment) {
+                    updatePaymentStatus(result.payment.status);
+
+                    // Stop polling if completed or failed
+                    if (result.payment.status === 'completed' || result.payment.status === 'failed') {
+                        stopPaymentPolling();
+                    }
+                }
+            } catch (error) {
+                console.error('[Success] Payment status check error:', error);
+            }
+        }
+
+        /**
+         * Update payment status display
+         */
+        function updatePaymentStatus(status) {
+            const paymentStatusEl = document.getElementById('paymentStatus');
+            if (!paymentStatusEl) return;
+
+            const statusConfig = {
+                'pending': { class: 'status-pending', text: 'Chờ thanh toán' },
+                'processing': { class: 'status-processing', text: 'Đang xử lý' },
+                'completed': { class: 'status-completed', text: 'Đã thanh toán ✅' },
+                'paid': { class: 'status-paid', text: 'Đã thanh toán ✅' },
+                'failed': { class: 'status-failed', text: 'Thanh toán thất bại ❌' }
+            };
+
+            const config = statusConfig[status] || statusConfig['pending'];
+            paymentStatusEl.innerHTML = `<span class="payment-status-badge ${config.class}">${config.text}</span>`;
+
+            // Show success message if completed
+            if (status === 'completed' || status === 'paid') {
+                showToast('✅ Thanh toán thành công!', 'success');
+                // Add home button
+                addHomeButton();
+            } else if (status === 'failed') {
+                showToast('⚠️ Thanh toán thất bại. Vui lòng liên hệ quán.', 'error');
+            }
+        }
+
+        /**
+         * Stop payment polling
+         */
+        function stopPaymentPolling() {
+            if (paymentPollingInterval) {
+                clearInterval(paymentPollingInterval);
+                paymentPollingInterval = null;
+            }
+        }
+
+        /**
+         * Add home button after successful payment
+         */
+        function addHomeButton() {
+            const actionsEl = document.getElementById('successActions');
+            if (actionsEl && !actionsEl.querySelector('.btn-home')) {
+                const homeBtn = document.createElement('a');
+                homeBtn.href = 'index.html';
+                homeBtn.className = 'btn-success btn-primary btn-home';
+                homeBtn.textContent = '🏠 Về Trang Chủ';
+                actionsEl.appendChild(homeBtn);
+            }
+        }
+
+        /**
+         * Print receipt
+         */
+        function printReceipt() {
+            const pendingOrder = localStorage.getItem('pendingOrder');
+            if (pendingOrder) {
+                const order = JSON.parse(pendingOrder);
+                openReceiptWindow(order);
+            } else if (currentOrderId) {
+                // Load order from API
+                loadOrderAndPrint(currentOrderId);
+            }
+        }
+
+        /**
+         * Download receipt as PDF
+         */
+        function downloadReceipt() {
+            const pendingOrder = localStorage.getItem('pendingOrder');
+            if (pendingOrder) {
+                const order = JSON.parse(pendingOrder);
+                generateReceiptHTML(order);
+                printReceipt(); // Use print dialog with "Save as PDF" option
+            } else if (currentOrderId) {
+                loadOrderAndPrint(currentOrderId);
+            }
+        }
+
+        /**
+         * Open receipt window
+         */
+        function openReceiptWindow(order) {
+            const orderData = encodeURIComponent(JSON.stringify(order));
+            window.open(`receipt-template.html?order=${orderData}`, '_blank', 'width=400,height=600');
+        }
+
+        /**
+         * Generate receipt HTML (inline for success page)
+         */
+        function generateReceiptHTML(order) {
+            // Use receipt-generator module if available
+            if (window.ReceiptGenerator) {
+                window.ReceiptGenerator.downloadReceipt(order);
+            } else {
+                // Fallback to print window
+                openReceiptWindow(order);
+            }
+        }
+
+        /**
+         * Load order from API and print
+         */
+        async function loadOrderAndPrint(orderId) {
+            try {
+                const response = await fetch(`${API_BASE}/orders/${orderId}`);
+                const result = await response.json();
+
+                if (result.success && result.order) {
+                    openReceiptWindow(result.order);
+                } else {
+                    showToast('⚠️ Không tìm thấy đơn hàng', 'error');
+                }
+            } catch (error) {
+                console.error('[Success] Load order error:', error);
+                showToast('⚠️ Lỗi tải đơn hàng', 'error');
+            }
+        }
+
+        /**
+         * Show toast notification
+         */
+        function showToast(message, type = 'info') {
+            // Simple toast implementation
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 9999;
+                animation: slideDown 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
 
         async function initializeWebSocketTracking(orderId) {
             if (!window.WebSocketClient) {
@@ -502,6 +764,9 @@
         window.addEventListener('beforeunload', () => {
             if (orderWebSocket) {
                 orderWebSocket.disconnect();
+            }
+            if (paymentPollingInterval) {
+                stopPaymentPolling();
             }
         });
 
