@@ -67,6 +67,10 @@ htmlcov/
 # Turbo
 .turbo/
 
+# Vercel (not used — Cloudflare-only project)
+.vercel
+vercel
+
 # Project specific
 products/paid/*.zip
 !products/paid/README.md
