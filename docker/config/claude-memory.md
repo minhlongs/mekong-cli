@@ -86,9 +86,9 @@ API: `POST /missions` with Bearer token. Polar.sh billing integration.
 
 ## LLM Routing
 
-Multi-model routing with circuit breaker:
-- **Planner**: Qwen2.5-Coder-32B (local MLX, port 11435)
-- **Worker**: DeepSeek-R1-Distill-32B (local MLX)
+Dual-model routing with circuit breaker:
+- **Deep (reasoning/coding)**: DeepSeek-R1-Distill-32B (local MLX, port 11435, ~10 tok/s)
+- **Fast (triage/classify)**: Nemotron-3-Nano-30B (local MLX, port 11436, ~45 tok/s)
 - **Fallback**: Bailian API (DashScope cloud)
 
 ## Skill Detection
@@ -149,6 +149,36 @@ curl -s http://localhost:8000/health | jq .
 ```
 
 Never trust "done" reports. Trust `cat` and `pytest`.
+
+## Coexisting Systems
+
+This M1 Max runs TWO containerized systems. Be aware of the sibling:
+
+### CashClaw Trading Bot (cashclaw-bot)
+- Polymarket market-making bot with REAL MONEY
+- Container: `cashclaw-bot` in algo-trader repo
+- NO exposed ports (outbound only to Polymarket CLOB + LLMs)
+- Uses same LLM servers as this container:
+  - Nemotron Nano (:11436) for fast fair value estimation
+  - DeepSeek R1 (:11435) for deep trade analysis
+- NEVER kill Docker engine without stopping CashClaw first
+- NEVER change LLM server ports without updating CashClaw config
+
+### LLM Server Status Check
+```bash
+# Verify both LLM servers are alive
+curl -s http://host.docker.internal:11435/v1/models | python3 -m json.tool
+curl -s http://host.docker.internal:11436/v1/models | python3 -m json.tool
+
+# Check CashClaw sibling container
+docker ps --filter name=cashclaw-bot --format "{{.Status}}"
+```
+
+### Docker Safety
+- Docker Desktop auto-update is DISABLED (protects CashClaw)
+- See docker/DOCKER-SAFETY.md for full protocol
+- Shutdown order: Mekong first → CashClaw second → LLMs last
+- Startup order: LLMs first → CashClaw second → Mekong last
 
 ---
 

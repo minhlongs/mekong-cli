@@ -11,13 +11,17 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     image: mekong-dev:latest
-    container_name: mekong-dev
+    container_name: mekong-dev     # MUST match — CashClaw uses cashclaw-bot
     hostname: mekong-dev
     restart: unless-stopped
+    stop_grace_period: 10s         # Safe to kill quickly (no financial positions)
     shm_size: 2g
     network_mode: bridge
     cap_add:
-      - SYS_PTRACE
+      - SYS_ADMIN       # Required: Chromium sandboxing
+      - SYS_PTRACE       # Required: debugging tools
+    security_opt:
+      - seccomp=unconfined  # Required: Chromium in Docker
     ports:
       - "3001:3001"    # CloudCLI web UI
       - "8000:8000"    # Mekong Gateway API
@@ -28,3 +32,15 @@ services:
       - TZ=Asia/Ho_Chi_Minh
       - GIT_USER_NAME=OpenClaw
       - GIT_USER_EMAIL=openclaw@binhphap.io
+      # LLM endpoints (shared with CashClaw — contention is low)
+      - LLM_DEEPSEEK_URL=http://host.docker.internal:11435/v1
+      - LLM_NEMOTRON_URL=http://host.docker.internal:11436/v1
+      - LLM_DEEPSEEK_MODEL=mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit
+      - LLM_NEMOTRON_MODEL=mlx-community/NVIDIA-Nemotron-3-Nano-30B-A3B-4bit
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      - "com.binhphap.system=mekong-cli"
+      - "com.binhphap.priority=low"     # CashClaw is priority=high
+      - "com.binhphap.llm.deepseek=11435"
+      - "com.binhphap.llm.nemotron=11436"

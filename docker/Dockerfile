@@ -141,11 +141,13 @@ RUN echo "${VARIANT}" > /etc/mekong-variant
 COPY docker/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY docker/scripts/bootstrap.sh /usr/local/bin/bootstrap.sh
 COPY docker/scripts/notify.py /usr/local/bin/notify.py
+COPY docker/scripts/check-coexistence.sh /usr/local/bin/check-coexistence.sh
 COPY docker/config/claude-memory.md /usr/local/share/mekong/claude-memory.md
 COPY docker/config/settings.json /usr/local/share/mekong/settings.json
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     /usr/local/bin/bootstrap.sh \
-    /usr/local/bin/notify.py
+    /usr/local/bin/notify.py \
+    /usr/local/bin/check-coexistence.sh
 
 # ---------- s6 service definitions ----------
 COPY docker/s6-overlay/ /etc/s6-overlay/
@@ -154,7 +156,9 @@ RUN chmod +x /etc/s6-overlay/s6-rc.d/cloudcli/run \
     /etc/s6-overlay/s6-rc.d/mekong-gateway/run && \
     touch /etc/s6-overlay/s6-rc.d/user/contents.d/cloudcli && \
     touch /etc/s6-overlay/s6-rc.d/user/contents.d/xvfb && \
-    touch /etc/s6-overlay/s6-rc.d/user/contents.d/mekong-gateway
+    touch /etc/s6-overlay/s6-rc.d/user/contents.d/mekong-gateway && \
+    mkdir -p /etc/s6-overlay/s6-rc.d/cloudcli/dependencies.d && \
+    touch /etc/s6-overlay/s6-rc.d/cloudcli/dependencies.d/xvfb
 
 WORKDIR /workspace
 EXPOSE 3001 8000

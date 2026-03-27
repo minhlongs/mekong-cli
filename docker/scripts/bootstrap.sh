@@ -39,6 +39,9 @@ echo "[bootstrap] Workspace directories created"
 chown -R "$PUID:$PGID" "$CLAUDE_HOME/.claude"
 chown "$PUID:$PGID" "$CLAUDE_HOME/.claude.json"
 
+# Run coexistence check (informational, never blocks)
+/usr/local/bin/check-coexistence.sh 2>/dev/null || true
+
 # Sentinel
 touch "$CLAUDE_HOME/.claude/.mekong-bootstrapped"
 chown "$PUID:$PGID" "$CLAUDE_HOME/.claude/.mekong-bootstrapped"

@@ -2,10 +2,10 @@
 LLM Router — Routes tasks to the correct model with circuit breaker.
 
 Features:
-- Capability-based routing (coding/planning → Qwen, reasoning/general → DeepSeek)
+- Capability-based routing (fast tasks → Nemotron, deep tasks → DeepSeek R1)
 - Health check via GET /v1/models
 - Circuit breaker: open after N failures, auto-recover after cooldown
-- Fallback to Bailian API when local MLX is unhealthy
+- Fallback to fast model when primary is unhealthy
 """
 
 from __future__ import annotations
