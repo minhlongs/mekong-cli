@@ -136,11 +136,22 @@
     </button>
 
     <header class="page-header">
-        <h1>📋 Quản lý Đơn hàng</h1>
-        <a href="dashboard.html" class="back-link">
-            <span class="material-symbols-outlined">dashboard</span>
-            Quay lại Dashboard
-        </a>
+        <div>
+            <h1>📋 Quản lý Đơn hàng</h1>
+            <span id="currentBranchName" style="font-size: 0.85rem; color: #666; display: block; margin-top: 4px;"></span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="branchSwitcher" onchange="branchManager.switchTo(this.value)" style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; background: white; cursor: pointer; min-width: 180px;">
+                <option value="">Đang tải...</option>
+            </select>
+            <a href="branches.html" class="back-link" title="Quản lý chi nhánh">
+                <span class="material-symbols-outlined">store</span>
+            </a>
+            <a href="dashboard.html" class="back-link">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+        </div>
     </header>
 
     <div class="container">
@@ -343,5 +354,6 @@ Nhập số hành động:`);
         setInterval(() => loadOrders(currentFilter), 30000);
 
     <script type="module" src="js/theme.min.js" defer></script>
+    <script src="js/branch-manager.js" defer></script>
 </body>
 </html>

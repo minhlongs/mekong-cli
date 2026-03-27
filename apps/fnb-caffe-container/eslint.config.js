@@ -39,6 +39,7 @@ export default [
         EventTarget: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
+        Blob: 'readonly',
         console: 'readonly',
         setTimeout: 'readonly',
         setInterval: 'readonly',
