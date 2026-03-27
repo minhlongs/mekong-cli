@@ -52,7 +52,7 @@ export class ThemeManager {
 
   updateIcon() {
     const toggle = document.getElementById('themeToggle') || document.getElementById('theme-toggle');
-    if (!toggle) return;
+    if (!toggle) {return;}
 
     const icon = toggle.querySelector('.theme-icon, .material-symbols-outlined, [aria-hidden="true"]');
     if (icon) {
@@ -63,7 +63,7 @@ export class ThemeManager {
 
   updateAriaLabel() {
     const toggle = document.getElementById('themeToggle') || document.getElementById('theme-toggle');
-    if (!toggle) return;
+    if (!toggle) {return;}
 
     const nextTheme = this.theme === 'dark' ? 'light' : 'dark';
     toggle.setAttribute('aria-label', `Chuyển sang chế độ ${nextTheme}`);
@@ -114,7 +114,7 @@ export class ThemeManager {
   }
 
   listenToSystemChanges() {
-    if (!window.matchMedia) return;
+    if (!window.matchMedia) {return;}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e) => {

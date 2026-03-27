@@ -125,9 +125,6 @@
     --glow-candle: 0 0 10px rgba(245, 185, 94, 0.2);
 }
 
-/* Default theme (dark) variables — applied to :root */
-:root {
-
 /* ─── Reset & Base ─── */
 *,
 *::before,
