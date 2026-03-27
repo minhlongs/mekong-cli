@@ -13,28 +13,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
 
-# Import core modules - use smart_router as hybrid_router is not implemented
-try:
-    from core.hybrid_router import HybridRouter, TaskComplexity, TaskType, route_task
-except ImportError:
-    # Fallback to smart_router or skip tests
-    HybridRouter = None
-    TaskComplexity = None
-    TaskType = None
-    route_task = None
+# Import core modules
+from core.hybrid_router import HybridRouter, TaskComplexity, TaskType, route_task
 
 # Import mock data factory
-try:
-    from tests.fixtures.mock_data import MockDataFactory
-except ImportError:
-    MockDataFactory = None
+from tests.fixtures.mock_data import MockDataFactory
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 🧪 HYBRID ROUTER TESTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-@pytest.mark.skipif(HybridRouter is None, reason="core.hybrid_router unavailable (pydantic_settings missing)")
 class TestHybridRouter:
     """Test suite for HybridRouter AI task routing."""
 
@@ -248,12 +237,9 @@ class TestHubLogic:
 
     def test_hybrid_router_import(self):
         """Test HybridRouter is always available."""
-        try:
-            from core.ai.hybrid_router import HybridRouter as _HybridRouter
-        except (ImportError, ModuleNotFoundError) as e:
-            pytest.skip(f"core.ai.hybrid_router unavailable: {e}")
+        from core.ai.hybrid_router import HybridRouter
 
-        router = _HybridRouter()
+        router = HybridRouter()
         assert router is not None
 
 
@@ -262,7 +248,6 @@ class TestHubLogic:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-@pytest.mark.skipif(HybridRouter is None, reason="core.hybrid_router unavailable (pydantic_settings missing)")
 class TestPlatformIntegration:
     """Integration tests across platform modules."""
 
