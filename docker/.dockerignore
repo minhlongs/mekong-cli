@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+node_modules
+apps/
+mekong/daemon/
+*.pem
+*.key
+__pycache__
+.next
+dist

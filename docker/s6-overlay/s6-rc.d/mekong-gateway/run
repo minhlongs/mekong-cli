@@ -1,0 +1,7 @@
+#!/bin/sh
+cd /workspace
+exec s6-setuidgid claude env \
+  HOME=/home/claude \
+  MEKONG_HOME=/workspace \
+  DISPLAY=:99 \
+  python3 -m uvicorn src.gateway:app --host 0.0.0.0 --port 8000

@@ -268,7 +268,7 @@ Users/
 infrastructure/
 terraform/
 k8s/
-docker/
+!docker/
 monitoring/
 ops/
 automation/
@@ -594,7 +594,7 @@ i18next-scanner.config.js
 antigravity/
 /config/
 !config/cto-config.json
-docker/
+!docker/
 lib/
 locales/
 # mekong/commands and mekong/skills are duplicates of .claude/

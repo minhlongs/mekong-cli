@@ -1,0 +1,54 @@
+# ==============================================================================
+# Mekong CLI — Full Configuration
+# docker compose -f docker/docker-compose.full.yaml up -d
+# ==============================================================================
+
+services:
+  mekong:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: mekong-dev:latest
+    container_name: mekong-dev
+    hostname: mekong-dev
+    restart: unless-stopped
+    shm_size: 2g
+    network_mode: bridge
+    cap_add:
+      - SYS_PTRACE
+    ports:
+      - "3001:3001"    # CloudCLI web UI
+      - "8000:8000"    # Mekong Gateway API
+      - "3000:3000"    # Next.js dev server
+      - "5173:5173"    # Vite dev
+      - "8787:8787"    # Wrangler dev
+    volumes:
+      - ./data/claude:/home/claude/.claude
+      - ../:/workspace
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - PUID=1000
+      - PGID=1000
+      - GIT_USER_NAME=OpenClaw
+      - GIT_USER_EMAIL=openclaw@binhphap.io
+      - NODE_OPTIONS=--max-old-space-size=4096
+
+      # LLM routing
+      - LLM_BASE_URL=http://host.docker.internal:11435/v1
+      - BAILIAN_API_KEY=
+      - BAILIAN_BASE_URL=
+
+      # RaaS billing
+      - POLAR_WEBHOOK_SECRET=
+      - RAAS_DB_PATH=/workspace/.mekong/raas/tenants.db
+
+      # Notifications (uncomment to enable)
+      # - NOTIFY_DISCORD=discord://webhook_id/webhook_token
+      # - NOTIFY_TELEGRAM=tg://bot_token/chat_id
+      # - NOTIFY_SLACK=slack://token_a/token_b/token_c
+
+      # AI providers
+      # - GEMINI_API_KEY=
+      # - OPENAI_API_KEY=
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

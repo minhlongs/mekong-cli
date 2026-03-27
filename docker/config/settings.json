@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "env": {
+    "DISABLE_AUTOUPDATER": "1",
+    "MEKONG_HOME": "/workspace"
+  },
+  "model": "opus",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/notify.py cook.done"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/notify.py error"
+          }
+        ]
+      }
+    ]
+  }
+}
