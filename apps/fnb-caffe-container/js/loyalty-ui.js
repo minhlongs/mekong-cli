@@ -383,8 +383,8 @@ function renderPointsTimeline() {
   ui.pointsTimeline.innerHTML = transactions.map(txn => {
     const isPositive = txn.points > 0;
     const typeClass = txn.source === 'birthday' ? 'bonus' :
-                       txn.source === 'tier_upgrade' ? 'tier-upgrade' :
-                       isPositive ? 'earned' : 'spent';
+      txn.source === 'tier_upgrade' ? 'tier-upgrade' :
+        isPositive ? 'earned' : 'spent';
     const icon = getTransactionIcon(txn.source || txn.type);
 
     return `

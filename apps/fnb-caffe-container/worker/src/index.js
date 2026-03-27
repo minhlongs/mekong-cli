@@ -45,6 +45,27 @@ import {
   updateReservation,
   deleteReservation,
 } from './routes/reservations.js';
+import {
+  sendOrderConfirmation,
+  sendReservationConfirmation,
+} from './routes/notifications.js';
+import {
+  getStaff,
+  getStaffById,
+  createStaff,
+  updateStaff,
+  patchStaff,
+  deleteStaff,
+} from './routes/staff.js';
+import {
+  getInventory,
+  getInventoryItem,
+  getInventoryAlerts,
+  getInventorySummary,
+  createInventoryItem,
+  updateInventory,
+  resolveAlert,
+} from './routes/inventory.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
@@ -206,6 +227,89 @@ export default {
       if (path.match(/^\/api\/reservations\/[^/]+$/) && method === 'DELETE') {
         const id = path.split('/')[3];
         return deleteReservation(request, env, id);
+      }
+
+      // Notification Routes
+      // POST /api/notify/order-confirmation
+      if (path === '/api/notify/order-confirmation' && method === 'POST') {
+        return sendOrderConfirmation(request, env);
+      }
+
+      // POST /api/notify/reservation-confirmation
+      if (path === '/api/notify/reservation-confirmation' && method === 'POST') {
+        return sendReservationConfirmation(request, env);
+      }
+
+      // Staff Routes
+      // GET /api/staff
+      if (path === '/api/staff' && method === 'GET') {
+        return getStaff(request, env);
+      }
+
+      // POST /api/staff
+      if (path === '/api/staff' && method === 'POST') {
+        return createStaff(request, env);
+      }
+
+      // GET /api/staff/:id
+      if (path.match(/^\/api\/staff\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[3];
+        return getStaffById(request, env, id);
+      }
+
+      // PUT /api/staff/:id
+      if (path.match(/^\/api\/staff\/[^/]+$/) && method === 'PUT') {
+        const id = path.split('/')[3];
+        return updateStaff(request, env, id);
+      }
+
+      // PATCH /api/staff/:id
+      if (path.match(/^\/api\/staff\/[^/]+$/) && method === 'PATCH') {
+        const id = path.split('/')[3];
+        return patchStaff(request, env, id);
+      }
+
+      // DELETE /api/staff/:id
+      if (path.match(/^\/api\/staff\/[^/]+$/) && method === 'DELETE') {
+        const id = path.split('/')[3];
+        return deleteStaff(request, env, id);
+      }
+
+      // Inventory Routes
+      // GET /api/inventory
+      if (path === '/api/inventory' && method === 'GET') {
+        return getInventory(request, env);
+      }
+
+      // GET /api/inventory/alerts
+      if (path === '/api/inventory/alerts' && method === 'GET') {
+        return getInventoryAlerts(request, env);
+      }
+
+      // GET /api/inventory/summary
+      if (path === '/api/inventory/summary' && method === 'GET') {
+        return getInventorySummary(request, env);
+      }
+
+      // POST /api/inventory
+      if (path === '/api/inventory' && method === 'POST') {
+        return createInventoryItem(request, env);
+      }
+
+      // GET /api/inventory/:id
+      if (path.match(/^\/api\/inventory\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[3];
+        // Check for alert resolve subpath
+        if (path.includes('/resolve')) {
+          return resolveAlert(request, env, id);
+        }
+        return getInventoryItem(request, env, id);
+      }
+
+      // PUT /api/inventory/:id
+      if (path.match(/^\/api\/inventory\/[^/]+$/) && method === 'PUT') {
+        const id = path.split('/')[3];
+        return updateInventory(request, env, id);
       }
 
       // 404 for unmatched routes
