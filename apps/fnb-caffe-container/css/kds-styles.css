@@ -22,10 +22,15 @@
     --kds-completed: #6b7280;
     --kds-completed-bg: rgba(107, 114, 128, 0.1);
 
-    /* Priority Colors */
+    /* Priority Colors - red=urgent, yellow=normal, green=completed */
     --kds-rush: #ef4444;
     --kds-rush-bg: rgba(239, 68, 68, 0.15);
+    --kds-normal: #fbbf24;
+    --kds-normal-bg: rgba(251, 191, 36, 0.15);
     --kds-low: #8b5cf6;
+    --kds-low-bg: rgba(139, 92, 246, 0.15);
+    --kds-completed-priority: #10b981;
+    --kds-completed-priority-bg: rgba(16, 185, 129, 0.15);
 
     /* Timer Danger */
     --kds-timer-danger: #dc2626;
@@ -312,10 +317,22 @@
 .order-card.priority-rush {
     border-color: var(--kds-rush);
     box-shadow: 0 0 20px var(--kds-rush-bg);
+    border-left-width: 4px;
+}
+
+.order-card.priority-normal {
+    border-color: var(--kds-normal);
+    border-left-width: 4px;
 }
 
 .order-card.priority-low {
     border-color: var(--kds-low);
+    border-left-width: 4px;
+}
+
+.order-card.status-completed {
+    border-color: var(--kds-completed-priority);
+    border-left-width: 4px;
 }
 
 .order-card.order-overdue {
@@ -446,8 +463,40 @@
 
 .order-total {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
     font-size: 13px;
+}
+
+.order-estimated-time {
+    font-size: 11px;
+    color: var(--kds-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.estimated-time-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.estimated-time-badge.short {
+    background: var(--kds-ready-bg);
+    color: var(--kds-ready);
+}
+
+.estimated-time-badge.medium {
+    background: var(--kds-pending-bg);
+    color: var(--kds-pending);
+}
+
+.estimated-time-badge.long {
+    background: var(--kds-rush-bg);
+    color: var(--kds-rush);
 }
 
 .total-amount {
