@@ -235,7 +235,7 @@ class RecipeExecutor:
 
             if browse_action == "check":
                 result = agent.check_status(url)
-                status_color = "green" if result.success else "red"
+                _status_color = "green" if result.success else "red"
                 output = f"HTTP {result.status_code} ({result.duration_ms:.0f}ms)"
             elif browse_action == "links":
                 result = agent.get_links(url)
@@ -251,7 +251,7 @@ class RecipeExecutor:
                     f"Load Time: {result.load_time_ms:.0f}ms\n\n"
                     f"{result.text_content[:500]}"
                 )
-                status_color = "green" if result.status_code < 400 else "red"
+                _status_color = "green" if result.status_code < 400 else "red"
 
             self.console.print(
                 Panel(

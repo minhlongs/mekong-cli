@@ -49,16 +49,7 @@ git commit -m "$ARGUMENTS"
 git push origin main
 ```
 
-### Step 4: Force Vercel Deploy (if needed)
-
-// turbo
-
-```bash
-cd /Users/macbookprom1/mekong-cli/apps/docs
-vercel deploy --prod --yes
-```
-
-### Step 5: Verify Live
+### Step 4: Verify Live
 
 // turbo
 
@@ -71,5 +62,4 @@ echo "✅ SHIPPED!"
 
 ```bash
 gh run list --limit 1
-vercel ls --limit 1
 ```

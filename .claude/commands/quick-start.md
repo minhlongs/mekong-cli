@@ -93,7 +93,7 @@ description: Start any new project from idea to production in 5 commands
 ```
 ✅ CI: All checks pass
 ✅ Commit: a1b2c3d
-🚀 Live: https://my-saas.vercel.app
+🚀 Live: https://my-saas.pages.dev
 ```
 
 ---

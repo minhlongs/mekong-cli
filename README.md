@@ -11,11 +11,11 @@
 Mekong CLI is an AI-operated business platform. One natural-language command triggers multi-agent workflows that build software, run marketing campaigns, manage finances, and ship products. Works with any LLM provider -- cloud or local.
 
 ```
-$ mekong cook "Create a SaaS landing page with Stripe checkout"
+$ mekong cook "Create a SaaS landing page with Polar.sh checkout"
 
   ◐ Planning...   3 phases identified
   ✓ Phase 1/3:    Scaffold Next.js + Tailwind        (12 files created)
-  ✓ Phase 2/3:    Wire Stripe checkout + webhook handler
+  ✓ Phase 2/3:    Wire Polar.sh checkout + webhook handler
   ✓ Phase 3/3:    Deploy to Cloudflare Pages
   ✓ Verify:       Build OK ─ 14 tests pass ─ live at https://app.example.com
 

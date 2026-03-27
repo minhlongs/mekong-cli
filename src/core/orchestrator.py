@@ -816,7 +816,7 @@ class RecipeOrchestrator:
         # Code Evolution: log improvement hint after execution
         if self._code_evolution:
             try:
-                journal = self._code_evolution.get_journal(limit=1)
+                _journal = self._code_evolution.get_journal(limit=1)
                 stats = self._code_evolution.get_stats()
                 if stats.get("total_attempts", 0) > 0:
                     self.console.print(
