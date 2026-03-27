@@ -18,7 +18,7 @@ const ALLOWED_ORIGINS = [
  * @returns {boolean} true nếu được allow
  */
 export function isAllowedOrigin(origin) {
-  if (!origin) return false;
+  if (!origin) {return false;}
   return ALLOWED_ORIGINS.includes(origin);
 }
 

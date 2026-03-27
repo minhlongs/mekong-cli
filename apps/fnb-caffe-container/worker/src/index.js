@@ -86,6 +86,7 @@ import {
   getPaymentStatus,
   getPaymentIntent,
 } from './routes/payments.js';
+import { handleZaloWebhook } from './routes/chatbot.js';
 
 // Debug logging configuration
 const DEBUG = typeof FNB_DEBUG !== 'undefined' && FNB_DEBUG;
@@ -370,6 +371,17 @@ export default {
       if (path.match(/^\/api\/payment\/intent\/[^/]+$/) && method === 'GET') {
         const paymentIntentId = path.split('/')[4];
         return getPaymentIntent(request, env, paymentIntentId);
+      }
+
+      // Zalo Chatbot Webhook
+      // POST /api/chatbot/webhook
+      if (path === '/api/chatbot/webhook' && method === 'POST') {
+        return handleZaloWebhook(request, env);
+      }
+
+      // GET /api/chatbot/webhook (Zalo verification)
+      if (path === '/api/chatbot/webhook' && method === 'GET') {
+        return handleZaloWebhook(request, env);
       }
 
       // 404 for unmatched routes
