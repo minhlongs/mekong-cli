@@ -745,9 +745,85 @@
                         <p style="text-align: center; padding: 40px; color: #999; grid-column: 1/-1;">Đang tải dữ liệu...</p>
                     </div>
                 </div>
+
+                <!-- QR Code Generator -->
+                <div class="admin-section">
+                    <div class="section-header">
+                        <h2>Mã QR Menu</h2>
+                        <button class="filter-btn active" onclick="qrGenerator.downloadQR()" style="margin-left: auto;">
+                            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">download</span>
+                            Tải QR Code
+                        </button>
+                    </div>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Quét mã QR để xem thực đơn trên điện thoại. Khách hàng có thể quét trực tiếp tại quán.
+                    </p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+                        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);">
+                            <div id="qrCodeContainer" style="width: 256px; height: 256px;"></div>
+                        </div>
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.9rem; color: #666; margin-bottom: 8px;">
+                                    URL thực đơn
+                                </label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="menuUrl" value="" readonly
+                                        style="flex: 1; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem; background: #fafafa;">
+                                    <button class="filter-btn active" onclick="qrGenerator.copyUrl()" style="white-space: nowrap;">
+                                        <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">content_copy</span>
+                                        Sao chép
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.9rem; color: #666; margin-bottom: 8px;">
+                                    Tùy chọn kích thước
+                                </label>
+                                <select id="qrSize" onchange="qrGenerator.generate()"
+                                    style="width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.9rem;">
+                                    <option value="256">Nhỏ (256x256px) - Web</option>
+                                    <option value="512" selected>Vừa (512x512px) - In ấn</option>
+                                    <option value="1024">Lớn (1024x1024px) - Biển quảng cáo</option>
+                                </select>
+                            </div>
+                            <div style="background: #E8F5E9; padding: 16px; border-radius: 8px; margin-top: 16px;">
+                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <span class="material-symbols-outlined" style="color: #2E7D32;">info</span>
+                                    <div style="font-size: 0.85rem; color: #1B5E20;">
+                                        <strong>Mẹo sử dụng:</strong>
+                                        <ul style="margin: 8px 0 0 0; padding-left: 16px;">
+                                            <li>In mã QR và đặt tại bàn, quầy thu ngân</li>
+                                            <li>Dán mã QR trên cửa kính, menu giấy</li>
+                                            <li>Chia sẻ mã QR trên mạng xã hội</li>
+                                            <li>Gửi mã QR cho khách qua Zalo, email</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
+
+    <!-- QR Code Modal -->
+    <md-dialog id="qrModal">
+        <div style="text-align: center; padding: 20px;">
+            <h3 style="margin-bottom: 16px;">Mã QR Thực Đơn</h3>
+            <div id="qrModalContent" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+                <button class="filter-btn" onclick="qrGenerator.downloadQR()">
+                    <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">download</span>
+                    Tải xuống
+                </button>
+                <button class="filter-btn" onclick="document.getElementById('qrModal').close()">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </md-dialog>
 
     <!-- Order Detail Modal -->
     <div id="orderDetailModal"></div>
@@ -767,5 +843,128 @@
         const themeIcon = themeToggle?.querySelector('.theme-icon');
         if (!themeToggle) return;
     <script type="module" src="js/theme.min.js" defer></script>
+
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // QR Code Generator Module
+        const qrGenerator = {
+            menuUrl: window.location.origin + '/qr-menu.html',
+            qrCode: null,
+
+            init() {
+                // Set the menu URL input
+                document.getElementById('menuUrl').value = this.menuUrl;
+
+                // Generate QR code
+                this.generate();
+            },
+
+            generate() {
+                const size = parseInt(document.getElementById('qrSize').value);
+                const container = document.getElementById('qrCodeContainer');
+
+                // Clear existing QR code
+                container.innerHTML = '';
+
+                // Generate new QR code
+                this.qrCode = new QRCode(container, {
+                    text: this.menuUrl,
+                    width: size,
+                    height: size,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            },
+
+            downloadQR() {
+                const canvas = document.querySelector('#qrCodeContainer canvas');
+                if (!canvas) {
+                    alert('Vui lòng đợi mã QR được tạo!');
+                    return;
+                }
+
+                const size = document.getElementById('qrSize').value;
+                const link = document.createElement('a');
+                link.download = `qr-menu-fnb-${size}x${size}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            },
+
+            copyUrl() {
+                const urlInput = document.getElementById('menuUrl');
+                urlInput.select();
+                urlInput.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(urlInput.value).then(() => {
+                    // Show toast notification
+                    this.showToast('Đã sao chép URL!');
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Không thể sao chép. Vui lòng sao chép thủ công.');
+                });
+            },
+
+            showToast(message) {
+                // Remove existing toast
+                const existingToast = document.querySelector('.toast-notification');
+                if (existingToast) existingToast.remove();
+
+                // Create toast
+                const toast = document.createElement('div');
+                toast.className = 'toast-notification';
+                toast.innerHTML = `
+                    <span class="material-symbols-outlined" style="margin-right: 8px;">check_circle</span>
+                    ${message}
+                `;
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #323232;
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 0.9rem;
+                    z-index: 10000;
+                    animation: slideUp 0.3s ease;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+
+                document.body.appendChild(toast);
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    toast.style.animation = 'slideDown 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        };
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            @keyframes slideDown {
+                from { opacity: 1; transform: translateX(-50%) translateY(0); }
+                to { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize QR generator when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => qrGenerator.init());
+        } else {
+            qrGenerator.init();
+        }
+    </script>
 </body>
 </html>

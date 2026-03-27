@@ -26,27 +26,27 @@
         <div class="order-info">
             <div class="info-row">
                 <span>Hóa đơn:</span>
-                <span class="value">#ORD-2026-001</span>
+                <span class="value" id="orderNumber">#---</span>
             </div>
             <div class="info-row">
                 <span>Ngày:</span>
-                <span class="value">15/03/2026 14:30</span>
+                <span class="value" id="orderDate">--/--/---- --:--</span>
             </div>
             <div class="info-row">
-                <span>Nhân viên:</span>
-                <span class="value">Nguyễn Văn A</span>
+                <span>Khách hàng:</span>
+                <span class="value" id="customerName">---</span>
             </div>
             <div class="info-row">
-                <span>Khách:</span>
-                <span class="value">Nguyễn Văn B</span>
+                <span>SĐT:</span>
+                <span class="value" id="customerPhone">---</span>
             </div>
             <div class="info-row">
-                <span>Bàn:</span>
-                <span class="value">Tầng 2 - Bàn 5</span>
+                <span>Địa chỉ:</span>
+                <span class="value" id="deliveryType">---</span>
             </div>
             <div class="info-row">
                 <span>Loại:</span>
-                <span class="value">Tại chỗ</span>
+                <span class="value" id="orderType">Tại chỗ</span>
             </div>
         </div>
 
@@ -62,45 +62,8 @@
                         <th class="item-price">Thành tiền</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <div class="item-detail">
-                                <span class="item-name-text">Cà Phê Sữa Đá</span>
-                                <span class="item-note">- Ít đường</span>
-                            </div>
-                        </td>
-                        <td class="qty">2</td>
-                        <td class="price">90.000đ</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="item-detail">
-                                <span class="item-name-text">Trà Đào Cam Sả</span>
-                                <span class="item-note">- Đá ít</span>
-                            </div>
-                        </td>
-                        <td class="qty">1</td>
-                        <td class="price">55.000đ</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="item-detail">
-                                <span class="item-name-text">Bánh Croissant</span>
-                            </div>
-                        </td>
-                        <td class="qty">1</td>
-                        <td class="price">45.000đ</td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="item-detail">
-                                <span class="item-name-text">Cold Brew Cam</span>
-                            </div>
-                        </td>
-                        <td class="qty">2</td>
-                        <td class="price">130.000đ</td>
-                    </tr>
+                <tbody id="itemsList">
+                    <!-- Items will be populated by JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -111,19 +74,19 @@
         <div class="receipt-totals">
             <div class="total-row">
                 <span>Tạm tính</span>
-                <span>320.000đ</span>
+                <span id="subtotal">0đ</span>
+            </div>
+            <div class="total-row" id="discountRow" style="display: none;">
+                <span>Giảm giá</span>
+                <span class="discount" id="discount">0đ</span>
             </div>
             <div class="total-row">
-                <span>Giảm giá (10%)</span>
-                <span class="discount">-32.000đ</span>
-            </div>
-            <div class="total-row">
-                <span>Thuế VAT (8%)</span>
-                <span>23.040đ</span>
+                <span>Phí giao hàng</span>
+                <span id="deliveryFee">0đ</span>
             </div>
             <div class="total-row grand-total">
                 <span>Tổng cộng</span>
-                <span>311.040đ</span>
+                <span id="total">0đ</span>
             </div>
         </div>
 
@@ -132,31 +95,20 @@
         <!-- Payment -->
         <div class="payment-info">
             <div class="total-row">
-                <span>Thanh toán</span>
-                <span>311.040đ</span>
-            </div>
-            <div class="total-row">
                 <span>Phương thức</span>
-                <span class="payment-method">💳 MoMo</span>
+                <span class="payment-method" id="paymentMethod">---</span>
             </div>
             <div class="total-row">
                 <span>Trạng thái</span>
-                <span class="status-paid">✓ Đã thanh toán</span>
+                <span class="status-paid" id="paymentStatus">✓ Đã thanh toán</span>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="receipt-footer">
             <div class="qr-section">
-                <div class="qr-code">
-                    <!-- Placeholder QR code -->
-                    <svg viewBox="0 0 100 100" width="80" height="80">
-                        <rect fill="#000" x="0" y="0" width="100" height="100"/>
-                        <rect fill="#fff" x="10" y="10" width="80" height="80"/>
-                        <rect fill="#000" x="15" y="15" width="20" height="20"/>
-                        <rect fill="#000" x="65" y="15" width="20" height="20"/>
-                        <rect fill="#000" x="15" y="65" width="20" height="20"/>
-                    </svg>
+                <div class="qr-code" id="qrCode">
+                    <!-- QR code will be generated by JavaScript -->
                 </div>
                 <p class="qr-text">Quét QR để thanh toán</p>
             </div>
@@ -185,14 +137,157 @@
         <button onclick="window.print()" class="btn-print">
             🖨️ In Hóa Đơn
         </button>
-        <button onclick="window.close()" class="btn-close">
-            ✕ Đóng
+        <button onclick="window.history.back()" class="btn-close">
+            ← Quay Lại
         </button>
     </div>
 
     <script>
-        // Auto-print on load (optional)
-        // window.onload = () => window.print();
+        /**
+         * Format price in VND
+         */
+        function formatPrice(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount).replace('₫', 'đ');
+        }
+
+        /**
+         * Generate QR code using Google Charts API
+         */
+        function generateQRCode(data) {
+            const qrContainer = document.getElementById('qrCode');
+            const qrData = encodeURIComponent(data);
+            const qrUrl = `https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${qrData}&choe=UTF-8`;
+
+            qrContainer.innerHTML = `<img src="${qrUrl}" alt="QR Code" width="80" height="80" />`;
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Parse order data from URL parameters
+         */
+        function loadOrderFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Check if we have order data in URL
+            const orderData = params.get('order');
+            if (!orderData) {
+                // Try to load from localStorage
+                const pendingOrder = localStorage.getItem('pendingOrder');
+                if (pendingOrder) {
+                    return JSON.parse(pendingOrder);
+                }
+                return null;
+            }
+
+            try {
+                return JSON.parse(decodeURIComponent(orderData));
+            } catch (e) {
+                console.error('Error parsing order data:', e);
+                return null;
+            }
+        }
+
+        /**
+         * Render receipt with order data
+         */
+        function renderReceipt(order) {
+            if (!order) {
+                alert('Không tìm thấy thông tin đơn hàng!');
+                return;
+            }
+
+            // Order info
+            document.getElementById('orderNumber').textContent = '#' + (order.id || '---');
+
+            const orderDate = order.created_at ? new Date(order.created_at) : new Date();
+            document.getElementById('orderDate').textContent = orderDate.toLocaleString('vi-VN');
+
+            document.getElementById('customerName').textContent = escapeHtml(order.customer?.full_name || 'Khách vãng lai');
+            document.getElementById('customerPhone').textContent = escapeHtml(order.customer?.phone || '---');
+
+            const address = order.customer?.address || 'Tại quán';
+            document.getElementById('deliveryType').textContent = escapeHtml(address);
+            document.getElementById('orderType').textContent = address === 'Tại quán' ? 'Tại chỗ' : 'Giao hàng';
+
+            // Items
+            const itemsList = document.getElementById('itemsList');
+            const items = order.items || [];
+
+            if (items.length === 0) {
+                itemsList.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px;">Không có món nào</td></tr>';
+            } else {
+                itemsList.innerHTML = items.map(item => `
+                    <tr>
+                        <td>
+                            <div class="item-detail">
+                                <span class="item-name-text">${escapeHtml(item.name)}</span>
+                                ${item.note ? `<span class="item-note">- ${escapeHtml(item.note)}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="qty">${item.quantity || 1}</td>
+                        <td class="price">${formatPrice((item.price || 0) * (item.quantity || 1))}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // Totals
+            const subtotal = order.subtotal || 0;
+            const discount = order.discount || 0;
+            const deliveryFee = order.shipping_fee || 0;
+            const total = order.total || 0;
+
+            document.getElementById('subtotal').textContent = formatPrice(subtotal);
+
+            if (discount > 0) {
+                document.getElementById('discountRow').style.display = 'flex';
+                document.getElementById('discount').textContent = '-' + formatPrice(discount);
+            }
+
+            document.getElementById('deliveryFee').textContent = deliveryFee === 0 ? 'Miễn phí' : formatPrice(deliveryFee);
+            document.getElementById('total').textContent = formatPrice(total);
+
+            // Payment
+            const paymentMethods = {
+                'cod': '💵 Tiền mặt (COD)',
+                'momo': '💳 MoMo',
+                'vnpay': '💳 VNPay',
+                'payos': '💳 PayOS',
+                'qr-bank': '💳 QR Ngân hàng'
+            };
+            document.getElementById('paymentMethod').textContent = paymentMethods[order.payment_method] || order.payment_method || '---';
+
+            const statusLabels = {
+                'pending': '⏳ Chờ xử lý',
+                'confirmed': '✓ Đã xác nhận',
+                'paid': '✓ Đã thanh toán',
+                'completed': '✓ Hoàn thành'
+            };
+            document.getElementById('paymentStatus').textContent = statusLabels[order.status] || '✓ Đã thanh toán';
+
+            // Generate QR code with order info
+            const qrData = `F&B CONTAINER\nHoa don: ${order.id}\nTong tien: ${formatPrice(total)}\nNgay: ${orderDate.toLocaleString('vi-VN')}`;
+            generateQRCode(qrData);
+
+            // Auto-print dialog (optional - commented out by default)
+            // setTimeout(() => window.print(), 500);
+        }
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const order = loadOrderFromURL();
+            renderReceipt(order);
+        });
     </script>
 </body>
 </html>
