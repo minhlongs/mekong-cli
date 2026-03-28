@@ -1,0 +1,7 @@
+{
+  "project": "mekong-cli",
+  "goal": "/cook \"Run full quality check: 1) python3 -m pytest tests/ -v --tb=short 2>&1 | tail -20 2) python3 -m ruff check src/ --fix 3) python3 factory/self_test.py 4) Report score và status. Target: score > 95/100\"",
+  "priority": "medium",
+  "created_at": "2026-03-20T15:01:40+07:00",
+  "source": "antigravity-cto-dispatch"
+}
