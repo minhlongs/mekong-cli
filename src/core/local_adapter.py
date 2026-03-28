@@ -1,6 +1,7 @@
-"""ALGO 5 — Local Adapter (Ollama).
+"""ALGO 5 — Local LLM Adapter (MLX / OpenAI-compatible).
 
-Manages local LLM inference via Ollama API.
+Manages local LLM inference via OpenAI-compatible API.
+Works with MLX (mlx-lm.server), Ollama, LM Studio, or any local server.
 """
 
 from __future__ import annotations
@@ -13,8 +14,12 @@ from typing import AsyncIterator
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+LOCAL_LLM_URL = os.getenv(
+    "LOCAL_LLM_URL",
+    os.getenv("OLLAMA_URL", "http://localhost:11435/v1"),
+)
 
+# Legacy compat — keep for reference
 QUANTIZATION_MAP: dict[str, str] = {
     "llama3.3:70b": "q4_K_M",
     "deepseek-coder-v2:33b": "q4_K_M",
@@ -26,60 +31,56 @@ QUANTIZATION_MAP: dict[str, str] = {
 
 
 @dataclass
-class OllamaAdapter:
-    """Adapter for Ollama local inference."""
+class LocalLLMAdapter:
+    """Adapter for local LLM inference via OpenAI-compatible API.
 
-    base_url: str = OLLAMA_BASE_URL
+    Works with MLX (mlx-lm.server), Ollama (/v1), LM Studio, etc.
+    """
+
+    base_url: str = LOCAL_LLM_URL
     pulled_models: set[str] = field(default_factory=set)
 
     def health_check(self) -> bool:
-        """Check if Ollama is running and responsive."""
+        """Check if local LLM server is running and responsive."""
         try:
             import urllib.request
-            req = urllib.request.Request(
-                f"{self.base_url}/api/tags",
-                method="GET",
-            )
-            with urllib.request.urlopen(req, timeout=2) as resp:
+            # Use OpenAI-standard /models endpoint
+            url = f"{self.base_url}/models"
+            if not self.base_url.endswith("/v1"):
+                url = f"{self.base_url}/v1/models"
+            req = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(req, timeout=3) as resp:
                 return resp.status == 200
         except Exception as e:
-            logger.debug("Ollama health check failed: %s", e)
+            logger.debug("Local LLM health check failed: %s", e)
             return False
 
     def list_models(self) -> list[str]:
-        """List locally available models."""
+        """List locally available models via OpenAI-compatible endpoint."""
         try:
             import urllib.request
-            req = urllib.request.Request(
-                f"{self.base_url}/api/tags",
-                method="GET",
-            )
+            url = f"{self.base_url}/models"
+            if not self.base_url.endswith("/v1"):
+                url = f"{self.base_url}/v1/models"
+            req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read())
-                return [m["name"] for m in data.get("models", [])]
+                return [m["id"] for m in data.get("data", [])]
         except Exception as e:
-            logger.debug("Ollama list_models failed: %s", e)
+            logger.debug("Local LLM list_models failed: %s", e)
             return []
 
-    def get_vram_load(self) -> float:
-        """Estimate VRAM usage (0.0-1.0)."""
+    def get_status(self) -> dict:
+        """Get basic server status (model list + health)."""
         try:
-            import urllib.request
-            req = urllib.request.Request(
-                f"{self.base_url}/api/ps",
-                method="GET",
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                data = json.loads(resp.read())
-                models = data.get("models", [])
-                if not models:
-                    return 0.0
-                total_size = sum(m.get("size", 0) for m in models)
-                gpu_total = int(os.getenv("GPU_TOTAL_VRAM_GB", "8")) * 1_073_741_824
-                return min(total_size / gpu_total, 1.0) if gpu_total > 0 else 0.0
-        except Exception as e:
-            logger.debug("Ollama VRAM load check failed: %s", e)
-            return 0.0
+            models = self.list_models()
+            return {
+                "healthy": True,
+                "models_loaded": len(models),
+                "models": models,
+            }
+        except Exception:
+            return {"healthy": False, "models_loaded": 0, "models": []}
 
     async def generate(
         self,
@@ -88,10 +89,10 @@ class OllamaAdapter:
         temperature: float = 0.3,
         max_tokens: int = 4096,
     ) -> AsyncIterator[str]:
-        """Stream generate from Ollama.
+        """Stream generate from local LLM via OpenAI-compatible API.
 
         Args:
-            model: Ollama model name (without 'ollama:' prefix).
+            model: Model name.
             messages: Chat messages in OpenAI format.
             temperature: Generation temperature.
             max_tokens: Max output tokens.
@@ -101,38 +102,44 @@ class OllamaAdapter:
         """
         import aiohttp
 
-        # Strip ollama: prefix if present
-        if model.startswith("ollama:"):
-            model = model[7:]
+        # Strip provider prefix if present
+        for prefix in ("ollama:", "mlx:", "local:"):
+            if model.startswith(prefix):
+                model = model[len(prefix):]
+                break
 
         payload = {
             "model": model,
             "messages": messages,
             "stream": True,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens,
-                "num_ctx": 4096,
-                "num_thread": os.cpu_count() or 4,
-            },
+            "temperature": temperature,
+            "max_tokens": max_tokens,
         }
+
+        url = f"{self.base_url}/chat/completions"
+        if not self.base_url.endswith("/v1"):
+            url = f"{self.base_url}/v1/chat/completions"
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"{self.base_url}/api/chat",
+                url,
                 json=payload,
                 timeout=aiohttp.ClientTimeout(total=300),
             ) as resp:
                 async for line in resp.content:
-                    if not line:
+                    line_str = line.decode("utf-8", errors="ignore").strip()
+                    if not line_str or line_str == "data: [DONE]":
                         continue
+                    if line_str.startswith("data: "):
+                        line_str = line_str[6:]
                     try:
-                        chunk = json.loads(line)
-                        if chunk.get("done"):
-                            break
-                        content = chunk.get("message", {}).get("content", "")
-                        if content:
-                            yield content
+                        chunk = json.loads(line_str)
+                        choices = chunk.get("choices", [])
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
                     except json.JSONDecodeError:
                         continue
 
@@ -146,21 +153,25 @@ class OllamaAdapter:
         """Synchronous generation for simple use cases."""
         import urllib.request
 
-        if model.startswith("ollama:"):
-            model = model[7:]
+        for prefix in ("ollama:", "mlx:", "local:"):
+            if model.startswith(prefix):
+                model = model[len(prefix):]
+                break
 
         payload = json.dumps({
             "model": model,
             "messages": messages,
             "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens,
-            },
+            "temperature": temperature,
+            "max_tokens": max_tokens,
         }).encode()
 
+        url = f"{self.base_url}/chat/completions"
+        if not self.base_url.endswith("/v1"):
+            url = f"{self.base_url}/v1/chat/completions"
+
         req = urllib.request.Request(
-            f"{self.base_url}/api/chat",
+            url,
             data=payload,
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -169,7 +180,14 @@ class OllamaAdapter:
         try:
             with urllib.request.urlopen(req, timeout=300) as resp:
                 data = json.loads(resp.read())
-                return data.get("message", {}).get("content", "")
+                choices = data.get("choices", [])
+                if choices:
+                    return choices[0].get("message", {}).get("content", "")
+                return ""
         except Exception as e:
-            logger.error("Ollama sync generate failed: %s", e)
+            logger.error("Local LLM sync generate failed: %s", e)
             return ""
+
+
+# Backward compatibility alias
+OllamaAdapter = LocalLLMAdapter

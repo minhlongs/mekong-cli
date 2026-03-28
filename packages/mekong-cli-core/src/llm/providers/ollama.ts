@@ -1,33 +1,36 @@
 /**
- * Ollama provider — local LLM inference.
- * Wraps the Ollama API (OpenAI-compatible at /v1/).
+ * Local LLM provider — supports MLX, Ollama, and any OpenAI-compatible server.
+ * MLX is preferred on Apple Silicon for optimal performance.
  */
 import { OpenAICompatProvider } from './openai-compatible.js';
 import type { LlmProvider, ChatRequest, ChatResponse } from '../types.js';
 
-export class OllamaProvider implements LlmProvider {
-  readonly name = 'ollama';
+export class LocalLLMProvider implements LlmProvider {
+  readonly name = 'local-llm';
   private inner: OpenAICompatProvider;
   private baseUrl: string;
 
   constructor(baseUrl?: string, defaultModel?: string) {
-    this.baseUrl = baseUrl ?? 'http://localhost:11434';
+    this.baseUrl = baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
     this.inner = new OpenAICompatProvider({
-      name: 'ollama',
-      baseUrl: `${this.baseUrl}/v1`,
-      apiKey: 'ollama', // Ollama doesn't require a key
-      defaultModel: defaultModel ?? 'llama3.2',
+      name: 'local-llm',
+      baseUrl: this.baseUrl.endsWith('/v1') ? this.baseUrl : `${this.baseUrl}/v1`,
+      apiKey: process.env.LLM_API_KEY ?? 'mlx',
+      defaultModel: defaultModel ?? process.env.LOCAL_LLM_MODEL ?? 'mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit',
     });
   }
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     const response = await this.inner.chat(request);
-    return { ...response, cost: 0, provider: 'ollama' }; // Local = free
+    return { ...response, cost: 0, provider: 'local-llm' }; // Local = free
   }
 
   async isAvailable(): Promise<boolean> {
     try {
-      const response = await fetch(this.baseUrl, { signal: AbortSignal.timeout(2000) });
+      const url = this.baseUrl.endsWith('/v1')
+        ? `${this.baseUrl}/models`
+        : `${this.baseUrl}/v1/models`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
       return response.ok;
     } catch {
       return false;
@@ -36,12 +39,18 @@ export class OllamaProvider implements LlmProvider {
 
   async listModels(): Promise<string[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/tags`);
+      const url = this.baseUrl.endsWith('/v1')
+        ? `${this.baseUrl}/models`
+        : `${this.baseUrl}/v1/models`;
+      const response = await fetch(url);
       if (!response.ok) return [];
-      const data = await response.json() as { models?: Array<{ name: string }> };
-      return data.models?.map(m => m.name) ?? [];
+      const data = await response.json() as { data?: Array<{ id: string }> };
+      return data.data?.map(m => m.id) ?? [];
     } catch {
       return [];
     }
   }
 }
+
+// Backward compatibility
+export const OllamaProvider = LocalLLMProvider;

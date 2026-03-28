@@ -1,6 +1,8 @@
 from .lead_hunter import LeadHunter
 from .content_writer import ContentWriter
+from .content_factory import ContentFactory
 from .recipe_crawler import RecipeCrawler
+from .kingcontent_adapter import KingContentAdapter
 from .git_agent import GitAgent
 from .file_agent import FileAgent
 from .shell_agent import ShellAgent
@@ -19,6 +21,7 @@ registry.register("database", DatabaseAgent)
 registry.register("db", DatabaseAgent)  # Alias for convenience
 registry.register("lead", LeadHunter)
 registry.register("content", ContentWriter)
+registry.register("content-factory", ContentFactory)
 registry.register("crawler", RecipeCrawler)
 registry.register("workspace", WorkspaceAgent)
 registry.register("google", WorkspaceAgent)  # Alias
@@ -39,6 +42,8 @@ except Exception:
 __all__ = [
     "LeadHunter",
     "ContentWriter",
+    "ContentFactory",
+    "KingContentAdapter",
     "RecipeCrawler",
     "GitAgent",
     "FileAgent",

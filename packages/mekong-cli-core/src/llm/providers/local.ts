@@ -1,13 +1,13 @@
 /**
- * Local provider — supports Ollama and Cloudflare Workers AI.
- * Auto-detects which local endpoint is available.
+ * Local provider — supports MLX, Ollama, and Cloudflare Workers AI.
+ * MLX is preferred on Apple Silicon for optimal performance.
  */
 import { OpenAICompatProvider } from './openai-compatible.js';
 import type { ChatRequest, ChatResponse, LlmProvider } from '../types.js';
 
 export interface LocalConfig {
-  /** 'ollama' or 'cloudflare-workers-ai' */
-  backend: 'ollama' | 'cloudflare-workers-ai';
+  /** 'mlx', 'ollama', or 'cloudflare-workers-ai' */
+  backend: 'mlx' | 'ollama' | 'cloudflare-workers-ai';
   baseUrl?: string;
   defaultModel?: string;
   /** Required for CF Workers AI */
@@ -39,13 +39,23 @@ export class LocalProvider implements LlmProvider {
         apiKey: apiToken,
         defaultModel: config.defaultModel ?? '@cf/meta/llama-3.1-8b-instruct',
       });
-    } else {
-      // Ollama (default)
-      const baseUrl = config.baseUrl ?? 'http://localhost:11434';
-      this.healthUrl = baseUrl;
+    } else if (backend === 'mlx') {
+      // MLX (Apple Silicon optimized — preferred)
+      const baseUrl = config.baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
+      this.healthUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
       this.inner = new OpenAICompatProvider({
         name: this.name,
-        baseUrl: `${baseUrl}/v1`,
+        baseUrl: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
+        apiKey: process.env.LLM_API_KEY ?? 'mlx',
+        defaultModel: config.defaultModel ?? 'mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit',
+      });
+    } else {
+      // Ollama (cross-platform fallback)
+      const baseUrl = config.baseUrl ?? 'http://localhost:11434';
+      this.healthUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
+      this.inner = new OpenAICompatProvider({
+        name: this.name,
+        baseUrl: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
         apiKey: 'ollama',
         defaultModel: config.defaultModel ?? 'llama3.2',
       });

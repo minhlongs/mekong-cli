@@ -45,8 +45,8 @@ def _make_state(**overrides) -> SystemState:
 
 
 class TestDetectProvider:
-    def test_ollama(self):
-        assert detect_provider("ollama:llama3.2:3b") == "ollama"
+    def test_mlx(self):
+        assert detect_provider("mlx:llama3.2:3b") == "mlx"
 
     def test_anthropic(self):
         assert detect_provider("claude-sonnet-4-6") == "anthropic"
@@ -70,7 +70,7 @@ class TestLookupMatrix:
     def test_sensitive_cto(self):
         profile = _make_profile(agent_role="cto", complexity="simple",
                                 requires_reasoning=False, data_sensitivity="sensitive")
-        assert _lookup_matrix(profile) == "ollama:deepseek-coder-v2:16b"
+        assert _lookup_matrix(profile) == "mlx:deepseek-coder-v2:16b"
 
     def test_wildcard_sensitivity(self):
         profile = _make_profile(agent_role="cmo", complexity="simple",
@@ -86,7 +86,7 @@ class TestLookupMatrix:
     def test_cs_simple(self):
         profile = _make_profile(agent_role="cs", complexity="simple",
                                 requires_reasoning=False, data_sensitivity="public")
-        assert _lookup_matrix(profile) == "ollama:mistral:7b"
+        assert _lookup_matrix(profile) == "mlx:mistral:7b"
 
 
 class TestSelectModel:
@@ -104,8 +104,8 @@ class TestSelectModel:
                                 requires_reasoning=False, data_sensitivity="sensitive")
         state = _make_state(local_available=False)
         config = select_model(profile, state)
-        # Should fallback from ollama to API
-        assert not config.model_id.startswith("ollama:")
+        # Should fallback from mlx to API
+        assert not config.model_id.startswith("mlx:")
 
     def test_vram_pressure_downgrades(self):
         profile = _make_profile(agent_role="cto", complexity="standard",
@@ -113,7 +113,7 @@ class TestSelectModel:
         state = _make_state(local_load=0.9)
         config = select_model(profile, state)
         # Should downgrade from 33b to smaller
-        assert config.model_id != "ollama:deepseek-coder-v2:33b"
+        assert config.model_id != "mlx:deepseek-coder-v2:33b"
 
     def test_starter_no_opus(self):
         profile = _make_profile(agent_role="cto", complexity="complex",
@@ -127,7 +127,7 @@ class TestSelectModel:
                                 requires_reasoning=False, domain="ops")
         state = _make_state(tenant_tier="starter")
         config = select_model(profile, state)
-        assert config.model_id.startswith("ollama:")
+        assert config.model_id.startswith("mlx:")
 
     def test_temperature_matches_domain(self):
         profile = _make_profile(domain="creative", agent_role="cmo",
@@ -150,7 +150,7 @@ class TestSelectModel:
         state = _make_state(api_keys={"anthropic": False, "google": False, "openai": False})
         config = select_model(profile, state)
         # Should use local since no API keys
-        assert config.model_id.startswith("ollama:")
+        assert config.model_id.startswith("mlx:")
 
     def test_model_not_pulled_falls_back(self):
         profile = _make_profile(agent_role="coo", complexity="simple",
@@ -158,7 +158,7 @@ class TestSelectModel:
         state = _make_state(local_models=[])  # no models pulled
         config = select_model(profile, state)
         # Falls back to API since no local models
-        assert not config.model_id.startswith("ollama:")
+        assert not config.model_id.startswith("mlx:")
 
     def test_cost_fields_populated(self):
         profile = _make_profile(agent_role="cto", complexity="simple",

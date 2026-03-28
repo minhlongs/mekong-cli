@@ -27,7 +27,7 @@ class ModelConfig:
     """Selected model configuration."""
 
     model_id: str
-    provider: Literal["ollama", "anthropic", "google", "openai"]
+    provider: Literal["mlx", "anthropic", "google", "openai"]
     max_tokens: int
     temperature: float
     context_window: int = 0
@@ -41,13 +41,13 @@ MODEL_ROUTING_MATRIX: dict[tuple[str, str, bool | str, str], str] = {
     # CTO: CODE
     ("cto", "simple", False, "public"): "gemini-2.0-flash",
     ("cto", "simple", False, "internal"): "gemini-2.0-flash",
-    ("cto", "simple", False, "sensitive"): "ollama:deepseek-coder-v2:16b",
+    ("cto", "simple", False, "sensitive"): "mlx:deepseek-coder-v2:16b",
     ("cto", "standard", True, "public"): "claude-sonnet-4-6",
     ("cto", "standard", True, "internal"): "claude-sonnet-4-6",
-    ("cto", "standard", True, "sensitive"): "ollama:deepseek-coder-v2:33b",
+    ("cto", "standard", True, "sensitive"): "mlx:deepseek-coder-v2:33b",
     ("cto", "complex", True, "public"): "claude-opus-4-6",
     ("cto", "complex", True, "internal"): "claude-opus-4-6",
-    ("cto", "complex", True, "sensitive"): "ollama:deepseek-coder-v2:33b",
+    ("cto", "complex", True, "sensitive"): "mlx:deepseek-coder-v2:33b",
     # CMO/EDITOR: CREATIVE
     ("cmo", "simple", False, "*"): "gemini-2.0-flash",
     ("cmo", "standard", True, "*"): "gemini-2.0-flash",
@@ -56,24 +56,24 @@ MODEL_ROUTING_MATRIX: dict[tuple[str, str, bool | str, str], str] = {
     ("editor", "standard", False, "*"): "gemini-2.0-flash",
     ("editor", "complex", False, "*"): "gemini-2.0-flash",
     # COO: OPS (prefer local)
-    ("coo", "simple", False, "*"): "ollama:llama3.2:3b",
-    ("coo", "standard", False, "*"): "ollama:llama3.2:3b",
-    ("coo", "complex", False, "*"): "ollama:llama3.2:3b",
+    ("coo", "simple", False, "*"): "mlx:llama3.2:3b",
+    ("coo", "standard", False, "*"): "mlx:llama3.2:3b",
+    ("coo", "complex", False, "*"): "mlx:llama3.2:3b",
     # CFO/DATA: ANALYSIS
-    ("cfo", "simple", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("cfo", "simple", False, "sensitive"): "mlx:qwen2.5:7b",
     ("cfo", "simple", False, "public"): "gemini-2.0-flash-lite",
-    ("cfo", "standard", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("cfo", "standard", False, "sensitive"): "mlx:qwen2.5:7b",
     ("cfo", "standard", False, "public"): "gemini-2.0-flash-lite",
-    ("cfo", "complex", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("cfo", "complex", False, "sensitive"): "mlx:qwen2.5:7b",
     ("cfo", "complex", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "simple", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("data", "simple", False, "sensitive"): "mlx:qwen2.5:7b",
     ("data", "simple", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "standard", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("data", "standard", False, "sensitive"): "mlx:qwen2.5:7b",
     ("data", "standard", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "complex", False, "sensitive"): "ollama:qwen2.5:7b",
+    ("data", "complex", False, "sensitive"): "mlx:qwen2.5:7b",
     ("data", "complex", False, "public"): "gemini-2.0-flash-lite",
     # CS: SUPPORT
-    ("cs", "simple", False, "*"): "ollama:mistral:7b",
+    ("cs", "simple", False, "*"): "mlx:mistral:7b",
     ("cs", "standard", False, "*"): "claude-haiku-4-5",
     ("cs", "complex", True, "*"): "claude-haiku-4-5",
     # SALES
@@ -91,12 +91,12 @@ CONTEXT_WINDOW_MAP: dict[str, int] = {
     "gemini-2.0-pro": 1000000,
     "gpt-4o-mini": 128000,
     "gpt-4o": 128000,
-    "ollama:deepseek-coder-v2:33b": 128000,
-    "ollama:deepseek-coder-v2:16b": 128000,
-    "ollama:llama3.2:3b": 128000,
-    "ollama:llama3.3:70b": 128000,
-    "ollama:qwen2.5:7b": 128000,
-    "ollama:mistral:7b": 32000,
+    "mlx:deepseek-coder-v2:33b": 128000,
+    "mlx:deepseek-coder-v2:16b": 128000,
+    "mlx:llama3.2:3b": 128000,
+    "mlx:llama3.3:70b": 128000,
+    "mlx:qwen2.5:7b": 128000,
+    "mlx:mistral:7b": 32000,
 }
 
 TEMP_MAP: dict[str, float] = {
@@ -110,28 +110,28 @@ TEMP_MAP: dict[str, float] = {
 
 # Best local model per domain (for starter tier override)
 BEST_LOCAL_FOR_DOMAIN: dict[str, str] = {
-    "code": "ollama:deepseek-coder-v2:16b",
-    "creative": "ollama:llama3.2:3b",
-    "ops": "ollama:llama3.2:3b",
-    "analysis": "ollama:qwen2.5:7b",
-    "sales": "ollama:mistral:7b",
-    "support": "ollama:mistral:7b",
+    "code": "mlx:deepseek-coder-v2:16b",
+    "creative": "mlx:llama3.2:3b",
+    "ops": "mlx:llama3.2:3b",
+    "analysis": "mlx:qwen2.5:7b",
+    "sales": "mlx:mistral:7b",
+    "support": "mlx:mistral:7b",
 }
 
 # Smaller local model fallback for VRAM pressure
 LOCAL_DOWNGRADE: dict[str, str] = {
-    "ollama:deepseek-coder-v2:33b": "ollama:deepseek-coder-v2:16b",
-    "ollama:deepseek-coder-v2:16b": "ollama:llama3.2:3b",
-    "ollama:llama3.3:70b": "ollama:deepseek-coder-v2:33b",
-    "ollama:qwen2.5:7b": "ollama:llama3.2:3b",
-    "ollama:mistral:7b": "ollama:llama3.2:3b",
+    "mlx:deepseek-coder-v2:33b": "mlx:deepseek-coder-v2:16b",
+    "mlx:deepseek-coder-v2:16b": "mlx:llama3.2:3b",
+    "mlx:llama3.3:70b": "mlx:deepseek-coder-v2:33b",
+    "mlx:qwen2.5:7b": "mlx:llama3.2:3b",
+    "mlx:mistral:7b": "mlx:llama3.2:3b",
 }
 
 
 def detect_provider(model_id: str) -> str:
     """Detect the provider from a model ID."""
-    if model_id.startswith("ollama:"):
-        return "ollama"
+    if model_id.startswith("mlx:"):
+        return "mlx"
     if "claude" in model_id:
         return "anthropic"
     if "gemini" in model_id:
@@ -179,7 +179,7 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
     model_id = _lookup_matrix(profile) or "gemini-2.0-flash"
 
     # Step 2: Availability check
-    if model_id.startswith("ollama:"):
+    if model_id.startswith("mlx:"):
         ollama_model = model_id.split(":", 1)[1] if ":" in model_id else model_id
         if not state.local_available:
             model_id = "gemini-2.0-flash"  # API fallback
@@ -192,7 +192,7 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
         if not state.api_keys.get(provider, False):
             # Try different provider
             if state.local_available:
-                model_id = BEST_LOCAL_FOR_DOMAIN.get(profile.domain, "ollama:llama3.2:3b")
+                model_id = BEST_LOCAL_FOR_DOMAIN.get(profile.domain, "mlx:llama3.2:3b")
             else:
                 model_id = "gemini-2.0-flash"  # last resort
 
