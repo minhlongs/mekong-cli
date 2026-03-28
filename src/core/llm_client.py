@@ -10,8 +10,9 @@ Priority (auto-detected from env vars when no providers passed):
 5. ANTHROPIC_API_KEY     → Direct Anthropic API
 6. OPENAI_API_KEY        → Direct OpenAI API
 7. GOOGLE_API_KEY        → Google Gemini (direct)
-8. OLLAMA_BASE_URL       → Local Ollama (free, offline)
-9. Fallback              → OfflineProvider
+8. LOCAL_LLM_URL         → Local MLX/Ollama (free, offline)
+9. OLLAMA_BASE_URL       → Local Ollama legacy (free, offline)
+10. Fallback             → OfflineProvider
 
 NO PROXY by default. User's key hits provider directly (BYOK).
 Runtime failover: if one provider fails, tries the next in priority order.
@@ -186,7 +187,8 @@ class LLMClient:
           ANTHROPIC_API_KEY → Direct Anthropic (skip localhost proxy)
           OPENAI_API_KEY → Direct OpenAI
           GOOGLE_API_KEY → Gemini
-          OLLAMA_BASE_URL → Local Ollama
+          OLLAMA_BASE_URL → Local Ollama (legacy)
+          LOCAL_LLM_URL   → Local MLX/Ollama (preferred)
 
         User only needs to set 3 vars. All providers are compatible.
         Presets: see mekong/adapters/llm-providers.yaml
@@ -293,15 +295,28 @@ class LLMClient:
         if google_key:
             built.append(GeminiProvider(api_key=google_key, model=self.model))
 
-        # Local Ollama (no key needed)
+        # Local LLM — MLX preferred, Ollama fallback
+        local_url = os.getenv("LOCAL_LLM_URL", "")
         ollama_url = os.getenv("OLLAMA_BASE_URL", "")
-        if ollama_url or self._check_ollama_running():
+        local_model = os.getenv("LOCAL_LLM_MODEL", "") or os.getenv("OLLAMA_MODEL", "llama3.2")
+
+        if local_url:
             built.append(
                 OpenAICompatibleProvider(
-                    base_url=ollama_url or "http://localhost:11434/v1",
-                    api_key="ollama",
-                    model=os.getenv("OLLAMA_MODEL", "llama3.2"),
-                    provider_name="ollama-local",
+                    base_url=local_url,
+                    api_key=os.getenv("LLM_API_KEY", "mlx"),
+                    model=local_model,
+                    provider_name="local-llm",
+                    timeout=self.timeout,
+                ),
+            )
+        elif ollama_url or self._check_local_llm_running():
+            built.append(
+                OpenAICompatibleProvider(
+                    base_url=ollama_url or "http://localhost:11435/v1",
+                    api_key="mlx",
+                    model=local_model,
+                    provider_name="local-llm",
                     timeout=self.timeout,
                 ),
             )
@@ -309,13 +324,16 @@ class LLMClient:
         built.append(OfflineProvider())
         return built
 
-    def _check_ollama_running(self) -> bool:
-        """Probe Ollama health endpoint (port 11434). Returns False on any error."""
-        try:
-            resp = requests.get("http://localhost:11434/api/tags", timeout=2)
-            return resp.status_code == 200
-        except Exception:
-            return False
+    def _check_local_llm_running(self) -> bool:
+        """Probe local LLM health endpoint (MLX port 11435, then Ollama 11434)."""
+        for port in (11435, 11434):
+            try:
+                resp = requests.get(f"http://localhost:{port}/v1/models", timeout=2)
+                if resp.status_code == 200:
+                    return True
+            except Exception:
+                continue
+        return False
 
     @staticmethod
     def _build_providers_from_config(config_path: str) -> list[LLMProvider]:

@@ -19,28 +19,40 @@ providers:
     pros: ["200+ models", "auto-fallback", "pay-per-token", "free tier available"]
     cons: ["cần internet", "cần API key"]
 
+  mlx:
+    name: "MLX (Local — Apple Silicon)"
+    description: "LLM chạy local via MLX, tối ưu Apple Silicon, full memory bandwidth"
+    base_url: "http://localhost:11435/v1"
+    env_key: "LOCAL_LLM_URL"
+    default_model: "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit"
+    recommended_models:
+      - model: "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit"
+        ram: "24GB"
+        quality: "Excellent — reasoning + coding"
+      - model: "mlx-community/Qwen2.5-Coder-32B-Instruct-4bit"
+        ram: "24GB"
+        quality: "Best — coding tasks"
+      - model: "mlx-community/Llama-3.3-70B-Instruct-4bit"
+        ram: "48GB"
+        quality: "Excellent — general tasks"
+    setup_guide: |
+      1. pip install mlx-lm
+      2. python -m mlx_lm.server --model mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit --port 11435
+      3. Server chạy trên port 11435 (OpenAI-compatible)
+    pros: ["miễn phí", "offline", "Apple Silicon optimized", "full memory bandwidth"]
+    cons: ["chỉ chạy trên Apple Silicon", "cần RAM lớn"]
+
   ollama:
-    name: "Ollama (Local)"
-    description: "LLM chạy local, miễn phí, offline, privacy 100%"
+    name: "Ollama (Local — Cross-platform)"
+    description: "LLM chạy local, miễn phí, offline, cross-platform (legacy — prefer MLX on Mac)"
     base_url: "http://localhost:11434/v1"
     env_key: "OLLAMA_BASE_URL"
     default_model: "llama3.2"
-    recommended_models:
-      - model: "llama3.2"
-        ram: "8GB"
-        quality: "Good — general tasks"
-      - model: "qwen2.5-coder"
-        ram: "8GB"
-        quality: "Best — coding tasks"
-      - model: "deepseek-coder-v2"
-        ram: "16GB"
-        quality: "Excellent — complex coding"
     setup_guide: |
       1. curl -fsSL https://ollama.ai/install.sh | sh
       2. ollama pull llama3.2
-      3. Ollama tự chạy trên port 11434
-    pros: ["miễn phí", "offline", "privacy", "không cần API key"]
-    cons: ["cần GPU/RAM", "chất lượng thấp hơn cloud"]
+    pros: ["miễn phí", "offline", "cross-platform"]
+    cons: ["chậm hơn MLX trên Apple Silicon", "bandwidth bị chia sẻ"]
 
   direct:
     name: "Direct API"
@@ -65,5 +77,5 @@ providers:
     cons: ["cần API key", "locked vào 1 provider"]
 
 # Hybrid mode: user có thể set NHIỀU provider
-# System sẽ failover: OpenRouter → Direct → Ollama
-failover_order: ["openrouter", "direct", "ollama"]
+# System sẽ failover: OpenRouter → Direct → MLX → Ollama
+failover_order: ["openrouter", "direct", "mlx", "ollama"]
