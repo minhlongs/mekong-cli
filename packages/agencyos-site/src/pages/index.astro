@@ -1,844 +1,385 @@
 ---
 import BaseLayout from '../layouts/base-layout.astro';
 
-const features = [
-  { icon: '🤖', title: 'AI Receptionist', desc: 'Trả lời Zalo & Facebook 24/7, không bỏ sót tin nhắn nào. Phản hồi dưới 3 giây.', outcome: 'Không còn khách chờ đợi → tăng tỷ lệ chốt đơn 40%' },
-  { icon: '✍️', title: 'Content Creator', desc: 'AI tạo 7 ngày content theo lịch. Bạn chỉ cần duyệt và đăng.', outcome: 'Đăng bài đều đặn → tăng reach 2.3x, không tốn thời gian nghĩ ý tưởng' },
-  { icon: '📊', title: 'CRM Thông Minh', desc: 'Tự động lưu hồ sơ khách, phân loại lead, remarketing đúng lúc.', outcome: 'Khách cũ quay lại 2.3x nhiều hơn → tăng LTV đáng kể' },
-  { icon: '📈', title: 'Báo Cáo Thời Gian Thực', desc: 'Dashboard trực quan. AI phân tích và gợi ý hành động mỗi tuần.', outcome: 'Ra quyết định dựa trên data → tối ưu chi tiêu marketing 35%' },
-];
-
-const steps = [
-  { num: '01', title: 'Đăng ký', time: '2 phút', desc: 'Tạo tài khoản miễn phí, không cần thẻ tín dụng.' },
-  { num: '02', title: 'Kết nối Zalo/FB', time: '5 phút', desc: 'Kết nối kênh bán hàng bằng vài cú click đơn giản.' },
-  { num: '03', title: 'AI vận hành tự động', time: '24/7', desc: 'Hệ thống tự học, tự trả lời, tự báo cáo từ phút đầu.' },
-];
-
-const plans = [
-  { name: 'Free', price: '$0', period: '/mo', tag: '', features: ['50 credits/tháng', 'AI Receptionist cơ bản', '3 ngày content/tháng', '50 khách CRM'], cta: 'Bắt đầu miễn phí', href: '/dashboard/signup', featured: false },
-  { name: 'Starter', price: '$49', period: '/mo', tag: '', features: ['200 MCU/tháng', 'AI 24/7', '7 ngày content/tuần', 'CRM không giới hạn', 'Báo cáo tuần'], cta: 'Dùng thử 14 ngày', href: 'https://nowpayments.io/payment/?iid=6245075877', featured: false },
-  { name: 'Pro', price: '$149', period: '/mo', tag: 'Phổ biến nhất', features: ['1.000 MCU/tháng', 'Multi-channel (Zalo+FB+Web)', 'AI tùy chỉnh theo ngành', 'API access', 'SLA 99.9%'], cta: 'Chọn Pro', href: 'https://nowpayments.io/payment/?iid=5438578229', featured: true },
-  { name: 'Enterprise', price: '$499', period: '/mo', tag: '', features: ['MCU không giới hạn', 'Dedicated AI model', 'White-label', 'Onboarding 1-1', 'SLA 99.99%'], cta: 'Liên hệ tư vấn', href: 'mailto:hello@agencyos.network', featured: false },
-];
-
-const faqs = [
-  { q: 'Có cần biết lập trình không?', a: 'Không. Giao diện hoàn toàn trực quan, ai cũng dùng được trong 5 phút đầu tiên.' },
-  { q: 'Hỗ trợ những ngành nào?', a: 'Cafe, nhà hàng, spa, salon, gym, shop thời trang, cửa hàng tiện lợi và hầu hết ngành bán lẻ.' },
-  { q: 'Thanh toán bằng gì?', a: 'Thanh toán bằng USDT (TRC20) qua NOWPayments. Hỗ trợ toàn cầu, giá USD.' },
-  { q: 'Có thể huỷ đăng ký không?', a: 'Có thể huỷ bất cứ lúc nào, không phí phạt. Dữ liệu giữ nguyên 30 ngày sau khi huỷ.' },
-  { q: 'Dữ liệu khách hàng có an toàn không?', a: 'Chạy trên Cloudflare Workers, mã hoá end-to-end, không chia sẻ bên thứ ba.' },
-];
-
-const platformStats = [
-  { value: '319', label: 'Commands', desc: 'CLI commands cho mọi tầng' },
-  { value: '540', label: 'AI Skills', desc: 'Kho skill chuyên biệt' },
-  { value: '17', label: 'AI Agents', desc: 'Agent tự vận hành' },
-  { value: '410', label: 'Contracts', desc: 'Machine contract sẵn dùng' },
-  { value: '13', label: 'Hooks', desc: 'Auto-trigger pipeline' },
-];
-
-const socialProof = [
-  { value: '500+', label: 'doanh nghiệp Việt tin dùng' },
-  { value: '1M+', label: 'tin nhắn đã xử lý tự động' },
-  { value: '99.9%', label: 'uptime trong 12 tháng' },
-  { value: '24/7', label: 'hỗ trợ khách hàng' },
-];
-
-const customerLogos = [
-  { name: 'FoodTech Startup', icon: '🍜' },
-  { name: 'Beauty Brand', icon: '💄' },
-  { name: 'Cafe Chain', icon: '☕' },
-  { name: 'E-commerce', icon: '🛒' },
-  { name: 'SaaS Platform', icon: '💻' },
-  { name: 'Spa & Wellness', icon: '🧘' },
-];
-
-const testimonials = [
-  { name: 'Minh Tuấn', role: 'CEO, FoodTech Startup', text: 'Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó.', avatar: '👨‍💼', result: '+40% năng suất', verified: true },
-  { name: 'Hà Linh', role: 'Founder, Beauty Brand', text: 'AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng.', avatar: '👩‍💼', result: '+40% conversion', verified: true },
-  { name: 'Đức Anh', role: 'CTO, SaaS Platform', text: 'Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. Impressive.', avatar: '👨‍💻', result: '-90% chi phí', verified: true },
-  { name: 'Thu Hằng', role: 'Owner, Cafe Chain', text: 'Doanh thu tăng 35% nhờ AI follow-up khách đúng lúc. ROI rõ ràng sau 2 tuần.', avatar: '👩‍🍳', result: '+35% doanh thu', verified: true },
-  { name: 'Thanh Nam', role: 'Founder, E-commerce', text: 'CRM thông minh giúp remarketing hiệu quả. Tỷ lệ quay lại tăng 2.3x.', avatar: '👨‍🔬', result: '2.3x retention', verified: true },
-];
-
-// SoftwareApplication JSON-LD (RaaS Product)
-const softwareAppSchema = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "OpenClaw",
-  "alternateName": ["AgencyOS", "RaaS", "Revenue-as-a-Service"],
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD",
-    "description": "Miễn phí 14 ngày, không cần thẻ tín dụng",
-    "availability": "https://schema.org/InStock",
-    "eligibleRegion": ["VN", "US", "SG"]
+const products = [
+  {
+    id: 'sophia',
+    icon: '🎬',
+    name: 'Sophia AI Factory',
+    tagline: 'Video Factory + AI Automation',
+    desc: 'Tạo video chuyên nghiệp, tự động hóa quy trình sản xuất nội dung. RaaS platform — thuê AI như thuê nhân sự.',
+    href: 'https://sophia.agencyos.network',
+    badge: 'RaaS',
+    pricing: '$199 – $4,999/mo',
+    features: ['Video production tự động', 'AI content pipeline', 'RaaS billing (MCU)'],
+    gradient: 'linear-gradient(135deg, rgba(124,77,255,0.15), rgba(0,188,212,0.08))',
+    border: 'rgba(124,77,255,0.3)',
+    badgeColor: '#7C4DFF',
   },
+  {
+    id: 'cashclaw',
+    icon: '📈',
+    name: 'CashClaw',
+    tagline: 'Prediction Market Trading Bot',
+    desc: 'Trading bot cho Polymarket. Phân tích xác suất, thực thi lệnh, quản lý rủi ro tự động. Dữ liệu thực — không có backtesting ảo.',
+    href: 'https://cashclaw.cc',
+    badge: 'LIVE',
+    pricing: '$49 – $499/mo',
+    features: ['Polymarket integration', 'DeepSeek R1 analysis', 'Risk management engine'],
+    gradient: 'linear-gradient(135deg, rgba(0,188,212,0.15), rgba(0,230,118,0.08))',
+    border: 'rgba(0,188,212,0.3)',
+    badgeColor: '#00BCD4',
+  },
+  {
+    id: 'openclaw',
+    icon: '⚡',
+    name: 'OpenClaw CLI',
+    tagline: '342+ Business Commands',
+    desc: 'Mekong CLI mã nguồn mở. 342+ lệnh AI cho mọi tầng doanh nghiệp — từ chiến lược đến deploy. Chạy trên bất kỳ LLM nào.',
+    href: 'https://github.com/longtho638-jpg/mekong-cli',
+    badge: 'Open Source',
+    pricing: 'Miễn phí',
+    features: ['342+ CLI commands', '6 tầng doanh nghiệp', 'Universal LLM adapter'],
+    gradient: 'linear-gradient(135deg, rgba(255,167,38,0.12), rgba(124,77,255,0.08))',
+    border: 'rgba(255,167,38,0.3)',
+    badgeColor: '#FFA726',
+  },
+];
+
+const stats = [
+  { value: '342+', label: 'Lệnh AI', desc: 'CLI commands sẵn dùng' },
+  { value: '3', label: 'Sản phẩm', desc: 'Production-ready' },
+  { value: '100%', label: 'Cloudflare', desc: 'Zero downtime infra' },
+];
+
+const ecosystemSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "AgencyOS",
+  "url": "https://agencyos.network",
+  "description": "Hệ sinh thái AI gồm 3 sản phẩm: Sophia AI Factory, CashClaw, OpenClaw CLI",
+  "sameAs": ["https://github.com/longtho638-jpg/mekong-cli"],
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
-    "name": "RaaS Pricing Tiers",
+    "name": "AgencyOS Ecosystem",
     "itemListElement": [
-      {
-        "@type": "Offer",
-        "name": "Free",
-        "price": "0",
-        "priceCurrency": "USD",
-        "description": "50 credits/tháng, AI Receptionist cơ bản"
-      },
-      {
-        "@type": "Offer",
-        "name": "Starter",
-        "price": "8",
-        "priceCurrency": "USD",
-        "priceSpecification": {
-          "@type": "UnitPriceSpecification",
-          "price": "49",
-          "priceCurrency": "USD",
-          "referenceQuantity": {
-            "@type": "QuantitativeValue",
-            "value": "1",
-            "unitCode": "MON"
-          }
-        },
-        "description": "200 MCU, AI 24/7, 7 ngày content/tuần"
-      },
-      {
-        "@type": "Offer",
-        "name": "Pro",
-        "price": "149",
-        "priceCurrency": "USD",
-        "priceSpecification": {
-          "@type": "UnitPriceSpecification",
-          "price": "149",
-          "priceCurrency": "USD",
-          "referenceQuantity": {
-            "@type": "QuantitativeValue",
-            "value": "1",
-            "unitCode": "MON"
-          }
-        },
-        "description": "1.000 MCU, Multi-channel, AI tùy chỉnh",
-        "bestOffer": "true"
-      },
-      {
-        "@type": "Offer",
-        "name": "Enterprise",
-        "price": "499",
-        "priceCurrency": "USD",
-        "description": "MCU không giới hạn, Dedicated AI, White-label"
-      }
+      { "@type": "Offer", "itemOffered": { "@type": "SoftwareApplication", "name": "Sophia AI Factory", "url": "https://sophia.agencyos.network", "applicationCategory": "VideoApplication" } },
+      { "@type": "Offer", "itemOffered": { "@type": "SoftwareApplication", "name": "CashClaw", "url": "https://cashclaw.cc", "applicationCategory": "FinanceApplication" } },
+      { "@type": "Offer", "itemOffered": { "@type": "SoftwareApplication", "name": "OpenClaw CLI", "url": "https://github.com/longtho638-jpg/mekong-cli", "applicationCategory": "DeveloperApplication" } }
     ]
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "ratingCount": "500",
-    "bestRating": "5",
-    "worstRating": "1",
-    "reviewCount": "500"
-  },
-  "featureList": "AI Receptionist, Content Creator, CRM Thông Minh, Báo Cáo Thời Gian Thực, Tự động hóa Zalo, Tự động hóa Facebook, Multi-channel Support, API Access",
-  "screenshot": "https://agencyos.network/og-default.jpg",
-  "description": "Nền tảng AI tự động hóa doanh nghiệp: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần.",
-  "applicationSubCategory": "SaaS",
-  "downloadUrl": "/dashboard/signup",
-  "releaseNotes": "/docs/changelog",
-  "softwareVersion": "5.0.0",
-  "potentialAction": {
-    "@type": "UseAction",
-    "actionStatus": "https://schema.org/PotentialActionStatus",
-    "target": "/dashboard/signup",
-    "description": "Đăng ký dùng thử miễn phí 14 ngày"
-  },
-  "review": [
-    {
-      "@type": "Review",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5",
-        "bestRating": "5"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Minh Tuấn, CEO FoodTech Startup"
-      },
-      "reviewBody": "Từ ngày dùng OpenClaw, team 1 người của mình xử lý được lượng công việc bằng team 5 người trước đó. +40% năng suất."
-    },
-    {
-      "@type": "Review",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5",
-        "bestRating": "5"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Hà Linh, Founder Beauty Brand"
-      },
-      "reviewBody": "AI trả lời tin nhắn Zalo 24/7, tôi không bỏ lỡ khách nào kể cả lúc 2 giờ sáng. +40% conversion."
-    },
-    {
-      "@type": "Review",
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5",
-        "bestRating": "5"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Đức Anh, CTO SaaS Platform"
-      },
-      "reviewBody": "Hệ thống billing + metering chạy zero-cost trên Cloudflare Workers. -90% chi phí."
-    }
-  ]
-};
-
-// FAQPage JSON-LD
-const faqPageSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": faqs.map(faq => ({
-    "@type": "Question",
-    "name": faq.q,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": faq.a
-    }
-  }))
-};
-
-// Service JSON-LD (RaaS Service)
-const raasServiceSchema = {
-  "@context": "https://schema.org",
-  "@type": "Service",
-  "serviceType": "AI Business Automation Platform",
-  "provider": {
-    "@type": "Organization",
-    "name": "OpenClaw",
-    "alternateName": "AgencyOS",
-    "url": "https://agencyos.network",
-    "logo": "https://agencyos.network/logo.jpg"
-  },
-  "areaServed": ["VN", "US", "SG", "Global"],
-  "hasOfferCatalog": {
-    "@type": "OfferCatalog",
-    "name": "RaaS Service Tiers",
-    "itemListElement": [
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Free Tier",
-          "description": "50 credits/tháng, AI Receptionist cơ bản, 3 ngày content/tháng"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Starter Tier",
-          "description": "200 MCU/tháng, AI 24/7, 7 ngày content/tuần, CRM không giới hạn"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Pro Tier",
-          "description": "1.000 MCU/tháng, Multi-channel, AI tùy chỉnh, API access, SLA 99.9%"
-        }
-      },
-      {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Service",
-          "name": "Enterprise Tier",
-          "description": "Unlimited credits, Dedicated AI model, White-label, 1-1 onboarding, SLA 99.99%"
-        }
-      }
-    ]
-  },
-  "audience": {
-    "@type": "BusinessAudience",
-    "audienceType": ["SMB", "Enterprise", "Agency", "Startup"],
-    "geographicArea": {
-      "@type": "Country",
-      "name": "Vietnam"
-    }
-  },
-  "availableChannel": {
-    "@type": "ServiceChannel",
-    "serviceUrl": "https://agencyos.network",
-    "availableLanguage": ["Vietnamese", "English"]
   }
-};
-
-// BreadcrumbList JSON-LD
-const breadcrumbSchema = {
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://agencyos.network"
-    }
-  ]
 };
 ---
 
 <BaseLayout
-  title="OpenClaw — AI Làm Việc Thay Bạn 24/7 | Tự Động 100%, Trả Lời Trong 3 Giây"
-  description="AI Receptionist cho Zalo & Facebook — CRM thông minh — Tạo content tự động. Miễn phí 14 ngày, không cần thẻ tín dụng. 500+ doanh nghiệp Việt tin dùng. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
+  title="AgencyOS — Hệ Sinh Thái AI: Sophia · CashClaw · OpenClaw"
+  description="3 sản phẩm AI production-ready. Sophia: video + RaaS. CashClaw: Polymarket trading. OpenClaw: 342+ business commands. Tất cả trên Cloudflare."
   lang="vi"
   type="website"
   canonical="/"
-  keywords="AI tự động hóa, AI Receptionist, Zalo automation, Facebook automation, CRM thông minh, tạo content tự động, trả lời khách 24/7, tăng doanh thu, tiết kiệm thời gian, business automation Vietnam, SaaS Vietnam"
-  ogTitle="OpenClaw — AI Làm Việc Thay Bạn 24/7 | Tăng 35% Doanh Thu"
-  ogDescription="AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. 500+ doanh nghiệp Việt tin dùng. Dùng thử miễn phí 14 ngày."
-  twitterTitle="OpenClaw — AI Vận Hành Doanh Nghiệp 24/7"
-  twitterDescription="AI tự động hóa: trả lời khách 24/7, tạo content, CRM thông minh. Tăng 35% doanh thu, tiết kiệm 20+ giờ/tuần."
+  keywords="AgencyOS, Sophia AI Factory, CashClaw trading bot, OpenClaw CLI, hệ sinh thái AI, Polymarket, video automation, mekong-cli"
 >
 
-  <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json" set:html={JSON.stringify([softwareAppSchema, raasServiceSchema, faqPageSchema, breadcrumbSchema])} />
+  <script type="application/ld+json" set:html={JSON.stringify(ecosystemSchema)} />
 
   <!-- HERO -->
-  <section class="hero-section" aria-label="Giới thiệu OpenClaw">
-    <!-- Enhanced animated mesh gradient orbs (decorative) -->
+  <section class="hero-section" aria-label="AgencyOS Ecosystem">
     <div class="mesh-orb orb-1" aria-hidden="true"></div>
     <div class="mesh-orb orb-2" aria-hidden="true"></div>
     <div class="mesh-orb orb-3" aria-hidden="true"></div>
-    <div class="mesh-orb orb-4" aria-hidden="true"></div>
 
-    <div class="container hero-container">
-      <div class="hero-content">
-        <!-- FOMO Badge - Top Urgency -->
-        <div class="fomo-badge-wrapper animate-in" style="margin-bottom:12px;" role="status" aria-live="polite" aria-atomic="true" aria-label="47 doanh nghiệp đăng ký hôm nay">
-          <div class="fomo-badge">
-            <span class="fomo-icon" aria-hidden="true">🔥</span>
-            <span class="fomo-text">47 doanh nghiệp đăng ký hôm nay</span>
-            <span class="fomo-live-dot" aria-hidden="true"></span>
-          </div>
-        </div>
-
-        <!-- Main Hero Badge -->
-        <div class="hero-badge animate-in" style="margin-bottom:24px;">
-          <span class="badge-icon" aria-hidden="true">✨</span>
-          <span class="badge-text">AI Receptionist cho Zalo & Facebook — CRM thông minh — Tạo content tự động</span>
-        </div>
-
-        <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
-          <span class="gradient-text">AI Làm Việc Thay Bạn</span><br />
-          24/7 <span class="gradient-text-highlight">Tự Động 100%</span>
-        </h1>
-
-        <p class="hero-description animate-in" style="margin-bottom:28px;">
-          Miễn phí 14 ngày, không cần thẻ tín dụng · 500+ doanh nghiệp Việt tin dùng · Phản hồi trong 3 giây
-        </p>
-
-        <!-- Enhanced CTA Buttons with Stronger Animations -->
-        <div class="hero-cta animate-in" style="margin-bottom:24px;" role="group" aria-label="Hành động nhanh">
-          <a href="/dashboard/signup" class="btn-primary btn-pulse btn-glow btn-cta-primary" aria-label="Dùng thử miễn phí 14 ngày, không cần thẻ tín dụng">
-            <span class="cta-text">Dùng thử miễn phí 14 ngày</span>
-            <svg class="btn-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-          <a href="#features" class="btn-outline btn-ghost btn-demo" aria-label="Xem demo 30 giây">
-            <svg class="play-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            <span>Xem demo 30s</span>
-          </a>
-        </div>
-
-        <!-- Trust & Security Badges -->
-        <div class="trust-badges animate-in" style="margin-bottom:24px;" role="list" aria-label="Chứng nhận bảo mật">
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">🔐</span>
-            <span>SSL Encrypted</span>
-          </span>
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">☁️</span>
-            <span>Cloudflare Protected</span>
-          </span>
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">✓</span>
-            <span>Không cần thẻ tín dụng</span>
-          </span>
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">⚡</span>
-            <span>Setup 2 phút</span>
-          </span>
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">🏆</span>
-            <span>Top 1 AI VN 2025</span>
-          </span>
-          <span class="trust-badge" role="listitem">
-            <span class="trust-icon" aria-hidden="true">⭐</span>
-            <span>4.9/5 từ 500+ reviews</span>
-          </span>
-        </div>
-
-        <!-- Enhanced Social Proof Counter with Animation -->
-        <div class="social-proof-counter animate-in" style="margin-bottom:28px;" aria-label="Thống kê nền tảng">
-          <div class="counter-item">
-            <div class="counter-value" data-target="500">0</div>
-            <div class="counter-suffix">+</div>
-            <div class="counter-label">doanh nghiệp Việt</div>
-          </div>
-          <div class="counter-divider"></div>
-          <div class="counter-item">
-            <div class="counter-value" data-target="1">0</div>
-            <div class="counter-suffix">M+</div>
-            <div class="counter-label">tin nhắn đã xử lý</div>
-          </div>
-          <div class="counter-divider"></div>
-          <div class="counter-item">
-            <div class="counter-value" data-target="99">0</div>
-            <div class="counter-suffix">.9%</div>
-            <div class="counter-label">uptime 12 tháng</div>
-          </div>
-        </div>
-
-        <!-- Customer Logos Carousel -->
-        <div class="customer-logos animate-in" style="margin-bottom:28px;">
-          <span class="logos-label">Được tin dùng bởi:</span>
-          <div class="logos-grid logos-scroll">
-            {customerLogos.map((logo, i) => (
-              <div class="logo-item" title={logo.name} aria-label={logo.name}>
-                <span class="logo-icon" aria-hidden="true">{logo.icon}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <!-- Social Proof Badges with Rating -->
-        <div class="proof-badges animate-in" style="margin-bottom:24px;">
-          <span class="proof-badge featured" role="img" aria-label="Top 1 AI Việt Nam 2025">
-            <span class="badge-glow"></span>
-            <span>🏆 Top 1 AI VN 2025</span>
-          </span>
-          <span class="proof-badge proof-rating" role="img" aria-label="4.9 trên 5 sao từ hơn 500 đánh giá">
-            <span class="stars" aria-hidden="true">⭐⭐⭐⭐⭐</span>
-            <span>4.9/5 từ 500+ reviews</span>
-          </span>
-        </div>
-
-        <!-- Trust Indicators -->
-        <div class="trust-indicators animate-in">
-          <span class="trust-item"><span class="trust-icon" aria-hidden="true">⚡</span>Setup 2 phút</span>
-          <span class="trust-item"><span class="trust-icon" aria-hidden="true">💯</span>Free 100% khi bắt đầu</span>
-        </div>
+    <div class="container" style="padding-top:96px;padding-bottom:80px;text-align:center;">
+      <div class="hero-badge animate-in" style="margin-bottom:24px;">
+        <span class="badge-icon" aria-hidden="true">🌐</span>
+        <span class="badge-text">Hệ Sinh Thái AI Cho Doanh Nghiệp</span>
       </div>
 
-      <!-- Enhanced Terminal mockup with code highlight -->
-      <div class="terminal-wrapper animate-on-scroll" aria-label="Demo terminal OpenClaw">
-        <div class="terminal">
-          <div class="terminal-header">
-            <span class="terminal-dot red" aria-hidden="true"></span>
-            <span class="terminal-dot yellow" aria-hidden="true"></span>
-            <span class="terminal-dot green" aria-hidden="true"></span>
-            <span class="terminal-title">OpenClaw CLI</span>
-          </div>
-          <div class="terminal-body">
-            <div class="terminal-line input">
-              <span class="prompt">$</span>
-              <span class="command">openclaw</span>
-              <span class="args">cook "Trả lời khách hỏi giá bánh mì"</span>
-            </div>
-            <div class="terminal-line process">
-              <span class="arrow">→</span>
-              <span class="process-text">Phân tích yêu cầu...</span>
-            </div>
-            <div class="terminal-line process">
-              <span class="arrow">→</span>
-              <span class="process-text">Tìm menu trong CRM...</span>
-            </div>
-            <div class="terminal-line success">
-              <span class="check">✓</span>
-              <span class="success-text">Đã trả lời:</span>
-              <span class="response-text">"Bánh mì thịt nướng 25k, combo 2 cái 45k 🍞"</span>
-            </div>
-            <div class="terminal-line process">
-              <span class="arrow">→</span>
-              <span class="process-text">Lưu vào CRM: khách quan tâm combo</span>
-            </div>
-            <div class="terminal-line stats">
-              <span class="bolt">⚡</span>
-              <span class="stat-time">1.2s</span>
-              <span class="stat-separator">·</span>
-              <span class="stat-credits">1 credit used</span>
-            </div>
-          </div>
-        </div>
-        <div class="terminal-glow"></div>
-      </div>
-    </div>
-  </section>
+      <h1 class="display animate-in" style="margin-bottom:20px;animation-delay:0.1s;">
+        <span class="gradient-text">3 Sản Phẩm.</span><br />
+        <span class="gradient-text-highlight">1 Tầm Nhìn.</span>
+      </h1>
 
-  <!-- VALUE PROPOSITION -->
-  <section style="background:var(--md-surface-container);">
-    <div class="container">
-      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
-        <div class="badge" style="margin-bottom:16px;">Giá trị cốt lõi</div>
-        <h2 class="headline">OpenClaw không phải <span class="gradient-text">chatbot</span>. Là nhân viên AI thực thụ.</h2>
-      </div>
-      <div class="comparison-table animate-on-scroll">
-        <div class="comparison-header">
-          <div class="comparison-col before">
-            <span class="comparison-label">Trước (Không có AI)</span>
-          </div>
-          <div class="comparison-col after">
-            <span class="comparison-label">Sau (Có OpenClaw)</span>
-          </div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-col before">
-            <span class="comparison-icon" aria-hidden="true">❌</span>
-            <span>Trả lời khách chậm → mất đơn hàng</span>
-          </div>
-          <div class="comparison-col after">
-            <span class="comparison-icon" aria-hidden="true">✅</span>
-            <span>Phản hồi trong 3s → chốt đơn ngay</span>
-          </div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-col before">
-            <span class="comparison-icon" aria-hidden="true">❌</span>
-            <span>Content đăng manual → không đều</span>
-          </div>
-          <div class="comparison-col after">
-            <span class="comparison-icon" aria-hidden="true">✅</span>
-            <span>Lịch 7 ngày tự động → đều đặn mỗi ngày</span>
-          </div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-col before">
-            <span class="comparison-icon" aria-hidden="true">❌</span>
-            <span>Khách cũ không remarketing → mất cơ hội</span>
-          </div>
-          <div class="comparison-col after">
-            <span class="comparison-icon" aria-hidden="true">✅</span>
-            <span>CRM thông minh → gợi ý đúng lúc</span>
-          </div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-col before">
-            <span class="comparison-icon" aria-hidden="true">❌</span>
-            <span>Báo cáo thủ công → sai số, chậm</span>
-          </div>
-          <div class="comparison-col after">
-            <span class="comparison-icon" aria-hidden="true">✅</span>
-            <span>Dashboard real-time → quyết định nhanh</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+      <p class="hero-description animate-in" style="margin-bottom:40px;max-width:600px;margin-left:auto;margin-right:auto;">
+        Sophia tạo video + RaaS. CashClaw giao dịch Polymarket. OpenClaw tự động hóa mọi quy trình.<br />
+        Tất cả chạy trên Cloudflare — không downtime, không vendor lock-in.
+      </p>
 
-  <!-- FEATURES -->
-  <section id="features" style="background:var(--md-surface);">
-    <div class="container">
-      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">Tính năng</div>
-        <h2 class="headline">Mọi thứ bạn cần để <span class="gradient-text">bán hàng hiệu quả</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">AI làm thay những việc lặp lại, bạn tập trung vào tăng trưởng.</p>
-      </div>
-      <div class="grid-4">
-        {features.map((f, i) => (
-          <div class="card-glass animate-on-scroll" style={`animation-delay:${i * 0.1}s`}>
-            <div class="icon-container">{f.icon}</div>
-            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:10px;">{f.title}</h3>
-            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.65;">{f.desc}</p>
-            <p style="color:var(--md-primary);font-size:0.85rem;font-weight:500;margin-top:12px;">{f.outcome}</p>
+      <!-- Stats -->
+      <div class="stats-row animate-in" style="margin-bottom:56px;" aria-label="Thống kê thực">
+        {stats.map((s) => (
+          <div class="stat-item">
+            <div class="stat-value">{s.value}</div>
+            <div class="stat-label">{s.label}</div>
+            <div class="stat-desc">{s.desc}</div>
           </div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section style="background:var(--md-surface-container);">
+  <!-- PRODUCTS -->
+  <section id="products" style="background:var(--md-surface-container);padding:80px 0;" aria-label="Sản phẩm">
     <div class="container">
       <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">Bắt đầu</div>
-        <h2 class="headline">Chỉ <span class="gradient-text">3 bước</span> là xong</h2>
-      </div>
-      <!-- Connector dots (desktop only) -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:-20px;padding:0 calc(100%/6 - 20px);position:relative;z-index:1;" class="animate-on-scroll">
-        <span class="step-dot"></span><span class="step-line"></span>
-        <span class="step-dot"></span><span class="step-line"></span>
-        <span class="step-dot"></span>
-      </div>
-      <div class="grid-3">
-        {steps.map((s, i) => (
-          <div class="card animate-on-scroll" style={`position:relative;overflow:hidden;animation-delay:${i*0.12}s`}>
-            <div style="position:absolute;top:16px;right:20px;font-family:'Be Vietnam Pro',sans-serif;font-size:3.5rem;font-weight:800;color:rgba(0,188,212,0.06);line-height:1;user-select:none;">{s.num}</div>
-            <div class="badge" style="margin-bottom:16px;font-size:0.78rem;">{s.time}</div>
-            <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:10px;">{s.title}</h3>
-            <p style="color:var(--md-on-surface-muted);font-size:0.9rem;">{s.desc}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- PLATFORM POWER -->
-  <section style="background:var(--md-surface);position:relative;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,188,212,0.04),transparent 70%);pointer-events:none;"></div>
-    <div class="container" style="position:relative;z-index:1;">
-      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">Nền tảng</div>
-        <h2 class="headline">Sức mạnh <span class="gradient-text">đằng sau mỗi lệnh</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">Hệ sinh thái AI lớn nhất cho vận hành doanh nghiệp — được xây dựng bởi những kỹ sư hàng đầu.</p>
-      </div>
-      <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
-        {platformStats.map((s, i) => (
-          <div class="card-glass animate-on-scroll" style={`text-align:center;min-width:160px;flex:1;max-width:200px;animation-delay:${i*0.08}s`}>
-            <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.5rem;font-weight:800;line-height:1;" class="gradient-text">{s.value}</div>
-            <div style="font-size:0.9rem;font-weight:600;margin:8px 0 4px;">{s.label}</div>
-            <div style="font-size:0.78rem;color:var(--md-on-surface-muted);">{s.desc}</div>
-          </div>
-        ))}
-      </div>
-      <div class="text-center" style="margin-top:36px;">
-        <a href="/docs/guides/commands" class="btn-outline" style="font-size:0.9rem;padding:10px 24px;">Xem toàn bộ →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- SOCIAL PROOF - Testimonial Carousel -->
-  <section class="testimonials-section">
-    <div class="container">
-      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
-        <div class="badge" style="margin-bottom:16px;">Testimonials</div>
-        <h2 class="headline">Kết quả <span class="gradient-text">thực tế</span> từ founder Việt</h2>
-        <p style="color:var(--md-on-surface-muted);max-width:500px;margin:16px auto 0;">
-          Những con số biết nói từ doanh nghiệp đã triển khai OpenClaw
+        <div class="badge" style="margin-bottom:16px;">Sản phẩm</div>
+        <h2 class="headline">Chỉ những gì <span class="gradient-text">thực sự tồn tại</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:16px auto 0;">
+          Không hứa hẹn tính năng chưa xây. Mỗi sản phẩm đang chạy production.
         </p>
       </div>
 
-      <!-- Carousel Container -->
-      <div class="testimonial-carousel carousel-auto">
-        <div class="carousel-track" id="testimonialTrack">
-          <!-- Testimonials will be duplicated for seamless loop -->
-          {testimonials.map((t, i) => (
-            <div class="testimonial-card featured">
-              <div class="testimonial-result-badge">{t.result}</div>
-              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-              <p class="testimonial-text">"{t.text}"</p>
-              <div class="testimonial-author">
-                <div class="testimonial-avatar">{t.avatar}</div>
-                <div class="testimonial-info">
-                  <div class="testimonial-name">
-                    {t.name}
-                    {t.verified && (
-                      <span class="verified-badge" title="Verified customer">✓</span>
-                    )}
-                  </div>
-                  <div class="testimonial-role">{t.role}</div>
-                </div>
-              </div>
+      <div class="products-grid">
+        {products.map((p, i) => (
+          <a
+            href={p.href}
+            target={p.id === 'openclaw' ? '_blank' : '_self'}
+            rel={p.id === 'openclaw' ? 'noopener noreferrer' : ''}
+            class="product-card animate-on-scroll"
+            style={`animation-delay:${i * 0.12}s; background:${p.gradient}; border:1px solid ${p.border};`}
+            aria-label={`${p.name} — ${p.tagline}`}
+          >
+            <div class="product-header">
+              <span class="product-icon" aria-hidden="true">{p.icon}</span>
+              <span class="product-badge" style={`background:${p.badgeColor}22; color:${p.badgeColor}; border:1px solid ${p.badgeColor}44;`}>{p.badge}</span>
             </div>
-          ))}
-          <!-- Duplicate for seamless loop -->
-          {testimonials.map((t, i) => (
-            <div class="testimonial-card featured">
-              <div class="testimonial-result-badge">{t.result}</div>
-              <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-              <p class="testimonial-text">"{t.text}"</p>
-              <div class="testimonial-author">
-                <div class="testimonial-avatar">{t.avatar}</div>
-                <div class="testimonial-info">
-                  <div class="testimonial-name">
-                    {t.name}
-                    {t.verified && (
-                      <span class="verified-badge" title="Verified customer">✓</span>
-                    )}
-                  </div>
-                  <div class="testimonial-role">{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <!-- Carousel Controls -->
-        <div class="carousel-controls">
-          <button type="button" class="carousel-btn prev" id="carouselPrev" aria-label="Previous testimonial">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <div class="carousel-dots" id="carouselDots"></div>
-          <button type="button" class="carousel-btn next" id="carouselNext" aria-label="Next testimonial">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Bottom CTA -->
-      <div class="text-center" style="margin-top:48px;">
-        <a href="/dashboard/signup" class="btn-primary">
-          Nhận kết quả tương tự →
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing" style="background:var(--md-surface);">
-    <div class="container">
-      <div class="text-center animate-on-scroll" style="margin-bottom:0;">
-        <div class="badge" style="margin-bottom:16px;">Bảng giá</div>
-        <h2 class="headline">Minh bạch, <span class="gradient-text">không phí ẩn</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:400px;margin:16px auto 32px;">14 ngày dùng thử miễn phí. Huỷ bất cứ lúc nào.</p>
-        <p style="color:#a78bfa;font-size:0.875rem;font-weight:600;margin-bottom:48px;">
-          💳 Thanh toán bằng USDT TRC20 qua NOWPayments
-        </p>
-      </div>
-      <div class="grid-4" style="align-items:start;">
-        {plans.map((p, i) => (
-          <div class={`animate-on-scroll${p.featured ? ' pricing-featured' : ' card'}`} style={`animation-delay:${i*0.1}s;border-radius:var(--md-radius);padding:28px;position:relative;${!p.featured ? 'background:var(--md-surface-container);border:1px solid var(--md-outline);' : ''}`}>
-            {p.tag && (
-              <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00BCD4,#7C4DFF);color:#fff;font-size:0.72rem;font-weight:700;padding:4px 14px;border-radius:100px;white-space:nowrap;">{p.tag}</div>
-            )}
-            <div style="margin-bottom:20px;">
-              <div style="font-size:0.85rem;color:var(--md-on-surface-muted);margin-bottom:6px;">{p.name}</div>
-              <div style="display:flex;align-items:baseline;gap:2px;">
-                <span style="font-family:'Be Vietnam Pro',sans-serif;font-size:2.2rem;font-weight:800;">{p.price}</span>
-                <span style="font-size:0.85rem;color:var(--md-on-surface-muted);">{p.period}</span>
-              </div>
-            </div>
-            <ul style="list-style:none;margin-bottom:24px;display:flex;flex-direction:column;gap:10px;">
-              {p.features.map(feat => (
-                <li style="font-size:0.875rem;color:var(--md-on-surface-muted);display:flex;gap:8px;align-items:flex-start;">
-                  <span style="color:#00BCD4;flex-shrink:0;font-weight:600;">✓</span>{feat}
-                </li>
+            <h3 class="product-name">{p.name}</h3>
+            <p class="product-tagline">{p.tagline}</p>
+            <p class="product-desc">{p.desc}</p>
+            <ul class="product-features" aria-label={`Tính năng ${p.name}`}>
+              {p.features.map(f => (
+                <li><span style={`color:${p.badgeColor};`} aria-hidden="true">✓</span> {f}</li>
               ))}
             </ul>
-            <a href={p.href} class={p.featured ? 'btn-primary' : 'btn-outline'} style="display:flex;justify-content:center;width:100%;text-align:center;">{p.cta}</a>
+            <div class="product-footer">
+              <span class="product-price">{p.pricing}</span>
+              <span class="product-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CLOUDFLARE -->
+  <section style="background:var(--md-surface);padding:80px 0;" aria-label="Kiến trúc">
+    <div class="container" style="max-width:800px;">
+      <div class="text-center animate-on-scroll" style="margin-bottom:48px;">
+        <div class="badge" style="margin-bottom:16px;">Kiến trúc</div>
+        <h2 class="headline">Xây trên <span class="gradient-text">Cloudflare</span> — không phải máy chủ riêng</h2>
+      </div>
+      <div class="arch-grid animate-on-scroll">
+        <div class="arch-item">
+          <span class="arch-icon" aria-hidden="true">⚡</span>
+          <div>
+            <strong>Zero Cold Start</strong>
+            <p>Cloudflare Workers — edge computing toàn cầu, phản hồi &lt;50ms</p>
           </div>
-        ))}
+        </div>
+        <div class="arch-item">
+          <span class="arch-icon" aria-hidden="true">🔒</span>
+          <div>
+            <strong>Bảo mật mặc định</strong>
+            <p>DDoS protection, WAF, SSL tự động — không cần cấu hình thêm</p>
+          </div>
+        </div>
+        <div class="arch-item">
+          <span class="arch-icon" aria-hidden="true">💰</span>
+          <div>
+            <strong>Chi phí tối thiểu</strong>
+            <p>Pages + Workers + D1 + KV + R2 — gần như $0 infra cost</p>
+          </div>
+        </div>
+        <div class="arch-item">
+          <span class="arch-icon" aria-hidden="true">🌍</span>
+          <div>
+            <strong>Global Edge</strong>
+            <p>300+ PoPs — người dùng ở Việt Nam hay Mỹ đều có latency thấp</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- FAQ -->
-  <section id="faq" style="background:var(--md-surface-container);">
-    <div class="container" style="max-width:720px;">
-      <div class="text-center animate-on-scroll" style="margin-bottom:56px;">
-        <div class="badge" style="margin-bottom:16px;">FAQ</div>
-        <h2 class="headline">Câu hỏi <span class="gradient-text">thường gặp</span></h2>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        {faqs.map((f, i) => (
-          <details class="card animate-on-scroll" style={`animation-delay:${i*0.08}s;padding:0;`} open={i===0}>
-            <summary style="padding:20px 24px;cursor:pointer;font-weight:600;font-size:0.975rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-              {f.q}
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--md-primary);flex-shrink:0;transition:transform 0.25s ease;"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </summary>
-            <div style="padding:0 24px 20px;color:var(--md-on-surface-muted);font-size:0.9rem;line-height:1.7;border-top:1px solid var(--md-outline);">{f.a}</div>
-          </details>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA BANNER -->
-  <section style="background:var(--md-surface);">
+  <!-- CTA -->
+  <section style="background:var(--md-surface-container);padding:80px 0;" aria-label="Bắt đầu">
     <div class="container">
       <div class="animate-on-scroll" style="background:linear-gradient(135deg,rgba(0,188,212,0.08),rgba(124,77,255,0.1));border:1px solid rgba(0,188,212,0.2);border-radius:var(--md-radius);padding:72px 40px;text-align:center;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;"></div>
-        <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(0,188,212,0.1),transparent 70%);pointer-events:none;"></div>
-        <h2 class="headline" style="margin-bottom:16px;position:relative;">Sẵn sàng để AI <span class="gradient-text">làm việc cho bạn?</span></h2>
-        <p style="color:var(--md-on-surface-muted);max-width:440px;margin:0 auto 40px;position:relative;">
-          Tham gia cùng 500+ doanh nghiệp đang tiết kiệm 20+ giờ/tuần với OpenClaw.
+        <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(124,77,255,0.15),transparent 70%);pointer-events:none;" aria-hidden="true"></div>
+        <h2 class="headline" style="margin-bottom:16px;">Bắt đầu với sản phẩm <span class="gradient-text">phù hợp nhất</span></h2>
+        <p style="color:var(--md-on-surface-muted);max-width:480px;margin:0 auto 40px;">
+          Chọn Sophia nếu cần tự động hóa nội dung. Chọn CashClaw nếu giao dịch Polymarket. Dùng OpenClaw CLI ngay hôm nay — miễn phí, mã nguồn mở.
         </p>
-        <a href="/dashboard/signup" class="btn-primary btn-pulse" style="font-size:1.05rem;padding:16px 44px;position:relative;">Bắt đầu miễn phí ngay →</a>
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+          <a href="https://sophia.agencyos.network" class="btn-primary" style="font-size:1rem;padding:14px 32px;">Sophia AI Factory →</a>
+          <a href="https://cashclaw.cc" class="btn-outline" style="font-size:1rem;padding:14px 32px;">CashClaw →</a>
+          <a href="https://github.com/longtho638-jpg/mekong-cli" target="_blank" rel="noopener noreferrer" class="btn-outline" style="font-size:1rem;padding:14px 32px;">OpenClaw CLI →</a>
+        </div>
       </div>
     </div>
   </section>
 
   <style>
-    details[open] summary svg { transform: rotate(180deg); }
-
-    /* Value Proposition Comparison Table */
-    .comparison-table {
-      background: var(--md-surface);
-      border-radius: var(--md-radius);
-      border: 1px solid var(--md-outline);
+    /* Hero */
+    .hero-section {
+      background: linear-gradient(135deg, #0a0f1a, #1a1040 60%, #0a2030);
+      position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
     }
-    .comparison-header {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      background: linear-gradient(135deg, rgba(0,188,212,0.1), rgba(124,77,255,0.1));
-      border-bottom: 2px solid var(--md-outline);
-    }
-    .comparison-col {
-      padding: 20px 24px;
+
+    .stats-row {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
     }
-    .comparison-col.before {
-      background: rgba(244, 67, 54, 0.05);
+    .stat-item {
+      text-align: center;
     }
-    .comparison-col.after {
-      background: rgba(76, 175, 80, 0.05);
-      border-left: 1px solid var(--md-outline);
+    .stat-value {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00BCD4, #7C4DFF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .comparison-label {
+    .stat-label {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+    .stat-desc {
+      font-size: 0.8rem;
+      color: var(--md-on-surface-muted);
+      margin-top: 2px;
+    }
+
+    /* Products grid */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .product-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 32px;
+      border-radius: var(--md-radius);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    }
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .product-icon {
+      font-size: 2.4rem;
+    }
+    .product-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 100px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .comparison-col.before .comparison-label {
-      color: #f44336;
+    .product-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin: 0;
     }
-    .comparison-col.after .comparison-label {
-      color: #4caf50;
+    .product-tagline {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--md-primary);
+      margin: 0;
     }
-    .comparison-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border-bottom: 1px solid var(--md-outline);
+    .product-desc {
+      font-size: 0.9rem;
+      color: var(--md-on-surface-muted);
+      line-height: 1.65;
+      margin: 0;
+      flex: 1;
     }
-    .comparison-row:last-child {
-      border-bottom: none;
+    .product-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .comparison-row:nth-child(odd) {
-      background: rgba(0,0,0,0.02);
+    .product-features li {
+      font-size: 0.85rem;
+      color: var(--md-on-surface-muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
-    .comparison-icon {
-      font-size: 1.2rem;
-      margin-right: 8px;
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .comparison-col {
-      padding: 20px 24px;
+    .product-price {
+      font-weight: 700;
       font-size: 0.95rem;
+    }
+    .product-arrow {
+      font-size: 1.2rem;
+      transition: transform 0.2s ease;
+    }
+    .product-card:hover .product-arrow {
+      transform: translateX(4px);
+    }
+
+    /* Architecture */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .arch-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 24px;
+      background: var(--md-surface-container);
+      border: 1px solid var(--md-outline);
+      border-radius: var(--md-radius);
+    }
+    .arch-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+    .arch-item strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+    .arch-item p {
+      font-size: 0.875rem;
+      color: var(--md-on-surface-muted);
+      margin: 0;
       line-height: 1.6;
     }
-    @media (max-width: 768px) {
-      .comparison-header,
-      .comparison-row {
-        grid-template-columns: 1fr;
-      }
-      .comparison-col.after {
-        border-left: none;
-        border-top: 1px solid var(--md-outline);
-      }
+
+    @media (max-width: 640px) {
+      .stats-row { gap: 24px; }
+      .product-card { padding: 24px; }
     }
   </style>
 

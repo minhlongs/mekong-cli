@@ -8,7 +8,7 @@ Governance, Reflection, and WorldModel.
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from .event_bus import EventType, get_event_bus
 from .governance import ActionClass, AuditEntry, Governance, GovernanceDecision

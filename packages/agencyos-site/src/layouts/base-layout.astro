@@ -210,12 +210,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <!-- DNS Prefetch -->
   <link rel="dns-prefetch" href="https://agencyos.network" />
 
-  <!-- Font Preload (critical fonts) -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
-
-  <!-- Critical CSS Preload -->
-  <link rel="preload" as="style" href="/src/styles/global.css" />
+  <!-- Google Fonts (loaded via global.css @import — no duplicate link needed) -->
 </head>
 <body>
 <!-- Skip to Content Link (Accessibility) -->
@@ -248,7 +243,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
 <!-- Sticky nav -->
 <nav style="position:sticky;top:0;z-index:100;padding:0 24px;border-bottom:1px solid var(--md-outline);" class="glass" role="navigation" aria-label={isEn ? 'Main navigation' : 'Điều hướng chính'}>
   <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:64px;">
-    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'OpenClaw Home' : 'Trang chủ OpenClaw'}>OpenClaw</a>
+    <a href={base || '/'} style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;text-decoration:none;" class="gradient-text" aria-label={isEn ? 'AgencyOS Home' : 'Trang chủ AgencyOS'}>AgencyOS</a>
     <!-- Hamburger button (mobile only) -->
     <button class="mobile-menu-btn" id="hamburger-btn" aria-label={isEn ? 'Open menu' : 'Mở menu'} aria-expanded="false" aria-controls="nav-links-mobile">
       <span></span>
@@ -256,34 +251,11 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       <span></span>
     </button>
     <div class="nav-links" id="nav-links-mobile" role="menubar">
-      <a href={`${base}/#features`} class="nav-link" role="menuitem" aria-label={isEn ? 'View features' : 'Xem tính năng'}>{labels.features}</a>
-
-      <!-- 5-Layer Commands Mega Menu -->
-      <div style="position:relative;" class="dropdown-container" role="menuitem" aria-haspopup="true" aria-expanded="false">
-        <button class="nav-link" style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:inherit;color:inherit;" aria-label={isEn ? 'Browse commands by layer' : 'Duyệt lệnh theo tầng'}>
-          {labels.commands}
-          <span style="margin-left:4px;">▼</span>
-        </button>
-        <div class="dropdown-menu" style="position:absolute;top:100%;left:0;background:var(--md-surface);border:1px solid var(--md-outline);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.12);padding:16px;min-width:600px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;opacity:0;visibility:hidden;transform:translateY(-8px);transition:all 0.2s ease;">
-          {commandLayers.map((layer, idx) => (
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="font-weight:700;font-size:0.75rem;line-height:1.2;">{layer.name}</div>
-              <div style="font-size:0.65rem;color:var(--md-on-surface-muted);line-height:1.3;">{layer.desc}</div>
-              <div style="display:flex;flex-direction:column;gap:4px;">
-                {layer.items.map(item => (
-                  <a href="/docs/guides/commands" style="font-size:0.7rem;color:var(--md-primary);text-decoration:none;padding:2px 4px;border-radius:4px;transition:background 0.15s;" class="command-item">{item}</a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
+      <a href={`${base}/#products`} class="nav-link" role="menuitem" aria-label={isEn ? 'View products' : 'Xem sản phẩm'}>{isEn ? 'Products' : 'Sản phẩm'}</a>
       <a href={labels.pLink} class="nav-link" role="menuitem" aria-label={isEn ? 'View pricing' : 'Xem bảng giá'}>{labels.pricing}</a>
-      <a href={`${base}/#faq`} class="nav-link" role="menuitem" aria-label={isEn ? 'View FAQ' : 'Xem câu hỏi thường gặp'}>FAQ</a>
       <a href={`${base}/blog`} class="nav-link" role="menuitem" aria-label="Blog">Blog</a>
       <a href={`${base}/community`} class="nav-link" role="menuitem" aria-label={isEn ? 'Community' : 'Cộng đồng'}>{isEn ? 'Community' : 'Cộng Đồng'}</a>
-      <a href={`${base}/enterprise`} class="nav-link" role="menuitem" aria-label={isEn ? 'Enterprise' : 'Doanh Nghiệp'}>{isEn ? 'Enterprise' : 'Doanh Nghiệp'}</a>
+      <a href="https://github.com/longtho638-jpg/mekong-cli" target="_blank" rel="noopener noreferrer" class="nav-link" role="menuitem" aria-label="OpenClaw CLI on GitHub">OpenClaw CLI</a>
       <div style="display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;" role="group" aria-label={isEn ? 'Language switcher' : 'Chuyển ngôn ngữ'}>
         <a href="/" style={`text-decoration:none;padding:3px 7px;border-radius:6px;color:${!isEn ? '#00BCD4' : 'var(--md-on-surface-muted)'};${!isEn ? 'background:rgba(0,188,212,0.1)' : ''}`} aria-label={isEn ? 'Switch to Vietnamese' : 'Chuyển sang tiếng Việt'} aria-current={!isEn ? 'true' : 'false'} aria-pressed={!isEn}>VI</a>
         <span style="color:var(--md-on-surface-muted);" role="separator">|</span>
@@ -291,7 +263,7 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
       </div>
     </div>
     <!-- CTA always visible -->
-    <a href="/dashboard/signup" class="btn-primary nav-cta" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Sign up for free' : 'Đăng ký miễn phí'}>{labels.cta}</a>
+    <a href="https://sophia.agencyos.network" class="btn-primary nav-cta" style="padding:10px 20px;font-size:0.875rem;" aria-label={isEn ? 'Get started' : 'Bắt đầu ngay'}>{isEn ? 'Get Started' : 'Bắt Đầu'}</a>
   </div>
 </nav>
 
@@ -362,34 +334,33 @@ const jsonLdSchemas = [organizationSchema, webSiteSchema].concat(articleSchema ?
   <div class="container">
     <div class="grid-3" style="margin-bottom:48px;">
       <div>
-        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:12px;" class="gradient-text">OpenClaw</div>
+        <div style="font-family:'Be Vietnam Pro',sans-serif;font-size:1.25rem;font-weight:800;margin-bottom:12px;" class="gradient-text">AgencyOS</div>
         <p style="color:var(--md-on-surface-muted);font-size:0.875rem;line-height:1.7;max-width:240px;">
-          {isEn ? 'AI-powered business automation for modern enterprises.' : 'Nền tảng tự động hóa doanh nghiệp bằng AI hiện đại.'}
+          {isEn ? 'AI ecosystem — 3 products, 1 vision. Built on Cloudflare.' : 'Hệ sinh thái AI — 3 sản phẩm, 1 tầm nhìn. Xây trên Cloudflare.'}
         </p>
       </div>
       <div>
-        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-product-label">{isEn ? 'Product' : 'Sản phẩm'}</div>
+        <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-product-label">{isEn ? 'Products' : 'Sản phẩm'}</div>
         <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-product-label">
-          <a href={`${base}/#features`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Features' : 'Tính năng'}</a>
+          <a href="https://sophia.agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">Sophia AI Factory</a>
+          <a href="https://cashclaw.cc" class="nav-link" style="font-size:0.875rem;" role="listitem">CashClaw</a>
+          <a href="https://github.com/longtho638-jpg/mekong-cli" target="_blank" rel="noopener noreferrer" class="nav-link" style="font-size:0.875rem;" role="listitem">OpenClaw CLI</a>
           <a href={labels.pLink} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Pricing' : 'Bảng giá'}</a>
-          <a href={`${base}/blog`} class="nav-link" style="font-size:0.875rem;" role="listitem">Blog</a>
-          <a href={`${base}/community`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Community' : 'Cộng Đồng'}</a>
-          <a href="/docs" class="nav-link" style="font-size:0.875rem;" role="listitem">API Docs</a>
-          <a href="/dashboard" class="nav-link" style="font-size:0.875rem;" role="listitem">Dashboard</a>
         </div>
       </div>
       <div>
         <div style="font-weight:600;margin-bottom:16px;font-size:0.875rem;" id="footer-company-label">{isEn ? 'Company' : 'Công ty'}</div>
         <div style="display:flex;flex-direction:column;gap:10px;" role="list" aria-labelledby="footer-company-label">
-          <a href={`${base}/enterprise`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'About' : 'Về chúng tôi'}</a>
-          <a href="mailto:hello@agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Contact' : 'Liên hệ'}</a>
+          <a href={`${base}/blog`} class="nav-link" style="font-size:0.875rem;" role="listitem">Blog</a>
+          <a href={`${base}/community`} class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Community' : 'Cộng Đồng'}</a>
+          <a href="mailto:support@agencyos.network" class="nav-link" style="font-size:0.875rem;" role="listitem">{isEn ? 'Support' : 'Hỗ trợ'}</a>
         </div>
       </div>
     </div>
     <hr class="divider" />
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;flex-wrap:wrap;gap:12px;">
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 OpenClaw. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
+        <p style="color:var(--md-on-surface-muted);font-size:0.8rem;">© 2026 AgencyOS. {isEn ? 'All rights reserved.' : 'Bảo lưu mọi quyền.'}</p>
         <span class="built-badge">⚡ Built with AI</span>
       </div>
       <div style="display:flex;gap:20px;" role="navigation" aria-label={isEn ? 'Legal links' : 'Liên kết pháp lý'}>
