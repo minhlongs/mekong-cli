@@ -1,7 +1,0 @@
-{
-  "project": "mekong-cli",
-  "goal": "/cook \"Pull Qwen3.0 32B model vào Ollama local: chạy ollama pull qwen3:32b. Sau đó verify model available: ollama list | grep qwen3. Nếu chưa có ollama thì báo lỗi.\"",
-  "priority": "high",
-  "created_at": "2026-03-20T15:01:10+07:00",
-  "source": "antigravity-cto-dispatch"
-}
