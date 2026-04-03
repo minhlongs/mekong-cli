@@ -1,0 +1,3 @@
+# Mekong IDE Engine Farm — Python dependencies
+# Install: pip install -r requirements.txt
+mlx-lm>=0.22.0
