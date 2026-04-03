@@ -42,6 +42,15 @@ impl super::Tool for FileEditTool {
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("Missing 'new_str' parameter"))?;
 
+        // Path traversal protection
+        if let Err(reason) = super::validate_workspace_path(path) {
+            return Ok(ToolResult {
+                content: format!("Access denied: {reason}"),
+                is_error: true,
+                truncated: false,
+            });
+        }
+
         let content = match tokio::fs::read_to_string(path).await {
             Ok(c) => c,
             Err(e) => {

@@ -23,6 +23,23 @@ pub enum PermissionCheck {
     NeedsApproval(String),
 }
 
+/// Canonical list of always-blocked command patterns (single source of truth).
+/// Used by both PermissionGuard and BashTool.
+pub fn get_deny_patterns() -> &'static [&'static str] {
+    &[
+        r"rm\s+(-[rfRF]+\s+)?/",
+        r"rm\s+(-[rfRF]+\s+)?~",
+        r"mkfs\.",
+        r"dd\s+if=",
+        r">\s*/dev/sd",
+        r"chmod\s+777\s+/",
+        r"curl.*\|\s*sh",
+        r"wget.*\|\s*sh",
+        r"sudo\s+rm",
+        r":\(\)\s*\{",
+    ]
+}
+
 /// Guard that checks tool permissions before execution
 pub struct PermissionGuard {
     mode: PermissionMode,
@@ -37,17 +54,11 @@ impl PermissionGuard {
             _ => PermissionMode::AllowEdits,
         };
 
-        // Always-blocked patterns (even in bypass mode)
-        let deny_patterns = vec![
-            Regex::new(r"rm\s+-rf\s+/").unwrap(),
-            Regex::new(r"sudo\s+rm").unwrap(),
-            Regex::new(r"chmod\s+777").unwrap(),
-            Regex::new(r"mkfs\.").unwrap(),
-            Regex::new(r"dd\s+if=").unwrap(),
-            Regex::new(r":\(\)\s*\{").unwrap(),
-            Regex::new(r">\s*/dev/sd").unwrap(),
-            Regex::new(r"curl.*\|\s*sh").unwrap(),
-        ];
+        // Always-blocked patterns (even in bypass mode) — built from single source
+        let deny_patterns = get_deny_patterns()
+            .iter()
+            .map(|p| Regex::new(p).unwrap())
+            .collect();
 
         Self { mode, deny_patterns }
     }

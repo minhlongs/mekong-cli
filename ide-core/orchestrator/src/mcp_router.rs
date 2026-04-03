@@ -276,9 +276,13 @@ async fn execute_tool(
                 };
             }
             PermissionCheck::NeedsApproval(reason) => {
-                // In server mode, auto-approve or reject based on mode
-                // For now, log and proceed (bypass in server context)
-                info!("Auto-approving in server mode: {reason}");
+                // Non-interactive server mode: deny operations that require human approval
+                warn!("Denied in non-interactive mode: {reason}");
+                return ToolResult {
+                    content: format!("Permission denied (non-interactive): {reason}"),
+                    is_error: true,
+                    truncated: false,
+                };
             }
         }
     }

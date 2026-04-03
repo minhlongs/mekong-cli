@@ -41,6 +41,44 @@ pub trait Tool: Send + Sync {
     async fn execute(&self, args: Value) -> Result<ToolResult>;
 }
 
+/// Validate that a path resolves within the current working directory (workspace root).
+/// Prevents path traversal attacks (e.g. `../../etc/passwd`).
+///
+/// For new files, the parent directory is used for validation.
+/// Returns the original path as a PathBuf on success.
+pub fn validate_workspace_path(path: &str) -> Result<std::path::PathBuf, String> {
+    let p = std::path::Path::new(path);
+    let parent = p.parent().unwrap_or(std::path::Path::new("."));
+
+    // If parent doesn't exist yet (new file to be created), check the nearest ancestor
+    let canonical_parent = {
+        let mut check = parent.to_path_buf();
+        loop {
+            match std::fs::canonicalize(&check) {
+                Ok(c) => break c,
+                Err(_) => {
+                    if let Some(up) = check.parent() {
+                        check = up.to_path_buf();
+                    } else {
+                        return Err(format!("Cannot resolve any ancestor of path: {path}"));
+                    }
+                }
+            }
+        }
+    };
+
+    let cwd = std::env::current_dir().map_err(|e| format!("Cannot get cwd: {e}"))?;
+
+    if !canonical_parent.starts_with(&cwd) {
+        return Err(format!(
+            "Path escapes workspace boundary: {path} (resolved: {})",
+            canonical_parent.display()
+        ));
+    }
+
+    Ok(std::path::PathBuf::from(path))
+}
+
 /// Convert a Tool to an OpenAI-compatible function definition
 pub fn tool_to_def(tool: &dyn Tool) -> ToolDef {
     ToolDef {

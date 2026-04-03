@@ -39,6 +39,15 @@ impl super::Tool for FileWriteTool {
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("Missing 'content' parameter"))?;
 
+        // Path traversal protection
+        if let Err(reason) = super::validate_workspace_path(path) {
+            return Ok(ToolResult {
+                content: format!("Access denied: {reason}"),
+                is_error: true,
+                truncated: false,
+            });
+        }
+
         // Create parent directories
         if let Some(parent) = Path::new(path).parent() {
             if !parent.exists() {

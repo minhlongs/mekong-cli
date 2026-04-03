@@ -38,6 +38,15 @@ impl super::Tool for FileReadTool {
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("Missing 'path' parameter"))?;
 
+        // Path traversal protection
+        if let Err(reason) = super::validate_workspace_path(path) {
+            return Ok(ToolResult {
+                content: format!("Access denied: {reason}"),
+                is_error: true,
+                truncated: false,
+            });
+        }
+
         let content = match tokio::fs::read(path).await {
             Ok(bytes) => bytes,
             Err(e) => {
@@ -80,11 +89,12 @@ impl super::Tool for FileReadTool {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let truncated = numbered.len() > MAX_OUTPUT_CHARS;
+        let truncated = numbered.chars().count() > MAX_OUTPUT_CHARS;
         let output = if truncated {
+            // Use char boundary slicing to avoid splitting UTF-8 sequences
+            let safe_head: String = numbered.chars().take(MAX_OUTPUT_CHARS).collect();
             format!(
-                "{}\n\n[... truncated, showing {}/{} lines ...]",
-                &numbered[..MAX_OUTPUT_CHARS],
+                "{safe_head}\n\n[... truncated, showing {}/{} lines ...]",
                 end - start,
                 total
             )

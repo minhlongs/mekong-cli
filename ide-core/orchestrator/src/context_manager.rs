@@ -78,7 +78,9 @@ pub async fn compact_if_needed(
     }
 }
 
-/// Layer 1: Remove old tool result messages, keeping the last 5
+/// Layer 1: Remove old tool result messages, keeping the last 5.
+/// Also removes orphaned preceding assistant messages that only contain tool_calls
+/// (no text content), since those become invalid once the tool result is gone.
 fn quick_trim(messages: &mut Vec<ChatMessage>) {
     let tool_indices: Vec<usize> = messages
         .iter()
@@ -91,9 +93,31 @@ fn quick_trim(messages: &mut Vec<ChatMessage>) {
         return;
     }
 
+    // Indices of tool messages to remove (oldest first)
     let to_remove: Vec<usize> = tool_indices[..tool_indices.len() - 5].to_vec();
-    // Remove in reverse order to preserve indices
-    for idx in to_remove.into_iter().rev() {
+
+    // Collect additional orphaned assistant indices (preceding tool-call-only messages)
+    let mut extra_remove: Vec<usize> = Vec::new();
+    for &tool_idx in &to_remove {
+        if tool_idx > 0 {
+            let prev = &messages[tool_idx - 1];
+            // An assistant message is orphaned if it has tool_calls but no substantive content
+            if prev.role == "assistant"
+                && prev.tool_calls.as_ref().map_or(false, |tc| !tc.is_empty())
+                && prev.content.as_deref().unwrap_or("").trim().is_empty()
+            {
+                extra_remove.push(tool_idx - 1);
+            }
+        }
+    }
+
+    // Combine, deduplicate, sort descending, and remove
+    let mut all_remove = to_remove;
+    all_remove.extend(extra_remove);
+    all_remove.sort_unstable();
+    all_remove.dedup();
+
+    for idx in all_remove.into_iter().rev() {
         messages.remove(idx);
     }
 }
@@ -110,7 +134,8 @@ async fn auto_compact(
         .filter_map(|m| {
             let role = &m.role;
             let content = m.content.as_deref().unwrap_or("[tool call]");
-            let truncated = &content[..content.len().min(500)];
+            // Use char-based truncation to avoid splitting UTF-8 sequences
+            let truncated: String = content.chars().take(500).collect();
             Some(format!("[{role}]: {truncated}"))
         })
         .collect::<Vec<_>>()

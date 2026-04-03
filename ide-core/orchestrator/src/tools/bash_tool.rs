@@ -5,6 +5,7 @@ use std::time::Duration;
 use tokio::process::Command;
 
 use super::{PermissionLevel, ToolResult};
+use crate::permissions::get_deny_patterns;
 
 const MAX_OUTPUT_CHARS: usize = 30_000;
 const DEFAULT_TIMEOUT_SECS: u64 = 120;
@@ -15,16 +16,11 @@ pub struct BashTool {
 
 impl BashTool {
     pub fn new() -> Self {
-        let deny_patterns = vec![
-            Regex::new(r"rm\s+-rf\s+/").unwrap(),
-            Regex::new(r"sudo\s+rm").unwrap(),
-            Regex::new(r"chmod\s+777").unwrap(),
-            Regex::new(r"mkfs\.").unwrap(),
-            Regex::new(r"dd\s+if=").unwrap(),
-            Regex::new(r":\(\)\s*\{").unwrap(),
-            Regex::new(r">\s*/dev/sd").unwrap(),
-            Regex::new(r"curl.*\|\s*sh").unwrap(),
-        ];
+        // Build deny patterns from single source of truth in permissions module
+        let deny_patterns: Vec<Regex> = get_deny_patterns()
+            .iter()
+            .map(|p| Regex::new(p).unwrap())
+            .collect();
         Self { deny_patterns }
     }
 
@@ -39,12 +35,13 @@ impl BashTool {
 }
 
 fn truncate_output(output: &str) -> (String, bool) {
-    if output.len() <= MAX_OUTPUT_CHARS {
+    let char_count = output.chars().count();
+    if char_count <= MAX_OUTPUT_CHARS {
         return (output.to_string(), false);
     }
     let half = MAX_OUTPUT_CHARS / 2;
-    let head = &output[..half];
-    let tail = &output[output.len() - half..];
+    let head: String = output.chars().take(half).collect();
+    let tail: String = output.chars().rev().take(half).collect::<String>().chars().rev().collect();
     let truncated_kb = (output.len() - MAX_OUTPUT_CHARS) as f64 / 1024.0;
     (
         format!("{head}\n\n[... {truncated_kb:.0}KB truncated ...]\n\n{tail}"),
