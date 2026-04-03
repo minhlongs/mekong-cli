@@ -103,13 +103,38 @@ function base64UrlEncode(str) {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-// Helper: Hash password using SHA-256
+// Helper: Hash password using PBKDF2 with random salt
 async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
   const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hash = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const hashArray = Array.from(new Uint8Array(hash));
+  const saltArray = Array.from(salt);
+  return saltArray.map(b => b.toString(16).padStart(2, '0')).join('') + ':' +
+         hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Helper: Verify password against stored PBKDF2 hash
+async function verifyPassword(password, storedHash) {
+  const [saltHex, hashHex] = storedHash.split(':');
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']
+  );
+  const hash = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, 256
+  );
+  const hashArray = Array.from(new Uint8Array(hash));
+  const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return computedHash === hashHex;
 }
 
 // Helper: Get auth token from request header
@@ -205,8 +230,8 @@ export async function loginUser(request, env) {
     const user = JSON.parse(userStr);
 
     // Verify password
-    const hashedPassword = await hashPassword(password);
-    if (user.password !== hashedPassword) {
+    const passwordValid = await verifyPassword(password, user.password);
+    if (!passwordValid) {
       return errorResponse('Email hoặc mật khẩu không đúng', 401);
     }
 
@@ -302,4 +327,4 @@ export async function getCurrentUser(request, env) {
 }
 
 // Export helpers for use in index.js
-export { generateJWT, verifyJWT, hashPassword, getAuthToken };
+export { generateJWT, verifyJWT, hashPassword, verifyPassword, getAuthToken };
