@@ -14,14 +14,16 @@ binding = "AUTH_KV"
 id = "789e7cf1894e4d4c9e8f8cd51b2dbe16"
 
 # KV Namespace for Rate Limiting
+# TODO: Create separate KV namespace - run: wrangler kv namespace create RATE_LIMIT_STORE
+# Then replace the id below with the new namespace ID
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "789e7cf1894e4d4c9e8f8cd51b2dbe16"
+id = "REPLACE_WITH_NEW_KV_NAMESPACE_ID"
 
 # Environment Variables
 [vars]
 ENVIRONMENT = "production"
-CORS_ORIGIN = "*"
-JWT_SECRET=REDACTED = "your-super-secret-jwt-key-change-in-production"
+CORS_ORIGIN = "https://fnb-caffe.pages.dev"
 WORKER_VERSION = "2.0.0-enhanced"
 DEBUG = false
+# JWT_SECRET=REDACTED must be set via: wrangler secret put JWT_SECRET=REDACTED
