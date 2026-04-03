@@ -902,9 +902,232 @@ class RecipeOrchestrator:
         return self.run_from_recipe(recipe)
 
 
+class ReportFormatter:
+    """Formats and displays orchestration reports."""
+
+    _STATUS_COLORS = {
+        OrchestrationStatus.SUCCESS: "green",
+        OrchestrationStatus.FAILED: "red",
+        OrchestrationStatus.PARTIAL: "yellow",
+        OrchestrationStatus.ROLLED_BACK: "magenta",
+    }
+
+    def _format_status(self, status: OrchestrationStatus) -> str:
+        """Return a coloured string representation of the status."""
+        color = self._STATUS_COLORS.get(status, "white")
+        return f"[{color}]{status.value}[/{color}]"
+
+    def display(self, result: "OrchestrationResult") -> None:
+        """Print a human-readable report to stdout (never raises)."""
+        console = Console()
+        try:
+            table = Table(show_header=False, box=None)
+            table.add_column("Metric", style="bold")
+            table.add_column("Value")
+
+            table.add_row("Status", self._format_status(result.status))
+            table.add_row("Total Steps", str(result.total_steps))
+            table.add_row("Completed", str(result.completed_steps))
+            table.add_row("Failed", str(result.failed_steps))
+            table.add_row("Success Rate", f"{result.success_rate:.1f}%")
+
+            console.print(table)
+
+            for error in result.errors:
+                console.print(f"[red]Error:[/red] {error}")
+            for warning in result.warnings:
+                console.print(f"[yellow]Warning:[/yellow] {warning}")
+        except Exception:
+            pass
+
+
+class RollbackHandler:
+    """Handles rollback of completed steps on failure."""
+
+    def __init__(self, enable_rollback: bool = True) -> None:
+        self.enable_rollback = enable_rollback
+        try:
+            from .command_sanitizer import CommandSanitizer
+            self._sanitizer = CommandSanitizer(strict_mode=True)
+        except Exception:
+            self._sanitizer = None
+
+    def rollback(
+        self,
+        result: "OrchestrationResult",
+        failed_step: "RecipeStep",
+    ) -> None:
+        """Roll back all completed steps in reverse order."""
+        if not self.enable_rollback:
+            return
+
+        import subprocess as _subprocess
+
+        rollback_errors: List[str] = []
+
+        for step_result in reversed(result.step_results):
+            if not step_result.verification.passed:
+                continue  # Only roll back passed steps
+
+            step = step_result.step
+            rollback_cmd = step.params.get("rollback") if step.params else None
+            if not rollback_cmd:
+                continue
+
+            # Security check — block dangerous commands
+            if self._sanitizer is not None:
+                san = self._sanitizer.sanitize(rollback_cmd)
+                if not san.is_safe:
+                    msg = f"Step {step.order} rollback blocked (security): {san.blocked_reason}"
+                    rollback_errors.append(msg)
+                    continue
+
+            try:
+                cmd_args = rollback_cmd.split()
+                proc = _subprocess.run(
+                    cmd_args,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if proc.returncode != 0:
+                    msg = f"Step {step.order} rollback failed: {proc.stderr.strip()}"
+                    rollback_errors.append(msg)
+            except _subprocess.TimeoutExpired:
+                rollback_errors.append(f"Step {step.order} rollback timed out")
+            except Exception as exc:
+                rollback_errors.append(f"Step {step.order} rollback error: {exc}")
+
+        if rollback_errors:
+            result.errors.extend(rollback_errors)
+            result.warnings.append("Rollback completed with errors")
+
+        result.status = OrchestrationStatus.ROLLED_BACK
+
+
+class StepExecutor:
+    """Executes and verifies individual recipe steps with optional self-healing."""
+
+    def __init__(
+        self,
+        executor: Any,
+        verifier: Any,
+        llm_client: Optional[Any] = None,
+        history: Optional[List[Any]] = None,
+        telemetry: Optional[Any] = None,
+    ) -> None:
+        self.executor = executor
+        self.verifier = verifier
+        self.llm_client = llm_client
+        self.history: List[Any] = history if history is not None else []
+        self.telemetry = telemetry
+
+    def execute_and_verify(
+        self,
+        step: "RecipeStep",
+        step_order: Optional[int] = None,
+        workflow_id: str = "",
+    ) -> "StepResult":
+        """Execute step, optionally self-heal on failure, then verify."""
+        self_healed = False
+        order = step_order if step_order is not None else step.order
+
+        # Execute
+        execution_result = self.executor.execute_step(step)
+
+        # Self-healing: only for shell steps with an LLM client
+        step_type = step.params.get("type", "shell") if step.params else "shell"
+        if (
+            step_type == "shell"
+            and execution_result.exit_code != 0
+            and self.llm_client is not None
+            and hasattr(self.llm_client, "generate")
+        ):
+            command = step.description.strip()
+            stderr = execution_result.stderr or ""
+
+            # Optional: get strategy hint from reflection engine
+            strategy_hint = ""
+            reflection = getattr(self, "_reflection", None)
+            if reflection is not None:
+                try:
+                    strategy_hint = reflection.get_strategy_suggestion(command) or ""
+                except Exception:
+                    pass
+
+            # Append history event for self-heal attempt
+            try:
+                event = ExecutionEvent.create(
+                    EventKind.SELF_HEAL_ATTEMPTED,
+                    workflow_id or "local",
+                    step.order,
+                    data={"error": stderr[:200]},
+                )
+                self.history.append(event)
+            except Exception:
+                pass
+
+            try:
+                if self.telemetry:
+                    self.telemetry.record_llm_call()
+
+                prompt = (
+                    f"This shell command failed: `{command}`. "
+                    f"Error: `{stderr[:500]}`. "
+                    + (f"Hint: {strategy_hint}. " if strategy_hint else "")
+                    + "Suggest a corrected command. "
+                    "Reply with ONLY the corrected command, no explanation."
+                )
+                corrected = self.llm_client.generate(prompt).strip()
+
+                if corrected and corrected != command:
+                    from .parser import RecipeStep as _RS
+
+                    healed_step = _RS(
+                        order=step.order,
+                        title=f"{step.title} (healed)",
+                        description=corrected,
+                        params=step.params,
+                    )
+                    healed_result = self.executor.execute_step(healed_step)
+                    if healed_result.exit_code == 0:
+                        self_healed = True
+                        execution_result = healed_result
+            except Exception:
+                pass
+
+        # Extract verification criteria
+        criteria = step.params.get("verification", {}) if step.params else {}
+
+        # Verify
+        verification_report = self.verifier.verify(execution_result, criteria)
+
+        # Record telemetry
+        if self.telemetry:
+            try:
+                self.telemetry.record_step(
+                    step_order=order,
+                    title=step.title,
+                    exit_code=execution_result.exit_code,
+                    self_healed=self_healed,
+                )
+            except Exception:
+                pass
+
+        return StepResult(
+            step=step,
+            execution=execution_result,
+            verification=verification_report,
+            self_healed=self_healed,
+        )
+
+
 __all__ = [
     "RecipeOrchestrator",
     "OrchestrationResult",
     "OrchestrationStatus",
+    "ReportFormatter",
+    "RollbackHandler",
+    "StepExecutor",
     "StepResult",
 ]
