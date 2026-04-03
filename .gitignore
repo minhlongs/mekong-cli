@@ -644,3 +644,6 @@ packages/mekong-docs/
 # WIP packages (not ready for public)
 packages/core/
 public/
+# Mekong IDE Core
+ide-core/bin-mekong-*
+ide-core/orchestrator/target/
