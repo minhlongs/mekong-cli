@@ -15,10 +15,10 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-logger = logging.getLogger(__name__)
-
 from .event_bus import EventType, get_event_bus
 from .vector_memory_store import MemoryType, VectorMemoryStore
+
+logger = logging.getLogger(__name__)
 
 try:
     from packages.memory.memory_facade import get_memory_facade as _get_facade
