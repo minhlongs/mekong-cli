@@ -97,7 +97,7 @@ packages/
     └── package.json
 ```
 
-### Applications
+### Applications & Company Templates
 
 ```
 apps/
@@ -108,6 +108,11 @@ apps/
 ├── raas-platform/       # Marketplace
 ├── landing-page/        # Next.js 16
 └── ... (8+ apps)
+
+clipmart/                 # Paperclip AI company templates
+├── mekong-saas-startup/  # 22-agent full SaaS company (founders & scale-ups)
+├── mekong-dev-shop/      # 8-agent engineering agency (dev teams)
+└── mekong-solo-founder/  # 5-agent lean template (solopreneurs)
 ```
 
 ### Commands & Skills
@@ -342,9 +347,36 @@ pytest tests/
 
 ---
 
+## Company Templates (Clipmart)
+
+**Paperclip AI company templates** — Pre-built agent teams for different business models:
+
+| Template | Agents | Use Case | Budget |
+|----------|--------|----------|--------|
+| **mekong-saas-startup** | 22 | Funded SaaS founders building full org | Scalable |
+| **mekong-dev-shop** | 8 | Dev agencies and engineering teams | 2,100 MCU/mo |
+| **mekong-solo-founder** | 5 | Solopreneurs shipping fast | 1,550 MCU/mo |
+
+**Features per template:**
+- Pre-configured agent org charts
+- Skills aligned to roles (Binh Pháp governance)
+- Escalation matrices and approval workflows
+- Integration with Mekong CLI commands
+- MIT licensed, ready to fork
+
+**Quick start:**
+```bash
+cd mekong-cli/clipmart/mekong-solo-founder
+paperclip company init .
+mekong company/start
+```
+
+---
+
 ## Next Steps
 
 - **Getting Started:** `/docs/getting-started.md`
 - **API Reference:** `/docs/api-reference.md`
 - **Deployment:** `/docs/DEPLOYMENT_GUIDE.md`
+- **Company Templates:** `/clipmart/`
 - **Contributing:** `/CONTRIBUTING.md`
