@@ -22,6 +22,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os as _os
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
@@ -71,8 +72,6 @@ app.include_router(raas_router)
 # CORS for AgencyOS frontend
 # Security: wildcard origin is incompatible with allow_credentials=True (CORS spec).
 # Use explicit origins list from env var; fall back to localhost for dev.
-import os as _os
-
 _ALLOWED_ORIGINS: list[str] = [
     o.strip()
     for o in _os.environ.get(
