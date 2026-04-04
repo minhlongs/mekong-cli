@@ -15,42 +15,8 @@
     "url": "https://github.com/longtho638-jpg/mekong-cli/issues"
   },
   "workspaces": [
-    "packages/*",
-    "packages/core/*",
-    "packages/integrations/*",
-    "packages/business/*",
-    "packages/ui/*",
-    "packages/tooling/*",
-    "apps/admin",
-    "apps/agencyos-landing",
-    "apps/agencyos-web",
-    "apps/crm",
-    "apps/agi-sops",
-    "apps/analytics",
-    "apps/anima119",
-    "apps/antigravity-cli",
-    "apps/apex-os",
-    "apps/api",
-    "apps/com-anh-duong-10x",
-    "apps/dashboard",
-    "apps/developers",
-    "apps/docs",
-    "apps/engine",
-    "apps/gemini-proxy-clone",
-    "apps/landing",
-    "apps/openclaw-worker",
-    "apps/project",
-    "apps/raas-demo",
-    "apps/raas-gateway",
-    "apps/raas-gateway-cli",
-    "apps/sa-dec-flower-hunt",
-    "apps/saas-dashboard",
-    "apps/sophia-proposal",
-    "apps/starter-template",
-    "apps/tasks",
-    "apps/vibe-coding-cafe",
-    "apps/web",
-    "apps/well"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "MEKONG_ENV=development npx turbo run dev",
@@ -148,5 +114,8 @@
       "minimatch@^9.0.0 <9.0.5": ">=9.0.5",
       "hono@<4.12.7": ">=4.12.7"
     }
+  },
+  "bin": {
+    "mekong": "./src/cli/index.js"
   }
 }
