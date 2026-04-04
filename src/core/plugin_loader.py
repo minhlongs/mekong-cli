@@ -25,6 +25,43 @@ EP_GROUP_HOOKS = "mekong.hooks"
 
 DEFAULT_PLUGIN_DIR = Path.home() / ".mekong" / "plugins"
 
+# Required attributes that every plugin module must expose
+_REQUIRED_MODULE_ATTRS: tuple[str, ...] = ("register",)
+
+# Allowed plugin file size limit (bytes) — prevents loading massive untrusted files
+_MAX_PLUGIN_FILE_BYTES = 512 * 1024  # 512 KB
+
+
+def _validate_local_plugin(fpath: Path) -> tuple[bool, str]:
+    """Validate a local plugin file before loading.
+
+    Checks:
+    - File size within limit (guards against zip-bomb / oversized payloads)
+    - File extension is .py
+    - Filename does not contain path traversal characters
+
+    Returns:
+        (is_valid, reason) — reason is empty string when valid.
+    """
+    if fpath.suffix.lower() != ".py":
+        return False, f"Unexpected extension: {fpath.suffix}"
+
+    # Guard against path traversal in file name
+    if ".." in fpath.parts or "/" in fpath.name or "\\" in fpath.name:
+        return False, "Path traversal detected in plugin filename"
+
+    try:
+        size = fpath.stat().st_size
+    except OSError as exc:
+        return False, f"Cannot stat plugin file: {exc}"
+
+    if size > _MAX_PLUGIN_FILE_BYTES:
+        return False, (
+            f"Plugin file too large: {size} bytes (limit {_MAX_PLUGIN_FILE_BYTES})"
+        )
+
+    return True, ""
+
 
 class PluginLoader:
     """Discovers and loads Mekong plugins from entry_points and local directories.
@@ -90,6 +127,15 @@ class PluginLoader:
         for fpath in sorted(pdir.glob("*.py")):
             if fpath.name.startswith("_") or fpath.name.startswith("test_"):
                 continue
+
+            # Validate plugin file before executing arbitrary code
+            is_valid, reason = _validate_local_plugin(fpath)
+            if not is_valid:
+                logger.warning(
+                    "Skipping plugin '%s' — validation failed: %s", fpath.name, reason,
+                )
+                continue
+
             try:
                 spec = importlib.util.spec_from_file_location(fpath.stem, fpath)
                 if spec is None or spec.loader is None:

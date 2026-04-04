@@ -69,9 +69,22 @@ app = FastAPI(
 app.include_router(raas_router)
 
 # CORS for AgencyOS frontend
+# Security: wildcard origin is incompatible with allow_credentials=True (CORS spec).
+# Use explicit origins list from env var; fall back to localhost for dev.
+import os as _os
+
+_ALLOWED_ORIGINS: list[str] = [
+    o.strip()
+    for o in _os.environ.get(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://localhost:8080",
+    ).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

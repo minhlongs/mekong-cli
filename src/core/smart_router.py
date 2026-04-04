@@ -9,8 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import logging
+
 from .nlu import Intent, IntentResult
 from .memory import MemoryStore
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -70,8 +74,8 @@ class SmartRouter:
         try:
             from .tool_registry import ToolRegistry
             self._tool_registry = ToolRegistry()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("ToolRegistry unavailable, tool routing disabled: %s", _exc)
 
     def route(self, intent_result: IntentResult) -> RouteResult:
         """
@@ -129,8 +133,8 @@ class SmartRouter:
                         tool_name=tool_name,
                         reason=f"Intent tool match: {tool_name}",
                     )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Intent tool lookup failed for '%s': %s", tool_name, _exc)
 
         # AGI v2: Route to evolve-code for refactor/optimize intents
         if intent_result.intent in _EVOLVE_INTENTS:
@@ -149,8 +153,8 @@ class SmartRouter:
                         tool_name=suggested.name,
                         reason=f"Tool suggestion: {suggested.name}",
                     )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("Tool suggestion failed: %s", _exc)
 
         return RouteResult(action="plan", reason="No viable recipe found")
 

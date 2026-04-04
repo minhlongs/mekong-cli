@@ -189,10 +189,19 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS middleware - Configure allow_origins for production
+    # CORS middleware - Security: wildcard origin is incompatible with
+    # allow_credentials=True (CORS spec). Use explicit origins from env var.
+    _allowed_origins: list[str] = [
+        o.strip()
+        for o in os.environ.get(
+            "CORS_ALLOWED_ORIGINS",
+            "http://localhost:3000,http://localhost:8080",
+        ).split(",")
+        if o.strip()
+    ]
     gateway.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Update to specific origins in production
+        allow_origins=_allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

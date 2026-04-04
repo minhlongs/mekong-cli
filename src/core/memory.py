@@ -8,11 +8,14 @@ Vector backend (VectorMemoryStore) provides semantic search alongside YAML.
 """
 
 import hashlib
+import logging
 import time
 import yaml  # type: ignore[import-untyped]
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from .event_bus import EventType, get_event_bus
 from .vector_memory_store import MemoryType, VectorMemoryStore
@@ -63,8 +66,8 @@ class MemoryStore:
             self._vector_store.get_or_create_collection(
                 self.VECTOR_COLLECTION, self.VECTOR_DIM,
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.warning("Vector store collection init failed, semantic search disabled: %s", _exc)
 
     def record(self, entry: MemoryEntry) -> None:
         """Record an execution outcome and persist."""
@@ -95,8 +98,8 @@ class MemoryStore:
                         "timestamp": entry.timestamp,
                     },
                 )
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("External memory facade add failed: %s", _exc)
 
     def query(self, goal_pattern: str) -> List[MemoryEntry]:
         """
@@ -122,8 +125,8 @@ class MemoryStore:
                     matched = [e for e in self._entries if e.goal in matched_goals]
                     if matched:
                         return matched
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("External memory facade search failed: %s", _exc)
 
         # YAML substring fallback
         pattern = goal_pattern.lower()

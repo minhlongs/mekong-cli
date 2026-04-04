@@ -161,8 +161,8 @@ class AGIScoreEngine:
                 if obj is not None:
                     score += 2.5
                     wired.append(name)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Orchestrator wiring check failed: %s", _exc)
 
         # Check planner step types
         try:
@@ -171,8 +171,8 @@ class AGIScoreEngine:
             if hasattr(planner, "_detect_step_type"):
                 score += 2.5
                 wired.append("planner_step_types")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Planner step-type check failed: %s", _exc)
 
         # Check router intent tools
         try:
@@ -180,8 +180,8 @@ class AGIScoreEngine:
             if _INTENT_TOOLS:
                 score += 2.5
                 wired.append("router_intent_tools")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Router intent-tools check failed: %s", _exc)
 
         # Check executor step types
         try:
@@ -191,16 +191,16 @@ class AGIScoreEngine:
             if hasattr(exe, "_execute_tool_step") and hasattr(exe, "_execute_browse_step"):
                 score += 2.5
                 wired.append("executor_step_types")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Executor step-type check failed: %s", _exc)
 
         # Check EventBus wiring in orchestrator
         try:
             if orch._event_bus is not None:
                 score += 2.5
                 wired.append("event_bus")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("EventBus wiring check failed: %s", _exc)
 
         report.details["wired"] = wired
         return min(score, 25.0)
@@ -230,8 +230,8 @@ class AGIScoreEngine:
 
             report.details["executions"] = total
             report.details["success_rate"] = success_rate
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("Runtime metrics check failed: %s", _exc)
         return min(score, 15.0)
 
     def _score_improvement(self, report: AGIScoreReport) -> float:
@@ -244,8 +244,8 @@ class AGIScoreEngine:
             ReflectionEngine()  # validate importable
             score += 5.0  # Available
             report.details["reflection"] = "active"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("ReflectionEngine unavailable: %s", _exc)
 
         # Code Evolution available = 5 pts
         try:
@@ -254,8 +254,8 @@ class AGIScoreEngine:
             stats = evo.get_stats()
             score += 5.0
             report.details["evolution_attempts"] = stats.get("total_attempts", 0)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("CodeEvolutionEngine unavailable: %s", _exc)
 
         # Tiered telemetry available = 5 pts
         try:
@@ -263,8 +263,8 @@ class AGIScoreEngine:
             TieredTelemetryStore()  # validate importable
             score += 5.0
             report.details["telemetry"] = "tiered"
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("TieredTelemetryStore unavailable: %s", _exc)
 
         return min(score, 15.0)
 

@@ -8,12 +8,15 @@ compatible with RaaS Gateway's JWT + mk_ API key authentication.
 
 import hashlib
 import json
+import logging
 import os
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 # RaaS Gateway configuration
@@ -75,8 +78,8 @@ class SecurityAttestationGenerator:
                     f for f in findings
                     if "os.getenv" not in f and "os.environ" not in f
                 ]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.warning("Hardcoded-secrets scan failed: %s", _exc)
 
         return len(findings) == 0, findings
 
@@ -100,8 +103,8 @@ class SecurityAttestationGenerator:
                     f for f in files
                     if f and ".env.example" not in f and ".venv" not in f
                 ]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.warning("Env-file exposure scan failed: %s", _exc)
 
         return len(exposed) == 0, exposed
 

@@ -475,11 +475,12 @@ class AutoRecovery:
     # Built-in Recovery Actions
     # ========================================================================
 
-    def _execute_proxy_recovery(self) -> bool:
+    async def _execute_proxy_recovery(self) -> bool:
         """
         Execute proxy recovery script.
 
         Runs scripts/proxy-recovery.sh or falls back to default proxy restart logic.
+        Async to avoid blocking the event loop during subprocess and sleep waits.
 
         Returns:
             True if proxy recovery succeeded
@@ -497,7 +498,9 @@ class AutoRecovery:
             if script_path.exists():
                 logger.info(f"Found proxy-recovery script at {script_path}")
                 try:
-                    result = subprocess.run(
+                    # Run blocking subprocess in thread pool to avoid blocking event loop
+                    result = await asyncio.to_thread(
+                        subprocess.run,
                         ["bash", str(script_path)],
                         capture_output=True,
                         text=True,
@@ -515,23 +518,27 @@ class AutoRecovery:
 
         # Fallback: restart proxy service
         logger.info("Falling back to default proxy restart logic...")
-        return self._restart_proxy_service()
+        return await self._restart_proxy_service()
 
-    def _restart_proxy_service(self) -> bool:
+    async def _restart_proxy_service(self) -> bool:
         """
         Fallback proxy restart logic.
+
+        Async to replace blocking time.sleep(2) with asyncio.sleep.
 
         Returns:
             True if restart succeeded
         """
         try:
-            # Kill existing proxy processes
-            subprocess.run(
+            # Kill existing proxy processes (non-blocking via thread pool)
+            await asyncio.to_thread(
+                subprocess.run,
                 ["pkill", "-f", "proxy"],
                 capture_output=True,
                 timeout=5,
             )
-            time.sleep(2)
+            # Non-blocking sleep — gives event loop time to process other tasks
+            await asyncio.sleep(2)
 
             # Restart would typically be handled by external process manager
             # This is a placeholder - actual implementation depends on deployment
@@ -541,9 +548,11 @@ class AutoRecovery:
             logger.error(f"Failed to restart proxy service: {e}")
             return False
 
-    def _restart_health_endpoint(self) -> bool:
+    async def _restart_health_endpoint(self) -> bool:
         """
         Restart health endpoint service.
+
+        Async to replace blocking time.sleep(2) with asyncio.sleep.
 
         Returns:
             True if restart succeeded
@@ -551,13 +560,15 @@ class AutoRecovery:
         logger.info("Restarting health endpoint...")
 
         try:
-            # Kill existing health endpoint processes
-            subprocess.run(
+            # Kill existing health endpoint processes (non-blocking via thread pool)
+            await asyncio.to_thread(
+                subprocess.run,
                 ["pkill", "-f", "health.*endpoint"],
                 capture_output=True,
                 timeout=5,
             )
-            time.sleep(2)
+            # Non-blocking sleep — gives event loop time to process other tasks
+            await asyncio.sleep(2)
 
             # Signal for restart (actual restart handled by process manager)
             logger.info("Health endpoint restart initiated")
@@ -615,12 +626,13 @@ class AutoRecovery:
         logger.info("Crash recovery triggered - awaiting external process manager")
         return True
 
-    def _handle_license_recovery(self) -> bool:
+    async def _handle_license_recovery(self) -> bool:
         """
         Handle license recovery.
 
         Triggers proxy recovery since license issues are typically
         resolved by restoring proxy connectivity.
+        Async because it delegates to async _execute_proxy_recovery.
 
         Returns:
             True if recovery initiated successfully
@@ -629,7 +641,7 @@ class AutoRecovery:
 
         # License recovery delegates to proxy recovery
         # since most license issues are network/proxy related
-        return self._execute_proxy_recovery()
+        return await self._execute_proxy_recovery()
 
     # ========================================================================
     # Recovery Analytics
