@@ -4,9 +4,11 @@
  * Centralized env resolution for local Ollama inference.
  * Ollama 0.19+ uses Apple MLX natively on Apple Silicon.
  *
- * Strategy:
- *   development → qwen3:30b-a3b + deepseek-r1:32b (M1 Max 64GB)
- *   production  → qwen2.5:14b + nemotron:12b (customer B2B)
+ * Strategy (100/100 model stack):
+ *   DEV:  qwen3:30b-a3b (18GB MoE) + deepseek-r1:32b (19GB) = 38.7GB
+ *   PROD: qwen2.5-coder:7b + qwen3:8b = 14.7GB (B2B lightweight)
+ *   Shared: qwen3:1.7b (tool), phi4-mini-reasoning (trading),
+ *   nomic-embed-text (embeddings)
  */
 
 export type MekongEnv = 'development' | 'production'
@@ -16,20 +18,26 @@ export interface OllamaConfig {
   apiKey: string
   defaultModel: string
   reasoningModel: string
-  auditModel: string
+  toolModel: string
+  tradingModel: string
+  embedModel: string
   env: MekongEnv
 }
 
 const DEV_MODELS = {
-  default: 'qwen2.5-coder:32b',
+  default: 'qwen3:30b-a3b',
   reasoning: 'deepseek-r1:32b',
-  audit: 'qwen2.5-coder:7b',
+  tool: 'qwen3:1.7b',
+  trading: 'phi4-mini-reasoning',
+  embed: 'nomic-embed-text',
 } as const
 
 const PROD_MODELS = {
-  default: 'qwen2.5:14b',
-  reasoning: 'nemotron:12b',
-  audit: 'qwen2.5:7b',
+  default: 'qwen2.5-coder:7b',
+  reasoning: 'qwen3:8b',
+  tool: 'qwen3:1.7b',
+  trading: 'phi4-mini-reasoning',
+  embed: 'nomic-embed-text',
 } as const
 
 /**
@@ -62,7 +70,9 @@ export function getOllamaConfig(): OllamaConfig {
     apiKey: process.env.OPENAI_API_KEY ?? 'ollama',
     defaultModel: process.env.OPENAI_MODEL ?? models.default,
     reasoningModel: models.reasoning,
-    auditModel: models.audit,
+    toolModel: models.tool,
+    tradingModel: models.trading,
+    embedModel: models.embed,
     env,
   }
 }

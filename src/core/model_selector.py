@@ -130,6 +130,8 @@ LOCAL_DOWNGRADE: dict[str, str] = {
 
 def detect_provider(model_id: str) -> str:
     """Detect the provider from a model ID."""
+    if model_id.startswith("ollama:"):
+        return "ollama"
     if model_id.startswith("mlx:"):
         return "mlx"
     if "claude" in model_id:

@@ -67,6 +67,9 @@
     "farm:start:dev": "MEKONG_ENV=development bash ide-core/engine-farm/start-farm.sh",
     "farm:start:prod": "MEKONG_ENV=production bash ide-core/engine-farm/start-farm.sh",
     "farm:stop": "bash ide-core/engine-farm/stop-farm.sh",
+    "farm:migrate": "bash ide-core/engine-farm/migrate-models.sh",
+    "farm:ab-test": "bash ide-core/engine-farm/ab-test.sh",
+    "farm:cutover": "bash ide-core/engine-farm/cutover.sh --yes",
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
     "health": "bash scripts/health-check.sh"
   },
