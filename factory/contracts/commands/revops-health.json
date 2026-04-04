@@ -13,8 +13,8 @@
     "hub": "cs-lead, rev-ops-analyst",
     "complexity": "revops-hub",
     "timeout_ms": 120000,
-    "credit_cost": \nSEQUENTIAL: unified-health,
-    "requires_approval": standard|false
+    "credit_cost": 3,
+    "requires_approval": false
   },
   "input": {
     "type": "object",

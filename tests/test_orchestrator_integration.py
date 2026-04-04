@@ -75,7 +75,7 @@ def test_run_from_recipe_success(orchestrator):
     )
     recipe = _make_recipe("success-recipe", [step])
 
-    with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True):
+    with patch("src.core.command_sanitizer.CommandSanitizer.is_safe_command", return_value=True):
         result = orchestrator.run_from_recipe(recipe)
 
     assert result.status == OrchestrationStatus.SUCCESS
@@ -150,7 +150,7 @@ def test_step_result_structure(orchestrator):
     )
     recipe = _make_recipe("structure-recipe", [step])
 
-    with patch("src.core.executor.RecipeExecutor._is_safe_command", return_value=True):
+    with patch("src.core.command_sanitizer.CommandSanitizer.is_safe_command", return_value=True):
         result = orchestrator.run_from_recipe(recipe)
 
     assert len(result.step_results) == 1

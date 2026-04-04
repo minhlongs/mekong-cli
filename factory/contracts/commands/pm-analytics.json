@@ -13,8 +13,8 @@
     "hub": "data-analyst",
     "complexity": "product-hub",
     "timeout_ms": 120000,
-    "credit_cost": \nSEQUENTIAL: insights-report,
-    "requires_approval": standard|false
+    "credit_cost": 3,
+    "requires_approval": false
   },
   "input": {
     "type": "object",
