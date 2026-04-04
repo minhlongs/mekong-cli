@@ -20,21 +20,21 @@
         "name": "Prioritize by Severity",
         "mode": "sequential",
         "commands": [{ "id": "vuln-prioritize", "args": "--cvss-sort" }],
-        "depends_on": [\"scan\"]
+        "depends_on": ["scan"]
       }, 
       {
         "id": "assign",
         "name": "Assign SLAs",
         "mode": "sequential",
         "commands": [{ "id": "vuln-assign-sla", "args": "--policy default" }],
-        "depends_on": [\"prioritize\"]
+        "depends_on": ["prioritize"]
       }, 
       {
         "id": "track",
         "name": "Track Remediation",
         "mode": "sequential",
         "commands": [{ "id": "vuln-track", "args": "--dashboard" }],
-        "depends_on": [\"assign\"]
+        "depends_on": ["assign"]
       }]
   }
 }

@@ -20,21 +20,21 @@
         "name": "Send for Review",
         "mode": "sequential",
         "commands": [{ "id": "send-review", "args": "--managers" }],
-        "depends_on": [\"extract\"]
+        "depends_on": ["extract"]
       }, 
       {
         "id": "attest",
         "name": "Collect Attestation",
         "mode": "sequential",
         "commands": [{ "id": "collect-attestation", "args": "--deadline 14d" }],
-        "depends_on": [\"review\"]
+        "depends_on": ["review"]
       }, 
       {
         "id": "remediate",
         "name": "Remediate Exceptions",
         "mode": "sequential",
         "commands": [{ "id": "remediate-access", "args": "--revoke-unattested" }],
-        "depends_on": [\"attest\"]
+        "depends_on": ["attest"]
       }]
   }
 }

@@ -20,7 +20,7 @@
         "name": "Findings Report",
         "mode": "sequential",
         "commands": [{ "id": "itgc-report", "args": "--gap-analysis" }],
-        "depends_on": [\"test\"]
+        "depends_on": ["test"]
       }]
   }
 }

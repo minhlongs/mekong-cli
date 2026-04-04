@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "run", "name": "dbt Run", "mode": "sequential", "commands": [{ "id": "dbt-run", "args": "--select tag:production" }], "depends_on": [] }, 
-      { "id": "test", "name": "dbt Test", "mode": "sequential", "commands": [{ "id": "dbt-test", "args": "--severity error" }], "depends_on": [\"run\"] }, 
-      { "id": "lineage", "name": "Update Lineage", "mode": "sequential", "commands": [{ "id": "update-lineage", "args": "--publish" }], "depends_on": [\"test\"] }]
+      { "id": "test", "name": "dbt Test", "mode": "sequential", "commands": [{ "id": "dbt-test", "args": "--severity error" }], "depends_on": ["run"] }, 
+      { "id": "lineage", "name": "Update Lineage", "mode": "sequential", "commands": [{ "id": "update-lineage", "args": "--publish" }], "depends_on": ["test"] }]
   }
 }

@@ -19,7 +19,7 @@
     },
     "layer": {
       "type": "string",
-      "enum": ["founder", "business", "product", "engineering", "ops"],
+      "enum": ["studio", "founder", "business", "product", "engineering", "ops"],
       "description": "Pyramid layer this command belongs to"
     },
     "chapter": {

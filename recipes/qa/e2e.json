@@ -20,14 +20,14 @@
         "name": "Collect Results",
         "mode": "sequential",
         "commands": [{ "id": "collect-results", "args": "--screenshots" }],
-        "depends_on": [\"run\"]
+        "depends_on": ["run"]
       }, 
       {
         "id": "report",
         "name": "Generate Report",
         "mode": "sequential",
         "commands": [{ "id": "e2e-report", "args": "--html" }],
-        "depends_on": [\"collect\"]
+        "depends_on": ["collect"]
       }]
   }
 }

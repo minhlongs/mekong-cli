@@ -20,7 +20,7 @@
         "name": "Package Evidence",
         "mode": "sequential",
         "commands": [{ "id": "package-evidence", "args": "--format audit-ready" }],
-        "depends_on": [\"collect\"]
+        "depends_on": ["collect"]
       }]
   }
 }

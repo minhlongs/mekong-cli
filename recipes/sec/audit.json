@@ -20,14 +20,14 @@
         "name": "Gap Analysis",
         "mode": "sequential",
         "commands": [{ "id": "gap-analyze", "args": "--severity critical,high" }],
-        "depends_on": [\"collect\"]
+        "depends_on": ["collect"]
       }, 
       {
         "id": "remediate",
         "name": "Remediation Plan",
         "mode": "sequential",
         "commands": [{ "id": "remediation-plan", "args": "--priority-sort" }],
-        "depends_on": [\"analyze\"]
+        "depends_on": ["analyze"]
       }]
   }
 }

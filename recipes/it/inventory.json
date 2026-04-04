@@ -20,7 +20,7 @@
         "name": "Reconcile Licenses",
         "mode": "sequential",
         "commands": [{ "id": "reconcile-licenses", "args": "--cost-optimize" }],
-        "depends_on": [\"scan\"]
+        "depends_on": ["scan"]
       }]
   }
 }

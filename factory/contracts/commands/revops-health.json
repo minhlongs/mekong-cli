@@ -9,28 +9,44 @@
     "description_en": "Unified customer health score — CS + sales + usage"
   },
   "execution": {
-    "agents": ["軍爭 — Military Contention"],
+    "agents": [
+      "軍爭 — Military Contention"
+    ],
     "hub": "cs-lead, rev-ops-analyst",
-    "complexity": "revops-hub",
+    "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
     "requires_approval": false
   },
   "input": {
     "type": "object",
-    "required": ["goal"],
+    "required": [
+      "goal"
+    ],
     "properties": {
-      "goal": { "type": "string", "description": "Natural language task" }
+      "goal": {
+        "type": "string",
+        "description": "Natural language task"
+      }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "result": { "type": "string" },
-      "artifacts": { "type": "array", "items": { "type": "string" } }
+      "result": {
+        "type": "string"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
     }
   },
-  "cascade": { "triggers": [] },
+  "cascade": {
+    "triggers": []
+  },
   "validation": {
     "output_must_contain": [],
     "min_output_length": 50,

@@ -20,14 +20,14 @@
         "name": "Collect Evidence",
         "mode": "sequential",
         "commands": [{ "id": "collect-evidence", "args": "--chain-of-custody" }],
-        "depends_on": [\"assign\"]
+        "depends_on": ["assign"]
       }, 
       {
         "id": "document",
         "name": "Document Findings",
         "mode": "sequential",
         "commands": [{ "id": "document-findings", "args": "--severity-rating" }],
-        "depends_on": [\"collect\"]
+        "depends_on": ["collect"]
       }]
   }
 }

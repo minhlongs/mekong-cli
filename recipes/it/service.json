@@ -20,14 +20,14 @@
         "name": "Prioritize",
         "mode": "sequential",
         "commands": [{ "id": "prioritize-tickets", "args": "--sla" }],
-        "depends_on": [\"triage\"]
+        "depends_on": ["triage"]
       }, 
       {
         "id": "assign",
         "name": "Assign",
         "mode": "sequential",
         "commands": [{ "id": "assign-tickets", "args": "--auto-route" }],
-        "depends_on": [\"prioritize\"]
+        "depends_on": ["prioritize"]
       }]
   }
 }

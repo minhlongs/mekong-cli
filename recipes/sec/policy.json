@@ -20,14 +20,14 @@
         "name": "Drift Detection",
         "mode": "sequential",
         "commands": [{ "id": "drift-detect", "args": "--baseline" }],
-        "depends_on": [\"scan\"]
+        "depends_on": ["scan"]
       }, 
       {
         "id": "enforce",
         "name": "Enforce Policies",
         "mode": "sequential",
         "commands": [{ "id": "policy-enforce", "args": "--auto-remediate" }],
-        "depends_on": [\"drift\"]
+        "depends_on": ["drift"]
       }]
   }
 }
