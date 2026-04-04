@@ -1,7 +1,7 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
 # Engine Farm Migration — Pull new optimized model stack
-# Old (22GB, 4 models) → New (14.9GB, 7 models)
+# Old (22GB, 4 models) → New (14.7GB, 5 models)
 # Usage: bash migrate-models.sh
 #   or SSH: ssh <user>@<host> 'bash -s' < migrate-models.sh
 # ═══════════════════════════════════════════════════════════════
