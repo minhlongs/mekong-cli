@@ -242,7 +242,7 @@ class TestConfirmEdgeCases:
         result1 = gate.confirm(lock.lock_id)
         assert result1.success is True
         # Second confirm — lock no longer exists as pending
-        result2 = gate.confirm(lock.lock_id)
+        gate.confirm(lock.lock_id)
         # The ledger row exists but its type is still 'lock' (confirmed),
         # so confirm finds it and processes — but balance would go negative.
         # We must verify balance is consistent (not double-deducted).

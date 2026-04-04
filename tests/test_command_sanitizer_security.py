@@ -5,12 +5,9 @@ Tests REAL sanitization logic. No mocking of the sanitizers themselves.
 
 from __future__ import annotations
 
-import pytest
-
 # ── Core sanitizer (dataclass-based, allow/deny lists) ───────────────────────
 from src.core.command_sanitizer import (
     CommandSanitizer as CoreSanitizer,
-    SanitizationResult,
     get_sanitizer as get_core_sanitizer,
 )
 
@@ -226,7 +223,7 @@ class TestCoreSanitizerStrictMode:
 
     def test_base64_decode_warned_in_normal_mode(self):
         s = CoreSanitizer(strict_mode=False)
-        result = s.sanitize("cat data | base64 -d")
+        s.sanitize("cat data | base64 -d")
         # pipe_injection is dangerous and will block, skip that; test base64 alone
         result2 = s.sanitize("echo aGVsbG8= | base64 -d")
         # pipe_injection pattern fires first — pipe IS dangerous
