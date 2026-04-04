@@ -99,19 +99,21 @@ Mekong CLI uses Ollama 0.19+ for local model inference on Apple Silicon (M1/M2/M
 
 ### Model Specifications
 
-#### Development (M1 Max 64GB recommended)
-| Model | Size | Purpose |
-|-------|------|---------|
-| qwen2.5-coder:32b | 20GB VRAM | Primary coding assistant |
-| deepseek-r1:32b | 20GB VRAM | Complex reasoning + analysis |
-| qwen2.5-coder:7b | 4GB VRAM | Fast audit/verification |
+#### Development (M1 Max 64GB — 100/100 Stack)
+| Model | Size | Throughput | Purpose |
+|-------|------|-----------|---------|
+| qwen3:30b-a3b | 18GB | 53.4 tok/s | Primary (MoE, only 3B active) |
+| deepseek-r1:32b | 19GB | 4.1 tok/s | Reasoning & complex analysis |
+| **Total** | **38.7GB** | — | 25.3GB headroom for tools |
 
-#### Production (M1 Pro 16GB minimum)
+**Note:** qwen3:30b-a3b is Mixture-of-Experts with only 3B active parameters; hence fast throughput despite nominal size.
+
+#### Production (B2B, M1 Pro 16GB minimum)
 | Model | Size | Purpose |
 |-------|------|---------|
-| qwen2.5:14b | 8GB VRAM | Customer-facing model |
-| nemotron:12b | 7GB VRAM | Fallback specialized tasks |
-| qwen2.5:7b | 4GB VRAM | Quick audits |
+| qwen2.5-coder:7b | 4GB | Fast inference, primary |
+| qwen3:8b | 4.7GB | Fallback specialized tasks |
+| **Total** | **14.7GB** | — |
 
 ### OpenAI-Compatible API
 
