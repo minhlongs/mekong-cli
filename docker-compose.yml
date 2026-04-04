@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  mekong-ide:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - RAAS_URL=http://raas:8000
+    depends_on:
+      - raas
+
+  raas:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - raas-data:/data
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  raas-data:
