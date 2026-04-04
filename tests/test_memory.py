@@ -35,7 +35,7 @@ class TestMemoryStore(unittest.TestCase):
 
     def _make_store(self, tmpdir):
         path = str(Path(tmpdir) / "memory.yaml")
-        return MemoryStore(store_path=path, sync_save=True)  # Sync mode for testing
+        return MemoryStore(store_path=path)
 
     def test_record_and_query(self):
         """Record entries and query by pattern."""
@@ -147,7 +147,7 @@ class TestMemoryStore(unittest.TestCase):
             path = str(Path(tmpdir) / "memory.yaml")
             store1 = MemoryStore(store_path=path)
             store1.record(MemoryEntry(goal="test", status="success", duration_ms=42.0))
-            store1.flush()  # Wait for async save
+            store1._save()  # Force save to disk
 
             store2 = MemoryStore(store_path=path)
             self.assertEqual(len(store2._entries), 1)
@@ -169,7 +169,7 @@ class TestMemoryStore(unittest.TestCase):
         """Clear empties store and removes file."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = str(Path(tmpdir) / "memory.yaml")
-            store = MemoryStore(store_path=path, sync_save=True)
+            store = MemoryStore(store_path=path)
             store.record(MemoryEntry(goal="x", status="success"))
             self.assertTrue(Path(path).exists())
 

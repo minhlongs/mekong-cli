@@ -324,15 +324,23 @@ class LLMClient:
         built.append(OfflineProvider())
         return built
 
+    _local_llm_cache: bool | None = None
+
     def _check_local_llm_running(self) -> bool:
-        """Probe local LLM health endpoint (MLX port 11435, then Ollama 11434)."""
-        for port in (11435, 11434):
+        """Probe local LLM health endpoint (cached after first check)."""
+        if LLMClient._local_llm_cache is not None:
+            return LLMClient._local_llm_cache
+        for port in (11434, 11435):
             try:
-                resp = requests.get(f"http://localhost:{port}/v1/models", timeout=2)
+                resp = requests.get(
+                    f"http://127.0.0.1:{port}/v1/models", timeout=1
+                )
                 if resp.status_code == 200:
+                    LLMClient._local_llm_cache = True
                     return True
             except Exception:
                 continue
+        LLMClient._local_llm_cache = False
         return False
 
     @staticmethod

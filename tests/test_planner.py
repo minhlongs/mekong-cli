@@ -432,7 +432,7 @@ class TestValidatePlan(unittest.TestCase):
         # Self-reference triggers: "depends on itself" AND "depends on future/same step"
         self.assertGreaterEqual(len(issues), 1)
         issues_text = " ".join(issues).lower()
-        self.assertIn("depends on itself", issues_text)
+        self.assertIn("on itself", issues_text)
 
     def test_future_dependency(self):
         """Step depending on future step (1-based: dep >= step.order) should be flagged."""

@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
+from src.core.command_sanitizer import CommandSanitizer
 from src.core.parser import Recipe, RecipeStep
 from src.core.verifier import ExecutionResult
 
@@ -294,6 +295,17 @@ class RecipeExecutor:
                 stdout="[SKIPPED] Empty command",
                 stderr="",
                 metadata={"mode": "shell", "skipped": True},
+            )
+
+        # Sanitize command before execution
+        sanitizer = CommandSanitizer()
+        if not sanitizer.is_safe_command(command):
+            self.console.print(f"[red]BLOCKED:[/red] Unsafe command: {command}")
+            return ExecutionResult(
+                exit_code=1,
+                stdout="",
+                stderr=f"Command blocked by sanitizer: {command}",
+                metadata={"mode": "shell", "blocked": True},
             )
 
         max_attempts = step.params.get("retry", 1) + 1 if step.params else 2
