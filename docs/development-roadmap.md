@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-03-23
-**Current Status**: $1M ARR Roadmap in progress (6 phases, 7 planning files)
+**Last Updated**: 2026-04-04
+**Current Status**: Engine Farm Ollama Refactor completed; $1M ARR Roadmap in progress
 
 ---
 
@@ -11,7 +11,8 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
-| **Phase 20** | **Retention & Engagement System** | **✅ COMPLETED** | **2026-03-14** |
+| **Phase 21** | **Engine Farm Ollama Refactor** | **✅ COMPLETED** | **2026-04-04** |
+| Phase 20 | Retention & Engagement System | ✅ COMPLETED | 2026-03-14 |
 | Phase 19 | Dashboard Analytics UI | ✅ COMPLETED | 2026-03-14 |
 | Phase 18 | Onboarding System & Testing | ✅ COMPLETED | 2026-03-14 |
 | Phase 17 | Tier-Based Rate Limiting | ✅ COMPLETED | 2026-03-07 |
@@ -23,6 +24,41 @@ All significant project milestones and phases tracked here.
 ---
 
 ## Completed Phases
+
+### Phase 21: Engine Farm Ollama Refactor (2026-04-04)
+
+**Objective**: Migrate from MLX inference to Ollama 0.20+ for unified LLM serving across Mekong CLI.
+
+**Status**: ✅ COMPLETED (100%)
+
+**Components**:
+- Refactored `ide-core/engine-farm/` from python3.11 mlx_lm to Ollama 0.19+ infrastructure
+- Created `bin/start_mekong_farm.sh` convenience wrapper (--dev/--prod flags)
+- TypeScript env config: `ide-core/cli-ts/env.ts` with MEKONG_ENV model routing
+- Updated provider flag handling: `ide-core/cli-ts/providerFlag.ts` (mekong provider → Ollama port 11434)
+- Enhanced package.json with farm:start/stop/build:prod scripts
+- Ollama 0.20.0 installed on M1 Max (192.168.11.111)
+- API verified at http://127.0.0.1:11434/v1 on M1 Max
+- Models pulling: qwen2.5-coder:7b, qwen2.5:14b (qwen2.5-coder:32b already present)
+
+**Test Results**: 845 passed, 1 pre-existing failure (test_executor.py, unrelated to refactor)
+
+**Key Benefits**:
+- Unified LLM serving via Ollama API (compatible with OpenAI endpoints)
+- Support for multiple model sizes (7b, 14b, 32b variants)
+- Off-device inference for resource-constrained environments
+- Fallback capability for cloud API downtime
+
+**Files Modified**:
+- ide-core/engine-farm/
+- ide-core/cli-ts/env.ts
+- ide-core/cli-ts/providerFlag.ts
+- package.json
+- bin/start_mekong_farm.sh (new)
+
+**Infrastructure**: M1 Max Ollama server (192.168.11.111:11434)
+
+---
 
 ### Phase 20: Retention & Engagement System (2026-03-14)
 
@@ -182,19 +218,19 @@ All significant project milestones and phases tracked here.
 
 ## Upcoming Phases (Roadmap)
 
-### Phase 21: Advanced Retention Analytics
+### Phase 22: Advanced Retention Analytics
 - Predictive churn modeling with historical data
 - Cohort-based retention curves
 - Segment-specific engagement recommendations
 - Dashboard integration for executives
 
-### Phase 22: Multi-Workspace Collaboration
+### Phase 23: Multi-Workspace Collaboration
 - Shared workspace features
 - Team member role management
 - Audit logging for compliance
 - Invitation and access control
 
-### Phase 23: Performance Optimization
+### Phase 24: Performance Optimization
 - Database query optimization
 - Caching layer (Redis)
 - API response time improvements
@@ -227,6 +263,7 @@ All significant project milestones and phases tracked here.
 | 1.0.0 | 2026-02-06 | Initial release (vibe-analytics, vibe-dev) |
 | 1.5.0 | 2026-03-05 | OAuth2 + Rate Limiting + Billing |
 | 1.6.0 | 2026-03-14 | Onboarding + Analytics + Retention |
+| 1.7.0 | 2026-04-04 | Engine Farm Ollama Refactor + M1 Max LLM |
 
 ---
 

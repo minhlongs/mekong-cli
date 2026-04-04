@@ -56,10 +56,10 @@ function parseModelFlag(args: string[]): string | null {
  *
  * Returns { error } if the provider name is not recognized.
  */
-export function applyProviderFlag(
+export async function applyProviderFlag(
   provider: string,
   args: string[],
-): { error?: string } {
+): Promise<{ error?: string }> {
   if (!(VALID_PROVIDERS as readonly string[]).includes(provider)) {
     return {
       error: `Unknown provider "${provider}". Valid providers: ${VALID_PROVIDERS.join(', ')}`,
@@ -103,13 +103,14 @@ export function applyProviderFlag(
       if (model) process.env.OPENAI_MODEL ??= model
       break
 
-    case 'mekong':
-      // Mekong: route to local MLX Engine Farm on M1 Max
-      process.env.CLAUDE_CODE_USE_OPENAI = '1'
-      process.env.OPENAI_BASE_URL ??= 'http://127.0.0.1:4001/v1'
-      process.env.OPENAI_API_KEY ??= 'mekong-local'
-      process.env.OPENAI_MODEL ??= model ?? 'gemma-4-26b-moe-4bit'
+    case 'mekong': {
+      // Mekong: route to local Ollama MLX Engine Farm
+      const { applyOllamaEnv, getDefaultModel } = await import('./env.js')
+      applyOllamaEnv()
+      if (model) process.env.OPENAI_MODEL = model
+      else process.env.OPENAI_MODEL ??= getDefaultModel()
       break
+    }
   }
 
   return {}

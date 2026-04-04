@@ -53,15 +53,20 @@
     "apps/well"
   ],
   "scripts": {
-    "dev": "npx turbo run dev",
+    "dev": "MEKONG_ENV=development npx turbo run dev",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
     "build": "npx turbo run build --concurrency=4",
+    "build:prod": "MEKONG_ENV=production bun build ./ide-core/cli-ts/env.ts --compile --target=bun-darwin-arm64 --outfile mekong",
     "test": "npx turbo run test --concurrency=5",
     "lint": "npx turbo run lint --concurrency=1",
     "format": "npx turbo run format --concurrency=10",
     "type-check": "tsc --noEmit",
     "gws": "npx -y @googleworkspace/cli",
+    "farm:start": "bash ide-core/engine-farm/start-farm.sh",
+    "farm:start:dev": "MEKONG_ENV=development bash ide-core/engine-farm/start-farm.sh",
+    "farm:start:prod": "MEKONG_ENV=production bash ide-core/engine-farm/start-farm.sh",
+    "farm:stop": "bash ide-core/engine-farm/stop-farm.sh",
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
     "health": "bash scripts/health-check.sh"
   },
