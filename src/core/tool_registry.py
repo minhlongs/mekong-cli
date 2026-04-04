@@ -236,6 +236,25 @@ class ToolRegistry:
                 cmd = tool.command_template.format(**{
                     k: shlex.quote(str(v)) for k, v in params.items()
                 })
+
+                # Security: route shell:run through CommandSanitizer to prevent
+                # injection via the generic shell execution builtin.
+                if name == "shell:run":
+                    try:
+                        from .command_sanitizer import CommandSanitizer
+                        _san = CommandSanitizer(strict_mode=True)
+                        san_result = _san.sanitize(cmd)
+                        if not san_result.is_safe:
+                            blocked = "; ".join(san_result.violations)
+                            raise RuntimeError(
+                                f"shell:run blocked by CommandSanitizer: {blocked}"
+                            )
+                        cmd = san_result.sanitized_command
+                    except ImportError:
+                        logger.warning(
+                            "CommandSanitizer unavailable; shell:run executing without sanitization"
+                        )
+
                 proc = subprocess.run(
                     shlex.split(cmd), capture_output=True, text=True,
                     timeout=30,

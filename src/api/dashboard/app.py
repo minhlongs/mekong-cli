@@ -34,10 +34,22 @@ app = FastAPI(
 # Session middleware (authentication)
 app.add_middleware(SessionMiddleware)
 
-# CORS middleware (local dev only)
+# CORS middleware - Security: wildcard origin is incompatible with
+# allow_credentials=True (CORS spec). Use explicit origins from env var.
+import os as _os
+
+_ALLOWED_ORIGINS: list[str] = [
+    o.strip()
+    for o in _os.environ.get(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://localhost:8080",
+    ).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

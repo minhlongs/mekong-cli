@@ -124,6 +124,25 @@ class MacOSKeychainBackend(SecureStorageBackend):
         return True
 
 
+def _sanitize_credential_name(value: str) -> str:
+    """Sanitize a credential name/key for safe embedding in PowerShell cmdkey args.
+
+    Allows only alphanumeric characters, hyphens, underscores, and dots.
+    Raises ValueError if the sanitized result would be empty or differ from the input.
+    This prevents injection via credential key names or account identifiers.
+    """
+    import re
+    sanitized = re.sub(r"[^A-Za-z0-9._-]", "", value)
+    if not sanitized:
+        raise ValueError(f"Credential name '{value}' is empty after sanitization")
+    if sanitized != value:
+        raise ValueError(
+            f"Credential name '{value}' contains disallowed characters — "
+            "only alphanumeric, '.', '_', '-' are permitted"
+        )
+    return sanitized
+
+
 class WindowsVaultBackend(SecureStorageBackend):
     """Windows Credential Vault backend using PowerShell."""
 
@@ -149,9 +168,19 @@ class WindowsVaultBackend(SecureStorageBackend):
 
     def store_credential(self, key: str, value: str) -> None:
         """Store license key in Windows Credential Vault."""
+        # Sanitize key and account to prevent PowerShell injection via cmdkey args.
+        try:
+            safe_key = _sanitize_credential_name(key)
+            safe_account = _sanitize_credential_name(self.account)
+        except ValueError as exc:
+            raise SecureStorageError(f"Invalid credential identifier: {exc}") from exc
+
         # Use cmdkey for basic credential storage
         escaped_value = value.replace('"', '""')
-        command = f'cmdkey /generic:"{self.SERVICE_NAME}:{key}:{self.account}" /user:"{self.account}" /pass:"{escaped_value}"'
+        command = (
+            f'cmdkey /generic:"{self.SERVICE_NAME}:{safe_key}:{safe_account}"'
+            f' /user:"{safe_account}" /pass:"{escaped_value}"'
+        )
         returncode, stdout, stderr = self._run_powershell(command)  # noqa: F841 (stdout unused)
 
         if returncode != 0:
@@ -200,7 +229,14 @@ class WindowsVaultBackend(SecureStorageBackend):
 
     def delete_credential(self, key: str) -> bool:
         """Delete credential from Windows Credential Vault."""
-        command = f'cmdkey /delete:"{self.SERVICE_NAME}:{key}:{self.account}"'
+        # Sanitize key and account to prevent PowerShell injection.
+        try:
+            safe_key = _sanitize_credential_name(key)
+            safe_account = _sanitize_credential_name(self.account)
+        except ValueError as exc:
+            raise SecureStorageError(f"Invalid credential identifier: {exc}") from exc
+
+        command = f'cmdkey /delete:"{self.SERVICE_NAME}:{safe_key}:{safe_account}"'
         returncode, stdout, stderr = self._run_powershell(command)  # noqa: F841 (stdout unused)
         return returncode == 0
 
