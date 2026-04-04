@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════
+   MEKONG IDE — Design Tokens (Exported from Pencil.dev)
+   Source: pencil-welcome-desktop.pen → get_variables()
+   178 screens · 435 components · 4 themes
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Background ── */
+  --bg-primary: #0A0A0B;
+  --bg-secondary: #141416;
+  --bg-tertiary: #1C1C1F;
+
+  /* ── Text ── */
+  --text-primary: #F1F1F3;
+  --text-secondary: #A0A0A8;
+  --text-muted: #5A5A65;
+
+  /* ── Accent Teal ── */
+  --accent-teal-400: #2DB88A;
+  --accent-teal-500: #1D9E75;
+  --accent-teal-600: #167A5B;
+
+  /* ── Surface ── */
+  --surface-card: #1E1E22;
+  --surface-hover: #252528;
+  --border-default: #2A2A2E;
+  --border-active: #3A3A40;
+
+  /* ── Status ── */
+  --status-healthy: #22C55E;
+  --status-warning: #EAB308;
+  --status-error: #EF4444;
+  --status-idle: #6B7280;
+
+  /* ── Context ── */
+  --context-safe: #22C55E;
+  --context-warning: #EAB308;
+  --context-critical: #EF4444;
+
+  /* ── Model Colors ── */
+  --model-gemma: #4285F4;
+  --model-deepseek: #7C3AED;
+  --model-qwen: #0EA5E9;
+  --model-nemotron: #F59E0B;
+  --model-architect: #3B82F6;
+  --model-reasoning: #9B6DFF;
+  --model-audit: #BA7517;
+  --model-trading: #E8614D;
+
+  /* ── Market Colors ── */
+  --market-yes: #22C55E;
+  --market-no: #EF4444;
+  --market-spread: #EAB308;
+  --market-fair-value: #7C3AED;
+
+  /* ── Permission Colors ── */
+  --perm-allow: #22C55E;
+  --perm-bypass: #EAB308;
+  --perm-deny: #EF4444;
+
+  /* ── Typography ── */
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-md: 14px;
+  --font-lg: 16px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --font-3xl: 32px;
+  --font-family-mono: 'JetBrains Mono', monospace;
+  --font-family-sans: 'Geist', 'Inter', sans-serif;
+
+  /* ── Spacing ── */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ── Shadcn-compatible (Dark Mode) ── */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #FF8400;
+  --primary-foreground: #111111;
+  --secondary: #2E2E2E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2E2E2E;
+  --muted-foreground: #a3a3a3;
+  --accent: #111111;
+  --accent-foreground: #F2F3F0;
+  --destructive: #FF5C33;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #666666;
+
+  /* ── Sidebar ── */
+  --sidebar: #18181b;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #2a2a30;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #71717a;
+}
