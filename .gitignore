@@ -647,3 +647,4 @@ public/
 # Mekong IDE Core
 ide-core/bin-mekong-*
 ide-core/orchestrator/target/
+apps/fnb-caffe-container/
