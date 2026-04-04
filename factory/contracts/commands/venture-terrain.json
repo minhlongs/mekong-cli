@@ -1,18 +1,18 @@
 {
   "id": "venture-terrain",
   "version": "1.0.0",
-  "layer": "founder",
-  "chapter": "地形 — Terrain",
+  "layer": "studio",
+  "chapter": "孫子兵法 — Art of War (Complete)",
   "display": {
-    "name_en": "Terrain Analysis",
+    "name_en": "Venture Terrain",
     "icon": "",
-    "description_en": "Analyze market terrain and competitive landscape"
+    "description_en": "Sun Tzu terrain analysis (地形篇) for market/sector. 1 command, ~8 min."
   },
   "execution": {
     "agents": [
-      "founder-ops"
+      "general"
     ],
-    "hub": "founder-hub",
+    "hub": "studio-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,25 +26,21 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Natural language task"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "result": {
         "type": "string"
       },
-      "action_items": {
+      "artifacts": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "metrics": {
-        "type": "object",
-        "description": "Key metrics and KPIs"
       }
     }
   },

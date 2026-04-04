@@ -1,18 +1,18 @@
 {
   "id": "match-founder-idea",
   "version": "1.0.0",
-  "layer": "founder",
-  "chapter": "用間 — Use of Intelligence",
+  "layer": "studio",
+  "chapter": "孫子兵法 — Art of War (Complete)",
   "display": {
-    "name_en": "Founder-Idea Match",
+    "name_en": "Match Founder Idea",
     "icon": "",
-    "description_en": "Match founders with viable business ideas"
+    "description_en": "AI-powered founder-idea matching — pair founders with validated opportunities. 1 command, ~8 min."
   },
   "execution": {
     "agents": [
-      "founder-ops"
+      "general"
     ],
-    "hub": "founder-hub",
+    "hub": "studio-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,25 +26,21 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Natural language task"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "result": {
         "type": "string"
       },
-      "action_items": {
+      "artifacts": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "metrics": {
-        "type": "object",
-        "description": "Key metrics and KPIs"
       }
     }
   },

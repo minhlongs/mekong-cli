@@ -1,18 +1,18 @@
 {
   "id": "match-vc-startup",
   "version": "1.0.0",
-  "layer": "founder",
-  "chapter": "用間 — Use of Intelligence",
+  "layer": "studio",
+  "chapter": "孫子兵法 — Art of War (Complete)",
   "display": {
-    "name_en": "VC-Startup Match",
+    "name_en": "Match Vc Startup",
     "icon": "",
-    "description_en": "Match VCs with startups for investment"
+    "description_en": "Match VC investors to portfolio company for follow-on/co-invest. 1 command, ~5 min."
   },
   "execution": {
     "agents": [
-      "founder-ops"
+      "general"
     ],
-    "hub": "founder-hub",
+    "hub": "studio-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,25 +26,21 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Natural language task"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "result": {
         "type": "string"
       },
-      "action_items": {
+      "artifacts": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "metrics": {
-        "type": "object",
-        "description": "Key metrics and KPIs"
       }
     }
   },

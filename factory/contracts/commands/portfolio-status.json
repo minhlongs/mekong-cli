@@ -1,18 +1,18 @@
 {
   "id": "portfolio-status",
   "version": "1.0.0",
-  "layer": "founder",
-  "chapter": "行軍 — Army on the March",
+  "layer": "studio",
+  "chapter": "孫子兵法 — Art of War (Complete)",
   "display": {
     "name_en": "Portfolio Status",
     "icon": "",
-    "description_en": "Check portfolio company status"
+    "description_en": "Portfolio company health dashboard — metrics, momentum, alerts. 1 command, ~3 min."
   },
   "execution": {
     "agents": [
-      "founder-ops"
+      "general"
     ],
-    "hub": "founder-hub",
+    "hub": "studio-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,25 +26,21 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Natural language task"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "result": {
         "type": "string"
       },
-      "action_items": {
+      "artifacts": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "metrics": {
-        "type": "object",
-        "description": "Key metrics and KPIs"
       }
     }
   },
