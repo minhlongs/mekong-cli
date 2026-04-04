@@ -365,6 +365,66 @@ AST-based security scanning:
 
 **Safety:** Plugin failures logged as warnings (never crash CLI)
 
+### 2.8a RaaS Plugin (`plugins/mekong-raas/`)
+
+Tenant authentication, credit metering, and billing middleware for Cloudflare Workers deployment:
+
+**Components:**
+- `tenant-auth.ts` — JWT validation, tenant context extraction, API key rotation
+- `credit-meter.ts` — Per-tenant credit ledger, quota enforcement, usage tracking
+- `billing-logger.ts` — Audit trail for all missions, webhook logging, reconciliation
+- `types.ts` — TenantContext, BillingRecord, CreditMeterage interfaces
+- `index.ts` — Worker middleware chain for request/response transformation
+
+**Workflow:**
+1. Request arrives with Authorization header
+2. `tenant-auth` validates JWT → extracts tenant_id
+3. `credit-meter` checks balance → reserves credits
+4. Mission executes
+5. `billing-logger` records completion → deducts credits
+
+**Integration Point:** Wrapped around `/api/v1/missions` and `/api/v1/tasks` endpoints
+
+### 2.8b Tasks DAG Plugin (`plugins/mekong-tasks/`)
+
+Background task scheduling via DAG recipe executor for asynchronous mission execution:
+
+**Components:**
+- `dag-executor.ts` — Parallel task scheduling with dependency resolution
+- `dag-step-runner.ts` — Individual step execution with retries and timeouts
+- `recipe-loader.ts` — YAML recipe loading and validation
+- `recipe-to-steps.ts` — Recipe dependency graph transformation to DAG steps
+- `types.ts` — RecipeNode, DAGStep, ExecutionContext, StepStatus interfaces
+- `index.ts` — Task queue processor and lifecycle manager
+
+**Workflow:**
+1. Mission creates Recipe with steps + dependencies
+2. `recipe-to-steps` converts to DAG representation
+3. `dag-executor` schedules steps (respects dependencies, runs parallel independents)
+4. `dag-step-runner` executes each step with circuit breaker
+5. Status updates published to mission journal (audit trail)
+
+**Integration Point:** `POST /api/v1/tasks` enqueues recipes; `GET /api/v1/tasks/:id` polls status
+
+### 2.8c Skills/Mekong Package (`skills/mekong/`)
+
+Multi-department command catalog with 22 ClawHub packages for enterprise team structures:
+
+**Structure:**
+- `SKILL.md` — Skill meta-definition (discovery, dependencies, SLAs)
+- `manifest.json` — 348 commands across 22 departments + free/paid tier breakdown
+- `clawhub-packages/` — 22 JSON configs (audit, board, business, corpdev, data, devops, engineering, esg, finance, founder, hr, intel, intl, ipo, legal, marketing, ops, product, risk, sales, security, studio)
+- `packages/` — Individual department package definitions (26 files)
+
+**Department Breakdown:**
+- **Business Ops:** finance, sales, marketing, hr, legal (5 free commands each, 25 total)
+- **Technical Ops:** engineering (8 free), devops (5 free), data (5 free), security (5 free), product (5 free) = 28 free
+- **Strategy:** studio (3 free), founder (3 free), ipo (2 free), intel (3 free) = 11 free
+- **Other:** audit, board, corpdev, esg, intl, risk (5 free each) = 30 free
+- **Total:** 348 commands, 117 free (PLG tier), 231 premium (paid)
+
+**Usage:** `mekong list skills` displays all 22 departments; `mekong run studio/announce` executes studio command
+
 ### 2.9 Credit System (`src/raas/`)
 
 Multi-tenant billing with SQLite backend:
