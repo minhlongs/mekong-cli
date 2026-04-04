@@ -181,8 +181,10 @@ async fn execute_reasoning(
         tool_calls: None,
         tool_call_id: None,
     }];
+    // Use reasoning_endpoint() for shared DeepSeek R1 support
+    let (r_host, r_port) = config.reasoning_endpoint();
     match client
-        .chat_completion(config.reasoning_port, &reasoning_msgs, None, 300)
+        .chat_completion_with_host(r_host, r_port, &reasoning_msgs, None, 300)
         .await
     {
         Ok(resp) => {

@@ -22,6 +22,19 @@ impl LlmClient {
         }
     }
 
+    /// Send chat completion to host:port. Use `host_override` for shared engines.
+    pub async fn chat_completion_with_host(
+        &self,
+        host: &str,
+        port: u16,
+        messages: &[ChatMessage],
+        tools: Option<&[ToolDef]>,
+        timeout_secs: u64,
+    ) -> Result<ChatResponse> {
+        let url = format!("http://{}:{}/v1/chat/completions", host, port);
+        self.do_chat_completion(&url, messages, tools, timeout_secs).await
+    }
+
     pub async fn chat_completion(
         &self,
         port: u16,
@@ -30,6 +43,16 @@ impl LlmClient {
         timeout_secs: u64,
     ) -> Result<ChatResponse> {
         let url = format!("http://{}:{}/v1/chat/completions", self.host, port);
+        self.do_chat_completion(&url, messages, tools, timeout_secs).await
+    }
+
+    async fn do_chat_completion(
+        &self,
+        url: &str,
+        messages: &[ChatMessage],
+        tools: Option<&[ToolDef]>,
+        timeout_secs: u64,
+    ) -> Result<ChatResponse> {
 
         let mut body = serde_json::json!({
             "messages": messages,
@@ -42,7 +65,7 @@ impl LlmClient {
 
         let response = self
             .client
-            .post(&url)
+            .post(url)
             .timeout(Duration::from_secs(timeout_secs))
             .json(&body)
             .send()
@@ -59,6 +82,18 @@ impl LlmClient {
             .json::<ChatResponse>()
             .await
             .context("failed to parse LLM response")
+    }
+
+    /// Quick health check with host override
+    pub async fn is_healthy_at(&self, host: &str, port: u16) -> bool {
+        let url = format!("http://{}:{}/v1/models", host, port);
+        self.client
+            .get(&url)
+            .timeout(Duration::from_secs(5))
+            .send()
+            .await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false)
     }
 
     /// Quick health check — returns true if /v1/models responds 200
