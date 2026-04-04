@@ -1,18 +1,18 @@
 {
   "id": "venture-momentum",
   "version": "1.0.0",
-  "layer": "founder",
-  "chapter": "兵勢 — Momentum",
+  "layer": "studio",
+  "chapter": "孫子兵法 — Art of War (Complete)",
   "display": {
     "name_en": "Venture Momentum",
     "icon": "",
-    "description_en": "Assess and build venture momentum"
+    "description_en": "Calculate momentum score (勢) for company or market. 1 command, ~5 min."
   },
   "execution": {
     "agents": [
-      "founder-ops"
+      "general"
     ],
-    "hub": "founder-hub",
+    "hub": "studio-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,25 +26,21 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task description"
+        "description": "Natural language task"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "summary": {
+      "result": {
         "type": "string"
       },
-      "action_items": {
+      "artifacts": {
         "type": "array",
         "items": {
           "type": "string"
         }
-      },
-      "metrics": {
-        "type": "object",
-        "description": "Key metrics and KPIs"
       }
     }
   },
