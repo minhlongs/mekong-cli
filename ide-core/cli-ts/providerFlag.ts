@@ -98,7 +98,7 @@ export async function applyProviderFlag(
 
     case 'ollama':
       process.env.CLAUDE_CODE_USE_OPENAI = '1'
-      process.env.OPENAI_BASE_URL ??= 'http://localhost:11434/v1'
+      process.env.OPENAI_BASE_URL ??= 'http://127.0.0.1:11434/v1'
       process.env.OPENAI_API_KEY ??= 'ollama'
       if (model) process.env.OPENAI_MODEL ??= model
       break
