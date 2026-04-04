@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from unittest.mock import patch, MagicMock
-
-import pytest
 
 from src.core.image_generator import (
     QwenImageGenerator,
