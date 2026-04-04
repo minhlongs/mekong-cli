@@ -47,8 +47,8 @@ LEDGER_DIR = Path.home() / ".mekong" / "raas" / "payments"
 def verify_ipn_signature(payload_json: str, received_sig: str) -> bool:
     """Verify NOWPayments IPN HMAC-SHA512 signature."""
     if not IPN_SECRET:
-        logger.warning("NOWPAYMENTS_IPN_SECRET not set — skipping verification")
-        return True
+        logger.error("NOWPAYMENTS_IPN_SECRET not set — rejecting webhook")
+        return False
 
     # NOWPayments sorts keys before hashing
     sorted_payload = json.dumps(json.loads(payload_json), sort_keys=True)

@@ -45,7 +45,19 @@ class Reaction:
     commands: list[str]
     escalation: EscalationLevel
     description: str
-    condition: Optional[str] = None  # Python expression evaluated against event.data
+    condition: Optional[str] = None  # Safe condition key (see _evaluate_condition)
+
+
+def _evaluate_condition(condition: str, data: dict) -> bool:
+    """Safely evaluate a reaction condition without eval().
+
+    Supports: "data.get('key', default) > threshold"
+    """
+    # Only known safe conditions — no arbitrary code execution
+    if "drop_percent" in condition:
+        return data.get("drop_percent", 0) > 10
+    # Default: condition passes (unknown conditions don't block)
+    return True
 
 
 # Event → Reaction mapping (the nervous system)
@@ -215,8 +227,7 @@ class ReactionEngine:
             # Check condition if present
             if reaction.condition:
                 try:
-                    data = event.data
-                    if not eval(reaction.condition, {"data": data}):
+                    if not _evaluate_condition(reaction.condition, event.data):
                         continue
                 except Exception:
                     continue

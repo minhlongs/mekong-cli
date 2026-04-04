@@ -635,15 +635,22 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
         """
         issues = []
 
-        # Check for circular dependencies
+        # Check for circular dependencies (deps use 1-based step order)
+        valid_orders = {s.order for s in recipe.steps}
         for step in recipe.steps:
             deps = step.params.get("dependencies", [])
-            if step.order - 1 in deps:
+            if step.order in deps:
                 issues.append(f"Step {step.order} has circular dependency on itself")
 
             for dep in deps:
-                if dep >= step.order - 1:
-                    issues.append(f"Step {step.order} depends on future step {dep + 1}")
+                if dep not in valid_orders:
+                    issues.append(f"Step {step.order} depends on non-existent step {dep}")
+                elif dep >= step.order:
+                    issues.append(f"Step {step.order} depends on future step {dep}")
+
+            # Check for duplicate dependencies
+            if len(deps) != len(set(deps)):
+                issues.append(f"Step {step.order} has duplicate dependencies")
 
         # Check for empty steps
         if not recipe.steps:
