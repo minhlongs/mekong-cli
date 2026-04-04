@@ -1,8 +1,8 @@
 {
   "id": "dealflow-term-sheet",
   "version": "1.0.0",
-  "layer": "studio",
-  "chapter": "孫子兵法 — Art of War (Complete)",
+  "layer": "founder",
+  "chapter": "軍形 — Disposition of Forces",
   "display": {
     "name_en": "Dealflow Term Sheet",
     "icon": "",
