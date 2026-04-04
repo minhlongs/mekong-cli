@@ -1,8 +1,8 @@
 {
   "id": "ml-monitor",
   "version": "1.0.0",
-  "layer": "8",
-  "chapter": "engineering",
+  "layer": "ops",
+  "chapter": "軍爭 — Military Contention",
   "display": {
     "name_en": "Model Monitor",
     "icon": "",
