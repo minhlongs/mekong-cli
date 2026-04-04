@@ -151,8 +151,8 @@ class ClobClient:
     def _live_place_order(self, request: OrderRequest) -> OrderResponse:
         """Place a real order via Polymarket CLOB API.
 
-        TODO: Wire to actual Polymarket SDK when ready for live trading.
-        Currently returns a rejection to prevent accidental live trades.
+        Not yet wired to Polymarket SDK.
+        Returns a rejection to prevent accidental live trades.
         """
         logger.warning(
             "Live order attempted but API not wired: %s %s $%.2f",

@@ -59,7 +59,6 @@ export const useMissionControl = ({
       setIsLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API endpoint
       const response = await fetch(`/api/robots/${robotId}/mission`);
 
       if (!response.ok) {
@@ -90,7 +89,7 @@ export const useMissionControl = ({
 
       ws.onopen = () => {
         setIsConnected(true);
-        console.log(`Mission control WebSocket connected to ${wsUrl}`);
+        // WebSocket connected
       };
 
       ws.onmessage = (event) => {
@@ -132,7 +131,7 @@ export const useMissionControl = ({
               break;
           }
         } catch (err) {
-          console.error('Failed to parse mission event:', err);
+          setError('Failed to parse mission event');
         }
       };
 
@@ -167,7 +166,6 @@ export const useMissionControl = ({
   const launchMission = useCallback(
     async (missionIdToLaunch: string) => {
       try {
-        // TODO: Replace with actual API endpoint
         const response = await fetch(`/api/robots/${robotId}/missions/${missionIdToLaunch}/launch`, {
           method: 'POST',
         });

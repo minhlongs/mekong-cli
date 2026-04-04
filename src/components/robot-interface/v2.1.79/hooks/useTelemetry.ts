@@ -84,7 +84,6 @@ export const useTelemetry = ({
     try {
       setError(null);
 
-      // TODO: Replace with actual API endpoint
       const response = await fetch(`/api/robots/${robotId}/telemetry`);
 
       if (!response.ok) {
@@ -135,7 +134,7 @@ export const useTelemetry = ({
 
       ws.onopen = () => {
         setIsStreaming(true);
-        console.log(`Telemetry WebSocket connected to ${wsUrl}`);
+        // WebSocket connected
       };
 
       ws.onmessage = (event) => {
@@ -170,7 +169,7 @@ export const useTelemetry = ({
             return newData;
           });
         } catch (err) {
-          console.error('Failed to parse telemetry data:', err);
+          setError('Failed to parse telemetry data');
         }
       };
 

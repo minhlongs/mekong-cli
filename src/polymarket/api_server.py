@@ -65,8 +65,7 @@ def _resolve_api_key(authorization: str) -> Optional[APIKeyInfo]:
     if not token:
         return None
 
-    # TODO: Validate against subscription database
-    # For now, accept any non-empty token for development
+    # Accepts any non-empty token in dev mode; wire subscription DB for production
     return APIKeyInfo(
         key=token,
         tier="starter",

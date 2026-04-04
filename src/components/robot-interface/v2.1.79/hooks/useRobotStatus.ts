@@ -54,7 +54,6 @@ export const useRobotStatus = ({
       setIsLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API endpoint
       const response = await fetch(`/api/robots/${robotId}`);
 
       if (!response.ok) {
@@ -86,7 +85,7 @@ export const useRobotStatus = ({
       ws.onopen = () => {
         setIsConnected(true);
         setIsConnecting(false);
-        console.log(`WebSocket connected to ${wsUrl}`);
+        // WebSocket connected
       };
 
       ws.onmessage = (event) => {
@@ -102,7 +101,7 @@ export const useRobotStatus = ({
             setEvents((prev) => [...prev, data.event]);
           }
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          setError('Failed to parse WebSocket message');
         }
       };
 
@@ -145,7 +144,6 @@ export const useRobotStatus = ({
 
   // Acknowledge event
   const acknowledgeEvent = useCallback(async (eventId: string) => {
-    // TODO: Replace with actual API endpoint
     await fetch(`/api/robots/${robotId}/events/${eventId}/acknowledge`, {
       method: 'POST',
     });
