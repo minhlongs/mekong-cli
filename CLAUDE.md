@@ -16,7 +16,8 @@
 | `mekong/adapters/` | LLM provider configs |
 | `mekong/infra/` | 3-layer deploy templates (CF-only) |
 | `mekong/daemon/` | Tôm Hùm autonomous dispatch |
-| `factory/contracts/` | 410 JSON machine contracts |
+| `factory/contracts/` | 567 JSON machine contracts |
+| `clipmart/` | Paperclip Agent Companies templates (PUBLIC marketplace) |
 | `mekong/` | Adapters, infra, daemon (NOT skills/commands) |
 
 CC CLI reads `.claude/skills/` and `.claude/commands/` directly. NO symlinks.
@@ -177,6 +178,7 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 | `.claude/skills/` | Skill definitions (PUBLIC) |
 | `.claude/commands/` | Command definitions (PUBLIC) |
 | `factory/contracts/` | Machine contracts (PUBLIC) |
+| `clipmart/` | Clipmart marketplace templates (PUBLIC) |
 | Root files | package.json, tsconfig, README, CLAUDE.md |
 
 ### Khi `git add -A` hoặc `git commit`:

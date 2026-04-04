@@ -37,12 +37,12 @@ Risk & Compliance   →  legal      (行軍 — Army on March)
 
 ```bash
 # Install via Paperclip CLI
-paperclip company install mekong-solo-founder
+npx paperclipai company import mekong-solo-founder
 
 # Or clone manually
 git clone https://github.com/longtho638-jpg/mekong-cli
 cd mekong-cli/clipmart/mekong-solo-founder
-paperclip company init .
+npx paperclipai company init .
 
 # Launch your company
 mekong company/start

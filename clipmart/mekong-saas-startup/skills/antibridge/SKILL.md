@@ -71,8 +71,6 @@ Common fixes:
 | First-time setup  | `SETUP.bat`            |
 | Start Antigravity | `OPEN_ANTIGRAVITY.vbs` |
 | Start server      | `START.bat` (as admin) |
-| Local access      | http://localhost:8000  |
-| Remote access     | http://100.x.x.x:8000  |
 
 ## Related Skills
 

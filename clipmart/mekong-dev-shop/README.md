@@ -44,12 +44,12 @@ board
 
 ```bash
 # Install via Paperclip CLI
-paperclip company install mekong-dev-shop
+npx paperclipai company import mekong-dev-shop
 
 # Or clone manually
 git clone https://github.com/longtho638-jpg/mekong-cli
 cd mekong-cli/clipmart/mekong-dev-shop
-paperclip company init .
+npx paperclipai company init .
 
 # Launch your dev shop
 mekong company/start
