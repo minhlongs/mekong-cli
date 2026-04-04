@@ -13,8 +13,8 @@
     "hub": "ml-engineer",
     "complexity": "ml-hub",
     "timeout_ms": 120000,
-    "credit_cost": \nSEQUENTIAL: alert-report,
-    "requires_approval": standard|false
+    "credit_cost": 3,
+    "requires_approval": false
   },
   "input": {
     "type": "object",
