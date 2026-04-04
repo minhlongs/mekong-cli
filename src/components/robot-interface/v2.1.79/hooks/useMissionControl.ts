@@ -131,7 +131,7 @@ export const useMissionControl = ({
               break;
           }
         } catch (err) {
-          setError('Failed to parse mission event');
+          // Silently skip malformed messages — transient, not user-facing
         }
       };
 

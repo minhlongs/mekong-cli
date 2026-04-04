@@ -101,7 +101,7 @@ export const useRobotStatus = ({
             setEvents((prev) => [...prev, data.event]);
           }
         } catch (err) {
-          setError('Failed to parse WebSocket message');
+          // Silently skip malformed messages — transient, not user-facing
         }
       };
 
