@@ -16,7 +16,17 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/mekong-cli-core",
+    "packages/mekong-engine",
+    "packages/openclaw-engine",
+    "packages/ui",
+    "packages/tokens",
+    "packages/i18n",
+    "packages/license-sdk",
+    "packages/memory",
+    "packages/observability",
+    "packages/shared",
+    "packages/raas-landing"
   ],
   "scripts": {
     "dev": "MEKONG_ENV=development npx turbo run dev",
@@ -116,6 +126,6 @@
     }
   },
   "bin": {
-    "mekong": "./src/cli/index.js"
+    "mekong": "./packages/mekong-cli-core/dist/cli.js"
   }
 }
