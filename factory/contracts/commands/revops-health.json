@@ -1,15 +1,15 @@
 {
   "id": "revops-health",
   "version": "1.0.0",
-  "layer": "8",
-  "chapter": "business",
+  "layer": "ops",
+  "chapter": "作戰 — Waging War",
   "display": {
     "name_en": "Customer Health",
     "icon": "",
     "description_en": "Unified customer health score — CS + sales + usage"
   },
   "execution": {
-    "agents": ["軍爭 — Armed Struggle"],
+    "agents": ["軍爭 — Military Contention"],
     "hub": "cs-lead, rev-ops-analyst",
     "complexity": "revops-hub",
     "timeout_ms": 120000,

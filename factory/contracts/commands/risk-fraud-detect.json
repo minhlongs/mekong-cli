@@ -2,7 +2,7 @@
   "id": "risk-fraud-detect",
   "version": "1.0.0",
   "layer": "founder",
-  "chapter": "計 — Calculations",
+  "chapter": "始計 — Initial Calculations",
   "display": {
     "name_en": "Fraud Detection",
     "icon": "",
