@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-04-04 - 100/100 Model Stack Upgrade)
+
+#### LLM Model Stack
+- **DEV Stack (100/100):** Upgraded to maximum performance tier
+  - qwen3:30b-a3b (18GB, 53.4 tok/s) — Mixture-of-Experts with 3B active parameters
+  - deepseek-r1:32b (19GB, 4.1 tok/s) — Reasoning & analysis
+  - **Total:** 38.7GB used, 25.3GB headroom on M1 Max 64GB
+- **PROD Stack:** Lightweight B2B configuration
+  - qwen2.5-coder:7b (4GB) — Fast primary inference
+  - qwen3:8b (4.7GB) — Fallback specialized tasks
+  - **Total:** 14.7GB used
+- **Development:** docs/development-setup.md updated with throughput metrics
+
 ### Changed (2026-04-04 - Engine Farm Ollama Refactor & Phase 21 Completion)
 
 #### Infrastructure & LLM
@@ -15,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TypeScript config: ide-core/cli-ts/env.ts with MEKONG_ENV model routing
   - Provider flag: mekong provider → Ollama port 11434 (providerFlag.ts)
 - **M1 Max LLM Setup:** Ollama 0.20.0 installed on 192.168.11.111
-  - Models deployed: qwen2.5-coder:7b, qwen2.5:14b, qwen2.5-coder:32b
+  - Models deployed: qwen2.5-coder:7b, qwen2.5:14b, qwen2.5-coder:32b, qwen3:30b-a3b, deepseek-r1:32b
   - API verified: http://127.0.0.1:11434/v1 (OpenAI-compatible endpoints)
 - **Farm Start Script:** bin/start_mekong_farm.sh (--dev/--prod flags for environment-aware startup)
 

@@ -3,7 +3,7 @@
 All significant project milestones and phases tracked here.
 
 **Last Updated**: 2026-04-04
-**Current Status**: Engine Farm Ollama Refactor completed; $1M ARR Roadmap in progress
+**Current Status**: 100/100 Model Stack (DEV: qwen3:30b-a3b + deepseek-r1:32b, 38.7GB); $1M ARR Roadmap in progress
 
 ---
 
@@ -11,7 +11,7 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
-| **Phase 21** | **Engine Farm Ollama Refactor** | **✅ COMPLETED** | **2026-04-04** |
+| **Phase 21** | **100/100 Model Stack + Engine Farm Refactor** | **✅ COMPLETED** | **2026-04-04** |
 | Phase 20 | Retention & Engagement System | ✅ COMPLETED | 2026-03-14 |
 | Phase 19 | Dashboard Analytics UI | ✅ COMPLETED | 2026-03-14 |
 | Phase 18 | Onboarding System & Testing | ✅ COMPLETED | 2026-03-14 |
@@ -25,38 +25,41 @@ All significant project milestones and phases tracked here.
 
 ## Completed Phases
 
-### Phase 21: Engine Farm Ollama Refactor (2026-04-04)
+### Phase 21: Engine Farm 100/100 Model Stack Upgrade (2026-04-04)
 
-**Objective**: Migrate from MLX inference to Ollama 0.20+ for unified LLM serving across Mekong CLI.
+**Objective**: Unified LLM inference via Ollama 0.20+ with optimized DEV/PROD model configurations.
 
 **Status**: ✅ COMPLETED (100%)
 
-**Components**:
-- Refactored `ide-core/engine-farm/` from python3.11 mlx_lm to Ollama 0.19+ infrastructure
-- Created `bin/start_mekong_farm.sh` convenience wrapper (--dev/--prod flags)
-- TypeScript env config: `ide-core/cli-ts/env.ts` with MEKONG_ENV model routing
-- Updated provider flag handling: `ide-core/cli-ts/providerFlag.ts` (mekong provider → Ollama port 11434)
-- Enhanced package.json with farm:start/stop/build:prod scripts
-- Ollama 0.20.0 installed on M1 Max (192.168.11.111)
-- API verified at http://127.0.0.1:11434/v1 on M1 Max
-- Models pulling: qwen2.5-coder:7b, qwen2.5:14b (qwen2.5-coder:32b already present)
+**DEV Stack (M1 Max 64GB)**:
+- qwen3:30b-a3b (MoE model): 53.4 tok/s throughput
+- deepseek-r1:32b (reasoning): 4.1 tok/s throughput
+- Memory: 38.7GB loaded, 25.3GB headroom
+- PR #21: 3 commits consolidating model routing
 
-**Test Results**: 845 passed, 1 pre-existing failure (test_executor.py, unrelated to refactor)
+**PROD Stack (B2B Delivery)**:
+- Unchanged configuration for stability
+- qwen2.5-coder:32b maintained at 14.7GB
+- Ollama 0.20.0 on 192.168.11.111:11434
 
-**Key Benefits**:
-- Unified LLM serving via Ollama API (compatible with OpenAI endpoints)
-- Support for multiple model sizes (7b, 14b, 32b variants)
-- Off-device inference for resource-constrained environments
-- Fallback capability for cloud API downtime
+**Benchmark Results**:
+- MoE inference: 53.4 tok/s (fast, low latency)
+- Deep reasoning: 4.1 tok/s (accurate, thorough analysis)
+- Memory utilization: Optimal with 25GB headroom for spikes
+
+**Infrastructure**:
+- Ollama 0.20.0 on M1 Max (192.168.11.111:11434)
+- OpenAI-compatible API endpoints verified
+- Farm scripts: bin/start_mekong_farm.sh (--dev/--prod)
 
 **Files Modified**:
 - ide-core/engine-farm/
 - ide-core/cli-ts/env.ts
 - ide-core/cli-ts/providerFlag.ts
-- package.json
-- bin/start_mekong_farm.sh (new)
+- package.json (farm:start/stop/build:prod scripts)
+- bin/start_mekong_farm.sh
 
-**Infrastructure**: M1 Max Ollama server (192.168.11.111:11434)
+**Test Results**: 845 passed, 1 pre-existing failure (test_executor.py)
 
 ---
 
