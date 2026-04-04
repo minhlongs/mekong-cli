@@ -60,9 +60,16 @@ Board (You)
 ## Quick Start
 
 ```bash
+# Install via Paperclip CLI
 npx paperclipai company import mekong-saas-startup
-# or
-companies.sh add binh-phap/mekong-saas-startup
+
+# Or clone manually
+git clone https://github.com/longtho638-jpg/mekong-cli
+cd mekong-cli/clipmart/mekong-saas-startup
+npx paperclipai company init .
+
+# Launch your company
+mekong company/start
 ```
 
 ---
