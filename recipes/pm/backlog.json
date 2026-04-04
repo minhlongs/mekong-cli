@@ -1,40 +1,17 @@
 {
   "id": "pm-backlog",
-  "name": "PM Backlog Management",
-  "description": "List all known tasks, prioritize by value and urgency, and add effort estimates.",
-  "version": "1.0.0",
-  "layer": "pm",
+  "name": "Backlog Management",
+  "description": "Sprint grooming pipeline",
   "trigger": "/pm:backlog",
-  "input": "$ARGUMENTS",
   "output_dir": "reports/pm/backlog",
-  "estimated_credits": 3,
-  "estimated_minutes": 10,
+  "estimated_credits": 2,
+  "estimated_minutes": 8,
   "dag": {
     "groups": [
-      {
-        "id": "list",
-        "name": "List Tasks",
-        "mode": "parallel",
-        "commands": [
-          { "id": "dev-audit", "args": "--output reports/pm/backlog/technical-debt.md" },
-          { "id": "pm-scope", "args": "--output reports/pm/backlog/scope-items.md" }
-        ],
-        "depends_on": []
-      },
-      {
-        "id": "prioritize-estimate",
-        "name": "Prioritize and Estimate",
-        "mode": "sequential",
-        "commands": [
-          { "id": "pm-sprint", "args": "--output reports/pm/backlog/prioritized-list.md" }
-        ],
-        "depends_on": ["list"]
-      }
-    ],
-    "on_complete": {
-      "compile_summary": true,
-      "summary_file": "reports/pm/backlog/SUMMARY.md",
-      "template": "Compile technical debt, scope items, and prioritized list into a groomed backlog with: epics, stories, effort estimates, priority scores, and sprint-ready acceptance criteria."
-    }
+      {"id": "triage", "name": "Triage Stories", "mode": "sequential", "commands": [{"id": "triage-stories", "args": "--ungroomed"}], "depends_on": []},
+      {"id": "estimate", "name": "Estimate", "mode": "sequential", "commands": [{"id": "estimate-stories", "args": "--story-points"}], "depends_on": ["triage"]},
+      {"id": "groom", "name": "Groom", "mode": "sequential", "commands": [{"id": "groom-sprint", "args": "--capacity"}], "depends_on": ["estimate"]},
+      {"id": "assign", "name": "Assign Sprint", "mode": "sequential", "commands": [{"id": "assign-sprint", "args": "--next"}], "depends_on": ["groom"]}
+    ]
   }
 }
