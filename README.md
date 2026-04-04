@@ -32,7 +32,7 @@ $ mekong founder:raise "Series A for AI platform"
 
 $ mekong status
 
-  OpenClaw v6.0 ─ 342 commands ─ 5 layers ─ CI: GREEN
+  OpenClaw ─ 348 commands ─ 5 layers ─ CI: GREEN
   LLM:     anthropic/claude-sonnet-4  via OpenRouter
   Credits: 847 / 1000 MCU remaining
 ```
