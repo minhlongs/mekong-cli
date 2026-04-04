@@ -2,6 +2,18 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Parse flags
+SHARE_REASONING=false
+for arg in "$@"; do
+  case "$arg" in
+    --share-reasoning)
+      SHARE_REASONING=true
+      export REASONING_PORT=11435
+      ;;
+  esac
+done
+
 source "$SCRIPT_DIR/config.env"
 
 # Timeout in seconds to wait for each server to become healthy
@@ -87,9 +99,18 @@ wait_healthy() {
 
 echo "[farm] === Mekong Engine Farm — Starting ==="
 
-start_server "router"    "$ROUTER_MODEL"    "$ROUTER_PORT"    "$ROUTER_MAX_TOKENS"    "$ROUTER_CONTEXT"
-start_server "reasoning" "$REASONING_MODEL" "$REASONING_PORT" "$REASONING_MAX_TOKENS" "$REASONING_CONTEXT"
-start_server "audit"     "$AUDIT_MODEL"     "$AUDIT_PORT"     "$AUDIT_MAX_TOKENS"     "$AUDIT_CONTEXT"
+if $SHARE_REASONING; then
+  echo "[farm] --share-reasoning: using CashClaw DeepSeek R1 on port $REASONING_PORT"
+  echo "[farm] Skipping local reasoning server startup (saves ~18GB RAM)"
+fi
+
+start_server "router" "$ROUTER_MODEL" "$ROUTER_PORT" "$ROUTER_MAX_TOKENS" "$ROUTER_CONTEXT"
+
+if ! $SHARE_REASONING; then
+  start_server "reasoning" "$REASONING_MODEL" "$REASONING_PORT" "$REASONING_MAX_TOKENS" "$REASONING_CONTEXT"
+fi
+
+start_server "audit" "$AUDIT_MODEL" "$AUDIT_PORT" "$AUDIT_MAX_TOKENS" "$AUDIT_CONTEXT"
 
 # --- Health checks (sequential — each model loads large weights) ---
 
@@ -99,5 +120,9 @@ wait_healthy "audit"     "$AUDIT_PORT"     || exit 1
 
 echo "[farm] === All servers healthy ==="
 echo "[farm]   router    http://${FARM_HOST}:${ROUTER_PORT}"
-echo "[farm]   reasoning http://${FARM_HOST}:${REASONING_PORT}"
+if $SHARE_REASONING; then
+  echo "[farm]   reasoning http://${FARM_HOST}:${REASONING_PORT} (SHARED from CashClaw)"
+else
+  echo "[farm]   reasoning http://${FARM_HOST}:${REASONING_PORT}"
+fi
 echo "[farm]   audit     http://${FARM_HOST}:${AUDIT_PORT}"
