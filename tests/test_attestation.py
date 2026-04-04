@@ -11,10 +11,8 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, call
-import subprocess
+from unittest.mock import patch, MagicMock
 
-import pytest
 
 from src.security.attestation_generator import SecurityAttestationGenerator
 
@@ -453,7 +451,6 @@ class TestRunSecurityChecks:
         assert results["sanitizer_ok"] is True
 
     def test_sanitizer_check_fails_when_file_missing(self):
-        import shutil
         sanitizer_path = Path(self.tmp) / "src" / "security" / "command_sanitizer.py"
         sanitizer_path.unlink()
 
