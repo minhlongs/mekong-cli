@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "define", "name": "Define Metrics", "mode": "sequential", "commands": [{ "id": "define-metrics", "args": "--yaml" }], "depends_on": [] }, 
-      { "id": "validate", "name": "Validate Calculations", "mode": "sequential", "commands": [{ "id": "validate-calculations", "args": "--test-against-source" }], "depends_on": [\"define\"] }, 
-      { "id": "publish", "name": "Publish Layer", "mode": "sequential", "commands": [{ "id": "publish-layer", "args": "--api-expose" }], "depends_on": [\"validate\"] }]
+      { "id": "validate", "name": "Validate Calculations", "mode": "sequential", "commands": [{ "id": "validate-calculations", "args": "--test-against-source" }], "depends_on": ["define"] }, 
+      { "id": "publish", "name": "Publish Layer", "mode": "sequential", "commands": [{ "id": "publish-layer", "args": "--api-expose" }], "depends_on": ["validate"] }]
   }
 }

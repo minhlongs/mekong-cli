@@ -9,6 +9,6 @@
   "dag": {
     "groups": [
       { "id": "checks", "name": "Quality Checks", "mode": "parallel", "commands": [{ "id": "freshness-check", "args": "--sla 4h" }, { "id": "volume-check", "args": "--threshold 10pct" }, { "id": "schema-check", "args": "--diff" }], "depends_on": [] }, 
-      { "id": "alert", "name": "Alert Report", "mode": "sequential", "commands": [{ "id": "alert-report", "args": "--slack-notify" }], "depends_on": [\"checks\"] }]
+      { "id": "alert", "name": "Alert Report", "mode": "sequential", "commands": [{ "id": "alert-report", "args": "--slack-notify" }], "depends_on": ["checks"] }]
   }
 }

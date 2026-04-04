@@ -1,18 +1,18 @@
 {
-  "id": "ml-monitor",
+  "id": "studio-operate-daily",
   "version": "1.0.0",
-  "layer": "ops",
-  "chapter": "軍爭 — Military Contention",
+  "layer": "founder",
+  "chapter": "九變 — Nine Variations",
   "display": {
-    "name_en": "Model Monitor",
+    "name_en": "Daily Operations",
     "icon": "",
-    "description_en": "Drift detection, latency, hallucination rates, cost per inference"
+    "description_en": "Daily operations checklist for studio"
   },
   "execution": {
     "agents": [
-      "火攻 — Fire Attack"
+      "founder-ops"
     ],
-    "hub": "ml-engineer",
+    "hub": "founder-hub",
     "complexity": "standard",
     "timeout_ms": 120000,
     "credit_cost": 3,
@@ -26,21 +26,25 @@
     "properties": {
       "goal": {
         "type": "string",
-        "description": "Natural language task"
+        "description": "Natural language task description"
       }
     }
   },
   "output": {
     "type": "object",
     "properties": {
-      "result": {
+      "summary": {
         "type": "string"
       },
-      "artifacts": {
+      "action_items": {
         "type": "array",
         "items": {
           "type": "string"
         }
+      },
+      "metrics": {
+        "type": "object",
+        "description": "Key metrics and KPIs"
       }
     }
   },

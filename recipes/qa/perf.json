@@ -20,14 +20,14 @@
         "name": "Execute Load Test",
         "mode": "sequential",
         "commands": [{ "id": "execute-load-test", "args": "--vus 100 --duration 5m" }],
-        "depends_on": [\"setup\"]
+        "depends_on": ["setup"]
       }, 
       {
         "id": "analyze",
         "name": "Analyze Results",
         "mode": "sequential",
         "commands": [{ "id": "analyze-perf", "args": "--thresholds p95,p99" }],
-        "depends_on": [\"execute\"]
+        "depends_on": ["execute"]
       }]
   }
 }

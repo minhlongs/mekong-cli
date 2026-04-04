@@ -20,14 +20,14 @@
         "name": "Track Deficiencies",
         "mode": "sequential",
         "commands": [{ "id": "deficiency-track", "args": "--open-items" }],
-        "depends_on": [\"heatmap\"]
+        "depends_on": ["heatmap"]
       }, 
       {
         "id": "status",
         "name": "Remediation Status",
         "mode": "sequential",
         "commands": [{ "id": "remediation-status", "args": "--board-format" }],
-        "depends_on": [\"deficiency\"]
+        "depends_on": ["deficiency"]
       }]
   }
 }

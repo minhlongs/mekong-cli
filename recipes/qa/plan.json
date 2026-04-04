@@ -20,14 +20,14 @@
         "name": "Generate Test Cases",
         "mode": "sequential",
         "commands": [{ "id": "generate-test-cases", "args": "--coverage full" }],
-        "depends_on": [\"analyze\"]
+        "depends_on": ["analyze"]
       }, 
       {
         "id": "review",
         "name": "Review Plan",
         "mode": "sequential",
         "commands": [{ "id": "review-plan", "args": "--checklist" }],
-        "depends_on": [\"generate\"]
+        "depends_on": ["generate"]
       }]
   }
 }

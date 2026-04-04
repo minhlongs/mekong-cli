@@ -20,14 +20,14 @@
         "name": "Enforce JIT Policies",
         "mode": "sequential",
         "commands": [{ "id": "enforce-jit", "args": "--max-duration 4h" }],
-        "depends_on": [\"scan\"]
+        "depends_on": ["scan"]
       }, 
       {
         "id": "audit",
         "name": "Audit Log",
         "mode": "sequential",
         "commands": [{ "id": "audit-pam-log", "args": "--export" }],
-        "depends_on": [\"enforce\"]
+        "depends_on": ["enforce"]
       }]
   }
 }

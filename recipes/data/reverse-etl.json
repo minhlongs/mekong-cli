@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "select", "name": "Select Segments", "mode": "sequential", "commands": [{ "id": "select-segments", "args": "--audience-builder" }], "depends_on": [] }, 
-      { "id": "sync", "name": "Sync Destinations", "mode": "sequential", "commands": [{ "id": "sync-destinations", "args": "--crm,marketing" }], "depends_on": [\"select\"] }, 
-      { "id": "verify", "name": "Verify Delivery", "mode": "sequential", "commands": [{ "id": "verify-delivery", "args": "--row-match" }], "depends_on": [\"sync\"] }]
+      { "id": "sync", "name": "Sync Destinations", "mode": "sequential", "commands": [{ "id": "sync-destinations", "args": "--crm,marketing" }], "depends_on": ["select"] }, 
+      { "id": "verify", "name": "Verify Delivery", "mode": "sequential", "commands": [{ "id": "verify-delivery", "args": "--row-match" }], "depends_on": ["sync"] }]
   }
 }

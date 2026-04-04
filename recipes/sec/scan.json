@@ -12,7 +12,7 @@
         "id": "scan-parallel",
         "name": "Static + Dynamic + SCA Scans",
         "mode": "parallel",
-        "commands": [{ "id": "sast-scan", "args": "--all" }, { "id": "dast-scan", "args": "--target \$URL" }, { "id": "sca-scan", "args": "--deps" }],
+        "commands": [{ "id": "sast-scan", "args": "--all" }, { "id": "dast-scan", "args": "--target $URL" }, { "id": "sca-scan", "args": "--deps" }],
         "depends_on": []
       }, 
       {
@@ -20,7 +20,7 @@
         "name": "Compile Report",
         "mode": "sequential",
         "commands": [{ "id": "compile-report", "args": "--format markdown" }],
-        "depends_on": [\"scan-parallel\"]
+        "depends_on": ["scan-parallel"]
       }]
   }
 }

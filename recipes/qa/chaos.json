@@ -20,21 +20,21 @@
         "name": "Inject Faults",
         "mode": "sequential",
         "commands": [{ "id": "inject-faults", "args": "--type network,cpu,memory" }],
-        "depends_on": [\"define\"]
+        "depends_on": ["define"]
       }, 
       {
         "id": "observe",
         "name": "Observe Recovery",
         "mode": "sequential",
         "commands": [{ "id": "observe-recovery", "args": "--timeout 60s" }],
-        "depends_on": [\"inject\"]
+        "depends_on": ["inject"]
       }, 
       {
         "id": "report",
         "name": "Chaos Report",
         "mode": "sequential",
         "commands": [{ "id": "chaos-report", "args": "--recommendations" }],
-        "depends_on": [\"observe\"]
+        "depends_on": ["observe"]
       }]
   }
 }

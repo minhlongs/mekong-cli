@@ -20,14 +20,14 @@
         "name": "Analyze Coverage",
         "mode": "sequential",
         "commands": [{ "id": "analyze-coverage", "args": "--gap-detect" }],
-        "depends_on": [\"extract\"]
+        "depends_on": ["extract"]
       }, 
       {
         "id": "update",
         "name": "Update Matrix",
         "mode": "sequential",
         "commands": [{ "id": "update-matrix", "args": "--publish" }],
-        "depends_on": [\"analyze\"]
+        "depends_on": ["analyze"]
       }]
   }
 }

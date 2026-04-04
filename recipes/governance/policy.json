@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "draft", "name": "Draft Policies", "mode": "sequential", "commands": [{ "id": "draft-policies", "args": "--template corporate" }], "depends_on": [] }, 
-      { "id": "legal", "name": "Legal Review", "mode": "sequential", "commands": [{ "id": "legal-review", "args": "--compliance-check" }], "depends_on": [\"draft\"] }, 
-      { "id": "publish", "name": "Publish and Distribute", "mode": "sequential", "commands": [{ "id": "publish-distribute", "args": "--all-employees" }], "depends_on": [\"legal\"] }]
+      { "id": "legal", "name": "Legal Review", "mode": "sequential", "commands": [{ "id": "legal-review", "args": "--compliance-check" }], "depends_on": ["draft"] }, 
+      { "id": "publish", "name": "Publish and Distribute", "mode": "sequential", "commands": [{ "id": "publish-distribute", "args": "--all-employees" }], "depends_on": ["legal"] }]
   }
 }

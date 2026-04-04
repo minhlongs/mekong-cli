@@ -20,14 +20,14 @@
         "name": "Run Regression",
         "mode": "sequential",
         "commands": [{ "id": "run-regression", "args": "--parallel" }],
-        "depends_on": [\"select\"]
+        "depends_on": ["select"]
       }, 
       {
         "id": "diff",
         "name": "Diff Report",
         "mode": "sequential",
         "commands": [{ "id": "diff-report", "args": "--baseline main" }],
-        "depends_on": [\"run\"]
+        "depends_on": ["run"]
       }]
   }
 }

@@ -20,7 +20,7 @@
         "name": "Remediation Report",
         "mode": "sequential",
         "commands": [{ "id": "accessibility-report", "args": "--prioritize" }],
-        "depends_on": [\"scan\"]
+        "depends_on": ["scan"]
       }]
   }
 }
