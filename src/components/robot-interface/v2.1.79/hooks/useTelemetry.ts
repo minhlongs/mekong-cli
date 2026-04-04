@@ -168,8 +168,8 @@ export const useTelemetry = ({
 
             return newData;
           });
-        } catch (err) {
-          setError('Failed to parse telemetry data');
+        } catch {
+          // Silently skip malformed messages — transient, not user-facing
         }
       };
 
