@@ -20,14 +20,14 @@
         "name": "Operating Effectiveness",
         "mode": "sequential",
         "commands": [{ "id": "sox-oe-test", "args": "--sample-size 25" }],
-        "depends_on": [\"test\"]
+        "depends_on": ["test"]
       }, 
       {
         "id": "report",
         "name": "Deficiency Report",
         "mode": "sequential",
         "commands": [{ "id": "deficiency-report", "args": "--material-weakness-check" }],
-        "depends_on": [\"oe\"]
+        "depends_on": ["oe"]
       }]
   }
 }

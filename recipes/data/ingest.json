@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "configure", "name": "Configure Connectors", "mode": "sequential", "commands": [{ "id": "configure-connectors", "args": "--source all" }], "depends_on": [] }, 
-      { "id": "extract", "name": "Extract and Load", "mode": "sequential", "commands": [{ "id": "extract-load", "args": "--incremental" }], "depends_on": [\"configure\"] }, 
-      { "id": "verify", "name": "Verify Landing", "mode": "sequential", "commands": [{ "id": "verify-landing", "args": "--row-counts" }], "depends_on": [\"extract\"] }]
+      { "id": "extract", "name": "Extract and Load", "mode": "sequential", "commands": [{ "id": "extract-load", "args": "--incremental" }], "depends_on": ["configure"] }, 
+      { "id": "verify", "name": "Verify Landing", "mode": "sequential", "commands": [{ "id": "verify-landing", "args": "--row-counts" }], "depends_on": ["extract"] }]
   }
 }

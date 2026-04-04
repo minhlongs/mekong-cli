@@ -20,14 +20,14 @@
         "name": "Select Audits",
         "mode": "sequential",
         "commands": [{ "id": "select-audits", "args": "--budget-constrained" }],
-        "depends_on": [\"rank\"]
+        "depends_on": ["rank"]
       }, 
       {
         "id": "allocate",
         "name": "Allocate Resources",
         "mode": "sequential",
         "commands": [{ "id": "allocate-resources", "args": "--team-capacity" }],
-        "depends_on": [\"select\"]
+        "depends_on": ["select"]
       }]
   }
 }

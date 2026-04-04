@@ -20,14 +20,14 @@
         "name": "Run Certification",
         "mode": "sequential",
         "commands": [{ "id": "certify-access", "args": "--deadline 14d" }],
-        "depends_on": [\"extract\"]
+        "depends_on": ["extract"]
       }, 
       {
         "id": "remediate",
         "name": "Remediate Exceptions",
         "mode": "sequential",
         "commands": [{ "id": "remediate-exceptions", "args": "--auto-revoke" }],
-        "depends_on": [\"certify\"]
+        "depends_on": ["certify"]
       }]
   }
 }

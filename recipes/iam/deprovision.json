@@ -20,14 +20,14 @@
         "name": "Archive Data",
         "mode": "sequential",
         "commands": [{ "id": "archive-user-data", "args": "--retention 90d" }],
-        "depends_on": [\"revoke\"]
+        "depends_on": ["revoke"]
       }, 
       {
         "id": "evidence",
         "name": "Generate Evidence",
         "mode": "sequential",
         "commands": [{ "id": "generate-evidence", "args": "--sox-compliant" }],
-        "depends_on": [\"archive\"]
+        "depends_on": ["archive"]
       }]
   }
 }

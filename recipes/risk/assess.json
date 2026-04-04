@@ -20,14 +20,14 @@
         "name": "Map Controls",
         "mode": "sequential",
         "commands": [{ "id": "map-controls", "args": "--control-matrix" }],
-        "depends_on": [\"identify\"]
+        "depends_on": ["identify"]
       }, 
       {
         "id": "score",
         "name": "Score Residual Risk",
         "mode": "sequential",
         "commands": [{ "id": "score-residual", "args": "--heat-map" }],
-        "depends_on": [\"map\"]
+        "depends_on": ["map"]
       }]
   }
 }

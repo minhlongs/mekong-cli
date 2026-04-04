@@ -20,7 +20,7 @@
         "name": "Verify Access",
         "mode": "sequential",
         "commands": [{ "id": "verify-access", "args": "--test-login" }],
-        "depends_on": [\"setup\"]
+        "depends_on": ["setup"]
       }]
   }
 }

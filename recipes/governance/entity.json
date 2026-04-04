@@ -9,6 +9,6 @@
   "dag": {
     "groups": [
       { "id": "sync", "name": "Entity Inventory + Cap Table", "mode": "parallel", "commands": [{ "id": "entity-inventory", "args": "--subsidiaries" }, { "id": "cap-table-sync", "args": "--409a" }], "depends_on": [] }, 
-      { "id": "insurance", "name": "Insurance Review", "mode": "sequential", "commands": [{ "id": "insurance-review", "args": "--d-and-o" }], "depends_on": [\"sync\"] }]
+      { "id": "insurance", "name": "Insurance Review", "mode": "sequential", "commands": [{ "id": "insurance-review", "args": "--d-and-o" }], "depends_on": ["sync"] }]
   }
 }

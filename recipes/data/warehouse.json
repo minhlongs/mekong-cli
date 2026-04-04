@@ -9,7 +9,7 @@
   "dag": {
     "groups": [
       { "id": "usage", "name": "Usage Stats", "mode": "sequential", "commands": [{ "id": "warehouse-usage", "args": "--last-30d" }], "depends_on": [] }, 
-      { "id": "cost", "name": "Cost Analysis", "mode": "sequential", "commands": [{ "id": "warehouse-cost", "args": "--per-query" }], "depends_on": [\"usage\"] }, 
-      { "id": "optimize", "name": "Optimization Recs", "mode": "sequential", "commands": [{ "id": "warehouse-optimize", "args": "--auto-suspend" }], "depends_on": [\"cost\"] }]
+      { "id": "cost", "name": "Cost Analysis", "mode": "sequential", "commands": [{ "id": "warehouse-cost", "args": "--per-query" }], "depends_on": ["usage"] }, 
+      { "id": "optimize", "name": "Optimization Recs", "mode": "sequential", "commands": [{ "id": "warehouse-optimize", "args": "--auto-suspend" }], "depends_on": ["cost"] }]
   }
 }
