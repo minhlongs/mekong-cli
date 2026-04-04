@@ -1,15 +1,15 @@
 {
   "id": "pm-analytics",
   "version": "1.0.0",
-  "layer": "8",
-  "chapter": "product",
+  "layer": "ops",
+  "chapter": "謀攻 — Attack by Stratagem",
   "display": {
     "name_en": "Product Analytics",
     "icon": "",
     "description_en": "Funnel analysis and feature adoption tracking"
   },
   "execution": {
-    "agents": ["軍爭 — Armed Struggle"],
+    "agents": ["軍爭 — Military Contention"],
     "hub": "data-analyst",
     "complexity": "product-hub",
     "timeout_ms": 120000,
