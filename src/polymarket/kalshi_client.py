@@ -91,7 +91,7 @@ class KalshiClient:
         if self.paper_mode:
             return []
 
-        # TODO: Wire to Kalshi REST API when ready
+        # Kalshi REST API not yet wired — returns empty in non-paper mode
         logger.info("Kalshi API not yet wired")
         return []
 

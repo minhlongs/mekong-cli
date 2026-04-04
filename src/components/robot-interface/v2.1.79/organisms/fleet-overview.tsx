@@ -876,8 +876,8 @@ export const FleetOverview: React.FC<LocalFleetOverviewProps> = ({
     if (!sortConfig) return filteredRobots;
 
     return [...filteredRobots].sort((a, b) => {
-      let aVal: string | number;
-      let bVal: string | number;
+      let aVal: string | number = '';
+      let bVal: string | number = '';
 
       switch (sortConfig.field) {
         case 'name':
