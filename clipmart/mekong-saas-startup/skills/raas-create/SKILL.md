@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Create full RaaS SaaS product — scaffold, build features, deploy. 5 commands, ~45 min."
-argument-hint: [project-name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /raas:create — Full RaaS Product Pipeline
 

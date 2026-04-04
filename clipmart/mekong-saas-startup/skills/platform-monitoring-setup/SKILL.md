@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Health checks → alerts → dashboard → runbook for platform monitoring"
-argument-hint: [service or platform to monitor]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /platform:monitoring-setup — Monitoring Setup
 

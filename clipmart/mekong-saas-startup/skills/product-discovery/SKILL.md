@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Problem → persona → solution → validation. 5 commands, ~30 min."
-argument-hint: [product context or goal]
----
 
 # Product Discovery Sprint
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "New client setup — contract, project setup, kickoff deck, schedule. 4 commands, ~15 min."
-argument-hint: [business context or goal]
----
 
 # Client Onboarding
 

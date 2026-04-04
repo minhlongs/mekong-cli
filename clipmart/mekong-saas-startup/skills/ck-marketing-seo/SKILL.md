@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SEO bundle — audit, programmatic SEO, technical SEO (Ch.3 謀攻)"
-argument-hint: [domain-or-url to audit]
----
 
 # Marketing SEO - Search Engine Optimization Bundle
 

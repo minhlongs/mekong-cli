@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Interview script, discussion guide, insight synthesis. 2 commands, ~10 min."
-argument-hint: [user segment or research question]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ux:interview — UX Interview
 

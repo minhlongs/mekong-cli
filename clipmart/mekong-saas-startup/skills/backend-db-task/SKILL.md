@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backend DB task — schema change, migration, seed, verify in 10 min"
-argument-hint: [schema change or migration description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /backend:db-task — DB Task
 

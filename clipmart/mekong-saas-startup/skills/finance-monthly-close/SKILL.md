@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Revenue reconcile, expense audit, P&L statement, cash flow, AR aging. 5 commands, ~25 min."
-argument-hint: [month or period to close]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /finance:monthly-close — Monthly Financial Close
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backfill historical features for training"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /ml:feature-backfill — Feature Backfill
 **IC super command** — Backfill historical features for training
 ## Pipeline

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Lint → test → build → staging → smoke → production deployment pipeline"
-argument-hint: [service or tag to deploy]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /devops:deploy-pipeline — Deployment Pipeline
 

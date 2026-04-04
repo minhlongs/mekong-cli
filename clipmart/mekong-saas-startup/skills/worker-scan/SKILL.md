@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Scan codebase for issues: tech debt, security, code quality"
-argument-hint: [scope: full|security|debt|quality]
----
 
 # /worker-scan — Worker Operation
 

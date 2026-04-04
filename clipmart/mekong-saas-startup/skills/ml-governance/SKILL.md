@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audit trail, EU AI Act compliance, model cards"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ml:governance — AI Governance
 

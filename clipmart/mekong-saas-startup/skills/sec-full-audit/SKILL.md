@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Complete security audit — scan, vuln, access review, compliance report"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sec:full-audit — Full Security Audit
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Copywriting bundle — page copy, editing, persuasion (Ch.5 勢)"
-argument-hint: [page-or-product to write copy for]
----
 
 # Marketing Copy - Copywriting Bundle
 

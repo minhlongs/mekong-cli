@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Void-substance analysis (虚実) — find where competitors are hollow. 1 command, ~8 min."
-argument-hint: [market-or-sector]
-allowed-tools: Bash
----
 
 # /venture:void-substance — Void-Substance Market Map (虚実)
 

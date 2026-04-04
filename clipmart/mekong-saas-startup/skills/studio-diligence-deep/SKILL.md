@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Deep due diligence — market + team + tech + financial + legal analysis. 5 parallel agents, ~25 min."
-argument-hint: [deal-id]
-allowed-tools: Read, Write, Bash, Task, WebSearch
----
 
 # /studio:diligence:deep — Deep Due Diligence Pipeline
 

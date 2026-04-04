@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Codebase tour → setup guide → first ticket → contribution guide for new developer"
-argument-hint: [new developer name or role]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /eng:onboard-dev — Developer Onboarding
 

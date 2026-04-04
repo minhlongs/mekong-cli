@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Job requirements, candidate search, outreach. 2 commands, ~10 min."
-argument-hint: [role or job description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /recruiter:source — Candidate Sourcing
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Carbon footprint tracking for Scope 1-3"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /esg:carbon — Carbon Tracking
 

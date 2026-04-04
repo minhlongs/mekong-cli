@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Strategic retreat and market exit criteria"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /terrain:retreat — Strategic Retreat
 

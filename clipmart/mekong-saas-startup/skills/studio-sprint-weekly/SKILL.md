@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Weekly studio sprint — portfolio status, follow-ups, cross-portfolio insights, report. 5 commands, ~20 min."
-argument-hint: [optional: specific-focus-area]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:sprint:weekly — Weekly Studio Sprint
 

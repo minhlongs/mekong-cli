@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Compliance check — privacy policy → terms → data handling → regulatory gaps"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /legal:compliance-check — Compliance Check
 

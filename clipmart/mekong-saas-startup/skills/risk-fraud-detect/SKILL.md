@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Anti-fraud monitoring"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /risk:fraud-detect — Fraud Detection
 

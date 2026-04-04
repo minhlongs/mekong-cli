@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Context window management — what to keep, compress, or drop"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /context:strategy — Context Strategy
 

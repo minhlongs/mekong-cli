@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Safely restart factory loop without killing active CC CLI tasks"
-argument-hint: [--force | --status]
-allowed-tools: Bash
----
 
 # /factory-restart — Safe Factory Loop Restart
 

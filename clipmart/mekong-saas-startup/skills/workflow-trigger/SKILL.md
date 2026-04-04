@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Event-driven workflow trigger management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /workflow:trigger — Event Triggers
 **IC super command** — Event-driven workflow trigger management
 ## Pipeline

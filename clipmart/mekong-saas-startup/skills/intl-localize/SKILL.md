@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "i18n pipeline and translation management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intl:localize — Localization
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Spec, design, implement, responsive check. 2 commands, ~12 min."
-argument-hint: [component name or description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ui:design-component — Component Design & Build
 

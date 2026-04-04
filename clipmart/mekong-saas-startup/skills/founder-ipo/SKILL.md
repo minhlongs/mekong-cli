@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "18-month IPO readiness — audit, S-1, roadshow, day-of execution. 7 commands, ~60 min."
-argument-hint: [founder context or goal]
----
 
 # IPO Preparation Pipeline
 

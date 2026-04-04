@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "On-call rotation management and scheduling"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /incident:oncall — On-Call Rotation
 **IC super command** — On-call rotation management and scheduling
 ## Pipeline

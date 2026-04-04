@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Validate business model before spending money — PMF, economics, market, moat. 5 commands, ~25 min."
-argument-hint: [founder context or goal]
----
 
 # Business Validation Sprint
 

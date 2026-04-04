@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full venture launch — thesis → source deals → screen → create company. 6 commands, ~30 min."
-argument-hint: [sector-or-market-focus]
-allowed-tools: Read, Write, Bash, Task, WebSearch
----
 
 # /studio:launch:full — Full Venture Launch Pipeline
 

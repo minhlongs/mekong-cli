@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backup project state: git stash, export configs, snapshot data"
-argument-hint: [project-name]
----
 
 # /worker-backup — Worker Operation
 

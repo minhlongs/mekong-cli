@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Meeting follow-up — follow-up email + next steps scheduled in parallel. 2 commands, ~5 min."
-argument-hint: [meeting-summary-or-deal-name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ae:follow-up — Meeting Follow-Up
 

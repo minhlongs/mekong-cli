@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Unified customer health score — CS + sales + usage"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /revops:health — Customer Health
 

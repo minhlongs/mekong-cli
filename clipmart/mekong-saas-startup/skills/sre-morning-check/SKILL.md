@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SRE morning check — health, status, benchmark in parallel, 5 min"
-argument-hint: [optional: service name or environment]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sre:morning-check — Morning Check
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "CTO brain health dashboard — ROI scores, active missions, learning state"
-argument-hint: [--roi | --learning | --missions | --all]
-allowed-tools: Bash, Read
----
 
 # /cto-dashboard — CTO Brain Health Dashboard
 

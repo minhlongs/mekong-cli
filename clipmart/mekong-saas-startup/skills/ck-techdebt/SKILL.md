@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Scan and clean duplicated or messy code — technical debt scanner"
-argument-hint: [path or module to scan]
----
 
 # /techdebt - Technical Debt Scanner
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "End-to-end recruiting — JD, sourcing, interview kit, comp benchmarking. 4 commands, ~20 min."
-argument-hint: [business context or goal]
----
 
 # Hiring Sprint
 

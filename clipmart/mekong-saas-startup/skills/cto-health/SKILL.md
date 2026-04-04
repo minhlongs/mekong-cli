@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Run CTO health check dashboard — all subsystems in one view"
-argument-hint: []
-allowed-tools: Bash
----
 
 # /cto-health — CTO Health Dashboard
 

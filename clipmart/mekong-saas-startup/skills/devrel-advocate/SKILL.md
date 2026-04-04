@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Content calendar and event management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /devrel:advocate — Developer Advocacy
 

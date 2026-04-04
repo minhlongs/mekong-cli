@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "ROI scorecard across all projects. 3 credits, ~10 min."
-argument-hint: [context or goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:roi — ROI Scorecard
 

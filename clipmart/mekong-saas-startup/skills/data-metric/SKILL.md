@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Semantic layer for consistent KPI definitions"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /data:metric — Semantic Layer
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Market entry strategy per terrain classification"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /terrain:entry — Market Entry
 

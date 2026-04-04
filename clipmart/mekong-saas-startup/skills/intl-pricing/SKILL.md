@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Geo-specific pricing and PPP adjustments"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intl:pricing — Geo Pricing
 

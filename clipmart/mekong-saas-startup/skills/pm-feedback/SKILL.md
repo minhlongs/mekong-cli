@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "User feedback collection routed to backlog"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:feedback — User Feedback
 

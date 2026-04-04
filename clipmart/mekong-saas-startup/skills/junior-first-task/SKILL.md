@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Junior first task — codebase overview, starter issue, guided implementation in 15 min"
-argument-hint: [task or area of interest]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /junior:first-task — First Task
 

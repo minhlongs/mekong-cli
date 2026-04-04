@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SLA-governed lead and opportunity handoff"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /revops:handoff — Lead Handoff
 

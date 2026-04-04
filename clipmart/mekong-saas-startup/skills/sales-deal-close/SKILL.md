@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Research buyer, build proposal, pricing strategy, closing playbook. 4 commands, ~20 min."
-argument-hint: [deal name or buyer company]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sales:deal-close — Deal Closer
 

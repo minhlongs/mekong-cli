@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Rate limit rule configuration per tier"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /gateway:rate-limit — Rate Limiting
 **IC super command** — Rate limit rule configuration per tier
 ## Pipeline

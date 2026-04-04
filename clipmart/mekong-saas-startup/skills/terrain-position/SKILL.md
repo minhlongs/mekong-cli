@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Competitive positioning analysis per terrain type"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /terrain:position — Competitive Position
 

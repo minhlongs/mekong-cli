@@ -6,8 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Start any new project from idea to production in 5 commands
----
 
 // turbo
 

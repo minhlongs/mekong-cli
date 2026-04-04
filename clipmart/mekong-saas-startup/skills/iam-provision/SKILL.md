@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Automated user provisioning via SCIM/SSO"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /iam:provision — User Provisioning
 

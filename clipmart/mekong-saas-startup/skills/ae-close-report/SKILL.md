@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Close report — win/loss analysis then CRM update. 2 commands, ~5 min."
-argument-hint: [deal-name-and-outcome]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ae:close-report — Close Report
 

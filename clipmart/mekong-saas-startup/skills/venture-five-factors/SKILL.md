@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Run 道天地將法 five-factor evaluation for deal or company. 1 command, ~10 min."
-argument-hint: [deal-id or company-slug or --top=3]
-allowed-tools: Bash
----
 
 # /venture:five-factors — Five-Factor Evaluation (道天地將法)
 

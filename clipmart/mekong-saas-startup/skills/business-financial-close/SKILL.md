@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Monthly/quarterly close — reconcile, report, forecast, tax prep. 5 commands, ~25 min."
-argument-hint: [business context or goal]
----
 
 # Financial Close
 

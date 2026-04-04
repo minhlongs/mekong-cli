@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Diversity metrics and reporting"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /esg:dei — DEI Metrics
 

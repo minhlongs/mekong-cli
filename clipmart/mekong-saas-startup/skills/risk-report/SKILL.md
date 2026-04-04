@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Board-ready risk reports"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /risk:report — Risk Report
 

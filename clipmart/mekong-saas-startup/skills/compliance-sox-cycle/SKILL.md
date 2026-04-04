@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full SOX cycle — SOX testing, ITGC, risk assessment, risk report"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /compliance:sox-cycle — SOX Compliance Cycle
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Paid advertising bundle — ad strategy, copy, A/B testing (Ch.2 作戰)"
-argument-hint: [campaign-goal or product-name]
----
 
 # Marketing Ads - Paid Advertising Bundle
 

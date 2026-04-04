@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Transaction review, categorize, reconcile, flag anomalies. 2 commands, ~8 min."
-argument-hint: [date or period to reconcile]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /accounting:daily — Daily Bookkeeping
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Push commits to remote with CI/CD verification"
-argument-hint: [branch]
----
 
 # /worker-push — Worker Operation
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audit current → plan migration → generate scripts → test → verify"
-argument-hint: [migration target or version]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /tech:migration — Migration Pipeline
 

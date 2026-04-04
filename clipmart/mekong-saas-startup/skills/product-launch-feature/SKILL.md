@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Spec → build → test → ship → announce. 5 commands, ~40 min."
-argument-hint: [product context or goal]
----
 
 # Feature Launch Pipeline
 

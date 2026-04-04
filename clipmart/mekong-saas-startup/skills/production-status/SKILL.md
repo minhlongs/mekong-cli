@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Live production board — project states, ROI scores, next planned dispatch, session stats"
-argument-hint: [--all | --project=name]
-allowed-tools: Bash
----
 
 # /production-status — Live Production Board
 

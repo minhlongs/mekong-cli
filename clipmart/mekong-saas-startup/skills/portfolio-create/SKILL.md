@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Create new portfolio company with OpenClaw CTO instance. 1 command, ~5 min."
-argument-hint: [company-name --sector=ai --stage=idea --equity=30]
-allowed-tools: Bash
----
 
 # /portfolio:create — Create Portfolio Company
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "API gateway route configuration and management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /gateway:route — Route Config
 **IC super command** — API gateway route configuration and management
 ## Pipeline

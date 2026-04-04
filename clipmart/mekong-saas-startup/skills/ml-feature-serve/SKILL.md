@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Serve features for real-time inference"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /ml:feature-serve — Feature Serve
 **IC super command** — Serve features for real-time inference
 ## Pipeline

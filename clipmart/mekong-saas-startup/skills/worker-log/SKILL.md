@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "View and analyze recent logs for debugging"
-argument-hint: [log-source] [--lines N]
----
 
 # /worker-log — Worker Operation
 

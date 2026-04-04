@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Acqui-hire and acquisition evaluation"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /corpdev:evaluate — Acquisition Eval
 

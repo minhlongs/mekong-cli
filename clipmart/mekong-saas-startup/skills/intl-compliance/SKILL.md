@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Country-specific regulatory requirements"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intl:compliance — Country Compliance
 

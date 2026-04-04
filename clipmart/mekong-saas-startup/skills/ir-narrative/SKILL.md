@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "S-1 narrative development — investment thesis and MD&A"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ir:narrative — S-1 Narrative
 

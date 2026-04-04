@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Centralized log aggregation and search"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /obs:logs — Log Aggregation
 **IC super command** — Centralized log aggregation and search
 ## Pipeline

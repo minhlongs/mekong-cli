@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "International entity setup and tax structuring"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intl:entity — International Entity
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Pipeline-weighted forecast and scenario modeling"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /revops:forecast — Revenue Forecast
 

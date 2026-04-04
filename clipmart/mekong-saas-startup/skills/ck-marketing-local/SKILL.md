@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Local business marketing bundle — schema markup, local SEO (Ch.10 地形)"
-argument-hint: [business-name --location=CITY]
----
 
 # Marketing Local - Local Business Bundle
 

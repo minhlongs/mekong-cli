@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Create and manage ADRs for key technical decisions"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /kb:adr — Architecture Decision Records
 **IC super command** — Create and manage ADRs for key technical decisions
 ## Pipeline

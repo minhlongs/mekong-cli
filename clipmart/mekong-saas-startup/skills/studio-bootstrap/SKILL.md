@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Bootstrap venture studio — call mekong CLI engine. 1 command, ~15 min."
-argument-hint: [studio-name]
-allowed-tools: Bash
----
 
 # /studio:bootstrap — Bootstrap Venture Studio
 

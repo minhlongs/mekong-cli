@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Blog pipeline — keyword research, then draft + SEO optimize in parallel. 3 commands, ~15 min."
-argument-hint: [blog-topic-or-keyword]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /writer:blog — Blog Pipeline
 

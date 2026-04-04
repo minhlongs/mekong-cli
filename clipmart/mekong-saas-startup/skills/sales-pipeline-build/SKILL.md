@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Build complete sales pipeline — ICP profile, lead list, outreach sequences, CRM setup. 5 commands, ~30 min."
-argument-hint: [goal or target market]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sales:pipeline-build — Pipeline Builder
 

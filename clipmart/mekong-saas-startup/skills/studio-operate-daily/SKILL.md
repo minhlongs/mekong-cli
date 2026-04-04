@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Daily studio ops — standup, tickets, invoices, metrics across all portfolio companies. 4 commands, ~10 min."
-argument-hint: [optional: company-slug to focus on]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:operate:daily — Daily Studio Operations
 

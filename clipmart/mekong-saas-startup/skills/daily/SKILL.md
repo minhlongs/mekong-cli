@@ -6,8 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Get daily status report from Agentic Overlord
----
 
 # /daily Command
 

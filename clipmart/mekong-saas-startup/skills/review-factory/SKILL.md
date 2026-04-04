@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full code review of factory-loop.sh — lint, logic, integration, security"
-argument-hint: [--strict | --quick]
-allowed-tools: Read, Bash, Grep
----
 
 # /review:factory — Factory Loop Code Review
 

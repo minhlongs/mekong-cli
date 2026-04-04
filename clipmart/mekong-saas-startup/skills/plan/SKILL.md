@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Create implementation plan with research and analysis
-argument-hint: "<task description>"
----
 
 # Plan — Implementation Planning
 

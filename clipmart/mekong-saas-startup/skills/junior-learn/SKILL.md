@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Junior learn — architecture overview, module deep dive, key patterns in 10 min"
-argument-hint: [module or topic to learn]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /junior:learn — Learn Codebase
 

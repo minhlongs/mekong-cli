@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Branch → fix → test → deploy hotfix to production"
-argument-hint: [bug description or issue ID]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /release:hotfix — Hotfix Pipeline
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Prioritize what stays in context window under pressure"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /context:priority — Context Priority
 

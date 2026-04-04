@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Worker compile atomic command. 1 credit."
-argument-hint: [target or args]
-allowed-tools: Read, Write, Bash
----
 
 # /worker:build — Atomic Compile & Bundle
 

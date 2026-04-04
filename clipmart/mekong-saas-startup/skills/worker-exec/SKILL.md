@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Execute a shell command safely with timeout and error handling"
-argument-hint: [command]
----
 
 # /worker-exec — Worker Operation
 

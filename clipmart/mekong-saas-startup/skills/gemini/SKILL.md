@@ -6,8 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Control Gemini CLI with rate limiting and retry logic
----
 
 # Gemini Command
 

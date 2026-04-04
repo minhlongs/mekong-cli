@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Opus Tôm Hùm Team — Self-orchestrate as 5-department company. Builds full-stack code multi-threaded. 30+ credits, ~90 min."
-argument-hint: [product or feature to build]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /opus-tomhum-orchestrator — Tôm Hùm Team Full-Stack Builder
 

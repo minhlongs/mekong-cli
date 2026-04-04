@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Outreach blast — cold emails + LinkedIn messages in parallel. 2 commands, ~8 min."
-argument-hint: [lead-list-or-target-persona]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sdr:outreach-blast — Outreach Blast
 

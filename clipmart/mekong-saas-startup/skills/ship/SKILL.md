@@ -6,8 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Ship code to production - test, commit, push, deploy
----
 
 # 🚀 Ship Command
 

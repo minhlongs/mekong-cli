@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Rollback to previous known-good state"
-argument-hint: [commit-hash or steps]
----
 
 # /worker-rollback — Worker Operation
 

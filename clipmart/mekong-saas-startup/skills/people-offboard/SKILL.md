@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Exit checklist, access revocation, knowledge transfer. 2 commands, ~5 min."
-argument-hint: [departing employee name or last day]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /people:offboard — Employee Offboarding
 

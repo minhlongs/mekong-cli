@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Close deal — finalize investment, onboard company to portfolio. 1 command, ~5 min."
-argument-hint: [deal-id]
-allowed-tools: Bash
----
 
 # /dealflow:close — Close Deal & Onboard
 

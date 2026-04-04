@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Drift detection, latency, hallucination rates, cost per inference"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ml:monitor — Model Monitor
 

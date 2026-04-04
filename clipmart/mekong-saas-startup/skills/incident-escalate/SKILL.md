@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Automated escalation policy execution"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /incident:escalate — Escalation Engine
 **IC super command** — Automated escalation policy execution
 ## Pipeline

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "AI-powered deal sourcing — scan markets, identify opportunities matching thesis. 1 command, ~8 min."
-argument-hint: [--sector=ai --count=5 --region=sea]
-allowed-tools: Bash
----
 
 # /dealflow:source — AI-Powered Deal Sourcing
 

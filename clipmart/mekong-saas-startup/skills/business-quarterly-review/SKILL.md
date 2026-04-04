@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "QBR across all departments — revenue, expenses, KPIs, team, forecast. 6 commands, ~30 min."
-argument-hint: [business context or goal]
----
 
 # Quarterly Business Review
 

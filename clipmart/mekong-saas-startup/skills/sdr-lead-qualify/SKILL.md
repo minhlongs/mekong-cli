@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Lead qualify & handoff — score lead then prep AE handoff brief. 2 commands, ~8 min."
-argument-hint: [lead-name-or-company]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sdr:lead-qualify — Lead Qualify & Handoff
 

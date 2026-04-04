@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "OpenTelemetry distributed tracing setup and analysis"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /obs:trace — Distributed Tracing
 **IC super command** — OpenTelemetry distributed tracing setup and analysis
 ## Pipeline

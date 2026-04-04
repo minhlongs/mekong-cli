@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Subsidiaries, cap table, D&O insurance tracking"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /governance:entity — Entity Management
 

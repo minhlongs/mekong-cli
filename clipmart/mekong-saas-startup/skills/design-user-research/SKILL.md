@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "UX research sprint — personas → user journeys → pain points → opportunity map"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /design:user-research — UX Research Sprint
 

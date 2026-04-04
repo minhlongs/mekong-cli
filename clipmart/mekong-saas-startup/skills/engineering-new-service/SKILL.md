@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Scaffold → implement → test → deploy. New microservice from zero. 6 commands, ~45 min."
-argument-hint: [engineering context or goal]
----
 
 # New Service Bootstrap
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Model deployment with A/B serving and canary rollouts"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ml:deploy — Model Deploy
 

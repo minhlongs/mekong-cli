@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full CTO observability dashboard — telemetry, anomalies, dispatch health"
-argument-hint: [--anomalies | --telemetry | --all]
-allowed-tools: Bash
----
 
 # /cto-observability — CTO Observability Dashboard
 

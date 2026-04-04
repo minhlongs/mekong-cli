@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audit → prioritize → refactor → test → verify tech debt"
-argument-hint: [focus area or module]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /eng:tech-debt — Tech Debt Sprint
 

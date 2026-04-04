@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Segregation of duties violation detection"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /iam:sod — SoD Detection
 

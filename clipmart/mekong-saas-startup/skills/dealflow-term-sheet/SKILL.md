@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Generate term sheet draft from deal data and studio defaults. 1 command, ~8 min."
-argument-hint: [deal-id]
-allowed-tools: Bash
----
 
 # /dealflow:term-sheet — Generate Term Sheet
 

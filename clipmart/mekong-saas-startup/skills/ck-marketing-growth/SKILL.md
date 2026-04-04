@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Growth engineering bundle — referrals, viral loops, free tools (Ch.12 火攻)"
-argument-hint: [growth-lever or experiment-hypothesis]
----
 
 # Marketing Growth - Growth Engineering Bundle
 

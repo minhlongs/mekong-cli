@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Cross-device identity resolution and graph"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /cdp:identity — Identity Resolution
 **IC super command** — Cross-device identity resolution and graph
 ## Pipeline

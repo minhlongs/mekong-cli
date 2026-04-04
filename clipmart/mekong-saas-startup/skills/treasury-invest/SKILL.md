@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Short-term investment policy management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /treasury:invest — Investment Policy
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Policy-as-code enforcement"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sec:policy — Policy Enforcement
 

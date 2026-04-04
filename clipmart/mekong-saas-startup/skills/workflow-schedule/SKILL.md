@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Cron and scheduled job management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /workflow:schedule — Scheduled Jobs
 **IC super command** — Cron and scheduled job management
 ## Pipeline

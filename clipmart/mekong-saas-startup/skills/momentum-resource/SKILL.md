@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Allocate resources by momentum score — invest in winners"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /momentum:resource — Resource Allocation
 

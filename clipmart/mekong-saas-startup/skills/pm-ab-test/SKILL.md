@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Experiment design, statistical analysis, auto-rollback"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:ab-test — A/B Testing
 

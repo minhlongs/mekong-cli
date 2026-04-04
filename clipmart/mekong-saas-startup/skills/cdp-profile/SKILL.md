@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Unified customer profile across all touchpoints"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /cdp:profile — Customer 360
 **IC super command** — Unified customer profile across all touchpoints
 ## Pipeline

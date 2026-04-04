@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Reallocate MCU budget across projects. 3 credits, ~10 min."
-argument-hint: [context or goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:allocate — Budget Allocation
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "AI-powered expert matching — find best expert for portfolio company need. 1 command, ~5 min."
-argument-hint: [company-slug --need="description of need"]
-allowed-tools: Bash
----
 
 # /expert:match — Expert Matching
 

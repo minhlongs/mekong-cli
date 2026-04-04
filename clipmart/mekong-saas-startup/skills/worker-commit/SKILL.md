@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Stage, validate, and commit changes with conventional message"
-argument-hint: [scope] [message]
----
 
 # /worker-commit — Worker Operation
 

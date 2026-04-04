@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Network architecture audit — segmentation, firewall, DNS"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /infra:network — Network Audit
 

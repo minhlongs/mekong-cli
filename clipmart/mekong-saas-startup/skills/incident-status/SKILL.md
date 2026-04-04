@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Public and internal status page management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /incident:status — Status Page
 **IC super command** — Public and internal status page management
 ## Pipeline

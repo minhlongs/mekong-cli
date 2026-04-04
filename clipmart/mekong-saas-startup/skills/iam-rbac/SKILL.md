@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Role-based access control matrix management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /iam:rbac — RBAC Management
 
