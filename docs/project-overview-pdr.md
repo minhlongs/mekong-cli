@@ -92,6 +92,13 @@ Goal → Decomposed into steps with dependencies → Parallel execution → Qual
 ### Agent System
 Pluggable agents (Git, File, Shell) + community extensions via PyPI entry points or ~/.mekong/plugins/
 
+### Company Templates (Clipmart)
+Pre-built Paperclip AI company templates for different team structures:
+- **mekong-saas-startup** — 22-agent full organization (founders, executives, 5 teams)
+- **mekong-dev-shop** — 8-agent engineering-focused agency
+- **mekong-solo-founder** — 5-agent lean starter template
+Each includes agent definitions, escalation matrices, Binh Pháp governance, and 300+ operational skills.
+
 ### Credit Billing
 Per-tenant credit ledger: simple tasks cost 1 credit, complex tasks cost 5+ credits
 
