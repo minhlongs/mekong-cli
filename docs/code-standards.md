@@ -174,6 +174,19 @@ grep -r ": any" src/ --include="*.py"  # MUST return 0
 python3 -m mypy src/ --strict
 ```
 
+### Tech Debt Elimination (Binh Phap Front 1)
+
+```bash
+# Zero console logging in production
+grep -r "console\.\(log\|warn\|error\|debug\)" src/ --include="*.ts" --include="*.tsx" --include="*.js"  # MUST return 0
+
+# Zero TODO/FIXME comments
+grep -r "TODO\|FIXME" src/ --include="*.ts" --include="*.tsx" --include="*.py" --include="*.js"  # MUST return 0
+
+# Zero @ts-ignore directives
+grep -r "@ts-ignore\|@ts-nocheck" src/ --include="*.ts" --include="*.tsx"  # MUST return 0
+```
+
 ### Tests (>80% Coverage)
 
 ```bash

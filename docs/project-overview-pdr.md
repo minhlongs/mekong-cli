@@ -81,6 +81,9 @@ Developers building AI-powered platforms need a framework that:
 | **Providers** | LLMProvider abstraction | `src/core/providers.py` | LLM backends |
 | **Billing** | SQLite + NOWPayments | `src/raas/` | Credit system |
 | **API Server** | FastAPI + WebSocket | `src/core/gateway.py` | REST + streaming |
+| **RaaS Plugin** | TypeScript / Cloudflare Workers | `plugins/mekong-raas/` | Auth, metering, billing |
+| **Tasks DAG Plugin** | TypeScript / Cloudflare Workers | `plugins/mekong-tasks/` | Background scheduling |
+| **Skills Catalog** | JSON manifest + SKILL.md | `skills/mekong/` | 22 departments, 348 commands |
 | **Testing** | pytest | `tests/` | 62+ tests |
 | **Package** | Poetry / PyPI | `pyproject.toml` | Distribution |
 
