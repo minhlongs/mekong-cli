@@ -648,3 +648,4 @@ public/
 ide-core/bin-mekong-*
 ide-core/orchestrator/target/
 apps/fnb-caffe-container/
+# PR #19 trigger
