@@ -2,127 +2,112 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Parse flags
-SHARE_REASONING=false
-for arg in "$@"; do
-  case "$arg" in
-    --share-reasoning)
-      SHARE_REASONING=true
-      export REASONING_PORT=11435
-      ;;
-  esac
-done
-
 source "$SCRIPT_DIR/config.env"
 
-# Timeout in seconds to wait for each server to become healthy
 HEALTH_TIMEOUT=120
-HEALTH_INTERVAL=5
+HEALTH_INTERVAL=3
 
 # --- Helpers ---
 
-pid_file() {
-  echo "${PID_DIR}/mekong-farm-${1}.pid"
+check_ollama() {
+  if ! command -v ollama &>/dev/null; then
+    echo "[farm] ERROR: Ollama not installed."
+    echo "[farm] Install: curl -fsSL https://ollama.com/install.sh | sh"
+    echo "[farm] macOS: brew install ollama"
+    exit 1
+  fi
+  echo "[farm] Ollama $(ollama --version 2>&1 | head -1)"
 }
 
-start_server() {
-  local name="$1"
-  local model="$2"
-  local port="$3"
-  local max_tokens="$4"
-  local context="$5"
-
-  local pidfile
-  pidfile="$(pid_file "$port")"
-
-  # Kill stale process if pid file exists
-  if [[ -f "$pidfile" ]]; then
-    local old_pid
-    old_pid="$(cat "$pidfile")"
-    if kill -0 "$old_pid" 2>/dev/null; then
-      echo "[farm] $name already running (pid $old_pid), skipping."
-      return
-    else
-      rm -f "$pidfile"
-    fi
+ensure_ollama_serving() {
+  if curl -sf "${OLLAMA_API}/api/tags" >/dev/null 2>&1; then
+    echo "[farm] Ollama already serving at ${OLLAMA_API}"
+    return
   fi
 
-  echo "[farm] Starting $name on port $port (model: $model)..."
+  echo "[farm] Starting Ollama server..."
+  OLLAMA_HOST="${OLLAMA_HOST}" ollama serve >/tmp/mekong-ollama.log 2>&1 &
+  echo $! >/tmp/mekong-ollama.pid
 
-  python3.11 -m mlx_lm server \
-      --model "$model" \
-      --max-tokens "$max_tokens" \
-      --host "$FARM_HOST" \
-      --port "$port" \
-    > "/tmp/mekong-farm-${port}.log" 2>&1 &
-
-  echo $! > "$pidfile"
-  echo "[farm] $name started (pid $!, log: /tmp/mekong-farm-${port}.log)"
-}
-
-wait_healthy() {
-  local name="$1"
-  local port="$2"
-  local url="http://${FARM_HOST}:${port}/v1/models"
   local elapsed=0
-
-  echo "[farm] Waiting for $name health check at $url..."
-
-  while [[ $elapsed -lt $HEALTH_TIMEOUT ]]; do
-    if curl -sf "$url" > /dev/null 2>&1; then
-      echo "[farm] $name is healthy (${elapsed}s)"
-      return 0
+  while [[ $elapsed -lt 30 ]]; do
+    if curl -sf "${OLLAMA_API}/api/tags" >/dev/null 2>&1; then
+      echo "[farm] Ollama serving at ${OLLAMA_API} (${elapsed}s)"
+      return
     fi
-
-    # Check process is still alive
-    local pidfile
-    pidfile="$(pid_file "$port")"
-    if [[ -f "$pidfile" ]]; then
-      local pid
-      pid="$(cat "$pidfile")"
-      if ! kill -0 "$pid" 2>/dev/null; then
-        echo "[farm] ERROR: $name process (pid $pid) died. Check /tmp/mekong-farm-${port}.log"
-        return 1
-      fi
-    fi
-
-    sleep "$HEALTH_INTERVAL"
-    elapsed=$((elapsed + HEALTH_INTERVAL))
+    sleep 1
+    elapsed=$((elapsed + 1))
   done
 
-  echo "[farm] ERROR: $name did not become healthy within ${HEALTH_TIMEOUT}s"
-  return 1
+  echo "[farm] ERROR: Ollama failed to start within 30s"
+  exit 1
 }
 
-# --- Start all servers ---
+pull_model() {
+  local model="$1"
+  if ollama list 2>/dev/null | grep -q "^${model}"; then
+    echo "[farm] Model $model already pulled"
+    return
+  fi
+  echo "[farm] Pulling $model (this may take a while)..."
+  ollama pull "$model"
+}
 
-echo "[farm] === Mekong Engine Farm — Starting ==="
+warm_model() {
+  local model="$1"
+  if ollama ps 2>/dev/null | grep -q "${model}"; then
+    echo "[farm] Model $model already loaded in memory"
+    return
+  fi
+  echo "[farm] Warming $model into unified memory..."
+  curl -sf "${OLLAMA_API}/api/generate" \
+    -d "{\"model\":\"${model}\",\"prompt\":\"hi\",\"stream\":false}" \
+    >/dev/null 2>&1 || true
+  echo "[farm] Model $model warmed"
+}
 
-if $SHARE_REASONING; then
-  echo "[farm] --share-reasoning: using CashClaw DeepSeek R1 on port $REASONING_PORT"
-  echo "[farm] Skipping local reasoning server startup (saves ~18GB RAM)"
-fi
+# --- Resolve models based on MEKONG_ENV ---
 
-start_server "router" "$ROUTER_MODEL" "$ROUTER_PORT" "$ROUTER_MAX_TOKENS" "$ROUTER_CONTEXT"
+resolve_models() {
+  if [[ "${MEKONG_ENV}" == "production" ]]; then
+    ROUTER_MODEL="$PROD_ROUTER_MODEL"
+    REASONING_MODEL="$PROD_REASONING_MODEL"
+    AUDIT_MODEL="$PROD_AUDIT_MODEL"
+    echo "[farm] Mode: PRODUCTION (lightweight models for B2B)"
+  else
+    ROUTER_MODEL="$DEV_ROUTER_MODEL"
+    REASONING_MODEL="$DEV_REASONING_MODEL"
+    AUDIT_MODEL="$DEV_AUDIT_MODEL"
+    echo "[farm] Mode: DEVELOPMENT (full-power models)"
+  fi
+}
 
-if ! $SHARE_REASONING; then
-  start_server "reasoning" "$REASONING_MODEL" "$REASONING_PORT" "$REASONING_MAX_TOKENS" "$REASONING_CONTEXT"
-fi
+# --- Main ---
 
-start_server "audit" "$AUDIT_MODEL" "$AUDIT_PORT" "$AUDIT_MAX_TOKENS" "$AUDIT_CONTEXT"
+echo "[farm] === Mekong Engine Farm — Ollama MLX ==="
+echo "[farm] MEKONG_ENV=${MEKONG_ENV}"
 
-# --- Health checks (sequential — each model loads large weights) ---
+check_ollama
+ensure_ollama_serving
+resolve_models
 
-wait_healthy "router"    "$ROUTER_PORT"    || exit 1
-wait_healthy "reasoning" "$REASONING_PORT" || exit 1
-wait_healthy "audit"     "$AUDIT_PORT"     || exit 1
+echo ""
+echo "[farm] --- Pulling models ---"
+pull_model "$ROUTER_MODEL"
+pull_model "$REASONING_MODEL"
+pull_model "$AUDIT_MODEL"
 
-echo "[farm] === All servers healthy ==="
-echo "[farm]   router    http://${FARM_HOST}:${ROUTER_PORT}"
-if $SHARE_REASONING; then
-  echo "[farm]   reasoning http://${FARM_HOST}:${REASONING_PORT} (SHARED from CashClaw)"
-else
-  echo "[farm]   reasoning http://${FARM_HOST}:${REASONING_PORT}"
-fi
-echo "[farm]   audit     http://${FARM_HOST}:${AUDIT_PORT}"
+echo ""
+echo "[farm] --- Warming models into unified memory ---"
+warm_model "$ROUTER_MODEL"
+warm_model "$REASONING_MODEL"
+
+echo ""
+echo "[farm] === Engine Farm Ready ==="
+echo "[farm]   API:       ${OLLAMA_API}/v1"
+echo "[farm]   Router:    ${ROUTER_MODEL}"
+echo "[farm]   Reasoning: ${REASONING_MODEL}"
+echo "[farm]   Audit:     ${AUDIT_MODEL}"
+echo "[farm]   Env:       ${MEKONG_ENV}"
+echo ""
+echo "[farm] OpenAI-compatible endpoint: ${OLLAMA_API}/v1/chat/completions"

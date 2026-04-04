@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-04-04 - Engine Farm Ollama Refactor & Phase 21 Completion)
+
+#### Infrastructure & LLM
+- **Engine Farm Migration:** Refactored from python3.11 mlx_lm to Ollama 0.20+ infrastructure
+  - ide-core/engine-farm/ now fully compatible with Ollama API endpoints
+  - TypeScript config: ide-core/cli-ts/env.ts with MEKONG_ENV model routing
+  - Provider flag: mekong provider → Ollama port 11434 (providerFlag.ts)
+- **M1 Max LLM Setup:** Ollama 0.20.0 installed on 192.168.11.111
+  - Models deployed: qwen2.5-coder:7b, qwen2.5:14b, qwen2.5-coder:32b
+  - API verified: http://127.0.0.1:11434/v1 (OpenAI-compatible endpoints)
+- **Farm Start Script:** bin/start_mekong_farm.sh (--dev/--prod flags for environment-aware startup)
+
+#### Build & Testing
+- **Test Results:** 845 tests passed; 1 pre-existing failure in test_executor.py (unrelated)
+- **Package Scripts:** Added farm:start, farm:stop, build:prod to package.json
+- **Stability:** All Ollama API calls verified; model pulling automated
+
+#### Benefits
+- Unified LLM serving via OpenAI-compatible Ollama API
+- Multi-model support (7b, 14b, 32b Qwen variants)
+- Off-device inference for resource-constrained environments
+- Fallback capability for cloud API downtime
+
 ### Changed (2026-03-23 - Phase 1 & Phase 6 Launch Hardening)
 
 #### Critical Fixes
