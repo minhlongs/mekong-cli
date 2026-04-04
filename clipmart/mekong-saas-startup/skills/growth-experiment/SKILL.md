@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Growth experiment — experiment design then metrics framework. 2 commands, ~10 min."
-argument-hint: [hypothesis-or-growth-area]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /growth:experiment — Growth Experiment
 

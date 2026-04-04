@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Performance and load testing with k6"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /qa:perf — Performance Testing
 

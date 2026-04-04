@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Meeting minutes and action item tracking"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /board:minutes — Board Minutes
 

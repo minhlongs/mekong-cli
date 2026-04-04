@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Multi-touch attribution and channel ROI"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /revops:attribution — Attribution Analysis
 

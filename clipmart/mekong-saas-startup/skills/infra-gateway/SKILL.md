@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "API gateway configuration — routes, auth, rate limiting"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /infra:gateway — API Gateway
 

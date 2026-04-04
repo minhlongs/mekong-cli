@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "AR aging assessment, overdue invoice list, reminder emails, follow-up schedule. 3 commands, ~10 min."
-argument-hint: [aging threshold or client segment]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /finance:collections — Collections Pipeline
 

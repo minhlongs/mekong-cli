@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Territory planning and quota allocation"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /revops:territory — Territory Planning
 

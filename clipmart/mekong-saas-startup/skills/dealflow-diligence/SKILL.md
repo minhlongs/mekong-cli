@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Run due diligence pipeline — market, team, tech, financial analysis. 1 command, ~10 min."
-argument-hint: [deal-id --depth=quick|standard|deep]
-allowed-tools: Bash
----
 
 # /dealflow:diligence — Due Diligence Pipeline
 

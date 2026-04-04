@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "AI-powered founder-idea matching — pair founders with validated opportunities. 1 command, ~8 min."
-argument-hint: [--founder-id=id or --idea="sector/concept"]
-allowed-tools: Bash
----
 
 # /match:founder-idea — Founder-Idea Matching
 

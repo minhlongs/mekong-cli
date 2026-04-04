@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Map infrastructure topology — services, dependencies, traffic"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /infra:topology — Infra Topology
 

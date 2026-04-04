@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Dependency scan → code audit → config review → remediation plan. 3 commands, ~20 min."
-argument-hint: [ops context or goal]
----
 
 # Security Audit
 

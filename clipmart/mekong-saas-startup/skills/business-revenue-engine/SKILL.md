@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Build complete revenue pipeline — leads, CRM, sales, invoicing, analytics. 7 commands, ~40 min."
-argument-hint: [business context or goal]
----
 
 # Revenue Engine Setup
 

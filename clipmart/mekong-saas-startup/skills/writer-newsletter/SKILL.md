@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Newsletter pipeline — draft content then generate subject lines. 2 commands, ~8 min."
-argument-hint: [newsletter-topic-or-audience]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /writer:newsletter — Newsletter Pipeline
 

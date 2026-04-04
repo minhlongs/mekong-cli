@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Init → install deps → configure MCP → verify environment setup"
-argument-hint: [environment name or target]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /platform:environment-setup — Environment Setup
 

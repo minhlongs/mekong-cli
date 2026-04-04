@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "CRO bundle — landing page, form, checkout optimization (Ch.4 形勢)"
-argument-hint: [page-url or funnel-step to optimize]
----
 
 # Marketing CRO - Conversion Rate Optimization Bundle
 

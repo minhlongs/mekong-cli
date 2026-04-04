@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show project priority matrix — ranked by business impact (ROI + maturity + activity)"
-argument-hint: [--top=5 | --all]
-allowed-tools: Bash
----
 
 # /project-matrix — Project Priority Ranking
 

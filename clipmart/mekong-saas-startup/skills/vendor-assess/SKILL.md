@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Risk tiering and SOC 2 verification"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /vendor:assess — Vendor Assessment
 

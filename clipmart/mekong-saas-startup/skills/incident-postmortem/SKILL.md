@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Structured blameless postmortem generation"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /incident:postmortem — Postmortem Generator
 **IC super command** — Structured blameless postmortem generation
 ## Pipeline

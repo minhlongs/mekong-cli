@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "System-wide health audit — services, security, performance, sync status. 5 commands, ~15 min."
-argument-hint: [ops context or goal]
----
 
 # Full Health Sweep
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SDK publishing and compatibility matrix"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /devrel:sdk — SDK Publishing
 

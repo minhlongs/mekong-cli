@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "API key provisioning, rotation, and revocation"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /gateway:key — API Key Management
 **IC super command** — API key provisioning, rotation, and revocation
 ## Pipeline

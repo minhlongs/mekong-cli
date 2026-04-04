@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Marketing Constitution — universal marketing command for all projects"
-argument-hint: [task --location=LOCATION --business=BUSINESS_NAME]
----
 
 # Marketing Constitution - Universal Marketing Command
 

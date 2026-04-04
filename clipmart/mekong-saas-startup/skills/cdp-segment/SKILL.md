@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Dynamic customer segmentation by behavior and value"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /cdp:segment — Customer Segmentation
 **IC super command** — Dynamic customer segmentation by behavior and value
 ## Pipeline

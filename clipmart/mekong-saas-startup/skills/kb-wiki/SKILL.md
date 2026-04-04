@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Internal wiki creation, organization, and search"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /kb:wiki — Wiki Management
 **IC super command** — Internal wiki creation, organization, and search
 ## Pipeline

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Warehouse administration and cost monitoring"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /data:warehouse — Warehouse Admin
 

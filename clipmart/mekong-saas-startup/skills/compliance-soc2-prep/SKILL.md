@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SOC2 prep — audit, policy, IAM review, compliance report"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /compliance:soc2-prep — SOC2 Preparation
 

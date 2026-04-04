@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Incident response orchestration. 8 credits, ~20 min."
-argument-hint: [project or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /cto:incident — Incident Response
 

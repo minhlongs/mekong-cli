@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show CTO brain evolution history — what it learned over time, strategy changes"
-argument-hint: [--last=10 | --all]
-allowed-tools: Bash
----
 
 # /brain-evolution-log — Brain Evolution History
 

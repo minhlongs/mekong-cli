@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Run all CTO factory tests — unit + integration + dry-run as health check"
-argument-hint: [--verbose]
-allowed-tools: Bash
----
 
 # /cto-selftest — CTO System Health Check
 

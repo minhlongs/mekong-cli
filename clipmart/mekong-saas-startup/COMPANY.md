@@ -1,6 +1,6 @@
 ---
 name: Mekong SaaS Startup
-description: Full AI-operated SaaS company — 22 departments, 323 commands, Binh Pháp governance
+description: Full AI-operated SaaS company — 22 departments, 348 commands, Binh Pháp governance
 version: 1.0.0
 schema: agent-company/v1
 authors:
@@ -20,7 +20,7 @@ tags:
 
 # Mekong SaaS Startup
 
-A complete AI company template with **22 departments**, **323 operational skills**,
+A complete AI company template with **22 departments**, **348 operational skills**,
 and **Binh Pháp governance** — ready to run on Paperclip.
 
 Unlike generic templates that leave agents without operational knowledge,

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Multi-channel marketing campaign — content, ads, email, social, SEO. 6 commands, ~35 min."
-argument-hint: [business context or goal]
----
 
 # Campaign Launch
 

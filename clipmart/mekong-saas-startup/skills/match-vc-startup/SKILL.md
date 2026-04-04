@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Match VC investors to portfolio company for follow-on/co-invest. 1 command, ~5 min."
-argument-hint: [company-slug]
-allowed-tools: Bash
----
 
 # /match:vc-startup — VC-Startup Matching
 

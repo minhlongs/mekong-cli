@@ -2,7 +2,7 @@
 
 ## What's Included
 
-**22 AI agents** organized into 5 teams, powered by **323 operational skills**
+**22 AI agents** organized into 5 teams, powered by **348 operational skills**
 and governed by **13 Binh Pháp (Sun Tzu) chapters**.
 
 ### Org Chart

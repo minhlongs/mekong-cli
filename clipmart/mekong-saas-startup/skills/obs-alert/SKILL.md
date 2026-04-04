@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Alert rule creation, routing, and silencing"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /obs:alert — Alert Management
 **IC super command** — Alert rule creation, routing, and silencing
 ## Pipeline

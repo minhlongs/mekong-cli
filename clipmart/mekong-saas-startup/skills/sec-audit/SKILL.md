@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Continuous compliance monitoring (SOC2/ISO27001)"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sec:audit — Compliance Audit
 

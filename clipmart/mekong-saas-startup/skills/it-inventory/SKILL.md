@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SaaS discovery, license tracking, shadow IT detection"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /it:inventory — IT Inventory
 

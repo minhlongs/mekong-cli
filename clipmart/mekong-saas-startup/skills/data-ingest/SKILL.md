@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Pipeline orchestration with Fivetran/Airbyte connectors"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /data:ingest — Data Ingestion
 

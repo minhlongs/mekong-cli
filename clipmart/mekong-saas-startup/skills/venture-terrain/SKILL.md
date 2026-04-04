@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Sun Tzu terrain analysis (地形篇) for market/sector. 1 command, ~8 min."
-argument-hint: [market-or-sector]
-allowed-tools: Bash
----
 
 # /venture:terrain — Sun Tzu Terrain Analysis
 

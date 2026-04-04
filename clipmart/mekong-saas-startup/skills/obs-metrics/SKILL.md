@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Metrics collection, dashboards, and alerting"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /obs:metrics — Metrics Dashboard
 **IC super command** — Metrics collection, dashboards, and alerting
 ## Pipeline

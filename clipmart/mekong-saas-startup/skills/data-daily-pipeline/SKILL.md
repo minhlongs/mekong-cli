@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Daily pipeline — ingest, transform, quality check"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /data:daily-pipeline — Daily Data Pipeline
 

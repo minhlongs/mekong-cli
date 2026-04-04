@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Cross-portfolio analytics — performance, patterns, intelligence. 1 command, ~8 min."
-argument-hint: [--period=weekly|monthly|quarterly]
-allowed-tools: Bash
----
 
 # /portfolio:report — Cross-Portfolio Analytics Report
 

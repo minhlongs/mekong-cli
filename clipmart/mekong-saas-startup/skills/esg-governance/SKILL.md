@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "ESG governance framework maintenance"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /esg:governance — ESG Governance
 

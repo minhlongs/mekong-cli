@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "PR review — code review and security check in parallel, 10 min"
-argument-hint: [PR number or branch name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /dev:pr-review — PR Review
 

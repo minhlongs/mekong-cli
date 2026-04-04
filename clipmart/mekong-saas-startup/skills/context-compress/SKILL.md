@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Auto-compact and compress context to fit window"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /context:compress — Context Compress
 

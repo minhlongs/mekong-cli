@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Reserved instance management and rightsizing"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /finops:optimize — Cloud Optimize
 

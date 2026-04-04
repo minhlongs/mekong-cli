@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Channel metrics, SEO health audit, ROI analysis, optimization recommendations. 3 commands, ~15 min."
-argument-hint: [time period or channel to audit]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /marketing:performance-report — Marketing Performance
 

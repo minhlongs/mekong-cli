@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audit components, check consistency, flag issues. 2 commands, ~8 min."
-argument-hint: [component, page, or design system to review]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ui:design-review — Design Review
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backup → test restore → verify integrity → document. 3 commands, ~15 min."
-argument-hint: [ops context or goal]
----
 
 # Disaster Recovery Test
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Funnel analysis and feature adoption tracking"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:analytics — Product Analytics
 

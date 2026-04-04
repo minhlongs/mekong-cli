@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "IT General Controls testing"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /audit:itgc — ITGC Testing
 

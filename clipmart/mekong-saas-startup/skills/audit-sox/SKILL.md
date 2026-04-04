@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SOX ICFR testing — walkthroughs, control design, OE"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /audit:sox — SOX Testing
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "API audit → schema review → dependency analysis → improvement plan"
-argument-hint: [system or component to review]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /tech:architecture-review — Architecture Review
 

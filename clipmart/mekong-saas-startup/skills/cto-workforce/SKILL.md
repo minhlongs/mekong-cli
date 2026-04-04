@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show CTO workforce — registered workers, project states, throughput per pane"
-argument-hint: [--detailed | --throughput]
-allowed-tools: Bash
----
 
 # /cto-workforce — CTO Workforce Dashboard
 

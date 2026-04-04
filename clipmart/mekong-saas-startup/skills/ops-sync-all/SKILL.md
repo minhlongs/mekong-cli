@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Sync everything in parallel — agents, skills, MCP, artifacts, rules. 6 commands, ~10 min."
-argument-hint: [ops context or goal]
----
 
 # Full System Sync
 

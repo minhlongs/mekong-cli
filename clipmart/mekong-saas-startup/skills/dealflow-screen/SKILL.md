@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Screen deal against investment thesis — five-factor quick eval. 1 command, ~5 min."
-argument-hint: [deal-id or --all-new]
-allowed-tools: Bash
----
 
 # /dealflow:screen — Deal Screening
 

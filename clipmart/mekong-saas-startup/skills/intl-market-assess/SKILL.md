@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Market entry analysis per country"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intl:market-assess — Market Assessment
 

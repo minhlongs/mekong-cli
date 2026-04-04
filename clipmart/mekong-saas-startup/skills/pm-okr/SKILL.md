@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Set/review OKRs and key results. 3 credits, ~10 min."
-argument-hint: [task or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:okr — OKR Review
 

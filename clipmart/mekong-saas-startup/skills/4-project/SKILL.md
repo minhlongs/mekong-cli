@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Tứ Đại Chiến — 4 projects parallel dispatch. Start master view, dispatch missions, monitor status."
-argument-hint: [start|stop|status|attach|dispatch <project> "mission"|all "mission"]
----
 
 # Tứ Đại Chiến — 4 Projects Parallel
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Onboard new project to OpenClaw. 8 credits, ~30 min."
-argument-hint: [project or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /cto:onboard — Project Onboarding
 

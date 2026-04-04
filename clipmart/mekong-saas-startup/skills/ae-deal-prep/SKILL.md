@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Deal prep — company research + competitive positioning, then proposal talking points. 3 commands, ~12 min."
-argument-hint: [company-name-or-deal-description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ae:deal-prep — Deal Prep
 

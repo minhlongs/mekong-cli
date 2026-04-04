@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Vulnerability management lifecycle"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sec:vuln — Vulnerability Management
 

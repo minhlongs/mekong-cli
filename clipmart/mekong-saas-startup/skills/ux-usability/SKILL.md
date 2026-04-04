@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Usability test — test plan, task scenarios, findings, recommendations in 10 min"
-argument-hint: [feature or flow to test]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ux:usability — Usability Test
 

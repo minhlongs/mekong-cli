@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Trace execution flow for debugging complex issues"
-argument-hint: [entry-point] [issue-description]
----
 
 # /worker-trace — Worker Operation
 

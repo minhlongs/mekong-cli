@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Sprint planning — backlog to sprint tasks. 3 credits, ~15 min."
-argument-hint: [task or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:sprint — Sprint Planning
 

@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Health check: build status, test results, dependency audit"
-argument-hint: [project-name]
----
 
 # /worker-health — Worker Operation
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "OpenClaw Escalation Policy — all commands mapped to L0-L3 autonomy levels"
-argument-hint: [level or command-name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /escalation:map — Escalation Policy
 

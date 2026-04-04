@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full portfolio ROI audit across all projects. Delegates cto:review per project. 10 credits, ~60 min."
-argument-hint: [context or goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:audit — Portfolio Audit
 

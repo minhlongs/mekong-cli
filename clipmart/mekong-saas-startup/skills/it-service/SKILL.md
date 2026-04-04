@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "IT service management — requests, incidents, changes"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /it:service — IT Service Management
 

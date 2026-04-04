@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Cloud cost allocation per customer and feature"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /finops:cost — Cloud Cost
 

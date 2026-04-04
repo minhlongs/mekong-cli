@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Recruiting pipeline — JD → sourcing → interview kit → offer template"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /hr:recruit — Recruiting Pipeline
 

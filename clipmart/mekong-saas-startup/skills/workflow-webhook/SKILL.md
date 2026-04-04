@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Incoming and outgoing webhook management"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /workflow:webhook — Webhook Management
 **IC super command** — Incoming and outgoing webhook management
 ## Pipeline

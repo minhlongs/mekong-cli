@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Generate investor report (weekly/monthly). 5 credits, ~20 min."
-argument-hint: [context or goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:report — Investor Report
 

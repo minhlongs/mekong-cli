@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Changelog → version bump → test → tag → deploy production release"
-argument-hint: [version or release notes]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /release:ship — Ship Release
 

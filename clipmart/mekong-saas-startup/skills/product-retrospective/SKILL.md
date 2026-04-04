@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Review sprint → gather feedback → improvement plan → next sprint prep. 3 commands, ~15 min."
-argument-hint: [product context or goal]
----
 
 # Sprint Retrospective
 

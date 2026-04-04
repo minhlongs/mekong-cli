@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Region and edge deployment planning — latency, compliance, cost"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /infra:region — Region Planning
 

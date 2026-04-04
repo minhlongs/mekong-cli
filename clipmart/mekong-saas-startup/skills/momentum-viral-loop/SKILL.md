@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Design and measure viral loops — K-factor, cycle time"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /momentum:viral-loop — Viral Loop Design
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "End-to-end test execution with Playwright"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /qa:e2e — E2E Tests
 

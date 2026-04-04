@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Exploit information asymmetry for competitive advantage"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /intel:asymmetry — Info Asymmetry
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Plan parallel → implement features → test all → review → ship"
-argument-hint: [sprint goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /eng:sprint-execute — Sprint Execution
 

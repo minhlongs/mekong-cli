@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SRE incident — triage, mitigate, verify, report in 10 min"
-argument-hint: [incident description or affected service]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sre:incident — Incident Response
 

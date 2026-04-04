@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Enterprise risk library and scoring"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /risk:assess — Risk Assessment
 

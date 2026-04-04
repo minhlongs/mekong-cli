@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Daily cash position across all accounts"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /treasury:position — Cash Position
 

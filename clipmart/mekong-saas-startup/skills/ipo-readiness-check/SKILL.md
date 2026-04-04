@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "IPO readiness — SOX cycle, investor metrics, disclosure check, then S-1 narrative"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ipo:readiness-check — IPO Readiness Check
 

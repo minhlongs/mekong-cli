@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audit → plan → refactor → test → verify. Safe large-scale refactoring. 5 commands, ~40 min."
-argument-hint: [engineering context or goal]
----
 
 # Refactor Pipeline
 

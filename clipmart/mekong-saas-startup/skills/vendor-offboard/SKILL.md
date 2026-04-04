@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Vendor decommissioning and data deletion"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /vendor:offboard — Vendor Offboard
 

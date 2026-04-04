@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Frontend UI build — component, styling, responsive, test in 12 min"
-argument-hint: [component or UI feature name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /frontend:ui-build — UI Build
 

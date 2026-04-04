@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Network effect analysis — density, clustering, value curves"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /momentum:network — Network Effects
 

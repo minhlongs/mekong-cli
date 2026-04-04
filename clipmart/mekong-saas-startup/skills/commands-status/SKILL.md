@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show command health — dispatch count, success rate, avg duration from factory-metrics.log"
-argument-hint: [--all | command-name | --top=10]
-allowed-tools: Bash, Read
----
 
 # /commands-status — Command Health Dashboard
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Release post-release — smoke prod, health check, announce in 5 min"
-argument-hint: [version number or release notes]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /releng:post-release — Post-Release
 

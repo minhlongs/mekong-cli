@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Customer journey mapping and optimization"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /cdp:journey — Journey Mapping
 **IC super command** — Customer journey mapping and optimization
 ## Pipeline

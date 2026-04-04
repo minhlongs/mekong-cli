@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Write code for a specific task — focused single-file implementation"
-argument-hint: [file-path] [task]
----
 
 # /worker-code — Worker Operation
 

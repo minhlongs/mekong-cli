@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "SEO research, content calendar, blog drafts, social posts, email sequences. 5 commands, ~35 min."
-argument-hint: [topic or product to promote]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /marketing:content-engine — Content Engine
 

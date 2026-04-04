@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Portfolio company health dashboard — metrics, momentum, alerts. 1 command, ~3 min."
-argument-hint: [company-slug or --all]
-allowed-tools: Bash
----
 
 # /portfolio:status — Portfolio Health Dashboard
 

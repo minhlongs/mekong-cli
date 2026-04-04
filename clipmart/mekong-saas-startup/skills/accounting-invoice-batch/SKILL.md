@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Generate invoices, send reminders, update AR. 2 commands, ~8 min."
-argument-hint: [client batch or billing period]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /accounting:invoice-batch — Invoice Batch Processing
 

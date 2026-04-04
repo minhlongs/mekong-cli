@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Full refresh — ingest, transform, quality, catalog in parallel, then metrics"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /data:full-refresh — Full Data Refresh
 

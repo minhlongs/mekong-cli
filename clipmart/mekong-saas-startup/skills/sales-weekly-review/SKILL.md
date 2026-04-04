@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Pipeline health, revenue tracking, weekly forecast and action items. 3 commands, ~10 min."
-argument-hint: [week or date range]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sales:weekly-review — Sales Weekly Review
 

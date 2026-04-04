@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Data pull, analysis, executive summary. 2 commands, ~12 min."
-argument-hint: [market, segment, or topic to analyze]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /analyst:report — Analyst Report
 

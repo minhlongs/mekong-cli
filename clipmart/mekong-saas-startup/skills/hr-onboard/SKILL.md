@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Employee onboarding — welcome kit → access setup → 30-60-90 plan → buddy assignment"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /hr:onboard — Employee Onboarding
 

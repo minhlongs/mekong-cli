@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Board prep — meeting management, metrics, risk report in parallel, then minutes"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ipo:board-prep — IPO Board Prep
 

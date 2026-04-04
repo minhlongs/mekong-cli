@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Requirements → schema → OpenAPI spec → implementation plan"
-argument-hint: [API or feature to design]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /tech:api-design — API Design
 

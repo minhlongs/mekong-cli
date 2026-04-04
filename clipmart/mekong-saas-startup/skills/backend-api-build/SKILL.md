@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backend API build — schema, implement, test, docs. Full API cycle in 12 min"
-argument-hint: [API endpoint or resource name]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /backend:api-build — API Build
 

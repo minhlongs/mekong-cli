@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Pull actuals, compare, update model, variance report. 2 commands, ~8 min."
-argument-hint: [period or model to update]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /analyst:forecast-update — Forecast Update
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Resume analysis, score candidates, interview questions. 2 commands, ~8 min."
-argument-hint: [candidate name or batch]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /recruiter:screen — Candidate Screening
 

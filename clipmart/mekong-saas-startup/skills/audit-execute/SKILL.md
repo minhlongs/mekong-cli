@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Fieldwork tracking and evidence collection"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /audit:execute — Audit Execution
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Daily standup report. 1 credit, ~5 min."
-argument-hint: [task or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /pm:standup — Daily Standup
 

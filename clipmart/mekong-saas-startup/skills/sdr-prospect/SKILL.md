@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Prospecting sprint — ICP match + lead research in parallel. 2 commands, ~10 min."
-argument-hint: [target-market-or-icp-description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /sdr:prospect — Prospecting Sprint
 

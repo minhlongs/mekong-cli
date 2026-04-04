@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Analyze term sheet + model dilution + plan negotiation strategy. 4 commands, ~20 min."
-argument-hint: [founder context or goal]
----
 
 # Deal Negotiation Kit
 

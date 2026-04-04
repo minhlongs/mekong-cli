@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Frontend responsive fix — audit breakpoints, fix issues, test viewports in 8 min"
-argument-hint: [page or component with responsive issues]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /frontend:responsive-fix — Responsive Fix
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show CTO brain intelligence — command effectiveness, output patterns, learning insights"
-argument-hint: [--detailed | --project=name]
-allowed-tools: Bash, Read
----
 
 # /factory-intelligence — CTO Brain Intelligence Report
 

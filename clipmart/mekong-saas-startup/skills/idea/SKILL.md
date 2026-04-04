@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "MANDATORY first step — Generate full company architecture from a business idea before OpenClaw runs the 5-layer command system. Zero→IPO Agentic BizPlan OS."
-argument-hint: "<your business idea in 1-3 sentences>"
----
 
 # /idea — Agentic BizPlan OS: Zero→IPO Company Architecture Generator
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Log and track important business and technical decisions"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /kb:decision — Decision Log
 **IC super command** — Log and track important business and technical decisions
 ## Pipeline

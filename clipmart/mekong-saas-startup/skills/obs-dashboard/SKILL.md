@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Unified observability dashboard — traces + metrics + logs"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 # /obs:dashboard — Observability Dashboard
 **IC super command** — Unified observability dashboard — traces + metrics + logs
 ## Pipeline

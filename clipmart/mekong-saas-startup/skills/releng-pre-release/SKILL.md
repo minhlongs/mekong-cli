@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Release pre-release — full test suite, changelog, version bump, tag in 10 min"
-argument-hint: [version number e.g. v1.2.0]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /releng:pre-release — Pre-Release
 

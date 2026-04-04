@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: ⚔️ Binh Pháp - Strategic execution framework (plan → implement → verify → ship)
-argument-hint: [action] [task-description] — actions: plan|implement|verify|ship
----
 
 **Ultrathink** and execute Binh Pháp strategic framework based on the action provided:
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Dev review command. Delegates to worker level."
-argument-hint: [feature or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /dev:review — Developer Level
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Feature build — plan, code, test, PR. Full feature cycle in 15 min"
-argument-hint: [feature description]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /dev:feature — Feature Build
 

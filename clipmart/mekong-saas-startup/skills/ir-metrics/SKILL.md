@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Automated SaaS metrics for investors — ARR, NRR, Rule of 40"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /ir:metrics — Investor Metrics
 

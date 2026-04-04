@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Performance review cycle — self-assessment → manager review → calibration → feedback delivery"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /hr:performance-cycle — Performance Review Cycle
 

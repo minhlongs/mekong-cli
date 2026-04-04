@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Backlog grooming → sprint scope → task breakdown → assignments. 4 commands, ~20 min."
-argument-hint: [product context or goal]
----
 
 # Sprint Planning
 

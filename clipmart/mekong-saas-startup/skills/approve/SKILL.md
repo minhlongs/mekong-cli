@@ -6,8 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: Approve pending content, decisions, or deployments
----
 
 # /approve Command
 

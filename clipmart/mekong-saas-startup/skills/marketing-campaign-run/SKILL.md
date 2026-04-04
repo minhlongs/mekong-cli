@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Audience targeting, ad creatives, channel strategy, campaign launch checklist. 4 commands, ~25 min."
-argument-hint: [campaign goal or product]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /marketing:campaign-run — Campaign Execution
 

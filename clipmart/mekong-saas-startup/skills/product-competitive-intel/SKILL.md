@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Market scan + competitor deep dive + positioning strategy. 4 commands, ~25 min."
-argument-hint: [product context or goal]
----
 
 # Competitive Intelligence
 

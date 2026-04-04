@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Social batch — 7-day posts + posting schedule in parallel. 2 commands, ~10 min."
-argument-hint: [brand-or-content-theme]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /writer:social-batch — Social Batch
 

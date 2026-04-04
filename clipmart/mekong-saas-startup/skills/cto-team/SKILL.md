@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Team capacity planning and task routing. 3 credits, ~10 min."
-argument-hint: [project or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /cto:team — Team Planning
 

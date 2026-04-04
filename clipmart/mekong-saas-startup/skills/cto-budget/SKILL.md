@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "MCU budget allocation within project. 3 credits, ~10 min."
-argument-hint: [project or context]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /cto:budget — Budget Allocation
 

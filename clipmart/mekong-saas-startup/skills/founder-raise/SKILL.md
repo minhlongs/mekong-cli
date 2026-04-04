@@ -6,9 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Complete fundraise preparation — from unit economics to investor targeting. 8 commands, ~45 min."
-argument-hint: [founder context or goal]
----
 
 # Fundraise Pipeline
 

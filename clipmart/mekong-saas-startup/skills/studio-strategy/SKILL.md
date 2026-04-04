@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Strategic planning session. 8 credits, ~30 min."
-argument-hint: [context or goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /studio:strategy — Strategic Planning
 

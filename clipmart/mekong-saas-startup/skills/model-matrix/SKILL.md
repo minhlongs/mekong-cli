@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Show model capabilities matrix — which model for which task type"
-argument-hint: [--recommend "task description"]
-allowed-tools: Bash
----
 
 # /model-matrix — Model Capabilities & Routing
 

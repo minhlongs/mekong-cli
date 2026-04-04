@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Scaffold new RaaS project — generates full Next.js SaaS with auth, billing, dashboard. 1 command, ~15 min."
-argument-hint: [project-name --type saas --stack next+cf]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /raas:scaffold — Generate RaaS SaaS Project
 

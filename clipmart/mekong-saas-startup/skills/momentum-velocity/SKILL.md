@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Track MRR growth rate, user acquisition speed, feature ship rate"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /momentum:velocity — Scaling Velocity
 

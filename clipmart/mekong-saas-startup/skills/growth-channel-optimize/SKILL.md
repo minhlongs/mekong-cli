@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Channel audit, performance analysis, optimization plan. 3 commands, ~12 min."
-argument-hint: [channels or product to optimize]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /growth:channel-optimize — Channel Optimization
 

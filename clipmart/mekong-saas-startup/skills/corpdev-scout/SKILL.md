@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "M&A target identification"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /corpdev:scout — M&A Scout
 

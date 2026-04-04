@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Sustainability reporting with GRI/SASB frameworks"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /esg:report — ESG Report
 

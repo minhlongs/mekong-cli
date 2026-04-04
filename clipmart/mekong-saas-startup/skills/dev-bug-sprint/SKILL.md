@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Bug sprint — debug, fix, test. Batch bug fixes in 15 min"
-argument-hint: [bug description or issue list]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /dev:bug-sprint — Bug Sprint
 

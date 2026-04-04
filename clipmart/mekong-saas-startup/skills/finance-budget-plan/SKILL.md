@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Department budgets, financial forecast, budget allocation and approval deck. 3 commands, ~20 min."
-argument-hint: [fiscal year or quarter]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /finance:budget-plan — Budget Planning
 

@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Define, update, or evaluate investment thesis. 1 command, ~5 min."
-argument-hint: [show|update|evaluate]
-allowed-tools: Bash
----
 
 # /venture:thesis — Investment Thesis Management
 

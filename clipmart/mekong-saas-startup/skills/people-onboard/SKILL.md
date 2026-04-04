@@ -6,10 +6,6 @@ version: 1.0.0
 credit_cost: 2
 ---
 
-description: "Welcome email, access setup, day-1 schedule. 2 commands, ~5 min."
-argument-hint: [new hire name or start date]
-allowed-tools: Read, Write, Bash, Task
----
 
 # /people:onboard — Employee Onboarding
 
