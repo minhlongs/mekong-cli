@@ -2,6 +2,18 @@
 # Mekong CLI only needs 3 vars: LLM_BASE_URL + LLM_API_KEY + LLM_MODEL
 # All providers below are compatible.
 
+# ─── PRIMARY PROVIDER — Antigravity Proxy (OpenClaw Gateway) ─────
+primary:
+  name: antigravity-proxy
+  provider: openclaw
+  base_url: http://localhost:18789/v1
+  model: claude-sonnet-4-20250514
+  timeout: 120
+  retry_count: 3
+  retry_delay: 2
+  note: "Antigravity Proxy via OpenClaw Gateway — routes to Claude/Gemini"
+# ─────────────────────────────────────────────────────────────────
+
 presets:
   # --- CHINA ---
   qwen-coding-plan:
@@ -14,6 +26,14 @@ presets:
     base_url: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
     model: "qwen3-coder-plus"
     note: "International endpoint"
+
+  qwen-image:
+    base_url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis"
+    model: "qwen-image-plus"
+    note: "Qwen Image 20B — text-to-image generation, uses same DASHSCOPE_API_KEY"
+    models:
+      - qwen-image-plus    # Fast, ~¥0.04/image
+      - qwen-image-max     # Highest quality, ~¥0.16/image
 
   deepseek:
     base_url: "https://api.deepseek.com"
@@ -60,11 +80,12 @@ presets:
     model: "deepseek-ai/DeepSeek-V3"
 
   # --- LOCAL (FREE) ---
-  ollama:
-    base_url: "http://localhost:11434/v1"
-    model: "qwen2.5-coder"
-    note: "Free, offline, privacy 100%"
-    setup: "curl -fsSL https://ollama.ai/install.sh | sh && ollama pull qwen2.5-coder"
+  mlx:
+    base_url: "http://localhost:11435/v1"
+    model: "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit"
+    note: "Free, offline, Apple Silicon optimized, full memory bandwidth"
+    setup: "pip install mlx-lm && python -m mlx_lm.server --model mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit --port 11435"
+
 
   lmstudio:
     base_url: "http://localhost:1234/v1"
@@ -76,3 +97,4 @@ presets:
     base_url: "https://api.puter.com/puterai/openai/v1/"
     model: "qwen/qwen3-coder-plus"
     note: "Free, no key needed, rate limited"
+

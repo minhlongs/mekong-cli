@@ -230,7 +230,8 @@ INSERT INTO rate_cards (plan_tier, event_type, model_name, unit, unit_price, inc
 ('growth', 'agent_spawn', NULL, 'spawns', 0.006, 500, 0.008, '2026-01-01', TRUE),
 ('growth', 'model_usage', 'qwen3.5-plus', 'calls', 0.0012, 500, 0.0015, '2026-01-01', TRUE),
 ('growth', 'model_usage', 'qwen3-coder-plus', 'calls', 0.0008, 750, 0.001, '2026-01-01', TRUE),
-('growth', 'model_usage', 'qwen3-max', 'calls', 0.002, 200, 0.003, '2026-01-01', TRUE)
+('growth', 'model_usage', 'qwen3-max', 'calls', 0.002, 200, 0.003, '2026-01-01', TRUE),
+('growth', 'model_usage', 'qwen-image-plus', 'calls', 0.003, 100, 0.004, '2026-01-01', TRUE)
 ON CONFLICT (plan_tier, event_type, model_name, valid_from) DO NOTHING;
 
 -- Premium tier - Professional usage
@@ -242,7 +243,9 @@ INSERT INTO rate_cards (plan_tier, event_type, model_name, unit, unit_price, inc
 ('premium', 'model_usage', 'qwen3.5-plus', 'calls', 0.001, 2000, 0.0012, '2026-01-01', TRUE),
 ('premium', 'model_usage', 'qwen3-coder-plus', 'calls', 0.0006, 3000, 0.0008, '2026-01-01', TRUE),
 ('premium', 'model_usage', 'qwen3-max', 'calls', 0.0015, 1000, 0.002, '2026-01-01', TRUE),
-('premium', 'model_usage', 'qwen-vl-max', 'calls', 0.0025, 500, 0.0035, '2026-01-01', TRUE)
+('premium', 'model_usage', 'qwen-vl-max', 'calls', 0.0025, 500, 0.0035, '2026-01-01', TRUE),
+('premium', 'model_usage', 'qwen-image-plus', 'calls', 0.0025, 500, 0.003, '2026-01-01', TRUE),
+('premium', 'model_usage', 'qwen-image-max', 'calls', 0.012, 100, 0.016, '2026-01-01', TRUE)
 ON CONFLICT (plan_tier, event_type, model_name, valid_from) DO NOTHING;
 
 -- Enterprise tier - Highest limits with best rates
@@ -254,7 +257,9 @@ INSERT INTO rate_cards (plan_tier, event_type, model_name, unit, unit_price, inc
 ('enterprise', 'model_usage', 'qwen3.5-plus', 'calls', 0.0008, 10000, 0.001, '2026-01-01', TRUE),
 ('enterprise', 'model_usage', 'qwen3-coder-plus', 'calls', 0.0005, 15000, 0.0006, '2026-01-01', TRUE),
 ('enterprise', 'model_usage', 'qwen3-max', 'calls', 0.001, 5000, 0.0015, '2026-01-01', TRUE),
-('enterprise', 'model_usage', 'qwen-vl-max', 'calls', 0.002, 2500, 0.0025, '2026-01-01', TRUE)
+('enterprise', 'model_usage', 'qwen-vl-max', 'calls', 0.002, 2500, 0.0025, '2026-01-01', TRUE),
+('enterprise', 'model_usage', 'qwen-image-plus', 'calls', 0.002, 2000, 0.0025, '2026-01-01', TRUE),
+('enterprise', 'model_usage', 'qwen-image-max', 'calls', 0.01, 500, 0.012, '2026-01-01', TRUE)
 ON CONFLICT (plan_tier, event_type, model_name, valid_from) DO NOTHING;
 
 -- ============================================================================

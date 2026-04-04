@@ -6,7 +6,7 @@ import type { ChatRequest, ChatResponse, LlmProvider } from './types.js';
 import type { MekongConfig } from '../types/config.js';
 import { CostTracker } from './cost-tracker.js';
 import { OpenAICompatProvider } from './providers/openai-compatible.js';
-import { OllamaProvider } from './providers/ollama.js';
+import { LocalLLMProvider } from './providers/ollama.js';
 import { AnthropicProvider } from './providers/anthropic.js';
 import { OpenAIProvider } from './providers/openai.js';
 import { LocalProvider } from './providers/local.js';
@@ -171,9 +171,9 @@ export class LlmRouter {
         }
       }
 
-      // Always add Ollama as last-resort local fallback
-      const ollamaUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
-      this.providers.set('ollama', new OllamaProvider(ollamaUrl));
+      // Always add local MLX as last-resort fallback
+      const localUrl = process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
+      this.providers.set('local-llm', new LocalLLMProvider(localUrl));
     }
 
     // CF Workers AI from env (always check, even if other providers exist)
@@ -195,8 +195,10 @@ export class LlmRouter {
         return new AnthropicProvider({ apiKey, baseUrl: baseUrl || undefined, defaultModel });
       case 'openai':
         return new OpenAIProvider({ apiKey, baseUrl: baseUrl || undefined, defaultModel });
+      case 'local-llm':
+      case 'mlx':
       case 'ollama':
-        return new OllamaProvider(baseUrl, defaultModel);
+        return new LocalLLMProvider(baseUrl, defaultModel);
       default:
         if (!baseUrl) throw new MekongError(`Provider "${name}" requires a base URL`, 'PROVIDER_CONFIG_ERROR', false);
         return new OpenAICompatProvider({ name, baseUrl, apiKey, defaultModel });
