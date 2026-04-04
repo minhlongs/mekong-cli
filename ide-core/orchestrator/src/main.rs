@@ -72,7 +72,8 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
     let client = &state.llm_client;
 
     let router_ok = client.is_healthy(cfg.router_port).await;
-    let reasoning_ok = client.is_healthy(cfg.reasoning_port).await;
+    let (r_host, r_port) = cfg.reasoning_endpoint();
+    let reasoning_ok = client.is_healthy_at(r_host, r_port).await;
     let audit_ok = client.is_healthy(cfg.audit_port).await;
 
     let tool_count = state.tool_registry.all_tool_defs().len();
@@ -81,7 +82,7 @@ async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
         "status": if router_ok && reasoning_ok && audit_ok { "healthy" } else { "degraded" },
         "engines": {
             "router": { "port": cfg.router_port, "healthy": router_ok },
-            "reasoning": { "port": cfg.reasoning_port, "healthy": reasoning_ok },
+            "reasoning": { "host": r_host, "port": r_port, "healthy": reasoning_ok },
             "audit": { "port": cfg.audit_port, "healthy": audit_ok }
         },
         "tools": tool_count,

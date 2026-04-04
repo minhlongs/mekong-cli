@@ -153,7 +153,13 @@ async fn auto_compact(
     }];
 
     let summary_resp = client
-        .chat_completion(config.reasoning_port, &summary_prompt, None, 60)
+        .chat_completion_with_host(
+            config.reasoning_endpoint().0,
+            config.reasoning_endpoint().1,
+            &summary_prompt,
+            None,
+            60,
+        )
         .await
         .context("Summary generation failed")?;
 
