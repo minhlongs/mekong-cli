@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
-@import './tokens/md-ref-palette.css';
-@import './tokens/md-sys-color.css';
-@import './tokens/md-sys-shape.css';
-@import './tokens/md-sys-typescale.css';
-@import './tokens/md-sys-elevation.css';
-@import './tokens/md-sys-motion.css';
-@import './tokens/md-sys-state.css';
+@import '../styles/tokens/md-ref-palette.css';
+@import '../styles/tokens/md-sys-color.css';
+@import '../styles/tokens/md-sys-shape.css';
+@import '../styles/tokens/md-sys-typescale.css';
+@import '../styles/tokens/md-sys-elevation.css';
+@import '../styles/tokens/md-sys-motion.css';
+@import '../styles/tokens/md-sys-state.css';
 
 /* M3 Utility Classes (Tailwind-like but Native) */
 .m3-display-large {
