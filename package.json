@@ -29,6 +29,7 @@
     "packages/raas-landing"
   ],
   "scripts": {
+    "start": "uvicorn src.gateway:app --host 0.0.0.0 --port 8000",
     "dev": "MEKONG_ENV=development npx turbo run dev",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
