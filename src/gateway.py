@@ -49,6 +49,7 @@ from src.core.mcu_billing import MCUBilling, MCU_COSTS
 from src.core.webhook_events import WEBHOOK_EVENT_PAYLOADS
 from src.core.api_key_manager import validate_api_key
 from src.raas.missions_api_router import router as raas_router
+from src.raas.revenue_router import router as revenue_router
 
 from src.core.request_logger import RequestLoggerMiddleware
 
@@ -68,6 +69,7 @@ app = FastAPI(
 
 # Mount RaaS API router
 app.include_router(raas_router)
+app.include_router(revenue_router)
 
 # CORS for AgencyOS frontend
 # Security: wildcard origin is incompatible with allow_credentials=True (CORS spec).

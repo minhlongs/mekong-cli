@@ -176,6 +176,21 @@ class TenantStore:
             return None
         return _row_to_tenant(row, api_key=key)
 
+    def find_by_email(self, email: str) -> Optional[Tenant]:
+        """Find tenant by name (used as email lookup)."""
+        try:
+            with self._connect() as conn:
+                row = conn.execute(
+                    "SELECT * FROM tenants WHERE name = ?",
+                    (email,),
+                ).fetchone()
+        except sqlite3.Error as exc:
+            raise RuntimeError(f"Failed to look up tenant by email: {exc}") from exc
+
+        if row is None:
+            return None
+        return _row_to_tenant(row)
+
     def list_tenants(self) -> List[Tenant]:
         """Return all tenants ordered by creation date (oldest first).
 
