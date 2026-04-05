@@ -127,6 +127,49 @@ class CreditStore:
         except sqlite3.Error as exc:
             raise RuntimeError(f"CreditStore.get_balance failed: {exc}") from exc
 
+    def add_credits(self, tenant_id: str, amount: int, reason: str) -> int:
+        """Add credits to a tenant account. Returns new balance."""
+        if amount <= 0:
+            raise ValueError("Credit amount must be positive")
+
+        try:
+            conn = self._connect()
+            try:
+                conn.execute("BEGIN EXCLUSIVE")
+                row = conn.execute(
+                    "SELECT balance FROM credit_accounts WHERE tenant_id = ?",
+                    (tenant_id,),
+                ).fetchone()
+
+                current = int(row["balance"]) if row else 0
+                new_balance = current + amount
+
+                if row:
+                    conn.execute(
+                        "UPDATE credit_accounts "
+                        "SET balance = ?, total_earned = total_earned + ? "
+                        "WHERE tenant_id = ?",
+                        (new_balance, amount, tenant_id),
+                    )
+                else:
+                    conn.execute(
+                        "INSERT INTO credit_accounts "
+                        "(tenant_id, balance, total_earned, total_spent) "
+                        "VALUES (?, ?, ?, 0)",
+                        (tenant_id, new_balance, amount),
+                    )
+
+                self._record_transaction(conn, tenant_id, amount, reason)
+                conn.execute("COMMIT")
+                return new_balance
+            except Exception:
+                conn.execute("ROLLBACK")
+                raise
+            finally:
+                conn.close()
+        except sqlite3.Error as exc:
+            raise RuntimeError(f"CreditStore.add_credits failed: {exc}") from exc
+
     def deduct(self, tenant_id: str, amount: int, reason: str) -> bool:
         """Atomically deduct credits from a tenant account.
 

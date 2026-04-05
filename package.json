@@ -19,6 +19,7 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "npm run dev --workspace=apps/dashboard",
     "dev": "MEKONG_ENV=development npx turbo run dev",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --port 8000",
@@ -37,7 +38,7 @@
     "farm:ab-test": "bash ide-core/engine-farm/ab-test.sh",
     "farm:cutover": "bash ide-core/engine-farm/cutover.sh --yes",
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
-    "start": "npm run dev --workspace=apps/dashboard",
+    "start:api": "uvicorn src.gateway:app --host 0.0.0.0 --port 8000",
     "start:landing": "npx serve apps/landing -l 3001",
     "health": "bash scripts/health-check.sh"
   },
