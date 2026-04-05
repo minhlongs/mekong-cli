@@ -22,6 +22,7 @@ from src.core.cost_estimator import estimate_cost, CostEstimate
 from src.core.mcu_gate import MCUGate
 from src.core.agent_dispatcher import build_message_chain
 from src.core.fallback_chain import execute_with_fallback
+from src.core.command_loader import find_best_command, build_system_prompt
 from src.core.context_flow import ContextFlow
 from src.core.subagent_reviewer import SubagentReviewer
 from src.core.llm_client import get_client
@@ -108,6 +109,18 @@ async def route_and_execute(
         agent_roles if is_multi_agent else "no",
     )
 
+    # ── STAGE 1.5: LOAD MATCHING COMMAND ────────────────────────
+    matched_command = find_best_command(goal, agent_role=profile.agent_role, domain=profile.domain)
+    command_system_prompt = None
+    if matched_command:
+        command_system_prompt = build_system_prompt(matched_command, goal)
+        logger.info(
+            "Stage 1.5 — Command matched: %s (injecting as system prompt)",
+            matched_command.id,
+        )
+    else:
+        logger.info("Stage 1.5 — No matching command found, using default prompt")
+
     # ── STAGE 2: MCU CHECK + LOCK ─────────────────────────────
     gate = mcu_gate or MCUGate(":memory:")
     lock_result = gate.check_and_lock(tenant_id, mission_id, profile.mcu_cost)
@@ -163,7 +176,7 @@ async def route_and_execute(
                 exec_result = await execute_with_fallback(
                     model_config=model_config,
                     messages=messages,
-                    system_prompt=system_prompt,
+                    system_prompt=command_system_prompt or system_prompt,
                     on_token_cb=on_token,
                     data_sensitivity=profile.data_sensitivity,
                 )
@@ -219,7 +232,7 @@ async def route_and_execute(
             exec_result = await execute_with_fallback(
                 model_config=model_config,
                 messages=messages,
-                system_prompt=system_prompt,
+                system_prompt=command_system_prompt or system_prompt,
                 on_token_cb=on_token,
                 data_sensitivity=profile.data_sensitivity,
             )

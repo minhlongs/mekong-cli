@@ -16,17 +16,7 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/mekong-cli-core",
-    "packages/mekong-engine",
-    "packages/openclaw-engine",
-    "packages/ui",
-    "packages/tokens",
-    "packages/i18n",
-    "packages/license-sdk",
-    "packages/memory",
-    "packages/observability",
-    "packages/shared",
-    "packages/raas-landing"
+    "packages/*"
   ],
   "scripts": {
     "start": "npm run dev --workspace=apps/dashboard",
@@ -48,9 +38,9 @@
     "farm:ab-test": "bash ide-core/engine-farm/ab-test.sh",
     "farm:cutover": "bash ide-core/engine-farm/cutover.sh --yes",
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
-    "health": "bash scripts/health-check.sh",
     "start:api": "uvicorn src.gateway:app --host 0.0.0.0 --port 8000",
-    "start:landing": "npx serve apps/landing -l 3001"
+    "start:landing": "npx serve apps/landing -l 3001",
+    "health": "bash scripts/health-check.sh"
   },
   "devDependencies": {
     "@types/node": "25.3.3",
@@ -129,6 +119,6 @@
     }
   },
   "bin": {
-    "mekong": "./packages/mekong-cli-core/dist/cli.js"
+    "mekong": "./bin/mekong"
   }
 }

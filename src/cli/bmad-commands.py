@@ -10,7 +10,10 @@ import sys
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from packages.core.bmad.catalog import WorkflowCatalog  # noqa: E402
+try:
+    from packages.core.bmad.catalog import WorkflowCatalog  # noqa: E402
+except ImportError:
+    pass  # packages not available in standalone mode
 from packages.core.bmad.loader import BMADWorkflowLoader  # noqa: E402
 
 app = typer.Typer(name="bmad", help="BMAD workflow management")

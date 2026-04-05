@@ -68,6 +68,19 @@ export LLM_BASE_URL=http://localhost:11434/v1
 mekong cook "Build a Python CLI calculator"
 ```
 
+### Dashboard (IDE)
+
+```bash
+cd apps/dashboard
+cp .env.local.example .env.local
+# Edit .env.local — only SUPABASE vars are required
+npm run dev
+# Open http://localhost:3000
+```
+
+The dashboard runs without payment env vars — Polar and Stripe
+features degrade gracefully when not configured.
+
 ## How It Works
 
 **Plan-Execute-Verify (PEV)** -- the core loop:

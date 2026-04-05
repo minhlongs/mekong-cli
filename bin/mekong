@@ -15,5 +15,5 @@ if [ -f "$SCRIPT_DIR/src/cli/start_command.py" ]; then
 fi
 
 echo "Error: No CLI entry point found."
-echo "Run: cd \"$(dirname "$0")/..\" && npm run dev"
+echo "Run: cd $(dirname $0)/.. && npm run dev"
 exit 1

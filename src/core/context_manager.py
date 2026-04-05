@@ -8,7 +8,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from packages.memory.memory_facade import get_memory_facade
+try:
+    from packages.memory.memory_facade import get_memory_facade
+except ImportError:
+    pass  # packages not available in standalone mode
 
 logger = logging.getLogger(__name__)
 

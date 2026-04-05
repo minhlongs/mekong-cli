@@ -175,13 +175,13 @@ class WindowsVaultBackend(SecureStorageBackend):
         except ValueError as exc:
             raise SecureStorageError(f"Invalid credential identifier: {exc}") from exc
 
-        # Use cmdkey for basic credential storage
-        escaped_value = value.replace('"', '""')
-        command = (
-            f'cmdkey /generic:"{self.SERVICE_NAME}:{safe_key}:{safe_account}"'
-            f' /user:"{safe_account}" /pass:"{escaped_value}"'
+        # Use cmdkey for basic credential storage — pass args as list to prevent injection
+        generic = f"{self.SERVICE_NAME}:{safe_key}:{safe_account}"
+        result = subprocess.run(
+            ["cmdkey", f"/generic:{generic}", f"/user:{safe_account}", f"/pass:{value}"],
+            capture_output=True, text=True, timeout=10,
         )
-        returncode, stdout, stderr = self._run_powershell(command)  # noqa: F841 (stdout unused)
+        returncode, stderr = result.returncode, result.stderr
 
         if returncode != 0:
             raise SecureStorageError(f"Failed to store credential: {stderr.strip()}")
