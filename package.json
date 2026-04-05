@@ -37,6 +37,8 @@
     "farm:ab-test": "bash ide-core/engine-farm/ab-test.sh",
     "farm:cutover": "bash ide-core/engine-farm/cutover.sh --yes",
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
+    "start": "npm run dev --workspace=apps/dashboard",
+    "start:landing": "npx serve apps/landing -l 3001",
     "health": "bash scripts/health-check.sh"
   },
   "devDependencies": {
@@ -116,6 +118,6 @@
     }
   },
   "bin": {
-    "mekong": "./src/cli/index.js"
+    "mekong": "./bin/mekong"
   }
 }
