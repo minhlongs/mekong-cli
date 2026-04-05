@@ -251,8 +251,9 @@ class ToolRegistry:
                             )
                         cmd = san_result.sanitized_command
                     except ImportError:
-                        logger.warning(
-                            "CommandSanitizer unavailable; shell:run executing without sanitization"
+                        raise RuntimeError(
+                            "CommandSanitizer module missing — shell:run blocked (fail-closed). "
+                            "Install command_sanitizer or disable shell:run."
                         )
 
                 proc = subprocess.run(
