@@ -178,6 +178,27 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
     Returns:
         ModelConfig with selected model and parameters.
     """
+    # LLM_MODEL override: respect env var (e.g., Ollama local mode)
+    import os as _os
+    _env_model = _os.environ.get("LLM_MODEL", "").strip()
+    if _env_model:
+        _prefix = "ollama:" if not _env_model.startswith(("ollama:", "mlx:", "claude", "gemini", "gpt")) else ""
+        model_id = f"{_prefix}{_env_model}"
+        ctx_window = CONTEXT_WINDOW_MAP.get(model_id, 32000)
+        temperature = TEMP_MAP.get(profile.domain, 0.3)
+        provider = detect_provider(model_id)
+        from src.core.cost_estimator import COST_TABLE
+        costs = COST_TABLE.get(model_id, (0.0, 0.0))
+        return ModelConfig(
+            model_id=model_id,
+            provider=provider,  # type: ignore[arg-type]
+            max_tokens=int(ctx_window * 0.75),
+            temperature=temperature,
+            context_window=ctx_window,
+            cost_per_mtok_input=costs[0],
+            cost_per_mtok_output=costs[1],
+        )
+
     model_id = _lookup_matrix(profile) or "gemini-2.0-flash"
 
     # Step 2: Availability check
@@ -240,7 +261,25 @@ def select_model_with_tier(
     state: SystemState,
     task_tier: str = "integration",
 ) -> ModelConfig:
-    """Enhanced model selection with task complexity tier.
+    """LLM_MODEL env var has highest priority (wraps inner logic)."""
+    import os as _os
+    _env_model = _os.environ.get("LLM_MODEL", "").strip()
+    if _env_model:
+        _prefix = "" if _env_model.startswith(("ollama:", "mlx:", "claude", "gemini", "gpt")) else "ollama:"
+        _mid = f"{_prefix}{_env_model}"
+        _provider = detect_provider(_mid)
+        from src.core.cost_estimator import COST_TABLE as _COST
+        _c = _COST.get(_mid, (0.0, 0.0))
+        _ctx = CONTEXT_WINDOW_MAP.get(_mid, 32000)
+        return ModelConfig(
+            model_id=_mid, provider=_provider,  # type: ignore[arg-type]
+            max_tokens=int(_ctx * 0.75),
+            temperature=TEMP_MAP.get(profile.domain, 0.3),
+            context_window=_ctx,
+            cost_per_mtok_input=_c[0], cost_per_mtok_output=_c[1],
+        )
+    _BLOCK_MARKER_IGNORE = True
+    """Tiered model selection — LLM_MODEL override handled above.
 
     Args:
         profile: Classified task profile.
