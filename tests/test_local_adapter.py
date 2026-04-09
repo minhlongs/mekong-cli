@@ -34,7 +34,7 @@ class TestBackwardCompat:
 class TestLocalLLMAdapterInit:
     def test_default_base_url(self):
         adapter = LocalLLMAdapter()
-        assert "11435" in adapter.base_url or "11434" in adapter.base_url
+        assert "11434" in adapter.base_url
 
     def test_custom_base_url(self):
         adapter = LocalLLMAdapter(base_url="http://custom:8080/v1")
@@ -54,7 +54,7 @@ class TestHealthCheck:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        adapter = LocalLLMAdapter(base_url="http://localhost:11435/v1")
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         assert adapter.health_check() is True
 
     @patch("urllib.request.urlopen", side_effect=ConnectionError("refused"))
@@ -83,7 +83,7 @@ class TestListModels:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        adapter = LocalLLMAdapter(base_url="http://localhost:11435/v1")
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         models = adapter.list_models()
         assert "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit" in models
         assert "mlx-community/Qwen2.5-Coder-32B-4bit" in models
@@ -106,7 +106,7 @@ class TestGetStatus:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        adapter = LocalLLMAdapter(base_url="http://localhost:11435/v1")
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         status = adapter.get_status()
         assert status["healthy"] is True
         assert status["models_loaded"] == 1
@@ -129,7 +129,7 @@ class TestSyncGenerate:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        adapter = LocalLLMAdapter(base_url="http://localhost:11435/v1")
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         result = adapter.generate_sync("mlx:test-model", [{"role": "user", "content": "hi"}])
         assert result == "Hello world"
 
@@ -143,7 +143,7 @@ class TestSyncGenerate:
         mock_resp.__exit__ = MagicMock(return_value=False)
         mock_urlopen.return_value = mock_resp
 
-        adapter = LocalLLMAdapter(base_url="http://localhost:11435/v1")
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         result = adapter.generate_sync("ollama:llama3.2:3b", [{"role": "user", "content": "hi"}])
         assert result == "Hello world"
 

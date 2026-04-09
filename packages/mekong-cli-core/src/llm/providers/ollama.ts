@@ -11,7 +11,7 @@ export class LocalLLMProvider implements LlmProvider {
   private baseUrl: string;
 
   constructor(baseUrl?: string, defaultModel?: string) {
-    this.baseUrl = baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
+    this.baseUrl = baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11434';
     this.inner = new OpenAICompatProvider({
       name: 'local-llm',
       baseUrl: this.baseUrl.endsWith('/v1') ? this.baseUrl : `${this.baseUrl}/v1`,

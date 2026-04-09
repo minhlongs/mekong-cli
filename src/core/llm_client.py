@@ -313,7 +313,7 @@ class LLMClient:
         elif ollama_url or self._check_local_llm_running():
             built.append(
                 OpenAICompatibleProvider(
-                    base_url=ollama_url or "http://localhost:11435/v1",
+                    base_url=ollama_url or "http://localhost:11434/v1",
                     api_key="mlx",
                     model=local_model,
                     provider_name="local-llm",

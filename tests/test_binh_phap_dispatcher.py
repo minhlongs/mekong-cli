@@ -99,7 +99,7 @@ class TestEscalationRouting:
     def test_resolve_local_mlx(self) -> None:
         from src.core.binh_phap_escalation import resolve_llm_provider
         config = resolve_llm_provider("local_mlx")
-        assert "11435" in config["base_url"]
+        assert "11434" in config["base_url"]
         assert config["provider_name"] == "m1max-mlx"
         assert "fallback_url" in config
 

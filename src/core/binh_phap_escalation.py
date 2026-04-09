@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Abstract escalation level → concrete provider config
 ESCALATION_PROVIDERS: dict[str, dict[str, str]] = {
     "local_mlx": {
-        "base_url": "http://192.168.11.111:11435/v1",
+        "base_url": "http://localhost:11434/v1",
         "model": "qwen2.5-coder:32b",
         "provider_name": "m1max-mlx",
         "fallback_url": "http://192.168.11.111:11434/v1",

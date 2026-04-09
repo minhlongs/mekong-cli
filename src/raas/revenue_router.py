@@ -4,6 +4,8 @@ Endpoints:
     POST /v1/onboard   — create tenant, return API key + free credits
     POST /webhook/polar — receive Polar.sh payment, provision credits
     GET  /v1/pricing    — return tiers + checkout URL
+    POST /v1/checkout   — (see checkout_router.py)
+    GET  /v1/success    — (see checkout_router.py)
 """
 
 from __future__ import annotations
@@ -30,6 +32,19 @@ CREDIT_MAP = {
     "pro": 5000,
 }
 
+# Polar.sh product/price IDs — set POLAR_PRICE_<TIER> env vars to override
+_POLAR_PRICE_DEFAULTS = {
+    "starter": "price_starter",
+    "growth": "price_growth",
+    "pro": "price_pro",
+}
+
+_PRICING_TIERS = [
+    {"name": "Starter", "tier": "starter", "price_usd": 49, "credits": 200},
+    {"name": "Growth", "tier": "growth", "price_usd": 149, "credits": 1000},
+    {"name": "Pro", "tier": "pro", "price_usd": 499, "credits": 5000},
+]
+
 
 class OnboardRequest(BaseModel):
     name: str = Field(..., description="Tenant name (company or person)")
@@ -42,6 +57,40 @@ class OnboardResponse(BaseModel):
     credits: int
     message: str
 
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _polar_checkout_base() -> str:
+    """Return the Polar.sh organisation checkout base URL."""
+    return os.environ.get(
+        "POLAR_CHECKOUT_BASE",
+        "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions",
+    )
+
+
+def _polar_price_id(tier: str) -> str:
+    """Return the Polar price ID for a given tier (from env or fallback)."""
+    env_key = f"POLAR_PRICE_{tier.upper()}"
+    return os.environ.get(env_key, _POLAR_PRICE_DEFAULTS.get(tier, tier))
+
+
+def _tier_from_session(session_id: str) -> str:
+    """Derive tier from Polar session_id prefix convention.
+
+    Polar session IDs are opaque; we encode tier in query param at redirect.
+    This helper is a safety fallback — callers pass ?tier= explicitly.
+    """
+    for tier in CREDIT_MAP:
+        if tier in session_id.lower():
+            return tier
+    return "starter"
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
 
 @router.post("/v1/onboard", response_model=OnboardResponse)
 async def onboard_tenant(req: OnboardRequest):
@@ -71,12 +120,15 @@ async def polar_webhook(request: Request):
     signature = request.headers.get("webhook-signature", "")
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
-    if secret:
-        expected = hmac.new(
-            secret.encode(), body, hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(signature, expected):
-            raise HTTPException(status_code=401, detail="Invalid signature")
+    if not secret:
+        logger.error("POLAR_WEBHOOK_SECRET not configured")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
+    expected = hmac.new(
+        secret.encode(), body, hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise HTTPException(status_code=401, detail="Invalid signature")
 
     payload = json.loads(body)
     event_type = payload.get("type", "")
@@ -114,15 +166,16 @@ async def polar_webhook(request: Request):
 
 @router.get("/v1/pricing")
 async def get_pricing():
-    """Return current pricing tiers."""
+    """Return current pricing tiers with per-tier checkout URLs."""
+    base = _polar_checkout_base()
+    tiers_with_urls = []
+    for tier_info in _PRICING_TIERS:
+        price_id = _polar_price_id(tier_info["tier"])
+        tiers_with_urls.append({
+            **tier_info,
+            "checkout_url": f"{base}?price={price_id}",
+        })
     return {
-        "tiers": [
-            {"name": "Starter", "price": 49, "credits": 200},
-            {"name": "Growth", "price": 149, "credits": 1000},
-            {"name": "Pro", "price": 499, "credits": 5000},
-        ],
-        "checkout_url": os.environ.get(
-            "POLAR_CHECKOUT_URL",
-            "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions",
-        ),
+        "tiers": tiers_with_urls,
+        "checkout_url": base,
     }

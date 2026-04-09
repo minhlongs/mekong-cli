@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 LOCAL_LLM_URL = os.getenv(
     "LOCAL_LLM_URL",
-    os.getenv("OLLAMA_URL", "http://localhost:11435/v1"),
+    os.getenv("OLLAMA_URL", "http://localhost:11434/v1"),
 )
 
 # Legacy compat — keep for reference
