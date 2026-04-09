@@ -44,10 +44,10 @@ def main():
     for p in products:
         try:
             result = client.products.create(request=p)
-            print(f"  ✅ {p[name]}: {result.id}")
-            print(f"     Price: ${p[prices][0][amount]/100}/mo")
+            print(f"  ✅ {p["name"]}: {result.id}")
+            print(f"     Price: ${p["prices"][0]["amount"]/100}/mo")
         except Exception as e:
-            print(f"  ❌ {p[name]}: {e}")
+            print(f"  ❌ {p["name"]}: {e}")
 
     print("\nDone. Copy product IDs to .env:")
     print("  POLAR_PRODUCT_STARTER=prod_xxx")

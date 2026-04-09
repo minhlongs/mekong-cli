@@ -61,7 +61,7 @@ class OnboardResponse(BaseModel):
 
 class CheckoutRequest(BaseModel):
     tier: str = Field(..., description="Subscription tier: starter | growth | pro")
-    email: str = Field(..., description="Customer email for pre-fill")
+    email: EmailStr = Field(..., description="Customer email for pre-fill")
 
 
 class CheckoutResponse(BaseModel):
@@ -138,6 +138,10 @@ async def polar_webhook(request: Request):
     signature = request.headers.get("webhook-signature", "")
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
+    if not secret:
+        logger.error("POLAR_WEBHOOK_SECRET not configured")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
     if secret:
         expected = hmac.new(
             secret.encode(), body, hashlib.sha256
@@ -213,12 +217,23 @@ async def create_checkout(req: CheckoutRequest):
     base = _polar_checkout_base()
     price_id = _polar_price_id(tier)
 
-    # Build checkout URL — Polar supports ?price= and ?prefilled_email= params
+    # Build checkout URL with proper URL encoding (C3 fix)
+    from urllib.parse import quote, urlencode
+    import hmac as _hmac
+    app_base = os.environ.get("APP_BASE_URL", "https://mekong.ai")
+    # Generate HMAC sig for success URL verification (C2 fix)
+    secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
+    sig = ""
+    if secret:
+        sig = _hmac.new(
+            secret.encode(), f"{tier}:{req.email}".encode(), hashlib.sha256
+        ).hexdigest()[:16]
+    success_params = urlencode({"tier": tier, "email": req.email, "sig": sig})
+    success_url = f"{app_base}/v1/success?{success_params}"
     checkout_url = (
         f"{base}?price={price_id}"
-        f"&prefilled_email={req.email}"
-        f"&success_url={os.environ.get('APP_BASE_URL', 'https://mekong.ai')}"
-        f"/v1/success?tier={tier}&email={req.email}"
+        f"&prefilled_email={quote(str(req.email))}"
+        f"&success_url={quote(success_url)}"
     )
 
     logger.info("Checkout URL generated for tier=%s email=%s", tier, req.email)
@@ -230,13 +245,38 @@ async def payment_success(
     tier: str = "starter",
     email: str = "",
     session_id: str = "",
+    sig: str = "",
 ):
     """Handle Polar.sh post-payment redirect.
 
     Query params: ``?session_id=xxx&email=xxx&tier=starter``
 
     Provisions (or retrieves) the tenant and returns their API key + credits.
+    Requires valid HMAC sig to prevent unauthenticated provisioning.
     """
+    # C2 security fix: verify HMAC signature
+    import hmac as _hmac
+    secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
+    if secret and sig:
+        expected = _hmac.new(
+            secret.encode(), f"{tier}:{email}".encode(), hashlib.sha256
+        ).hexdigest()[:16]
+        if not _hmac.compare_digest(sig, expected):
+            # Invalid sig — return info-only, no provisioning
+            return SuccessResponse(
+                api_key="pending_webhook_verification",
+                credits=CREDIT_MAP.get(tier.lower(), 200),
+                tier=tier.lower() if tier.lower() in CREDIT_MAP else "starter",
+                tenant_id="provisioned_via_webhook",
+            )
+    elif not sig:
+        # No sig provided — return info-only (actual provisioning via webhook)
+        return SuccessResponse(
+            api_key="pending_webhook_verification",
+            credits=CREDIT_MAP.get(tier.lower(), 200),
+            tier=tier.lower() if tier.lower() in CREDIT_MAP else "starter",
+            tenant_id="provisioned_via_webhook",
+        )
     tier = tier.lower()
     if tier not in CREDIT_MAP:
         tier = _tier_from_session(session_id) if session_id else "starter"
