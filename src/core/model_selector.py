@@ -27,7 +27,7 @@ class ModelConfig:
     """Selected model configuration."""
 
     model_id: str
-    provider: Literal["mlx", "anthropic", "google", "openai"]
+    provider: Literal["mlx", "ollama", "anthropic", "google", "openai"]
     max_tokens: int
     temperature: float
     context_window: int = 0
@@ -168,6 +168,43 @@ def _lookup_matrix(profile: TaskProfile) -> str | None:
     return None
 
 
+def _env_override(profile: TaskProfile) -> ModelConfig | None:
+    """Build a ModelConfig from the `LLM_MODEL` env var, or return None.
+
+    Highest-priority selection path — lets operators force any model via env
+    (e.g., local Ollama in dev) without touching the routing matrix.
+
+    Sensitive-data guard: when `profile.data_sensitivity == "sensitive"`, only
+    local prefixes (`ollama:`/`mlx:`) are allowed. Non-local overrides are
+    silently ignored so the caller falls back to the normal matrix, which
+    honours the sensitive→local-only rule.
+    """
+    import os
+    env_model = os.environ.get("LLM_MODEL", "").strip()
+    if not env_model:
+        return None
+
+    known_prefixes = ("ollama:", "mlx:", "claude", "gemini", "gpt")
+    model_id = env_model if env_model.startswith(known_prefixes) else f"ollama:{env_model}"
+
+    # Sensitive data → only allow local backends through override.
+    if profile.data_sensitivity == "sensitive" and not model_id.startswith(("ollama:", "mlx:")):
+        return None
+
+    from src.core.cost_estimator import COST_TABLE
+    ctx_window = CONTEXT_WINDOW_MAP.get(model_id, 32000)
+    costs = COST_TABLE.get(model_id, (0.0, 0.0))
+    return ModelConfig(
+        model_id=model_id,
+        provider=detect_provider(model_id),  # type: ignore[arg-type]
+        max_tokens=int(ctx_window * 0.75),
+        temperature=TEMP_MAP.get(profile.domain, 0.3),
+        context_window=ctx_window,
+        cost_per_mtok_input=costs[0],
+        cost_per_mtok_output=costs[1],
+    )
+
+
 def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
     """Select the best model for a task profile given system state.
 
@@ -178,6 +215,10 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
     Returns:
         ModelConfig with selected model and parameters.
     """
+    override = _env_override(profile)
+    if override is not None:
+        return override
+
     model_id = _lookup_matrix(profile) or "gemini-2.0-flash"
 
     # Step 2: Availability check
@@ -240,7 +281,7 @@ def select_model_with_tier(
     state: SystemState,
     task_tier: str = "integration",
 ) -> ModelConfig:
-    """Enhanced model selection with task complexity tier.
+    """Tiered model selection — LLM_MODEL env override has highest priority.
 
     Args:
         profile: Classified task profile.
@@ -250,6 +291,10 @@ def select_model_with_tier(
     Returns:
         ModelConfig — may override matrix selection for mechanical tasks.
     """
+    env_override = _env_override(profile)
+    if env_override is not None:
+        return env_override
+
     override = TASK_TIER_OVERRIDE.get(task_tier)
     if override:
         # Use cheap model for mechanical tasks

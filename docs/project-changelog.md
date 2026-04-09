@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (2026-04-05 - E2E Wiring Fix — LLM Model Override on M1 Max)
+
+#### Model Selector Environment Override
+- **Commit:** 6cfe9f08e on `feat/antigravity-community`
+- **Issue:** E2E test on M1 Max failed — `select_model_with_tier()` hardcoded mechanical tier to gemini-2.0-flash-lite, bypassing LLM_MODEL env var override
+- **Root Cause:** TASK_TIER_OVERRIDE dict had no escape hatch for local Ollama inference
+- **Solution:** Added env var short-circuit in `select_model()` and `select_model_with_tier()` — when LLM_MODEL is set, both functions return ModelConfig directly without TASK_TIER_OVERRIDE lookup
+- **Verification:** Full mission pipeline tested on M1 Max with qwen2.5-coder:7b (Ollama): classifier ✅, command loader ✅, MCU locking ✅, model selection (margin=98%) ✅, execution ✅, billing ✅
+- **Also Fixed:** `src/core/local_adapter.py` default port (11435→11434), removed `apps/dashboard/vercel.json` (Vercel banned)
+- **Deps Added:** aiohttp, openai, email-validator on M1 Max
+- **Test Result:** 56/56 focused tests pass, 3/3 smoke tests, zero regressions
+
+#### Known Followups
+- Sensitive data guard: LLM_MODEL override bypasses local-only guarantee for sensitive tasks — extend check to require `ollama:`/`mlx:` prefix
+- Provider type: Extend ModelConfig.provider Literal to include `"ollama"`
+- Code duplication: Extract `_env_override()` helper function
+
 ### Fixed (2026-04-04 - Quality Gate Sweep — Binh Phap Fronts 1 & 2)
 
 #### Tech Debt Elimination
