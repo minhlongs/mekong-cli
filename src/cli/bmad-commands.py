@@ -30,11 +30,11 @@ def list_workflows(
     agent_type: str = typer.Option(None, "--agent-type", help="Filter by agent type")
 ) -> None:
     """List available BMAD workflows."""
-    try:
-        if BMADWorkflowLoader is None:
+    if BMADWorkflowLoader is None:
         console.print("[red]BMAD packages not available in standalone mode[/red]")
         raise typer.Exit(1)
-    loader = BMADWorkflowLoader()
+    try:
+        loader = BMADWorkflowLoader()
         workflows = loader.list_workflows(agent_type)
 
         table = Table(title=f"BMAD Workflows ({len(workflows)} total)")
@@ -61,11 +61,11 @@ def list_workflows(
 @app.command("info")
 def workflow_info(workflow_id: str) -> None:
     """Show detailed workflow information."""
-    try:
-        if BMADWorkflowLoader is None:
+    if BMADWorkflowLoader is None:
         console.print("[red]BMAD packages not available in standalone mode[/red]")
         raise typer.Exit(1)
-    loader = BMADWorkflowLoader()
+    try:
+        loader = BMADWorkflowLoader()
         workflow = loader.get_workflow(workflow_id)
 
         if not workflow:
@@ -93,11 +93,11 @@ def workflow_info(workflow_id: str) -> None:
 @app.command("catalog")
 def build_catalog() -> None:
     """Build and cache workflow catalog."""
-    try:
-        if WorkflowCatalog is None:
+    if WorkflowCatalog is None:
         console.print("[red]BMAD packages not available in standalone mode[/red]")
         raise typer.Exit(1)
-    catalog = WorkflowCatalog()
+    try:
+        catalog = WorkflowCatalog()
         data = catalog.build_catalog()
 
         console.print("[green]Catalog built:[/green]")
@@ -112,11 +112,11 @@ def build_catalog() -> None:
 @app.command("search")
 def search_workflows(query: str) -> None:
     """Search workflows by name or description."""
-    try:
-        if BMADWorkflowLoader is None:
+    if BMADWorkflowLoader is None:
         console.print("[red]BMAD packages not available in standalone mode[/red]")
         raise typer.Exit(1)
-    loader = BMADWorkflowLoader()
+    try:
+        loader = BMADWorkflowLoader()
         results = loader.search_workflows(query)
 
         console.print(f"[bold]Search results for '{query}':[/bold] {len(results)} found")
