@@ -4,6 +4,8 @@ Endpoints:
     POST /v1/onboard   — create tenant, return API key + free credits
     POST /webhook/polar — receive Polar.sh payment, provision credits
     GET  /v1/pricing    — return tiers + checkout URL
+    POST /v1/checkout   — create Polar checkout session URL for a given tier
+    GET  /v1/success    — post-payment redirect; provision tenant + return API key
 """
 
 from __future__ import annotations
@@ -15,7 +17,8 @@ import logging
 import os
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr, Field
 
 from src.raas.tenant import TenantStore
 from src.raas.credits import CreditStore
@@ -30,6 +33,19 @@ CREDIT_MAP = {
     "pro": 5000,
 }
 
+# Polar.sh product/price IDs — set POLAR_PRICE_<TIER> env vars to override
+_POLAR_PRICE_DEFAULTS = {
+    "starter": "price_starter",
+    "growth": "price_growth",
+    "pro": "price_pro",
+}
+
+_PRICING_TIERS = [
+    {"name": "Starter", "tier": "starter", "price_usd": 49, "credits": 200},
+    {"name": "Growth", "tier": "growth", "price_usd": 149, "credits": 1000},
+    {"name": "Pro", "tier": "pro", "price_usd": 499, "credits": 5000},
+]
+
 
 class OnboardRequest(BaseModel):
     name: str = Field(..., description="Tenant name (company or person)")
@@ -42,6 +58,57 @@ class OnboardResponse(BaseModel):
     credits: int
     message: str
 
+
+class CheckoutRequest(BaseModel):
+    tier: str = Field(..., description="Subscription tier: starter | growth | pro")
+    email: str = Field(..., description="Customer email for pre-fill")
+
+
+class CheckoutResponse(BaseModel):
+    checkout_url: str
+    tier: str
+
+
+class SuccessResponse(BaseModel):
+    api_key: str
+    credits: int
+    tier: str
+    tenant_id: str
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _polar_checkout_base() -> str:
+    """Return the Polar.sh organisation checkout base URL."""
+    return os.environ.get(
+        "POLAR_CHECKOUT_BASE",
+        "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions",
+    )
+
+
+def _polar_price_id(tier: str) -> str:
+    """Return the Polar price ID for a given tier (from env or fallback)."""
+    env_key = f"POLAR_PRICE_{tier.upper()}"
+    return os.environ.get(env_key, _POLAR_PRICE_DEFAULTS.get(tier, tier))
+
+
+def _tier_from_session(session_id: str) -> str:
+    """Derive tier from Polar session_id prefix convention.
+
+    Polar session IDs are opaque; we encode tier in query param at redirect.
+    This helper is a safety fallback — callers pass ?tier= explicitly.
+    """
+    for tier in CREDIT_MAP:
+        if tier in session_id.lower():
+            return tier
+    return "starter"
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
 
 @router.post("/v1/onboard", response_model=OnboardResponse)
 async def onboard_tenant(req: OnboardRequest):
@@ -114,15 +181,106 @@ async def polar_webhook(request: Request):
 
 @router.get("/v1/pricing")
 async def get_pricing():
-    """Return current pricing tiers."""
+    """Return current pricing tiers with per-tier checkout URLs."""
+    base = _polar_checkout_base()
+    tiers_with_urls = []
+    for tier_info in _PRICING_TIERS:
+        price_id = _polar_price_id(tier_info["tier"])
+        tiers_with_urls.append({
+            **tier_info,
+            "checkout_url": f"{base}?price={price_id}",
+        })
     return {
-        "tiers": [
-            {"name": "Starter", "price": 49, "credits": 200},
-            {"name": "Growth", "price": 149, "credits": 1000},
-            {"name": "Pro", "price": 499, "credits": 5000},
-        ],
-        "checkout_url": os.environ.get(
-            "POLAR_CHECKOUT_URL",
-            "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions",
-        ),
+        "tiers": tiers_with_urls,
+        "checkout_url": base,
     }
+
+
+@router.post("/v1/checkout", response_model=CheckoutResponse)
+async def create_checkout(req: CheckoutRequest):
+    """Return a Polar.sh checkout URL for the requested tier.
+
+    Body: ``{"tier": "starter|growth|pro", "email": "user@example.com"}``
+    Returns: ``{"checkout_url": "https://polar.sh/checkout/...", "tier": "starter"}``
+    """
+    tier = req.tier.lower()
+    if tier not in CREDIT_MAP:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown tier '{tier}'. Valid tiers: {list(CREDIT_MAP.keys())}",
+        )
+
+    base = _polar_checkout_base()
+    price_id = _polar_price_id(tier)
+
+    # Build checkout URL — Polar supports ?price= and ?prefilled_email= params
+    checkout_url = (
+        f"{base}?price={price_id}"
+        f"&prefilled_email={req.email}"
+        f"&success_url={os.environ.get('APP_BASE_URL', 'https://mekong.ai')}"
+        f"/v1/success?tier={tier}&email={req.email}"
+    )
+
+    logger.info("Checkout URL generated for tier=%s email=%s", tier, req.email)
+    return CheckoutResponse(checkout_url=checkout_url, tier=tier)
+
+
+@router.get("/v1/success", response_model=SuccessResponse)
+async def payment_success(
+    tier: str = "starter",
+    email: str = "",
+    session_id: str = "",
+):
+    """Handle Polar.sh post-payment redirect.
+
+    Query params: ``?session_id=xxx&email=xxx&tier=starter``
+
+    Provisions (or retrieves) the tenant and returns their API key + credits.
+    """
+    tier = tier.lower()
+    if tier not in CREDIT_MAP:
+        tier = _tier_from_session(session_id) if session_id else "starter"
+
+    credits = CREDIT_MAP[tier]
+
+    if not email:
+        raise HTTPException(status_code=400, detail="email query parameter is required")
+
+    store = TenantStore()
+    existing = store.find_by_email(email)
+
+    if existing:
+        # Tenant already exists — provision credits for this purchase
+        credit_store = CreditStore()
+        credit_store.add_credits(
+            tenant_id=existing.id,
+            amount=credits,
+            reason=f"polar_success_{tier}_{session_id or 'direct'}",
+        )
+        logger.info(
+            "Existing tenant %s: +%d credits (%s tier)", email, credits, tier
+        )
+        # api_key is not stored in plaintext — return placeholder directing to dashboard
+        return SuccessResponse(
+            api_key="retrieve_from_dashboard",
+            credits=credits,
+            tier=tier,
+            tenant_id=existing.id,
+        )
+
+    # New tenant — create and provision
+    tenant = store.create_tenant(name=email)
+    credit_store = CreditStore()
+    credit_store.add_credits(
+        tenant_id=tenant.id,
+        amount=credits,
+        reason=f"polar_success_{tier}_{session_id or 'direct'}",
+    )
+
+    logger.info("New tenant %s provisioned: %d credits (%s tier)", email, credits, tier)
+    return SuccessResponse(
+        api_key=tenant.api_key,
+        credits=credits,
+        tier=tier,
+        tenant_id=tenant.id,
+    )
