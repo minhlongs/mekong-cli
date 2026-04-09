@@ -41,7 +41,7 @@ export class LocalProvider implements LlmProvider {
       });
     } else if (backend === 'mlx') {
       // MLX (Apple Silicon optimized — preferred)
-      const baseUrl = config.baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
+      const baseUrl = config.baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11434';
       this.healthUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
       this.inner = new OpenAICompatProvider({
         name: this.name,

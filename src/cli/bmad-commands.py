@@ -13,10 +13,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 try:
     from packages.core.bmad.catalog import WorkflowCatalog  # noqa: E402
 except ImportError:
+    WorkflowCatalog = None  # type: ignore
     pass  # packages not available in standalone mode
 try:
     from packages.core.bmad.loader import BMADWorkflowLoader  # noqa: E402
 except ImportError:
+    BMADWorkflowLoader = None  # type: ignore
     pass
 
 app = typer.Typer(name="bmad", help="BMAD workflow management")
@@ -29,7 +31,10 @@ def list_workflows(
 ) -> None:
     """List available BMAD workflows."""
     try:
-        loader = BMADWorkflowLoader()
+        if BMADWorkflowLoader is None:
+        console.print("[red]BMAD packages not available in standalone mode[/red]")
+        raise typer.Exit(1)
+    loader = BMADWorkflowLoader()
         workflows = loader.list_workflows(agent_type)
 
         table = Table(title=f"BMAD Workflows ({len(workflows)} total)")
@@ -57,7 +62,10 @@ def list_workflows(
 def workflow_info(workflow_id: str) -> None:
     """Show detailed workflow information."""
     try:
-        loader = BMADWorkflowLoader()
+        if BMADWorkflowLoader is None:
+        console.print("[red]BMAD packages not available in standalone mode[/red]")
+        raise typer.Exit(1)
+    loader = BMADWorkflowLoader()
         workflow = loader.get_workflow(workflow_id)
 
         if not workflow:
@@ -86,7 +94,10 @@ def workflow_info(workflow_id: str) -> None:
 def build_catalog() -> None:
     """Build and cache workflow catalog."""
     try:
-        catalog = WorkflowCatalog()
+        if WorkflowCatalog is None:
+        console.print("[red]BMAD packages not available in standalone mode[/red]")
+        raise typer.Exit(1)
+    catalog = WorkflowCatalog()
         data = catalog.build_catalog()
 
         console.print("[green]Catalog built:[/green]")
@@ -102,7 +113,10 @@ def build_catalog() -> None:
 def search_workflows(query: str) -> None:
     """Search workflows by name or description."""
     try:
-        loader = BMADWorkflowLoader()
+        if BMADWorkflowLoader is None:
+        console.print("[red]BMAD packages not available in standalone mode[/red]")
+        raise typer.Exit(1)
+    loader = BMADWorkflowLoader()
         results = loader.search_workflows(query)
 
         console.print(f"[bold]Search results for '{query}':[/bold] {len(results)} found")

@@ -172,7 +172,7 @@ export class LlmRouter {
       }
 
       // Always add local MLX as last-resort fallback
-      const localUrl = process.env.LOCAL_LLM_URL ?? 'http://localhost:11435';
+      const localUrl = process.env.LOCAL_LLM_URL ?? 'http://localhost:11434';
       this.providers.set('local-llm', new LocalLLMProvider(localUrl));
     }
 
