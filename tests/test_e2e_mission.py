@@ -26,7 +26,7 @@ async def test_full_journey():
         tenant = store.create_tenant("e2e_test_customer")
         print(f"  ID: {tenant.id[:12]}...")
         print(f"  Key: {tenant.api_key[:15]}...")
-        print(f"  ✅ Tenant created")
+        print("  ✅ Tenant created")
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
         errors.append(f"Tenant: {e}")
@@ -40,7 +40,7 @@ async def test_full_journey():
         credits.add(tenant.id, 100, "e2e_test_funding")
         bal = credits.get_balance(tenant.id)
         print(f"  Balance: {bal}")
-        print(f"  ✅ Credits funded")
+        print("  ✅ Credits funded")
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
         errors.append(f"Credits: {e}")
@@ -56,7 +56,7 @@ async def test_full_journey():
         print(f"  Agent: {profile.agent_role}")
         print(f"  Domain: {profile.domain}")
         print(f"  Cost: {profile.mcu_cost} MCU")
-        print(f"  ✅ Classified")
+        print("  ✅ Classified")
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
         errors.append(f"Classifier: {e}")
@@ -82,9 +82,9 @@ async def test_full_journey():
         if result.output:
             print(f"  Output ({len(result.output)} chars):")
             print(f"    {result.output[:300]}")
-            print(f"  ✅ Mission produced output")
+            print("  ✅ Mission produced output")
         else:
-            print(f"  ❌ Output is EMPTY")
+            print("  ❌ Output is EMPTY")
             print(f"  Error: {result.error}")
             errors.append(f"Mission: empty output — {result.error}")
     except Exception as e:
@@ -97,9 +97,9 @@ async def test_full_journey():
         bal_after = credits.get_balance(tenant.id)
         print(f"  Before: 100, After: {bal_after}")
         if bal_after < 100:
-            print(f"  ✅ Credits deducted correctly")
+            print("  ✅ Credits deducted correctly")
         else:
-            print(f"  ⚠️  Credits not deducted (MCU gate tracks separately)")
+            print("  ⚠️  Credits not deducted (MCU gate tracks separately)")
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
 
