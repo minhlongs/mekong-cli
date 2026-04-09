@@ -14,7 +14,10 @@ try:
     from packages.core.bmad.catalog import WorkflowCatalog  # noqa: E402
 except ImportError:
     pass  # packages not available in standalone mode
-from packages.core.bmad.loader import BMADWorkflowLoader  # noqa: E402
+try:
+    from packages.core.bmad.loader import BMADWorkflowLoader  # noqa: E402
+except ImportError:
+    pass
 
 app = typer.Typer(name="bmad", help="BMAD workflow management")
 console = Console()

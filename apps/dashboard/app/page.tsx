@@ -1,9 +1,5 @@
-import { redirect } from 'next/navigation';
-<<<<<<< HEAD
+import { redirect } from "next/navigation";
 
 export default function RootPage() {
-  redirect('/dashboard');
+  redirect("/dashboard");
 }
-=======
-export default function RootPage() { redirect('/dashboard'); }
->>>>>>> main

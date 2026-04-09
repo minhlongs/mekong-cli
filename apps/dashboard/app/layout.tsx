@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
-import './globals.css';
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Mekong AI OS — IDE',
-  description: '22 departments. 323 commands. AI-operated business platform.',
+  title: "Mekong AI OS — IDE",
+  description: "22 departments. 323 commands. AI-operated business platform.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -15,8 +15,4 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </body>
     </html>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> main
