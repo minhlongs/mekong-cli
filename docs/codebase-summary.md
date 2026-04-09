@@ -89,6 +89,25 @@ packages/
 │   │   ├── agents/
 │   │   └── tests/
 │   └── pyproject.toml
+├── agents/
+│   └── hubs/                      # Department-scoped command catalogs (17 total)
+│       ├── cto-hub.md             # Chief Technology Officer commands
+│       ├── cfo-hub.md             # Chief Financial Officer commands
+│       ├── cro-hub.md             # Chief Revenue Officer commands
+│       ├── cmo-hub.md             # Chief Marketing Officer commands
+│       ├── engineering-hub.md
+│       ├── sales-hub.md
+│       ├── marketing-hub.md
+│       ├── growth-hub.md
+│       ├── ops-hub.md
+│       ├── finance-hub.md
+│       ├── hr-hub.md
+│       ├── design-hub.md
+│       ├── data-hub.md
+│       ├── venture-hub.md
+│       ├── security-hub.md
+│       ├── legal-hub.md
+│       └── it-hub.md
 └── openclaw-engine/               # Autonomous daemon
     ├── src/
     │   ├── daemon.ts
