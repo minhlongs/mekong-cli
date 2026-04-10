@@ -1,0 +1,21 @@
+{
+  "name": "AI HR Operations",
+  "slug": "hr-operations",
+  "tagline": "Automate HR workflows with AI agents",
+  "description": "Recruitment, onboarding, performance reviews, and employee management powered by AI HR agents.",
+  "featured_departments": ["hr", "business"],
+  "featured_commands": [
+    "hr-recruit", "hr-onboard", "hr-review",
+    "hr-policy", "business-report"
+  ],
+  "branding": { "accent_color": "#EC4899", "icon": "users" },
+  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "polar_checkout_url": null,
+  "target_audience": "HR managers and people ops teams",
+  "use_cases": [
+    "Screen resumes and rank candidates with AI",
+    "Generate onboarding checklists and materials",
+    "Automate performance review cycles",
+    "Draft HR policies and handbooks"
+  ]
+}

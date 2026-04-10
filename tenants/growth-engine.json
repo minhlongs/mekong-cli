@@ -1,0 +1,21 @@
+{
+  "name": "AI Growth Engine",
+  "slug": "growth-engine",
+  "tagline": "Automate growth loops with AI agents",
+  "description": "Lead generation, conversion optimization, A/B testing, and growth experiments powered by AI marketing agents.",
+  "featured_departments": ["growth", "marketing", "sales"],
+  "featured_commands": [
+    "growth-experiment", "marketing-campaign", "sales-pipeline",
+    "growth-metrics", "marketing-seo"
+  ],
+  "branding": { "accent_color": "#EF4444", "icon": "trending-up" },
+  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "polar_checkout_url": null,
+  "target_audience": "Growth hackers and marketing teams",
+  "use_cases": [
+    "Design and run growth experiments automatically",
+    "Optimize conversion funnels with AI analysis",
+    "Generate and qualify leads at scale",
+    "Track growth metrics and OKRs"
+  ]
+}

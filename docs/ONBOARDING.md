@@ -1,5 +1,25 @@
 # Mekong IDE — Customer Onboarding
 
+## Choose your use-case
+
+Mekong IDE is a single product with 13 customized landing pages for different industries:
+
+- **Trading Desk** — Algorithmic trading & portfolio management
+- **Model Router** — LLM provider orchestration
+- **Content Studio** — Content creation & distribution
+- **Legal Counsel** — Legal document automation
+- **Dev Agency** — Software development teams
+- **Growth Engine** — Marketing & growth operations
+- **Compliance Vault** — Regulatory compliance
+- **Business Intelligence** — Data analytics & BI
+- **HR Operations** — Human resources management
+- **Sales Operations** — Sales automation
+- **Design Studio** — Creative design tools
+- **Venture Studio** — Venture capital operations
+- **Operations Center** — General business operations
+
+Visit `landing.agencyos.network` to browse all use-cases, then subscribe. Your use-case choice customizes the department dashboard but does not restrict API access — you always have access to all 22 departments.
+
 ## 5-minute setup
 
 ### 1. Get your API key
@@ -46,10 +66,14 @@ curl https://api.mekong.ai/raas/credits/balance \
 ### 4. Explore departments
 
 ```bash
+# All departments
 curl https://api.mekong.ai/v1/departments
+
+# Or filter by use-case (e.g., "trading-desk", "content-studio")
+curl "https://api.mekong.ai/v1/departments?tenant=trading-desk"
 ```
 
-Returns all 22 departments and 290 commands available in your subscription.
+Returns all 22 departments and 290 commands available in your subscription, optionally filtered to your chosen use-case.
 
 ### 5. Stream results (Growth+ tier)
 

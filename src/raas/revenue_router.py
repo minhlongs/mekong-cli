@@ -6,6 +6,7 @@ Endpoints:
     GET  /v1/pricing    — return tiers + checkout URL
     POST /v1/checkout   — (see checkout_router.py)
     GET  /v1/success    — (see checkout_router.py)
+    GET  /v1/departments, /v1/tenants — (see tenant_use_case_router.py)
 """
 
 from __future__ import annotations
@@ -165,9 +166,17 @@ async def polar_webhook(request: Request):
 
 
 @router.get("/v1/pricing")
-async def get_pricing():
+async def get_pricing(tenant: str | None = None):
     """Return current pricing tiers with per-tier checkout URLs."""
-    base = _polar_checkout_base()
+    from src.api.tenant_config_loader import get_tenant_config
+
+    tenant_config = get_tenant_config(tenant) if tenant else None
+    base = (
+        tenant_config.get("polar_checkout_url") or _polar_checkout_base()
+        if tenant_config
+        else _polar_checkout_base()
+    )
+
     tiers_with_urls = []
     for tier_info in _PRICING_TIERS:
         price_id = _polar_price_id(tier_info["tier"])
@@ -175,34 +184,8 @@ async def get_pricing():
             **tier_info,
             "checkout_url": f"{base}?price={price_id}",
         })
-    return {
-        "tiers": tiers_with_urls,
-        "checkout_url": base,
-    }
 
-
-@router.get("/v1/departments")
-async def list_departments():
-    """List all departments included in Mekong IDE."""
-    import sys
-    import os
-
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-    from src.core.command_loader import get_commands
-
-    commands = get_commands()
-
-    departments: dict = {}
-    for cmd in commands:
-        prefix = cmd.id.split("-")[0] if "-" in cmd.id else cmd.id
-        if prefix not in departments:
-            departments[prefix] = {"name": prefix, "commands": [], "count": 0}
-        departments[prefix]["commands"].append(cmd.id)
-        departments[prefix]["count"] += 1
-
-    return {
-        "product": "Mekong IDE",
-        "total_departments": len(departments),
-        "total_commands": len(commands),
-        "departments": sorted(departments.values(), key=lambda d: -d["count"]),
-    }
+    result = {"tiers": tiers_with_urls, "checkout_url": base}
+    if tenant_config:
+        result["tenant"] = tenant_config["slug"]
+    return result

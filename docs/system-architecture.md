@@ -452,6 +452,96 @@ Multi-tenant billing with SQLite backend:
 5. Execution completes → credits deducted
 6. Failed execution → credits refunded
 
+### 2.9a Use-Case Tenant System (Marketing Personas)
+
+**Purpose:** Single Mekong IDE product with 13 customizable landing pages + department filtering for different use cases.
+
+**Architecture:**
+- **Use-case tenants** (marketing personas): JSON configs in `tenants/` directory
+- **Billing tenants** (payment accounts): SQLite database (separate from use-case tenants)
+- **Orthogonal systems**: Use-case persona filtering is independent from billing auth
+
+**Use-Case Tenants (13 Personas):**
+```
+├── trading-desk.json          # Algorithmic trading
+├── model-router.json          # LLM provider management
+├── content-studio.json        # Content generation & publishing
+├── legal-counsel.json         # Legal document automation
+├── dev-agency.json            # Software development teams
+├── growth-engine.json         # Growth & marketing ops
+├── compliance-vault.json      # Regulatory compliance
+├── business-intelligence.json # Data analytics & reporting
+├── hr-operations.json         # Human resources management
+├── sales-operations.json      # Sales automation & CRM
+├── design-studio.json         # Design & creative tools
+├── venture-studio.json        # Venture capital operations
+└── operations-center.json     # Business operations hub
+```
+
+**Components:**
+- `src/api/tenant_config_loader.py` — LRU-cached JSON loader with schema validation
+- `src/raas/tenant_use_case_router.py` — API endpoints for tenant data
+- `landing/` — Jinja2 template + Python build script for 13 static pages
+- `landing/dist/` — Generated landing pages (one per tenant + hub index)
+- `.github/workflows/deploy-landing.yml` — CF Pages auto-deploy on tenant changes
+
+**Config Schema** (`tenants/_schema.json`):
+```json
+{
+  "name": "AI Trading Desk",
+  "slug": "trading-desk",
+  "tagline": "Algo-trading with AI agents",
+  "description": "Run quantitative analysis, backtest strategies...",
+  "featured_departments": ["finance", "analyst", "data"],
+  "featured_commands": ["finance-budget-plan", "analyst-report", ...],
+  "branding": {
+    "accent_color": "#10B981",
+    "icon": "chart-line"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
+  "polar_checkout_url": null,
+  "target_audience": "Algo-traders and quant teams",
+  "use_cases": [
+    "Backtest trading strategies with AI analysis",
+    "Generate daily P&L and risk reports"
+  ]
+}
+```
+
+**API Endpoints:**
+```
+GET    /v1/tenants                  # List all 13 use-case tenants
+GET    /v1/tenants/{slug}           # Get tenant config by slug
+GET    /v1/departments?tenant=slug  # List departments for tenant
+GET    /v1/pricing?tenant=slug      # Pricing with tenant-specific checkout URL
+```
+
+**Landing Page Flow:**
+1. User visits `landing.agencyos.network` → hub page (13 tenant cards)
+2. Clicks tenant card → redirects to `landing.agencyos.network/{slug}/`
+3. Tenant landing page renders with personalized departments + pricing
+4. Clicks "Subscribe" → Polar.sh with tenant-specific checkout URL
+5. After payment → onboard to billing tenant (separate from use-case)
+
+**Build Process:**
+1. `landing/build.py` loads all `tenants/*.json` configs
+2. For each tenant:
+   - Renders `landing/template.html` with tenant context
+   - Writes to `landing/dist/{slug}/index.html`
+3. Generates hub page at `landing/dist/index.html`
+4. Creates `_redirects` file for Cloudflare Pages clean URLs
+5. GitHub Actions deploys to CF Pages on push to `tenants/` or `landing/`
+
+**Key Design Decisions:**
+- **Static generation** — All pages built at deploy time (no runtime rendering)
+- **JSON-driven** — Add new persona by creating `tenants/{slug}.json` + redeploying
+- **Orthogonal** — Use-case tenants don't create database records; only for UX filtering
+- **Billing separation** — Polar payment creates *billing* tenant, not use-case tenant
+- **No runtime cost** — Pages served directly from CF Pages (no serverless compute)
+
 ### 2.10 RaaS API Layer (`src/api/`)
 
 Production-grade REST API with authentication & billing enforcement:
