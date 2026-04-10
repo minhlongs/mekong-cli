@@ -5,15 +5,26 @@
 
 import { API_BASE_URL, API_TIMEOUT_MS, buildHeaders } from "./api-config";
 import { ApiError, type ApiResult } from "./api-types";
+import { isTauri } from "../tauri-bridge";
+
+/** Get the right fetch function — Tauri plugin or native browser */
+async function getTauriFetch(): Promise<typeof globalThis.fetch> {
+  if (isTauri()) {
+    const { fetch: tFetch } = await import("@tauri-apps/plugin-http");
+    return tFetch as unknown as typeof globalThis.fetch;
+  }
+  return globalThis.fetch;
+}
 
 async function fetchWithTimeout(
   url: string,
   init: RequestInit = {}
 ): Promise<Response> {
+  const doFetch = await getTauriFetch();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    return await doFetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
   }

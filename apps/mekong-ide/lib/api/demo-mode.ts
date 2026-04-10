@@ -4,14 +4,17 @@
  */
 
 import { API_BASE_URL } from "./api-config";
+import { isTauri, checkGatewayHealth } from "../tauri-bridge";
 
 let cachedReachable: boolean | null = null;
 let lastCheckMs = 0;
 const CACHE_TTL_MS = 30_000;
 
 /**
- * Check if the gateway is reachable by hitting /health.
- * Result is cached for 30 s to avoid repeated probes.
+ * Check if the gateway is reachable.
+ * In Tauri: uses Rust IPC (bypasses WebView sandbox).
+ * In browser: uses fetch /health.
+ * Result cached 30s.
  */
 export async function isApiReachable(): Promise<boolean> {
   const now = Date.now();
@@ -19,11 +22,16 @@ export async function isApiReachable(): Promise<boolean> {
     return cachedReachable;
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/health`, {
-      method: "GET",
-      signal: AbortSignal.timeout(3_000),
-    });
-    cachedReachable = res.ok;
+    if (isTauri()) {
+      const health = await checkGatewayHealth();
+      cachedReachable = health.online;
+    } else {
+      const res = await fetch(`${API_BASE_URL}/health`, {
+        method: "GET",
+        signal: AbortSignal.timeout(3_000),
+      });
+      cachedReachable = res.ok;
+    }
   } catch (_) {
     cachedReachable = false;
   }
