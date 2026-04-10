@@ -6,10 +6,13 @@
 
 | Service | URL | Type |
 |---------|-----|------|
-| Landing | agencyos.network | CF Pages |
-| Dashboard | app.agencyos.network | CF Pages |
-| API | api.agencyos.network | CF Workers v5.0.0 |
-| Docs | docs.agencyos.network | CF Pages |
+| Landing | mekongmind.com | CF Pages (project: mekongmind) |
+| Use Cases | mekongmind.com/use-cases/* | CF Pages (project: mekongmind) |
+| IDE App | mekongmind.com/ide | CF Pages (project: mekongmind) |
+| Reports | mekongmind.com/reports | CF Pages (project: mekongmind) |
+| Dashboard | mekongmind.com/dashboard | CF Pages (project: mekongmind) |
+| API | api.mekongmind.com | CF Workers v5.0.0 |
+| Docs | mekongmind.com/docs | CF Pages (project: mekongmind) |
 | LLM | 192.168.11.111:11434 | Ollama (M1 Max) |
 
 ## 1. High-Level Overview
@@ -520,8 +523,8 @@ GET    /v1/pricing?tenant=slug      # Pricing with tenant-specific checkout URL
 ```
 
 **Landing Page Flow:**
-1. User visits `landing.agencyos.network` → hub page (13 tenant cards)
-2. Clicks tenant card → redirects to `landing.agencyos.network/{slug}/`
+1. User visits `mekongmind.com` → hub page (13 tenant cards)
+2. Clicks tenant card → redirects to `mekongmind.com/use-cases/{slug}/`
 3. Tenant landing page renders with personalized departments + pricing
 4. Clicks "Subscribe" → Polar.sh with tenant-specific checkout URL
 5. After payment → onboard to billing tenant (separate from use-case)
