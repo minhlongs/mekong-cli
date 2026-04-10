@@ -108,7 +108,10 @@ async def payment_success(
     """
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
-    # Verify HMAC signature — missing or invalid sig returns info-only response
+    # Verify HMAC signature — missing sig returns info-only (no real provisioning).
+    # This is intentional for UX: Polar redirects here without sig on checkout
+    # success, so we show a "pending" confirmation while webhook handles the real
+    # credit provisioning asynchronously.
     if not sig:
         return SuccessResponse(
             api_key="pending_webhook_verification",
