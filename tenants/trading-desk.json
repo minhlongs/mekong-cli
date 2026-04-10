@@ -1,0 +1,21 @@
+{
+  "name": "AI Trading Desk",
+  "slug": "trading-desk",
+  "tagline": "Algo-trading with AI agents",
+  "description": "Run quantitative analysis, backtest strategies, and monitor positions with AI-powered finance commands.",
+  "featured_departments": ["finance", "analyst", "data"],
+  "featured_commands": [
+    "finance-budget-plan", "analyst-report", "analyst-forecast-update",
+    "data-pipeline", "accounting-daily"
+  ],
+  "branding": { "accent_color": "#10B981", "icon": "chart-line" },
+  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "polar_checkout_url": null,
+  "target_audience": "Algo-traders and quant teams",
+  "use_cases": [
+    "Backtest trading strategies with AI analysis",
+    "Generate daily P&L and risk reports",
+    "Monitor positions and set automated alerts",
+    "Build financial models with natural language"
+  ]
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ tenant.name }} — Mekong IDE</title>
+  <meta name="description" content="{{ tenant.description }}">
+  <link rel="stylesheet" href="../static/style.css">
+  <style>:root { --accent: {{ tenant.branding.accent_color }}; }</style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/" class="logo">Mekong IDE</a>
+      <a href="/#pricing">Pricing</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="icon">{{ tenant.branding.icon }}</span>
+    <h1>{{ tenant.name }}</h1>
+    <p class="tagline">{{ tenant.tagline }}</p>
+    <p class="description">{{ tenant.description }}</p>
+    <a class="cta" href="{{ checkout_url }}">Start Free Trial</a>
+  </section>
+
+  <section class="use-cases">
+    <h2>What you can do</h2>
+    <ul>
+      {% for uc in tenant.use_cases %}
+      <li>{{ uc }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="departments">
+    <h2>AI Departments Included</h2>
+    <div class="dept-grid">
+      {% for dept in tenant.featured_departments %}
+      <div class="dept-card">{{ dept }}</div>
+      {% endfor %}
+    </div>
+    <p class="note">Plus access to all 22 departments with any subscription.</p>
+  </section>
+
+  <section class="commands">
+    <h2>Featured Commands</h2>
+    <div class="cmd-list">
+      {% for cmd in tenant.featured_commands %}
+      <code>mekong {{ cmd }}</code>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <h2>Simple Pricing</h2>
+    <div class="tier-grid">
+      {% for tier in pricing_tiers %}
+      <div class="tier-card">
+        <h3>{{ tier.name }}</h3>
+        <p class="price">${{ tier.price_usd }}/mo</p>
+        <p>{{ tier.credits }} credits</p>
+        <a href="{{ tier.checkout_url }}">Get Started</a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <footer>
+    <p>Mekong IDE — 22 AI departments. 290 commands. 1 subscription.</p>
+  </footer>
+</body>
+</html>

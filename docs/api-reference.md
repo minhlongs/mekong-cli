@@ -2140,7 +2140,170 @@ If valuation_cap:
 
 ---
 
-## 15. /v1/funding
+## 15. /v1/tenants (Use-Case Personas)
+
+**Purpose:** Discover and filter departments by industry use-case.
+
+**Base Path:** `/v1/tenants`
+
+**Authentication:** Not required
+
+**Note:** Use-case tenants are marketing personas (JSON configs) — orthogonal to billing tenants (payment accounts). All API access is unrestricted regardless of chosen use-case.
+
+### Endpoints
+
+#### GET /v1/tenants
+
+**Purpose:** List all 13 available use-case personas.
+
+**Response (200):**
+```json
+{
+  "count": 13,
+  "tenants": [
+    {
+      "name": "Trading Desk",
+      "slug": "trading-desk",
+      "tagline": "Algorithmic trading operations",
+      "accent_color": "#FF6B00",
+      "icon": "📊"
+    },
+    {
+      "name": "Content Studio",
+      "slug": "content-studio",
+      "tagline": "Content creation & distribution",
+      "accent_color": "#6366F1",
+      "icon": "✏️"
+    }
+  ]
+}
+```
+
+---
+
+#### GET /v1/tenants/{slug}
+
+**Purpose:** Get full configuration for a single use-case tenant.
+
+**Path Parameters:**
+| Field | Type | Required |
+|-------|------|----------|
+| `slug` | string | Yes (e.g., "trading-desk") |
+
+**Response (200):**
+```json
+{
+  "slug": "trading-desk",
+  "name": "Trading Desk",
+  "tagline": "Algorithmic trading operations",
+  "featured_departments": ["studio", "founder", "product", "engineering"],
+  "branding": {
+    "accent_color": "#FF6B00",
+    "icon": "📊"
+  },
+  "polar_checkout_url": "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions"
+}
+```
+
+**Errors:**
+| Code | Reason |
+|------|--------|
+| 404 | Tenant slug not found |
+
+---
+
+#### GET /v1/departments
+
+**Purpose:** List departments, optionally filtered by use-case tenant.
+
+**Query Parameters:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `tenant` | string | No | Filter to departments featured in this use-case (e.g., "trading-desk") |
+
+**Response (200) — Without tenant filter:**
+```json
+{
+  "product": "Mekong IDE",
+  "total_departments": 22,
+  "total_commands": 290,
+  "departments": [
+    {
+      "name": "studio",
+      "commands": ["studio-announce", "studio-launch", ...],
+      "count": 8
+    },
+    {
+      "name": "founder",
+      "commands": ["founder-annual", "founder-okr", ...],
+      "count": 12
+    }
+  ]
+}
+```
+
+**Response (200) — With tenant filter:**
+```json
+{
+  "product": "Mekong IDE",
+  "total_departments": 4,
+  "total_commands": 78,
+  "tenant": {
+    "name": "Trading Desk",
+    "slug": "trading-desk",
+    "tagline": "Algorithmic trading operations"
+  },
+  "departments": [
+    {
+      "name": "studio",
+      "commands": ["studio-announce", "studio-launch", ...],
+      "count": 8
+    }
+  ]
+}
+```
+
+---
+
+#### GET /v1/pricing
+
+**Purpose:** Return pricing tiers, optionally customized by tenant.
+
+**Query Parameters:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `tenant` | string | No | Customize checkout URL for this use-case (e.g., "trading-desk") |
+
+**Response (200):**
+```json
+{
+  "pricing_tiers": [
+    {
+      "name": "Starter",
+      "price_usd": 49,
+      "credits": 200,
+      "checkout_url": "https://polar.sh/.../subscriptions?tier=starter"
+    },
+    {
+      "name": "Growth",
+      "price_usd": 149,
+      "credits": 1000,
+      "checkout_url": "https://polar.sh/.../subscriptions?tier=growth"
+    },
+    {
+      "name": "Pro",
+      "price_usd": 499,
+      "credits": 5000,
+      "checkout_url": "https://polar.sh/.../subscriptions?tier=pro"
+    }
+  ],
+  "tenant": "trading-desk"
+}
+```
+
+---
+
+## 16. /v1/funding
 
 **Purpose:** Quadratic funding rounds and project matching.
 
