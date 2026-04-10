@@ -6,16 +6,20 @@
 import { TokenUsageBar } from "./token-usage-bar";
 import { CompressionTimeline } from "./compression-timeline";
 import { ContextMetricsRow } from "./context-metrics-row";
+import { useContextMetrics } from "@/hooks/use-context-metrics";
 import { MOCK_CONTEXT } from "@/lib/mock/context-mock-data";
-import type { ContextMetrics } from "@/lib/types/context-types";
 
-interface ContextVisualizerProps {
-  metrics?: ContextMetrics;
-}
+export function ContextVisualizer() {
+  const { metrics, isDemoMode } = useContextMetrics();
 
-export function ContextVisualizer({ metrics = MOCK_CONTEXT }: ContextVisualizerProps) {
-  const { tokenUsage, compressionEvents, sessionDurationSec, estimatedCostUsd } = metrics;
-  const usedTokens = tokenUsage.systemPrompt + tokenUsage.claudeMd + tokenUsage.conversation + tokenUsage.toolResults;
+  // Fallback to mock while loading or in demo mode
+  const data = metrics ?? MOCK_CONTEXT;
+  const { tokenUsage, compressionEvents, sessionDurationSec, estimatedCostUsd } = data;
+  const usedTokens =
+    tokenUsage.systemPrompt +
+    tokenUsage.claudeMd +
+    tokenUsage.conversation +
+    tokenUsage.toolResults;
 
   return (
     <div
@@ -34,6 +38,11 @@ export function ContextVisualizer({ metrics = MOCK_CONTEXT }: ContextVisualizerP
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-primary)" }}>
           Context Usage
+          {isDemoMode && (
+            <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "var(--text-muted)" }}>
+              (demo)
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -57,7 +66,7 @@ export function ContextVisualizer({ metrics = MOCK_CONTEXT }: ContextVisualizerP
       />
 
       {/* Metrics row */}
-      <ContextMetricsRow metrics={metrics} />
+      <ContextMetricsRow metrics={data} />
     </div>
   );
 }

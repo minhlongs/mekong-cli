@@ -2,32 +2,17 @@
 /**
  * EngineFarmPage — full page layout: header, engine grid, queue/router cards, system resources.
  */
-import { useState } from "react";
 import { Badge, Button, Card } from "@/components/ds";
 import { EngineCard } from "./engine-card";
 import { SystemResourcesPanel } from "./system-resources-panel";
-import { MOCK_ENGINES, MOCK_SYSTEM, MOCK_QUEUE, MOCK_ROUTER } from "@/lib/mock/engine-mock-data";
-import type { Engine, EngineStatus } from "@/lib/types/engine-types";
+import { useEngines } from "@/hooks/use-engines";
+import { MOCK_SYSTEM, MOCK_QUEUE, MOCK_ROUTER } from "@/lib/mock/engine-mock-data";
 
 export function EngineFarmPage() {
-  const [engines, setEngines] = useState<Engine[]>(MOCK_ENGINES);
+  const { engines, start, stop, isLoading, isDemoMode } = useEngines();
 
-  function updateStatus(id: string, status: EngineStatus) {
-    setEngines((prev) =>
-      prev.map((e) =>
-        e.id === id
-          ? {
-              ...e,
-              status,
-              resources: status === "stopped" ? { ram: 0, gpu: 0, vram: 0 } : e.resources,
-              tokensPerSec: status === "stopped" || status === "idle" ? 0 : e.tokensPerSec,
-            }
-          : e
-      )
-    );
-  }
-
-  const runningCount = engines.filter((e) => e.status === "running").length;
+  const engineList = engines ?? [];
+  const runningCount = engineList.filter((e) => e.status === "running").length;
 
   return (
     <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem", minHeight: "100vh", background: "var(--bg-primary)" }}>
@@ -38,16 +23,24 @@ export function EngineFarmPage() {
             Engine Farm
           </h1>
           <Badge variant={runningCount > 0 ? "success" : "danger"} label={`${runningCount} running`} dot />
+          {isDemoMode && (
+            <Badge variant="warning" label="demo" />
+          )}
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Button variant="primary"  size="sm" onClick={() => engines.forEach((e) => updateStatus(e.id, "running"))}>
+          <Button variant="primary" size="sm" onClick={() => engineList.forEach((e) => start(e.id))}>
             Start All
           </Button>
-          <Button variant="danger"   size="sm" onClick={() => engines.forEach((e) => updateStatus(e.id, "stopped"))}>
+          <Button variant="danger" size="sm" onClick={() => engineList.forEach((e) => stop(e.id))}>
             Stop All
           </Button>
         </div>
       </div>
+
+      {/* Loading state */}
+      {isLoading && engineList.length === 0 && (
+        <div style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>Loading engines…</div>
+      )}
 
       {/* Row 1 — Engine cards */}
       <div
@@ -57,13 +50,13 @@ export function EngineFarmPage() {
           gap: "1rem",
         }}
       >
-        {engines.map((engine) => (
+        {engineList.map((engine) => (
           <EngineCard
             key={engine.id}
             engine={engine}
-            onStart={(id)   => updateStatus(id, "running")}
-            onStop={(id)    => updateStatus(id, "stopped")}
-            onRestart={(id) => updateStatus(id, "idle")}
+            onStart={(id) => start(id)}
+            onStop={(id)  => stop(id)}
+            onRestart={(id) => { stop(id); setTimeout(() => start(id), 300); }}
           />
         ))}
       </div>
@@ -79,9 +72,9 @@ export function EngineFarmPage() {
         </Card>
         <Card header="Model Router">
           <div style={{ display: "flex", gap: "2rem" }}>
-            <Stat label="Routed"     value={MOCK_ROUTER.routed}       color="var(--accent-teal-400)" />
-            <Stat label="Avg Route"  value={`${MOCK_ROUTER.avgRouteMs}ms`} color="var(--text-secondary)" />
-            <Stat label="Fallbacks"  value={MOCK_ROUTER.fallbacks}    color="var(--status-warning)"  />
+            <Stat label="Routed"    value={MOCK_ROUTER.routed}            color="var(--accent-teal-400)" />
+            <Stat label="Avg Route" value={`${MOCK_ROUTER.avgRouteMs}ms`} color="var(--text-secondary)" />
+            <Stat label="Fallbacks" value={MOCK_ROUTER.fallbacks}         color="var(--status-warning)"  />
           </div>
         </Card>
       </div>

@@ -2,23 +2,22 @@
 
 // Agent Chat Panel — composes pipeline, messages, model status, input, footer
 
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { PipelineVisualizer } from "./pipeline-visualizer";
 import { ChatMessageItem } from "./chat-message";
 import { ModelStatusCard } from "./model-status-card";
 import { ChatInput } from "./chat-input";
 import { ContextFooter } from "./context-footer";
+import { useAgentChat } from "@/hooks/use-agent-chat";
 import {
-  MOCK_MESSAGES,
   MOCK_PIPELINE_STEPS,
   MOCK_MODEL_CONFIGS,
   MOCK_CONTEXT_FOOTER,
 } from "@/lib/mock/agent-mock-data";
-import type { ChatMessage } from "@/lib/agent-types";
 import type { ModelVariant } from "@/lib/types";
 
 export function AgentChatPanel() {
-  const [messages, setMessages] = useState<ChatMessage[]>(MOCK_MESSAGES);
+  const { messages, send, isLoading, isDemoMode, selectedModel, setSelectedModel } = useAgentChat();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new message
@@ -29,19 +28,9 @@ export function AgentChatPanel() {
   }, [messages]);
 
   function handleSend(content: string, model: ModelVariant) {
-    const id = String(Date.now());
-    setMessages((prev) => [
-      ...prev,
-      { id, role: "user", content, timestamp: Date.now() },
-      // Placeholder echo for demo; replaced by real API in Phase 7
-      {
-        id: id + "_r",
-        role: "agent",
-        content: "Processing your request...",
-        timestamp: Date.now() + 100,
-        model,
-      },
-    ]);
+    // Sync model selection then send via hook (real API or demo fallback)
+    setSelectedModel(model as string);
+    send(content);
   }
 
   return (
@@ -64,6 +53,11 @@ export function AgentChatPanel() {
         {messages.map((msg) => (
           <ChatMessageItem key={msg.id} message={msg} />
         ))}
+        {isLoading && (
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", padding: "0.25rem 0.5rem" }}>
+            {isDemoMode ? "Demo mode…" : "Thinking…"}
+          </div>
+        )}
       </div>
 
       {/* Model status — compact 3-card stack */}
