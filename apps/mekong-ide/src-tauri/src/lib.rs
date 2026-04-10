@@ -48,6 +48,8 @@ pub fn run() {
             // System
             commands::system::get_system_info,
             commands::system::list_tenants,
+            // Gateway proxy (bypasses WebView sandbox)
+            commands::gateway::gateway_fetch,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Mekong IDE");

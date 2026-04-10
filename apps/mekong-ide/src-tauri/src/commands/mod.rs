@@ -2,3 +2,4 @@
 pub mod llm;
 pub mod filesystem;
 pub mod system;
+pub mod gateway;

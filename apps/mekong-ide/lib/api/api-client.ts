@@ -1,49 +1,69 @@
 /**
- * Base fetch wrapper with auth, timeout, and typed error handling.
- * Uses native fetch — no external libraries.
+ * API client — routes through Rust IPC in Tauri, native fetch in browser.
+ * Tauri WebView blocks fetch() to localhost — invoke() bypasses this.
  */
 
 import { API_BASE_URL, API_TIMEOUT_MS, buildHeaders } from "./api-config";
 import { ApiError, type ApiResult } from "./api-types";
 import { isTauri } from "../tauri-bridge";
 
-/** Get the right fetch function — Tauri plugin or native browser */
-async function getTauriFetch(): Promise<typeof globalThis.fetch> {
-  if (isTauri()) {
-    const { fetch: tFetch } = await import("@tauri-apps/plugin-http");
-    return tFetch as unknown as typeof globalThis.fetch;
-  }
-  return globalThis.fetch;
+// ---- Tauri IPC fetch (bypasses WebView sandbox) ----
+
+async function tauriFetch<T>(
+  path: string,
+  method: string,
+  body?: unknown
+): Promise<T> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<T>("gateway_fetch", {
+    path,
+    method,
+    body: body !== undefined ? JSON.stringify(body) : null,
+  });
 }
 
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit = {}
-): Promise<Response> {
-  const doFetch = await getTauriFetch();
+// ---- Browser fetch ----
+
+async function browserFetch<T>(
+  path: string,
+  method: string,
+  body?: unknown
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   try {
-    return await doFetch(url, { ...init, signal: controller.signal });
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers: buildHeaders(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        message = data?.detail ?? data?.message ?? message;
+      } catch (_) {}
+      throw new ApiError(res.status, message);
+    }
+    if (res.status === 204) return undefined as unknown as T;
+    return res.json() as Promise<T>;
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function parseResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    let message = `HTTP ${res.status}`;
-    try {
-      const body = await res.json();
-      message = body?.detail ?? body?.message ?? message;
-    } catch (_) {
-      // ignore parse errors
-    }
-    throw new ApiError(res.status, message);
+// ---- Unified API call ----
+
+async function apiCall<T>(
+  path: string,
+  method: string,
+  body?: unknown
+): Promise<T> {
+  if (isTauri()) {
+    return tauriFetch<T>(path, method, body);
   }
-  // 204 No Content
-  if (res.status === 204) return undefined as unknown as T;
-  return res.json() as Promise<T>;
+  return browserFetch<T>(path, method, body);
 }
 
 /** Wrap any API call into {data, error} — never throws */
@@ -60,41 +80,19 @@ async function safe<T>(call: () => Promise<T>): Promise<ApiResult<T>> {
 // ---- HTTP verbs ----
 
 function get<T>(path: string): Promise<ApiResult<T>> {
-  return safe(() =>
-    fetchWithTimeout(`${API_BASE_URL}${path}`, {
-      method: "GET",
-      headers: buildHeaders(),
-    }).then(parseResponse<T>)
-  );
+  return safe(() => apiCall<T>(path, "GET"));
 }
 
 function post<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
-  return safe(() =>
-    fetchWithTimeout(`${API_BASE_URL}${path}`, {
-      method: "POST",
-      headers: buildHeaders(),
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }).then(parseResponse<T>)
-  );
+  return safe(() => apiCall<T>(path, "POST", body));
 }
 
 function patch<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
-  return safe(() =>
-    fetchWithTimeout(`${API_BASE_URL}${path}`, {
-      method: "PATCH",
-      headers: buildHeaders(),
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }).then(parseResponse<T>)
-  );
+  return safe(() => apiCall<T>(path, "PATCH", body));
 }
 
 function del<T>(path: string): Promise<ApiResult<T>> {
-  return safe(() =>
-    fetchWithTimeout(`${API_BASE_URL}${path}`, {
-      method: "DELETE",
-      headers: buildHeaders(),
-    }).then(parseResponse<T>)
-  );
+  return safe(() => apiCall<T>(path, "DELETE"));
 }
 
 export const apiClient = { get, post, patch, delete: del };
