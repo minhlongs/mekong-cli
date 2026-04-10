@@ -10,7 +10,7 @@ from __future__ import annotations
 import threading
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.api.raas_task_models import StepDetail, TaskStatus
 
@@ -30,6 +30,10 @@ class TaskRecord:
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     steps: List[StepDetail] = field(default_factory=list)
+    # Result fields — populated by orchestrator after successful execution
+    result_data: Optional[Dict[str, Any]] = None
+    result_schema: Optional[str] = None  # e.g. "marketing/campaign"
+    completed_at: Optional[str] = None
 
 
 class TaskStore:
@@ -83,6 +87,73 @@ class TaskStore:
         """
         with self._lock:
             self._records[record.task_id] = record
+
+    def save_result(
+        self,
+        task_id: str,
+        tenant_id: str,
+        data: Dict[str, Any],
+        schema: Optional[str] = None,
+    ) -> Optional[TaskRecord]:
+        """Attach structured result data to an existing task record.
+
+        Guards against oversized payloads (1 MB limit) to prevent LLM verbosity
+        from bloating the in-memory store.
+
+        Args:
+            task_id: Task identifier.
+            tenant_id: Caller's tenant — mismatches return None.
+            data: Structured result payload (command-specific JSON).
+            schema: Optional schema slug identifying the report layout.
+
+        Returns:
+            Updated :class:`TaskRecord` or ``None`` if not found / mismatch.
+
+        Raises:
+            ValueError: If serialised data exceeds 1 MB.
+        """
+        import json as _json
+
+        serialised = _json.dumps(data)
+        if len(serialised.encode()) > 1_000_000:
+            raise ValueError("result_data exceeds 1 MB limit")
+
+        record = self.get(task_id, tenant_id)
+        if record is None:
+            return None
+        record.result_data = data
+        record.result_schema = schema
+        self.update(record)
+        return record
+
+    def list_tasks(
+        self,
+        tenant_id: str,
+        limit: int = 20,
+        offset: int = 0,
+        status: Optional[str] = None,
+    ) -> List[TaskRecord]:
+        """Return a paginated list of task records for a tenant.
+
+        Args:
+            tenant_id: Filter to this tenant only.
+            limit: Maximum number of records to return (capped at 100).
+            offset: Number of records to skip.
+            status: Optional :class:`TaskStatus` value string to filter by.
+
+        Returns:
+            List of matching :class:`TaskRecord` objects.
+        """
+        limit = min(limit, 100)
+        with self._lock:
+            records = [r for r in self._records.values() if r.tenant_id == tenant_id]
+
+        if status:
+            records = [r for r in records if r.status.value == status]
+
+        # Most-recent first (insertion order is preserved in Python 3.7+)
+        records = list(reversed(records))
+        return records[offset : offset + limit]
 
 
 # Module-level singleton shared across all route handlers

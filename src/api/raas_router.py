@@ -11,10 +11,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, AsyncGenerator, Dict, List
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from src.api.raas_auth_middleware import require_tenant
 from src.api.raas_task_models import (
@@ -27,6 +27,7 @@ from src.api.raas_task_models import (
     TaskStatus,
     TaskStatusResponse,
 )
+from src.api.raas_result_models import MissionResultResponse, TaskListResponse, TaskSummary
 from src.api.raas_task_store import TaskRecord, get_task_store
 from src.core.error_responses import ErrorCode, error_response
 from src.core.input_validation import validate_required, validate_string_length
@@ -55,8 +56,39 @@ def _build_orchestrator() -> Any:
     )
 
 
+def _goal_to_schema(goal: str) -> Optional[str]:
+    """Derive a report layout slug from a goal string.
+
+    Maps common goal keywords to schema identifiers used by report pages.
+    Returns None when no pattern matches.
+
+    Args:
+        goal: High-level goal submitted by the caller.
+
+    Returns:
+        Schema slug string or ``None``.
+    """
+    goal_lower = goal.lower()
+    _schema_map = [
+        (["marketing", "campaign"], "marketing/campaign"),
+        (["sales", "pipeline", "crm"], "sales/pipeline"),
+        (["finance", "budget", "revenue"], "finance/budget"),
+        (["code", "review", "audit"], "engineering/code-review"),
+        (["deploy", "deployment", "release"], "engineering/deployment"),
+        (["security", "vulnerability", "cve"], "ops/security"),
+        (["okr", "objective", "goal"], "strategy/okr"),
+        (["sprint", "backlog", "story"], "product/sprint"),
+    ]
+    for keywords, schema in _schema_map:
+        if any(kw in goal_lower for kw in keywords):
+            return schema
+    return None
+
+
 def _result_to_record(record: TaskRecord, result: Any) -> TaskRecord:
     """Populate a TaskRecord from an OrchestrationResult in-place."""
+    import datetime as _dt
+
     from src.core.orchestrator import OrchestrationStatus
 
     status_map = {
@@ -82,6 +114,21 @@ def _result_to_record(record: TaskRecord, result: Any) -> TaskRecord:
         )
         for sr in result.step_results
     ]
+
+    # Capture structured output if orchestrator produced it
+    if hasattr(result, "structured_output") and result.structured_output:
+        record.result_data = result.structured_output
+    elif record.status == TaskStatus.SUCCESS and record.steps:
+        # Fallback: store step summaries as minimal result_data
+        record.result_data = {
+            "steps": [
+                {"order": s.order, "title": s.title, "summary": s.summary}
+                for s in record.steps
+            ]
+        }
+
+    record.result_schema = _goal_to_schema(record.goal)
+    record.completed_at = _dt.datetime.utcnow().isoformat() + "Z"
     return record
 
 
@@ -197,6 +244,9 @@ def get_task_status(
             errors=record.errors,
             warnings=record.warnings,
             steps=record.steps,
+            result_data=record.result_data,
+            result_schema=record.result_schema,
+            completed_at=record.completed_at,
         )
 
     except HTTPException:
@@ -306,6 +356,157 @@ async def stream_task(
         _event_stream(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# Result + list endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/tasks", response_model=TaskListResponse)
+def list_tasks(
+    tenant: TenantContext = Depends(require_tenant),
+    limit: int = Query(20, ge=1, le=100, description="Page size"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+    status: Optional[str] = Query(None, description="Filter by TaskStatus value"),
+) -> TaskListResponse:
+    """List tasks for the authenticated tenant with pagination and optional status filter.
+
+    Args:
+        tenant: Resolved tenant.
+        limit: Max records to return (1-100, default 20).
+        offset: Records to skip for pagination.
+        status: Optional status string to filter (pending/running/success/failed/partial).
+
+    Returns:
+        :class:`TaskListResponse` with paginated task summaries.
+    """
+    store = get_task_store()
+    records = store.list_tasks(
+        tenant_id=tenant.tenant_id,
+        limit=limit,
+        offset=offset,
+        status=status,
+    )
+    summaries = [
+        TaskSummary(
+            task_id=r.task_id,
+            goal=r.goal,
+            status=r.status,
+            result_schema=r.result_schema,
+            completed_at=r.completed_at,
+            success_rate=r.success_rate,
+        )
+        for r in records
+    ]
+    # Total count (all matching records, before pagination)
+    all_records = store.list_tasks(
+        tenant_id=tenant.tenant_id,
+        limit=10000,
+        offset=0,
+        status=status,
+    )
+    return TaskListResponse(
+        tasks=summaries,
+        total=len(all_records),
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get("/tasks/{task_id}/result", response_model=MissionResultResponse)
+def get_task_result(
+    task_id: str,
+    tenant: TenantContext = Depends(require_tenant),
+) -> Any:
+    """Return only the structured result payload for a completed task.
+
+    Lighter than GET /v1/tasks/{id} — omits execution metadata (steps, errors).
+    Designed to be cached by report pages.
+
+    Args:
+        task_id: Task identifier.
+        tenant: Resolved tenant.
+
+    Returns:
+        :class:`MissionResultResponse` with result_data and result_schema.
+
+    Raises:
+        HTTPException 404: Task not found, belongs to another tenant, or still running.
+        HTTPException 204: Task complete but no result_data stored (via JSONResponse).
+    """
+    if not task_id or not task_id.strip():
+        raise HTTPException(status_code=400, detail="task_id is required")
+
+    store = get_task_store()
+    record = store.get(task_id=task_id, tenant_id=tenant.tenant_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    if record.status in (TaskStatus.PENDING, TaskStatus.RUNNING):
+        raise HTTPException(status_code=404, detail="Task not yet complete.")
+
+    if not record.result_data:
+        # 204 No Content — task done but no structured result
+        return JSONResponse(status_code=204, content=None)
+
+    return MissionResultResponse(
+        task_id=record.task_id,
+        goal=record.goal,
+        result_schema=record.result_schema,
+        result_data=record.result_data,
+        completed_at=record.completed_at,
+    )
+
+
+@router.patch("/tasks/{task_id}/result", response_model=MissionResultResponse)
+def save_task_result(
+    task_id: str,
+    body: Dict[str, Any],
+    tenant: TenantContext = Depends(require_tenant),
+) -> MissionResultResponse:
+    """Store structured result data on an existing task (called by orchestrator).
+
+    Allows external orchestrators to push result_data after execution completes.
+    Validates payload size (1 MB limit).
+
+    Args:
+        task_id: Task identifier.
+        body: Free-form JSON dict — the structured command output.
+        tenant: Resolved tenant.
+
+    Returns:
+        Updated :class:`MissionResultResponse`.
+
+    Raises:
+        HTTPException 404: Task not found.
+        HTTPException 413: Payload exceeds 1 MB.
+    """
+    if not task_id or not task_id.strip():
+        raise HTTPException(status_code=400, detail="task_id is required")
+
+    store = get_task_store()
+    try:
+        schema = body.pop("_result_schema", None)
+        record = store.save_result(
+            task_id=task_id,
+            tenant_id=tenant.tenant_id,
+            data=body,
+            schema=schema,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from exc
+
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    return MissionResultResponse(
+        task_id=record.task_id,
+        goal=record.goal,
+        result_schema=record.result_schema,
+        result_data=record.result_data or {},
+        completed_at=record.completed_at,
     )
 
 

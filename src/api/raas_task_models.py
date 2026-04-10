@@ -67,6 +67,13 @@ class TaskStatusResponse(BaseModel):
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
     steps: List[StepDetail] = Field(default_factory=list)
+    result_data: Optional[Dict[str, Any]] = Field(
+        None, description="Structured output produced by the orchestrator"
+    )
+    result_schema: Optional[str] = Field(
+        None, description="Report layout slug (e.g. 'marketing/campaign')"
+    )
+    completed_at: Optional[str] = Field(None, description="ISO-8601 completion timestamp")
 
 
 class AgentInfo(BaseModel):
