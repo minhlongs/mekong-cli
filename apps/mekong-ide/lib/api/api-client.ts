@@ -1,33 +1,25 @@
 /**
  * API client — routes through Rust IPC in Tauri, native fetch in browser.
  *
- * IMPORTANT: Tauri detection must be runtime-only (not tree-shakeable).
- * Next.js SSG eliminates code paths it evaluates as dead at build time.
- * All Tauri imports MUST be dynamic import() inside runtime functions.
+ * Uses window.__TAURI_INTERNALS__.invoke() directly — no npm import.
+ * This survives Next.js tree-shaking because it's a runtime window access.
  */
 
 import { API_BASE_URL, API_TIMEOUT_MS, buildHeaders } from "./api-config";
 import { ApiError, type ApiResult } from "./api-types";
 
-/** Runtime check — NOT tree-shakeable because it depends on window */
-function isInTauri(): boolean {
-  try {
-    return typeof window !== "undefined" &&
-      "__TAURI_INTERNALS__" in window;
-  } catch (_) {
-    return false;
-  }
-}
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-/** Route API call through Rust IPC (bypasses WebView sandbox) */
+/** Route API call through Tauri Rust IPC — zero npm imports */
 async function tauriFetch<T>(
   path: string,
   method: string,
   body?: unknown
 ): Promise<T> {
-  // Dynamic import — MUST stay inside function body to survive tree-shaking
-  const { invoke } = await import("@tauri-apps/api/core");
-  return invoke<T>("gateway_fetch", {
+  const w = window as any;
+  const invoke = w.__TAURI_INTERNALS__?.invoke;
+  if (!invoke) throw new Error("Tauri invoke not available");
+  return invoke("gateway_fetch", {
     path,
     method,
     body: body !== undefined ? JSON.stringify(body) : null,
@@ -70,8 +62,10 @@ async function apiCall<T>(
   method: string,
   body?: unknown
 ): Promise<T> {
-  // Runtime check every call — not cached, not tree-shakeable
-  if (isInTauri()) {
+  if (
+    typeof window !== "undefined" &&
+    (window as any).__TAURI_INTERNALS__
+  ) {
     return tauriFetch<T>(path, method, body);
   }
   return browserFetch<T>(path, method, body);
