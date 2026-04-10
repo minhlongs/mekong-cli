@@ -3,127 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pricing — Mekong AI OS</title>
-<meta name="description" content="Mekong AI OS pricing. From $0 open source to $499 enterprise. Pay with Polar.sh.">
+<title>Pricing — Mekong IDE</title>
+<meta name="description" content="Mekong IDE pricing. 22 AI departments, 290 commands, 1 subscription. From $49/mo.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0A0A0B;--bg2:#141416;--surface:#1E1E22;--text:#F1F1F3;--text2:#A0A0A8;--text3:#5A5A65;--border:#2A2A2E;--accent:#FF8400;--green:#22C55E}
+*{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--text);text-decoration:none}a:hover{color:var(--accent)}
 .topbar{display:flex;align-items:center;padding:0 48px;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
 .logo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:16px}.logo-m{color:var(--text)}.logo-a{color:var(--accent)}
 .nav{display:flex;gap:32px;margin-left:auto;align-items:center}.nav a{font-size:14px;color:var(--text2);font-weight:500}.nav a:hover{color:var(--text)}
-.hero{text-align:center;padding:80px 48px 40px}
-h1{font-size:42px;font-weight:700;margin-bottom:16px}
+.wrap{max-width:960px;margin:0 auto;padding:64px 24px}
+h1{font-size:38px;font-weight:700;text-align:center;margin-bottom:8px}
 h1 em{font-style:normal;color:var(--accent)}
-.sub{font-size:18px;color:var(--text2);max-width:600px;margin:0 auto 48px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:1200px;margin:0 auto;padding:0 48px 80px}
+.sub{text-align:center;color:var(--text2);font-size:16px;margin-bottom:48px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 24px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
 .card:hover{border-color:var(--text3);transform:translateY(-2px)}
-.card.popular{border-color:var(--accent);position:relative}
-.card.popular::before{content:'Most Popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:4px 14px;border-radius:999px}
+.card.pop{border-color:var(--accent);position:relative}
+.card.pop::before{content:'Most popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:4px 14px;border-radius:999px}
 .tier{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.price{font-size:48px;font-weight:800;margin-bottom:4px}
-.price span{font-size:16px;font-weight:500;color:var(--text2)}
-.period{font-size:13px;color:var(--text3);margin-bottom:24px}
-.features{list-style:none;margin-bottom:32px;flex:1}
-.features li{font-size:14px;color:var(--text2);padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.features li::before{content:'✓';color:var(--green);font-weight:700}
-.cta{display:block;text-align:center;padding:14px;border-radius:12px;font-weight:600;font-size:14px;transition:all .2s;cursor:pointer;border:none}
-.cta-primary{background:var(--accent);color:#000}.cta-primary:hover{opacity:.9;color:#000}
-.cta-outline{border:1px solid var(--border);color:var(--text);background:none}.cta-outline:hover{border-color:var(--text3)}
-.cta-green{background:var(--green);color:#000}.cta-green:hover{opacity:.9;color:#000}
-.faq{max-width:700px;margin:0 auto;padding:0 48px 80px}
-.faq h2{font-size:28px;font-weight:700;text-align:center;margin-bottom:32px}
-.faq-item{border-bottom:1px solid var(--border);padding:20px 0}
-.faq-q{font-weight:600;margin-bottom:8px}
-.faq-a{font-size:14px;color:var(--text2);line-height:1.6}
-footer{display:flex;align-items:center;padding:0 48px;height:60px;border-top:1px solid var(--border)}
-.footer-domain{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text3)}
-.footer-links{display:flex;gap:24px;margin-left:auto}.footer-links a{font-size:13px;color:var(--text3)}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.topbar,.hero,.faq,footer{padding-left:24px;padding-right:24px}.grid{padding:0 24px 60px}}
-@media(max-width:600px){.grid{grid-template-columns:1fr}.nav a:not(:last-child){display:none}h1{font-size:28px}.price{font-size:36px}}
+.price{font-size:42px;font-weight:800;margin-bottom:4px}.price span{font-size:16px;font-weight:400;color:var(--text2)}
+.credits{color:var(--accent);font-size:14px;margin-bottom:24px;font-weight:500}
+.features{list-style:none;flex:1;margin-bottom:24px}
+.features li{padding:6px 0;font-size:14px;color:var(--text2)}
+.features li::before{content:"✓ ";color:var(--accent)}
+.btn{display:block;text-align:center;padding:14px;border-radius:10px;font-weight:600;font-size:15px;transition:opacity .2s}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--accent);color:#000}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.included{margin-top:56px;text-align:center}
+.included h2{font-size:20px;font-weight:600;margin-bottom:16px}
+.depts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:700px;margin:0 auto}
+.dept{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--text2)}
+.back{display:block;text-align:center;margin-top:40px;color:var(--text3);font-size:14px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<nav class="topbar"><a href="/"><div class="logo"><span class="logo-m">Mekong</span> <span class="logo-a">AI OS</span></div></a><div class="nav"><a href="https://github.com/longtho638-jpg/mekong-cli">GitHub</a><a href="/#features">Features</a><a href="https://github.com/longtho638-jpg/mekong-cli/wiki">Docs</a></div></nav>
-
-<section class="hero">
-<h1>Simple pricing. <em>Real AI ops.</em></h1>
-<p class="sub">Open source core. Pay only for managed execution credits (MCU). Cancel anytime.</p>
-</section>
-
+<nav class="topbar">
+<a href="/" class="logo"><span class="logo-m">mekong</span><span class="logo-a">IDE</span></a>
+<div class="nav"><a href="/">Home</a><a href="/pricing/">Pricing</a><a href="https://github.com/longtho638-jpg/mekong-cli/wiki">Docs</a></div>
+</nav>
+<div class="wrap">
+<h1>One IDE. <em>All departments.</em></h1>
+<p class="sub">Every tier includes all 22 AI departments and all 290 commands.<br>Credits = how much you run. No feature gates.</p>
 <div class="grid">
-<div class="card">
-<div class="tier">Open Source</div>
-<div class="price">$0</div>
-<div class="period">forever</div>
-<ul class="features">
-<li>348 commands</li>
-<li>All 13 Binh Phap chapters</li>
-<li>Local LLM (Ollama)</li>
-<li>Community support</li>
-<li>Clipmart marketplace</li>
-</ul>
-<a href="https://github.com/longtho638-jpg/mekong-cli" class="cta cta-outline">Clone on GitHub</a>
-</div>
-
 <div class="card">
 <div class="tier">Starter</div>
 <div class="price">$49<span>/mo</span></div>
-<div class="period">200 MCU credits</div>
+<div class="credits">200 credits / month</div>
 <ul class="features">
-<li>Everything in Open Source</li>
-<li>Cloud LLM routing</li>
-<li>200 MCU/month</li>
-<li>Email support</li>
-<li>1 workspace</li>
+<li>All 22 departments</li>
+<li>All 290 commands</li>
+<li>API access (mk_ key)</li>
+<li>Ollama local inference</li>
+<li>Community support</li>
 </ul>
-<a href="https://polar.sh/longtho638-jpg/mekong-cli/subscriptions" class="cta cta-primary">Subscribe via Polar</a>
+<a href="https://polar.sh/longtho638-jpg" class="btn btn-outline">Get started</a>
 </div>
-
-<div class="card popular">
-<div class="tier">Pro</div>
+<div class="card pop">
+<div class="tier">Growth</div>
 <div class="price">$149<span>/mo</span></div>
-<div class="period">1,000 MCU credits</div>
+<div class="credits">1,000 credits / month</div>
 <ul class="features">
 <li>Everything in Starter</li>
-<li>1,000 MCU/month</li>
-<li>Priority support</li>
-<li>5 workspaces</li>
-<li>Custom agents</li>
-<li>Analytics dashboard</li>
+<li>Priority execution</li>
+<li>Webhook callbacks</li>
+<li>SSE streaming</li>
+<li>Email support</li>
 </ul>
-<a href="https://polar.sh/longtho638-jpg/mekong-cli/subscriptions" class="cta cta-green">Subscribe via Polar</a>
+<a href="https://polar.sh/longtho638-jpg" class="btn btn-primary">Subscribe</a>
 </div>
-
 <div class="card">
-<div class="tier">Enterprise</div>
+<div class="tier">Pro</div>
 <div class="price">$499<span>/mo</span></div>
-<div class="period">Unlimited MCU</div>
+<div class="credits">5,000 credits / month</div>
 <ul class="features">
-<li>Everything in Pro</li>
-<li>Unlimited MCU</li>
+<li>Everything in Growth</li>
 <li>Dedicated support</li>
-<li>Unlimited workspaces</li>
-<li>Custom integrations</li>
+<li>Custom agent configs</li>
 <li>SLA guarantee</li>
-<li>On-premise option</li>
+<li>Multi-workspace</li>
 </ul>
-<a href="https://polar.sh/longtho638-jpg/mekong-cli/subscriptions" class="cta cta-primary">Contact Sales</a>
+<a href="https://polar.sh/longtho638-jpg" class="btn btn-outline">Contact us</a>
 </div>
 </div>
-
-<section class="faq">
-<h2>FAQ</h2>
-<div class="faq-item"><div class="faq-q">What is an MCU?</div><div class="faq-a">1 MCU = 1 command execution credit. Simple commands cost 1 MCU, complex multi-step workflows cost 3-5 MCU. Credits are deducted only after successful delivery.</div></div>
-<div class="faq-item"><div class="faq-q">Can I use my own LLM?</div><div class="faq-a">Yes. Mekong supports any OpenAI-compatible endpoint: Ollama (local), OpenRouter, DashScope, DeepSeek, Anthropic, Google. Set 3 env vars and go.</div></div>
-<div class="faq-item"><div class="faq-q">What payment methods?</div><div class="faq-a">All payments processed via Polar.sh — credit card, bank transfer. No PayPal.</div></div>
-<div class="faq-item"><div class="faq-q">Can I cancel anytime?</div><div class="faq-a">Yes. Cancel from your Polar dashboard. Unused credits expire at end of billing cycle.</div></div>
-</section>
-
-<footer><span class="footer-domain">agencyos.network</span><div class="footer-links"><a href="https://github.com/longtho638-jpg/mekong-cli">GitHub</a><a href="https://github.com/longtho638-jpg/mekong-cli/wiki">Docs</a><a href="/">Home</a></div></footer>
+<div class="included">
+<h2>Every tier includes all 22 departments</h2>
+<div class="depts">
+<span class="dept">Finance</span><span class="dept">Marketing</span><span class="dept">Sales</span>
+<span class="dept">Engineering</span><span class="dept">Legal</span><span class="dept">Compliance</span>
+<span class="dept">HR</span><span class="dept">Design</span><span class="dept">Data</span>
+<span class="dept">Security</span><span class="dept">Growth</span><span class="dept">Venture</span>
+<span class="dept">CTO</span><span class="dept">CFO</span><span class="dept">CMO</span>
+<span class="dept">CRO</span><span class="dept">Operations</span><span class="dept">Incident</span>
+<span class="dept">Observability</span><span class="dept">ML/AI</span><span class="dept">Customer Success</span>
+<span class="dept">Product</span>
+</div>
+</div>
+<a href="/" class="back">&larr; Back to Mekong IDE</a>
+</div>
 </body>
 </html>

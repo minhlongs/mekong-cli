@@ -1,4 +1,6 @@
-# Mekong CLI
+# Mekong IDE — AI Operating System
+
+> 22 AI departments. 290 commands. 1 subscription. Run your entire business with AI agents.
 
 [![CI](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml)
 [![npm openclaw-engine](https://img.shields.io/npm/v/@mekongcli/openclaw-engine?label=openclaw-engine)](https://www.npmjs.com/package/@mekongcli/openclaw-engine)

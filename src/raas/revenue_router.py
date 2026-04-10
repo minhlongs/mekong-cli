@@ -179,3 +179,30 @@ async def get_pricing():
         "tiers": tiers_with_urls,
         "checkout_url": base,
     }
+
+
+@router.get("/v1/departments")
+async def list_departments():
+    """List all departments included in Mekong IDE."""
+    import sys
+    import os
+
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    from src.core.command_loader import get_commands
+
+    commands = get_commands()
+
+    departments: dict = {}
+    for cmd in commands:
+        prefix = cmd.id.split("-")[0] if "-" in cmd.id else cmd.id
+        if prefix not in departments:
+            departments[prefix] = {"name": prefix, "commands": [], "count": 0}
+        departments[prefix]["commands"].append(cmd.id)
+        departments[prefix]["count"] += 1
+
+    return {
+        "product": "Mekong IDE",
+        "total_departments": len(departments),
+        "total_commands": len(commands),
+        "departments": sorted(departments.values(), key=lambda d: -d["count"]),
+    }

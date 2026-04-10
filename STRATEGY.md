@@ -1,39 +1,86 @@
-# Binh Pháp Mekong AI OS — 13-Giant Battle Formation
+# Mekong AI OS — Strategy
 
-> 借力打力, 虛實相生
-> Mượn sức đánh sức. Chỗ rỗng thì lấp, chỗ đầy thì cưỡi.
+> XONG = Mekong tự bán Mekong, có $ vào tài khoản.
+> PR merged, self-test pass, HTTP 200 đều CHƯA XONG.
 
-## The Formation
+## The Product: Mekong IDE
 
-| Ch | 孫子 | Giant | Relationship | Vertical |
-|----|------|-------|-------------|----------|
-| 1 | 始計 Laying Plans | Paperclip (45K⭐) | Go together | MekongHQ — AI strategy |
-| 2 | 作戰 Waging War | Coolify (53K⭐) | Ride on top | CashClaw — Algo-trading |
-| 3 | 謀攻 Win Without Fighting | OpenClaw (347K⭐) | Ride the wave | MekongCounsel — AI consulting |
-| 4 | 軍形 Invincible Defense | Supabase (100K⭐) | Ride on top | MekongVault — AI compliance |
-| 5 | 兵勢 Momentum | Next.js (139K⭐) | Ride on top | MekongStudio — Content factory |
-| 6 | 虛實 Void & Substance | Polar.sh (7K⭐) | Ride on top | MekongPay — SE Asian billing |
-| 7 | 軍爭 Maneuver | n8n (182K⭐) | Go together | MekongBridge — Integrations |
-| 8 | 九變 Adapt | Ollama (167K⭐) | Ride on top | MekongMind — Model router |
-| 9 | 行軍 Read Signals | Grafana (73K⭐) | Ride on top | MekongPulse — Signal detection |
-| 10 | 地形 Know Terrain | LangChain (132K⭐) | Go together | MekongMap — Market intelligence |
-| 11 | 九地 Match Situation | CrewAI (48K⭐) | Go together | MekongForce — AI agency |
-| 12 | 火攻 Controlled Fire | OpenCode (137K⭐) | Go together | MekongLaunch — Growth engine |
-| 13 | 用間 Intelligence | PostHog (32K⭐) | Ride on top | MekongEye — Competitive intel |
+Mekong IDE is ONE product. Not 13. Not 22. ONE.
 
-## Rule
-- Go together = they need us, mutual value
-- Ride on top = they don't need us, we take what we need
-- Never fork what you can ride. Never build what you can borrow.
+1 subscription → 22 AI departments → 290 operational commands
+→ runs on M1 Max via Ollama (zero cloud cost)
+→ or via RaaS API (pay-per-mission)
 
-## Nhân Bản Doctrine
-Each vertical shares the same 323-command core.
-Each vertical feeds data back to core.
-Each vertical makes every other vertical smarter.
-CashClaw is vertical #1. It funds everything else.
+### What the customer gets
 
-## Current Priority
-1. Fix foundation (install, dashboard, deploy)
-2. CashClaw dry run (prove edge on real markets)
-3. Mount first giant (ClaudeKit Operations Kit)
-4. Second vertical chosen by signal, not imagination
+| Tier | Price | Credits | Access |
+|------|-------|---------|--------|
+| Starter | $49/mo | 200 | All 22 departments, all 290 commands |
+| Growth | $149/mo | 1,000 | + priority execution + webhooks |
+| Pro | $499/mo | 5,000 | + dedicated support + custom agents |
+
+Every tier gets ALL departments. Credits = how much you run.
+
+### The 22 Departments (built-in)
+
+Finance, Marketing, Sales, Engineering, Legal, Compliance, HR,
+Design, Data, Security, Growth, Venture, CTO, CFO, CMO, CRO,
+Operations, Incident, Observability, ML/AI, Customer Success, Product
+
+### How It Works
+
+```
+User: "Create Q1 financial report"
+→ Classifier: agent=CFO, domain=finance, cost=1
+→ Command loader: finance-budget-plan.md (1236 chars)
+→ LLM (Ollama local or cloud): executes with command knowledge
+→ Output: structured financial report
+→ Credits: -1 from balance
+```
+
+## 13 Giants — Distribution, Not Products
+
+| Ch | Giant | Relationship | Purpose |
+|----|-------|-------------|---------|
+| 始計 | Paperclip (45K) | Go together | Org templates for IDE |
+| 作戰 | Coolify (35K) | Ride on top | Deploy IDE cheaply |
+| 謀攻 | OpenClaw (351K) | Ride the wave | Distribute IDE skills |
+| 軍形 | Supabase (75K) | Ride on top | IDE backend |
+| 兵勢 | Next.js (139K) | Ride on top | IDE dashboard |
+| 虛實 | Polar.sh (7K) | Ride on top | IDE billing |
+| 軍爭 | n8n (150K) | Go together | IDE automation |
+| 九變 | Ollama (120K) | Ride on top | IDE brain (local LLM) |
+| 行軍 | Grafana (73K) | Ride on top | IDE monitoring |
+| 地形 | LangChain (132K) | Go together | IDE RAG pipeline |
+| 九地 | CrewAI (48K) | Go together | IDE multi-agent |
+| 火攻 | OpenCode (139K) | Go together | IDE CLI shell |
+| 用間 | PostHog (32K) | Ride on top | IDE analytics |
+
+## 13 Use Cases (Marketing, Not Products)
+
+Same IDE, different landing pages for different audiences:
+
+1. **AI Trading Desk** — Finance dept commands for algo-traders
+2. **AI Model Router** — Engineering dept for LLM cost optimization
+3. **AI Content Studio** — Marketing dept for content teams
+4. **AI Legal Counsel** — Legal + Compliance dept for law firms
+5. **AI Dev Agency** — Engineering + CTO dept for dev shops
+6. **AI Growth Engine** — Growth + Marketing dept for startups
+7. **AI Compliance Vault** — Compliance + Security dept for regulated
+8. **AI Business Intelligence** — Data + Analytics dept for analysts
+9. **AI HR Operations** — HR dept for people teams
+10. **AI Sales Operations** — Sales + CRO dept for sales teams
+11. **AI Design Studio** — Design dept for creative agencies
+12. **AI Venture Studio** — Venture + Strategy dept for VCs
+13. **AI Operations Center** — Ops + Incident dept for SRE teams
+
+Each "use case" = same IDE subscription + different landing page.
+
+## Execution Order
+
+1. ✅ Core IDE works (commands, gateway, credits, tenant)
+2. ⬜ E2E test with Ollama on M1 Max
+3. ⬜ Create Polar.sh products (Starter/Growth/Pro)
+4. ⬜ Wire checkout links
+5. ⬜ Deploy gateway
+6. ⬜ First customer pays → XONG
