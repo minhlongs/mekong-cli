@@ -34,8 +34,9 @@ def main():
                 "AI Operating System — 22 departments, 290 commands, "
                 "200 credits/month. Run your business with AI agents."
             ),
+            "recurring_interval": "month",
             "prices": [
-                {"amount_type": "fixed", "amount": 4900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
+                {"amount_type": "fixed", "price_amount": 4900, "price_currency": "usd"}
             ],
         },
         {
@@ -44,8 +45,9 @@ def main():
                 "AI Operating System — 22 departments, 290 commands, "
                 "1000 credits/month. Priority execution + webhooks."
             ),
+            "recurring_interval": "month",
             "prices": [
-                {"amount_type": "fixed", "amount": 14900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
+                {"amount_type": "fixed", "price_amount": 14900, "price_currency": "usd"}
             ],
         },
         {
@@ -54,8 +56,9 @@ def main():
                 "AI Operating System — 22 departments, 290 commands, "
                 "5000 credits/month. Dedicated support + SLA."
             ),
+            "recurring_interval": "month",
             "prices": [
-                {"amount_type": "fixed", "amount": 49900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
+                {"amount_type": "fixed", "price_amount": 49900, "price_currency": "usd"}
             ],
         },
     ]
