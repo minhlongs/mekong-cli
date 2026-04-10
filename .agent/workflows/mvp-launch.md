@@ -8,7 +8,7 @@ Launch your product in 30 days or less with validated market fit.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/mvp-launch
+Execute workflow: https://mekongmind.com/docs/workflows/mvp-launch
 ```
 
 ## ⚡ Step-by-Step Execution

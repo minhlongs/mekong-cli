@@ -158,7 +158,7 @@ Start with the basics, measure what matters, and iterate continuously. The organ
 
     cta = f"""### Ready to Level Up?
 
-If you're looking for expert guidance on {topic.lower()}, [schedule a consultation](https://agencyos.network/consult) with Binh Pháp Venture Studio. 
+If you're looking for expert guidance on {topic.lower()}, [schedule a consultation](https://mekongmind.com/consult) with Binh Pháp Venture Studio. 
 
 **Services:**
 - Ghost CTO Lite ($3K/month)

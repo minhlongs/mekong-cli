@@ -56,7 +56,7 @@ def validate(
 ) -> None:
     """Validate a license key (local or gateway-based).
 
-    Phase 6: Use --gateway flag to validate against RaaS Gateway at raas.agencyos.network.
+    Phase 6: Use --gateway flag to validate against RaaS Gateway at raas.mekongmind.com.
     """
     # Get license key from argument or environment
     license_key = key or os.getenv("RAAS_LICENSE_KEY")
@@ -225,7 +225,7 @@ def _validate_with_gateway(key: str, verbose: bool) -> None:
 
 def _show_dashboard_link(tenant_id: str, tier: str) -> None:
     """Phase 6.4: Show dashboard handoff link."""
-    dashboard_url = f"https://agencyos.network/dashboard/{tenant_id}/license"
+    dashboard_url = f"https://mekongmind.com/dashboard/{tenant_id}/license"
 
     console.print()
     console.print(Panel(

@@ -2,7 +2,7 @@
 RaaS Gateway Synchronization Command — ROIaaS Phase 5
 =====================================================
 
-Command for integrating with the live RaaS Gateway at raas.agencyos.network.
+Command for integrating with the live RaaS Gateway at raas.mekongmind.com.
 
 Features:
 1. Validate local RAAS_LICENSE_KEY against gateway's JWT+mk_ API key auth endpoint
@@ -41,7 +41,7 @@ def get_cli_version() -> str:
 
 
 # RaaS Gateway Configuration
-RAAS_GATEWAY_BASE_URL = "https://raas.agencyos.network"
+RAAS_GATEWAY_BASE_URL = "https://raas.mekongmind.com"
 AUTH_ENDPOINT = f"{RAAS_GATEWAY_BASE_URL}/auth/validate"
 REGISTER_ENDPOINT = f"{RAAS_GATEWAY_BASE_URL}/license/register"
 USAGE_ENDPOINT = f"{RAAS_GATEWAY_BASE_URL}/usage"
@@ -451,7 +451,7 @@ def sync(
     no_cache: bool = typer.Option(False, "--no-cache", "-n", help="Bypass local cache and fetch fresh data"),
 ) -> None:
     """
-    Synchronize with RaaS Gateway at raas.agencyos.network.
+    Synchronize with RaaS Gateway at raas.mekongmind.com.
 
     Performs license validation, CLI registration, usage tracking, and analytics fetch.
     """

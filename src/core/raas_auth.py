@@ -1,7 +1,7 @@
 """
 RaaS Auth Client — Cloud Gateway Authentication
 
-Authentication client for RaaS Gateway (https://raas.agencyos.network)
+Authentication client for RaaS Gateway (https://raas.mekongmind.com)
 Supports:
   - mk_ API key authentication
   - JWT (Supabase) authentication
@@ -72,8 +72,8 @@ class RaaSAuthClient:
     - Device certificate-based auth (X-Cert-ID, X-Cert-Sig headers)
 
     Environment variables:
-    - RAAS_GATEWAY_URL: Primary gateway (default: https://raas.agencyos.network)
-    - RAAS_GATEWAY_URL_SECONDARY: Secondary gateway (default: https://raas-backup.agencyos.network)
+    - RAAS_GATEWAY_URL: Primary gateway (default: https://raas.mekongmind.com)
+    - RAAS_GATEWAY_URL_SECONDARY: Secondary gateway (default: https://raas-backup.mekongmind.com)
     - RAAS_GATEWAY_URL_TERTIARY: Tertiary gateway (optional)
     - RAAS_LICENSE_KEY: Default license key
     - RAAS_CREDENTIALS_FILE: Custom credentials file path
@@ -82,12 +82,12 @@ class RaaSAuthClient:
     - RAAS_LOCAL_TEST: If "true", skip gateway calls and use local mock
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://raas.mekongmind.com"
 
     # Multi-gateway URLs with failover priority
     GATEWAY_URLS = [
-        os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network"),
-        os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.agencyos.network"),
+        os.getenv("RAAS_GATEWAY_URL", "https://raas.mekongmind.com"),
+        os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.mekongmind.com"),
         os.getenv("RAAS_GATEWAY_URL_TERTIARY"),
     ]
 
@@ -791,7 +791,7 @@ class RaaSAuthClient:
             return {
                 "synced": False,
                 "error": "Not authenticated",
-                "dashboard_url": "https://agencyos.network/dashboard",
+                "dashboard_url": "https://mekongmind.com/dashboard",
             }
 
         # Call gateway to sync with dashboard - try V2 first
@@ -803,7 +803,7 @@ class RaaSAuthClient:
                 return {
                     "synced": False,
                     "error": "No credentials",
-                    "dashboard_url": "https://agencyos.network/dashboard",
+                    "dashboard_url": "https://mekongmind.com/dashboard",
                 }
 
             # Try V2 endpoint first
@@ -828,7 +828,7 @@ class RaaSAuthClient:
                     "synced": True,
                     "tenant_id": tenant_id,
                     "tier": data.get("tier"),
-                    "dashboard_url": f"https://agencyos.network/dashboard/{tenant_id}",
+                    "dashboard_url": f"https://mekongmind.com/dashboard/{tenant_id}",
                     "features": data.get("features", []),
                     "rate_limit": data.get("rateLimit"),
                     "gateway_version": data.get("gateway", {}).get("version"),
@@ -837,14 +837,14 @@ class RaaSAuthClient:
                 return {
                     "synced": False,
                     "error": f"Gateway returned {response.status_code}",
-                    "dashboard_url": "https://agencyos.network/dashboard",
+                    "dashboard_url": "https://mekongmind.com/dashboard",
                 }
 
         except requests.RequestException as e:
             return {
                 "synced": False,
                 "error": f"Sync failed: {str(e)}",
-                "dashboard_url": "https://agencyos.network/dashboard",
+                "dashboard_url": "https://mekongmind.com/dashboard",
             }
 
     def get_gateway_health(self) -> Dict[str, Any]:

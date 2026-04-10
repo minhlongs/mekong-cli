@@ -76,4 +76,4 @@ Có thể điều chỉnh trong `gemini-bridge.cjs`:
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

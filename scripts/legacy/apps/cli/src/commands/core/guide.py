@@ -107,7 +107,7 @@ export ALLOWED_ORIGINS="http://localhost:3000"
 
 ## 📞 Support
 
-- **Documentation**: [agencyos.network/docs](https://agencyos.network/docs)
+- **Documentation**: [mekongmind.com/docs](https://mekongmind.com/docs)
 - **Community**: [Discord Server](https://discord.gg/agencyos)
 - **Issues**: [GitHub Issues](https://github.com/agencyos/issues)
 

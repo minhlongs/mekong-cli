@@ -39,5 +39,5 @@ echo "🏥 Final health verification..."
 npm run health-check:production
 
 echo "✅ Production deployment complete!"
-echo "📊 Monitoring: https://monitoring.agencyos.network"
-echo "📈 Dashboard: https://dashboard.agencyos.network"
+echo "📊 Monitoring: https://monitoring.mekongmind.com"
+echo "📈 Dashboard: https://dashboard.mekongmind.com"

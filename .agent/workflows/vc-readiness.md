@@ -8,7 +8,7 @@ Prepare your agency for successful fundraising with institutional investors.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/vc-readiness
+Execute workflow: https://mekongmind.com/docs/workflows/vc-readiness
 ```
 
 ## ⚡ Step-by-Step Execution

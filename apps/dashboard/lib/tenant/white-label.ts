@@ -146,7 +146,7 @@ export class WhiteLabelManager {
   async setupCustomDomain(tenantId: string, domain: string): Promise<DomainVerification> {
     // Generate verification records
     const txtRecord = `agencyos-verify=${tenantId.substring(0, 8)}`
-    const cnameRecord = `${tenantId.substring(0, 8)}.tenant.agencyos.network`
+    const cnameRecord = `${tenantId.substring(0, 8)}.tenant.mekongmind.com`
 
     const { data } = await this.supabase
       .from('custom_domains')

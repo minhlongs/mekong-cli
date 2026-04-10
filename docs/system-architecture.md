@@ -6,10 +6,10 @@
 
 | Service | URL | Type |
 |---------|-----|------|
-| Landing | agencyos.network | CF Pages |
-| Dashboard | app.agencyos.network | CF Pages |
-| API | api.agencyos.network | CF Workers v5.0.0 |
-| Docs | docs.agencyos.network | CF Pages |
+| Landing | mekongmind.com | CF Pages |
+| Dashboard | app.mekongmind.com | CF Pages |
+| API | api.mekongmind.com | CF Workers v5.0.0 |
+| Docs | docs.mekongmind.com | CF Pages |
 | LLM | 192.168.11.111:11434 | Ollama (M1 Max) |
 
 ## 1. High-Level Overview

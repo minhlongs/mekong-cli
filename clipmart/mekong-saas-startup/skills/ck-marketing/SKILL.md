@@ -97,8 +97,8 @@ Output: `marketing/print/{type}_text.md`
 | Google Reviews | 10      | 30      | 100     |
 | Repeat Rate    | 15%     | 25%     | 3
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

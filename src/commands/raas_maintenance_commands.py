@@ -1,7 +1,7 @@
 """
 RaaS Maintenance CLI Command - Phase 6
 
-Interfaces with RaaS Gateway at raas.agencyos.network to perform maintenance operations.
+Interfaces with RaaS Gateway at raas.mekongmind.com to perform maintenance operations.
 
 Commands:
     mekong raas-maintenance cache-clear       - Clear cached rate limits and entitlements
@@ -217,7 +217,7 @@ def health_check(
     result = {
         "command": "health",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "gateway_url": "https://raas.agencyos.network",
+        "gateway_url": "https://raas.mekongmind.com",
         "success": False,
         "status": "unknown",
         "checks": {},
@@ -325,7 +325,7 @@ def deep_health_check(
     🔍 Deep health check of entire RaaS infrastructure.
 
     Performs comprehensive diagnostic check:
-    1. Validate connectivity to RaaS Gateway (raas.agencyos.network)
+    1. Validate connectivity to RaaS Gateway (raas.mekongmind.com)
     2. Verify JWT + mk_ API key authentication
     3. Check license key status via License Management
     4. Confirm Stripe/Polar webhook delivery
@@ -345,7 +345,7 @@ def deep_health_check(
     result = {
         "command": "deep-check",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "gateway_url": "https://raas.agencyos.network",
+        "gateway_url": "https://raas.mekongmind.com",
         "success": False,
         "exit_code": 0,
         "checks": {

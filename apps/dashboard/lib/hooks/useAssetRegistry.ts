@@ -281,7 +281,7 @@ function getDemoAssets(): Asset[] {
     },
     {
       id: '3',
-      name: 'agencyos.network',
+      name: 'mekongmind.com',
       type: 'domain',
       status: 'active',
       vendor: 'Cloudflare',

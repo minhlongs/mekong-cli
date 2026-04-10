@@ -20,9 +20,9 @@ class Settings:
 
         env = os.getenv("ENVIRONMENT", "development")
         if env == "production":
-            return ["https://agencyos.network", "https://www.agencyos.network"]
+            return ["https://mekongmind.com", "https://www.mekongmind.com"]
         elif env == "staging":
-            return ["https://staging.agencyos.network"]
+            return ["https://staging.mekongmind.com"]
         else:
             return ["http://localhost:3000", "http://localhost:8000", "http://localhost:8080"]
 

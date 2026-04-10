@@ -1878,7 +1878,7 @@
       "contact": {
         "title": "7. Liên hệ",
         "intro": "Câu hỏi về quyền riêng tư? Liên hệ với chúng tôi:",
-        "email": "Email: privacy@agencyos.network"
+        "email": "Email: privacy@mekongmind.com"
       }
     },
     "footer": {
@@ -1949,7 +1949,7 @@
         "items": [
           "Cam kết hoàn tiền 30 ngày cho mọi gói",
           "Hoàn tiền không cần lý do",
-          "Email support@agencyos.network"
+          "Email support@mekongmind.com"
         ]
       },
       "termination": {
@@ -1972,7 +1972,7 @@
       "contact": {
         "title": "11. Liên hệ",
         "intro": "Câu hỏi về điều khoản?",
-        "email": "Email: legal@agencyos.network"
+        "email": "Email: legal@mekongmind.com"
       }
     },
     "footer": {
@@ -2227,7 +2227,7 @@
       },
       "support": {
         "footer": "Cần hỗ trợ? Liên hệ {link}",
-        "contact": "support@agencyos.network"
+        "contact": "support@mekongmind.com"
       },
       "alerts": {
         "copied": "Đã sao chép mã giấy phép!",

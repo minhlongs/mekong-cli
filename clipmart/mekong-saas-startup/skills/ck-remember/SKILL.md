@@ -11,4 +11,4 @@ Search claude-mem for #$ARGUMENTS and look up relevant context to help clarify w
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

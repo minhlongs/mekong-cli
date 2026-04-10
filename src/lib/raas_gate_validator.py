@@ -1,7 +1,7 @@
 """
 RAAS License Gate Validator - Gateway-Only Validation
 
-Validates license keys directly against RaaS Gateway at raas.agencyos.network.
+Validates license keys directly against RaaS Gateway at raas.mekongmind.com.
 No local license generation - fully delegated to gateway.
 
 Reference: docs/HIEN_PHAP_ROIAAS.md - ROIaaS Phase 1

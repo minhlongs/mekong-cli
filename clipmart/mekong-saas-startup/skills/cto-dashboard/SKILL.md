@@ -59,8 +59,8 @@ echo ""
 echo "--- Brain Learning State ---"
 BRAIN_STATE="$HOME/mek
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

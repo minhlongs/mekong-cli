@@ -10,7 +10,7 @@ Usage:
 
 Environment Variables:
     RAAS_LICENSE_KEY: License key (mk_* or JWT format)
-    RAAS_GATEWAY_URL: Gateway URL (default: https://raas.agencyos.network)
+    RAAS_GATEWAY_URL: Gateway URL (default: https://raas.mekongmind.com)
     RAAS_USE_CERTIFICATE_AUTH: Enable certificate auth (default: true)
 """
 

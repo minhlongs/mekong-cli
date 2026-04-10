@@ -435,7 +435,7 @@ docker buildx build --platform linux/amd64,linux/arm64 -t agencyos/mekong-cli:1.
 
 For issues or questions:
 - GitHub Issues: [agencyos/mekong-cli/issues](https://github.com/longtho638-jpg/mekong-cli/issues)
-- Documentation: [docs.agencyos.network](https://docs.agencyos.network)
+- Documentation: [docs.mekongmind.com](https://docs.mekongmind.com)
 
 ## 📄 License
 

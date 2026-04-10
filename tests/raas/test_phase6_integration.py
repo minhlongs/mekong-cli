@@ -26,7 +26,7 @@ class TestUsageInstrumentor:
 
         instrumentor = UsageInstrumentor()
 
-        assert instrumentor.gateway_url == "https://raas.agencyos.network"
+        assert instrumentor.gateway_url == "https://raas.mekongmind.com"
         assert instrumentor.cli_version is not None
         assert instrumentor.usage_dir.exists()
 

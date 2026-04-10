@@ -5,7 +5,7 @@ version: 1.0.0
 schema: agent-company/v1
 authors:
   - name: Binh Phap Venture Studio
-    url: https://agencyos.network
+    url: https://mekongmind.com
 goals:
   - Build and operate a SaaS startup with AI agents across all 22 departments
   - Achieve operational autonomy: agents handle 95% of daily operations

@@ -48,4 +48,4 @@ Output is a deployable Next.js SaaS application, not analysis documents.
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

@@ -417,7 +417,7 @@ onboardingRoutes.post('/verify-email', handleAsync(async (c) => {
       businessName: tenant.name,
       apiKey: 'your-api-key', // Client should have this from signup
       dashboardUrl: `${origin}/dashboard`,
-      docsUrl: 'https://docs.agencyos.network',
+      docsUrl: 'https://docs.mekongmind.com',
     })
 
     await markWelcomeEmailSent(c.env.DB, tenant.id)

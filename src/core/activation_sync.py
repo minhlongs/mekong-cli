@@ -39,7 +39,7 @@ class ActivationSync:
 
     DASHBOARD_URL = os.getenv(
         "AGENCYOS_DASHBOARD_URL",
-        "https://agencyos.network"
+        "https://mekongmind.com"
     )
     SYNC_ENDPOINT = "/api/v1/dashboard/sync"
     MAX_RETRIES = 3

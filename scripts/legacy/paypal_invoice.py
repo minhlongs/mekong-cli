@@ -138,8 +138,8 @@ def create_payment_link(invoice_id: str):
             "brand_name": "Binh Pháp Venture Studio",
             "landing_page": "BILLING",
             "user_action": "PAY_NOW",
-            "return_url": "https://agencyos.network/success",
-            "cancel_url": "https://agencyos.network/cancel",
+            "return_url": "https://mekongmind.com/success",
+            "cancel_url": "https://mekongmind.com/cancel",
         },
     }
 

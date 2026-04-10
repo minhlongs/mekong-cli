@@ -38,7 +38,7 @@ GATEWAY="DOWN"
 
 curl -sf http://192.168.11.111:11436/v1/models >/dev/null 2>&1 && NEMOTRON="HEALTHY"
 curl -sf http://192.168.11.111:11435/v1/models >/dev/null 2>&1 && DEEPSEEK="HEALTHY"
-curl -sf https://api.agencyos.network/health >/dev/null 2>&1 && GATEWAY="HEALTHY"
+curl -sf https://api.mekongmind.com/health >/dev/null 2>&1 && GATEWAY="HEALTHY"
 
 # Calculate uptime
 if [ "$TOTAL_RUNS" -gt 0 ]; then

@@ -269,16 +269,16 @@ mekong status
 mekong account:usage
 
 # Upgrade tier
-# Visit: agencyos.network/upgrade
+# Visit: mekongmind.com/upgrade
 ```
 
 ---
 
 ## Support
 
-- **Email:** support@agencyos.network
+- **Email:** support@mekongmind.com
 - **Slack:** Join community (Pro/Enterprise)
 - **Issues:** GitHub Issues
-- **Status:** status.agencyos.network
+- **Status:** status.mekongmind.com
 
 Happy building! 🚀

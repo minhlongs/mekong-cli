@@ -9,7 +9,7 @@
     "Sentry configured with source maps",
     "Uptime monitoring active (Pingly/Better Uptime)",
     "Alerts configured for errors + downtime",
-    "Production URL: api.agencyos.network"
+    "Production URL: api.mekongmind.com"
   ],
   "mcu_budget": 150,
   "output_path": "mekong/infra/cloudflare/",

@@ -90,8 +90,8 @@ Use my link to get [Reward]: [link]"
 4. **Converters** - File converter, format converter
 5. **Che
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

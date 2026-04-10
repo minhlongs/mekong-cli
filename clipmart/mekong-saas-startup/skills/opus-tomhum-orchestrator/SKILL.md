@@ -60,8 +60,8 @@ Each sub-agent:
 ### Phase 5: INTEGRATION — 🔗
 After al
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

@@ -135,7 +135,7 @@ def _authenticate() -> bool:
             "[yellow]Set your license key:[/yellow]\n"
             "  [cyan]export RAAS_LICENSE_KEY=mk_your_key[/cyan]\n\n"
             "Or get a key from:\n"
-            "  [cyan]https://raas.agencyos.network[/cyan]\n"
+            "  [cyan]https://raas.mekongmind.com[/cyan]\n"
         )
         return False
 
@@ -180,14 +180,14 @@ def _display_sync_summary(entitlements: dict, verbose: bool = False) -> None:
     summary_table.add_column("Value", style="cyan")
 
     summary_table.add_row("Sync Time", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"))
-    summary_table.add_row("Gateway", "https://raas.agencyos.network")
+    summary_table.add_row("Gateway", "https://raas.mekongmind.com")
     summary_table.add_row("Version", "v2.0.0 (CF Worker)")
 
     console.print(summary_table)
 
     if verbose:
         console.print("\n[dim]Anonymized analytics pushed to AgencyOS dashboard[/dim]")
-        console.print("[dim]Dashboard: https://agencyos.network[/dim]\n")
+        console.print("[dim]Dashboard: https://mekongmind.com[/dim]\n")
 
 
 @app.command("status")

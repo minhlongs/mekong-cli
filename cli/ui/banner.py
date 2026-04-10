@@ -19,7 +19,7 @@ def print_banner() -> None:
 ║   The One-Person Unicorn Operating System                ║
 ║   "Không đánh mà thắng" - Win Without Fighting           ║
 ║                                                           ║
-║   🌐 agencyos.network                                    ║
+║   🌐 mekongmind.com                                    ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝[/bold primary]
     """

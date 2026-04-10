@@ -36,7 +36,7 @@ def sync_service(test_db_path):
     """Create BillingSyncService instance for testing."""
     config = SyncConfig(
         db_path=test_db_path,
-        gateway_url="https://raas.agencyos.network/v2/usage",
+        gateway_url="https://raas.mekongmind.com/v2/usage",
         api_key="mk_test_key_12345",
         batch_size=10,
         max_retries=3,

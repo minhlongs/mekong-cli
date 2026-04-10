@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-GATEWAY_URL="${MEKONG_GATEWAY_URL:-https://raas.agencyos.network}"
+GATEWAY_URL="${MEKONG_GATEWAY_URL:-https://raas.mekongmind.com}"
 CREDS_FILE="${HOME}/.mekong/credentials"
 
 # Color helpers

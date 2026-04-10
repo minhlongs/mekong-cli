@@ -253,7 +253,7 @@ class TestUpgradeHints(unittest.TestCase):
         checker = LicenseChecker(tier_override="free")
         result = checker.check_pipeline_access("parallel")
         assert "Pro" in result.upgrade_hint
-        assert "agencyos.network" in result.upgrade_hint
+        assert "mekongmind.com" in result.upgrade_hint
 
     def test_pro_gets_enterprise_hint(self):
         checker = LicenseChecker(tier_override="pro")

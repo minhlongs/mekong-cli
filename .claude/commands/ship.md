@@ -54,7 +54,7 @@ git push origin main
 // turbo
 
 ```bash
-curl -s https://www.agencyos.network | head -20
+curl -s https://www.mekongmind.com | head -20
 echo "✅ SHIPPED!"
 ```
 

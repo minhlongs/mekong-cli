@@ -31,7 +31,7 @@
           "AgentOps"
         ],
         "summary": "List All Ops",
-        "description": "\ud83d\udcca List all AgentOps modules via AgentOpsController\nReturns status of all 50 ops aligned with agencyos.network",
+        "description": "\ud83d\udcca List all AgentOps modules via AgentOpsController\nReturns status of all 50 ops aligned with mekongmind.com",
         "operationId": "list_all_ops_api_agentops__get",
         "responses": {
           "200": {

@@ -143,7 +143,7 @@ def credits_depleted_event(
         payload={
             "balance": balance,
             "plan": plan,
-            "upgrade_url": "https://agencyos.network/pricing",
+            "upgrade_url": "https://mekongmind.com/pricing",
         },
     )
 

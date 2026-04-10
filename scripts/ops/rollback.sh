@@ -18,7 +18,7 @@ echo "🎯 Rolling back to: $PREVIOUS_VERSION"
 
 # Health check before rollback
 echo "🏥 Pre-rollback health check..."
-curl -f https://api.agencyos.network/api/health || {
+curl -f https://api.mekongmind.com/api/health || {
     echo "⚠️  Current deployment already unhealthy, proceeding with rollback"
 }
 
@@ -45,7 +45,7 @@ npm run deploy:production
 echo "🏥 Post-rollback health verification..."
 sleep 30  # Allow deployment to stabilize
 
-HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" https://api.agencyos.network/api/health)
+HEALTH_CHECK=$(curl -s -o /dev/null -w "%{http_code}" https://api.mekongmind.com/api/health)
 if [ "$HEALTH_CHECK" = "200" ]; then
     echo "✅ Rollback successful! System is healthy."
     echo "📊 Current version: $(git rev-parse --short HEAD)"

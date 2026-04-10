@@ -8,7 +8,7 @@ Plan, create, and distribute content systematically for your agency.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/content-calendar
+Execute workflow: https://mekongmind.com/docs/workflows/content-calendar
 ```
 
 ## ⚡ Step-by-Step Execution

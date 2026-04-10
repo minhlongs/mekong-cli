@@ -5,7 +5,7 @@ Automatically emits usage events to RaaS Gateway after each billable CLI command
 
 Features:
 - Captures: command name, timestamp, agency_id (from JWT), CLI version
-- POST to https://raas.agencyos.network/v2/usage
+- POST to https://raas.mekongmind.com/v2/usage
 - mk_ API key authentication
 - Idempotency via client-generated UUIDs
 - KV-backed rate limit backoff
@@ -60,7 +60,7 @@ class UsageInstrumentor:
     """
 
     def __init__(self):
-        self.gateway_url = os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network")
+        self.gateway_url = os.getenv("RAAS_GATEWAY_URL", "https://raas.mekongmind.com")
         self.api_key = os.getenv("RAAS_LICENSE_KEY")
         self.tenant_id: Optional[str] = None
         self.cli_version = self._get_cli_version()

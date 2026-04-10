@@ -45,8 +45,8 @@ finance:collections, sales:deal-close, marketing:campaign-run,
 legal:contract-review, legal:compliance-check, sec:incident,
 sec:full-audit, sec:compliance-report, sec:access-rev
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

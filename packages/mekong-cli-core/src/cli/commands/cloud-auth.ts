@@ -13,7 +13,7 @@ import {
   getCloudClient,
 } from '../../core/raas-client.js';
 
-const GATEWAY = 'https://raas.agencyos.network';
+const GATEWAY = 'https://raas.mekongmind.com';
 
 export function registerCloudAuthCommand(program: Command): void {
   program

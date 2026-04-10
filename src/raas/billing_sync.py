@@ -40,7 +40,7 @@ class SyncConfig:
     db_path: str = field(default_factory=lambda: str(
         Path.home() / ".mekong" / "usage.db"
     ))
-    gateway_url: str = "https://raas.agencyos.network/v2/usage"
+    gateway_url: str = "https://raas.mekongmind.com/v2/usage"
     api_key: Optional[str] = None
     batch_size: int = 100
     max_retries: int = 5

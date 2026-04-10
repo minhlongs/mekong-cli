@@ -81,7 +81,7 @@ class TestRaaSAuthClientInit:
     def test_default_init(self):
         """Test default initialization."""
         client = RaaSAuthClient()
-        assert client.gateway_url == "https://raas.agencyos.network"
+        assert client.gateway_url == "https://raas.mekongmind.com"
         assert client.credentials_path.suffix == ".json"
         assert client.use_secure_storage is True
 

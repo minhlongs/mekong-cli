@@ -20,7 +20,7 @@ from requests.adapters import HTTPAdapter
 # Gateway configuration
 DEFAULT_GATEWAY_URL = os.environ.get(
     "RAAS_GATEWAY_URL",
-    "https://raas.agencyos.network"
+    "https://raas.mekongmind.com"
 )
 REQUEST_TIMEOUT = int(os.environ.get("RAAS_REQUEST_TIMEOUT", "5"))
 

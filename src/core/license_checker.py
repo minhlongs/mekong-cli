@@ -207,9 +207,9 @@ class LicenseChecker:
     def _get_upgrade_hint(current_tier: LicenseTier, feature: str) -> str:
         """Generate upgrade hint based on current tier and desired feature."""
         if current_tier == LicenseTier.FREE:
-            return "Upgrade to Pro for parallel execution and all task profiles: https://agencyos.network/pricing"
+            return "Upgrade to Pro for parallel execution and all task profiles: https://mekongmind.com/pricing"
         if current_tier == LicenseTier.PRO:
-            return "Upgrade to Enterprise for custom agents and priority queue: https://agencyos.network/pricing"
+            return "Upgrade to Enterprise for custom agents and priority queue: https://mekongmind.com/pricing"
         return ""
 
 

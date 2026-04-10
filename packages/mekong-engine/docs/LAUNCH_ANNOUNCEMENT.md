@@ -234,7 +234,7 @@ curl https://mekong-engine.agencyos-openclaw.workers.dev/v1/tasks \
 | **Production URL** | https://mekong-engine.agencyos-openclaw.workers.dev |
 | **Documentation** | [docs/README.md](./README.md) |
 | **Support Runbook** | [docs/SUPPORT_RUNBOOK.md](./SUPPORT_RUNBOOK.md) |
-| **Email** | support@agencyos.network |
+| **Email** | support@mekongmind.com |
 | **Slack** | #mekong-engine channel |
 | **GitHub** | https://github.com/longtho638-jpg/mekong-cli |
 

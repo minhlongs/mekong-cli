@@ -51,7 +51,7 @@ def sync(
         console.print(f"[red]{error}[/red]")
         console.print()
         console.print("[yellow]Get a license key:[/yellow]")
-        console.print("  [cyan]https://raas.agencyos.network[/cyan]")
+        console.print("  [cyan]https://raas.mekongmind.com[/cyan]")
         console.print()
         console.print("[dim]Or set environment variable:[/dim]")
         console.print("  [cyan]export RAAS_LICENSE_KEY=mk_your_key[/cyan]\n")
@@ -408,7 +408,7 @@ def sync_encrypted(
         console.print("[bold red]✗ License validation failed[/bold red]")
         console.print(f"[red]{error}[/red]\n")
         console.print("[yellow]Get a license key:[/yellow]")
-        console.print("  [cyan]https://raas.agencyos.network[/cyan]\n")
+        console.print("  [cyan]https://raas.mekongmind.com[/cyan]\n")
         raise SystemExit(1)
 
     console.print("[green]✓ License valid[/green]\n")

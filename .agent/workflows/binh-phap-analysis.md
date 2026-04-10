@@ -8,7 +8,7 @@ Apply the Art of War principles to strategic agency decisions.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/binh-phap-analysis
+Execute workflow: https://mekongmind.com/docs/workflows/binh-phap-analysis
 ```
 
 ## ⚡ Step-by-Step Execution

@@ -10,7 +10,7 @@
 | **Cloudflare Dashboard** | https://dash.cloudflare.com |
 | **D1 Database** | `mekong-db` |
 | **KV Namespace** | `RATE_LIMIT_KV` |
-| **Support Email** | support@agencyos.network |
+| **Support Email** | support@mekongmind.com |
 
 ---
 
@@ -140,7 +140,7 @@ curl https://mekong-engine.agencyos-openclaw.workers.dev/billing/tenants/me \
   -H "Authorization: Bearer mk_xxx"
 
 # 2. Upgrade tier if needed
-# Contact sales@agencyos.network for enterprise upgrade
+# Contact sales@mekongmind.com for enterprise upgrade
 ```
 
 ---
@@ -221,9 +221,9 @@ wrangler secret put ZALO_WEBHOOK_SECRET
 
 | Role | Contact | Slack |
 |------|---------|-------|
-| **On-call Engineer** | oncall@agencyos.network | #oncall |
-| **Engineering Lead** | eng-lead@agencyos.network | #engineering |
-| **CTO** | cto@agencyos.network | #leadership |
+| **On-call Engineer** | oncall@mekongmind.com | #oncall |
+| **Engineering Lead** | eng-lead@mekongmind.com | #engineering |
+| **CTO** | cto@mekongmind.com | #leadership |
 
 ---
 
@@ -359,7 +359,7 @@ curl -X POST https://.../billing/tenants/regenerate-key \
   -H "Authorization: Bearer mk_compromised_key"
 
 # 2. Notify tenant
-# Email: security@agencyos.network
+# Email: security@mekongmind.com
 
 # 3. Audit access logs
 wrangler tail | grep "tenant_id: tnt_xyz"
@@ -375,7 +375,7 @@ wrangler d1 execute mekong-db --command "SELECT tenant_id, COUNT(*) FROM mission
 wrangler d1 execute mekong-db --command "UPDATE tenants SET status='suspended' WHERE tenant_id='tnt_abuser';"
 
 # 3. Notify tenant
-# Email: abuse@agencyos.network
+# Email: abuse@mekongmind.com
 ```
 
 ---

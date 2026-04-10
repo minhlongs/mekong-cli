@@ -59,7 +59,7 @@ git push origin main
 // turbo
 
 ```bash
-curl -s https://www.agencyos.network | head -20
+curl -s https://www.mekongmind.com | head -20
 echo "✅ SHIPPED!"
 ```
 
@@ -71,4 +71,4 @@ gh run list --limit 1
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

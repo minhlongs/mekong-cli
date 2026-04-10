@@ -8,7 +8,7 @@ Set up standardized legal agreements for your agency.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/legal-contracts
+Execute workflow: https://mekongmind.com/docs/workflows/legal-contracts
 ```
 
 ## ⚡ Step-by-Step Execution

@@ -8,7 +8,7 @@ Streamline video production from concept to distribution.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/video-workflow
+Execute workflow: https://mekongmind.com/docs/workflows/video-workflow
 ```
 
 ## ⚡ Step-by-Step Execution

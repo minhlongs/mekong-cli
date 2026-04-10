@@ -8,7 +8,7 @@ Build proactive customer success operations that drive retention and expansion.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/customer-success
+Execute workflow: https://mekongmind.com/docs/workflows/customer-success
 ```
 
 ## ⚡ Step-by-Step Execution

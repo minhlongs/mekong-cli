@@ -80,8 +80,8 @@ credit_cost: 2
 | How It Works       | 3-4 steps                  |
 | Objection Handling 
 
-[Full documentation at agencyos.network]
+[Full documentation at mekongmind.com]
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

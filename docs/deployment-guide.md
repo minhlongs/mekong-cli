@@ -10,15 +10,15 @@ Mekong CLI RaaS uses Cloudflare's serverless infrastructure:
 
 | Service | Production URL | Type | Status |
 |---------|---------|------|--------|
-| API Gateway | api.agencyos.network | CF Workers v5.0.0 | Active |
-| Dashboard | app.agencyos.network | CF Pages | Active (signup/login ready) |
-| Landing | agencyos.network | CF Pages | Active |
-| Docs | docs.agencyos.network | CF Pages | Active |
+| API Gateway | api.mekongmind.com | CF Workers v5.0.0 | Active |
+| Dashboard | app.mekongmind.com | CF Pages | Active (signup/login ready) |
+| Landing | mekongmind.com | CF Pages | Active |
+| Docs | docs.mekongmind.com | CF Pages | Active |
 | LLM Fallback | 192.168.11.111:11434 | Ollama (M1 Max) | Active |
 
 **Legacy Endpoints (deprecated):**
-- `mekong-engine-staging.*.workers.dev` → migrate to api.agencyos.network
-- `raas-landing.pages.dev` → use agencyos.network instead
+- `mekong-engine-staging.*.workers.dev` → migrate to api.mekongmind.com
+- `raas-landing.pages.dev` → use mekongmind.com instead
 
 ---
 
@@ -118,7 +118,7 @@ npx wrangler pages deploy dist --project-name=raas-landing
 curl -sI "https://mekong-engine-staging.<account>.workers.dev/health"
 
 # Production
-curl -sI "https://mekong-engine.agencyos.network/health"
+curl -sI "https://mekong-engine.mekongmind.com/health"
 ```
 
 ### Expected Response

@@ -55,4 +55,4 @@ Dispatch to `apps/openclaw-worker/4-project-dispatch.sh` or `4-project-master.sh
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

@@ -8,7 +8,7 @@ Build a comprehensive brand identity system for your agency.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/brand-system
+Execute workflow: https://mekongmind.com/docs/workflows/brand-system
 ```
 
 ## ⚡ Step-by-Step Execution

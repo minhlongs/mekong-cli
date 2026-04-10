@@ -8,7 +8,7 @@ Set up comprehensive financial tracking and reporting for your agency.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/finance-reporting
+Execute workflow: https://mekongmind.com/docs/workflows/finance-reporting
 ```
 
 ## ⚡ Step-by-Step Execution

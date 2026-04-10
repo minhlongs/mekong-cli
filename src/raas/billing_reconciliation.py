@@ -122,7 +122,7 @@ class ReconciliationResult:
 class ReconciliationConfig:
     """Configuration for reconciliation service."""
 
-    gateway_url: str = "https://raas.agencyos.network/v2/usage/reconcile"
+    gateway_url: str = "https://raas.mekongmind.com/v2/usage/reconcile"
     api_key: Optional[str] = None
     variance_threshold_percent: float = 5.0  # Alert if variance > 5%
     auto_resolve_threshold_percent: float = 0.5  # Auto-resolve if < 0.5%

@@ -8,7 +8,7 @@ Recruit, onboard, and retain top talent for your agency.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/hr-hiring
+Execute workflow: https://mekongmind.com/docs/workflows/hr-hiring
 ```
 
 ## ⚡ Step-by-Step Execution

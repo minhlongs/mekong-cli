@@ -10,7 +10,7 @@ from backend.models.agentops import OpsExecuteRequest, OpsExecuteResponse, OpsSt
 
 
 class OpsCategory(str, Enum):
-    """All AgentOps categories aligned with agencyos.network DNA"""
+    """All AgentOps categories aligned with mekongmind.com DNA"""
 
     # Sales
     SDR = "sdrops"
@@ -237,7 +237,7 @@ class AgentOpsService:
             "departments": summary,
             "total": sum(d["count"] for d in summary.values()),
             "all_ready": all(d["count"] == d["ready"] for d in summary.values()),
-            "dna": "agencyos.network",
+            "dna": "mekongmind.com",
         }
 
     async def get_binh_phap_chapters(self) -> Dict[str, Any]:

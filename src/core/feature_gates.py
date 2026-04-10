@@ -136,7 +136,7 @@ def require_feature(feature: str) -> Callable:
                 )
                 console.print(f"[dim]Current tier: {tier}[/dim]")
                 console.print(
-                    "[yellow]Upgrade at: https://raas.agencyos.network[/yellow]"
+                    "[yellow]Upgrade at: https://raas.mekongmind.com[/yellow]"
                 )
                 raise typer.Exit(code=1)
 

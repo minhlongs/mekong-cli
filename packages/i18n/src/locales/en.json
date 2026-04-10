@@ -2025,7 +2025,7 @@
       "contact": {
         "title": "7. Contact",
         "intro": "Questions about privacy? Contact us:",
-        "email": "Email: privacy@agencyos.network"
+        "email": "Email: privacy@mekongmind.com"
       }
     },
     "footer": {
@@ -2146,7 +2146,7 @@
         "items": [
           "30-day money-back guarantee on all plans",
           "No questions asked refunds",
-          "Email support@agencyos.network"
+          "Email support@mekongmind.com"
         ]
       },
       "termination": {
@@ -2169,7 +2169,7 @@
       "contact": {
         "title": "11. Contact",
         "intro": "Questions about terms?",
-        "email": "Email: legal@agencyos.network"
+        "email": "Email: legal@mekongmind.com"
       }
     },
     "footer": {
@@ -2424,7 +2424,7 @@
       },
       "support": {
         "footer": "Need help? Contact {link}",
-        "contact": "support@agencyos.network"
+        "contact": "support@mekongmind.com"
       },
       "alerts": {
         "copied": "License key copied!",

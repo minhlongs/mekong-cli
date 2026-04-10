@@ -73,4 +73,4 @@ mekong company/start
 ```
 
 ---
-Powered by [Mekong AI OS](https://agencyos.network)
+Powered by [Mekong AI OS](https://mekongmind.com)

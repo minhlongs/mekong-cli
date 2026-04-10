@@ -68,4 +68,4 @@ grep "dispatch.*sent" "$METRICS" | tail -20 | awk -F'|' '{gsub(/^ +| +$/,"",$1);
 
 ---
 *Powered by Mekong AI OS — Operational knowledge, not just prompts.*
-*Full RaaS access: https://agencyos.network*
+*Full RaaS access: https://mekongmind.com*

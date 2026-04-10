@@ -97,7 +97,7 @@ class TestCheckAndLock:
     def test_recharge_url_in_error(self, gate: MCUGate):
         gate.seed_balance("t1", 1)
         result = gate.check_and_lock("t1", "m1", 5)
-        assert "agencyos.network/billing" in result.recharge_url
+        assert "mekongmind.com/billing" in result.recharge_url
         assert "t1" in result.recharge_url
 
 

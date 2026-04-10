@@ -1,7 +1,7 @@
 """
 RaaS Gateway Client — Unified Gateway for CLI Requests
 
-Routes all outbound CLI requests through raas.agencyos.network with:
+Routes all outbound CLI requests through raas.mekongmind.com with:
 - JWT/mk_ API key authentication
 - JWT-bound usage attribution (Phase 6)
 - Rate limit enforcement
@@ -33,8 +33,8 @@ from .telemetry_reporter import TelemetryReporter
 
 # Multi-gateway URLs with failover priority
 GATEWAY_URLS = [
-    os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network"),
-    os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.agencyos.network"),
+    os.getenv("RAAS_GATEWAY_URL", "https://raas.mekongmind.com"),
+    os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.mekongmind.com"),
     os.getenv("RAAS_GATEWAY_URL_TERTIARY"),  # Optional tertiary fallback
 ]
 
@@ -81,7 +81,7 @@ class GatewayClient:
     - HALF-OPEN: Testing recovery after timeout
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://raas.mekongmind.com"
 
     def __init__(
         self,

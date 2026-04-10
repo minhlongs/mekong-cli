@@ -108,7 +108,7 @@ class RaasLicenseGate:
         self._license_tier: Optional[str] = None
         self._key_id: Optional[str] = None
         self._enable_remote = enable_remote
-        self._remote_url = os.getenv("RAAS_API_URL", "https://raas.agencyos.network")
+        self._remote_url = os.getenv("RAAS_API_URL", "https://raas.mekongmind.com")
         # Phase 6: Credit rate limiter for sliding window enforcement
         self._rate_limiter: Optional[CreditRateLimiter] = None
         # Phase 6b: Quota warning state

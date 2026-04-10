@@ -388,7 +388,7 @@ Authorization: Bearer <tenant_api_key>
 {
   "service": "mekong-engine",
   "version": "3.2.0",
-  "docs": "https://docs.agencyos.network",
+  "docs": "https://docs.mekongmind.com",
   "health": "/health",
   "api": "/v1"
 }

@@ -8,7 +8,7 @@ Implement proven retention strategies to reduce churn and maximize LTV.
 
 ## 🤖 Quick Execute
 ```bash
-Execute workflow: https://agencyos.network/docs/workflows/retention-plays
+Execute workflow: https://mekongmind.com/docs/workflows/retention-plays
 ```
 
 ## ⚡ Step-by-Step Execution

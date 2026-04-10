@@ -102,5 +102,5 @@ cd apps/docs && vercel deploy --prod --yes
 supabase link --project-ref jcbahdioqoepvoliplqy
 
 # 4. Verify
-curl -s https://agencyos.network | head -5
+curl -s https://mekongmind.com | head -5
 ```

@@ -538,16 +538,16 @@ Severity Levels:
 
 ### Security Team Contacts
 
-- **Security Lead:** security@agencyos.network
-- **Incident Response:** incidents@agencyos.network
-- **Security Operations:** ops@agencyos.network
+- **Security Lead:** security@mekongmind.com
+- **Incident Response:** incidents@mekongmind.com
+- **Security Operations:** ops@mekongmind.com
 - **Emergency Hotline:** +1-SECURE-NOW
 
 ### Escalation Contacts
 
-- **Engineering Manager:** engineering@agencyos.network
-- **CTO Office:** cto@agencyos.network
-- **Legal/Compliance:** compliance@agencyos.network
+- **Engineering Manager:** engineering@mekongmind.com
+- **CTO Office:** cto@mekongmind.com
+- **Legal/Compliance:** compliance@mekongmind.com
 
 ---
 

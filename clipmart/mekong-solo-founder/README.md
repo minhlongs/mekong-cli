@@ -102,4 +102,4 @@ pm-roadmap               — Product roadmap management
 
 MIT — see [LICENSE](LICENSE)
 
-Built by [Binh Phap Venture Studio](https://agencyos.network)
+Built by [Binh Phap Venture Studio](https://mekongmind.com)

@@ -13,7 +13,7 @@ import asyncio
 async def main():
     # Initialize RaaS client
     client = MissionClient(
-        api_key="your_api_key_here",  # Get from agencyos.network/dashboard
+        api_key="your_api_key_here",  # Get from mekongmind.com/dashboard
         tenant_id="your_tenant_id",
     )
 

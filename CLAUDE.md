@@ -65,7 +65,7 @@ All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` disc
 ```
 ┌─────────────────────────────────────────────────────┐
 │  CLI: mekong cook/fix/plan/deploy/...              │
-│  Dashboard: agencyos.network → /v1/missions        │
+│  Dashboard: mekongmind.com → /v1/missions        │
 └──────────────────┬──────────────────────────────────┘
                    │
          ┌─────────▼──────────┐

@@ -139,7 +139,7 @@ class TestActivateCommand:
             tier="free",
             role="user",
         )
-        mock_client.gateway_url = "https://raas.agencyos.network"
+        mock_client.gateway_url = "https://raas.mekongmind.com"
 
         with patch.object(RaaSAuthClient, "__init__", return_value=None):
             with patch.object(RaaSAuthClient, "validate_credentials", side_effect=Exception("Network error")):

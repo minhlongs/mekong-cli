@@ -90,7 +90,7 @@ class MultiTenantMiddleware(BaseHTTPMiddleware):
         # Method 1: Subdomain-based resolution
         host = request.headers.get("host", "")
         if host:
-            # Extract subdomain (e.g., agencyos.agencyos.network)
+            # Extract subdomain (e.g., agencyos.mekongmind.com)
             subdomain = host.split(".")[0] if "." in host else None
             if subdomain and subdomain in TENANT_STORE:
                 logger.info(f"Tenant resolved by subdomain: {subdomain}")
