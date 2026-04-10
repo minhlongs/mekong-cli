@@ -1,37 +1,40 @@
 /**
  * API client — routes through Rust IPC in Tauri, native fetch in browser.
  *
- * Uses window.__TAURI_INTERNALS__.invoke() directly — no npm import.
- * This survives Next.js tree-shaking because it's a runtime window access.
+ * The Tauri path uses window.__TAURI_INTERNALS__.invoke() directly.
+ * Both code paths are ALWAYS included — no conditional imports, no
+ * tree-shakeable branches. The runtime check happens inside apiCall().
  */
+"use client";
 
 import { API_BASE_URL, API_TIMEOUT_MS, buildHeaders } from "./api-config";
 import { ApiError, type ApiResult } from "./api-types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/** Route API call through Tauri Rust IPC — zero npm imports */
-async function tauriFetch<T>(
-  path: string,
-  method: string,
-  body?: unknown
-): Promise<T> {
-  const w = window as any;
-  const invoke = w.__TAURI_INTERNALS__?.invoke;
-  if (!invoke) throw new Error("Tauri invoke not available");
-  return invoke("gateway_fetch", {
-    path,
-    method,
-    body: body !== undefined ? JSON.stringify(body) : null,
-  });
-}
+// Force bundler to include this string by assigning to a module-level const
+const TAURI_CMD = "gateway_fetch";
+const TAURI_KEY = "__TAURI_INTERNALS__";
 
-/** Standard browser fetch with timeout */
-async function browserFetch<T>(
+/** Unified API call — tries Tauri IPC first, falls back to fetch */
+async function apiCall<T>(
   path: string,
   method: string,
   body?: unknown
 ): Promise<T> {
+  // Tauri path — use window global directly (no import)
+  if (typeof globalThis !== "undefined") {
+    const internals = (globalThis as any)[TAURI_KEY];
+    if (internals && typeof internals.invoke === "function") {
+      return internals.invoke(TAURI_CMD, {
+        path,
+        method,
+        body: body !== undefined ? JSON.stringify(body) : null,
+      }) as Promise<T>;
+    }
+  }
+
+  // Browser path — standard fetch
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
   try {
@@ -54,21 +57,6 @@ async function browserFetch<T>(
   } finally {
     clearTimeout(timer);
   }
-}
-
-/** Unified API call — Tauri IPC or browser fetch */
-async function apiCall<T>(
-  path: string,
-  method: string,
-  body?: unknown
-): Promise<T> {
-  if (
-    typeof window !== "undefined" &&
-    (window as any).__TAURI_INTERNALS__
-  ) {
-    return tauriFetch<T>(path, method, body);
-  }
-  return browserFetch<T>(path, method, body);
 }
 
 /** Wrap any API call into {data, error} — never throws */
