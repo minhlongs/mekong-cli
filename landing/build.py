@@ -17,7 +17,6 @@ PRICING_TIERS = [
 ]
 
 POLAR_BASE = "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions"
-SITE_DOMAIN = "https://mekongmind.com"
 
 
 def load_tenants() -> list[dict]:
@@ -77,7 +76,7 @@ def build():
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://polar.sh
 """
     (DIST_DIR / "_headers").write_text(headers)
 
