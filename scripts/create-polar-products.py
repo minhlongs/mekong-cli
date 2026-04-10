@@ -35,7 +35,7 @@ def main():
                 "200 credits/month. Run your business with AI agents."
             ),
             "prices": [
-                {"amount": 4900, "currency": "usd", "recurring_interval": "month"}
+                {"amount_type": "fixed", "amount": 4900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
             ],
         },
         {
@@ -45,7 +45,7 @@ def main():
                 "1000 credits/month. Priority execution + webhooks."
             ),
             "prices": [
-                {"amount": 14900, "currency": "usd", "recurring_interval": "month"}
+                {"amount_type": "fixed", "amount": 14900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
             ],
         },
         {
@@ -55,7 +55,7 @@ def main():
                 "5000 credits/month. Dedicated support + SLA."
             ),
             "prices": [
-                {"amount": 49900, "currency": "usd", "recurring_interval": "month"}
+                {"amount_type": "fixed", "amount": 49900, "currency": "usd", "type": "recurring", "recurring_interval": "month"}
             ],
         },
     ]
