@@ -15,9 +15,9 @@ Mekong CLI is building the **de facto standard for AI-powered agent orchestratio
 
 ---
 
-## v3.0.1 (Current) — UI Restructure Complete
+## v3.0.1 (Current) — UI Restructure & Code Quality Complete
 
-**Status:** ✅ Shipped | **Release Date:** 2026-03-11
+**Status:** ✅ Shipped | **Release Date:** 2026-03-11 | **Updated:** 2026-04-05
 
 ### Delivered
 
@@ -31,7 +31,8 @@ Mekong CLI is building the **de facto standard for AI-powered agent orchestratio
 - ✅ FastAPI server with WebSocket streaming
 - ✅ Automatic rollback on verification failure
 - ✅ RaaS API Bootstrap (Phase 1-6)
-- ✅ Landing page v5.0 UI restructure (17 fixes) ← **NEW**
+- ✅ Landing page v5.0 UI restructure (17 fixes)
+- ✅ Revenue Router idempotency & modularization (PR #31)
 - ✅ 102+ unit tests (>85% coverage)
 
 ### v3.0 Milestones

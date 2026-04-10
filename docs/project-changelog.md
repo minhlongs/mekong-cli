@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-04-05 - Revenue Router Refactor — Idempotency & Modularization, PR #31)
+
+#### Architecture & Code Quality Improvements
+- **Branch:** `feat/antigravity-community`
+- **PR #31:** Revenue router refactor + boundary violation fixes
+- **Changes:**
+  - Split `revenue_router.py` (204 lines) → `checkout_router.py` + service layer (both <200 lines)
+  - Added idempotency guard to `/v1/success` endpoint with soft fallback pattern
+  - Removed dead code path (`if secret:` unreachable guard)
+  - Fixed test tautology (assertion was always true)
+  - Reverted 3 `apps/dashboard/` files (boundary violation correction)
+- **Quality Gate:** Binh Phap Fronts 1-2 achieved
+  - Type Safety: 0 `any` types
+  - Tech Debt: 0 console.log, 0 TODO/FIXME
+- **Tests:** Self-test 100/100 HEALTHY
+- **CI/CD:** 3/3 GREEN (Factory Integrity, Security, DocsOps)
+- **Quality Score:** 5/10 → 8/10
+
 ### Fixed (2026-04-05 - E2E Wiring Fix — LLM Model Override on M1 Max)
 
 #### Model Selector Environment Override
