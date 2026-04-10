@@ -71,7 +71,7 @@ async def create_checkout(req: CheckoutRequest):
     base = _polar_checkout_base()
     price_id = _polar_price_id(tier)
 
-    app_base = os.environ.get("APP_BASE_URL", "https://mekong.ai")
+    app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
     sig = ""
     if secret:

@@ -17,6 +17,7 @@ PRICING_TIERS = [
 ]
 
 POLAR_BASE = "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions"
+SITE_DOMAIN = "https://mekongmind.com"
 
 
 def load_tenants() -> list[dict]:
@@ -69,6 +70,16 @@ def build():
     # Generate _redirects for CF Pages clean URLs
     redirects = [f"/{t['slug']} /{t['slug']}/ 301" for t in tenants]
     (DIST_DIR / "_redirects").write_text("\n".join(redirects))
+
+    # Security headers
+    headers = """/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'
+"""
+    (DIST_DIR / "_headers").write_text(headers)
 
     print(f"\nDone. {len(tenants)} pages in {DIST_DIR}")
 
