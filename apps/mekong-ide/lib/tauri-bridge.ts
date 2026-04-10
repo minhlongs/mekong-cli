@@ -40,9 +40,17 @@ export interface SystemInfo {
 
 // ── Guard ─────────────────────────────────────────────────────────────────────
 
-/** Returns true when running inside a Tauri webview. */
+/** Returns true when running inside a Tauri webview.
+ * Uses __TAURI_INTERNALS__ (v2) and dynamic property access
+ * to prevent Next.js tree-shaking from eliminating Tauri code paths.
+ */
 export function isTauri(): boolean {
-  return typeof window !== "undefined" && "__TAURI__" in window;
+  try {
+    return typeof window !== "undefined" &&
+      typeof (window as Record<string, unknown>)["__TAURI_INTERNALS__"] !== "undefined";
+  } catch {
+    return false;
+  }
 }
 
 // ── LLM commands ─────────────────────────────────────────────────────────────

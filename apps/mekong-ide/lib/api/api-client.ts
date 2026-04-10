@@ -1,19 +1,31 @@
 /**
  * API client — routes through Rust IPC in Tauri, native fetch in browser.
- * Tauri WebView blocks fetch() to localhost — invoke() bypasses this.
+ *
+ * IMPORTANT: Tauri detection must be runtime-only (not tree-shakeable).
+ * Next.js SSG eliminates code paths it evaluates as dead at build time.
+ * All Tauri imports MUST be dynamic import() inside runtime functions.
  */
 
 import { API_BASE_URL, API_TIMEOUT_MS, buildHeaders } from "./api-config";
 import { ApiError, type ApiResult } from "./api-types";
-import { isTauri } from "../tauri-bridge";
 
-// ---- Tauri IPC fetch (bypasses WebView sandbox) ----
+/** Runtime check — NOT tree-shakeable because it depends on window */
+function isInTauri(): boolean {
+  try {
+    return typeof window !== "undefined" &&
+      typeof (window as Record<string, unknown>)["__TAURI_INTERNALS__"] !== "undefined";
+  } catch {
+    return false;
+  }
+}
 
+/** Route API call through Rust IPC (bypasses WebView sandbox) */
 async function tauriFetch<T>(
   path: string,
   method: string,
   body?: unknown
 ): Promise<T> {
+  // Dynamic import — MUST stay inside function body to survive tree-shaking
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<T>("gateway_fetch", {
     path,
@@ -22,8 +34,7 @@ async function tauriFetch<T>(
   });
 }
 
-// ---- Browser fetch ----
-
+/** Standard browser fetch with timeout */
 async function browserFetch<T>(
   path: string,
   method: string,
@@ -43,7 +54,7 @@ async function browserFetch<T>(
       try {
         const data = await res.json();
         message = data?.detail ?? data?.message ?? message;
-      } catch (_) {}
+      } catch {}
       throw new ApiError(res.status, message);
     }
     if (res.status === 204) return undefined as unknown as T;
@@ -53,14 +64,14 @@ async function browserFetch<T>(
   }
 }
 
-// ---- Unified API call ----
-
+/** Unified API call — Tauri IPC or browser fetch */
 async function apiCall<T>(
   path: string,
   method: string,
   body?: unknown
 ): Promise<T> {
-  if (isTauri()) {
+  // Runtime check every call — not cached, not tree-shakeable
+  if (isInTauri()) {
     return tauriFetch<T>(path, method, body);
   }
   return browserFetch<T>(path, method, body);
@@ -76,8 +87,6 @@ async function safe<T>(call: () => Promise<T>): Promise<ApiResult<T>> {
     return { data: null, error: message };
   }
 }
-
-// ---- HTTP verbs ----
 
 function get<T>(path: string): Promise<ApiResult<T>> {
   return safe(() => apiCall<T>(path, "GET"));
