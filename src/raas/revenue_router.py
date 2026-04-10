@@ -34,9 +34,9 @@ CREDIT_MAP = {
 
 # Polar.sh product/price IDs — set POLAR_PRICE_<TIER> env vars to override
 _POLAR_PRICE_DEFAULTS = {
-    "starter": "price_starter",
-    "growth": "price_growth",
-    "pro": "price_pro",
+    "starter": "f03dc96f-b06a-4921-8953-fb56e702989e",
+    "growth": "6d07279b-a3b7-4995-8cc2-511df81b871f",
+    "pro": "b9ef1fdf-f16e-4886-9fbe-78c3b8fe3859",
 }
 
 _PRICING_TIERS = [
