@@ -48,7 +48,7 @@ export function isTauri(): boolean {
   try {
     return typeof window !== "undefined" &&
       typeof (window as Record<string, unknown>)["__TAURI_INTERNALS__"] !== "undefined";
-  } catch {
+  } catch (_) {
     return false;
   }
 }

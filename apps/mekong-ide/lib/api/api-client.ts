@@ -14,7 +14,7 @@ function isInTauri(): boolean {
   try {
     return typeof window !== "undefined" &&
       typeof (window as Record<string, unknown>)["__TAURI_INTERNALS__"] !== "undefined";
-  } catch {
+  } catch (_) {
     return false;
   }
 }
@@ -54,7 +54,7 @@ async function browserFetch<T>(
       try {
         const data = await res.json();
         message = data?.detail ?? data?.message ?? message;
-      } catch {}
+      } catch (_) {}
       throw new ApiError(res.status, message);
     }
     if (res.status === 204) return undefined as unknown as T;
