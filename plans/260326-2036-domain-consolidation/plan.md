@@ -1,5 +1,5 @@
 ---
-title: "Consolidate 7 mekongmind.com subdomains into 1 unified domain"
+title: "Consolidate 7 agencyos.network subdomains into 1 unified domain"
 description: "Merge landing, docs, dashboard into single Cloudflare Pages site with Workers routing + NOWPayments checkout"
 status: in_progress
 priority: P1
@@ -14,22 +14,22 @@ created: 2026-03-26
 ## Current State
 
 7 subdomains all returning 200 but broken checkout + duplicate dashboards:
-- `mekongmind.com` — raas-landing (Astro, static)
-- `app.mekongmind.com` — raas-dashboard (Astro, static)
-- `sophia.mekongmind.com` — dead (Polar broken)
-- `landing.mekongmind.com` — landing v2 (dead Polar links)
-- `docs.mekongmind.com` — mekong-docs (Astro, static)
-- `dashboard.mekongmind.com` — duplicate of app.*
-- `api.mekongmind.com` — mekong-engine (Hono on Workers, keep as-is)
+- `agencyos.network` — raas-landing (Astro, static)
+- `app.agencyos.network` — raas-dashboard (Astro, static)
+- `sophia.agencyos.network` — dead (Polar broken)
+- `landing.agencyos.network` — landing v2 (dead Polar links)
+- `docs.agencyos.network` — mekong-docs (Astro, static)
+- `dashboard.agencyos.network` — duplicate of app.*
+- `api.agencyos.network` — mekong-engine (Hono on Workers, keep as-is)
 
 ## Target State
 
 | URL | Source | Notes |
 |-----|--------|-------|
-| `mekongmind.com/*` | raas-landing | Landing, pricing, features |
-| `mekongmind.com/docs/*` | mekong-docs | Documentation |
-| `mekongmind.com/dashboard/*` | raas-dashboard | Auth + app |
-| `api.mekongmind.com/*` | mekong-engine | Keep separate (CORS) |
+| `agencyos.network/*` | raas-landing | Landing, pricing, features |
+| `agencyos.network/docs/*` | mekong-docs | Documentation |
+| `agencyos.network/dashboard/*` | raas-dashboard | Auth + app |
+| `api.agencyos.network/*` | mekong-engine | Keep separate (CORS) |
 
 ## Architecture Decision: Astro Monolith vs Workers Router
 
@@ -95,7 +95,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://mekongmind.com',
+  site: 'https://agencyos.network',
   i18n: {
     defaultLocale: 'vi',
     locales: ['vi', 'en'],
@@ -136,8 +136,8 @@ export default defineConfig({
 - [x] Merge layouts (3 base layouts)
 - [x] Merge components (deduplicate shared ones)
 - [x] Merge `public/` static assets
-- [x] Update all internal links (`docs.mekongmind.com/x` -> `/docs/x`)
-- [x] Update all internal links (`app.mekongmind.com/x` -> `/dashboard/x`)
+- [x] Update all internal links (`docs.agencyos.network/x` -> `/docs/x`)
+- [x] Update all internal links (`app.agencyos.network/x` -> `/dashboard/x`)
 - [x] Fix import paths across all files
 - [x] `astro build` passes with 0 errors
 - [x] `astro preview` — manually verify all routes work
@@ -147,7 +147,7 @@ export default defineConfig({
 ## Phase 2: NOWPayments Checkout Integration (1h) — ✅ DONE (Session 2026-03-26)
 
 ### Current pricing.astro problem
-Links point to `app.mekongmind.com/signup?plan=X` — no actual payment.
+Links point to `app.agencyos.network/signup?plan=X` — no actual payment.
 
 ### Fix: Direct NOWPayments invoice URLs
 
@@ -158,7 +158,7 @@ const plans = [
   { name: 'Free',       price: '$0',     href: '/dashboard/signup',                    featured: false },
   { name: 'Starter',    price: '$49/mo', href: 'https://nowpayments.io/payment/?iid=STARTER_INVOICE_ID', featured: false },
   { name: 'Pro',        price: '$149/mo',href: 'https://nowpayments.io/payment/?iid=PRO_INVOICE_ID',     featured: true  },
-  { name: 'Enterprise', price: '$499/mo',href: 'mailto:hello@mekongmind.com',       featured: false },
+  { name: 'Enterprise', price: '$499/mo',href: 'mailto:hello@agencyos.network',       featured: false },
 ];
 ```
 
@@ -186,14 +186,14 @@ npx wrangler pages deploy dist --project-name agencyos-site
 
 In Cloudflare dashboard:
 1. Go to Pages > agencyos-site > Custom domains
-2. Add `mekongmind.com`
+2. Add `agencyos.network`
 3. CF auto-creates CNAME record
 
 ### TODO
 - [ ] `wrangler pages project create agencyos-site`
 - [ ] First deploy: `wrangler pages deploy dist`
-- [ ] Add custom domain `mekongmind.com`
-- [ ] Verify site loads at `mekongmind.com`
+- [ ] Add custom domain `agencyos.network`
+- [ ] Verify site loads at `agencyos.network`
 - [ ] Verify `/docs` works
 - [ ] Verify `/dashboard` works
 - [ ] Verify `/pricing` checkout links work
@@ -208,11 +208,11 @@ In Cloudflare dashboard > Rules > Redirect Rules:
 
 | Source | Target | Status |
 |--------|--------|--------|
-| `sophia.mekongmind.com/*` | `https://mekongmind.com/` | 301 |
-| `landing.mekongmind.com/*` | `https://mekongmind.com/` | 301 |
-| `app.mekongmind.com/*` | `https://mekongmind.com/dashboard/*` | 301 |
-| `dashboard.mekongmind.com/*` | `https://mekongmind.com/dashboard/*` | 301 |
-| `docs.mekongmind.com/*` | `https://mekongmind.com/docs/*` | 301 |
+| `sophia.agencyos.network/*` | `https://agencyos.network/` | 301 |
+| `landing.agencyos.network/*` | `https://agencyos.network/` | 301 |
+| `app.agencyos.network/*` | `https://agencyos.network/dashboard/*` | 301 |
+| `dashboard.agencyos.network/*` | `https://agencyos.network/dashboard/*` | 301 |
+| `docs.agencyos.network/*` | `https://agencyos.network/docs/*` | 301 |
 
 ### Option B: Workers redirect (if Bulk Redirects insufficient)
 
@@ -226,11 +226,11 @@ export default {
     const path = url.pathname;
 
     const redirectMap = {
-      'sophia.mekongmind.com': 'https://mekongmind.com/',
-      'landing.mekongmind.com': 'https://mekongmind.com/',
-      'app.mekongmind.com': `https://mekongmind.com/dashboard${path}`,
-      'dashboard.mekongmind.com': `https://mekongmind.com/dashboard${path}`,
-      'docs.mekongmind.com': `https://mekongmind.com/docs${path}`,
+      'sophia.agencyos.network': 'https://agencyos.network/',
+      'landing.agencyos.network': 'https://agencyos.network/',
+      'app.agencyos.network': `https://agencyos.network/dashboard${path}`,
+      'dashboard.agencyos.network': `https://agencyos.network/dashboard${path}`,
+      'docs.agencyos.network': `https://agencyos.network/docs${path}`,
     };
 
     const target = redirectMap[host];
@@ -252,9 +252,9 @@ export default {
 
 ### 5.1 SEO preservation
 - [x] Submit updated sitemap.xml to Google Search Console — N/A (pre-deploy)
-- [x] Verify canonical URLs point to `mekongmind.com` (not subdomains) — verified in merged site
+- [x] Verify canonical URLs point to `agencyos.network` (not subdomains) — verified in merged site
 - [x] Check robots.txt allows crawling of all paths — verified
-- [x] Update OpenGraph/meta tags to use `mekongmind.com` URLs — verified in merged site
+- [x] Update OpenGraph/meta tags to use `agencyos.network` URLs — verified in merged site
 - [x] JSON-LD schemas use correct URLs — verified in pricing.astro + index pages
 
 ### 5.2 End-to-end verification — UI BUG FIXES COMPLETE
@@ -268,7 +268,7 @@ export default {
 - [x] Created blog/community/enterprise stub pages
 
 ### 5.3 CORS update on mekong-engine
-- [ ] Update CORS allowed origins in mekong-engine to include `mekongmind.com`
+- [ ] Update CORS allowed origins in mekong-engine to include `agencyos.network`
 - [ ] Remove old subdomain origins from CORS allowlist
 - [ ] Test API calls from dashboard work (no CORS errors in browser console)
 
@@ -289,7 +289,7 @@ npx wrangler pages project delete mekong-raas
 
 ### 6.2 DNS cleanup
 - Remove old CNAME records for deleted Pages projects
-- Keep: api.mekongmind.com, sophia.mekongmind.com DNS records
+- Keep: api.agencyos.network, sophia.agencyos.network DNS records
 
 ### 6.3 Code cleanup
 - [ ] Mark `packages/raas-landing/` as deprecated in package.json
@@ -300,9 +300,9 @@ npx wrangler pages project delete mekong-raas
 
 ### Pre-cleanup checklist (verify before 2026-04-09)
 - [ ] Google Search Console: 0 crawl errors for 2 weeks
-- [ ] All 301 redirects working (app/dashboard/docs/landing → mekongmind.com)
+- [ ] All 301 redirects working (app/dashboard/docs/landing → agencyos.network)
 - [ ] No 404s in CF analytics for old subdomains
-- [ ] Sitemap submitted and indexed at mekongmind.com/sitemap-index.xml
+- [ ] Sitemap submitted and indexed at agencyos.network/sitemap-index.xml
 
 ### TODO
 - [ ] Wait until 2026-04-09
@@ -327,7 +327,7 @@ npx wrangler pages project delete mekong-raas
 
 1. **Astro monolith over Workers router** — simpler for solo dev, all sites same framework
 2. **CF Redirect Rules over Workers** — zero cost, simpler, no code to maintain
-3. **Keep api.mekongmind.com separate** — CORS + different runtime (Hono Workers)
+3. **Keep api.agencyos.network separate** — CORS + different runtime (Hono Workers)
 4. **NOWPayments direct invoice links** — simplest integration, no server-side SDK needed initially
 5. **2-week overlap** — keep old subdomains redirecting before cleanup
 
@@ -346,6 +346,6 @@ Phase 1 (Merge)  ──>  Phase 2 (Payments)  ──>  Phase 3 (Deploy)
 ## Unresolved Questions
 
 1. **NOWPayments invoice IDs** — need to create actual invoices in NOWPayments dashboard. Are recurring invoices supported or one-time only? If one-time, need IPN webhook to handle subscription logic.
-2. **Supabase auth redirect URLs** — dashboard uses Supabase auth. Need to check if redirect URLs in Supabase project settings include `mekongmind.com/dashboard/*`.
+2. **Supabase auth redirect URLs** — dashboard uses Supabase auth. Need to check if redirect URLs in Supabase project settings include `agencyos.network/dashboard/*`.
 3. **mekong-docs content source** — does it use Astro Content Collections or plain `.astro` pages? If Content Collections, need to merge `content/` directory carefully.
 4. **Existing CF Pages project names** — exact names needed for cleanup phase. Check `wrangler pages project list`.

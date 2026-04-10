@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — Mekong IDE</title>
+<meta name="description" content="Mekong IDE pricing. 22 AI departments, 327 commands, 1 subscription. From $49/mo.">
+<style>
+:root{--bg:#0A0A0B;--surface:#1E1E22;--border:#2A2A2E;--text:#F1F1F3;--text2:#A0A0A8;--accent:#FF8400}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:60px 24px}
+h1{font-size:36px;font-weight:700;text-align:center;margin-bottom:8px}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{text-align:center;color:var(--text2);font-size:16px;margin-bottom:48px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 24px;display:flex;flex-direction:column}
+.card.pop{border-color:var(--accent);position:relative}
+.card.pop::before{content:'Most popular';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:11px;font-weight:700;padding:4px 14px;border-radius:99px}
+.tier{font-size:13px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.price{font-size:42px;font-weight:700}.price span{font-size:16px;color:var(--text2)}
+.credits{color:var(--accent);font-size:14px;margin-bottom:24px}
+.features{list-style:none;flex:1;margin-bottom:24px}
+.features li{padding:6px 0;font-size:14px;color:var(--text2)}
+.features li::before{content:"✓ ";color:var(--accent)}
+.btn{display:block;text-align:center;padding:14px;border-radius:10px;font-weight:600;text-decoration:none}
+.btn-primary{background:var(--accent);color:#000}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.back{display:block;text-align:center;margin-top:32px;color:var(--text2);font-size:14px;text-decoration:none}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>One IDE. <em>All departments.</em></h1>
+<p class="sub">Every tier includes all 22 AI departments and all 327 commands.<br>Credits = how much you run. No feature gates.</p>
+<div class="grid">
+<div class="card">
+<div class="tier">Starter</div>
+<div class="price">$49<span>/mo</span></div>
+<div class="credits">200 credits / month</div>
+<ul class="features">
+<li>All 22 departments</li><li>All 327 commands</li><li>API access (mk_ key)</li><li>Ollama local inference</li><li>Community support</li>
+</ul>
+<a href="https://polar.sh/longtho638-jpg/checkout?products=f03dc96f-b06a-4921-8953-fb56e702989e" class="btn btn-outline">Get started</a>
+</div>
+<div class="card pop">
+<div class="tier">Growth</div>
+<div class="price">$149<span>/mo</span></div>
+<div class="credits">1,000 credits / month</div>
+<ul class="features">
+<li>Everything in Starter</li><li>Priority execution</li><li>Webhook callbacks</li><li>SSE streaming</li><li>Email support</li>
+</ul>
+<a href="https://polar.sh/longtho638-jpg/checkout?products=6d07279b-a3b7-4995-8cc2-511df81b871f" class="btn btn-primary">Subscribe</a>
+</div>
+<div class="card">
+<div class="tier">Pro</div>
+<div class="price">$499<span>/mo</span></div>
+<div class="credits">5,000 credits / month</div>
+<ul class="features">
+<li>Everything in Growth</li><li>Dedicated support</li><li>Custom agent configs</li><li>SLA guarantee</li><li>Multi-workspace</li>
+</ul>
+<a href="https://polar.sh/longtho638-jpg/checkout?products=b9ef1fdf-f16e-4886-9fbe-78c3b8fe3859" class="btn btn-outline">Contact us</a>
+</div>
+</div>
+<a href="/" class="back">← Back to Mekong IDE</a>
+</div>
+</body>
+</html>
