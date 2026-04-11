@@ -117,7 +117,7 @@ def build_hub_page(tenants: list[dict]) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mekong IDE — AI Operating System</title>
+  <title>Mekong IDE — Business Automation Platform</title>
   <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
@@ -126,7 +126,7 @@ def build_hub_page(tenants: list[dict]) -> str:
   </header>
   <section class="hero">
     <h1>Mekong IDE</h1>
-    <p class="tagline">22 AI departments. 290 commands. 1 subscription.</p>
+    <p class="tagline">22 modules. 385 workflows. 1 subscription.</p>
     <p class="description">Choose your use case below.</p>
   </section>
   <section class="hub-grid">{links}</section>
