@@ -1,15 +1,28 @@
 {
-  "name": "AI Design Studio",
+  "name": "Design Studio",
   "slug": "design-studio",
-  "tagline": "Design systems and assets with AI agents",
-  "description": "Brand identity, design systems, UI/UX wireframes, and creative asset generation powered by AI design agents.",
-  "featured_departments": ["design", "content", "marketing"],
-  "featured_commands": [
-    "design-system", "content-blog", "marketing-brand",
-    "design-wireframe", "content-social"
+  "tagline": "Design systems and assets with agents",
+  "description": "Brand identity, design systems, UI/UX wireframes, and creative asset generation powered by design agents.",
+  "featured_departments": [
+    "design",
+    "content",
+    "marketing"
   ],
-  "branding": { "accent_color": "#14B8A6", "icon": "palette" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "design-system",
+    "content-blog",
+    "marketing-brand",
+    "design-wireframe",
+    "content-social"
+  ],
+  "branding": {
+    "accent_color": "#14B8A6",
+    "icon": "palette"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "Designers and creative teams",
   "use_cases": [

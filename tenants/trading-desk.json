@@ -1,15 +1,28 @@
 {
-  "name": "AI Analytics Desk",
+  "name": "Analytics Desk",
   "slug": "trading-desk",
   "tagline": "Data analytics and financial reporting automation",
   "description": "Run quantitative analysis, generate financial reports, and automate data pipelines with workflow templates.",
-  "featured_departments": ["finance", "analyst", "data"],
-  "featured_commands": [
-    "finance-budget-plan", "analyst-report", "analyst-forecast-update",
-    "data-pipeline", "accounting-daily"
+  "featured_departments": [
+    "finance",
+    "analyst",
+    "data"
   ],
-  "branding": { "accent_color": "#10B981", "icon": "chart-line" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "finance-budget-plan",
+    "analyst-report",
+    "analyst-forecast-update",
+    "data-pipeline",
+    "accounting-daily"
+  ],
+  "branding": {
+    "accent_color": "#10B981",
+    "icon": "chart-line"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "Finance teams and data analysts",
   "use_cases": [

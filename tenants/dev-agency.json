@@ -1,20 +1,34 @@
 {
-  "name": "AI Dev Agency",
+  "name": "Dev Agency",
   "slug": "dev-agency",
-  "tagline": "Ship software 10x faster with AI agents",
+  "tagline": "Ship software 10x faster with agents",
   "description": "Full-stack development automation: plan, code, test, review, deploy. One command does the work of an entire dev team.",
-  "featured_departments": ["engineering", "backend", "code"],
-  "featured_commands": [
-    "cook", "code", "test", "review", "deploy"
+  "featured_departments": [
+    "engineering",
+    "backend",
+    "code"
   ],
-  "branding": { "accent_color": "#3B82F6", "icon": "terminal" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "cook",
+    "code",
+    "test",
+    "review",
+    "deploy"
+  ],
+  "branding": {
+    "accent_color": "#3B82F6",
+    "icon": "terminal"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "Developers and dev agencies",
   "use_cases": [
     "Build features end-to-end with natural language",
     "Automated code review and quality gates",
     "CI/CD pipeline management and deployment",
-    "Debug and fix issues with AI assistance"
+    "Debug and fix issues with assistance"
   ]
 }

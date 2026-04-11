@@ -1,21 +1,34 @@
 {
-  "name": "AI Sales Operations",
+  "name": "Sales Operations",
   "slug": "sales-operations",
-  "tagline": "Close more deals with AI sales agents",
-  "description": "Pipeline management, lead scoring, proposal generation, and sales forecasting with AI-powered agents.",
-  "featured_departments": ["sales", "ae", "business"],
-  "featured_commands": [
-    "sales-pipeline", "sales-forecast", "sales-proposal",
-    "ae-outreach", "business-report"
+  "tagline": "Close more deals with sales agents",
+  "description": "Pipeline management, lead scoring, proposal generation, and sales forecasting with powered agents.",
+  "featured_departments": [
+    "sales",
+    "ae",
+    "business"
   ],
-  "branding": { "accent_color": "#F97316", "icon": "target" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "sales-pipeline",
+    "sales-forecast",
+    "sales-proposal",
+    "ae-outreach",
+    "business-report"
+  ],
+  "branding": {
+    "accent_color": "#F97316",
+    "icon": "target"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "Sales teams and revenue ops",
   "use_cases": [
     "Manage and prioritize sales pipeline with AI",
     "Generate personalized proposals automatically",
-    "Forecast revenue with AI-powered analysis",
+    "Forecast revenue with powered analysis",
     "Automate lead scoring and qualification"
   ]
 }

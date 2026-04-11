@@ -1,15 +1,28 @@
 {
-  "name": "AI Venture Studio",
+  "name": "Venture Studio",
   "slug": "venture-studio",
-  "tagline": "Launch and scale ventures with AI agents",
+  "tagline": "Launch and scale ventures with agents",
   "description": "Venture building automation: due diligence, cap table management, pitch decks, and portfolio monitoring.",
-  "featured_departments": ["venture", "board", "founder"],
-  "featured_commands": [
-    "founder-pitch", "venture-due-diligence", "founder-okr",
-    "board-report", "venture-portfolio"
+  "featured_departments": [
+    "venture",
+    "board",
+    "founder"
   ],
-  "branding": { "accent_color": "#A855F7", "icon": "rocket" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "founder-pitch",
+    "venture-due-diligence",
+    "founder-okr",
+    "board-report",
+    "venture-portfolio"
+  ],
+  "branding": {
+    "accent_color": "#A855F7",
+    "icon": "rocket"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "VCs, founders, and venture builders",
   "use_cases": [

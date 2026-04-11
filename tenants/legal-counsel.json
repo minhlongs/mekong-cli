@@ -1,15 +1,28 @@
 {
-  "name": "AI Legal Counsel",
+  "name": "Legal Counsel",
   "slug": "legal-counsel",
-  "tagline": "AI-assisted legal operations and compliance",
-  "description": "Contract review, compliance checks, regulatory analysis, and legal document generation powered by AI agents.",
-  "featured_departments": ["legal", "audit", "compliance"],
-  "featured_commands": [
-    "legal-contract-review", "audit-compliance", "legal-policy",
-    "compliance-check", "audit-report"
+  "tagline": "assisted legal operations and compliance",
+  "description": "Contract review, compliance checks, regulatory analysis, and legal document generation powered by agents.",
+  "featured_departments": [
+    "legal",
+    "audit",
+    "compliance"
   ],
-  "branding": { "accent_color": "#6B7280", "icon": "scale" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "legal-contract-review",
+    "audit-compliance",
+    "legal-policy",
+    "compliance-check",
+    "audit-report"
+  ],
+  "branding": {
+    "accent_color": "#6B7280",
+    "icon": "scale"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
   "target_audience": "Legal teams and compliance officers",
   "use_cases": [

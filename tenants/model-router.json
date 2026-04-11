@@ -1,16 +1,30 @@
 {
-  "name": "AI Model Router",
+  "name": "Model Router",
   "slug": "model-router",
-  "tagline": "Route AI workloads to the right model",
+  "tagline": "Route workloads to the right model",
   "description": "Intelligent model selection, fallback chains, and cost optimization across cloud and local LLM providers.",
-  "featured_departments": ["engineering", "backend", "data"],
-  "featured_commands": [
-    "cook", "code", "deploy", "test", "data-pipeline"
+  "featured_departments": [
+    "engineering",
+    "backend",
+    "data"
   ],
-  "branding": { "accent_color": "#6366F1", "icon": "cpu" },
-  "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
+  "featured_commands": [
+    "cook",
+    "code",
+    "deploy",
+    "test",
+    "data-pipeline"
+  ],
+  "branding": {
+    "accent_color": "#6366F1",
+    "icon": "cpu"
+  },
+  "limits": {
+    "max_credits_per_mission": 5,
+    "default_model": "auto"
+  },
   "polar_checkout_url": null,
-  "target_audience": "AI engineers and ML teams",
+  "target_audience": "engineers and ML teams",
   "use_cases": [
     "Route prompts to cheapest capable model automatically",
     "Set up fallback chains across providers",
