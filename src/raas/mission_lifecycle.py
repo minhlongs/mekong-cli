@@ -91,7 +91,7 @@ class MissionLifecycle:
             self._emit_depleted(tenant_id, balance)
             raise InsufficientCreditsError(
                 f"Insufficient credits: need {cost}, have {balance}. "
-                "Upgrade at https://agencyos.network/pricing"
+                "Upgrade at https://mekongmind.com/pricing"
             )
 
         # Debit BEFORE creating the record — prevents double-spend on retry

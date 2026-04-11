@@ -89,7 +89,7 @@ def create_payment(
         "order_description": f"OpenClaw {tier_config['name']} — {tier_config['credits']} credits/mo",
         "ipn_callback_url": os.getenv(
             "NOWPAYMENTS_IPN_URL",
-            "https://api.agencyos.network/webhooks/nowpayments",
+            "https://api.mekongmind.com/webhooks/nowpayments",
         ),
         "payout_address": PAYOUT_ADDRESS,
     }
@@ -119,15 +119,15 @@ def create_invoice(
         "order_description": f"OpenClaw {tier_config['name']} — {tier_config['credits']} credits/mo",
         "ipn_callback_url": os.getenv(
             "NOWPAYMENTS_IPN_URL",
-            "https://api.agencyos.network/webhooks/nowpayments",
+            "https://api.mekongmind.com/webhooks/nowpayments",
         ),
         "success_url": os.getenv(
             "NOWPAYMENTS_SUCCESS_URL",
-            "https://sophia.agencyos.network/thank-you",
+            "https://sophia.mekongmind.com/thank-you",
         ),
         "cancel_url": os.getenv(
             "NOWPAYMENTS_CANCEL_URL",
-            "https://sophia.agencyos.network/pricing",
+            "https://sophia.mekongmind.com/pricing",
         ),
     }
     if customer_email:

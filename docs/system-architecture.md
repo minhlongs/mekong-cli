@@ -667,7 +667,7 @@ Serverless PEV engine running on Cloudflare Workers, exposing core Mekong functi
 - **Cache:** Cloudflare KV (distributed rate limiting)
 - **LLM:** Workers AI (Llama 3.1 8B) + OpenAI-compatible fallback
 
-**Production URL:** `https://mekong-engine.agencyos-openclaw.workers.dev`
+**Production URL:** `https://mekong-engine.mekongmind.workers.dev`
 
 **Core Features:**
 1. **PEV Pipeline** — `/cmd` endpoint for direct PEV execution (no auth)

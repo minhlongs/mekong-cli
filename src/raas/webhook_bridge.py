@@ -380,7 +380,7 @@ class WebhookBridge:
         import requests
 
         gateway_url = gateway_url or os.getenv(
-            "RAAS_GATEWAY_URL", "https://raas.agencyos.network"
+            "RAAS_GATEWAY_URL", "https://raas.mekongmind.com"
         )
         url = f"{gateway_url}/v1/billing/webhook-relay"
 

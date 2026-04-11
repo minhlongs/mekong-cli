@@ -785,7 +785,7 @@ class SyncClient:
 
             return {
                 "success": True,
-                "dashboard_url": "https://agencyos.network/analytics",
+                "dashboard_url": "https://mekongmind.com/analytics",
             }
 
         except GatewayError as e:
@@ -906,7 +906,7 @@ class SyncClient:
             )
             return {
                 "healthy": response.data.get("healthy", False),
-                "dashboard_url": response.data.get("dashboard_url", "https://agencyos.network/analytics"),
+                "dashboard_url": response.data.get("dashboard_url", "https://mekongmind.com/analytics"),
                 "last_push": response.data.get("last_push"),
                 "events_pushed": response.data.get("events_pushed", 0),
             }

@@ -60,7 +60,7 @@ class FinalPhaseValidator:
     Returns completion certificate on success.
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://raas.mekongmind.com"
 
     def __init__(self, gateway_url: Optional[str] = None) -> None:
         self.console = Console()
