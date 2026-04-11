@@ -1,6 +1,6 @@
-# Mekong IDE — AI Operating System
+# Mekong IDE — Business Automation Platform
 
-> 22 AI departments. 290 commands. 1 subscription. Run your entire business with AI agents.
+> 22 operational modules. 290 commands. 1 subscription. Run your entire business with automation workflows.
 
 [![CI](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml)
 [![npm openclaw-engine](https://img.shields.io/npm/v/@mekongcli/openclaw-engine?label=openclaw-engine)](https://www.npmjs.com/package/@mekongcli/openclaw-engine)
@@ -8,9 +8,9 @@
 [![Tests](https://img.shields.io/badge/tests-5713%20passing-brightgreen)]()
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
 
-**Describe your goal. AI plans, executes, verifies, delivers.**
+**Describe your goal. automation plans, executes, verifies, delivers.**
 
-Mekong CLI is an AI-operated business platform. One natural-language command triggers multi-agent workflows that build software, run marketing campaigns, manage finances, and ship products. Works with any LLM provider -- cloud or local.
+Mekong CLI is an automation-powered business platform. One natural-language command triggers multi-agent workflows that build software, run marketing campaigns, manage finances, and ship products. Works with any LLM provider -- cloud or local.
 
 ```
 $ mekong cook "Create a SaaS landing page with Polar.sh checkout"
@@ -23,7 +23,7 @@ $ mekong cook "Create a SaaS landing page with Polar.sh checkout"
 
   ✅ Done in 4m 23s.  3 MCU credits used.
 
-$ mekong founder:raise "Series A for AI platform"
+$ mekong founder:raise "Series A for automation platform"
 
   ◐ Dispatching 8 agents in parallel...
   ✓ Group 1:  Unit Economics + TAM + Moat Audit      (3 parallel)

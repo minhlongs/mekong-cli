@@ -144,7 +144,7 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 | Naming | snake_case (Python), kebab-case (files) |
 | Secrets | Never in code — use `.env` |
 | Commits | Conventional: `feat/fix/refactor/docs/test/chore` |
-| No AI refs | Clean commit messages |
+| No automation refs | Clean commit messages |
 
 ### Binh Phap Quality Fronts
 

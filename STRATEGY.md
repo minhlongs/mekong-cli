@@ -1,4 +1,4 @@
-# Mekong AI OS — Strategy
+# Mekong automation OS — Strategy
 
 > XONG = Mekong tự bán Mekong, có $ vào tài khoản.
 > PR merged, self-test pass, HTTP 200 đều CHƯA XONG.
@@ -7,7 +7,7 @@
 
 Mekong IDE is ONE product. Not 13. Not 22. ONE.
 
-1 subscription → 22 AI departments → 290 operational commands
+1 subscription → 22 automation departments → 290 operational commands
 → runs on M1 Max via Ollama (zero cloud cost)
 → or via RaaS API (pay-per-mission)
 
@@ -25,7 +25,7 @@ Every tier gets ALL departments. Credits = how much you run.
 
 Finance, Marketing, Sales, Engineering, Legal, Compliance, HR,
 Design, Data, Security, Growth, Venture, CTO, CFO, CMO, CRO,
-Operations, Incident, Observability, ML/AI, Customer Success, Product
+Operations, Incident, Observability, ML/Automation, Customer Success, Product
 
 ### How It Works
 
@@ -60,19 +60,19 @@ User: "Create Q1 financial report"
 
 Same IDE, different landing pages for different audiences:
 
-1. **AI Trading Desk** — Finance dept commands for algo-traders
-2. **AI Model Router** — Engineering dept for LLM cost optimization
-3. **AI Content Studio** — Marketing dept for content teams
-4. **AI Legal Counsel** — Legal + Compliance dept for law firms
-5. **AI Dev Agency** — Engineering + CTO dept for dev shops
-6. **AI Growth Engine** — Growth + Marketing dept for startups
-7. **AI Compliance Vault** — Compliance + Security dept for regulated
-8. **AI Business Intelligence** — Data + Analytics dept for analysts
-9. **AI HR Operations** — HR dept for people teams
-10. **AI Sales Operations** — Sales + CRO dept for sales teams
-11. **AI Design Studio** — Design dept for creative agencies
-12. **AI Venture Studio** — Venture + Strategy dept for VCs
-13. **AI Operations Center** — Ops + Incident dept for SRE teams
+1. **Trading Desk** — Finance dept commands for algo-traders
+2. **Model Router** — Engineering dept for LLM cost optimization
+3. **Content Studio** — Marketing dept for content teams
+4. **Legal Counsel** — Legal + Compliance dept for law firms
+5. **Dev Agency** — Engineering + CTO dept for dev shops
+6. **Growth Engine** — Growth + Marketing dept for startups
+7. **Compliance Vault** — Compliance + Security dept for regulated
+8. **Business Intelligence** — Data + Analytics dept for analysts
+9. **HR Operations** — HR dept for people teams
+10. **Sales Operations** — Sales + CRO dept for sales teams
+11. **Design Studio** — Design dept for creative agencies
+12. **Venture Studio** — Venture + Strategy dept for VCs
+13. **Operations Center** — Ops + Incident dept for SRE teams
 
 Each "use case" = same IDE subscription + different landing page.
 
