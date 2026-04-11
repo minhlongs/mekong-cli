@@ -3,7 +3,7 @@ import json
 import shutil
 from pathlib import Path
 
-from markupsafe import escape
+from markupsafe import escape, Markup
 from jinja2 import Environment, FileSystemLoader
 
 ROOT = Path(__file__).resolve().parent
@@ -83,11 +83,24 @@ def build():
     print(f"\nDone. {len(tenants)} pages in {DIST_DIR}")
 
 
+def _svg(path: str, color: str = "currentColor") -> str:
+    """Generate 20x20 inline SVG icon."""
+    return f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">{path}</svg>'
+
 ICON_MAP = {
-    "chart-line": "📊", "cpu": "⚡", "pen-tool": "✏️", "scale": "⚖️",
-    "terminal": "💻", "trending-up": "📈", "shield": "🛡️", "bar-chart-2": "📉",
-    "users": "👥", "target": "🎯", "palette": "🎨", "rocket": "🚀",
-    "activity": "⚙️",
+    "chart-line": _svg('<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>'),
+    "cpu": _svg('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>'),
+    "pen-tool": _svg('<path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>'),
+    "scale": _svg('<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>'),
+    "terminal": _svg('<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>'),
+    "trending-up": _svg('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'),
+    "shield": _svg('<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'),
+    "bar-chart-2": _svg('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'),
+    "users": _svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    "target": _svg('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'),
+    "palette": _svg('<circle cx="13.5" cy="6.5" r="0.5"/><circle cx="17.5" cy="10.5" r="0.5"/><circle cx="8.5" cy="7.5" r="0.5"/><circle cx="6.5" cy="12" r="0.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>'),
+    "rocket": _svg('<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>'),
+    "activity": _svg('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'),
 }
 
 def build_hub_page(tenants: list[dict]) -> str:
@@ -95,7 +108,7 @@ def build_hub_page(tenants: list[dict]) -> str:
     links = "\n".join(
         f'<a href="/use-cases/{escape(t["slug"])}/" class="tenant-link"'
         f' style="border-color:{escape(t["branding"]["accent_color"])}">'
-        f'{ICON_MAP.get(t["branding"]["icon"], "▸")} {escape(t["name"])}'
+        f'{Markup(ICON_MAP.get(t["branding"]["icon"], "▸"))} {escape(t["name"])}'
         f'<br><small>{escape(t["tagline"])}</small></a>'
         for t in tenants
     )
