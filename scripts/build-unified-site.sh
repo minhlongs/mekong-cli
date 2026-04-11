@@ -104,7 +104,7 @@ cat > "$OUT/_headers" <<'HEADERS'
   X-Content-Type-Options: nosniff
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:* https://*.mekongmind.com https://polar.sh; font-src 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:* https://*.mekongmind.com https://api.cashclaw.cc https://polar.sh; font-src 'self'
 HEADERS
 
 echo ""
