@@ -68,7 +68,10 @@ for slug_dir in "$REPO_ROOT/landing/dist"/*/; do
   [[ "$slug" == _* ]] && continue
   cp -r "$slug_dir" "$OUT/use-cases/$slug"
 done
-echo "      Tenant pages → $OUT/use-cases/"
+# Copy hub index
+cp "$REPO_ROOT/landing/dist/index.html" "$OUT/use-cases/index.html" 2>/dev/null
+cp -r "$REPO_ROOT/landing/dist/static" "$OUT/use-cases/static" 2>/dev/null
+echo "      Tenant pages + hub → $OUT/use-cases/"
 
 # IDE under /ide/  — next export puts files at top-level, wrap in subdir
 mkdir -p "$OUT/ide"

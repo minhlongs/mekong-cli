@@ -83,12 +83,19 @@ def build():
     print(f"\nDone. {len(tenants)} pages in {DIST_DIR}")
 
 
+ICON_MAP = {
+    "chart-line": "📊", "cpu": "⚡", "pen-tool": "✏️", "scale": "⚖️",
+    "terminal": "💻", "trending-up": "📈", "shield": "🛡️", "bar-chart-2": "📉",
+    "users": "👥", "target": "🎯", "palette": "🎨", "rocket": "🚀",
+    "activity": "⚙️",
+}
+
 def build_hub_page(tenants: list[dict]) -> str:
     """Generate hub page linking to all 13 tenant landing pages."""
     links = "\n".join(
-        f'<a href="/{escape(t["slug"])}/" class="tenant-link"'
+        f'<a href="/use-cases/{escape(t["slug"])}/" class="tenant-link"'
         f' style="border-color:{escape(t["branding"]["accent_color"])}">'
-        f'{escape(t["branding"]["icon"])} {escape(t["name"])}'
+        f'{ICON_MAP.get(t["branding"]["icon"], "▸")} {escape(t["name"])}'
         f'<br><small>{escape(t["tagline"])}</small></a>'
         for t in tenants
     )
