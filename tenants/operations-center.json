@@ -6,7 +6,7 @@
   "featured_departments": ["ops", "incident", "security"],
   "featured_commands": [
     "ops-status", "incident-respond", "security-scan",
-    "ops-health", "incident-postmortem"
+    "ops-status", "incident-postmortem"
   ],
   "branding": { "accent_color": "#DC2626", "icon": "activity" },
   "limits": { "max_credits_per_mission": 5, "default_model": "auto" },
@@ -14,7 +14,7 @@
   "target_audience": "DevOps and SRE teams",
   "use_cases": [
     "Automated incident detection and response",
-    "Infrastructure health monitoring",
+    "Infrastructure uptime monitoring",
     "Security vulnerability scanning",
     "Generate postmortems and runbooks"
   ]

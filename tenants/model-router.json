@@ -14,7 +14,7 @@
   "use_cases": [
     "Route prompts to cheapest capable model automatically",
     "Set up fallback chains across providers",
-    "Monitor token usage and cost per task",
+    "Monitor API usage and cost per task",
     "A/B test model performance on real workloads"
   ]
 }
