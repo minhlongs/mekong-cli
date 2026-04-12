@@ -80,6 +80,21 @@ def build():
 """
     (DIST_DIR / "_headers").write_text(headers)
 
+    # SEO: Generate sitemap.xml
+    sitemap_entries = ['<?xml version="1.0" encoding="UTF-8"?>',
+                       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+                       '  <url><loc>https://mekongmind.pages.dev/</loc><priority>1.0</priority></url>']
+    for t in tenants:
+        sitemap_entries.append(f'  <url><loc>https://mekongmind.pages.dev/{t["slug"]}/</loc><priority>0.8</priority></url>')
+    sitemap_entries.append('</urlset>')
+    (DIST_DIR / "sitemap.xml").write_text("\n".join(sitemap_entries))
+    print(f"  Built: sitemap.xml ({len(tenants)+1} URLs)")
+
+    # SEO: Generate robots.txt
+    robots = "User-agent: *\nAllow: /\nSitemap: https://mekongmind.pages.dev/sitemap.xml\n"
+    (DIST_DIR / "robots.txt").write_text(robots)
+    print(f"  Built: robots.txt")
+
     print(f"\nDone. {len(tenants)} pages in {DIST_DIR}")
 
 
