@@ -101,48 +101,37 @@ def get_api_key() -> str:
 
 
 def execute_mission(goal: str, api_key: str) -> str:
-    """Execute mission via gateway API (eat own dogfood)."""
+    """Execute mission via Ollama native API (non-streaming, no credit cost).
+
+    Uses Ollama's native /api/chat endpoint which handles model loading
+    and memory management better than OpenAI-compatible endpoint.
+    """
+    model = os.getenv("DAEMON_LLM_MODEL", "qwen3:32b")
+    system_prompt = (
+        "You are an expert business consultant writing for solo founders. "
+        "Write detailed, actionable, well-structured content with headers and bullet points. "
+        "Do NOT use the word 'AI' — use 'automation' or 'intelligent' instead. "
+        "Minimum 500 words. Include specific examples."
+    )
     try:
-        r = requests.post(f"{GATEWAY_URL}/raas/missions",
-            json={"goal": goal},
-            headers={"Authorization": f"Bearer {api_key}"},
-            timeout=10,
-        )
-        if r.status_code == 202:
-            mission_id = r.json()["id"]
-            # Poll for completion (max 2 min)
-            for _ in range(12):
-                time.sleep(10)
-                status_r = requests.get(
-                    f"{GATEWAY_URL}/raas/missions/{mission_id}",
-                    headers={"Authorization": f"Bearer {api_key}"},
-                    timeout=10,
-                )
-                if status_r.status_code == 200:
-                    data = status_r.json()
-                    if data["status"] == "completed":
-                        return data.get("output", goal)
-                    if data["status"] == "failed":
-                        return f"[FAILED] {data.get('error_message', 'unknown')}"
-            return "[TIMEOUT] Mission did not complete in 2 minutes"
-        elif r.status_code == 402:
-            return "[NO_CREDITS] Daemon out of credits"
-        else:
-            return f"[ERROR] HTTP {r.status_code}: {r.text[:200]}"
+        r = requests.post("http://localhost:11434/api/chat",
+            json={
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": goal},
+                ],
+                "stream": False,
+                "options": {"num_predict": 2000, "temperature": 0.7},
+            }, timeout=300)  # 5 min for thorough content
+        content = r.json()["message"]["content"]
+        if len(content) > 100:
+            return content
+        return f"[SHORT] {len(content)} chars — model may be overloaded"
+    except requests.Timeout:
+        return "[TIMEOUT] Ollama took >5 minutes"
     except Exception as e:
         return f"[ERROR] {e}"
-
-    # Fallback: direct Ollama call if gateway fails
-    try:
-        r = requests.post("http://localhost:11434/v1/chat/completions",
-            json={
-                "model": "qwen2.5-coder:7b",
-                "messages": [{"role": "user", "content": goal}],
-                "max_tokens": 2000,
-            }, timeout=120)
-        return r.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"[FALLBACK_ERROR] {e}"
 
 
 def publish_to_github(title: str, body: str, category: str = "General") -> str:
