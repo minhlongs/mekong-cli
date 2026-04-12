@@ -1,8 +1,8 @@
 {
-  "name": "Analytics Desk",
+  "name": "AI Trading Desk",
   "slug": "trading-desk",
-  "tagline": "Data analytics and financial reporting automation",
-  "description": "Run quantitative analysis, generate financial reports, and automate data pipelines with workflow templates.",
+  "tagline": "Algo-trading with AI agents across 5 prediction markets",
+  "description": "52+ strategies, 5 platforms (Polymarket, Kalshi, Limitless, PredictIt, Smarkets), AI signal validation, real-time WebSocket, paper trading proven profitable.",
   "featured_departments": [
     "finance",
     "analyst",
@@ -24,11 +24,12 @@
     "default_model": "auto"
   },
   "polar_checkout_url": null,
-  "target_audience": "Finance teams and data analysts",
+  "target_audience": "Algo-traders, quant teams, and prediction market enthusiasts",
   "use_cases": [
-    "Automate financial report generation",
-    "Build data pipelines with natural language",
-    "Generate budget forecasts and variance analysis",
-    "Create executive dashboards from raw data"
+    "Run 52+ trading strategies across Polymarket, Kalshi, and 3 more platforms",
+    "AI signal validation: 3-persona swarm consensus before every trade",
+    "Paper trading with proven +67% win rate",
+    "Real-time market scanning via WebSocket (<1s latency)",
+    "Whale copy trading: auto-follow $1K+ trades"
   ]
 }

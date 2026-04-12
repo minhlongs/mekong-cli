@@ -35,6 +35,27 @@ CashClaw trades on Polymarket's Central Limit Order Book. The API has critical q
 - `references/api-endpoints.md` — CLOB endpoint reference
 - `references/order-examples.md` — Working order placement examples
 
+## CashClaw Integration (algo-trader repo)
+
+CashClaw is the execution engine for Trading Desk use case. Git remote: `algo-trader`.
+
+### Architecture (24 PRs, ~20K LOC)
+- **CLOB v2 adapter** (`@polymarket/clob-client-v2` + viem) — L1/L2 auth
+- **WebSocket feed** (`wss://ws-subscriptions-clob.polymarket.com/ws/market`) — <1s latency
+- **52+ strategies**: endgame, neg-risk, cross-market ILP, delta-neutral, BTC 15-min, whale copy, split/merge, cycle-end
+- **5 platforms**: Polymarket + Kalshi + Limitless + PredictIt + Smarkets
+- **AI pipeline**: 3-persona swarm → signal fusion → DeepSeek validation → resolution analyzer
+- **Paper trading**: +67% win rate (prediction tracker verifying real accuracy)
+- **Real trade ledger**: `cashclaw ledger 0xWALLET` — view any wallet's actual trades
+
+### Key Commands
+```bash
+cashclaw paper              # Start paper trading
+cashclaw status             # P&L report
+cashclaw scan               # Market opportunities
+cashclaw ledger 0xWALLET    # Real Polymarket trades
+```
+
 ## Gotchas
 - GTC orders SURVIVE bot crashes. Always register SIGTERM handler to cancel.
 - `outcomePrices` from Gamma API are STRINGS not numbers. Parse with `parseFloat()`.
@@ -42,3 +63,5 @@ CashClaw trades on Polymarket's Central Limit Order Book. The API has critical q
 - The `nonce` field must be unique per order. Use timestamp + random suffix.
 - Testnet does NOT exist. Use `DRY_RUN` mode with real API reads + simulated writes.
 - Dynamic fees depend on probability: a 95% market has HIGHER taker fees than a 55% market.
+- **Geopolitical markets**: 0% taker fee — best edge category.
+- **Split/CLOB entry**: mint YES+NO → sell unwanted = 5-8% cheaper than direct buy.
