@@ -82,7 +82,7 @@ _ALLOWED_ORIGINS: list[str] = [
     o.strip()
     for o in _os.environ.get(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:8080",
+        "http://localhost:3000,http://localhost:8080,https://mekongmind.pages.dev,https://mekongmind.com,https://api.cashclaw.cc",
     ).split(",")
     if o.strip()
 ]
@@ -558,32 +558,38 @@ async def mcu_deduct(request: MCUDeductRequest) -> MCUDeductResponse:
         raise HTTPException(status_code=400, detail=error.to_dict())
 
     try:
-        result = mcu_billing.deduct(
-            tenant_id=request.tenant_id,
-            complexity=request.complexity,
-            mission_id=request.mission_id,
-        )
+        # Use SQLite CreditStore (same as /raas/missions) instead of
+        # in-memory MCUBilling to avoid split-store bug (BUG-06).
+        from src.raas.credits import CreditStore
 
-        if not result.success:
-            # Check error type for appropriate status code
-            if "Insufficient MCU" in result.error:
-                raise HTTPException(
-                    status_code=402,  # Payment Required
-                    detail={
-                        "error": "INSUFFICIENT_CREDITS",
-                        "message": result.error,
-                        "balance": result.balance_after,
-                        "required": MCU_COSTS[request.complexity],
-                    },
-                )
-            raise HTTPException(status_code=400, detail=result.error)
+        cost = MCU_COSTS.get(request.complexity, 1)
+        credit_store = CreditStore()
+        balance_before = credit_store.get_balance(request.tenant_id)
+
+        if balance_before < cost:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "INSUFFICIENT_CREDITS",
+                    "message": f"Insufficient MCU: need {cost}, have {balance_before}",
+                    "balance": balance_before,
+                    "required": cost,
+                },
+            )
+
+        credit_store.deduct(
+            tenant_id=request.tenant_id,
+            amount=cost,
+            reason=f"mcu_{request.complexity}_{request.mission_id or 'direct'}",
+        )
+        balance_after = credit_store.get_balance(request.tenant_id)
 
         return MCUDeductResponse(
-            success=result.success,
-            balance_before=result.balance_before,
-            balance_after=result.balance_after,
-            amount_deducted=result.amount_deducted,
-            low_balance=result.low_balance,
+            success=True,
+            balance_before=balance_before,
+            balance_after=balance_after,
+            amount_deducted=cost,
+            low_balance=balance_after < 10,
         )
 
     except HTTPException:

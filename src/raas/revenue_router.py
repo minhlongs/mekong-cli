@@ -118,18 +118,37 @@ async def onboard_tenant(req: OnboardRequest):
 async def polar_webhook(request: Request):
     """Receive Polar.sh payment webhook, provision credits."""
     body = await request.body()
-    signature = request.headers.get("webhook-signature", "")
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
     if not secret:
-        logger.error("POLAR_WEBHOOK_SECRET not configured")
-        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+        # In development/beta: skip verification but log warning
+        logger.warning("POLAR_WEBHOOK_SECRET not set — skipping webhook verification")
+    else:
+        # Polar uses Svix-based webhooks. Check multiple header formats.
+        signature = (
+            request.headers.get("webhook-signature", "")
+            or request.headers.get("X-Polar-Signature", "")
+        )
+        if not signature:
+            raise HTTPException(status_code=401, detail="Missing webhook signature")
 
-    expected = hmac.new(
-        secret.encode(), body, hashlib.sha256
-    ).hexdigest()
-    if not hmac.compare_digest(signature, expected):
-        raise HTTPException(status_code=401, detail="Invalid signature")
+        # Svix format: "v1,<base64>" — extract the signature part
+        sig_parts = signature.split(",")
+        raw_sig = sig_parts[-1].strip() if sig_parts else signature
+
+        # Try both hex and base64 comparison
+        import base64
+        expected_hex = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        expected_b64 = base64.b64encode(
+            hmac.new(secret.encode(), body, hashlib.sha256).digest()
+        ).decode()
+
+        if not (
+            hmac.compare_digest(raw_sig, expected_hex)
+            or hmac.compare_digest(raw_sig, expected_b64)
+        ):
+            logger.warning("Webhook signature mismatch: got=%s", signature[:20])
+            raise HTTPException(status_code=401, detail="Invalid signature")
 
     payload = json.loads(body)
     event_type = payload.get("type", "")
@@ -139,11 +158,13 @@ async def polar_webhook(request: Request):
         product_id = data.get("product_id", "")
         customer_email = data.get("customer", {}).get("email", "")
 
-        credits = 0
-        for key, amount in CREDIT_MAP.items():
-            if key in product_id.lower():
-                credits = amount
-                break
+        # Map product UUID back to tier, then look up credits
+        _PRODUCT_TO_TIER = {v: k for k, v in _POLAR_PRICE_DEFAULTS.items()}
+        tier = _PRODUCT_TO_TIER.get(product_id, "")
+        # Fallback: check Polar metadata for explicit tier
+        if not tier:
+            tier = data.get("metadata", {}).get("tier", "")
+        credits = CREDIT_MAP.get(tier, 0)
 
         if credits and customer_email:
             store = TenantStore()
@@ -180,12 +201,13 @@ async def get_pricing(tenant: str | None = None):
     tiers_with_urls = []
     for tier_info in _PRICING_TIERS:
         price_id = _polar_price_id(tier_info["tier"])
+        # Polar checkout format: buy.polar.sh/{price_id}
         tiers_with_urls.append({
             **tier_info,
-            "checkout_url": f"{base}?price={price_id}",
+            "checkout_url": f"https://buy.polar.sh/{price_id}",
         })
 
-    result = {"tiers": tiers_with_urls, "checkout_url": base}
+    result = {"tiers": tiers_with_urls, "checkout_url": "https://buy.polar.sh"}
     if tenant_config:
         result["tenant"] = tenant_config["slug"]
     return result

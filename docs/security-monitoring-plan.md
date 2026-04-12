@@ -34,7 +34,7 @@
 
 ### Alert Channels
 
-- Email: security@agencyos.network
+- Email: security@mekongmind.com
 - Slack: #security-alerts
 - SMS: Critical security incidents
 

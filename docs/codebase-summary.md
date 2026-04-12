@@ -24,7 +24,7 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  CLI: mekong cook/fix/plan/deploy/... (319 commands)  │
-│  Dashboard: agencyos.network → /v1/missions            │
+│  Dashboard: mekongmind.com → /v1/missions            │
 └──────────────────┬──────────────────────────────────────┘
                    │
         ┌─────────▼──────────┐
@@ -341,7 +341,7 @@ mekong-qwen
 
 **API:**
 ```bash
-curl -X POST https://api.agencyos.network/v1/tasks \
+curl -X POST https://api.mekongmind.com/v1/tasks \
   -H "Authorization: Bearer $API_KEY" \
   -d '{"command": "cook", "goal": "Build landing page"}'
 ```

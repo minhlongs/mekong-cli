@@ -155,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Deploy & Content
 - **Gateway Deploy:** Version 15f37878 with all Phase 1 fixes
-  - api.agencyos.network GREEN, health check passing
+  - api.mekongmind.com GREEN, health check passing
 - **Content Pipeline:** Show HN + ProductHunt drafts created
   - Show HN: "I built an AI agent that runs 342 business commands for $49/mo"
   - ProductHunt: Full product story with 15 screenshots
@@ -164,8 +164,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Infrastructure & DevOps
 - **Database Migration:** All 279 D1 migrations applied (524 total tables)
-- **Custom Domain:** api.agencyos.network → raas-gateway v5.0.0 (certificate auto-renewed)
-- **Dashboard Deployment:** Signup/login pages live on app.agencyos.network
+- **Custom Domain:** api.mekongmind.com → raas-gateway v5.0.0 (certificate auto-renewed)
+- **Dashboard Deployment:** Signup/login pages live on app.mekongmind.com
 - **Pricing Unified:** Free $0/50MCU, Starter $49/200, Pro $149/1000, Enterprise $499/unlimited
 
 #### Bug Fixes
@@ -187,10 +187,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Use Case:** Local fallback when cloud API unavailable (reduces costs)
 
 #### Platform Status
-- **Landing:** agencyos.network (CF Pages)
-- **Dashboard:** app.agencyos.network (CF Pages, signup/login ready)
-- **API:** api.agencyos.network (CF Workers v5.0.0)
-- **Docs:** docs.agencyos.network (CF Pages)
+- **Landing:** mekongmind.com (CF Pages)
+- **Dashboard:** app.mekongmind.com (CF Pages, signup/login ready)
+- **API:** api.mekongmind.com (CF Workers v5.0.0)
+- **Docs:** docs.mekongmind.com (CF Pages)
 - **LLM:** 192.168.11.111:11434 (Ollama, M1 Max)
 
 #### Strategic Roadmap

@@ -2,7 +2,7 @@
 
 > *"Victorious warriors win first and then go to war. Defeated warriors go to war first and then seek to win."* — Sun Tzu
 
-**Target:** $1M ARR ($83K MRR) | **Current:** $0 MRR | **Platform:** api.agencyos.network (LIVE)
+**Target:** $1M ARR ($83K MRR) | **Current:** $0 MRR | **Platform:** api.mekongmind.com (LIVE)
 
 This document applies the 13 chapters of Binh Phap to the concrete path from $0 to $1M ARR.
 
@@ -12,9 +12,9 @@ This document applies the 13 chapters of Binh Phap to the concrete path from $0 
 
 | Asset | Status | URL |
 |-------|--------|-----|
-| RaaS Gateway API | LIVE v5.0.0 | api.agencyos.network |
-| Landing Page | LIVE | agencyos.network |
-| Dashboard | LIVE | dashboard.agencyos.network |
+| RaaS Gateway API | LIVE v5.0.0 | api.mekongmind.com |
+| Landing Page | LIVE | mekongmind.com |
+| Dashboard | LIVE | dashboard.mekongmind.com |
 | Billing (NOWPayments) | CONFIGURED | $49/$149/$499 tiers |
 | Mekong CLI | PUBLIC | github.com/longtho638-jpg/mekong-cli |
 | M1 Max Inference | READY | Local MLX + Ollama |
@@ -30,7 +30,7 @@ This document applies the 13 chapters of Binh Phap to the concrete path from $0 
 
 ```
 mekong swot "RaaS AI Agent Platform 2026"
-mekong venture:five-factors "agencyos.network"
+mekong venture:five-factors "mekongmind.com"
 ```
 
 | Factor | Assessment |
@@ -47,7 +47,7 @@ mekong venture:five-factors "agencyos.network"
 
 ```
 mekong scout "competitor pricing AI agent platforms"
-mekong audit "agencyos.network full-stack"
+mekong audit "mekongmind.com full-stack"
 ```
 
 **Intel targets:**

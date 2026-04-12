@@ -84,7 +84,7 @@ class PolarSubscriptionRepository:
                 conn.executescript("""
                 -- Polar subscriptions
                 CREATE TABLE IF NOT EXISTS polar_subscriptions (
-                    workspace_id           TEXT PRIMARY KEY REFERENCES workspaces(id) ON DELETE CASCADE,
+                    workspace_id           TEXT PRIMARY KEY,
                     polar_subscription_id  TEXT NOT NULL UNIQUE,
                     product_id             TEXT NOT NULL,
                     tier                   TEXT NOT NULL,
@@ -372,7 +372,7 @@ class PolarWebhookHandler:
         existing = self._subscription_repo.get_subscription(workspace_id)
         if existing:
             existing.tier = new_tier
-            existing.updated_at = self._credit_repo._now_iso()
+            existing.updated_at = datetime.now(timezone.utc).isoformat()
             self._subscription_repo.save_subscription(existing)
 
         # Mark processed
@@ -392,7 +392,7 @@ class PolarWebhookHandler:
         existing = self._subscription_repo.get_subscription(workspace_id)
         if existing:
             existing.status = "cancelled"
-            existing.updated_at = self._credit_repo._now_iso()
+            existing.updated_at = datetime.now(timezone.utc).isoformat()
             self._subscription_repo.save_subscription(existing)
 
         # Mark processed

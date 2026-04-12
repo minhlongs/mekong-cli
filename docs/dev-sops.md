@@ -146,7 +146,7 @@ python3 -c "from src.core.llm_client import LLMClient; c = LLMClient(); print(c.
 curl http://localhost:8000/health
 
 # Check engine
-curl https://mekong-engine.agencyos-openclaw.workers.dev/health
+curl https://mekong-engine.mekongmind.workers.dev/health
 
 # Run single test with verbose
 python3 -m pytest tests/test_executor.py::test_shell_execution -v -s

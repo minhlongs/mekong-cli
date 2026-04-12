@@ -39,6 +39,47 @@ $ mekong status
   Credits: 847 / 1000 MCU remaining
 ```
 
+## Get Started
+
+### Quick Start
+
+**Option 1 — Self-hosted (open source)**
+
+```bash
+git clone --depth 1 https://github.com/longtho638-jpg/mekong-cli.git
+source ~/mekong-cli/scripts/shell-init.sh && mekong
+```
+
+**Option 2 — Managed API**
+
+Sign up at [mekongmind.pages.dev](https://mekongmind.pages.dev) to get an API key, then onboard:
+
+```bash
+curl -X POST https://api.cashclaw.cc/v1/onboard \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Your Name","email":"you@example.com"}'
+```
+
+**Option 3 — Free tier**
+
+50 credits/month. No credit card required. Start at [mekongmind.pages.dev](https://mekongmind.pages.dev).
+
+### Pricing
+
+| Tier | Price | Credits/mo | Access |
+|------|-------|-----------|--------|
+| Starter | $49/mo | 200 | All 22 departments |
+| Growth | $149/mo | 1,000 | + priority + webhooks |
+| Pro | $499/mo | 5,000 | + support + custom agents |
+
+### Links
+
+- Landing: [mekongmind.pages.dev](https://mekongmind.pages.dev)
+- API: [api.cashclaw.cc](https://api.cashclaw.cc)
+- Subscribe: [Starter $49/mo](https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263) · [Growth $149/mo](https://buy.polar.sh/c06a03a3-25cd-4cd3-a13d-e795ee592a4e) · [Pro $499/mo](https://buy.polar.sh/52b7404c-b420-48cc-a382-ab4b5979f766)
+
+---
+
 ## Install
 
 ### SDK (npm)

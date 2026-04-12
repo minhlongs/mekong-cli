@@ -79,8 +79,18 @@ Each "use case" = same IDE subscription + different landing page.
 ## Execution Order
 
 1. ✅ Core IDE works (commands, gateway, credits, tenant)
-2. ⬜ E2E test with Ollama on M1 Max
-3. ⬜ Create Polar.sh products (Starter/Growth/Pro)
-4. ⬜ Wire checkout links
-5. ⬜ Deploy gateway
+2. ✅ E2E test with Ollama on M1 Max (2026-04-12: all endpoints pass)
+3. ✅ Create Polar.sh products (Starter/Growth/Pro) — approved
+4. ✅ Wire checkout links (Polar URLs verified in /v1/pricing)
+5. ✅ Deploy gateway (api.cashclaw.cc → M1 Max:8000 via CF Tunnel)
 6. ⬜ First customer pays → XONG
+
+### Production URLs (2026-04-12)
+
+| Service | URL | Status |
+|---------|-----|--------|
+| Gateway API | https://api.cashclaw.cc | ✅ LIVE |
+| Landing Pages | https://mekongmind.pages.dev | ✅ LIVE (13/13 pages) |
+| Starter Checkout | https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263 | ✅ 302 |
+| Growth Checkout | https://buy.polar.sh/c06a03a3-25cd-4cd3-a13d-e795ee592a4e | ✅ 302 |
+| Pro Checkout | https://buy.polar.sh/52b7404c-b420-48cc-a382-ab4b5979f766 | ✅ 302 |

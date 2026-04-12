@@ -208,7 +208,7 @@ All significant project milestones and phases tracked here.
 
 **Key Infrastructure Updates (2026-03-23):**
 - All 279 D1 migrations applied (524 tables)
-- Custom domain: api.agencyos.network → raas-gateway v5.0.0
+- Custom domain: api.mekongmind.com → raas-gateway v5.0.0
 - Dashboard signup/login pages deployed
 - Unified pricing: Free $0/50MCU, Starter $49/200, Pro $149/1000, Enterprise $499/unlimited
 - Webhook failover: KV outage no longer blocks payments

@@ -11,12 +11,12 @@ TENANTS_DIR = ROOT.parent / "tenants"
 DIST_DIR = ROOT / "dist"
 
 PRICING_TIERS = [
-    {"name": "Starter", "price_usd": 49, "credits": 200},
-    {"name": "Growth", "price_usd": 149, "credits": 1000},
-    {"name": "Pro", "price_usd": 499, "credits": 5000},
+    {"name": "Starter", "price_usd": 49, "credits": 200, "price_id": "a09a5fa0-63db-42a4-a547-3b1523ffc263"},
+    {"name": "Growth", "price_usd": 149, "credits": 1000, "price_id": "c06a03a3-25cd-4cd3-a13d-e795ee592a4e"},
+    {"name": "Pro", "price_usd": 499, "credits": 5000, "price_id": "52b7404c-b420-48cc-a382-ab4b5979f766"},
 ]
 
-POLAR_BASE = "https://polar.sh/longtho638-jpg/mekong-cli/subscriptions"
+POLAR_BASE = "https://buy.polar.sh"
 
 
 def load_tenants() -> list[dict]:
@@ -50,11 +50,11 @@ def build():
         out_dir = DIST_DIR / slug
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        checkout_url = tenant.get("polar_checkout_url") or POLAR_BASE
         tiers = [
-            {**t, "checkout_url": f"{checkout_url}?tier={t['name'].lower()}"}
+            {**t, "checkout_url": f"{POLAR_BASE}/{t['price_id']}"}
             for t in PRICING_TIERS
         ]
+        checkout_url = POLAR_BASE
 
         html = template.render(
             tenant=tenant, checkout_url=checkout_url, pricing_tiers=tiers

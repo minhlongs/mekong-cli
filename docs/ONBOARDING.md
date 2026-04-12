@@ -18,7 +18,7 @@ Mekong IDE is a single product with 13 customized landing pages for different in
 - **Venture Studio** — Venture capital operations
 - **Operations Center** — General business operations
 
-Visit `landing.agencyos.network` to browse all use-cases, then subscribe. Your use-case choice customizes the department dashboard but does not restrict API access — you always have access to all 22 departments.
+Visit `landing.mekongmind.com` to browse all use-cases, then subscribe. Your use-case choice customizes the department dashboard but does not restrict API access — you always have access to all 22 departments.
 
 ## 5-minute setup
 
