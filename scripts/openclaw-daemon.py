@@ -223,14 +223,13 @@ def run_cycle(state: dict) -> dict:
         print(f"  Report: {filename} ({len(result)} chars)")
 
         # ── SELL: inject CTA into every piece of content ──
-        if result and not result.startswith("["):
-            result_with_cta = result + SELL_CTA
+        result_with_cta = (result + SELL_CTA) if (result and len(result) > 100 and not result.startswith("[")) else result
 
         # ── PUBLISH: auto-post content to GitHub ──
-        published_url = None
-        if mission.get("publish") and not result.startswith("["):
+        published_url = ""
+        if mission.get("publish") and result and len(result) > 100 and not result.startswith("["):
             title = mission["goal"][:100]
-            published_url = publish_to_github(title, result_with_cta, mission.get("category", "General"))
+            published_url = publish_to_github(title, result_with_cta, mission.get("category", "General")) or ""
 
         # ── REPORT: track what happened ──
         run_record = {
@@ -310,9 +309,19 @@ def run_cycle(state: dict) -> dict:
 
 def main():
     """Main daemon loop — runs forever."""
-    print("OpenClaw Autonomous Daemon starting...")
+    import traceback as _tb
+
+    # Redirect all output to log file for debugging
+    log_path = Path.home() / ".mekong" / "daemon-debug.log"
+    import sys
+    sys.stdout = open(str(log_path), "a", buffering=1)
+    sys.stderr = sys.stdout
+
+    print(f"\n{'='*40} DAEMON START {'='*40}")
+    print(f"PID: {os.getpid()}")
     print(f"Gateway: {GATEWAY_URL}")
     print(f"Reports: {REPORTS_DIR}")
+    print(f"GITHUB_TOKEN: {'SET' if GITHUB_TOKEN else 'NOT SET'}")
     print(f"Cycle interval: {CYCLE_INTERVAL_HOURS}h")
 
     state = load_state()
@@ -322,9 +331,11 @@ def main():
             state = run_cycle(state)
         except Exception as e:
             print(f"[CYCLE_ERROR] {e}")
+            _tb.print_exc()
+            save_state(state)  # Save whatever we have
 
         # Sleep until next cycle
-        print(f"\nSleeping {CYCLE_INTERVAL_HOURS}h until next cycle...")
+        print(f"\nSleeping {CYCLE_INTERVAL_HOURS}h until next cycle...", flush=True)
         time.sleep(CYCLE_INTERVAL_HOURS * 3600)
 
 
