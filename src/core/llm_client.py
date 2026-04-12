@@ -92,7 +92,7 @@ class LLMClient:
         proxy_url: str | None = None,
         api_key: str | None = None,
         gemini_key: str | None = None,
-        model: str = "gemini-2.5-pro",
+        model: str | None = None,
         timeout: int = 60,
         enable_cache: bool = True,
         enable_hooks: bool = True,
@@ -111,7 +111,7 @@ class LLMClient:
             providers: Explicit provider list. If None, auto-detects from env vars.
 
         """
-        self.model = model
+        self.model = model or os.getenv("LLM_MODEL", "qwen2.5-coder:7b")
         self.timeout = timeout
 
         # Keep legacy attrs for backward compat (some callers read them directly)
@@ -154,7 +154,7 @@ class LLMClient:
     def from_config(
         cls,
         config_path: str,
-        model: str = "gemini-2.5-pro",
+        model: str | None = None,
         timeout: int = 60,
         enable_cache: bool = True,
         enable_hooks: bool = True,
