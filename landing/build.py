@@ -76,7 +76,7 @@ def build():
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://polar.sh
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://polar.sh https://buy.polar.sh
 """
     (DIST_DIR / "_headers").write_text(headers)
 
@@ -119,35 +119,80 @@ ICON_MAP = {
 }
 
 def build_hub_page(tenants: list[dict]) -> str:
-    """Generate hub page linking to all 13 tenant landing pages."""
-    links = "\n".join(
-        f'<a href="/use-cases/{escape(t["slug"])}/" class="tenant-link"'
-        f' style="border-color:{escape(t["branding"]["accent_color"])}">'
-        f'{Markup(ICON_MAP.get(t["branding"]["icon"], "▸"))} {escape(t["name"])}'
-        f'<br><small>{escape(t["tagline"])}</small></a>'
+    """Generate hub page linking to all 13 tenant landing pages — Tailwind dark theme."""
+    cards = "\n".join(
+        f'''<a href="/{escape(t["slug"])}/" class="group block bg-[#1E293B] border border-[#334155] rounded-xl p-6 hover:border-[{escape(t["branding"]["accent_color"])}] transition-all duration-200 cursor-pointer hover:-translate-y-0.5">
+  <div class="flex items-center gap-3 mb-3">
+    {Markup(ICON_MAP.get(t["branding"]["icon"], ""))}
+    <h3 class="font-semibold text-[#F1F5F9] group-hover:text-[{escape(t["branding"]["accent_color"])}] transition-colors">{escape(t["name"])}</h3>
+  </div>
+  <p class="text-sm text-[#94A3B8] leading-relaxed">{escape(t["tagline"])}</p>
+</a>'''
         for t in tenants
     )
+    starter_url = f"{POLAR_BASE}/a09a5fa0-63db-42a4-a547-3b1523ffc263"
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mekong IDE — Business Automation Platform</title>
-  <link rel="stylesheet" href="static/style.css">
+  <title>MekongMind — 22 Departments Working for You 24/7</title>
+  <meta name="description" content="Business automation platform. 22 departments, 290 commands, runs locally via Ollama. $49/mo.">
+  <meta property="og:title" content="MekongMind — 22 Departments Working for You 24/7">
+  <meta property="og:description" content="Business automation platform. 22 departments, 290 commands. $49/mo.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mekongmind.pages.dev/">
+  <link rel="canonical" href="https://mekongmind.pages.dev/">
+  <meta name="robots" content="index, follow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body {{ background: #0F172A; color: #F1F5F9; font-family: 'IBM Plex Sans', system-ui, sans-serif; }} .glow {{ text-shadow: 0 0 20px rgba(59,130,246,0.3); }}</style>
 </head>
-<body>
-  <header>
-    <nav><a href="/" class="logo">Mekong IDE</a></nav>
-  </header>
-  <section class="hero">
-    <h1>Mekong IDE</h1>
-    <p class="tagline">22 modules. 385 workflows. 1 subscription.</p>
-    <p class="description">Choose your use case below.</p>
+<body class="antialiased min-h-screen">
+  <nav class="fixed top-4 left-4 right-4 z-50 bg-[#1E293B]/80 backdrop-blur-lg border border-[#334155] rounded-2xl px-6 py-3 flex items-center justify-between max-w-6xl mx-auto">
+    <span class="font-mono font-semibold text-lg">MekongMind</span>
+    <div class="flex items-center gap-4">
+      <a href="#use-cases" class="text-[#94A3B8] hover:text-[#F1F5F9] transition-colors text-sm cursor-pointer">Use Cases</a>
+      <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
+    </div>
+  </nav>
+
+  <section class="pt-32 pb-16 px-6 text-center">
+    <div class="inline-flex items-center gap-2 bg-[#1E293B] border border-[#334155] rounded-full px-4 py-1.5 text-sm text-[#94A3B8] mb-8">
+      <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+      Autonomous — running 24/7 on M1 Max
+    </div>
+    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 glow max-w-3xl mx-auto">22 departments<br>working for you.<br>$49/mo.</h1>
+    <p class="text-xl text-[#94A3B8] mb-10 max-w-xl mx-auto">Configure once. Finance reports on Monday. Content on Wednesday. Security audits on Friday. Zero manual work.</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
+      <a href="#use-cases" class="bg-[#1E293B] hover:bg-[#334155] border border-[#334155] font-medium px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Browse use cases</a>
+    </div>
   </section>
-  <section class="hub-grid">{links}</section>
-  <footer>
-    <a class="cta" href="{POLAR_BASE}">Subscribe Now</a>
-  </footer>
+
+  <section id="use-cases" class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-2xl font-bold text-center mb-10">13 use cases. Same platform. Pick yours.</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {cards}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-12 px-6 border-t border-[#334155]">
+    <div class="max-w-2xl mx-auto text-center">
+      <p class="text-[#94A3B8] mb-4">MIT licensed. Self-host free via Ollama. Or use our managed API.</p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center text-sm">
+        <a href="https://github.com/longtho638-jpg/mekong-cli" class="text-[#94A3B8] hover:text-[#F1F5F9] transition-colors cursor-pointer">GitHub</a>
+        <span class="text-[#334155] hidden sm:inline">|</span>
+        <a href="https://api.cashclaw.cc/api-docs" class="text-[#94A3B8] hover:text-[#F1F5F9] transition-colors cursor-pointer">API Docs</a>
+        <span class="text-[#334155] hidden sm:inline">|</span>
+        <a href="{starter_url}" class="text-[#2563EB] hover:text-blue-400 transition-colors cursor-pointer">Subscribe $49/mo</a>
+      </div>
+    </div>
+  </section>
 </body>
 </html>"""
 
