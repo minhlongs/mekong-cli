@@ -270,9 +270,9 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
 # When task is mechanical, use cheaper model regardless of agent role
 
 TASK_TIER_OVERRIDE: dict[str, str | None] = {
-    "mechanical": "gemini-2.0-flash-lite",  # isolated functions, clear specs
-    "integration": None,                     # keep matrix default
-    "architecture": None,                    # keep matrix default (or upgrade)
+    "mechanical": "ollama:qwen2.5-coder:7b",  # local M1 Max — zero cost
+    "integration": None,                       # keep matrix default (LLM_MODEL env)
+    "architecture": None,                      # keep matrix default (or upgrade)
 }
 
 

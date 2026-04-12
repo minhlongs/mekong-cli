@@ -17,17 +17,22 @@ from src.core.cost_estimator import COST_TABLE
 logger = logging.getLogger(__name__)
 
 FALLBACK_HIERARCHY: dict[str, list[str]] = {
-    "claude-opus-4-6": ["claude-sonnet-4-6", "gemini-2.0-pro"],
-    "claude-sonnet-4-6": ["claude-haiku-4-5", "gemini-2.0-flash"],
-    "claude-haiku-4-5": ["gemini-2.0-flash", "gpt-4o-mini"],
-    "gemini-2.0-pro": ["claude-sonnet-4-6", "gpt-4o"],
-    "gemini-2.0-flash": ["gpt-4o-mini", "claude-haiku-4-5"],
-    "gemini-2.0-flash-lite": ["gpt-4o-mini", "ollama:llama3.2:3b"],
-    "ollama:deepseek-coder-v2:33b": ["claude-sonnet-4-6", "gemini-2.0-flash"],
-    "ollama:llama3.3:70b": ["gemini-2.0-flash", "gpt-4o-mini"],
-    "ollama:llama3.2:3b": ["gemini-2.0-flash-lite"],
-    "ollama:qwen2.5:7b": ["gemini-2.0-flash-lite"],
-    "ollama:mistral:7b": ["claude-haiku-4-5", "gemini-2.0-flash"],
+    # Local-first: Ollama models fallback to other local, then cloud
+    "ollama:qwen2.5-coder:7b": ["ollama:deepseek-r1:32b", "ollama:qwen2.5:7b"],
+    "ollama:deepseek-r1:32b": ["ollama:qwen2.5-coder:7b", "ollama:qwen2.5:7b"],
+    "ollama:qwen2.5:7b": ["ollama:qwen2.5-coder:7b"],
+    "ollama:deepseek-coder-v2:33b": ["ollama:qwen2.5-coder:7b"],
+    "ollama:llama3.3:70b": ["ollama:qwen2.5-coder:7b"],
+    "ollama:llama3.2:3b": ["ollama:qwen2.5-coder:7b"],
+    "ollama:mistral:7b": ["ollama:qwen2.5-coder:7b"],
+    # Cloud models fallback to local
+    "claude-opus-4-6": ["claude-sonnet-4-6", "ollama:deepseek-r1:32b"],
+    "claude-sonnet-4-6": ["claude-haiku-4-5", "ollama:qwen2.5-coder:7b"],
+    "claude-haiku-4-5": ["ollama:qwen2.5-coder:7b"],
+    "gemini-2.0-pro": ["ollama:deepseek-r1:32b"],
+    "gemini-2.0-flash": ["ollama:qwen2.5-coder:7b"],
+    "gemini-2.0-flash-lite": ["ollama:qwen2.5-coder:7b"],
+    "gpt-4o-mini": ["ollama:qwen2.5-coder:7b"],
 }
 
 MAX_RETRIES = 3
