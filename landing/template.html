@@ -1,110 +1,213 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ tenant.name }} — Mekong IDE</title>
+  <title>{{ tenant.name }} — MekongMind</title>
   <meta name="description" content="{{ tenant.description }}">
-  <!-- SEO: Open Graph for social sharing -->
-  <meta property="og:title" content="{{ tenant.name }} — Mekong IDE">
+  <meta property="og:title" content="{{ tenant.name }} — MekongMind">
   <meta property="og:description" content="{{ tenant.description }}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://mekongmind.pages.dev/{{ tenant.slug }}/">
-  <!-- SEO: Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ tenant.name }} — Mekong IDE">
+  <meta name="twitter:title" content="{{ tenant.name }} — MekongMind">
   <meta name="twitter:description" content="{{ tenant.description }}">
-  <!-- SEO: Canonical + indexing -->
   <link rel="canonical" href="https://mekongmind.pages.dev/{{ tenant.slug }}/">
   <meta name="robots" content="index, follow">
-  <link rel="stylesheet" href="../static/style.css">
-  <style>:root { --accent: {{ tenant.branding.accent_color }}; }</style>
-  <!-- Structured Data: SoftwareApplication -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Mekong IDE — {{ tenant.name }}",
-    "description": "{{ tenant.description }}",
-    "url": "https://mekongmind.pages.dev/{{ tenant.slug }}/",
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "macOS, Linux, Windows",
-    "offers": {
-      "@type": "Offer",
-      "price": "49",
-      "priceCurrency": "USD"
-    }
-  }
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"MekongMind — {{ tenant.name }}","description":"{{ tenant.description }}","url":"https://mekongmind.pages.dev/{{ tenant.slug }}/","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Linux, Windows","offers":{"@type":"Offer","price":"49","priceCurrency":"USD"}}
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#0F172A',
+            surface: '#1E293B',
+            border: '#334155',
+            accent: '{{ tenant.branding.accent_color }}',
+            cta: '#2563EB',
+            text: '#F1F5F9',
+            muted: '#94A3B8',
+          },
+          fontFamily: {
+            sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { background: #0F172A; color: #F1F5F9; }
+    .glow { text-shadow: 0 0 20px rgba(59,130,246,0.3); }
+    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    @media (prefers-reduced-motion: reduce) { .card-hover:hover { transform: none; } }
+  </style>
 </head>
-<body>
-  <header>
-    <nav>
-      <a href="/" class="logo">Mekong IDE</a>
-      <a href="/#pricing">Pricing</a>
-    </nav>
-  </header>
+<body class="font-sans antialiased min-h-screen">
 
-  <section class="hero">
-    <span class="icon">{{ tenant.branding.icon }}</span>
-    <h1>{{ tenant.name }}</h1>
-    <p class="tagline">{{ tenant.tagline }}</p>
-    <p class="description">{{ tenant.description }}</p>
-    <a class="cta" href="{{ checkout_url }}">Start Free — 50 credits</a>
-  </section>
-
-  <section class="autopilot">
-    <h2>22 departments working for you. 24/7. $49/mo.</h2>
-    <p>Configure once — your business runs on autopilot. Finance reports every Monday. Content published every Wednesday. Security audits every Friday. All without lifting a finger.</p>
-    <div class="autopilot-flow">
-      <code>POST /raas/autopilot</code> → choose departments → set goals → results delivered automatically
+  <!-- Nav -->
+  <nav class="fixed top-4 left-4 right-4 z-50 bg-surface/80 backdrop-blur-lg border border-border rounded-2xl px-6 py-3 flex items-center justify-between max-w-6xl mx-auto">
+    <a href="/" class="font-mono font-semibold text-lg text-text hover:text-accent transition-colors cursor-pointer">MekongMind</a>
+    <div class="flex items-center gap-6">
+      <a href="#autopilot" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">How it works</a>
+      <a href="#pricing" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">Pricing</a>
+      <a href="{{ checkout_url }}" class="bg-cta hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
     </div>
-  </section>
+  </nav>
 
-  <section class="use-cases">
-    <h2>What your autopilot does</h2>
-    <ul>
-      {% for uc in tenant.use_cases %}
-      <li>{{ uc }}</li>
-      {% endfor %}
-    </ul>
-  </section>
-
-  <section class="departments">
-    <h2>Departments Included</h2>
-    <div class="dept-grid">
-      {% for dept in tenant.featured_departments %}
-      <div class="dept-card">{{ dept }}</div>
-      {% endfor %}
-    </div>
-    <p class="note">Plus access to all 22 departments with any subscription.</p>
-  </section>
-
-  <section class="commands">
-    <h2>Featured Commands</h2>
-    <div class="cmd-list">
-      {% for cmd in tenant.featured_commands %}
-      <code>mekong {{ cmd }}</code>
-      {% endfor %}
-    </div>
-  </section>
-
-  <section class="pricing" id="pricing">
-    <h2>Simple Pricing</h2>
-    <div class="tier-grid">
-      {% for tier in pricing_tiers %}
-      <div class="tier-card">
-        <h3>{{ tier.name }}</h3>
-        <p class="price">${{ tier.price_usd }}/mo</p>
-        <p>{{ tier.credits }} credits</p>
-        <a href="{{ tier.checkout_url }}">Get Started</a>
+  <!-- Hero -->
+  <section class="pt-32 pb-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 bg-surface border border-border rounded-full px-4 py-1.5 text-sm text-muted mb-8">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        22 departments running autonomously
       </div>
-      {% endfor %}
+      <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 glow">{{ tenant.name }}</h1>
+      <p class="text-xl md:text-2xl text-muted mb-4 max-w-2xl mx-auto">{{ tenant.tagline }}</p>
+      <p class="text-base text-muted/70 mb-10 max-w-xl mx-auto">{{ tenant.description }}</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{{ checkout_url }}" class="bg-cta hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
+        <a href="#autopilot" class="bg-surface hover:bg-border text-text border border-border font-medium px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">See how it works</a>
+      </div>
+      <!-- Terminal preview -->
+      <div class="mt-16 bg-surface border border-border rounded-2xl p-6 text-left max-w-2xl mx-auto font-mono text-sm">
+        <div class="flex gap-2 mb-4">
+          <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500/60"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500/60"></span>
+        </div>
+        {% for cmd in tenant.featured_commands[:3] %}
+        <div class="mb-2"><span class="text-green-400">$</span> <span class="text-text">mekong {{ cmd }}</span></div>
+        {% endfor %}
+        <div class="text-muted mt-2">// 290 commands across 22 departments</div>
+      </div>
     </div>
   </section>
 
-  <footer>
-    <p>Mekong IDE — 22 departments. 290 commands. 1 subscription.</p>
+  <!-- Autopilot -->
+  <section id="autopilot" class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Your business, on autopilot</h2>
+      <p class="text-muted text-center mb-16 max-w-2xl mx-auto">Configure once. 22 departments work for you 24/7. Finance reports on Monday. Content on Wednesday. Security audits on Friday. Zero manual work.</p>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-surface border border-border rounded-xl p-6 card-hover cursor-pointer">
+          <div class="text-2xl font-bold text-accent mb-2">1</div>
+          <h3 class="font-semibold text-lg mb-2">Choose departments</h3>
+          <p class="text-muted text-sm">Pick from 22 departments: Finance, Marketing, Sales, Engineering, Legal, HR, Security, Growth...</p>
+        </div>
+        <div class="bg-surface border border-border rounded-xl p-6 card-hover cursor-pointer">
+          <div class="text-2xl font-bold text-accent mb-2">2</div>
+          <h3 class="font-semibold text-lg mb-2">Set your goals</h3>
+          <p class="text-muted text-sm">Tell each department what to do: "Weekly P&L report", "3 social posts per week", "Security scan daily".</p>
+        </div>
+        <div class="bg-surface border border-border rounded-xl p-6 card-hover cursor-pointer">
+          <div class="text-2xl font-bold text-accent mb-2">3</div>
+          <h3 class="font-semibold text-lg mb-2">Results delivered</h3>
+          <p class="text-muted text-sm">Reports, content, audits — delivered automatically via webhook or email. You review, not execute.</p>
+        </div>
+      </div>
+      <div class="mt-10 bg-surface border border-border rounded-xl p-6 font-mono text-sm">
+        <span class="text-muted">// Configure autopilot via API</span><br>
+        <span class="text-green-400">POST</span> <span class="text-text">/raas/autopilot</span><br>
+        <span class="text-muted">{</span><br>
+        <span class="text-muted ml-4">"departments": {</span><br>
+        <span class="text-blue-400 ml-8">"finance"</span><span class="text-muted">: [{"goal": "Weekly P&L summary", "schedule": "weekly"}],</span><br>
+        <span class="text-blue-400 ml-8">"marketing"</span><span class="text-muted">: [{"goal": "3 social posts", "schedule": "weekly"}]</span><br>
+        <span class="text-muted ml-4">}</span><br>
+        <span class="text-muted">}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl font-bold text-center mb-12">What your autopilot does</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        {% for uc in tenant.use_cases %}
+        <div class="flex items-start gap-3 bg-surface border border-border rounded-lg p-4 card-hover cursor-default">
+          <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-sm">{{ uc }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Departments -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-4">22 departments included</h2>
+      <p class="text-muted mb-10">Every subscription unlocks all departments. No feature gates.</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        {% for dept in tenant.featured_departments %}
+        <span class="bg-surface border border-border rounded-lg px-4 py-2 text-sm font-medium">{{ dept }}</span>
+        {% endfor %}
+        <span class="bg-surface border border-accent/30 rounded-lg px-4 py-2 text-sm text-accent">+{{ 22 - tenant.featured_departments|length }} more</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="py-20 px-6 border-t border-border">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold text-center mb-4">Simple pricing</h2>
+      <p class="text-muted text-center mb-12">All departments. All commands. Credits = how much you run.</p>
+      <div class="grid md:grid-cols-3 gap-6">
+        {% for tier in pricing_tiers %}
+        <div class="bg-surface border {% if tier.name == 'Starter' %}border-accent{% else %}border-border{% endif %} rounded-2xl p-8 card-hover relative {% if tier.name == 'Starter' %}ring-1 ring-accent/20{% endif %}">
+          {% if tier.name == 'Starter' %}
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-semibold px-3 py-1 rounded-full">Most Popular</div>
+          {% endif %}
+          <h3 class="font-semibold text-lg mb-1">{{ tier.name }}</h3>
+          <div class="flex items-baseline gap-1 mb-1">
+            <span class="text-4xl font-bold">${{ tier.price_usd }}</span>
+            <span class="text-muted">/mo</span>
+          </div>
+          <p class="text-muted text-sm mb-6">{{ tier.credits }} credits per month</p>
+          <a href="{{ tier.checkout_url }}" class="block text-center {% if tier.name == 'Starter' %}bg-cta hover:bg-blue-700 text-white{% else %}bg-surface hover:bg-border text-text border border-border{% endif %} font-medium py-3 rounded-xl transition-colors cursor-pointer">Get Started</a>
+          <ul class="mt-6 space-y-2 text-sm text-muted">
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All 22 departments</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 290 commands</li>
+            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Autopilot scheduling</li>
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Self-host CTA -->
+  <section class="py-16 px-6 border-t border-border">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-4">Prefer to self-host?</h2>
+      <p class="text-muted mb-6">MIT licensed. Runs locally via Ollama on Apple Silicon. Zero cloud cost.</p>
+      <div class="bg-surface border border-border rounded-xl p-6 font-mono text-sm text-left max-w-lg mx-auto">
+        <div><span class="text-green-400">$</span> git clone https://github.com/longtho638-jpg/mekong-cli</div>
+        <div><span class="text-green-400">$</span> source scripts/shell-init.sh</div>
+        <div><span class="text-green-400">$</span> mekong</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
+      <span class="font-mono">MekongMind</span>
+      <span>22 departments. 290 commands. 1 subscription.</span>
+      <div class="flex gap-4">
+        <a href="https://github.com/longtho638-jpg/mekong-cli" class="hover:text-text transition-colors cursor-pointer">GitHub</a>
+        <a href="https://api.cashclaw.cc/api-docs" class="hover:text-text transition-colors cursor-pointer">API Docs</a>
+      </div>
+    </div>
   </footer>
+
 </body>
 </html>
