@@ -53,6 +53,7 @@ from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
 from src.raas.tenant_use_case_router import router as tenant_router
 from src.raas.reports_router import router as reports_router
+from src.raas.autopilot import router as autopilot_router
 
 from src.core.request_logger import RequestLoggerMiddleware
 
@@ -76,6 +77,7 @@ app.include_router(revenue_router)
 app.include_router(checkout_router)
 app.include_router(tenant_router)
 app.include_router(reports_router)
+app.include_router(autopilot_router)
 
 # CORS for AgencyOS frontend
 # Security: wildcard origin is incompatible with allow_credentials=True (CORS spec).

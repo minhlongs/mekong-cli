@@ -50,11 +50,19 @@
     <h1>{{ tenant.name }}</h1>
     <p class="tagline">{{ tenant.tagline }}</p>
     <p class="description">{{ tenant.description }}</p>
-    <a class="cta" href="{{ checkout_url }}">Start Free Trial</a>
+    <a class="cta" href="{{ checkout_url }}">Start Free — 50 credits</a>
+  </section>
+
+  <section class="autopilot">
+    <h2>22 departments working for you. 24/7. $49/mo.</h2>
+    <p>Configure once — your business runs on autopilot. Finance reports every Monday. Content published every Wednesday. Security audits every Friday. All without lifting a finger.</p>
+    <div class="autopilot-flow">
+      <code>POST /raas/autopilot</code> → choose departments → set goals → results delivered automatically
+    </div>
   </section>
 
   <section class="use-cases">
-    <h2>What you can do</h2>
+    <h2>What your autopilot does</h2>
     <ul>
       {% for uc in tenant.use_cases %}
       <li>{{ uc }}</li>

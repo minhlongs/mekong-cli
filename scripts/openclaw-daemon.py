@@ -233,8 +233,19 @@ def run_cycle(state: dict) -> dict:
     state["cycle_count"] = cycle
     save_state(state)
 
+    # ── TENANT AUTOPILOT ── Run all customer daemons
+    print(f"\n  --- Running tenant autopilots ---")
+    try:
+        import sys
+        sys.path.insert(0, str(Path.home() / "mekong-cli"))
+        from src.raas.autopilot_executor import execute_all_tenants
+        tenant_result = execute_all_tenants()
+        print(f"  Tenants: {tenant_result['tenants']}, Missions: {tenant_result['missions']}")
+    except Exception as e:
+        print(f"  [TENANT_ERROR] {e}")
+
     print(f"\n{'=' * 60}")
-    print(f"  Cycle #{cycle} complete: {completed_this_cycle}/{len(MISSIONS)} missions")
+    print(f"  Cycle #{cycle} complete: {completed_this_cycle}/{len(MISSIONS)} own + tenant missions")
     print(f"  Total lifetime: {state['total_missions']} missions")
     print(f"  Next cycle in {CYCLE_INTERVAL_HOURS}h")
     print(f"{'=' * 60}")
