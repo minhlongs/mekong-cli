@@ -2,27 +2,30 @@
 
 Runs CONTINUOUSLY on M1 Max. Every cycle:
 1. Pick next priority mission
-2. Execute via gateway API (eat own dogfood)
+2. Execute via direct Ollama (qwen3:32b)
 3. Auto-publish content to GitHub Discussions
-4. Sleep 4 hours, repeat
+4. Sleep 12 hours, repeat
 
 This IS the a16z solo company: agents do everything, human sleeps.
 """
 import json
 import os
+import sys
 import time
 import datetime
 import hashlib
+import fcntl
 import requests
 from pathlib import Path
 
-# Config — use gateway API (not direct LLM)
+# Config
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
 REPORTS_DIR = Path.home() / "mekong-cli" / "content" / "openclaw-reports"
 STATE_FILE = Path.home() / ".mekong" / "daemon-state.json"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 GITHUB_REPO = "longtho638-jpg/mekong-cli"
-CYCLE_INTERVAL_HOURS = 4
+CYCLE_INTERVAL_HOURS = 12
+PID_FILE = Path.home() / ".mekong" / "daemon.pid"
 
 # Mission queue — rotates each cycle, never repeats within 24h
 MISSIONS = [
@@ -250,6 +253,7 @@ def run_cycle(state: dict) -> dict:
         state["completed"][mhash] = now
         state["total_missions"] = state.get("total_missions", 0) + 1
         completed_this_cycle += 1
+        save_state(state)  # Save after EACH mission (crash-safe)
         time.sleep(5)  # Cool down
 
     state["cycle_count"] = cycle
@@ -307,13 +311,29 @@ def run_cycle(state: dict) -> dict:
     return state
 
 
+def acquire_lock():
+    """Prevent duplicate daemon processes via file lock."""
+    PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    lock_fd = open(str(PID_FILE), "w")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        lock_fd.write(str(os.getpid()))
+        lock_fd.flush()
+        return lock_fd
+    except IOError:
+        print(f"Another daemon already running (lock: {PID_FILE})")
+        sys.exit(0)
+
+
 def main():
     """Main daemon loop — runs forever."""
     import traceback as _tb
 
+    # Single-instance lock
+    lock = acquire_lock()
+
     # Redirect all output to log file for debugging
     log_path = Path.home() / ".mekong" / "daemon-debug.log"
-    import sys
     sys.stdout = open(str(log_path), "a", buffering=1)
     sys.stderr = sys.stdout
 
