@@ -121,8 +121,11 @@ async def polar_webhook(request: Request):
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
     if not secret:
-        # In development/beta: skip verification but log warning
-        logger.warning("POLAR_WEBHOOK_SECRET not set — skipping webhook verification")
+        if os.environ.get("POLAR_WEBHOOK_SKIP_VERIFY") == "true":
+            logger.warning("DEV MODE: POLAR_WEBHOOK_SKIP_VERIFY=true — skipping verification")
+        else:
+            logger.error("POLAR_WEBHOOK_SECRET not set — rejecting webhook")
+            raise HTTPException(status_code=500, detail="Webhook secret not configured")
     else:
         # Polar uses Svix-based webhooks. Check multiple header formats.
         signature = (

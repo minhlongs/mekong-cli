@@ -64,29 +64,9 @@ def list_reports(limit: int = 20, dept: str | None = None):
     return results
 
 
-@router.get("/reports/{filename}")
-def get_report(filename: str):
-    """Get full report content by filename."""
-    filepath = _REPORTS_DIR / filename
-    if not filepath.exists() or not filepath.suffix == ".md":
-        raise HTTPException(status_code=404, detail="Report not found")
-
-    # Security: prevent path traversal
-    if ".." in filename or "/" in filename:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-
-    parts = filepath.stem.split("-")
-    return ReportDetail(
-        filename=filepath.name,
-        content=filepath.read_text(),
-        department=parts[2] if len(parts) > 2 else "unknown",
-        date=parts[0] if parts else "",
-    )
-
-
 @router.get("/reports/stats")
 def report_stats():
-    """Daemon activity stats."""
+    """Daemon activity stats. MUST be declared before /reports/{filename}."""
     if not _REPORTS_DIR.exists():
         return {"total": 0, "departments": {}}
 
@@ -102,3 +82,27 @@ def report_stats():
         "departments": depts,
         "latest": sorted(files, key=lambda f: f.stat().st_mtime, reverse=True)[0].name if files else None,
     }
+
+
+@router.get("/reports/{filename}")
+def get_report(filename: str):
+    """Get full report content by filename."""
+    # Security: prevent path traversal BEFORE constructing path
+    if ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    filepath = _REPORTS_DIR / filename
+    resolved = filepath.resolve()
+    if not resolved.is_relative_to(_REPORTS_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    if not filepath.exists() or filepath.suffix != ".md":
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    parts = filepath.stem.split("-")
+    return ReportDetail(
+        filename=filepath.name,
+        content=filepath.read_text(),
+        department=parts[2] if len(parts) > 2 else "unknown",
+        date=parts[0] if parts else "",
+    )
