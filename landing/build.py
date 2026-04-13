@@ -56,8 +56,10 @@ def build():
         ]
         checkout_url = POLAR_BASE
 
+        other_tenants = [t for t in tenants if t["slug"] != slug]
         html = template.render(
-            tenant=tenant, checkout_url=checkout_url, pricing_tiers=tiers
+            tenant=tenant, checkout_url=checkout_url, pricing_tiers=tiers,
+            other_tenants=other_tenants, all_tenants=tenants,
         )
         (out_dir / "index.html").write_text(html)
         print(f"  Built: {slug}/index.html")

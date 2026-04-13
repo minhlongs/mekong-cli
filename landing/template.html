@@ -56,18 +56,41 @@
 </head>
 <body class="font-sans antialiased min-h-screen">
 
-  <!-- Nav -->
+  <!-- Nav with dropdown -->
   <nav class="fixed top-4 left-4 right-4 z-50 bg-surface/80 backdrop-blur-lg border border-border rounded-2xl px-6 py-3 flex items-center justify-between max-w-6xl mx-auto">
     <a href="/" class="font-mono font-semibold text-lg text-text hover:text-accent transition-colors cursor-pointer">MekongMind</a>
     <div class="flex items-center gap-6">
-      <a href="#autopilot" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">How it works</a>
-      <a href="#pricing" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">Pricing</a>
+      <div class="relative group">
+        <button class="text-muted hover:text-text transition-colors text-sm cursor-pointer flex items-center gap-1">
+          Use Cases
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div class="absolute top-full left-0 mt-2 w-64 bg-surface border border-border rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 max-h-80 overflow-y-auto">
+          {% for t in all_tenants %}
+          <a href="/{{ t.slug }}/" class="block px-4 py-2 text-sm {% if t.slug == tenant.slug %}text-accent bg-accent/10{% else %}text-muted hover:text-text hover:bg-border/50{% endif %} transition-colors cursor-pointer">{{ t.name }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <a href="#autopilot" class="text-muted hover:text-text transition-colors text-sm cursor-pointer hidden sm:block">How it works</a>
+      <a href="#pricing" class="text-muted hover:text-text transition-colors text-sm cursor-pointer hidden sm:block">Pricing</a>
       <a href="{{ pricing_tiers[0].checkout_url }}" class="bg-cta hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
     </div>
   </nav>
 
+  <!-- Breadcrumb + Schema -->
+  <div class="pt-24 px-6 max-w-6xl mx-auto">
+    <nav class="text-sm text-muted" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-text transition-colors cursor-pointer">Home</a>
+      <span class="mx-2">/</span>
+      <span class="text-text">{{ tenant.name }}</span>
+    </nav>
+  </div>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://mekongmind.pages.dev/"},{"@type":"ListItem","position":2,"name":"{{ tenant.name }}","item":"https://mekongmind.pages.dev/{{ tenant.slug }}/"}]}
+  </script>
+
   <!-- Hero -->
-  <section class="pt-32 pb-20 px-6">
+  <section class="pt-8 pb-20 px-6">
     <div class="max-w-4xl mx-auto text-center">
       <div class="inline-flex items-center gap-2 bg-surface border border-border rounded-full px-4 py-1.5 text-sm text-muted mb-8">
         <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
@@ -201,17 +224,59 @@
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="py-8 px-6 border-t border-border">
-    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
-      <span class="font-mono">MekongMind</span>
-      <span>22 departments. 290 commands. 1 subscription.</span>
-      <div class="flex gap-4">
-        <a href="https://github.com/longtho638-jpg/mekong-cli" class="hover:text-text transition-colors cursor-pointer">GitHub</a>
-        <a href="https://api.cashclaw.cc/api-docs" class="hover:text-text transition-colors cursor-pointer">API Docs</a>
+  <!-- Explore More — cross-navigation -->
+  <section class="py-16 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-2xl font-bold text-center mb-8">Explore other use cases</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {% for t in other_tenants[:4] %}
+        <a href="/{{ t.slug }}/" class="group bg-surface border border-border rounded-xl p-5 hover:border-accent/50 transition-all duration-200 cursor-pointer card-hover">
+          <h3 class="font-semibold text-sm mb-1 group-hover:text-accent transition-colors">{{ t.name }}</h3>
+          <p class="text-xs text-muted line-clamp-2">{{ t.tagline }}</p>
+        </a>
+        {% endfor %}
+      </div>
+      <div class="text-center mt-6">
+        <a href="/" class="text-sm text-muted hover:text-accent transition-colors cursor-pointer">View all 13 use cases →</a>
       </div>
     </div>
+  </section>
+
+  <!-- Footer with all 13 links -->
+  <footer class="py-12 px-6 border-t border-border">
+    <div class="max-w-5xl mx-auto">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div>
+          <span class="font-mono font-semibold text-text block mb-3">MekongMind</span>
+          <p class="text-sm text-muted">22 departments. 290 commands. 1 subscription.</p>
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-text block mb-3">Use Cases</span>
+          {% for t in all_tenants[:5] %}
+          <a href="/{{ t.slug }}/" class="block text-sm text-muted hover:text-text transition-colors cursor-pointer mb-1">{{ t.name }}</a>
+          {% endfor %}
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-text block mb-3">More</span>
+          {% for t in all_tenants[5:10] %}
+          <a href="/{{ t.slug }}/" class="block text-sm text-muted hover:text-text transition-colors cursor-pointer mb-1">{{ t.name }}</a>
+          {% endfor %}
+        </div>
+        <div>
+          <span class="text-sm font-semibold text-text block mb-3">Resources</span>
+          <a href="https://github.com/longtho638-jpg/mekong-cli" class="block text-sm text-muted hover:text-text transition-colors cursor-pointer mb-1">GitHub</a>
+          <a href="https://api.cashclaw.cc/api-docs" class="block text-sm text-muted hover:text-text transition-colors cursor-pointer mb-1">API Docs</a>
+          <a href="{{ pricing_tiers[0].checkout_url }}" class="block text-sm text-accent hover:text-blue-400 transition-colors cursor-pointer mb-1">Start Free</a>
+        </div>
+      </div>
+      <div class="text-center text-xs text-muted/50 pt-4 border-t border-border">MIT Licensed · Built for solo founders · Runs on Apple Silicon</div>
+    </div>
   </footer>
+
+  <!-- Mobile sticky CTA -->
+  <div class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-bg/95 backdrop-blur border-t border-border px-4 py-3">
+    <a href="{{ pricing_tiers[0].checkout_url }}" class="block w-full text-center bg-cta hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors cursor-pointer">Start Free — 50 credits</a>
+  </div>
 
 </body>
 </html>
