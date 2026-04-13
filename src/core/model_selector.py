@@ -269,10 +269,15 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
 # --- Task Complexity Override (Superpowers-inspired) ---
 # When task is mechanical, use cheaper model regardless of agent role
 
+# Smart routing: right model for right task on M1 Max 64GB
+# qwen3-coder-next = coding/technical (SOTA agentic coding)
+# qwen3:32b = general content/business (broad knowledge)
+# qwen2.5-coder:7b = fast simple tasks (1.3s)
+# deepseek-r1:32b = heavy reasoning (security, analysis)
 TASK_TIER_OVERRIDE: dict[str, str | None] = {
-    "mechanical": "ollama:qwen2.5-coder:7b",  # local M1 Max — zero cost
-    "integration": None,                       # keep matrix default (LLM_MODEL env)
-    "architecture": None,                      # keep matrix default (or upgrade)
+    "mechanical": "ollama:qwen2.5-coder:7b",     # fast: simple tasks, 1.3s
+    "integration": "ollama:qwen3-coder-next",     # coding/agentic workflows
+    "architecture": "ollama:qwen3:32b",           # broad reasoning + content
 }
 
 

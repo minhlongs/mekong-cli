@@ -17,21 +17,21 @@ from src.core.cost_estimator import COST_TABLE
 logger = logging.getLogger(__name__)
 
 FALLBACK_HIERARCHY: dict[str, list[str]] = {
-    # Local-first: Ollama models fallback to other local, then cloud
-    "ollama:qwen2.5-coder:7b": ["ollama:deepseek-r1:32b", "ollama:qwen2.5:7b"],
-    "ollama:deepseek-r1:32b": ["ollama:qwen2.5-coder:7b", "ollama:qwen2.5:7b"],
-    "ollama:qwen2.5:7b": ["ollama:qwen2.5-coder:7b"],
-    "ollama:deepseek-coder-v2:33b": ["ollama:qwen2.5-coder:7b"],
-    "ollama:llama3.3:70b": ["ollama:qwen2.5-coder:7b"],
-    "ollama:llama3.2:3b": ["ollama:qwen2.5-coder:7b"],
-    "ollama:mistral:7b": ["ollama:qwen2.5-coder:7b"],
-    # Cloud models fallback to local
-    "claude-opus-4-6": ["claude-sonnet-4-6", "ollama:deepseek-r1:32b"],
-    "claude-sonnet-4-6": ["claude-haiku-4-5", "ollama:qwen2.5-coder:7b"],
+    # M1 Max 64GB — 4 local models, smart fallback
+    # qwen3-coder-next: coding → fallback to qwen3:32b (broader) → 7b (fast)
+    "ollama:qwen3-coder-next": ["ollama:qwen3:32b", "ollama:qwen2.5-coder:7b"],
+    # qwen3:32b: content/general → fallback to coder-next → 7b
+    "ollama:qwen3:32b": ["ollama:qwen3-coder-next", "ollama:qwen2.5-coder:7b"],
+    # deepseek-r1: reasoning → fallback to qwen3:32b → coder-next
+    "ollama:deepseek-r1:32b": ["ollama:qwen3:32b", "ollama:qwen3-coder-next"],
+    # qwen2.5-coder:7b: fast → fallback to coder-next → qwen3:32b
+    "ollama:qwen2.5-coder:7b": ["ollama:qwen3-coder-next", "ollama:qwen3:32b"],
+    # Cloud → always fallback to local
+    "claude-opus-4-6": ["ollama:qwen3:32b", "ollama:deepseek-r1:32b"],
+    "claude-sonnet-4-6": ["ollama:qwen3-coder-next", "ollama:qwen2.5-coder:7b"],
     "claude-haiku-4-5": ["ollama:qwen2.5-coder:7b"],
-    "gemini-2.0-pro": ["ollama:deepseek-r1:32b"],
-    "gemini-2.0-flash": ["ollama:qwen2.5-coder:7b"],
-    "gemini-2.0-flash-lite": ["ollama:qwen2.5-coder:7b"],
+    "gemini-2.0-pro": ["ollama:qwen3:32b"],
+    "gemini-2.0-flash": ["ollama:qwen3-coder-next"],
     "gpt-4o-mini": ["ollama:qwen2.5-coder:7b"],
 }
 

@@ -109,7 +109,14 @@ def execute_mission(goal: str, api_key: str) -> str:
     Uses Ollama's native /api/chat endpoint which handles model loading
     and memory management better than OpenAI-compatible endpoint.
     """
-    model = os.getenv("DAEMON_LLM_MODEL", "qwen3:32b")
+    # Smart model routing: coding→coder-next, content→qwen3:32b, fast→7b
+    default_model = "qwen3:32b"
+    goal_lower = goal.lower()
+    if any(k in goal_lower for k in ["code", "security", "audit", "api", "engineering", "technical"]):
+        default_model = "qwen3-coder-next"
+    elif any(k in goal_lower for k in ["quick", "status", "list", "check"]):
+        default_model = "qwen2.5-coder:7b"
+    model = os.getenv("DAEMON_LLM_MODEL", default_model)
     system_prompt = (
         "You are an expert business consultant writing for solo founders. "
         "Write detailed, actionable, well-structured content with headers and bullet points. "
