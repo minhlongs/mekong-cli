@@ -35,9 +35,9 @@ CREDIT_MAP = {
 
 # Polar.sh product/price IDs — set POLAR_PRICE_<TIER> env vars to override
 _POLAR_PRICE_DEFAULTS = {
-    "starter": "a09a5fa0-63db-42a4-a547-3b1523ffc263",
-    "growth": "c06a03a3-25cd-4cd3-a13d-e795ee592a4e",
-    "pro": "52b7404c-b420-48cc-a382-ab4b5979f766",
+    "starter": "polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA",
+    "growth": "polar_cl_TDhelBvQfsZq3Rayqf9to4tl0UD6D04OBFqXm1zJDVC",
+    "pro": "polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j",
 }
 
 _PRICING_TIERS = [
@@ -201,13 +201,13 @@ async def get_pricing(tenant: str | None = None):
     tiers_with_urls = []
     for tier_info in _PRICING_TIERS:
         price_id = _polar_price_id(tier_info["tier"])
-        # Polar checkout format: buy.polar.sh/{price_id}
+        # Polar checkout link format: api.polar.sh/v1/checkout-links/{id}/redirect
         tiers_with_urls.append({
             **tier_info,
-            "checkout_url": f"https://buy.polar.sh/{price_id}",
+            "checkout_url": f"https://api.polar.sh/v1/checkout-links/{price_id}/redirect",
         })
 
-    result = {"tiers": tiers_with_urls, "checkout_url": "https://buy.polar.sh"}
+    result = {"tiers": tiers_with_urls, "checkout_url": "https://polar.sh"}
     if tenant_config:
         result["tenant"] = tenant_config["slug"]
     return result

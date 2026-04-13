@@ -81,9 +81,9 @@ async def create_checkout(req: CheckoutRequest):
 
     success_params = urlencode({"tier": tier, "email": req.email, "sig": sig})
     success_url = f"{app_base}/v1/success?{success_params}"
-    # Polar checkout format: buy.polar.sh/{price_id}
+    # Polar checkout link: api.polar.sh/v1/checkout-links/{id}/redirect
     checkout_url = (
-        f"https://buy.polar.sh/{price_id}"
+        f"https://api.polar.sh/v1/checkout-links/{price_id}/redirect"
         f"?prefilled_email={quote(str(req.email))}"
         f"&success_url={quote(success_url)}"
     )

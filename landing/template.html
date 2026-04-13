@@ -58,7 +58,7 @@
     <div class="flex items-center gap-6">
       <a href="#autopilot" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">How it works</a>
       <a href="#pricing" class="text-muted hover:text-text transition-colors text-sm cursor-pointer">Pricing</a>
-      <a href="{{ checkout_url }}" class="bg-cta hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
+      <a href="{{ pricing_tiers[0].checkout_url }}" class="bg-cta hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
     </div>
   </nav>
 
@@ -73,7 +73,7 @@
       <p class="text-xl md:text-2xl text-muted mb-4 max-w-2xl mx-auto">{{ tenant.tagline }}</p>
       <p class="text-base text-muted/70 mb-10 max-w-xl mx-auto">{{ tenant.description }}</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="{{ checkout_url }}" class="bg-cta hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
+        <a href="{{ pricing_tiers[0].checkout_url }}" class="bg-cta hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
         <a href="#autopilot" class="bg-surface hover:bg-border text-text border border-border font-medium px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">See how it works</a>
       </div>
       <!-- Terminal preview -->

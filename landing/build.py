@@ -16,7 +16,7 @@ PRICING_TIERS = [
     {"name": "Pro", "price_usd": 499, "credits": 5000, "price_id": "polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j"},
 ]
 
-POLAR_BASE = "https://buy.polar.sh"
+POLAR_BASE = "https://api.polar.sh/v1/checkout-links"
 
 
 def load_tenants() -> list[dict]:
@@ -51,7 +51,7 @@ def build():
         out_dir.mkdir(parents=True, exist_ok=True)
 
         tiers = [
-            {**t, "checkout_url": f"{POLAR_BASE}/{t['price_id']}"}
+            {**t, "checkout_url": f"{POLAR_BASE}/{t['price_id']}/redirect"}
             for t in PRICING_TIERS
         ]
         checkout_url = POLAR_BASE
@@ -130,7 +130,7 @@ def build_hub_page(tenants: list[dict]) -> str:
 </a>'''
         for t in tenants
     )
-    starter_url = f"{POLAR_BASE}/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA"
+    starter_url = f"{POLAR_BASE}/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA/redirect"
     return f"""<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
