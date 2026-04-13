@@ -11,9 +11,9 @@ TENANTS_DIR = ROOT.parent / "tenants"
 DIST_DIR = ROOT / "dist"
 
 PRICING_TIERS = [
-    {"name": "Starter", "price_usd": 49, "credits": 200, "price_id": "a09a5fa0-63db-42a4-a547-3b1523ffc263"},
-    {"name": "Growth", "price_usd": 149, "credits": 1000, "price_id": "c06a03a3-25cd-4cd3-a13d-e795ee592a4e"},
-    {"name": "Pro", "price_usd": 499, "credits": 5000, "price_id": "52b7404c-b420-48cc-a382-ab4b5979f766"},
+    {"name": "Starter", "price_usd": 49, "credits": 200, "price_id": "polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA"},
+    {"name": "Growth", "price_usd": 149, "credits": 1000, "price_id": "polar_cl_TDhelBvQfsZq3Rayqf9to4tl0UD6D04OBFqXm1zJDVC"},
+    {"name": "Pro", "price_usd": 499, "credits": 5000, "price_id": "polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j"},
 ]
 
 POLAR_BASE = "https://buy.polar.sh"
@@ -130,7 +130,7 @@ def build_hub_page(tenants: list[dict]) -> str:
 </a>'''
         for t in tenants
     )
-    starter_url = f"{POLAR_BASE}/a09a5fa0-63db-42a4-a547-3b1523ffc263"
+    starter_url = f"{POLAR_BASE}/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA"
     return f"""<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
