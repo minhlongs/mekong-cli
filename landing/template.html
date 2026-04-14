@@ -24,28 +24,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            bg: '#0F172A',
-            surface: '#1E293B',
-            border: '#334155',
-            accent: '{{ tenant.branding.accent_color }}',
-            cta: '#2563EB',
-            text: '#F1F5F9',
-            muted: '#94A3B8',
-          },
-          fontFamily: {
-            sans: ['IBM Plex Sans', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-        },
-      },
-    }
-  </script>
+  <link rel="stylesheet" href="/static/tailwind.min.css">
+  <style>:root { --accent-color: {{ tenant.branding.accent_color }}; }</style>
   <style>
     body { background: #0F172A; color: #F1F5F9; }
     .glow { text-shadow: 0 0 20px rgba(59,130,246,0.3); }

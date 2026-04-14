@@ -7,10 +7,12 @@ what the autonomous daemon produces. Transparency = trust.
 from __future__ import annotations
 
 import logging
+import time
+from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/raas", tags=["Reports"])
 
 _REPORTS_DIR = Path.home() / "mekong-cli" / "content" / "openclaw-reports"
+
+# Simple in-memory rate limiter: 30 requests per minute per IP
+_RATE_LIMIT = 30
+_RATE_WINDOW = 60
+_rate_store: dict[str, list[float]] = defaultdict(list)
+
+
+def _check_rate_limit(request: Request) -> None:
+    """Raise 429 if client exceeds rate limit."""
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    window_start = now - _RATE_WINDOW
+    hits = _rate_store[client_ip]
+    _rate_store[client_ip] = [t for t in hits if t > window_start]
+    if len(_rate_store[client_ip]) >= _RATE_LIMIT:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Try again later.")
+    _rate_store[client_ip].append(now)
 
 
 class ReportSummary(BaseModel):
@@ -35,8 +54,9 @@ class ReportDetail(BaseModel):
 
 
 @router.get("/reports", response_model=List[ReportSummary])
-def list_reports(limit: int = 20, dept: str | None = None):
+def list_reports(request: Request, limit: int = 20, dept: str | None = None):
     """List recent daemon reports, newest first."""
+    _check_rate_limit(request)
     if not _REPORTS_DIR.exists():
         return []
 
@@ -65,8 +85,9 @@ def list_reports(limit: int = 20, dept: str | None = None):
 
 
 @router.get("/reports/stats")
-def report_stats():
+def report_stats(request: Request):
     """Daemon activity stats. MUST be declared before /reports/{filename}."""
+    _check_rate_limit(request)
     if not _REPORTS_DIR.exists():
         return {"total": 0, "departments": {}}
 
@@ -85,8 +106,9 @@ def report_stats():
 
 
 @router.get("/reports/{filename}")
-def get_report(filename: str):
+def get_report(request: Request, filename: str):
     """Get full report content by filename."""
+    _check_rate_limit(request)
     # Security: prevent path traversal BEFORE constructing path
     if ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")

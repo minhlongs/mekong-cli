@@ -58,7 +58,7 @@ SELL_CTA = """
 **Run your entire company with 22 autonomous departments. $49/mo.**
 
 - [Start free (50 credits)](https://mekongmind.pages.dev)
-- [Subscribe $49/mo](https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263)
+- [Subscribe $49/mo](https://api.polar.sh/v1/checkout-links/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA/redirect)
 - [Self-host free (MIT)](https://github.com/longtho638-jpg/mekong-cli)
 
 *Generated autonomously by MekongMind — the one-person company platform.*
@@ -117,11 +117,18 @@ def execute_mission(goal: str, api_key: str) -> str:
     elif any(k in goal_lower for k in ["quick", "status", "list", "check"]):
         default_model = "qwen2.5-coder:7b"
     model = os.getenv("DAEMON_LLM_MODEL", default_model)
+    # qwen3 uses <think> tags by default, consuming most tokens on reasoning.
+    # Add /no_think to system prompt to get direct output for content generation.
+    # For analysis tasks, allow thinking but increase token budget.
+    is_analysis = any(k in goal.lower() for k in ["audit", "analysis", "review", "security", "compare"])
+    think_instruction = "" if is_analysis else " /no_think"
+    num_predict = 4000 if is_analysis else 3000
+
     system_prompt = (
         "You are an expert business consultant writing for solo founders. "
         "Write detailed, actionable, well-structured content with headers and bullet points. "
         "Do NOT use the word 'AI' — use 'automation' or 'intelligent' instead. "
-        "Minimum 500 words. Include specific examples."
+        f"Minimum 500 words. Include specific examples.{think_instruction}"
     )
     try:
         r = requests.post("http://localhost:11434/api/chat",
@@ -132,12 +139,17 @@ def execute_mission(goal: str, api_key: str) -> str:
                     {"role": "user", "content": goal},
                 ],
                 "stream": False,
-                "options": {"num_predict": 2000, "temperature": 0.7},
-            }, timeout=300)  # 5 min for thorough content
-        content = r.json()["message"]["content"]
+                "options": {"num_predict": num_predict, "temperature": 0.7},
+            }, timeout=600)  # 10 min for 32b model
+        raw_content = r.json()["message"]["content"]
+        # Strip any <think>...</think> blocks that qwen3 may still produce
+        content = raw_content
+        if "<think>" in content:
+            import re
+            content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
         if len(content) > 100:
             return content
-        return f"[SHORT] {len(content)} chars — model may be overloaded"
+        return f"[SHORT] {len(content)} chars (raw: {len(raw_content)}) — model may need /no_think"
     except requests.Timeout:
         return "[TIMEOUT] Ollama took >5 minutes"
     except Exception as e:
