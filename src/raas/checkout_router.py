@@ -77,7 +77,7 @@ async def create_checkout(req: CheckoutRequest):
     if secret:
         sig = hmac.new(
             secret.encode(), f"{tier}:{req.email}".encode(), hashlib.sha256
-        ).hexdigest()[:16]
+        ).hexdigest()[:32]
 
     success_params = urlencode({"tier": tier, "email": req.email, "sig": sig})
     success_url = f"{app_base}/v1/success?{success_params}"
@@ -124,7 +124,7 @@ async def payment_success(
     if secret:
         expected = hmac.new(
             secret.encode(), f"{tier}:{email}".encode(), hashlib.sha256
-        ).hexdigest()[:16]
+        ).hexdigest()[:32]
         if not hmac.compare_digest(sig, expected):
             return SuccessResponse(
                 api_key="pending_webhook_verification",

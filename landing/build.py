@@ -78,7 +78,7 @@ def build():
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://polar.sh https://buy.polar.sh
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://polar.sh https://api.polar.sh
 """
     (DIST_DIR / "_headers").write_text(headers)
 
@@ -149,8 +149,8 @@ def build_hub_page(tenants: list[dict]) -> str:
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>body {{ background: #0F172A; color: #F1F5F9; font-family: 'IBM Plex Sans', system-ui, sans-serif; }} .glow {{ text-shadow: 0 0 20px rgba(59,130,246,0.3); }}</style>
+  <link rel="stylesheet" href="/static/tailwind.min.css">
+  <style>:root {{ --accent-color: #3B82F6; }} body {{ background: #0F172A; color: #F1F5F9; font-family: 'IBM Plex Sans', system-ui, sans-serif; }} .glow {{ text-shadow: 0 0 20px rgba(59,130,246,0.3); }}</style>
 </head>
 <body class="antialiased min-h-screen">
   <nav class="fixed top-4 left-4 right-4 z-50 bg-[#1E293B]/80 backdrop-blur-lg border border-[#334155] rounded-2xl px-6 py-3 flex items-center justify-between max-w-6xl mx-auto">
