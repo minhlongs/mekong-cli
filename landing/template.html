@@ -182,31 +182,108 @@
     </div>
   </section>
 
-  <!-- Pricing -->
+  <!-- Pricing — Sophia-quality -->
   <section id="pricing" class="py-20 px-6 border-t border-border">
-    <div class="max-w-4xl mx-auto">
-      <h2 class="text-3xl font-bold text-center mb-4">Simple pricing</h2>
-      <p class="text-muted text-center mb-12">All departments. All commands. Credits = how much you run.</p>
-      <div class="grid md:grid-cols-3 gap-6">
-        {% for tier in pricing_tiers %}
-        <div class="bg-surface border {% if tier.name == 'Starter' %}border-accent{% else %}border-border{% endif %} rounded-2xl p-8 card-hover relative {% if tier.name == 'Starter' %}ring-1 ring-accent/20{% endif %}">
-          {% if tier.name == 'Starter' %}
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-semibold px-3 py-1 rounded-full">Most Popular</div>
-          {% endif %}
-          <h3 class="font-semibold text-lg mb-1">{{ tier.name }}</h3>
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Simple pricing</h2>
+      <p class="text-muted text-center mb-14 max-w-xl mx-auto">All departments. All commands. Pay only for what you run.</p>
+
+      <div class="grid md:grid-cols-3 gap-6 items-start">
+        <!-- Starter -->
+        <div class="bg-surface border border-border rounded-2xl p-8 card-hover">
+          <h3 class="font-bold text-xl mb-1">Starter</h3>
+          <p class="text-muted text-sm mb-5">For solo founders getting started.</p>
           <div class="flex items-baseline gap-1 mb-1">
-            <span class="text-4xl font-bold">${{ tier.price_usd }}</span>
-            <span class="text-muted">/mo</span>
+            <span class="text-4xl font-bold">${{ pricing_tiers[0].price_usd }}</span>
+            <span class="text-muted text-sm">/mo</span>
           </div>
-          <p class="text-muted text-sm mb-6">{{ tier.credits }} credits per month</p>
-          <a href="{{ tier.checkout_url }}" class="block text-center {% if tier.name == 'Starter' %}bg-cta hover:bg-blue-700 text-white{% else %}bg-surface hover:bg-border text-text border border-border{% endif %} font-medium py-3 rounded-xl transition-colors cursor-pointer">Get Started</a>
-          <ul class="mt-6 space-y-2 text-sm text-muted">
-            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All 22 departments</li>
-            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 290 commands</li>
-            <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Autopilot scheduling</li>
-          </ul>
+          <span class="inline-block bg-border/50 text-muted text-xs px-2 py-0.5 rounded mb-6">{{ pricing_tiers[0].credits }} credits/mo</span>
+
+          <div class="mb-4">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Autopilot</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All 22 departments</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 5 autopilot goals</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Weekly reports</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Email support (48h)</li>
+            </ul>
+          </div>
+
+          <div class="mb-6">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Execution</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 290 commands</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> REST API access</li>
+            </ul>
+          </div>
+
+          <a href="{{ pricing_tiers[0].checkout_url }}" class="block text-center bg-surface hover:bg-border text-text border border-border font-semibold py-3.5 rounded-xl transition-colors cursor-pointer">Get Started</a>
         </div>
-        {% endfor %}
+
+        <!-- Growth (Popular) -->
+        <div class="bg-surface border-2 border-accent rounded-2xl p-8 card-hover relative ring-1 ring-accent/20 md:-mt-4 md:mb-[-16px]">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-4 py-1 rounded-full tracking-wide">Most Popular</div>
+          <h3 class="font-bold text-xl mb-1">Growth</h3>
+          <p class="text-muted text-sm mb-5">Scale your solo operation.</p>
+          <div class="flex items-baseline gap-1 mb-1">
+            <span class="text-4xl font-bold">${{ pricing_tiers[1].price_usd }}</span>
+            <span class="text-muted text-sm">/mo</span>
+          </div>
+          <span class="inline-block bg-accent/10 text-accent text-xs px-2 py-0.5 rounded mb-6">{{ pricing_tiers[1].credits }} credits/mo</span>
+
+          <div class="mb-4">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Autopilot</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All 22 departments</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 15 autopilot goals</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Daily reports</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> API + Webhooks</li>
+            </ul>
+          </div>
+
+          <div class="mb-6">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Execution</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 290 commands</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Priority execution</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 5 team members</li>
+            </ul>
+          </div>
+
+          <a href="{{ pricing_tiers[1].checkout_url }}" class="block text-center bg-cta hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl transition-colors cursor-pointer">Get Started</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="bg-surface border border-border rounded-2xl p-8 card-hover">
+          <h3 class="font-bold text-xl mb-1">Pro</h3>
+          <p class="text-muted text-sm mb-5">Full power. Custom agents.</p>
+          <div class="flex items-baseline gap-1 mb-1">
+            <span class="text-4xl font-bold">${{ pricing_tiers[2].price_usd }}</span>
+            <span class="text-muted text-sm">/mo</span>
+          </div>
+          <span class="inline-block bg-border/50 text-muted text-xs px-2 py-0.5 rounded mb-6">{{ pricing_tiers[2].credits }} credits/mo</span>
+
+          <div class="mb-4">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Autopilot</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All 22 departments</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited goals</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Real-time reports</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Custom integrations</li>
+            </ul>
+          </div>
+
+          <div class="mb-6">
+            <span class="text-xs font-semibold text-accent uppercase tracking-wider">Execution</span>
+            <ul class="mt-2 space-y-2 text-sm text-muted">
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 290 commands + custom</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Dedicated support</li>
+              <li class="flex items-center gap-2"><svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited members</li>
+            </ul>
+          </div>
+
+          <a href="{{ pricing_tiers[2].checkout_url }}" class="block text-center bg-surface hover:bg-border text-text border border-border font-semibold py-3.5 rounded-xl transition-colors cursor-pointer">Get Started</a>
+        </div>
       </div>
     </div>
   </section>
