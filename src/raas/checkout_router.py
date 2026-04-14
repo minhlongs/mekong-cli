@@ -23,7 +23,6 @@ from src.raas.tenant import TenantStore
 from src.raas.credits import CreditStore
 from src.raas.revenue_router import (
     CREDIT_MAP,
-    _polar_checkout_base,
     _polar_price_id,
     _tier_from_session,
 )
@@ -68,7 +67,6 @@ async def create_checkout(req: CheckoutRequest):
             detail=f"Unknown tier '{tier}'. Valid tiers: {list(CREDIT_MAP.keys())}",
         )
 
-    base = _polar_checkout_base()
     price_id = _polar_price_id(tier)
 
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
@@ -77,7 +75,7 @@ async def create_checkout(req: CheckoutRequest):
     if secret:
         sig = hmac.new(
             secret.encode(), f"{tier}:{req.email}".encode(), hashlib.sha256
-        ).hexdigest()[:16]
+        ).hexdigest()[:32]
 
     success_params = urlencode({"tier": tier, "email": req.email, "sig": sig})
     success_url = f"{app_base}/v1/success?{success_params}"
@@ -124,7 +122,7 @@ async def payment_success(
     if secret:
         expected = hmac.new(
             secret.encode(), f"{tier}:{email}".encode(), hashlib.sha256
-        ).hexdigest()[:16]
+        ).hexdigest()[:32]
         if not hmac.compare_digest(sig, expected):
             return SuccessResponse(
                 api_key="pending_webhook_verification",
