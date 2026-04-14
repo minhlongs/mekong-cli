@@ -178,6 +178,7 @@ class MCUDeductResponse(BaseModel):
 # =============================================================================
 
 MISSION_STORE: dict[str, dict] = {}
+_MISSION_STORE_MAX = 1000  # Evict oldest when exceeded
 mcu_billing = MCUBilling()
 
 
@@ -254,7 +255,10 @@ async def create_mission_endpoint(
         response = create_mission(mission_request)
         mission_id = response.mission_id
 
-        # Store mission state
+        # Store mission state (evict oldest if over limit)
+        if len(MISSION_STORE) >= _MISSION_STORE_MAX:
+            oldest_key = next(iter(MISSION_STORE))
+            del MISSION_STORE[oldest_key]
         MISSION_STORE[mission_id] = {
             "goal": request.goal,
             "tenant_id": request.tenant_id,

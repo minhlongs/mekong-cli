@@ -40,6 +40,8 @@ _POLAR_PRICE_DEFAULTS = {
     "pro": "polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j",
 }
 
+_POLAR_PRODUCT_TO_TIER = {v: k for k, v in _POLAR_PRICE_DEFAULTS.items()}
+
 _PRICING_TIERS = [
     {"name": "Starter", "tier": "starter", "price_usd": 49, "credits": 200},
     {"name": "Growth", "tier": "growth", "price_usd": 149, "credits": 1000},
@@ -161,8 +163,8 @@ async def polar_webhook(request: Request):
         product_id = data.get("product_id", "")
         customer_email = data.get("customer", {}).get("email", "")
 
-        # Map product UUID back to tier, then look up credits
-        _PRODUCT_TO_TIER = {v: k for k, v in _POLAR_PRICE_DEFAULTS.items()}
+        # Map product UUID back to tier (module-level constant)
+        _PRODUCT_TO_TIER = _POLAR_PRODUCT_TO_TIER
         tier = _PRODUCT_TO_TIER.get(product_id, "")
         # Fallback: check Polar metadata for explicit tier
         if not tier:

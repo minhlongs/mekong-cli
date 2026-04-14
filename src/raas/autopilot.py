@@ -177,7 +177,15 @@ def _init_db():
     conn.close()
 
 
-_init_db()
+_db_initialized = False
+
+
+def _ensure_db():
+    """Lazy init — only create tables on first actual use."""
+    global _db_initialized
+    if not _db_initialized:
+        _init_db()
+        _db_initialized = True
 
 
 # ─── Endpoints ───────────────────────────────────────────────
