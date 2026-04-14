@@ -23,7 +23,6 @@ from src.raas.tenant import TenantStore
 from src.raas.credits import CreditStore
 from src.raas.revenue_router import (
     CREDIT_MAP,
-    _polar_checkout_base,
     _polar_price_id,
     _tier_from_session,
 )
@@ -68,7 +67,6 @@ async def create_checkout(req: CheckoutRequest):
             detail=f"Unknown tier '{tier}'. Valid tiers: {list(CREDIT_MAP.keys())}",
         )
 
-    base = _polar_checkout_base()
     price_id = _polar_price_id(tier)
 
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")

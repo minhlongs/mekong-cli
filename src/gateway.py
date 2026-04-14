@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.gateway_mission_routes import router as mission_router, MISSION_STORE
+from src.api.gateway_mission_routes import router as mission_router
 from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router

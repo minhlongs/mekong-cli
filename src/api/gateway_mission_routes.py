@@ -5,13 +5,18 @@ Status + SSE stream endpoints are in gateway_mission_stream.py.
 """
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime, timezone
+from typing import AsyncGenerator
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import StreamingResponse
 
 from src.api.gateway_models import CreateMissionRequest, CreateMissionResponse, MissionStatusResponse
+from src.core.error_responses import ErrorCode, error_response
 from src.core.input_validation import (
     validate_enum_value,
     validate_required,
