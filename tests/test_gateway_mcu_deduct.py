@@ -9,25 +9,9 @@ from src.gateway import app
 from src.raas.credits import CreditStore
 
 
-@pytest.fixture(autouse=True)
-def reset_billing():
-    """Reset MCU billing state between tests."""
-    store = CreditStore()
-    # Clear all credit accounts from the database
-    try:
-        store.db_path.unlink(missing_ok=True)
-    except Exception:
-        pass
-    yield
-    try:
-        store.db_path.unlink(missing_ok=True)
-    except Exception:
-        pass
-
-
 @pytest.fixture
 def credit_store():
-    """Provide a fresh CreditStore instance."""
+    """Provide a fresh CreditStore instance using the session-isolated DB."""
     return CreditStore()
 
 
