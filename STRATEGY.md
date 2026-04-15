@@ -1,14 +1,21 @@
-# Mekong automation OS — Strategy
+# Mekong IDE — The One-Person Company Platform
 
-> XONG = Mekong tự bán Mekong, có $ vào tài khoản.
-> PR merged, self-test pass, HTTP 200 đều CHƯA XONG.
+> XONG = $49 vào ACB Bank. PR merged, self-test pass, HTTP 200 đều CHƯA XONG.
+
+## a16z Doctrine: One-Person Billion-Dollar Company
+
+Marc Andreessen predicts single-person billion-dollar startups enabled by autonomous agents.
+Mekong IDE IS this — one subscription replaces a 50-person team with 22 autonomous departments.
+
+**Target customer:** Solo founder / solopreneur ONLY. Not teams. Not enterprise.
+**Revenue model:** 1 subscription = 1 person = all departments.
 
 ## The Product: Mekong IDE
 
-Mekong IDE is ONE product. Not 13. Not 22. ONE.
+ONE product. ONE subscription. ONE person runs everything.
 
-1 subscription → 22 automation departments → 290 operational commands
-→ runs on M1 Max via Ollama (zero cloud cost)
+1 subscription → 22 autonomous departments → 290 operational commands
+→ runs on YOUR machine via Ollama (zero cloud cost)
 → or via RaaS API (pay-per-mission)
 
 ### What the customer gets

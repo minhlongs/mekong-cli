@@ -1,19 +1,20 @@
-# Mekong IDE — Business Automation Platform
+# Mekong IDE — The One-Person Company Platform
 
-> **22 modules. 385 templates. $49/mo.** Run your entire solo business from one platform.
+> **One person. 22 departments. $49/mo.** Replace a 50-person team with autonomous agents.
 
 [![Website](https://img.shields.io/badge/Website-mekongmind.com-blue)](https://www.mekongmind.com)
 [![Subscribe](https://img.shields.io/badge/Subscribe-$49%2Fmo-green)](https://buy.polar.sh/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA)
 
 ## What is Mekong IDE?
 
-A workflow automation platform for **solo founders**. 22 operational modules covering engineering, marketing, sales, finance, legal, compliance, HR, and more — all from one subscription.
+The platform that enables the **one-person billion-dollar company**. 22 autonomous departments — engineering, marketing, sales, finance, legal, compliance, HR — all operated by agents. You make the decisions, agents do the work.
 
-**Key features:**
-- 385 pre-built workflow templates
-- Runs locally on your Mac (M1/M2/M3/M4) with Ollama
-- Zero cloud cost — data stays on your machine
-- Autonomous operations engine (OpenClaw)
+**Built for solo founders:**
+- 385 pre-built workflow templates across 22 departments
+- Runs locally on your Mac (M1/M2/M3/M4) with Ollama — zero cloud cost
+- Your data never leaves your machine
+- Autonomous operations engine (OpenClaw) runs 24/7 while you sleep
+- One subscription = your entire workforce
 
 ## Quick Start
 

@@ -138,10 +138,10 @@ def build_hub_page(tenants: list[dict]) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MekongMind — 22 Departments Working for You 24/7</title>
-  <meta name="description" content="Business automation platform. 22 departments, 290 commands, runs locally via Ollama. $49/mo.">
-  <meta property="og:title" content="MekongMind — 22 Departments Working for You 24/7">
-  <meta property="og:description" content="Business automation platform. 22 departments, 290 commands. $49/mo.">
+  <title>MekongMind — One Person. 22 Departments. $49/mo.</title>
+  <meta name="description" content="Run your entire company solo. 22 autonomous departments, 290 commands, runs locally on your machine. $49/mo.">
+  <meta property="og:title" content="MekongMind — One Person. 22 Departments. $49/mo.">
+  <meta property="og:description" content="Run your entire company solo. 22 autonomous departments, 290 commands. $49/mo.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.mekongmind.com/">
   <link rel="canonical" href="https://www.mekongmind.com/">
@@ -166,8 +166,8 @@ def build_hub_page(tenants: list[dict]) -> str:
       <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
       Autonomous — running 24/7 on M1 Max
     </div>
-    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 glow max-w-3xl mx-auto">22 departments<br>working for you.<br>$49/mo.</h1>
-    <p class="text-xl text-[#94A3B8] mb-10 max-w-xl mx-auto">Configure once. Finance reports on Monday. Content on Wednesday. Security audits on Friday. Zero manual work.</p>
+    <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-6 glow max-w-3xl mx-auto">One person.<br>22 departments.<br>$49/mo.</h1>
+    <p class="text-xl text-[#94A3B8] mb-10 max-w-xl mx-auto">Run your entire company solo. Agents handle finance, content, sales, security — you make the decisions. Zero cloud cost.</p>
     <div class="flex flex-col sm:flex-row gap-4 justify-center">
       <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
       <a href="#use-cases" class="bg-[#1E293B] hover:bg-[#334155] border border-[#334155] font-medium px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Browse use cases</a>

@@ -24,7 +24,7 @@
     "default_model": "auto"
   },
   "polar_checkout_url": null,
-  "target_audience": "Data analysts and BI teams",
+  "target_audience": "Solo founders making data-driven decisions",
   "use_cases": [
     "Generate business reports from natural language queries",
     "Build automated data pipelines",
