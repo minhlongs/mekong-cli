@@ -63,15 +63,15 @@ export function registerCloudBillingCommand(program: Command): void {
   // ── cloud-billing checkout <pack-id> ──────────────────────────────────────
   cb
     .command('checkout <packId>')
-    .description('Open Stripe checkout for a credit pack')
+    .description('Open checkout for a credit pack')
     .option('--no-open', 'Print URL instead of opening browser')
     .action(async (packId: string, opts: { open: boolean }) => {
       try {
         const client = requireCloudClient();
         const result = await client.billing.createCheckout({
           pack_id: packId,
-          success_url: 'https://mekong-raas.pages.dev/?checkout=success',
-          cancel_url: 'https://mekong-raas.pages.dev/?checkout=cancelled',
+          success_url: 'https://www.mekongmind.com/?checkout=success',
+          cancel_url: 'https://www.mekongmind.com/?checkout=cancelled',
         });
         success(`Checkout URL: ${result.checkout_url}`);
         if (opts.open) {

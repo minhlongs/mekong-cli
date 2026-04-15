@@ -90,7 +90,7 @@ Each "use case" = same IDE subscription + different landing page.
 | Service | URL | Status |
 |---------|-----|--------|
 | Gateway API | https://api.cashclaw.cc | ✅ LIVE |
-| Landing Pages | https://mekongmind.pages.dev | ✅ LIVE (13/13 pages) |
+| Landing Pages | https://www.mekongmind.com | ✅ LIVE (13/13 pages) |
 | Starter Checkout | https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263 | ✅ 302 |
 | Growth Checkout | https://buy.polar.sh/c06a03a3-25cd-4cd3-a13d-e795ee592a4e | ✅ 302 |
 | Pro Checkout | https://buy.polar.sh/52b7404c-b420-48cc-a382-ab4b5979f766 | ✅ 302 |

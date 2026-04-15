@@ -1,84 +1,41 @@
 # Mekong IDE — Business Automation Platform
 
-> 22 operational modules. 290 commands. 1 subscription. Run your entire business with automation workflows.
+> **22 modules. 385 templates. $49/mo.** Run your entire solo business from one platform.
 
-[![CI](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/longtho638-jpg/mekong-cli/actions/workflows/ci.yml)
-[![npm openclaw-engine](https://img.shields.io/npm/v/@mekongcli/openclaw-engine?label=openclaw-engine)](https://www.npmjs.com/package/@mekongcli/openclaw-engine)
-[![npm cli-core](https://img.shields.io/npm/v/@mekongcli/cli-core?label=cli-core)](https://www.npmjs.com/package/@mekongcli/cli-core)
-[![Tests](https://img.shields.io/badge/tests-5713%20passing-brightgreen)]()
-[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE)
+[![Website](https://img.shields.io/badge/Website-mekongmind.com-blue)](https://www.mekongmind.com)
+[![Subscribe](https://img.shields.io/badge/Subscribe-$49%2Fmo-green)](https://buy.polar.sh/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA)
 
-**Describe your goal. automation plans, executes, verifies, delivers.**
+## What is Mekong IDE?
 
-Mekong CLI is an automation-powered business platform. One natural-language command triggers multi-agent workflows that build software, run marketing campaigns, manage finances, and ship products. Works with any LLM provider -- cloud or local.
+A workflow automation platform for **solo founders**. 22 operational modules covering engineering, marketing, sales, finance, legal, compliance, HR, and more — all from one subscription.
 
-```
-$ mekong cook "Create a SaaS landing page with Polar.sh checkout"
+**Key features:**
+- 385 pre-built workflow templates
+- Runs locally on your Mac (M1/M2/M3/M4) with Ollama
+- Zero cloud cost — data stays on your machine
+- Autonomous operations engine (OpenClaw)
 
-  ◐ Planning...   3 phases identified
-  ✓ Phase 1/3:    Scaffold Next.js + Tailwind        (12 files created)
-  ✓ Phase 2/3:    Wire Polar.sh checkout + webhook handler
-  ✓ Phase 3/3:    Deploy to Cloudflare Pages
-  ✓ Verify:       Build OK ─ 14 tests pass ─ live at https://app.example.com
-
-  ✅ Done in 4m 23s.  3 MCU credits used.
-
-$ mekong founder:raise "Series A for automation platform"
-
-  ◐ Dispatching 8 agents in parallel...
-  ✓ Group 1:  Unit Economics + TAM + Moat Audit      (3 parallel)
-  ✓ Group 2:  Financial Model + Data Room            (2 parallel)
-  ✓ Group 3:  Cap Table → Pitch Deck → VC Map        (3 sequential)
-
-  ✅ Raise-ready kit at reports/raise-ready-kit/
-
-$ mekong status
-
-  OpenClaw ─ 348 commands ─ 5 layers ─ CI: GREEN
-  LLM:     anthropic/claude-sonnet-4  via OpenRouter
-  Credits: 847 / 1000 MCU remaining
-```
-
-## Get Started
-
-### Quick Start
-
-**Option 1 — Self-hosted (open source)**
+## Quick Start
 
 ```bash
-git clone --depth 1 https://github.com/longtho638-jpg/mekong-cli.git
-source ~/mekong-cli/scripts/shell-init.sh && mekong
+curl -fsSL https://www.mekongmind.com/install.sh | bash
 ```
 
-**Option 2 — Managed API**
+## Pricing
 
-Sign up at [mekongmind.pages.dev](https://mekongmind.pages.dev) to get an API key, then onboard:
+| Plan | Price | Credits |
+|------|-------|---------|
+| [Starter](https://buy.polar.sh/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA) | $49/mo | 200 |
+| [Growth](https://buy.polar.sh/polar_cl_TDhelBvQfsZq3Rayqf9to4tl0UD6D04OBFqXm1zJDVC) | $149/mo | 1,000 |
+| [Pro](https://buy.polar.sh/polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j) | $499/mo | 5,000 |
 
-```bash
-curl -X POST https://api.cashclaw.cc/v1/onboard \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Your Name","email":"you@example.com"}'
-```
+## Links
 
-**Option 3 — Free tier**
+- **Website:** [mekongmind.com](https://www.mekongmind.com)
+- **IDE:** [ide.mekongmind.com](https://ide.mekongmind.com)
+- **Guides:** [mekongmind.com/guides](https://www.mekongmind.com/guides/)
+- **API:** [api.cashclaw.cc](https://api.cashclaw.cc/health)
 
-50 credits/month. No credit card required. Start at [mekongmind.pages.dev](https://mekongmind.pages.dev).
-
-### Pricing
-
-| Tier | Price | Credits/mo | Access |
-|------|-------|-----------|--------|
-| Starter | $49/mo | 200 | All 22 departments |
-| Growth | $149/mo | 1,000 | + priority + webhooks |
-| Pro | $499/mo | 5,000 | + support + custom agents |
-
-### Links
-
-- Landing: [mekongmind.pages.dev](https://mekongmind.pages.dev)
-- API: [api.cashclaw.cc](https://api.cashclaw.cc)
-- Subscribe: [Starter $49/mo](https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263) · [Growth $149/mo](https://buy.polar.sh/c06a03a3-25cd-4cd3-a13d-e795ee592a4e) · [Pro $499/mo](https://buy.polar.sh/52b7404c-b420-48cc-a382-ab4b5979f766)
-
----
 
 ## Install
 
