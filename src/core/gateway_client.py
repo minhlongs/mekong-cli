@@ -21,7 +21,7 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import requests
 
@@ -48,7 +48,7 @@ class GatewayResponse:
     """Response from gateway request."""
 
     status_code: int
-    data: Any
+    data: Union[dict[str, object], str, None]
     headers: dict[str, str]
     elapsed_ms: float
     rate_limit_remaining: Optional[int] = None
@@ -509,7 +509,7 @@ class GatewayClient:
             logging.debug(f"Gateway health check failed: {e}")
             return False
 
-    def get_circuit_status(self) -> dict[str, Any]:
+    def get_circuit_status(self) -> dict[str, dict[str, object]]:
         """
         Get circuit breaker status for all gateways.
 

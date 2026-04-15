@@ -4,11 +4,17 @@ CLI Helpers - Output formatting and display utilities
 Centralized helpers for Rich console output, tables, and panels.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Optional, List, Dict, Tuple
+from dataclasses import dataclass
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from typing import Any, Optional, List, Dict, Tuple
-from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from src.core.orchestrator.models import StepResult, OrchestrationResult
 
 
 console = Console()
@@ -110,7 +116,7 @@ def print_json_output(data: Dict[str, Any]) -> None:
     console.print(json.dumps(data, indent=2))
 
 
-def build_execution_result_table(step_results: List[Any]) -> Table:
+def build_execution_result_table(step_results: "List[StepResult]") -> Table:
     """Build a detailed execution result table."""
     table = create_step_table("Step Details")
     table.add_column("Status")
@@ -127,7 +133,7 @@ def build_execution_result_table(step_results: List[Any]) -> Table:
     return table
 
 
-def format_human_summary(result: Any) -> HumanSummary:
+def format_human_summary(result: "OrchestrationResult") -> HumanSummary:
     """Build human-readable summary from orchestration result."""
     if result.status.value == "success":
         return HumanSummary(

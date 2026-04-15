@@ -232,6 +232,7 @@ class TestGetTaskStatus:
         mock_result.errors = []
         mock_result.warnings = []
         mock_result.step_results = []
+        mock_result.structured_output = {"result": "success"}
 
         with patch("src.api.raas_router._build_orchestrator") as mock_orch:
             instance = MagicMock()
