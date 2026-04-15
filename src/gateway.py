@@ -28,8 +28,10 @@ from src.raas.autopilot import router as autopilot_router
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.sentry_init import init_sentry
+from src.core.telemetry_init import init_telemetry
 
 init_sentry()
+init_telemetry()
 
 logger = logging.getLogger(__name__)
 
