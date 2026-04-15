@@ -63,6 +63,6 @@ jobs:
       - name: Smoke test production
         run: |
           sleep 15
-          HTTP=$(curl -sI https://mekongmind.pages.dev | head -1 | awk '{print $2}')
+          HTTP=$(curl -sI https://www.mekongmind.com | head -1 | awk '{print $2}')
           echo "Production HTTP: $HTTP"
           [ "$HTTP" = "200" ] || [ "$HTTP" = "301" ] || [ "$HTTP" = "308" ] && echo "PRODUCTION GREEN" || (echo "PRODUCTION DOWN" && exit 1)

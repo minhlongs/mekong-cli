@@ -16,7 +16,7 @@ PRICING_TIERS = [
     {"name": "Pro", "price_usd": 499, "credits": 5000, "price_id": "polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j"},
 ]
 
-POLAR_BASE = "https://api.polar.sh/v1/checkout-links"
+POLAR_BASE = "https://buy.polar.sh"
 
 
 def load_tenants() -> list[dict]:
@@ -85,15 +85,15 @@ def build():
     # SEO: Generate sitemap.xml
     sitemap_entries = ['<?xml version="1.0" encoding="UTF-8"?>',
                        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-                       '  <url><loc>https://mekongmind.pages.dev/</loc><priority>1.0</priority></url>']
+                       '  <url><loc>https://www.mekongmind.com/</loc><priority>1.0</priority></url>']
     for t in tenants:
-        sitemap_entries.append(f'  <url><loc>https://mekongmind.pages.dev/{t["slug"]}/</loc><priority>0.8</priority></url>')
+        sitemap_entries.append(f'  <url><loc>https://www.mekongmind.com/{t["slug"]}/</loc><priority>0.8</priority></url>')
     sitemap_entries.append('</urlset>')
     (DIST_DIR / "sitemap.xml").write_text("\n".join(sitemap_entries))
     print(f"  Built: sitemap.xml ({len(tenants)+1} URLs)")
 
     # SEO: Generate robots.txt
-    robots = "User-agent: *\nAllow: /\nSitemap: https://mekongmind.pages.dev/sitemap.xml\n"
+    robots = "User-agent: *\nAllow: /\nSitemap: https://www.mekongmind.com/sitemap.xml\n"
     (DIST_DIR / "robots.txt").write_text(robots)
     print(f"  Built: robots.txt")
 
@@ -143,8 +143,8 @@ def build_hub_page(tenants: list[dict]) -> str:
   <meta property="og:title" content="MekongMind — 22 Departments Working for You 24/7">
   <meta property="og:description" content="Business automation platform. 22 departments, 290 commands. $49/mo.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://mekongmind.pages.dev/">
-  <link rel="canonical" href="https://mekongmind.pages.dev/">
+  <meta property="og:url" content="https://www.mekongmind.com/">
+  <link rel="canonical" href="https://www.mekongmind.com/">
   <meta name="robots" content="index, follow">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

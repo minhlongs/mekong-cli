@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.gateway_mission_routes import router as mission_router
 from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
+from src.api.coupon_router import router as coupon_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
@@ -49,6 +50,7 @@ app = FastAPI(
 # Mount routers — gateway endpoints
 app.include_router(mission_router)
 app.include_router(webhook_mcu_router)
+app.include_router(coupon_router)
 
 # Mount routers — RaaS endpoints
 app.include_router(raas_router)
@@ -63,7 +65,7 @@ _ALLOWED_ORIGINS: list[str] = [
     o.strip()
     for o in _os.environ.get(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:8080,https://mekongmind.pages.dev,https://mekongmind.com,https://www.mekongmind.com,https://api.cashclaw.cc",
+        "http://localhost:3000,http://localhost:8080,https://mekongmind.com,https://www.mekongmind.com,https://api.cashclaw.cc,https://sophia.agencyos.network",
     ).split(",")
     if o.strip()
 ]
