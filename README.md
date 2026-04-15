@@ -11,7 +11,8 @@ The platform that enables the **one-person billion-dollar company**. 22 autonomo
 
 **Built for solo founders:**
 - 385 pre-built workflow templates across 22 departments
-- Runs locally on your Mac (M1/M2/M3/M4) with Ollama — zero cloud cost
+- Runs locally on your Mac with Ollama — zero cloud cost
+  - M1/M2/M3/M4: 7B-14B models | M1 Ultra/M2 Ultra: 32B-70B models
 - Your data never leaves your machine
 - Autonomous operations engine (OpenClaw) runs 24/7 while you sleep
 - One subscription = your entire workforce
