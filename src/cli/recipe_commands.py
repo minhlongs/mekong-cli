@@ -1,5 +1,8 @@
 """
-Recipe commands: init, list, search, run, ui
+Recipe management CLI commands: init, list, search, run, ui.
+
+Handles recipe discovery, search, execution, and the interactive TUI module selector.
+Register via register_recipe_commands(app).
 """
 
 from pathlib import Path
@@ -11,18 +14,11 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 
-from src.agents.content_writer import ContentWriter
-from src.agents.lead_hunter import LeadHunter
-from src.agents.recipe_crawler import RecipeCrawler
-from src.core.executor import RecipeExecutor
-from src.core.parser import RecipeParser
-from src.core.registry import RecipeRegistry
-
 console = Console()
 
 
 def register_recipe_commands(app: typer.Typer) -> None:
-    """Register recipe management commands onto the typer app."""
+    """Attach recipe commands to the given Typer app."""
 
     @app.command()
     def init() -> None:
@@ -41,6 +37,8 @@ def register_recipe_commands(app: typer.Typer) -> None:
     @app.command(name="list")
     def list_cmd() -> None:
         """List available recipes"""
+        from src.core.registry import RecipeRegistry
+
         registry = RecipeRegistry()
         recipes = registry.scan()
 
@@ -67,6 +65,8 @@ def register_recipe_commands(app: typer.Typer) -> None:
     @app.command()
     def search(query: str) -> None:
         """Search for recipes"""
+        from src.core.registry import RecipeRegistry
+
         registry = RecipeRegistry()
         results = registry.search(query)
 
@@ -86,28 +86,15 @@ def register_recipe_commands(app: typer.Typer) -> None:
 
     @app.command()
     def run(
-        recipe: str = typer.Argument(..., help="Recipe file path (.md/.json) or name"),
+        recipe: str = typer.Argument(..., help="Recipe file path (.md) or name"),
     ) -> None:
-        """Run a recipe workflow (supports .md and .json DAG recipes)"""
-        recipe_path = Path(recipe)
+        """Run a recipe workflow"""
+        from src.core.executor import RecipeExecutor
+        from src.core.parser import RecipeParser
+        from src.core.registry import RecipeRegistry
 
-        # JSON DAG recipe support (e.g., recipes/raas/create.json)
-        if recipe.endswith(".json") or (recipe_path.exists() and recipe_path.suffix == ".json"):
-            if not recipe_path.exists():
-                # Try recipes/ directory
-                recipe_path = Path("recipes") / recipe
-            if not recipe_path.exists():
-                console.print(f"[bold red]❌ Error:[/bold red] JSON recipe not found: {recipe}")
-                raise typer.Exit(code=1)
-            try:
-                _run_dag_recipe(recipe_path)
-                return
-            except Exception as e:
-                console.print(f"[bold red]❌ DAG Error:[/bold red] {str(e)}")
-                raise typer.Exit(code=1)
-
-        # Legacy: lookup by name
-        if not recipe.endswith(".md") and not recipe_path.exists():
+        # Try registry lookup when arg isn't a direct file path
+        if not recipe.endswith(".md") and not Path(recipe).exists():
             registry = RecipeRegistry()
             found = registry.get_recipe(recipe)
             if found:
@@ -121,7 +108,7 @@ def register_recipe_commands(app: typer.Typer) -> None:
                     console.print(f"[bold red]❌ Execution Error:[/bold red] {str(e)}")
                     raise typer.Exit(code=1)
 
-        # .md file path
+        recipe_path = Path(recipe)
         if not recipe_path.exists():
             console.print(f"[bold red]❌ Error:[/bold red] Recipe file not found: {recipe}")
             raise typer.Exit(code=1)
@@ -140,6 +127,8 @@ def register_recipe_commands(app: typer.Typer) -> None:
     @app.command()
     def ui() -> None:
         """Open interactive terminal UI"""
+        from src.agents import ContentWriter, LeadHunter, RecipeCrawler
+
         console.print(
             Panel(
                 Text("🎨 Mekong Terminal UI", style="bold cyan"),
@@ -158,10 +147,8 @@ def register_recipe_commands(app: typer.Typer) -> None:
         table.add_column("ID", style="cyan", justify="right")
         table.add_column("Module", style="bold")
         table.add_column("Description", style="dim")
-
         for pid, info in modules.items():
             table.add_row(pid, info["name"], info["desc"])
-
         console.print(table)
 
         choice = Prompt.ask("Enter module ID", choices=list(modules.keys()))
@@ -171,14 +158,12 @@ def register_recipe_commands(app: typer.Typer) -> None:
         agent_class = selected["class"]
         agent = agent_class()
 
-        if choice == "1":
-            user_input = Prompt.ask("Enter domain to hunt (e.g., techcorp.com)")
-        elif choice == "2":
-            user_input = Prompt.ask("Enter topic/keyword (e.g., AI Marketing)")
-        elif choice == "3":
-            user_input = Prompt.ask("Enter search query or 'all'")
-        else:
-            user_input = Prompt.ask("Enter input data")
+        prompts = {
+            "1": "Enter domain to hunt (e.g., techcorp.com)",
+            "2": "Enter topic/keyword (e.g., AI Marketing)",
+            "3": "Enter search query or 'all'",
+        }
+        user_input = Prompt.ask(prompts.get(choice, "Enter input data"))
 
         with console.status(f"[bold green]Running {selected['name']}...[/bold green]"):
             try:
@@ -187,9 +172,7 @@ def register_recipe_commands(app: typer.Typer) -> None:
                 for res in results:
                     status_symbol = "✅" if res.success else "❌"
                     status_color = "green" if res.success else "red"
-                    console.print(
-                        f"[{status_color}]{status_symbol} Task: {res.task_id}[/{status_color}]"
-                    )
+                    console.print(f"[{status_color}]{status_symbol} Task: {res.task_id}[/{status_color}]")
                     if res.output:
                         console.print(Panel(str(res.output), title="Output", border_style="dim"))
                     if res.error:
@@ -199,67 +182,3 @@ def register_recipe_commands(app: typer.Typer) -> None:
 
         console.print("\n[dim]Press Enter to exit...[/dim]")
         input()
-
-
-def _run_dag_recipe(recipe_path: Path) -> None:
-    """Execute a JSON DAG recipe — groups run in dependency order."""
-    import json
-    import shlex
-    import subprocess
-
-    data = json.loads(recipe_path.read_text())
-    name = data.get("name", recipe_path.stem)
-    groups = data.get("dag", {}).get("groups", [])
-
-    if not groups:
-        console.print(f"[yellow]Recipe '{name}' has no DAG groups[/yellow]")
-        return
-
-    console.print(Panel(
-        f"[bold]{name}[/bold]\n{data.get('description', '')}\n"
-        f"Groups: {len(groups)} | Est: {data.get('estimated_minutes', '?')} min | "
-        f"Credits: {data.get('estimated_credits', '?')}",
-        title="DAG Recipe", border_style="cyan",
-    ))
-
-    completed: set[str] = set()
-
-    for group in groups:
-        group_id = group["id"]
-        deps = group.get("depends_on", [])
-
-        # Check dependencies
-        for dep in deps:
-            if dep not in completed:
-                console.print(f"[red]Dependency '{dep}' not completed for group '{group_id}'[/red]")
-                return
-
-        console.print(f"\n[bold cyan]--- Group: {group['name']} ({group['mode']}) ---[/bold cyan]")
-
-        commands = group.get("commands", [])
-        for cmd in commands:
-            cmd_id = cmd.get("id", "unknown")
-            cmd_args = cmd.get("args", "")
-            full_cmd = f"mekong {cmd_id} {cmd_args}".strip()
-
-            console.print(f"  [dim]>[/dim] {full_cmd}")
-            try:
-                # shell=False: full_cmd is "mekong {cmd_id} {cmd_args}" from
-                # trusted JSON config. Split into list to prevent injection.
-                result = subprocess.run(
-                    shlex.split(full_cmd), shell=False, capture_output=True,
-                    text=True, timeout=600, cwd=str(Path.home() / "mekong-cli"),
-                )
-                if result.returncode == 0:
-                    console.print(f"  [green]OK[/green] {cmd_id}")
-                else:
-                    console.print(f"  [red]FAIL[/red] {cmd_id}: {result.stderr[:100]}")
-                    return
-            except subprocess.TimeoutExpired:
-                console.print(f"  [red]TIMEOUT[/red] {cmd_id} (>600s)")
-                return
-
-        completed.add(group_id)
-        console.print(f"  [green]Group '{group_id}' complete[/green]")
-
-    console.print(f"\n[bold green]DAG Recipe '{name}' completed successfully[/bold green]")
