@@ -204,6 +204,7 @@ def register_recipe_commands(app: typer.Typer) -> None:
 def _run_dag_recipe(recipe_path: Path) -> None:
     """Execute a JSON DAG recipe — groups run in dependency order."""
     import json
+    import shlex
     import subprocess
 
     data = json.loads(recipe_path.read_text())
@@ -243,9 +244,11 @@ def _run_dag_recipe(recipe_path: Path) -> None:
 
             console.print(f"  [dim]>[/dim] {full_cmd}")
             try:
+                # shell=False: full_cmd is "mekong {cmd_id} {cmd_args}" from
+                # trusted JSON config. Split into list to prevent injection.
                 result = subprocess.run(
-                    full_cmd, shell=True, capture_output=True, text=True,
-                    timeout=600, cwd=str(Path.home() / "mekong-cli"),
+                    shlex.split(full_cmd), shell=False, capture_output=True,
+                    text=True, timeout=600, cwd=str(Path.home() / "mekong-cli"),
                 )
                 if result.returncode == 0:
                     console.print(f"  [green]OK[/green] {cmd_id}")

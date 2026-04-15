@@ -248,8 +248,12 @@ class HeartbeatScheduler:
         task.last_run = datetime.now()
 
         if task.tier == 1 and task.command:
-            # Tier 1: Direct command execution (shell=True needed for pipes/&&)
-            # Commands come from local .mekong/loops/*.json (trusted local config)
+            # SECURITY NOTE: shell=True is intentional here.
+            # Tier 1 commands originate exclusively from local .mekong/loops/*.json
+            # files controlled by the machine owner. They legitimately use shell
+            # features (pipes `|`, `&&` chaining). No user-supplied or network-
+            # derived strings reach this path. If that invariant ever changes,
+            # migrate to multi-step subprocess.PIPE chaining and remove shell=True.
             try:
                 result = subprocess.run(
                     task.command, shell=True, capture_output=True, text=True,

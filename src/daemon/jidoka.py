@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
@@ -261,9 +262,13 @@ class JidokaMonitor:
             True if fix succeeded, False otherwise.
         """
         try:
+            # shell=False: auto-fix commands are hardcoded patterns (npm test,
+            # git revert HEAD, npm audit fix). Split into list to prevent
+            # injection if the pattern definition is ever extended externally.
+            cmd_args = shlex.split(command) if isinstance(command, str) else command
             result = subprocess.run(
-                command,
-                shell=True,
+                cmd_args,
+                shell=False,
                 capture_output=True,
                 text=True,
                 timeout=120,  # 2 minute timeout
@@ -293,9 +298,11 @@ class JidokaMonitor:
             True if rollback succeeded, False otherwise.
         """
         try:
+            # shell=False: same rationale as _run_auto_fix above.
+            cmd_args = shlex.split(command) if isinstance(command, str) else command
             result = subprocess.run(
-                command,
-                shell=True,
+                cmd_args,
+                shell=False,
                 capture_output=True,
                 text=True,
                 timeout=60,

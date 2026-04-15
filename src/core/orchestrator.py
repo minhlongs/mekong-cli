@@ -16,6 +16,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+import shlex
 import time
 import uuid
 
@@ -689,9 +690,17 @@ class RecipeOrchestrator:
             try:
                 import subprocess
 
+                # shell=False: rollback_cmd comes from recipe params (plan YAML).
+                # Split into list so metacharacters cannot be injected via the
+                # rollback field in a crafted plan file.
+                rollback_args = (
+                    shlex.split(rollback_cmd)
+                    if isinstance(rollback_cmd, str)
+                    else rollback_cmd
+                )
                 proc = subprocess.run(
-                    rollback_cmd,
-                    shell=True,
+                    rollback_args,
+                    shell=False,
                     capture_output=True,
                     text=True,
                     timeout=30,
