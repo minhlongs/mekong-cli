@@ -24,7 +24,11 @@ fi
 echo "[2/4] Downloading default model (qwen2.5-coder:7b)..."
 ollama serve &>/dev/null &
 sleep 5
-ollama pull qwen2.5-coder:7b 2>/dev/null || true
+if ollama pull qwen2.5-coder:7b 2>/dev/null; then
+  echo "  ✅ Model downloaded"
+else
+  echo "  ⚠️  Model download failed (will retry on first use)"
+fi
 
 # Step 3: Install OpenCode (rebranded as mekong engine)
 if ! command -v opencode &>/dev/null; then

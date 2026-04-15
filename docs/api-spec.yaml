@@ -201,7 +201,7 @@ paths:
                   format: email
                 plan:
                   type: string
-                  enum: [free, starter, pro, enterprise]
+                  enum: [free, starter, growth, pro]
       responses:
         '201':
           description: Tenant created

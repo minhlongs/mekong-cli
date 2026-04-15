@@ -46,7 +46,7 @@ def sync_raas(
     2. Fetch license entitlements
     3. Register with webhook system (Stripe/Polar)
     4. Sync local usage metrics
-    5. Push anonymized analytics to AgencyOS
+    5. Push anonymized analytics to MekongMind
 
     Examples:
         mekong sync-raas
@@ -101,7 +101,7 @@ def sync_raas(
             console.print(f"[yellow]⚠ Sync: {sync_result.error}[/yellow]\n")
 
     # Step 5: Push analytics
-    console.print("[dim]Step 5/5: Pushing analytics to AgencyOS...[/dim]")
+    console.print("[dim]Step 5/5: Pushing analytics to MekongMind...[/dim]")
     if dry_run:
         console.print("[yellow]⊘ Skipped (dry run)[/yellow]\n")
         console.print("[bold]Dry Run Complete[/bold]\n")
@@ -135,7 +135,7 @@ def _authenticate() -> bool:
             "[yellow]Set your license key:[/yellow]\n"
             "  [cyan]export RAAS_LICENSE_KEY=mk_your_key[/cyan]\n\n"
             "Or get a key from:\n"
-            "  [cyan]https://raas.agencyos.network[/cyan]\n"
+            "  [cyan]https://www.mekongmind.com[/cyan]\n"
         )
         return False
 
@@ -180,13 +180,13 @@ def _display_sync_summary(entitlements: dict, verbose: bool = False) -> None:
     summary_table.add_column("Value", style="cyan")
 
     summary_table.add_row("Sync Time", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"))
-    summary_table.add_row("Gateway", "https://raas.agencyos.network")
+    summary_table.add_row("Gateway", "https://www.mekongmind.com")
     summary_table.add_row("Version", "v2.0.0 (CF Worker)")
 
     console.print(summary_table)
 
     if verbose:
-        console.print("\n[dim]Anonymized analytics pushed to AgencyOS dashboard[/dim]")
+        console.print("\n[dim]Anonymized analytics pushed to MekongMind dashboard[/dim]")
         console.print("[dim]Dashboard: https://agencyos.network[/dim]\n")
 
 
