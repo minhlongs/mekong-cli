@@ -44,7 +44,7 @@ mcu_billing = MCUBilling()
 
 app = FastAPI(
     title="Mekong CLI Gateway API",
-    description="Unified API contract for AgencyOS → Mekong CLI integration",
+    description="Unified API for MekongMind — the one-person company platform",
     version="3.3.0",
     docs_url="/api-docs",
     redoc_url="/api-redoc",

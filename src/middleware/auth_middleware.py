@@ -142,7 +142,7 @@ class AuthMiddleware:
             console.print("[red]License has expired.[/red]")
             console.print("\n[yellow]To renew your license:[/yellow]")
             console.print("  [cyan]mekong renewal[/cyan]\n")
-            console.print("[dim]Or visit: https://raas.agencyos.network[/dim]\n")
+            console.print("[dim]Or visit: https://www.mekongmind.com[/dim]\n")
 
         elif result.reason == AuthorizationReason.QUOTA_EXCEEDED:
             console.print("[red]Rate limit exceeded.[/red]")
@@ -151,12 +151,12 @@ class AuthMiddleware:
                     f"[dim]Please wait {result.rate_limit_reset_in} seconds before retrying.[/dim]\n"
                 )
             console.print("\n[yellow]Upgrade your tier for higher limits:[/yellow]")
-            console.print("  [cyan]https://raas.agencyos.network/pricing[/cyan]\n")
+            console.print("  [cyan]https://www.mekongmind.com/pricing[/cyan]\n")
 
         elif result.reason == AuthorizationReason.INSUFFICIENT_TIER:
             console.print(f"[red]{result.message}[/red]")
             console.print("\n[yellow]Upgrade to access this command:[/yellow]")
-            console.print("  [cyan]https://raas.agencyos.network/pricing[/cyan]\n")
+            console.print("  [cyan]https://www.mekongmind.com/pricing[/cyan]\n")
 
         elif result.reason == AuthorizationReason.GRACE_PERIOD:
             # Grace period - allow but warn

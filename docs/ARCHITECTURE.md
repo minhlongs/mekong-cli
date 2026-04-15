@@ -236,7 +236,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
-    plan VARCHAR(50) DEFAULT 'solo',  -- solo | team | enterprise
+    plan VARCHAR(50) DEFAULT 'starter',  -- starter | growth | pro
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -811,9 +811,9 @@ def calculate_vn_tax(amount_vnd: float, quarter_total: float) -> dict:
 
 | Tier       | Price      | Features                                  | Target        |
 |------------|------------|-------------------------------------------|---------------|
-| **Solo**   | $395/year  | 1 user, 3 agents, 10K requests/month      | Solopreneur   |
-| **Team**   | $995/year  | 5 users, 10 agents, 50K requests/month    | Small agency  |
-| **Enterprise** | Custom | Unlimited users/agents, dedicated support | Large agency  |
+| **Starter** | $49/mo  | All 22 departments, 200 credits            | Solo founders |
+| **Growth**  | $149/mo | + priority execution, 1,000 credits        | Scaling solos |
+| **Pro**     | $499/mo | + dedicated support, 5,000 credits         | Full power    |
 
 **License Format**: `AGY-{TENANT_ID}-{TIMESTAMP}-{CHECKSUM}`
 - Example: `AGY-tenant123-20260125-a3f8c9d2`
