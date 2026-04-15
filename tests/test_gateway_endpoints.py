@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi.testclient import TestClient
 
-from src.gateway import app, MISSION_STORE
+from src.gateway import app
+from src.api.gateway_mission_routes import MISSION_STORE
 
 # ---------------------------------------------------------------------------
 # Shared test client
