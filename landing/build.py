@@ -68,6 +68,13 @@ def build():
     (DIST_DIR / "index.html").write_text(hub_html)
     print(f"  Built: index.html (hub)")
 
+    # Build guide page
+    guide_html = build_guide_page()
+    guide_dir = DIST_DIR / "guide"
+    guide_dir.mkdir(parents=True, exist_ok=True)
+    (guide_dir / "index.html").write_text(guide_html)
+    print(f"  Built: guide/index.html")
+
     # Generate _redirects for CF Pages clean URLs
     redirects = [f"/{t['slug']} /{t['slug']}/ 301" for t in tenants]
     (DIST_DIR / "_redirects").write_text("\n".join(redirects))
@@ -88,6 +95,7 @@ def build():
                        '  <url><loc>https://www.mekongmind.com/</loc><priority>1.0</priority></url>']
     for t in tenants:
         sitemap_entries.append(f'  <url><loc>https://www.mekongmind.com/{t["slug"]}/</loc><priority>0.8</priority></url>')
+    sitemap_entries.append('  <url><loc>https://www.mekongmind.com/guide/</loc><priority>0.9</priority></url>')
     sitemap_entries.append('</urlset>')
     (DIST_DIR / "sitemap.xml").write_text("\n".join(sitemap_entries))
     print(f"  Built: sitemap.xml ({len(tenants)+1} URLs)")
@@ -197,6 +205,92 @@ def build_hub_page(tenants: list[dict]) -> str:
   </section>
 </body>
 </html>"""
+
+
+def build_guide_page() -> str:
+    """SEO guide: How to Run a One-Person Company."""
+    starter_url = f"{POLAR_BASE}/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA/redirect"
+    return f"""<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Run a One-Person Company with Autonomous Agents — MekongMind</title>
+  <meta name="description" content="Step-by-step guide to building a one-person billion-dollar company using autonomous agents. 22 departments, zero employees, $49/mo.">
+  <meta property="og:title" content="How to Run a One-Person Company — MekongMind">
+  <meta property="og:description" content="Replace a 50-person team with 22 autonomous departments. The a16z thesis, made real.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.mekongmind.com/guide/">
+  <link rel="canonical" href="https://www.mekongmind.com/guide/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/tailwind.min.css">
+  <style>body {{ background: #0F172A; color: #F1F5F9; font-family: 'IBM Plex Sans', sans-serif; }} .prose h2 {{ color: #F1F5F9; font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem; }} .prose h3 {{ color: #CBD5E1; font-size: 1.125rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }} .prose p {{ color: #94A3B8; line-height: 1.75; margin-bottom: 1rem; }} .prose ul {{ color: #94A3B8; margin-bottom: 1rem; padding-left: 1.5rem; }} .prose li {{ margin-bottom: 0.5rem; }} .prose code {{ background: #1E293B; padding: 2px 6px; border-radius: 4px; font-size: 0.875rem; }}</style>
+</head>
+<body class="antialiased">
+  <nav class="bg-[#1E293B]/80 backdrop-blur border-b border-[#334155] px-6 py-3 flex items-center justify-between">
+    <a href="/" class="font-mono font-semibold text-lg cursor-pointer">MekongMind</a>
+    <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">Start Free</a>
+  </nav>
+  <article class="max-w-3xl mx-auto px-6 py-16 prose">
+    <h1 class="text-3xl md:text-4xl font-bold text-[#F1F5F9] mb-2">How to Run a One-Person Company with Autonomous Agents</h1>
+    <p class="text-[#64748B] text-sm mb-8">Updated April 2026 &middot; 5 min read</p>
+
+    <p>Marc Andreessen predicts single-person billion-dollar startups, enabled by autonomous agents. Dario Amodei gives it a 70-80% probability by 2026. The question is no longer <em>if</em> — it's <em>how</em>.</p>
+
+    <h2>The Solo Founder Stack</h2>
+    <p>A one-person company needs the same departments as a 50-person one: finance, marketing, sales, engineering, legal, HR, compliance. The difference is who does the work.</p>
+    <ul>
+      <li><strong>Old model:</strong> Hire 50 employees. $500K/mo payroll.</li>
+      <li><strong>New model:</strong> Deploy 22 autonomous agent departments. $49/mo.</li>
+    </ul>
+
+    <h2>How MekongMind Works</h2>
+    <h3>1. Install (60 seconds)</h3>
+    <p>One command. Everything runs locally on your Mac.</p>
+    <pre class="bg-[#1E293B] border border-[#334155] rounded-xl p-4 text-sm text-green-400 overflow-x-auto"><code>curl -fsSL https://www.mekongmind.com/install.sh | bash</code></pre>
+    <p>This installs Ollama (local inference), downloads a coding model, and sets up the Mekong Engine with 385 workflow commands. Zero cloud dependency.</p>
+
+    <h3>2. Configure Your Departments</h3>
+    <p>Each of the 22 departments handles a function of your company:</p>
+    <ul>
+      <li><strong>Finance:</strong> Revenue reports, expense tracking, forecasting</li>
+      <li><strong>Marketing:</strong> Content generation, SEO analysis, campaign management</li>
+      <li><strong>Sales:</strong> Lead scoring, pipeline management, outreach automation</li>
+      <li><strong>Engineering:</strong> Code generation, testing, deployment, code review</li>
+      <li><strong>Legal:</strong> Contract review, compliance checks, IP protection</li>
+      <li><strong>HR:</strong> Contractor management, hiring workflow, onboarding</li>
+    </ul>
+
+    <h3>3. Set Autopilot Goals</h3>
+    <p>OpenClaw, the autonomous operations engine, runs 24/7. Finance reports on Monday. Content on Wednesday. Security audits on Friday. You review — you don't execute.</p>
+
+    <h3>4. Scale Without Hiring</h3>
+    <p>More revenue? More credits. Not more employees. Your marginal cost of running another department is zero. The LLM runs on your machine.</p>
+
+    <h2>The Economics</h2>
+    <ul>
+      <li><strong>Infrastructure:</strong> $0/mo (runs on your Mac, M1/M2/M3/M4)</li>
+      <li><strong>LLM cost:</strong> $0/mo (Ollama runs locally)</li>
+      <li><strong>Hosting:</strong> $0/mo (Cloudflare Pages, free tier)</li>
+      <li><strong>MekongMind subscription:</strong> $49/mo (all 22 departments)</li>
+      <li><strong>Total overhead:</strong> $49/mo</li>
+    </ul>
+    <p>Compare this to $500K/mo for a 50-person team doing the same work.</p>
+
+    <h2>Who Is This For</h2>
+    <p>Solo founders who want to run a real company — not a side project. People who believe the a16z thesis that agents will replace teams. Indie makers who want to ship at agency speed without agency cost.</p>
+    <p>This is <strong>not</strong> for teams. Not for enterprise. One person, all departments, full power.</p>
+
+    <div class="mt-12 bg-[#1E293B] border border-[#334155] rounded-2xl p-8 text-center">
+      <h2 class="text-2xl font-bold text-[#F1F5F9] mb-3" style="margin-top:0">Start Your One-Person Company</h2>
+      <p class="text-[#94A3B8] mb-6">22 departments. 290 commands. $49/mo. MIT licensed.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl transition-colors cursor-pointer">Subscribe — $49/mo</a>
+        <a href="https://github.com/longtho638-jpg/mekong-cli" class="bg-[#1E293B] hover:bg-[#334155] border border-[#334155] font-medium px-8 py-3 rounded-xl transition-colors cursor-pointer">View on GitHub</a>
+      </div>
+    </div>
+  </article>
+</body></html>"""
 
 
 if __name__ == "__main__":
