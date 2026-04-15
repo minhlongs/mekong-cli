@@ -5,7 +5,7 @@ Provides both RollbackHandler class and _handle_failure helper used by runner.
 
 import shlex
 import subprocess
-from typing import List, Optional, TYPE_CHECKING
+from typing import List
 
 from rich.console import Console
 

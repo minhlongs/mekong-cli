@@ -90,8 +90,9 @@ class TestRouteAndExecuteStage2:
 class TestRouteAndExecuteSuccess:
     """Test successful execution (Stages 1-9)."""
 
+    @patch("src.raas.credits.CreditStore")
     @patch("src.core.hybrid_router.execute_with_fallback")
-    def test_full_pipeline_success(self, mock_exec, gate, api_state):
+    def test_full_pipeline_success(self, mock_exec, mock_credit_store_class, gate, api_state):
         mock_exec.return_value = FallbackResult(
             success=True,
             model_used="gemini-2.0-flash",
@@ -99,6 +100,11 @@ class TestRouteAndExecuteSuccess:
             attempts=["gemini-2.0-flash"],
             output="Hello world response",
         )
+
+        # Mock CreditStore to return high balance (>200) to skip watermark
+        mock_store_instance = MagicMock()
+        mock_store_instance.get_balance.return_value = 250
+        mock_credit_store_class.return_value = mock_store_instance
 
         result = asyncio.run(route_and_execute(
             goal="write a simple hello world script",

@@ -9,11 +9,11 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from typing import Any
 
-from src.core.llm_client import get_client
+from src.core.llm_client import get_client, LLMClient
 from src.core.planner import RecipePlanner, PlanningContext, TaskComplexity
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
+from src.core.orchestrator.models import OrchestrationResult
 from src.cli.helpers import (
     create_config_panel,
     create_step_table,
@@ -82,7 +82,7 @@ def cook(
     _print_final_result(result)
 
 
-def _run_dry_run(goal: str, llm_client: Any) -> None:
+def _run_dry_run(goal: str, llm_client: LLMClient) -> None:
     """Run dry-run mode: plan only without execution."""
     planner = RecipePlanner(llm_client=llm_client if llm_client.is_available else None)
     recipe = planner.plan(goal)
@@ -103,7 +103,7 @@ def _run_dry_run(goal: str, llm_client: Any) -> None:
     console.print("\n[yellow]Dry run complete — no steps executed.[/yellow]")
 
 
-def _print_json_output(result: Any, goal: str) -> None:
+def _print_json_output(result: OrchestrationResult, goal: str) -> None:
     """Print JSON output for machine consumption."""
     output = {
         "status": result.status.value,
@@ -128,7 +128,7 @@ def _print_json_output(result: Any, goal: str) -> None:
     print_json_output(output)
 
 
-def _print_final_result(result: Any) -> None:
+def _print_final_result(result: OrchestrationResult) -> None:
     """Print final result summary."""
     if result.status == OrchestrationStatus.SUCCESS:
         print_success("🎉 Mission accomplished!", title="Success")

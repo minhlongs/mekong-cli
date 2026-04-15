@@ -1,6 +1,7 @@
 """Tests for EngagementStore — SQLite storage for retention data."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -13,34 +14,42 @@ def store(tmp_path: Path) -> EngagementStore:
     return EngagementStore(db_path=tmp_path / "test.db")
 
 
+@pytest.fixture
+def today_date() -> str:
+    """Return today's date in YYYY-MM-DD format."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
 class TestTrackEvent:
-    def test_track_stores_event(self, store: EngagementStore) -> None:
-        store.track_event("u1", "ws1", "login", "2026-03-14")
+    def test_track_stores_event(self, store: EngagementStore, today_date: str) -> None:
+        store.track_event("u1", "ws1", "login", today_date)
         events = store.get_user_events("u1", days=30)
         assert len(events) >= 1
 
-    def test_deduplicates_same_day_type(self, store: EngagementStore) -> None:
-        store.track_event("u1", "ws1", "login", "2026-03-14")
-        store.track_event("u1", "ws1", "login", "2026-03-14")
+    def test_deduplicates_same_day_type(self, store: EngagementStore, today_date: str) -> None:
+        store.track_event("u1", "ws1", "login", today_date)
+        store.track_event("u1", "ws1", "login", today_date)
         # Should increment count, not create duplicate
         counts = store.get_daily_event_counts("u1", days=30)
-        login_count = sum(d.total_events for d in counts if "2026-03-14" == d.event_date)
+        login_count = sum(d.total_events for d in counts if today_date == d.event_date)
         assert login_count == 2  # count incremented
 
-    def test_different_types_same_day(self, store: EngagementStore) -> None:
-        store.track_event("u1", "ws1", "login", "2026-03-14")
-        store.track_event("u1", "ws1", "mission_run", "2026-03-14")
+    def test_different_types_same_day(self, store: EngagementStore, today_date: str) -> None:
+        store.track_event("u1", "ws1", "login", today_date)
+        store.track_event("u1", "ws1", "mission_run", today_date)
         counts = store.get_daily_event_counts("u1", days=30)
         assert len(counts) >= 1
 
 
 class TestActiveDates:
-    def test_returns_active_dates(self, store: EngagementStore) -> None:
-        store.track_event("u1", "ws1", "login", "2026-03-12")
-        store.track_event("u1", "ws1", "login", "2026-03-14")
+    def test_returns_active_dates(self, store: EngagementStore, today_date: str) -> None:
+        from datetime import timedelta
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+        store.track_event("u1", "ws1", "login", yesterday)
+        store.track_event("u1", "ws1", "login", today_date)
         dates = store.get_active_dates("u1", days=30)
-        assert "2026-03-12" in dates
-        assert "2026-03-14" in dates
+        assert yesterday in dates
+        assert today_date in dates
 
     def test_empty_for_unknown_user(self, store: EngagementStore) -> None:
         dates = store.get_active_dates("nobody", days=30)
@@ -48,17 +57,21 @@ class TestActiveDates:
 
 
 class TestStreaks:
-    def test_upsert_and_get(self, store: EngagementStore) -> None:
-        data = StreakData("u1", 5, 10, "2026-03-14", "2026-03-10", 0)
+    def test_upsert_and_get(self, store: EngagementStore, today_date: str) -> None:
+        from datetime import timedelta
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+        data = StreakData("u1", 5, 10, today_date, yesterday, 0)
         store.upsert_streak(data)
         result = store.get_streak("u1")
         assert result is not None
         assert result.current_streak == 5
         assert result.longest_streak == 10
 
-    def test_upsert_updates_existing(self, store: EngagementStore) -> None:
-        store.upsert_streak(StreakData("u1", 1, 1, "2026-03-13", "2026-03-13", 0))
-        store.upsert_streak(StreakData("u1", 2, 2, "2026-03-14", "2026-03-13", 0))
+    def test_upsert_updates_existing(self, store: EngagementStore, today_date: str) -> None:
+        from datetime import timedelta
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+        store.upsert_streak(StreakData("u1", 1, 1, yesterday, yesterday, 0))
+        store.upsert_streak(StreakData("u1", 2, 2, today_date, yesterday, 0))
         result = store.get_streak("u1")
         assert result is not None
         assert result.current_streak == 2
@@ -76,9 +89,9 @@ class TestHealthSnapshots:
         assert history[0].grade == "A"
         assert history[0].components["usage"] == 90
 
-    def test_upsert_same_date(self, store: EngagementStore) -> None:
-        store.save_health_snapshot("ws1", 70, "B", {}, "2026-03-14")
-        store.save_health_snapshot("ws1", 80, "A", {}, "2026-03-14")
+    def test_upsert_same_date(self, store: EngagementStore, today_date: str) -> None:
+        store.save_health_snapshot("ws1", 70, "B", {}, today_date)
+        store.save_health_snapshot("ws1", 80, "A", {}, today_date)
         history = store.get_health_history("ws1", days=30)
         assert len(history) == 1
         assert history[0].score == 80

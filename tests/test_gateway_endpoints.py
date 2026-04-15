@@ -276,23 +276,23 @@ class TestWebhookTest:
         resp = client.post("/v1/webhook/test", json={})
         assert resp.status_code == 422
 
-    def test_reachable_url_returns_success_true(self, client):
-        with patch("src.gateway.validate_webhook_url") as mock_val:
-            mock_val.return_value = (True, "HTTP 200")
-            resp = client.post(
-                "/v1/webhook/test",
-                json={"webhook_url": "https://example.com/hook"},
-            )
+    @patch("src.api.gateway_webhook_mcu_routes.validate_webhook_url")
+    def test_reachable_url_returns_success_true(self, mock_val, client):
+        mock_val.return_value = (True, "HTTP 200")
+        resp = client.post(
+            "/v1/webhook/test",
+            json={"webhook_url": "https://example.com/hook"},
+        )
         assert resp.status_code == 200
         assert resp.json()["success"] is True
 
-    def test_unreachable_url_returns_success_false(self, client):
-        with patch("src.gateway.validate_webhook_url") as mock_val:
-            mock_val.return_value = (False, "Connection refused")
-            resp = client.post(
-                "/v1/webhook/test",
-                json={"webhook_url": "https://dead-server.example.com/hook"},
-            )
+    @patch("src.api.gateway_webhook_mcu_routes.validate_webhook_url")
+    def test_unreachable_url_returns_success_false(self, mock_val, client):
+        mock_val.return_value = (False, "Connection refused")
+        resp = client.post(
+            "/v1/webhook/test",
+            json={"webhook_url": "https://dead-server.example.com/hook"},
+        )
         assert resp.status_code == 200
         assert resp.json()["success"] is False
 
@@ -359,20 +359,14 @@ class TestMCUDeduct:
         assert resp.status_code == 402
 
     def test_successful_deduct_returns_200(self, client):
-        mock_result = MagicMock()
-        mock_result.success = True
-        mock_result.balance_before = 100
-        mock_result.balance_after = 99
-        mock_result.amount_deducted = 1
-        mock_result.low_balance = False
-        mock_result.error = ""
+        from src.raas.credits import CreditStore
+        credit_store = CreditStore()
+        credit_store.add_credits("rich-tenant", 100, "test_setup")
 
-        with patch("src.gateway.mcu_billing.deduct") as mock_deduct:
-            mock_deduct.return_value = mock_result
-            resp = client.post(
-                "/v1/mcu/deduct",
-                json={"tenant_id": "rich-tenant", "complexity": "simple", "mission_id": "m1"},
-            )
+        resp = client.post(
+            "/v1/mcu/deduct",
+            json={"tenant_id": "rich-tenant", "complexity": "simple", "mission_id": "m1"},
+        )
 
         assert resp.status_code == 200
         body = resp.json()
@@ -383,58 +377,42 @@ class TestMCUDeduct:
 
     def test_complex_mission_deducts_more(self, client):
         """Complex missions cost more MCUs (5 vs 1 for simple)."""
-        mock_result = MagicMock()
-        mock_result.success = True
-        mock_result.balance_before = 100
-        mock_result.balance_after = 95
-        mock_result.amount_deducted = 5
-        mock_result.low_balance = False
-        mock_result.error = ""
+        from src.raas.credits import CreditStore
+        credit_store = CreditStore()
+        credit_store.add_credits("rich-tenant2", 100, "test_setup")
 
-        with patch("src.gateway.mcu_billing.deduct") as mock_deduct:
-            mock_deduct.return_value = mock_result
-            resp = client.post(
-                "/v1/mcu/deduct",
-                json={"tenant_id": "rich-tenant", "complexity": "complex", "mission_id": "m2"},
-            )
+        resp = client.post(
+            "/v1/mcu/deduct",
+            json={"tenant_id": "rich-tenant2", "complexity": "complex", "mission_id": "m2"},
+        )
 
         assert resp.status_code == 200
         assert resp.json()["amount_deducted"] == 5
 
     def test_low_balance_flag_returned(self, client):
-        mock_result = MagicMock()
-        mock_result.success = True
-        mock_result.balance_before = 5
-        mock_result.balance_after = 4
-        mock_result.amount_deducted = 1
-        mock_result.low_balance = True
-        mock_result.error = ""
+        from src.raas.credits import CreditStore
+        credit_store = CreditStore()
+        credit_store.add_credits("low-tenant", 5, "test_setup")
 
-        with patch("src.gateway.mcu_billing.deduct") as mock_deduct:
-            mock_deduct.return_value = mock_result
-            resp = client.post(
-                "/v1/mcu/deduct",
-                json={"tenant_id": "low-tenant", "complexity": "simple", "mission_id": "m3"},
-            )
+        resp = client.post(
+            "/v1/mcu/deduct",
+            json={"tenant_id": "low-tenant", "complexity": "simple", "mission_id": "m3"},
+        )
 
         assert resp.status_code == 200
         assert resp.json()["low_balance"] is True
 
     def test_all_valid_complexities_accepted(self, client):
         """simple, standard, complex — all must be accepted by validation."""
-        mock_result = MagicMock()
-        mock_result.success = True
-        mock_result.balance_before = 1000
-        mock_result.balance_after = 999
-        mock_result.amount_deducted = 1
-        mock_result.low_balance = False
-        mock_result.error = ""
+        from src.raas.credits import CreditStore
+        credit_store = CreditStore()
+
+        # Add sufficient credits for all three deductions (1 + 3 + 5 = 9)
+        credit_store.add_credits("t1", 100, "test_setup")
 
         for complexity in ("simple", "standard", "complex"):
-            with patch("src.gateway.mcu_billing.deduct") as mock_deduct:
-                mock_deduct.return_value = mock_result
-                resp = client.post(
-                    "/v1/mcu/deduct",
-                    json={"tenant_id": "t1", "complexity": complexity, "mission_id": "m"},
-                )
-            assert resp.status_code == 200, f"Failed for complexity={complexity}"
+            resp = client.post(
+                "/v1/mcu/deduct",
+                json={"tenant_id": "t1", "complexity": complexity, "mission_id": "m"},
+            )
+            assert resp.status_code == 200, f"Failed for complexity={complexity}: {resp.json()}"

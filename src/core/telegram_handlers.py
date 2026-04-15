@@ -6,7 +6,10 @@ Handler functions for Telegram bot commands.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core.orchestrator.models import OrchestrationResult
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -19,8 +22,8 @@ logger = logging.getLogger(__name__)
 async def cook_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    config: Any,
-    save_config: Any,
+    config: dict[str, object],
+    save_config: Callable[..., None],
 ) -> None:
     """Handle /cook <goal> — queue task for Mekong CLI."""
     goal = " ".join(context.args) if context.args else ""
@@ -55,8 +58,8 @@ async def cook_handler(
 async def spawn_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
-    config: Any,
-    save_config: Any,
+    config: dict[str, object],
+    save_config: Callable[..., None],
 ) -> None:
     """Handle /spawn <project> <goal> — queue task for specific project."""
     args = context.args or []
@@ -266,7 +269,7 @@ async def cmd_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     )
 
 
-def _format_result(result: Any) -> str:
+def _format_result(result: "OrchestrationResult | None") -> str:
     """Format OrchestrationResult for Telegram message."""
     if result is None:
         return "❌ Execution failed — no result"

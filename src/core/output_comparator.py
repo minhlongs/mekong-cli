@@ -11,7 +11,7 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List
+from typing import List, Union
 
 
 class ComparisonMode(Enum):
@@ -39,8 +39,8 @@ class ComparisonResult:
 
     matched: bool
     mode: ComparisonMode
-    expected: Any
-    actual: Any
+    expected: Union[str, dict[str, object]]
+    actual: Union[str, dict[str, object]]
     diff_details: str = ""
 
 
@@ -53,7 +53,7 @@ class OutputComparator:
     def compare(
         self,
         actual: str,
-        expected: Any,
+        expected: Union[str, dict[str, object]],
         mode: ComparisonMode = ComparisonMode.CONTAINS,
     ) -> ComparisonResult:
         """Compare actual output against expected using specified mode.
@@ -126,7 +126,7 @@ class OutputComparator:
         )
 
     def _compare_json_subset(
-        self, actual: str, expected: Any,
+        self, actual: str, expected: Union[str, dict[str, object]],
     ) -> ComparisonResult:
         """Check that actual JSON contains all key/value pairs from expected.
 
@@ -183,8 +183,8 @@ class OutputComparator:
 
     def _check_subset(
         self,
-        expected: dict,
-        actual: Any,
+        expected: dict[str, object],
+        actual: Union[dict[str, object], str, object],
         prefix: str,
         missing: List[str],
         mismatched: List[str],

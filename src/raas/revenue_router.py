@@ -197,7 +197,7 @@ async def get_pricing(tenant: str | None = None):
     from src.api.tenant_config_loader import get_tenant_config
 
     tenant_config = get_tenant_config(tenant) if tenant else None
-    base = (
+    checkout_base = (
         tenant_config.get("polar_checkout_url") or _polar_checkout_base()
         if tenant_config
         else _polar_checkout_base()
@@ -212,7 +212,7 @@ async def get_pricing(tenant: str | None = None):
             "checkout_url": f"https://api.polar.sh/v1/checkout-links/{price_id}/redirect",
         })
 
-    result = {"tiers": tiers_with_urls, "checkout_url": "https://polar.sh"}
+    result = {"tiers": tiers_with_urls, "checkout_url": checkout_base}
     if tenant_config:
         result["tenant"] = tenant_config["slug"]
     return result
