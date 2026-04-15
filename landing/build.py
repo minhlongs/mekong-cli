@@ -180,6 +180,7 @@ def build_hub_page(tenants: list[dict]) -> str:
       <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Start Free — 50 credits</a>
       <a href="#use-cases" class="bg-[#1E293B] hover:bg-[#334155] border border-[#334155] font-medium px-8 py-3.5 rounded-xl transition-colors text-lg cursor-pointer">Browse use cases</a>
     </div>
+    <p class="text-sm text-[#64748B] mt-4">Use code <span class="text-[#2563EB] font-mono font-semibold">FREE50</span> at checkout for 50 bonus credits</p>
   </section>
 
   <section id="use-cases" class="py-16 px-6">
@@ -283,7 +284,8 @@ def build_guide_page() -> str:
 
     <div class="mt-12 bg-[#1E293B] border border-[#334155] rounded-2xl p-8 text-center">
       <h2 class="text-2xl font-bold text-[#F1F5F9] mb-3" style="margin-top:0">Start Your One-Person Company</h2>
-      <p class="text-[#94A3B8] mb-6">22 departments. 290 commands. $49/mo. MIT licensed.</p>
+      <p class="text-[#94A3B8] mb-2">22 departments. 290 commands. $49/mo. MIT licensed.</p>
+      <p class="text-sm text-[#64748B] mb-6">Use code <span class="text-[#2563EB] font-mono font-semibold">FREE50</span> for 50 bonus credits</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <a href="{starter_url}" class="bg-[#2563EB] hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl transition-colors cursor-pointer">Subscribe — $49/mo</a>
         <a href="https://github.com/longtho638-jpg/mekong-cli" class="bg-[#1E293B] hover:bg-[#334155] border border-[#334155] font-medium px-8 py-3 rounded-xl transition-colors cursor-pointer">View on GitHub</a>

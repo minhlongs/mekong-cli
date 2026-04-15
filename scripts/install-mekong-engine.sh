@@ -20,12 +20,23 @@ else
   echo "[1/4] Local inference engine: already installed"
 fi
 
-# Step 2: Pull default model
-echo "[2/4] Downloading default model (qwen2.5-coder:7b)..."
+# Step 2: Pull model based on hardware
 ollama serve &>/dev/null &
 sleep 5
-if ollama pull qwen2.5-coder:7b 2>/dev/null; then
-  echo "  ✅ Model downloaded"
+CHIP=$(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo "unknown")
+RAM_GB=$(( $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1073741824 ))
+if echo "$CHIP" | grep -qi "Ultra"; then
+  MODEL="qwen2.5-coder:32b"
+  echo "[2/4] M1 Ultra detected (${RAM_GB}GB RAM) — downloading premium model ($MODEL)..."
+elif [ "$RAM_GB" -ge 32 ]; then
+  MODEL="qwen2.5-coder:14b"
+  echo "[2/4] ${RAM_GB}GB RAM detected — downloading optimized model ($MODEL)..."
+else
+  MODEL="qwen2.5-coder:7b"
+  echo "[2/4] Downloading default model ($MODEL)..."
+fi
+if ollama pull "$MODEL" 2>/dev/null; then
+  echo "  ✅ Model downloaded: $MODEL"
 else
   echo "  ⚠️  Model download failed (will retry on first use)"
 fi
@@ -61,7 +72,7 @@ cat > "$MEKONG_HOME/config.json" << EOF
 {
   "port": $MEKONG_PORT,
   "ollama_url": "http://localhost:11434",
-  "model": "qwen2.5-coder:7b",
+  "model": "$MODEL",
   "commands_dir": "$HOME/.config/opencode/commands"
 }
 EOF
