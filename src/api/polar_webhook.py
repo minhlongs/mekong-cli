@@ -26,7 +26,7 @@ from typing import Optional
 from src.config.logging_config import get_logger
 from src.lib.license_generator import LicenseKeyGenerator
 
-router = APIRouter(prefix="/api/v1/polar", tags=["Polar.sh Webhooks"])
+router = APIRouter(prefix="/webhook/polar", tags=["Polar.sh Webhooks"])
 
 # Config
 POLAR_WEBHOOK_SECRET = os.getenv("POLAR_WEBHOOK_SECRET")
@@ -112,14 +112,14 @@ def process_subscription_created(event_data: dict) -> dict:
     customer_id = customer.get("id", "unknown")
     product_name = product.get("name", "Unknown Product")
 
-    # Determine tier from product name/metadata
-    tier = "pro"  # Default
-    if "enterprise" in product_name.lower():
-        tier = "enterprise"
-    elif "trial" in product_name.lower():
-        tier = "trial"
-    elif "free" in product_name.lower():
-        tier = "free"
+    # Determine tier from product name/metadata (a16z solo tiers)
+    tier = "starter"  # Default
+    if "pro" in product_name.lower():
+        tier = "pro"
+    elif "growth" in product_name.lower():
+        tier = "growth"
+    elif "starter" in product_name.lower():
+        tier = "starter"
 
     # Generate license key
     generator = LicenseKeyGenerator()
@@ -269,7 +269,7 @@ def _is_event_duplicate(event_id: str) -> bool:
     return False
 
 
-@router.post("/webhook")
+@router.post("")
 async def handle_webhook(
     request: Request,
     x_polar_signature: Optional[str] = Header(None, alias="X-Polar-Signature"),
