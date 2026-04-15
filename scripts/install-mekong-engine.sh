@@ -3,9 +3,10 @@
 # User runs: curl -fsSL https://mekongmind.com/install.sh | bash
 set -e
 
-echo "╔════════════════════════════════════════╗"
-echo "║  Mekong Engine — Installing...         ║"
-echo "╚════════════════════════════════════════╝"
+echo "╔════════════════════════════════════════════╗"
+echo "║  Mekong Engine — Your One-Person Company ║"
+echo "║  22 departments. Zero cloud cost.        ║"
+echo "╚════════════════════════════════════════════╝"
 
 MEKONG_HOME="$HOME/.mekong"
 MEKONG_PORT=18900
@@ -31,7 +32,15 @@ if ! command -v opencode &>/dev/null; then
   if command -v brew &>/dev/null; then
     brew install anomalyco/tap/opencode 2>/dev/null || npm install -g opencode 2>/dev/null
   else
-    npm install -g opencode 2>/dev/null || echo "Please install Node.js first: https://nodejs.org"
+    if command -v npm &>/dev/null; then
+      npm install -g opencode 2>/dev/null
+    elif command -v apt-get &>/dev/null; then
+      echo "    Installing Node.js..."
+      curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs
+      npm install -g opencode 2>/dev/null
+    else
+      echo "    Please install Node.js first: https://nodejs.org"
+    fi
   fi
 else
   echo "[3/4] Mekong Engine: already installed"
@@ -105,15 +114,16 @@ LAUNCH
 chmod +x "$MEKONG_HOME/start.sh"
 
 echo ""
-echo "╔════════════════════════════════════════╗"
-echo "║  ✅ Mekong Engine installed!           ║"
-echo "║                                        ║"
-echo "║  Start:  ~/.mekong/start.sh            ║"
-echo "║  IDE:    https://www.mekongmind.com/ide║"
-echo "║                                        ║"
-echo "║  Everything runs on YOUR machine.      ║"
-echo "║  Zero cloud cost. Your data stays local║"
-echo "╚════════════════════════════════════════╝"
+echo "╔══════════════════════════════════════════════╗"
+echo "║  ✅ Mekong Engine installed!                ║"
+echo "║                                             ║"
+echo "║  Start:  ~/.mekong/start.sh                 ║"
+echo "║  IDE:    https://www.mekongmind.com/ide     ║"
+echo "║                                             ║"
+echo "║  You are now a one-person company.          ║"
+echo "║  22 departments running on YOUR machine.    ║"
+echo "║  Zero cloud cost. Your data stays local.    ║"
+echo "╚══════════════════════════════════════════════╝"
 
 # Auto-start
 bash "$MEKONG_HOME/start.sh" &

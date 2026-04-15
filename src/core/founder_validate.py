@@ -148,7 +148,7 @@ def generate_framework(
         assumptions=assumptions,
         hypotheses=hypotheses,
         primary_persona="Decision-maker directly experiencing the pain",
-        secondary_persona="Team member affected by the problem",
+        secondary_persona="Stakeholder affected by the problem",
         avoid_persona="People who would give biased/polite answers (friends, family)",
     )
 

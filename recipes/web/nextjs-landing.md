@@ -135,8 +135,8 @@ const features = [
     icon: '📊',
   },
   {
-    name: 'Team Collaboration',
-    description: 'Built-in tools for seamless team communication and project coordination.',
+    name: 'Agent Orchestration',
+    description: 'Built-in tools for autonomous agent coordination and pipeline management.',
     icon: '🤝',
   },
   {

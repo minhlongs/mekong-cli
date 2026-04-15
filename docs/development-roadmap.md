@@ -127,7 +127,7 @@ All significant project milestones and phases tracked here.
 **Status**: ✅ COMPLETED (100%)
 
 **Components**:
-- 4-tier configuration (FREE, TRIAL, PRO, ENTERPRISE)
+- 4-tier configuration (FREE, STARTER, GROWTH, PRO)
 - Token bucket algorithm with configurable burst
 - Tenant override system
 - PostgreSQL-backed persistence
@@ -138,9 +138,9 @@ All significant project milestones and phases tracked here.
 | Tier | Auth Login | Auth Callback | Auth Refresh | API Default |
 |------|------------|---------------|--------------|-------------|
 | FREE | 5 | 10 | 10 | 20 |
-| TRIAL | 10 | 20 | 20 | 40 |
-| PRO | 30 | 60 | 60 | 100 |
-| ENTERPRISE | 100 | 200 | 200 | 500 |
+| STARTER | 10 | 20 | 20 | 40 |
+| GROWTH | 30 | 60 | 60 | 100 |
+| PRO | 100 | 200 | 200 | 500 |
 
 **Testing**: 80+ tests, ~62% code coverage
 
@@ -210,7 +210,7 @@ All significant project milestones and phases tracked here.
 - All 279 D1 migrations applied (524 tables)
 - Custom domain: api.mekongmind.com → raas-gateway v5.0.0
 - Dashboard signup/login pages deployed
-- Unified pricing: Free $0/50MCU, Starter $49/200, Pro $149/1000, Enterprise $499/unlimited
+- Unified pricing: Free $0/50MCU, Starter $49/200, Growth $149/1000, Pro $499/5000
 - Webhook failover: KV outage no longer blocks payments
 - 73 OpenClaw CLI tests added (benchmark, cost, health, mission)
 - M1 Max LLM configured: Ollama qwen2.5-coder + qwen3 (local fallback)
@@ -227,11 +227,11 @@ All significant project milestones and phases tracked here.
 - Segment-specific engagement recommendations
 - Dashboard integration for executives
 
-### Phase 23: Multi-Workspace Collaboration
-- Shared workspace features
-- Team member role management
+### Phase 23: Advanced Agent Orchestration
+- Multi-pipeline agent coordination
+- Agent role and permission management
 - Audit logging for compliance
-- Invitation and access control
+- API key and access control
 
 ### Phase 24: Performance Optimization
 - Database query optimization

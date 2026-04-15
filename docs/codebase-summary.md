@@ -253,10 +253,9 @@ CREATE TABLE tasks (
 
 | Tier | Price/mo | Credits | Daily Limit |
 |------|----------|---------|-------------|
-| Free | $0 | 10 | 3/day |
-| Starter | $79 | 150 | 15/day |
-| Pro | $249 | 750 | 50/day |
-| Enterprise | $599 | Unlimited* | Unlimited |
+| Starter | $49 | 200 | All departments |
+| Growth | $149 | 1,000 | + priority execution |
+| Pro | $499 | 5,000 | + dedicated support |
 
 **Command Costs:**
 ```
@@ -373,7 +372,7 @@ pytest tests/
 | Template | Agents | Use Case | Budget |
 |----------|--------|----------|--------|
 | **mekong-saas-startup** | 22 | Funded SaaS founders building full org | Scalable |
-| **mekong-dev-shop** | 8 | Dev agencies and engineering teams | 2,100 MCU/mo |
+| **mekong-dev-shop** | 8 | Solo developers running a full agency | 2,100 MCU/mo |
 | **mekong-solo-founder** | 5 | Solopreneurs shipping fast | 1,550 MCU/mo |
 
 **Features per template:**
