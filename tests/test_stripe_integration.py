@@ -12,8 +12,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# Mock stripe module if not available
+# Mock stripe module if not available — save original so we can restore it
+# after this test module finishes. Without restoration, tests that run AFTER
+# this file and patch 'stripe.Customer' or 'stripe.Subscription' would fail
+# because the real stripe package is a namespace package (not a plain module).
 import sys
+_original_stripe = sys.modules.get('stripe')
 mock_stripe = MagicMock()
 sys.modules['stripe'] = mock_stripe
 
@@ -24,6 +28,26 @@ from src.auth.stripe_integration import (  # noqa: E402
     get_tier_to_role_mapping,
 )
 from src.auth.rbac import Role  # noqa: E402
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _patch_stripe_in_integration_module():
+    """Patch the stripe reference inside src.auth.stripe_integration for this module.
+
+    test_auth_routes.py imports src.auth.stripe_integration at collection time
+    (before this file's sys.modules patch runs), so stripe_integration.stripe
+    holds a reference to the REAL stripe. We must also patch that reference so
+    stripe.Customer / stripe.Subscription lookups in these tests use the mock.
+    """
+    import src.auth.stripe_integration as _si_mod
+    original_stripe_in_si = _si_mod.stripe
+    _si_mod.stripe = mock_stripe
+    yield
+    _si_mod.stripe = original_stripe_in_si
+    if _original_stripe is not None:
+        sys.modules['stripe'] = _original_stripe
+    elif 'stripe' in sys.modules:
+        del sys.modules['stripe']
 
 
 class TestStripeCustomerDataclass:

@@ -58,9 +58,10 @@ class CreditStore:
     # ------------------------------------------------------------------
 
     def _connect(self) -> sqlite3.Connection:
-        """Return a configured SQLite connection."""
+        """Return a configured SQLite connection with WAL mode and busy timeout."""
         conn = sqlite3.connect(str(self.db_path), timeout=10)
         conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
         conn.row_factory = sqlite3.Row
         return conn
 
