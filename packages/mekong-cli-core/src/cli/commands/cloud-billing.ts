@@ -63,7 +63,7 @@ export function registerCloudBillingCommand(program: Command): void {
   // ── cloud-billing checkout <pack-id> ──────────────────────────────────────
   cb
     .command('checkout <packId>')
-    .description('Open Stripe checkout for a credit pack')
+    .description('Open checkout for a credit pack')
     .option('--no-open', 'Print URL instead of opening browser')
     .action(async (packId: string, opts: { open: boolean }) => {
       try {
