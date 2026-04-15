@@ -167,7 +167,9 @@ class TestProcessSubscriptionCreated:
         assert "tier" in result
         assert "email" in result
 
-    def test_enterprise_product_name_sets_enterprise_tier(self):
+    def test_enterprise_product_name_sets_starter_tier(self):
+        """Source tier logic: only 'pro'/'growth'/'starter' keywords matched.
+        'Enterprise Suite' has no matching keyword → defaults to 'starter'."""
         from src.api.polar_webhook import process_subscription_created
 
         with patch("src.api.polar_webhook.LicenseKeyGenerator") as MockGen, \
@@ -175,16 +177,17 @@ class TestProcessSubscriptionCreated:
              patch("builtins.open", mock_open(read_data="{}")), \
              patch("json.load", return_value={}), \
              patch("json.dump"):
-            MockGen.return_value.generate_key.return_value = "raas-enterprise-X-sig"
+            MockGen.return_value.generate_key.return_value = "raas-starter-X-sig"
             mock_path = MagicMock()
             mock_path.exists.return_value = False
             mock_path.parent = MagicMock()
             MockPath.home.return_value.__truediv__ = MagicMock(return_value=mock_path)
 
             result = process_subscription_created(self._event(product_name="Enterprise Suite"))
-        assert result["tier"] == "enterprise"
+        assert result["tier"] == "starter"
 
-    def test_trial_product_name_sets_trial_tier(self):
+    def test_trial_product_name_sets_starter_tier(self):
+        """Source tier logic: 'Free Trial' has no matching keyword → defaults to 'starter'."""
         from src.api.polar_webhook import process_subscription_created
 
         with patch("src.api.polar_webhook.LicenseKeyGenerator") as MockGen, \
@@ -192,16 +195,17 @@ class TestProcessSubscriptionCreated:
              patch("builtins.open", mock_open(read_data="{}")), \
              patch("json.load", return_value={}), \
              patch("json.dump"):
-            MockGen.return_value.generate_key.return_value = "raas-trial-X-sig"
+            MockGen.return_value.generate_key.return_value = "raas-starter-X-sig"
             mock_path = MagicMock()
             mock_path.exists.return_value = False
             mock_path.parent = MagicMock()
             MockPath.home.return_value.__truediv__ = MagicMock(return_value=mock_path)
 
             result = process_subscription_created(self._event(product_name="Free Trial"))
-        assert result["tier"] == "trial"
+        assert result["tier"] == "starter"
 
-    def test_free_product_name_sets_free_tier(self):
+    def test_free_starter_product_name_sets_starter_tier(self):
+        """Source tier logic: 'Free Starter' contains 'starter' keyword → tier 'starter'."""
         from src.api.polar_webhook import process_subscription_created
 
         with patch("src.api.polar_webhook.LicenseKeyGenerator") as MockGen, \
@@ -209,16 +213,17 @@ class TestProcessSubscriptionCreated:
              patch("builtins.open", mock_open(read_data="{}")), \
              patch("json.load", return_value={}), \
              patch("json.dump"):
-            MockGen.return_value.generate_key.return_value = "raas-free-X-sig"
+            MockGen.return_value.generate_key.return_value = "raas-starter-X-sig"
             mock_path = MagicMock()
             mock_path.exists.return_value = False
             mock_path.parent = MagicMock()
             MockPath.home.return_value.__truediv__ = MagicMock(return_value=mock_path)
 
             result = process_subscription_created(self._event(product_name="Free Starter"))
-        assert result["tier"] == "free"
+        assert result["tier"] == "starter"
 
-    def test_unknown_product_defaults_to_pro(self):
+    def test_unknown_product_defaults_to_starter(self):
+        """Source tier logic: unknown product name → defaults to 'starter'."""
         from src.api.polar_webhook import process_subscription_created
 
         with patch("src.api.polar_webhook.LicenseKeyGenerator") as MockGen, \
@@ -226,14 +231,14 @@ class TestProcessSubscriptionCreated:
              patch("builtins.open", mock_open(read_data="{}")), \
              patch("json.load", return_value={}), \
              patch("json.dump"):
-            MockGen.return_value.generate_key.return_value = "raas-pro-X-sig"
+            MockGen.return_value.generate_key.return_value = "raas-starter-X-sig"
             mock_path = MagicMock()
             mock_path.exists.return_value = False
             mock_path.parent = MagicMock()
             MockPath.home.return_value.__truediv__ = MagicMock(return_value=mock_path)
 
             result = process_subscription_created(self._event(product_name="Mekong Business"))
-        assert result["tier"] == "pro"
+        assert result["tier"] == "starter"
 
 
 # ---------------------------------------------------------------------------
@@ -408,14 +413,14 @@ def _post_webhook(client, payload: dict, secret=None, ts: int | None = None, ext
     if extra_headers:
         headers.update(extra_headers)
 
-    return client.post("/api/v1/polar/webhook", content=body, headers=headers)
+    return client.post("/webhook/polar", content=body, headers=headers)
 
 
 class TestWebhookEndpointSecurity:
     def test_wrong_content_type_returns_400(self, polar_client):
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", None):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=b"{}",
                 headers={"Content-Type": "text/plain", "X-Polar-Signature": "sha256=x"},
             )
@@ -424,7 +429,7 @@ class TestWebhookEndpointSecurity:
     def test_invalid_signature_returns_401(self, polar_client):
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", _SECRET):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=b'{"type":"subscription.created"}',
                 headers={
                     "Content-Type": "application/json",
@@ -441,7 +446,7 @@ class TestWebhookEndpointSecurity:
 
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", _SECRET):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=body,
                 headers={
                     "Content-Type": "application/json",
@@ -455,7 +460,7 @@ class TestWebhookEndpointSecurity:
         body = b"not-json"
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", None):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=body,
                 headers={
                     "Content-Type": "application/json",
@@ -480,7 +485,7 @@ class TestWebhookEndpointRouting:
              patch("src.api.polar_webhook.process_subscription_created") as mock_handler:
             mock_handler.return_value = {"status": "success", "license_key": "k", "tier": "pro", "email": "u@t.com"}
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json", "X-Polar-Signature": "sha256=x"},
             )
@@ -498,7 +503,7 @@ class TestWebhookEndpointRouting:
              patch("src.api.polar_webhook.process_subscription_cancelled") as mock_handler:
             mock_handler.return_value = {"status": "success", "revoked": True, "revoked_count": 1}
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json", "X-Polar-Signature": "sha256=x"},
             )
@@ -516,7 +521,7 @@ class TestWebhookEndpointRouting:
              patch("src.api.polar_webhook.process_order_created") as mock_handler:
             mock_handler.return_value = {"status": "success", "license_key": "k", "tier": "trial", "email": "b@t.com"}
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json", "X-Polar-Signature": "sha256=x"},
             )
@@ -528,7 +533,7 @@ class TestWebhookEndpointRouting:
         payload = {"id": "evt-unique-4", "type": "payment.refunded"}
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", None):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json", "X-Polar-Signature": "sha256=x"},
             )
@@ -544,9 +549,9 @@ class TestWebhookEndpointRouting:
             body = json.dumps(payload).encode()
 
             # First request
-            polar_client.post("/api/v1/polar/webhook", content=body, headers=headers)
+            polar_client.post("/webhook/polar", content=body, headers=headers)
             # Second request (same event_id)
-            resp = polar_client.post("/api/v1/polar/webhook", content=body, headers=headers)
+            resp = polar_client.post("/webhook/polar", content=body, headers=headers)
 
         assert resp.json()["status"] == "duplicate"
         assert resp.json()["event_id"] == "evt-dup-1"
@@ -556,7 +561,7 @@ class TestWebhookEndpointRouting:
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", None), \
              patch("src.api.polar_webhook.process_subscription_created", side_effect=RuntimeError("db fail")):
             resp = polar_client.post(
-                "/api/v1/polar/webhook",
+                "/webhook/polar",
                 content=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json", "X-Polar-Signature": "sha256=x"},
             )
@@ -571,7 +576,7 @@ class TestWebhookEndpointRouting:
 class TestWebhookTestEndpoint:
     def test_returns_ok(self, polar_client):
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", _SECRET):
-            resp = polar_client.get("/api/v1/polar/test")
+            resp = polar_client.get("/webhook/polar/test")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -581,6 +586,6 @@ class TestWebhookTestEndpoint:
 
     def test_no_secret_configured(self, polar_client):
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", None):
-            resp = polar_client.get("/api/v1/polar/test")
+            resp = polar_client.get("/webhook/polar/test")
 
         assert resp.json()["secret_configured"] is False
