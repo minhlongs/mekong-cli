@@ -70,8 +70,8 @@ export function registerCloudBillingCommand(program: Command): void {
         const client = requireCloudClient();
         const result = await client.billing.createCheckout({
           pack_id: packId,
-          success_url: 'https://mekong-raas.pages.dev/?checkout=success',
-          cancel_url: 'https://mekong-raas.pages.dev/?checkout=cancelled',
+          success_url: 'https://www.mekongmind.com/?checkout=success',
+          cancel_url: 'https://www.mekongmind.com/?checkout=cancelled',
         });
         success(`Checkout URL: ${result.checkout_url}`);
         if (opts.open) {
