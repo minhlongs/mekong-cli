@@ -24,7 +24,7 @@
     "default_model": "auto"
   },
   "polar_checkout_url": null,
-  "target_audience": "Compliance teams and auditors",
+  "target_audience": "Solo operators handling their own compliance",
   "use_cases": [
     "Continuous compliance monitoring and alerting",
     "Automated audit trail generation",

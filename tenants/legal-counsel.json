@@ -1,7 +1,7 @@
 {
   "name": "Legal Counsel",
   "slug": "legal-counsel",
-  "tagline": "assisted legal operations and compliance",
+  "tagline": "Legal operations and compliance for the solo founder",
   "description": "Contract review, compliance checks, regulatory analysis, and legal document generation powered by agents.",
   "featured_departments": [
     "legal",
@@ -24,7 +24,7 @@
     "default_model": "auto"
   },
   "polar_checkout_url": null,
-  "target_audience": "Legal teams and compliance officers",
+  "target_audience": "Solo founders navigating legal without a lawyer",
   "use_cases": [
     "Review contracts and flag risk clauses",
     "Generate compliance reports automatically",

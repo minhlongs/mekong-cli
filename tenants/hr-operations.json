@@ -1,8 +1,8 @@
 {
   "name": "HR Operations",
   "slug": "hr-operations",
-  "tagline": "Automate HR workflows with agents",
-  "description": "Recruitment, onboarding, performance reviews, and employee management powered by HR agents.",
+  "tagline": "Automate contractor and hiring workflows with agents",
+  "description": "Recruitment, onboarding, performance reviews, and contractor management powered by HR agents.",
   "featured_departments": [
     "hr",
     "business"
@@ -23,7 +23,7 @@
     "default_model": "auto"
   },
   "polar_checkout_url": null,
-  "target_audience": "HR managers and people ops teams",
+  "target_audience": "Solo founders managing contractors and hiring",
   "use_cases": [
     "Screen resumes and rank candidates with AI",
     "Generate onboarding checklists and materials",
