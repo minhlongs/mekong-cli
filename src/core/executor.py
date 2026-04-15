@@ -5,6 +5,7 @@ Executes recipes parsed from Markdown files.
 Returns ExecutionResult for orchestrator integration.
 """
 
+import shlex
 import subprocess
 import time
 from rich.console import Console
@@ -321,8 +322,12 @@ class RecipeExecutor:
             self.console.print(f"[dim]Running:[/dim] {command}")
 
             try:
+                # shell=False: split string into list to prevent command injection.
+                # CommandSanitizer already vetted `command`, but shell=True still
+                # allows metachar injection (;, &&, $()) on unsanitised sub-parts.
+                cmd_args = shlex.split(command) if isinstance(command, str) else command
                 process = subprocess.run(
-                    command, shell=True, check=True, text=True, capture_output=True
+                    cmd_args, shell=False, check=True, text=True, capture_output=True
                 )
 
                 if process.stdout:

@@ -26,6 +26,9 @@ from src.raas.reports_router import router as reports_router
 from src.raas.autopilot import router as autopilot_router
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
+from src.core.sentry_init import init_sentry
+
+init_sentry()
 
 logger = logging.getLogger(__name__)
 
