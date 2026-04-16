@@ -12,7 +12,6 @@ from src.binh_phap.immortal_loop import main as run_immortal_loop
 from src.binh_phap.topology import (
     TopologyEngine,
     CHAPTER_COMMANDS,
-    DIAGONAL_LOOP,
     CycleLesson,
 )
 

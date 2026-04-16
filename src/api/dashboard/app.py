@@ -36,7 +36,7 @@ app.add_middleware(SessionMiddleware)
 
 # CORS middleware - Security: wildcard origin is incompatible with
 # allow_credentials=True (CORS spec). Use explicit origins from env var.
-import os as _os
+import os as _os  # noqa: E402 — intentional late import for security-scoped config
 
 _ALLOWED_ORIGINS: list[str] = [
     o.strip()
