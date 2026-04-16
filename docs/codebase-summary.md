@@ -76,6 +76,12 @@ packages/
 │   │   │   │   ├── executor.py
 │   │   │   │   ├── verifier.py
 │   │   │   │   └── orchestrator.py
+│   │   │   ├── telemetry/        # Layer 2: OpenTelemetry SDK
+│   │   │   │   ├── observe.py    # @observe_agent decorator + metrics
+│   │   │   │   └── otel_setup.py
+│   │   │   ├── signals/          # Layer 2: Signals loop (SQLite evals)
+│   │   │   │   ├── evals.py
+│   │   │   │   └── emit.py
 │   │   │   ├── llm_client.py      # Router (3 env vars)
 │   │   │   ├── llm_providers.yaml
 │   │   │   ├── skill_loader.py
@@ -87,6 +93,16 @@ packages/
 │   │   │   │   ├── tasks.py
 │   │   │   │   └── ... (10+ route groups)
 │   │   ├── agents/
+│   │   ├── cli/
+│   │   │   ├── commands/
+│   │   │   │   ├── metrics.py     # Layer 2: mekong metrics
+│   │   │   │   ├── eval_agent.py  # Layer 2: mekong eval-agent
+│   │   │   │   └── ... (sdlc commands in phase-04)
+│   │   │   └── sdlc/              # Layer 2: SDLC scaffold (phase-04)
+│   │   │       ├── spec_command.py
+│   │   │       ├── design_command.py
+│   │   │       ├── code_command.py
+│   │   │       └── deploy_command.py
 │   │   └── tests/
 │   └── pyproject.toml
 ├── agents/
