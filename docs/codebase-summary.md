@@ -58,7 +58,7 @@
 - **Database:** Cloudflare D1 (SQLite) + PostgreSQL (optional)
 - **Cache:** Cloudflare KV + Redis (optional)
 - **Storage:** Cloudflare R2 (S3-compatible)
-- **Messaging:** Stripe/Polar webhooks + email
+- **Messaging:** Polar.sh webhooks + email
 
 ---
 
@@ -200,7 +200,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | `POST /v1/tasks` | Execute command |
 | `POST /v1/agents/spawn` | Spawn agent |
 | `POST /v1/chat/completions` | Chat API |
-| `POST /payment/webhook` | NOWPayments webhook |
+| `POST /webhook/polar` | Polar.sh subscription/order events |
 | `GET /v1/reports` | Analytics |
 
 **Middleware:**

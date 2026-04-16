@@ -175,7 +175,7 @@ class TestTaskResult:
 class TestGatewayConfig:
     def test_defaults(self):
         cfg = GatewayConfig()
-        assert cfg.base_url == "https://raas.agencyos.network"
+        assert cfg.base_url == "https://api.cashclaw.cc"
         assert cfg.api_version == "v2"
         assert cfg.timeout_seconds == 30
         assert cfg.retry_attempts == 3
@@ -197,7 +197,7 @@ class TestRaasTaskClientInit:
         with patch("src.lib.raas_task_client.get_auth_client", return_value=mock_auth), \
              patch("src.lib.raas_task_client.get_audit_logger", return_value=mock_audit_logger):
             c = RaasTaskClient()
-        assert c.config.base_url == "https://raas.agencyos.network"
+        assert c.config.base_url == "https://api.cashclaw.cc"
 
     def test_session_has_default_headers(self, client):
         assert client._session.headers["Content-Type"] == "application/json"

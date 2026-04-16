@@ -197,14 +197,14 @@ class AuthGatewayMixin:
         """
         session = self.get_session()
         if not session.authenticated:
-            return {"synced": False, "error": "Not authenticated", "dashboard_url": "https://agencyos.network/dashboard"}
+            return {"synced": False, "error": "Not authenticated", "dashboard_url": "https://www.mekongmind.com/dashboard"}
 
         try:
             creds = self._load_credentials()
             token = creds.get("token") or os.getenv("RAAS_LICENSE_KEY")
 
             if not token:
-                return {"synced": False, "error": "No credentials", "dashboard_url": "https://agencyos.network/dashboard"}
+                return {"synced": False, "error": "No credentials", "dashboard_url": "https://www.mekongmind.com/dashboard"}
 
             _req = _get_requests()
             response = _req.post(
@@ -227,16 +227,16 @@ class AuthGatewayMixin:
                     "synced": True,
                     "tenant_id": tenant_id,
                     "tier": data.get("tier"),
-                    "dashboard_url": f"https://agencyos.network/dashboard/{tenant_id}",
+                    "dashboard_url": f"https://www.mekongmind.com/dashboard/{tenant_id}",
                     "features": data.get("features", []),
                     "rate_limit": data.get("rateLimit"),
                     "gateway_version": data.get("gateway", {}).get("version"),
                 }
             else:
-                return {"synced": False, "error": f"Gateway returned {response.status_code}", "dashboard_url": "https://agencyos.network/dashboard"}
+                return {"synced": False, "error": f"Gateway returned {response.status_code}", "dashboard_url": "https://www.mekongmind.com/dashboard"}
 
         except _requests_base.RequestException as e:
-            return {"synced": False, "error": f"Sync failed: {str(e)}", "dashboard_url": "https://agencyos.network/dashboard"}
+            return {"synced": False, "error": f"Sync failed: {str(e)}", "dashboard_url": "https://www.mekongmind.com/dashboard"}
 
     def get_gateway_health(self) -> Dict[str, Any]:
         """Check RaaS Gateway health status."""

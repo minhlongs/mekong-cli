@@ -119,7 +119,7 @@ def activate(
             console.print("[yellow]⚠️ Dashboard sync queued (will retry)[/yellow]\n")
 
         # Show dashboard link
-        dashboard_url = f"https://agencyos.network/dashboard/{result.tenant.tenant_id}"
+        dashboard_url = f"https://www.mekongmind.com/dashboard/{result.tenant.tenant_id}"
         console.print(
             Panel(
                 f"Gateway: {client.gateway_url}\n"

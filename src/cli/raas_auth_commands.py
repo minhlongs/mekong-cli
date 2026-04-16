@@ -227,7 +227,7 @@ def validate(
     Examples:
         mekong auth validate
         mekong auth validate -t mk_abc123
-        mekong auth validate -g https://raas.agencyos.network
+        mekong auth validate -g https://api.cashclaw.cc
     """
     from src.core.raas_auth import RaaSAuthClient
 

@@ -615,7 +615,7 @@ def billing_sync(
         )
         raise SystemExit(1)
 
-    console.print("Gateway: [cyan]https://raas.agencyos.network/v2/usage[/cyan]")
+    console.print("Gateway: [cyan]https://api.cashclaw.cc/v2/usage[/cyan]")
     console.print(f"API Key: [cyan]mk_***{api_key[-4:] if len(api_key) > 4 else api_key}[/cyan]")
     console.print()
 

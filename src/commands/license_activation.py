@@ -96,7 +96,7 @@ def activate_license(
         console.print(f"[bold red]✗ Validation failed: {result.error}[/bold red]\n")
         console.print(
             "[dim]Get a license key from:[/dim]\n"
-            "  [cyan]https://raas.agencyos.network[/cyan]\n"
+            "  [cyan]https://api.cashclaw.cc[/cyan]\n"
         )
         raise SystemExit(1)
 
@@ -304,7 +304,7 @@ def _display_license_summary(license_data, verbose: bool = False) -> None:
     if verbose:
         if license_data.features:
             console.print(f"\n[dim]Features: {', '.join(license_data.features)}[/dim]")
-        console.print("[dim]Gateway: https://raas.agencyos.network[/dim]\n")
+        console.print("[dim]Gateway: https://api.cashclaw.cc[/dim]\n")
 
 
 # Export for registration in main.py

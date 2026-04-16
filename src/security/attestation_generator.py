@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # RaaS Gateway configuration
 RAAS_GATEWAY_CONFIG = {
-    "base_url": os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network"),
+    "base_url": os.getenv("RAAS_GATEWAY_URL", "https://api.cashclaw.cc"),
     "api_key_prefix": "mk_",
     "jwt_audience": "mekong-cli-security",
     "kv_namespace": "security-attestations",

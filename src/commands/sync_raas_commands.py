@@ -187,7 +187,7 @@ def _display_sync_summary(entitlements: dict, verbose: bool = False) -> None:
 
     if verbose:
         console.print("\n[dim]Anonymized analytics pushed to MekongMind dashboard[/dim]")
-        console.print("[dim]Dashboard: https://agencyos.network[/dim]\n")
+        console.print("[dim]Dashboard: https://www.mekongmind.com[/dim]\n")
 
 
 @app.command("status")

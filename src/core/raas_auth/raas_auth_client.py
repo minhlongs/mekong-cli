@@ -53,11 +53,11 @@ class _RaaSAuthClientBase(AuthCredentialsMixin, AuthCertificateMixin, AuthGatewa
     - AuthGatewayMixin: _call_gateway_validation, validate_credentials, verify_gateway, sync_to_dashboard, get_gateway_health
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
 
     GATEWAY_URLS = [
-        os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network"),
-        os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.agencyos.network"),
+        os.getenv("RAAS_GATEWAY_URL", "https://api.cashclaw.cc"),
+        os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://api.cashclaw.cc"),
         os.getenv("RAAS_GATEWAY_URL_TERTIARY"),
     ]
 

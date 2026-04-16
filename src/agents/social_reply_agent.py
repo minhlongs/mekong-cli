@@ -59,7 +59,7 @@ class SocialReplyAgent:
             llm_client: Configured LLMClient (from src.core.llm_client.get_client).
         """
         self.llm = llm_client
-        self.raas_url = os.getenv("RAAS_URL", "https://agencyos.network")
+        self.raas_url = os.getenv("RAAS_URL", "https://www.mekongmind.com")
         self._reply_log = Path.home() / ".mekong" / "social" / "reply-log.jsonl"
         self._reply_log.parent.mkdir(parents=True, exist_ok=True)
         self._replied_ids = self._load_replied_ids()

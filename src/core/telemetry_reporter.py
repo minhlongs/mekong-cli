@@ -48,7 +48,7 @@ class TelemetryReporter:
             gateway_url: Optional gateway URL for flushing
         """
         self.gateway_url = gateway_url or os.getenv(
-            "RAAS_GATEWAY_URL", "https://raas.agencyos.network"
+            "RAAS_GATEWAY_URL", "https://api.cashclaw.cc"
         )
         self.db_path = Path(self.DB_PATH).expanduser()
         self._buffer: list[UsageRecord] = []
