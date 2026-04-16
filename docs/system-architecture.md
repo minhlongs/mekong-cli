@@ -1128,7 +1128,41 @@ The authentication layer implements OAuth2-based user authentication with JWT se
 | `STRIPE_SECRET_KEY` | (optional) | Stripe API key |
 | `STRIPE_WEBHOOK_SECRET` | (optional) | Stripe webhook secret |
 
-## 11. Health Monitoring System
+## 11. Layer 2: Observability & Feedback Loop
+
+**Added 2026-04-16.** Self-hosted observability stack + signals for model evaluation + SDLC scaffold.
+
+### Observability (OTel → Prometheus → Grafana)
+
+**Stack:** OpenTelemetry collector → Prometheus (M1 Max) → Grafana (CF Tunnel `m1max.cashclaw.cc`)
+
+**Metrics tracked:**
+- `agent.invocation_ms` — Agent latency
+- `agent.token_cost_usd` — Token consumption cost
+- `agent.retry_total` — Retry attempts
+- `agent.model_drift_score` — LLM consistency
+- `mlx.gpu_utilization_percent` — M1 Max GPU
+
+**Dashboards:** `observability/dashboards/` (agent-performance.json, m1max-health.json, cost-analysis.json)
+
+### Signals Loop (SQLite evals + Statsig/PostHog)
+
+**Phases:** Offline evals (SQLite) → Online A/B tests (Statsig) → Amplitude analytics (deferred >50 customers)
+
+**Location:** `.mekong/phases/signals/canary_flags.json` (feature gate state)
+
+### Enforcement Gates (5 GitHub Actions)
+
+**`.github/workflows/gates.yml`:** Runs on every PR to main.
+- g1-validation: Type checks, syntax validation
+- g2-security: Secret scanning, dependency audit
+- g3-quality: Linting, coverage > 80%
+- g4-dependency: Dependency freshness
+- g5-deploy: CF Pages deploy test
+
+---
+
+## 12. Health Monitoring System
 
 > **Phase 1-5 Monitoring Architecture** — Real-time detection, alerting, and automated recovery
 

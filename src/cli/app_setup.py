@@ -25,6 +25,16 @@ def build_app() -> typer.Typer:
     from src.cli.autonomous_commands import autonomous_app, telegram_app
     from src.cli.tools_browse_collab_commands import tools_app, browse_app, collab_app
 
+    # SDLC scaffold sub-apps (phase-04)
+    from src.cli.sdlc.spec import spec_app
+    from src.cli.sdlc.design import design_app
+    from src.cli.sdlc.code import code_app
+    from src.cli.sdlc.deploy import deploy_app
+
+    # Phase-03 flat commands (signals loop)
+    from src.cli.commands.metrics import register as register_metrics
+    from src.cli.commands.eval_agent import register as register_eval_agent
+
     # Flat command group registrations
     from src.cli.cook_command import register_cook_command
     from src.cli.workflow_commands import register_workflow_commands
@@ -58,10 +68,20 @@ def build_app() -> typer.Typer:
     root.add_typer(browse_app, name="browse")
     root.add_typer(collab_app, name="collab")
 
+    # Wire SDLC scaffold sub-apps (phase-04)
+    root.add_typer(spec_app, name="spec", help="Spec phase: feature request → requirements")
+    root.add_typer(design_app, name="design", help="Design phase: requirements → architecture")
+    root.add_typer(code_app, name="code", help="Code phase: architecture → task backlog")
+    root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates → ship/hold")
+
     # Register flat command groups
     register_cook_command(root)
     register_workflow_commands(root)
     register_recipe_commands(root)
     register_system_commands(root)
+
+    # Phase-03 signals commands (metrics + offline evals)
+    register_metrics(root)
+    register_eval_agent(root)
 
     return root

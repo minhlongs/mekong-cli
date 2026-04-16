@@ -1,0 +1,18 @@
+# Semgrep ignore — exclude non-production paths
+node_modules/
+.venv/
+dist/
+build/
+docs/
+*.md
+*.txt
+*.json
+*.yaml
+*.yml
+*.toml
+__pycache__/
+*.pyc
+.git/
+coverage.xml
+logs/
+tmp/
