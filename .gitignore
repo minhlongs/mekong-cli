@@ -1,3 +1,12 @@
+# Observability stack — runtime data and secrets
+observability/data/
+.env.observability
+
+# Signals loop — phase-03
+data/signals.sqlite
+.env.posthog
+posthog-data/
+
 # Archived projects (moved from apps/)
 _archived/
 
@@ -171,7 +180,7 @@ release-manifest.json
 # Logs & Temporary Files
 logs/
 /memory/
-signals/
+/signals/
 temp_well/
 *.log
 **/logs/
@@ -290,7 +299,7 @@ agents/
 !/agents/
 !packages/**/agents/
 # algo-trader has its own repo: github.com/longtho638-jpg/algo-trader
-cli/
+/cli/
 !packages/**/cli/
 workers/
 mekong-docs/
@@ -349,8 +358,15 @@ poetry.lock.backup
 
 # Additional internal dirs
 .mekong/
+!.mekong/phases/
 .workflow-migration-backup-*/
 packages/cleo/
+
+# Phase templates — committed, but rest of .mekong/ runtime state stays private
+!/.mekong/
+/.mekong/*
+!/.mekong/phases/
+!/.mekong/phases/**
 
 # Additional excluded apps
 apps/raas-demo/
@@ -368,6 +384,9 @@ packages/vibe-supabase/
 .gemini/
 .env*
 !.env.example
+!.env.*.template
+!.env.observability.template
+!.env.posthog.template
 .tom_hum_state.json
 .warp_config.json
 .cursorrules

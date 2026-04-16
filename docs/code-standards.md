@@ -286,14 +286,57 @@ def test_executor_with_mock_llm(mock_chat):
     assert result.success
 ```
 
-## 8. Documentation
+## 8. Observability & Telemetry (Layer 2)
+
+### Instrumentation
+
+All agent invocations **must** use the `@observe_agent` decorator:
+
+```python
+from src.core.telemetry import observe_agent
+
+@observe_agent("my-agent")
+def execute_mission(goal: str) -> Result:
+    """Execute mission with automatic telemetry."""
+    return result
+
+# Emits: agent.invocation_ms, agent.token_cost_usd, agent.retry_total
+```
+
+### Signals Emission
+
+For eval tracking, emit mission events:
+
+```python
+from src.core.signals import emit_mission_event
+
+emit_mission_event(
+    agent_id="agent-123",
+    event_type="success",
+    latency_ms=1500,
+    token_cost=0.25,
+    model_drift_score=0.95
+)
+```
+
+### Key Metrics
+
+| Metric | Unit | Purpose |
+|--------|------|---------|
+| `agent.invocation_ms` | milliseconds | Agent execution latency |
+| `agent.token_cost_usd` | USD | LLM token consumption |
+| `agent.retry_total` | count | Failure recovery attempts |
+| `agent.model_drift_score` | 0-1 | LLM consistency (model switch cost) |
+| `mlx.gpu_utilization_percent` | % | M1 Max GPU usage |
+
+## 9. Documentation
 
 - Add docstrings to all public functions/classes
 - Update CHANGELOG.md for features
 - Include examples in docstrings for non-obvious APIs
 - API docs auto-generated via FastAPI + OpenAPI
 
-## 9. Getting Help
+## 10. Getting Help
 
 - **Docs**: `/docs` directory
 - **Issues**: GitHub issues for bugs/features
