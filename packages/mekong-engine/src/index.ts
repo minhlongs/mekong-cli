@@ -91,8 +91,8 @@ app.onError((err, c) => {
 app.use('*', payloadSizeLimit())
 app.use('*', cors({
   origin: [
-    'https://agencyos.network',
-    'https://api.agencyos.network',
+    'https://www.mekongmind.com',
+    'https://api.cashclaw.cc',
     'http://localhost:4321',  // astro dev
     'http://localhost:3001',  // dashboard dev
   ],
@@ -114,7 +114,7 @@ initAlerts()
 app.get('/', (c) => c.json({
   service: 'mekong-engine',
   version: '3.2.0',
-  docs: 'https://agencyos.network/docs',
+  docs: 'https://www.mekongmind.com/docs',
   health: '/health',
   api: '/v1',
 }))

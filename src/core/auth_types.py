@@ -180,7 +180,7 @@ class SessionCache:
 
 
 # Module constants
-DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
 VERIFY_ENDPOINT = "/v1/verify"
 VALIDATION_ENDPOINT_V1 = "/v1/auth/validate"
 VALIDATION_ENDPOINT_V2 = "/v2/license/validate"

@@ -65,7 +65,7 @@ All providers launch from `~/mekong-cli` root, ensuring `.claude/commands/` disc
 ```
 ┌─────────────────────────────────────────────────────┐
 │  CLI: mekong cook/fix/plan/deploy/...              │
-│  Dashboard: agencyos.network → /v1/missions        │
+│  IDE: ide.mekongmind.com → /v1/missions            │
 └──────────────────┬──────────────────────────────────┘
                    │
          ┌─────────▼──────────┐
@@ -227,11 +227,11 @@ Deploy: CF Pages (frontend via `git push`) + CF Workers (backend via `wrangler d
 | Tier | Credits/mo | Price |
 |------|-----------|-------|
 | Starter | 200 | $49 |
-| Pro | 1,000 | $149 |
-| Enterprise | Unlimited | $499 |
+| Growth | 1,000 | $149 |
+| Pro | 5,000 | $499 |
 
 - Zero balance → HTTP 402
-- NOWPayments webhooks = only payment source
+- Polar.sh webhooks → license provisioning + credit allocation
 - Audit trail for every transaction
 
 ---

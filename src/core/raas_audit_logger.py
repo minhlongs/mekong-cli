@@ -2,7 +2,7 @@
 RaaS Audit Logger — Compliance & Observability
 
 Posts audit events to RaaS Gateway:
-  POST https://raas.agencyos.network/v2/audit
+  POST https://api.cashclaw.cc/v2/audit
   Headers: Authorization: Bearer {mk_...}, X-JWT-Attribution: {jwt}
   Payload: {
     "project": "mekong-cli",
@@ -95,13 +95,13 @@ class RAASAuditLogger:
     - Full interaction tracing for --raas-debug
 
     Environment variables:
-    - RAAS_GATEWAY_URL: Gateway endpoint (default: https://raas.agencyos.network)
+    - RAAS_GATEWAY_URL: Gateway endpoint (default: https://api.cashclaw.cc)
     - RAAS_LICENSE_KEY: mk_ API key for authentication
     - RAAS_DEBUG: Enable debug tracing (default: False)
     - GITHUB_SHA: Commit SHA for audit events
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
     AUDIT_ENDPOINT = "/v2/audit"
 
     def __init__(

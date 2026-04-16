@@ -103,7 +103,7 @@ export function createWelcomeEmail(data: WelcomeEmailData): EmailTemplate {
     <h4>📚 Resources:</h4>
     <ul>
       <li><a href="${data.docsUrl}">Documentation & Quickstart Guide</a></li>
-      <li><a href="https://docs.agencyos.network/guides/commands">Command Reference</a></li>
+      <li><a href="https://www.mekongmind.com/docs/guides/commands">Command Reference</a></li>
       <li><a href="https://discord.gg/mekong">Join our Discord community</a></li>
     </ul>
 
@@ -112,7 +112,7 @@ export function createWelcomeEmail(data: WelcomeEmailData): EmailTemplate {
 
   <div class="footer">
     <p>Mekong RaaS - AI-operated business platform</p>
-    <p>Questions? Contact us at hello@agencyos.network</p>
+    <p>Questions? Contact us at hello@mekongmind.com</p>
   </div>
 </body>
 </html>
@@ -141,7 +141,7 @@ Open Dashboard: ${data.dashboardUrl}
 
 📚 RESOURCES:
 - Documentation: ${data.docsUrl}
-- Command Reference: https://docs.agencyos.network/guides/commands
+- Command Reference: https://www.mekongmind.com/docs/guides/commands
 - Discord: https://discord.gg/mekong
 
 Need help? Reply to this email or join our Discord!
@@ -533,7 +533,7 @@ export function createSetupReminderEmail(data: { tenantName: string; businessNam
       <a href="${data.setupUrl}" class="button">Complete Setup (5 min)</a>
     </p>
 
-    <p><small>Need help? Check our <a href="https://docs.agencyos.network/guides/quickstart">Quick Start Guide</a></small></p>
+    <p><small>Need help? Check our <a href="https://www.mekongmind.com/docs/guides/quickstart">Quick Start Guide</a></small></p>
   </div>
 
   <div class="footer">
@@ -558,7 +558,7 @@ QUICK SETUP CHECKLIST:
 
 Complete here: ${data.setupUrl}
 
-Need help? Check our Quick Start Guide: https://docs.agencyos.network/guides/quickstart
+Need help? Check our Quick Start Guide: https://www.mekongmind.com/docs/guides/quickstart
 
 --
 Mekong RaaS

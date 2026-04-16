@@ -121,7 +121,7 @@ class TaskResult:
 @dataclass
 class GatewayConfig:
     """RaaS Gateway configuration."""
-    base_url: str = "https://raas.agencyos.network"
+    base_url: str = "https://api.cashclaw.cc"
     api_version: str = "v2"
     timeout_seconds: int = 30
     retry_attempts: int = 3

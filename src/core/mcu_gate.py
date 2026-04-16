@@ -140,7 +140,7 @@ class MCUGate:
                     error="tenant_not_found",
                     available=0,
                     required=mcu_amount,
-                    recharge_url=f"https://agencyos.network/billing?tenant={tenant_id}",
+                    recharge_url=f"https://www.mekongmind.com/billing?tenant={tenant_id}",
                 )
 
             available = row["balance"] - row["locked"]
@@ -152,7 +152,7 @@ class MCUGate:
                     error="insufficient_mcu",
                     available=available,
                     required=mcu_amount,
-                    recharge_url=f"https://agencyos.network/billing?tenant={tenant_id}",
+                    recharge_url=f"https://www.mekongmind.com/billing?tenant={tenant_id}",
                 )
 
             # Lock MCU

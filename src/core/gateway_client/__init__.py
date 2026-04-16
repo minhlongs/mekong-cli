@@ -44,8 +44,8 @@ from .models import CircuitState, GatewayError, GatewayResponse
 
 # Ordered failover list; None entries are skipped at runtime
 GATEWAY_URLS: list[Optional[str]] = [
-    os.getenv("RAAS_GATEWAY_URL", "https://raas.agencyos.network"),
-    os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://raas-backup.agencyos.network"),
+    os.getenv("RAAS_GATEWAY_URL", "https://api.cashclaw.cc"),
+    os.getenv("RAAS_GATEWAY_URL_SECONDARY", "https://api.cashclaw.cc"),
     os.getenv("RAAS_GATEWAY_URL_TERTIARY"),  # Optional tertiary
 ]
 
@@ -62,7 +62,7 @@ class GatewayClient:
     - HALF-OPEN: Testing recovery after timeout
     """
 
-    DEFAULT_GATEWAY_URL = "https://raas.agencyos.network"
+    DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
 
     def __init__(
         self,

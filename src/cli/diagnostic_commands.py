@@ -53,7 +53,7 @@ def check_gateway(
 
     Examples:
         mekong diagnostic gateway
-        mekong diagnostic gateway -u https://raas.agencyos.network
+        mekong diagnostic gateway -u https://api.cashclaw.cc
         mekong diagnostic gateway -t 5
     """
     import requests
@@ -62,7 +62,7 @@ def check_gateway(
     console.print("[bold cyan]🌐 RaaS Gateway Connectivity Test[/bold cyan]\n")
 
     # Resolve gateway URL
-    gateway_url = url or GATEWAY_URLS[0] or "https://raas.agencyos.network"
+    gateway_url = url or GATEWAY_URLS[0] or "https://api.cashclaw.cc"
 
     console.print(f"Testing: [cyan]{gateway_url}[/cyan]\n")
 
@@ -221,7 +221,7 @@ def check_auth(
     Examples:
         mekong diagnostic auth
         mekong diagnostic auth -t mk_abc123
-        mekong diagnostic auth -g https://raas.agencyos.network
+        mekong diagnostic auth -g https://api.cashclaw.cc
     """
     from src.core.raas_auth import RaaSAuthClient
 
@@ -331,7 +331,7 @@ def check_rate_limit(
 
     console.print("[bold cyan]🚦 Rate Limit Enforcement Test[/bold cyan]\n")
 
-    url = gateway_url or GATEWAY_URLS[0] or "https://raas.agencyos.network"
+    url = gateway_url or GATEWAY_URLS[0] or "https://api.cashclaw.cc"
     test_endpoint = f"{url}/health"
 
     console.print(f"Testing: [cyan]{test_endpoint}[/cyan]")

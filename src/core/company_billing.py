@@ -181,7 +181,7 @@ def get_topup_info(amount: int) -> dict:
         "price": pack["price"],
         "per_mcu": pack["per_mcu"],
         "discount": pack["discount"],
-        "checkout_url": f"https://app.agencyos.network/billing/topup/{amount}",
+        "checkout_url": f"https://ide.mekongmind.com/billing/topup/{amount}",
     }
 
 

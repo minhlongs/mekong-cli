@@ -1,19 +1,19 @@
-# System Architecture: Mekong CLI v5.0.0 (OpenClaw v2026.3.23)
+# System Architecture: Mekong CLI v6.0.0 (OpenClaw v2026.4.16)
 
-**Last Updated:** 2026-03-23 | **Status:** Production
+**Last Updated:** 2026-04-16 | **Status:** Production
 
 ### Platform Endpoints
 
 | Service | URL | Type |
 |---------|-----|------|
-| Landing | mekongmind.com | CF Pages (project: mekongmind) |
-| Use Cases | mekongmind.com/use-cases/* | CF Pages (project: mekongmind) |
-| IDE App | mekongmind.com/ide | CF Pages (project: mekongmind) |
-| Reports | mekongmind.com/reports | CF Pages (project: mekongmind) |
-| Dashboard | mekongmind.com/dashboard | CF Pages (project: mekongmind) |
-| API | api.mekongmind.com | CF Workers v5.0.0 |
-| Docs | mekongmind.com/docs | CF Pages (project: mekongmind) |
-| LLM | 192.168.11.111:11434 | Ollama (M1 Max) |
+| Landing | www.mekongmind.com | CF Pages (project: mekongmind) |
+| Use Cases | www.mekongmind.com/{slug}/ | CF Pages (project: mekongmind) |
+| IDE App | ide.mekongmind.com | CF Pages (project: mekong-ide) |
+| Guide | www.mekongmind.com/guide/ | CF Pages (project: mekongmind) |
+| API Gateway | api.cashclaw.cc | FastAPI on M1 Max (CF Tunnel) |
+| Webhook | api.cashclaw.cc/webhook/polar | Polar.sh payment events |
+| Docs | www.mekongmind.com/docs | CF Pages (project: mekongmind) |
+| LLM | localhost:11434 | Ollama (M1 Max, 5 models, 95GB) |
 
 ## 1. High-Level Overview
 
@@ -71,7 +71,7 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ RaaS Gateway: Cloudflare KV (rate limiting cache) │  │
-│  │ NOWPayments Webhooks: payment → credit allocation    │  │
+│  │ Polar.sh Webhooks: payment → license + credit allocation    │  │
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────┬───────────────────────────────────────┘
                    │
@@ -147,7 +147,7 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐  │
 │  │ RaaS Gateway: Cloudflare KV (rate limiting cache) │  │
-│  │ NOWPayments Webhooks: payment → credit allocation    │  │
+│  │ Polar.sh Webhooks: payment → license + credit allocation    │  │
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -436,7 +436,7 @@ Multi-tenant billing with SQLite backend:
 - `tenant.py` — Tenant management (create, list, rotate API keys)
 - `credits.py` — Credit ledger (add, deduct, check balance)
 - `missions.py` — Mission lifecycle (create, execute, complete, cancel)
-- `billing.py` — NOWPayments webhook receiver
+- `billing.py` — Polar.sh webhook receiver
 - `sdk.py` — Python client SDK
 - `rate_limiter.py` — Fair-use rate limiting per tenant
 
@@ -449,7 +449,7 @@ Multi-tenant billing with SQLite backend:
 
 **Workflow:**
 1. User creates tenant → gets API key
-2. Admin adds credits via NOWPayments purchase
+2. User purchases credits via Polar.sh checkout
 3. User submits mission via API
 4. Mission plan estimates credits → reserved
 5. Execution completes → credits deducted
@@ -573,12 +573,12 @@ GET    /api/v1/billing/usage    # Get tenant usage metrics
 | 1-10 MCU | 1 | Simple (single step) |
 | 11-30 MCU | 3 | Standard (multi-step) |
 | 31-60 MCU | 5 | Complex (parallel tasks) |
-| 61+ MCU | 8 | Enterprise (advanced) |
+| 61+ MCU | 8 | Critical (advanced) |
 
 **Billing Tiers:**
-- Free: 10 MCU/month included
-- Pro: Unlimited MCU, $9.99/month (via NOWPayments)
-- Enterprise: Custom limits, custom support
+- Starter: 200 MCU/month, $49/mo (via Polar.sh)
+- Growth: 1,000 MCU/month, $149/mo (via Polar.sh)
+- Pro: 5,000 MCU/month, $499/mo (via Polar.sh)
 
 ### 2.11 RaaS Gateway (`apps/raas-gateway/`)
 
@@ -587,7 +587,7 @@ Cloudflare Workers edge gateway with distributed rate limiting:
 **Features:**
 - **Edge Auth** — JWT validation at Cloudflare edge (before reaching origin)
 - **KV Rate Limiter** — Distributed rate limiting cache (Cloudflare KV)
-- **Webhook Handler** — NOWPayments payment events → credit allocation
+- **Webhook Handler** — Polar.sh payment events → license + credit allocation
 - **Edge Computing** — Process requests globally without database latency
 
 **Architecture:**
@@ -601,10 +601,10 @@ Cloudflare Edge (auth + rate limit)
 
 **Webhook Flow:**
 ```
-NOWPayments payment completed
-  → POST /webhooks/polar
-  → Verify signature + idempotency key
-  → Allocate credits to tenant
+Polar.sh subscription.created
+  → POST /webhook/polar
+  → Verify HMAC-SHA256 signature + timestamp
+  → Generate license key + allocate credits
   → Return 200 (idempotent)
 ```
 

@@ -64,7 +64,7 @@ function buildHtmlEmail(opts: EmailOptions): string {
 
     <p style="color:#444">
       Need help? Visit our
-      <a href="https://agencyos.network/support" style="color:#0070f3">support portal</a>
+      <a href="https://www.mekongmind.com/support" style="color:#0070f3">support portal</a>
       or reply to this email.
     </p>
 
@@ -118,7 +118,7 @@ async function sendViaResend(
   const subject  = `Your ${opts.brand} ${opts.tier} license key`;
 
   const payload: ResendPayload = {
-    from:    `${fromName} <licenses@agencyos.network>`,
+    from:    `${fromName} <licenses@www.mekongmind.com>`,
     to:      [opts.to],
     subject,
     html:    buildHtmlEmail(opts),

@@ -86,7 +86,7 @@ class HealthReporter:
         self.consent_manager = consent_manager or get_consent_manager()
         self.auth_client = auth_client or RaaSAuthClient()
         self.gateway_url = gateway_url or os.getenv(
-            "RAAS_GATEWAY_URL", "https://raas.agencyos.network"
+            "RAAS_GATEWAY_URL", "https://api.cashclaw.cc"
         )
         self.metrics_path = Path(self.METRICS_FILE).expanduser()
         self._metrics: Optional[HealthMetrics] = None

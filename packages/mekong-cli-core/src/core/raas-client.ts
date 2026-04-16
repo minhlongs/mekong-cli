@@ -10,7 +10,7 @@ import { homedir } from 'node:os';
 
 const CREDS_DIR = join(homedir(), '.mekong');
 const CREDS_FILE = join(CREDS_DIR, 'credentials.json');
-const DEFAULT_BASE_URL = 'https://raas.agencyos.network';
+const DEFAULT_BASE_URL = 'https://api.cashclaw.cc';
 
 export interface Credentials {
   jwt?: string;
