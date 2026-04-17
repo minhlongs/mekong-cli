@@ -215,7 +215,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 
 ### Agent Workforce Layer (agent-core)
 
-`packages/agent-core/` provides the **Phase 1 (Seed) agent kernel** — primitives for building autonomous workforce systems. It pairs with `mekongd` (Phase 0 cost-saving LLM proxy) to enable distributed agent execution via LLMClient routing to `http://127.0.0.1:8765`. Includes BaseAgent (think→act→observe), SeedMemory (SQLite + optional ChromaDB), and pre-built CEO/Developer/ToolAgent roles with sandboxed tools (browser, file_system, execute). Seed phase completes Phase 2 (Forest multi-tenant) on demand.
+`packages/agent-core/` provides the **Phase 1 (Seed) agent kernel** — primitives for building autonomous workforce systems. It pairs with `mekongd` (Phase 0 cost-saving LLM proxy) to enable distributed agent execution via LLMClient routing to `http://127.0.0.1:8765` with Prometheus metrics at `GET /metrics`. Includes BaseAgent (think→act→observe), SeedMemory (SQLite + optional ChromaDB), and pre-built CEO/Developer/ToolAgent roles with sandboxed tools (browser, file_system, execute). Seed phase completes Phase 2 (Forest multi-tenant) on demand.
 
 #### Forest Layer (Multi-Tenant Runtime)
 
@@ -235,6 +235,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | `POST /v1/chat/completions` | Chat API |
 | `POST /webhook/polar` | Polar.sh subscription/order events |
 | `GET /v1/reports` | Analytics |
+| `GET /metrics` | Prometheus metrics (mekongd observability) |
 
 **Middleware:**
 - `authMiddleware` — API key validation
