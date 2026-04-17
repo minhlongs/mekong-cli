@@ -37,6 +37,9 @@ class ForestSettings:
     worker_executor: str = "subprocess"
     docker_image: str = "agent-core:latest"
     docker_timeout_seconds: int = 300
+    # Self-heal feedback loop: 1 = single-pass CEO→Dev (back-compat),
+    # >=2 enables agent-core FeedbackLoop with Tester+Reviewer+Ops+Analyst + bounded retry.
+    feedback_rounds: int = 1
 
     @classmethod
     def from_env(cls) -> ForestSettings:
@@ -69,4 +72,5 @@ class ForestSettings:
             worker_executor=worker_executor,
             docker_image=os.getenv("FOREST_DOCKER_IMAGE", "agent-core:latest"),
             docker_timeout_seconds=_env_int("FOREST_DOCKER_TIMEOUT_SECONDS", 300),
+            feedback_rounds=max(1, _env_int("FOREST_FEEDBACK_ROUNDS", 1)),
         )

@@ -20,7 +20,7 @@ def test_gateway_worker_roundtrip(client, fake_redis, settings):
     key = q.pop_job_key(fake_redis, timeout=1)
     assert key == f"job:usr_founder1:{job_id}"
 
-    def stub(_p: str, _s: str) -> JobOutcome:
+    def stub(_p: str, _s: str, *, max_rounds: int = 1) -> JobOutcome:
         return JobOutcome(status="completed", result="pong")
 
     process_one(fake_redis, settings, key=key, executor=stub)

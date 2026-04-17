@@ -169,7 +169,7 @@ class TestWorkerMainEdgeCases:
             key, mapping={"job_id": "j_noprompt", "user_id": "usr_test", "status": "queued"}
         )
 
-        def stub(prompt, sandbox):
+        def stub(prompt, sandbox, *, max_rounds=1):
             assert prompt == ""  # Should default to empty
             return JobOutcome(status="completed")
 

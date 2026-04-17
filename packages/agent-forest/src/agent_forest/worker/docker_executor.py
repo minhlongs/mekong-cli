@@ -53,6 +53,7 @@ def execute_in_container(
     sandbox_str: str,
     *,
     settings: ForestSettings | None = None,
+    max_rounds: int = 1,
 ) -> JobOutcome:
     """Run prompt in isolated container; return JobOutcome. Never raises."""
     if docker is None:
@@ -75,9 +76,12 @@ def execute_in_container(
 
     container = None
     try:
+        cmd = ["python", "-m", "agent_core.cli", "orchestrate", prompt]
+        if max_rounds >= 2:
+            cmd += ["--rounds", str(max_rounds)]
         container = client.containers.run(
             settings.docker_image,
-            command=["python", "-m", "agent_core.cli", prompt],
+            command=cmd,
             volumes={sandbox_str: {"bind": "/outputs", "mode": "rw"}},
             environment=_build_env(sandbox_str),
             mem_limit="2g",
