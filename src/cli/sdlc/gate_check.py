@@ -12,12 +12,26 @@ Non-blocking (returns True) when gh CLI is unavailable — solo fast-path.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 
 from rich.console import Console
 from rich.table import Table
 
 console = Console()
+
+
+def _detect_repo() -> str | None:
+    """Infer owner/repo from git remote origin URL — handles https + ssh."""
+    try:
+        url = subprocess.run(
+            ["git", "config", "--get", "remote.origin.url"],
+            capture_output=True, text=True, timeout=3,
+        ).stdout.strip()
+    except Exception:
+        return None
+    m = re.search(r"github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$", url)
+    return f"{m.group(1)}/{m.group(2)}" if m else None
 
 # Ordered gate list — job IDs from .github/workflows/gates.yml
 GATES = [
@@ -38,14 +52,17 @@ def check_ci_gates() -> bool:
         True if conclusion is "success" or gh is unavailable (non-blocking).
         False if conclusion is "failure" or "cancelled".
     """
+    cmd = [
+        "gh", "run", "list", "-L", "1",
+        "--workflow=gates.yml",
+        "--json", "status,conclusion,url",
+    ]
+    repo = _detect_repo()
+    if repo:
+        cmd.extend(["--repo", repo])
     try:
         result = subprocess.run(
-            [
-                "gh", "run", "list", "-L", "1",
-                "--workflow=gates.yml",
-                "--json", "status,conclusion,url",
-            ],
-            capture_output=True, text=True, timeout=15,
+            cmd, capture_output=True, text=True, timeout=15,
         )
     except FileNotFoundError:
         console.print(
