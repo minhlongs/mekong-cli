@@ -8,7 +8,7 @@ import sqlite3
 import stat
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterator, Literal
 
@@ -174,14 +174,24 @@ def aggregate_signals(db_path: Path) -> dict[str, int]:
     return {kind: int(count) for kind, count in rows}
 
 
-def aggregate_signals_by_model(db_path: Path) -> dict[str, dict[str, int]]:
-    """Return {model: {good: n, bad: n}}. Legacy rows bucket under ''."""
+def aggregate_signals_by_model(
+    db_path: Path, since_hours: int | None = None
+) -> dict[str, dict[str, int]]:
+    """Return {model: {good: n, bad: n}}. Legacy rows bucket under ''.
+
+    since_hours: if provided, include only rows newer than now-since_hours UTC.
+    """
     if not db_path.exists():
         return {}
+    sql = "SELECT COALESCE(model,''), kind, COUNT(*) FROM signals"
+    params: tuple = ()
+    if since_hours is not None and since_hours > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=since_hours)
+        sql += " WHERE ts >= ?"
+        params = (cutoff.isoformat(),)
+    sql += " GROUP BY model, kind"
     with _connect(db_path) as conn:
-        rows = conn.execute(
-            "SELECT COALESCE(model,''), kind, COUNT(*) FROM signals GROUP BY model, kind"
-        ).fetchall()
+        rows = conn.execute(sql, params).fetchall()
     out: dict[str, dict[str, int]] = {}
     for model, kind, count in rows:
         out.setdefault(model, {"good": 0, "bad": 0})[kind] = int(count)

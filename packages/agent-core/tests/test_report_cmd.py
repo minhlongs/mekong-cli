@@ -55,6 +55,17 @@ def test_get_signals_breakdown_missing_key_returns_empty():
 
 
 @respx.mock
+def test_get_signals_breakdown_passes_hours_param():
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(200, json={"by_model": {"qwen3-8b": {"good": 1, "bad": 0}}})
+    )
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    client.get_signals_breakdown(hours=24)
+    assert route.called
+    assert route.calls[0].request.url.params["hours"] == "24"
+
+
+@respx.mock
 def test_send_signal_includes_model_when_provided():
     import json as _json
 
@@ -90,7 +101,7 @@ def test_report_cmd_prints_table(capsys):
             200, json={"by_model": {"qwen3-8b": {"good": 5, "bad": 2}}}
         )
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765")
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0)
     captured = capsys.readouterr().out
     assert "qwen3-8b" in captured
     assert "TOTAL" in captured
@@ -104,6 +115,17 @@ def test_report_cmd_exits_on_http_error(capsys):
         return_value=httpx.Response(500, json={"error": "boom"})
     )
     with pytest.raises(typer.Exit) as exc_info:
-        report_cmd(mekongd_url="http://127.0.0.1:8765")
+        report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0)
     assert exc_info.value.exit_code == 2
     assert "Lỗi" in capsys.readouterr().err
+
+
+@respx.mock
+def test_report_cmd_passes_hours_to_client(capsys):
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(200, json={"by_model": {"qwen3-8b": {"good": 3, "bad": 0}}})
+    )
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=24)
+    captured = capsys.readouterr().out
+    assert "last 24h" in captured
+    assert route.calls[0].request.url.params["hours"] == "24"

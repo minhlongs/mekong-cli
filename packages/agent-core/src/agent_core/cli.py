@@ -82,15 +82,21 @@ def report_cmd(
     mekongd_url: str = typer.Option(
         None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
     ),
+    hours: int = typer.Option(
+        0, "--hours", help="Limit breakdown to last N hours (0 = all time)."
+    ),
 ) -> None:
     """Show good/bad signal breakdown by model as a human-friendly table."""
     kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
     llm = LLMClient(**kwargs)
+    window = hours if hours > 0 else None
     try:
-        by_model = llm.get_signals_breakdown()
+        by_model = llm.get_signals_breakdown(hours=window)
     except Exception as e:  # noqa: BLE001
         typer.echo(f"Lỗi khi gọi mekongd: {e}", err=True)
         raise typer.Exit(code=2) from e
+    label = f" (last {hours}h)" if window else ""
+    typer.echo(f"Signal breakdown{label}:")
     typer.echo(_format_breakdown(by_model))
 
 
