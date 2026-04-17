@@ -92,6 +92,13 @@ def test_signals_breakdown_groups_by_model(client: TestClient):
     assert data[""] == {"good": 0, "bad": 1}
 
 
+def test_signals_breakdown_accepts_hours_query(client: TestClient):
+    client.post("/v1/signals", json={"kind": "good", "model": "qwen3-8b"})
+    # hours=1 at test time → the just-posted signal falls inside window
+    data = client.get("/v1/signals/breakdown?hours=1").json()["by_model"]
+    assert data["qwen3-8b"] == {"good": 1, "bad": 0}
+
+
 def test_metrics_after_request(client: TestClient):
     body = {
         "model": "claude-opus-4-7",

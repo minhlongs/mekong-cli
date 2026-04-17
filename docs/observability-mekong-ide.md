@@ -125,6 +125,10 @@ agent-core report
 # qwen3-8b                          12       3      0.80
 # ----------------------------------------------------------
 # TOTAL                             17       6      0.74
+
+# Limit window after a policy change:
+agent-core report --hours 24       # last 24h only
+curl -s '127.0.0.1:8765/v1/signals/breakdown?hours=24' | jq .
 ```
 
 Counters on `/metrics` stay unlabeled to keep Prometheus cardinality bounded.

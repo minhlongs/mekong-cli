@@ -81,6 +81,33 @@ def test_aggregate_signals_by_model_empty(tmp_path: Path):
     assert aggregate_signals_by_model(tmp_path / "missing.sqlite") == {}
 
 
+def test_aggregate_signals_by_model_honors_since_hours(tmp_path: Path):
+    """Rows older than since_hours are excluded."""
+    from datetime import datetime, timedelta, timezone
+
+    db = tmp_path / "stats.sqlite"
+    # Record a recent signal via public API
+    assert record_signal(db, "good", "recent", "qwen3-8b")
+
+    # Backdate a row to 2 days ago via direct SQL
+    conn = sqlite3.connect(str(db))
+    old_ts = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    conn.execute(
+        "INSERT INTO signals (ts, kind, note, model) VALUES (?, ?, ?, ?)",
+        (old_ts, "bad", "stale", "qwen3-8b"),
+    )
+    conn.commit()
+    conn.close()
+
+    # all-time: both counted
+    all_time = aggregate_signals_by_model(db)
+    assert all_time["qwen3-8b"] == {"good": 1, "bad": 1}
+
+    # last 1h: only the recent good signal
+    recent = aggregate_signals_by_model(db, since_hours=1)
+    assert recent["qwen3-8b"] == {"good": 1, "bad": 0}
+
+
 def test_legacy_signals_table_migrates_model_column(tmp_path: Path):
     """Pre-existing signals table without `model` column gets migrated on init_db."""
     db = tmp_path / "legacy.sqlite"

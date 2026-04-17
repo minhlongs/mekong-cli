@@ -148,10 +148,13 @@ async def signals(req: SignalRequest):
 
 
 @app.get("/v1/signals/breakdown")
-async def signals_breakdown():
-    """Operator diagnostic — good/bad counts grouped by model. Legacy rows bucket under ''."""
+async def signals_breakdown(hours: int | None = None):
+    """Operator diagnostic — good/bad counts grouped by model.
+
+    hours: optional window filter (e.g. ?hours=24). Legacy rows bucket under ''.
+    """
     cfg, _, _ = _get_deps()
-    return {"by_model": aggregate_signals_by_model(cfg.stats_db_path)}
+    return {"by_model": aggregate_signals_by_model(cfg.stats_db_path, hours)}
 
 
 async def _stream_local(
