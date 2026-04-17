@@ -15,6 +15,7 @@ from agent_core.agents.developer import DeveloperAgent
 from agent_core.formatters import format_breakdown, format_cost_by_model, format_recent_notes
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
+from agent_core.orchestrator import SoloCompanyOrchestrator
 from agent_core.tools.file_system import write_file
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, invoke_without_command=True)
@@ -119,6 +120,47 @@ def report_cmd(
             typer.echo(f"Lỗi khi lấy cost: {e}", err=True)
             return
         typer.echo(format_cost_by_model(by_cost, window))
+
+
+@app.command("orchestrate")
+def orchestrate_cmd(
+    goal: str = typer.Argument(..., help="Mục tiêu giao cho công ty AI."),
+    mekongd_url: str = typer.Option(
+        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
+    ),
+    model: str = typer.Option(None, "--model", help="Override LLM model."),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """CEO → Developer → Tester → Reviewer full pipeline."""
+    logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
+    kwargs: dict = {}
+    if mekongd_url:
+        kwargs["base_url"] = mekongd_url
+    if model:
+        kwargs["model"] = model
+    orch = SoloCompanyOrchestrator(llm=LLMClient(**kwargs), memory=SeedMemory())
+    typer.echo("Orchestrator khởi động: CEO → Developer → Tester → Reviewer")
+    report = orch.process_goal(goal)
+
+    typer.echo(f"\n--- Kế hoạch (CEO) ---\n{report.plan}\n")
+    typer.echo(f"--- Artifact (Developer) ---\n{report.artifact[:2000]}\n")
+    typer.echo(
+        f"--- Tester ({report.test['status'].upper()}) ---\n"
+        f"{report.test['summary']}\n"
+    )
+    if report.test["issues"]:
+        for issue in report.test["issues"]:
+            typer.echo(f"  - {issue}")
+    typer.echo(
+        f"\n--- Reviewer ({report.review['verdict'].upper()} "
+        f"score={report.review['score']}/10) ---"
+    )
+    for note in report.review["notes"]:
+        typer.echo(f"  - {note}")
+
+    artifact = _maybe_write_artifact(report.artifact)
+    if artifact:
+        typer.echo(f"\nĐã lưu artifact vào: {artifact}")
 
 
 @app.command("signal")
