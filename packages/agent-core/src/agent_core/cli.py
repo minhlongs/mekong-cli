@@ -12,8 +12,13 @@ import typer
 from agent_core import __version__
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
-from agent_core.feedback_loop import FeedbackLoop
-from agent_core.formatters import format_breakdown, format_cost_by_model, format_recent_notes
+from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
+from agent_core.formatters import (
+    format_breakdown,
+    format_cost_by_model,
+    format_history,
+    format_recent_notes,
+)
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
 from agent_core.orchestrator import SoloCompanyOrchestrator
@@ -197,6 +202,24 @@ def _print_report(report) -> None:
     )
     for note in report.review["notes"]:
         typer.echo(f"  - {note}")
+
+
+@app.command("history")
+def history_cmd(
+    limit: int = typer.Option(
+        10, "--limit", "-n", help="Số round gần nhất hiển thị (mặc định 10)."
+    ),
+    as_json: bool = typer.Option(
+        False, "--json", help="In ra JSON thô thay vì bảng."
+    ),
+) -> None:
+    """Hiển thị các vòng feedback đã persist trong SeedMemory."""
+    memory = SeedMemory()
+    rows = list_recent_sessions(memory, limit=max(1, limit))
+    if as_json:
+        typer.echo(json.dumps(rows, ensure_ascii=False, indent=2))
+        return
+    typer.echo(format_history(rows))
 
 
 @app.command("signal")
