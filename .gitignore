@@ -573,6 +573,7 @@ docs/*.yaml
 !docs/command-catalog.md
 !docs/code-standards.md
 !docs/system-architecture.md
+!docs/domain-plan.md
 
 # Stub/internal packages
 packages/vibe-*/
