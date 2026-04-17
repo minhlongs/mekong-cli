@@ -105,6 +105,33 @@ def format_status(
     return "\n".join(lines)
 
 
+def format_forest_status(data: dict) -> str:
+    """Render agent-forest gateway snapshot from fetch_forest_status() output."""
+    lines = [f"agent-forest @ {data.get('base_url', '?')}"]
+    err = data.get("error")
+    if err:
+        lines.append(f"  error: {err}")
+        return "\n".join(lines)
+    health = data.get("healthz") or {}
+    code = health.get("status_code", "?")
+    body = health.get("body") or {}
+    lines.append(f"  /healthz            : HTTP {code}  service={body.get('service', '?')}")
+    m = data.get("metrics") or {}
+    up = int(m.get("agent_forest_up", 0))
+    lines.append(f"  service up          : {'yes' if up == 1 else 'NO'}")
+    lines.append(f"  queue depth         : {int(m.get('agent_forest_queue_depth', 0))}")
+    lines.append(f"  workers alive       : {int(m.get('agent_forest_workers_alive', 0))}")
+    last_seen = int(m.get("agent_forest_worker_last_seen_timestamp", 0))
+    if last_seen > 0:
+        from datetime import UTC, datetime
+
+        ts = datetime.fromtimestamp(last_seen, tz=UTC).isoformat()[:19]
+        lines.append(f"  last heartbeat utc  : {ts}")
+    else:
+        lines.append("  last heartbeat utc  : (none)")
+    return "\n".join(lines)
+
+
 def format_cost_by_model(by_model: dict[str, float], hours: int | None) -> str:
     """Render cloud cost dict as table sorted by spend desc. Empty → friendly."""
     if not by_model:

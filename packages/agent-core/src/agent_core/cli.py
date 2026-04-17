@@ -13,9 +13,11 @@ from agent_core import __version__
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
+from agent_core.forest_client import fetch_forest_status
 from agent_core.formatters import (
     format_breakdown,
     format_cost_by_model,
+    format_forest_status,
     format_history,
     format_recent_notes,
     format_status,
@@ -221,6 +223,23 @@ def history_cmd(
         typer.echo(json.dumps(rows, ensure_ascii=False, indent=2))
         return
     typer.echo(format_history(rows))
+
+
+@app.command("forest-status")
+def forest_status_cmd(
+    url: str = typer.Option(
+        "http://localhost:8000",
+        "--url",
+        "-u",
+        help="Base URL của agent-forest gateway (mặc định localhost:8000).",
+    ),
+    timeout: float = typer.Option(
+        5.0, "--timeout", help="Timeout HTTP tính bằng giây (mặc định 5)."
+    ),
+) -> None:
+    """Gọi /healthz + /metrics trên agent-forest gateway và in snapshot."""
+    data = fetch_forest_status(url, timeout=timeout)
+    typer.echo(format_forest_status(data))
 
 
 @app.command("status")
