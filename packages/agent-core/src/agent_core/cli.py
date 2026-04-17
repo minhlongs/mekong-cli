@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import sys
 
 import typer
 
@@ -38,6 +40,11 @@ def run_cmd(
     ),
     model: str = typer.Option(None, "--model", help="Override LLM model."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
+    signal: bool = typer.Option(
+        None,
+        "--signal/--no-signal",
+        help="Prompt for good/bad feedback after run. Default: env AGENT_CORE_PROMPT_SIGNAL=1.",
+    ),
 ) -> None:
     """CEO plans → Developer executes the first actionable step."""
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
@@ -66,6 +73,9 @@ def run_cmd(
     if artifact:
         typer.echo(f"Đã lưu artifact vào: {artifact}")
 
+    enabled = signal if signal is not None else os.environ.get("AGENT_CORE_PROMPT_SIGNAL") == "1"
+    _maybe_prompt_signal(llm, enabled)
+
 
 @app.command("signal")
 def signal_cmd(
@@ -84,6 +94,21 @@ def signal_cmd(
         typer.echo(f"Lỗi: {e}", err=True)
         raise typer.Exit(code=2) from e
     typer.echo(f"Đã gửi signal: {resp}")
+
+
+def _maybe_prompt_signal(llm: LLMClient, enabled: bool) -> None:
+    """Prompt operator for good/bad feedback → mekongd/v1/signals. No-op unless TTY + enabled."""
+    if not enabled or not sys.stdin.isatty():
+        return
+    choice = typer.prompt("Feedback? [g]ood/[b]ad/[s]kip", default="s").strip().lower()
+    if not choice or choice[0] not in ("g", "b"):
+        return
+    kind = "good" if choice[0] == "g" else "bad"
+    try:
+        llm.send_signal(kind)
+        typer.echo(f"Đã gửi signal: {kind}")
+    except Exception as e:  # noqa: BLE001
+        typer.echo(f"Cảnh báo: gửi signal thất bại ({e}) — bỏ qua.", err=True)
 
 
 def _maybe_write_artifact(developer_response: str) -> str | None:
