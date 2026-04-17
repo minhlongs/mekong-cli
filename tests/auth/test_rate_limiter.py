@@ -15,7 +15,6 @@ Covers:
 import asyncio
 import time
 import pytest
-from unittest.mock import patch
 
 from src.auth.rate_limiter import (
     RateLimitConfig,
