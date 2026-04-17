@@ -11,9 +11,22 @@ import shlex
 import subprocess
 from pathlib import Path
 
-from agent_core.tools.file_system import OUTPUTS_DIR
+from agent_core.tools import file_system as _fs
 
 _DEFAULT_TIMEOUT = 30.0
+
+
+def _sandbox_cwd(cwd: str | Path | None) -> Path:
+    sandbox = _fs.OUTPUTS_DIR
+    if cwd is None:
+        return sandbox
+    candidate = Path(cwd)
+    resolved = candidate.resolve() if candidate.is_absolute() else (sandbox / candidate).resolve()
+    try:
+        resolved.relative_to(sandbox)
+    except ValueError as e:
+        raise ValueError(f"cwd outside sandbox: {cwd}") from e
+    return resolved
 
 
 def execute_command(
@@ -27,7 +40,10 @@ def execute_command(
         return f"Lỗi parse lệnh: {e}"
     if not argv:
         return "Lỗi: lệnh rỗng"
-    work_dir = Path(cwd) if cwd else OUTPUTS_DIR
+    try:
+        work_dir = _sandbox_cwd(cwd)
+    except ValueError as e:
+        return f"Lỗi: {e}"
     try:
         result = subprocess.run(
             argv,

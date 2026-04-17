@@ -15,8 +15,10 @@ OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
 def _resolve(rel_path: str) -> Path:
     target = (OUTPUTS_DIR / rel_path).resolve()
-    if not str(target).startswith(str(OUTPUTS_DIR)):
-        raise ValueError(f"Path traversal rejected: {rel_path}")
+    try:
+        target.relative_to(OUTPUTS_DIR)
+    except ValueError as e:
+        raise ValueError(f"Path traversal rejected: {rel_path}") from e
     return target
 
 

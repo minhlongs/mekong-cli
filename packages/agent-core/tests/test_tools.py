@@ -33,6 +33,24 @@ def test_write_file_rejects_path_traversal(tmp_outputs: Path):
         fs.write_file("../escape.txt", "nope")
 
 
+def test_write_file_rejects_sibling_prefix_bypass(tmp_outputs: Path):
+    import importlib
+
+    import agent_core.tools.file_system as fs
+
+    importlib.reload(fs)
+    sibling = tmp_outputs.parent / (tmp_outputs.name + "-evil")
+    with pytest.raises(ValueError):
+        fs.write_file(f"../{sibling.name}/x.txt", "nope")
+
+
+def test_execute_command_rejects_cwd_outside_sandbox(tmp_outputs: Path):
+    from agent_core.tools.execute import execute_command
+
+    out = execute_command("echo hi", cwd="/")
+    assert out.startswith("Lỗi:")
+
+
 def test_read_file_returns_message_when_missing(tmp_outputs: Path):
     import importlib
 
