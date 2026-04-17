@@ -217,6 +217,10 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 
 `packages/agent-core/` provides the **Phase 1 (Seed) agent kernel** — primitives for building autonomous workforce systems. It pairs with `mekongd` (Phase 0 cost-saving LLM proxy) to enable distributed agent execution via LLMClient routing to `http://127.0.0.1:8765`. Includes BaseAgent (think→act→observe), SeedMemory (SQLite + optional ChromaDB), and pre-built CEO/Developer/ToolAgent roles with sandboxed tools (browser, file_system, execute). Seed phase completes Phase 2 (Forest multi-tenant) on demand.
 
+#### Forest Layer (Multi-Tenant Runtime)
+
+`packages/agent-forest/` — **Phase 2 (Forest)** multi-tenant agent orchestration platform. FastAPI gateway (JWT HS256 auth, rate limiting), Redis-backed task queue, async worker pool, per-user sandbox (subprocess-based). 51 tests pass, 1336 LOC total. Routes task submission → queued for async execution → result callback via webhook. Foundation for Phase 3 (Postgres user persistence) and Phase 4 (multi-cloud deployment).
+
 ---
 
 ## API Gateway
