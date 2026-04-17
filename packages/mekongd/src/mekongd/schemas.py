@@ -85,10 +85,16 @@ class MessageDeltaPayload(BaseModel):
     stop_sequence: Optional[str] = None
 
 
+class MessageDeltaUsage(BaseModel):
+    """Anthropic message_delta usage — output_tokens only per strict spec."""
+
+    output_tokens: int = 0
+
+
 class MessageDeltaEvent(BaseModel):
     type: Literal["message_delta"] = "message_delta"
     delta: MessageDeltaPayload
-    usage: Usage = Field(default_factory=Usage)
+    usage: MessageDeltaUsage = Field(default_factory=MessageDeltaUsage)
 
 
 class MessageStopEvent(BaseModel):

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import sqlite3
+import stat
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -49,6 +51,11 @@ def init_db(db_path: Path) -> None:
     with _connect(db_path) as conn:
         conn.executescript(_SCHEMA_SQL)
         conn.commit()
+    # Owner-only permissions to avoid leaking request metadata on shared hosts.
+    try:
+        os.chmod(str(db_path), stat.S_IRUSR | stat.S_IWUSR)
+    except OSError as e:
+        log.debug("chmod 0600 failed on %s: %s", db_path, e)
 
 
 @contextmanager
