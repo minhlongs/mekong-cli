@@ -541,6 +541,8 @@ docs/*.json
 docs/*.yaml
 
 # Keep these docs (whitelisted):
+!docs/claims-audit.md
+!docs/roadmap-post-launch.md
 !docs/ARCHITECTURE.md
 !docs/COMMANDS.md
 !docs/BINH_PHAP_*.md

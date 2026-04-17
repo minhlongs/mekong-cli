@@ -1,20 +1,19 @@
 # Mekong IDE — The One-Person Company Platform
 
-> **One person. 22 departments. $49/mo.** Replace a 50-person team with autonomous agents.
+> **One person. 10 business layers. $49/mo.** Replace a 50-person team with autonomous agents.
 
 [![Website](https://img.shields.io/badge/Website-mekongmind.com-blue)](https://www.mekongmind.com)
 [![Subscribe](https://img.shields.io/badge/Subscribe-$49%2Fmo-green)](https://buy.polar.sh/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA)
 
 ## What is Mekong IDE?
 
-The platform that enables the **one-person billion-dollar company**. 22 autonomous departments — engineering, marketing, sales, finance, legal, compliance, HR — all operated by agents. You make the decisions, agents do the work.
+The platform that enables the **one-person billion-dollar company**. 10 business layers — Founder, Business, Product, Engineering, Ops, Studio, CTO, PM, Dev, Worker — all operated by agents. You make the decisions, agents do the work.
 
-**Built for solo founders:**
-- 385 pre-built workflow templates across 22 departments
-- Runs locally on your Mac with Ollama — zero cloud cost
-  - M1/M2/M3/M4: 7B-14B models | M1 Ultra/M2 Ultra: 32B-70B models
+**Built for solo founders (as of 2026-04-17):**
+- 443 command definitions across 10 business layers
+- Runs locally on your Mac with Ollama — zero cloud cost (benchmarks pending; tested with Qwen 2.5-coder and compatible models)
 - Your data never leaves your machine
-- Autonomous operations engine (OpenClaw) runs 24/7 while you sleep
+- Autonomous operations engine (OpenClaw) — daemon scaffolded, stress-test + runbook shipping in v6.1
 - One subscription = your entire workforce
 
 ## Quick Start
@@ -45,7 +44,7 @@ curl -fsSL https://www.mekongmind.com/install.sh | bash
 
 ```bash
 npm install @mekongcli/openclaw-engine    # Mission orchestration SDK
-npm install @mekongcli/cli-core           # Full CLI with 300+ commands
+npm install @mekongcli/cli-core           # Full CLI with 443 command definitions
 ```
 
 ### Full Platform
@@ -107,7 +106,7 @@ Verifier: build OK, 12 tests pass, deployed
 
 Commands compose into **DAG workflows** -- parallel where possible, sequential where required. The `founder:raise` demo above shows 8 agents dispatched across 3 dependency groups, finishing in one command.
 
-## 5 Business Layers, 300+ Commands
+## 10 Business Layers, 443 Commands
 
 | Layer | Examples | Purpose |
 |-------|----------|---------|
@@ -116,8 +115,13 @@ Commands compose into **DAG workflows** -- parallel where possible, sequential w
 | **Product** | `/plan` `/sprint` `/roadmap` `/brainstorm` | Product management |
 | **Engineering** | `/cook` `/code` `/test` `/deploy` `/review` | Build and ship |
 | **Ops** | `/audit` `/health` `/security` `/status` | Monitor and maintain |
+| **Studio** | `/studio-audit` `/studio-portfolio` `/studio-roi` | VC studio / portfolio ops |
+| **CTO** | `/cto-review` `/cto-roadmap` `/cto-architect` | Architecture and tech leadership |
+| **PM** | `/pm-plan` `/pm-sprint` `/pm-okr` | Tactical product management |
+| **Dev** | `/dev-feature` `/dev-fix` `/dev-test` | Developer execution |
+| **Worker** | `/worker-code` `/worker-build` `/worker-push` | Atomic task execution |
 
-Every command has a typed JSON contract (388 total) specifying input schema, output schema, agent assignments, and cascade triggers.
+Every command has a typed JSON contract (567 total) specifying input schema, output schema, agent assignments, and cascade triggers. Evidence: `factory/contracts/commands/`.
 
 ## Architecture
 
@@ -144,8 +148,8 @@ mekong cook "your goal"
     v
 +-------------------+
 |  Agent Layer       |  GitAgent, FileAgent, ShellAgent
-|  248 Skills        |  .claude/skills/
-|  206 Commands      |  .claude/commands/
+|  197 Skills        |  .claude/skills/ (SKILL.md definitions)
+|  443 Commands      |  .claude/commands/ (command definitions)
 +-------------------+
     |
     v
@@ -217,13 +221,16 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 
 ## Project Stats
 
-| Metric | Count |
-|--------|-------|
-| Commands | 300+ across 5 layers |
-| Machine Contracts | 388 (typed JSON I/O) |
-| Skills | 248 |
-| Tests | 5,713 passing (1,263 TS + 4,450 Python) |
-| npm Packages | 2 published |
+*Verified counts as of 2026-04-17. Evidence: [`docs/claims-audit.md`](docs/claims-audit.md)*
+
+| Metric | Count | Evidence |
+|--------|-------|----------|
+| Command definitions | 443 across 10 layers | `find .claude/commands -name '*.md' \| wc -l` |
+| Live command modules (Python) | 43 | `find src/commands -name '*.py' -not -name '_*' \| wc -l` |
+| Machine contracts (JSON) | 567 (typed I/O) | `ls factory/contracts/commands/ \| wc -l` |
+| Skill definitions | 197 | `find .claude/skills -name 'SKILL.md' \| wc -l` |
+| Python tests passing | 7,007 (34 skipped) | `python3 -m pytest -q --tb=no` |
+| npm Packages | 2 published | `@mekongcli/openclaw-engine`, `@mekongcli/cli-core` |
 
 ## Contributing
 
@@ -232,9 +239,12 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 git clone https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli && pnpm install
 
-# Run tests
-cd packages/mekong-cli-core && pnpm test     # 1,263 tests
-cd packages/openclaw-engine && pnpm test      # Engine tests
+# Run Python tests (7,007 passing as of 2026-04-17)
+python3 -m pytest -q --tb=short
+
+# Run TS tests
+cd packages/mekong-cli-core && pnpm test
+cd packages/openclaw-engine && pnpm test
 
 # Lint
 pnpm --filter @mekongcli/cli-core lint
