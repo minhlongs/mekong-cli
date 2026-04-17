@@ -12,7 +12,7 @@ def test_process_one_updates_status_on_success(fake_redis, settings):
         fake_redis, job_id="j1", user_id="usr_founder1", prompt="x", webhook_url=None
     )
 
-    def stub(_prompt: str, _sandbox: str) -> JobOutcome:
+    def stub(_prompt: str, _sandbox: str, *, max_rounds: int = 1) -> JobOutcome:
         return JobOutcome(status="completed", result="mock output")
 
     outcome = process_one(
@@ -33,7 +33,7 @@ def test_process_one_records_failure(fake_redis, settings):
         fake_redis, job_id="j2", user_id="usr_founder2", prompt="x", webhook_url=None
     )
 
-    def stub(_prompt: str, _sandbox: str) -> JobOutcome:
+    def stub(_prompt: str, _sandbox: str, *, max_rounds: int = 1) -> JobOutcome:
         return JobOutcome(status="failed", error="boom")
 
     outcome = process_one(
@@ -61,5 +61,7 @@ def test_run_loop_honors_max_iterations(fake_redis, settings, monkeypatch):
         "from_url",
         staticmethod(lambda *_a, **_k: fake_redis),
     )
-    iters = worker_main.run_loop(settings, max_iterations=1, executor=lambda *_: None)
+    iters = worker_main.run_loop(
+        settings, max_iterations=1, executor=lambda *_a, **_k: None
+    )
     assert iters == 1
