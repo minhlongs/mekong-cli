@@ -258,11 +258,12 @@ clean-settings.js
 demo.py
 demo_script.md
 test_input.jsonl
-factory-loop.sh
-restore_swarm.sh
-supervisor.py
-server.py
-main.py
+/factory-loop.sh
+/restore_swarm.sh
+/supervisor.py
+/server.py
+/main.py
+# ^ Top-level script artifacts only — package source files (e.g. packages/*/src/**/main.py) stay tracked
 
 # Build & analysis output
 build_log*.txt
