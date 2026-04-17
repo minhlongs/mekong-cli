@@ -81,6 +81,40 @@ def test_aggregate_signals_by_model_empty(tmp_path: Path):
     assert aggregate_signals_by_model(tmp_path / "missing.sqlite") == {}
 
 
+def test_list_recent_signals_returns_newest_first(tmp_path: Path):
+    from mekongd.stats import list_recent_signals
+
+    db = tmp_path / "stats.sqlite"
+    assert record_signal(db, "good", "first", "qwen3-8b")
+    assert record_signal(db, "bad", "second", "claude-sonnet-4-6")
+    assert record_signal(db, "good", "third")  # no model
+
+    rows = list_recent_signals(db, limit=10)
+    assert [r["note"] for r in rows] == ["third", "second", "first"]
+    assert rows[0]["model"] == ""  # empty model stringified
+    assert rows[1]["model"] == "claude-sonnet-4-6"
+    assert rows[2]["kind"] == "good"
+
+
+def test_list_recent_signals_honors_limit(tmp_path: Path):
+    from mekongd.stats import list_recent_signals
+
+    db = tmp_path / "stats.sqlite"
+    for i in range(5):
+        record_signal(db, "good", f"note-{i}")
+    assert len(list_recent_signals(db, limit=3)) == 3
+    # limit capped at 500 internally — a huge limit still works
+    assert len(list_recent_signals(db, limit=999999)) == 5
+    # non-positive limit → empty
+    assert list_recent_signals(db, limit=0) == []
+
+
+def test_list_recent_signals_empty_when_db_missing(tmp_path: Path):
+    from mekongd.stats import list_recent_signals
+
+    assert list_recent_signals(tmp_path / "missing.sqlite", limit=10) == []
+
+
 def test_aggregate_signals_by_model_honors_since_hours(tmp_path: Path):
     """Rows older than since_hours are excluded."""
     from datetime import datetime, timedelta, timezone

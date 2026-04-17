@@ -174,6 +174,20 @@ def aggregate_signals(db_path: Path) -> dict[str, int]:
     return {kind: int(count) for kind, count in rows}
 
 
+def list_recent_signals(db_path: Path, limit: int = 20) -> list[dict]:
+    """Return last N signal rows (newest first) as dicts. Empty list when db missing."""
+    if not db_path.exists() or limit <= 0:
+        return []
+    limit = min(int(limit), 500)
+    with _connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT ts, kind, COALESCE(note,''), COALESCE(model,'') "
+            "FROM signals ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [{"ts": ts, "kind": kind, "note": note, "model": model} for ts, kind, note, model in rows]
+
+
 def aggregate_signals_by_model(
     db_path: Path, since_hours: int | None = None
 ) -> dict[str, dict[str, int]]:

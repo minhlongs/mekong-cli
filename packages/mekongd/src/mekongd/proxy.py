@@ -36,6 +36,7 @@ from mekongd.stats import (
     aggregate_signals_by_model,
     aggregate_stats,
     estimate_savings,
+    list_recent_signals,
     record_route,
     record_signal,
 )
@@ -155,6 +156,13 @@ async def signals_breakdown(hours: int | None = None):
     """
     cfg, _, _ = _get_deps()
     return {"by_model": aggregate_signals_by_model(cfg.stats_db_path, hours)}
+
+
+@app.get("/v1/signals/recent")
+async def signals_recent(limit: int = 20):
+    """Operator review — last N signals (newest first) with notes."""
+    cfg, _, _ = _get_deps()
+    return {"signals": list_recent_signals(cfg.stats_db_path, limit)}
 
 
 async def _stream_local(
