@@ -11,6 +11,8 @@
 | `agencyos-site` | `packages/agencyos-site/` | Unified marketing site (landing, docs, dashboard) |
 | `ui` | `packages/ui/` | Shared UI component library |
 | `build-optimizer` | `packages/build-optimizer/` | Build pipeline optimization |
+| `agent-core` | `packages/agent-core/` | Seed-phase agent kernel — BaseAgent + Memory + LLMClient + CEO/Developer agents |
+| `agent-forest` | `packages/agent-forest/` | Forest-phase multi-tenant runtime — FastAPI gateway (JWT) + Redis queue + worker pool + per-user sandbox |
 
 ## Hub Architecture (Planned)
 
