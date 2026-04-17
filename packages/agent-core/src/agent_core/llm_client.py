@@ -77,17 +77,24 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json()
 
-    def send_signal(self, kind: str, note: str = "") -> dict:
-        """Pillar 3 feedback — POST {kind: good|bad, note} to mekongd /v1/signals."""
+    def send_signal(self, kind: str, note: str = "", model: str = "") -> dict:
+        """Pillar 3 feedback — POST {kind: good|bad, note, model} to mekongd /v1/signals."""
         if kind not in ("good", "bad"):
             raise ValueError(f"kind must be 'good' or 'bad', got {kind!r}")
+        payload: dict = {"kind": kind, "note": note}
+        if model:
+            payload["model"] = model
         with httpx.Client(timeout=5.0) as client:
-            resp = client.post(
-                f"{self.base_url}/v1/signals",
-                json={"kind": kind, "note": note},
-            )
+            resp = client.post(f"{self.base_url}/v1/signals", json=payload)
             resp.raise_for_status()
             return resp.json()
+
+    def get_signals_breakdown(self) -> dict[str, dict[str, int]]:
+        """Fetch {model: {good, bad}} breakdown from mekongd /v1/signals/breakdown."""
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.get(f"{self.base_url}/v1/signals/breakdown")
+            resp.raise_for_status()
+            return resp.json().get("by_model", {})
 
 
 def _extract_text(data: dict) -> str:

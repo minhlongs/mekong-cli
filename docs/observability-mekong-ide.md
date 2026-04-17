@@ -102,6 +102,35 @@ up{job=~"mekongd|agent-forest"}         # scraper-inferred
 agent_forest_up                          # self-reported
 ```
 
+### Per-model signal breakdown
+
+Not a scrape target — a JSON diagnostic endpoint for operator triage when
+`mekongd_signals_ratio` degrades:
+
+```bash
+curl -s 127.0.0.1:8765/v1/signals/breakdown | jq .
+# {"by_model": {"qwen3-8b": {"good": 12, "bad": 3},
+#               "claude-sonnet-4-6": {"good": 5, "bad": 2},
+#               "": {"good": 0, "bad": 1}}}   # legacy rows (no model field)
+```
+
+Or via the bundled CLI:
+
+```bash
+agent-core report
+# Model                           Good     Bad     Ratio
+# ----------------------------------------------------------
+# (unknown)                          0       1      0.00
+# claude-sonnet-4-6                  5       2      0.71
+# qwen3-8b                          12       3      0.80
+# ----------------------------------------------------------
+# TOTAL                             17       6      0.74
+```
+
+Counters on `/metrics` stay unlabeled to keep Prometheus cardinality bounded.
+Use the breakdown endpoint for ad-hoc slicing; export to a panel only if
+the model set is small and stable.
+
 ### Operator feedback (Pillar 3)
 
 ```promql

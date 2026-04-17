@@ -22,7 +22,7 @@ app = typer.Typer(add_completion=False, no_args_is_help=True, invoke_without_com
 @app.callback()
 def _root(
     ctx: typer.Context,
-    version: bool = typer.Option(False, "--version", "-V", help="Show version and exit."),
+    version: bool = typer.Option(False, "--version", help="Show version and exit."),
 ) -> None:
     if version:
         typer.echo(f"agent-core {__version__}")
@@ -41,9 +41,9 @@ def run_cmd(
     model: str = typer.Option(None, "--model", help="Override LLM model."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
     signal: bool = typer.Option(
-        None,
-        "--signal/--no-signal",
-        help="Prompt for good/bad feedback after run. Default: env AGENT_CORE_PROMPT_SIGNAL=1.",
+        False,
+        "--signal",
+        help="Prompt good/bad after run. Default off; env AGENT_CORE_PROMPT_SIGNAL=1 also enables.",
     ),
 ) -> None:
     """CEO plans → Developer executes the first actionable step."""
@@ -73,8 +73,25 @@ def run_cmd(
     if artifact:
         typer.echo(f"Đã lưu artifact vào: {artifact}")
 
-    enabled = signal if signal is not None else os.environ.get("AGENT_CORE_PROMPT_SIGNAL") == "1"
+    enabled = signal or os.environ.get("AGENT_CORE_PROMPT_SIGNAL") == "1"
     _maybe_prompt_signal(llm, enabled)
+
+
+@app.command("report")
+def report_cmd(
+    mekongd_url: str = typer.Option(
+        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
+    ),
+) -> None:
+    """Show good/bad signal breakdown by model as a human-friendly table."""
+    kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
+    llm = LLMClient(**kwargs)
+    try:
+        by_model = llm.get_signals_breakdown()
+    except Exception as e:  # noqa: BLE001
+        typer.echo(f"Lỗi khi gọi mekongd: {e}", err=True)
+        raise typer.Exit(code=2) from e
+    typer.echo(_format_breakdown(by_model))
 
 
 @app.command("signal")
@@ -94,6 +111,28 @@ def signal_cmd(
         typer.echo(f"Lỗi: {e}", err=True)
         raise typer.Exit(code=2) from e
     typer.echo(f"Đã gửi signal: {resp}")
+
+
+def _format_breakdown(by_model: dict[str, dict[str, int]]) -> str:
+    """Render breakdown dict as fixed-width table. Empty input → friendly empty message."""
+    if not by_model:
+        return "Chưa có signal nào. Gửi feedback bằng `agent-core signal good|bad`."
+    header = f"{'Model':<32}{'Good':>8}{'Bad':>8}{'Ratio':>10}"
+    sep = "-" * len(header)
+    rows = [header, sep]
+    total_good = total_bad = 0
+    for model, counts in sorted(by_model.items()):
+        good, bad = int(counts.get("good", 0)), int(counts.get("bad", 0))
+        total_good += good
+        total_bad += bad
+        ratio = good / (good + bad) if (good + bad) else 0.0
+        display = model if model else "(unknown)"
+        rows.append(f"{display:<32}{good:>8}{bad:>8}{ratio:>10.2f}")
+    rows.append(sep)
+    total = total_good + total_bad
+    total_ratio = total_good / total if total else 0.0
+    rows.append(f"{'TOTAL':<32}{total_good:>8}{total_bad:>8}{total_ratio:>10.2f}")
+    return "\n".join(rows)
 
 
 def _maybe_prompt_signal(llm: LLMClient, enabled: bool) -> None:
