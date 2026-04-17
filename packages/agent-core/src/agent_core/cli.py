@@ -328,6 +328,21 @@ def _maybe_write_artifact(developer_response: str) -> str | None:
     return write_file(path, content)
 
 
+
+@app.command("prune")
+def prune_cmd(
+    keep: int = typer.Option(
+        100, "--keep", "-k", help="Số round mới nhất giữ lại (>=0). Mặc định 100."
+    ),
+) -> None:
+    """Xoá các vòng feedback cũ trong SeedMemory, giữ lại N row mới nhất."""
+    if keep < 0:
+        typer.echo("keep phải >= 0", err=True)
+        raise typer.Exit(code=2)
+    memory = SeedMemory()
+    deleted = memory.prune_agent("feedback_session", keep_last_n=keep)
+    typer.echo(f"Đã xoá {deleted} round cũ, giữ lại {keep} gần nhất.")
+
 @app.command("eval")
 def eval_cmd(  # noqa: B008
     dataset: Path = typer.Option(  # noqa: B008
