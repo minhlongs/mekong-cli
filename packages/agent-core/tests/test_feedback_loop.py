@@ -145,6 +145,65 @@ def test_feedback_loop_rejects_invalid_max_rounds(tmp_memory: SeedMemory):
         loop.process_goal("x", max_rounds=0)
 
 
+def test_feedback_session_persists_rounds_to_memory(tmp_memory: SeedMemory):
+    """process_goal should write each round to SeedMemory under feedback_session."""
+    fake = ScriptedLLM(
+        _round_responses(
+            plan="p",
+            artifact_json="a",
+            tester_json='{"status": "pass", "summary": "ok", "issues": []}',
+            reviewer_json='{"score": 9, "verdict": "ship", "notes": []}',
+            ops_json='{"healthy": true, "severity": "info", "alerts": []}',
+            analyst_json='{"summary": "ok", "recommendations": [], "trend": "flat"}',
+        )
+    )
+    loop = FeedbackLoop(llm=fake, memory=tmp_memory)
+    loop.process_goal("persist-me", max_rounds=1)
+    records = tmp_memory.get_recent("feedback_session", limit=5)
+    assert len(records) == 1
+    assert records[0].metadata["verdict"] == "ship"
+    assert records[0].metadata["round"] == 1
+
+
+def test_feedback_loop_persist_false_skips_write(tmp_memory: SeedMemory):
+    """persist=False should keep memory empty."""
+    fake = ScriptedLLM(
+        _round_responses(
+            plan="p",
+            artifact_json="a",
+            tester_json='{"status": "pass", "summary": "ok", "issues": []}',
+            reviewer_json='{"score": 9, "verdict": "ship", "notes": []}',
+            ops_json='{"healthy": true, "severity": "info", "alerts": []}',
+            analyst_json='{"summary": "ok", "recommendations": [], "trend": "flat"}',
+        )
+    )
+    loop = FeedbackLoop(llm=fake, memory=tmp_memory)
+    loop.process_goal("no-persist", max_rounds=1, persist=False)
+    assert tmp_memory.get_recent("feedback_session", limit=5) == []
+
+
+def test_feedback_loop_seeds_analyst_history_from_prior_session(tmp_memory: SeedMemory):
+    """Second run should observe first run's rounds via SeedMemory."""
+    from agent_core.feedback_loop import load_recent_history
+
+    first = ScriptedLLM(
+        _round_responses(
+            plan="p1",
+            artifact_json="a1",
+            tester_json='{"status": "fail", "summary": "broken", "issues": ["x"]}',
+            reviewer_json='{"score": 4, "verdict": "revise", "notes": []}',
+            ops_json='{"healthy": true, "severity": "info", "alerts": []}',
+            analyst_json='{"summary": "bad", "recommendations": [], "trend": "regressing"}',
+        )
+    )
+    FeedbackLoop(llm=first, memory=tmp_memory).process_goal("v1", max_rounds=1)
+
+    loaded = load_recent_history(tmp_memory, limit=3)
+    assert len(loaded) == 1
+    assert loaded[0]["review"]["verdict"] == "revise"
+    assert loaded[0]["test"]["status"] == "fail"
+
+
 def test_feedback_session_as_dict(tmp_memory: SeedMemory):
     fake = ScriptedLLM(
         _round_responses(

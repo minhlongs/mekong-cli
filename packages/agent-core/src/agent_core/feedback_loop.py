@@ -3,10 +3,15 @@
 Sync MVP: runs the pipeline, consults Ops + Analyst, re-runs the pipeline with
 Analyst recommendations appended to the goal if verdict is revise/block or Ops
 raises a non-info severity. Bounded by `max_rounds` to avoid runaway loops.
+
+Each session persists its per-round compact dict into SeedMemory under
+``agent_id="feedback_session"`` so subsequent sessions' AnalystAgent can
+observe cross-session trend data (closes PDF "Hệ thống ghi nhật ký và học hồi").
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 
 from agent_core.agents.analyst import AnalystAgent
@@ -14,6 +19,8 @@ from agent_core.agents.ops import OpsAgent
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
 from agent_core.orchestrator import PipelineReport, SoloCompanyOrchestrator
+
+_SESSION_AGENT_ID = "feedback_session"
 
 
 @dataclass
@@ -49,6 +56,54 @@ class FeedbackSession:
             ],
             "final": self.final.as_dict(),
         }
+
+    def persist(self, memory: SeedMemory) -> list[str]:
+        """Store each round as an individual memory record; return doc ids."""
+        ids: list[str] = []
+        for r in self.rounds:
+            payload = {
+                "goal": self.goal,
+                "round": r.round_index,
+                "review": r.report.review,
+                "test": r.report.test,
+                "ops": r.ops,
+                "analyst": r.analyst,
+            }
+            ids.append(
+                memory.remember(
+                    agent_id=_SESSION_AGENT_ID,
+                    content=json.dumps(payload, ensure_ascii=False),
+                    metadata={
+                        "round": r.round_index,
+                        "verdict": r.report.review.get("verdict", "?"),
+                        "trend": r.analyst.get("trend", "?"),
+                    },
+                )
+            )
+        return ids
+
+
+def load_recent_history(memory: SeedMemory, limit: int = 3) -> list[dict]:
+    """Return up to ``limit`` most-recent persisted rounds as pipeline-report dicts.
+
+    Used to seed Analyst history so it can observe cross-session trends.
+    Malformed rows are skipped silently — memory is best-effort, never load-bearing.
+    """
+    records = memory.get_recent(_SESSION_AGENT_ID, limit=limit)
+    out: list[dict] = []
+    for rec in records:
+        try:
+            payload = json.loads(rec.content)
+        except json.JSONDecodeError:
+            continue
+        out.append(
+            {
+                "review": payload.get("review", {}),
+                "test": payload.get("test", {}),
+                "ops": payload.get("ops", {}),
+            }
+        )
+    return out
 
 
 class FeedbackLoop:
@@ -87,11 +142,14 @@ class FeedbackLoop:
             f"[Vòng lặp cải tiến] Ưu tiên xử lý các khuyến nghị sau:\n{bullet}"
         )
 
-    def process_goal(self, goal: str, max_rounds: int = 2) -> FeedbackSession:
+    def process_goal(
+        self, goal: str, max_rounds: int = 2, *, persist: bool = True
+    ) -> FeedbackSession:
         if max_rounds < 1:
             raise ValueError("max_rounds must be >= 1")
         session = FeedbackSession(goal=goal)
-        history: list[dict] = []
+        # Seed Analyst history with prior sessions so trends span beyond this run.
+        history: list[dict] = load_recent_history(self.memory, limit=3)
         current_goal = goal
 
         for i in range(1, max_rounds + 1):
@@ -113,4 +171,6 @@ class FeedbackLoop:
                 break
             current_goal = self._next_goal(goal, analyst_report)
 
+        if persist:
+            session.persist(self.memory)
         return session
