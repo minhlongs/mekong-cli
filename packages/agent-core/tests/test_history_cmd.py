@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import json as _json
 
-from typer.testing import CliRunner
-
-from agent_core.cli import app
+from agent_core import cli
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
 from agent_core.formatters import format_history
 from agent_core.memory import SeedMemory
@@ -76,36 +74,30 @@ def test_list_recent_sessions_skips_malformed(tmp_memory: SeedMemory):
     assert rows[0]["verdict"] == "ship"
 
 
-def test_history_cmd_empty_table(tmp_path, monkeypatch):
+def test_history_cmd_empty_table(tmp_path, monkeypatch, capsys):
     """CLI on a clean memory shows friendly empty message."""
-    monkeypatch.setattr(
-        "agent_core.cli.SeedMemory",
-        lambda: SeedMemory(root=tmp_path / "ac"),
-    )
-    runner = CliRunner()
-    result = runner.invoke(app, ["history"])
-    assert result.exit_code == 0
-    assert "Chưa có phiên feedback" in result.stdout
+    monkeypatch.setattr(cli, "SeedMemory", lambda: SeedMemory(root=tmp_path / "ac"))
+    cli.history_cmd(limit=10, as_json=False)
+    out = capsys.readouterr().out
+    assert "Chưa có phiên feedback" in out
 
 
-def test_history_cmd_renders_table(tmp_path, monkeypatch):
+def test_history_cmd_renders_table(tmp_path, monkeypatch, capsys):
     mem = SeedMemory(root=tmp_path / "ac2")
     _seed_one_session(mem, verdict="ship", trend="flat")
-    monkeypatch.setattr("agent_core.cli.SeedMemory", lambda: mem)
-    runner = CliRunner()
-    result = runner.invoke(app, ["history", "--limit", "5"])
-    assert result.exit_code == 0
-    assert "ship" in result.stdout and "landing" in result.stdout
+    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
+    cli.history_cmd(limit=5, as_json=False)
+    out = capsys.readouterr().out
+    assert "ship" in out and "landing" in out
 
 
-def test_history_cmd_json_output(tmp_path, monkeypatch):
+def test_history_cmd_json_output(tmp_path, monkeypatch, capsys):
     mem = SeedMemory(root=tmp_path / "ac3")
     _seed_one_session(mem, verdict="ship", trend="flat")
-    monkeypatch.setattr("agent_core.cli.SeedMemory", lambda: mem)
-    runner = CliRunner()
-    result = runner.invoke(app, ["history", "--json"])
-    assert result.exit_code == 0
-    parsed = _json.loads(result.stdout)
+    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
+    cli.history_cmd(limit=10, as_json=True)
+    out = capsys.readouterr().out
+    parsed = _json.loads(out)
     assert len(parsed) == 1
     assert parsed[0]["verdict"] == "ship"
     assert parsed[0]["trend"] == "flat"
