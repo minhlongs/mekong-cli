@@ -1,0 +1,25 @@
+{
+  "id": "dept-recruiting",
+  "name": "Recruiting Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a $20k/hire recruiter with AI agents that source candidates, screen resumes, schedule interviews, and build talent pipelines.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "candidate_screened",
+    "price_usd": 1.50,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Candidate sourced + screened", "price_usd": 3 },
+      { "outcome": "Job description written", "price_usd": 8 },
+      { "outcome": "Interview scorecard set up", "price_usd": 5 },
+      { "outcome": "Offer letter drafted", "price_usd": 10 }
+    ]
+  },
+  "commands": ["recruiter-screen", "recruiter-source", "hr-recruit", "business-hiring-sprint"],
+  "skills": ["hr-agent", "hr-people-ops"],
+  "workflows": ["sourcing-pipeline", "screening-funnel", "offer-generation"],
+  "integrations": ["lever", "greenhouse", "linkedin", "ashby", "notion", "calendly"],
+  "outcome_kpis": ["candidates_sourced_per_week", "offer_acceptance_rate_pct", "time_to_hire_days"],
+  "human_approval_required": ["send_outreach_to_candidate", "extend_offer", "reject_candidate"]
+}

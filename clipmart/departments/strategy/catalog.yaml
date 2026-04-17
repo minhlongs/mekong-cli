@@ -1,0 +1,23 @@
+id: dept-strategy
+name: strategy
+category: founder
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: strategic_deliverable
+  price_usd: 15.00
+  monthly_floor_usd: 49
+
+commands:
+  - okr
+  - swot
+  - board-report
+  - annual
+  - ipo-readiness-check
+
+skills:
+  - launch-strategy
+  - pricing-strategy
+
+status: available
+install: "mekong install dept-strategy"

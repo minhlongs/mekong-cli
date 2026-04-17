@@ -1,0 +1,21 @@
+id: dept-engineering-frontend
+name: engineering-frontend
+category: engineering
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: frontend_task
+  price_usd: 5.00
+  monthly_floor_usd: 49
+
+commands:
+  - frontend-ui-build
+  - frontend-responsive-fix
+  - cook
+
+skills:
+  - frontend
+  - frontend-development
+
+status: available
+install: "mekong install dept-engineering-frontend"

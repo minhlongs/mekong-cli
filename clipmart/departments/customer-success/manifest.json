@@ -1,0 +1,25 @@
+{
+  "id": "dept-customer-success",
+  "name": "Customer Success Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a CS team with AI agents that onboard customers, run health checks, detect churn signals, and execute expansion plays — automatically.",
+  "category": "business",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "customer_action",
+    "price_usd": 1.50,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Customer onboarding flow", "price_usd": 10 },
+      { "outcome": "Churn risk alert + action plan", "price_usd": 8 },
+      { "outcome": "QBR report generated", "price_usd": 15 },
+      { "outcome": "NPS survey + analysis", "price_usd": 12 }
+    ]
+  },
+  "commands": ["business-client-onboard", "business-revenue-engine", "sales-forecast"],
+  "skills": ["customer-data-unification", "marketing-agent"],
+  "workflows": ["onboarding-sequence", "health-score-monitoring", "expansion-playbook"],
+  "integrations": ["intercom", "zendesk", "hubspot", "gainsight", "mixpanel", "segment"],
+  "outcome_kpis": ["net_revenue_retention_pct", "churn_rate_pct", "time_to_value_days", "nps_score"],
+  "human_approval_required": ["send_churn_rescue_offer", "approve_expansion_deal", "escalate_at_risk_account"]
+}

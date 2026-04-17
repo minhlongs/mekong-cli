@@ -1,0 +1,25 @@
+{
+  "id": "dept-hr",
+  "name": "HR Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace an HR manager with AI agents that handle onboarding, performance cycles, policy management, and employee reviews — Gusto at a fraction of the cost.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "hr_action",
+    "price_usd": 3.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Employee onboarding package", "price_usd": 15 },
+      { "outcome": "Performance review cycle run", "price_usd": 20 },
+      { "outcome": "HR policy document", "price_usd": 12 },
+      { "outcome": "Annual review coordination", "price_usd": 25 }
+    ]
+  },
+  "commands": ["hr-onboard", "hr-performance-cycle", "hr-policy", "hr-review", "hr-recruit", "business-hiring-sprint"],
+  "skills": ["hr-agent", "hr-people-ops"],
+  "workflows": ["onboarding-checklist", "performance-review-cycle", "policy-annual-update"],
+  "integrations": ["gusto", "rippling", "bamboohr", "slack", "notion", "google-workspace"],
+  "outcome_kpis": ["time_to_productivity_days", "review_completion_rate_pct", "policy_compliance_pct"],
+  "human_approval_required": ["approve_offer_letter", "finalize_performance_rating", "publish_hr_policy"]
+}

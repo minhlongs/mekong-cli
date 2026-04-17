@@ -1,0 +1,25 @@
+{
+  "id": "dept-it-security",
+  "name": "IT Security Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace an IT security team with AI agents that run security scans, endpoint management, service desk, and inventory audits.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "security_action",
+    "price_usd": 4.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Security scan + report", "price_usd": 20 },
+      { "outcome": "Endpoint compliance check", "price_usd": 8 },
+      { "outcome": "Service ticket resolved", "price_usd": 5 },
+      { "outcome": "IT inventory audit", "price_usd": 15 }
+    ]
+  },
+  "commands": ["security-scan", "it-endpoint", "it-inventory", "it-service", "audit-compliance"],
+  "skills": ["cc-skill-security-review", "cybersecurity-ops-agent", "api-security-best-practices", "data-privacy-engineering"],
+  "workflows": ["security-scan-weekly", "endpoint-compliance-cycle", "incident-response"],
+  "integrations": ["crowdstrike", "okta", "jamf", "1password-teams", "slack", "jira"],
+  "outcome_kpis": ["open_vulnerabilities_count", "mean_time_to_remediate_days", "endpoint_compliance_pct"],
+  "human_approval_required": ["block_endpoint", "escalate_incident", "approve_security_exception"]
+}

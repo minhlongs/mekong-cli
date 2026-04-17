@@ -1,0 +1,21 @@
+id: dept-engineering-backend
+name: engineering-backend
+category: engineering
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: engineering_task
+  price_usd: 5.00
+  monthly_floor_usd: 49
+
+commands:
+  - backend-api-build
+  - backend-db-task
+  - cook
+
+skills:
+  - backend
+  - backend-development
+
+status: available
+install: "mekong install dept-engineering-backend"

@@ -1,0 +1,20 @@
+id: dept-legal
+name: legal
+category: founder
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: legal_document
+  price_usd: 12.00
+  monthly_floor_usd: 49
+
+commands:
+  - legal-contract-review
+  - legal-policy
+
+skills:
+  - legal-agent
+  - legal-compliance
+
+status: available
+install: "mekong install dept-legal"

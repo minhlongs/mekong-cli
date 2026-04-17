@@ -1,0 +1,25 @@
+{
+  "id": "dept-ux-research",
+  "name": "UX Research Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a $180/hr UX researcher with AI agents that run user interviews, usability tests, synthesis, and design recommendations.",
+  "category": "product",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "research_deliverable",
+    "price_usd": 12.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Usability test plan + script", "price_usd": 20 },
+      { "outcome": "Interview synthesis (5 users)", "price_usd": 25 },
+      { "outcome": "UX audit report", "price_usd": 35 },
+      { "outcome": "Design recommendations doc", "price_usd": 18 }
+    ]
+  },
+  "commands": ["ux-interview", "ux-usability"],
+  "skills": ["product-manager-toolkit", "ai-product", "frontend-design"],
+  "workflows": ["research-sprint", "usability-test-cycle", "insight-synthesis"],
+  "integrations": ["figma", "maze", "hotjar", "fullstory", "notion", "dovetail"],
+  "outcome_kpis": ["research_reports_per_month", "insights_actioned_pct", "usability_issues_found"],
+  "human_approval_required": ["recruit_participants", "publish_research_findings", "action_design_changes"]
+}

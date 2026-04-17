@@ -1,0 +1,25 @@
+{
+  "id": "dept-engineering-frontend",
+  "name": "Frontend Engineering Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a frontend team with AI agents that build UIs, fix responsive issues, implement design systems, and ship pixel-perfect features.",
+  "category": "engineering",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "frontend_task",
+    "price_usd": 5.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "UI component built from Figma", "price_usd": 12 },
+      { "outcome": "Responsive fix across breakpoints", "price_usd": 8 },
+      { "outcome": "Page feature complete", "price_usd": 20 },
+      { "outcome": "Design system token integration", "price_usd": 15 }
+    ]
+  },
+  "commands": ["frontend-ui-build", "frontend-responsive-fix", "cook", "code", "review"],
+  "skills": ["frontend", "frontend-dev-guidelines", "frontend-development", "cc-skill-frontend-patterns", "frontend-design"],
+  "workflows": ["ui-build-cycle", "design-to-code", "responsive-qa"],
+  "integrations": ["figma", "github", "vercel", "cloudflare-pages", "storybook"],
+  "outcome_kpis": ["ui_components_shipped", "lighthouse_score", "design_parity_pct"],
+  "human_approval_required": ["merge_to_main", "deploy_to_production", "approve_design_deviation"]
+}

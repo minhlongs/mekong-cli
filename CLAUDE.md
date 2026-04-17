@@ -256,3 +256,67 @@ Every session:
 4. If no `company.json` → suggest: `mekong company/init`
 
 **Language:** English for all documentation and code. Vietnamese for user-facing content when configured.
+
+---
+
+## SERVICES-AS-SOFTWARE MARKETPLACE
+
+### Thesis
+
+Inspired by Jennifer Li's a16z essay *"Services-as-Software"*: labor markets worth $2T (accounting, legal, HR, marketing, customer support, engineering) will be reshaped by AI agents that deliver services as software products. Each vertical becomes a SaaS product with **per-outcome pricing** — not per-seat, not per-hour.
+
+For Mekong CLI, this means packaging the existing 22 departments as **installable department-in-a-box products** in the `clipmart/` marketplace.
+
+### Browse the Marketplace
+
+```bash
+cat clipmart/departments/CATALOG.md       # Master catalog of all 22 departments
+mekong install --list                     # CLI: list all available departments
+```
+
+### Install a Department
+
+```bash
+mekong install dept-sales                 # Install Sales Department as a Service
+mekong install dept-engineering-backend   # Install Backend Engineering as a Service
+mekong install --dry-run dept-legal       # Validate + preview without installing
+```
+
+### 22 Available Departments
+
+| Layer | Departments |
+|-------|-------------|
+| Founder | strategy, finance, legal, fundraising |
+| Business | sales, marketing, customer-success, bizops |
+| Product | product-management, ux-research, data-analytics |
+| Engineering | engineering-backend, engineering-frontend, engineering-qa, devops |
+| People/Ops | hr, recruiting, accounting, compliance, it-security, cx-support, communications |
+
+### Outcome Pricing Philosophy
+
+Every department is priced on **outcomes**, not seats:
+
+- `dept-sales`: $2.00 per qualified lead (vs $70k/yr BDR salary)
+- `dept-legal`: $25 per contract reviewed (vs $400/hr outside counsel)
+- `dept-accounting`: $0.50 per transaction (vs $5k/mo bookkeeper)
+- `dept-cx-support`: $0.75 per ticket resolved (vs $55k/yr support rep)
+
+**Monthly floor:** $49 per department. No outcomes delivered = no additional charge.
+
+### Per-Department Structure
+
+Each department in `clipmart/departments/<name>/` contains:
+
+```
+manifest.json       — Product metadata, pricing, commands, skills
+README.md           — Customer-facing product page (install + config + workflows)
+install.sh          — Installer script (validates, configures, dry-runs)
+catalog.yaml        — Computed commands + skills available in this dept
+outcome-pricing.md  — Market reference pricing + rationale
+```
+
+### Reference
+
+- Jennifer Li (a16z): Services-as-Software thesis
+- Marketplace index: `clipmart/departments/CATALOG.md`
+- Root installer: `clipmart/install.sh`

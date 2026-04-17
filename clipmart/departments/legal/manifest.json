@@ -1,0 +1,25 @@
+{
+  "id": "dept-legal",
+  "name": "Legal Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace $400/hr outside counsel for routine legal work — contract review, policy drafting, compliance checks — with autonomous AI legal agents.",
+  "category": "founder",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "legal_document",
+    "price_usd": 12.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Contract review + redlines", "price_usd": 25 },
+      { "outcome": "Privacy policy draft", "price_usd": 20 },
+      { "outcome": "Employment agreement", "price_usd": 30 },
+      { "outcome": "Vendor NDA", "price_usd": 15 }
+    ]
+  },
+  "commands": ["legal-contract-review", "legal-compliance-check", "legal-policy", "compliance-check", "board-compliance"],
+  "skills": ["legal-agent", "legal-compliance", "legal-hub-sdk", "legaltech-contract-intelligence", "identity-compliance-sdk"],
+  "workflows": ["contract-review-pipeline", "policy-update-cycle", "compliance-calendar"],
+  "integrations": ["docusign", "ironclad", "notion", "google-docs", "dropbox"],
+  "outcome_kpis": ["contracts_reviewed_per_month", "avg_review_turnaround_hours", "policy_coverage_pct"],
+  "human_approval_required": ["sign_contract", "publish_legal_policy", "escalate_dispute"]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "dept-finance",
+  "name": "Finance Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a part-time CFO + bookkeeper with autonomous agents that handle budgeting, monthly close, collections, and financial reporting.",
+  "category": "founder",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "finance_deliverable",
+    "price_usd": 10.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Monthly financial close", "price_usd": 50 },
+      { "outcome": "Budget plan (annual)", "price_usd": 60 },
+      { "outcome": "Collections workflow run", "price_usd": 20 },
+      { "outcome": "Investor financial report", "price_usd": 40 }
+    ]
+  },
+  "commands": ["finance-budget-plan", "finance-monthly-close", "finance-collections", "business-financial-close", "analyst-forecast-update", "analyst-report"],
+  "skills": ["finance-accounting", "finance-agent", "embedded-finance-baas"],
+  "workflows": ["monthly-close-cycle", "budget-vs-actual", "collections-automation"],
+  "integrations": ["quickbooks", "xero", "stripe", "mercury", "brex"],
+  "outcome_kpis": ["monthly_close_days", "ar_days_outstanding", "forecast_accuracy_pct"],
+  "human_approval_required": ["approve_budget_plan", "sign_off_monthly_close", "trigger_collections_escalation"]
+}

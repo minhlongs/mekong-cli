@@ -1,0 +1,20 @@
+id: dept-bizops
+name: bizops
+category: business
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: ops_deliverable
+  price_usd: 8.00
+  monthly_floor_usd: 49
+
+commands:
+  - business-quarterly-review
+  - business-report
+  - business-revenue-engine
+
+skills:
+  - data-analyst-agent
+
+status: available
+install: "mekong install dept-bizops"

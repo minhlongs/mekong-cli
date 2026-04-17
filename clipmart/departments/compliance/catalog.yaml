@@ -1,0 +1,22 @@
+id: dept-compliance
+name: compliance
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: compliance_control
+  price_usd: 5.00
+  monthly_floor_usd: 49
+
+commands:
+  - compliance-check
+  - compliance-monitor
+  - compliance-soc2-prep
+  - audit-compliance
+
+skills:
+  - compliance-automation
+  - regtech-compliance
+
+status: available
+install: "mekong install dept-compliance"

@@ -1,0 +1,25 @@
+{
+  "id": "dept-strategy",
+  "name": "Strategy Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a full-time Chief of Staff + strategy consultant with autonomous AI agents that run OKRs, annual planning, competitive analysis, and board reporting.",
+  "category": "founder",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "strategic_deliverable",
+    "price_usd": 15.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Annual OKR plan", "price_usd": 75 },
+      { "outcome": "Quarterly board report", "price_usd": 45 },
+      { "outcome": "SWOT + competitive analysis", "price_usd": 30 },
+      { "outcome": "3-year financial model", "price_usd": 90 }
+    ]
+  },
+  "commands": ["annual", "okr", "swot", "board-report", "board-manage", "board-minutes", "business-quarterly-review", "ipo-readiness-check", "ipo-board-prep"],
+  "skills": ["launch-strategy", "pricing-strategy", "free-tool-strategy", "brainstorming"],
+  "workflows": ["annual-planning", "okr-cascade", "board-cadence"],
+  "integrations": ["notion", "google-docs", "slack", "linear"],
+  "outcome_kpis": ["okr_completion_rate_pct", "board_meeting_prep_hours_saved", "strategic_decisions_documented"],
+  "human_approval_required": ["publish_board_report", "finalize_annual_plan", "submit_ipo_readiness"]
+}

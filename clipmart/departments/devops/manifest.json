@@ -1,0 +1,25 @@
+{
+  "id": "dept-devops",
+  "name": "DevOps Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a DevOps/platform engineer with AI agents that manage CI/CD pipelines, infra provisioning, rollbacks, and network topology.",
+  "category": "engineering",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "infra_operation",
+    "price_usd": 4.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "CI/CD pipeline deploy", "price_usd": 6 },
+      { "outcome": "Rollback executed", "price_usd": 5 },
+      { "outcome": "Infra region provisioned", "price_usd": 20 },
+      { "outcome": "Network topology optimization", "price_usd": 15 }
+    ]
+  },
+  "commands": ["devops-deploy-pipeline", "devops-rollback", "deploy", "infra-gateway", "infra-network", "infra-optimize", "infra-region", "infra-topology"],
+  "skills": ["devops", "devops-agent", "aws-serverless", "azure-functions"],
+  "workflows": ["zero-downtime-deploy", "rollback-playbook", "infra-as-code"],
+  "integrations": ["github-actions", "cloudflare-workers", "vercel", "docker", "terraform"],
+  "outcome_kpis": ["deploy_frequency_per_week", "mttr_minutes", "deployment_success_rate_pct"],
+  "human_approval_required": ["deploy_to_production", "execute_rollback", "provision_new_region"]
+}

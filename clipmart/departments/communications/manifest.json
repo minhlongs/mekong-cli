@@ -1,0 +1,25 @@
+{
+  "id": "dept-communications",
+  "name": "Communications Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a PR/comms manager with AI agents that draft press releases, internal announcements, board minutes, and external communications.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "communication_piece",
+    "price_usd": 6.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Press release drafted", "price_usd": 20 },
+      { "outcome": "Internal announcement", "price_usd": 8 },
+      { "outcome": "Board minutes", "price_usd": 15 },
+      { "outcome": "Crisis comms brief", "price_usd": 30 }
+    ]
+  },
+  "commands": ["board-minutes", "board-report", "business-report"],
+  "skills": ["internal-comms-anthropic", "internal-comms-community", "marketing-agent"],
+  "workflows": ["press-release-pipeline", "internal-comms-cadence", "board-reporting"],
+  "integrations": ["slack", "notion", "google-docs", "mailchimp", "linkedin"],
+  "outcome_kpis": ["comms_pieces_per_month", "announcement_open_rate_pct", "press_coverage_count"],
+  "human_approval_required": ["publish_press_release", "send_all_hands_email", "respond_to_media_inquiry"]
+}

@@ -1,0 +1,19 @@
+id: dept-ux-research
+name: ux-research
+category: product
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: research_deliverable
+  price_usd: 12.00
+  monthly_floor_usd: 49
+
+commands:
+  - ux-interview
+  - ux-usability
+
+skills:
+  - product-manager-toolkit
+
+status: available
+install: "mekong install dept-ux-research"

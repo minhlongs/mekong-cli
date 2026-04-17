@@ -1,0 +1,21 @@
+id: dept-devops
+name: devops
+category: engineering
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: infra_operation
+  price_usd: 4.00
+  monthly_floor_usd: 49
+
+commands:
+  - devops-deploy-pipeline
+  - devops-rollback
+  - deploy
+
+skills:
+  - devops
+  - devops-agent
+
+status: available
+install: "mekong install dept-devops"

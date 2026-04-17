@@ -1,0 +1,22 @@
+id: dept-it-security
+name: it-security
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: security_action
+  price_usd: 4.00
+  monthly_floor_usd: 49
+
+commands:
+  - security-scan
+  - it-endpoint
+  - it-inventory
+  - it-service
+
+skills:
+  - cc-skill-security-review
+  - cybersecurity-ops-agent
+
+status: available
+install: "mekong install dept-it-security"

@@ -1,0 +1,21 @@
+id: dept-engineering-qa
+name: engineering-qa
+category: engineering
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: test_run
+  price_usd: 3.00
+  monthly_floor_usd: 49
+
+commands:
+  - qa-e2e
+  - qa-regression
+  - qa-perf
+  - qa-accessibility
+
+skills:
+  - qa-testing-agent
+
+status: available
+install: "mekong install dept-engineering-qa"

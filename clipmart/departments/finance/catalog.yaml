@@ -1,0 +1,21 @@
+id: dept-finance
+name: finance
+category: founder
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: finance_deliverable
+  price_usd: 10.00
+  monthly_floor_usd: 49
+
+commands:
+  - finance-budget-plan
+  - finance-monthly-close
+  - finance-collections
+
+skills:
+  - finance-accounting
+  - finance-agent
+
+status: available
+install: "mekong install dept-finance"

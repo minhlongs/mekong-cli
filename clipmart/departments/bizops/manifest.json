@@ -1,0 +1,25 @@
+{
+  "id": "dept-bizops",
+  "name": "BizOps Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a BizOps manager with AI agents that run revenue operations, quarterly reviews, hiring sprints, and cross-functional reporting.",
+  "category": "business",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "ops_deliverable",
+    "price_usd": 8.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Quarterly business review", "price_usd": 40 },
+      { "outcome": "Revenue ops dashboard", "price_usd": 30 },
+      { "outcome": "Hiring sprint coordination", "price_usd": 25 },
+      { "outcome": "Cross-functional report", "price_usd": 20 }
+    ]
+  },
+  "commands": ["business-quarterly-review", "business-revenue-engine", "business-report", "business-hiring-sprint", "business-campaign-launch", "business-client-onboard"],
+  "skills": ["data-analyst-agent", "launch-strategy"],
+  "workflows": ["qbr-cycle", "revenue-ops-weekly", "hiring-sprint-tracker"],
+  "integrations": ["notion", "linear", "slack", "looker", "metabase", "airtable"],
+  "outcome_kpis": ["revenue_ops_cycle_time_days", "cross_functional_blockers_resolved", "qbr_action_items_completion_pct"],
+  "human_approval_required": ["approve_quarterly_targets", "sign_off_headcount_plan", "publish_business_review"]
+}

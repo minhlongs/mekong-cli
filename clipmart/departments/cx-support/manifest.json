@@ -1,0 +1,25 @@
+{
+  "id": "dept-cx-support",
+  "name": "CX Support Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a support team with AI agents that resolve tickets, answer FAQs, escalate complex issues, and generate CSAT reports — 24/7 coverage.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "ticket_resolved",
+    "price_usd": 0.75,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Support ticket resolved", "price_usd": 1 },
+      { "outcome": "FAQ knowledge base updated", "price_usd": 10 },
+      { "outcome": "CSAT report generated", "price_usd": 8 },
+      { "outcome": "Escalation handled", "price_usd": 5 }
+    ]
+  },
+  "commands": ["business-client-onboard", "business-revenue-engine"],
+  "skills": ["customer-data-unification", "marketing-agent"],
+  "workflows": ["ticket-triage", "first-response-automation", "escalation-playbook"],
+  "integrations": ["intercom", "zendesk", "freshdesk", "slack", "linear", "notion"],
+  "outcome_kpis": ["first_response_time_minutes", "resolution_rate_pct", "csat_score", "ticket_volume"],
+  "human_approval_required": ["issue_refund", "escalate_to_engineering", "ban_user_account"]
+}

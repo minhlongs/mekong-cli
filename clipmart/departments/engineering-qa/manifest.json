@@ -1,0 +1,25 @@
+{
+  "id": "dept-engineering-qa",
+  "name": "QA Engineering Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a QA team with AI agents that run e2e tests, performance tests, chaos engineering, accessibility audits, and regression suites.",
+  "category": "engineering",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "test_run",
+    "price_usd": 3.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "E2E test suite run", "price_usd": 5 },
+      { "outcome": "Regression suite", "price_usd": 8 },
+      { "outcome": "Performance benchmark report", "price_usd": 12 },
+      { "outcome": "Accessibility audit", "price_usd": 15 }
+    ]
+  },
+  "commands": ["qa-e2e", "qa-regression", "qa-perf", "qa-accessibility", "qa-chaos", "qa-plan"],
+  "skills": ["qa-testing-agent", "production-code-audit"],
+  "workflows": ["ci-test-gate", "regression-on-pr", "chaos-day"],
+  "integrations": ["github-actions", "playwright", "k6", "sentry", "datadog"],
+  "outcome_kpis": ["bug_escape_rate", "test_pass_rate_pct", "p95_api_latency_ms", "accessibility_violations"],
+  "human_approval_required": ["approve_release", "waive_test_failure", "trigger_chaos_experiment"]
+}

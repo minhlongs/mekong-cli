@@ -1,0 +1,25 @@
+{
+  "id": "dept-accounting",
+  "name": "Accounting Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a $5k/mo bookkeeper + accounting firm with AI agents that run daily accounting, invoice batches, reconciliation, and month-end close.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "accounting_transaction",
+    "price_usd": 0.50,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Daily bookkeeping run", "price_usd": 5 },
+      { "outcome": "Invoice batch processed (50)", "price_usd": 10 },
+      { "outcome": "Month-end reconciliation", "price_usd": 40 },
+      { "outcome": "AP/AR aging report", "price_usd": 15 }
+    ]
+  },
+  "commands": ["accounting-daily", "accounting-invoice-batch", "finance-monthly-close", "finance-collections", "business-financial-close"],
+  "skills": ["accounting-agent", "finance-accounting", "finance-agent"],
+  "workflows": ["daily-bookkeeping", "invoice-to-cash", "month-end-close"],
+  "integrations": ["quickbooks", "xero", "stripe", "bill.com", "mercury", "brex"],
+  "outcome_kpis": ["invoices_processed_per_day", "reconciliation_accuracy_pct", "close_cycle_days"],
+  "human_approval_required": ["approve_payment_run", "sign_off_month_end", "flag_anomalous_transaction"]
+}

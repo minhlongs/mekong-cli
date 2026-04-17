@@ -1,0 +1,19 @@
+id: dept-fundraising
+name: fundraising
+category: founder
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: investor_touchpoint
+  price_usd: 5.00
+  monthly_floor_usd: 49
+
+commands:
+  - pitch
+  - fundraise
+
+skills:
+  - launch-strategy
+
+status: available
+install: "mekong install dept-fundraising"

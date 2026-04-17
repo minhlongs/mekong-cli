@@ -1,0 +1,20 @@
+id: dept-recruiting
+name: recruiting
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: candidate_screened
+  price_usd: 1.50
+  monthly_floor_usd: 49
+
+commands:
+  - recruiter-screen
+  - recruiter-source
+  - hr-recruit
+
+skills:
+  - hr-agent
+
+status: available
+install: "mekong install dept-recruiting"

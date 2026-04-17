@@ -1,0 +1,20 @@
+id: dept-product-management
+name: product-management
+category: product
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: product_artifact
+  price_usd: 10.00
+  monthly_floor_usd: 49
+
+commands:
+  - product-sprint-plan
+  - product-discovery
+  - product-launch-feature
+
+skills:
+  - product-manager-agent
+
+status: available
+install: "mekong install dept-product-management"

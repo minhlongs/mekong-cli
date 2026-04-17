@@ -1,0 +1,21 @@
+id: dept-accounting
+name: accounting
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: accounting_transaction
+  price_usd: 0.50
+  monthly_floor_usd: 49
+
+commands:
+  - accounting-daily
+  - accounting-invoice-batch
+  - finance-monthly-close
+
+skills:
+  - accounting-agent
+  - finance-accounting
+
+status: available
+install: "mekong install dept-accounting"

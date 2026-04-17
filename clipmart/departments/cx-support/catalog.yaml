@@ -1,0 +1,19 @@
+id: dept-cx-support
+name: cx-support
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: ticket_resolved
+  price_usd: 0.75
+  monthly_floor_usd: 49
+
+commands:
+  - business-client-onboard
+  - business-revenue-engine
+
+skills:
+  - customer-data-unification
+
+status: available
+install: "mekong install dept-cx-support"

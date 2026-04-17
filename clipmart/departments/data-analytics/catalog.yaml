@@ -1,0 +1,21 @@
+id: dept-data-analytics
+name: data-analytics
+category: product
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: data_deliverable
+  price_usd: 8.00
+  monthly_floor_usd: 49
+
+commands:
+  - data-pipeline
+  - data-daily-pipeline
+  - data-warehouse
+  - data-quality
+
+skills:
+  - data-analyst-agent
+
+status: available
+install: "mekong install dept-data-analytics"

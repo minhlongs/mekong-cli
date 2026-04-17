@@ -1,0 +1,25 @@
+{
+  "id": "dept-fundraising",
+  "name": "Fundraising Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a $20k/month fundraising advisor with AI agents that build investor pipelines, write pitch decks, manage deal flow, and prep due diligence.",
+  "category": "founder",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "investor_touchpoint",
+    "price_usd": 5.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Pitch deck generation", "price_usd": 50 },
+      { "outcome": "Investor outreach batch (25)", "price_usd": 25 },
+      { "outcome": "Cap table analysis", "price_usd": 20 },
+      { "outcome": "Due diligence data room prep", "price_usd": 75 }
+    ]
+  },
+  "commands": ["pitch", "fundraise", "vc/cap-table", "ipo-readiness-check", "ipo-board-prep", "board-report"],
+  "skills": ["launch-strategy", "pricing-strategy", "brainstorming"],
+  "workflows": ["investor-outreach-sequence", "due-diligence-pack", "cap-table-management"],
+  "integrations": ["airtable", "notion", "google-slides", "docusign", "carta"],
+  "outcome_kpis": ["investor_meetings_booked", "pitch_decks_generated", "due_diligence_items_completed"],
+  "human_approval_required": ["send_investor_email", "publish_pitch_deck", "sign_term_sheet"]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "dept-product-management",
+  "name": "Product Management Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a senior PM with AI agents that run discovery, sprint planning, competitive intel, feature launches, and retrospectives.",
+  "category": "product",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "product_artifact",
+    "price_usd": 10.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Sprint plan + ticket breakdown", "price_usd": 20 },
+      { "outcome": "Feature launch checklist", "price_usd": 15 },
+      { "outcome": "Competitive intelligence report", "price_usd": 25 },
+      { "outcome": "Product retrospective", "price_usd": 12 }
+    ]
+  },
+  "commands": ["product-sprint-plan", "product-discovery", "product-launch-feature", "product-competitive-intel", "product-retrospective"],
+  "skills": ["product-manager-agent", "product-manager-toolkit", "ai-product"],
+  "workflows": ["sprint-ceremony-loop", "discovery-pipeline", "launch-checklist"],
+  "integrations": ["linear", "jira", "notion", "figma", "productboard", "miro"],
+  "outcome_kpis": ["sprint_velocity", "feature_launch_cycle_days", "discovery_insights_per_sprint"],
+  "human_approval_required": ["approve_sprint_scope", "sign_off_feature_launch", "publish_roadmap"]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "dept-compliance",
+  "name": "Compliance Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a $50k/year compliance officer with AI agents that monitor controls, run SOX/SOC2 cycles, audit trails, and ITGC testing.",
+  "category": "people",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "compliance_control",
+    "price_usd": 5.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "SOC2 readiness assessment", "price_usd": 80 },
+      { "outcome": "SOX cycle run", "price_usd": 50 },
+      { "outcome": "ITGC control test", "price_usd": 20 },
+      { "outcome": "Audit trail report", "price_usd": 15 }
+    ]
+  },
+  "commands": ["compliance-check", "compliance-monitor", "compliance-soc2-prep", "compliance-sox-cycle", "audit-compliance", "audit-execute", "audit-itgc", "audit-plan", "audit-report", "audit-sox", "audit-trail"],
+  "skills": ["compliance-automation", "ai-governance-compliance", "regtech-compliance", "identity-compliance-sdk"],
+  "workflows": ["continuous-compliance-monitor", "soc2-evidence-collection", "sox-cycle"],
+  "integrations": ["vanta", "drata", "secureframe", "jira", "notion", "github"],
+  "outcome_kpis": ["open_findings_count", "control_pass_rate_pct", "audit_evidence_freshness_days"],
+  "human_approval_required": ["submit_soc2_report", "sign_sox_attestation", "escalate_material_weakness"]
+}

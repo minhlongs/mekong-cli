@@ -1,0 +1,25 @@
+{
+  "id": "dept-engineering-backend",
+  "name": "Backend Engineering Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a backend engineering team with AI agents that build APIs, manage databases, optimize infrastructure, and ship features end-to-end.",
+  "category": "engineering",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "engineering_task",
+    "price_usd": 5.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "REST API endpoint built + tested", "price_usd": 15 },
+      { "outcome": "Database migration", "price_usd": 10 },
+      { "outcome": "Backend feature complete", "price_usd": 25 },
+      { "outcome": "Performance optimization", "price_usd": 20 }
+    ]
+  },
+  "commands": ["backend-api-build", "backend-db-task", "cook", "code", "review", "test"],
+  "skills": ["backend", "backend-dev-guidelines", "backend-development", "cc-skill-backend-patterns", "databases", "database-design", "api-patterns"],
+  "workflows": ["feature-dev-loop", "api-build-cycle", "db-migration-safe"],
+  "integrations": ["github", "postgres", "supabase", "redis", "cloudflare-workers"],
+  "outcome_kpis": ["features_shipped_per_sprint", "api_p99_latency_ms", "test_coverage_pct"],
+  "human_approval_required": ["merge_to_main", "deploy_to_production", "schema_migration_run"]
+}

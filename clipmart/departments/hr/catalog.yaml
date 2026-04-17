@@ -1,0 +1,22 @@
+id: dept-hr
+name: hr
+category: people
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: hr_action
+  price_usd: 3.00
+  monthly_floor_usd: 49
+
+commands:
+  - hr-onboard
+  - hr-performance-cycle
+  - hr-policy
+  - hr-review
+
+skills:
+  - hr-agent
+  - hr-people-ops
+
+status: available
+install: "mekong install dept-hr"

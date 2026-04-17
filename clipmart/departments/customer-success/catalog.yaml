@@ -1,0 +1,19 @@
+id: dept-customer-success
+name: customer-success
+category: business
+version: "1.0.0"
+pricing:
+  model: per-outcome
+  unit: customer_action
+  price_usd: 1.50
+  monthly_floor_usd: 49
+
+commands:
+  - business-client-onboard
+  - business-revenue-engine
+
+skills:
+  - customer-data-unification
+
+status: available
+install: "mekong install dept-customer-success"

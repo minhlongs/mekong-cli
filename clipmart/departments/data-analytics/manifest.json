@@ -1,0 +1,25 @@
+{
+  "id": "dept-data-analytics",
+  "name": "Data Analytics Department as a Service",
+  "version": "1.0.0",
+  "description": "Replace a data engineering team with AI agents that build pipelines, run transforms, manage warehouse, query data, and deliver metric reports.",
+  "category": "product",
+  "pricing": {
+    "model": "per-outcome",
+    "unit": "data_deliverable",
+    "price_usd": 8.00,
+    "monthly_floor_usd": 49,
+    "examples": [
+      { "outcome": "Data pipeline build + test", "price_usd": 30 },
+      { "outcome": "Daily pipeline run", "price_usd": 5 },
+      { "outcome": "Data quality audit", "price_usd": 20 },
+      { "outcome": "Metric dashboard", "price_usd": 25 }
+    ]
+  },
+  "commands": ["data-pipeline", "data-daily-pipeline", "data-ingest", "data-transform", "data-warehouse", "data-quality", "data-query", "data-metric", "data-catalog", "data-full-refresh", "data-reverse-etl", "data-access"],
+  "skills": ["data-analyst-agent", "databases", "database-design"],
+  "workflows": ["daily-etl-run", "warehouse-refresh", "metric-reporting"],
+  "integrations": ["dbt", "airflow", "bigquery", "snowflake", "postgres", "looker", "metabase"],
+  "outcome_kpis": ["pipeline_uptime_pct", "data_freshness_hrs", "query_p95_latency_ms"],
+  "human_approval_required": ["deploy_pipeline_change", "approve_schema_migration", "publish_metric_definition"]
+}
