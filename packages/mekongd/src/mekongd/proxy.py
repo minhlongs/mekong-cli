@@ -35,6 +35,7 @@ from mekongd.stats import (
     aggregate_signals,
     aggregate_signals_by_model,
     aggregate_stats,
+    cloud_cost_by_model,
     estimate_savings,
     list_recent_signals,
     record_route,
@@ -164,6 +165,17 @@ async def signals_breakdown(hours: int | None = None):
     """
     cfg, _, _ = _get_deps()
     return {"by_model": aggregate_signals_by_model(cfg.stats_db_path, hours)}
+
+
+@app.get("/v1/cost/by-model")
+async def cost_by_model(hours: int | None = None):
+    """Operator diagnostic — cloud spend grouped by model.
+
+    hours: optional window filter (e.g. ?hours=168 for last week).
+    Returns only models with non-zero cost.
+    """
+    cfg, _, _ = _get_deps()
+    return {"by_model": cloud_cost_by_model(cfg.stats_db_path, hours)}
 
 
 @app.get("/v1/signals/recent")

@@ -111,6 +111,55 @@ def test_today_cloud_spent_excludes_yesterday(tmp_path: Path):
     assert abs(spent - 0.04) < 1e-9  # yesterday's 99.0 excluded
 
 
+def test_cloud_cost_by_model_groups_totals(tmp_path: Path):
+    from mekongd.stats import cloud_cost_by_model
+
+    db = tmp_path / "stats.sqlite"
+    record_route(db, "POST /v1/messages", 100, 200, "cloud", 0.0, "claude-opus-4-7", 0.05)
+    record_route(db, "POST /v1/messages", 50, 100, "cloud", 0.0, "claude-opus-4-7", 0.02)
+    record_route(db, "POST /v1/messages", 30, 60, "cloud", 0.0, "claude-sonnet-4-6", 0.01)
+    # Local route must NOT count (cost_usd=0)
+    record_route(db, "POST /v1/messages", 100, 200, "local", 0.003, "qwen3-8b", 0.0)
+
+    by_model = cloud_cost_by_model(db)
+    assert abs(by_model["claude-opus-4-7"] - 0.07) < 1e-9
+    assert abs(by_model["claude-sonnet-4-6"] - 0.01) < 1e-9
+    assert "qwen3-8b" not in by_model  # local, zero cost
+
+
+def test_cloud_cost_by_model_empty(tmp_path: Path):
+    from mekongd.stats import cloud_cost_by_model
+
+    assert cloud_cost_by_model(tmp_path / "missing.sqlite") == {}
+
+
+def test_cloud_cost_by_model_honors_since_hours(tmp_path: Path):
+    from datetime import datetime, timedelta, timezone
+
+    from mekongd.stats import cloud_cost_by_model
+
+    db = tmp_path / "stats.sqlite"
+    record_route(db, "POST /v1/messages", 50, 100, "cloud", 0.0, "claude", 0.03)
+
+    # Backdate a row 2 days ago
+    conn = sqlite3.connect(str(db))
+    old_ts = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    conn.execute(
+        "INSERT INTO routes (ts, method, tokens_in, tokens_out, destination, "
+        "cost_saved_usd, cost_usd, model) VALUES (?, ?, 0, 0, 'cloud', 0, 99.0, 'stale-model')",
+        (old_ts, "POST /v1/messages"),
+    )
+    conn.commit()
+    conn.close()
+
+    all_time = cloud_cost_by_model(db)
+    assert "stale-model" in all_time
+    # last 1h excludes the stale row
+    recent = cloud_cost_by_model(db, since_hours=1)
+    assert "stale-model" not in recent
+    assert abs(recent["claude"] - 0.03) < 1e-9
+
+
 def test_legacy_routes_table_migrates_cost_usd(tmp_path: Path):
     """Pre-existing routes table without cost_usd column gets migrated on init_db."""
     from mekongd.stats import today_cloud_spent_usd

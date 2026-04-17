@@ -120,6 +120,29 @@ def test_metrics_exposes_cloud_daily_budget_zero_by_default(client: TestClient):
     assert "mekongd_cloud_daily_budget_usd 0" in m
 
 
+def test_cost_by_model_endpoint_empty(client: TestClient):
+    r = client.get("/v1/cost/by-model")
+    assert r.status_code == 200
+    assert r.json() == {"by_model": {}}
+
+
+def test_cost_by_model_endpoint_reflects_routes(client, tmp_path):
+    from mekongd.config import MekongdConfig
+    from mekongd.proxy import set_runtime
+    from mekongd.runtime import StubRuntime
+    from mekongd.stats import record_route
+
+    cfg = MekongdConfig()
+    cfg.stats_db_path = tmp_path / "costs.sqlite"
+    record_route(cfg.stats_db_path, "POST /v1/messages", 100, 200, "cloud", 0.0, "opus", 0.04)
+    record_route(cfg.stats_db_path, "POST /v1/messages", 50, 100, "cloud", 0.0, "sonnet", 0.01)
+    set_runtime(StubRuntime(cfg), cfg)
+
+    data = client.get("/v1/cost/by-model").json()["by_model"]
+    assert abs(data["opus"] - 0.04) < 1e-9
+    assert abs(data["sonnet"] - 0.01) < 1e-9
+
+
 def test_cloud_budget_enforced_raises_402(tmp_path):
     """When daily cloud spend >= budget, cloud routes return 402."""
     from mekongd.config import MekongdConfig, PolicyConfig
