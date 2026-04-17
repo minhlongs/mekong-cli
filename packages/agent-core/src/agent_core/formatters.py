@@ -43,6 +43,29 @@ def format_recent_notes(signals: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def format_history(rows: list[dict]) -> str:
+    """Render persisted FeedbackSession rounds as fixed-width table, newest first."""
+    if not rows:
+        return (
+            "Chưa có phiên feedback nào được ghi. "
+            "Chạy `agent-core orchestrate --rounds 2 \"...\"` để tạo."
+        )
+    header = (
+        f"{'When':<20}{'R':>3}{'Verdict':>10}{'Score':>7}"
+        f"{'Trend':>12}  {'Goal':<60}"
+    )
+    sep = "-" * len(header)
+    lines = [header, sep]
+    for r in rows:
+        ts = (r.get("created_at") or "")[:19]
+        lines.append(
+            f"{ts:<20}{int(r.get('round', 0)):>3}"
+            f"{r.get('verdict', '?'):>10}{int(r.get('score', 0)):>7}"
+            f"{r.get('trend', '?'):>12}  {r.get('goal', ''):<60}"
+        )
+    return "\n".join(lines)
+
+
 def format_cost_by_model(by_model: dict[str, float], hours: int | None) -> str:
     """Render cloud cost dict as table sorted by spend desc. Empty → friendly."""
     if not by_model:

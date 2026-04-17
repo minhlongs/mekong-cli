@@ -83,6 +83,35 @@ class FeedbackSession:
         return ids
 
 
+def list_recent_sessions(memory: SeedMemory, limit: int = 10) -> list[dict]:
+    """Return persisted rounds with timestamps, newest first, for operator inspection.
+
+    Each row: ``{created_at, round, verdict, trend, goal, score}`` — ready to
+    feed into a formatter. Malformed rows are skipped silently.
+    """
+    records = memory.get_recent(_SESSION_AGENT_ID, limit=limit)
+    rows: list[dict] = []
+    for rec in records:
+        try:
+            payload = json.loads(rec.content)
+        except json.JSONDecodeError:
+            continue
+        review = payload.get("review", {}) if isinstance(payload, dict) else {}
+        rows.append(
+            {
+                "created_at": rec.created_at,
+                "round": payload.get("round", rec.metadata.get("round", 0)),
+                "verdict": review.get("verdict", rec.metadata.get("verdict", "?")),
+                "score": review.get("score", 0),
+                "trend": payload.get("analyst", {}).get(
+                    "trend", rec.metadata.get("trend", "?")
+                ),
+                "goal": (payload.get("goal") or "")[:60],
+            }
+        )
+    return rows
+
+
 def load_recent_history(memory: SeedMemory, limit: int = 3) -> list[dict]:
     """Return up to ``limit`` most-recent persisted rounds as pipeline-report dicts.
 
