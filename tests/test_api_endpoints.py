@@ -82,9 +82,12 @@ class _MockClientMiddleware(BaseHTTPMiddleware):
 
 @pytest.fixture()
 def license_client():
-    """TestClient for the license server. TestClient default client=('testclient', 50000)."""
+    """TestClient for the license server. TestClient default client=('testclient', 50000).
+
+    raise_server_exceptions=True so CI surfaces real tracebacks instead of opaque 500s.
+    """
     from src.api.license_server import app as _license_app
-    return TestClient(_license_app, raise_server_exceptions=False)
+    return TestClient(_license_app, raise_server_exceptions=True)
 
 
 # ---------------------------------------------------------------------------
