@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +396,7 @@ class TestRecordUsage:
         authorizer, _, _ = _make_authorizer()
         from src.core.command_authorizer import AuthorizationResult, AuthorizationReason
         result = AuthorizationResult(allowed=False, reason=AuthorizationReason.INVALID_LICENSE)
-        with patch("src.core.command_authorizer.logger") as mock_logger:
+        with patch("src.core.command_authorizer.logger"):
             authorizer.record_usage("deploy", result)
             # No emit call should happen; verify by checking no usage import crash
 

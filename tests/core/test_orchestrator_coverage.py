@@ -14,11 +14,10 @@ from __future__ import annotations
 import sys
 import os
 import subprocess
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 
 from src.core.orchestrator import (
     OrchestrationResult,

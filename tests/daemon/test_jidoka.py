@@ -16,15 +16,13 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from src.daemon.jidoka import (
     ALERT_LOG_MAX_LINES,
     ErrorPattern,
     ErrorSeverity,
-    JidokaEvent,
     JidokaMonitor,
 )
 from src.daemon.circuit_breaker import CircuitBreakerRegistry
