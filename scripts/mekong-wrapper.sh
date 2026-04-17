@@ -1,10 +1,57 @@
 #!/bin/bash
 # MEKONG WRAPPER — Universal AI CLI dispatcher (bash 3.2 compat)
 # Usage: mekong-wrapper [--tool X] [--model M] [--list-tools] [PROMPT]
+#        mekong-wrapper install dept-<name>   # Install a Clipmart department
+#        mekong-wrapper install <name>        # Alias (dept- prefix optional)
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export MEKONG_ROOT="${MEKONG_ROOT:-$(dirname "$SCRIPT_DIR")}"
+
+# ── dept install subcommand (must run before adapter registry) ──────────────
+# Usage: mekong install dept-<name> [args...]
+#        mekong install <name> [args...]       (dept- prefix optional)
+_dept_install() {
+  local raw_name="${1:-}"
+  shift || true
+  local extra_args=("$@")
+
+  # Strip optional "dept-" prefix to get canonical name
+  local name="${raw_name#dept-}"
+
+  local dept_dir="$MEKONG_ROOT/clipmart/departments/$name"
+  local install_script="$dept_dir/install.sh"
+
+  if [ -n "$name" ] && [ -f "$install_script" ]; then
+    echo "🌊 Mekong — installing department: $name"
+    bash "$install_script" "${extra_args[@]+"${extra_args[@]}"}"
+    exit $?
+  fi
+
+  # install.sh not found — show available departments
+  echo "❌  Department '${raw_name}' not found." >&2
+  echo "" >&2
+  echo "Available departments:" >&2
+  local found=0
+  for mf in "$MEKONG_ROOT/clipmart/departments"/*/manifest.json; do
+    [ -f "$mf" ] || continue
+    found=1
+    local dept_name; dept_name="$(basename "$(dirname "$mf")")"
+    # Extract "name" field with minimal tooling (bash 3.2 compat, no jq required)
+    local label; label="$(grep '"name"' "$mf" | head -1 | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')"
+    echo "  mekong install $dept_name  — $label" >&2
+  done
+  [ "$found" -eq 0 ] && echo "  (none — no departments found in clipmart/departments/)" >&2
+  exit 1
+}
+
+# Intercept: mekong install [dept-]<name>
+if [ "${1:-}" = "install" ]; then
+  shift
+  _dept_install "${1:-}" "${@:2}"
+fi
+# ─────────────────────────────────────────────────────────────────────────────
+
 source "$MEKONG_ROOT/mekong/adapters/registry.sh"
 
 TOOL="${MEKONG_TOOL:-auto}" MODEL="${MEKONG_MODEL:-}" CWD="${MEKONG_CWD:-$MEKONG_ROOT}"
@@ -50,7 +97,14 @@ case "$ACTION" in
     echo "  Commands: $(find "$MEKONG_ROOT/.claude/commands" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')"
     echo "  Skills: $(find "$MEKONG_ROOT/.claude/skills" -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')"
     exit 0;;
-  help) head -5 "$0" | sed 's/^# //'; exit 0;;
+  help)
+    head -6 "$0" | sed 's/^#[[:space:]]*//'
+    echo ""
+    echo "Dept install:"
+    echo "  mekong install dept-<name>   Install a Clipmart department"
+    echo "  mekong install <name>        Same (dept- prefix optional)"
+    echo "  (run with no name to list available departments)"
+    exit 0;;
 esac
 
 SEL=$(select_tool "$TOOL") || exit 1

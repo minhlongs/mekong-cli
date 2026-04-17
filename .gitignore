@@ -166,10 +166,12 @@ insights/
 # ClaudeKit DNA (private skill configs) — .claude/ is private; only explicit allowlist tracked
 .claude/*
 !.claude/commands/
-.claude/commands/*
-!.claude/commands/sdlc.md
-!.claude/commands/sdlc/
-!.claude/commands/sdlc/**
+# .claude/commands/ is PUBLIC per CLAUDE.md — all .md command definitions are committable
+# Un-ignore first, then re-ignore private/local drafts (git applies last matching pattern)
+!.claude/commands/**
+.claude/commands/private/
+.claude/commands/private/**
+.claude/commands/*.local.md
 !.claude/agents/
 .claude/agents/*
 !.claude/agents/git-ops-agent.md
