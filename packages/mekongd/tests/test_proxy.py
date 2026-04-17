@@ -54,6 +54,19 @@ def test_signals_accepts_good_and_bad(client: TestClient):
     m = client.get("/metrics").text
     assert 'mekongd_signals_total{kind="good"} 1' in m
     assert 'mekongd_signals_total{kind="bad"} 1' in m
+    assert "mekongd_signals_ratio 0.500000" in m
+
+
+def test_signals_ratio_zero_when_no_signals(client: TestClient):
+    m = client.get("/metrics").text
+    assert "mekongd_signals_ratio 0" in m
+
+
+def test_signals_ratio_one_when_all_good(client: TestClient):
+    for _ in range(3):
+        client.post("/v1/signals", json={"kind": "good"})
+    m = client.get("/metrics").text
+    assert "mekongd_signals_ratio 1.000000" in m
 
 
 def test_signals_rejects_invalid_kind(client: TestClient):
