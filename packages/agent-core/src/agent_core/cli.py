@@ -259,16 +259,39 @@ def status_cmd() -> None:
 @app.command("prune")
 def prune_cmd(
     keep: int = typer.Option(
-        100, "--keep", "-k", help="Số round mới nhất giữ lại (>=0). Mặc định 100."
+        100, "--keep", "-k", help="Số row mới nhất giữ lại (>=0). Mặc định 100."
+    ),
+    prune_all: bool = typer.Option(
+        False,
+        "--all",
+        help="Áp dụng cho MỌI agent_id (CEO, Developer, Tester, ...). "
+        "Mặc định chỉ xoá feedback_session.",
     ),
 ) -> None:
-    """Xoá các vòng feedback cũ trong SeedMemory, giữ lại N row mới nhất."""
+    """Xoá các row cũ trong SeedMemory, giữ lại N row mới nhất.
+
+    Mặc định chỉ áp dụng cho agent_id=feedback_session. Dùng ``--all`` để
+    gom cả các agent role khác (memory của CEO/Developer/Tester/Reviewer
+    cũng grow unbounded nếu không được prune).
+    """
     if keep < 0:
         typer.echo("keep phải >= 0", err=True)
         raise typer.Exit(code=2)
     memory = SeedMemory()
-    deleted = memory.prune_agent("feedback_session", keep_last_n=keep)
-    typer.echo(f"Đã xoá {deleted} round cũ, giữ lại {keep} gần nhất.")
+    if not prune_all:
+        deleted = memory.prune_agent("feedback_session", keep_last_n=keep)
+        typer.echo(f"Đã xoá {deleted} row cũ của feedback_session, giữ lại {keep} gần nhất.")
+        return
+    counts = memory.agent_counts()
+    if not counts:
+        typer.echo("Memory đang trống, không có gì để xoá.")
+        return
+    total = 0
+    for agent_id in counts:
+        total += memory.prune_agent(agent_id, keep_last_n=keep)
+    typer.echo(
+        f"Đã xoá {total} row cũ trên {len(counts)} agent_id, giữ lại {keep} gần nhất mỗi agent."
+    )
 
 
 @app.command("signal")
