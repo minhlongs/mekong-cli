@@ -18,6 +18,7 @@ from agent_core.formatters import (
     format_cost_by_model,
     format_history,
     format_recent_notes,
+    format_status,
 )
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
@@ -220,6 +221,20 @@ def history_cmd(
         typer.echo(json.dumps(rows, ensure_ascii=False, indent=2))
         return
     typer.echo(format_history(rows))
+
+
+@app.command("status")
+def status_cmd() -> None:
+    """In ra snapshot ops: memory root, retention, số row theo agent_id, lần chạy cuối."""
+    memory = SeedMemory()
+    typer.echo(
+        format_status(
+            agent_rows=memory.agent_counts(),
+            last_session_at=memory.last_created_at("feedback_session"),
+            retention_env=os.environ.get("AGENT_CORE_SESSION_RETENTION"),
+            memory_root=str(memory.root),
+        )
+    )
 
 
 @app.command("prune")
