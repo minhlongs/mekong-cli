@@ -12,6 +12,7 @@ observe cross-session trend data (closes PDF "Hệ thống ghi nhật ký và h�
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 
 from agent_core.agents.analyst import AnalystAgent
@@ -202,4 +203,26 @@ class FeedbackLoop:
 
         if persist:
             session.persist(self.memory)
+            _apply_retention(self.memory)
         return session
+
+
+def _apply_retention(memory: SeedMemory) -> None:
+    """Auto-prune oldest feedback_session rows when AGENT_CORE_SESSION_RETENTION>0.
+
+    Default 0 = unbounded (preserves PR #117 behaviour). Parsing errors silent —
+    retention is best-effort, never a hard failure mode for the loop.
+    """
+    raw = os.getenv("AGENT_CORE_SESSION_RETENTION")
+    if not raw:
+        return
+    try:
+        keep = int(raw)
+    except ValueError:
+        return
+    if keep <= 0:
+        return
+    try:
+        memory.prune_agent(_SESSION_AGENT_ID, keep_last_n=keep)
+    except Exception:  # noqa: BLE001 — retention is best-effort
+        pass
