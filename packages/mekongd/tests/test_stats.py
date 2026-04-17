@@ -64,6 +64,81 @@ def test_estimate_savings():
     assert estimate_savings(0, 0, 3.0, 15.0) == 0.0
 
 
+def test_record_route_persists_cost_usd(tmp_path: Path):
+    """Cloud routes must store cost_usd for daily spend aggregation."""
+    from mekongd.stats import today_cloud_spent_usd
+
+    db = tmp_path / "stats.sqlite"
+    record_route(db, "POST /v1/messages", 1000, 2000, "cloud", 0.0, "claude-opus-4-7", 0.05)
+    record_route(db, "POST /v1/messages", 500, 1000, "cloud", 0.0, "claude-opus-4-7", 0.02)
+    record_route(db, "POST /v1/messages", 100, 200, "local", 0.003, "qwen3-8b", 0.0)
+
+    spent = today_cloud_spent_usd(db)
+    assert abs(spent - 0.07) < 1e-9  # 0.05 + 0.02
+    # Local routes don't count
+    s = aggregate_stats(db)
+    assert s.cloud_requests == 2
+    assert s.local_requests == 1
+
+
+def test_today_cloud_spent_usd_empty(tmp_path: Path):
+    from mekongd.stats import today_cloud_spent_usd
+
+    assert today_cloud_spent_usd(tmp_path / "missing.sqlite") == 0.0
+
+
+def test_today_cloud_spent_excludes_yesterday(tmp_path: Path):
+    """Rows from previous UTC day must not leak into today's spend."""
+    from datetime import datetime, timedelta, timezone
+
+    from mekongd.stats import today_cloud_spent_usd
+
+    db = tmp_path / "stats.sqlite"
+    record_route(db, "POST /v1/messages", 100, 200, "cloud", 0.0, "claude", 0.04)
+
+    # Backdate a row to yesterday
+    conn = sqlite3.connect(str(db))
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    conn.execute(
+        "INSERT INTO routes (ts, method, tokens_in, tokens_out, destination, "
+        "cost_saved_usd, cost_usd, model) VALUES (?, ?, 0, 0, 'cloud', 0, 99.0, 'old')",
+        (yesterday, "POST /v1/messages"),
+    )
+    conn.commit()
+    conn.close()
+
+    spent = today_cloud_spent_usd(db)
+    assert abs(spent - 0.04) < 1e-9  # yesterday's 99.0 excluded
+
+
+def test_legacy_routes_table_migrates_cost_usd(tmp_path: Path):
+    """Pre-existing routes table without cost_usd column gets migrated on init_db."""
+    from mekongd.stats import today_cloud_spent_usd
+
+    db = tmp_path / "legacy.sqlite"
+    conn = sqlite3.connect(str(db))
+    conn.executescript(
+        """
+        CREATE TABLE routes (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts             TEXT    NOT NULL,
+            method         TEXT    NOT NULL,
+            tokens_in      INTEGER NOT NULL DEFAULT 0,
+            tokens_out     INTEGER NOT NULL DEFAULT 0,
+            destination    TEXT    NOT NULL,
+            cost_saved_usd REAL    NOT NULL DEFAULT 0.0,
+            model          TEXT    NOT NULL DEFAULT ''
+        );
+        """
+    )
+    conn.commit()
+    conn.close()
+
+    # Trigger migration
+    assert record_route(db, "POST /v1/messages", 100, 200, "cloud", 0.0, "claude", 0.05)
+    assert abs(today_cloud_spent_usd(db) - 0.05) < 1e-9
+
+
 def test_record_signal_with_model_and_breakdown(tmp_path: Path):
     db = tmp_path / "stats.sqlite"
     assert record_signal(db, "good", "fast", "qwen3-8b")

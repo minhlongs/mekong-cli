@@ -39,6 +39,7 @@ from mekongd.stats import (
     list_recent_signals,
     record_route,
     record_signal,
+    today_cloud_spent_usd,
 )
 
 log = logging.getLogger(__name__)
@@ -97,6 +98,9 @@ async def metrics() -> str:
         "# HELP mekongd_local_ratio Share of requests routed to local runtime (0..1)",
         "# TYPE mekongd_local_ratio gauge",
         f"mekongd_local_ratio {s.local_pct / 100:.6f}",
+        "# HELP mekongd_cloud_spent_usd_today Cloud routing cost (USD) since UTC midnight",
+        "# TYPE mekongd_cloud_spent_usd_today gauge",
+        f"mekongd_cloud_spent_usd_today {today_cloud_spent_usd(cfg.stats_db_path):.6f}",
     ]
     sigs = aggregate_signals(cfg.stats_db_path)
     good, bad = sigs.get("good", 0), sigs.get("bad", 0)
@@ -212,13 +216,11 @@ def _persist(
     out_tok: int,
     model: str,
 ) -> None:
-    saved = (
-        estimate_savings(
-            in_tok, out_tok, cfg.cloud_input_usd_per_mtok, cfg.cloud_output_usd_per_mtok
-        )
-        if destination == "local"
-        else 0.0
+    estimate = estimate_savings(
+        in_tok, out_tok, cfg.cloud_input_usd_per_mtok, cfg.cloud_output_usd_per_mtok
     )
+    saved = estimate if destination == "local" else 0.0
+    cost = estimate if destination == "cloud" else 0.0
     record_route(
         cfg.stats_db_path,
         "POST /v1/messages",
@@ -227,6 +229,7 @@ def _persist(
         destination,  # type: ignore[arg-type]
         saved,
         model,
+        cost,
     )
 
 
