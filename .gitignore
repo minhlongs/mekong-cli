@@ -147,6 +147,9 @@ openclaw-key.json
 
 # Private Client Projects — ALL apps/ are LOCAL ONLY
 apps/
+# PUBLIC exceptions — scaffolds intended for open-source distribution
+!apps/tauri-shell/
+!apps/tauri-shell/**
 
 # Private Orchestration (Tôm Hùm internal state)
 apps/openclaw-worker/data/
