@@ -85,6 +85,9 @@ def report_cmd(
     hours: int = typer.Option(
         0, "--hours", help="Limit breakdown to last N hours (0 = all time)."
     ),
+    notes: int = typer.Option(
+        0, "--notes", help="Append last N signal notes to output (0 = none)."
+    ),
 ) -> None:
     """Show good/bad signal breakdown by model as a human-friendly table."""
     kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
@@ -98,6 +101,13 @@ def report_cmd(
     label = f" (last {hours}h)" if window else ""
     typer.echo(f"Signal breakdown{label}:")
     typer.echo(_format_breakdown(by_model))
+    if notes > 0:
+        try:
+            recent = llm.get_recent_signals(limit=notes)
+        except Exception as e:  # noqa: BLE001
+            typer.echo(f"Lỗi khi lấy notes: {e}", err=True)
+            return
+        typer.echo(_format_recent_notes(recent))
 
 
 @app.command("signal")
@@ -117,6 +127,20 @@ def signal_cmd(
         typer.echo(f"Lỗi: {e}", err=True)
         raise typer.Exit(code=2) from e
     typer.echo(f"Đã gửi signal: {resp}")
+
+
+def _format_recent_notes(signals: list[dict]) -> str:
+    """Render recent signals as a timestamped note tail. Empty → friendly message."""
+    if not signals:
+        return "\nKhông có note gần đây."
+    lines = ["", "Recent notes (newest first):"]
+    for s in signals:
+        ts = (s.get("ts") or "")[:19]
+        kind = s.get("kind", "?")
+        model = s.get("model") or "(unknown)"
+        note = s.get("note") or "(no note)"
+        lines.append(f"  {ts}  [{kind:<4}]  {model:<24}  {note}")
+    return "\n".join(lines)
 
 
 def _format_breakdown(by_model: dict[str, dict[str, int]]) -> str:

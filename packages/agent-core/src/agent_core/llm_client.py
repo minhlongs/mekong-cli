@@ -100,6 +100,13 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json().get("by_model", {})
 
+    def get_recent_signals(self, limit: int = 20) -> list[dict]:
+        """Fetch last N signals (newest first) from mekongd /v1/signals/recent."""
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.get(f"{self.base_url}/v1/signals/recent", params={"limit": limit})
+            resp.raise_for_status()
+            return resp.json().get("signals", [])
+
 
 def _extract_text(data: dict) -> str:
     blocks = data.get("content") or []

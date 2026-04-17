@@ -99,6 +99,21 @@ def test_signals_breakdown_accepts_hours_query(client: TestClient):
     assert data["qwen3-8b"] == {"good": 1, "bad": 0}
 
 
+def test_signals_recent_returns_newest_first(client: TestClient):
+    client.post("/v1/signals", json={"kind": "good", "note": "A", "model": "qwen3-8b"})
+    client.post("/v1/signals", json={"kind": "bad", "note": "B"})
+    payload = client.get("/v1/signals/recent?limit=5").json()
+    notes = [s["note"] for s in payload["signals"]]
+    assert notes == ["B", "A"]
+
+
+def test_signals_recent_honors_limit_default(client: TestClient):
+    for i in range(3):
+        client.post("/v1/signals", json={"kind": "good", "note": f"n{i}"})
+    payload = client.get("/v1/signals/recent").json()
+    assert len(payload["signals"]) == 3
+
+
 def test_metrics_after_request(client: TestClient):
     body = {
         "model": "claude-opus-4-7",

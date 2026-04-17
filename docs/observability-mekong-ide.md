@@ -148,6 +148,10 @@ agent-core report
 # Limit window after a policy change:
 agent-core report --hours 24       # last 24h only
 curl -s '127.0.0.1:8765/v1/signals/breakdown?hours=24' | jq .
+
+# Append last N signal notes to see the "diary" of why operators marked bad/good:
+agent-core report --notes 20
+curl -s '127.0.0.1:8765/v1/signals/recent?limit=20' | jq .
 ```
 
 Counters on `/metrics` stay unlabeled to keep Prometheus cardinality bounded.
