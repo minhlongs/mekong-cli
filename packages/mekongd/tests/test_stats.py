@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from mekongd.stats import aggregate_stats, estimate_savings, init_db, record_route
+from mekongd.stats import (
+    aggregate_signals,
+    aggregate_stats,
+    estimate_savings,
+    init_db,
+    record_route,
+    record_signal,
+)
 
 
 def test_init_db_creates_file(tmp_path: Path):
@@ -33,6 +40,19 @@ def test_aggregate_empty(tmp_path: Path):
     s = aggregate_stats(tmp_path / "nonexistent.sqlite")
     assert s.total_requests == 0
     assert s.local_pct == 0.0
+
+
+def test_record_and_aggregate_signals(tmp_path: Path):
+    db = tmp_path / "stats.sqlite"
+    assert record_signal(db, "good", "Qwen nailed the refactor")
+    assert record_signal(db, "good", "")
+    assert record_signal(db, "bad", "wrong language")
+    agg = aggregate_signals(db)
+    assert agg == {"good": 2, "bad": 1}
+
+
+def test_aggregate_signals_empty(tmp_path: Path):
+    assert aggregate_signals(tmp_path / "missing.sqlite") == {}
 
 
 def test_estimate_savings():
