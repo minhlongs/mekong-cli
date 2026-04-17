@@ -23,6 +23,8 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | `mekongd_tokens_out_total` | counter | — | SQLite sum |
 | `mekongd_cost_saved_usd_total` | counter | — | SQLite sum |
 | `mekongd_local_ratio` | gauge | — | derived (0..1) |
+| `mekongd_signals_total` | counter | `kind={good,bad}` | `aggregate_signals` |
+| `mekongd_signals_ratio` | gauge | — | derived `good/(good+bad)`, 0 if none |
 
 ### agent-forest
 
@@ -100,6 +102,19 @@ up{job=~"mekongd|agent-forest"}         # scraper-inferred
 agent_forest_up                          # self-reported
 ```
 
+### Operator feedback (Pillar 3)
+
+```promql
+# Good-response ratio — single SLO number (0..1)
+mekongd_signals_ratio
+
+# Negative feedback rate (signals/min) — alert if climbing
+rate(mekongd_signals_total{kind="bad"}[5m])
+
+# Engagement: total signals captured per day
+increase(mekongd_signals_total[1d])
+```
+
 ## Suggested Grafana panels
 
 Panel per row, left→right:
@@ -129,7 +144,15 @@ groups:
         for: 5m
         annotations:
           summary: "Worker queue depth >50 — scale workers or check for stuck jobs"
+
+      - alert: MekongdSignalsRatioDegraded
+        expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10
+        for: 30m
+        annotations:
+          summary: "Operator satisfaction <60% with ≥10 signals/h — routing quality regression"
 ```
+
+The `MekongdSignalsRatioDegraded` alert guards against the ratio firing on a handful of bad signals: `increase > 10` requires meaningful volume before alerting.
 
 ## Not yet covered
 
