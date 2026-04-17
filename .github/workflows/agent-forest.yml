@@ -43,12 +43,15 @@ jobs:
       - name: Verify tracked files (silent-drop guard)
         run: |
           # Detect files that exist on disk but aren't tracked — catches
-          # gitignore silent drops (see incident 2026-04-17 PR #89 main.py).
+          # gitignore silent drops (incidents 2026-04-17 PR #89 main.py,
+          # PR #91 conftest.py). Scans BOTH src/ and tests/ since test
+          # fixtures (conftest.py) can also be silently dropped.
           cd ../..
-          UNTRACKED=$(find packages/agent-forest/src -name '*.py' -not -path '*/__pycache__/*' \
+          UNTRACKED=$(find packages/agent-forest/src packages/agent-forest/tests \
+              -name '*.py' -not -path '*/__pycache__/*' \
             | while read -r f; do git ls-files --error-unmatch "$f" 2>/dev/null >/dev/null || echo "$f"; done)
           if [ -n "$UNTRACKED" ]; then
-            echo "::error::Untracked Python files in packages/agent-forest/src:"
+            echo "::error::Untracked Python files in packages/agent-forest:"
             echo "$UNTRACKED"
             exit 1
           fi

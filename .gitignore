@@ -664,7 +664,12 @@ supabase/
 .geminiignore
 .repomixignore
 .ruffignore
-conftest.py
+# NOTE: conftest.py was a bare pattern that silently dropped every
+# pytest conftest at any depth (packages/agent-forest/tests/conftest.py
+# etc.). Re-scoped below to match only top-level `/conftest.py` if any.
+# Package conftests under tests/ are always tracked. Refs incident
+# 2026-04-17 PR #89/#90 main.py silent drop.
+/conftest.py
 .coveragerc
 .env*.local
 
