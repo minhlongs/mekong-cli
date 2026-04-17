@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 
 from src.core.entitlement_enforcer import (
     EntitlementEnforcer,

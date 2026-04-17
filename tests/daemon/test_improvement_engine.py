@@ -16,16 +16,12 @@ Targets:
 from __future__ import annotations
 
 import json
-import pytest
-from dataclasses import field
 from datetime import datetime
-from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from src.daemon.improvement_engine import (
     ImprovementEngine,
     ImprovementTask,
-    ImprovementRecommendation,
 )
 
 
@@ -205,7 +201,7 @@ class TestCreateImprovementTask:
         errors = [f"error {i}" for i in range(10)]
         task = engine._create_improvement_task("svc", 6, errors)
         # At most 5 errors in description bullets
-        bullet_lines = [l for l in task.description.splitlines() if l.startswith("- ")]
+        bullet_lines = [line for line in task.description.splitlines() if line.startswith("- ")]
         assert len(bullet_lines) <= 5
 
 

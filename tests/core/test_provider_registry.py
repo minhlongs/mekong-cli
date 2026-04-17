@@ -20,7 +20,6 @@ from src.core.provider_registry import (
     GeminiProvider,
     OpenAICompatProvider,
     OpenAIProvider,
-    ProviderConfig,
     ProviderRegistry,
     ResolvedModel,
     create_default_registry,

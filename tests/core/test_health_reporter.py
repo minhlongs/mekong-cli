@@ -5,9 +5,8 @@ import json
 import time
 from dataclasses import asdict
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -533,7 +532,7 @@ class TestResetCounters:
         reporter.record_command("cook", success=True, duration_ms=50.0)
 
         reporter._metrics = None
-        before = reporter.get_or_create_metrics().session_id
+        reporter.get_or_create_metrics().session_id
         reporter._reset_counters()
         reporter._metrics = None
         after = reporter.get_or_create_metrics().session_id

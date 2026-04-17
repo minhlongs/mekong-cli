@@ -15,7 +15,6 @@ Targets uncovered paths in src/core/code_evolution.py:
 
 import os
 import tempfile
-import time
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -23,8 +22,6 @@ from unittest.mock import MagicMock, patch
 import yaml
 
 from src.core.code_evolution import (
-    DANGEROUS_PATTERNS,
-    CodeChange,
     CodeEvolutionEngine,
     EvolutionAttempt,
     EvolutionStatus,

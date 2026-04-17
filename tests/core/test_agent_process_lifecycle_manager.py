@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
+
+from src.core.agent_process_lifecycle_manager import ProcessManager
 
 
 # ---------------------------------------------------------------------------
