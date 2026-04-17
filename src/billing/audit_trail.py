@@ -1,7 +1,6 @@
 """Financial audit trail for MCU billing — immutable log of all credit transactions."""
 import json
 import os
-import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Optional
