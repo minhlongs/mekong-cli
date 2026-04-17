@@ -40,6 +40,9 @@ class ForestSettings:
     # Self-heal feedback loop: 1 = single-pass CEO→Dev (back-compat),
     # >=2 enables agent-core FeedbackLoop with Tester+Reviewer+Ops+Analyst + bounded retry.
     feedback_rounds: int = 1
+    # Giai đoạn 3.1.A/B: if set, UserStore is backed by SQLite (register_user
+    # works). Unset = legacy in-memory YAML defaults.
+    db_path: Path | None = None
 
     @classmethod
     def from_env(cls) -> ForestSettings:
@@ -73,4 +76,5 @@ class ForestSettings:
             docker_image=os.getenv("FOREST_DOCKER_IMAGE", "agent-core:latest"),
             docker_timeout_seconds=_env_int("FOREST_DOCKER_TIMEOUT_SECONDS", 300),
             feedback_rounds=max(1, _env_int("FOREST_FEEDBACK_ROUNDS", 1)),
+            db_path=(Path(raw_db).resolve() if (raw_db := os.getenv("FOREST_DB_PATH")) else None),
         )

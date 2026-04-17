@@ -10,6 +10,7 @@ from fastapi import Depends, Header, HTTPException, status
 from agent_forest.auth import AuthError, decode_access_token
 from agent_forest.config import ForestSettings
 from agent_forest.users import User, UserStore, load_users
+from agent_forest.users_db import SqliteUserStore
 
 
 @lru_cache(maxsize=1)
@@ -18,8 +19,11 @@ def get_settings() -> ForestSettings:
 
 
 @lru_cache(maxsize=1)
-def get_user_store() -> UserStore:
+def get_user_store() -> UserStore | SqliteUserStore:
+    """Pick SqliteUserStore when FOREST_DB_PATH is set, else YAML-backed UserStore."""
     settings = get_settings()
+    if settings.db_path is not None:
+        return SqliteUserStore(settings.db_path)
     return UserStore(load_users(settings.users_yaml))
 
 
@@ -39,7 +43,7 @@ def reset_caches() -> None:
 def current_user(
     authorization: str | None = Header(default=None),
     settings: ForestSettings = Depends(get_settings),
-    store: UserStore = Depends(get_user_store),
+    store: UserStore | SqliteUserStore = Depends(get_user_store),
 ) -> User:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(
