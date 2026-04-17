@@ -15,6 +15,7 @@ from typing import Iterator, Literal
 log = logging.getLogger(__name__)
 
 Destination = Literal["local", "cloud"]
+SignalKind = Literal["good", "bad"]
 
 _SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS routes (
@@ -29,6 +30,14 @@ CREATE TABLE IF NOT EXISTS routes (
 );
 CREATE INDEX IF NOT EXISTS idx_routes_ts ON routes (ts);
 CREATE INDEX IF NOT EXISTS idx_routes_dest ON routes (destination);
+
+CREATE TABLE IF NOT EXISTS signals (
+    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts   TEXT    NOT NULL,
+    kind TEXT    NOT NULL,
+    note TEXT    NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_signals_kind ON signals (kind);
 """
 
 
@@ -122,6 +131,37 @@ def aggregate_stats(db_path: Path) -> StatsSummary:
         total_tokens_out=tout or 0,
         total_cost_saved_usd=float(saved or 0.0),
     )
+
+
+def record_signal(
+    db_path: Path,
+    kind: SignalKind,
+    note: str = "",
+) -> bool:
+    """Persist one operator feedback signal. Swallows exceptions."""
+    try:
+        init_db(db_path)
+        with _connect(db_path) as conn:
+            conn.execute(
+                "INSERT INTO signals (ts, kind, note) VALUES (?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), kind, note),
+            )
+            conn.commit()
+        return True
+    except Exception as e:
+        log.warning("stats.record_signal failed: %s", e)
+        return False
+
+
+def aggregate_signals(db_path: Path) -> dict[str, int]:
+    """Return {kind: count} for all signals. Empty dict if db missing."""
+    if not db_path.exists():
+        return {}
+    with _connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT kind, COUNT(*) FROM signals GROUP BY kind"
+        ).fetchall()
+    return {kind: int(count) for kind, count in rows}
 
 
 def estimate_savings(

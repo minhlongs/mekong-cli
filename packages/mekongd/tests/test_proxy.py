@@ -42,6 +42,25 @@ def test_metrics_empty(client: TestClient):
     assert "mekongd_local_ratio 0" in body
 
 
+def test_signals_accepts_good_and_bad(client: TestClient):
+    r = client.post("/v1/signals", json={"kind": "good", "note": "local Qwen nailed it"})
+    assert r.status_code == 202
+    assert r.json() == {"accepted": True, "kind": "good"}
+
+    r = client.post("/v1/signals", json={"kind": "bad"})
+    assert r.status_code == 202
+    assert r.json() == {"accepted": True, "kind": "bad"}
+
+    m = client.get("/metrics").text
+    assert 'mekongd_signals_total{kind="good"} 1' in m
+    assert 'mekongd_signals_total{kind="bad"} 1' in m
+
+
+def test_signals_rejects_invalid_kind(client: TestClient):
+    r = client.post("/v1/signals", json={"kind": "maybe"})
+    assert r.status_code == 422
+
+
 def test_metrics_after_request(client: TestClient):
     body = {
         "model": "claude-opus-4-7",
