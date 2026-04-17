@@ -218,42 +218,24 @@ Full JSON dashboard export deferred until local Grafana instance stood up (YAGNI
 
 ## Alerting rules (starter set)
 
+Maintained as a drop-in Prometheus rules file at [`docs/alerting/mekong-ide-rules.yml`](alerting/mekong-ide-rules.yml). Add to your Prometheus config:
+
 ```yaml
-groups:
-  - name: mekong-ide
-    rules:
-      - alert: MekongdLocalRatioLow
-        expr: mekongd_local_ratio < 0.4
-        for: 15m
-        annotations:
-          summary: "Qwen local path underutilized (<40%) — investigate cloud_patterns"
-
-      - alert: AgentForestQueueBackpressure
-        expr: agent_forest_queue_depth > 50
-        for: 5m
-        annotations:
-          summary: "Worker queue depth >50 — scale workers or check for stuck jobs"
-
-      - alert: AgentForestNoWorkers
-        expr: agent_forest_queue_depth > 0 and agent_forest_workers_alive == 0
-        for: 2m
-        annotations:
-          summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
-
-      - alert: MekongdCloudSpendHigh
-        expr: mekongd_cloud_spent_usd_today > 10
-        for: 5m
-        annotations:
-          summary: "Cloud spend today exceeds $10 — review routing policy / budget"
-
-      - alert: MekongdSignalsRatioDegraded
-        expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10
-        for: 30m
-        annotations:
-          summary: "Operator satisfaction <60% with ≥10 signals/h — routing quality regression"
+rule_files:
+  - /etc/prometheus/rules/mekong-ide-rules.yml
 ```
 
-The `MekongdSignalsRatioDegraded` alert guards against the ratio firing on a handful of bad signals: `increase > 10` requires meaningful volume before alerting.
+The starter set covers:
+
+| Alert | Trigger | For |
+|-------|---------|-----|
+| `MekongdLocalRatioLow` | `mekongd_local_ratio < 0.4` | 15m |
+| `MekongdSignalsRatioDegraded` | `ratio < 0.6 and increase(signals[1h]) > 10` | 30m |
+| `MekongdCloudSpendHigh` | `mekongd_cloud_spent_usd_today > 10` | 5m |
+| `AgentForestQueueBackpressure` | `agent_forest_queue_depth > 50` | 5m |
+| `AgentForestNoWorkers` | `queue > 0 and workers_alive == 0` | 2m |
+
+`MekongdSignalsRatioDegraded` guards against firing on a handful of bad signals: `increase > 10` requires meaningful volume before alerting.
 
 ## Not yet covered
 
