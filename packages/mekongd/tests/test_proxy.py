@@ -74,6 +74,24 @@ def test_signals_rejects_invalid_kind(client: TestClient):
     assert r.status_code == 422
 
 
+def test_signals_breakdown_empty_when_no_signals(client: TestClient):
+    r = client.get("/v1/signals/breakdown")
+    assert r.status_code == 200
+    assert r.json() == {"by_model": {}}
+
+
+def test_signals_breakdown_groups_by_model(client: TestClient):
+    client.post("/v1/signals", json={"kind": "good", "model": "qwen3-8b"})
+    client.post("/v1/signals", json={"kind": "bad", "model": "qwen3-8b"})
+    client.post("/v1/signals", json={"kind": "good", "model": "claude-sonnet-4-6"})
+    client.post("/v1/signals", json={"kind": "bad"})  # legacy-style, no model
+
+    data = client.get("/v1/signals/breakdown").json()["by_model"]
+    assert data["qwen3-8b"] == {"good": 1, "bad": 1}
+    assert data["claude-sonnet-4-6"] == {"good": 1, "bad": 0}
+    assert data[""] == {"good": 0, "bad": 1}
+
+
 def test_metrics_after_request(client: TestClient):
     body = {
         "model": "claude-opus-4-7",

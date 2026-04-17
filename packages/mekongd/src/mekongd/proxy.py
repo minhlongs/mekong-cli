@@ -33,6 +33,7 @@ from mekongd.schemas import (
 )
 from mekongd.stats import (
     aggregate_signals,
+    aggregate_signals_by_model,
     aggregate_stats,
     estimate_savings,
     record_route,
@@ -142,8 +143,15 @@ async def messages(req: MessagesRequest):
 async def signals(req: SignalRequest):
     """Pillar 3 — operator feedback loop. Persists one signal, returns 202."""
     cfg, _, _ = _get_deps()
-    ok = record_signal(cfg.stats_db_path, req.kind, req.note)
+    ok = record_signal(cfg.stats_db_path, req.kind, req.note, req.model)
     return {"accepted": ok, "kind": req.kind}
+
+
+@app.get("/v1/signals/breakdown")
+async def signals_breakdown():
+    """Operator diagnostic — good/bad counts grouped by model. Legacy rows bucket under ''."""
+    cfg, _, _ = _get_deps()
+    return {"by_model": aggregate_signals_by_model(cfg.stats_db_path)}
 
 
 async def _stream_local(
