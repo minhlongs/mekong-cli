@@ -115,6 +115,56 @@ def test_signals_recent_honors_limit_default(client: TestClient):
     assert len(payload["signals"]) == 3
 
 
+def test_metrics_exposes_cloud_daily_budget_zero_by_default(client: TestClient):
+    m = client.get("/metrics").text
+    assert "mekongd_cloud_daily_budget_usd 0" in m
+
+
+def test_cloud_budget_enforced_raises_402(tmp_path):
+    """When daily cloud spend >= budget, cloud routes return 402."""
+    from mekongd.config import MekongdConfig, PolicyConfig
+    from mekongd.proxy import app, set_runtime
+    from mekongd.runtime import StubRuntime
+    from mekongd.stats import record_route
+
+    # Force cloud by making default destination cloud with no patterns matching.
+    cfg = MekongdConfig(
+        cloud_daily_budget_usd=0.01,
+        policy=PolicyConfig(local_patterns=[], cloud_patterns=[], default_destination="cloud"),
+    )
+    cfg.stats_db_path = tmp_path / "stats.sqlite"
+    # Seed a cloud route that exceeds the $0.01 cap
+    record_route(cfg.stats_db_path, "POST /v1/messages", 100, 100, "cloud", 0.0, "claude", 0.05)
+    set_runtime(StubRuntime(cfg), cfg)
+    client = TestClient(app)
+    r = client.post(
+        "/v1/messages",
+        json={"model": "x", "messages": [{"role": "user", "content": "hi"}], "max_tokens": 8},
+    )
+    assert r.status_code == 402
+    assert "budget" in r.json()["detail"].lower()
+
+
+def test_cloud_budget_allows_when_under(tmp_path):
+    """Cloud routes succeed while spent < budget."""
+    from mekongd.config import MekongdConfig, PolicyConfig
+    from mekongd.proxy import set_runtime
+    from mekongd.runtime import StubRuntime
+
+    cfg = MekongdConfig(
+        cloud_daily_budget_usd=10.0,  # generous cap
+        policy=PolicyConfig(local_patterns=[], cloud_patterns=[], default_destination="cloud"),
+    )
+    cfg.stats_db_path = tmp_path / "stats.sqlite"
+    set_runtime(StubRuntime(cfg), cfg)
+    # Don't actually call cloud — stub that out or just check the pre-check doesn't fire.
+    # Since we can't mock cloud_forward easily here, assert budget check alone
+    # doesn't block by directly calling the enforcement helper.
+    from mekongd.proxy import _enforce_cloud_budget
+
+    _enforce_cloud_budget(cfg)  # should not raise: spend=0 < 10
+
+
 def test_metrics_after_request(client: TestClient):
     body = {
         "model": "claude-opus-4-7",

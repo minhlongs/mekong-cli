@@ -57,6 +57,10 @@ class MekongdConfig(BaseSettings):
     cloud_input_usd_per_mtok: float = 3.0
     cloud_output_usd_per_mtok: float = 15.0
 
+    # Optional daily cloud-spend cap (USD, UTC day). None = no enforcement.
+    # Set via env MEKONGD_CLOUD_DAILY_BUDGET_USD.
+    cloud_daily_budget_usd: Optional[float] = None
+
     # Policy
     policy: PolicyConfig = Field(default_factory=PolicyConfig)
 

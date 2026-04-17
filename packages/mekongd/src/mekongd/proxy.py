@@ -6,7 +6,7 @@ import logging
 import uuid
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from sse_starlette.sse import EventSourceResponse
 
@@ -101,6 +101,9 @@ async def metrics() -> str:
         "# HELP mekongd_cloud_spent_usd_today Cloud routing cost (USD) since UTC midnight",
         "# TYPE mekongd_cloud_spent_usd_today gauge",
         f"mekongd_cloud_spent_usd_today {today_cloud_spent_usd(cfg.stats_db_path):.6f}",
+        "# HELP mekongd_cloud_daily_budget_usd Configured daily cap (0 = no enforcement)",
+        "# TYPE mekongd_cloud_daily_budget_usd gauge",
+        f"mekongd_cloud_daily_budget_usd {cfg.cloud_daily_budget_usd or 0:.6f}",
     ]
     sigs = aggregate_signals(cfg.stats_db_path)
     good, bad = sigs.get("good", 0), sigs.get("bad", 0)
@@ -128,6 +131,7 @@ async def messages(req: MessagesRequest):
     message_id = f"msg_{uuid.uuid4().hex[:16]}"
 
     if decision.destination == "cloud":
+        _enforce_cloud_budget(cfg)
         return await cloud_forward(cfg, req, _make_persist(cfg))
 
     if not req.stream:
@@ -198,6 +202,22 @@ async def _stream_local(
     )
     yield _sse(MessageStopEvent())
     _persist(cfg, "local", in_tok, out_tok, req.model)
+
+
+def _enforce_cloud_budget(cfg: MekongdConfig) -> None:
+    """Raise 402 if today's cloud spend has reached cfg.cloud_daily_budget_usd."""
+    budget = cfg.cloud_daily_budget_usd
+    if budget is None or budget <= 0:
+        return
+    spent = today_cloud_spent_usd(cfg.stats_db_path)
+    if spent >= budget:
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                f"Cloud daily budget reached: spent ${spent:.2f} "
+                f">= cap ${budget:.2f}. Route locally or raise MEKONGD_CLOUD_DAILY_BUDGET_USD."
+            ),
+        )
 
 
 def _make_persist(cfg: MekongdConfig):

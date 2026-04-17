@@ -24,6 +24,7 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | `mekongd_cost_saved_usd_total` | counter | — | SQLite sum |
 | `mekongd_local_ratio` | gauge | — | derived (0..1) |
 | `mekongd_cloud_spent_usd_today` | gauge | — | SQLite sum (cloud, UTC today) |
+| `mekongd_cloud_daily_budget_usd` | gauge | — | config `cloud_daily_budget_usd` (0 = no cap) |
 | `mekongd_signals_total` | counter | `kind={good,bad}` | `aggregate_signals` |
 | `mekongd_signals_ratio` | gauge | — | derived `good/(good+bad)`, 0 if none |
 
@@ -80,7 +81,12 @@ mekongd_cloud_spent_usd_today
 
 # Burn rate: cloud USD/sec over last 5m
 rate(mekongd_cloud_spent_usd_today[5m])
+
+# Fraction of budget consumed (0..1) — 1.0 = cap reached; further cloud routes → HTTP 402
+mekongd_cloud_spent_usd_today / mekongd_cloud_daily_budget_usd
 ```
+
+**Budget enforcement:** set `MEKONGD_CLOUD_DAILY_BUDGET_USD=10` (or `cloud_daily_budget_usd` in config.toml). When today's cloud spend reaches the cap, `POST /v1/messages` with a cloud-routed decision returns HTTP 402 with a human-readable detail. Local routes are never blocked.
 
 ### Routing health
 
