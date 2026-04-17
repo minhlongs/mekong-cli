@@ -33,6 +33,10 @@ class ForestSettings:
     webhook_timeout_seconds: float = 5.0
     worker_poll_seconds: int = 5
     testing: bool = False
+    # Docker executor settings (opt-in via FOREST_WORKER_EXECUTOR=docker)
+    worker_executor: str = "subprocess"
+    docker_image: str = "agent-core:latest"
+    docker_timeout_seconds: int = 300
 
     @classmethod
     def from_env(cls) -> ForestSettings:
@@ -44,6 +48,11 @@ class ForestSettings:
             )
         outputs = Path(os.getenv("FOREST_OUTPUTS", "./outputs")).resolve()
         outputs.mkdir(parents=True, exist_ok=True)
+        worker_executor = os.getenv("FOREST_WORKER_EXECUTOR", "subprocess")
+        if worker_executor not in {"subprocess", "docker"}:
+            raise ValueError(
+                f"FOREST_WORKER_EXECUTOR must be 'subprocess' or 'docker', got {worker_executor!r}"
+            )
         return cls(
             redis_url=os.getenv("REDIS_URL", "redis://localhost:6379"),
             jwt_secret_key=secret or "test-only-secret-key",
@@ -57,4 +66,7 @@ class ForestSettings:
             webhook_timeout_seconds=float(os.getenv("FOREST_WEBHOOK_TIMEOUT", "5")),
             worker_poll_seconds=_env_int("FOREST_WORKER_POLL_SECONDS", 5),
             testing=testing,
+            worker_executor=worker_executor,
+            docker_image=os.getenv("FOREST_DOCKER_IMAGE", "agent-core:latest"),
+            docker_timeout_seconds=_env_int("FOREST_DOCKER_TIMEOUT_SECONDS", 300),
         )
