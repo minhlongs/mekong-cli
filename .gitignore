@@ -160,8 +160,13 @@ plans/reports/
 plans/260302-*/
 insights/
 
-# ClaudeKit DNA (private skill configs)
-.claude/
+# ClaudeKit DNA (private skill configs) — .claude/ is private; only explicit allowlist tracked
+.claude/*
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/sdlc.md
+!.claude/commands/sdlc/
+!.claude/commands/sdlc/**
 _bmad/
 claudekit-engineer-dna/
 
@@ -635,7 +640,7 @@ tasks/
 # Fourth pass — internal tooling
 scripts/
 supabase/
-.claude/
+# .claude/ narrowed in second-rule above — only sdlc commands tracked
 .geminiignore
 .repomixignore
 .ruffignore
