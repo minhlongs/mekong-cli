@@ -6,12 +6,11 @@ import logging
 import uuid
 from typing import AsyncIterator
 
-import httpx
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from sse_starlette.sse import EventSourceResponse
 
 from mekongd import __version__
+from mekongd.cloud import forward as cloud_forward
 from mekongd.config import MekongdConfig, load_config
 from mekongd.router import Router
 from mekongd.runtime import BaseRuntime, get_runtime
@@ -23,6 +22,7 @@ from mekongd.schemas import (
     ContentBlockStopEvent,
     MessageDeltaEvent,
     MessageDeltaPayload,
+    MessageDeltaUsage,
     MessageStartEvent,
     MessageStopEvent,
     MessagesRequest,
@@ -73,7 +73,7 @@ async def messages(req: MessagesRequest):
     message_id = f"msg_{uuid.uuid4().hex[:16]}"
 
     if decision.destination == "cloud":
-        return await _forward_cloud(cfg, req)
+        return await cloud_forward(cfg, req, _make_persist(cfg))
 
     if not req.stream:
         text = await runtime.generate(req)
@@ -113,41 +113,20 @@ async def _stream_local(
     yield _sse(
         MessageDeltaEvent(
             delta=MessageDeltaPayload(stop_reason="end_turn"),
-            usage=Usage(input_tokens=in_tok, output_tokens=out_tok),
+            usage=MessageDeltaUsage(output_tokens=out_tok),
         )
     )
     yield _sse(MessageStopEvent())
     _persist(cfg, "local", in_tok, out_tok, req.model)
 
 
-async def _forward_cloud(cfg: MekongdConfig, req: MessagesRequest) -> JSONResponse:
-    """Forward to Anthropic. No streaming fallback in v0 — CC CLI handles retries."""
-    if not cfg.anthropic_api_key:
-        raise HTTPException(
-            status_code=501,
-            detail="Cloud fallback requested but ANTHROPIC_API_KEY not configured.",
-        )
-    url = f"{cfg.anthropic_fallback_url.rstrip('/')}/v1/messages"
-    headers = {
-        "x-api-key": cfg.anthropic_api_key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-    }
-    body = req.model_dump(exclude_none=True)
-    # Force stream=False for simplicity in v0 cloud-fallback.
-    body["stream"] = False
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.post(url, headers=headers, json=body)
-    data = resp.json() if resp.content else {}
-    usage = data.get("usage") or {}
-    _persist(
-        cfg,
-        "cloud",
-        int(usage.get("input_tokens") or _estimate_in(req)),
-        int(usage.get("output_tokens") or 0),
-        req.model,
-    )
-    return JSONResponse(status_code=resp.status_code, content=data)
+def _make_persist(cfg: MekongdConfig):
+    """Closure adapter — matches cloud.PersistFn signature."""
+
+    def _fn(destination: str, in_tok: int, out_tok: int, model: str) -> None:
+        _persist(cfg, destination, in_tok, out_tok, model)
+
+    return _fn
 
 
 def _persist(

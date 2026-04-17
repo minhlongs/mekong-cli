@@ -82,6 +82,44 @@ def test_routing_cloud_forwards_and_records(
     assert s.total_cost_saved_usd == 0.0
 
 
+@respx.mock
+def test_cloud_streaming_passthrough(client: TestClient, tmp_config: MekongdConfig):
+    """When stream=true and route=cloud, mekongd pipes SSE bytes from Anthropic."""
+    sse_body = (
+        "event: message_start\n"
+        'data: {"type":"message_start","message":{}}\n\n'
+        "event: message_delta\n"
+        'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},'
+        '"usage":{"output_tokens":42}}\n\n'
+        "event: message_stop\n"
+        'data: {"type":"message_stop"}\n\n'
+    )
+    respx.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(
+            200,
+            content=sse_body,
+            headers={"content-type": "text/event-stream"},
+        )
+    )
+    body = {
+        "model": "claude-opus-4-7",
+        "system": "Architect the migration",  # cloud pattern
+        "messages": [{"role": "user", "content": "go"}],
+        "max_tokens": 64,
+        "stream": True,
+    }
+    with client.stream("POST", "/v1/messages", json=body) as r:
+        assert r.status_code == 200
+        raw = b"".join(r.iter_bytes()).decode("utf-8")
+    assert "message_start" in raw
+    assert "message_delta" in raw
+    assert "message_stop" in raw
+
+    s = aggregate_stats(tmp_config.stats_db_path)
+    assert s.cloud_requests == 1
+    assert s.total_tokens_out == 42  # parsed from SSE message_delta
+
+
 def test_cloud_without_api_key_returns_501(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # Override the config used by proxy — API key missing this time.
     monkeypatch.delenv("MEKONGD_ANTHROPIC_API_KEY", raising=False)
