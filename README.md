@@ -232,6 +232,23 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 | Python tests passing | 7,007 (34 skipped) | `python3 -m pytest -q --tb=no` |
 | npm Packages | 2 published | `@mekongcli/openclaw-engine`, `@mekongcli/cli-core` |
 
+## Roadmap — Binh Pháp 13 Verticals
+
+Mekong IDE is the AI kernel. 13 vertical products are built on top of it.
+1 shipped (CashClaw). 12 remaining are post-D-Day targets.
+
+| Status | Vertical | Chapter |
+|--------|----------|---------|
+| **SHIPPED** | CashClaw (trading) | 2 作戰 |
+| PARTIAL | MekongPay, MekongMind, MekongEye | 6, 8, 13 |
+| SCAFFOLD | MekongHQ, MekongCounsel, MekongVault, MekongStudio, MekongBridge, MekongPulse, MekongMap, MekongForce, MekongLaunch | 1,3,4,5,7,9,10,11,12 |
+
+Full roadmap: [`docs/BINH_PHAP_ROADMAP.md`](docs/BINH_PHAP_ROADMAP.md) · Scaffold plans: [`verticals/scaffold/`](verticals/scaffold/)
+
+> XONG = $ in bank. Not PR merged. Not scaffold created.
+
+---
+
 ## Contributing
 
 ```bash
