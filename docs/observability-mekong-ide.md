@@ -23,6 +23,7 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | `mekongd_tokens_out_total` | counter | — | SQLite sum |
 | `mekongd_cost_saved_usd_total` | counter | — | SQLite sum |
 | `mekongd_local_ratio` | gauge | — | derived (0..1) |
+| `mekongd_cloud_spent_usd_today` | gauge | — | SQLite sum (cloud, UTC today) |
 | `mekongd_signals_total` | counter | `kind={good,bad}` | `aggregate_signals` |
 | `mekongd_signals_ratio` | gauge | — | derived `good/(good+bad)`, 0 if none |
 
@@ -69,6 +70,16 @@ increase(mekongd_cost_saved_usd_total[1h])
 # Saved $ per local request (proxy for Qwen efficacy)
 increase(mekongd_cost_saved_usd_total[1h])
   / increase(mekongd_requests_total{destination="local"}[1h])
+```
+
+### Cloud spend guardrails
+
+```promql
+# Cloud USD spent today — alert when near budget
+mekongd_cloud_spent_usd_today
+
+# Burn rate: cloud USD/sec over last 5m
+rate(mekongd_cloud_spent_usd_today[5m])
 ```
 
 ### Routing health
@@ -206,6 +217,12 @@ groups:
         for: 2m
         annotations:
           summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
+
+      - alert: MekongdCloudSpendHigh
+        expr: mekongd_cloud_spent_usd_today > 10
+        for: 5m
+        annotations:
+          summary: "Cloud spend today exceeds $10 — review routing policy / budget"
 
       - alert: MekongdSignalsRatioDegraded
         expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10

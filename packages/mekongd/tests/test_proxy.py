@@ -40,6 +40,7 @@ def test_metrics_empty(client: TestClient):
     assert "mekongd_tokens_in_total 0" in body
     assert "mekongd_cost_saved_usd_total 0" in body
     assert "mekongd_local_ratio 0" in body
+    assert "mekongd_cloud_spent_usd_today 0" in body
 
 
 def test_signals_accepts_good_and_bad(client: TestClient):

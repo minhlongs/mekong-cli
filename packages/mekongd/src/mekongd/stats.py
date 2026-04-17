@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS routes (
     tokens_out     INTEGER NOT NULL DEFAULT 0,
     destination    TEXT    NOT NULL,
     cost_saved_usd REAL    NOT NULL DEFAULT 0.0,
+    cost_usd       REAL    NOT NULL DEFAULT 0.0,
     model          TEXT    NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_routes_ts ON routes (ts);
@@ -49,6 +50,13 @@ def _migrate_signals_model(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE signals ADD COLUMN model TEXT NOT NULL DEFAULT ''")
 
 
+def _migrate_routes_cost_usd(conn: sqlite3.Connection) -> None:
+    """Add `cost_usd` column to pre-existing routes tables (idempotent)."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(routes)").fetchall()}
+    if "cost_usd" not in cols:
+        conn.execute("ALTER TABLE routes ADD COLUMN cost_usd REAL NOT NULL DEFAULT 0.0")
+
+
 @dataclass
 class StatsSummary:
     total_requests: int
@@ -68,6 +76,7 @@ def init_db(db_path: Path) -> None:
     with _connect(db_path) as conn:
         conn.executescript(_SCHEMA_SQL)
         _migrate_signals_model(conn)
+        _migrate_routes_cost_usd(conn)
         conn.commit()
     # Owner-only permissions to avoid leaking request metadata on shared hosts.
     try:
@@ -95,14 +104,19 @@ def record_route(
     destination: Destination,
     cost_saved_usd: float = 0.0,
     model: str = "",
+    cost_usd: float = 0.0,
 ) -> bool:
-    """Persist one routing decision. Swallows exceptions."""
+    """Persist one routing decision. Swallows exceptions.
+
+    For local routes: cost_saved_usd=estimate, cost_usd=0.
+    For cloud routes: cost_saved_usd=0, cost_usd=estimate (actual cloud bill).
+    """
     try:
         init_db(db_path)
         with _connect(db_path) as conn:
             conn.execute(
                 "INSERT INTO routes (ts, method, tokens_in, tokens_out, destination, "
-                "cost_saved_usd, model) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "cost_saved_usd, cost_usd, model) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     datetime.now(timezone.utc).isoformat(),
                     method,
@@ -110,6 +124,7 @@ def record_route(
                     tokens_out,
                     destination,
                     cost_saved_usd,
+                    cost_usd,
                     model,
                 ),
             )
@@ -210,6 +225,20 @@ def aggregate_signals_by_model(
     for model, kind, count in rows:
         out.setdefault(model, {"good": 0, "bad": 0})[kind] = int(count)
     return out
+
+
+def today_cloud_spent_usd(db_path: Path) -> float:
+    """Sum of cost_usd for cloud routes today (UTC midnight cutoff). 0 when empty."""
+    if not db_path.exists():
+        return 0.0
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT COALESCE(SUM(cost_usd), 0) FROM routes "
+            "WHERE destination='cloud' AND ts >= ?",
+            (f"{today}T00:00:00+00:00",),
+        ).fetchone()
+    return float(row[0] if row else 0.0)
 
 
 def estimate_savings(
