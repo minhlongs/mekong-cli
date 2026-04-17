@@ -93,6 +93,13 @@ mekongd_cloud_spent_usd_today / mekongd_cloud_daily_budget_usd
 ```bash
 curl -s '127.0.0.1:8765/v1/cost/by-model?hours=168' | jq .
 # {"by_model": {"claude-opus-4-7": 7.20, "claude-sonnet-4-6": 1.84}}
+
+# Via CLI (combines signal + cost report):
+agent-core report --cost --hours 168
+# Cloud cost by model (last 168h):
+#   claude-opus-4-7                  $    7.2000
+#   claude-sonnet-4-6                $    1.8400
+#   TOTAL                            $    9.0400
 ```
 
 Only models with non-zero spend appear. Omit `hours` for all-time. Legacy rows (missing `model` column before PR #102) bucket under `""`.

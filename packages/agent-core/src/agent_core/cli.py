@@ -88,6 +88,9 @@ def report_cmd(
     notes: int = typer.Option(
         0, "--notes", help="Append last N signal notes to output (0 = none)."
     ),
+    cost: bool = typer.Option(
+        False, "--cost", help="Append cloud cost breakdown by model."
+    ),
 ) -> None:
     """Show good/bad signal breakdown by model as a human-friendly table."""
     kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
@@ -108,6 +111,13 @@ def report_cmd(
             typer.echo(f"Lỗi khi lấy notes: {e}", err=True)
             return
         typer.echo(_format_recent_notes(recent))
+    if cost:
+        try:
+            by_cost = llm.get_cost_by_model(hours=window)
+        except Exception as e:  # noqa: BLE001
+            typer.echo(f"Lỗi khi lấy cost: {e}", err=True)
+            return
+        typer.echo(_format_cost_by_model(by_cost, window))
 
 
 @app.command("signal")
@@ -127,6 +137,21 @@ def signal_cmd(
         typer.echo(f"Lỗi: {e}", err=True)
         raise typer.Exit(code=2) from e
     typer.echo(f"Đã gửi signal: {resp}")
+
+
+def _format_cost_by_model(by_model: dict[str, float], hours: int | None) -> str:
+    """Render cloud cost dict as table sorted by spend desc. Empty → friendly."""
+    if not by_model:
+        return "\nKhông có cloud cost nào được ghi nhận."
+    label = f" (last {hours}h)" if hours else ""
+    lines = ["", f"Cloud cost by model{label}:"]
+    total = 0.0
+    for model, usd in sorted(by_model.items(), key=lambda kv: -kv[1]):
+        display = model if model else "(unknown)"
+        lines.append(f"  {display:<32}  ${usd:>10.4f}")
+        total += usd
+    lines.append(f"  {'TOTAL':<32}  ${total:>10.4f}")
+    return "\n".join(lines)
 
 
 def _format_recent_notes(signals: list[dict]) -> str:
