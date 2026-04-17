@@ -173,6 +173,11 @@ insights/
 !.claude/agents/file-scout-agent.md
 !.claude/agents/shell-runner-agent.md
 !.claude/agents/docs-writer-agent.md
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/pre-tool-use-guard.cjs
+!.claude/hooks/stop-checkpoint.cjs
+!.claude/settings.json
 _bmad/
 claudekit-engineer-dna/
 
