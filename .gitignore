@@ -578,6 +578,7 @@ docs/*.yaml
 !docs/code-standards.md
 !docs/system-architecture.md
 !docs/domain-plan.md
+!docs/observability-mekong-ide.md
 
 # Stub/internal packages
 packages/vibe-*/
