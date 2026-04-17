@@ -7,6 +7,7 @@ import uuid
 from typing import AsyncIterator
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from sse_starlette.sse import EventSourceResponse
 
 from mekongd import __version__
@@ -29,7 +30,7 @@ from mekongd.schemas import (
     MessagesResponse,
     Usage,
 )
-from mekongd.stats import estimate_savings, record_route
+from mekongd.stats import aggregate_stats, estimate_savings, record_route
 
 log = logging.getLogger(__name__)
 app = FastAPI(title="mekongd", version=__version__)
@@ -63,6 +64,32 @@ def set_runtime(runtime: BaseRuntime, config: MekongdConfig | None = None) -> No
 async def healthz():
     _, runtime, _ = _get_deps()
     return {"status": "ok", "runtime": runtime.name, "version": __version__}
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics() -> str:
+    """Prometheus text-format exposition — aggregated from stats sqlite."""
+    cfg, _, _ = _get_deps()
+    s = aggregate_stats(cfg.stats_db_path)
+    lines = [
+        "# HELP mekongd_requests_total Total /v1/messages requests by destination",
+        "# TYPE mekongd_requests_total counter",
+        f'mekongd_requests_total{{destination="local"}} {s.local_requests}',
+        f'mekongd_requests_total{{destination="cloud"}} {s.cloud_requests}',
+        "# HELP mekongd_tokens_in_total Total input tokens accepted",
+        "# TYPE mekongd_tokens_in_total counter",
+        f"mekongd_tokens_in_total {s.total_tokens_in}",
+        "# HELP mekongd_tokens_out_total Total output tokens produced",
+        "# TYPE mekongd_tokens_out_total counter",
+        f"mekongd_tokens_out_total {s.total_tokens_out}",
+        "# HELP mekongd_cost_saved_usd_total Estimated USD saved by local routing",
+        "# TYPE mekongd_cost_saved_usd_total counter",
+        f"mekongd_cost_saved_usd_total {s.total_cost_saved_usd:.6f}",
+        "# HELP mekongd_local_ratio Share of requests routed to local runtime (0..1)",
+        "# TYPE mekongd_local_ratio gauge",
+        f"mekongd_local_ratio {s.local_pct / 100:.6f}",
+    ]
+    return "\n".join(lines) + "\n"
 
 
 @app.post("/v1/messages")
