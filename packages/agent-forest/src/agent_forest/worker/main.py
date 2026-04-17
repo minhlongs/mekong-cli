@@ -32,21 +32,23 @@ def _install_signal_handlers() -> None:
     signal.signal(signal.SIGTERM, _handle)
 
 
-def _execute_in_subprocess(prompt: str, sandbox_str: str) -> JobOutcome:
+def _execute_in_subprocess(
+    prompt: str, sandbox_str: str, *, max_rounds: int = 1
+) -> JobOutcome:
     """Spawn a fresh Python process so AGENT_CORE_OUTPUTS rebind is clean."""
     ctx = mp.get_context("spawn")
     parent_conn, child_conn = ctx.Pipe(duplex=False)
 
-    def _target(conn, prompt_, sandbox_):  # noqa: ANN001
+    def _target(conn, prompt_, sandbox_, rounds_):  # noqa: ANN001
         from pathlib import Path as _Path
 
         from agent_forest.worker.runner import run_job as _run
 
-        outcome = _run(prompt_, _Path(sandbox_))
+        outcome = _run(prompt_, _Path(sandbox_), max_rounds=rounds_)
         conn.send((outcome.status, outcome.result, outcome.error))
         conn.close()
 
-    proc = ctx.Process(target=_target, args=(child_conn, prompt, sandbox_str))
+    proc = ctx.Process(target=_target, args=(child_conn, prompt, sandbox_str, max_rounds))
     proc.start()
     proc.join(timeout=300)
     if proc.is_alive():
@@ -64,7 +66,7 @@ def process_one(
     settings: ForestSettings,
     *,
     key: str,
-    executor: Callable[[str, str], JobOutcome] = _execute_in_subprocess,
+    executor: Callable[..., JobOutcome] = _execute_in_subprocess,
 ) -> JobOutcome:
     parsed = q.parse_job_key(key)
     if not parsed:
@@ -76,7 +78,9 @@ def process_one(
         return JobOutcome(status="failed", error="job missing")
     q.update_job_status(r, user_id, job_id, status="running")
     sandbox = user_output_dir(settings.outputs_dir, user_id)
-    outcome = executor(data.get("prompt", ""), str(sandbox))
+    outcome = executor(
+        data.get("prompt", ""), str(sandbox), max_rounds=settings.feedback_rounds
+    )
     q.update_job_status(
         r, user_id, job_id, status=outcome.status, result=outcome.result, error=outcome.error
     )
@@ -87,12 +91,15 @@ def process_one(
     return outcome
 
 
-def _select_executor(settings: ForestSettings) -> Callable[[str, str], JobOutcome]:
+def _select_executor(settings: ForestSettings) -> Callable[..., JobOutcome]:
     """Return the executor callable based on settings.worker_executor."""
     if settings.worker_executor == "docker":
         from agent_forest.worker.docker_executor import execute_in_container
 
-        return lambda p, s: execute_in_container(p, s, settings=settings)
+        def _docker_exec(p: str, s: str, *, max_rounds: int = 1) -> JobOutcome:
+            return execute_in_container(p, s, settings=settings, max_rounds=max_rounds)
+
+        return _docker_exec
     return _execute_in_subprocess
 
 
@@ -100,7 +107,7 @@ def run_loop(
     settings: ForestSettings | None = None,
     *,
     max_iterations: int | None = None,
-    executor: Callable[[str, str], JobOutcome] = _execute_in_subprocess,
+    executor: Callable[..., JobOutcome] = _execute_in_subprocess,
 ) -> int:
     settings = settings or ForestSettings.from_env()
     # If caller didn't override executor, auto-select based on settings.
