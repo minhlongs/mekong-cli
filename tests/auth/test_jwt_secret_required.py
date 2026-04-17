@@ -12,7 +12,6 @@ Verifies that:
 
 from __future__ import annotations
 
-import importlib
 import os
 import sys
 from contextlib import contextmanager
@@ -36,9 +35,27 @@ def _clean_jwt_module() -> Generator[None, None, None]:
     sys.modules.pop(mod_name, None)
 
 
-def _no_test_env() -> dict[str, str | None]:
-    """Env overrides that simulate a non-test, non-CI production-like environment."""
-    return {"CI": None, "PYTEST_CURRENT_TEST": None, "TESTING": None}
+@contextmanager
+def _production_like_env(jwt_secret: str | None = None) -> Generator[None, None, None]:
+    """Context manager that removes CI/test env vars and optionally sets JWT_SECRET=REDACTED.
+
+    os.environ does not accept None values (Python 3.12 restriction).
+    We pop CI vars instead of setting them to None.
+    """
+    ci_vars = ["CI", "PYTEST_CURRENT_TEST", "TESTING"]
+    saved = {k: os.environ.pop(k, None) for k in ci_vars}
+    # Also pop JWT_SECRET=REDACTED so we control it cleanly
+    saved["JWT_SECRET=REDACTED"] = os.environ.pop("JWT_SECRET=REDACTED", None)
+    try:
+        if jwt_secret is not None:
+            os.environ["JWT_SECRET=REDACTED"] = jwt_secret
+        yield
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
+            else:
+                os.environ.pop(k, None)
 
 
 # ---------------------------------------------------------------------------
@@ -50,17 +67,14 @@ class TestGetJwtSecretMissing:
 
     def test_raises_when_no_env_var_in_production_context(self):
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": ""}, clear=False):
-                # Remove JWT_SECRET=REDACTED from env entirely
-                os.environ.pop("JWT_SECRET=REDACTED", None)
+            with _production_like_env(jwt_secret=None):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 with pytest.raises(RuntimeError, match="JWT_SECRET=REDACTED environment variable is required"):
                     get_jwt_secret()
 
     def test_error_message_includes_generation_command(self):
         with _clean_jwt_module():
-            with patch.dict(os.environ, _no_test_env(), clear=False):
-                os.environ.pop("JWT_SECRET=REDACTED", None)
+            with _production_like_env(jwt_secret=None):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 with pytest.raises(RuntimeError, match="secrets.token_urlsafe"):
                     get_jwt_secret()
@@ -74,26 +88,22 @@ class TestGetJwtSecretTooShort:
     """get_jwt_secret raises RuntimeError when JWT_SECRET=REDACTED < 32 bytes outside CI."""
 
     def test_raises_for_short_secret(self):
-        short = "tooshort"  # 8 bytes < 32
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": short}, clear=False):
+            with _production_like_env(jwt_secret="tooshort"):  # 8 bytes < 32
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 with pytest.raises(RuntimeError, match="too short"):
                     get_jwt_secret()
 
     def test_raises_for_31_byte_secret(self):
-        # 31 ascii chars = 31 bytes — just under limit
-        secret_31 = "a" * 31
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": secret_31}, clear=False):
+            with _production_like_env(jwt_secret="a" * 31):  # 31 bytes, just under
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 with pytest.raises(RuntimeError, match="too short"):
                     get_jwt_secret()
 
     def test_error_includes_byte_count(self):
-        short = "abc"
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": short}, clear=False):
+            with _production_like_env(jwt_secret="abc"):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 with pytest.raises(RuntimeError, match=r"\d+ bytes"):
                     get_jwt_secret()
@@ -109,7 +119,7 @@ class TestGetJwtSecretValid:
     def test_succeeds_with_32_byte_secret(self):
         secret = "a" * 32
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": secret}, clear=False):
+            with _production_like_env(jwt_secret=secret):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 assert get_jwt_secret() == secret
 
@@ -117,7 +127,7 @@ class TestGetJwtSecretValid:
         import secrets as _secrets
         long_secret = _secrets.token_urlsafe(48)  # > 32 bytes
         with _clean_jwt_module():
-            with patch.dict(os.environ, {**_no_test_env(), "JWT_SECRET=REDACTED": long_secret}, clear=False):
+            with _production_like_env(jwt_secret=long_secret):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
                 assert get_jwt_secret() == long_secret
 
