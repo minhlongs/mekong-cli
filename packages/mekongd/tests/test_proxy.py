@@ -29,6 +29,36 @@ def test_healthz(client: TestClient):
     assert data["runtime"] == "stub"
 
 
+def test_metrics_empty(client: TestClient):
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/plain")
+    body = r.text
+    assert "mekongd_requests_total" in body
+    assert 'mekongd_requests_total{destination="local"} 0' in body
+    assert 'mekongd_requests_total{destination="cloud"} 0' in body
+    assert "mekongd_tokens_in_total 0" in body
+    assert "mekongd_cost_saved_usd_total 0" in body
+    assert "mekongd_local_ratio 0" in body
+
+
+def test_metrics_after_request(client: TestClient):
+    body = {
+        "model": "claude-opus-4-7",
+        "messages": [{"role": "user", "content": "hello metrics"}],
+        "max_tokens": 32,
+    }
+    r = client.post("/v1/messages", json=body)
+    assert r.status_code == 200
+
+    r2 = client.get("/metrics")
+    assert r2.status_code == 200
+    text = r2.text
+    assert 'mekongd_requests_total{destination="local"} 1' in text
+    assert "mekongd_tokens_in_total" in text
+    assert "mekongd_local_ratio 1.000000" in text
+
+
 def test_messages_non_stream(client: TestClient):
     body = {
         "model": "claude-opus-4-7",
