@@ -5,16 +5,18 @@ from __future__ import annotations
 import hashlib
 import os
 
-from fastapi import FastAPI, Request
+import redis
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from agent_forest.gateway.deps import get_settings
+from agent_forest.gateway.deps import get_redis_client, get_settings
 from agent_forest.gateway.routes_auth import router as auth_router
 from agent_forest.gateway.routes_task import router as task_router
+from agent_forest.queue import TASK_QUEUE
 
 
 def _rate_key(request: Request) -> str:
@@ -56,6 +58,23 @@ def create_app() -> FastAPI:
     @app.get("/healthz", tags=["infra"])
     def healthz() -> JSONResponse:
         return JSONResponse({"status": "ok", "service": "agent-forest"})
+
+    @app.get("/metrics", tags=["infra"], response_class=PlainTextResponse)
+    def metrics(r: redis.Redis = Depends(get_redis_client)) -> str:
+        """Prometheus text exposition — queue depth + service info."""
+        try:
+            depth = int(r.llen(TASK_QUEUE))
+        except Exception:
+            depth = -1
+        lines = [
+            "# HELP agent_forest_queue_depth Current length of Redis task_queue list",
+            "# TYPE agent_forest_queue_depth gauge",
+            f"agent_forest_queue_depth {depth}",
+            "# HELP agent_forest_up Service liveness indicator (1=up)",
+            "# TYPE agent_forest_up gauge",
+            "agent_forest_up 1",
+        ]
+        return "\n".join(lines) + "\n"
 
     return app
 
