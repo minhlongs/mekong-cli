@@ -11,11 +11,10 @@ Targets uncovered paths:
 """
 
 import platform
-import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, mock_open, patch, call
+from unittest.mock import MagicMock, mock_open, patch
 
 from src.core.machine_fingerprint import (
     FingerprintGenerator,
@@ -178,14 +177,14 @@ class TestGetMacAddresses(unittest.TestCase):
         gen = FingerprintGenerator()
         gen.platform = "Linux"
         with patch.object(gen, "_get_mac_addresses_linux", return_value=["11:22:33:44:55:66"]) as m:
-            macs = gen._get_mac_addresses()
+            gen._get_mac_addresses()
             m.assert_called_once()
 
     def test_windows_dispatch(self):
         gen = FingerprintGenerator()
         gen.platform = "Windows"
         with patch.object(gen, "_get_mac_addresses_windows", return_value=["aa:aa:aa:aa:aa:aa"]) as m:
-            macs = gen._get_mac_addresses()
+            gen._get_mac_addresses()
             m.assert_called_once()
 
     def test_unknown_platform_uses_uuid_fallback(self):
@@ -386,14 +385,14 @@ class TestGetDiskSerial(unittest.TestCase):
         gen = FingerprintGenerator()
         gen.platform = "Linux"
         with patch.object(gen, "_get_disk_serial_linux", return_value="disk-sn-lnx") as m:
-            result = gen._get_disk_serial()
+            gen._get_disk_serial()
             m.assert_called_once()
 
     def test_windows_dispatch(self):
         gen = FingerprintGenerator()
         gen.platform = "Windows"
         with patch.object(gen, "_get_disk_serial_windows", return_value="disk-sn-win") as m:
-            result = gen._get_disk_serial()
+            gen._get_disk_serial()
             m.assert_called_once()
 
     def test_unknown_platform_returns_none(self):
@@ -522,14 +521,14 @@ class TestGetMachineId(unittest.TestCase):
         gen = FingerprintGenerator()
         gen.platform = "Linux"
         with patch.object(gen, "_get_machine_id_linux", return_value="linux-mid") as m:
-            result = gen._get_machine_id()
+            gen._get_machine_id()
             m.assert_called_once()
 
     def test_windows_dispatch(self):
         gen = FingerprintGenerator()
         gen.platform = "Windows"
         with patch.object(gen, "_get_machine_id_windows", return_value="win-guid") as m:
-            result = gen._get_machine_id()
+            gen._get_machine_id()
             m.assert_called_once()
 
     def test_unknown_platform_returns_none(self):
@@ -581,7 +580,6 @@ class TestGetMachineIdLinux(unittest.TestCase):
         gen = FingerprintGenerator()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".id", delete=False) as f:
             f.write("abcdef1234567890\n")
-            tmp_path = f.name
 
         with patch("src.core.machine_fingerprint.Path") as mock_path_cls:
             mock_file = MagicMock()

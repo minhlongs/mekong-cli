@@ -179,7 +179,7 @@ class TestExecuteToolListDir:
 
 class TestExecuteToolAppendLog:
     def test_appends_timestamped_message(self):
-        from src.daemon.agent_loop import execute_tool, SANDBOX_DIR
+        from src.daemon.agent_loop import execute_tool
         with patch("builtins.open", mock_open()) as m:
             with patch.object(Path, "mkdir"):
                 result = execute_tool("append_log", {"filename": "agent.log", "message": "hello"})

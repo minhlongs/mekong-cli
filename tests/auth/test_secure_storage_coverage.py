@@ -14,7 +14,6 @@ Targets uncovered paths:
 
 import json
 import os
-import platform
 import sys
 import tempfile
 import unittest
@@ -77,7 +76,7 @@ class TestSanitizeCredentialName(unittest.TestCase):
 class TestMacOSKeychainBackend(unittest.TestCase):
 
     def test_is_available_true_on_darwin(self):
-        backend = MacOSKeychainBackend()
+        MacOSKeychainBackend()
         with patch("sys.platform", "darwin"):
             backend2 = MacOSKeychainBackend()
             self.assertEqual(backend2.is_available(), sys.platform == "darwin")
@@ -277,7 +276,7 @@ class TestLinuxEncryptedBackend(unittest.TestCase):
             machine_id_path.write_text("test-machine-id-1234\n")
             backend = LinuxEncryptedBackend(config_dir=Path(tmpdir))
 
-            with patch("src.auth.secure_storage.Path") as mock_path_cls:
+            with patch("src.auth.secure_storage.Path"):
                 # Make /etc/machine-id appear to exist and return our content
                 fake_etc = MagicMock()
                 fake_etc.exists.return_value = True

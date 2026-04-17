@@ -17,8 +17,6 @@ Tests for JwtRefreshClient — covers previously uncovered branches:
 """
 
 import os
-import time
-import pytest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 
@@ -668,7 +666,7 @@ class TestModuleHelpers:
         mock_client = MagicMock()
         mock_client.activate.return_value = RefreshResult(status=RefreshStatus.SUCCESS, access_token="tok")
         mod._refresh_client = mock_client
-        result = activate_license("mk_some_key")
+        activate_license("mk_some_key")
         mock_client.activate.assert_called_once_with("mk_some_key")
         mod._refresh_client = None
 
@@ -677,7 +675,7 @@ class TestModuleHelpers:
         mock_client = MagicMock()
         mock_client.refresh.return_value = RefreshResult(status=RefreshStatus.NOT_REQUIRED)
         mod._refresh_client = mock_client
-        result = refresh_jwt_token(force=True)
+        refresh_jwt_token(force=True)
         mock_client.refresh.assert_called_once_with(force=True)
         mod._refresh_client = None
 

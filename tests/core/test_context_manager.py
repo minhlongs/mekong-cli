@@ -1,11 +1,8 @@
 """Tests for src/core/context_manager.py."""
 
 import json
-from datetime import datetime
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

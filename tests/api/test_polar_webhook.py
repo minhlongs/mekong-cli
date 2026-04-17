@@ -21,13 +21,10 @@ import json
 import hmac as _hmac
 import hashlib
 import os
-import time
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch, mock_open, call
-from types import SimpleNamespace
+from unittest.mock import MagicMock, patch, mock_open
 
-import httpx
 
 os.environ.setdefault("TESTING", "true")
 os.environ.setdefault("AUTH_ENVIRONMENT", "dev")
@@ -61,8 +58,6 @@ class TestVerifyWebhookSignature:
         with patch("src.api.polar_webhook.POLAR_WEBHOOK_SECRET", secret):
             from src.api.polar_webhook import verify_webhook_signature
             # Reload to pick up patched module-level var
-            import importlib
-            import src.api.polar_webhook as mod
             return verify_webhook_signature(payload, sig, timestamp)
 
     def test_valid_signature_returns_true(self):
