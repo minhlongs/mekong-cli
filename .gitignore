@@ -167,6 +167,12 @@ insights/
 !.claude/commands/sdlc.md
 !.claude/commands/sdlc/
 !.claude/commands/sdlc/**
+!.claude/agents/
+.claude/agents/*
+!.claude/agents/git-ops-agent.md
+!.claude/agents/file-scout-agent.md
+!.claude/agents/shell-runner-agent.md
+!.claude/agents/docs-writer-agent.md
 _bmad/
 claudekit-engineer-dna/
 
@@ -303,6 +309,8 @@ api/
 agents/
 !/agents/
 !packages/**/agents/
+!.claude/agents/
+!.claude/agents/**
 # algo-trader has its own repo: github.com/longtho638-jpg/algo-trader
 /cli/
 !packages/**/cli/
