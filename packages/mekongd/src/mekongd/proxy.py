@@ -97,12 +97,18 @@ async def metrics() -> str:
         f"mekongd_local_ratio {s.local_pct / 100:.6f}",
     ]
     sigs = aggregate_signals(cfg.stats_db_path)
+    good, bad = sigs.get("good", 0), sigs.get("bad", 0)
+    total = good + bad
+    ratio = good / total if total else 0.0
     lines.extend(
         [
             "# HELP mekongd_signals_total Operator feedback signals by kind (Pillar 3)",
             "# TYPE mekongd_signals_total counter",
-            f'mekongd_signals_total{{kind="good"}} {sigs.get("good", 0)}',
-            f'mekongd_signals_total{{kind="bad"}} {sigs.get("bad", 0)}',
+            f'mekongd_signals_total{{kind="good"}} {good}',
+            f'mekongd_signals_total{{kind="bad"}} {bad}',
+            "# HELP mekongd_signals_ratio Share of good signals (0..1, 0 when no signals)",
+            "# TYPE mekongd_signals_ratio gauge",
+            f"mekongd_signals_ratio {ratio:.6f}",
         ]
     )
     return "\n".join(lines) + "\n"
