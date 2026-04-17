@@ -12,6 +12,7 @@ import typer
 from agent_core import __version__
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
+from agent_core.feedback_loop import FeedbackLoop
 from agent_core.formatters import format_breakdown, format_cost_by_model, format_recent_notes
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
@@ -130,37 +131,72 @@ def orchestrate_cmd(
     ),
     model: str = typer.Option(None, "--model", help="Override LLM model."),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
+    rounds: int = typer.Option(
+        1,
+        "--rounds",
+        "-r",
+        help="Số vòng feedback loop (>=2 bật Ops+Analyst+retry). 1 = single pass.",
+    ),
 ) -> None:
-    """CEO → Developer → Tester → Reviewer full pipeline."""
+    """CEO → Developer → Tester → Reviewer [→ Ops + Analyst retry if rounds>1]."""
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
     kwargs: dict = {}
     if mekongd_url:
         kwargs["base_url"] = mekongd_url
     if model:
         kwargs["model"] = model
-    orch = SoloCompanyOrchestrator(llm=LLMClient(**kwargs), memory=SeedMemory())
-    typer.echo("Orchestrator khởi động: CEO → Developer → Tester → Reviewer")
-    report = orch.process_goal(goal)
+    llm = LLMClient(**kwargs)
+    memory = SeedMemory()
 
-    typer.echo(f"\n--- Kế hoạch (CEO) ---\n{report.plan}\n")
+    if rounds <= 1:
+        orch = SoloCompanyOrchestrator(llm=llm, memory=memory)
+        typer.echo("Orchestrator khởi động: CEO → Developer → Tester → Reviewer")
+        report = orch.process_goal(goal)
+        _print_report(report)
+        artifact = _maybe_write_artifact(report.artifact)
+        if artifact:
+            typer.echo(f"\nĐã lưu artifact vào: {artifact}")
+        return
+
+    loop = FeedbackLoop(llm=llm, memory=memory)
+    typer.echo(
+        f"FeedbackLoop khởi động: tối đa {rounds} vòng "
+        "(CEO → Dev → Tester → Reviewer → Ops → Analyst)"
+    )
+    session = loop.process_goal(goal, max_rounds=rounds)
+    for round_ in session.rounds:
+        typer.echo(f"\n===== Vòng {round_.round_index} =====")
+        _print_report(round_.report)
+        typer.echo(
+            f"Ops: healthy={round_.ops['healthy']} "
+            f"severity={round_.ops['severity']} alerts={round_.ops['alerts']}"
+        )
+        typer.echo(
+            f"Analyst: trend={round_.analyst['trend']} "
+            f"summary={round_.analyst['summary']}"
+        )
+        for rec in round_.analyst["recommendations"]:
+            typer.echo(f"  • {rec}")
+    artifact = _maybe_write_artifact(session.final.artifact)
+    if artifact:
+        typer.echo(f"\nĐã lưu artifact vào: {artifact}")
+
+
+def _print_report(report) -> None:
+    typer.echo(f"--- Kế hoạch (CEO) ---\n{report.plan}\n")
     typer.echo(f"--- Artifact (Developer) ---\n{report.artifact[:2000]}\n")
     typer.echo(
         f"--- Tester ({report.test['status'].upper()}) ---\n"
-        f"{report.test['summary']}\n"
+        f"{report.test['summary']}"
     )
-    if report.test["issues"]:
-        for issue in report.test["issues"]:
-            typer.echo(f"  - {issue}")
+    for issue in report.test["issues"]:
+        typer.echo(f"  - {issue}")
     typer.echo(
-        f"\n--- Reviewer ({report.review['verdict'].upper()} "
+        f"--- Reviewer ({report.review['verdict'].upper()} "
         f"score={report.review['score']}/10) ---"
     )
     for note in report.review["notes"]:
         typer.echo(f"  - {note}")
-
-    artifact = _maybe_write_artifact(report.artifact)
-    if artifact:
-        typer.echo(f"\nĐã lưu artifact vào: {artifact}")
 
 
 @app.command("signal")
