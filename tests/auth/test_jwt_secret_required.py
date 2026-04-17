@@ -27,12 +27,26 @@ import pytest
 
 @contextmanager
 def _clean_jwt_module() -> Generator[None, None, None]:
-    """Re-import session_manager with a clean module-level JWT_SECRET=REDACTED=None."""
+    """Re-import session_manager with a clean module-level JWT_SECRET=REDACTED=None.
+
+    Saves the original module instance and restores it on exit so that
+    imports held by other test files (e.g. ``from src.auth.session_manager
+    import SessionManager`` at module scope) continue to see the original
+    module's ``JWT_SECRET=REDACTED``/``JWT_ALGORITHM`` globals. Without restoration
+    ``patch('src.auth.session_manager.JWT_SECRET=REDACTED', ...)`` in later tests
+    patches a DIFFERENT module instance than the one their imported
+    ``SessionManager`` binds to → ``InvalidSignatureError``.
+    """
     mod_name = "src.auth.session_manager"
-    # Remove cached module so module-level JWT_SECRET=REDACTED resets to None
-    sys.modules.pop(mod_name, None)
-    yield
-    sys.modules.pop(mod_name, None)
+    saved = sys.modules.pop(mod_name, None)
+    try:
+        yield
+    finally:
+        if saved is not None:
+            saved.JWT_SECRET=REDACTED = None
+            sys.modules[mod_name] = saved
+        else:
+            sys.modules.pop(mod_name, None)
 
 
 @contextmanager
