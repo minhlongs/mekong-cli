@@ -14,6 +14,8 @@ from agent_forest import queue as q
 from agent_forest.config import ForestSettings
 from agent_forest.sandbox import user_output_dir
 from agent_forest.webhook import send_webhook
+from agent_forest.worker.heartbeat import default_worker_id
+from agent_forest.worker.heartbeat import publish as publish_heartbeat
 from agent_forest.worker.runner import JobOutcome
 
 log = logging.getLogger("agent_forest.worker")
@@ -106,12 +108,17 @@ def run_loop(
         executor = _select_executor(settings)
     _install_signal_handlers()
     r = redis.Redis.from_url(settings.redis_url, decode_responses=True)
-    log.info("worker online; polling %s", settings.redis_url)
+    worker_id = default_worker_id()
+    log.info("worker online; id=%s polling=%s", worker_id, settings.redis_url)
     iterations = 0
     while not _STOP:
         if max_iterations is not None and iterations >= max_iterations:
             break
         iterations += 1
+        try:
+            publish_heartbeat(r, worker_id)
+        except Exception as exc:  # noqa: BLE001 — heartbeat is best-effort, never crash worker
+            log.warning("heartbeat publish failed: %s", exc)
         key = q.pop_job_key(r, timeout=settings.worker_poll_seconds)
         if not key:
             continue

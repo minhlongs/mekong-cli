@@ -23,6 +23,24 @@ def test_metrics_empty_queue(client):
     assert "agent_forest_queue_depth 0" in body
     assert "agent_forest_up 1" in body
     assert "# TYPE agent_forest_queue_depth gauge" in body
+    # Heartbeat gauges default to 0 when no workers alive
+    assert "agent_forest_workers_alive 0" in body
+    assert "agent_forest_worker_last_seen_timestamp 0" in body
+
+
+def test_metrics_reflects_worker_heartbeat(client, fake_redis):
+    """Publishing a heartbeat into Redis should bump alive gauge."""
+    from agent_forest.worker.heartbeat import publish
+
+    publish(fake_redis, "test-worker-1")
+    publish(fake_redis, "test-worker-2")
+    m = client.get("/metrics").text
+    assert "agent_forest_workers_alive 2" in m
+    # last_seen_timestamp is a positive unix-ts (>10^9 for years past 2001)
+    for line in m.splitlines():
+        if line.startswith("agent_forest_worker_last_seen_timestamp "):
+            value = int(line.split()[-1])
+            assert value > 1_000_000_000
 
 
 def test_metrics_reflects_queue_depth(client, fake_redis):

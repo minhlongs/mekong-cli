@@ -32,6 +32,12 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 |--------|------|--------|--------|
 | `agent_forest_queue_depth` | gauge | — | `LLEN TASK_QUEUE` (Redis) |
 | `agent_forest_up` | gauge | — | liveness (constant `1`) |
+| `agent_forest_workers_alive` | gauge | — | `SCAN workers:heartbeat:*` count |
+| `agent_forest_worker_last_seen_timestamp` | gauge | — | max unix-ts across live heartbeats |
+
+Workers write `SETEX workers:heartbeat:<id> 60 <unix_ts>` each loop iteration;
+stale entries auto-expire. `agent_forest_workers_alive` thus reflects workers
+with a heartbeat no older than 60s.
 
 ## Prometheus scrape config
 
@@ -93,6 +99,19 @@ agent_forest_queue_depth
 
 # Growth rate (jobs/sec) — positive = producer out-running workers
 deriv(agent_forest_queue_depth[5m])
+```
+
+### Worker liveness
+
+```promql
+# Workers reporting heartbeat (TTL<60s)
+agent_forest_workers_alive
+
+# Dead pool: queue has work but no worker heartbeat
+agent_forest_queue_depth > 0 and agent_forest_workers_alive == 0
+
+# Staleness in seconds (how fresh is the last heartbeat)
+time() - agent_forest_worker_last_seen_timestamp
 ```
 
 ### Liveness
@@ -178,6 +197,12 @@ groups:
         annotations:
           summary: "Worker queue depth >50 — scale workers or check for stuck jobs"
 
+      - alert: AgentForestNoWorkers
+        expr: agent_forest_queue_depth > 0 and agent_forest_workers_alive == 0
+        for: 2m
+        annotations:
+          summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
+
       - alert: MekongdSignalsRatioDegraded
         expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10
         for: 30m
@@ -191,7 +216,6 @@ The `MekongdSignalsRatioDegraded` alert guards against the ratio firing on a han
 
 - Request latency (histogram) — requires middleware + `prometheus_client` dep. Re-evaluate when SLO work begins.
 - Per-user `agent_forest_queue_depth` — Redis `SCAN` expense deferred.
-- Worker heartbeat (`agent_forest_worker_last_seen_timestamp`) — needs a worker metrics surface.
 - Agent-core `/metrics` — no HTTP surface (library); expose via CLI-side stats file if needed.
 
 ## Unresolved
