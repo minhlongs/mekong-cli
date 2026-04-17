@@ -227,6 +227,22 @@ def aggregate_signals_by_model(
     return out
 
 
+def cloud_cost_by_model(db_path: Path, since_hours: int | None = None) -> dict[str, float]:
+    """Return {model: total_cost_usd} for cloud routes. Legacy rows bucket under ''."""
+    if not db_path.exists():
+        return {}
+    sql = "SELECT COALESCE(model,''), SUM(cost_usd) FROM routes WHERE destination='cloud'"
+    params: tuple = ()
+    if since_hours is not None and since_hours > 0:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=since_hours)
+        sql += " AND ts >= ?"
+        params = (cutoff.isoformat(),)
+    sql += " GROUP BY model"
+    with _connect(db_path) as conn:
+        rows = conn.execute(sql, params).fetchall()
+    return {model: float(total or 0.0) for model, total in rows if (total or 0) > 0}
+
+
 def today_cloud_spent_usd(db_path: Path) -> float:
     """Sum of cost_usd for cloud routes today (UTC midnight cutoff). 0 when empty."""
     if not db_path.exists():

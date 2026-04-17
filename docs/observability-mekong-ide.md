@@ -88,6 +88,15 @@ mekongd_cloud_spent_usd_today / mekongd_cloud_daily_budget_usd
 
 **Budget enforcement:** set `MEKONGD_CLOUD_DAILY_BUDGET_USD=10` (or `cloud_daily_budget_usd` in config.toml). When today's cloud spend reaches the cap, `POST /v1/messages` with a cloud-routed decision returns HTTP 402 with a human-readable detail. Local routes are never blocked.
 
+**Per-model cost breakdown:** for tuning decisions ("which model is eating the budget?"):
+
+```bash
+curl -s '127.0.0.1:8765/v1/cost/by-model?hours=168' | jq .
+# {"by_model": {"claude-opus-4-7": 7.20, "claude-sonnet-4-6": 1.84}}
+```
+
+Only models with non-zero spend appear. Omit `hours` for all-time. Legacy rows (missing `model` column before PR #102) bucket under `""`.
+
 ### Routing health
 
 ```promql
