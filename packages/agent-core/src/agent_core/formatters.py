@@ -66,6 +66,45 @@ def format_history(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def format_status(
+    agent_rows: dict[str, int],
+    last_session_at: str | None,
+    retention_env: str | None,
+    memory_root: str,
+) -> str:
+    """Operator-facing snapshot: memory root, retention, row counts per agent_id."""
+    retention_display = (
+        f"{retention_env} (auto-prune on)"
+        if retention_env and retention_env.isdigit() and int(retention_env) > 0
+        else "unbounded"
+    )
+    last = last_session_at or "(never)"
+    last_line = (
+        f"  last feedback round : {last[:19]}"
+        if last != "(never)"
+        else "  last feedback round : (never)"
+    )
+    lines = [
+        "agent-core status",
+        f"  memory root         : {memory_root}",
+        f"  retention env       : AGENT_CORE_SESSION_RETENTION={retention_env or '(unset)'}",
+        f"  retention effective : {retention_display}",
+        last_line,
+        "",
+        "Rows per agent_id (newest activity first):",
+    ]
+    if not agent_rows:
+        lines.append("  (memory is empty)")
+        return "\n".join(lines)
+    header = f"  {'Agent':<28}{'Rows':>8}"
+    lines.append(header)
+    lines.append("  " + "-" * (len(header) - 2))
+    for agent_id, count in agent_rows.items():
+        display = agent_id if agent_id else "(unknown)"
+        lines.append(f"  {display:<28}{count:>8}")
+    return "\n".join(lines)
+
+
 def format_cost_by_model(by_model: dict[str, float], hours: int | None) -> str:
     """Render cloud cost dict as table sorted by spend desc. Empty → friendly."""
     if not by_model:
