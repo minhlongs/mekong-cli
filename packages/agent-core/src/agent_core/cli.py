@@ -12,6 +12,7 @@ import typer
 from agent_core import __version__
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
+from agent_core.formatters import format_breakdown, format_cost_by_model, format_recent_notes
 from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
 from agent_core.tools.file_system import write_file
@@ -103,21 +104,21 @@ def report_cmd(
         raise typer.Exit(code=2) from e
     label = f" (last {hours}h)" if window else ""
     typer.echo(f"Signal breakdown{label}:")
-    typer.echo(_format_breakdown(by_model))
+    typer.echo(format_breakdown(by_model))
     if notes > 0:
         try:
             recent = llm.get_recent_signals(limit=notes)
         except Exception as e:  # noqa: BLE001
             typer.echo(f"Lỗi khi lấy notes: {e}", err=True)
             return
-        typer.echo(_format_recent_notes(recent))
+        typer.echo(format_recent_notes(recent))
     if cost:
         try:
             by_cost = llm.get_cost_by_model(hours=window)
         except Exception as e:  # noqa: BLE001
             typer.echo(f"Lỗi khi lấy cost: {e}", err=True)
             return
-        typer.echo(_format_cost_by_model(by_cost, window))
+        typer.echo(format_cost_by_model(by_cost, window))
 
 
 @app.command("signal")
@@ -137,57 +138,6 @@ def signal_cmd(
         typer.echo(f"Lỗi: {e}", err=True)
         raise typer.Exit(code=2) from e
     typer.echo(f"Đã gửi signal: {resp}")
-
-
-def _format_cost_by_model(by_model: dict[str, float], hours: int | None) -> str:
-    """Render cloud cost dict as table sorted by spend desc. Empty → friendly."""
-    if not by_model:
-        return "\nKhông có cloud cost nào được ghi nhận."
-    label = f" (last {hours}h)" if hours else ""
-    lines = ["", f"Cloud cost by model{label}:"]
-    total = 0.0
-    for model, usd in sorted(by_model.items(), key=lambda kv: -kv[1]):
-        display = model if model else "(unknown)"
-        lines.append(f"  {display:<32}  ${usd:>10.4f}")
-        total += usd
-    lines.append(f"  {'TOTAL':<32}  ${total:>10.4f}")
-    return "\n".join(lines)
-
-
-def _format_recent_notes(signals: list[dict]) -> str:
-    """Render recent signals as a timestamped note tail. Empty → friendly message."""
-    if not signals:
-        return "\nKhông có note gần đây."
-    lines = ["", "Recent notes (newest first):"]
-    for s in signals:
-        ts = (s.get("ts") or "")[:19]
-        kind = s.get("kind", "?")
-        model = s.get("model") or "(unknown)"
-        note = s.get("note") or "(no note)"
-        lines.append(f"  {ts}  [{kind:<4}]  {model:<24}  {note}")
-    return "\n".join(lines)
-
-
-def _format_breakdown(by_model: dict[str, dict[str, int]]) -> str:
-    """Render breakdown dict as fixed-width table. Empty input → friendly empty message."""
-    if not by_model:
-        return "Chưa có signal nào. Gửi feedback bằng `agent-core signal good|bad`."
-    header = f"{'Model':<32}{'Good':>8}{'Bad':>8}{'Ratio':>10}"
-    sep = "-" * len(header)
-    rows = [header, sep]
-    total_good = total_bad = 0
-    for model, counts in sorted(by_model.items()):
-        good, bad = int(counts.get("good", 0)), int(counts.get("bad", 0))
-        total_good += good
-        total_bad += bad
-        ratio = good / (good + bad) if (good + bad) else 0.0
-        display = model if model else "(unknown)"
-        rows.append(f"{display:<32}{good:>8}{bad:>8}{ratio:>10.2f}")
-    rows.append(sep)
-    total = total_good + total_bad
-    total_ratio = total_good / total if total else 0.0
-    rows.append(f"{'TOTAL':<32}{total_good:>8}{total_bad:>8}{total_ratio:>10.2f}")
-    return "\n".join(rows)
 
 
 def _maybe_prompt_signal(llm: LLMClient, enabled: bool) -> None:

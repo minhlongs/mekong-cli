@@ -6,11 +6,15 @@ import httpx
 import pytest
 import respx
 
-from agent_core.cli import (
-    _format_breakdown,
-    _format_cost_by_model,
-    _format_recent_notes,
-    report_cmd,
+from agent_core.cli import report_cmd
+from agent_core.formatters import (
+    format_breakdown as _format_breakdown,
+)
+from agent_core.formatters import (
+    format_cost_by_model as _format_cost_by_model,
+)
+from agent_core.formatters import (
+    format_recent_notes as _format_recent_notes,
 )
 from agent_core.llm_client import LLMClient
 
