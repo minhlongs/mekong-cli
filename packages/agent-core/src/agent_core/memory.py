@@ -147,6 +147,39 @@ class SeedMemory:
             for r in rows
         ]
 
+    def prune_agent(self, agent_id: str, keep_last_n: int) -> int:
+        """Delete all but the newest ``keep_last_n`` rows for ``agent_id``. Returns deleted count.
+
+        ``keep_last_n`` must be >=0. 0 means delete everything (same as clear_agent
+        but without touching chroma). Chroma vector store is pruned by id for the
+        same rows so SQLite and Chroma stay in sync.
+        """
+        if keep_last_n < 0:
+            raise ValueError("keep_last_n must be >= 0")
+        with self._connect() as conn:
+            # Find ids to delete: all rows except newest N by created_at DESC.
+            stale = conn.execute(
+                "SELECT id FROM memories WHERE agent_id = ? "
+                "ORDER BY created_at DESC, id DESC LIMIT -1 OFFSET ?",
+                (agent_id, keep_last_n),
+            ).fetchall()
+            if not stale:
+                return 0
+            stale_ids = [r[0] for r in stale]
+            placeholders = ",".join("?" * len(stale_ids))
+            conn.execute(
+                f"DELETE FROM memories WHERE id IN ({placeholders})", stale_ids
+            )
+            conn.commit()
+        client = self._chroma()
+        if client is not None:  # pragma: no cover
+            try:
+                coll = client.get_or_create_collection(name=agent_id)
+                coll.delete(ids=stale_ids)
+            except Exception as e:
+                log.debug("chroma prune failed: %s", e)
+        return len(stale_ids)
+
     def clear_agent(self, agent_id: str) -> int:
         with self._connect() as conn:
             cur = conn.execute("DELETE FROM memories WHERE agent_id = ?", (agent_id,))
