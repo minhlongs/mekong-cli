@@ -54,8 +54,21 @@ def get_jwt_secret() -> str:
             else:
                 raise RuntimeError(
                     "JWT_SECRET environment variable is required. "
-                    "Generate one with: secrets.token_urlsafe(32) "
+                    "Generate one with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))' "
                     "and add to your .env file."
+                )
+        else:
+            # Enforce minimum 32-byte secret in non-test environments
+            _is_test = (
+                os.getenv("CI") == "true"
+                or os.getenv("PYTEST_CURRENT_TEST")
+                or os.getenv("TESTING")
+            )
+            if not _is_test and len(JWT_SECRET.encode()) < 32:
+                raise RuntimeError(
+                    f"JWT_SECRET is too short: {len(JWT_SECRET.encode())} bytes. "
+                    "Minimum 32 bytes required for production security. "
+                    "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
                 )
     return JWT_SECRET
 
