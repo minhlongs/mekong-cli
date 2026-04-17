@@ -77,6 +77,18 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json()
 
+    def send_signal(self, kind: str, note: str = "") -> dict:
+        """Pillar 3 feedback — POST {kind: good|bad, note} to mekongd /v1/signals."""
+        if kind not in ("good", "bad"):
+            raise ValueError(f"kind must be 'good' or 'bad', got {kind!r}")
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.post(
+                f"{self.base_url}/v1/signals",
+                json={"kind": kind, "note": note},
+            )
+            resp.raise_for_status()
+            return resp.json()
+
 
 def _extract_text(data: dict) -> str:
     blocks = data.get("content") or []

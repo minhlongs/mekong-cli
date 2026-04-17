@@ -77,3 +77,24 @@ def test_chat_dict_messages_accepted():
         )
         reply = client.chat(messages=[{"role": "user", "content": "raw dict"}])
     assert reply == "ok"
+
+
+@respx.mock
+def test_send_signal_posts_kind_and_note():
+    import json as _json
+
+    route = respx.post("http://127.0.0.1:8765/v1/signals").mock(
+        return_value=httpx.Response(202, json={"accepted": True, "kind": "good"})
+    )
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    resp = client.send_signal("good", "Qwen nailed it")
+    assert resp == {"accepted": True, "kind": "good"}
+    assert route.called
+    body = _json.loads(route.calls[0].request.content)
+    assert body == {"kind": "good", "note": "Qwen nailed it"}
+
+
+def test_send_signal_rejects_invalid_kind():
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    with pytest.raises(ValueError, match="good"):
+        client.send_signal("maybe")

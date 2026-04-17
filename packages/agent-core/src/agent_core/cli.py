@@ -67,6 +67,25 @@ def run_cmd(
         typer.echo(f"Đã lưu artifact vào: {artifact}")
 
 
+@app.command("signal")
+def signal_cmd(
+    kind: str = typer.Argument(..., help="good|bad — operator feedback on last response."),
+    note: str = typer.Argument("", help="Optional free-text note (≤500 chars)."),
+    mekongd_url: str = typer.Option(
+        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
+    ),
+) -> None:
+    """Send a Pillar 3 feedback signal to mekongd /v1/signals."""
+    kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
+    llm = LLMClient(**kwargs)
+    try:
+        resp = llm.send_signal(kind, note)
+    except ValueError as e:
+        typer.echo(f"Lỗi: {e}", err=True)
+        raise typer.Exit(code=2) from e
+    typer.echo(f"Đã gửi signal: {resp}")
+
+
 def _maybe_write_artifact(developer_response: str) -> str | None:
     """If the developer replied with {file_path, content} JSON, persist it."""
     start = developer_response.find("{")
