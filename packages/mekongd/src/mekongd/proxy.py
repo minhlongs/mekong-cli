@@ -28,9 +28,16 @@ from mekongd.schemas import (
     MessageStopEvent,
     MessagesRequest,
     MessagesResponse,
+    SignalRequest,
     Usage,
 )
-from mekongd.stats import aggregate_stats, estimate_savings, record_route
+from mekongd.stats import (
+    aggregate_signals,
+    aggregate_stats,
+    estimate_savings,
+    record_route,
+    record_signal,
+)
 
 log = logging.getLogger(__name__)
 app = FastAPI(title="mekongd", version=__version__)
@@ -89,6 +96,15 @@ async def metrics() -> str:
         "# TYPE mekongd_local_ratio gauge",
         f"mekongd_local_ratio {s.local_pct / 100:.6f}",
     ]
+    sigs = aggregate_signals(cfg.stats_db_path)
+    lines.extend(
+        [
+            "# HELP mekongd_signals_total Operator feedback signals by kind (Pillar 3)",
+            "# TYPE mekongd_signals_total counter",
+            f'mekongd_signals_total{{kind="good"}} {sigs.get("good", 0)}',
+            f'mekongd_signals_total{{kind="bad"}} {sigs.get("bad", 0)}',
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -114,6 +130,14 @@ async def messages(req: MessagesRequest):
         )
 
     return EventSourceResponse(_stream_local(cfg, runtime, req, message_id))
+
+
+@app.post("/v1/signals", status_code=202)
+async def signals(req: SignalRequest):
+    """Pillar 3 — operator feedback loop. Persists one signal, returns 202."""
+    cfg, _, _ = _get_deps()
+    ok = record_signal(cfg.stats_db_path, req.kind, req.note)
+    return {"accepted": ok, "kind": req.kind}
 
 
 async def _stream_local(

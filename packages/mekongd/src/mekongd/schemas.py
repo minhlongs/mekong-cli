@@ -39,6 +39,13 @@ class Usage(BaseModel):
     output_tokens: int = 0
 
 
+class SignalRequest(BaseModel):
+    """POST /v1/signals body — operator feedback loop (Pillar 3)."""
+
+    kind: Literal["good", "bad"]
+    note: str = Field(default="", max_length=500)
+
+
 class MessagesResponse(BaseModel):
     """Non-streaming response (Anthropic schema)."""
 
