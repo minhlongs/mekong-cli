@@ -37,7 +37,7 @@ _TEMPLATE = "TASKS.todo.template"
 _OUTPUT = "TASKS.todo"
 
 
-@code_app.command()
+@code_app.command("new")
 def code_cmd(
     feature: str = typer.Argument(..., help="Feature slug, e.g. auth-mfa"),
     skip_prior_check: bool = typer.Option(
@@ -98,5 +98,5 @@ def code_cmd(
 
     console.print(
         f"[dim]Next:[/dim] After the agent fills {_OUTPUT}, run "
-        f"[bold cyan]mekong deploy {feature}[/bold cyan]"
+        f"[bold cyan]mekong deploy new {feature}[/bold cyan]"
     )
