@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-04-04
-**Current Status**: 100/100 Model Stack (DEV: qwen3:30b-a3b + deepseek-r1:32b, 38.7GB); $1M ARR Roadmap in progress
+**Last Updated**: 2026-04-17
+**Current Status**: Phase 1 (Seed) agent kernel shipped (agent-core); $1M ARR Roadmap in progress
 
 ---
 
@@ -11,6 +11,7 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
+| **Phase 1 (Seed)** | **Agent Kernel: BaseAgent + SeedMemory** | **✅ COMPLETED** | **2026-04-17** |
 | **Phase 21** | **100/100 Model Stack + Engine Farm Refactor** | **✅ COMPLETED** | **2026-04-04** |
 | Phase 20 | Retention & Engagement System | ✅ COMPLETED | 2026-03-14 |
 | Phase 19 | Dashboard Analytics UI | ✅ COMPLETED | 2026-03-14 |
@@ -24,6 +25,33 @@ All significant project milestones and phases tracked here.
 ---
 
 ## Completed Phases
+
+### Phase 1 (Seed): Agent Kernel & DeepSeek Design Implementation (2026-04-17)
+
+**Objective**: Implement Phase 1 of 226-page DeepSeek solo-platform design — agent workforce primitives for autonomous execution.
+
+**Status**: ✅ COMPLETED (100%)
+
+**New Package**: `packages/agent-core/`
+- **BaseAgent**: Think→Act→Observe loop with configurable LLM reasoning
+- **SeedMemory**: Dual-layer persistence (SQLite + optional ChromaDB) for agent state and semantic recall
+- **LLMClient**: Routes to mekongd proxy at `http://127.0.0.1:8765` (cost-saver from PR #86/#87)
+- **Tool Registry**: Sandboxed execution (browser, file_system, execute) with path traversal fix (C1) and cwd sandbox fix (H1)
+- **Agent Roles**: CEO (vision), Developer (implementation), ToolAgent (action execution)
+- **Typer CLI**: `agent-core run "<goal>"` for standalone agent missions
+
+**Architecture**:
+- Pairs with mekongd (packages/mekongd/) for distributed LLM cost control
+- Foundation for Phase 2 (Forest multi-tenant) agent orchestration
+- All modules < 200 LOC per codebase standards
+
+**Testing**: 34/34 pytest pass, ruff clean
+
+**Files**: 20 Python modules (agent definitions, tools, memory, CLI)
+
+**PR**: #88 → commit b8a16878f
+
+---
 
 ### Phase 21: Engine Farm 100/100 Model Stack Upgrade (2026-04-04)
 

@@ -105,6 +105,15 @@ packages/
 │   │   │       └── deploy_command.py
 │   │   └── tests/
 │   └── pyproject.toml
+├── agent-core/                    # Phase 1 (Seed): Agent kernel
+│   ├── src/agent_core/
+│   │   ├── base_agent.py          # Think→Act→Observe loop
+│   │   ├── llm_client.py          # LLMClient (routes to mekongd:8765)
+│   │   ├── memory.py              # SeedMemory (SQLite + ChromaDB)
+│   │   ├── tools/                 # Sandboxed tools (browser, file_system, execute)
+│   │   ├── agents/                # CEO, Developer, ToolAgent roles
+│   │   └── cli.py                 # Typer CLI: agent-core run "<goal>"
+│   └── tests/                     # 34/34 tests pass
 ├── agents/
 │   └── hubs/                      # Department-scoped command catalogs (17 total)
 │       ├── cto-hub.md             # Chief Technology Officer commands
@@ -203,6 +212,10 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 - `mekong-sonnet` — Claude Sonnet 4
 - `mekong-qwen` — DashScope Qwen 3.5
 - `mekong-cto` — Daemon mode
+
+### Agent Workforce Layer (agent-core)
+
+`packages/agent-core/` provides the **Phase 1 (Seed) agent kernel** — primitives for building autonomous workforce systems. It pairs with `mekongd` (Phase 0 cost-saving LLM proxy) to enable distributed agent execution via LLMClient routing to `http://127.0.0.1:8765`. Includes BaseAgent (think→act→observe), SeedMemory (SQLite + optional ChromaDB), and pre-built CEO/Developer/ToolAgent roles with sandboxed tools (browser, file_system, execute). Seed phase completes Phase 2 (Forest multi-tenant) on demand.
 
 ---
 
