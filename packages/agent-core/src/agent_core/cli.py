@@ -236,9 +236,15 @@ def forest_status_cmd(
     timeout: float = typer.Option(
         5.0, "--timeout", help="Timeout HTTP tính bằng giây (mặc định 5)."
     ),
+    as_json: bool = typer.Option(
+        False, "--json", help="In ra JSON thô (cho monitoring/script) thay vì bảng."
+    ),
 ) -> None:
     """Gọi /healthz + /metrics trên agent-forest gateway và in snapshot."""
     data = fetch_forest_status(url, timeout=timeout)
+    if as_json:
+        typer.echo(json.dumps(data, ensure_ascii=False, indent=2))
+        return
     typer.echo(format_forest_status(data))
 
 

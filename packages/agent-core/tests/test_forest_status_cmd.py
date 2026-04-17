@@ -122,7 +122,27 @@ def test_forest_status_cmd_renders(monkeypatch, capsys):
     respx.get(f"{base}/metrics").mock(
         return_value=httpx.Response(200, text=_METRICS_SAMPLE)
     )
-    cli.forest_status_cmd(url=base, timeout=5.0)
+    cli.forest_status_cmd(url=base, timeout=5.0, as_json=False)
     out = capsys.readouterr().out
     assert "agent-forest @" in out
     assert "workers alive       : 3" in out
+
+
+@respx.mock
+def test_forest_status_cmd_json_output(monkeypatch, capsys):
+    import json as _json
+
+    base = "http://stub-forest.test:8000"
+    respx.get(f"{base}/healthz").mock(
+        return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
+    )
+    respx.get(f"{base}/metrics").mock(
+        return_value=httpx.Response(200, text=_METRICS_SAMPLE)
+    )
+    cli.forest_status_cmd(url=base, timeout=5.0, as_json=True)
+    out = capsys.readouterr().out
+    parsed = _json.loads(out)
+    assert parsed["base_url"] == base
+    assert parsed["healthz"]["status_code"] == 200
+    assert parsed["metrics"]["agent_forest_workers_alive"] == 3
+    assert parsed["error"] is None
