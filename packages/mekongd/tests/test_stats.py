@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import sqlite3
+
 from mekongd.stats import (
     aggregate_signals,
+    aggregate_signals_by_model,
     aggregate_stats,
     estimate_savings,
     init_db,
@@ -59,3 +62,46 @@ def test_estimate_savings():
     # 1M input tokens @ $3 + 1M output @ $15 = $18
     assert abs(estimate_savings(1_000_000, 1_000_000, 3.0, 15.0) - 18.0) < 1e-9
     assert estimate_savings(0, 0, 3.0, 15.0) == 0.0
+
+
+def test_record_signal_with_model_and_breakdown(tmp_path: Path):
+    db = tmp_path / "stats.sqlite"
+    assert record_signal(db, "good", "fast", "qwen3-8b")
+    assert record_signal(db, "bad", "wrong", "qwen3-8b")
+    assert record_signal(db, "good", "", "claude-sonnet-4-6")
+    assert record_signal(db, "bad", "")  # legacy — empty model
+
+    by = aggregate_signals_by_model(db)
+    assert by["qwen3-8b"] == {"good": 1, "bad": 1}
+    assert by["claude-sonnet-4-6"] == {"good": 1, "bad": 0}
+    assert by[""] == {"good": 0, "bad": 1}
+
+
+def test_aggregate_signals_by_model_empty(tmp_path: Path):
+    assert aggregate_signals_by_model(tmp_path / "missing.sqlite") == {}
+
+
+def test_legacy_signals_table_migrates_model_column(tmp_path: Path):
+    """Pre-existing signals table without `model` column gets migrated on init_db."""
+    db = tmp_path / "legacy.sqlite"
+    conn = sqlite3.connect(str(db))
+    conn.executescript(
+        """
+        CREATE TABLE signals (
+            id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts   TEXT    NOT NULL,
+            kind TEXT    NOT NULL,
+            note TEXT    NOT NULL DEFAULT ''
+        );
+        INSERT INTO signals (ts, kind, note) VALUES ('2026-04-17T00:00:00Z', 'bad', 'old');
+        """
+    )
+    conn.commit()
+    conn.close()
+
+    # Trigger migration via any record_signal (calls init_db)
+    assert record_signal(db, "good", "new", "qwen3-8b")
+
+    by = aggregate_signals_by_model(db)
+    assert by[""] == {"good": 0, "bad": 1}  # legacy row bucket
+    assert by["qwen3-8b"] == {"good": 1, "bad": 0}

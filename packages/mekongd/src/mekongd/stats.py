@@ -32,13 +32,21 @@ CREATE INDEX IF NOT EXISTS idx_routes_ts ON routes (ts);
 CREATE INDEX IF NOT EXISTS idx_routes_dest ON routes (destination);
 
 CREATE TABLE IF NOT EXISTS signals (
-    id   INTEGER PRIMARY KEY AUTOINCREMENT,
-    ts   TEXT    NOT NULL,
-    kind TEXT    NOT NULL,
-    note TEXT    NOT NULL DEFAULT ''
+    id    INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts    TEXT    NOT NULL,
+    kind  TEXT    NOT NULL,
+    note  TEXT    NOT NULL DEFAULT '',
+    model TEXT    NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_signals_kind ON signals (kind);
 """
+
+
+def _migrate_signals_model(conn: sqlite3.Connection) -> None:
+    """Add `model` column to pre-existing signals tables (idempotent)."""
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(signals)").fetchall()}
+    if "model" not in cols:
+        conn.execute("ALTER TABLE signals ADD COLUMN model TEXT NOT NULL DEFAULT ''")
 
 
 @dataclass
@@ -59,6 +67,7 @@ def init_db(db_path: Path) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     with _connect(db_path) as conn:
         conn.executescript(_SCHEMA_SQL)
+        _migrate_signals_model(conn)
         conn.commit()
     # Owner-only permissions to avoid leaking request metadata on shared hosts.
     try:
@@ -137,14 +146,15 @@ def record_signal(
     db_path: Path,
     kind: SignalKind,
     note: str = "",
+    model: str = "",
 ) -> bool:
     """Persist one operator feedback signal. Swallows exceptions."""
     try:
         init_db(db_path)
         with _connect(db_path) as conn:
             conn.execute(
-                "INSERT INTO signals (ts, kind, note) VALUES (?, ?, ?)",
-                (datetime.now(timezone.utc).isoformat(), kind, note),
+                "INSERT INTO signals (ts, kind, note, model) VALUES (?, ?, ?, ?)",
+                (datetime.now(timezone.utc).isoformat(), kind, note, model),
             )
             conn.commit()
         return True
@@ -162,6 +172,20 @@ def aggregate_signals(db_path: Path) -> dict[str, int]:
             "SELECT kind, COUNT(*) FROM signals GROUP BY kind"
         ).fetchall()
     return {kind: int(count) for kind, count in rows}
+
+
+def aggregate_signals_by_model(db_path: Path) -> dict[str, dict[str, int]]:
+    """Return {model: {good: n, bad: n}}. Legacy rows bucket under ''."""
+    if not db_path.exists():
+        return {}
+    with _connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT COALESCE(model,''), kind, COUNT(*) FROM signals GROUP BY model, kind"
+        ).fetchall()
+    out: dict[str, dict[str, int]] = {}
+    for model, kind, count in rows:
+        out.setdefault(model, {"good": 0, "bad": 0})[kind] = int(count)
+    return out
 
 
 def estimate_savings(

@@ -44,6 +44,7 @@ class SignalRequest(BaseModel):
 
     kind: Literal["good", "bad"]
     note: str = Field(default="", max_length=500)
+    model: str = Field(default="", max_length=120)
 
 
 class MessagesResponse(BaseModel):
