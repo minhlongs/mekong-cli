@@ -15,6 +15,27 @@ def test_healthz(client):
     assert res.json()["status"] == "ok"
 
 
+def test_metrics_empty_queue(client):
+    res = client.get("/metrics")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/plain")
+    body = res.text
+    assert "agent_forest_queue_depth 0" in body
+    assert "agent_forest_up 1" in body
+    assert "# TYPE agent_forest_queue_depth gauge" in body
+
+
+def test_metrics_reflects_queue_depth(client, fake_redis):
+    token = _login(client)
+    headers = {"Authorization": f"Bearer {token}"}
+    res = client.post("/task", json={"prompt": "a"}, headers=headers)
+    assert res.status_code == 202
+    res = client.post("/task", json={"prompt": "b"}, headers=headers)
+    assert res.status_code == 202
+    m = client.get("/metrics").text
+    assert "agent_forest_queue_depth 2" in m
+
+
 def test_login_and_me(client):
     token = _login(client)
     res = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
