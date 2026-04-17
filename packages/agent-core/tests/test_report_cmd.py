@@ -6,7 +6,12 @@ import httpx
 import pytest
 import respx
 
-from agent_core.cli import _format_breakdown, _format_recent_notes, report_cmd
+from agent_core.cli import (
+    _format_breakdown,
+    _format_cost_by_model,
+    _format_recent_notes,
+    report_cmd,
+)
 from agent_core.llm_client import LLMClient
 
 
@@ -101,7 +106,7 @@ def test_report_cmd_prints_table(capsys):
             200, json={"by_model": {"qwen3-8b": {"good": 5, "bad": 2}}}
         )
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False)
     captured = capsys.readouterr().out
     assert "qwen3-8b" in captured
     assert "TOTAL" in captured
@@ -115,7 +120,7 @@ def test_report_cmd_exits_on_http_error(capsys):
         return_value=httpx.Response(500, json={"error": "boom"})
     )
     with pytest.raises(typer.Exit) as exc_info:
-        report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0)
+        report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False)
     assert exc_info.value.exit_code == 2
     assert "Lỗi" in capsys.readouterr().err
 
@@ -184,8 +189,53 @@ def test_report_cmd_with_notes_appends_tail(capsys):
     respx.get("http://127.0.0.1:8765/v1/signals/recent").mock(
         return_value=httpx.Response(200, json=recent_payload)
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=10)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=10, cost=False)
     out = capsys.readouterr().out
     assert "Signal breakdown" in out
     assert "Recent notes" in out
     assert "yay" in out
+
+
+def test_format_cost_by_model_empty_message():
+    assert "Không có cloud cost" in _format_cost_by_model({}, None)
+
+
+def test_format_cost_by_model_sorts_desc_and_totals():
+    data = {"claude-opus-4-7": 7.20, "claude-sonnet-4-6": 1.84, "cheap-model": 0.01}
+    out = _format_cost_by_model(data, hours=168)
+    lines = out.splitlines()
+    # Header has the window label
+    assert "last 168h" in lines[1]
+    # Opus (highest) appears before Sonnet which appears before cheap-model
+    opus_line = next(i for i, line in enumerate(lines) if "claude-opus-4-7" in line)
+    sonnet_line = next(i for i, line in enumerate(lines) if "claude-sonnet-4-6" in line)
+    cheap_line = next(i for i, line in enumerate(lines) if "cheap-model" in line)
+    assert opus_line < sonnet_line < cheap_line
+    # TOTAL row sums
+    total_line = next(line for line in lines if line.lstrip().startswith("TOTAL"))
+    assert "9.0500" in total_line
+
+
+@respx.mock
+def test_get_cost_by_model_passes_hours_param():
+    route = respx.get("http://127.0.0.1:8765/v1/cost/by-model").mock(
+        return_value=httpx.Response(200, json={"by_model": {"opus": 0.5}})
+    )
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    client.get_cost_by_model(hours=24)
+    assert route.calls[0].request.url.params["hours"] == "24"
+
+
+@respx.mock
+def test_report_cmd_with_cost_flag_appends_cost_section(capsys):
+    respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(200, json={"by_model": {"qwen3-8b": {"good": 2, "bad": 0}}})
+    )
+    respx.get("http://127.0.0.1:8765/v1/cost/by-model").mock(
+        return_value=httpx.Response(200, json={"by_model": {"claude-opus-4-7": 1.23}})
+    )
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=True)
+    out = capsys.readouterr().out
+    assert "Cloud cost by model" in out
+    assert "claude-opus-4-7" in out
+    assert "1.2300" in out

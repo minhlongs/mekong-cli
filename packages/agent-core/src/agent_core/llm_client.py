@@ -107,6 +107,14 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json().get("signals", [])
 
+    def get_cost_by_model(self, hours: int | None = None) -> dict[str, float]:
+        """Fetch {model: cloud_usd} from mekongd /v1/cost/by-model."""
+        params = {"hours": hours} if hours else {}
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.get(f"{self.base_url}/v1/cost/by-model", params=params)
+            resp.raise_for_status()
+            return resp.json().get("by_model", {})
+
 
 def _extract_text(data: dict) -> str:
     blocks = data.get("content") or []
