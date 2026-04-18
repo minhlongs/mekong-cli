@@ -328,17 +328,11 @@ def test_breakdown_from_signals_ignores_non_good_bad():
 
 
 @respx.mock
-def test_report_cmd_source_user_uses_recent_and_filters(capsys):
-    respx.get("http://127.0.0.1:8765/v1/signals/recent").mock(
+def test_report_cmd_source_user_forwards_to_server(capsys):
+    """Giai đoạn 3.2.E: CLI delegates to mekongd ?source= server-side filter."""
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
         return_value=httpx.Response(
-            200,
-            json={
-                "signals": [
-                    {"kind": "good", "model": "qwen", "note": "forest/u/j"},  # auto
-                    {"kind": "bad", "model": "qwen", "note": "forest/u/k#user"},  # user
-                    {"kind": "good", "model": "opus", "note": "forest/u/z#user"},  # user
-                ]
-            },
+            200, json={"by_model": {"opus": {"good": 1, "bad": 0}}}
         )
     )
     report_cmd(
@@ -350,11 +344,25 @@ def test_report_cmd_source_user_uses_recent_and_filters(capsys):
     )
     out = capsys.readouterr().out
     assert "source=user" in out
-    # user-only: qwen has 0 good 1 bad; opus has 1 good 0 bad; auto qwen excluded
     assert "opus" in out
-    # TOTAL row reflects user-filtered counts (1 good + 1 bad = 2 total)
-    total_line = next(line for line in out.splitlines() if line.startswith("TOTAL"))
-    assert " 1 " in total_line.replace("  ", " ")
+    assert route.calls[0].request.url.params["source"] == "user"
+
+
+@respx.mock
+def test_report_cmd_source_all_omits_server_param(capsys):
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(
+            200, json={"by_model": {"qwen": {"good": 2, "bad": 1}}}
+        )
+    )
+    report_cmd(
+        mekongd_url="http://127.0.0.1:8765",
+        hours=0,
+        notes=0,
+        cost=False,
+        source="all",
+    )
+    assert "source" not in route.calls[0].request.url.params
 
 
 def test_report_cmd_rejects_unknown_source(capsys):
