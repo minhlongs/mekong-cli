@@ -9,6 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from agent_forest import queue as q
 from agent_forest.gateway.deps import current_user, get_redis_client
+from agent_forest.gateway.prompt_guard import (
+    detect_dangerous_code,
+    detect_prompt_injection,
+    sanitize_input,
+)
 from agent_forest.models import (
     FeedbackAccepted,
     FeedbackRequest,
@@ -37,12 +42,25 @@ def create_task(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid webhook_url: {exc}",
             ) from exc
+    cleaned_prompt = sanitize_input(body.prompt)
+    injected, inj_hits = detect_prompt_injection(cleaned_prompt)
+    if injected:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Prompt injection pattern detected: {inj_hits}",
+        )
+    dangerous, dng_hits = detect_dangerous_code(cleaned_prompt)
+    if dangerous:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dangerous code pattern detected: {dng_hits}",
+        )
     job_id = f"job_{uuid.uuid4().hex[:12]}"
     record = q.enqueue_job(
         r,
         job_id=job_id,
         user_id=user.user_id,
-        prompt=body.prompt,
+        prompt=cleaned_prompt,
         webhook_url=body.webhook_url,
     )
     return TaskEnqueued(
