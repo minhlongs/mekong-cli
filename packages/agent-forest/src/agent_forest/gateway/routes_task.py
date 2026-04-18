@@ -27,6 +27,11 @@ from agent_forest.worker.signals import emit_user_feedback
 
 router = APIRouter(tags=["tasks"])
 
+# Redis counter keys for /metrics exposition (parallels agent_forest:tasks:*).
+# Read-side pattern: gateway.app._probe → /metrics Prometheus text.
+PROMPT_GUARD_INJECTION_KEY = "agent_forest:prompt_guard:rejections_injection"
+PROMPT_GUARD_DANGEROUS_KEY = "agent_forest:prompt_guard:rejections_dangerous"
+
 
 @router.post("/task", response_model=TaskEnqueued, status_code=status.HTTP_202_ACCEPTED)
 def create_task(
@@ -45,12 +50,20 @@ def create_task(
     cleaned_prompt = sanitize_input(body.prompt)
     injected, inj_hits = detect_prompt_injection(cleaned_prompt)
     if injected:
+        try:
+            r.incr(PROMPT_GUARD_INJECTION_KEY)
+        except Exception:
+            pass  # metrics must never block the reject path
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Prompt injection pattern detected: {inj_hits}",
         )
     dangerous, dng_hits = detect_dangerous_code(cleaned_prompt)
     if dangerous:
+        try:
+            r.incr(PROMPT_GUARD_DANGEROUS_KEY)
+        except Exception:
+            pass
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Dangerous code pattern detected: {dng_hits}",
