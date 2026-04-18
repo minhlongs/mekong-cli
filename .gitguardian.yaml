@@ -1,0 +1,9 @@
+# GitGuardian ignore config.
+# Test fixtures often contain synthetic credential-shaped strings (runtime-built
+# passwords, placeholder user ids) that are never real secrets. Scanning them
+# produces false positives without adding security value.
+version: 2
+paths-ignore:
+  - "packages/agent-forest/tests/**"
+  - "packages/agent-core/tests/**"
+  - "**/conftest.py"
