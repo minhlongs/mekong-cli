@@ -36,6 +36,9 @@ DANGEROUS_CODE_PATTERNS: tuple[str, ...] = (
     r"\bsubprocess\.",
     r"\bshell_exec\b",
     r"\bpopen\b",
+    r"\bpassthru\s*\(",
+    r"\bfs\.unlink\b",
+    r"\bfs\.rmdir\b",
 )
 
 _INJ = [re.compile(p, re.IGNORECASE) for p in INJECTION_PATTERNS]
