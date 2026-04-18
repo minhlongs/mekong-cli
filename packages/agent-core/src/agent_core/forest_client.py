@@ -45,11 +45,27 @@ def parse_prom_metrics(text: str, names: tuple[str, ...] = _METRIC_NAMES) -> dic
     return out
 
 
+def _status_json_to_metrics(body: dict) -> dict[str, float]:
+    """Map agent-forest /status JSON keys into the Prom-metric shape the
+    formatter already knows how to render."""
+    return {
+        "agent_forest_queue_depth": float(body.get("queue_depth", 0)),
+        "agent_forest_up": 1.0 if body.get("up") else 0.0,
+        "agent_forest_workers_alive": float(body.get("workers_alive", 0)),
+        "agent_forest_worker_last_seen_timestamp": float(
+            body.get("worker_last_seen_ts", 0)
+        ),
+    }
+
+
 def fetch_forest_status(base_url: str, *, timeout: float = 5.0) -> dict:
-    """Hit /healthz + /metrics on the agent-forest gateway. Return compact summary.
+    """Hit /healthz + /status (JSON, preferred) + /metrics (fallback) and return
+    a compact summary.
 
     Never raises: connection/HTTP errors are reported in the returned dict so the
-    CLI can print a clean error row rather than a traceback.
+    CLI can print a clean error row rather than a traceback. Prefers the JSON
+    endpoint added in PR #128; falls back to Prom-text parsing for older gateway
+    versions that only expose /metrics.
     """
     base = base_url.rstrip("/")
     result: dict = {"base_url": base, "healthz": None, "metrics": {}, "error": None}
@@ -57,6 +73,13 @@ def fetch_forest_status(base_url: str, *, timeout: float = 5.0) -> dict:
         with httpx.Client(timeout=timeout) as client:
             health = client.get(f"{base}/healthz")
             result["healthz"] = {"status_code": health.status_code, "body": health.json()}
+            status = client.get(f"{base}/status")
+            if status.status_code == 200:
+                try:
+                    result["metrics"] = _status_json_to_metrics(status.json())
+                    return result
+                except Exception:  # noqa: BLE001 — malformed JSON → fall through
+                    pass
             metrics = client.get(f"{base}/metrics")
             result["metrics"] = parse_prom_metrics(metrics.text)
     except Exception as exc:  # noqa: BLE001 — ops CLI, never traceback
