@@ -70,6 +70,24 @@ def test_detect_dangerous_code_benign_passes():
     assert hits == []
 
 
+def test_detect_dangerous_code_passthru():
+    detected, hits = detect_dangerous_code("<?php passthru($cmd) ?>")
+    assert detected
+    assert any("passthru" in h for h in hits)
+
+
+def test_detect_dangerous_code_fs_unlink():
+    detected, hits = detect_dangerous_code("fs.unlink('/etc/passwd', cb)")
+    assert detected
+    assert any("unlink" in h for h in hits)
+
+
+def test_detect_dangerous_code_fs_rmdir():
+    detected, hits = detect_dangerous_code("await fs.rmdir('/var/log', {recursive:true})")
+    assert detected
+    assert any("rmdir" in h for h in hits)
+
+
 def test_task_rejects_prompt_injection(client):
     token = _login(client)
     res = client.post(
