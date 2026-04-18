@@ -292,6 +292,18 @@ The starter set covers:
 
 `MekongdSignalsRatioDegraded` guards against firing on a handful of bad signals: `increase > 10` requires meaningful volume before alerting.
 
+Every alert carries two labels — `severity` (`critical` | `warning`) and `component` (`mekongd` | `agent-forest`) — so downstream Alertmanager routes can page by urgency without matching on alertname strings.
+
+## Alert delivery (Alertmanager)
+
+Routing template at [`docs/alerting/mekong-ide-alertmanager.yml`](alerting/mekong-ide-alertmanager.yml). Pairs with `mekong-ide-rules.yml` — the severity labels on each rule drive the route tree:
+
+- `severity=critical` → Slack `#mekong-ide-oncall` (10s group_wait, 1h repeat) + optional PagerDuty
+- `severity=warning` → Slack `#mekong-ide-alerts` digest (1m group_wait, 12h repeat)
+- inhibit rule silences warnings for a component while a critical alert is firing on the same component (incident-mode noise reduction)
+
+Placeholder webhook URLs in the template (`REPLACE_WITH_SLACK_WEBHOOK_URL`, `REPLACE_ME` SMTP creds) are sentinels — replace before deploy. Unrouted alerts fall through to `default-drop` so newly added rules don't accidentally page anyone until you wire a route.
+
 ## Not yet covered
 
 - Request latency (histogram) — requires middleware + `prometheus_client` dep. Re-evaluate when SLO work begins.
