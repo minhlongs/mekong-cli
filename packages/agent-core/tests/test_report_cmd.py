@@ -79,6 +79,28 @@ def test_get_signals_breakdown_passes_hours_param():
 
 
 @respx.mock
+def test_get_signals_breakdown_passes_source_param():
+    """Giai đoạn 3.2.D — LLMClient forwards source=user/auto to mekongd."""
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(200, json={"by_model": {"qwen": {"good": 1, "bad": 0}}})
+    )
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    client.get_signals_breakdown(source="user")
+    assert route.calls[0].request.url.params["source"] == "user"
+
+
+@respx.mock
+def test_get_signals_breakdown_drops_unknown_source_values():
+    """Unknown source values are silently dropped (don't break on typo)."""
+    route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
+        return_value=httpx.Response(200, json={"by_model": {}})
+    )
+    client = LLMClient(base_url="http://127.0.0.1:8765")
+    client.get_signals_breakdown(source="nonsense")
+    assert "source" not in route.calls[0].request.url.params
+
+
+@respx.mock
 def test_send_signal_includes_model_when_provided():
     import json as _json
 

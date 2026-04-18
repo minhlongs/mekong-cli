@@ -100,6 +100,44 @@ def test_signals_breakdown_accepts_hours_query(client: TestClient):
     assert data["qwen3-8b"] == {"good": 1, "bad": 0}
 
 
+def test_signals_breakdown_accepts_source_user(client: TestClient):
+    """Giai đoạn 3.2.D: ?source=user filters via `#user` marker in note."""
+    client.post(
+        "/v1/signals", json={"kind": "good", "note": "forest/u/j1", "model": "qwen"}
+    )
+    client.post(
+        "/v1/signals",
+        json={"kind": "bad", "note": "forest/u/j2#user", "model": "qwen"},
+    )
+    data = client.get("/v1/signals/breakdown?source=user").json()["by_model"]
+    assert data == {"qwen": {"good": 0, "bad": 1}}
+
+
+def test_signals_breakdown_source_auto_excludes_user_marker(client: TestClient):
+    client.post(
+        "/v1/signals", json={"kind": "good", "note": "forest/u/j1", "model": "qwen"}
+    )
+    client.post(
+        "/v1/signals",
+        json={"kind": "bad", "note": "forest/u/j2#user", "model": "qwen"},
+    )
+    data = client.get("/v1/signals/breakdown?source=auto").json()["by_model"]
+    assert data == {"qwen": {"good": 1, "bad": 0}}
+
+
+def test_signals_breakdown_ignores_unknown_source_value(client: TestClient):
+    """Unknown ?source= value falls back to no filter (legacy behavior)."""
+    client.post(
+        "/v1/signals", json={"kind": "good", "note": "forest/u/j1", "model": "qwen"}
+    )
+    client.post(
+        "/v1/signals",
+        json={"kind": "bad", "note": "forest/u/j2#user", "model": "qwen"},
+    )
+    data = client.get("/v1/signals/breakdown?source=nonsense").json()["by_model"]
+    assert data == {"qwen": {"good": 1, "bad": 1}}
+
+
 def test_signals_recent_returns_newest_first(client: TestClient):
     client.post("/v1/signals", json={"kind": "good", "note": "A", "model": "qwen3-8b"})
     client.post("/v1/signals", json={"kind": "bad", "note": "B"})
