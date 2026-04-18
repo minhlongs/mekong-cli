@@ -53,11 +53,56 @@ def test_parse_prom_metrics_strips_label_suffix():
 
 
 @respx.mock
-def test_fetch_forest_status_happy_path():
+def test_fetch_forest_status_prefers_json_endpoint():
+    """PR #128 added /status JSON — client should use it over /metrics text parse."""
     base = "http://fake-forest.test:8000"
     respx.get(f"{base}/healthz").mock(
         return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
     )
+    respx.get(f"{base}/status").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "service": "agent-forest",
+                "version": "0.1.0",
+                "up": True,
+                "queue_depth": 7,
+                "workers_alive": 3,
+                "worker_last_seen_ts": 1744934400,
+            },
+        )
+    )
+    # /metrics should NOT be called when /status succeeds
+    data = fetch_forest_status(base)
+    assert data["error"] is None
+    assert data["metrics"]["agent_forest_workers_alive"] == 3
+    assert data["metrics"]["agent_forest_up"] == 1.0
+
+
+@respx.mock
+def test_fetch_forest_status_falls_back_to_metrics_on_404():
+    """Older gateway versions expose /metrics only — fallback should work."""
+    base = "http://old-forest.test:8000"
+    respx.get(f"{base}/healthz").mock(
+        return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
+    )
+    respx.get(f"{base}/status").mock(return_value=httpx.Response(404))
+    respx.get(f"{base}/metrics").mock(
+        return_value=httpx.Response(200, text=_METRICS_SAMPLE)
+    )
+    data = fetch_forest_status(base)
+    assert data["error"] is None
+    assert data["metrics"]["agent_forest_workers_alive"] == 3
+
+
+@respx.mock
+def test_fetch_forest_status_happy_path():
+    """Legacy alias — still hits /status first per new behaviour."""
+    base = "http://fake-forest.test:8000"
+    respx.get(f"{base}/healthz").mock(
+        return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
+    )
+    respx.get(f"{base}/status").mock(return_value=httpx.Response(404))
     respx.get(f"{base}/metrics").mock(
         return_value=httpx.Response(200, text=_METRICS_SAMPLE)
     )
@@ -119,6 +164,8 @@ def test_forest_status_cmd_renders(monkeypatch, capsys):
     respx.get(f"{base}/healthz").mock(
         return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
     )
+    # Exercise /metrics fallback path in CLI render test
+    respx.get(f"{base}/status").mock(return_value=httpx.Response(404))
     respx.get(f"{base}/metrics").mock(
         return_value=httpx.Response(200, text=_METRICS_SAMPLE)
     )
@@ -136,6 +183,7 @@ def test_forest_status_cmd_json_output(monkeypatch, capsys):
     respx.get(f"{base}/healthz").mock(
         return_value=httpx.Response(200, json={"status": "ok", "service": "agent-forest"})
     )
+    respx.get(f"{base}/status").mock(return_value=httpx.Response(404))
     respx.get(f"{base}/metrics").mock(
         return_value=httpx.Response(200, text=_METRICS_SAMPLE)
     )
