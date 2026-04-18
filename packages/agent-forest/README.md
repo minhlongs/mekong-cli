@@ -111,15 +111,29 @@ agent-core forest-status --url http://localhost:8000
 agent-core forest-status --url http://localhost:8000 --json  # for scripts
 ```
 
-## Feedback signals (Giai đoạn 3.2.A)
+## Feedback signals (Giai đoạn 3.2)
 
-Every completed job emits a `good` / `bad` signal to `mekongd /v1/signals`
-(note prefix `forest/{user_id}/{job_id}`). This closes Pillar 3 (Feedback
-Loop) at the multi-tenant layer, so operator dashboards include forest
-traffic alongside single-founder agent-core runs.
+**3.2.A — Worker auto-emit.** Every completed job emits a `good` / `bad`
+signal to `mekongd /v1/signals` with note prefix `forest/{user_id}/{job_id}`.
+Closes Pillar 3 (Feedback Loop) at the multi-tenant layer.
 
-- Transport is best-effort — mekongd outages never fail the user job.
-- Disable entirely with `FOREST_SIGNALS_ENABLED=0` (e.g. CI).
+**3.2.B — User feedback endpoint.**
+
+```bash
+curl -s -X POST localhost:8000/task/$JOB_ID/feedback \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"rating":"good","note":"output was spot-on"}'
+# → 202 {"job_id":"job_...","rating":"good","forwarded":true}
+```
+
+The rating is forwarded as a mekongd signal with note suffix `#user` so
+operator dashboards can distinguish user-driven from worker-auto signals.
+Owner-only: 404 when the job is missing or belongs to another user.
+
+- Transport is best-effort — mekongd outages never fail user requests.
+- Disable worker auto-emit with `FOREST_SIGNALS_ENABLED=0` (user endpoint
+  still stores the rating).
 - Inspect with `agent-core report --hours 1` or `/v1/signals/recent`.
 
 ## Deviations from DeepSeek blueprint

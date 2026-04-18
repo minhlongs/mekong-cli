@@ -140,3 +140,58 @@ def test_emit_uses_mekongd_url_env_when_base_not_given(monkeypatch):
     )
     ok = signals.emit("completed", "u", "j")
     assert ok is True
+
+
+# ---- Giai đoạn 3.2.B: user-driven feedback ----
+
+
+@respx.mock
+def test_emit_user_feedback_posts_rating_as_kind():
+    respx.post("http://m.test:8765/v1/signals").mock(
+        return_value=httpx.Response(202, json={"ok": True})
+    )
+    ok = signals.emit_user_feedback(
+        "good", "usr_a", "job_7", base_url="http://m.test:8765"
+    )
+    assert ok is True
+    body = _last_body(respx.calls)
+    assert body["kind"] == "good"
+    assert body["note"] == "forest/usr_a/job_7#user"
+
+
+@respx.mock
+def test_emit_user_feedback_includes_note_tail():
+    respx.post("http://m.test:8765/v1/signals").mock(
+        return_value=httpx.Response(202, json={"ok": True})
+    )
+    signals.emit_user_feedback(
+        "bad",
+        "u",
+        "j",
+        note="output was incomplete",
+        base_url="http://m.test:8765",
+    )
+    body = _last_body(respx.calls)
+    assert body["kind"] == "bad"
+    assert body["note"].endswith("output was incomplete")
+    assert "#user" in body["note"]
+
+
+def test_emit_user_feedback_rejects_bad_rating():
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError):
+        signals.emit_user_feedback("meh", "u", "j")
+
+
+@respx.mock
+def test_emit_user_feedback_truncates_long_note():
+    respx.post("http://m.test:8765/v1/signals").mock(
+        return_value=httpx.Response(202, json={"ok": True})
+    )
+    signals.emit_user_feedback(
+        "bad", "u", "j", note="X" * 500, base_url="http://m.test:8765"
+    )
+    body = _last_body(respx.calls)
+    # prefix ~20 chars + ": " + 160 chars max tail
+    assert len(body["note"]) <= 200

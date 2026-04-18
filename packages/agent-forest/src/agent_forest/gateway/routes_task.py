@@ -9,9 +9,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from agent_forest import queue as q
 from agent_forest.gateway.deps import current_user, get_redis_client
-from agent_forest.models import JobRecord, TaskEnqueued, TaskRequest
+from agent_forest.models import (
+    FeedbackAccepted,
+    FeedbackRequest,
+    JobRecord,
+    TaskEnqueued,
+    TaskRequest,
+)
 from agent_forest.users import User
 from agent_forest.webhook import WebhookRejected, validate_webhook_url
+from agent_forest.worker.signals import emit_user_feedback
 
 router = APIRouter(tags=["tasks"])
 
@@ -63,6 +70,27 @@ def list_tasks(
 ) -> list[JobRecord]:
     jobs = q.list_jobs(r, user.user_id, limit=limit)
     return [JobRecord(**_as_job_kwargs(j)) for j in jobs]
+
+
+@router.post(
+    "/task/{job_id}/feedback",
+    response_model=FeedbackAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def submit_feedback(
+    job_id: str,
+    body: FeedbackRequest,
+    user: User = Depends(current_user),
+    r: redis.Redis = Depends(get_redis_client),
+) -> FeedbackAccepted:
+    """Record user rating for a completed job — forwards to mekongd signals."""
+    data = q.get_job(r, user.user_id, job_id)
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+    forwarded = emit_user_feedback(
+        body.rating, user.user_id, job_id, note=body.note
+    )
+    return FeedbackAccepted(job_id=job_id, rating=body.rating, forwarded=forwarded)
 
 
 def _as_job_kwargs(data: dict[str, str]) -> dict[str, object]:
