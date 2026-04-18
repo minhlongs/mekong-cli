@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-04-17
-**Current Status**: Phase 1 (Seed) agent kernel shipped (agent-core); $1M ARR Roadmap in progress
+**Last Updated**: 2026-04-18
+**Current Status**: Phase 1 (Seed) agent kernel + Giai đoạn 3.4.B A/B testing shipped; $1M ARR Roadmap in progress
 
 ---
 
@@ -11,6 +11,7 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
+| **Giai đoạn 3.4.B** | **A/B Testing: Statsig-style Bucketing (SHA-256 Deterministic)** | **✅ COMPLETED** | **2026-04-18** |
 | **Phase 2 (Forest)** | **Multi-Tenant Runtime: FastAPI Gateway + Redis Queue + Worker Pool** | **✅ COMPLETED** | **2026-04-17** |
 | **Phase 1 (Seed)** | **Agent Kernel: BaseAgent + SeedMemory** | **✅ COMPLETED** | **2026-04-17** |
 | **Phase 21** | **100/100 Model Stack + Engine Farm Refactor** | **✅ COMPLETED** | **2026-04-04** |
@@ -26,6 +27,30 @@ All significant project milestones and phases tracked here.
 ---
 
 ## Completed Phases
+
+### Giai đoạn 3.4.B: A/B Testing & Statsig-Style Bucketing (2026-04-18)
+
+**Objective**: Implement final slot of 3-step feedback-loop gate — deterministic A/B variant assignment via SHA-256 bucketing.
+
+**Status**: ✅ COMPLETED (100%)
+
+**Components**:
+- **experiments.py** (`packages/agent-core/src/agent_core/experiments.py`): `bucket(user_id, experiment_name, variants)` — SHA-256 deterministic assignment with cross-experiment isolation
+- **CLI Integration**: `agent-core experiment --user <user_id> --name <experiment_name> [--variants a,b,c] [--json]`
+- **Bucketing Logic**: Hash-based determinism ensures same user always gets same variant within experiment; separate experiment namespaces prevent spillover
+
+**Statsig Gate Completion**:
+- ✅ Step 1: Offline regression guard (Giai đoạn 3.3.A `agent-core eval` + 3.3.C CI gate)
+- ✅ Step 2: Online quality signal (Giai đoạn 3.2 signals loop + `mekongd_signals_ratio`)
+- ✅ Step 3: A/B exposure (Giai đoạn 3.4.B deterministic bucketing)
+
+**Testing**: 188/188 pytest pass (15 new unit + CLI tests covering determinism, isolation, distribution, edge cases)
+
+**Files**: 4 files (+208 LOC) — experiments.py, test_experiments.py, test_cli_experiment.py, cli.py +28 LOC
+
+**PR**: #143 → commit 958431005
+
+---
 
 ### Phase 2 (Forest): Multi-Tenant Agent Orchestration Runtime (2026-04-17)
 
