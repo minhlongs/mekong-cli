@@ -13,6 +13,7 @@ from mekongd.config import MekongdConfig
 from mekongd.stats import (
     aggregate_signals,
     aggregate_stats,
+    aggregate_user_signals,
     today_cloud_spent_usd,
 )
 
@@ -50,6 +51,10 @@ def build_metrics_body(cfg: MekongdConfig) -> str:
     good, bad = sigs.get("good", 0), sigs.get("bad", 0)
     total = good + bad
     ratio = good / total if total else 0.0
+    user_sigs = aggregate_user_signals(db_path)
+    user_good, user_bad = user_sigs.get("good", 0), user_sigs.get("bad", 0)
+    user_total = user_good + user_bad
+    user_ratio = user_good / user_total if user_total else 0.0
     lines.extend(
         [
             "# HELP mekongd_signals_total Operator feedback signals by kind (Pillar 3)",
@@ -59,6 +64,13 @@ def build_metrics_body(cfg: MekongdConfig) -> str:
             "# HELP mekongd_signals_ratio Share of good signals (0..1, 0 when no signals)",
             "# TYPE mekongd_signals_ratio gauge",
             f"mekongd_signals_ratio {ratio:.6f}",
+            "# HELP mekongd_user_signals_total User-forwarded feedback signals by kind (#user marker)",
+            "# TYPE mekongd_user_signals_total counter",
+            f'mekongd_user_signals_total{{kind="good"}} {user_good}',
+            f'mekongd_user_signals_total{{kind="bad"}} {user_bad}',
+            "# HELP mekongd_user_feedback_ratio Share of good user feedback (0..1, 0 when no user signals)",
+            "# TYPE mekongd_user_feedback_ratio gauge",
+            f"mekongd_user_feedback_ratio {user_ratio:.6f}",
         ]
     )
     return "\n".join(lines) + "\n"

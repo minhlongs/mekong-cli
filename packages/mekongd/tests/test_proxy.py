@@ -70,6 +70,33 @@ def test_signals_ratio_one_when_all_good(client: TestClient):
     assert "mekongd_signals_ratio 1.000000" in m
 
 
+def test_user_feedback_ratio_splits_user_from_auto(client: TestClient):
+    """Giai đoạn 3.2.F: #user-marked notes feed user-feedback gauges only."""
+    # Auto-emitted (no #user) — feeds umbrella ratio but not user gauges.
+    client.post("/v1/signals", json={"kind": "bad", "note": "forest/u/j1"})
+    client.post("/v1/signals", json={"kind": "bad", "note": "forest/u/j2"})
+    # User-forwarded feedback via /task/{id}/feedback — #user marker present.
+    client.post("/v1/signals", json={"kind": "good", "note": "forest/u/j3#user: great"})
+    client.post("/v1/signals", json={"kind": "bad", "note": "forest/u/j4#user: meh"})
+
+    m = client.get("/metrics").text
+    assert 'mekongd_user_signals_total{kind="good"} 1' in m
+    assert 'mekongd_user_signals_total{kind="bad"} 1' in m
+    assert "mekongd_user_feedback_ratio 0.500000" in m
+    # Umbrella still counts everything (0 good / 3 bad = 0 of total 4 bad? no, 1/4)
+    assert 'mekongd_signals_total{kind="good"} 1' in m
+    assert 'mekongd_signals_total{kind="bad"} 3' in m
+
+
+def test_user_feedback_ratio_zero_when_only_auto_signals(client: TestClient):
+    """Auto-only traffic must not poison the user-feedback ratio."""
+    client.post("/v1/signals", json={"kind": "bad", "note": "forest/u/j1"})
+    m = client.get("/metrics").text
+    assert 'mekongd_user_signals_total{kind="good"} 0' in m
+    assert 'mekongd_user_signals_total{kind="bad"} 0' in m
+    assert "mekongd_user_feedback_ratio 0" in m
+
+
 def test_signals_rejects_invalid_kind(client: TestClient):
     r = client.post("/v1/signals", json={"kind": "maybe"})
     assert r.status_code == 422
