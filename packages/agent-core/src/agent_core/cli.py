@@ -15,6 +15,7 @@ from agent_core.agents.developer import DeveloperAgent
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
 from agent_core.forest_client import fetch_forest_status
 from agent_core.formatters import (
+    breakdown_from_signals,
     format_breakdown,
     format_cost_by_model,
     format_forest_status,
@@ -102,18 +103,35 @@ def report_cmd(
     cost: bool = typer.Option(
         False, "--cost", help="Append cloud cost breakdown by model."
     ),
+    source: str = typer.Option(
+        "all",
+        "--source",
+        help="Filter signals by origin: all | auto (worker) | user (feedback endpoint).",
+    ),
 ) -> None:
     """Show good/bad signal breakdown by model as a human-friendly table."""
+    if source not in {"all", "auto", "user"}:
+        typer.echo(
+            f"--source must be one of all|auto|user, got {source!r}", err=True
+        )
+        raise typer.Exit(code=2)
     kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
     llm = LLMClient(**kwargs)
     window = hours if hours > 0 else None
     try:
-        by_model = llm.get_signals_breakdown(hours=window)
+        if source == "all":
+            by_model = llm.get_signals_breakdown(hours=window)
+        else:
+            # Fetch recent signals and tabulate locally — mekongd /breakdown
+            # has no source-filter parameter yet.
+            recent = llm.get_recent_signals(limit=500)
+            by_model = breakdown_from_signals(recent, source=source)
     except Exception as e:  # noqa: BLE001
         typer.echo(f"Lỗi khi gọi mekongd: {e}", err=True)
         raise typer.Exit(code=2) from e
+    src_label = "" if source == "all" else f" [source={source}]"
     label = f" (last {hours}h)" if window else ""
-    typer.echo(f"Signal breakdown{label}:")
+    typer.echo(f"Signal breakdown{label}{src_label}:")
     typer.echo(format_breakdown(by_model))
     if notes > 0:
         try:

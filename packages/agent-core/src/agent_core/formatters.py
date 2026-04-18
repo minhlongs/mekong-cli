@@ -29,6 +29,43 @@ def format_breakdown(by_model: dict[str, dict[str, int]]) -> str:
     return "\n".join(rows)
 
 
+_USER_MARKER = "#user"
+
+
+def classify_signal_source(note: str | None) -> str:
+    """Return ``user`` when the signal note carries the ``#user`` marker, else ``auto``.
+
+    Forest workers emit notes shaped ``forest/{user_id}/{job_id}``; the user
+    feedback endpoint appends ``#user`` before any freeform text. Anything else
+    (including empty) counts as an auto signal.
+    """
+    if note and _USER_MARKER in note:
+        return "user"
+    return "auto"
+
+
+def breakdown_from_signals(
+    signals: list[dict], source: str | None = None
+) -> dict[str, dict[str, int]]:
+    """Rebuild a ``{model: {good, bad}}`` breakdown from a raw signal list.
+
+    ``source`` ∈ ``{None, "auto", "user", "all"}`` — ``None`` and ``"all"`` are
+    equivalent.
+    """
+    want = source if source and source != "all" else None
+    out: dict[str, dict[str, int]] = {}
+    for s in signals:
+        if want and classify_signal_source(s.get("note")) != want:
+            continue
+        model = s.get("model") or ""
+        kind = s.get("kind")
+        if kind not in ("good", "bad"):
+            continue
+        bucket = out.setdefault(model, {"good": 0, "bad": 0})
+        bucket[kind] += 1
+    return out
+
+
 def format_recent_notes(signals: list[dict]) -> str:
     """Render recent signals as a timestamped note tail. Empty → friendly message."""
     if not signals:
