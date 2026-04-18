@@ -41,8 +41,11 @@ Outputs land in `./outputs/`. Memory lives in `~/.agent-core/`.
 | `signal good\|bad [note]` | Send Pillar 3 feedback signal to mekongd. |
 | `history [--limit N] [--json]` | Inspect persisted FeedbackSession rounds (table or JSON). |
 | `prune --keep N [--all]` | Delete old memory rows, keep newest N. Default targets `feedback_session`; `--all` covers every agent_id. |
-| `status` | Snapshot: memory root, retention config, last round, rows per agent_id. |
-| `forest-status --url URL` | Query `agent-forest` gateway `/healthz` + `/metrics`; print queue depth, workers alive, last heartbeat. |
+| `status [--json]` | Snapshot: memory root, retention config, last round, rows per agent_id. |
+| `forest-status --url URL [--json]` | Query `agent-forest` gateway `/healthz` + `/metrics`; print queue depth, workers alive, last heartbeat. |
+| `eval --dataset PATH [--offline] [--json]` | Offline-eval harness (Giai đoạn 3.3.A). Exits 1 on ≥5% regression vs baseline. |
+| `experiment --user ID --name NAME [--variants X,Y] [--json]` | A/B hash-bucket assignment (Giai đoạn 3.4.B Statsig-style). |
+| `doctor [--mekongd-url URL] [--forest-url URL] [--json]` | Holistic triage: env + memory + connectivity + package versions. Best-effort exit 0. |
 
 ## Environment variables
 
@@ -74,7 +77,9 @@ src/agent_core/
 ├── feedback_loop.py  # + Ops + Analyst + bounded retry + session persist
 ├── forest_client.py  # httpx client for agent-forest /healthz + /metrics
 ├── formatters.py     # CLI table formatters
-├── cli.py            # typer entry point (8 commands)
+├── cli.py            # typer entry point (11 commands)
+├── evals.py          # offline-eval harness (run + regression detection)
+├── experiments.py    # SHA-256 hash-based A/B bucket assignment
 ├── agents/
 │   ├── ceo.py
 │   ├── developer.py
