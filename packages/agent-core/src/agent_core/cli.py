@@ -286,14 +286,30 @@ def forest_status_cmd(
 
 
 @app.command("status")
-def status_cmd() -> None:
+def status_cmd(
+    as_json: bool = typer.Option(
+        False, "--json", help="In JSON thô (cho monitoring/script) thay vì bảng text."
+    ),
+) -> None:
     """In ra snapshot ops: memory root, retention, số row theo agent_id, lần chạy cuối."""
     memory = SeedMemory()
+    agent_rows = memory.agent_counts()
+    last_session_at = memory.last_created_at("feedback_session")
+    retention_env = os.environ.get("AGENT_CORE_SESSION_RETENTION")
+    if as_json:
+        payload = {
+            "memory_root": str(memory.root),
+            "retention_env": retention_env,
+            "last_session_at": last_session_at,
+            "agent_rows": agent_rows,
+        }
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
     typer.echo(
         format_status(
-            agent_rows=memory.agent_counts(),
-            last_session_at=memory.last_created_at("feedback_session"),
-            retention_env=os.environ.get("AGENT_CORE_SESSION_RETENTION"),
+            agent_rows=agent_rows,
+            last_session_at=last_session_at,
+            retention_env=retention_env,
             memory_root=str(memory.root),
         )
     )
