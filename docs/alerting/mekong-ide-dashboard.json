@@ -316,6 +316,36 @@
         }
       },
       "options": {"colorMode": "background"}
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "prompt_guard rejections/s (agent-forest)",
+      "description": "POST /task rejections by prompt_guard. Alert AgentForestPromptGuardSurge fires > 0.1/s for 5m (probe or false-positive regex).",
+      "gridPos": {"x": 0, "y": 24, "w": 24, "h": 6},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(agent_forest_prompt_guard_rejections_total[5m]))",
+          "refId": "A",
+          "legendFormat": "{{reason}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 0.1},
+              {"color": "red", "value": 1.0}
+            ]
+          },
+          "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "thresholdsStyle": {"mode": "line"}}
+        }
+      },
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}}
     }
   ]
 }
