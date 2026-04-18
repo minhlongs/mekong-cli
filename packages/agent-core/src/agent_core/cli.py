@@ -310,6 +310,9 @@ def doctor_cmd(
         help="Base URL của agent-forest gateway (mặc định localhost:8000).",
     ),
     timeout: float = typer.Option(3.0, "--timeout", help="HTTP timeout giây (mặc định 3)."),
+    as_json: bool = typer.Option(
+        False, "--json", help="In JSON thô (cho monitoring/script) thay vì bảng text."
+    ),
 ) -> None:
     """Self-check env + memory + mekongd/forest connectivity.
 
@@ -338,6 +341,31 @@ def doctor_cmd(
     mekongd_status = _ping(mekongd_url or os.environ.get("MEKONGD_URL") or "") \
         if (mekongd_url or os.environ.get("MEKONGD_URL")) else "(skipped — no URL)"
     forest_status = _ping(forest_url)
+
+    if as_json:
+        payload = {
+            "env": {
+                "MEKONGD_URL": mekongd_target,
+                "AGENT_CORE_SESSION_RETENTION": retention_env,
+                "AGENT_CORE_OUTPUTS": outputs_env,
+                "AGENT_CORE_PROMPT_SIGNAL": prompt_env,
+            },
+            "memory": {
+                "root": str(memory.root),
+                "agents": len(counts),
+                "total_rows": total_rows,
+            },
+            "connectivity": {
+                "mekongd": mekongd_status,
+                "agent_forest": forest_status,
+            },
+            "package": {
+                "agent_core": __version__,
+                "python": sys.version.split()[0],
+            },
+        }
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
 
     lines = [
         "agent-core doctor",
