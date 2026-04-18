@@ -99,9 +99,41 @@ def test_status_cmd_renders_snapshot(tmp_path, monkeypatch, capsys):
     _seed_session(mem)
     monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
     monkeypatch.setenv("AGENT_CORE_SESSION_RETENTION", "50")
-    cli.status_cmd()
+    cli.status_cmd(as_json=False)
     out = capsys.readouterr().out
     assert "agent-core status" in out
     assert "feedback_session" in out
     assert "auto-prune on" in out
     assert str(tmp_path / "ac") in out
+
+
+def test_status_cmd_json_emits_parseable_payload(tmp_path, monkeypatch, capsys):
+    """--json emits dict with memory_root + retention_env + agent_rows + last_session_at."""
+    import json as _json
+
+    mem = SeedMemory(root=tmp_path / "ac")
+    for _ in range(5):
+        mem.remember(agent_id="CEO", content="x", metadata={})
+    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
+    monkeypatch.setenv("AGENT_CORE_SESSION_RETENTION", "100")
+    cli.status_cmd(as_json=True)
+    payload = _json.loads(capsys.readouterr().out)
+    assert set(payload.keys()) == {"memory_root", "retention_env", "last_session_at", "agent_rows"}
+    assert payload["retention_env"] == "100"
+    assert payload["agent_rows"] == {"CEO": 5}
+    assert payload["last_session_at"] is None  # no feedback_session seeded
+    assert payload["memory_root"].endswith("/ac")
+
+
+def test_status_cmd_json_no_text_banner(tmp_path, monkeypatch, capsys):
+    """--json pure JSON — no text banner leak."""
+    import json as _json
+
+    mem = SeedMemory(root=tmp_path / "ac")
+    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
+    monkeypatch.delenv("AGENT_CORE_SESSION_RETENTION", raising=False)
+    cli.status_cmd(as_json=True)
+    out = capsys.readouterr().out
+    _json.loads(out)  # must parse
+    assert "agent-core status" not in out
+    assert "auto-prune" not in out
