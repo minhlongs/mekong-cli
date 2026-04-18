@@ -216,17 +216,41 @@ mekongd_user_feedback_ratio < 0.7
           + mekongd_user_signals_total{kind="bad"}) > 20
 ```
 
-## Suggested Grafana panels
+## Grafana dashboard (drop-in)
 
-Panel per row, left→right:
+A portable Grafana dashboard JSON lives at [`docs/alerting/mekong-ide-dashboard.json`](alerting/mekong-ide-dashboard.json). Panels (3 rows × ~4 panels):
 
-1. **Single stat — Local routing ratio** (`mekongd_local_ratio`, threshold green≥0.6, amber≥0.4)
-2. **Time series — USD saved / day** (`increase(mekongd_cost_saved_usd_total[1d])`)
-3. **Time series — Queue depth** (`agent_forest_queue_depth`, alert ≥ 50)
-4. **Bar gauge — Requests/min by destination** (`sum by (destination)(rate(mekongd_requests_total[1m]))`)
-5. **Stat — Tokens/sec in** and **Tokens/sec out** (`rate(mekongd_tokens_in_total[1m])` / `..._out_total`)
+| # | Panel | Expression |
+|---|-------|-----------|
+| 1 | Local routing ratio (gauge) | `mekongd_local_ratio` |
+| 2 | Cloud spend today vs budget (stat) | `mekongd_cloud_spent_usd_today`, `mekongd_cloud_daily_budget_usd` |
+| 3 | Signals ratio — all (stat) | `mekongd_signals_ratio` |
+| 4 | User feedback ratio (stat) | `mekongd_user_feedback_ratio` |
+| 5 | Requests/min by destination (bar gauge) | `sum by (destination)(rate(mekongd_requests_total[1m]))` |
+| 6 | USD saved over time (time series) | `increase(mekongd_cost_saved_usd_total[5m])` |
+| 7 | Token throughput in/out (time series) | `rate(mekongd_tokens_{in,out}_total[1m])` |
+| 8 | Queue depth (time series, alert line @ 50) | `agent_forest_queue_depth` |
+| 9 | Workers alive (stat) | `agent_forest_workers_alive` |
+| 10 | Heartbeat staleness (stat) | `time() - agent_forest_worker_last_seen_timestamp` |
+| 11 | Liveness (stat) | `agent_forest_up` |
 
-Full JSON dashboard export deferred until local Grafana instance stood up (YAGNI — panel list above is portable). Unified dashboard slated for next session.
+**Import:** Grafana → Dashboards → Import → Upload JSON → select your Prometheus datasource for the `DS_PROMETHEUS` prompt. The dashboard uses `${DS_PROMETHEUS}` so it's portable across deployments.
+
+**CLI import (Grafana API):**
+
+```bash
+jq --arg ds "$DS_UID" '
+    (.panels[].datasource.uid) = $ds
+    | {dashboard: (del(.__inputs, .__requires)), overwrite: true}
+  ' docs/alerting/mekong-ide-dashboard.json \
+| curl -sS -X POST "http://$GRAFANA_HOST/api/dashboards/db" \
+    -H "Authorization: Bearer $GRAFANA_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d @-
+# DS_UID = your Prometheus datasource UID (Grafana → Datasources → Prometheus → copy UID)
+```
+
+The JSON is hand-authored (no Grafana-provisioned `id` or `version` drift), so it round-trips cleanly through git.
 
 ## Alerting rules (starter set)
 
@@ -259,4 +283,4 @@ The starter set covers:
 ## Unresolved
 
 - Should `/metrics` require auth in prod (even behind loopback)? Low priority until public exposure planned.
-- Dashboard JSON location convention: `docs/observability/` vs `packages/*/ops/` once unified dashboard lands.
+- Dashboard JSON co-lives with the alerting rules under `docs/alerting/`; revisit if ops assets grow beyond a handful of files (candidate relocation: `docs/observability/`).
