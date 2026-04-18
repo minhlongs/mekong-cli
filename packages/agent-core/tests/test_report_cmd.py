@@ -8,6 +8,10 @@ import respx
 
 from agent_core.cli import report_cmd
 from agent_core.formatters import (
+    breakdown_from_signals,
+    classify_signal_source,
+)
+from agent_core.formatters import (
     format_breakdown as _format_breakdown,
 )
 from agent_core.formatters import (
@@ -110,7 +114,7 @@ def test_report_cmd_prints_table(capsys):
             200, json={"by_model": {"qwen3-8b": {"good": 5, "bad": 2}}}
         )
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False, source="all")
     captured = capsys.readouterr().out
     assert "qwen3-8b" in captured
     assert "TOTAL" in captured
@@ -124,7 +128,7 @@ def test_report_cmd_exits_on_http_error(capsys):
         return_value=httpx.Response(500, json={"error": "boom"})
     )
     with pytest.raises(typer.Exit) as exc_info:
-        report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False)
+        report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=False, source="all")
     assert exc_info.value.exit_code == 2
     assert "Lỗi" in capsys.readouterr().err
 
@@ -134,7 +138,7 @@ def test_report_cmd_passes_hours_to_client(capsys):
     route = respx.get("http://127.0.0.1:8765/v1/signals/breakdown").mock(
         return_value=httpx.Response(200, json={"by_model": {"qwen3-8b": {"good": 3, "bad": 0}}})
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=24, notes=0)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=24, notes=0, cost=False, source="all")
     captured = capsys.readouterr().out
     assert "last 24h" in captured
     assert route.calls[0].request.url.params["hours"] == "24"
@@ -193,7 +197,7 @@ def test_report_cmd_with_notes_appends_tail(capsys):
     respx.get("http://127.0.0.1:8765/v1/signals/recent").mock(
         return_value=httpx.Response(200, json=recent_payload)
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=10, cost=False)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=10, cost=False, source="all")
     out = capsys.readouterr().out
     assert "Signal breakdown" in out
     assert "Recent notes" in out
@@ -238,8 +242,109 @@ def test_report_cmd_with_cost_flag_appends_cost_section(capsys):
     respx.get("http://127.0.0.1:8765/v1/cost/by-model").mock(
         return_value=httpx.Response(200, json={"by_model": {"claude-opus-4-7": 1.23}})
     )
-    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=True)
+    report_cmd(mekongd_url="http://127.0.0.1:8765", hours=0, notes=0, cost=True, source="all")
     out = capsys.readouterr().out
     assert "Cloud cost by model" in out
     assert "claude-opus-4-7" in out
     assert "1.2300" in out
+
+
+# ---- Giai đoạn 3.2.C: --source filter ----
+
+
+def test_classify_signal_source_detects_user_marker():
+    assert classify_signal_source("forest/u/j#user") == "user"
+    assert classify_signal_source("forest/u/j#user: bad output") == "user"
+
+
+def test_classify_signal_source_defaults_auto():
+    assert classify_signal_source("forest/u/j") == "auto"
+    assert classify_signal_source("") == "auto"
+    assert classify_signal_source(None) == "auto"
+
+
+def test_breakdown_from_signals_buckets_by_model():
+    signals = [
+        {"kind": "good", "model": "qwen", "note": "forest/u/j"},
+        {"kind": "bad", "model": "qwen", "note": "forest/u/k#user"},
+        {"kind": "good", "model": "opus", "note": "forest/u/z#user: nice"},
+    ]
+    out = breakdown_from_signals(signals)
+    assert out == {"qwen": {"good": 1, "bad": 1}, "opus": {"good": 1, "bad": 0}}
+
+
+def test_breakdown_from_signals_filters_user_only():
+    signals = [
+        {"kind": "good", "model": "qwen", "note": "forest/u/j"},
+        {"kind": "bad", "model": "qwen", "note": "forest/u/k#user"},
+        {"kind": "good", "model": "opus", "note": "forest/u/z#user"},
+    ]
+    out = breakdown_from_signals(signals, source="user")
+    assert out == {"qwen": {"good": 0, "bad": 1}, "opus": {"good": 1, "bad": 0}}
+
+
+def test_breakdown_from_signals_filters_auto_only():
+    signals = [
+        {"kind": "good", "model": "qwen", "note": "forest/u/j"},
+        {"kind": "bad", "model": "qwen", "note": "forest/u/k#user"},
+    ]
+    out = breakdown_from_signals(signals, source="auto")
+    assert out == {"qwen": {"good": 1, "bad": 0}}
+
+
+def test_breakdown_from_signals_all_is_alias_for_none():
+    signals = [{"kind": "good", "model": "q", "note": "x"}]
+    assert breakdown_from_signals(signals, source="all") == breakdown_from_signals(signals)
+
+
+def test_breakdown_from_signals_ignores_non_good_bad():
+    signals = [
+        {"kind": "info", "model": "q", "note": "x"},
+        {"kind": "good", "model": "q", "note": "x"},
+    ]
+    assert breakdown_from_signals(signals) == {"q": {"good": 1, "bad": 0}}
+
+
+@respx.mock
+def test_report_cmd_source_user_uses_recent_and_filters(capsys):
+    respx.get("http://127.0.0.1:8765/v1/signals/recent").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "signals": [
+                    {"kind": "good", "model": "qwen", "note": "forest/u/j"},  # auto
+                    {"kind": "bad", "model": "qwen", "note": "forest/u/k#user"},  # user
+                    {"kind": "good", "model": "opus", "note": "forest/u/z#user"},  # user
+                ]
+            },
+        )
+    )
+    report_cmd(
+        mekongd_url="http://127.0.0.1:8765",
+        hours=0,
+        notes=0,
+        cost=False,
+        source="user",
+    )
+    out = capsys.readouterr().out
+    assert "source=user" in out
+    # user-only: qwen has 0 good 1 bad; opus has 1 good 0 bad; auto qwen excluded
+    assert "opus" in out
+    # TOTAL row reflects user-filtered counts (1 good + 1 bad = 2 total)
+    total_line = next(line for line in out.splitlines() if line.startswith("TOTAL"))
+    assert " 1 " in total_line.replace("  ", " ")
+
+
+def test_report_cmd_rejects_unknown_source(capsys):
+    import typer as _typer
+
+    with pytest.raises(_typer.Exit):
+        report_cmd(
+            mekongd_url="http://x:8765",
+            hours=0,
+            notes=0,
+            cost=False,
+            source="garbage",
+        )
+    err = capsys.readouterr().err
+    assert "--source must be one of" in err
