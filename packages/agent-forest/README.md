@@ -136,12 +136,27 @@ Owner-only: 404 when the job is missing or belongs to another user.
   still stores the rating).
 - Inspect with `agent-core report --hours 1` or `/v1/signals/recent`.
 
+## Security — prompt_guard (Giai đoạn 4.4.1)
+
+Server-side first-line defense on `POST /task` — regex-only, no LLM round-trip, no network. Rejects with HTTP 400.
+
+- **24 patterns** in `agent_forest.gateway.prompt_guard`:
+  - 13 injection: `ignore previous instructions`, `forget everything`, `<|im_start|>`, `you are now`, `sudo`, `<script`, `javascript:`, etc.
+  - 14 dangerous-code: `rm -rf`, `DROP TABLE`, `eval(`, `os.system`, `subprocess.`, `passthru(`, `fs.unlink`, `fs.rmdir`, etc.
+- **`sanitize_input`** strips NUL + control chars, caps at 10k (Pydantic rejects >8k first).
+- **Observability loop:**
+  - Counter `agent_forest_prompt_guard_rejections_total{reason="injection"|"dangerous"}` on `/metrics`
+  - Alert `AgentForestPromptGuardSurge` fires at `> 0.1 rej/s` for 5m (warning)
+  - Grafana panel (id=12) splits rate by reason label, thresholds match alert
+- **Tier-2 LLM guard (Llama-Guard) deferred per YAGNI** — server regex is cheap first line, real defense is worker-sandbox (Firecracker/gVisor).
+
 ## Deviations from DeepSeek blueprint
 
 - **No Docker-in-Docker by default.** Per-user isolation is path-based (`outputs/{user_id}/`)
   with a subprocess sandbox. Set `FOREST_WORKER_EXECUTOR=docker` to enable DinD.
 - **Single-attempt webhooks.** No retry; timeout enforced.
 - **No Temporal supervisor yet.** Workflow durability relies on Redis + webhook callback.
+- **Giai đoạn 4.4.1 complete** (prompt_guard above). 4.4.2/4.4.3 Firecracker+gVisor sandbox deferred — require host VM binaries.
 
 ## Tests
 
