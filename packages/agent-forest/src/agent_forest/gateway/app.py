@@ -56,13 +56,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(task_router)
 
-    @app.get("/healthz", tags=["infra"])
-    def healthz() -> JSONResponse:
-        return JSONResponse({"status": "ok", "service": "agent-forest"})
-
-    @app.get("/metrics", tags=["infra"], response_class=PlainTextResponse)
-    def metrics(r: redis.Redis = Depends(get_redis_client)) -> str:
-        """Prometheus text exposition — queue depth + worker liveness."""
+    def _probe(r: redis.Redis) -> tuple[int, int, int]:
+        """Shared read for queue + workers. Returns (depth, alive, last_seen)."""
         try:
             depth = int(r.llen(TASK_QUEUE))
         except Exception:
@@ -73,6 +68,31 @@ def create_app() -> FastAPI:
         except Exception:
             alive = -1
             last_seen = 0
+        return depth, alive, last_seen
+
+    @app.get("/healthz", tags=["infra"])
+    def healthz() -> JSONResponse:
+        return JSONResponse({"status": "ok", "service": "agent-forest"})
+
+    @app.get("/status", tags=["infra"])
+    def status_json(r: redis.Redis = Depends(get_redis_client)) -> JSONResponse:
+        """JSON snapshot of gateway state — consumed by agent-core forest-status."""
+        depth, alive, last_seen = _probe(r)
+        return JSONResponse(
+            {
+                "service": "agent-forest",
+                "version": "0.1.0",
+                "up": True,
+                "queue_depth": depth,
+                "workers_alive": alive,
+                "worker_last_seen_ts": last_seen,
+            }
+        )
+
+    @app.get("/metrics", tags=["infra"], response_class=PlainTextResponse)
+    def metrics(r: redis.Redis = Depends(get_redis_client)) -> str:
+        """Prometheus text exposition — queue depth + worker liveness."""
+        depth, alive, last_seen = _probe(r)
         lines = [
             "# HELP agent_forest_queue_depth Current length of Redis task_queue list",
             "# TYPE agent_forest_queue_depth gauge",
