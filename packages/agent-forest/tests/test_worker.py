@@ -52,6 +52,61 @@ def test_process_one_rejects_malformed_key(fake_redis, settings):
     assert outcome.status == "failed"
 
 
+def test_process_one_emits_signal_with_outcome(fake_redis, settings, monkeypatch):
+    """Giai đoạn 3.2.A: worker fires a signal on every completed job."""
+    from agent_forest import queue as q
+    from agent_forest.worker import main as worker_main
+    from agent_forest.worker.runner import JobOutcome
+
+    calls: list[tuple] = []
+
+    def _spy(status, user_id, job_id, *, error=None, **_kw):
+        calls.append((status, user_id, job_id, error))
+        return True
+
+    monkeypatch.setattr(worker_main, "emit_signal", _spy)
+
+    q.enqueue_job(
+        fake_redis, job_id="j9", user_id="usr_sig", prompt="x", webhook_url=None
+    )
+
+    def stub(_p, _s, *, max_rounds: int = 1) -> JobOutcome:
+        return JobOutcome(status="completed", result="ok")
+
+    worker_main.process_one(
+        fake_redis, settings, key="job:usr_sig:j9", executor=stub
+    )
+    assert calls == [("completed", "usr_sig", "j9", None)]
+
+
+def test_process_one_emits_bad_signal_with_error(fake_redis, settings, monkeypatch):
+    from agent_forest import queue as q
+    from agent_forest.worker import main as worker_main
+    from agent_forest.worker.runner import JobOutcome
+
+    calls: list[tuple] = []
+    monkeypatch.setattr(
+        worker_main,
+        "emit_signal",
+        lambda status, uid, jid, *, error=None, **_kw: calls.append(
+            (status, uid, jid, error)
+        )
+        or True,
+    )
+
+    q.enqueue_job(
+        fake_redis, job_id="j10", user_id="usr_sig", prompt="x", webhook_url=None
+    )
+
+    def stub(_p, _s, *, max_rounds: int = 1) -> JobOutcome:
+        return JobOutcome(status="failed", error="explode")
+
+    worker_main.process_one(
+        fake_redis, settings, key="job:usr_sig:j10", executor=stub
+    )
+    assert calls == [("failed", "usr_sig", "j10", "explode")]
+
+
 def test_run_loop_honors_max_iterations(fake_redis, settings, monkeypatch):
     from agent_forest.worker import main as worker_main
 

@@ -17,6 +17,7 @@ from agent_forest.webhook import send_webhook
 from agent_forest.worker.heartbeat import default_worker_id
 from agent_forest.worker.heartbeat import publish as publish_heartbeat
 from agent_forest.worker.runner import JobOutcome
+from agent_forest.worker.signals import emit as emit_signal
 
 log = logging.getLogger("agent_forest.worker")
 _STOP = False
@@ -84,6 +85,7 @@ def process_one(
     q.update_job_status(
         r, user_id, job_id, status=outcome.status, result=outcome.result, error=outcome.error
     )
+    emit_signal(outcome.status, user_id, job_id, error=outcome.error)
     webhook = data.get("webhook_url") or ""
     if webhook:
         payload = q.get_job(r, user_id, job_id) or {}
