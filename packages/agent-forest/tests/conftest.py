@@ -10,6 +10,8 @@ import pytest
 
 os.environ["FOREST_TESTING"] = "1"
 os.environ.setdefault("JWT_SECRET=REDACTED_KEY", "unit-test-key")
+# Keep worker tests off the network unless a test opts in by removing this var.
+os.environ.setdefault("FOREST_SIGNALS_ENABLED", "0")
 
 
 @pytest.fixture

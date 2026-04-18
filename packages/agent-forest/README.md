@@ -27,7 +27,8 @@ poetry install
 | `FOREST_RATE_LIMIT_PER_MINUTE` | no | `60` | Per-bearer rate cap |
 | `FOREST_WEBHOOK_TIMEOUT` | no | `5` | POST timeout (s) |
 | `FOREST_WORKER_EXECUTOR` | no | `subprocess` | `subprocess` \| `docker` |
-| `MEKONGD_URL` | no | `http://127.0.0.1:8765` | Inherited by agent-core |
+| `FOREST_SIGNALS_ENABLED` | no | `1` | Set `0` to disable worker→mekongd signal emission |
+| `MEKONGD_URL` | no | `http://127.0.0.1:8765` | Inherited by agent-core + signals target |
 
 ## Quickstart
 
@@ -109,6 +110,17 @@ Inspect from CLI:
 agent-core forest-status --url http://localhost:8000
 agent-core forest-status --url http://localhost:8000 --json  # for scripts
 ```
+
+## Feedback signals (Giai đoạn 3.2.A)
+
+Every completed job emits a `good` / `bad` signal to `mekongd /v1/signals`
+(note prefix `forest/{user_id}/{job_id}`). This closes Pillar 3 (Feedback
+Loop) at the multi-tenant layer, so operator dashboards include forest
+traffic alongside single-founder agent-core runs.
+
+- Transport is best-effort — mekongd outages never fail the user job.
+- Disable entirely with `FOREST_SIGNALS_ENABLED=0` (e.g. CI).
+- Inspect with `agent-core report --hours 1` or `/v1/signals/recent`.
 
 ## Deviations from DeepSeek blueprint
 
