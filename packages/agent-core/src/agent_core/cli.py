@@ -299,6 +299,71 @@ def status_cmd() -> None:
     )
 
 
+@app.command("doctor")
+def doctor_cmd(
+    mekongd_url: str | None = typer.Option(
+        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
+    ),
+    forest_url: str = typer.Option(
+        "http://localhost:8000",
+        "--forest-url",
+        help="Base URL của agent-forest gateway (mặc định localhost:8000).",
+    ),
+    timeout: float = typer.Option(3.0, "--timeout", help="HTTP timeout giây (mặc định 3)."),
+) -> None:
+    """Self-check env + memory + mekongd/forest connectivity.
+
+    Holistic operator triage: dumps env flags, memory stats, pings both
+    services /healthz, prints package + Python versions in one shot.
+    Never raises — returns exit 0 even on probe failures (informational only).
+    """
+    import httpx
+
+    memory = SeedMemory()
+    counts = memory.agent_counts()
+    total_rows = sum(counts.values())
+    mekongd_target = mekongd_url or os.environ.get("MEKONGD_URL") or "(unset)"
+    retention_env = os.environ.get("AGENT_CORE_SESSION_RETENTION", "(unset)")
+    outputs_env = os.environ.get("AGENT_CORE_OUTPUTS", "(unset)")
+    prompt_env = os.environ.get("AGENT_CORE_PROMPT_SIGNAL", "(unset)")
+
+    def _ping(url: str) -> str:
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                resp = client.get(f"{url.rstrip('/')}/healthz")
+            return f"OK (HTTP {resp.status_code})"
+        except Exception as exc:  # noqa: BLE001 — informational probe
+            return f"FAIL ({type(exc).__name__})"
+
+    mekongd_status = _ping(mekongd_url or os.environ.get("MEKONGD_URL") or "") \
+        if (mekongd_url or os.environ.get("MEKONGD_URL")) else "(skipped — no URL)"
+    forest_status = _ping(forest_url)
+
+    lines = [
+        "agent-core doctor",
+        "",
+        "[env]",
+        f"  MEKONGD_URL                  : {mekongd_target}",
+        f"  AGENT_CORE_SESSION_RETENTION : {retention_env}",
+        f"  AGENT_CORE_OUTPUTS           : {outputs_env}",
+        f"  AGENT_CORE_PROMPT_SIGNAL     : {prompt_env}",
+        "",
+        "[memory]",
+        f"  root      : {memory.root}",
+        f"  agents    : {len(counts)}",
+        f"  total rows: {total_rows}",
+        "",
+        "[connectivity]",
+        f"  mekongd /healthz     : {mekongd_status}",
+        f"  agent-forest /healthz: {forest_status}",
+        "",
+        "[package]",
+        f"  agent-core: {__version__}",
+        f"  python    : {sys.version.split()[0]}",
+    ]
+    typer.echo("\n".join(lines))
+
+
 @app.command("prune")
 def prune_cmd(
     keep: int = typer.Option(
