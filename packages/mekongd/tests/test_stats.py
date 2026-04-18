@@ -266,6 +266,56 @@ def test_aggregate_signals_by_model_honors_since_hours(tmp_path: Path):
     assert recent["qwen3-8b"] == {"good": 1, "bad": 0}
 
 
+def test_aggregate_signals_by_model_source_filter_user(tmp_path: Path):
+    """source=user keeps only rows whose note carries the #user marker."""
+    db = tmp_path / "s.sqlite"
+    record_signal(db, "good", "forest/u/j1", "qwen")  # auto
+    record_signal(db, "bad", "forest/u/j2#user: output wrong", "qwen")  # user
+    record_signal(db, "good", "forest/u/j3#user", "opus")  # user
+    assert aggregate_signals_by_model(db, source="user") == {
+        "qwen": {"good": 0, "bad": 1},
+        "opus": {"good": 1, "bad": 0},
+    }
+
+
+def test_aggregate_signals_by_model_source_filter_auto(tmp_path: Path):
+    """source=auto keeps only rows without #user marker (incl. empty notes)."""
+    db = tmp_path / "s.sqlite"
+    record_signal(db, "good", "", "qwen")  # auto, empty note
+    record_signal(db, "good", "forest/u/j1", "qwen")  # auto
+    record_signal(db, "bad", "forest/u/j2#user", "qwen")  # user
+    assert aggregate_signals_by_model(db, source="auto") == {
+        "qwen": {"good": 2, "bad": 0}
+    }
+
+
+def test_aggregate_signals_by_model_source_none_includes_all(tmp_path: Path):
+    db = tmp_path / "s.sqlite"
+    record_signal(db, "good", "forest/u/j1", "qwen")
+    record_signal(db, "bad", "forest/u/j2#user", "qwen")
+    assert aggregate_signals_by_model(db) == {"qwen": {"good": 1, "bad": 1}}
+
+
+def test_aggregate_signals_by_model_source_combines_with_hours(tmp_path: Path):
+    """Source + since_hours filters stack correctly."""
+    from datetime import datetime, timedelta, timezone
+
+    db = tmp_path / "s.sqlite"
+    # Seed a fresh user row and a stale user row
+    record_signal(db, "good", "forest/u/j#user", "qwen")
+    conn = sqlite3.connect(str(db))
+    old = (datetime.now(timezone.utc) - timedelta(hours=10)).isoformat()
+    conn.execute(
+        "UPDATE signals SET ts = ? WHERE id = 1",
+        (old,),
+    )
+    conn.commit()
+    conn.close()
+    record_signal(db, "bad", "forest/u/k#user", "qwen")  # fresh user
+    got = aggregate_signals_by_model(db, since_hours=1, source="user")
+    assert got == {"qwen": {"good": 0, "bad": 1}}
+
+
 def test_legacy_signals_table_migrates_model_column(tmp_path: Path):
     """Pre-existing signals table without `model` column gets migrated on init_db."""
     db = tmp_path / "legacy.sqlite"

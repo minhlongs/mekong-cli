@@ -204,23 +204,37 @@ def list_recent_signals(db_path: Path, limit: int = 20) -> list[dict]:
 
 
 def aggregate_signals_by_model(
-    db_path: Path, since_hours: int | None = None
+    db_path: Path,
+    since_hours: int | None = None,
+    source: str | None = None,
 ) -> dict[str, dict[str, int]]:
     """Return {model: {good: n, bad: n}}. Legacy rows bucket under ''.
 
     since_hours: if provided, include only rows newer than now-since_hours UTC.
+    source: ``user`` keeps only rows whose note contains ``#user`` (emitted
+            by agent-forest POST /task/{id}/feedback); ``auto`` keeps
+            everything else. ``None`` or ``all`` disables the filter.
     """
     if not db_path.exists():
         return {}
     sql = "SELECT COALESCE(model,''), kind, COUNT(*) FROM signals"
-    params: tuple = ()
+    where: list[str] = []
+    params: list = []
     if since_hours is not None and since_hours > 0:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=since_hours)
-        sql += " WHERE ts >= ?"
-        params = (cutoff.isoformat(),)
+        where.append("ts >= ?")
+        params.append(cutoff.isoformat())
+    if source == "user":
+        where.append("note LIKE ?")
+        params.append("%#user%")
+    elif source == "auto":
+        where.append("(note IS NULL OR note NOT LIKE ?)")
+        params.append("%#user%")
+    if where:
+        sql += " WHERE " + " AND ".join(where)
     sql += " GROUP BY model, kind"
     with _connect(db_path) as conn:
-        rows = conn.execute(sql, params).fetchall()
+        rows = conn.execute(sql, tuple(params)).fetchall()
     out: dict[str, dict[str, int]] = {}
     for model, kind, count in rows:
         out.setdefault(model, {"good": 0, "bad": 0})[kind] = int(count)

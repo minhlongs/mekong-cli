@@ -89,12 +89,21 @@ class LLMClient:
             resp.raise_for_status()
             return resp.json()
 
-    def get_signals_breakdown(self, hours: int | None = None) -> dict[str, dict[str, int]]:
+    def get_signals_breakdown(
+        self,
+        hours: int | None = None,
+        source: str | None = None,
+    ) -> dict[str, dict[str, int]]:
         """Fetch {model: {good, bad}} breakdown from mekongd /v1/signals/breakdown.
 
         hours: optional window (e.g. 24 = last 24h). None = all time.
+        source: ``user`` or ``auto`` — server-side filter by note origin.
         """
-        params = {"hours": hours} if hours else {}
+        params: dict = {}
+        if hours:
+            params["hours"] = hours
+        if source in ("user", "auto"):
+            params["source"] = source
         with httpx.Client(timeout=5.0) as client:
             resp = client.get(f"{self.base_url}/v1/signals/breakdown", params=params)
             resp.raise_for_status()

@@ -117,13 +117,23 @@ async def signals(req: SignalRequest):
 
 
 @app.get("/v1/signals/breakdown")
-async def signals_breakdown(hours: int | None = None):
+async def signals_breakdown(
+    hours: int | None = None, source: str | None = None
+):
     """Operator diagnostic — good/bad counts grouped by model.
 
     hours: optional window filter (e.g. ?hours=24). Legacy rows bucket under ''.
+    source: ``user`` or ``auto`` — filter by note origin (``#user`` marker
+            set by agent-forest user-feedback endpoint). Unknown values fall
+            back to no filter.
     """
     cfg, _, _ = _get_deps()
-    return {"by_model": aggregate_signals_by_model(cfg.stats_db_path, hours)}
+    effective = source if source in ("user", "auto") else None
+    return {
+        "by_model": aggregate_signals_by_model(
+            cfg.stats_db_path, hours, source=effective
+        )
+    }
 
 
 @app.get("/v1/cost/by-model")
