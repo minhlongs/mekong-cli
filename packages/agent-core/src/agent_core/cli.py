@@ -15,7 +15,6 @@ from agent_core.agents.developer import DeveloperAgent
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
 from agent_core.forest_client import fetch_forest_status
 from agent_core.formatters import (
-    breakdown_from_signals,
     format_breakdown,
     format_cost_by_model,
     format_forest_status,
@@ -118,14 +117,9 @@ def report_cmd(
     kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
     llm = LLMClient(**kwargs)
     window = hours if hours > 0 else None
+    server_source = source if source in ("auto", "user") else None
     try:
-        if source == "all":
-            by_model = llm.get_signals_breakdown(hours=window)
-        else:
-            # Fetch recent signals and tabulate locally — mekongd /breakdown
-            # has no source-filter parameter yet.
-            recent = llm.get_recent_signals(limit=500)
-            by_model = breakdown_from_signals(recent, source=source)
+        by_model = llm.get_signals_breakdown(hours=window, source=server_source)
     except Exception as e:  # noqa: BLE001
         typer.echo(f"Lỗi khi gọi mekongd: {e}", err=True)
         raise typer.Exit(code=2) from e
