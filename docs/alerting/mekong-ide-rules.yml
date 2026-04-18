@@ -15,6 +15,9 @@ groups:
       - alert: MekongdLocalRatioLow
         expr: mekongd_local_ratio < 0.4
         for: 15m
+        labels:
+          severity: warning
+          component: mekongd
         annotations:
           summary: "Qwen local path underutilized (<40%) — investigate cloud_patterns"
 
@@ -22,6 +25,9 @@ groups:
       - alert: MekongdSignalsRatioDegraded
         expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10
         for: 30m
+        labels:
+          severity: warning
+          component: mekongd
         annotations:
           summary: "Operator satisfaction <60% with ≥10 signals/h — routing quality regression"
 
@@ -35,6 +41,9 @@ groups:
           and (mekongd_user_signals_total{kind="good"}
                + mekongd_user_signals_total{kind="bad"}) > 20
         for: 30m
+        labels:
+          severity: warning
+          component: mekongd
         annotations:
           summary: "User feedback <70% good with ≥20 user signals — quality regression"
 
@@ -42,6 +51,9 @@ groups:
       - alert: MekongdCloudSpendHigh
         expr: mekongd_cloud_spent_usd_today > 10
         for: 5m
+        labels:
+          severity: critical
+          component: mekongd
         annotations:
           summary: "Cloud spend today exceeds $10 — review routing policy / budget"
 
@@ -49,6 +61,9 @@ groups:
       - alert: AgentForestQueueBackpressure
         expr: agent_forest_queue_depth > 50
         for: 5m
+        labels:
+          severity: warning
+          component: agent-forest
         annotations:
           summary: "Worker queue depth >50 — scale workers or check for stuck jobs"
 
@@ -56,6 +71,9 @@ groups:
       - alert: AgentForestNoWorkers
         expr: agent_forest_queue_depth > 0 and agent_forest_workers_alive == 0
         for: 2m
+        labels:
+          severity: critical
+          component: agent-forest
         annotations:
           summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
 
@@ -66,5 +84,8 @@ groups:
             / (rate(agent_forest_tasks_completed_total[5m]) + rate(agent_forest_tasks_failed_total[5m]))
             > 0.3
         for: 10m
+        labels:
+          severity: critical
+          component: agent-forest
         annotations:
           summary: "Task failure rate >30% over 5m window — check worker executor / sandbox"
