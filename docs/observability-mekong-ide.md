@@ -27,6 +27,8 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | `mekongd_cloud_daily_budget_usd` | gauge | — | config `cloud_daily_budget_usd` (0 = no cap) |
 | `mekongd_signals_total` | counter | `kind={good,bad}` | `aggregate_signals` |
 | `mekongd_signals_ratio` | gauge | — | derived `good/(good+bad)`, 0 if none |
+| `mekongd_user_signals_total` | counter | `kind={good,bad}` | `aggregate_user_signals` (note LIKE `%#user%`) |
+| `mekongd_user_feedback_ratio` | gauge | — | derived `user_good/(user_good+user_bad)`, 0 if none |
 
 ### agent-forest
 
@@ -194,7 +196,7 @@ the model set is small and stable.
 ### Operator feedback (Pillar 3)
 
 ```promql
-# Good-response ratio — single SLO number (0..1)
+# Good-response ratio — single SLO number (0..1) — everything, auto + user
 mekongd_signals_ratio
 
 # Negative feedback rate (signals/min) — alert if climbing
@@ -202,6 +204,16 @@ rate(mekongd_signals_total{kind="bad"}[5m])
 
 # Engagement: total signals captured per day
 increase(mekongd_signals_total[1d])
+
+# USER feedback only (notes carrying `#user`, forwarded by agent-forest's
+# POST /task/{id}/feedback). Distinguishes "my users are unhappy" from
+# "my auto pipeline is breaking" — they move independently.
+mekongd_user_feedback_ratio
+
+# Alert thresholds for user-only stream (no floor if no traffic)
+mekongd_user_feedback_ratio < 0.7
+  and on() (mekongd_user_signals_total{kind="good"}
+          + mekongd_user_signals_total{kind="bad"}) > 20
 ```
 
 ## Suggested Grafana panels
@@ -231,6 +243,7 @@ The starter set covers:
 |-------|---------|-----|
 | `MekongdLocalRatioLow` | `mekongd_local_ratio < 0.4` | 15m |
 | `MekongdSignalsRatioDegraded` | `ratio < 0.6 and increase(signals[1h]) > 10` | 30m |
+| `MekongdUserFeedbackRatioDegraded` | `user_feedback_ratio < 0.7 and user_signals_total > 20` | 30m |
 | `MekongdCloudSpendHigh` | `mekongd_cloud_spent_usd_today > 10` | 5m |
 | `AgentForestQueueBackpressure` | `agent_forest_queue_depth > 50` | 5m |
 | `AgentForestNoWorkers` | `queue > 0 and workers_alive == 0` | 2m |

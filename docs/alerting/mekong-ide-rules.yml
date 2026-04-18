@@ -25,6 +25,19 @@ groups:
         annotations:
           summary: "Operator satisfaction <60% with ≥10 signals/h — routing quality regression"
 
+      # mekongd — explicit user feedback quality (Pillar 3, Giai đoạn 3.2.F)
+      # User-forwarded feedback (note carries `#user`) moves independently of
+      # auto-emitted pipeline signals — alert separately so "my users are
+      # unhappy" doesn't get averaged away by healthy auto traffic.
+      - alert: MekongdUserFeedbackRatioDegraded
+        expr: |
+          mekongd_user_feedback_ratio < 0.7
+          and (mekongd_user_signals_total{kind="good"}
+               + mekongd_user_signals_total{kind="bad"}) > 20
+        for: 30m
+        annotations:
+          summary: "User feedback <70% good with ≥20 user signals — quality regression"
+
       # mekongd — cost guardrail
       - alert: MekongdCloudSpendHigh
         expr: mekongd_cloud_spent_usd_today > 10

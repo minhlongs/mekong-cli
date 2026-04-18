@@ -10,6 +10,7 @@ from mekongd.stats import (
     aggregate_signals,
     aggregate_signals_by_model,
     aggregate_stats,
+    aggregate_user_signals,
     estimate_savings,
     init_db,
     record_route,
@@ -56,6 +57,26 @@ def test_record_and_aggregate_signals(tmp_path: Path):
 
 def test_aggregate_signals_empty(tmp_path: Path):
     assert aggregate_signals(tmp_path / "missing.sqlite") == {}
+
+
+def test_aggregate_user_signals_filters_user_marker(tmp_path: Path):
+    """Only rows whose note contains '#user' count as explicit user feedback."""
+    db = tmp_path / "stats.sqlite"
+    # Auto-emitted pipeline signals (no #user marker) — must be excluded.
+    assert record_signal(db, "good", "forest/u/j1: auto ok")
+    assert record_signal(db, "bad", "forest/u/j2: auto boom")
+    # User-forwarded feedback via POST /task/{id}/feedback — must be included.
+    assert record_signal(db, "good", "forest/u/j3#user: loved it")
+    assert record_signal(db, "good", "forest/u/j4#user")
+    assert record_signal(db, "bad", "forest/u/j5#user: wrong answer")
+
+    assert aggregate_user_signals(db) == {"good": 2, "bad": 1}
+    # The umbrella counter still sees everything.
+    assert aggregate_signals(db) == {"good": 3, "bad": 2}
+
+
+def test_aggregate_user_signals_empty(tmp_path: Path):
+    assert aggregate_user_signals(tmp_path / "missing.sqlite") == {}
 
 
 def test_estimate_savings():

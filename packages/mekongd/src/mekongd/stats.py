@@ -189,6 +189,24 @@ def aggregate_signals(db_path: Path) -> dict[str, int]:
     return {kind: int(count) for kind, count in rows}
 
 
+def aggregate_user_signals(db_path: Path) -> dict[str, int]:
+    """Return {kind: count} for user-originated signals only (note LIKE '%#user%').
+
+    Pairs with ``aggregate_signals`` to let operators distinguish auto-emitted
+    pipeline signals from explicit human feedback forwarded by agent-forest's
+    POST /task/{id}/feedback endpoint.
+    """
+    if not db_path.exists():
+        return {}
+    with _connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT kind, COUNT(*) FROM signals "
+            "WHERE note LIKE ? GROUP BY kind",
+            ("%#user%",),
+        ).fetchall()
+    return {kind: int(count) for kind, count in rows}
+
+
 def list_recent_signals(db_path: Path, limit: int = 20) -> list[dict]:
     """Return last N signal rows (newest first) as dicts. Empty list when db missing."""
     if not db_path.exists() or limit <= 0:
