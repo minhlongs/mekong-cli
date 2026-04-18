@@ -20,6 +20,7 @@ from agent_core.evals import (
     load_dataset,
     run_dataset,
 )
+from agent_core.experiments import bucket
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
 from agent_core.forest_client import fetch_forest_status
 from agent_core.formatters import (
@@ -499,6 +500,32 @@ def eval_cmd(  # noqa: B008
     if regressions:
         typer.echo("\n" + "\n".join(regressions), err=True)
         raise typer.Exit(code=1)
+
+
+@app.command("experiment")
+def experiment_cmd(
+    user: str = typer.Option(..., "--user", help="User identifier."),
+    name: str = typer.Option(..., "--name", help="Experiment name."),
+    variants: str = typer.Option(
+        "control,treatment",
+        "--variants",
+        help="Comma-separated variant names (equal weight).",
+    ),
+    json_out: bool = typer.Option(False, "--json", help="Emit JSON output."),
+) -> None:
+    """Assign user to a variant of an experiment (deterministic hash-based)."""
+    variant_list = [v.strip() for v in variants.split(",") if v.strip()]
+    try:
+        assignment = bucket(user, name, variant_list)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    if json_out:
+        typer.echo(
+            json.dumps({"user": user, "experiment": name, "variant": assignment})
+        )
+    else:
+        typer.echo(assignment)
 
 
 if __name__ == "__main__":  # pragma: no cover
