@@ -13,9 +13,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from agent_forest.gateway import routes_task as _rt
 from agent_forest.gateway.deps import get_redis_client, get_settings
 from agent_forest.gateway.routes_auth import router as auth_router
-from agent_forest.gateway.routes_task import router as task_router
 from agent_forest.queue import TASK_QUEUE
 from agent_forest.worker.heartbeat import count_alive, last_seen_timestamp
 
@@ -54,12 +54,12 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth_router)
-    app.include_router(task_router)
+    app.include_router(_rt.router)
 
-    def _probe(r: redis.Redis) -> tuple[int, int, int, int, int]:
-        """Shared read for queue + workers + task counters.
+    def _probe(r: redis.Redis) -> tuple[int, int, int, int, int, int, int]:
+        """Shared read for queue + workers + task + prompt-guard counters.
 
-        Returns (depth, alive, last_seen, completed, failed).
+        Returns (depth, alive, last_seen, completed, failed, inj, dng).
         """
         try:
             depth = int(r.llen(TASK_QUEUE))
@@ -77,7 +77,13 @@ def create_app() -> FastAPI:
         except Exception:
             completed = 0
             failed = 0
-        return depth, alive, last_seen, completed, failed
+        try:
+            inj = int(r.get(_rt.PROMPT_GUARD_INJECTION_KEY) or 0)
+            dng = int(r.get(_rt.PROMPT_GUARD_DANGEROUS_KEY) or 0)
+        except Exception:
+            inj = 0
+            dng = 0
+        return depth, alive, last_seen, completed, failed, inj, dng
 
     @app.get("/healthz", tags=["infra"])
     def healthz() -> JSONResponse:
@@ -86,7 +92,7 @@ def create_app() -> FastAPI:
     @app.get("/status", tags=["infra"])
     def status_json(r: redis.Redis = Depends(get_redis_client)) -> JSONResponse:
         """JSON snapshot of gateway state — consumed by agent-core forest-status."""
-        depth, alive, last_seen, _completed, _failed = _probe(r)
+        depth, alive, last_seen, _completed, _failed, _inj, _dng = _probe(r)
         return JSONResponse(
             {
                 "service": "agent-forest",
@@ -101,7 +107,7 @@ def create_app() -> FastAPI:
     @app.get("/metrics", tags=["infra"], response_class=PlainTextResponse)
     def metrics(r: redis.Redis = Depends(get_redis_client)) -> str:
         """Prometheus text exposition — queue depth + worker liveness + task counters."""
-        depth, alive, last_seen, completed, failed = _probe(r)
+        depth, alive, last_seen, completed, failed, inj, dng = _probe(r)
         lines = [
             "# HELP agent_forest_queue_depth Current length of Redis task_queue list",
             "# TYPE agent_forest_queue_depth gauge",
@@ -121,6 +127,11 @@ def create_app() -> FastAPI:
             "# HELP agent_forest_worker_last_seen_timestamp Max unix-ts of any live heartbeat",
             "# TYPE agent_forest_worker_last_seen_timestamp gauge",
             f"agent_forest_worker_last_seen_timestamp {last_seen}",
+            "# HELP agent_forest_prompt_guard_rejections_total "
+            "POST /task rejections by prompt_guard (reason=injection|dangerous)",
+            "# TYPE agent_forest_prompt_guard_rejections_total counter",
+            f'agent_forest_prompt_guard_rejections_total{{reason="injection"}} {inj}',
+            f'agent_forest_prompt_guard_rejections_total{{reason="dangerous"}} {dng}',
         ]
         return "\n".join(lines) + "\n"
 
