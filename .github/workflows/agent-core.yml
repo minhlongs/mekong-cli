@@ -29,6 +29,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - name: Restore eval baseline cache
+        # Pillar 3: persist ~/.agent-core across CI runs so the regression
+        # gate has a real baseline to compare against (cold-start returns
+        # [] because recent_eval_runs is empty). PRs inherit main's cache
+        # via restore-keys fallback; writes are scoped to branch, so PRs
+        # can't pollute main's baseline.
+        uses: actions/cache@v4
+        with:
+          path: ~/.agent-core
+          key: agent-core-eval-db-${{ runner.os }}-py${{ matrix.python }}-${{ hashFiles('packages/agent-core/fixtures/evals/**', 'packages/agent-core/src/agent_core/evals.py') }}
+          restore-keys: |
+            agent-core-eval-db-${{ runner.os }}-py${{ matrix.python }}-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
