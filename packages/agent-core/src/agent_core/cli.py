@@ -6,12 +6,20 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
 
 import typer
 
 from agent_core import __version__
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
+from agent_core.evals import (
+    EvalRunSummary,
+    dataset_hash,
+    detect_regression,
+    load_dataset,
+    run_dataset,
+)
 from agent_core.feedback_loop import FeedbackLoop, list_recent_sessions
 from agent_core.forest_client import fetch_forest_status
 from agent_core.formatters import (
@@ -26,6 +34,22 @@ from agent_core.llm_client import LLMClient
 from agent_core.memory import SeedMemory
 from agent_core.orchestrator import SoloCompanyOrchestrator
 from agent_core.tools.file_system import write_file
+
+
+class _OfflineLLM:
+    """Deterministic stub — returns '[offline] <prompt>' without any network call.
+
+    Used by ``agent-core eval`` when the dataset fixture is designed for offline
+    testing (expect_substring contains 'offline' or '[offline]').
+    """
+
+    def chat(self, messages: list, system: str | None = None, max_tokens: int = 1024) -> str:
+        prompt = ""
+        for m in reversed(messages):
+            if isinstance(m, dict) and m.get("role") == "user":
+                prompt = m.get("content", "")
+                break
+        return f"[offline] {prompt}"
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, invoke_without_command=True)
 
@@ -361,6 +385,120 @@ def _maybe_write_artifact(developer_response: str) -> str | None:
     if not path or content is None:
         return None
     return write_file(path, content)
+
+
+@app.command("eval")
+def eval_cmd(  # noqa: B008
+    dataset: Path = typer.Option(  # noqa: B008
+        ..., "--dataset", "-d", help="Path to JSON dataset file.", exists=True
+    ),
+    baseline_run_id: int = typer.Option(  # noqa: B008
+        0, "--baseline", help="Run ID to compare against (0 = use latest run for dataset)."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Emit structured JSON output for CI."),  # noqa: B008
+    offline: bool = typer.Option(  # noqa: B008
+        False,
+        "--offline",
+        help="Use built-in offline stub LLM instead of mekongd (for fixture-based CI testing).",
+    ),
+    mekongd_url: str = typer.Option(  # noqa: B008
+        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
+    ),
+    threshold: float = typer.Option(  # noqa: B008
+        0.05, "--threshold", help="Regression threshold as fraction (default 0.05 = 5%)."
+    ),
+) -> None:
+    """Run offline eval harness against a fixed dataset and detect regressions.
+
+    Exits with code 1 when regressions are detected; 0 when clean.
+    """
+    with open(dataset, encoding="utf-8") as fh:
+        dataset_dict: dict = json.load(fh)
+
+    dataset_name: str = dataset_dict.get("name", dataset.stem)
+    d_hash = dataset_hash(dataset_dict)
+    cases = load_dataset(dataset)
+
+    llm: object
+    if offline:
+        llm = _OfflineLLM()
+    else:
+        kwargs: dict = {"base_url": mekongd_url} if mekongd_url else {}
+        llm = LLMClient(**kwargs)
+
+    summary: EvalRunSummary = run_dataset(cases, llm)
+    summary.dataset_name = dataset_name
+
+    memory = SeedMemory()
+
+    # Resolve baseline
+    baseline_record: dict | None = None
+    if baseline_run_id > 0:
+        runs = memory.recent_eval_runs(dataset_name, limit=100)
+        for r in runs:
+            if r["id"] == baseline_run_id:
+                baseline_record = r
+                break
+        if baseline_record is None:
+            typer.echo(
+                f"Cảnh báo: baseline run_id={baseline_run_id} không tìm thấy — bỏ qua so sánh.",
+                err=True,
+            )
+    else:
+        prev_runs = memory.recent_eval_runs(dataset_name, limit=1)
+        if prev_runs:
+            baseline_record = prev_runs[0]
+
+    # Record current run
+    run_id = memory.record_eval_run(
+        dataset_name=dataset_name,
+        dataset_hash=d_hash,
+        score=summary.total_score,
+        passed=summary.passed_count,
+        total=summary.total_count,
+        details=summary.as_record(),
+    )
+
+    regressions = detect_regression(summary, baseline_record, threshold_pct=threshold)
+
+    if as_json:
+        out = {
+            "run_id": run_id,
+            "dataset": dataset_name,
+            "score_pct": round(summary.score_pct, 4),
+            "passed": summary.passed_count,
+            "total": summary.total_count,
+            "regressions": regressions,
+            "cases": [
+                {
+                    "id": r.case_id,
+                    "passed": r.passed,
+                    "score": r.score,
+                }
+                for r in summary.details
+            ],
+        }
+        typer.echo(json.dumps(out, ensure_ascii=False))
+        if regressions:
+            raise typer.Exit(code=1)
+        return
+
+    # Human-readable table
+    typer.echo(f"\nEval: {dataset_name}  (run_id={run_id}  hash={d_hash[:12]})")
+    typer.echo(f"{'Case':<20} {'Score':>6} {'Pass':>5}")
+    typer.echo("-" * 35)
+    for r in summary.details:
+        mark = "OK" if r.passed else "FAIL"
+        typer.echo(f"{r.case_id:<20} {r.score:>6.2f} {mark:>5}")
+    typer.echo("-" * 35)
+    typer.echo(
+        f"{'TOTAL':<20} {summary.total_score:>6.2f} {summary.passed_count}/{summary.total_count}"
+    )
+    typer.echo(f"Score: {summary.score_pct:.1%}")
+
+    if regressions:
+        typer.echo("\n" + "\n".join(regressions), err=True)
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -26,6 +26,23 @@ def test_metrics_empty_queue(client):
     # Heartbeat gauges default to 0 when no workers alive
     assert "agent_forest_workers_alive 0" in body
     assert "agent_forest_worker_last_seen_timestamp 0" in body
+    # Task lifecycle counters — zero on fresh Redis
+    assert "# HELP agent_forest_tasks_completed_total" in body
+    assert "# TYPE agent_forest_tasks_completed_total counter" in body
+    assert "agent_forest_tasks_completed_total 0" in body
+    assert "# HELP agent_forest_tasks_failed_total" in body
+    assert "# TYPE agent_forest_tasks_failed_total counter" in body
+    assert "agent_forest_tasks_failed_total 0" in body
+
+
+def test_metrics_task_counters_increment(client, fake_redis):
+    """After bumping Redis counters directly, /metrics should reflect them."""
+    fake_redis.incr("agent_forest:tasks:completed")
+    fake_redis.incr("agent_forest:tasks:completed")
+    fake_redis.incr("agent_forest:tasks:failed")
+    body = client.get("/metrics").text
+    assert "agent_forest_tasks_completed_total 2" in body
+    assert "agent_forest_tasks_failed_total 1" in body
 
 
 def test_metrics_reflects_worker_heartbeat(client, fake_redis):

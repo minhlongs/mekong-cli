@@ -58,3 +58,13 @@ groups:
         for: 2m
         annotations:
           summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
+
+      # agent-forest — task failure rate (Giai đoạn 3.3.B)
+      - alert: AgentForestTaskFailureRateHigh
+        expr: |
+          rate(agent_forest_tasks_failed_total[5m])
+            / (rate(agent_forest_tasks_completed_total[5m]) + rate(agent_forest_tasks_failed_total[5m]))
+            > 0.3
+        for: 10m
+        annotations:
+          summary: "Task failure rate >30% over 5m window — check worker executor / sandbox"

@@ -34,6 +34,18 @@ CREATE TABLE IF NOT EXISTS memories (
 );
 CREATE INDEX IF NOT EXISTS idx_mem_agent ON memories (agent_id);
 CREATE INDEX IF NOT EXISTS idx_mem_created ON memories (created_at);
+
+CREATE TABLE IF NOT EXISTS eval_runs (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at   TEXT NOT NULL,
+    dataset_hash TEXT NOT NULL,
+    dataset_name TEXT NOT NULL,
+    score        REAL NOT NULL,
+    passed       INTEGER NOT NULL,
+    total        INTEGER NOT NULL,
+    details_json TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_eval_dataset ON eval_runs (dataset_name, created_at);
 """
 
 
@@ -81,10 +93,12 @@ class SeedMemory:
         if self._chroma_client is None:
             try:
                 import chromadb
-            except ImportError:
+                self.chroma_path.mkdir(parents=True, exist_ok=True)
+                self._chroma_client = chromadb.PersistentClient(path=str(self.chroma_path))
+            except Exception as e:
+                # ImportError or pydantic compat issue (e.g. Python 3.14 + old chromadb)
+                log.debug("chromadb unavailable: %s — falling back to SQLite", e)
                 return None
-            self.chroma_path.mkdir(parents=True, exist_ok=True)
-            self._chroma_client = chromadb.PersistentClient(path=str(self.chroma_path))
         return self._chroma_client
 
     def remember(
@@ -210,3 +224,49 @@ class SeedMemory:
             except Exception as e:
                 log.debug("chroma delete failed: %s", e)
         return deleted
+
+    def record_eval_run(
+        self,
+        dataset_name: str,
+        dataset_hash: str,
+        score: float,
+        passed: int,
+        total: int,
+        details: Any,
+    ) -> int:
+        """Persist an eval run and return the new row id."""
+        ts = datetime.now(UTC).isoformat()
+        details_json = json.dumps(details, ensure_ascii=False, sort_keys=True)
+        with self._connect() as conn:
+            cur = conn.execute(
+                "INSERT INTO eval_runs "
+                "(created_at, dataset_hash, dataset_name, score, passed, total, details_json) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (ts, dataset_hash, dataset_name, score, passed, total, details_json),
+            )
+            conn.commit()
+            return cur.lastrowid  # type: ignore[return-value]
+
+    def recent_eval_runs(self, dataset_name: str, limit: int = 5) -> list[dict]:
+        """Return the most recent eval runs for the given dataset_name (newest first)."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, created_at, dataset_hash, dataset_name, "
+                "score, passed, total, details_json "
+                "FROM eval_runs WHERE dataset_name = ? "
+                "ORDER BY created_at DESC LIMIT ?",
+                (dataset_name, limit),
+            ).fetchall()
+        return [
+            {
+                "id": r[0],
+                "created_at": r[1],
+                "dataset_hash": r[2],
+                "dataset_name": r[3],
+                "score": r[4],
+                "passed": r[5],
+                "total": r[6],
+                "details": json.loads(r[7] or "{}"),
+            }
+            for r in rows
+        ]

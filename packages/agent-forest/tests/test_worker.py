@@ -107,6 +107,73 @@ def test_process_one_emits_bad_signal_with_error(fake_redis, settings, monkeypat
     assert calls == [("failed", "usr_sig", "j10", "explode")]
 
 
+def test_process_one_increments_completed_counter(fake_redis, settings):
+    """Giai đoạn 3.3.B: completed outcome increments Redis counter."""
+    from agent_forest import queue as q
+    from agent_forest.worker.main import process_one
+    from agent_forest.worker.runner import JobOutcome
+
+    q.enqueue_job(
+        fake_redis, job_id="cnt1", user_id="usr_founder1", prompt="x", webhook_url=None
+    )
+
+    def stub(_p, _s, *, max_rounds: int = 1) -> JobOutcome:
+        return JobOutcome(status="completed", result="ok")
+
+    process_one(fake_redis, settings, key="job:usr_founder1:cnt1", executor=stub)
+    assert int(fake_redis.get("agent_forest:tasks:completed") or 0) == 1
+    assert int(fake_redis.get("agent_forest:tasks:failed") or 0) == 0
+
+
+def test_process_one_increments_failed_counter(fake_redis, settings):
+    """Giai đoạn 3.3.B: failed outcome increments Redis counter."""
+    from agent_forest import queue as q
+    from agent_forest.worker.main import process_one
+    from agent_forest.worker.runner import JobOutcome
+
+    q.enqueue_job(
+        fake_redis, job_id="cnt2", user_id="usr_founder2", prompt="x", webhook_url=None
+    )
+
+    def stub(_p, _s, *, max_rounds: int = 1) -> JobOutcome:
+        return JobOutcome(status="failed", error="boom")
+
+    process_one(fake_redis, settings, key="job:usr_founder2:cnt2", executor=stub)
+    assert int(fake_redis.get("agent_forest:tasks:failed") or 0) == 1
+    assert int(fake_redis.get("agent_forest:tasks:completed") or 0) == 0
+
+
+def test_process_one_counter_graceful_on_redis_error(fake_redis, settings, monkeypatch):
+    """Giai đoạn 3.3.B: counter bump failure must NOT crash worker (best-effort)."""
+    from agent_forest import queue as q
+    from agent_forest.worker import main as worker_main
+    from agent_forest.worker.runner import JobOutcome
+
+    q.enqueue_job(
+        fake_redis, job_id="cnt3", user_id="usr_founder1", prompt="x", webhook_url=None
+    )
+
+    # Patch incr to raise — worker should still return completed outcome
+    original_incr = fake_redis.incr
+
+    def _boom(key):
+        raise ConnectionError("redis gone")
+
+    monkeypatch.setattr(fake_redis, "incr", _boom)
+
+    def stub(_p, _s, *, max_rounds: int = 1) -> JobOutcome:
+        return JobOutcome(status="completed", result="ok")
+
+    outcome = worker_main.process_one(
+        fake_redis, settings, key="job:usr_founder1:cnt3", executor=stub
+    )
+    # Must survive the Redis error without propagating
+    assert outcome.status == "completed"
+
+    # Restore so other tests aren't affected
+    monkeypatch.setattr(fake_redis, "incr", original_incr)
+
+
 def test_run_loop_honors_max_iterations(fake_redis, settings, monkeypatch):
     from agent_forest.worker import main as worker_main
 

@@ -86,6 +86,14 @@ def process_one(
         r, user_id, job_id, status=outcome.status, result=outcome.result, error=outcome.error
     )
     emit_signal(outcome.status, user_id, job_id, error=outcome.error)
+    # Pillar 2 throughput counters — best-effort, never crash the worker.
+    try:
+        if outcome.status == "completed":
+            r.incr("agent_forest:tasks:completed")
+        elif outcome.status == "failed":
+            r.incr("agent_forest:tasks:failed")
+    except Exception as exc:  # noqa: BLE001
+        log.warning("counter bump failed: %s", exc)
     webhook = data.get("webhook_url") or ""
     if webhook:
         payload = q.get_job(r, user_id, job_id) or {}

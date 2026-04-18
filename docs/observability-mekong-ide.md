@@ -35,6 +35,8 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | Metric | Type | Labels | Source |
 |--------|------|--------|--------|
 | `agent_forest_queue_depth` | gauge | — | `LLEN TASK_QUEUE` (Redis) |
+| `agent_forest_tasks_completed_total` | counter | — | `INCR agent_forest:tasks:completed` (worker) |
+| `agent_forest_tasks_failed_total` | counter | — | `INCR agent_forest:tasks:failed` (worker) |
 | `agent_forest_up` | gauge | — | liveness (constant `1`) |
 | `agent_forest_workers_alive` | gauge | — | `SCAN workers:heartbeat:*` count |
 | `agent_forest_worker_last_seen_timestamp` | gauge | — | max unix-ts across live heartbeats |
@@ -42,6 +44,10 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 Workers write `SETEX workers:heartbeat:<id> 60 <unix_ts>` each loop iteration;
 stale entries auto-expire. `agent_forest_workers_alive` thus reflects workers
 with a heartbeat no older than 60s.
+
+Task counters are incremented via best-effort `INCR` in `worker/main.py::process_one`
+immediately after `emit_signal`. Counter bumps are wrapped in try/except so a Redis
+error never crashes the worker. No labels are used — cardinality stays bounded.
 
 ## Prometheus scrape config
 
@@ -124,6 +130,17 @@ rate(mekongd_tokens_in_total[1m])
 
 # Output tokens/sec
 rate(mekongd_tokens_out_total[1m])
+```
+
+### Throughput (Giai đoạn 3.3.B)
+
+```promql
+# Jobs completed per second (5m window)
+rate(agent_forest_tasks_completed_total[5m])
+
+# Task failure rate (fraction 0..1) — alert > 0.3
+rate(agent_forest_tasks_failed_total[5m])
+  / (rate(agent_forest_tasks_completed_total[5m]) + rate(agent_forest_tasks_failed_total[5m]))
 ```
 
 ### Queue backpressure
@@ -271,6 +288,7 @@ The starter set covers:
 | `MekongdCloudSpendHigh` | `mekongd_cloud_spent_usd_today > 10` | 5m |
 | `AgentForestQueueBackpressure` | `agent_forest_queue_depth > 50` | 5m |
 | `AgentForestNoWorkers` | `queue > 0 and workers_alive == 0` | 2m |
+| `AgentForestTaskFailureRateHigh` | `failure_rate > 0.3` (5m window) | 10m |
 
 `MekongdSignalsRatioDegraded` guards against firing on a handful of bad signals: `increase > 10` requires meaningful volume before alerting.
 

@@ -56,8 +56,11 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(task_router)
 
-    def _probe(r: redis.Redis) -> tuple[int, int, int]:
-        """Shared read for queue + workers. Returns (depth, alive, last_seen)."""
+    def _probe(r: redis.Redis) -> tuple[int, int, int, int, int]:
+        """Shared read for queue + workers + task counters.
+
+        Returns (depth, alive, last_seen, completed, failed).
+        """
         try:
             depth = int(r.llen(TASK_QUEUE))
         except Exception:
@@ -68,7 +71,13 @@ def create_app() -> FastAPI:
         except Exception:
             alive = -1
             last_seen = 0
-        return depth, alive, last_seen
+        try:
+            completed = int(r.get("agent_forest:tasks:completed") or 0)
+            failed = int(r.get("agent_forest:tasks:failed") or 0)
+        except Exception:
+            completed = 0
+            failed = 0
+        return depth, alive, last_seen, completed, failed
 
     @app.get("/healthz", tags=["infra"])
     def healthz() -> JSONResponse:
@@ -77,7 +86,7 @@ def create_app() -> FastAPI:
     @app.get("/status", tags=["infra"])
     def status_json(r: redis.Redis = Depends(get_redis_client)) -> JSONResponse:
         """JSON snapshot of gateway state — consumed by agent-core forest-status."""
-        depth, alive, last_seen = _probe(r)
+        depth, alive, last_seen, _completed, _failed = _probe(r)
         return JSONResponse(
             {
                 "service": "agent-forest",
@@ -91,12 +100,18 @@ def create_app() -> FastAPI:
 
     @app.get("/metrics", tags=["infra"], response_class=PlainTextResponse)
     def metrics(r: redis.Redis = Depends(get_redis_client)) -> str:
-        """Prometheus text exposition — queue depth + worker liveness."""
-        depth, alive, last_seen = _probe(r)
+        """Prometheus text exposition — queue depth + worker liveness + task counters."""
+        depth, alive, last_seen, completed, failed = _probe(r)
         lines = [
             "# HELP agent_forest_queue_depth Current length of Redis task_queue list",
             "# TYPE agent_forest_queue_depth gauge",
             f"agent_forest_queue_depth {depth}",
+            "# HELP agent_forest_tasks_completed_total Total jobs finishing with status=completed",
+            "# TYPE agent_forest_tasks_completed_total counter",
+            f"agent_forest_tasks_completed_total {completed}",
+            "# HELP agent_forest_tasks_failed_total Total jobs finishing with status=failed",
+            "# TYPE agent_forest_tasks_failed_total counter",
+            f"agent_forest_tasks_failed_total {failed}",
             "# HELP agent_forest_up Service liveness indicator (1=up)",
             "# TYPE agent_forest_up gauge",
             "agent_forest_up 1",
