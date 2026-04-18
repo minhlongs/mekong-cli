@@ -52,3 +52,12 @@ jobs:
           fi
       - name: Test
         run: pytest tests/ -v --tb=short
+      - name: Offline eval regression gate
+        run: |
+          # Pillar 3: offline-eval gate. Exits 1 on regression (> 5% drop
+          # vs hard-coded baseline in evals.detect_regression). Uses the
+          # deterministic _OfflineLLM stub so no API key / network required.
+          agent-core eval \
+            --dataset fixtures/evals/smoke.json \
+            --offline \
+            --json
