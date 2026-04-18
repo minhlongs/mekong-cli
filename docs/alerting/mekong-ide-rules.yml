@@ -89,3 +89,16 @@ groups:
           component: agent-forest
         annotations:
           summary: "Task failure rate >30% over 5m window — check worker executor / sandbox"
+
+      # agent-forest — prompt_guard surge (Pillar 4 security ↔ Pillar 2)
+      # Benign baseline is ~0 rej/s. >0.1 rej/s (6/min) sustained 5m =
+      # active probe OR pattern false-positive that needs tuning. Warning,
+      # not critical — service still up, rejects are the system working.
+      - alert: AgentForestPromptGuardSurge
+        expr: sum(rate(agent_forest_prompt_guard_rejections_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: agent-forest
+        annotations:
+          summary: "prompt_guard rejections >0.1/s (6/min) — probe or false-positive regex"

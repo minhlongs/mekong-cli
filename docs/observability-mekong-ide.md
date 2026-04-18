@@ -40,6 +40,7 @@ Format: Prometheus text exposition (hand-formatted, no `prometheus_client` dep).
 | `agent_forest_up` | gauge | — | liveness (constant `1`) |
 | `agent_forest_workers_alive` | gauge | — | `SCAN workers:heartbeat:*` count |
 | `agent_forest_worker_last_seen_timestamp` | gauge | — | max unix-ts across live heartbeats |
+| `agent_forest_prompt_guard_rejections_total` | counter | `reason={injection,dangerous}` | `INCR agent_forest:prompt_guard:rejections_*` on /task reject |
 
 Workers write `SETEX workers:heartbeat:<id> 60 <unix_ts>` each loop iteration;
 stale entries auto-expire. `agent_forest_workers_alive` thus reflects workers
@@ -151,6 +152,16 @@ agent_forest_queue_depth
 
 # Growth rate (jobs/sec) — positive = producer out-running workers
 deriv(agent_forest_queue_depth[5m])
+```
+
+### prompt_guard surge (Pillar 4)
+
+```promql
+# Total rejects per second — alert > 0.1 (6/min)
+sum(rate(agent_forest_prompt_guard_rejections_total[5m]))
+
+# Split by reason — injection vs dangerous-code pattern
+sum by (reason) (rate(agent_forest_prompt_guard_rejections_total[5m]))
 ```
 
 ### Worker liveness
