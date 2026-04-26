@@ -80,15 +80,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: pip install chromadb
-      - name: Smoke test — seed layer
+      - run: pip install chromadb pytest pytest-asyncio
+      - name: Smoke test — seed layer imports
         run: |
           python3 -c "
           import sys; sys.path.insert(0, '.')
           from seed.llm_client import LLMClient, OLLAMA_BASE_URL
           from seed.agents import CEOAgent, DeveloperAgent, TesterAgent
           from tools import write_file, read_file, execute_command
-          print('✅ Gate 5 PASS — all imports OK')
+          print('✅ Gate 5 imports OK')
           "
+      - name: Unit tests — seed layer (69 tests, no Ollama needed)
+        run: |
+          python3 -m pytest tests/seed/ -q --tb=short && echo "✅ Gate 5 tests PASS"
       - name: Notify success
         run: echo "🚀 All 5 Gates PASSED — Ready to deploy"

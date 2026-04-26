@@ -10,6 +10,9 @@ COPY tools/ ./tools/
 COPY worker/ ./worker/
 COPY apps/ ./apps/
 COPY integrations/ ./integrations/
+COPY clipmart/ ./clipmart/
+COPY observability/ ./observability/
+COPY feedback/ ./feedback/
 
 ENV PYTHONPATH=/app
 
