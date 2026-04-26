@@ -118,6 +118,8 @@ GET /api/health/redis
 **Gate 5 Details:**
 ```bash
 # Runs on every push to main/dev
+make test-seed    # Recommended: runs tests in isolated venv
+# OR manually:
 pytest tests/seed/ -q --tb=short
 
 # Test directories:

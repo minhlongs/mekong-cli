@@ -423,7 +423,10 @@ curl -X POST https://api.mekongmind.com/v1/tasks \
 git clone https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli
 pip install -e ".[dev]"
-pytest tests/
+
+# Run seed layer tests (69 tests, no Ollama needed)
+make test-seed    # Recommended
+# OR: pytest tests/seed/ -v
 ```
 
 ---

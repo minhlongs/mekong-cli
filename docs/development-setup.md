@@ -48,6 +48,18 @@
 - `mekong version` - Show version information
 - `mekong --help` - Show all available commands
 
+### Running Tests
+
+Tests for the seed layer (69 unit tests, no Ollama needed):
+
+```bash
+# Recommended: using Makefile target (auto-creates isolated venv)
+make test-seed
+
+# Or manually with pytest
+pytest tests/seed/ -v --tb=short
+```
+
 ## Ollama Setup (Local LLM Inference)
 
 Mekong CLI uses Ollama 0.19+ for local model inference on Apple Silicon (M1/M2/M3). This provides free, private LLM access without API keys.
