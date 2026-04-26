@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-04-04
-**Current Status**: 100/100 Model Stack (DEV: qwen3:30b-a3b + deepseek-r1:32b, 38.7GB); $1M ARR Roadmap in progress
+**Last Updated**: 2026-04-25
+**Current Status**: v6.0.0 — Phase 01-04 (Seed Layer) COMPLETE; $1M ARR Roadmap in progress
 
 ---
 
@@ -11,6 +11,7 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
+| **Phase 01-04** | **Seed Layer: Hạt giống → Local Python CLI + Agents + Memory** | **✅ COMPLETED** | **2026-04-25** |
 | **Phase 21** | **100/100 Model Stack + Engine Farm Refactor** | **✅ COMPLETED** | **2026-04-04** |
 | Phase 20 | Retention & Engagement System | ✅ COMPLETED | 2026-03-14 |
 | Phase 19 | Dashboard Analytics UI | ✅ COMPLETED | 2026-03-14 |
@@ -24,6 +25,63 @@ All significant project milestones and phases tracked here.
 ---
 
 ## Completed Phases
+
+### Phase 01-04: Seed Layer Foundation (2026-04-25)
+
+**Objective:** Establish 4-phase growth architecture (Seed → Tree → Forest → Land) with Phase 01 production-ready local runtime.
+
+**Status:** ✅ COMPLETED (100%)
+
+**Architecture:**
+- **Seed (Phase 01):** Local Python CLI + 3 agents + memory (ChromaDB + SQLite)
+- **Tree (Phase 02):** Telegram bot + Web UI (htmx) + single-tenant expansion
+- **Forest (Phase 03):** Multi-tenant JWT + Docker isolation + Redis queue
+- **Land (Phase 04):** Temporal workflow engine + 5-gate CI/CD + Signals loop + Clipmart
+
+**Phase 01 Components (Production):**
+- `seed/main.py` — Orchestrator entry point using stdlib urllib (no SDK)
+- `seed/agents/` — CEO (planning), Developer (execution), Tester (verification), Base protocol
+- `seed/llm_client.py` — Ollama integration via urllib + streaming
+- `seed/memory.py` — ChromaDB vectors + SQLite persistence (hybrid)
+- `seed/config.py` — ENV-based config (OLLAMA_BASE_URL, LLM_MODEL)
+- `tools/` — file_system.py, browser.py capabilities
+- **Quick start:** `python3 seed/main.py "Your task here"`
+
+**Phase 02 Scaffolding (In-build):**
+- `apps/web/mission-control.html` — htmx UI for Phase 02
+- `integrations/telegram_bot.py` — Telegram integration
+- `apps/api/server.py` — FastAPI single-tenant (port 8765)
+
+**Phase 03 Scaffolding (In-build):**
+- `apps/api/gateway.py` — Multi-tenant JWT gateway (port 8766)
+- `worker/main.py` — Redis queue worker
+- Docker Compose + Dockerfile for containerization
+
+**Phase 04 Scaffolding (In-build):**
+- `observability/agent_metrics.py` — @timed decorator + Prometheus export
+- `feedback/signals_loop.py` — Weekly LLM evals + analysis
+- `clipmart/marketplace_api.py` — Agent template marketplace (4 built-ins)
+- `.github/workflows/ai-native-ci.yml` — 5-gate CI/CD (validation, security, quality, dependency, deploy)
+
+**Testing:**
+- All seed agents tested locally
+- Memory (ChromaDB + SQLite) verified
+- Ollama integration tested with qwen2.5-coder:32b
+
+**Key Design Decisions:**
+1. **Pure Python stdlib** — No external SDK dependencies (urllib only)
+2. **Hybrid memory** — ChromaDB for semantic search + SQLite for persistence
+3. **Stream-based parsing** — LLM responses parsed incrementally
+4. **Config-driven** — 3 environment variables (OLLAMA_BASE_URL, LLM_MODEL, AGENT_NAME)
+5. **Markdown code block extraction** — LLM outputs auto-parsed
+
+**Infrastructure:**
+- Ollama 0.20.0 at M1 Max (192.168.11.111:11434)
+- qwen2.5-coder:32b (14.7GB) — primary model
+- qwen3:32b available for reasoning workloads
+- ChromaDB standalone service (optional)
+
+---
 
 ### Phase 21: Engine Farm 100/100 Model Stack Upgrade (2026-04-04)
 
@@ -221,23 +279,34 @@ All significant project milestones and phases tracked here.
 
 ## Upcoming Phases (Roadmap)
 
-### Phase 22: Advanced Retention Analytics
-- Predictive churn modeling with historical data
+### Phase 02: Tree Layer (Planned)
+- Telegram bot integration (full CLI parity)
+- Web UI expansion (Mission Control dashboard)
+- Single-tenant API endpoints
+- Webhook ingestion (Polar, GitHub, etc.)
+- Timeline: 2026-05 to 2026-06
+
+### Phase 03: Forest Layer (Planned)
+- Multi-tenant JWT authentication
+- Docker isolation per tenant
+- Redis task queue
+- Concurrent agent execution
+- Credit metering + billing
+- Timeline: 2026-06 to 2026-07
+
+### Phase 04: Land Layer (Planned)
+- Temporal workflow engine
+- 5-gate CI/CD (validation, security, quality, dependency, deploy)
+- Signals loop (weekly LLM analysis)
+- Clipmart marketplace (template distribution)
+- Enterprise features (audit logging, RBAC)
+- Timeline: 2026-07 to 2026-08
+
+### Phase 22: Advanced Analytics (Post-Phase 04)
+- Predictive churn modeling
 - Cohort-based retention curves
-- Segment-specific engagement recommendations
-- Dashboard integration for executives
-
-### Phase 23: Advanced Agent Orchestration
-- Multi-pipeline agent coordination
-- Agent role and permission management
-- Audit logging for compliance
-- API key and access control
-
-### Phase 24: Performance Optimization
-- Database query optimization
-- Caching layer (Redis)
-- API response time improvements
-- Load testing and optimization
+- Segment-specific recommendations
+- Executive dashboards
 
 ---
 
@@ -263,10 +332,11 @@ All significant project milestones and phases tracked here.
 
 | Version | Date | Milestone |
 |---------|------|-----------|
-| 1.0.0 | 2026-02-06 | Initial release (vibe-analytics, vibe-dev) |
-| 1.5.0 | 2026-03-05 | OAuth2 + Rate Limiting + Billing |
-| 1.6.0 | 2026-03-14 | Onboarding + Analytics + Retention |
+| **6.0.0** | **2026-04-25** | **Phase 01 Seed: Local Python CLI + Agents + Memory** |
 | 1.7.0 | 2026-04-04 | Engine Farm Ollama Refactor + M1 Max LLM |
+| 1.6.0 | 2026-03-14 | Onboarding + Analytics + Retention |
+| 1.5.0 | 2026-03-05 | OAuth2 + Rate Limiting + Billing |
+| 1.0.0 | 2026-02-06 | Initial release (vibe-analytics, vibe-dev) |
 
 ---
 

@@ -9,6 +9,14 @@ from typing import Any
 from ..llm_client import LLMClient, get_llm_client
 from ..memory import SeedMemory, get_memory
 
+try:
+    from observability.agent_metrics import timed as _timed
+except ImportError:
+    def _timed(name):  # graceful no-op if observability not installed
+        def dec(fn):
+            return fn
+        return dec
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,6 +64,7 @@ class BaseAgent:
                 continue
         return {"text": response}
 
+    @_timed("agent.run")
     def run(self, task: str, extra_context: str | None = None) -> str:
         """Execute task: build context → call LLM → store memory → return response."""
         context = self._build_context(task)

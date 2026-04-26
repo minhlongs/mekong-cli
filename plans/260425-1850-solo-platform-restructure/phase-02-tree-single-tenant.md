@@ -61,6 +61,14 @@ Test 3: "Tìm kiếm và tóm tắt 3 bài về RAG architecture"
 | `apps/web/simple-mission-control.html` | Tạo mới (static HTML) |
 | `integrations/telegram_bot.py` | Tạo mới |
 
+## Checklist
+
+- [x] CEO Agent Hoàn Chỉnh
+- [x] Developer Agent + Tester Agent
+- [x] Mission Control UI (minimal)
+- [x] Telegram Webhook
+- [x] E2E Test Scenarios
+
 ## Success Criteria
 
 ```
