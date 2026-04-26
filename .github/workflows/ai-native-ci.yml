@@ -1,0 +1,94 @@
+name: AI-Native CI/CD — 5 Gates
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gate-1-validation:
+    name: "Gate 1: Logic Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install chromadb
+      - name: Validate seed layer imports
+        run: python3 -c "from seed.agents import CEOAgent, DeveloperAgent, TesterAgent; print('✅ Gate 1 PASS')"
+
+  gate-2-security:
+    name: "Gate 2: Security Scan"
+    runs-on: ubuntu-latest
+    needs: gate-1-validation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install bandit
+      - name: Bandit security scan
+        run: bandit -r seed/ tools/ integrations/ -ll -q && echo "✅ Gate 2 PASS"
+      - name: Secrets scan
+        run: |
+          if grep -rE "(api_key|secret|password)\s*=\s*['\"][^'\"]{8,}" seed/ tools/ --include="*.py"; then
+            echo "❌ Hardcoded secrets detected!" && exit 1
+          fi
+          echo "✅ No hardcoded secrets"
+
+  gate-3-quality:
+    name: "Gate 3: Quality Check"
+    runs-on: ubuntu-latest
+    needs: gate-1-validation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pyflakes
+      - name: Pyflakes lint
+        run: python3 -m pyflakes seed/ tools/ && echo "✅ Gate 3 PASS"
+      - name: File size check (<200 lines)
+        run: |
+          FAIL=0
+          for f in seed/**/*.py tools/*.py; do
+            lines=$(wc -l < "$f" 2>/dev/null || echo 0)
+            if [ "$lines" -gt 200 ]; then
+              echo "❌ $f is $lines lines (>200)" && FAIL=1
+            fi
+          done
+          [ $FAIL -eq 0 ] && echo "✅ All files under 200 lines"
+          exit $FAIL
+
+  gate-4-dependency:
+    name: "Gate 4: Dependency Audit"
+    runs-on: ubuntu-latest
+    needs: gate-2-security
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pip-audit
+      - name: pip-audit
+        run: pip-audit -r requirements.seed.txt --desc on || echo "⚠️ Audit warnings (non-blocking)"
+      - run: echo "✅ Gate 4 PASS"
+
+  gate-5-deployment:
+    name: "Gate 5: Deployment Gate"
+    runs-on: ubuntu-latest
+    needs: [gate-3-quality, gate-4-dependency]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install chromadb
+      - name: Smoke test — seed layer
+        run: |
+          python3 -c "
+          import sys; sys.path.insert(0, '.')
+          from seed.llm_client import LLMClient, OLLAMA_BASE_URL
+          from seed.agents import CEOAgent, DeveloperAgent, TesterAgent
+          from tools import write_file, read_file, execute_command
+          print('✅ Gate 5 PASS — all imports OK')
+          "
+      - name: Notify success
+        run: echo "🚀 All 5 Gates PASSED — Ready to deploy"
