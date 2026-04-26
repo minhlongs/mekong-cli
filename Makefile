@@ -1,7 +1,8 @@
 .PHONY: all install dev test lint format server clean stats help setup health build \
         generate-contracts validate-contracts self-test regenerate \
         start-daemon stop-daemon daemon-status start-gateway \
-        pev-test pev-lint pev-build pev-publish
+        pev-test pev-lint pev-build pev-publish \
+        venv-seed test-seed
 
 all: help
 
@@ -60,6 +61,7 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache .mypy_cache .ruff_cache build dist *.egg-info
 	rm -rf .turbo node_modules/.cache
+	rm -rf .venv-seed
 
 # === Factory / Contracts ===
 generate-contracts:
@@ -99,6 +101,19 @@ pev-build:
 
 pev-publish: pev-lint pev-test pev-build
 	python3 -m twine upload dist/*
+
+# === Seed Layer ===
+venv-seed:
+	@echo "Creating seed layer venv (Python 3.11)..."
+	@/opt/homebrew/bin/python3.11 -m venv .venv-seed 2>/dev/null || python3.11 -m venv .venv-seed
+	@.venv-seed/bin/pip install --quiet --upgrade pip
+	@.venv-seed/bin/pip install --quiet chromadb pytest pytest-asyncio
+	@echo "✅ .venv-seed ready — activate: source .venv-seed/bin/activate"
+
+test-seed:
+	@if [ ! -d .venv-seed ]; then $(MAKE) venv-seed; fi
+	@echo "Running seed layer tests (69 tests)..."
+	@.venv-seed/bin/python -m pytest tests/seed/ -v --tb=short
 
 # === Gateway ===
 start-gateway:
@@ -153,6 +168,10 @@ help:
 	@echo "    make pev-lint     Lint PEV core (ruff+black+isort)"
 	@echo "    make pev-build    Build Python package"
 	@echo "    make pev-publish  Lint + test + build + publish"
+	@echo ""
+	@echo "  Seed Layer:"
+	@echo "    make venv-seed    Create isolated Python 3.11 venv for seed tests"
+	@echo "    make test-seed    Run 69 seed layer tests (no Ollama needed)"
 	@echo ""
 	@echo "  Daemon:"
 	@echo "    make start-daemon   Start Tôm Hùm autonomous daemon"
