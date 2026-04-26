@@ -70,13 +70,23 @@
 seed/                                 # Local Python CLI runtime (stdlib-only)
 ├── main.py                          # Entry: python3 seed/main.py "task"
 ├── agents/
-│   ├── base.py                      # BaseAgent protocol
+│   ├── base.py                      # BaseAgent protocol + @timed decorator
 │   ├── ceo.py                       # Planning agent (LLM task decomposition)
 │   ├── developer.py                 # Code execution agent
 │   └── tester.py                    # Verification agent
 ├── llm_client.py                    # Ollama urllib client (no SDK)
 ├── memory.py                        # ChromaDB + SQLite hybrid store
 └── config.py                        # ENV-based configuration
+
+tests/seed/                           # Unit tests (69 tests, no Ollama needed)
+├── test_seed_config.py              # Config validation
+├── test_seed_llm_client.py          # LLM client + fallback
+├── test_seed_agents_base.py         # Base agent + decorators
+├── test_seed_memory.py              # Memory hybrid store
+├── test_seed_agents_ceo.py          # CEO agent planning
+├── test_seed_agents_dev_tester.py   # Developer + Tester agents
+├── test_seed_main_pipeline.py       # Main pipeline integration
+└── conftest.py                      # pytest fixtures + mocks
 
 tools/                                # Capability tools
 ├── file_system.py                   # File operations
@@ -104,11 +114,11 @@ clipmart/
 └── marketplace_api.py               # Agent template marketplace
 
 .github/workflows/
-└── ai-native-ci.yml                 # 5-gate CI/CD pipeline
+└── ai-native-ci.yml                 # 5-gate CI/CD pipeline (Gate 5: pytest)
 
 docker-compose.seed.yml              # Container stack
-Dockerfile.seed                       # Build image
-requirements.seed.txt                # chromadb, fastapi, uvicorn, redis
+Dockerfile.seed                       # Build image (copies seed/ tools/ worker/ apps/ integrations/ clipmart/ observability/ feedback/)
+requirements.seed.txt                # chromadb, fastapi, uvicorn, redis, pytest
 ```
 
 ### Core Packages

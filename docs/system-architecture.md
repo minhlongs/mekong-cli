@@ -193,6 +193,7 @@ Minimal standalone AI agent runtime using Python stdlib (no external LLM SDKs):
 - Stdlib-only agents (CEO, Developer, Tester)
 - Memory: ChromaDB vectors + SQLite backing
 - Config via environment: `OLLAMA_BASE_URL`, `LLM_MODEL`
+- Testing: 69 unit tests in `tests/seed/` (mock LLM, no Ollama required)
 
 **Quick Start:**
 ```bash
@@ -200,23 +201,32 @@ export OLLAMA_BASE_URL=http://localhost:11434
 python3 seed/main.py "Create a Python script to fetch weather"
 ```
 
+**Testing:**
+```bash
+# Run all 69 seed tests (no Ollama needed)
+pytest tests/seed/ -v
+
+# Gated in CI/CD via Gate 5 (`.github/workflows/ai-native-ci.yml`)
+```
+
 **Files Added (Phase 01):**
 - `seed/main.py` — Orchestrator entry point
-- `seed/agents/{ceo,developer,tester,base}.py` — Agent implementations
+- `seed/agents/{ceo,developer,tester,base}.py` — Agent implementations + @timed decorator
 - `seed/llm_client.py` — Ollama urllib client
 - `seed/memory.py` — ChromaDB + SQLite hybrid
 - `seed/config.py` — Environment configuration
+- `tests/seed/` — 69 unit tests (mock LLM, no Ollama)
 - `tools/{file_system,browser}.py` — Capability tools
 - `apps/web/mission-control.html` — htmx UI (Phase 02)
 - `apps/api/{server,gateway}.py` — FastAPI single/multi-tenant
 - `worker/main.py` — Redis queue worker
 - `integrations/telegram_bot.py` — Telegram integration (Phase 02)
-- `observability/agent_metrics.py` — Metrics decorator
+- `observability/agent_metrics.py` — Metrics decorator + observability
 - `feedback/signals_loop.py` — Weekly LLM analysis
 - `clipmart/marketplace_api.py` — Agent template marketplace
-- `.github/workflows/ai-native-ci.yml` — 5-gate CI/CD
-- `docker-compose.seed.yml` + `Dockerfile.seed` — Containerization
-- `requirements.seed.txt` — Dependencies (chromadb, fastapi, uvicorn, redis)
+- `.github/workflows/ai-native-ci.yml` — 5-gate CI/CD (Gate 5 runs pytest)
+- `docker-compose.seed.yml` + `Dockerfile.seed` — Containerization (copies seed/ tools/ worker/ apps/ integrations/ clipmart/ observability/ feedback/)
+- `requirements.seed.txt` — Dependencies (chromadb, fastapi, uvicorn, redis, pytest)
 
 ## 2. Core Modules
 
