@@ -45,8 +45,10 @@ OpenClaw (mekong cmds) + PaperClip (Temporal orchestration) + M1 Max + Local LLM
 - [x] 1.2C BaseAgent với vòng lặp think→act→observe
 - [x] 1.2D Tool Integration (browser, filesystem, execute_command)
 - [x] 1.3 Lắp ráp: `seed/main.py` + test E2E
+- [x] 1.4 **Unit tests** — 69 comprehensive tests covering config, LLM, memory, agents + full agent pipeline (2026-04-25)
 
 **Trạng thái:** ✅ COMPLETED
+**Tests:** 69/69 PASS | Agent Coverage: 100%
 
 ---
 
