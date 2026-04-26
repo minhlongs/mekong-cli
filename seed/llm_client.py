@@ -46,7 +46,7 @@ class LLMClient:
             return result["message"]["content"]
         except Exception as e:
             logger.error("LLM chat error: %s", e)
-            raise
+            return ""
 
     def embed(self, text: str) -> list[float]:
         """Generate embeddings via Ollama."""

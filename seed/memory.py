@@ -44,6 +44,7 @@ class SeedMemory:
         """Store a memory entry. Returns doc_id."""
         doc_id = str(uuid.uuid4())
         metadata = metadata or {}
+        metadata.setdefault("agent_id", agent_id)
 
         # Vector store (semantic search)
         try:
@@ -81,7 +82,7 @@ class SeedMemory:
     def get_recent(self, agent_id: str, limit: int = 5) -> list[dict[str, Any]]:
         """Return most recent memories by timestamp."""
         cur = self._sql.execute(
-            "SELECT content, metadata, created_at FROM memories WHERE agent_id = ? ORDER BY created_at DESC LIMIT ?",
+            "SELECT content, metadata, created_at FROM memories WHERE agent_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?",
             (agent_id, limit),
         )
         return [
