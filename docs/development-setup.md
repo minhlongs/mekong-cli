@@ -29,7 +29,7 @@
 4. **Verify installation**:
    ```bash
    export PATH="$HOME/Library/Python/3.9/bin:$PATH"
-   mekong version  # Should show Mekong CLI v3.0.0
+   mekong version  # Should show Mekong CLI v6.0.0
    mekong list     # Shows available recipes
    ```
 
@@ -59,7 +59,7 @@ make venv
 source .venv/bin/activate
 ```
 
-Run the **full test suite** (6950+ tests) in the venv:
+Run the **full test suite** (6989+ tests) in the venv:
 
 ```bash
 make test-venv
