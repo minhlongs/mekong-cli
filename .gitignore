@@ -86,6 +86,9 @@ products/paid/*.zip
 .archive/
 *.log
 
+# Idea autopilot generated outputs
+outputs/
+
 # Media (use CDN/LFS for large assets)
 *.mp4
 *.mov
