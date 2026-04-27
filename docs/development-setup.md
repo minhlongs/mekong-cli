@@ -50,14 +50,34 @@
 
 ### Running Tests
 
-Tests for the seed layer (69 unit tests, no Ollama needed):
+#### Python 3.11 Virtual Environment (Recommended)
+
+Create an isolated Python 3.11 venv with all dependencies:
 
 ```bash
-# Recommended: using Makefile target (auto-creates isolated venv)
-make test-seed
+make venv
+source .venv/bin/activate
+```
 
-# Or manually with pytest
-pytest tests/seed/ -v --tb=short
+Run the **full test suite** (6950+ tests) in the venv:
+
+```bash
+make test-venv
+```
+
+#### Seed Layer Tests Only
+
+For quick validation without full test suite (69 unit tests, no Ollama needed):
+
+```bash
+make test-seed
+```
+
+#### Manual Testing
+
+```bash
+pytest tests/ -v --tb=short          # Full suite
+pytest tests/seed/ -v --tb=short     # Seed layer only
 ```
 
 ## Ollama Setup (Local LLM Inference)
@@ -158,6 +178,19 @@ mekong status
 ---
 
 ## Troubleshooting
+
+### Python Version & Virtual Environment
+
+If you have system Python 3.14+ that causes compatibility issues:
+
+1. **Use the isolated venv instead** (recommended):
+   ```bash
+   make venv                      # Creates Python 3.11 isolated .venv
+   source .venv/bin/activate
+   make test-venv                 # Runs full test suite in venv
+   ```
+
+2. The venv approach eliminates system Python version conflicts entirely.
 
 ### Path Issues
 

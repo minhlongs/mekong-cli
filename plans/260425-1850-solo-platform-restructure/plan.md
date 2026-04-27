@@ -137,6 +137,33 @@ OpenClaw (mekong cmds) + PaperClip (Temporal orchestration) + M1 Max + Local LLM
 
 ---
 
+## Session Log — 2026-04-26
+
+**Session 1 (PM):**
+- Committed 3 docs: DEPLOYMENT_GUIDE.md, codebase-summary.md, system-architecture.md (8762e06e4)
+- Pushed feat/python-pev-jwt-fix-c1 → CI "Factory Integrity" GREEN ✅
+- PR #178 updated with latest commits
+
+**Session 2:**
+- Added `make venv-seed` target: Python 3.11 isolated venv with chromadb+pytest
+- Added `make test-seed` target: runs 69 seed tests in isolated venv (no Ollama needed)
+- Fixed `src/core/__init__.py` submodule fallback via `__getattr__` for test mocking
+- Verified 69/69 tests PASS in clean venv (commit a5218a230)
+- Updated Makefile `clean` target to remove `.venv-seed/`
+- Docs impact: Minor (dev tooling only, no user-facing changes)
+
+**Session 3 (This session):**
+- Created .venv (Python 3.11) with full deps: structlog, cryptography, pyjwt, stripe, asyncpg, chromadb, cachetools, sentry-sdk, jinja2 — fixed 77 collection errors
+- Added Makefile targets: `make venv` (create venv), `make test-venv` (run full suite), extended `make clean`
+- Fixed `src/api/license_server.py`: guard `http_request.client` (None in TestClient) — resolved 500 errors
+- Fixed `tests/auth/test_jwt_secret_required.py`: `_clean_jwt_module()` resets `JWT_SECRET=REDACTED=None` directly, prevents stale reference
+- Added `_reset_jwt_secret_cache` autouse fixture in `tests/conftest.py` — belt-and-suspenders isolation
+- Result: 6950 passed, 0 failed, 35 skipped + 69/69 seed tests ✅
+- Commit a27a74c43 pushed to feat/python-pev-jwt-fix-c1, CI GREEN ✅, PR #178 ready
+- Docs impact: None (internal tooling only)
+
+---
+
 ## Câu hỏi Chưa giải quyết
 
 1. mekong-cli có `src/core/` với PEV Engine — liệu có thể tái sử dụng làm `seed/` không hay cần viết lại từ đầu?
