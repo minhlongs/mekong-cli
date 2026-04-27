@@ -40,7 +40,9 @@
     "postinstall": "bash scripts/setup-dev.sh --quick 2>/dev/null || true",
     "start:api": "uvicorn src.gateway:app --host 0.0.0.0 --port 8000",
     "start:landing": "npx serve apps/landing -l 3001",
-    "health": "bash scripts/health-check.sh"
+    "health": "bash scripts/health-check.sh",
+    "idea:init": "bash scripts/idea-init.sh",
+    "idea:smoke": "mekong idea run \"add a /hello command\" --max-iter 4 --dry-run -y"
   },
   "devDependencies": {
     "@types/node": "25.3.3",
@@ -49,7 +51,8 @@
     "esbuild": "0.24.2",
     "eslint": "9",
     "turbo": "^2.8.12",
-    "vitest": "4.0.18"
+    "vitest": "4.0.18",
+    "claudekit": "^0.7.0"
   },
   "engines": {
     "node": ">=18.0.0",
