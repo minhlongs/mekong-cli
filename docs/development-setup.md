@@ -59,7 +59,7 @@ make venv
 source .venv/bin/activate
 ```
 
-Run the **full test suite** (6989+ tests) in the venv:
+Run the **full test suite** (7040+ tests) in the venv:
 
 ```bash
 make test-venv

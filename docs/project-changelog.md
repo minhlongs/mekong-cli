@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (2026-04-27 - Agent Base Test Suite & Bug Fix)
+
+#### Test Suite Addition
+- **NEW FILE**: `tests/test_agent_base.py` — 51 comprehensive tests covering:
+  - AgentBase class initialization and methods
+  - Task creation, status transitions, and validation
+  - Result data handling and error cases
+  - TaskStatus enum coverage
+- **Test Count**: 6989 → 7040 tests (+51 new tests)
+- **Coverage**: Core agent base functionality fully exercised
+
+#### Bug Fix: UnboundLocalError in AgentBase
+- **File**: `src/core/agent_base.py`
+- **Issue**: `UnboundLocalError` when `max_retries=0` in retry loop
+- **Root Cause**: `result` variable uninitialized before while loop
+- **Fix**: Added default `result` initialization before loop execution
+- **Impact**: Prevents crashes on zero-retry configurations
+
 ### Changed (2026-04-05 - Revenue Router Refactor — Idempotency & Modularization, PR #31)
 
 #### Architecture & Code Quality Improvements
