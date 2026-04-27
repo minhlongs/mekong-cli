@@ -2,7 +2,7 @@
         generate-contracts validate-contracts self-test regenerate \
         start-daemon stop-daemon daemon-status start-gateway \
         pev-test pev-lint pev-build pev-publish \
-        venv-seed test-seed
+        venv-seed test-seed venv test-venv
 
 all: help
 
@@ -61,7 +61,7 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache .mypy_cache .ruff_cache build dist *.egg-info
 	rm -rf .turbo node_modules/.cache
-	rm -rf .venv-seed
+	rm -rf .venv-seed .venv
 
 # === Factory / Contracts ===
 generate-contracts:
@@ -102,6 +102,21 @@ pev-build:
 pev-publish: pev-lint pev-test pev-build
 	python3 -m twine upload dist/*
 
+# === Dev Venv (Python 3.11, all deps) ===
+venv:
+	@echo "Creating dev venv (Python 3.11, all deps)..."
+	@/opt/homebrew/bin/python3.11 -m venv .venv 2>/dev/null || python3.11 -m venv .venv
+	@.venv/bin/pip install --quiet --upgrade pip
+	@.venv/bin/pip install --quiet -e .
+	@.venv/bin/pip install --quiet pytest pytest-asyncio pytest-cov httpx
+	@.venv/bin/pip install --quiet structlog "python-jose[cryptography]" pyjwt stripe asyncpg prometheus-client opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation-fastapi psutil chromadb cachetools sentry-sdk jinja2
+	@echo "✅ .venv ready — activate: source .venv/bin/activate"
+
+test-venv:
+	@if [ ! -d .venv ]; then $(MAKE) venv; fi
+	@echo "Running full test suite in .venv (Python 3.11)..."
+	@.venv/bin/python -m pytest tests/ -v --tb=short --ignore=tests/seed/
+
 # === Seed Layer ===
 venv-seed:
 	@echo "Creating seed layer venv (Python 3.11)..."
@@ -139,6 +154,8 @@ help:
 	@echo "    make health       Check dev environment"
 	@echo ""
 	@echo "  Python CLI:"
+	@echo "    make venv         Create dev venv (Python 3.11, all deps)"
+	@echo "    make test-venv    Run full test suite in .venv"
 	@echo "    make install      Install package (editable)"
 	@echo "    make dev          Install with dev deps"
 	@echo "    make test         Run Python tests"

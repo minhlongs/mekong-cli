@@ -27,12 +27,17 @@ import pytest
 
 @contextmanager
 def _clean_jwt_module() -> Generator[None, None, None]:
-    """Re-import session_manager with a clean module-level JWT_SECRET=REDACTED=None."""
-    mod_name = "src.auth.session_manager"
-    # Remove cached module so module-level JWT_SECRET=REDACTED resets to None
-    sys.modules.pop(mod_name, None)
+    """Reset JWT_SECRET=REDACTED to None so get_jwt_secret() re-evaluates from env.
+
+    Resets the module-level cache without popping from sys.modules, which
+    would create stale references for tests that imported SessionManager at
+    module level (patch() would target a different module object).
+    """
+    import src.auth.session_manager as _sm
+    original = _sm.JWT_SECRET=REDACTED
+    _sm.JWT_SECRET=REDACTED = None
     yield
-    sys.modules.pop(mod_name, None)
+    _sm.JWT_SECRET=REDACTED = None  # Reset after test so next test starts clean
 
 
 @contextmanager
