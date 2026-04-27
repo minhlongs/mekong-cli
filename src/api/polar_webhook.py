@@ -25,6 +25,7 @@ from typing import Optional
 
 from src.config.logging_config import get_logger
 from src.lib.license_generator import LicenseKeyGenerator
+from src.lib.license_email import send_license_email
 
 router = APIRouter(prefix="/webhook/polar", tags=["Polar.sh Webhooks"])
 
@@ -146,6 +147,12 @@ def process_subscription_created(event_data: dict) -> dict:
 
     with open(licenses_path, "w") as f:
         json.dump(licenses, f, indent=2)
+
+    # Best-effort email delivery (never blocks the webhook ack)
+    try:
+        send_license_email(email, license_key, tier)
+    except Exception as exc:  # defensive — send_license_email already swallows
+        logger.warning("webhook.email_dispatch_error", error=str(exc))
 
     key_preview = f"{license_key[:20]}..."
     logger.info(

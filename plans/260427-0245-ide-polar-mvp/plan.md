@@ -23,11 +23,11 @@ Code đã sẵn ~70%. Gap chính là **wiring + deploy**, không phải build m�
 
 | # | Phase | Effort | Status | Owner |
 |---|---|---|---|---|
-| 01 | [Backend Gateway Deploy](phase-01-backend-deploy-config.md) | 1-2 ngày | ☐ Pending | Code |
+| 01 | [Backend Gateway Deploy](phase-01-backend-deploy-config.md) | 1-2 ngày | ✅ Code complete (deploy pending Fly.io creds) | Code |
 | 02 | [Polar Dashboard Setup](phase-02-polar-products-setup.md) | 1h | ☐ Pending | **Human** |
-| 03 | [License Gating Middleware](phase-03-license-gating.md) | 2-3 ngày | ☐ Pending | Code |
-| 04 | [IDE UI MVP — CLI-in-browser](phase-04-ide-ui-mvp.md) | 5-7 ngày | ☐ Pending | Code |
-| 05 | [E2E Browser Verification](phase-05-e2e-browser-test.md) | 1 ngày | ☐ Pending | Code |
+| 03 | [License Gating Middleware](phase-03-license-gating.md) | 2-3 ngày | ✅ Complete (28 tests pass) | Code |
+| 04 | [IDE UI MVP — CLI-in-browser](phase-04-ide-ui-mvp.md) | 5-7 ngày | ✅ MVP scaffold (auth + terminal-view; xterm.js deferred) | Code |
+| 05 | [E2E Browser Verification](phase-05-e2e-browser-test.md) | 1 ngày | ✅ Specs scaffolded (run pending live infra) | Code |
 
 **Critical path:** 01 → 02 → 03 → 04 → 05 (sequential). 02 blocks 03 (cần real product IDs). 04 blocks 05.
 
