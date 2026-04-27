@@ -18,7 +18,8 @@ COPY pyproject.toml ./
 # Create data directory for SQLite
 RUN mkdir -p /data
 
-# Health check
+# Health check (Python gateway is now a local-dev / fallback target;
+# production runs on Cloudflare Workers via packages/mekong-engine).
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD curl -f http://localhost:8000/healthz || exit 1
 
