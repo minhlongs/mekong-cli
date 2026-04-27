@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./globals.css": "./src/globals.css",
+    "./components/*": "./src/components/*.tsx",
     "./*": "./src/components/*.tsx"
   },
   "peerDependencies": {

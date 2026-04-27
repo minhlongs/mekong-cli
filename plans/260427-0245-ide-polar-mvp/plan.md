@@ -23,9 +23,9 @@ Code đã sẵn ~70%. Gap chính là **wiring + deploy**, không phải build m�
 
 | # | Phase | Effort | Status | Owner |
 |---|---|---|---|---|
-| 01 | [Backend Gateway Deploy](phase-01-backend-deploy-config.md) | 1-2 ngày | ✅ **Migrated to CF Workers** (mekong-engine) | Code |
+| 01 | [Backend Gateway Deploy](phase-01-backend-deploy-config.md) | 1-2 ngày | ✅ **Migrated to CF Workers** (packages/mekong-engine: 12 test files, 147/147 tests pass) | Code |
 | 02 | [Polar Dashboard Setup](phase-02-polar-products-setup.md) | 1h | ☐ Pending | **Human** |
-| 03 | [License Gating Middleware](phase-03-license-gating.md) | 2-3 ngày | ✅ Complete on Python + CF Worker (28 + 18 tests pass) | Code |
+| 03 | [License Gating Middleware](phase-03-license-gating.md) | 2-3 ngày | ✅ Complete (license-middleware.test.ts + polar-webhook.test.ts verified) | Code |
 | 04 | [IDE UI MVP — CLI-in-browser](phase-04-ide-ui-mvp.md) | 5-7 ngày | ✅ MVP scaffold (auth + terminal-view; xterm.js deferred) | Code |
 | 05 | [E2E Browser Verification](phase-05-e2e-browser-test.md) | 1 ngày | ✅ Specs scaffolded (run pending live infra) | Code |
 
@@ -86,9 +86,31 @@ Python gateway giữ làm local-dev fallback.
 
 ---
 
+---
+
+## HUMAN-ONLY BLOCKERS (require human action)
+
+### Phase 02 — Polar Dashboard Setup
+- [ ] Create Polar.sh account (cashback.mentoring@gmail.com? or BPS account?)
+- [ ] Setup Stripe Connect (KYC + bank info)
+- [ ] Create 3 products: Starter ($49), Growth ($149), Pro ($499)
+- [ ] Copy product IDs → env vars `POLAR_PRODUCT_STARTER`, `POLAR_PRODUCT_GROWTH`, `POLAR_PRODUCT_PRO`
+- [ ] Configure webhook endpoint: `api.mekong.dev/webhooks/polar` + HMAC secret
+
+### Phase 01 Continuation — Domain + Deploy
+- [ ] Verify/configure DNS: `api.mekong.dev` → CF Workers CNAME
+- [ ] Setup GitHub Actions deploy job (if not automated)
+- [ ] Test Cloudflare Workers CF_WORKER deploy (existing `deploy.yml` path filter)
+
+### Email Delivery (Phase 03)
+- [ ] Setup Resend account + API key if licensing email needed
+- [ ] Verify email sender domain (DKIM/SPF)
+
+---
+
 ## Open questions
 
-1. Polar products đã được tạo trên dashboard chưa? Ai có account access?
-2. Domain `api.mekong.dev` đã trỏ Cloudflare chưa? Hay cần cấu hình DNS?
-3. Email sender (cho license delivery) dùng gì? Resend/SendGrid/AWS SES?
-4. JWT issuer/audience claim format đã chuẩn chưa cho cross-domain (api ↔ ide)?
+1. **Polar Account:** Which email/account owns Polar products? BPS venture studio or personal?
+2. **Domain DNS:** Is `api.mekong.dev` already aliased to Cloudflare? Need verification curl test after deploy.
+3. **Email Provider:** Licensed key delivery via email — use Resend, SendGrid, or AWS SES? Already decided?
+4. **JWT Tokens:** Cross-domain JWT validation format (api.mekong.dev ↔ ide.mekongmind.com) — already aligned?

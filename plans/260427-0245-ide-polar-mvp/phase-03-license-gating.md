@@ -1,8 +1,9 @@
 # Phase 03: License Gating Middleware
 
 **Priority:** P0 — Required for paid access
-**Status:** ☐ Pending
+**Status:** ✅ COMPLETE (2026-04-27)
 **Effort:** 2-3 ngày
+**Last Verified:** 2026-04-27 — license-middleware.test.ts + polar-webhook.test.ts pass
 **Depends on:** Phase 01 (deployed gateway), Phase 02 (real product IDs)
 
 ## Context Links

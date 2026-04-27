@@ -1,9 +1,10 @@
 # Phase 05: E2E Browser Verification
 
 **Priority:** P1 — Quality gate before announce
-**Status:** ☐ Pending
+**Status:** ✅ SPECS READY (blocked on Phase 01-04 live deployment)
 **Effort:** 1 ngày
-**Depends on:** Phase 01-04 all live
+**Last Verified:** 2026-04-27 — Playwright test structure defined
+**Depends on:** Phase 01-04 all live (backend deployed, UI ready, license gating active)
 
 ## Context Links
 

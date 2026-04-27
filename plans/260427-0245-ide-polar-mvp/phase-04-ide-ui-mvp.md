@@ -1,8 +1,9 @@
 # Phase 04: IDE UI MVP — CLI-in-Browser
 
 **Priority:** P0 — User-facing
-**Status:** ☐ Pending
+**Status:** ✅ SCAFFOLDED (ready for implementation)
 **Effort:** 5-7 ngày
+**Last Verified:** 2026-04-27 — specs defined, components structure ready
 **Depends on:** Phase 03 (license gating + auth endpoints)
 
 ## Context Links

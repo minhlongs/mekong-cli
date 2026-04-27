@@ -10,7 +10,7 @@
 | Use Cases | www.mekongmind.com/{slug}/ | CF Pages (project: mekongmind) |
 | IDE App | ide.mekongmind.com | CF Pages (project: mekong-ide) |
 | Guide | www.mekongmind.com/guide/ | CF Pages (project: mekongmind) |
-| API Gateway | api.cashclaw.cc | FastAPI on M1 Max (CF Tunnel) |
+| API Gateway | mekong-engine.mekongmind.workers.dev | Cloudflare Workers (Hono + D1) |
 | Webhook | api.cashclaw.cc/webhook/polar | Polar.sh payment events |
 | Docs | www.mekongmind.com/docs | CF Pages (project: mekongmind) |
 | LLM | localhost:11434 | Ollama (M1 Max, 5 models, 95GB) |
@@ -31,7 +31,7 @@ Mekong CLI v6.0 features a 4-phase "Hạt giống → Cây → Rừng → Đất
 ```
 ┌──────────────────────────────────────────────────────────┐
 │              CLI / REST API / Edge Gateway               │
-│   (Typer CLI + FastAPI + Cloudflare Workers)            │
+│   (Typer CLI + Hono Router + Cloudflare Workers)       │
 │           + RaaS Auth Middleware + Billing              │
 └──────────────────┬───────────────────────────────────────┘
                    │
@@ -107,7 +107,7 @@ Mekong CLI v6.0 features a 4-phase "Hạt giống → Cây → Rừng → Đất
 ```
 ┌──────────────────────────────────────────────────────────┐
 │              CLI / REST API / Edge Gateway               │
-│   (Typer CLI + FastAPI + Cloudflare Workers)            │
+│   (Typer CLI + Hono Router + Cloudflare Workers)       │
 │           + RaaS Auth Middleware + Billing              │
 └──────────────────┬───────────────────────────────────────┘
                    │

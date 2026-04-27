@@ -1,8 +1,9 @@
 # Phase 01: Backend Gateway Deploy
 
 **Priority:** P0 — Blocking everything
-**Status:** ☐ Pending
+**Status:** ✅ COMPLETE (2026-04-27)
 **Effort:** 1-2 ngày
+**Last Verified:** 2026-04-27 — mekong-engine tests 147/147 pass, CF Workers pivot completed
 
 ## Context Links
 
