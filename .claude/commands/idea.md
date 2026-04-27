@@ -183,3 +183,58 @@ Add `binh_phap_state` to track chain progress:
 - Each chain execution = 1 campaign cycle toward $1M ARR
 - User can interrupt at any phase gate: "pause" stops, "continue" resumes
 - Target: $1M ARR per project within GTM 2026
+
+## PHASE 7 — AUTOPILOT HAND-OFF (NEW)
+
+After all blueprint phases finish, automatically hand control to the
+autonomous code-generation loop. This is the "không gõ lại" guarantee:
+the user typed `/idea` once; everything from blueprint through shipping
+code happens without further input.
+
+### Dispatch (auto-execute, no confirmation)
+
+```bash
+# 1. Verify blueprint files exist
+test -f .mekong/company.json || { echo "blueprint missing — abort"; exit 1; }
+
+# 2. Hand off to the autopilot. It runs Plan→Execute→Verify→Reflect using
+#    DeepSeek (or whatever LLM_BASE_URL is configured) with up to 1M
+#    context. Worktree mode is on so the main repo is never touched.
+mekong idea run "$ARGUMENTS — implement per blueprint at .mekong/company.json and tasks/" \
+  --max-iter 24 \
+  --max-tokens 800000 \
+  --max-mcu 100 \
+  --worktree \
+  --yes
+```
+
+### What the autopilot does
+1. Reads `.mekong/company.json` and the 5 mission files in `tasks/`.
+2. Indexes the repo (~10k tokens) so the 1M window stays healthy.
+3. Plans → writes code → runs typecheck → runs tests → claudekit
+   checkpoints → reflects → repeats until DONE or budget exhausted.
+4. Persists every turn to `.mekong/idea/<run-id>/audit.jsonl` so the
+   founder can replay the whole run after the fact.
+5. Drops the founder onto branch `idea/<slug>` in worktree
+   `../mekong-idea-<slug>` for review.
+
+### Stopping conditions
+- LLM emits `<tool>DONE …</tool>` → success.
+- Iteration cap (24) / token cap (800k) / MCU cap (100) → graceful stop.
+- 3 consecutive tool failures → graceful stop.
+- `Ctrl-C` → cooperative abort, state persisted, can be resumed later.
+
+### After the autopilot exits
+Tell the user EXACTLY this, no more, no less:
+
+```
+Autopilot finished. Next steps:
+  cd ../mekong-idea-<slug>             # review the worktree
+  git diff main..idea/<slug>           # full diff
+  mekong idea show <run-id>            # plan + audit tail
+  # when satisfied:
+  cd ../mekong-cli && git merge idea/<slug>
+```
+
+The user is in `idea/<slug>` worktree. Do NOT continue editing files — the
+autopilot already ran. Hand control back.
