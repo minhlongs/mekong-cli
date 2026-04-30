@@ -1,83 +1,113 @@
 # 🏯 Unified Agent Architecture
 
-> **Version**: v3.2.0 | **Date**: 2026-01-19
+> **Version**: v6.0.0 | **Date**: 2026-04-29
 > **ClaudeKit-Engineer** + **Antigravity IDE** Unified Framework
-> **Status**: PRODUCTION READY | Zero Technical Debt
+> **Status**: PRODUCTION (post-cleanup) | Layer Contract enforced
 
 ---
 
-## 📁 Directory Structure
+## 📐 Layer Contract (NEW 2026-04-29)
+
+| Layer | Path | Owns | Boundary |
+|-------|------|------|----------|
+| **Layer 1** Global ClaudeKit | `~/.claude/` | Universal primitives: 16 agents, ~57 universal skills, 14 commands, Binh Pháp + Manus L1-L7 rules | NO mekong-specific code |
+| **Layer 2** Project Mekong | `~/mekong-cli/.claude/` | Domain extension: 6 mekong-only agents, ~501 domain skills, 338+ domain commands, factory contracts, clipmart | NO duplicate Layer-1 primitives |
+| **Layer 3** Antigravity (Gemini) | `~/mekong-cli/.agent/` | 106 task-based subagents + 40 workflows for Gemini IDE | Parallel ecosystem, separate concern |
+
+**Forbidden:** Layer 2 MUST NOT redefine Layer 1 primitives. Pre-commit guard enforces.
+
+---
+
+## 📁 Directory Structure (post-cleanup)
 
 ```
 mekong-cli/
-├── .claude/                    # ClaudeKit-Engineer (for Claude Code)
-│   ├── agents/                 # 22 persona-based agents
-│   ├── commands/               # 24 slash commands
-│   ├── hooks/                  # Session & privacy hooks
-│   ├── skills/                 # 39+ deep skill modules
-│   └── settings.json           # Claude-specific config
+├── .claude/                    # Layer 2 — ClaudeKit-Engineer (Project)
+│   ├── agents/         (6)     # Layer-2 only: agentic-overlord, content-agent, docs-writer-agent, file-scout-agent, git-ops-agent, shell-runner-agent
+│   ├── commands/      (338)    # Mekong domain commands (Studio/Founder/Business/Product/Engineering/Ops)
+│   ├── skills/        (501)    # Domain skills (post-dedup of 56 IDENTICAL with global)
+│   ├── hooks/                  # Project hooks (statusline, antigravity)
+│   ├── rules/                  # Project rules (m3-strict, cc-cli-input-rules, ...)
+│   └── settings.json
 │
-├── .agent/                     # Antigravity IDE (for Gemini)
-│   ├── subagents/              # 106 task-based subagents
-│   │   ├── core/               # WIN3, orchestration (5)
-│   │   ├── hubs/               # Department hubs (18)
-│   │   ├── ops/                # Operations agents (34)
-│   │   └── mekongAgent/        # Community imports (42)
-│   ├── workflows/              # 40 agentic workflows
-│   ├── skills/                 # Quick skills (6 categories)
-│   └── crews/                  # Multi-agent crews
+├── .agent/                     # Layer 3 — Antigravity IDE (Gemini)
+│   ├── subagents/    (106)
+│   ├── workflows/     (40)
+│   └── crews/
 │
-├── products/                   # 📦 Product Catalog
-│   ├── vscode-starter-pack/    # $0 (Lead Magnet)
-│   ├── ai-skills-pack/         # $27
-│   ├── vietnamese-agency-kit/  # $67
-│   ├── agencyos-pro/           # $197
-│   └── agencyos-enterprise/    # $497
-│
-└── GEMINI.md                   # Shared memory (both read)
+├── packages/                   # Public SDK (PUBLIC repo boundary OK)
+├── factory/contracts/          # 567 JSON machine contracts
+├── clipmart/                   # Paperclip Agent Companies marketplace
+├── apps/                       # PRIVATE — DO NOT commit (algo-trader, sophia, well, ...)
+├── mekong/daemon/              # PRIVATE — internal CTO brain
+└── GEMINI.md                   # Cross-tool shared memory (Layers 1-3)
 ```
 
 ---
 
-## 📦 Product Catalog
+## 📊 Statistics (live counts post-cleanup 2026-04-29 21:11)
 
-| Tier       | Product             | Price |
-| ---------- | ------------------- | ----- |
-| FREE       | VSCode Pack         | $0    |
-| Basic      | AI Skills, Auth     | $27   |
-| Pro        | AgencyOS Pro        | $197  |
-| Enterprise | AgencyOS Enterprise | $497  |
+| Metric | Layer 1 (Global) | Layer 2 (Mekong) | Layer 3 (Gemini) | Total Distinct |
+|--------|------------------|-------------------|-------------------|---------------|
+| Agents | 16 | 6 | 106 | **128** |
+| Skills | 151 | 501 | 6 categories | **652+ distinct** |
+| Commands | 18 | 338 | n/a | **356** |
+| Workflows | n/a | n/a | 40 | **40** |
+| Rules (Binh Pháp + Manus L1-L7) | shared | inherited | inherited | **18 files** |
 
-**Total Catalog Value:** $916+
+**Cleanup audit (260429-2108):** Removed 56 IDENTICAL skill copies from Layer 2 (auto-fall-through to Layer 1). 6 DIVERGENT skills + 32 incomplete (missing SKILL.md) kept for manual review.
 
 ---
 
 ## 🔗 Synced Components
 
-| Component       | Claude                                   | Gemini                                   | Status    |
-| --------------- | ---------------------------------------- | ---------------------------------------- | --------- |
-| **Binh Pháp**   | `.claude/agents/binh-phap-strategist.md` | `.agent/subagents/hubs/binh-phap-hub.md` | ✅ SYNCED |
-| **WIN-WIN-WIN** | `GEMINI.md`                              | `GEMINI.md`                              | ✅ SHARED |
-| **Data Diet**   | `GEMINI.md`                              | `GEMINI.md`                              | ✅ SHARED |
+| Component | Layer 1 | Layer 2 | Layer 3 | Status |
+|-----------|---------|---------|---------|--------|
+| **Binh Pháp** | `~/.claude/rules/binh-phap-*.md` | `.claude/agents/binh-phap-strategist.md` | `.agent/subagents/hubs/binh-phap-hub.md` | ✅ SYNCED |
+| **Memory** | `~/.claude/memory/` | `agent-memory/` | `GEMINI.md` | ✅ SHARED |
+| **Subagent dispatch** | global agents auto-discovered | mekong agents extend | Gemini parallel | ✅ |
 
 ---
 
-## 📊 Statistics
+## 🎯 Mekong-First Policy
 
-| Metric    | Claude | Gemini       | Total |
-| --------- | ------ | ------------ | ----- |
-| Agents    | 22     | 106          | 128   |
-| Skills    | 39     | 6 categories | 45+   |
-| Workflows | 24     | 40           | 64    |
-| Products  | —      | —            | 15    |
+User Assertion #1: All slash commands dispatch to mekong CLI engine.
+
+When CWD = `~/mekong-cli`, CC CLI discovers `.claude/commands/` (338 cmds) + falls through to `~/.claude/commands/` (18 cmds, only those NOT shadowed). Total runtime surface: 356.
+
+When CWD = elsewhere, only global 18 commands available. Hence `mekong` wrapper always launches from `~/mekong-cli` root.
+
+---
+
+## 📦 Product Catalog
+
+| Tier | Product | Price |
+|------|---------|-------|
+| FREE | VSCode Pack | $0 |
+| Basic | AI Skills, Auth | $27 |
+| Pro | AgencyOS Pro | $197 |
+| Enterprise | AgencyOS Enterprise | $497 |
+
+**Total Catalog Value:** $916+
+
+---
+
+## 🛡️ CI Guard (Phase G — Pending)
+
+To prevent future drift:
+- `.husky/pre-commit` runs `scripts/audit-architecture.sh`
+- Fails if Layer 1 primitive modified inside Layer 2
+- Fails if counts in this doc lệch >0 vs filesystem reality
+
+Status: NOT yet implemented.
 
 ---
 
 ## 🏯 Core Wisdom
 
 > **"Bất chiến nhi khuất nhân chi binh"**
-> Win without fighting - the highest form of victory.
+> Win without fighting — the highest form of victory.
 
 ---
 
-_Unified Architecture by AgencyOS | v3.2.0 | January 19, 2026_
+_Unified Architecture by AgencyOS | v6.0.0 | 2026-04-29 (post-claudekit-layer-cleanup)_
