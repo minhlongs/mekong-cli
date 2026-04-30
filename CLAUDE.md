@@ -133,6 +133,46 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 
 ---
 
+## CLAUDEKIT BRIDGE — Mekong-First Policy
+
+**User assertion #1:** All slash commands MUST dispatch to mekong CLI engine.
+
+When running via `mekong` (cwd=`~/mekong-cli`), CC CLI discovers `.claude/commands/` here (396+ cmds).
+When running bare `claude` from `~`, it only sees `~/.claude/commands/` (18 claudekit-only cmds).
+
+**Policy:** For best results, always use `mekong` not bare `claude`.
+
+### Claudekit → Mekong Command Map
+
+| Claudekit (`~/.claude`) | Mekong (`mekong-cli/.claude`) | Status |
+|------------------------|-------------------------------|--------|
+| `/binh-phap` | `/ck-binh-phap` | Identical — use mekong version |
+| `/remember` | `/ck-remember` | Identical — use mekong version |
+| `/save` | `/ck-save` | Identical — use mekong version |
+| `/techdebt` | `/ck-techdebt` | Identical — use mekong version |
+| `/marketing` | `/ck-marketing` | Identical — use mekong version |
+| `/marketing-ads` | `/ck-marketing-ads` | Identical — use mekong version |
+| `/marketing-copy` | `/ck-marketing-copy` | Identical — use mekong version |
+| `/marketing-cro` | `/ck-marketing-cro` | Identical — use mekong version |
+| `/marketing-growth` | `/ck-marketing-growth` | Identical — use mekong version |
+| `/marketing-local` | `/ck-marketing-local` | Identical — use mekong version |
+| `/marketing-seo` | `/ck-marketing-seo` | Identical — use mekong version |
+| `/idea` (simple 4-step) | `/idea` (25-step BizPlan OS) | Mekong wins — more complete |
+| `/raas-flow` | `/ck-raas-flow` | Ported (2026-04-16) |
+| `/vercel-debug` | `/vercel-debug` | Ported (2026-04-16) |
+| `/claude-mem` | `/ck-claude-mem` | Ported (2026-04-16) |
+| `/cc-cli-input-rules` | `.claude/rules/cc-cli-input-rules.md` | Rule (not command) |
+| `trading/*` | `trading/*` | Ported (2026-04-16) — 42 files |
+
+### New Commands Added (2026-04-16)
+
+- `/ck-raas-flow` — RAAS pipeline status dashboard across all plans/
+- `/vercel-debug` — Vercel CI/CD debug + verification loop
+- `/ck-claude-mem` — Memory management via claude-mem MCP
+- `trading/` — 42 trading-context C-suite + analyst persona commands
+
+---
+
 ## QUALITY RULES
 
 | Rule | Standard |

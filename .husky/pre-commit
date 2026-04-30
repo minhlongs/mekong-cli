@@ -53,4 +53,13 @@ if [ -f "backend/tests/unit/test_payment_service.py" ]; then
     fi
 fi
 
+# ClaudeKit Layer Contract guard (added 2026-04-29)
+if [ -x scripts/audit-architecture.sh ]; then
+    echo "   → Layer contract audit..."
+    if ! bash scripts/audit-architecture.sh > /dev/null 2>&1; then
+        echo "⚠️  Layer contract drift detected. Run: bash scripts/audit-architecture.sh"
+        # Warning only — non-blocking. Make blocking by replacing with: exit 1
+    fi
+fi
+
 echo "✅ Pre-commit passed"

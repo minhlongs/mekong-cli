@@ -659,7 +659,8 @@ plans/
 tasks/
 
 # Fourth pass — internal tooling
-scripts/
+scripts/*
+!scripts/audit-architecture.sh
 supabase/
 # .claude/ narrowed in second-rule above — only sdlc commands tracked
 .geminiignore
