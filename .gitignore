@@ -166,26 +166,58 @@ plans/reports/
 plans/260302-*/
 insights/
 
-# ClaudeKit DNA (private skill configs) — .claude/ is private; only explicit allowlist tracked
+# Claude Code project layout — follow the official standard (docs.claude.com).
+# Track agents/, commands/, skills/, hooks/, settings.json, output-styles/,
+# statusline, and any project-CLAUDE.md. Ignore per-developer + runtime state.
 .claude/*
+# Standard Claude Code primitives — all PUBLIC and tracked
+!.claude/agents/
+!.claude/agents/**
 !.claude/commands/
-# .claude/commands/ is PUBLIC per CLAUDE.md — all .md command definitions are committable
-# Un-ignore first, then re-ignore private/local drafts (git applies last matching pattern)
 !.claude/commands/**
+!.claude/skills/
+!.claude/skills/**
+!.claude/hooks/
+!.claude/hooks/**
+!.claude/output-styles/
+!.claude/output-styles/**
+!.claude/rules/
+!.claude/rules/**
+!.claude/schemas/
+!.claude/schemas/**
+!.claude/settings.json
+!.claude/statusline.sh
+!.claude/statusline.cjs
+!.claude/statusline.ps1
+!.claude/CLAUDE.md
+# Per-developer + runtime state — never tracked
+.claude/settings.local.json
+.claude/active-plan
+.claude/agent-memory/
+.claude/agent-memory/**
+.claude/command-archive/
+.claude/command-archive/**
+.claude/worktrees/
+.claude/worktrees/**
+.claude/scripts/
+.claude/scripts/**
+.claude/hooks/.logs/
+.claude/hooks/.logs/**
+.claude/hooks/__tests__/
+.claude/hooks/__tests__/**
+.claude/hooks/tests/
+.claude/hooks/tests/**
+# Drafts + local overrides
 .claude/commands/private/
 .claude/commands/private/**
 .claude/commands/*.local.md
-!.claude/agents/
-.claude/agents/*
-!.claude/agents/git-ops-agent.md
-!.claude/agents/file-scout-agent.md
-!.claude/agents/shell-runner-agent.md
-!.claude/agents/docs-writer-agent.md
-!.claude/hooks/
-.claude/hooks/*
-!.claude/hooks/pre-tool-use-guard.cjs
-!.claude/hooks/stop-checkpoint.cjs
-!.claude/settings.json
+# Secrets — defense in depth (in case any skill ships an .env)
+.claude/**/.env
+.claude/**/.env.*
+!.claude/**/.env.example
+.claude/**/secrets/
+.claude/**/*.key
+.claude/**/*.pem
 _bmad/
 claudekit-engineer-dna/
 
