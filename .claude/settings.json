@@ -40,6 +40,28 @@
   },
   "enableAllProjectMcpServers": true,
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-init.cjs",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/dev-rules-reminder.cjs",
+            "timeout": 1500
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -48,6 +70,29 @@
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-use-guard.cjs",
             "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-simplify-reminder.cjs",
+            "timeout": 1500
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cook-after-plan-reminder.cjs",
+            "timeout": 1500
           }
         ]
       }
