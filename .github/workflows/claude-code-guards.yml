@@ -50,3 +50,6 @@ jobs:
 
       - name: Command frontmatter guard (full tree)
         run: bash .ci/check-command-frontmatter.sh
+
+      - name: Agent frontmatter guard (full tree)
+        run: bash .ci/check-agent-frontmatter.sh
