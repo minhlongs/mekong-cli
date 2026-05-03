@@ -14,6 +14,16 @@ if [ -x .ci/check-no-duplicate-claudekit.sh ]; then
     }
 fi
 
+# Skill frontmatter guard — every SKILL.md under .claude/skills/ MUST declare
+# `name:` and `description:`, otherwise Claude Code silently skips the skill.
+if [ -x .ci/check-skill-frontmatter.sh ]; then
+    echo "   → Skill frontmatter guard..."
+    bash .ci/check-skill-frontmatter.sh --staged-only || {
+        echo "❌ One or more staged SKILL.md files lack required frontmatter."
+        exit 1
+    }
+fi
+
 # Python lint (if ruff available) — only staged .py files
 if command -v ruff &> /dev/null; then
     STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- "*.py" 2>/dev/null)
