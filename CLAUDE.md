@@ -247,6 +247,56 @@ Deploy: CF Pages (frontend via `git push`) + CF Workers (backend via `wrangler d
 
 ---
 
+## SUBAGENT DELEGATION (Claude Code standard)
+
+Standard pattern — every long task delegates specialised work via `Task`:
+
+| Phase | Subagent | Source | When |
+|-------|----------|--------|------|
+| Scout | `Explore` | global | Discover relevant files / multi-step search |
+| Research | `researcher` | global | External tech / docs research |
+| Plan | `planner` | global | Multi-phase implementation plan |
+| Implement | `fullstack-developer` | global | Code changes per phase |
+| Test | `tester`, `debugger` | global | **MUST** spawn before ship |
+| Review | `code-reviewer` | global | **MUST** spawn before merge |
+| Finalize | `project-manager`, `docs-manager`, `git-manager` | global | **MUST** spawn all 3 |
+
+All 14 stock subagents resolve from `~/.claude/agents/` per the Option B
+layering (architecture-mapping.md). Mekong-domain agents live in
+`.claude/agents/` (only override-with-purpose, see `why-override:` headers).
+
+**Why this matters (Boris Cherny tip #8):** keep the main session context
+clean by handing off context-heavy work (full test runs, deep research,
+big diff reviews) to subagents that have their own 200K token budget.
+The lead session orchestrates, the subagents execute.
+
+Reference: <https://docs.claude.com/en/docs/claude-code/sub-agents>
+
+---
+
+## CLAUDE CODE STANDARD COMPLIANCE
+
+`.claude/` follows the official project layout (verified 2026-05-03):
+
+- `.claude/agents/`        — 6 mekong-domain agents (14 stock pulled from `~/.claude/`)
+- `.claude/commands/`      — ~399 domain commands (3 with `why-override:`)
+- `.claude/skills/`        — 195 skills, 100% compliant frontmatter (post-backfill)
+- `.claude/hooks/`         — pre-tool-use guard, stop-checkpoint, etc.
+- `.claude/output-styles/` — 6 coding-level personas (eli5 → god)
+- `.claude/settings.json`  — `permissions.deny/ask` + `enableAllProjectMcpServers`
+- `.claude/statusline.sh`  — custom statusline (Boris Cherny tip #7)
+- `.ci/check-no-duplicate-claudekit.sh` — pre-commit guard against re-introduced dups
+
+Mapping report:
+`~/projects/sophia-ai-factory/plans/260503-0443-claudekit-mekong-architecture-mapping/`
+
+References:
+- <https://docs.claude.com/en/docs/claude-code/skills>
+- <https://docs.claude.com/en/docs/claude-code/settings>
+- <https://docs.claude.com/en/docs/claude-code/memory>
+
+---
+
 ## SESSION BOOTSTRAP
 
 Every session:
