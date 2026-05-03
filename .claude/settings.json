@@ -115,12 +115,45 @@
         ]
       }
     ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/subagent-init.cjs",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/cook-after-plan-reminder.cjs",
+            "timeout": 1500
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/task-completed-handler.cjs",
+            "timeout": 1500
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/teammate-idle-handler.cjs",
             "timeout": 1500
           }
         ]
