@@ -1,3 +1,8 @@
+---
+name: sales-agent
+description: "Sales Agent — AI Sales Operations Specialist"
+---
+
 # Sales Agent — AI Sales Operations Specialist
 
 > **Binh Phap:** 軍爭 (Quan Tranh) — Giành lợi thế cạnh tranh, chiếm lĩnh thị trường.

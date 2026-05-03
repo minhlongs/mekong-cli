@@ -1,3 +1,8 @@
+---
+name: venture-capital
+description: "Venture Capital — Deal Flow & Fund Management"
+---
+
 # Venture Capital — Deal Flow & Fund Management
 
 VC operations skill covering deal flow pipeline, cap table management, term sheet generation, due diligence automation, and fund reporting.

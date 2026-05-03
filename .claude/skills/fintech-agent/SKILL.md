@@ -1,3 +1,8 @@
+---
+name: fintech-agent
+description: "Fintech Agent — AI Financial Technology Specialist"
+---
+
 # Fintech Agent — AI Financial Technology Specialist
 
 > **Binh Pháp:** 軍爭 (Quân Tranh) — Cạnh tranh bằng tốc độ giao dịch và độ chính xác dữ liệu.

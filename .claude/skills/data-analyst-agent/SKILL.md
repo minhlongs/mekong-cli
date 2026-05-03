@@ -1,3 +1,8 @@
+---
+name: data-analyst-agent
+description: "Data Analyst Agent — AI Data & Analytics Specialist"
+---
+
 # Data Analyst Agent — AI Data & Analytics Specialist
 
 > **Binh Phap:** 用間 (Dung Gian) — Tri thuc tu du lieu la suc manh tinh bao toi thuong.

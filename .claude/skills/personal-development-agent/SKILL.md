@@ -1,3 +1,8 @@
+---
+name: personal-development-agent
+description: "Personal Development Agent — Phát Triển Cá Nhân"
+---
+
 # Personal Development Agent — Phát Triển Cá Nhân
 
 > **Binh Pháp:** 謀攻 (Mưu Công) — Thượng binh phạt mưu — Thắng bằng trí tuệ, không bằng sức.

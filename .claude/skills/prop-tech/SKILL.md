@@ -1,3 +1,8 @@
+---
+name: prop-tech
+description: "PropTech — Property Management & Real Estate SaaS"
+---
+
 # PropTech — Property Management & Real Estate SaaS
 
 Software for landlords, property managers, REITs, and tenant platforms.

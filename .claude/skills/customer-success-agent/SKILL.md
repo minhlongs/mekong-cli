@@ -1,3 +1,8 @@
+---
+name: customer-success-agent
+description: "Customer Success Agent — Thành Công Khách Hàng"
+---
+
 # Customer Success Agent — Thành Công Khách Hàng
 
 > **Binh Pháp:** 軍形 (Quân Hình) — Phòng thủ vững chắc, giữ chân khách hàng bền vững.

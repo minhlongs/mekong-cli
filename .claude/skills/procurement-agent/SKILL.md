@@ -1,3 +1,8 @@
+---
+name: procurement-agent
+description: "Procurement Agent — AI Procurement & Vendor Management Specialist"
+---
+
 # Procurement Agent — AI Procurement & Vendor Management Specialist
 
 > **Binh Phap:** 作戰 (Tac Chien) — Quan ly tai nguyen, toi uu chi phi, dam bao cung ung.

@@ -1,3 +1,8 @@
+---
+name: manufacturing-iiot-agent
+description: "Manufacturing IIoT Agent — AI Industrial IoT & Smart Factory Specialist"
+---
+
 # Manufacturing IIoT Agent — AI Industrial IoT & Smart Factory Specialist
 
 > **Binh Pháp:** 九變 (Cửu Biến) — Linh hoạt thích ứng với mọi biến đổi trong sản xuất.

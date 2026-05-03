@@ -1,3 +1,8 @@
+---
+name: hospitality-agent
+description: "Hospitality Agent — AI Hospitality & Tourism Operations Specialist"
+---
+
 # Hospitality Agent — AI Hospitality & Tourism Operations Specialist
 
 > **Binh Phap:** 兵勢 (Binh The) — Tao the luc tu phong trao, bien trai nghiem khach thanh dong luc tang truong.

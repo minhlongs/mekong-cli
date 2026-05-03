@@ -1,3 +1,8 @@
+---
+name: stealth-engine-agent
+description: "Stealth Engine Agent — Covert Operations & Background Processing"
+---
+
 # Stealth Engine Agent — Covert Operations & Background Processing
 
 > **Binh Pháp:** 用間 (Dụng Gián) — Tình báo là sức mạnh tối thượng, hoạt động thầm lặng mà hiệu quả.

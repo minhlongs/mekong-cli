@@ -1,3 +1,8 @@
+---
+name: cybersecurity-ops-agent
+description: "Cybersecurity Ops Agent — AI Security Operations Specialist"
+---
+
 # Cybersecurity Ops Agent — AI Security Operations Specialist
 
 > **Binh Pháp:** 軍形 (Quân Hình) — Phòng thủ vững chắc, bảo vệ hệ thống trước mọi mối đe dọa.

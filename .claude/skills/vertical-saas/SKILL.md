@@ -1,3 +1,8 @@
+---
+name: vertical-saas
+description: "Vertical SaaS Builder — Skill"
+---
+
 # Vertical SaaS Builder — Skill
 
 > Design and build industry-specific SaaS products with domain data models, workflow automation, compliance engines, and vertical marketplace patterns.

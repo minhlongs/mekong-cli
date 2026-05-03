@@ -1,3 +1,8 @@
+---
+name: construction-agent
+description: "Construction Agent — AI Construction Management Specialist"
+---
+
 # Construction Agent — AI Construction Management Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Trien khai luc luong co bai ban, xay dung vi the bat bai truoc khi tan cong.

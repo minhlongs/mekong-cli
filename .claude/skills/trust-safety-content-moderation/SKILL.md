@@ -1,3 +1,8 @@
+---
+name: trust-safety-content-moderation
+description: "Trust & Safety — AI Content Moderation"
+---
+
 # Trust & Safety — AI Content Moderation
 
 Build content moderation, fraud detection, and platform safety systems. $12B market by 2027, 15% CAGR.

@@ -1,3 +1,8 @@
+---
+name: hr-agent
+description: "HR Agent — AI Human Resources Specialist"
+---
+
 # HR Agent — AI Human Resources Specialist
 
 > **Binh Phap:** 用間 (Dung Gian) — Hieu nguoi, dung nguoi, giu nguoi — tri nhan la suc manh.

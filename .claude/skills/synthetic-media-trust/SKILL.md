@@ -1,3 +1,8 @@
+---
+name: synthetic-media-trust
+description: "Synthetic Media & AI Trust Verification"
+---
+
 # Synthetic Media & AI Trust Verification
 
 Deepfake detection, C2PA content provenance, AI content labeling, identity verification for KYC.

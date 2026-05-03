@@ -1,3 +1,8 @@
+---
+name: administrative-agent
+description: "Administrative Agent — Hành Chính Tổng Hợp"
+---
+
 # Administrative Agent — Hành Chính Tổng Hợp
 
 > **Binh Pháp:** 始計 (Khởi Đầu) — Nền tảng vận hành trơn tru cho toàn tổ chức.

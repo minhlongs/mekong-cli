@@ -1,3 +1,8 @@
+---
+name: video-saas-agent
+description: "Video SaaS Agent — AI Video Production Platform"
+---
+
 # Video SaaS Agent — AI Video Production Platform
 
 > **Binh Pháp:** 兵勢 (Binh Thế) — Tạo thế lực từ nội dung video, biến sáng tạo thành doanh thu.

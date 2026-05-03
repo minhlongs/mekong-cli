@@ -1,3 +1,8 @@
+---
+name: telecom-iot-agent
+description: "Telecom IoT Agent — AI Telecommunications & IoT Specialist"
+---
+
 # Telecom IoT Agent — AI Telecommunications & IoT Specialist
 
 > **Binh Pháp:** 用間 (Dụng Gián) — Mạng lưới thông tin là sức mạnh tình báo tối thượng.

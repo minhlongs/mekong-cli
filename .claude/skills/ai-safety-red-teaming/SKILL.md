@@ -1,3 +1,8 @@
+---
+name: ai-safety-red-teaming
+description: "AI Safety & Red — Teaming Agent"
+---
+
 # AI Safety & Red-Teaming Agent
 
 > **Binh Phap:** 用間 (Dung Gian) — Dung tinh bao de phat hien lo hong truoc khi ke thu lam.

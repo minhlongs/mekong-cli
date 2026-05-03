@@ -1,3 +1,8 @@
+---
+name: sustainability-esg-agent
+description: "Sustainability ESG Agent — AI Environmental & Social Governance Specialist"
+---
+
 # Sustainability ESG Agent — AI Environmental & Social Governance Specialist
 
 > **Binh Pháp:** 地形 (Địa Hình) — Hiểu rõ địa hình môi trường, bảo vệ tài nguyên bền vững.

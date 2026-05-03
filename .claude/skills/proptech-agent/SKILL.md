@@ -1,3 +1,8 @@
+---
+name: proptech-agent
+description: "PropTech Agent — AI Property Technology Specialist"
+---
+
 # PropTech Agent — AI Property Technology Specialist
 
 > **Binh Pháp:** 始計 (Thỉ Kế) — Tính toán kỹ trước khi đầu tư, dữ liệu là nền tảng quyết định.

@@ -1,3 +1,8 @@
+---
+name: regtech-compliance
+description: "RegTech & Compliance Automation Agent"
+---
+
 # RegTech & Compliance Automation Agent
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Phong thu phap ly, dam bao tuan thu moi quy dinh.

@@ -1,3 +1,8 @@
+---
+name: entrepreneur-agent
+description: "Entrepreneur Agent — AI Startup & Business Builder Specialist"
+---
+
 # Entrepreneur Agent — AI Startup & Business Builder Specialist
 
 > **Binh Phap:** 始計 (Shi Ji) — Tinh toan truoc, chuan bi ky, thang truoc khi danh.

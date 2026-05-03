@@ -1,3 +1,8 @@
+---
+name: operations-agent
+description: "Operations Agent — AI Business Operations Specialist"
+---
+
 # Operations Agent — AI Business Operations Specialist
 
 > **Binh Phap:** 九變 (Cuu Bien) — Linh hoat ung bien, toi uu van hanh moi tinh huong.

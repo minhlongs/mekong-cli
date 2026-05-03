@@ -1,3 +1,8 @@
+---
+name: workforce-management
+description: "Workforce Management & Scheduling — Skill"
+---
+
 # Workforce Management & Scheduling — Skill
 
 > Cloud-based shift scheduling, demand-driven labor forecasting, and predictive scheduling compliance for 2026 hybrid/gig workforces.

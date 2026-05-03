@@ -1,3 +1,8 @@
+---
+name: grant-writing
+description: "Grant Writing — Proposal Automation & Compliance"
+---
+
 # Grant Writing — Proposal Automation & Compliance
 
 Automates grant proposal creation, tracks compliance requirements, manages budgets, and generates reporting templates for government, foundation, and corporate grants.

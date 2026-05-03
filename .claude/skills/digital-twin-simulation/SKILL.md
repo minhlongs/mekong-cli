@@ -1,3 +1,8 @@
+---
+name: digital-twin-simulation
+description: "Digital Twin Simulation — Real — Time Virtual Replicas"
+---
+
 # Digital Twin Simulation — Real-Time Virtual Replicas
 
 Build digital twins of physical systems for simulation, monitoring, and optimization. $110B market by 2028, 35% CAGR.

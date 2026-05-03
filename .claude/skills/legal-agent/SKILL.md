@@ -1,3 +1,8 @@
+---
+name: legal-agent
+description: "Legal Agent — AI Legal Operations Specialist"
+---
+
 # Legal Agent — AI Legal Operations Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Phong thu kien co, phap ly la thanh tri bao ve doanh nghiep.

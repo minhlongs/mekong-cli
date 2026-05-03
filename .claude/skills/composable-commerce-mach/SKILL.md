@@ -1,3 +1,8 @@
+---
+name: composable-commerce-mach
+description: "Composable Commerce (MACH) — Modular E — Commerce Architecture"
+---
+
 # Composable Commerce (MACH) — Modular E-Commerce Architecture
 
 Build headless, API-first commerce platforms using MACH principles. $7.8B market by 2027, 18% CAGR.

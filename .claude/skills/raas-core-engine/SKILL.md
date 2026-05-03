@@ -1,3 +1,8 @@
+---
+name: raas-core-engine
+description: "RaaS Core Engine SDK"
+---
+
 # RaaS Core Engine SDK
 
 Recipe-as-a-Service core engine — recipe parser, supervisor loop, agent orchestration.

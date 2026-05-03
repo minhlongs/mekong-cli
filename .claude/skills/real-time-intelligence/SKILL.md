@@ -1,3 +1,8 @@
+---
+name: real-time-intelligence
+description: "Real — Time Intelligence — Market Data & Competitive Intelligence"
+---
+
 # Real-Time Intelligence — Market Data & Competitive Intelligence
 
 Aggregates market data streams, runs sentiment analysis, fires real-time alerts, and builds competitive intelligence dashboards for strategic decision-making.

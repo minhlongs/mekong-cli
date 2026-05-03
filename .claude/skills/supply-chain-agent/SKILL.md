@@ -1,3 +1,8 @@
+---
+name: supply-chain-agent
+description: "Supply Chain & Logistics Agent — AI Supply Chain Operations Specialist"
+---
+
 # Supply Chain & Logistics Agent — AI Supply Chain Operations Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Biet minh biet ta, toi uu nguon luc, bao dam hau can khong dut.

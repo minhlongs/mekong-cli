@@ -1,3 +1,8 @@
+---
+name: agriculture-agent
+description: "Agriculture Agent — AI Nong Nghiep Operations Specialist"
+---
+
 # Agriculture Agent — AI Nong Nghiep Operations Specialist
 
 > **Binh Phap:** 地形 (Di Hinh) — Nam ro dia hinh, thich nghi voi moi truong, toi uu nguon luc dat dai.

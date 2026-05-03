@@ -1,3 +1,8 @@
+---
+name: autonomous-supply-chain-ai
+description: "Autonomous Supply Chain AI — Demand Forecasting & Optimization"
+---
+
 # Autonomous Supply Chain AI — Demand Forecasting & Optimization
 
 AI-driven supply chain planning, demand forecasting, and autonomous fulfillment. $19B market by 2027, 22% CAGR.

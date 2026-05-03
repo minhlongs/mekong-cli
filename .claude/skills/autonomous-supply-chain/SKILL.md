@@ -1,3 +1,8 @@
+---
+name: autonomous-supply-chain
+description: "Autonomous Supply Chain — AI — Driven Optimization"
+---
+
 # Autonomous Supply Chain — AI-Driven Optimization
 
 AI-powered supply chain skill covering demand forecasting, inventory optimization, supplier scoring, logistics routing, and autonomous reorder workflows.

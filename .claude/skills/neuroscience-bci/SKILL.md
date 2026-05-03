@@ -1,3 +1,8 @@
+---
+name: neuroscience-bci
+description: "Neuroscience BCI — Skill"
+---
+
 # Neuroscience BCI — Skill
 
 > Build brain-computer interface systems: EEG pipelines, neurofeedback apps, and cognitive tracking platforms.

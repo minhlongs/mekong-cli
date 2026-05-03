@@ -1,3 +1,8 @@
+---
+name: edge-ai-tinyml
+description: "Edge AI & TinyML Agent"
+---
+
 # Edge AI & TinyML Agent
 
 > **Binh Phap:** 地形 (Dia Hinh) — Hieu dia hinh thiet bi, toi uu model cho moi neo.

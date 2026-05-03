@@ -1,3 +1,8 @@
+---
+name: vibe-ecosystem-sdk
+description: "VIBE Ecosystem SDK"
+---
+
 # VIBE Ecosystem SDK
 
 8 Planets architecture reference cho AgencyOS VIBE unified package.

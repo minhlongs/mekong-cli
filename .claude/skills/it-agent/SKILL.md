@@ -1,3 +1,8 @@
+---
+name: it-agent
+description: "IT Agent — AI Information Technology Specialist"
+---
+
 # IT Agent — AI Information Technology Specialist
 
 > **Binh Phap:** 九地 (Cuu Dia) — Kiem soat ha tang, bao ve lanh tho so.

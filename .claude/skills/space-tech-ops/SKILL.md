@@ -1,3 +1,8 @@
+---
+name: space-tech-ops
+description: "Space Economy & Satellite Operations"
+---
+
 # Space Economy & Satellite Operations
 
 Satellite constellation management, orbital data pipelines, launch coordination, space-as-a-service.

@@ -1,3 +1,8 @@
+---
+name: embedded-finance-baas
+description: "Embedded Finance (BaaS) — Banking — as — a — Service Integration"
+---
+
 # Embedded Finance (BaaS) — Banking-as-a-Service Integration
 
 Embed financial services (payments, lending, insurance, accounts) directly into non-financial apps. $92B market by 2026, 25% CAGR.

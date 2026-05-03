@@ -1,3 +1,8 @@
+---
+name: defense-govtech-ai
+description: "Defense Tech & GovTech AI Agent"
+---
+
 # Defense Tech & GovTech AI Agent
 
 > **Binh Phap:** 行軍 (Hanh Quan) — Hanh quan an toan trong dia hinh chinh phu & quoc phong.

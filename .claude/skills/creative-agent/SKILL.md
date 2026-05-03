@@ -1,3 +1,8 @@
+---
+name: creative-agent
+description: "Creative Agent — Sáng Tạo Đa Phương Tiện"
+---
+
 # Creative Agent — Sáng Tạo Đa Phương Tiện
 
 > **Binh Pháp:** 虛實 (Hư Thực) — Sáng tạo là nghệ thuật kết hợp hư và thực.

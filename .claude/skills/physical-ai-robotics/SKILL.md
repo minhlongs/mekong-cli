@@ -1,3 +1,8 @@
+---
+name: physical-ai-robotics
+description: "Physical AI & Robotics Operations"
+---
+
 # Physical AI & Robotics Operations
 
 Software layer for humanoid robot orchestration, warehouse automation, RaaS billing, fleet telemetry.

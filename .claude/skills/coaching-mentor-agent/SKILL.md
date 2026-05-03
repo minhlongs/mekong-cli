@@ -1,3 +1,8 @@
+---
+name: coaching-mentor-agent
+description: "Coaching Mentor Agent — AI Life & Business Coaching Specialist"
+---
+
 # Coaching Mentor Agent — AI Life & Business Coaching Specialist
 
 > **Binh Pháp:** 虛實 (Hư Thực) — Hiểu rõ điểm mạnh yếu, phát triển con người toàn diện.

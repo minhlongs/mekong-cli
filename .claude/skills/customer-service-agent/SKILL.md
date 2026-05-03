@@ -1,3 +1,8 @@
+---
+name: customer-service-agent
+description: "Customer Service Agent — Dịch Vụ Khách Hàng"
+---
+
 # Customer Service Agent — Dịch Vụ Khách Hàng
 
 > **Binh Pháp:** 兵勢 (Binh Thế) — Biến thế linh hoạt, xử lý mọi tình huống khách hàng.

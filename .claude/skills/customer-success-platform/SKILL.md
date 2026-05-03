@@ -1,3 +1,8 @@
+---
+name: customer-success-platform
+description: "Customer Success Platform — Skill"
+---
+
 # Customer Success Platform — Skill
 
 > CS-led revenue retention, health scoring, and NRR expansion infrastructure for SaaS — market growing 22.1% CAGR to $9.17B by 2032.

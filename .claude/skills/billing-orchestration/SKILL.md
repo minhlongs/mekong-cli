@@ -1,3 +1,8 @@
+---
+name: billing-orchestration
+description: "Billing Orchestration"
+---
+
 # Billing Orchestration
 
 End-to-end billing webhook processing pipeline — from signature verification to subscription activation, tenant binding, and analytics tracking.

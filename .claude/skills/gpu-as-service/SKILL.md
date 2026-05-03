@@ -1,3 +1,8 @@
+---
+name: gpu-as-service
+description: "GPU — as — a — Service — 第二篇 作戰 (Operations & Resources)"
+---
+
 # GPU-as-a-Service — 第二篇 作戰 (Operations & Resources)
 
 > GPU orchestration, inference serving, model deployment, compute marketplace.

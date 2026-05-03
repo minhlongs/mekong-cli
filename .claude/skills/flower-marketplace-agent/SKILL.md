@@ -1,3 +1,8 @@
+---
+name: flower-marketplace-agent
+description: "Flower Marketplace Agent — Sàn Hoa & Cây Cảnh"
+---
+
 # Flower Marketplace Agent — Sàn Hoa & Cây Cảnh
 
 > **Binh Pháp:** 地形 (Địa Hình) — Nắm rõ địa hình thị trường hoa, tận dụng mùa vụ làm lợi thế.

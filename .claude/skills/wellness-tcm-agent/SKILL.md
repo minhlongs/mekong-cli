@@ -1,3 +1,8 @@
+---
+name: wellness-tcm-agent
+description: "Wellness TCM Agent — Đông Y & Sức Khỏe Tự Nhiên"
+---
+
 # Wellness TCM Agent — Đông Y & Sức Khỏe Tự Nhiên
 
 > **Binh Pháp:** 軍形 (Quân Hình) — Xây dựng nền tảng sức khỏe vững chắc, phòng bệnh hơn chữa bệnh.

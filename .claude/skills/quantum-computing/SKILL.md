@@ -1,3 +1,8 @@
+---
+name: quantum-computing
+description: "Quantum Computing — Skill"
+---
+
 # Quantum Computing — Skill
 
 > Quantum circuit design, hybrid classical-quantum workflows, and quantum-safe cryptography engineering.

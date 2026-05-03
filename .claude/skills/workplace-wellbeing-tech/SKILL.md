@@ -1,3 +1,8 @@
+---
+name: workplace-wellbeing-tech
+description: "Workplace Wellbeing Tech — 第五篇 兵勢 (Force Multiplier)"
+---
+
 # Workplace Wellbeing Tech — 第五篇 兵勢 (Force Multiplier)
 
 > Employee wellness platforms, mental health tech, burnout prevention, wearable integration.

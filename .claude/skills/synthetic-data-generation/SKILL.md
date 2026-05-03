@@ -1,3 +1,8 @@
+---
+name: synthetic-data-generation
+description: "Synthetic Data Generation Agent"
+---
+
 # Synthetic Data Generation Agent
 
 > **Binh Phap:** 九變 (Cuu Bien) — Bien hoa du lieu, tao tu hu vo de huan luyen AI.

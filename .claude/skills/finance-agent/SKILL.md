@@ -1,3 +1,8 @@
+---
+name: finance-agent
+description: "Finance Agent — AI Financial Operations Specialist"
+---
+
 # Finance Agent — AI Financial Operations Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Phong thu vung chac, tai chinh la thanh tri.

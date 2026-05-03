@@ -1,3 +1,8 @@
+---
+name: creator-economy
+description: "Creator Economy & AI Monetization"
+---
+
 # Creator Economy & AI Monetization
 
 AI-native tools for content creators: monetization, audience analytics, IP management, multi-platform distribution.

@@ -1,3 +1,8 @@
+---
+name: compliance-automation
+description: "Compliance Automation — 第四篇 軍形 (Security & Defense)"
+---
+
 # Compliance Automation — 第四篇 軍形 (Security & Defense)
 
 > AML/KYC automation, regulatory compliance pipelines, perpetual monitoring.

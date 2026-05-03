@@ -1,3 +1,8 @@
+---
+name: customer-data-unification
+description: "Customer Data Unification — 第十三篇 用間 (Intelligence)"
+---
+
 # Customer Data Unification — 第十三篇 用間 (Intelligence)
 
 > CDP architecture, identity resolution, real-time customer graphs, reverse ETL.

@@ -1,3 +1,8 @@
+---
+name: media-agent
+description: "Media Agent — AI Media Production & Strategy Specialist"
+---
+
 # Media Agent — AI Media Production & Strategy Specialist
 
 > **Binh Phap:** 兵勢 (Binh The) — Tao dong luc truyen thong, khuech dai suc manh thuong hieu qua noi dung.

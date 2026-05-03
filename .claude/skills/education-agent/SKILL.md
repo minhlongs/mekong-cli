@@ -1,3 +1,8 @@
+---
+name: education-agent
+description: "Education Agent — AI Education & Learning Operations Specialist"
+---
+
 # Education Agent — AI Education & Learning Operations Specialist
 
 > **Binh Phap:** 虛實 (Xu Shi) — Nam biet diem manh, diem yeu de thiet ke lo trinh hoc tap toi uu.

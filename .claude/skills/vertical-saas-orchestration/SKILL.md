@@ -1,3 +1,8 @@
+---
+name: vertical-saas-orchestration
+description: "Vertical SaaS Orchestration — Multi — Vertical Platform Patterns"
+---
+
 # Vertical SaaS Orchestration — Multi-Vertical Platform Patterns
 
 Orchestration patterns for running multiple industry-specific SaaS verticals on a shared platform with tenant isolation, vertical-specific features, and cross-vertical data intelligence.

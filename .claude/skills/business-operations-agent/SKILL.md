@@ -1,3 +1,8 @@
+---
+name: business-operations-agent
+description: "Business Operations Agent — HR, Legal, Finance, Marketing, Sales"
+---
+
 # Business Operations Agent — HR, Legal, Finance, Marketing, Sales
 
 > **Binh Pháp:** 九變 (Cửu Biến) — Linh hoạt ứng biến, master mọi nghiệp vụ kinh doanh.

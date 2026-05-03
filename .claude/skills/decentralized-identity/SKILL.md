@@ -1,3 +1,8 @@
+---
+name: decentralized-identity
+description: "Decentralized Identity — Skill"
+---
+
 # Decentralized Identity — Skill
 
 > Build self-sovereign identity systems using DIDs, verifiable credentials, ZK proofs, and eIDAS 2.0-compliant wallets.

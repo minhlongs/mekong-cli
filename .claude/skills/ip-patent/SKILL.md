@@ -1,3 +1,8 @@
+---
+name: ip-patent
+description: "IP & Patent — Intellectual Property Management"
+---
+
 # IP & Patent — Intellectual Property Management
 
 Manages the full IP lifecycle: prior art search, patent application workflow, portfolio tracking, licensing deal structuring, and IP valuation.

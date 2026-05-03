@@ -1,3 +1,8 @@
+---
+name: qa-testing-agent
+description: "QA Testing Agent — AI Quality Assurance Specialist"
+---
+
 # QA Testing Agent — AI Quality Assurance Specialist
 
 > **Binh Phap:** 地形 (Dia Hinh) — Kiem soat moi dia hinh, khong de loi lot qua.

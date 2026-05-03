@@ -1,3 +1,8 @@
+---
+name: logistics-ai-agent
+description: "Logistics AI Agent — AI Supply Chain & Logistics Specialist"
+---
+
 # Logistics AI Agent — AI Supply Chain & Logistics Specialist
 
 > **Binh Pháp:** 行軍 (Hành Quân) — Di chuyển nhanh, tiếp tế đúng lúc, logistics là huyết mạch chiến trường.

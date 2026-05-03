@@ -1,3 +1,8 @@
+---
+name: product-manager-agent
+description: "Product Manager Agent — AI Product Operations Specialist"
+---
+
 # Product Manager Agent — AI Product Operations Specialist
 
 > **Binh Phap:** 謀攻 (Muu Cong) — Thang khong can danh, ke hoach san pham la vu khi toi thuong.

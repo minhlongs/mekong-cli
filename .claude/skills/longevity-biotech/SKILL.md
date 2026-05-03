@@ -1,3 +1,8 @@
+---
+name: longevity-biotech
+description: "Longevity Biotech & Anti — Aging"
+---
+
 # Longevity Biotech & Anti-Aging
 
 AI-powered drug discovery tools, clinical trial management, biomarker tracking, longevity clinic ops.

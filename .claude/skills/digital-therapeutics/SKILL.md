@@ -1,3 +1,8 @@
+---
+name: digital-therapeutics
+description: "Digital Therapeutics & Mental Health Tech"
+---
+
 # Digital Therapeutics & Mental Health Tech
 
 FDA-reimbursable DTx platform, AI coaching, CBT module delivery, wearable-integrated mental health monitoring.

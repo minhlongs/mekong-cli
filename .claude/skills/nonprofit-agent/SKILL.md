@@ -1,3 +1,8 @@
+---
+name: nonprofit-agent
+description: "Nonprofit Agent — AI Nonprofit Operations Specialist"
+---
+
 # Nonprofit Agent — AI Nonprofit Operations Specialist
 
 > **Binh Phap:** 虛實 (Xu Shi) — Huy dong nguon luc khan hiem, tao dong luc lon tu gia tri cong dong.

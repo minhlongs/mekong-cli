@@ -1,3 +1,8 @@
+---
+name: data-privacy-engineering
+description: "Data Privacy Engineering — Skill"
+---
+
 # Data Privacy Engineering — Skill
 
 > Privacy-by-design architecture, consent management infrastructure, and DSR/DSAR automation — CMP market growing to $3.6B by 2033, regulators demanding "technical truth" in 2026.

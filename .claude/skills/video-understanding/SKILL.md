@@ -1,3 +1,8 @@
+---
+name: video-understanding
+description: "Video Understanding — 第十三篇 用間 (Intelligence Network)"
+---
+
 # Video Understanding — 第十三篇 用間 (Intelligence Network)
 
 > Multimodal video analysis, semantic search, scene detection, content intelligence.

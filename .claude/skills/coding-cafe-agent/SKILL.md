@@ -1,3 +1,8 @@
+---
+name: coding-cafe-agent
+description: "Coding Cafe Agent — Vibe Coding Space Operations"
+---
+
 # Coding Cafe Agent — Vibe Coding Space Operations
 
 > **Binh Pháp:** 虛實 (Hư Thực) — Kết hợp không gian thực và ảo, tạo cộng đồng dev mạnh mẽ.

@@ -1,3 +1,8 @@
+---
+name: robotics-automation
+description: "Robotics Automation — Skill"
+---
+
 # Robotics Automation — Skill
 
 > ROS2-based robot fleet management, digital twin modeling, predictive maintenance, and industrial IoT edge computing.

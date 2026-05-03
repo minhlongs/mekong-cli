@@ -1,3 +1,8 @@
+---
+name: precision-food-tech
+description: "Precision Fermentation & Alt — Protein Tech"
+---
+
 # Precision Fermentation & Alt-Protein Tech
 
 Bioreactor management, fermentation optimization, regulatory submission, B2B ingredient marketplace.

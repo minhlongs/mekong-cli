@@ -1,3 +1,8 @@
+---
+name: legaltech-contract-intelligence
+description: "LegalTech & Contract Intelligence Agent"
+---
+
 # LegalTech & Contract Intelligence Agent
 
 > **Binh Phap:** 謀攻 (Muu Cong) — Phan tich hop dong nhu phan tich chien luoc doi phuong.

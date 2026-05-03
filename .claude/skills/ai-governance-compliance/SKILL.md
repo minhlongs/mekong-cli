@@ -1,3 +1,8 @@
+---
+name: ai-governance-compliance
+description: "AI Governance Compliance — 第四篇 軍形 (Security & Defense)"
+---
+
 # AI Governance Compliance — 第四篇 軍形 (Security & Defense)
 
 > EU AI Act compliance, model governance, bias detection, explainability, audit trails.

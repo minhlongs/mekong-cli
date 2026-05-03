@@ -1,3 +1,8 @@
+---
+name: llmops-ai-observability
+description: "LLMOps & AI Observability Agent"
+---
+
 # LLMOps & AI Observability Agent
 
 > **Binh Phap:** 虛實 (Hu Shi) — Thay ve theo doi, phat hien diem yeu trong pipeline AI.

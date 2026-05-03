@@ -1,3 +1,8 @@
+---
+name: a2ui-renderer
+description: "A2UI Terminal Renderer"
+---
+
 # A2UI Terminal Renderer
 
 Mekong-cli's implementation of Google's A2UI protocol for terminal/CLI rendering.

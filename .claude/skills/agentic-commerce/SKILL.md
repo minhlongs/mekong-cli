@@ -1,3 +1,8 @@
+---
+name: agentic-commerce
+description: "Agentic Commerce — Skill"
+---
+
 # Agentic Commerce — Skill
 
 > Autonomous AI shopping agents, dynamic pricing engines, and agent-to-agent marketplace infrastructure.

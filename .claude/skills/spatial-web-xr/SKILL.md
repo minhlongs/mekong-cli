@@ -1,3 +1,8 @@
+---
+name: spatial-web-xr
+description: "Spatial Web & XR — WebXR, AR Commerce, Immersive Experiences"
+---
+
 # Spatial Web & XR — WebXR, AR Commerce, Immersive Experiences
 
 Build immersive web experiences with WebXR, AR commerce, and spatial computing. $52B market by 2027, 30% CAGR.

@@ -1,3 +1,8 @@
+---
+name: accounting-agent
+description: "Accounting Agent — AI Accounting & Finance Operations Specialist"
+---
+
 # Accounting Agent — AI Accounting & Finance Operations Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Xay dung nen tang vung chac, kiem soat rui ro tai chinh, bao ve nguon luc.

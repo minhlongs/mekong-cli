@@ -1,3 +1,8 @@
+---
+name: synthetic-biology
+description: "Synthetic Biology — Skill"
+---
+
 # Synthetic Biology — Skill
 
 > Build biotech software platforms: DNA design tools, lab automation (LIMS), bioprocess optimization, bioinformatics pipelines, and regulatory submission automation.

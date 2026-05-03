@@ -1,3 +1,8 @@
+---
+name: insurance-agent
+description: "Insurance Agent — AI Insurance Operations Specialist"
+---
+
 # Insurance Agent — AI Insurance Operations Specialist
 
 > **Binh Phap:** 軍形 (Quan Hinh) — Xay dung phong thu vung chac, bao ve tai san va rui ro truoc khi chien dau.

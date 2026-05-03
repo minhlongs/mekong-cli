@@ -1,3 +1,8 @@
+---
+name: ambient-computing
+description: "Ambient Computing — 第六篇 虛實 (Weaknesses & Strengths)"
+---
+
 # Ambient Computing — 第六篇 虛實 (Weaknesses & Strengths)
 
 > Edge inference, contextual sensing, device orchestration, invisible UX.

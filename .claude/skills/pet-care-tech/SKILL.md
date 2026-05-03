@@ -1,3 +1,8 @@
+---
+name: pet-care-tech
+description: "Pet Care Tech — Veterinary & Pet Services SaaS"
+---
+
 # Pet Care Tech — Veterinary & Pet Services SaaS
 
 Platforms for veterinary clinics, pet insurance, pet boarding/grooming, and D2C pet wellness brands.
