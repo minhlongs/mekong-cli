@@ -185,6 +185,8 @@ insights/
 !.claude/rules/**
 !.claude/schemas/
 !.claude/schemas/**
+!.claude/scripts/
+!.claude/scripts/**
 !.claude/settings.json
 !.claude/statusline.sh
 !.claude/statusline.cjs
@@ -199,8 +201,15 @@ insights/
 .claude/command-archive/**
 .claude/worktrees/
 .claude/worktrees/**
-.claude/scripts/
-.claude/scripts/**
+# .claude/scripts/ holds Claude Code catalog generators (REQUIRED tracked
+# per the skills spec) plus per-developer dev tools. Track .py + .yaml + .md
+# + .txt by default; ignore the noisy .cjs/.sh/.ts dev tooling. We can't use
+# directory-level exclusion here because git refuses to un-ignore files
+# whose parent directory is excluded.
+.claude/scripts/*.cjs
+.claude/scripts/*.cjs.bak
+.claude/scripts/*.sh
+.claude/scripts/*.ts
 .claude/hooks/.logs/
 .claude/hooks/.logs/**
 .claude/hooks/__tests__/
@@ -694,7 +703,10 @@ plans/
 tasks/
 
 # Fourth pass — internal tooling
-scripts/
+# Root-anchored to avoid shadowing .claude/scripts/ (Claude Code catalog
+# generators are allowlisted up at line ~205) and per-project scripts/
+# folders (owned by their respective apps/ packages).
+/scripts/
 supabase/
 # .claude/ narrowed in second-rule above — only sdlc commands tracked
 .geminiignore
