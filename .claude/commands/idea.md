@@ -1,6 +1,7 @@
 ---
 description: "MANDATORY first step — Generate full company architecture from a business idea before OpenClaw runs the 5-layer command system. Zero→IPO Agentic BizPlan OS."
 argument-hint: "<your business idea in 1-3 sentences>"
+why-override: "Mekong-specific OpenClaw 5-layer integration; supersedes the older stock /idea at ~/.claude/commands/idea.md."
 ---
 
 # /idea — Agentic BizPlan OS: Zero→IPO Company Architecture Generator

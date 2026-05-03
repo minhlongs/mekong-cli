@@ -1,6 +1,7 @@
 ---
 description: "Debug Vercel CI/CD deployments — check status, fix errors, verify production GREEN"
 argument-hint: [deployment-url or omit for interactive]
+why-override: "Mekong has the verification-loop variant (5-step debug + GREEN gate). Global /vercel-debug at ~/.claude/commands is the older 'no-frontmatter' rules-only doc."
 ---
 
 # /vercel-debug — Vercel CI/CD Debugging Workflow

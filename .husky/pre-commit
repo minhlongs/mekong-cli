@@ -3,6 +3,17 @@
 
 echo "🔍 Pre-commit: Running quick checks..."
 
+# ClaudeKit duplicate guard — block re-introduction of identical stock copies.
+# Diverged forks are allowed; only bit-identical duplication fails the hook.
+if [ -x .ci/check-no-duplicate-claudekit.sh ]; then
+    echo "   → ClaudeKit duplicate guard..."
+    bash .ci/check-no-duplicate-claudekit.sh || {
+        echo "❌ Found bit-identical duplicates of stock claudekit primitives."
+        echo "   Run: bash .ci/check-no-duplicate-claudekit.sh --fix"
+        exit 1
+    }
+fi
+
 # Python lint (if ruff available) — only staged .py files
 if command -v ruff &> /dev/null; then
     STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- "*.py" 2>/dev/null)
