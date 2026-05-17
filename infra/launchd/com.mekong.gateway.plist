@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template: macOS LaunchDaemon for Mekong Gateway (FastAPI/uvicorn).
+
+  Placeholders interpolated by install-mekong-gateway.sh:
+    __USER_HOME__            → absolute home dir (e.g. /Users/macbook)
+    __PROJECT_DIR__          → absolute mekong-cli checkout path
+    __MEKONG_ADMIN_TOKEN__   → 32+ byte URL-safe secret (gates /v1/pilot/convert)
+
+  Do NOT install this file directly. Run ./install-mekong-gateway.sh which:
+    1. Validates .venv/bin/uvicorn exists
+    2. Generates fresh admin token (or reuses ~/.mekong/admin-token.txt)
+    3. Interpolates placeholders
+    4. Writes to /Library/LaunchDaemons/ with root:wheel ownership
+    5. Bootstraps + kickstarts the service
+
+  WARNING: This template contains a PLACEHOLDER token string. The actual
+  token is generated at install time and never committed to the repo.
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.mekong.gateway</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>__PROJECT_DIR__/.venv/bin/uvicorn</string>
+      <string>src.gateway:app</string>
+      <string>--host</string>
+      <string>0.0.0.0</string>
+      <string>--port</string>
+      <string>8000</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__PROJECT_DIR__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>StandardOutPath</key>
+    <string>/var/log/mekong-gateway.log</string>
+    <key>StandardErrorPath</key>
+    <string>/var/log/mekong-gateway-err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>PATH</key>
+      <string>__PROJECT_DIR__/.venv/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+      <key>PYTHONPATH</key>
+      <string>__PROJECT_DIR__</string>
+      <key>MEKONG_ADMIN_TOKEN</key>
+      <string>__MEKONG_ADMIN_TOKEN__</string>
+    </dict>
+  </dict>
+</plist>

@@ -602,6 +602,7 @@ docs/*.yaml
 !docs/codebase-summary.md
 !docs/project-overview-pdr.md
 !docs/api-reference.md
+!docs/handoff-shipping-playbook.md
 !docs/api-reference.json
 !docs/api-spec.yaml
 !docs/DATABASE_MIGRATIONS.md
