@@ -76,6 +76,29 @@
     .row-count { width: 30px; text-align: right; color: #fbbf24; font-weight: 600; }
     .empty { color: #64748b; font-size: 13px; font-style: italic; padding: 8px 0; }
 
+    /* Timeline (recent signups/NPS) */
+    .tl-item {
+      display: flex; gap: 12px; padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px;
+    }
+    .tl-item:last-child { border-bottom: none; }
+    .tl-time { width: 70px; color: #94a3b8; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .tl-body { flex: 1; color: #e2e8f0; }
+    .tl-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 500; margin-right: 6px;
+      background: rgba(129,140,248,0.15); color: #c7d2fe;
+    }
+    .tl-score {
+      display: inline-block; width: 22px; height: 22px; line-height: 22px;
+      text-align: center; border-radius: 50%; font-size: 11px; font-weight: 700;
+      margin-right: 8px; color: #0f172a;
+    }
+    .tl-score.s-5, .tl-score.s-4 { background: #10b981; color: #fff; }
+    .tl-score.s-3 { background: #fbbf24; }
+    .tl-score.s-2, .tl-score.s-1 { background: #ef4444; color: #fff; }
+    .tl-comment { color: #cbd5e1; font-style: italic; margin-top: 2px; font-size: 12px; }
+
     .err {
       background: #fee2e2; color: #991b1b; padding: 12px;
       border-radius: 8px; margin-bottom: 16px; font-size: 14px;
@@ -119,6 +142,16 @@
     <div class="breakdown">
       <h2>📣 Theo kênh recruit</h2>
       <div id="by-source"></div>
+    </div>
+
+    <div class="breakdown">
+      <h2>🆕 Signups gần nhất</h2>
+      <div id="recent-signups"></div>
+    </div>
+
+    <div class="breakdown">
+      <h2>📝 NPS gần nhất (anonymized)</h2>
+      <div id="recent-nps"></div>
     </div>
 
     <footer>
@@ -178,6 +211,65 @@
       }).join("");
     }
 
+    function formatTime(iso) {
+      if (!iso) return "—";
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      } catch { return iso; }
+    }
+
+    function renderRecentSignups(items) {
+      const el = $("recent-signups");
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div class="empty">Chưa có signup nào</div>';
+        return;
+      }
+      el.innerHTML = items.map((s) => {
+        const type = TYPE_LABELS[s.business_type] || s.business_type || "?";
+        const source = SOURCE_LABELS[s.source] || s.source || "?";
+        return `<div class="tl-item">
+          <div class="tl-time">${formatTime(s.onboarded_at)}</div>
+          <div class="tl-body">
+            <span class="tl-tag">${type}</span><span class="tl-tag">${s.city || "—"}</span><span class="tl-tag">${source}</span>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderRecentNps(items) {
+      const el = $("recent-nps");
+      if (!items || items.length === 0) {
+        el.innerHTML = '<div class="empty">Chưa có response nào (gửi poll Monday → review Thursday)</div>';
+        return;
+      }
+      el.innerHTML = items.map((r) => {
+        const scoreClass = `s-${r.score}`;
+        const comment = r.comment_preview ? `<div class="tl-comment">"${r.comment_preview}"</div>` : "";
+        return `<div class="tl-item">
+          <div class="tl-time">${formatTime(r.recorded_at)}</div>
+          <div class="tl-body">
+            <span class="tl-score ${scoreClass}">${r.score ?? "—"}</span>
+            <span class="tl-tag">${r.iso_week || "—"}</span>
+            ${comment}
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    async function loadRecent() {
+      try {
+        const r = await fetch(API_BASE + "/v1/pilot/recent?limit=10", { cache: "no-store" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        renderRecentSignups(data.signups);
+        renderRecentNps(data.nps_responses);
+      } catch (err) {
+        $("recent-signups").innerHTML = `<div class="empty">Lỗi tải: ${err.message}</div>`;
+        $("recent-nps").innerHTML = `<div class="empty">Lỗi tải: ${err.message}</div>`;
+      }
+    }
+
     async function loadStats() {
       btn.disabled = true;
       btn.textContent = "↻ Đang tải...";
@@ -215,9 +307,10 @@
       }
     }
 
-    btn.addEventListener("click", loadStats);
-    loadStats();
-    setInterval(loadStats, 60000);
+    function refreshAll() { loadStats(); loadRecent(); }
+    btn.addEventListener("click", refreshAll);
+    refreshAll();
+    setInterval(refreshAll, 60000);
   </script>
 </body>
 </html>

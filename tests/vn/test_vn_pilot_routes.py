@@ -198,3 +198,67 @@ class TestStats:
         assert stats["capacity_remaining"] == 6
         assert stats["by_type"] == {"shop_online": 2, "freelancer": 1, "cafe_fnb": 1}
         assert stats["by_source"] == {"fb": 2, "linkedin": 1, "zalo_group": 1}
+
+
+
+class TestRecent:
+    def test_recent_empty(self, client: TestClient) -> None:
+        resp = client.get("/v1/pilot/recent")
+        assert resp.status_code == 200
+        assert resp.json() == {"signups": [], "nps_responses": []}
+
+    def test_recent_signups_all_returned(self, client: TestClient) -> None:
+        for i in range(3):
+            client.post("/v1/pilot/signup", json={
+                **VALID_SIGNUP, "zalo": f"+849091234{i:02d}", "name": f"User{i}",
+                "business_type": "shop_online" if i == 0 else "freelancer",
+            })
+        body = client.get("/v1/pilot/recent").json()
+        # onboarded_at uses seconds resolution → ties expected within fast tests.
+        # Assert membership + count, not strict positional order.
+        types = [s["business_type"] for s in body["signups"]]
+        assert len(types) == 3
+        assert types.count("freelancer") == 2
+        assert types.count("shop_online") == 1
+
+    def test_recent_excludes_pii(self, client: TestClient) -> None:
+        client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        signup_record = client.get("/v1/pilot/recent").json()["signups"][0]
+        assert "name" not in signup_record
+        assert "zalo" not in signup_record
+        assert "industry" not in signup_record
+        assert "user_id" not in signup_record
+        # Allowed fields only
+        assert set(signup_record.keys()) == {"business_type", "city", "source", "onboarded_at"}
+
+    def test_recent_nps_with_comment_truncation(self, client: TestClient) -> None:
+        # Onboard then submit poll response with long comment
+        signup = client.post("/v1/pilot/signup", json=VALID_SIGNUP).json()
+        long_comment = "A" * 200
+        post_resp = client.post("/v1/pilot/response", json={
+            "user_id": signup["user_id"],
+            "score": 5,  # PollResponseRequest score range = 1-5
+            "comment": long_comment,
+        })
+        assert post_resp.status_code == 201, post_resp.text
+        body = client.get("/v1/pilot/recent").json()
+        assert len(body["nps_responses"]) == 1
+        nps = body["nps_responses"][0]
+        assert nps["score"] == 5
+        assert nps["comment_preview"] == "A" * 80  # truncated to 80
+        assert "user_id" not in nps  # PII boundary
+
+    def test_recent_limit_validation(self, client: TestClient) -> None:
+        # ge=1 le=100 enforced by FastAPI Query
+        assert client.get("/v1/pilot/recent?limit=0").status_code == 422
+        assert client.get("/v1/pilot/recent?limit=101").status_code == 422
+        assert client.get("/v1/pilot/recent?limit=1").status_code == 200
+        assert client.get("/v1/pilot/recent?limit=100").status_code == 200
+
+    def test_recent_respects_limit(self, client: TestClient) -> None:
+        for i in range(5):
+            client.post("/v1/pilot/signup", json={
+                **VALID_SIGNUP, "zalo": f"+849091234{i:02d}", "name": f"U{i}",
+            })
+        body = client.get("/v1/pilot/recent?limit=2").json()
+        assert len(body["signups"]) == 2

@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(prefix="/v1/pilot", tags=["VN Pilot"])
@@ -112,12 +112,12 @@ def _stable_user_id(name: str, zalo: str, seq: int) -> str:
     return f"opc_{seq:03d}_{digest}"
 
 
-def _load_pilots() -> list[dict]:
-    p = _pilots_path()
-    if not p.exists():
+def _load_jsonl(path: Path) -> list[dict]:
+    """Load newline-delimited JSON file, skipping malformed lines."""
+    if not path.exists():
         return []
     out = []
-    with p.open(encoding="utf-8") as fh:
+    with path.open(encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
             if line:
@@ -126,6 +126,14 @@ def _load_pilots() -> list[dict]:
                 except json.JSONDecodeError:
                     continue
     return out
+
+
+def _load_pilots() -> list[dict]:
+    return _load_jsonl(_pilots_path())
+
+
+def _load_responses() -> list[dict]:
+    return _load_jsonl(_responses_path())
 
 
 def _find_by_zalo(zalo: str) -> Optional[dict]:
@@ -279,3 +287,34 @@ def _count_by_key(records: list[dict], key: str) -> dict[str, int]:
         v = r.get(key) or "unknown"
         counts[v] = counts.get(v, 0) + 1
     return counts
+
+
+@router.get("/recent")
+async def recent(limit: int = Query(default=10, ge=1, le=100)) -> dict[str, list]:
+    """Recent signups + NPS responses for founder dashboard. No PII exposed.
+
+    Strips name + zalo from signups; truncates comment to 80 chars.
+    Sorted newest-first by timestamp. Used by mekong-pilot-admin dashboard.
+    """
+    pilots = sorted(_load_pilots(), key=lambda p: p.get("onboarded_at", ""), reverse=True)
+    responses = sorted(_load_responses(), key=lambda r: r.get("recorded_at", ""), reverse=True)
+    return {
+        "signups": [
+            {
+                "business_type": p.get("business_type"),
+                "city": p.get("city"),
+                "source": p.get("source"),
+                "onboarded_at": p.get("onboarded_at"),
+            }
+            for p in pilots[:limit]
+        ],
+        "nps_responses": [
+            {
+                "score": r.get("score"),
+                "iso_week": r.get("iso_week"),
+                "recorded_at": r.get("recorded_at"),
+                "comment_preview": (r.get("comment") or "")[:80],
+            }
+            for r in responses[:limit]
+        ],
+    }
