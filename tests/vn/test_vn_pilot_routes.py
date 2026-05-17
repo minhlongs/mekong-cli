@@ -176,6 +176,8 @@ class TestStats:
         assert body == {
             "total_pilots": 0,
             "active_pilots": 0,
+            "converted_pilots": 0,
+            "trial_pilots": 0,
             "capacity_remaining": 10,
             "by_type": {},
             "by_source": {},
@@ -450,3 +452,80 @@ class TestConvertAuth:
         """GET /revenue is dashboard-read aggregate — no auth required."""
         resp = client.get("/v1/pilot/revenue")
         assert resp.status_code == 200
+
+
+class TestStatsConversionCrossref:
+    """Verify /stats cross-references conversions.jsonl to split active into
+    trial vs converted. No auth needed — writes conversions.jsonl directly via
+    helper bypassing the /convert endpoint.
+    """
+
+    @staticmethod
+    def _seed_pilots(client: TestClient, n: int) -> list[str]:
+        """Return list of created user_ids."""
+        ids: list[str] = []
+        for i in range(n):
+            r = client.post("/v1/pilot/signup", json={
+                **VALID_SIGNUP, "zalo": f"+849099912{i:02d}", "name": f"U{i}",
+            })
+            assert r.status_code == 201, r.text
+            ids.append(r.json()["user_id"])
+        return ids
+
+    @staticmethod
+    def _write_conversion(user_id: str, tier: str = "starter_vnd",
+                          monthly: int = 199_000, started_at: str = "2026-05-17") -> None:
+        vpr._append_jsonl(vpr._conversions_path(), {
+            "user_id": user_id,
+            "tier": tier,
+            "monthly_vnd": monthly,
+            "started_at": started_at,
+            "recorded_at": "2026-05-17T08:00:00+00:00",
+        })
+
+    def test_no_conversions_all_trial(self, client: TestClient) -> None:
+        """3 signups + 0 conversions → trial=3, converted=0."""
+        self._seed_pilots(client, 3)
+        s = client.get("/v1/pilot/stats").json()
+        assert s["total_pilots"] == 3
+        assert s["active_pilots"] == 3
+        assert s["trial_pilots"] == 3
+        assert s["converted_pilots"] == 0
+
+    def test_one_converted_splits(self, client: TestClient) -> None:
+        """2 signups, 1 marks converted → trial=1, converted=1, active still 2."""
+        ids = self._seed_pilots(client, 2)
+        self._write_conversion(ids[0])
+        s = client.get("/v1/pilot/stats").json()
+        assert s["active_pilots"] == 2  # backward compat
+        assert s["converted_pilots"] == 1
+        assert s["trial_pilots"] == 1
+
+    def test_same_user_multiple_conversions_counted_once(self, client: TestClient) -> None:
+        """User upgrades tier mid-pilot → 2 conversion records, 1 unique user."""
+        ids = self._seed_pilots(client, 1)
+        self._write_conversion(ids[0], tier="starter_vnd", started_at="2026-05-01")
+        self._write_conversion(ids[0], tier="growth_vnd", started_at="2026-06-01")
+        s = client.get("/v1/pilot/stats").json()
+        assert s["converted_pilots"] == 1  # unique user count, not row count
+        assert s["trial_pilots"] == 0
+
+    def test_orphan_conversion_ignored(self, client: TestClient) -> None:
+        """Conversion record for user not in pilots.jsonl → not counted.
+        Prevents false MRR inflation if /convert auth ever bypassed.
+        """
+        self._seed_pilots(client, 2)
+        self._write_conversion("opc_999_orphan")  # not in pilots
+        s = client.get("/v1/pilot/stats").json()
+        assert s["converted_pilots"] == 0
+        assert s["trial_pilots"] == 2
+
+    def test_trial_plus_converted_equals_active(self, client: TestClient) -> None:
+        """Invariant: trial + converted == active (when all status active)."""
+        ids = self._seed_pilots(client, 5)
+        for uid in ids[:3]:
+            self._write_conversion(uid)
+        s = client.get("/v1/pilot/stats").json()
+        assert s["trial_pilots"] + s["converted_pilots"] == s["active_pilots"]
+        assert s["converted_pilots"] == 3
+        assert s["trial_pilots"] == 2
