@@ -143,7 +143,7 @@ Phase 0-6 plan: `plans/260517-0047-mekong-vn-hub/plan.md` (local-only — `plans
 |------|---------|
 | `src/commands/{ke_toan,thue_dnvn,zalo_oa}.py` | VN domain CLIs: TT78 invoice, TNCN/TNDN/GTGT, Zalo OA |
 | `src/core/usage_meter.py` | `track(command)` → log event + decrement credit. Anonymous-safe. |
-| `src/api/vn_pilot_routes.py` | `POST /v1/pilot/{signup,response}` + `GET /v1/pilot/{health,stats}` |
+| `src/api/vn_pilot_routes.py` | `POST /v1/pilot/{signup,response,convert}` + `GET /v1/pilot/{health,stats,recent,revenue}` — `convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN` |
 | `src/api/vn_pricing_routes.py` | `GET /v1/pricing/vn{,/services,/tier/{key}}` — VND tier display |
 | `src/cli/vn_setup.py` | Vietnamese onboarding wizard (writes `~/.mekong/vn_config.json`) |
 | `tests/vn/` | 100+ tests covering all of the above |
@@ -173,6 +173,23 @@ Pilot users export `MEKONG_USER_ID=opc_NNN_xxxxxx` (issued by `pilot-onboard.py 
 ### Mounted into gateway (src/gateway.py)
 
 Both `vn_pricing_router` and `vn_pilot_router` are mounted as of commit ?? — accessible via the unified Mekong CLI Gateway API.
+
+### Admin token (founder-only write endpoints)
+
+`POST /v1/pilot/convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN`.
+
+Token storage (per-machine, never committed): `~/.mekong/admin-token.txt` (mode 600).
+
+Inject into launchd-managed gateway via `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>EnvironmentVariables</key><dict>
+  ...
+  <key>MEKONG_ADMIN_TOKEN</key><string>YOUR_TOKEN_HERE</string>
+</dict>
+```
+Then `sudo launchctl kickstart -k system/com.mekong.gateway`.
+
+Rotation: regenerate via `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`, update plist, kickstart.
 
 ---
 

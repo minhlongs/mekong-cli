@@ -265,6 +265,13 @@ class TestRecent:
 
 
 class TestConvert:
+    @pytest.fixture(autouse=True)
+    def _bypass_admin_auth(self, client: TestClient) -> None:
+        """Skip token check in conversion-logic tests (see TestConvertAuth for auth)."""
+        client.app.dependency_overrides[vpr._require_admin_token] = lambda: None
+        yield
+        client.app.dependency_overrides.clear()
+
     def _signup(self, client: TestClient, suffix: int = 0, name: str = "U") -> str:
         body = client.post("/v1/pilot/signup", json={
             **VALID_SIGNUP, "zalo": f"+849091234{suffix:02d}", "name": f"{name}{suffix}",
@@ -327,6 +334,12 @@ class TestConvert:
 
 
 class TestRevenue:
+    @pytest.fixture(autouse=True)
+    def _bypass_admin_auth(self, client: TestClient) -> None:
+        client.app.dependency_overrides[vpr._require_admin_token] = lambda: None
+        yield
+        client.app.dependency_overrides.clear()
+
     def _signup(self, client: TestClient, suffix: int = 0) -> str:
         body = client.post("/v1/pilot/signup", json={
             **VALID_SIGNUP, "zalo": f"+849091234{suffix:02d}", "name": f"U{suffix}",
@@ -373,3 +386,67 @@ class TestRevenue:
         assert body["mrr_vnd"] == 199_000 + 499_000 + 999_000
         assert body["unique_converted_users"] == 3
         assert body["by_tier"] == {"starter_vnd": 1, "growth_vnd": 1, "pro_vnd": 1}
+
+
+class TestConvertAuth:
+    """Auth gate on POST /v1/pilot/convert. Real auth path, no dep-override."""
+
+    ADMIN_TOKEN = "test_admin_token_xyz123"
+
+    def _signup(self, client: TestClient) -> str:
+        return client.post("/v1/pilot/signup", json=VALID_SIGNUP).json()["user_id"]
+
+    def test_503_when_env_not_configured(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("MEKONG_ADMIN_TOKEN", raising=False)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
+        }, headers={"Authorization": f"Bearer {self.ADMIN_TOKEN}"})
+        assert resp.status_code == 503
+        assert "MEKONG_ADMIN_TOKEN not set" in resp.json()["detail"]
+
+    def test_401_when_no_authorization_header(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
+        })
+        assert resp.status_code == 401
+        assert "Bearer" in resp.json()["detail"]
+
+    def test_401_when_authorization_malformed(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
+        }, headers={"Authorization": "NotBearer foo"})
+        assert resp.status_code == 401
+
+    def test_403_when_token_mismatch(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
+        }, headers={"Authorization": "Bearer wrong_token"})
+        assert resp.status_code == 403
+        assert "Invalid" in resp.json()["detail"]
+
+    def test_201_with_valid_bearer(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
+        uid = self._signup(client)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": uid, "tier": "starter_vnd", "monthly_vnd": 199_000,
+        }, headers={"Authorization": f"Bearer {self.ADMIN_TOKEN}"})
+        assert resp.status_code == 201
+        assert resp.json()["is_new"] is True
+
+    def test_revenue_endpoint_remains_public(self, client: TestClient) -> None:
+        """GET /revenue is dashboard-read aggregate — no auth required."""
+        resp = client.get("/v1/pilot/revenue")
+        assert resp.status_code == 200

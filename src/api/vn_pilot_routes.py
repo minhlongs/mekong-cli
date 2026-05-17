@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(prefix="/v1/pilot", tags=["VN Pilot"])
@@ -106,6 +106,37 @@ class ConversionRequest(BaseModel):
         if not v.startswith("opc_"):
             raise ValueError("user_id phải bắt đầu bằng 'opc_'")
         return v
+
+
+# ---------- Auth (admin endpoints) ----------
+
+def _require_admin_token(authorization: Optional[str] = Header(default=None)) -> None:
+    """Bearer-token gate for founder-only admin endpoints.
+
+    Reads MEKONG_ADMIN_TOKEN at request time (so launchctl setenv updates
+    take effect without code reload — useful for token rotation).
+
+    - 503: env var not configured (feature locked at gateway level)
+    - 401: missing or malformed Authorization header
+    - 403: token mismatch
+    """
+    expected = os.environ.get("MEKONG_ADMIN_TOKEN")
+    if not expected:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin endpoints disabled — MEKONG_ADMIN_TOKEN not set on gateway",
+        )
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing 'Authorization: Bearer <token>' header",
+        )
+    received = authorization[len("Bearer "):].strip()
+    if received != expected:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid admin token",
+        )
 
 
 # ---------- Helpers ----------
@@ -294,7 +325,11 @@ async def poll_response(req: PollResponseRequest) -> dict[str, object]:
     }
 
 
-@router.post("/convert", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/convert",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(_require_admin_token)],
+)
 async def convert(req: ConversionRequest) -> dict[str, object]:
     """Mark a pilot user as paid. Records tier + MRR contribution.
 
@@ -302,8 +337,8 @@ async def convert(req: ConversionRequest) -> dict[str, object]:
     payment confirms (or manual VietQR transfer). Idempotent on
     (user_id, started_at) — re-call returns existing record.
 
-    Also flips pilot record status: "active" → "converted" (next /load
-    reads new status). Errors:
+    Requires `Authorization: Bearer <MEKONG_ADMIN_TOKEN>` header. Errors:
+    - 401 / 403 / 503: auth (see _require_admin_token docstring)
     - 404 if user_id not in pilots.jsonl
     """
     pilots = _load_pilots()
