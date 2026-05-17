@@ -137,6 +137,7 @@ class AgentBase(ABC):
         for task in self.tasks:
             task.status = TaskStatus.RUNNING
             retries = 0
+            result = Result(task_id=task.id, success=False, output=None, error="max_retries=0")
 
             while retries < self.max_retries:
                 result = self.execute(task)

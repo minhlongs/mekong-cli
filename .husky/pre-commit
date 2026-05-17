@@ -3,6 +3,47 @@
 
 echo "🔍 Pre-commit: Running quick checks..."
 
+# ClaudeKit duplicate guard — block re-introduction of identical stock copies.
+# Diverged forks are allowed; only bit-identical duplication fails the hook.
+if [ -x .ci/check-no-duplicate-claudekit.sh ]; then
+    echo "   → ClaudeKit duplicate guard..."
+    bash .ci/check-no-duplicate-claudekit.sh || {
+        echo "❌ Found bit-identical duplicates of stock claudekit primitives."
+        echo "   Run: bash .ci/check-no-duplicate-claudekit.sh --fix"
+        exit 1
+    }
+fi
+
+# Skill frontmatter guard — every SKILL.md under .claude/skills/ MUST declare
+# `name:` and `description:`, otherwise Claude Code silently skips the skill.
+if [ -x .ci/check-skill-frontmatter.sh ]; then
+    echo "   → Skill frontmatter guard..."
+    bash .ci/check-skill-frontmatter.sh --staged-only || {
+        echo "❌ One or more staged SKILL.md files lack required frontmatter."
+        exit 1
+    }
+fi
+
+# Command frontmatter guard — every .claude/commands/**.md needs a non-empty
+# `description:` so the slash-command palette renders a help label.
+if [ -x .ci/check-command-frontmatter.sh ]; then
+    echo "   → Command frontmatter guard..."
+    bash .ci/check-command-frontmatter.sh --staged-only || {
+        echo "❌ One or more staged command files lack required frontmatter."
+        exit 1
+    }
+fi
+
+# Agent frontmatter guard — every .claude/agents/**.md needs `name:` and
+# `description:` so the Task tool can dispatch the subagent.
+if [ -x .ci/check-agent-frontmatter.sh ]; then
+    echo "   → Agent frontmatter guard..."
+    bash .ci/check-agent-frontmatter.sh --staged-only || {
+        echo "❌ One or more staged agent files lack required frontmatter."
+        exit 1
+    }
+fi
+
 # Python lint (if ruff available) — only staged .py files
 if command -v ruff &> /dev/null; then
     STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- "*.py" 2>/dev/null)

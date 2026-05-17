@@ -6,8 +6,9 @@
 
 - **CLI Commands**: Functional (minor styling issues)
 - **Build Status**: Landing page ✅, Dashboard (needs env vars)
-- **Tests**: Passing (69/70 tests pass)
+- **Tests**: Passing (69/69 seed layer tests pass)
 - **API Endpoints**: Polar checkout fixed ✅
+- **CI/CD**: 5-gate pipeline GREEN (Gates 1-5 all pass)
 
 ### Production Build Verification
 
@@ -101,6 +102,37 @@ GET /api/health/redis
 - **Error Rates**: <1% threshold
 - **Throughput**: 1000+ req/min capacity
 - **Memory Usage**: <80% threshold
+
+### CI/CD Pipeline (5-Gate System)
+
+**Workflow:** `.github/workflows/ai-native-ci.yml`
+
+| Gate | Stage | Purpose |
+|------|-------|---------|
+| **Gate 1** | Logic Validation | Validate seed layer imports (CEOAgent, DeveloperAgent, TesterAgent) |
+| **Gate 2** | Security Scan | Bandit security scan + hardcoded secrets detection |
+| **Gate 3** | Quality Check | Pyflakes lint + file size validation (<200 lines) |
+| **Gate 4** | Dependency Audit | pip-audit on requirements.seed.txt |
+| **Gate 5** | Deployment Gate | 69 seed layer unit tests (mock LLM, no Ollama) + smoke tests |
+
+**Gate 5 Details:**
+```bash
+# Runs on every push to main/dev
+make test-seed    # Recommended: runs tests in isolated venv
+# OR manually:
+pytest tests/seed/ -q --tb=short
+
+# Test directories:
+tests/seed/test_seed_config.py           # Configuration validation
+tests/seed/test_seed_llm_client.py       # LLM client + fallbacks
+tests/seed/test_seed_agents_base.py      # Base agent + @timed decorator
+tests/seed/test_seed_agents_ceo.py       # CEO agent planning
+tests/seed/test_seed_agents_dev_tester.py # Developer + Tester agents
+tests/seed/test_seed_memory.py           # ChromaDB + SQLite hybrid
+tests/seed/test_seed_main_pipeline.py    # Main PEV pipeline
+```
+
+**All tests use mock LLM providers — no external Ollama required.**
 
 ### Deployment Scripts
 

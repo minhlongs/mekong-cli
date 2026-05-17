@@ -1,0 +1,58 @@
+{
+  "lang": "vi",
+  "name": "Tiếng Việt",
+  "commands": {
+    "ke-toan": "Kế Toán",
+    "thue-dnvn": "Thuế Doanh Nghiệp VN",
+    "zalo-oa": "Zalo OA Marketing",
+    "vietqr": "VietQR Thanh Toán",
+    "bhxh": "Bảo Hiểm Xã Hội",
+    "cook": "Thực Thi",
+    "plan": "Lập Kế Hoạch",
+    "deploy": "Triển Khai",
+    "audit": "Kiểm Tra"
+  },
+  "departments": {
+    "ke-toan": "Kế Toán & Hóa Đơn",
+    "kinh-doanh": "Kinh Doanh & CRM",
+    "marketing": "Marketing & Nội Dung",
+    "van-hanh": "Vận Hành",
+    "phap-ly": "Pháp Lý",
+    "tai-chinh": "Tài Chính"
+  },
+  "labels": {
+    "amount": "Số tiền",
+    "vat": "VAT",
+    "buyer": "Người mua",
+    "seller": "Người bán",
+    "invoice_date": "Ngày hóa đơn",
+    "tax_code": "Mã số thuế",
+    "bank": "Ngân hàng",
+    "account": "Số tài khoản",
+    "description": "Mô tả",
+    "month": "Tháng",
+    "year": "Năm",
+    "income": "Thu nhập",
+    "deduction": "Giảm trừ",
+    "tax_due": "Thuế phải nộp"
+  },
+  "messages": {
+    "disclaimer": "Tư vấn AI — không thay thế chuyên nghiệp có chứng chỉ.",
+    "tax_disclaimer": "Thuế VN thay đổi theo pháp luật — kiểm tra với cơ quan thuế.",
+    "invoice_disclaimer": "Hóa đơn điện tử cần chữ ký số từ cơ quan thuế.",
+    "processing": "Đang xử lý...",
+    "done": "Hoàn thành.",
+    "error": "Lỗi",
+    "success": "Thành công"
+  },
+  "vas_accounts": {
+    "131": "Phải thu khách hàng",
+    "331": "Phải trả người bán",
+    "511": "Doanh thu bán hàng",
+    "3331": "Thuế GTGT phải nộp",
+    "111": "Tiền mặt",
+    "112": "Tiền gửi ngân hàng",
+    "641": "Chi phí bán hàng",
+    "642": "Chi phí quản lý doanh nghiệp"
+  }
+}

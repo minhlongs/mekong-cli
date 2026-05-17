@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from src.api.gateway_models import CreateMissionRequest, CreateMissionResponse, MissionStatusResponse
@@ -24,6 +24,7 @@ from src.core.input_validation import (
     validate_url,
 )
 from src.core.gateway_api import MissionRequest, create_mission
+from src.middleware.license_gate import license_gate
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +39,20 @@ _MISSION_STORE_MAX = 1000
 async def create_mission_endpoint(
     request: CreateMissionRequest,
     background_tasks: BackgroundTasks,
+    http_request: Request,
 ) -> CreateMissionResponse:
-    """Create a new mission from AgencyOS."""
+    """Create a new mission from AgencyOS.
+
+    When ``LICENSE_GATE_ENFORCE=1`` the request must carry a valid Bearer JWT
+    issued by ``/auth/login``; the gate also checks license status and credits.
+    Otherwise the body-provided ``tenant_id`` is used (legacy / dev mode).
+    """
     request_id = str(uuid.uuid4())
+
+    import os as _os
+    if _os.environ.get("LICENSE_GATE_ENFORCE") == "1":
+        gated_tenant = await license_gate(http_request)
+        request.tenant_id = gated_tenant
 
     error = validate_required(request.goal, "goal")
     if error:

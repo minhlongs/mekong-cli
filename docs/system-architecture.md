@@ -10,21 +10,28 @@
 | Use Cases | www.mekongmind.com/{slug}/ | CF Pages (project: mekongmind) |
 | IDE App | ide.mekongmind.com | CF Pages (project: mekong-ide) |
 | Guide | www.mekongmind.com/guide/ | CF Pages (project: mekongmind) |
-| API Gateway | api.cashclaw.cc | FastAPI on M1 Max (CF Tunnel) |
+| API Gateway | mekong-engine.mekongmind.workers.dev | Cloudflare Workers (Hono + D1) |
 | Webhook | api.cashclaw.cc/webhook/polar | Polar.sh payment events |
 | Docs | www.mekongmind.com/docs | CF Pages (project: mekongmind) |
 | LLM | localhost:11434 | Ollama (M1 Max, 5 models, 95GB) |
 
 ## 1. High-Level Overview
 
-Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PEV) with pluggable LLM providers, parallel task execution via DAG scheduling, and built-in multi-tenant credit billing.
+Mekong CLI v6.0 features a 4-phase "Hạt giống → Cây → Rừng → Đất" (Seed → Tree → Forest → Land) architecture. Phase 01-04 (Seed) is complete, establishing the foundation for autonomous agent orchestration with Plan-Execute-Verify (PEV), pluggable LLM providers, parallel task execution via DAG scheduling, and multi-tenant billing.
+
+### Architecture Phases (2026 Roadmap)
+
+**Phase 01 (Seed - COMPLETE):** Local CLI + Python stdlib agents + memory (ChromaDB + SQLite)
+**Phase 02 (Tree):** Telegram bot + Web UI (htmx) + single-tenant expansion
+**Phase 03 (Forest):** Multi-tenant JWT + Docker isolation + Redis queue
+**Phase 04 (Land):** Temporal workflow engine + 5-gate CI/CD + Signals loop + Clipmart
 
 ### Architecture Layers
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │              CLI / REST API / Edge Gateway               │
-│   (Typer CLI + FastAPI + Cloudflare Workers)            │
+│   (Typer CLI + Hono Router + Cloudflare Workers)       │
 │           + RaaS Auth Middleware + Billing              │
 └──────────────────┬───────────────────────────────────────┘
                    │
@@ -100,7 +107,7 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 ```
 ┌──────────────────────────────────────────────────────────┐
 │              CLI / REST API / Edge Gateway               │
-│   (Typer CLI + FastAPI + Cloudflare Workers)            │
+│   (Typer CLI + Hono Router + Cloudflare Workers)       │
 │           + RaaS Auth Middleware + Billing              │
 └──────────────────┬───────────────────────────────────────┘
                    │
@@ -151,6 +158,75 @@ Mekong CLI is an autonomous agent framework implementing Plan-Execute-Verify (PE
 │  └────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────┘
 ```
+
+## 1.5. Seed Layer (Phase 01 - COMPLETE 2026-04-25)
+
+Minimal standalone AI agent runtime using Python stdlib (no external LLM SDKs):
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  seed/main.py — Entry point (python seed/main.py "task") │
+├──────────────────────────────────────────────────────────┤
+│                                                           │
+│  ┌──────────────────────┐  ┌──────────────────────────┐  │
+│  │  Agent Layer         │  │  LLM Router              │  │
+│  │  - ceo.py (planning) │  │  - ollama via urllib     │  │
+│  │  - developer.py      │  │  - stream-based parsing  │  │
+│  │  - tester.py         │  │  - fallback to offline   │  │
+│  │  - base.py (base)    │  └──────────────────────────┘  │
+│  └──────────────────────┘                                 │
+│                                                           │
+│  ┌──────────────────────┐  ┌──────────────────────────┐  │
+│  │  Memory (Hybrid)     │  │  Tools                   │  │
+│  │  - ChromaDB semantic │  │  - file_system.py        │  │
+│  │  - SQLite persistence│  │  - browser.py            │  │
+│  └──────────────────────┘  └──────────────────────────┘  │
+│                                                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Config — ENV-based: OLLAMA_BASE_URL, LLM_MODEL     │  │
+│  └──────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Key Design:**
+- Pure Python (no requests/httpx) — `urllib` + streaming
+- Stdlib-only agents (CEO, Developer, Tester)
+- Memory: ChromaDB vectors + SQLite backing
+- Config via environment: `OLLAMA_BASE_URL`, `LLM_MODEL`
+- Testing: 69 unit tests in `tests/seed/` (mock LLM, no Ollama required)
+
+**Quick Start:**
+```bash
+export OLLAMA_BASE_URL=http://localhost:11434
+python3 seed/main.py "Create a Python script to fetch weather"
+```
+
+**Testing:**
+```bash
+# Run all 69 seed tests (no Ollama needed)
+pytest tests/seed/ -v
+
+# Gated in CI/CD via Gate 5 (`.github/workflows/ai-native-ci.yml`)
+```
+
+**Files Added (Phase 01):**
+- `seed/main.py` — Orchestrator entry point
+- `seed/agents/{ceo,developer,tester,base}.py` — Agent implementations + @timed decorator
+- `seed/llm_client.py` — Ollama urllib client
+- `seed/memory.py` — ChromaDB + SQLite hybrid
+- `seed/config.py` — Environment configuration
+- `tests/seed/` — 69 unit tests (mock LLM, no Ollama)
+- `tools/{file_system,browser}.py` — Capability tools
+- `apps/web/mission-control.html` — htmx UI (Phase 02)
+- `apps/api/{server,gateway}.py` — FastAPI single/multi-tenant
+- `worker/main.py` — Redis queue worker
+- `integrations/telegram_bot.py` — Telegram integration (Phase 02)
+- `observability/agent_metrics.py` — Metrics decorator + observability
+- `feedback/signals_loop.py` — Weekly LLM analysis
+- `clipmart/marketplace_api.py` — Agent template marketplace
+- `.github/workflows/ai-native-ci.yml` — 5-gate CI/CD (Gate 5 runs pytest)
+- `docker-compose.seed.yml` + `Dockerfile.seed` — Containerization (copies seed/ tools/ worker/ apps/ integrations/ clipmart/ observability/ feedback/)
+- `requirements.seed.txt` — Dependencies (chromadb, fastapi, uvicorn, redis, pytest)
 
 ## 2. Core Modules
 

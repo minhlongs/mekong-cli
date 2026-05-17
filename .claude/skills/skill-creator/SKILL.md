@@ -1,6 +1,7 @@
 ---
 name: skill-creator
 description: Create new Mekong CLI skills from observed Claude failure patterns, repetitive workflows, or codebase-specific knowledge. Trigger when user says "make a skill for", "create skill", "this should be a skill", or when Claude notices it's doing the same multi-step task for the third time.
+why-override: "This is the Mekong-domain skill creator (mekong-cli specific gotchas). The stock global skill `ck:skill-creator` at ~/.claude/skills/skill-creator targets generic Claude skill authoring + Skillmark benchmarks. Both coexist; pick by intent."
 ---
 
 # Skill Creator

@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.seed.txt ./
+RUN pip install --no-cache-dir -r requirements.seed.txt \
+    && useradd --no-create-home --shell /bin/false appuser \
+    && chown -R appuser:appuser /app
+
+COPY --chown=appuser:appuser seed/ ./seed/
+COPY --chown=appuser:appuser tools/ ./tools/
+COPY --chown=appuser:appuser worker/ ./worker/
+COPY --chown=appuser:appuser apps/ ./apps/
+COPY --chown=appuser:appuser integrations/ ./integrations/
+COPY --chown=appuser:appuser clipmart/ ./clipmart/
+COPY --chown=appuser:appuser observability/ ./observability/
+COPY --chown=appuser:appuser feedback/ ./feedback/
+
+ENV PYTHONPATH=/app
+
+USER appuser
+
+CMD ["python", "seed/main.py"]

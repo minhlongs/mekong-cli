@@ -86,6 +86,32 @@ presets:
     note: "Free, offline, Apple Silicon optimized, full memory bandwidth"
     setup: "pip install mlx-lm && python -m mlx_lm.server --model mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit --port 11435"
 
+  # --- VN HUB (Mekong VN — local MLX, zero API cost) ---
+  # NOTE: PhoGPT-4B dropped — uses pytorch_model.bin (no safetensors), incompatible with mlx-lm.
+  # Qwen3-8B replaces it: newer (2025), 62+ tok/s on M1 Max, strong Vietnamese, 4.8GB RAM.
+  vn-specialist:
+    base_url: "http://localhost:11434/v1"
+    model: "qwen3-8b"
+    note: "Qwen3-8B Q4 — Primary VN model. Kế toán, thuế, marketing, BHXH. ~62 tok/s on M1 Max."
+    setup: "bash scripts/setup-mlx.sh --skip-phogpt && bash scripts/start-mlx-server.sh qwen3-8b"
+    lang: "vi|en"
+    models_dir: "models/qwen3-8b"
+
+  vn-reasoning:
+    base_url: "http://localhost:11434/v1"
+    model: "qwen3-8b"
+    note: "Same as vn-specialist — Qwen3-8B handles both VN tasks and complex reasoning."
+    setup: "bash scripts/start-mlx-server.sh qwen3-8b"
+    lang: "vi|en"
+    models_dir: "models/qwen3-8b"
+
+  vn-auto:
+    base_url: "http://localhost:11434/v1"
+    model: "qwen3-8b"
+    note: "Default VN Hub model. Start: bash scripts/start-mlx-server.sh qwen3-8b"
+    setup: "bash scripts/start-mlx-server.sh qwen3-8b"
+    lang: "vi"
+
 
   lmstudio:
     base_url: "http://localhost:1234/v1"

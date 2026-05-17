@@ -1,21 +1,21 @@
-# Mekong CLI — Codebase Summary
+# Mekong CLI v6.0 — Codebase Summary
 
-**Version:** 5.0.0 | **Status:** Production | **Last Updated:** 2026-03-23
+**Version:** 6.0.0 | **Status:** Phase 01-04 (Seed Layer COMPLETE) | **Last Updated:** 2026-04-25
 
-> AI-operated business platform. Open source. Universal LLM. 319 commands, 542 skills, 410 contracts.
+> AI-operated business platform. 4-phase Seed→Tree→Forest→Land architecture. Phase 01 (Seed) complete: 319 commands, 542 skills, Ollama-native Python stdlib agents.
 
 ---
 
 ## Executive Overview
 
-**Mekong CLI** is an orchestrated AI platform built on the Plan→Execute→Verify (PEV) engine. It enables automated business operations across 5 layers (Founder, Business, Product, Engineering, Ops) with 319+ commands and 542 skills.
+**Mekong CLI v6.0** restructures around a 4-phase growth architecture. Phase 01 (Seed) is production-ready with a local Python CLI + ChromaDB memory + Ollama integration. The platform enables autonomous agent orchestration with Plan-Execute-Verify (PEV) across 5 business layers (Founder, Business, Product, Engineering, Ops).
 
 **Key Stats:**
-- **4,002 files** | 5.8M tokens | 23M characters
-- **Python 3.9+** | TypeScript/Node.js 18+ | Cloudflare Workers + local LLM
-- **Monorepo structure:** Core SDK + 8 applications + 542 reusable skills
-- **Deployment:** 100% Cloudflare (Pages, Workers, D1, R2, KV) + M1 Max LLM (192.168.11.111:11434)
-- **License:** MIT | Open source with commercial licensing
+- **4,500+ files** | Phase 01-04 complete on main
+- **Python 3.9+** stdlib-first design (no requests/httpx) | TypeScript/Node.js 18+
+- **Monorepo:** Seed runtime + Tools + Apps + Integrations + Observability
+- **Deployment:** M1 Max local (Phase 01) → Telegram+Web (Phase 02) → Multi-tenant (Phase 03) → Temporal+CI/CD (Phase 04)
+- **License:** MIT | Open source infrastructure
 
 ---
 
@@ -63,6 +63,63 @@
 ---
 
 ## Directory Structure
+
+### Phase 01: Seed Layer (COMPLETE 2026-04-25)
+
+```
+seed/                                 # Local Python CLI runtime (stdlib-only)
+├── main.py                          # Entry: python3 seed/main.py "task"
+├── agents/
+│   ├── base.py                      # BaseAgent protocol + @timed decorator
+│   ├── ceo.py                       # Planning agent (LLM task decomposition)
+│   ├── developer.py                 # Code execution agent
+│   └── tester.py                    # Verification agent
+├── llm_client.py                    # Ollama urllib client (no SDK)
+├── memory.py                        # ChromaDB + SQLite hybrid store
+└── config.py                        # ENV-based configuration
+
+tests/seed/                           # Unit tests (69 tests, no Ollama needed)
+├── test_seed_config.py              # Config validation
+├── test_seed_llm_client.py          # LLM client + fallback
+├── test_seed_agents_base.py         # Base agent + decorators
+├── test_seed_memory.py              # Memory hybrid store
+├── test_seed_agents_ceo.py          # CEO agent planning
+├── test_seed_agents_dev_tester.py   # Developer + Tester agents
+├── test_seed_main_pipeline.py       # Main pipeline integration
+└── conftest.py                      # pytest fixtures + mocks
+
+tools/                                # Capability tools
+├── file_system.py                   # File operations
+└── browser.py                       # Browser automation
+
+apps/
+├── web/mission-control.html         # htmx Mission Control UI
+├── api/
+│   ├── server.py                    # FastAPI single-tenant (port 8765)
+│   └── gateway.py                   # Multi-tenant JWT gateway (port 8766)
+
+worker/
+└── main.py                          # Redis queue worker + Docker isolation
+
+integrations/
+└── telegram_bot.py                  # Telegram bot (set TELEGRAM_TOKEN)
+
+observability/
+└── agent_metrics.py                 # @timed decorator + Prometheus metrics
+
+feedback/
+└── signals_loop.py                  # Weekly LLM evals + analysis
+
+clipmart/
+└── marketplace_api.py               # Agent template marketplace
+
+.github/workflows/
+└── ai-native-ci.yml                 # 5-gate CI/CD pipeline (Gate 5: pytest)
+
+docker-compose.seed.yml              # Container stack
+Dockerfile.seed                       # Build image (copies seed/ tools/ worker/ apps/ integrations/ clipmart/ observability/ feedback/)
+requirements.seed.txt                # chromadb, fastapi, uvicorn, redis, pytest
+```
 
 ### Core Packages
 
@@ -386,7 +443,10 @@ curl -X POST https://api.mekongmind.com/v1/tasks \
 git clone https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli
 pip install -e ".[dev]"
-pytest tests/
+
+# Run seed layer tests (69 tests, no Ollama needed)
+make test-seed    # Recommended
+# OR: pytest tests/seed/ -v
 ```
 
 ---
