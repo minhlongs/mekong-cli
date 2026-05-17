@@ -529,3 +529,124 @@ class TestStatsConversionCrossref:
         assert s["trial_pilots"] + s["converted_pilots"] == s["active_pilots"]
         assert s["converted_pilots"] == 3
         assert s["trial_pilots"] == 2
+
+
+class TestFounderSignupWebhook:
+    """Verify the BackgroundTasks-driven founder notification on new signups.
+
+    Pattern: monkeypatch vpr._notify_founder_signup with a recorder, hit
+    POST /signup, assert recorder.calls reflects the expected behavior.
+    BackgroundTasks run synchronously inside TestClient → assertions work
+    immediately after the response.
+    """
+
+    @pytest.fixture
+    def recorder(self, monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+        """Replace the notification func with a list-appending capture.
+
+        Returns the call-log list so tests can assert content / arity.
+        """
+        calls: list[dict] = []
+
+        async def _recorder(record: dict) -> None:
+            calls.append(record)
+
+        monkeypatch.setattr(vpr, "_notify_founder_signup", _recorder)
+        return calls
+
+    def test_new_signup_triggers_notification(
+        self, client: TestClient, recorder: list[dict]
+    ) -> None:
+        resp = client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        assert resp.status_code == 201
+        assert resp.json()["is_new"] is True
+        assert len(recorder) == 1
+        rec = recorder[0]
+        assert rec["name"] == VALID_SIGNUP["name"]
+        assert rec["zalo"] == VALID_SIGNUP["zalo"]
+        assert rec["user_id"].startswith("opc_001_")
+
+    def test_idempotent_resubmit_does_not_notify(
+        self, client: TestClient, recorder: list[dict]
+    ) -> None:
+        """Same Zalo posting twice → only first signup notifies."""
+        r1 = client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        r2 = client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        assert r1.json()["is_new"] is True
+        assert r2.json()["is_new"] is False
+        assert len(recorder) == 1  # NOT 2 — no spam on re-submit
+
+    def test_webhook_disabled_no_calls(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When MEKONG_SIGNUP_WEBHOOK_URL unset, _notify_founder_signup is a
+        no-op (early return). Signup must still return 201.
+        """
+        monkeypatch.delenv("MEKONG_SIGNUP_WEBHOOK_URL", raising=False)
+        # Don't override _notify_founder_signup — let real impl run
+        resp = client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        assert resp.status_code == 201
+
+    def test_notifier_swallows_internal_errors(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Real _notify_founder_signup has except-all guard — bad URL must
+        not raise (httpx ConnectError swallowed). This is the actual safety
+        contract that protects the signup flow.
+        """
+        import asyncio
+        # localhost:1 = guaranteed connection refused (no service listens there)
+        monkeypatch.setenv("MEKONG_SIGNUP_WEBHOOK_URL", "http://127.0.0.1:1/x")
+        # Must complete without raising
+        asyncio.run(vpr._notify_founder_signup({
+            "user_id": "opc_001_abc", "name": "X", "zalo": "+849000",
+            "business_type": "shop_online", "city": "HCM",
+            "industry": None, "source": None, "onboarded_at": "now",
+        }))
+
+    def test_notifier_no_url_returns_silently(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Direct test of _notify_founder_signup: no env var → no exception."""
+        import asyncio
+        monkeypatch.delenv("MEKONG_SIGNUP_WEBHOOK_URL", raising=False)
+        # Should return None without raising or making HTTP calls
+        asyncio.run(vpr._notify_founder_signup({"name": "X", "zalo": "+849..."}))
+
+    def test_notifier_with_url_invokes_httpx(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """When URL set, notifier should POST via httpx. We stub httpx to
+        capture the call without making a real network request.
+        """
+        import asyncio
+        monkeypatch.setenv("MEKONG_SIGNUP_WEBHOOK_URL", "https://example.com/hook")
+        monkeypatch.setenv("MEKONG_SIGNUP_WEBHOOK_AUTH", "Bearer test-secret")
+
+        captured: dict = {}
+
+        class _FakeResp:
+            status_code = 200
+            text = "ok"
+
+        class _FakeClient:
+            def __init__(self, *a, **kw): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *a): return False
+            async def post(self, url, json=None, headers=None):
+                captured["url"] = url
+                captured["json"] = json
+                captured["headers"] = headers
+                return _FakeResp()
+
+        import httpx
+        monkeypatch.setattr(httpx, "AsyncClient", _FakeClient)
+        asyncio.run(vpr._notify_founder_signup({
+            "user_id": "opc_001_abc", "name": "Test", "zalo": "+8490000",
+            "business_type": "shop_online", "city": "HCM",
+            "industry": "test", "source": "smoke", "onboarded_at": "now",
+        }))
+        assert captured["url"] == "https://example.com/hook"
+        assert captured["json"]["event"] == "pilot.signup.new"
+        assert captured["json"]["user_id"] == "opc_001_abc"
+        assert captured["headers"]["Authorization"] == "Bearer test-secret"

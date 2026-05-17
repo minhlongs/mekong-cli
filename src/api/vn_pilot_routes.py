@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 from dataclasses import asdict, dataclass
@@ -23,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter(prefix="/v1/pilot", tags=["VN Pilot"])
@@ -236,6 +237,51 @@ def _current_iso_week() -> str:
     return f"{y}-W{w:02d}"
 
 
+async def _notify_founder_signup(record: dict) -> None:
+    """Fire founder webhook on new pilot signup. Non-blocking, resilient.
+
+    Env vars (both optional):
+    - MEKONG_SIGNUP_WEBHOOK_URL: target endpoint (Zapier/Pipedream/Telegram bot)
+    - MEKONG_SIGNUP_WEBHOOK_AUTH: optional Authorization header value
+
+    Payload includes PII (name, zalo) because founder needs to call user.
+    Webhook URL must point to a PRIVATE endpoint, not a public broadcast
+    channel — same security posture as MEKONG_ADMIN_TOKEN.
+
+    Failures logged at WARNING but never raised — signup response must
+    succeed even if Slack/Zapier is down.
+    """
+    url = os.environ.get("MEKONG_SIGNUP_WEBHOOK_URL")
+    if not url:
+        return
+    headers = {"Content-Type": "application/json"}
+    auth = os.environ.get("MEKONG_SIGNUP_WEBHOOK_AUTH")
+    if auth:
+        headers["Authorization"] = auth
+    payload = {
+        "event": "pilot.signup.new",
+        "user_id": record.get("user_id"),
+        "name": record.get("name"),
+        "zalo": record.get("zalo"),
+        "business_type": record.get("business_type"),
+        "city": record.get("city"),
+        "industry": record.get("industry"),
+        "source": record.get("source"),
+        "onboarded_at": record.get("onboarded_at"),
+    }
+    try:
+        import httpx  # local import keeps cold-start cheap when feature unused
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code >= 400:
+                logging.warning(
+                    "Founder signup webhook returned %d: %s",
+                    resp.status_code, resp.text[:200],
+                )
+    except Exception as exc:  # noqa: BLE001 — fire-and-forget, never raise
+        logging.warning("Founder signup webhook failed: %s", exc)
+
+
 # ---------- Routes ----------
 
 @router.get("/health")
@@ -244,11 +290,15 @@ async def health() -> dict[str, str]:
 
 
 @router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
-async def signup(req: SignupRequest) -> SignupResponse:
+async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> SignupResponse:
     """Onboard 1 pilot user. Idempotent: same Zalo → return existing user_id.
 
     Source channels: web form / Zalo bot webhook / Zapier / Google Forms /
     LinkedIn DM follow-up — all funnel here.
+
+    On is_new=True signups, schedules a fire-and-forget founder webhook
+    (see _notify_founder_signup). Repeat submissions don't re-fire — avoids
+    notification spam when a user re-opens the form.
     """
     existing = _find_by_zalo(req.zalo)
     if existing:
@@ -285,6 +335,10 @@ async def signup(req: SignupRequest) -> SignupResponse:
     }
     _append_jsonl(_pilots_path(), record)
     balance = _add_credits(user_id, INITIAL_FREE_CREDITS)
+
+    # Notify founder out-of-band (won't delay this response). Tests inject a
+    # mock by monkeypatching this module's _notify_founder_signup.
+    background_tasks.add_task(_notify_founder_signup, record)
 
     return SignupResponse(
         user_id=user_id,
