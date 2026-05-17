@@ -1,0 +1,104 @@
+# Prometheus alerting rules for Mekong-IDE (mekongd + agent-forest).
+#
+# Drop-in: add this file to your Prometheus config via `rule_files:`:
+#
+#   rule_files:
+#     - /etc/prometheus/rules/mekong-ide-rules.yml
+#
+# Thresholds are starter values — tune per deployment.
+# See docs/observability-mekong-ide.md for the full PromQL reference.
+
+groups:
+  - name: mekong-ide
+    rules:
+      # mekongd — routing policy health
+      - alert: MekongdLocalRatioLow
+        expr: mekongd_local_ratio < 0.4
+        for: 15m
+        labels:
+          severity: warning
+          component: mekongd
+        annotations:
+          summary: "Qwen local path underutilized (<40%) — investigate cloud_patterns"
+
+      # mekongd — operator feedback quality (Pillar 3)
+      - alert: MekongdSignalsRatioDegraded
+        expr: mekongd_signals_ratio < 0.6 and increase(mekongd_signals_total[1h]) > 10
+        for: 30m
+        labels:
+          severity: warning
+          component: mekongd
+        annotations:
+          summary: "Operator satisfaction <60% with ≥10 signals/h — routing quality regression"
+
+      # mekongd — explicit user feedback quality (Pillar 3, Giai đoạn 3.2.F)
+      # User-forwarded feedback (note carries `#user`) moves independently of
+      # auto-emitted pipeline signals — alert separately so "my users are
+      # unhappy" doesn't get averaged away by healthy auto traffic.
+      - alert: MekongdUserFeedbackRatioDegraded
+        expr: |
+          mekongd_user_feedback_ratio < 0.7
+          and (mekongd_user_signals_total{kind="good"}
+               + mekongd_user_signals_total{kind="bad"}) > 20
+        for: 30m
+        labels:
+          severity: warning
+          component: mekongd
+        annotations:
+          summary: "User feedback <70% good with ≥20 user signals — quality regression"
+
+      # mekongd — cost guardrail
+      - alert: MekongdCloudSpendHigh
+        expr: mekongd_cloud_spent_usd_today > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: mekongd
+        annotations:
+          summary: "Cloud spend today exceeds $10 — review routing policy / budget"
+
+      # agent-forest — queue health
+      - alert: AgentForestQueueBackpressure
+        expr: agent_forest_queue_depth > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: agent-forest
+        annotations:
+          summary: "Worker queue depth >50 — scale workers or check for stuck jobs"
+
+      # agent-forest — worker liveness
+      - alert: AgentForestNoWorkers
+        expr: agent_forest_queue_depth > 0 and agent_forest_workers_alive == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: agent-forest
+        annotations:
+          summary: "Queue has pending jobs but zero workers heartbeating — pool is dead"
+
+      # agent-forest — task failure rate (Giai đoạn 3.3.B)
+      - alert: AgentForestTaskFailureRateHigh
+        expr: |
+          rate(agent_forest_tasks_failed_total[5m])
+            / (rate(agent_forest_tasks_completed_total[5m]) + rate(agent_forest_tasks_failed_total[5m]))
+            > 0.3
+        for: 10m
+        labels:
+          severity: critical
+          component: agent-forest
+        annotations:
+          summary: "Task failure rate >30% over 5m window — check worker executor / sandbox"
+
+      # agent-forest — prompt_guard surge (Pillar 4 security ↔ Pillar 2)
+      # Benign baseline is ~0 rej/s. >0.1 rej/s (6/min) sustained 5m =
+      # active probe OR pattern false-positive that needs tuning. Warning,
+      # not critical — service still up, rejects are the system working.
+      - alert: AgentForestPromptGuardSurge
+        expr: sum(rate(agent_forest_prompt_guard_rejections_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: agent-forest
+        annotations:
+          summary: "prompt_guard rejections >0.1/s (6/min) — probe or false-positive regex"

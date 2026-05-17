@@ -2,7 +2,11 @@
         generate-contracts validate-contracts self-test regenerate \
         start-daemon stop-daemon daemon-status start-gateway \
         pev-test pev-lint pev-build pev-publish \
-        venv-seed test-seed venv test-venv
+        venv-seed test-seed venv test-venv \
+        test-mekongd lint-mekongd serve-mekongd \
+        test-agent-forest lint-agent-forest \
+        test-agent-core lint-agent-core \
+        test-python-packages lint-python-packages
 
 all: help
 
@@ -134,6 +138,32 @@ test-seed:
 start-gateway:
 	python3 -m uvicorn src.core.gateway:app --reload --port 8000
 
+# === Python Packages (mekongd / agent-forest / agent-core) — Pillar 4 local parity ===
+test-mekongd:
+	cd packages/mekongd && python3 -m pytest tests/ -v --tb=short
+
+lint-mekongd:
+	cd packages/mekongd && python3 -m ruff check src/ tests/
+
+serve-mekongd:
+	cd packages/mekongd && python3 -m mekongd.cli serve
+
+test-agent-forest:
+	cd packages/agent-forest && python3 -m pytest tests/ -v --tb=short
+
+lint-agent-forest:
+	cd packages/agent-forest && python3 -m ruff check src/ tests/
+
+test-agent-core:
+	cd packages/agent-core && python3 -m pytest tests/ -v --tb=short
+
+lint-agent-core:
+	cd packages/agent-core && python3 -m ruff check src/ tests/
+
+test-python-packages: test-mekongd test-agent-forest test-agent-core
+
+lint-python-packages: lint-mekongd lint-agent-forest lint-agent-core
+
 # === Info ===
 stats:
 	@echo "Python files: $$(find src -name '*.py' | wc -l | tr -d ' ')"
@@ -179,6 +209,17 @@ help:
 	@echo "    make validate-contracts  Validate contracts against schemas"
 	@echo "    make self-test           Run health check (score 0-100)"
 	@echo "    make regenerate          generate + validate + self-test"
+	@echo ""
+	@echo "  Python Packages (mekongd / agent-forest / agent-core):"
+	@echo "    make test-mekongd         pytest packages/mekongd"
+	@echo "    make lint-mekongd         ruff packages/mekongd"
+	@echo "    make serve-mekongd        Start mekongd daemon (Qwen3.6 proxy)"
+	@echo "    make test-agent-forest    pytest packages/agent-forest"
+	@echo "    make lint-agent-forest    ruff packages/agent-forest"
+	@echo "    make test-agent-core      pytest packages/agent-core"
+	@echo "    make lint-agent-core      ruff packages/agent-core"
+	@echo "    make test-python-packages All three above"
+	@echo "    make lint-python-packages All three lints"
 	@echo ""
 	@echo "  PEV Engine:"
 	@echo "    make pev-test     Run PEV core tests with coverage"

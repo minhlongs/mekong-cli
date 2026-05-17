@@ -162,6 +162,17 @@ packages/
 │   │   │       └── deploy_command.py
 │   │   └── tests/
 │   └── pyproject.toml
+├── agent-core/                    # Phase 1 (Seed): Agent kernel
+│   ├── src/agent_core/
+│   │   ├── base_agent.py          # Think→Act→Observe loop
+│   │   ├── llm_client.py          # LLMClient (routes to mekongd:8765)
+│   │   ├── memory.py              # SeedMemory (SQLite + ChromaDB)
+│   │   ├── tools/                 # Sandboxed tools (browser, file_system, execute)
+│   │   ├── agents/                # CEO, Developer, ToolAgent roles
+│   │   ├── experiments.py         # A/B bucket (SHA-256 deterministic variant assignment)
+│   │   ├── evals.py               # Offline-eval harness (regression gate)
+│   │   └── cli.py                 # 11 commands: run/orchestrate/report/signal/history/prune/status/forest-status/eval/experiment/doctor
+│   └── tests/                     # 196/196 tests pass, 1 skipped
 ├── agents/
 │   └── hubs/                      # Department-scoped command catalogs (17 total)
 │       ├── cto-hub.md             # Chief Technology Officer commands
@@ -261,6 +272,14 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 - `mekong-qwen` — DashScope Qwen 3.5
 - `mekong-cto` — Daemon mode
 
+### Agent Workforce Layer (agent-core)
+
+`packages/agent-core/` provides the **Phase 1 (Seed) agent kernel** — primitives for building autonomous workforce systems. It pairs with `mekongd` (Phase 0 cost-saving LLM proxy) to enable distributed agent execution via LLMClient routing to `http://127.0.0.1:8765` with Prometheus metrics at `GET /metrics`. Includes BaseAgent (think→act→observe), SeedMemory (SQLite + optional ChromaDB), pre-built CEO/Developer/ToolAgent roles with sandboxed tools (browser, file_system, execute), and A/B experiment bucketing (SHA-256 deterministic variant assignment via Statsig-style 3-step gate: offline eval ✓ / online signals ✓ / exposure ✓). Operator-facing CLI covers 11 commands with `--json` parity on non-interactive subcommands (forest-status/eval/history/report/status/experiment/doctor); `doctor` gives holistic triage (env + memory + connectivity + package). Seed phase completes Phase 2 (Forest multi-tenant) on demand.
+
+#### Forest Layer (Multi-Tenant Runtime)
+
+`packages/agent-forest/` — **Phase 2 (Forest)** multi-tenant agent orchestration platform. FastAPI gateway (JWT HS256 auth, rate limiting), Redis-backed task queue, async worker pool, per-user sandbox (subprocess-based). 142/142 tests pass. Routes task submission → queued for async execution → result callback via webhook. Pillar 4 security tier-1 active: `prompt_guard` (24 regex patterns + sanitize_input) rejects injection/dangerous-code on POST /task, with Prometheus counter `agent_forest_prompt_guard_rejections_total{reason}` + `AgentForestPromptGuardSurge` alert. Foundation for Phase 3 (Postgres user persistence) and Phase 4 (multi-cloud deployment).
+
 ---
 
 ## API Gateway
@@ -275,6 +294,7 @@ export LLM_MODEL=anthropic/claude-sonnet-4
 | `POST /v1/chat/completions` | Chat API |
 | `POST /webhook/polar` | Polar.sh subscription/order events |
 | `GET /v1/reports` | Analytics |
+| `GET /metrics` | Prometheus metrics (mekongd observability) |
 
 **Middleware:**
 - `authMiddleware` — API key validation

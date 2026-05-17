@@ -274,10 +274,12 @@ class RecipeStep:
 
 Multi-mode task runner:
 
-- **Shell Mode** — Runs `bash` or `sh` commands
+- **Shell Mode** — Runs `bash` or `sh` commands (default subprocess, or isolated Docker when `FOREST_WORKER_EXECUTOR=docker`)
 - **LLM Mode** — Sends prompts to LLM provider
 - **API Mode** — Calls HTTP endpoints (future)
 - **Agent Mode** — Dispatches to registered agents
+
+**Docker Isolation (Phase 3 Land):** Agent-forest workers can execute inside isolated Docker containers via env vars `FOREST_WORKER_EXECUTOR`, `FOREST_DOCKER_IMAGE` (default `agent-core:latest`), and `FOREST_DOCKER_TIMEOUT_SECONDS` (default 300). Non-root uid 1000, requires `docker>=7` extra.
 
 **Execution Result:**
 ```python

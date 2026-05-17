@@ -97,7 +97,6 @@ target-version = ['py311']
 line-length = 100
 target-version = "py311"
 exclude = [
-    "apps/sophia-proposal/.claude/",
     "apps/*/.claude/skills/",
     ".claude/skills/",
     "mekong/skills/",

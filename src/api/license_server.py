@@ -81,7 +81,7 @@ async def validate_license_endpoint(
     Requires Bearer token for authentication (optional for local dev).
     Rate limited to 100 requests per minute per IP.
     """
-    client_ip = http_request.client.host if http_request.client else "127.0.0.1"
+    client_ip = http_request.client.host if http_request.client else "unknown"
 
     # Check rate limit
     if not check_rate_limit(client_ip):
