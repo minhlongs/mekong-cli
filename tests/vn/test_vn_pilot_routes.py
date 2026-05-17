@@ -262,3 +262,114 @@ class TestRecent:
             })
         body = client.get("/v1/pilot/recent?limit=2").json()
         assert len(body["signups"]) == 2
+
+
+class TestConvert:
+    def _signup(self, client: TestClient, suffix: int = 0, name: str = "U") -> str:
+        body = client.post("/v1/pilot/signup", json={
+            **VALID_SIGNUP, "zalo": f"+849091234{suffix:02d}", "name": f"{name}{suffix}",
+        }).json()
+        return body["user_id"]
+
+    def test_convert_unknown_user(self, client: TestClient) -> None:
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "opc_999_zzzzzz",
+            "tier": "starter_vnd",
+            "monthly_vnd": 199_000,
+        })
+        assert resp.status_code == 404
+
+    def test_convert_creates_record(self, client: TestClient) -> None:
+        user_id = self._signup(client)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": user_id,
+            "tier": "starter_vnd",
+            "monthly_vnd": 199_000,
+        })
+        assert resp.status_code == 201
+        body = resp.json()
+        assert body["is_new"] is True
+        assert body["user_id"] == user_id
+        assert body["monthly_vnd"] == 199_000
+        assert body["tier"] == "starter_vnd"
+        assert body["started_at"]  # auto-filled with today
+
+    def test_convert_idempotent(self, client: TestClient) -> None:
+        user_id = self._signup(client)
+        payload = {
+            "user_id": user_id,
+            "tier": "growth_vnd",
+            "monthly_vnd": 499_000,
+            "started_at": "2026-05-17",
+        }
+        first = client.post("/v1/pilot/convert", json=payload).json()
+        second = client.post("/v1/pilot/convert", json=payload).json()
+        assert first["is_new"] is True
+        assert second["is_new"] is False
+        assert first["recorded_at"] == second["recorded_at"]
+
+    def test_convert_invalid_user_id_format(self, client: TestClient) -> None:
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": "not_a_pilot_id",
+            "tier": "starter_vnd",
+            "monthly_vnd": 199_000,
+        })
+        assert resp.status_code == 422
+
+    def test_convert_rejects_negative_amount(self, client: TestClient) -> None:
+        user_id = self._signup(client)
+        resp = client.post("/v1/pilot/convert", json={
+            "user_id": user_id,
+            "tier": "starter_vnd",
+            "monthly_vnd": -1,
+        })
+        assert resp.status_code == 422
+
+
+class TestRevenue:
+    def _signup(self, client: TestClient, suffix: int = 0) -> str:
+        body = client.post("/v1/pilot/signup", json={
+            **VALID_SIGNUP, "zalo": f"+849091234{suffix:02d}", "name": f"U{suffix}",
+        }).json()
+        return body["user_id"]
+
+    def test_revenue_empty(self, client: TestClient) -> None:
+        body = client.get("/v1/pilot/revenue").json()
+        assert body["conversions"] == 0
+        assert body["unique_converted_users"] == 0
+        assert body["mrr_vnd"] == 0
+        assert body["conversion_rate"] == 0.0
+        assert body["by_tier"] == {}
+        assert body["target_mrr_vnd"] == 1_000_000
+        assert body["target_conversions"] == 5
+
+    def test_revenue_aggregates_mrr(self, client: TestClient) -> None:
+        # 2 signups, 1 conversion
+        user_a = self._signup(client, suffix=0)
+        self._signup(client, suffix=1)
+        client.post("/v1/pilot/convert", json={
+            "user_id": user_a,
+            "tier": "starter_vnd",
+            "monthly_vnd": 199_000,
+            "started_at": "2026-05-17",
+        })
+        body = client.get("/v1/pilot/revenue").json()
+        assert body["conversions"] == 1
+        assert body["unique_converted_users"] == 1
+        assert body["mrr_vnd"] == 199_000
+        assert body["conversion_rate"] == 0.5  # 1 / 2
+        assert body["by_tier"] == {"starter_vnd": 1}
+
+    def test_revenue_multiple_tiers(self, client: TestClient) -> None:
+        for i in range(3):
+            uid = self._signup(client, suffix=i)
+            tier = ["starter_vnd", "growth_vnd", "pro_vnd"][i]
+            amount = [199_000, 499_000, 999_000][i]
+            client.post("/v1/pilot/convert", json={
+                "user_id": uid, "tier": tier, "monthly_vnd": amount,
+                "started_at": f"2026-05-{17 + i:02d}",
+            })
+        body = client.get("/v1/pilot/revenue").json()
+        assert body["mrr_vnd"] == 199_000 + 499_000 + 999_000
+        assert body["unique_converted_users"] == 3
+        assert body["by_tier"] == {"starter_vnd": 1, "growth_vnd": 1, "pro_vnd": 1}

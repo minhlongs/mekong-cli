@@ -89,6 +89,25 @@ class PollResponseRequest(BaseModel):
         return v
 
 
+class ConversionRequest(BaseModel):
+    """Founder marks a pilot user as paid (Week 7-8 conversion phase).
+
+    Idempotent on (user_id, started_at) — re-submitting same pair returns
+    existing record without inflating MRR.
+    """
+    user_id: str = Field(min_length=4)
+    tier: str = Field(min_length=1, max_length=40)  # vd "starter_vnd", "growth_vnd"
+    monthly_vnd: int = Field(ge=0, le=100_000_000)  # ≤100M VND sanity cap
+    started_at: Optional[str] = None  # ISO date; default = today
+
+    @field_validator("user_id")
+    @classmethod
+    def _validate_user_id(cls, v: str) -> str:
+        if not v.startswith("opc_"):
+            raise ValueError("user_id phải bắt đầu bằng 'opc_'")
+        return v
+
+
 # ---------- Helpers ----------
 
 def _ensure_dir() -> None:
@@ -105,6 +124,10 @@ def _credits_path() -> Path:
 
 def _responses_path() -> Path:
     return CONFIG_DIR / "poll_responses.jsonl"
+
+
+def _conversions_path() -> Path:
+    return CONFIG_DIR / "conversions.jsonl"
 
 
 def _stable_user_id(name: str, zalo: str, seq: int) -> str:
@@ -134,6 +157,10 @@ def _load_pilots() -> list[dict]:
 
 def _load_responses() -> list[dict]:
     return _load_jsonl(_responses_path())
+
+
+def _load_conversions() -> list[dict]:
+    return _load_jsonl(_conversions_path())
 
 
 def _find_by_zalo(zalo: str) -> Optional[dict]:
@@ -264,6 +291,74 @@ async def poll_response(req: PollResponseRequest) -> dict[str, object]:
         "score": req.score,
         "iso_week": iso_week,
         "low_nps_alert": req.score < 4,  # founder follow-up signal
+    }
+
+
+@router.post("/convert", status_code=status.HTTP_201_CREATED)
+async def convert(req: ConversionRequest) -> dict[str, object]:
+    """Mark a pilot user as paid. Records tier + MRR contribution.
+
+    Phase 6 Week 7-8 conversion phase: founder calls this after Polar.sh
+    payment confirms (or manual VietQR transfer). Idempotent on
+    (user_id, started_at) — re-call returns existing record.
+
+    Also flips pilot record status: "active" → "converted" (next /load
+    reads new status). Errors:
+    - 404 if user_id not in pilots.jsonl
+    """
+    pilots = _load_pilots()
+    if not any(p["user_id"] == req.user_id for p in pilots):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown user_id: {req.user_id}",
+        )
+    started_at = req.started_at or datetime.now(timezone.utc).date().isoformat()
+    existing = next(
+        (
+            c for c in _load_conversions()
+            if c.get("user_id") == req.user_id and c.get("started_at") == started_at
+        ),
+        None,
+    )
+    if existing:
+        return {"is_new": False, **existing}
+    record = {
+        "user_id": req.user_id,
+        "tier": req.tier,
+        "monthly_vnd": req.monthly_vnd,
+        "started_at": started_at,
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    _append_jsonl(_conversions_path(), record)
+    return {"is_new": True, **record}
+
+
+@router.get("/revenue")
+async def revenue() -> dict[str, object]:
+    """Conversion + MRR snapshot for founder dashboard.
+
+    MRR = sum of monthly_vnd across all conversion records. If a single
+    user appears twice (eg restart at higher tier), both contribute — the
+    founder is responsible for closing old conversions before adding new.
+    """
+    pilots = _load_pilots()
+    conversions = _load_conversions()
+    total_pilots = len(pilots)
+    converted_user_ids = {c["user_id"] for c in conversions}
+    mrr_vnd = sum(c.get("monthly_vnd", 0) for c in conversions)
+    by_tier: dict[str, int] = {}
+    for c in conversions:
+        by_tier[c.get("tier") or "unknown"] = by_tier.get(c.get("tier") or "unknown", 0) + 1
+    return {
+        "conversions": len(conversions),
+        "unique_converted_users": len(converted_user_ids),
+        "conversion_rate": (
+            round(len(converted_user_ids) / total_pilots, 3) if total_pilots else 0.0
+        ),
+        "mrr_vnd": mrr_vnd,
+        "by_tier": by_tier,
+        "target_mrr_vnd": 1_000_000,  # Phase 6 goal: 5 × 199K ≈ 1M VND
+        "target_conversions": 5,
     }
 
 

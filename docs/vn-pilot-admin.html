@@ -99,6 +99,35 @@
     .tl-score.s-2, .tl-score.s-1 { background: #ef4444; color: #fff; }
     .tl-comment { color: #cbd5e1; font-style: italic; margin-top: 2px; font-size: 12px; }
 
+    /* Revenue hero — Phase 6 Week 7-8 target */
+    .rev-card {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(20,184,166,0.05));
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 16px; padding: 24px; margin-bottom: 20px;
+    }
+    .rev-mrr {
+      font-size: 36px; font-weight: 700; line-height: 1;
+      background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .rev-label { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+    .rev-target {
+      font-size: 12px; color: #94a3b8; margin-top: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .rev-bar {
+      height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px;
+      margin-top: 6px; overflow: hidden;
+    }
+    .rev-fill { height: 100%; background: #10b981; transition: width 0.5s ease; }
+    .rev-tiers { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .rev-tier {
+      padding: 6px 12px; border-radius: 8px; font-size: 12px;
+      background: rgba(255,255,255,0.06); color: #cbd5e1;
+    }
+    .rev-tier b { color: #10b981; margin-left: 4px; }
+
     .err {
       background: #fee2e2; color: #991b1b; padding: 12px;
       border-radius: 8px; margin-bottom: 16px; font-size: 14px;
@@ -125,6 +154,17 @@
       <div class="capacity-label">pilot đang active / <span id="cap-total">10</span> tổng (còn <span id="cap-remain">—</span> chỗ)</div>
       <div class="capacity-bar"><div class="capacity-fill" id="cap-fill" style="width:0%"></div></div>
       <div class="capacity-hint" id="cap-hint">Mục tiêu: 10/10 onboarded → 5/10 paid → ~1M VND MRR</div>
+    </div>
+
+    <div class="rev-card">
+      <div class="rev-mrr" id="rev-mrr">— ₫</div>
+      <div class="rev-label"><span id="rev-conv-count">—</span> conversions · <span id="rev-rate">—</span> rate</div>
+      <div class="rev-target">
+        <span>Target: 1,000,000 ₫ MRR (5 paid)</span>
+        <span id="rev-pct">—</span>
+      </div>
+      <div class="rev-bar"><div class="rev-fill" id="rev-fill" style="width:0%"></div></div>
+      <div class="rev-tiers" id="rev-tiers"></div>
     </div>
 
     <div class="quick-grid">
@@ -257,6 +297,47 @@
       }).join("");
     }
 
+    const TIER_LABELS = {
+      starter_vnd: "Starter",
+      growth_vnd: "Growth",
+      pro_vnd: "Pro",
+      master_vnd: "Master",
+      unknown: "(chưa rõ)",
+    };
+
+    function formatVND(n) {
+      return (n || 0).toLocaleString("vi-VN") + " ₫";
+    }
+
+    async function loadRevenue() {
+      try {
+        const r = await fetch(API_BASE + "/v1/pilot/revenue", { cache: "no-store" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        $("rev-mrr").textContent = formatVND(data.mrr_vnd);
+        $("rev-conv-count").textContent = data.conversions ?? 0;
+        $("rev-rate").textContent = ((data.conversion_rate ?? 0) * 100).toFixed(0) + "%";
+        const target = data.target_mrr_vnd || 1_000_000;
+        const pct = Math.min(100, Math.round(((data.mrr_vnd || 0) / target) * 100));
+        $("rev-pct").textContent = pct + "%";
+        $("rev-fill").style.width = pct + "%";
+        const tiers = data.by_tier || {};
+        const tEl = $("rev-tiers");
+        const entries = Object.entries(tiers);
+        if (entries.length === 0) {
+          tEl.innerHTML = '<span class="empty" style="font-size:12px">Chưa có conversion. POST /v1/pilot/convert để ghi nhận.</span>';
+        } else {
+          tEl.innerHTML = entries.map(([k, n]) => {
+            const label = TIER_LABELS[k] || k;
+            return `<span class="rev-tier">${label}<b>${n}</b></span>`;
+          }).join("");
+        }
+      } catch (err) {
+        $("rev-mrr").textContent = "Lỗi tải";
+        $("rev-tiers").innerHTML = `<span class="empty" style="font-size:12px">${err.message}</span>`;
+      }
+    }
+
     async function loadRecent() {
       try {
         const r = await fetch(API_BASE + "/v1/pilot/recent?limit=10", { cache: "no-store" });
@@ -307,7 +388,7 @@
       }
     }
 
-    function refreshAll() { loadStats(); loadRecent(); }
+    function refreshAll() { loadStats(); loadRevenue(); loadRecent(); }
     btn.addEventListener("click", refreshAll);
     refreshAll();
     setInterval(refreshAll, 60000);
