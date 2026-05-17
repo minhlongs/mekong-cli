@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "credit_price_usd": 5.0,
   "currency": "USD",
-  "description": "OpenClaw RaaS pre-packaged service cards",
+  "description": "OpenClaw RaaS pre-packaged service cards (USD + VND)",
   "services": [
     {
       "name_en": "Annual Business Plan",
@@ -59,6 +59,96 @@
       "command": "security",
       "layer": "ops",
       "description_en": "Full security posture audit: auth, secrets, headers, vulnerabilities"
+    }
+  ],
+  "vn_products": {
+    "starter_vn": {
+      "polar_id": "",
+      "credits_per_month": 200,
+      "price_usd": 7.99,
+      "price_display_vnd": "199.000₫",
+      "label_vi": "Khởi Đầu",
+      "features_vi": [
+        "Tất cả 6 phòng ban VN",
+        "Kế toán, Marketing Zalo, VietQR",
+        "Hỗ trợ qua Zalo OA"
+      ]
+    },
+    "growth_vn": {
+      "polar_id": "",
+      "credits_per_month": 800,
+      "price_usd": 19.99,
+      "price_display_vnd": "499.000₫",
+      "label_vi": "Tăng Trưởng",
+      "features_vi": [
+        "Tất cả tính năng Khởi Đầu",
+        "Zalo OA broadcast tự động",
+        "Priority queue",
+        "Backup hàng tuần"
+      ]
+    },
+    "pro_vn": {
+      "polar_id": "",
+      "credits_per_month": 3000,
+      "price_usd": 49.99,
+      "price_display_vnd": "1.200.000₫",
+      "label_vi": "Chuyên Nghiệp",
+      "features_vi": [
+        "Tất cả tính năng Tăng Trưởng",
+        "Custom agents theo ngành",
+        "Hỗ trợ kế toán/luật sư",
+        "Slack/Zalo dedicated channel"
+      ]
+    }
+  },
+  "vn_services": [
+    {
+      "name_vi": "Tạo hóa đơn điện tử",
+      "command": "ke-toan",
+      "credits": 1,
+      "description_vi": "Hóa đơn XML chuẩn TT78/2021, có bút toán VAS"
+    },
+    {
+      "name_vi": "Tính thuế TNCN/TNDN/GTGT",
+      "command": "thue-dnvn",
+      "credits": 1,
+      "description_vi": "Tính thuế lũy tiến offline, xuất HTKK"
+    },
+    {
+      "name_vi": "Post Zalo OA",
+      "command": "zalo-oa",
+      "credits": 2,
+      "description_vi": "Broadcast/đăng bài/tạo caption VN tự động"
+    },
+    {
+      "name_vi": "Tạo mã VietQR",
+      "command": "vietqr",
+      "credits": 1,
+      "description_vi": "QR thanh toán cho 40+ ngân hàng VN"
+    },
+    {
+      "name_vi": "Khai BHXH",
+      "command": "bhxh",
+      "credits": 2,
+      "description_vi": "Tính BHXH/BHYT/BHTN + template D02-TS"
+    },
+    {
+      "name_vi": "Tư vấn kế toán",
+      "command": "ke-toan-vn",
+      "credits": 1,
+      "description_vi": "AI kế toán trưởng, chuẩn VAS"
+    },
+    {
+      "name_vi": "Tư vấn pháp lý",
+      "command": "phap-ly-vn",
+      "credits": 2,
+      "description_vi": "Hợp đồng, đăng ký KD, tuân thủ"
+    },
+    {
+      "name_vi": "Marketing tiếng Việt",
+      "command": "marketing-vn",
+      "credits": 1,
+      "description_vi": "Zalo/FB/TikTok content, lễ hội VN"
     }
   ]
 }

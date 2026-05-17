@@ -462,7 +462,6 @@ packages/vibe-supabase/
 knowledge/
 apps/api/
 apps/developers/
-AGENTS.md
 
 # Vietnamese / obsolete docs (not useful for devs)
 HIEN-PHAP-*.md
@@ -750,3 +749,7 @@ apps/fnb-caffe-container/
 !src/api/gateway_mission_routes.py
 !src/api/gateway_webhook_mcu_routes.py
 !src/api/coupon_router.py
+
+# VN Hub — local LLM models (large binary files, never commit)
+models/
+!models/.gitkeep

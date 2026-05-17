@@ -153,8 +153,8 @@ class TestIntentEnum(unittest.TestCase):
             self.assertEqual(intent.value, intent.value.lower())
 
     def test_intent_count(self):
-        """There should be 7 intents."""
-        self.assertEqual(len(Intent), 11)
+        """11 original + 5 VN business intents = 16 total."""
+        self.assertEqual(len(Intent), 16)
 
 
 class TestKeywordMap(unittest.TestCase):
