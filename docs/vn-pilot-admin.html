@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Mekong Pilot — Admin Stats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Be Vietnam Pro', -apple-system, system-ui, sans-serif;
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      color: #f1f5f9;
+      min-height: 100vh;
+      padding: 24px 16px;
+      line-height: 1.5;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 700; }
+    .meta { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+    button.refresh {
+      background: #4f46e5; color: #fff; border: none; padding: 8px 14px;
+      border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    button.refresh:hover { background: #4338ca; }
+    button.refresh:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* Capacity hero card */
+    .hero-card {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; padding: 24px; margin-bottom: 20px;
+    }
+    .capacity-num {
+      font-size: 48px; font-weight: 700; line-height: 1;
+      background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .capacity-label { font-size: 14px; color: #cbd5e1; margin-top: 4px; }
+    .capacity-bar {
+      height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;
+      margin-top: 16px; overflow: hidden;
+    }
+    .capacity-fill {
+      height: 100%; background: linear-gradient(90deg, #10b981, #fbbf24);
+      transition: width 0.4s ease;
+    }
+    .capacity-hint { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+
+    /* Quick stats grid */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px; margin-bottom: 20px;
+    }
+    .quick-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: 14px;
+    }
+    .quick-num { font-size: 24px; font-weight: 700; color: #f1f5f9; }
+    .quick-label { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+    /* Breakdown cards */
+    .breakdown {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .breakdown h2 { font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 14px; }
+    .row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 14px; }
+    .row:last-child { margin-bottom: 0; }
+    .row-label { width: 130px; color: #e2e8f0; flex-shrink: 0; }
+    .row-bar-wrap { flex: 1; height: 18px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    .row-bar { height: 100%; background: #818cf8; transition: width 0.4s ease; }
+    .row-count { width: 30px; text-align: right; color: #fbbf24; font-weight: 600; }
+    .empty { color: #64748b; font-size: 13px; font-style: italic; padding: 8px 0; }
+
+    .err {
+      background: #fee2e2; color: #991b1b; padding: 12px;
+      border-radius: 8px; margin-bottom: 16px; font-size: 14px;
+      border: 1px solid #fca5a5; display: none;
+    }
+    .err.visible { display: block; }
+    footer { font-size: 11px; color: #64748b; text-align: center; margin-top: 24px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>📊 Mekong Pilot Stats</h1>
+        <div class="meta" id="meta">Đang tải...</div>
+      </div>
+      <button class="refresh" id="refresh-btn" type="button">↻ Refresh</button>
+    </header>
+
+    <div class="err" id="err"></div>
+
+    <div class="hero-card">
+      <div class="capacity-num" id="active-num">—</div>
+      <div class="capacity-label">pilot đang active / <span id="cap-total">10</span> tổng (còn <span id="cap-remain">—</span> chỗ)</div>
+      <div class="capacity-bar"><div class="capacity-fill" id="cap-fill" style="width:0%"></div></div>
+      <div class="capacity-hint" id="cap-hint">Mục tiêu: 10/10 onboarded → 5/10 paid → ~1M VND MRR</div>
+    </div>
+
+    <div class="quick-grid">
+      <div class="quick-card"><div class="quick-num" id="qc-total">—</div><div class="quick-label">Tổng signups</div></div>
+      <div class="quick-card"><div class="quick-num" id="qc-active">—</div><div class="quick-label">Đang active</div></div>
+      <div class="quick-card"><div class="quick-num" id="qc-types">—</div><div class="quick-label">Ngành đa dạng</div></div>
+      <div class="quick-card"><div class="quick-num" id="qc-channels">—</div><div class="quick-label">Channel đang hoạt động</div></div>
+    </div>
+
+    <div class="breakdown">
+      <h2>🏢 Theo loại hình kinh doanh</h2>
+      <div id="by-type"></div>
+    </div>
+
+    <div class="breakdown">
+      <h2>📣 Theo kênh recruit</h2>
+      <div id="by-source"></div>
+    </div>
+
+    <footer>
+      Auto-refresh mỗi 60s · Cache control: no-store · API: <span id="api-base"></span><br>
+      Aggregate stats only — PII (tên, Zalo) chỉ available qua local <code>~/.mekong/pilots.jsonl</code>.
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = window.MEKONG_API_BASE || "https://gateway.cashclaw.cc";
+    document.getElementById("api-base").textContent = API_BASE;
+
+    const TYPE_LABELS = {
+      shop_online: "Shop online",
+      freelancer: "Freelancer",
+      cafe_fnb: "Cà phê / F&B",
+      giao_vien: "Gia sư / GV",
+      dich_vu: "Dịch vụ",
+      ho_kinh_doanh: "Hộ kinh doanh",
+      opc: "OPC",
+      unknown: "(chưa rõ)",
+    };
+    const SOURCE_LABELS = {
+      web_form: "Web form",
+      fb: "Facebook",
+      zalo_group: "Zalo group",
+      linkedin: "LinkedIn",
+      email: "Email cold",
+      smoke_test: "Smoke test",
+      unknown: "(chưa rõ)",
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const errEl = $("err");
+    const btn = $("refresh-btn");
+    const metaEl = $("meta");
+
+    function showErr(msg) { errEl.textContent = "⚠️ " + msg; errEl.classList.add("visible"); }
+    function clearErr() { errEl.classList.remove("visible"); }
+
+    function renderBreakdown(containerId, counts, labelMap) {
+      const el = $(containerId);
+      const entries = Object.entries(counts || {}).sort((a, b) => b[1] - a[1]);
+      if (entries.length === 0) {
+        el.innerHTML = '<div class="empty">Chưa có dữ liệu</div>';
+        return;
+      }
+      const max = Math.max(...entries.map(([, n]) => n), 1);
+      el.innerHTML = entries.map(([key, n]) => {
+        const pct = Math.round((n / max) * 100);
+        const label = labelMap[key] || key;
+        return `<div class="row">
+          <div class="row-label">${label}</div>
+          <div class="row-bar-wrap"><div class="row-bar" style="width:${pct}%"></div></div>
+          <div class="row-count">${n}</div>
+        </div>`;
+      }).join("");
+    }
+
+    async function loadStats() {
+      btn.disabled = true;
+      btn.textContent = "↻ Đang tải...";
+      clearErr();
+      try {
+        const r = await fetch(API_BASE + "/v1/pilot/stats", { cache: "no-store" });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const s = await r.json();
+
+        const total = s.total_pilots ?? 0;
+        const active = s.active_pilots ?? 0;
+        const remain = s.capacity_remaining ?? 0;
+        const cap = active + remain;
+
+        $("active-num").textContent = active;
+        $("cap-total").textContent = cap;
+        $("cap-remain").textContent = remain;
+        $("cap-fill").style.width = cap > 0 ? Math.round((active / cap) * 100) + "%" : "0%";
+
+        $("qc-total").textContent = total;
+        $("qc-active").textContent = active;
+        $("qc-types").textContent = Object.keys(s.by_type || {}).length;
+        $("qc-channels").textContent = Object.keys(s.by_source || {}).length;
+
+        renderBreakdown("by-type", s.by_type, TYPE_LABELS);
+        renderBreakdown("by-source", s.by_source, SOURCE_LABELS);
+
+        metaEl.textContent = "Cập nhật lúc " + new Date().toLocaleTimeString("vi-VN");
+      } catch (err) {
+        showErr("Không tải được stats: " + err.message + ". Kiểm tra gateway có chạy không.");
+        metaEl.textContent = "Lỗi: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "↻ Refresh";
+      }
+    }
+
+    btn.addEventListener("click", loadStats);
+    loadStats();
+    setInterval(loadStats, 60000);
+  </script>
+</body>
+</html>
