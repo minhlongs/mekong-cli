@@ -7,7 +7,9 @@ LaunchDaemon templates for persistent system services (run at boot, restart on c
 | File | Service |
 |------|---------|
 | `com.cloudflare.cloudflared.plist` | Cloudflare tunnel template (placeholders interpolated by installer) |
-| `install-cloudflared.sh` | Installer: validates binary, interpolates placeholders, bootstraps service |
+| `install-cloudflared.sh` | Cloudflared installer |
+| `com.mekong.gateway.plist` | Mekong Gateway (uvicorn) template — includes `MEKONG_ADMIN_TOKEN` env var |
+| `install-mekong-gateway.sh` | Gateway installer (auto-generates 32-byte URL-safe token if `~/.mekong/admin-token.txt` missing) |
 
 ## Why LaunchDaemon (not `brew services`)
 
@@ -38,25 +40,68 @@ What the installer does:
 6. `launchctl bootout` (cleanup) → `bootstrap` (register) → `kickstart -k` (start)
 7. Verifies via `launchctl list`
 
+## Install Mekong Gateway
+
+Prereqs:
+- Python venv at `<project>/.venv` with FastAPI + uvicorn installed
+- `python3` (system) for token generation
+
+Run:
+```bash
+# Auto-detect project dir (templates lives in <project>/infra/launchd/)
+./infra/launchd/install-mekong-gateway.sh
+
+# Or specify project dir explicitly
+./infra/launchd/install-mekong-gateway.sh /Users/macbook/mekong-cli
+```
+
+What the installer does:
+1. Resolves project dir (arg → `$(dirname $0)/../..` fallback)
+2. Validates `.venv/bin/uvicorn` binary exists
+3. **Token handling:**
+   - If `~/.mekong/admin-token.txt` exists → reuses it
+   - Else → generates fresh `secrets.token_urlsafe(32)` (43-char URL-safe), saves with mode 600
+4. Interpolates `__USER_HOME__` + `__PROJECT_DIR__` + `__MEKONG_ADMIN_TOKEN__` placeholders
+5. `plutil -lint` validates generated XML before install
+6. Backs up existing plist to `*.bak-YYMMDD-HHMMSS` (if any)
+7. Installs to `/Library/LaunchDaemons/` with `root:wheel` ownership, mode 644
+8. `bootout` → `bootstrap` → `kickstart -k`
+9. Verifies via `launchctl list`
+
 ## Verify
 
 ```bash
+# Cloudflared
 sudo launchctl list | grep cloudflared
-# Expected: PID + 0 exit status
-
 curl -sI https://YOUR_TUNNEL_HOSTNAME | head -3
-# Expected: HTTP/2 200 (or 502 if upstream down — but tunnel itself OK)
-
 tail -20 /Library/Logs/com.cloudflare.cloudflared.err.log
-# Look for: "Registered tunnel connection" lines
+
+# Mekong Gateway
+sudo launchctl list | grep mekong
+curl -s http://localhost:8000/healthz                  # local
+curl -s https://gateway.cashclaw.cc/healthz            # via tunnel
+tail -20 /var/log/mekong-gateway-err.log
+
+# Test admin gate (Round 7+)
+TOKEN=$(cat ~/.mekong/admin-token.txt)
+curl -X POST https://gateway.cashclaw.cc/v1/pilot/convert \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"opc_999_test","tier":"starter","monthly_vnd":199000}'
+# Expect: 404 (unknown user) → auth passed
 ```
 
 ## Uninstall
 
 ```bash
+# Cloudflared
 sudo launchctl bootout system /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
 sudo rm /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
-# (Backups under *.bak-* remain — clean manually if desired)
+
+# Mekong Gateway
+sudo launchctl bootout system /Library/LaunchDaemons/com.mekong.gateway.plist
+sudo rm /Library/LaunchDaemons/com.mekong.gateway.plist
+# Token stays in ~/.mekong/admin-token.txt — clean manually if rotating: rm ~/.mekong/admin-token.txt
 ```
 
 ## Plist Settings Explained
@@ -64,11 +109,25 @@ sudo rm /Library/LaunchDaemons/com.cloudflare.cloudflared.plist
 | Key | Value | Effect |
 |-----|-------|--------|
 | `RunAtLoad` | `<true/>` | Start service immediately when daemon loaded (boot or bootstrap) |
-| `KeepAlive` | `<true/>` | **Unconditional** restart on any exit (success or failure). Required for tunnel resilience. |
+| `KeepAlive` | `<true/>` | **Unconditional** restart on any exit (success or failure). Required for tunnel + API resilience. |
 | `ThrottleInterval` | `10` | Minimum 10s between restart attempts — prevents tight crash loops |
-| `StandardOutPath` / `StandardErrorPath` | `/Library/Logs/...` | System log location (vs `/tmp` which clears on boot) |
+| `StandardOutPath` / `StandardErrorPath` | `/Library/Logs/...` or `/var/log/...` | System log location (vs `/tmp` which clears on boot) |
+| `EnvironmentVariables` | dict | Inject env at launchd-process level. **SIP blocks `launchctl setenv`** — must edit plist directly. |
 
-## Pitfall — Original Bug (2026-05-17)
+## Token Rotation
+
+```bash
+# 1. Delete existing token
+rm ~/.mekong/admin-token.txt
+
+# 2. Re-run installer (generates fresh token)
+./infra/launchd/install-mekong-gateway.sh
+
+# 3. Distribute new token to admin clients (Zalo bot, dashboard, etc.)
+cat ~/.mekong/admin-token.txt
+```
+
+## Pitfall — Original Cloudflared Bug (2026-05-17)
 
 The initial install via `brew services` or `sudo cloudflared service install` registered a plist with:
 
@@ -85,9 +144,20 @@ This template prevents recurrence by:
 1. Including the full `tunnel … run <UUID>` argv
 2. Setting `KeepAlive` to unconditional `<true/>`
 
+## Pitfall — SIP Blocks `launchctl setenv` (2026-05-17, Round 7)
+
+Attempted to inject `MEKONG_ADMIN_TOKEN` via `sudo launchctl setenv MEKONG_ADMIN_TOKEN <value>` failed with:
+
+```
+150: Operation not permitted while System Integrity Protection is engaged.
+```
+
+Workaround applied: edit `/Library/LaunchDaemons/com.mekong.gateway.plist` directly to add the token inside the `EnvironmentVariables` dict, then `bootout` → `bootstrap` → `kickstart -k`. This template now bakes that pattern in — `install-mekong-gateway.sh` interpolates the token at install time so SIP is never in the path.
+
 ## Notes
 
-- Plist is **root-owned, system-scoped** — survives user logout, runs from boot
-- `tunnel run` (not `tunnel start`) is the long-running daemon subcommand
+- Plists are **root-owned, system-scoped** — survive user logout, run from boot
+- `tunnel run` (not `tunnel start`) is the long-running cloudflared subcommand
 - Tunnel credentials (`~/.cloudflared/<UUID>.json`) must be readable by root — owned by user is fine since LaunchDaemon reads via absolute path
-- If you rotate tunnel UUID, re-run installer with the new UUID
+- `~/.mekong/admin-token.txt` is mode 600, never committed (`.mekong/` is in `~/`, not in repo)
+- If you rotate tunnel UUID or admin token, re-run respective installer with fresh value
