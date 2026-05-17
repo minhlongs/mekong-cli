@@ -133,6 +133,101 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 
 ---
 
+## VN HUB — Platform for 1M Vietnamese One-Person Businesses
+
+Phase 0-6 plan: `plans/260517-0047-mekong-vn-hub/plan.md` (local-only — `plans/` gitignored).
+
+### Public modules (tracked in this repo)
+
+| Path | Purpose |
+|------|---------|
+| `src/commands/{ke_toan,thue_dnvn,zalo_oa}.py` | VN domain CLIs: TT78 invoice, TNCN/TNDN/GTGT, Zalo OA |
+| `src/core/usage_meter.py` | `track(command)` → log event + decrement credit. Anonymous-safe. |
+| `src/api/vn_pilot_routes.py` | `POST /v1/pilot/{signup,response,convert}` + `GET /v1/pilot/{health,stats,recent,revenue}` — `convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN` |
+| `src/api/vn_pricing_routes.py` | `GET /v1/pricing/vn{,/services,/tier/{key}}` — VND tier display |
+| `src/cli/vn_setup.py` | Vietnamese onboarding wizard (writes `~/.mekong/vn_config.json`) |
+| `tests/vn/` | 100+ tests covering all of the above |
+| `factory/contracts/pricing.json::vn_services` | Cost table (1-2 credits per command) |
+
+### Local artifacts (gitignored — founder ops only)
+
+- `scripts/pilot-onboard.py` — CLI để add pilot user (50 free credits + Zalo welcome)
+- `scripts/pilot-weekly-poll.py` — Monday send / Thursday report NPS poll
+- `scripts/pilot-metrics.py` — Aggregate `~/.mekong/usage_events.jsonl`
+- `docs/vn-{onboarding,user-guide,pilot-outreach-playbook}.md`
+
+### State files (per-machine, never committed)
+
+```
+~/.mekong/vn_config.json         — user wizard output
+~/.mekong/pilots.jsonl           — pilot user records (append-only)
+~/.mekong/pilot_credits.json     — credit balances
+~/.mekong/usage_events.jsonl     — every command call logged
+~/.mekong/poll_responses.jsonl   — weekly NPS poll responses
+```
+
+### Identity
+
+Pilot users export `MEKONG_USER_ID=opc_NNN_xxxxxx` (issued by `pilot-onboard.py add` or `POST /v1/pilot/signup`). Commands without this env var run in anonymous mode (events logged, no credit gate).
+
+### Mounted into gateway (src/gateway.py)
+
+Both `vn_pricing_router` and `vn_pilot_router` are mounted as of commit ?? — accessible via the unified Mekong CLI Gateway API.
+
+### Admin token (founder-only write endpoints)
+
+`POST /v1/pilot/convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN`.
+
+Token storage (per-machine, never committed): `~/.mekong/admin-token.txt` (mode 600).
+
+Inject into launchd-managed gateway via `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>EnvironmentVariables</key><dict>
+  ...
+  <key>MEKONG_ADMIN_TOKEN</key><string>YOUR_TOKEN_HERE</string>
+</dict>
+```
+Then `sudo launchctl kickstart -k system/com.mekong.gateway`.
+
+Rotation: regenerate via `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`, update plist, kickstart.
+
+### Founder signup webhook (optional)
+
+On `POST /v1/pilot/signup` with `is_new=True`, the gateway can fire a webhook
+to a private endpoint (Zapier / Pipedream / Telegram bot / founder's server)
+so the founder can initiate a welcome Zalo call within seconds.
+
+Configured via env vars in `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>MEKONG_SIGNUP_WEBHOOK_URL</key>
+<string>https://hooks.zapier.com/hooks/catch/.../...</string>
+<key>MEKONG_SIGNUP_WEBHOOK_AUTH</key>
+<string>Bearer your-shared-secret-here</string>
+```
+
+Payload (JSON POST):
+```json
+{
+  "event": "pilot.signup.new",
+  "user_id": "opc_001_abc123",
+  "name": "Nguyễn Văn A",
+  "zalo": "+84909123456",
+  "business_type": "shop_online",
+  "city": "HCM",
+  "industry": "thời trang",
+  "source": "fb",
+  "onboarded_at": "2026-05-17T16:00:00+00:00"
+}
+```
+
+Webhook is fire-and-forget via FastAPI BackgroundTasks — failures logged but
+never break the signup response. Idempotent re-submits (same Zalo) do NOT
+re-fire the webhook (no notification spam).
+
+If `MEKONG_SIGNUP_WEBHOOK_URL` is unset, the webhook is silently disabled.
+
+---
+
 ## CLAUDEKIT BRIDGE — Mekong-First Policy
 
 **User assertion #1:** All slash commands MUST dispatch to mekong CLI engine.
