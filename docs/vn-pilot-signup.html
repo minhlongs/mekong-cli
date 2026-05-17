@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong AI — Đăng Ký Pilot Miễn Phí 2 Tháng</title>
+  <meta name="description" content="Trợ lý AI tiếng Việt cho 1 triệu doanh nghiệp 1 người Việt Nam. Pilot miễn phí 8 tuần.">
+  <meta property="og:title" content="Mekong AI — Pilot Miễn Phí">
+  <meta property="og:description" content="10 OPC VN dùng thử miễn phí 2 tháng. Đăng ký ngay.">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Be Vietnam Pro', -apple-system, system-ui, sans-serif;
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      color: #f1f5f9;
+      min-height: 100vh;
+      padding: 24px 16px;
+      line-height: 1.6;
+    }
+    .container { max-width: 540px; margin: 0 auto; }
+    .hero { text-align: center; padding: 32px 0 24px; }
+    .hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .hero p { color: #cbd5e1; font-size: 15px; }
+    .badge {
+      display: inline-block; background: #fbbf24; color: #0f172a;
+      padding: 4px 12px; border-radius: 12px; font-size: 12px;
+      font-weight: 600; margin-bottom: 16px;
+    }
+    .perks {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 16px; margin: 24px 0;
+      font-size: 14px;
+    }
+    .perks ul { list-style: none; }
+    .perks li { padding: 4px 0; }
+    .perks li::before { content: "✓ "; color: #10b981; font-weight: 700; }
+    form { background: #fff; color: #0f172a; padding: 24px; border-radius: 16px; }
+    .field { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+    input, select {
+      width: 100%; padding: 12px 14px; font-size: 15px;
+      border: 1px solid #cbd5e1; border-radius: 8px;
+      font-family: inherit; background: #fff; color: #0f172a;
+    }
+    input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.15); }
+    .hint { font-size: 12px; color: #64748b; margin-top: 4px; }
+    button {
+      width: 100%; padding: 14px; background: #4f46e5; color: #fff;
+      border: none; border-radius: 8px; font-size: 16px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    button:hover:not(:disabled) { background: #4338ca; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .msg { padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 14px; display: none; }
+    .msg.success { background: #dcfce7; color: #065f46; border: 1px solid #86efac; display: block; }
+    .msg.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; display: block; }
+    .legal { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px; line-height: 1.5; }
+    .legal a { color: #818cf8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="badge">🎯 ĐANG MỞ — 10 SUẤT</div>
+      <h1>Mekong AI Pilot — Miễn Phí 2 Tháng</h1>
+      <p>Trợ lý AI tiếng Việt cho doanh nghiệp 1 người. Bằng tiếng Việt, trên máy bạn.</p>
+    </header>
+
+    <section class="perks">
+      <strong>Bạn được gì khi tham gia pilot 8 tuần:</strong>
+      <ul>
+        <li>50 credits miễn phí (đủ ~50 lệnh)</li>
+        <li>Hóa đơn điện tử TT78 + bút toán VAS</li>
+        <li>Tính TNCN/TNDN/GTGT đúng luật</li>
+        <li>Zalo OA caption + VietQR + BHXH</li>
+        <li>Hỗ trợ 1-1 qua Zalo OA hàng tuần</li>
+        <li>Nếu chuyển trả phí sau pilot: giảm 50% tháng đầu (99K thay vì 199K)</li>
+      </ul>
+    </section>
+
+    <form id="pilot-form" novalidate>
+      <div class="field">
+        <label for="name">Họ tên đầy đủ</label>
+        <input type="text" id="name" name="name" required minlength="2" maxlength="80"
+               placeholder="VD: Nguyễn Văn A" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="zalo">Số Zalo</label>
+        <input type="tel" id="zalo" name="zalo" required
+               placeholder="VD: 0909123456 hoặc +84909123456"
+               autocomplete="tel" inputmode="tel">
+        <div class="hint">Mekong sẽ gửi welcome message + link cài đặt qua Zalo</div>
+      </div>
+
+      <div class="field">
+        <label for="business_type">Loại hình kinh doanh</label>
+        <select id="business_type" name="business_type" required>
+          <option value="">-- Chọn --</option>
+          <option value="shop_online">Shop online (Shopee/TikTok/Lazada/Facebook)</option>
+          <option value="freelancer">Freelancer (thiết kế / content / IT)</option>
+          <option value="cafe_fnb">Quán cà phê / F&amp;B nhỏ</option>
+          <option value="giao_vien">Gia sư / Giáo viên tự do</option>
+          <option value="dich_vu">Dịch vụ sửa chữa / Tư vấn</option>
+          <option value="ho_kinh_doanh">Hộ kinh doanh</option>
+          <option value="opc">Công ty 1 thành viên (OPC)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="city">Tỉnh / Thành phố</label>
+        <select id="city" name="city" required>
+          <option value="HCM">TP. Hồ Chí Minh</option>
+          <option value="HN">Hà Nội</option>
+          <option value="DN">Đà Nẵng</option>
+          <option value="CT">Cần Thơ</option>
+          <option value="HP">Hải Phòng</option>
+          <option value="OTHER">Khác</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="industry">Ngành cụ thể (tùy chọn)</label>
+        <input type="text" id="industry" name="industry" maxlength="60"
+               placeholder="VD: thời trang, F&amp;B, IT, mỹ phẩm...">
+      </div>
+
+      <input type="hidden" id="source" name="source" value="web_form">
+
+      <button type="submit" id="submit-btn">Đăng Ký Pilot Ngay →</button>
+
+      <div id="msg" class="msg"></div>
+    </form>
+
+    <p class="legal">
+      Bằng việc đăng ký, bạn đồng ý cho Mekong liên hệ qua Zalo trong vòng 24h để onboard.
+      Pilot 8 tuần hoàn toàn miễn phí, không cần thẻ thanh toán.
+      <br><br>
+      <a href="https://mekongmind.com/vn/bang-gia">Xem bảng giá sau pilot →</a>
+    </p>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG — đổi cái này khi deploy lên prod
+    // ============================================================
+    // Local dev:    "http://localhost:8000"
+    // Production:   "https://api.mekongmind.com"
+    const API_BASE = window.MEKONG_API_BASE || "https://gateway.cashclaw.cc";
+
+    // Detect ?source=xxx URL param (UTM-style tracking)
+    const urlSource = new URLSearchParams(window.location.search).get("source");
+    if (urlSource) document.getElementById("source").value = urlSource;
+
+    const form = document.getElementById("pilot-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const msgEl = document.getElementById("msg");
+
+    function showMessage(text, type) {
+      msgEl.textContent = text;
+      msgEl.className = "msg " + type;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msgEl.className = "msg"; // clear
+
+      const data = Object.fromEntries(new FormData(form).entries());
+      // Remove empty industry so backend doesn't validate it
+      if (!data.industry) delete data.industry;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Đang gửi...";
+
+      try {
+        const resp = await fetch(API_BASE + "/v1/pilot/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        if (resp.status === 201) {
+          const body = await resp.json();
+          if (body.is_new) {
+            showMessage(
+              `✅ Đăng ký thành công! User ID: ${body.user_id}. ` +
+              `Mekong sẽ Zalo bạn trong 24h để onboard. Credits: ${body.credits}.`,
+              "success"
+            );
+          } else {
+            showMessage(
+              `Bạn đã đăng ký trước đó! User ID: ${body.user_id}. ` +
+              `Nếu chưa nhận được Zalo, liên hệ hello@mekongmind.com.`,
+              "success"
+            );
+          }
+          form.reset();
+        } else if (resp.status === 409) {
+          const body = await resp.json();
+          showMessage(
+            `⚠️ ${body.detail || "Pilot đã đủ 10 user. Đăng ký waitlist: hello@mekongmind.com"}`,
+            "error"
+          );
+        } else if (resp.status === 422) {
+          const body = await resp.json();
+          const detail = body.detail?.[0]?.msg || "Dữ liệu không hợp lệ. Kiểm tra lại số Zalo.";
+          showMessage(`⚠️ ${detail}`, "error");
+        } else {
+          showMessage(`⚠️ Lỗi server (${resp.status}). Vui lòng thử lại sau.`, "error");
+        }
+      } catch (err) {
+        showMessage(
+          `⚠️ Không kết nối được tới server. Vui lòng kiểm tra mạng hoặc Zalo: ` +
+          `zalo.me/mekongmind`,
+          "error"
+        );
+        console.error("Signup error:", err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Đăng Ký Pilot Ngay →";
+      }
+    });
+  </script>
+</body>
+</html>
