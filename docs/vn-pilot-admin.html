@@ -169,9 +169,9 @@
 
     <div class="quick-grid">
       <div class="quick-card"><div class="quick-num" id="qc-total">—</div><div class="quick-label">Tổng signups</div></div>
-      <div class="quick-card"><div class="quick-num" id="qc-active">—</div><div class="quick-label">Đang active</div></div>
+      <div class="quick-card"><div class="quick-num" id="qc-trial">—</div><div class="quick-label">Đang trial</div></div>
+      <div class="quick-card"><div class="quick-num" id="qc-converted">—</div><div class="quick-label">Đã pay 💰</div></div>
       <div class="quick-card"><div class="quick-num" id="qc-types">—</div><div class="quick-label">Ngành đa dạng</div></div>
-      <div class="quick-card"><div class="quick-num" id="qc-channels">—</div><div class="quick-label">Channel đang hoạt động</div></div>
     </div>
 
     <div class="breakdown">
@@ -371,9 +371,9 @@
         $("cap-fill").style.width = cap > 0 ? Math.round((active / cap) * 100) + "%" : "0%";
 
         $("qc-total").textContent = total;
-        $("qc-active").textContent = active;
+        $("qc-trial").textContent = s.trial_pilots ?? active;
+        $("qc-converted").textContent = s.converted_pilots ?? 0;
         $("qc-types").textContent = Object.keys(s.by_type || {}).length;
-        $("qc-channels").textContent = Object.keys(s.by_source || {}).length;
 
         renderBreakdown("by-type", s.by_type, TYPE_LABELS);
         renderBreakdown("by-source", s.by_source, SOURCE_LABELS);

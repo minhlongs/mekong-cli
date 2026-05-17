@@ -399,12 +399,25 @@ async def revenue() -> dict[str, object]:
 
 @router.get("/stats")
 async def stats() -> dict[str, object]:
-    """Aggregate stats — for founder dashboard."""
+    """Aggregate stats — for founder dashboard.
+
+    Cross-references conversions.jsonl to split active pilots into:
+    - trial_pilots: signed up + status active + NOT in conversions
+    - converted_pilots: at least one conversion record (regardless of status)
+
+    active_pilots kept for backward compat = users with status==active
+    (includes converted — they're still active users, just paying ones).
+    """
     pilots = _load_pilots()
     active = [p for p in pilots if p.get("status", "active") == "active"]
+    pilot_user_ids = {p.get("user_id") for p in pilots}
+    converted_user_ids = {c["user_id"] for c in _load_conversions()} & pilot_user_ids
+    trial = [p for p in active if p.get("user_id") not in converted_user_ids]
     return {
         "total_pilots": len(pilots),
         "active_pilots": len(active),
+        "converted_pilots": len(converted_user_ids),
+        "trial_pilots": len(trial),
         "capacity_remaining": max(0, 10 - len(pilots)),
         "by_type": _count_by_key(pilots, "business_type"),
         "by_source": _count_by_key(pilots, "source"),
