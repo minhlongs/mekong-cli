@@ -87,7 +87,7 @@ _ALLOWED_ORIGINS: list[str] = [
     o.strip()
     for o in _os.environ.get(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:8080,https://mekongmind.com,https://www.mekongmind.com,https://api.cashclaw.cc,https://ide.mekongmind.com",
+        "http://localhost:3000,http://localhost:8080,https://mekongmind.com,https://www.mekongmind.com,https://api.cashclaw.cc,https://ide.mekongmind.com,https://mekong-pilot-signup.pages.dev,https://mekong-pilot-admin.pages.dev",
     ).split(",")
     if o.strip()
 ]
