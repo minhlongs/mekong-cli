@@ -51,12 +51,14 @@ wrangler login
 
 ## 2. Local Deployment
 
-### mekong-engine (Worker)
+### mekong-engine (Hono Worker on CF Workers)
+
+**Stack:** Hono.js + Cloudflare D1 (SQLite) + KV (rate limiting) + Polar webhook
 
 ```bash
 cd packages/mekong-engine
 
-# Development (local)
+# Development (local, simulates CF environment)
 wrangler dev
 
 # Deploy to staging
@@ -66,7 +68,43 @@ wrangler deploy --env staging
 wrangler deploy
 ```
 
-### raas-landing (Pages)
+**Key Files:**
+- `src/index.ts` — Hono router with PEV endpoints
+- `src/routes/auth.ts` — `/auth/login` OAuth2 flow
+- `src/routes/raas.ts` — `/api/v1/tasks` mission endpoints
+- `src/raas/polar-webhook.ts` — Polar.sh webhook receiver
+- `wrangler.toml` — D1/KV/AI bindings configuration
+
+**Endpoints (after deploy):**
+- `GET /health` — Health check
+- `POST /auth/login` — OAuth2 login
+- `POST /api/v1/tasks` — Create mission (JWT required)
+- `GET /api/v1/tasks/:id` — Get mission status
+- `POST /billing/webhook/polar` — Polar payment webhook (HMAC verified)
+
+### dashboard (React SPA on CF Pages)
+
+**Stack:** React 19 + Vite + Tailwind CSS
+
+```bash
+cd apps/dashboard
+
+# Development
+npm run dev
+
+# Build
+npm run build
+
+# Deploy to CF Pages
+wrangler pages deploy dist
+```
+
+**Features:**
+- Analytics dashboard (`/analytics` route)
+- Signup/login forms (with `/auth/login` integration)
+- Real-time metrics via `GET /analytics/*` endpoints
+
+### raas-landing (CF Pages)
 
 ```bash
 cd packages/raas-landing
@@ -77,11 +115,8 @@ npm run dev
 # Build
 npm run build
 
-# Deploy to staging
-npx wrangler pages deploy dist --project-name=raas-landing-staging
-
 # Deploy to production
-npx wrangler pages deploy dist --project-name=raas-landing
+wrangler pages deploy dist
 ```
 
 ---

@@ -23,6 +23,10 @@ class TenantContext:
         license_key: Optional license key for mk_ API keys
         expires_at: License expiry timestamp
         features: List of enabled features
+        lang: Preferred language ("en" default, "vi" for VN users)
+        business_type: VN OPC business category (bakery/fashion/service/etc.)
+        city: VN city code (HCM/HN/DN) — informs market context
+        industry: Industry vertical for agent specialization
     """
 
     tenant_id: str
@@ -31,6 +35,15 @@ class TenantContext:
     license_key: Optional[str] = None
     expires_at: Optional[datetime] = None
     features: list[str] = field(default_factory=list)
+    lang: str = "en"
+    business_type: Optional[str] = None
+    city: Optional[str] = None
+    industry: Optional[str] = None
+
+    @property
+    def namespace(self) -> str:
+        """KV store namespace prefix for tenant isolation."""
+        return f"tenant_{self.tenant_id}"
 
 
 @dataclass

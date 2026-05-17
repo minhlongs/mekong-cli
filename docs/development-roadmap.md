@@ -2,8 +2,8 @@
 
 All significant project milestones and phases tracked here.
 
-**Last Updated**: 2026-04-18
-**Current Status**: Phase 1 (Seed) agent kernel + Giai đoạn 3.4.B A/B testing shipped; $1M ARR Roadmap in progress
+**Last Updated**: 2026-04-25
+**Current Status**: v6.0.0 — Phase 01-04 (Seed Layer) COMPLETE; $1M ARR Roadmap in progress
 
 ---
 
@@ -11,9 +11,7 @@ All significant project milestones and phases tracked here.
 
 | Phase | Title | Status | Completion |
 |-------|-------|--------|------------|
-| **Giai đoạn 3.4.B** | **A/B Testing: Statsig-style Bucketing (SHA-256 Deterministic)** | **✅ COMPLETED** | **2026-04-18** |
-| **Phase 2 (Forest)** | **Multi-Tenant Runtime: FastAPI Gateway + Redis Queue + Worker Pool** | **✅ COMPLETED** | **2026-04-17** |
-| **Phase 1 (Seed)** | **Agent Kernel: BaseAgent + SeedMemory** | **✅ COMPLETED** | **2026-04-17** |
+| **Phase 01-04** | **Seed Layer: Hạt giống → Local Python CLI + Agents + Memory** | **✅ COMPLETED** | **2026-04-25** |
 | **Phase 21** | **100/100 Model Stack + Engine Farm Refactor** | **✅ COMPLETED** | **2026-04-04** |
 | Phase 20 | Retention & Engagement System | ✅ COMPLETED | 2026-03-14 |
 | Phase 19 | Dashboard Analytics UI | ✅ COMPLETED | 2026-03-14 |
@@ -28,78 +26,60 @@ All significant project milestones and phases tracked here.
 
 ## Completed Phases
 
-### Giai đoạn 3.4.B: A/B Testing & Statsig-Style Bucketing (2026-04-18)
+### Phase 01-04: Seed Layer Foundation (2026-04-25)
 
-**Objective**: Implement final slot of 3-step feedback-loop gate — deterministic A/B variant assignment via SHA-256 bucketing.
+**Objective:** Establish 4-phase growth architecture (Seed → Tree → Forest → Land) with Phase 01 production-ready local runtime.
 
-**Status**: ✅ COMPLETED (100%)
+**Status:** ✅ COMPLETED (100%)
 
-**Components**:
-- **experiments.py** (`packages/agent-core/src/agent_core/experiments.py`): `bucket(user_id, experiment_name, variants)` — SHA-256 deterministic assignment with cross-experiment isolation
-- **CLI Integration**: `agent-core experiment --user <user_id> --name <experiment_name> [--variants a,b,c] [--json]`
-- **Bucketing Logic**: Hash-based determinism ensures same user always gets same variant within experiment; separate experiment namespaces prevent spillover
+**Architecture:**
+- **Seed (Phase 01):** Local Python CLI + 3 agents + memory (ChromaDB + SQLite)
+- **Tree (Phase 02):** Telegram bot + Web UI (htmx) + single-tenant expansion
+- **Forest (Phase 03):** Multi-tenant JWT + Docker isolation + Redis queue
+- **Land (Phase 04):** Temporal workflow engine + 5-gate CI/CD + Signals loop + Clipmart
 
-**Statsig Gate Completion**:
-- ✅ Step 1: Offline regression guard (Giai đoạn 3.3.A `agent-core eval` + 3.3.C CI gate)
-- ✅ Step 2: Online quality signal (Giai đoạn 3.2 signals loop + `mekongd_signals_ratio`)
-- ✅ Step 3: A/B exposure (Giai đoạn 3.4.B deterministic bucketing)
+**Phase 01 Components (Production):**
+- `seed/main.py` — Orchestrator entry point using stdlib urllib (no SDK)
+- `seed/agents/` — CEO (planning), Developer (execution), Tester (verification), Base protocol
+- `seed/llm_client.py` — Ollama integration via urllib + streaming
+- `seed/memory.py` — ChromaDB vectors + SQLite persistence (hybrid)
+- `seed/config.py` — ENV-based config (OLLAMA_BASE_URL, LLM_MODEL)
+- `tools/` — file_system.py, browser.py capabilities
+- **Quick start:** `python3 seed/main.py "Your task here"`
 
-**Testing**: 188/188 pytest pass (15 new unit + CLI tests covering determinism, isolation, distribution, edge cases)
+**Phase 02 Scaffolding (In-build):**
+- `apps/web/mission-control.html` — htmx UI for Phase 02
+- `integrations/telegram_bot.py` — Telegram integration
+- `apps/api/server.py` — FastAPI single-tenant (port 8765)
 
-**Files**: 4 files (+208 LOC) — experiments.py, test_experiments.py, test_cli_experiment.py, cli.py +28 LOC
+**Phase 03 Scaffolding (In-build):**
+- `apps/api/gateway.py` — Multi-tenant JWT gateway (port 8766)
+- `worker/main.py` — Redis queue worker
+- Docker Compose + Dockerfile for containerization
 
-**PR**: #143 → commit 958431005
+**Phase 04 Scaffolding (In-build):**
+- `observability/agent_metrics.py` — @timed decorator + Prometheus export
+- `feedback/signals_loop.py` — Weekly LLM evals + analysis
+- `clipmart/marketplace_api.py` — Agent template marketplace (4 built-ins)
+- `.github/workflows/ai-native-ci.yml` — 5-gate CI/CD (validation, security, quality, dependency, deploy)
 
----
+**Testing:**
+- All seed agents tested locally
+- Memory (ChromaDB + SQLite) verified
+- Ollama integration tested with qwen2.5-coder:32b
 
-### Phase 2 (Forest): Multi-Tenant Agent Orchestration Runtime (2026-04-17)
+**Key Design Decisions:**
+1. **Pure Python stdlib** — No external SDK dependencies (urllib only)
+2. **Hybrid memory** — ChromaDB for semantic search + SQLite for persistence
+3. **Stream-based parsing** — LLM responses parsed incrementally
+4. **Config-driven** — 3 environment variables (OLLAMA_BASE_URL, LLM_MODEL, AGENT_NAME)
+5. **Markdown code block extraction** — LLM outputs auto-parsed
 
-**Objective**: Build production-grade multi-tenant platform for agent task execution — FastAPI gateway, Redis queue, worker pool, per-user sandbox.
-
-**Status**: ✅ COMPLETED (100%)
-
-**New Package**: `packages/agent-forest/`
-- **Gateway**: FastAPI with JWT HS256 auth, rate limiting per tenant, OpenAPI docs
-- **Queue**: Redis-backed task queue with fakeredis for testing, async enqueue/dequeue
-- **Worker Pool**: Async executor processing queued tasks with timeout/retry
-- **Sandbox**: Subprocess-based execution (NOT Docker-in-Docker), cwd/env isolation
-- **Webhook**: Task completion → customer callback
-- **Models**: TaskRequest, TaskResponse, WorkerConfig (Pydantic)
-
-**Testing**: 51/51 pytest pass, ruff clean
-
-**Files**: 19 Python modules (gateway, worker, auth, queue, sandbox, webhook, models, CLI)
-
-**Security**: JWT validation, rate limiting, YAML-based mock users (Phase 3 → Postgres)
-
-**Next**: Phase 3 swaps mock YAML users for Postgres; Phase 4 adds multi-cloud deployment.
-
----
-
-### Phase 1 (Seed): Agent Kernel & DeepSeek Design Implementation (2026-04-17)
-
-**Objective**: Implement Phase 1 of 226-page DeepSeek solo-platform design — agent workforce primitives for autonomous execution.
-
-**Status**: ✅ COMPLETED (100%)
-
-**New Package**: `packages/agent-core/`
-- **BaseAgent**: Think→Act→Observe loop with configurable LLM reasoning
-- **SeedMemory**: Dual-layer persistence (SQLite + optional ChromaDB) for agent state and semantic recall
-- **LLMClient**: Routes to mekongd proxy at `http://127.0.0.1:8765` (cost-saver from PR #86/#87)
-- **Tool Registry**: Sandboxed execution (browser, file_system, execute) with path traversal fix (C1) and cwd sandbox fix (H1)
-- **Agent Roles**: CEO (vision), Developer (implementation), ToolAgent (action execution)
-- **Typer CLI**: `agent-core run "<goal>"` for standalone agent missions
-
-**Architecture**:
-- Pairs with mekongd (packages/mekongd/) for distributed LLM cost control
-- Foundation for Phase 2 (Forest multi-tenant) agent orchestration
-- All modules < 200 LOC per codebase standards
-
-**Testing**: 34/34 pytest pass, ruff clean
-
-**Files**: 20 Python modules (agent definitions, tools, memory, CLI)
-
-**PR**: #88 → commit b8a16878f
+**Infrastructure:**
+- Ollama 0.20.0 at M1 Max (192.168.11.111:11434)
+- qwen2.5-coder:32b (14.7GB) — primary model
+- qwen3:32b available for reasoning workloads
+- ChromaDB standalone service (optional)
 
 ---
 
@@ -299,23 +279,34 @@ All significant project milestones and phases tracked here.
 
 ## Upcoming Phases (Roadmap)
 
-### Phase 22: Advanced Retention Analytics
-- Predictive churn modeling with historical data
+### Phase 02: Tree Layer (Planned)
+- Telegram bot integration (full CLI parity)
+- Web UI expansion (Mission Control dashboard)
+- Single-tenant API endpoints
+- Webhook ingestion (Polar, GitHub, etc.)
+- Timeline: 2026-05 to 2026-06
+
+### Phase 03: Forest Layer (Planned)
+- Multi-tenant JWT authentication
+- Docker isolation per tenant
+- Redis task queue
+- Concurrent agent execution
+- Credit metering + billing
+- Timeline: 2026-06 to 2026-07
+
+### Phase 04: Land Layer (Planned)
+- Temporal workflow engine
+- 5-gate CI/CD (validation, security, quality, dependency, deploy)
+- Signals loop (weekly LLM analysis)
+- Clipmart marketplace (template distribution)
+- Enterprise features (audit logging, RBAC)
+- Timeline: 2026-07 to 2026-08
+
+### Phase 22: Advanced Analytics (Post-Phase 04)
+- Predictive churn modeling
 - Cohort-based retention curves
-- Segment-specific engagement recommendations
-- Dashboard integration for executives
-
-### Phase 23: Advanced Agent Orchestration
-- Multi-pipeline agent coordination
-- Agent role and permission management
-- Audit logging for compliance
-- API key and access control
-
-### Phase 24: Performance Optimization
-- Database query optimization
-- Caching layer (Redis)
-- API response time improvements
-- Load testing and optimization
+- Segment-specific recommendations
+- Executive dashboards
 
 ---
 
@@ -341,10 +332,11 @@ All significant project milestones and phases tracked here.
 
 | Version | Date | Milestone |
 |---------|------|-----------|
-| 1.0.0 | 2026-02-06 | Initial release (vibe-analytics, vibe-dev) |
-| 1.5.0 | 2026-03-05 | OAuth2 + Rate Limiting + Billing |
-| 1.6.0 | 2026-03-14 | Onboarding + Analytics + Retention |
+| **6.0.0** | **2026-04-25** | **Phase 01 Seed: Local Python CLI + Agents + Memory** |
 | 1.7.0 | 2026-04-04 | Engine Farm Ollama Refactor + M1 Max LLM |
+| 1.6.0 | 2026-03-14 | Onboarding + Analytics + Retention |
+| 1.5.0 | 2026-03-05 | OAuth2 + Rate Limiting + Billing |
+| 1.0.0 | 2026-02-06 | Initial release (vibe-analytics, vibe-dev) |
 
 ---
 

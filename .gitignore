@@ -86,6 +86,9 @@ products/paid/*.zip
 .archive/
 *.log
 
+# Idea autopilot generated outputs
+outputs/
+
 # Media (use CDN/LFS for large assets)
 *.mp4
 *.mov
@@ -163,24 +166,67 @@ plans/reports/
 plans/260302-*/
 insights/
 
-# ClaudeKit DNA (private skill configs) — .claude/ is private; only explicit allowlist tracked
+# Claude Code project layout — follow the official standard (docs.claude.com).
+# Track agents/, commands/, skills/, hooks/, settings.json, output-styles/,
+# statusline, and any project-CLAUDE.md. Ignore per-developer + runtime state.
 .claude/*
-!.claude/commands/
-.claude/commands/*
-!.claude/commands/sdlc.md
-!.claude/commands/sdlc/
-!.claude/commands/sdlc/**
+# Standard Claude Code primitives — all PUBLIC and tracked
 !.claude/agents/
-.claude/agents/*
-!.claude/agents/git-ops-agent.md
-!.claude/agents/file-scout-agent.md
-!.claude/agents/shell-runner-agent.md
-!.claude/agents/docs-writer-agent.md
+!.claude/agents/**
+!.claude/commands/
+!.claude/commands/**
+!.claude/skills/
+!.claude/skills/**
 !.claude/hooks/
-.claude/hooks/*
-!.claude/hooks/pre-tool-use-guard.cjs
-!.claude/hooks/stop-checkpoint.cjs
+!.claude/hooks/**
+!.claude/output-styles/
+!.claude/output-styles/**
+!.claude/rules/
+!.claude/rules/**
+!.claude/schemas/
+!.claude/schemas/**
+!.claude/scripts/
+!.claude/scripts/**
 !.claude/settings.json
+!.claude/statusline.sh
+!.claude/statusline.cjs
+!.claude/statusline.ps1
+!.claude/CLAUDE.md
+# Per-developer + runtime state — never tracked
+.claude/settings.local.json
+.claude/active-plan
+.claude/agent-memory/
+.claude/agent-memory/**
+.claude/command-archive/
+.claude/command-archive/**
+.claude/worktrees/
+.claude/worktrees/**
+# .claude/scripts/ holds Claude Code catalog generators (REQUIRED tracked
+# per the skills spec) plus per-developer dev tools. Track .py + .yaml + .md
+# + .txt by default; ignore the noisy .cjs/.sh/.ts dev tooling. We can't use
+# directory-level exclusion here because git refuses to un-ignore files
+# whose parent directory is excluded.
+.claude/scripts/*.cjs
+.claude/scripts/*.cjs.bak
+.claude/scripts/*.sh
+.claude/scripts/*.ts
+.claude/hooks/.logs/
+.claude/hooks/.logs/**
+.claude/hooks/__tests__/
+.claude/hooks/__tests__/**
+.claude/hooks/tests/
+.claude/hooks/tests/**
+# Drafts + local overrides
+.claude/commands/private/
+.claude/commands/private/**
+.claude/commands/*.local.md
+# Secrets — defense in depth (in case any skill ships an .env)
+.claude/**/.env
+.claude/**/.env.*
+!.claude/**/.env.example
+.claude/**/secrets/
+.claude/**/*.key
+.claude/**/*.pem
 _bmad/
 claudekit-engineer-dna/
 
@@ -258,12 +304,11 @@ clean-settings.js
 demo.py
 demo_script.md
 test_input.jsonl
-/factory-loop.sh
-/restore_swarm.sh
-/supervisor.py
-/server.py
-/main.py
-# ^ Top-level script artifacts only — package source files (e.g. packages/*/src/**/main.py) stay tracked
+factory-loop.sh
+restore_swarm.sh
+supervisor.py
+server.py
+main.py
 
 # Build & analysis output
 build_log*.txt
@@ -417,7 +462,6 @@ packages/vibe-supabase/
 knowledge/
 apps/api/
 apps/developers/
-AGENTS.md
 
 # Vietnamese / obsolete docs (not useful for devs)
 HIEN-PHAP-*.md
@@ -578,7 +622,6 @@ docs/*.yaml
 !docs/code-standards.md
 !docs/system-architecture.md
 !docs/domain-plan.md
-!docs/observability-mekong-ide.md
 
 # Stub/internal packages
 packages/vibe-*/
@@ -659,19 +702,16 @@ plans/
 tasks/
 
 # Fourth pass — internal tooling
-scripts/*
-!scripts/audit-architecture.sh
+# Root-anchored to avoid shadowing .claude/scripts/ (Claude Code catalog
+# generators are allowlisted up at line ~205) and per-project scripts/
+# folders (owned by their respective apps/ packages).
+/scripts/
 supabase/
 # .claude/ narrowed in second-rule above — only sdlc commands tracked
 .geminiignore
 .repomixignore
 .ruffignore
-# NOTE: conftest.py was a bare pattern that silently dropped every
-# pytest conftest at any depth (packages/agent-forest/tests/conftest.py
-# etc.). Re-scoped below to match only top-level `/conftest.py` if any.
-# Package conftests under tests/ are always tracked. Refs incident
-# 2026-04-17 PR #89/#90 main.py silent drop.
-/conftest.py
+conftest.py
 .coveragerc
 .env*.local
 
@@ -709,3 +749,7 @@ apps/fnb-caffe-container/
 !src/api/gateway_mission_routes.py
 !src/api/gateway_webhook_mcu_routes.py
 !src/api/coupon_router.py
+
+# VN Hub — local LLM models (large binary files, never commit)
+models/
+!models/.gitkeep

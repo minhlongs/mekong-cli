@@ -29,7 +29,7 @@
 4. **Verify installation**:
    ```bash
    export PATH="$HOME/Library/Python/3.9/bin:$PATH"
-   mekong version  # Should show Mekong CLI v3.0.0
+   mekong version  # Should show Mekong CLI v6.0.0
    mekong list     # Shows available recipes
    ```
 
@@ -47,6 +47,38 @@
 - `mekong list` - List available recipes
 - `mekong version` - Show version information
 - `mekong --help` - Show all available commands
+
+### Running Tests
+
+#### Python 3.11 Virtual Environment (Recommended)
+
+Create an isolated Python 3.11 venv with all dependencies:
+
+```bash
+make venv
+source .venv/bin/activate
+```
+
+Run the **full test suite** (7040+ tests) in the venv:
+
+```bash
+make test-venv
+```
+
+#### Seed Layer Tests Only
+
+For quick validation without full test suite (69 unit tests, no Ollama needed):
+
+```bash
+make test-seed
+```
+
+#### Manual Testing
+
+```bash
+pytest tests/ -v --tb=short          # Full suite
+pytest tests/seed/ -v --tb=short     # Seed layer only
+```
 
 ## Ollama Setup (Local LLM Inference)
 
@@ -146,6 +178,19 @@ mekong status
 ---
 
 ## Troubleshooting
+
+### Python Version & Virtual Environment
+
+If you have system Python 3.14+ that causes compatibility issues:
+
+1. **Use the isolated venv instead** (recommended):
+   ```bash
+   make venv                      # Creates Python 3.11 isolated .venv
+   source .venv/bin/activate
+   make test-venv                 # Runs full test suite in venv
+   ```
+
+2. The venv approach eliminates system Python version conflicts entirely.
 
 ### Path Issues
 

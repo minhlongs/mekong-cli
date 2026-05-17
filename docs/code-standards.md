@@ -11,6 +11,83 @@
 - **Linter**: Ruff (with strict settings)
 - **Type Checker**: mypy (strict mode)
 
+## 1.5. TypeScript Code Standards (Mekong Engine + Dashboard)
+
+### Style Guide
+
+- **TypeScript Version**: 5.6+
+- **Framework**: Hono.js (Workers) / React 19 (Dashboard)
+- **Formatter**: Prettier (default)
+- **Linter**: ESLint with @typescript-eslint
+- **Build**: Wrangler (Workers) / Vite (Dashboard)
+
+### Type Safety
+
+**All TypeScript files MUST:**
+- Use strict mode: `"strict": true` in `tsconfig.json`
+- Avoid `any` types — use concrete types or generics
+- Use `unknown` instead of `any` for catch blocks
+
+```typescript
+// ✅ CORRECT
+async function fetchMission(id: string): Promise<Mission> {
+  const response = await fetch(`/api/v1/tasks/${id}`);
+  if (!response.ok) throw new Error("Not found");
+  return response.json() as Promise<Mission>;
+}
+
+// ❌ WRONG
+async function fetchMission(id): Promise<any> {
+  const response: any = await fetch(`/api/v1/tasks/${id}`);
+  return response.json();
+}
+```
+
+### Hono Routing (mekong-engine)
+
+Use Hono's type-safe routing:
+
+```typescript
+// ✅ CORRECT - Type-safe handlers
+type HonoBindings = {
+  DB: D1Database;
+  KV: KVNamespace;
+  AUTH_ENVIRONMENT: string;
+};
+
+const app = new Hono<{ Bindings: HonoBindings }>();
+
+app.post("/auth/login", async (c) => {
+  const { email, password } = await c.req.json();
+  // c.env.DB, c.env.KV type-checked
+  return c.json({ token: "..." });
+});
+```
+
+### React Components (dashboard)
+
+```typescript
+// ✅ CORRECT - Typed props
+interface AnalyticsDashboardProps {
+  tenantId: string;
+  dateRange: [Date, Date];
+  onRefresh?: () => Promise<void>;
+}
+
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+  tenantId,
+  dateRange,
+  onRefresh,
+}) => {
+  // Component implementation
+};
+
+// ❌ WRONG
+export function AnalyticsDashboard(props: any) {
+  // Untyped props
+}
+```
+
 ### Type Hints (Mandatory)
 
 All functions **must** have type hints:

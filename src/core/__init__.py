@@ -75,6 +75,16 @@ def __getattr__(name: str):
         import importlib
         module = importlib.import_module(_imports[name], __package__)
         return getattr(module, name)
+
+    # Fallback: expose submodules by name (enables patch("src.core.<mod>.<attr>"))
+    try:
+        import importlib
+        submod = importlib.import_module(f".{name}", __package__)
+        globals()[name] = submod  # cache for subsequent access
+        return submod
+    except (ImportError, ModuleNotFoundError):
+        pass
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

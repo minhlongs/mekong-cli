@@ -9,12 +9,27 @@
 
 The platform that enables the **one-person billion-dollar company**. 10 business layers — Founder, Business, Product, Engineering, Ops, Studio, CTO, PM, Dev, Worker — all operated by agents. You make the decisions, agents do the work.
 
-**Built for solo founders (as of 2026-04-17):**
-- 443 command definitions across 10 business layers
-- Runs locally on your Mac with Ollama — zero cloud cost (benchmarks pending; tested with Qwen 2.5-coder and compatible models)
-- Your data never leaves your machine
-- Autonomous operations engine (OpenClaw) — daemon scaffolded, stress-test + runbook shipping in v6.1
-- One subscription = your entire workforce
+**Built for solo founders (status as of latest commit):**
+- ~490 command definitions across 10 business layers (markdown specs;
+  ~43 are wired through to executable Python in `src/commands/`).
+- Runs locally on your Mac with Ollama — zero cloud cost (smoke-tested
+  with Qwen 2.5-coder; performance benchmarks not yet published).
+- Your data never leaves your machine when running locally.
+- Autonomous operations engine (OpenClaw) — **scaffolded**; orchestration
+  daemon and runbook are on the roadmap, not shipped (see
+  [`GO_LIVE_PLAYBOOK.md`](./GO_LIVE_PLAYBOOK.md)).
+- One subscription = your entire workforce.
+
+**What's actually live today:**
+
+| | Status | Notes |
+| --- | --- | --- |
+| `api.cashclaw.cc` (gateway) | ✅ live | CF Tunnel → M1 Max:8000 |
+| `www.mekongmind.com` (landing) | ✅ live | 13 pages |
+| Polar.sh checkout (Starter / Growth / Pro) | ✅ wired | URLs return 302 |
+| `ide.mekongmind.com` (dashboard) | ⚠️ deploying | see [`GO_LIVE_PLAYBOOK.md`](./GO_LIVE_PLAYBOOK.md) |
+| OpenClaw daemon orchestration | ❌ not yet | scaffolded only |
+| First paying customer | ❌ not yet | tracked in [`STRATEGY.md`](./STRATEGY.md) |
 
 ## Quick Start
 

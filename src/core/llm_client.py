@@ -321,8 +321,23 @@ class LLMClient:
                 ),
             )
 
+        # VN Hub — Qwen3-8B local (MLX, port 11434)
+        vn_base_url = os.getenv("VN_LLM_BASE_URL", "http://localhost:11434/v1")
+        vn_model = os.getenv("VN_LLM_MODEL", "qwen3-8b")
+        self._vn_provider = OpenAICompatibleProvider(
+            base_url=vn_base_url,
+            api_key="mlx",
+            model=vn_model,
+            provider_name="vn-local-mlx",
+            timeout=self.timeout,
+        )
+
         built.append(OfflineProvider())
         return built
+
+    def get_vn_provider(self) -> "OpenAICompatibleProvider":
+        """Return the Vietnamese LLM provider (Qwen3-8B local MLX)."""
+        return self._vn_provider
 
     _local_llm_cache: bool | None = None
 

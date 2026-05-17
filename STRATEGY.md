@@ -90,7 +90,11 @@ Each "use case" = same IDE subscription + different landing page.
 3. ✅ Create Polar.sh products (Starter/Growth/Pro) — approved
 4. ✅ Wire checkout links (Polar URLs verified in /v1/pricing)
 5. ✅ Deploy gateway (api.cashclaw.cc → M1 Max:8000 via CF Tunnel)
-6. ⬜ First customer pays → XONG
+6. ✅ Resolve dashboard merge conflicts (page.tsx, .env.example, next.config) — required for #7
+7. ⬜ Deploy `ide.mekongmind.com` (Cloudflare Pages — see GO_LIVE_PLAYBOOK §3)
+8. ⬜ Run `scripts/smoke-test-payment.sh` — green before announcing
+9. ⬜ Founder dry-run: buy Starter $49 yourself, verify webhook → credit deduct → 402 on quota
+10. ⬜ First external customer pays → XONG
 
 ### Production URLs (2026-04-12)
 
