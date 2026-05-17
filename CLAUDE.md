@@ -191,6 +191,41 @@ Then `sudo launchctl kickstart -k system/com.mekong.gateway`.
 
 Rotation: regenerate via `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`, update plist, kickstart.
 
+### Founder signup webhook (optional)
+
+On `POST /v1/pilot/signup` with `is_new=True`, the gateway can fire a webhook
+to a private endpoint (Zapier / Pipedream / Telegram bot / founder's server)
+so the founder can initiate a welcome Zalo call within seconds.
+
+Configured via env vars in `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>MEKONG_SIGNUP_WEBHOOK_URL</key>
+<string>https://hooks.zapier.com/hooks/catch/.../...</string>
+<key>MEKONG_SIGNUP_WEBHOOK_AUTH</key>
+<string>Bearer your-shared-secret-here</string>
+```
+
+Payload (JSON POST):
+```json
+{
+  "event": "pilot.signup.new",
+  "user_id": "opc_001_abc123",
+  "name": "Nguyễn Văn A",
+  "zalo": "+84909123456",
+  "business_type": "shop_online",
+  "city": "HCM",
+  "industry": "thời trang",
+  "source": "fb",
+  "onboarded_at": "2026-05-17T16:00:00+00:00"
+}
+```
+
+Webhook is fire-and-forget via FastAPI BackgroundTasks — failures logged but
+never break the signup response. Idempotent re-submits (same Zalo) do NOT
+re-fire the webhook (no notification spam).
+
+If `MEKONG_SIGNUP_WEBHOOK_URL` is unset, the webhook is silently disabled.
+
 ---
 
 ## CLAUDEKIT BRIDGE — Mekong-First Policy
