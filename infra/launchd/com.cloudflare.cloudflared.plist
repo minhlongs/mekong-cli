@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template: macOS LaunchDaemon for cloudflared persistent tunnel.
+
+  Placeholders interpolated by install-cloudflared.sh:
+    __USER_HOME__  → absolute home dir of the user owning ~/.cloudflared/config.yml
+    __TUNNEL_ID__  → UUID of the named tunnel (from `cloudflared tunnel list`)
+
+  Do NOT install this file directly. Run ./install-cloudflared.sh which:
+    1. Validates cloudflared binary exists
+    2. Interpolates placeholders
+    3. Writes to /Library/LaunchDaemons/ with root:wheel ownership
+    4. Bootstraps + kickstarts the service
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.cloudflare.cloudflared</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/cloudflared</string>
+      <string>tunnel</string>
+      <string>--config</string>
+      <string>__USER_HOME__/.cloudflared/config.yml</string>
+      <string>run</string>
+      <string>__TUNNEL_ID__</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>StandardOutPath</key>
+    <string>/Library/Logs/com.cloudflare.cloudflared.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Library/Logs/com.cloudflare.cloudflared.err.log</string>
+  </dict>
+</plist>
