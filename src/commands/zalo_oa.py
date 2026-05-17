@@ -95,7 +95,13 @@ def main(argv: list[str] | None = None) -> None:
     p_post.set_defaults(func=cmd_post)
 
     args = parser.parse_args(argv)
-    args.func(args)
+    try:
+        from src.core.usage_meter import Stopwatch
+    except ImportError:
+        args.func(args)
+        return
+    with Stopwatch("zalo-oa"):
+        args.func(args)
 
 
 if __name__ == "__main__":

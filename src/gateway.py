@@ -22,6 +22,8 @@ from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.api.coupon_router import router as coupon_router
 from src.api.polar_webhook import router as polar_webhook_router
 from src.api.auth_routes import router as auth_router
+from src.api.vn_pricing_routes import router as vn_pricing_router
+from src.api.vn_pilot_routes import router as vn_pilot_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
@@ -75,6 +77,10 @@ app.include_router(checkout_router)
 app.include_router(tenant_router)
 app.include_router(reports_router)
 app.include_router(autopilot_router)
+
+# Mount routers — VN Hub (Phase 4 pricing + Phase 6 pilot)
+app.include_router(vn_pricing_router)
+app.include_router(vn_pilot_router)
 
 # CORS for AgencyOS frontend
 _ALLOWED_ORIGINS: list[str] = [

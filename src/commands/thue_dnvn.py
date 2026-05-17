@@ -156,3 +156,50 @@ def calculate_gtgt(amount: int, rate: int = 10) -> dict:
         "total_amount": int(total),
         "disclaimer": DISCLAIMER,
     }
+
+
+def main(argv=None) -> int:
+    """CLI: python3 -m src.commands.thue_dnvn {tncn|tndn|gtgt} ..."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(prog="thue-dnvn", description="Thuế VN: TNCN/TNDN/GTGT")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_tncn = sub.add_parser("tncn", help="Thuế TNCN biểu lũy tiến")
+    p_tncn.add_argument("--income", type=int, required=True, help="Thu nhập tháng (VND)")
+    p_tncn.add_argument("--dependents", type=int, default=0)
+
+    p_tndn = sub.add_parser("tndn", help="Thuế TNDN")
+    p_tndn.add_argument("--revenue", type=int, required=True, help="Doanh thu năm (VND)")
+
+    p_gtgt = sub.add_parser("gtgt", help="Thuế GTGT (VAT)")
+    p_gtgt.add_argument("--amount", type=int, required=True)
+    p_gtgt.add_argument("--rate", type=int, default=10, choices=[0, 5, 8, 10])
+
+    args = parser.parse_args(argv)
+
+    def _run() -> None:
+        if args.command == "tncn":
+            r = calculate_tncn(args.income, dependents=args.dependents)
+            sys.stdout.write(r.to_summary())
+        elif args.command == "tndn":
+            r = calculate_tndn(args.revenue)
+            sys.stdout.write(r.to_summary())
+        elif args.command == "gtgt":
+            import json as _json
+            sys.stdout.write(_json.dumps(calculate_gtgt(args.amount, rate=args.rate), ensure_ascii=False, indent=2))
+        sys.stdout.write("\n")
+
+    try:
+        from src.core.usage_meter import Stopwatch
+        with Stopwatch("thue-dnvn"):
+            _run()
+    except ImportError:
+        _run()
+    return 0
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    _sys.exit(main())

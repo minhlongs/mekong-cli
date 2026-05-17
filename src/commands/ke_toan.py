@@ -186,3 +186,50 @@ def create_invoice(
         buyer_name=buyer,
         items=[item],
     )
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    """CLI: python3 -m src.commands.ke_toan invoice --amount 5000000 ..."""
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(prog="ke-toan", description="Kế toán VN: hóa đơn TT78 + bút toán VAS")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_inv = sub.add_parser("invoice", help="Tạo hóa đơn điện tử")
+    p_inv.add_argument("--amount", type=int, required=True, help="Số tiền trước thuế (VND)")
+    p_inv.add_argument("--vat", type=int, default=10, choices=[0, 5, 8, 10])
+    p_inv.add_argument("--buyer", required=True)
+    p_inv.add_argument("--seller", default="Doanh Nghiệp")
+    p_inv.add_argument("--seller-tax-code", default="0000000000")
+    p_inv.add_argument("--description", default="Hàng hóa/Dịch vụ")
+    p_inv.add_argument("--format", choices=["summary", "xml", "journal"], default="summary")
+
+    args = parser.parse_args(argv)
+
+    def _run() -> None:
+        inv = create_invoice(
+            amount=args.amount, vat_rate=args.vat, buyer=args.buyer,
+            seller=args.seller, seller_tax_code=args.seller_tax_code,
+            description=args.description,
+        )
+        if args.format == "xml":
+            sys.stdout.write(inv.to_xml())
+        elif args.format == "journal":
+            sys.stdout.write(json.dumps(inv.to_journal_entry(), ensure_ascii=False, indent=2))
+        else:
+            sys.stdout.write(inv.to_summary())
+        sys.stdout.write("\n")
+
+    try:
+        from src.core.usage_meter import Stopwatch
+        with Stopwatch("ke-toan"):
+            _run()
+    except ImportError:
+        _run()
+    return 0
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    _sys.exit(main())
