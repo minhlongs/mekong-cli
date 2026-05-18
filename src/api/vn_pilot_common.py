@@ -1,8 +1,14 @@
-"""VN Pilot — shared models, constants, and JSONL helpers.
+"""VN Pilot — shared models, constants, JSONL helpers, and backend delegation.
 
 Imports CONFIG_DIR / MAX_PILOTS from vn_pilot_state at call time
 (inside function bodies) so monkeypatching vn_pilot_routes.CONFIG_DIR
 propagates correctly via the __setattr__ proxy.
+
+Storage delegation: _load_pilots/_load_conversions/_load_responses and
+_credit_balance/_add_credits now delegate to storage_backend._backend()
+so MEKONG_PILOT_STORAGE=sqlite transparently swaps the backing store.
+Raw helpers (_append_jsonl, _load_jsonl, path helpers) remain exported
+for tests + migration scripts that use them directly.
 """
 from __future__ import annotations
 
@@ -137,15 +143,18 @@ def _load_jsonl(path: Path) -> list[dict]:
 
 
 def _load_pilots() -> list[dict]:
-    return _load_jsonl(_pilots_path())
+    from src.services.storage_backend import _backend
+    return _backend().load_pilots()
 
 
 def _load_responses() -> list[dict]:
-    return _load_jsonl(_responses_path())
+    from src.services.storage_backend import _backend
+    return _backend().load_responses()
 
 
 def _load_conversions() -> list[dict]:
-    return _load_jsonl(_conversions_path())
+    from src.services.storage_backend import _backend
+    return _backend().load_conversions()
 
 
 def _append_jsonl(path: Path, record: dict) -> None:
@@ -181,6 +190,19 @@ def _find_by_zalo(zalo: str, org_id: str = "default") -> Optional[dict]:
 
 
 def _credit_balance(user_id: str) -> int:
+    from src.services.storage_backend import _backend
+    return _backend().get_credit_balance(user_id)
+
+
+def _add_credits(user_id: str, delta: int) -> int:
+    from src.services.storage_backend import _backend
+    return _backend().add_credits(user_id, delta)
+
+
+# ---------- Raw JSONL credit helpers (used by JsonlBackend internally) ----------
+
+def _jsonl_credit_balance(user_id: str) -> int:
+    """Direct JSONL credit read — used by JsonlBackend. Not delegated."""
     path = _credits_path()
     if not path.exists():
         return 0
@@ -190,7 +212,8 @@ def _credit_balance(user_id: str) -> int:
         return 0
 
 
-def _add_credits(user_id: str, delta: int) -> int:
+def _jsonl_add_credits(user_id: str, delta: int) -> int:
+    """Direct JSONL credit write — used by JsonlBackend. Not delegated."""
     path = _credits_path()
     balances: dict[str, int] = {}
     if path.exists():
@@ -202,6 +225,26 @@ def _add_credits(user_id: str, delta: int) -> int:
     _ensure_dir()
     path.write_text(json.dumps(balances, ensure_ascii=False, indent=2), encoding="utf-8")
     return balances[user_id]
+
+
+# ---------- Thin backend appenders (callsites use these) ----------
+
+def _append_pilot(record: dict) -> None:
+    """Append a pilot record via the active backend."""
+    from src.services.storage_backend import _backend
+    _backend().append_pilot(record)
+
+
+def _append_conversion(record: dict) -> None:
+    """Append a conversion record via the active backend."""
+    from src.services.storage_backend import _backend
+    _backend().append_conversion(record)
+
+
+def _append_response(record: dict) -> None:
+    """Append a poll response record via the active backend."""
+    from src.services.storage_backend import _backend
+    _backend().append_response(record)
 
 
 def _current_iso_week() -> str:

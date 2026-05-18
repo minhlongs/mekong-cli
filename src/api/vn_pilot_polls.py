@@ -7,10 +7,9 @@ from fastapi import APIRouter, HTTPException, status
 
 from src.api.vn_pilot_common import (
     PollResponseRequest,
-    _append_jsonl,
+    _append_response,
     _current_iso_week,
     _load_pilots,
-    _responses_path,
 )
 
 polls_router = APIRouter(tags=["VN Pilot"])
@@ -32,7 +31,7 @@ async def poll_response(req: PollResponseRequest) -> dict[str, object]:
         "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "iso_week": iso_week,
     }
-    _append_jsonl(_responses_path(), record)
+    _append_response(record)
     return {
         "recorded": True,
         "user_id": req.user_id,
