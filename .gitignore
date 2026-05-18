@@ -608,6 +608,7 @@ docs/*.yaml
 !docs/vn-vietqr-integration.md
 !docs/vn-misa-export.md
 !docs/vn-vietqr-integration.md
+!docs/vn-magic-link-auth.md
 !docs/api-reference.json
 !docs/api-spec.yaml
 !docs/DATABASE_MIGRATIONS.md
