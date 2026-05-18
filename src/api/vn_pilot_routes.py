@@ -86,7 +86,9 @@ router.include_router(signup_router)
 # ---------- Re-export contract ----------
 # Tests do: vpr.MAX_PILOTS, vpr._append_jsonl, vpr._record_conversion, etc.
 
-from src.api.vn_pilot_auth import _require_admin_token  # noqa: E402, F401
+from src.api.vn_pilot_auth import _require_admin_token, _require_scope  # noqa: E402, F401
+from src.api.vn_pilot_conversions import _convert_auth  # noqa: E402, F401
+from src.api.vn_pilot_export import _export_auth  # noqa: E402, F401
 from src.api.vn_pilot_common import (  # noqa: E402, F401
     INITIAL_FREE_CREDITS,
     PILOT_DURATION_WEEKS,

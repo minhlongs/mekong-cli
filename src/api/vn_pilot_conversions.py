@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.api.vn_pilot_auth import _require_admin_token
+from src.api.vn_pilot_auth import _require_scope
 from src.api.vn_pilot_common import (
     ConversionRequest,
     _append_jsonl,
@@ -16,6 +16,9 @@ from src.api.vn_pilot_common import (
 )
 
 conversions_router = APIRouter(tags=["VN Pilot"])
+
+# Module-level dependency instance — exposed for test overrides via dep_override
+_convert_auth = _require_scope(["founder", "cs"])
 
 
 def _record_conversion(
@@ -75,7 +78,7 @@ def _record_conversion(
 @conversions_router.post(
     "/convert",
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(_require_admin_token)],
+    dependencies=[Depends(_convert_auth)],
 )
 async def convert(req: ConversionRequest) -> dict[str, object]:
     """Mark a pilot user as paid. Records tier + MRR contribution.
