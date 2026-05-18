@@ -606,6 +606,7 @@ docs/*.yaml
 !docs/vn-multi-tenant-design.md
 !docs/vn-admin-scopes-design.md
 !docs/vn-vietqr-integration.md
+!docs/vn-misa-export.md
 !docs/vn-vietqr-integration.md
 !docs/api-reference.json
 !docs/api-spec.yaml
