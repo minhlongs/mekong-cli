@@ -66,6 +66,7 @@ class SignupRequest(BaseModel):
     city: str = "HCM"
     industry: Optional[str] = None
     source: Optional[str] = Field(default=None, description="Channel: fb|zalo_group|linkedin|email|web_form")
+    org_id: str = Field(default="default", pattern=r"^[a-z0-9][a-z0-9-]{0,31}$")
 
     @field_validator("zalo")
     @classmethod
@@ -176,9 +177,11 @@ def _conversions_path() -> Path:
     return CONFIG_DIR / "conversions.jsonl"
 
 
-def _stable_user_id(name: str, zalo: str, seq: int) -> str:
+def _stable_user_id(name: str, zalo: str, seq: int, org_id: str = "default") -> str:
     digest = hashlib.sha256(f"{name.strip().lower()}|{zalo.strip()}".encode()).hexdigest()[:6]
-    return f"opc_{seq:03d}_{digest}"
+    if org_id == "default":
+        return f"opc_{seq:03d}_{digest}"
+    return f"opc_{org_id}_{seq:03d}_{digest}"
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -209,8 +212,14 @@ def _load_conversions() -> list[dict]:
     return _load_jsonl(_conversions_path())
 
 
-def _find_by_zalo(zalo: str) -> Optional[dict]:
-    for p in _load_pilots():
+def _org_filter(records: list[dict], org_id: str) -> list[dict]:
+    """Filter records by org_id, treating missing field as 'default'."""
+    return [r for r in records if r.get("org_id", "default") == org_id]
+
+
+def _find_by_zalo(zalo: str, org_id: str = "default") -> Optional[dict]:
+    """Return pilot record matching zalo within the given org_id scope."""
+    for p in _org_filter(_load_pilots(), org_id):
         if p.get("zalo") == zalo:
             return p
     return None
@@ -315,8 +324,14 @@ async def _notify_founder_signup(record: dict) -> None:
 # ---------- Routes ----------
 
 @router.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "vn-pilot"}
+async def health() -> dict[str, object]:
+    """Health check. Includes per_org pilot count breakdown (orgs with >= 1 pilot)."""
+    pilots = _load_pilots()
+    per_org: dict[str, int] = {}
+    for p in pilots:
+        oid = p.get("org_id", "default")
+        per_org[oid] = per_org.get(oid, 0) + 1
+    return {"status": "ok", "service": "vn-pilot", "per_org": per_org}
 
 
 @router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
@@ -330,9 +345,10 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
     (see _notify_founder_signup). Repeat submissions don't re-fire — avoids
     notification spam when a user re-opens the form.
     """
-    existing = _find_by_zalo(req.zalo)
+    org_id = req.org_id
+    existing = _find_by_zalo(req.zalo, org_id)
     if existing:
-        # Idempotent — same person re-submitting form
+        # Idempotent — same person re-submitting form within same org
         return SignupResponse(
             user_id=existing["user_id"],
             credits=_credit_balance(existing["user_id"]),
@@ -340,16 +356,17 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
             is_new=False,
         )
 
-    pilots = _load_pilots()
-    seq = len(pilots) + 1
+    # Cap is per-org: count only pilots in this org
+    org_pilots = _org_filter(_load_pilots(), org_id)
+    seq = len(org_pilots) + 1
     if seq > MAX_PILOTS:
-        # Pilot capped at MAX_PILOTS (Phase 7 stage 1 = 50). Reject gracefully.
+        # Per-org cap reached. Reject gracefully.
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Pilot đã đủ {MAX_PILOTS} user. Subscribe waitlist: hello@mekongmind.com",
         )
 
-    user_id = _stable_user_id(req.name, req.zalo, seq)
+    user_id = _stable_user_id(req.name, req.zalo, seq, org_id)
     now = datetime.now(timezone.utc)
     record = {
         "user_id": user_id,
@@ -359,6 +376,7 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
         "city": req.city,
         "industry": req.industry,
         "source": req.source,
+        "org_id": org_id,
         "onboarded_at": now.isoformat(timespec="seconds"),
         "pilot_end_at": (now + timedelta(weeks=PILOT_DURATION_WEEKS)).isoformat(timespec="seconds"),
         "status": "active",
@@ -527,8 +545,8 @@ async def revenue() -> dict[str, object]:
 
 
 @router.get("/stats")
-async def stats() -> dict[str, object]:
-    """Aggregate stats — for founder dashboard.
+async def stats(org_id: str = Query(default="default")) -> dict[str, object]:
+    """Aggregate stats — for founder dashboard, scoped to org_id.
 
     Cross-references conversions.jsonl to split active pilots into:
     - trial_pilots: signed up + status active + NOT in conversions
@@ -536,8 +554,11 @@ async def stats() -> dict[str, object]:
 
     active_pilots kept for backward compat = users with status==active
     (includes converted — they're still active users, just paying ones).
+
+    Records without org_id field are treated as org_id='default'.
     """
-    pilots = _load_pilots()
+    all_pilots = _load_pilots()
+    pilots = _org_filter(all_pilots, org_id)
     active = [p for p in pilots if p.get("status", "active") == "active"]
     pilot_user_ids = {p.get("user_id") for p in pilots}
     converted_user_ids = {c["user_id"] for c in _load_conversions()} & pilot_user_ids
@@ -562,13 +583,21 @@ def _count_by_key(records: list[dict], key: str) -> dict[str, int]:
 
 
 @router.get("/recent")
-async def recent(limit: int = Query(default=10, ge=1, le=100)) -> dict[str, list]:
+async def recent(
+    limit: int = Query(default=10, ge=1, le=100),
+    org_id: str = Query(default="default"),
+) -> dict[str, list]:
     """Recent signups + NPS responses for founder dashboard. No PII exposed.
 
     Strips name + zalo from signups; truncates comment to 80 chars.
-    Sorted newest-first by timestamp. Used by mekong-pilot-admin dashboard.
+    Sorted newest-first by timestamp. Filtered by org_id.
+    Records without org_id field treated as 'default'.
     """
-    pilots = sorted(_load_pilots(), key=lambda p: p.get("onboarded_at", ""), reverse=True)
+    pilots = sorted(
+        _org_filter(_load_pilots(), org_id),
+        key=lambda p: p.get("onboarded_at", ""),
+        reverse=True,
+    )
     responses = sorted(_load_responses(), key=lambda r: r.get("recorded_at", ""), reverse=True)
     return {
         "signups": [
