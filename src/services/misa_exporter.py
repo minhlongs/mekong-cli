@@ -105,16 +105,26 @@ def build_misa_rows(
     conversions: list[dict],
     from_ym: str,
     to_ym: str,
+    org_id_filter: Optional[str] = None,
 ) -> list[MISARow]:
-    """Filter conversions by date range + map to MISARow.
+    """Filter conversions by date range (+ optional org) → map to MISARow.
 
     Date range filter uses `started_at` ISO date (YYYY-MM-DD) extracted to
     YYYY-MM for comparison. Inclusive both ends.
+
+    org_id_filter: when set, only rows where c.get("org_id","default") ==
+    org_id_filter are included. None means no org filtering (back-compat).
 
     Voucher numbers: `PIL-YYYYMM-NNN` ascending within each month. NNN
     restarts at 001 per month. Sorting is by started_at ASC for
     determinism.
     """
+    if org_id_filter is not None:
+        conversions = [
+            c for c in conversions
+            if (c.get("org_id") or "default") == org_id_filter
+        ]
+
     from_y, from_m = _parse_ym(from_ym)
     to_y, to_m = _parse_ym(to_ym)
     from_key = from_y * 12 + from_m

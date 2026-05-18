@@ -209,7 +209,8 @@ class TestMISARoute:
         assert resp.status_code == 200
         assert "text/csv" in resp.headers["content-type"]
         assert "attachment" in resp.headers["content-disposition"]
-        assert "misa-pilots-2026-05-2026-05.csv" in resp.headers["content-disposition"]
+        # Phase 8 P02: org_id included in filename (default when omitted)
+        assert "misa-pilots-default-2026-05-2026-05.csv" in resp.headers["content-disposition"]
 
     def test_route_admin_token_required(self, client: TestClient) -> None:
         """No Authorization header → 401."""
