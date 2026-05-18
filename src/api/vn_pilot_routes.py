@@ -619,3 +619,52 @@ async def recent(
             for r in responses[:limit]
         ],
     }
+
+
+# ---------- MISA Export (Phase 7 P03) ----------
+
+_YM_RE = re.compile(r"^\d{4}-\d{2}$")
+
+
+@router.get(
+    "/export/misa",
+    dependencies=[Depends(_require_admin_token)],
+)
+async def export_misa(
+    from_ym: str = Query(alias="from", description="Start month YYYY-MM (inclusive)"),
+    to_ym: str = Query(alias="to", description="End month YYYY-MM (inclusive)"),
+):
+    """Export conversions as MISA AMIS-compatible CSV.
+
+    Returns 8-column voucher CSV with UTF-8 BOM. Admin token required.
+
+    ⚠️ DRAFT account codes (131/511/33311) — accountant review pending.
+    Override via env: MEKONG_MISA_{DEBIT,CREDIT,VAT}_ACCOUNT.
+
+    Empty range → CSV with header row only (no 404, predictable for cron).
+    """
+    from fastapi.responses import Response  # local import — keeps top clean
+    from src.services.misa_exporter import build_misa_rows, to_csv_bytes
+
+    for ym in (from_ym, to_ym):
+        if not _YM_RE.match(ym):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid month format {ym!r} — expected YYYY-MM",
+            )
+
+    try:
+        rows = build_misa_rows(_load_conversions(), from_ym, to_ym)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
+
+    csv_bytes = to_csv_bytes(rows)
+    filename = f"misa-pilots-{from_ym}-{to_ym}.csv"
+    return Response(
+        content=csv_bytes,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
