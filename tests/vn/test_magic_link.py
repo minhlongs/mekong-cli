@@ -199,19 +199,12 @@ def test_unknown_token_returns_401(client: TestClient) -> None:
 def test_jwt_claims_allowed_orgs(tmp_path: Path) -> None:
     email = "org_member@example.com"
 
-    # Create org_members table manually (Phase P02 will ship this properly)
+    # P02 shipped org_members via ensure_schema — insert using named columns
     conn = _db_conn(tmp_path)
     conn.execute(
-        """CREATE TABLE IF NOT EXISTS org_members (
-            id TEXT PRIMARY KEY,
-            org_id TEXT NOT NULL,
-            email TEXT NOT NULL,
-            scope TEXT NOT NULL
-        )"""
-    )
-    conn.execute(
-        "INSERT INTO org_members VALUES (?, ?, ?, ?)",
-        ("m1", "acme-org", email, "org_admin"),
+        """INSERT INTO org_members (org_id, user_id, email, scope, joined_at, invited_by)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        ("acme-org", "opc_org_m1", email, "org_admin", "2026-01-01T00:00:00Z", None),
     )
     conn.commit()
     conn.close()
@@ -230,16 +223,17 @@ def test_jwt_claims_allowed_orgs(tmp_path: Path) -> None:
 def test_jwt_scopes_union_multi_org(tmp_path: Path) -> None:
     email = "multi@example.com"
     conn = _db_conn(tmp_path)
+    # P02 shipped org_members via ensure_schema — insert using named columns
     conn.execute(
-        """CREATE TABLE IF NOT EXISTS org_members (
-            id TEXT PRIMARY KEY,
-            org_id TEXT NOT NULL,
-            email TEXT NOT NULL,
-            scope TEXT NOT NULL
-        )"""
+        """INSERT INTO org_members (org_id, user_id, email, scope, joined_at, invited_by)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        ("org-a", "opc_org_m1", email, "org_viewer", "2026-01-01T00:00:00Z", None),
     )
-    conn.execute("INSERT INTO org_members VALUES (?, ?, ?, ?)", ("m1", "org-a", email, "org_viewer"))
-    conn.execute("INSERT INTO org_members VALUES (?, ?, ?, ?)", ("m2", "org-b", email, "org_admin"))
+    conn.execute(
+        """INSERT INTO org_members (org_id, user_id, email, scope, joined_at, invited_by)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        ("org-b", "opc_org_m2", email, "org_admin", "2026-01-01T00:00:00Z", None),
+    )
     conn.commit()
     conn.close()
 
