@@ -9,8 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from src.api.vn_pilot_auth import _require_scope
 from src.api.vn_pilot_common import (
     ConversionRequest,
-    _append_jsonl,
-    _conversions_path,
+    _append_conversion,
     _load_conversions,
     _load_pilots,
     _org_filter,
@@ -79,7 +78,7 @@ def _record_conversion(
     }
     if bank_tx_ref:
         record["bank_tx_ref"] = bank_tx_ref
-    _append_jsonl(_conversions_path(), record)
+    _append_conversion(record)
     return {"is_new": True, **record}
 
 
