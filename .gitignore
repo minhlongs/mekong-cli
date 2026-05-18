@@ -603,6 +603,7 @@ docs/*.yaml
 !docs/project-overview-pdr.md
 !docs/api-reference.md
 !docs/handoff-shipping-playbook.md
+!docs/vn-vietqr-integration.md
 !docs/api-reference.json
 !docs/api-spec.yaml
 !docs/DATABASE_MIGRATIONS.md

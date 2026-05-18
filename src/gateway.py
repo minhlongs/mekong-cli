@@ -30,6 +30,7 @@ from src.raas.reports_router import router as reports_router
 from src.raas.autopilot import router as autopilot_router
 from src.api.vn_pricing_routes import router as vn_pricing_router
 from src.api.vn_pilot_routes import router as vn_pilot_router
+from src.api.vn_payments_routes import router as vn_payments_router
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -78,6 +79,7 @@ app.include_router(tenant_router)
 app.include_router(reports_router)
 app.include_router(vn_pricing_router)
 app.include_router(vn_pilot_router)
+app.include_router(vn_payments_router)
 app.include_router(autopilot_router)
 
 # CORS for AgencyOS frontend
