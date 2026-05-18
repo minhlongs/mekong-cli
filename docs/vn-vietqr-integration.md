@@ -160,6 +160,39 @@ sudo launchctl kickstart -k system/com.mekong.gateway
 | Duplicate MRR records | (Shouldn't happen) | Check `bank_tx_ref` field — file an issue |
 | Bank not delivering | Sepay outage / wrong URL | Test with `curl` against the URL Sepay has |
 
+## Multi-tenant memo format (Phase 8 P03)
+
+Two memo formats are accepted **indefinitely** — no sunset planned:
+
+| Format | Example | Routes to org |
+|--------|---------|----------------|
+| Legacy single-tenant | `MEKONG-opc_001_abc12` | `default` |
+| Multi-tenant | `MEKONG-{org-prefix}-opc_001_abc12` | `{org-prefix}` |
+
+### Separators
+
+Memo is tolerant to `-`, `_`, ` ` (space) as separators. Bank UIs vary:
+- Vietcombank: `MEKONG ACME opc_001_abc12` (spaces work)
+- MB Bank: `MEKONG-acme-opc_001_abc12` (hyphens work)
+- Tech sector: `MEKONG_acme_opc_001_abc12` (underscores work)
+
+### Org-prefix rules
+
+- Case-insensitive: `MEKONG-ACME-...` and `MEKONG-acme-...` both route to `acme`
+- 1–32 characters, `[a-z0-9-]` only after canonicalization
+- Cannot start with `opc_` (collision guard via regex negative lookahead)
+- Names exceeding 32 chars cause parse failure → 200 no-op (founder reviews log)
+
+### Security model
+
+HMAC-only auth: the memo's org claim is **fully trusted** because:
+1. Sepay HMAC prevents non-Sepay POSTs (only Sepay can hit this endpoint)
+2. Attacker who crafts a memo MUST also pay real bank money to trigger conversion
+3. Founder reviews `~/.mekong/vietqr_webhook.log` before payouts
+
+Cross-org conversion via crafted memo is therefore **acceptable risk** for the
+single-founder pilot phase. Re-evaluate when partner orgs onboard at scale.
+
 ## Related Docs
 
 - `docs/handoff-shipping-playbook.md` — overall ship/handoff chain

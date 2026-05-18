@@ -161,7 +161,8 @@ class TestMemoParser:
     ])
     def test_memo_variants_parsed(self, memo: str) -> None:
         parsed = payments_routes._parse_memo(memo)
-        assert parsed == "opc_001_abc12"
+        # Legacy format: no org segment → routed to "default" org
+        assert parsed == ("default", "opc_001_abc12")
 
     @pytest.mark.parametrize("memo", [
         "",
@@ -184,6 +185,106 @@ class TestMemoParser:
         })
         assert resp.status_code == 200
         assert resp.json()["status"] == "memo_unparseable"
+
+    # -----------------------------------------------------------------------
+    # Phase 8 P03 — Multi-tenant memo format tests
+    # -----------------------------------------------------------------------
+
+    def test_memo_legacy_format_routes_to_default_org(
+        self, client: TestClient
+    ) -> None:
+        """Legacy `MEKONG-opc_NNN_xxx` memo routes to org_id="default"."""
+        user_id = _seed_pilot(client)
+        resp = _post_webhook(client, {
+            "tx_ref": "TX_LEGACY_ORG",
+            "amount": 199_000,
+            "memo": f"MEKONG-{user_id}",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "converted"
+        assert body["org_id"] == "default"
+        assert body["user_id"] == user_id
+
+    def test_memo_org_prefix_acme_routes_correctly(
+        self, client: TestClient
+    ) -> None:
+        """Multi-tenant `MEKONG-acme-opc_NNN_xxx` routes to org_id="acme"."""
+        user_id = _seed_pilot(client)
+        parsed = payments_routes._parse_memo(f"MEKONG-acme-{user_id}")
+        assert parsed == ("acme", user_id)
+
+    def test_memo_org_prefix_underscore_separator(self) -> None:
+        """`MEKONG_acme_opc_NNN_xxx` (underscore separators) → org_id="acme"."""
+        parsed = payments_routes._parse_memo("MEKONG_acme_opc_001_abc12")
+        assert parsed == ("acme", "opc_001_abc12")
+
+    def test_memo_org_prefix_space_separator(self) -> None:
+        """`MEKONG ACME opc_NNN_xxx` (space separators) → org_id="acme" (case-folded)."""
+        parsed = payments_routes._parse_memo("MEKONG ACME opc_001_abc12")
+        assert parsed == ("acme", "opc_001_abc12")
+
+    def test_memo_org_uppercase_canonicalized_to_lowercase(self) -> None:
+        """`MEKONG-ACME-opc_NNN_xxx` → org_id stored as "acme" (lowercase)."""
+        parsed = payments_routes._parse_memo("MEKONG-ACME-opc_001_abc12")
+        assert parsed == ("acme", "opc_001_abc12")
+
+    def test_memo_parse_failure_returns_200_not_5xx(
+        self, client: TestClient
+    ) -> None:
+        """Gibberish memo → 200 + status=memo_unparseable (bank-friendly, no 5xx)."""
+        resp = _post_webhook(client, {
+            "tx_ref": "TX_GIBBERISH",
+            "amount": 199_000,
+            "memo": "!!@#$% garbage transfer note ???",
+        })
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "memo_unparseable"
+
+    def test_memo_negative_lookahead_prevents_user_id_collision(self) -> None:
+        """`MEKONG-opc_001_abc12` (no org) must NOT split into org="opc" user="001_abc12".
+
+        The (?!opc_) lookahead ensures the optional org group cannot start with
+        `opc_` — so the parser correctly yields org_id="default", not org_id="opc".
+        """
+        parsed = payments_routes._parse_memo("MEKONG-opc_001_abc12")
+        assert parsed is not None
+        org_id, user_id = parsed
+        assert org_id == "default", f"org_id must be 'default', got {org_id!r}"
+        assert user_id == "opc_001_abc12", f"user_id must be full token, got {user_id!r}"
+
+    def test_memo_org_with_hyphen_in_name(self) -> None:
+        """`MEKONG-acme-co-opc_NNN_xxx` → org_id="acme-co" (hyphens within org valid)."""
+        parsed = payments_routes._parse_memo("MEKONG-acme-co-opc_001_abc12")
+        assert parsed == ("acme-co", "opc_001_abc12")
+
+    def test_memo_invalid_org_too_long_falls_back(self) -> None:
+        """Org name >32 chars exceeds `[a-z0-9][a-z0-9-]{0,31}` (max 32 chars).
+
+        Current behaviour: regex cannot match the too-long segment as org, AND
+        the too-long segment breaks the separator-then-user_id pattern, so the
+        whole match fails → None. Acceptable: bank sends a raw transfer note that
+        the regex can't parse; founder reviews the log.
+        """
+        long_org = "a" * 33  # 33 chars — one over the 32-char limit
+        memo = f"MEKONG-{long_org}-opc_001_abc12"
+        parsed = payments_routes._parse_memo(memo)
+        # Document: long org causes no match. If business need arises to fall
+        # back to default, update regex and add a positive-path assertion here.
+        assert parsed is None
+
+    def test_memo_response_includes_org_id(self, client: TestClient) -> None:
+        """Successful conversion response dict contains `org_id` field."""
+        user_id = _seed_pilot(client)
+        resp = _post_webhook(client, {
+            "tx_ref": "TX_ORG_IN_RESP",
+            "amount": 199_000,
+            "memo": f"MEKONG-{user_id}",
+        })
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "org_id" in body
+        assert body["org_id"] == "default"
 
 
 class TestTierMatching:
