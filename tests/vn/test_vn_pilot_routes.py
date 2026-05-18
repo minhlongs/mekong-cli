@@ -39,7 +39,10 @@ class TestHealth:
     def test_health_ok(self, client: TestClient) -> None:
         resp = client.get("/v1/pilot/health")
         assert resp.status_code == 200
-        assert resp.json() == {"status": "ok", "service": "vn-pilot"}
+        body = resp.json()
+        assert body["status"] == "ok"
+        assert body["service"] == "vn-pilot"
+        assert "per_org" in body  # P04: multi-tenant breakdown field
 
 
 class TestSignup:
