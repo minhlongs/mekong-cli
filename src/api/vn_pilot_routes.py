@@ -1,47 +1,33 @@
 """
-VN Pilot API Routes — recruitment + telemetry intake.
+VN Pilot API Routes — thin facade + re-export contract.
 
-POST /v1/pilot/signup    → onboard mới (web form, Zalo webhook, Zapier...)
-POST /v1/pilot/response  → poll response auto-capture (NPS 1-5)
-GET  /v1/pilot/health    → router sanity check
+This module is the public entry point. Tests import it as:
+    from src.api import vn_pilot_routes as vpr
 
-Persist:
-    ~/.mekong/pilots.jsonl          (append, shared với scripts/pilot-onboard.py)
-    ~/.mekong/pilot_credits.json    (JSON dict)
-    ~/.mekong/poll_responses.jsonl  (shared với scripts/pilot-weekly-poll.py)
+All route logic lives in focused sub-modules. This file:
+1. Assembles the APIRouter from sub-routers
+2. Re-exports all symbols that tests access directly
+3. Intercepts setattr on CONFIG_DIR / MAX_PILOTS so monkeypatch
+   and direct assignment propagate to vn_pilot_state (sub-modules
+   read _state.CONFIG_DIR at call time).
 
-Idempotency: same {name + zalo} → same user_id (hash-based).
+STORAGE NOTE: MEKONG_PILOT_STORAGE=sqlite is reserved for Phase 8;
+jsonl is the active backend. Warning logged if sqlite requested.
 """
 from __future__ import annotations
 
-import fcntl  # POSIX advisory lock — see _append_jsonl for Windows fallback note
-import hashlib
-import json
 import logging
 import os
-import re
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
+import sys
+import types
 from pathlib import Path
-from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, status
-from pydantic import BaseModel, Field, field_validator
+from fastapi import APIRouter
 
-router = APIRouter(prefix="/v1/pilot", tags=["VN Pilot"])
+import src.api.vn_pilot_state as _state
 
-# Test-isolation hook: tests can override via monkeypatch of this module-level
-# var without touching ~/.mekong/ on the dev machine.
-CONFIG_DIR = Path(os.getenv("MEKONG_PILOT_DIR", str(Path.home() / ".mekong")))
+# ---------- Storage backend selector ----------
 
-INITIAL_FREE_CREDITS = 50
-PILOT_DURATION_WEEKS = 8
-# Phase 7 stage 1: cap=50 (founder override). Phase 01b bumps to 100 after
-# 1-week monitoring. Tests override via MEKONG_MAX_PILOTS env var.
-MAX_PILOTS = int(os.getenv("MEKONG_MAX_PILOTS", "50"))
-# Storage backend selector — Phase 7 scaffolding only. jsonl path is active;
-# sqlite path is reserved for Phase 8 migration. Log a warning if anyone
-# sets sqlite now so it's not silently ignored.
 PILOT_STORAGE = os.getenv("MEKONG_PILOT_STORAGE", "jsonl").lower()
 if PILOT_STORAGE == "sqlite":
     logging.warning(
@@ -49,622 +35,84 @@ if PILOT_STORAGE == "sqlite":
         "falling back to jsonl. SQLite migration scheduled for Phase 8."
     )
     PILOT_STORAGE = "jsonl"
-SUPPORTED_TYPES = {
-    "shop_online", "freelancer", "cafe_fnb", "giao_vien",
-    "dich_vu", "ho_kinh_doanh", "opc",
-}
-# E.164 với prefix +84 hoặc số VN dạng 0xxxxxxxxx (10 digits)
-_ZALO_RE = re.compile(r"^(\+84\d{9,10}|0\d{9})$")
 
-
-# ---------- Pydantic models ----------
-
-class SignupRequest(BaseModel):
-    name: str = Field(min_length=2, max_length=80)
-    zalo: str = Field(description="Số Zalo: +84xxx hoặc 0xxx")
-    business_type: str
-    city: str = "HCM"
-    industry: Optional[str] = None
-    source: Optional[str] = Field(default=None, description="Channel: fb|zalo_group|linkedin|email|web_form")
-    org_id: str = Field(default="default", pattern=r"^[a-z0-9][a-z0-9-]{0,31}$")
-
-    @field_validator("zalo")
-    @classmethod
-    def _validate_zalo(cls, v: str) -> str:
-        cleaned = v.strip().replace(" ", "").replace("-", "")
-        if not _ZALO_RE.match(cleaned):
-            raise ValueError("Zalo phone invalid — phải là +84xxx hoặc 0xxx")
-        return cleaned
-
-    @field_validator("business_type")
-    @classmethod
-    def _validate_type(cls, v: str) -> str:
-        if v not in SUPPORTED_TYPES:
-            raise ValueError(f"business_type không hỗ trợ; chọn: {sorted(SUPPORTED_TYPES)}")
-        return v
-
-
-class SignupResponse(BaseModel):
-    user_id: str
-    credits: int
-    pilot_end_at: str
-    is_new: bool
-
-
-class PollResponseRequest(BaseModel):
-    user_id: str = Field(min_length=4)
-    score: int = Field(ge=1, le=5)
-    comment: str = ""
-    iso_week: Optional[str] = None  # vd "2026-W20" — default = current
-
-    @field_validator("user_id")
-    @classmethod
-    def _validate_user_id(cls, v: str) -> str:
-        if not v.startswith("opc_"):
-            raise ValueError("user_id phải bắt đầu bằng 'opc_'")
-        return v
-
-
-class ConversionRequest(BaseModel):
-    """Founder marks a pilot user as paid (Week 7-8 conversion phase).
-
-    Idempotent on (user_id, started_at) — re-submitting same pair returns
-    existing record without inflating MRR.
-    """
-    user_id: str = Field(min_length=4)
-    tier: str = Field(min_length=1, max_length=40)  # vd "starter_vnd", "growth_vnd"
-    monthly_vnd: int = Field(ge=0, le=100_000_000)  # ≤100M VND sanity cap
-    started_at: Optional[str] = None  # ISO date; default = today
-
-    @field_validator("user_id")
-    @classmethod
-    def _validate_user_id(cls, v: str) -> str:
-        if not v.startswith("opc_"):
-            raise ValueError("user_id phải bắt đầu bằng 'opc_'")
-        return v
-
-
-# ---------- Auth (admin endpoints) ----------
-
-def _require_admin_token(authorization: Optional[str] = Header(default=None)) -> None:
-    """Bearer-token gate for founder-only admin endpoints.
-
-    Reads MEKONG_ADMIN_TOKEN at request time (so launchctl setenv updates
-    take effect without code reload — useful for token rotation).
-
-    - 503: env var not configured (feature locked at gateway level)
-    - 401: missing or malformed Authorization header
-    - 403: token mismatch
-    """
-    expected = os.environ.get("MEKONG_ADMIN_TOKEN")
-    if not expected:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Admin endpoints disabled — MEKONG_ADMIN_TOKEN not set on gateway",
-        )
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing 'Authorization: Bearer <token>' header",
-        )
-    received = authorization[len("Bearer "):].strip()
-    if received != expected:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid admin token",
-        )
-
-
-# ---------- Helpers ----------
-
-def _ensure_dir() -> None:
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def _pilots_path() -> Path:
-    return CONFIG_DIR / "pilots.jsonl"
-
-
-def _credits_path() -> Path:
-    return CONFIG_DIR / "pilot_credits.json"
-
-
-def _responses_path() -> Path:
-    return CONFIG_DIR / "poll_responses.jsonl"
-
-
-def _conversions_path() -> Path:
-    return CONFIG_DIR / "conversions.jsonl"
-
-
-def _stable_user_id(name: str, zalo: str, seq: int, org_id: str = "default") -> str:
-    digest = hashlib.sha256(f"{name.strip().lower()}|{zalo.strip()}".encode()).hexdigest()[:6]
-    if org_id == "default":
-        return f"opc_{seq:03d}_{digest}"
-    return f"opc_{org_id}_{seq:03d}_{digest}"
-
-
-def _load_jsonl(path: Path) -> list[dict]:
-    """Load newline-delimited JSON file, skipping malformed lines."""
-    if not path.exists():
-        return []
-    out = []
-    with path.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                try:
-                    out.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    return out
-
-
-def _load_pilots() -> list[dict]:
-    return _load_jsonl(_pilots_path())
-
-
-def _load_responses() -> list[dict]:
-    return _load_jsonl(_responses_path())
-
-
-def _load_conversions() -> list[dict]:
-    return _load_jsonl(_conversions_path())
-
-
-def _org_filter(records: list[dict], org_id: str) -> list[dict]:
-    """Filter records by org_id, treating missing field as 'default'."""
-    return [r for r in records if r.get("org_id", "default") == org_id]
-
-
-def _find_by_zalo(zalo: str, org_id: str = "default") -> Optional[dict]:
-    """Return pilot record matching zalo within the given org_id scope."""
-    for p in _org_filter(_load_pilots(), org_id):
-        if p.get("zalo") == zalo:
-            return p
-    return None
-
-
-def _append_jsonl(path: Path, record: dict) -> None:
-    """Append one JSON record to a JSONL file with POSIX advisory lock.
-
-    Multi-worker safety: uvicorn with workers>1 can race on open(append) —
-    interleaved writes produce torn lines. fcntl.flock(LOCK_EX) serializes
-    writes within the same host. Lock released implicitly on close.
-
-    Limitation: fcntl is POSIX-only. On Windows this raises AttributeError
-    at import time; the gateway is launchd-managed on macOS so this is
-    acceptable. If Windows support is added later, swap to a portable
-    portalocker.lock() call here.
-    """
-    _ensure_dir()
-    with path.open("a", encoding="utf-8") as fh:
-        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
-        try:
-            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
-            fh.flush()  # push to kernel before lock release
-        finally:
-            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
-
-
-def _credit_balance(user_id: str) -> int:
-    path = _credits_path()
-    if not path.exists():
-        return 0
-    try:
-        return int(json.loads(path.read_text(encoding="utf-8")).get(user_id, 0))
-    except json.JSONDecodeError:
-        return 0
-
-
-def _add_credits(user_id: str, delta: int) -> int:
-    path = _credits_path()
-    balances: dict[str, int] = {}
-    if path.exists():
-        try:
-            balances = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            balances = {}
-    balances[user_id] = max(0, balances.get(user_id, 0) + delta)
-    _ensure_dir()
-    path.write_text(json.dumps(balances, ensure_ascii=False, indent=2), encoding="utf-8")
-    return balances[user_id]
-
-
-def _current_iso_week() -> str:
-    y, w, _ = datetime.now(timezone.utc).isocalendar()
-    return f"{y}-W{w:02d}"
-
-
-async def _notify_founder_signup(record: dict) -> None:
-    """Fire founder webhook on new pilot signup. Non-blocking, resilient.
-
-    Env vars (both optional):
-    - MEKONG_SIGNUP_WEBHOOK_URL: target endpoint (Zapier/Pipedream/Telegram bot)
-    - MEKONG_SIGNUP_WEBHOOK_AUTH: optional Authorization header value
-
-    Payload includes PII (name, zalo) because founder needs to call user.
-    Webhook URL must point to a PRIVATE endpoint, not a public broadcast
-    channel — same security posture as MEKONG_ADMIN_TOKEN.
-
-    Failures logged at WARNING but never raised — signup response must
-    succeed even if Slack/Zapier is down.
-    """
-    url = os.environ.get("MEKONG_SIGNUP_WEBHOOK_URL")
-    if not url:
-        return
-    headers = {"Content-Type": "application/json"}
-    auth = os.environ.get("MEKONG_SIGNUP_WEBHOOK_AUTH")
-    if auth:
-        headers["Authorization"] = auth
-    payload = {
-        "event": "pilot.signup.new",
-        "user_id": record.get("user_id"),
-        "name": record.get("name"),
-        "zalo": record.get("zalo"),
-        "business_type": record.get("business_type"),
-        "city": record.get("city"),
-        "industry": record.get("industry"),
-        "source": record.get("source"),
-        "onboarded_at": record.get("onboarded_at"),
-    }
-    try:
-        import httpx  # local import keeps cold-start cheap when feature unused
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            if resp.status_code >= 400:
-                logging.warning(
-                    "Founder signup webhook returned %d: %s",
-                    resp.status_code, resp.text[:200],
-                )
-    except Exception as exc:  # noqa: BLE001 — fire-and-forget, never raise
-        logging.warning("Founder signup webhook failed: %s", exc)
-
-
-# ---------- Routes ----------
-
-@router.get("/health")
-async def health() -> dict[str, object]:
-    """Health check. Includes per_org pilot count breakdown (orgs with >= 1 pilot)."""
-    pilots = _load_pilots()
-    per_org: dict[str, int] = {}
-    for p in pilots:
-        oid = p.get("org_id", "default")
-        per_org[oid] = per_org.get(oid, 0) + 1
-    return {"status": "ok", "service": "vn-pilot", "per_org": per_org}
-
-
-@router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
-async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> SignupResponse:
-    """Onboard 1 pilot user. Idempotent: same Zalo → return existing user_id.
-
-    Source channels: web form / Zalo bot webhook / Zapier / Google Forms /
-    LinkedIn DM follow-up — all funnel here.
-
-    On is_new=True signups, schedules a fire-and-forget founder webhook
-    (see _notify_founder_signup). Repeat submissions don't re-fire — avoids
-    notification spam when a user re-opens the form.
-    """
-    org_id = req.org_id
-    existing = _find_by_zalo(req.zalo, org_id)
-    if existing:
-        # Idempotent — same person re-submitting form within same org
-        return SignupResponse(
-            user_id=existing["user_id"],
-            credits=_credit_balance(existing["user_id"]),
-            pilot_end_at=existing["pilot_end_at"],
-            is_new=False,
-        )
-
-    # Cap is per-org: count only pilots in this org
-    org_pilots = _org_filter(_load_pilots(), org_id)
-    seq = len(org_pilots) + 1
-    if seq > MAX_PILOTS:
-        # Per-org cap reached. Reject gracefully.
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Pilot đã đủ {MAX_PILOTS} user. Subscribe waitlist: hello@mekongmind.com",
-        )
-
-    user_id = _stable_user_id(req.name, req.zalo, seq, org_id)
-    now = datetime.now(timezone.utc)
-    record = {
-        "user_id": user_id,
-        "name": req.name,
-        "zalo": req.zalo,
-        "business_type": req.business_type,
-        "city": req.city,
-        "industry": req.industry,
-        "source": req.source,
-        "org_id": org_id,
-        "onboarded_at": now.isoformat(timespec="seconds"),
-        "pilot_end_at": (now + timedelta(weeks=PILOT_DURATION_WEEKS)).isoformat(timespec="seconds"),
-        "status": "active",
-    }
-    _append_jsonl(_pilots_path(), record)
-    balance = _add_credits(user_id, INITIAL_FREE_CREDITS)
-
-    # Notify founder out-of-band (won't delay this response). Tests inject a
-    # mock by monkeypatching this module's _notify_founder_signup.
-    background_tasks.add_task(_notify_founder_signup, record)
-
-    return SignupResponse(
-        user_id=user_id,
-        credits=balance,
-        pilot_end_at=record["pilot_end_at"],
-        is_new=True,
-    )
-
-
-@router.post("/response", status_code=status.HTTP_201_CREATED)
-async def poll_response(req: PollResponseRequest) -> dict[str, object]:
-    """Capture poll response from Zalo webhook / web form.
-
-    Bypasses CLI `pilot-weekly-poll.py record` — useful when Zalo OA forwards
-    user replies to your webhook URL automatically.
-    """
-    # Sanity check user exists (don't accept responses for unknown users)
-    if not any(p["user_id"] == req.user_id for p in _load_pilots()):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Unknown user_id: {req.user_id}",
-        )
-    iso_week = req.iso_week or _current_iso_week()
-    record = {
-        "user_id": req.user_id,
-        "score": req.score,
-        "comment": req.comment,
-        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "iso_week": iso_week,
-    }
-    _append_jsonl(_responses_path(), record)
-    return {
-        "recorded": True,
-        "user_id": req.user_id,
-        "score": req.score,
-        "iso_week": iso_week,
-        "low_nps_alert": req.score < 4,  # founder follow-up signal
-    }
-
-
-def _record_conversion(
-    user_id: str,
-    tier: str,
-    monthly_vnd: int,
-    started_at: Optional[str] = None,
-    bank_tx_ref: Optional[str] = None,
-) -> dict:
-    """Internal conversion writer — shared by /convert endpoint + VietQR webhook.
-
-    Idempotency keys (in order):
-    1. `bank_tx_ref` — if provided (webhook path), bank reference is canonical;
-       same ref returns existing record without duplicating MRR.
-    2. `(user_id, started_at)` — manual /convert fallback when no bank ref.
-
-    Raises:
-        ValueError: if user_id not in pilots.jsonl. Caller translates to
-        HTTP status appropriate for its path (404 for /convert, 200+log for
-        webhook so bank doesn't retry-storm).
-
-    Returns dict with `is_new: bool` flag + full conversion record fields.
-    """
-    pilots = _load_pilots()
-    if not any(p.get("user_id") == user_id for p in pilots):
-        raise ValueError(f"Unknown user_id: {user_id}")
-
-    started_at = started_at or datetime.now(timezone.utc).date().isoformat()
-    conversions = _load_conversions()
-
-    # tx_ref idempotency takes priority (webhook may retry)
-    if bank_tx_ref:
-        existing = next(
-            (c for c in conversions if c.get("bank_tx_ref") == bank_tx_ref),
-            None,
-        )
-        if existing:
-            return {"is_new": False, **existing}
-
-    # Fallback: (user_id, started_at) idempotency for manual /convert
-    existing = next(
-        (
-            c for c in conversions
-            if c.get("user_id") == user_id and c.get("started_at") == started_at
-        ),
-        None,
-    )
-    if existing:
-        return {"is_new": False, **existing}
-
-    record = {
-        "user_id": user_id,
-        "tier": tier,
-        "monthly_vnd": monthly_vnd,
-        "started_at": started_at,
-        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-    }
-    if bank_tx_ref:
-        record["bank_tx_ref"] = bank_tx_ref
-    _append_jsonl(_conversions_path(), record)
-    return {"is_new": True, **record}
-
-
-@router.post(
-    "/convert",
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(_require_admin_token)],
+# ---------- Module-level CONFIG_DIR / MAX_PILOTS ----------
+# Authoritative values, kept in sync with vn_pilot_state via
+# the _ProxyModule.__setattr__ below.
+
+CONFIG_DIR: Path = _state.CONFIG_DIR
+MAX_PILOTS: int = _state.MAX_PILOTS
+
+# ---------- Custom module class for attribute-write interception ----------
+# Replaces the default module type so setattr(vpr, "CONFIG_DIR", x)
+# goes through our __setattr__ and syncs _state.CONFIG_DIR.
+# Required because Python 3.14 does NOT route setattr() through
+# a module-level __setattr__ function (PEP 562 only works via
+# module.__setattr__ when called directly, not via the setattr builtin
+# on Python ≥ 3.14). Using __class__ replacement is the reliable way.
+
+
+class _ProxyModule(types.ModuleType):
+    """ModuleType subclass that syncs CONFIG_DIR/MAX_PILOTS to _state."""
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if name == "CONFIG_DIR":
+            _state.CONFIG_DIR = value  # type: ignore[assignment]
+        elif name == "MAX_PILOTS":
+            _state.MAX_PILOTS = value  # type: ignore[assignment]
+        super().__setattr__(name, value)
+
+
+# Install proxy — must run before any attribute reads in tests
+sys.modules[__name__].__class__ = _ProxyModule
+
+
+# ---------- Main router ----------
+
+router = APIRouter(prefix="/v1/pilot", tags=["VN Pilot"])
+
+from src.api.vn_pilot_aggregates import aggregates_router  # noqa: E402
+from src.api.vn_pilot_conversions import conversions_router  # noqa: E402
+from src.api.vn_pilot_export import export_router  # noqa: E402
+from src.api.vn_pilot_polls import polls_router  # noqa: E402
+from src.api.vn_pilot_signup import signup_router  # noqa: E402
+
+router.include_router(aggregates_router)
+router.include_router(conversions_router)
+router.include_router(export_router)
+router.include_router(polls_router)
+router.include_router(signup_router)
+
+# ---------- Re-export contract ----------
+# Tests do: vpr.MAX_PILOTS, vpr._append_jsonl, vpr._record_conversion, etc.
+
+from src.api.vn_pilot_auth import _require_admin_token  # noqa: E402, F401
+from src.api.vn_pilot_common import (  # noqa: E402, F401
+    INITIAL_FREE_CREDITS,
+    PILOT_DURATION_WEEKS,
+    SUPPORTED_TYPES,
+    ConversionRequest,
+    PollResponseRequest,
+    SignupRequest,
+    SignupResponse,
+    _ZALO_RE,
+    _add_credits,
+    _append_jsonl,
+    _conversions_path,
+    _count_by_key,
+    _credit_balance,
+    _credits_path,
+    _current_iso_week,
+    _ensure_dir,
+    _find_by_zalo,
+    _load_conversions,
+    _load_jsonl,
+    _load_pilots,
+    _load_responses,
+    _org_filter,
+    _pilots_path,
+    _responses_path,
+    _stable_user_id,
 )
-async def convert(req: ConversionRequest) -> dict[str, object]:
-    """Mark a pilot user as paid. Records tier + MRR contribution.
-
-    Phase 6 Week 7-8 conversion phase: founder calls this after Polar.sh
-    payment confirms (or manual VietQR transfer). Idempotent on
-    (user_id, started_at) — re-call returns existing record.
-
-    Requires `Authorization: Bearer <MEKONG_ADMIN_TOKEN>` header. Errors:
-    - 401 / 403 / 503: auth (see _require_admin_token docstring)
-    - 404 if user_id not in pilots.jsonl
-    """
-    try:
-        return _record_conversion(
-            user_id=req.user_id,
-            tier=req.tier,
-            monthly_vnd=req.monthly_vnd,
-            started_at=req.started_at,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-
-
-@router.get("/revenue")
-async def revenue() -> dict[str, object]:
-    """Conversion + MRR snapshot for founder dashboard.
-
-    MRR = sum of monthly_vnd across all conversion records. If a single
-    user appears twice (eg restart at higher tier), both contribute — the
-    founder is responsible for closing old conversions before adding new.
-    """
-    pilots = _load_pilots()
-    conversions = _load_conversions()
-    total_pilots = len(pilots)
-    converted_user_ids = {c["user_id"] for c in conversions}
-    mrr_vnd = sum(c.get("monthly_vnd", 0) for c in conversions)
-    by_tier: dict[str, int] = {}
-    for c in conversions:
-        by_tier[c.get("tier") or "unknown"] = by_tier.get(c.get("tier") or "unknown", 0) + 1
-    return {
-        "conversions": len(conversions),
-        "unique_converted_users": len(converted_user_ids),
-        "conversion_rate": (
-            round(len(converted_user_ids) / total_pilots, 3) if total_pilots else 0.0
-        ),
-        "mrr_vnd": mrr_vnd,
-        "by_tier": by_tier,
-        "target_mrr_vnd": 1_000_000,  # Phase 6 goal: 5 × 199K ≈ 1M VND
-        "target_conversions": 5,
-    }
-
-
-@router.get("/stats")
-async def stats(org_id: str = Query(default="default")) -> dict[str, object]:
-    """Aggregate stats — for founder dashboard, scoped to org_id.
-
-    Cross-references conversions.jsonl to split active pilots into:
-    - trial_pilots: signed up + status active + NOT in conversions
-    - converted_pilots: at least one conversion record (regardless of status)
-
-    active_pilots kept for backward compat = users with status==active
-    (includes converted — they're still active users, just paying ones).
-
-    Records without org_id field are treated as org_id='default'.
-    """
-    all_pilots = _load_pilots()
-    pilots = _org_filter(all_pilots, org_id)
-    active = [p for p in pilots if p.get("status", "active") == "active"]
-    pilot_user_ids = {p.get("user_id") for p in pilots}
-    converted_user_ids = {c["user_id"] for c in _load_conversions()} & pilot_user_ids
-    trial = [p for p in active if p.get("user_id") not in converted_user_ids]
-    return {
-        "total_pilots": len(pilots),
-        "active_pilots": len(active),
-        "converted_pilots": len(converted_user_ids),
-        "trial_pilots": len(trial),
-        "capacity_remaining": max(0, MAX_PILOTS - len(pilots)),
-        "by_type": _count_by_key(pilots, "business_type"),
-        "by_source": _count_by_key(pilots, "source"),
-    }
-
-
-def _count_by_key(records: list[dict], key: str) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for r in records:
-        v = r.get(key) or "unknown"
-        counts[v] = counts.get(v, 0) + 1
-    return counts
-
-
-@router.get("/recent")
-async def recent(
-    limit: int = Query(default=10, ge=1, le=100),
-    org_id: str = Query(default="default"),
-) -> dict[str, list]:
-    """Recent signups + NPS responses for founder dashboard. No PII exposed.
-
-    Strips name + zalo from signups; truncates comment to 80 chars.
-    Sorted newest-first by timestamp. Filtered by org_id.
-    Records without org_id field treated as 'default'.
-    """
-    pilots = sorted(
-        _org_filter(_load_pilots(), org_id),
-        key=lambda p: p.get("onboarded_at", ""),
-        reverse=True,
-    )
-    responses = sorted(_load_responses(), key=lambda r: r.get("recorded_at", ""), reverse=True)
-    return {
-        "signups": [
-            {
-                "business_type": p.get("business_type"),
-                "city": p.get("city"),
-                "source": p.get("source"),
-                "onboarded_at": p.get("onboarded_at"),
-            }
-            for p in pilots[:limit]
-        ],
-        "nps_responses": [
-            {
-                "score": r.get("score"),
-                "iso_week": r.get("iso_week"),
-                "recorded_at": r.get("recorded_at"),
-                "comment_preview": (r.get("comment") or "")[:80],
-            }
-            for r in responses[:limit]
-        ],
-    }
-
-
-# ---------- MISA Export (Phase 7 P03) ----------
-
-_YM_RE = re.compile(r"^\d{4}-\d{2}$")
-
-
-@router.get(
-    "/export/misa",
-    dependencies=[Depends(_require_admin_token)],
-)
-async def export_misa(
-    from_ym: str = Query(alias="from", description="Start month YYYY-MM (inclusive)"),
-    to_ym: str = Query(alias="to", description="End month YYYY-MM (inclusive)"),
-):
-    """Export conversions as MISA AMIS-compatible CSV.
-
-    Returns 8-column voucher CSV with UTF-8 BOM. Admin token required.
-
-    ⚠️ DRAFT account codes (131/511/33311) — accountant review pending.
-    Override via env: MEKONG_MISA_{DEBIT,CREDIT,VAT}_ACCOUNT.
-
-    Empty range → CSV with header row only (no 404, predictable for cron).
-    """
-    from fastapi.responses import Response  # local import — keeps top clean
-    from src.services.misa_exporter import build_misa_rows, to_csv_bytes
-
-    for ym in (from_ym, to_ym):
-        if not _YM_RE.match(ym):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid month format {ym!r} — expected YYYY-MM",
-            )
-
-    try:
-        rows = build_misa_rows(_load_conversions(), from_ym, to_ym)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        )
-
-    csv_bytes = to_csv_bytes(rows)
-    filename = f"misa-pilots-{from_ym}-{to_ym}.csv"
-    return Response(
-        content=csv_bytes,
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+from src.api.vn_pilot_conversions import _record_conversion  # noqa: E402, F401
+from src.api.vn_pilot_signup import _notify_founder_signup  # noqa: E402, F401
