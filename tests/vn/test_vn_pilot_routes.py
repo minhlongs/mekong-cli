@@ -281,7 +281,7 @@ class TestConvert:
     @pytest.fixture(autouse=True)
     def _bypass_admin_auth(self, client: TestClient) -> None:
         """Skip token check in conversion-logic tests (see TestConvertAuth for auth)."""
-        client.app.dependency_overrides[vpr._require_admin_token] = lambda: None
+        client.app.dependency_overrides[vpr._convert_auth] = lambda: None
         yield
         client.app.dependency_overrides.clear()
 
@@ -349,7 +349,7 @@ class TestConvert:
 class TestRevenue:
     @pytest.fixture(autouse=True)
     def _bypass_admin_auth(self, client: TestClient) -> None:
-        client.app.dependency_overrides[vpr._require_admin_token] = lambda: None
+        client.app.dependency_overrides[vpr._convert_auth] = lambda: None
         yield
         client.app.dependency_overrides.clear()
 
@@ -413,11 +413,12 @@ class TestConvertAuth:
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.delenv("MEKONG_ADMIN_TOKEN", raising=False)
+        monkeypatch.delenv("MEKONG_JWT_SECRET=REDACTED", raising=False)
         resp = client.post("/v1/pilot/convert", json={
             "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
         }, headers={"Authorization": f"Bearer {self.ADMIN_TOKEN}"})
         assert resp.status_code == 503
-        assert "MEKONG_ADMIN_TOKEN not set" in resp.json()["detail"]
+        assert "Admin auth disabled" in resp.json()["detail"]
 
     def test_401_when_no_authorization_header(
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
@@ -441,11 +442,15 @@ class TestConvertAuth:
     def test_403_when_token_mismatch(
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        # With JWT enabled, a wrong legacy token falls to JWT path.
+        # An invalid JWT (not a valid JWT at all) returns 401 (invalid token).
         monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
+        monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", "test-secret-32-bytes-padded!!!!")
         resp = client.post("/v1/pilot/convert", json={
             "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
         }, headers={"Authorization": "Bearer wrong_token"})
-        assert resp.status_code == 403
+        # wrong_token is not a valid JWT → 401 invalid token
+        assert resp.status_code == 401
         assert "Invalid" in resp.json()["detail"]
 
     def test_201_with_valid_bearer(
