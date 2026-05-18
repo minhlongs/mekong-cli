@@ -70,14 +70,21 @@ class TestSignup:
             r = client.post("/v1/pilot/signup", json=payload).json()
             assert r["user_id"].startswith(f"opc_{i+1:03d}_")
 
-    def test_cap_at_10_pilots(self, client: TestClient) -> None:
-        for i in range(10):
+    def test_cap_uses_max_pilots_constant(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Parametric cap test — monkeypatch MAX_PILOTS to 3 for speed.
+        Validates the cap mechanism, not the production value (50).
+        Production cap=50 validated by tests/vn/test_vn_pilot_capacity.py.
+        """
+        monkeypatch.setattr(vpr, "MAX_PILOTS", 3)
+        for i in range(3):
             payload = {**VALID_SIGNUP, "zalo": f"+849091234{i:02d}", "name": f"U{i}"}
             assert client.post("/v1/pilot/signup", json=payload).status_code == 201
         overflow = {**VALID_SIGNUP, "zalo": "+84909999999", "name": "Overflow"}
         resp = client.post("/v1/pilot/signup", json=overflow)
         assert resp.status_code == 409
-        assert "10 user" in resp.json()["detail"]
+        assert "3 user" in resp.json()["detail"]
         assert "waitlist" in resp.json()["detail"]
 
     @pytest.mark.parametrize("zalo", ["invalid", "+1234", "abc", "84909123456", "0aaaaa"])
@@ -173,12 +180,13 @@ class TestPollResponse:
 class TestStats:
     def test_empty_state(self, client: TestClient) -> None:
         body = client.get("/v1/pilot/stats").json()
+        # capacity_remaining tracks MAX_PILOTS (Phase 7 stage 1 = 50)
         assert body == {
             "total_pilots": 0,
             "active_pilots": 0,
             "converted_pilots": 0,
             "trial_pilots": 0,
-            "capacity_remaining": 10,
+            "capacity_remaining": vpr.MAX_PILOTS,
             "by_type": {},
             "by_source": {},
         }
@@ -197,7 +205,7 @@ class TestStats:
         stats = client.get("/v1/pilot/stats").json()
         assert stats["total_pilots"] == 4
         assert stats["active_pilots"] == 4
-        assert stats["capacity_remaining"] == 6
+        assert stats["capacity_remaining"] == vpr.MAX_PILOTS - 4  # 46 in stage 1
         assert stats["by_type"] == {"shop_online": 2, "freelancer": 1, "cafe_fnb": 1}
         assert stats["by_source"] == {"fb": 2, "linkedin": 1, "zalo_group": 1}
 

@@ -14,6 +14,7 @@ Idempotency: same {name + zalo} → same user_id (hash-based).
 """
 from __future__ import annotations
 
+import fcntl  # POSIX advisory lock — see _append_jsonl for Windows fallback note
 import hashlib
 import json
 import logging
@@ -35,6 +36,19 @@ CONFIG_DIR = Path(os.getenv("MEKONG_PILOT_DIR", str(Path.home() / ".mekong")))
 
 INITIAL_FREE_CREDITS = 50
 PILOT_DURATION_WEEKS = 8
+# Phase 7 stage 1: cap=50 (founder override). Phase 01b bumps to 100 after
+# 1-week monitoring. Tests override via MEKONG_MAX_PILOTS env var.
+MAX_PILOTS = int(os.getenv("MEKONG_MAX_PILOTS", "50"))
+# Storage backend selector — Phase 7 scaffolding only. jsonl path is active;
+# sqlite path is reserved for Phase 8 migration. Log a warning if anyone
+# sets sqlite now so it's not silently ignored.
+PILOT_STORAGE = os.getenv("MEKONG_PILOT_STORAGE", "jsonl").lower()
+if PILOT_STORAGE == "sqlite":
+    logging.warning(
+        "MEKONG_PILOT_STORAGE=sqlite requested but unimplemented in Phase 7 — "
+        "falling back to jsonl. SQLite migration scheduled for Phase 8."
+    )
+    PILOT_STORAGE = "jsonl"
 SUPPORTED_TYPES = {
     "shop_online", "freelancer", "cafe_fnb", "giao_vien",
     "dich_vu", "ho_kinh_doanh", "opc",
@@ -203,9 +217,25 @@ def _find_by_zalo(zalo: str) -> Optional[dict]:
 
 
 def _append_jsonl(path: Path, record: dict) -> None:
+    """Append one JSON record to a JSONL file with POSIX advisory lock.
+
+    Multi-worker safety: uvicorn with workers>1 can race on open(append) —
+    interleaved writes produce torn lines. fcntl.flock(LOCK_EX) serializes
+    writes within the same host. Lock released implicitly on close.
+
+    Limitation: fcntl is POSIX-only. On Windows this raises AttributeError
+    at import time; the gateway is launchd-managed on macOS so this is
+    acceptable. If Windows support is added later, swap to a portable
+    portalocker.lock() call here.
+    """
     _ensure_dir()
     with path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+            fh.flush()  # push to kernel before lock release
+        finally:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
 
 
 def _credit_balance(user_id: str) -> int:
@@ -312,11 +342,11 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
 
     pilots = _load_pilots()
     seq = len(pilots) + 1
-    if seq > 10:
-        # Pilot capped at 10 users (per Phase 6 plan). Reject gracefully.
+    if seq > MAX_PILOTS:
+        # Pilot capped at MAX_PILOTS (Phase 7 stage 1 = 50). Reject gracefully.
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Pilot đã đủ 10 user. Subscribe waitlist: hello@mekongmind.com",
+            detail=f"Pilot đã đủ {MAX_PILOTS} user. Subscribe waitlist: hello@mekongmind.com",
         )
 
     user_id = _stable_user_id(req.name, req.zalo, seq)
@@ -472,7 +502,7 @@ async def stats() -> dict[str, object]:
         "active_pilots": len(active),
         "converted_pilots": len(converted_user_ids),
         "trial_pilots": len(trial),
-        "capacity_remaining": max(0, 10 - len(pilots)),
+        "capacity_remaining": max(0, MAX_PILOTS - len(pilots)),
         "by_type": _count_by_key(pilots, "business_type"),
         "by_source": _count_by_key(pilots, "source"),
     }
