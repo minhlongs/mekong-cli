@@ -1,23 +1,30 @@
-"""Auth routes: license key → JWT.
+"""Auth routes: license key → JWT + VN magic-link auth.
 
-POST /auth/login   {license_key} → {access_token, expires_in, tenant_id, tier}
-POST /auth/refresh {refresh_token} → new access_token (TODO: refresh impl)
+Legacy license-key routes (for IDE):
+  POST /auth/login   {license_key} → {access_token, expires_in, tenant_id, tier}
+  POST /auth/refresh {refresh_token} → new access_token (TODO: refresh impl)
 
-The IDE consumes /auth/login to obtain a short-lived JWT for subsequent
-mission requests gated by `license_gate`.
+VN Hub magic-link routes (public, enumeration-safe):
+  POST /v1/auth/magic-link  {email, purpose?} → 200 always (rate-limited)
+  GET  /v1/auth/verify?token=...              → 200 {jwt, scopes, allowed_orgs}
+                                               or 401 {error: invalid_or_expired_link}
 """
 from __future__ import annotations
 
 import logging
 import os
+import re
+import sys
 import time
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.lib.license_store import get_license_store
+from src.services import magic_link_service, resend_client
+from src.services.audit_logger import audit_admin_action
 
 logger = logging.getLogger(__name__)
 
@@ -81,4 +88,165 @@ async def login(req: LoginRequest) -> LoginResponse:
     logger.info("auth.login_success", extra={"tenant_id": tenant_id, "tier": tier})
     return LoginResponse(
         access_token=token, expires_in=ttl, tenant_id=tenant_id, tier=tier
+    )
+
+
+# =============================================================================
+# VN HUB — Magic-Link Auth Routes (prefix: /v1/auth)
+# =============================================================================
+
+vn_auth_router = APIRouter(prefix="/v1/auth", tags=["VN Magic-Link Auth"])
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+_MEKONG_PUBLIC_BASE_URL_DEFAULT = "https://api.mekong.dev"
+
+
+class MagicLinkRequest(BaseModel):
+    email: str = Field(..., max_length=320)
+    purpose: str = Field(default="login", max_length=32)
+
+
+class MagicLinkResponse(BaseModel):
+    ok: bool
+    message: str
+
+
+class VerifyResponse(BaseModel):
+    ok: bool
+    jwt: str
+    expires_at: str
+    scopes: list[str]
+    allowed_orgs: list[str]
+
+
+def _send_magic_link_bg(email: str, token: str, purpose: str) -> None:
+    """Background task: send magic-link email via Resend. Never raises."""
+    base_url = os.getenv("MEKONG_PUBLIC_BASE_URL", _MEKONG_PUBLIC_BASE_URL_DEFAULT)
+    magic_url = f"{base_url}/v1/auth/verify?token={token}"
+    try:
+        resend_client.send_magic_link_email(email, magic_url, purpose)
+        audit_admin_action(
+            scope="magic_link.sent",
+            org="none",
+            sub=email,
+            endpoint="/v1/auth/magic-link",
+        )
+        logger.info("magic_link.sent", extra={"email": email, "purpose": purpose})
+    except Exception as exc:
+        # Fire-and-forget: log failure but never surface to caller
+        logger.error(
+            "magic_link.send_failed",
+            extra={"email": email, "purpose": purpose, "error": str(exc)},
+        )
+        print(
+            f"[magic_link] WARN: email send failed for {email}: {exc}",
+            file=sys.stderr,
+        )
+
+
+@vn_auth_router.post("/magic-link", response_model=MagicLinkResponse)
+async def request_magic_link(
+    req: MagicLinkRequest,
+    background_tasks: BackgroundTasks,
+) -> MagicLinkResponse:
+    """Mint a magic-link token and send email (enumeration-safe).
+
+    Always returns 200 regardless of whether the email exists.
+    Rate-limit: 5 tokens/email/hour — over-cap requests are silently dropped.
+    Email is sent as a BackgroundTask — mint endpoint never blocks on Resend.
+    """
+    _OK_RESPONSE = MagicLinkResponse(
+        ok=True,
+        message="Nếu email tồn tại, liên kết đăng nhập đã được gửi.",
+    )
+
+    # Validate email format
+    if not _EMAIL_RE.match(req.email):
+        raise HTTPException(
+            status_code=422,
+            detail={"error": "invalid_email_format"},
+        )
+
+    # Rate limit check — silently drop if over cap
+    if not magic_link_service.check_rate_limit(req.email):
+        logger.warning(
+            "magic_link.rate_limited", extra={"email": req.email}
+        )
+        audit_admin_action(
+            scope="magic_link.rate_limited",
+            org="none",
+            sub=req.email,
+            endpoint="/v1/auth/magic-link",
+        )
+        return _OK_RESPONSE  # enumeration-safe: same response as success
+
+    # Mint token and schedule email send in background
+    token = magic_link_service.mint_token(req.email, req.purpose)
+    background_tasks.add_task(_send_magic_link_bg, req.email, token, req.purpose)
+
+    audit_admin_action(
+        scope="magic_link.minted",
+        org="none",
+        sub=req.email,
+        endpoint="/v1/auth/magic-link",
+    )
+    return _OK_RESPONSE
+
+
+@vn_auth_router.get("/verify", response_model=VerifyResponse)
+async def verify_magic_link(
+    token: str = Query(..., min_length=10, max_length=128),
+) -> VerifyResponse:
+    """Verify magic-link token and mint 24h JWT.
+
+    Single-use: atomically marks redeemed_at on success.
+    Any invalid/expired/reused token returns 401 with single error code
+    (no information leak about token state).
+    """
+    try:
+        result = magic_link_service.verify_and_redeem(token)
+    except (
+        magic_link_service.MagicLinkInvalid,
+        magic_link_service.MagicLinkExpired,
+        magic_link_service.MagicLinkAlreadyRedeemed,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail={"error": "invalid_or_expired_link"},
+        )
+
+    email = result["email"]
+    purpose = result["purpose"]
+
+    jwt_token, expires_at = magic_link_service.mint_jwt_for_email(email)
+
+    # Decode to extract scopes/orgs for response (no re-verify needed — we just minted)
+    import jwt as _jwt
+    secret = os.getenv("MEKONG_JWT_SECRET", "")
+    try:
+        claims = _jwt.decode(jwt_token, secret, algorithms=["HS256"])
+    except Exception:
+        claims = {}
+
+    scopes = claims.get("scopes", ["none"])
+    allowed_orgs = claims.get("allowed_orgs", [])
+
+    audit_admin_action(
+        scope="magic_link.verified",
+        org=allowed_orgs[0] if allowed_orgs else "none",
+        sub=email,
+        endpoint="/v1/auth/verify",
+    )
+    logger.info(
+        "magic_link.verified",
+        extra={"email": email, "purpose": purpose, "scopes": scopes},
+    )
+
+    return VerifyResponse(
+        ok=True,
+        jwt=jwt_token,
+        expires_at=expires_at,
+        scopes=scopes,
+        allowed_orgs=allowed_orgs,
     )
