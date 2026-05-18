@@ -191,6 +191,30 @@ Then `sudo launchctl kickstart -k system/com.mekong.gateway`.
 
 Rotation: regenerate via `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`, update plist, kickstart.
 
+### VietQR webhook (Phase 7 P02 — auto-conversion via bank transfer)
+
+`POST /v1/payments/vietqr/webhook` — bank (Sepay default) forwards transfer
+confirmations here. Maps memo→user_id, amount→tier, calls internal
+`_record_conversion()` with `bank_tx_ref` idempotency. Removes founder's
+manual `/convert` step from the conversion flow.
+
+Env vars (both required to enable feature; absent → 503):
+```xml
+<key>MEKONG_VIETQR_PROVIDER</key><string>sepay</string>
+<key>MEKONG_VIETQR_WEBHOOK_SECRET</key><string>YOUR_SEPAY_HMAC_SECRET</string>
+```
+
+Bank-friendly error policy: returns 200 on application errors (memo
+unparseable, unknown user, amount mismatch) — bank doesn't retry-storm.
+Errors logged to `~/.mekong/vietqr_webhook.log` for founder weekly review.
+Only 401 (invalid HMAC signature) and 503 (secret not configured) are
+non-200 responses.
+
+Memo format on QR: `MEKONG-{user_id}` (e.g. `MEKONG-opc_001_abc12`).
+Tier amounts: 199K starter / 299K growth / 499K pro (VND, exact match).
+
+Full setup guide: `docs/vn-vietqr-integration.md`.
+
 ### Founder signup webhook (optional)
 
 On `POST /v1/pilot/signup` with `is_new=True`, the gateway can fire a webhook

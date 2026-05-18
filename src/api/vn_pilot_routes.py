@@ -409,6 +409,67 @@ async def poll_response(req: PollResponseRequest) -> dict[str, object]:
     }
 
 
+def _record_conversion(
+    user_id: str,
+    tier: str,
+    monthly_vnd: int,
+    started_at: Optional[str] = None,
+    bank_tx_ref: Optional[str] = None,
+) -> dict:
+    """Internal conversion writer — shared by /convert endpoint + VietQR webhook.
+
+    Idempotency keys (in order):
+    1. `bank_tx_ref` — if provided (webhook path), bank reference is canonical;
+       same ref returns existing record without duplicating MRR.
+    2. `(user_id, started_at)` — manual /convert fallback when no bank ref.
+
+    Raises:
+        ValueError: if user_id not in pilots.jsonl. Caller translates to
+        HTTP status appropriate for its path (404 for /convert, 200+log for
+        webhook so bank doesn't retry-storm).
+
+    Returns dict with `is_new: bool` flag + full conversion record fields.
+    """
+    pilots = _load_pilots()
+    if not any(p.get("user_id") == user_id for p in pilots):
+        raise ValueError(f"Unknown user_id: {user_id}")
+
+    started_at = started_at or datetime.now(timezone.utc).date().isoformat()
+    conversions = _load_conversions()
+
+    # tx_ref idempotency takes priority (webhook may retry)
+    if bank_tx_ref:
+        existing = next(
+            (c for c in conversions if c.get("bank_tx_ref") == bank_tx_ref),
+            None,
+        )
+        if existing:
+            return {"is_new": False, **existing}
+
+    # Fallback: (user_id, started_at) idempotency for manual /convert
+    existing = next(
+        (
+            c for c in conversions
+            if c.get("user_id") == user_id and c.get("started_at") == started_at
+        ),
+        None,
+    )
+    if existing:
+        return {"is_new": False, **existing}
+
+    record = {
+        "user_id": user_id,
+        "tier": tier,
+        "monthly_vnd": monthly_vnd,
+        "started_at": started_at,
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    if bank_tx_ref:
+        record["bank_tx_ref"] = bank_tx_ref
+    _append_jsonl(_conversions_path(), record)
+    return {"is_new": True, **record}
+
+
 @router.post(
     "/convert",
     status_code=status.HTTP_201_CREATED,
@@ -425,31 +486,15 @@ async def convert(req: ConversionRequest) -> dict[str, object]:
     - 401 / 403 / 503: auth (see _require_admin_token docstring)
     - 404 if user_id not in pilots.jsonl
     """
-    pilots = _load_pilots()
-    if not any(p["user_id"] == req.user_id for p in pilots):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Unknown user_id: {req.user_id}",
+    try:
+        return _record_conversion(
+            user_id=req.user_id,
+            tier=req.tier,
+            monthly_vnd=req.monthly_vnd,
+            started_at=req.started_at,
         )
-    started_at = req.started_at or datetime.now(timezone.utc).date().isoformat()
-    existing = next(
-        (
-            c for c in _load_conversions()
-            if c.get("user_id") == req.user_id and c.get("started_at") == started_at
-        ),
-        None,
-    )
-    if existing:
-        return {"is_new": False, **existing}
-    record = {
-        "user_id": req.user_id,
-        "tier": req.tier,
-        "monthly_vnd": req.monthly_vnd,
-        "started_at": started_at,
-        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-    }
-    _append_jsonl(_conversions_path(), record)
-    return {"is_new": True, **record}
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
 @router.get("/revenue")
