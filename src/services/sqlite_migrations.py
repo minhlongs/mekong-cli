@@ -86,5 +86,17 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             user_id        TEXT PRIMARY KEY,
             balance        INTEGER NOT NULL DEFAULT 0
         );
+
+        CREATE TABLE IF NOT EXISTS magic_link_tokens (
+            token        TEXT PRIMARY KEY,
+            email        TEXT NOT NULL,
+            purpose      TEXT NOT NULL,
+            org_id       TEXT,
+            expires_at   TEXT NOT NULL,
+            redeemed_at  TEXT,
+            created_at   TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_magic_link_email_created
+            ON magic_link_tokens(email, created_at);
     """)
     conn.commit()
