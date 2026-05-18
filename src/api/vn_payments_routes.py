@@ -30,9 +30,14 @@ from src.services.vietqr_verifier import get_verifier
 
 router = APIRouter(prefix="/v1/payments", tags=["VN Payments"])
 
-# Memo format we control on the QR: "MEKONG-opc_001_abc" or "MEKONG opc_001_abc".
-# Case-insensitive, tolerates extra whitespace. Captures only opc_NNN_xxx.
-_MEMO_RE = re.compile(r"MEKONG[-_\s]*?(opc_\d{3}_[a-z0-9]+)", re.IGNORECASE)
+# Memo format: "MEKONG-{org}-{user_id}" or legacy "MEKONG-{user_id}".
+# Two capture groups: optional org (group 1) + required user_id (group 2).
+# Negative lookahead (?!opc_) prevents org group from consuming a user_id token.
+# Separators: `-`, `_`, ` ` are interchangeable. Case-insensitive.
+_MEMO_RE = re.compile(
+    r"MEKONG[-_\s]+(?:(?!opc_)([a-z0-9][a-z0-9-]{0,31})[-_\s]+)?(opc_\d{3}_[a-z0-9]+)",
+    re.IGNORECASE,
+)
 
 # Phase 6 VN tier prices. Real source of truth is factory/contracts/pricing.json
 # but for webhook latency we hardcode the 3 supported tiers. Mismatched amounts
@@ -70,16 +75,26 @@ def _log_webhook(entry: dict) -> None:
         logging.warning("Failed to log webhook attempt: %s", exc)
 
 
-def _parse_memo(memo: str) -> Optional[str]:
-    """Extract user_id from bank memo. Returns None if no match.
+def _parse_memo(memo: str) -> Optional[tuple[str, str]]:
+    """Extract (org_id, user_id) from bank memo. Returns None if no match.
 
-    Accepts variations: "MEKONG-opc_001_abc", "mekong opc_001_abc",
-    "Payment MEKONG_OPC_001_ABC for May" — robust to user typos.
+    Two formats accepted indefinitely (no sunset):
+    - Legacy single-tenant: `MEKONG-opc_001_abc` → ("default", "opc_001_abc")
+    - Multi-tenant:         `MEKONG-acme-opc_001_abc` → ("acme", "opc_001_abc")
+
+    Tolerant: case-insensitive; separators `-`, `_`, ` ` interchangeable.
+    Negative lookahead `(?!opc_)` prevents the org group from stealing user_id.
+    Org name max 32 chars `[a-z0-9-]`; names exceeding this cause no match.
     """
     if not memo:
         return None
     m = _MEMO_RE.search(memo)
-    return m.group(1).lower() if m else None
+    if not m:
+        return None
+    org_raw, user_raw = m.group(1), m.group(2)
+    org_id = org_raw.lower() if org_raw else "default"
+    user_id = user_raw.lower()
+    return org_id, user_id
 
 
 @router.post("/vietqr/webhook")
@@ -120,15 +135,26 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
             detail="Invalid webhook signature",
         )
 
-    # 2. Parse memo
-    user_id = _parse_memo(payload.memo)
-    if not user_id:
+    # 2. Parse memo → (org_id, user_id)
+    parsed = _parse_memo(payload.memo)
+    if not parsed:
         _log_webhook({
             "outcome": "memo_unparseable",
             "tx_ref": payload.tx_ref,
-            "memo": payload.memo[:80],
+            "memo_preview": payload.memo[:20],
         })
+        logging.warning(
+            '{"event": "vietqr_parse_failed", "memo_preview": "%s", "memo_len": %d}',
+            payload.memo[:20],
+            len(payload.memo),
+        )
         return {"status": "memo_unparseable", "tx_ref": payload.tx_ref}
+    org_id, user_id = parsed
+    logging.info(
+        '{"event": "vietqr_parse", "org_id": "%s", "user_id": "%s"}',
+        org_id,
+        user_id,
+    )
 
     # 3. Match amount → tier (exact match; mismatches logged + accepted)
     tier_key = _TIER_PRICES_VND.get(payload.amount)
@@ -137,12 +163,14 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
             "outcome": "amount_no_tier",
             "tx_ref": payload.tx_ref,
             "user_id": user_id,
+            "org_id": org_id,
             "amount": payload.amount,
         })
         return {
             "status": "amount_no_tier",
             "tx_ref": payload.tx_ref,
             "amount": payload.amount,
+            "org_id": org_id,
         }
 
     # 4. Record conversion (idempotent via bank_tx_ref)
@@ -152,6 +180,7 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
             tier=tier_key,
             monthly_vnd=payload.amount,
             bank_tx_ref=payload.tx_ref,
+            org_id=org_id,
         )
     except ValueError as exc:
         # User_id not found in pilots.jsonl — log + accept (don't retry-storm)
@@ -159,15 +188,22 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
             "outcome": "user_not_found",
             "tx_ref": payload.tx_ref,
             "user_id": user_id,
+            "org_id": org_id,
             "detail": str(exc),
         })
-        return {"status": "user_not_found", "tx_ref": payload.tx_ref, "user_id": user_id}
+        return {
+            "status": "user_not_found",
+            "tx_ref": payload.tx_ref,
+            "user_id": user_id,
+            "org_id": org_id,
+        }
 
     outcome = "already_processed" if not result.get("is_new") else "converted"
     _log_webhook({
         "outcome": outcome,
         "tx_ref": payload.tx_ref,
         "user_id": user_id,
+        "org_id": org_id,
         "tier": tier_key,
         "amount": payload.amount,
     })
@@ -175,5 +211,6 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
         "status": outcome,
         "tx_ref": payload.tx_ref,
         "user_id": user_id,
+        "org_id": org_id,
         "tier": tier_key,
     }
