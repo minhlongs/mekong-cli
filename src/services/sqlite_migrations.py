@@ -98,5 +98,30 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_magic_link_email_created
             ON magic_link_tokens(email, created_at);
+
+        CREATE TABLE IF NOT EXISTS orgs (
+            org_id                     TEXT PRIMARY KEY,
+            display_name               TEXT NOT NULL,
+            status                     TEXT NOT NULL DEFAULT 'unverified',
+            platform_fee_paid_until    TEXT,
+            trial_expires_at           TEXT NOT NULL,
+            created_at                 TEXT NOT NULL,
+            created_by_email           TEXT NOT NULL,
+            polar_org_subscription_id  TEXT,
+            raw_payload                TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_orgs_status ON orgs(status);
+
+        CREATE TABLE IF NOT EXISTS org_members (
+            org_id        TEXT NOT NULL,
+            user_id       TEXT NOT NULL,
+            email         TEXT NOT NULL,
+            scope         TEXT NOT NULL,
+            joined_at     TEXT NOT NULL,
+            invited_by    TEXT,
+            PRIMARY KEY (org_id, user_id),
+            FOREIGN KEY (org_id) REFERENCES orgs(org_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_org_members_email ON org_members(email);
     """)
     conn.commit()
