@@ -9,7 +9,7 @@ Flow for _require_scope:
   2. Try JWT decode against MEKONG_JWT_SECRET.
   3. Check scope (ANY-of).
   4. Check org (wildcard or exact list).
-  5. Emit structured audit log on success.
+  5. Emit structured audit log on success (stdout + ~/.mekong/admin-audit.jsonl).
 """
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from src.services.admin_token_service import (
     check_scope,
     decode_jwt,
 )
+from src.services.audit_logger import audit_admin_action
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ def _require_scope(required: list[str]) -> Callable:
         # --- Legacy backdoor: exact match on MEKONG_ADMIN_TOKEN ---
         if legacy_token and raw_token == legacy_token:
             org_id = request.query_params.get("org_id", "default")
-            _audit_log(scope="legacy", org=org_id, sub="legacy")
+            _audit_log(scope="legacy", org=org_id, sub="legacy", endpoint=request.url.path)
             return  # allow
 
         # --- JWT path ---
@@ -145,11 +146,18 @@ def _require_scope(required: list[str]) -> Callable:
             scope=",".join(claims.get("scopes", [])),
             org=org_id,
             sub=claims.get("sub", "unknown"),
+            endpoint=request.url.path,
         )
 
     return _dependency
 
 
-def _audit_log(scope: str, org: str, sub: str) -> None:
-    """Emit a structured JSON audit line on every successful admin auth."""
+def _audit_log(scope: str, org: str, sub: str, endpoint: str = "") -> None:
+    """Emit a structured JSON audit line on every successful admin auth.
+
+    Writes to both:
+    - stdout via Python logging (for journalctl / live tail)
+    - ~/.mekong/admin-audit.jsonl (persistent, flock-safe, founder-readable)
+    """
     logger.info(json.dumps({"event": "admin_auth", "scope": scope, "org": org, "sub": sub}))
+    audit_admin_action(scope=scope, org=org, sub=sub, endpoint=endpoint)
