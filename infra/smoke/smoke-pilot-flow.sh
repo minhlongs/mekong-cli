@@ -157,6 +157,33 @@ case "$http_code" in
     ;;
 esac
 
+# 8. Phase 8 P02 — org-scoped revenue: default org returns org_id field
+#    (read-only; does not mutate state)
+if check_200 "/v1/pilot/revenue?org_id=default" "$GATEWAY/v1/pilot/revenue?org_id=default" "$TMP"; then
+  check_keys "/v1/pilot/revenue (org=default)" "$TMP" \
+    org_id conversions mrr_vnd unique_converted_users
+  got_org=$(jq -r '.org_id // "MISSING"' "$TMP")
+  if [ "$got_org" = "default" ]; then
+    pass "/v1/pilot/revenue org_id field — value='default'"
+  else
+    fail "/v1/pilot/revenue org_id field — expected 'default', got '$got_org'"
+  fi
+fi
+
+# 9. Phase 8 P02 — org-scoped convert gate: unauthenticated with org_id MUST 401/503
+http_code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time "$TIMEOUT" \
+  -X POST -H "Content-Type: application/json" \
+  -d '{"user_id":"opc_smoke_test","tier":"x","monthly_vnd":1}' \
+  "$GATEWAY/v1/pilot/convert?org_id=smoke-org" 2>/dev/null) || http_code="curl_error"
+case "$http_code" in
+  401|503)
+    pass "/v1/pilot/convert?org_id=smoke-org auth gate — HTTP $http_code (expected, no token)"
+    ;;
+  *)
+    fail "/v1/pilot/convert?org_id=smoke-org auth gate — HTTP $http_code (expected 401 or 503)"
+    ;;
+esac
+
 # --- Summary ---
 hr
 if [ "$FAILS" -eq 0 ]; then

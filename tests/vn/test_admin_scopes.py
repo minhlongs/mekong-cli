@@ -323,18 +323,25 @@ class TestWrongOrg:
 
 class TestWildcardOrg:
     def test_wildcard_org_matches_any(self, client: TestClient) -> None:
-        """JWT with allowed_orgs=["*"] should pass org check for any org."""
-        resp = client.post("/v1/pilot/signup", json=VALID_SIGNUP)
+        """JWT with allowed_orgs=["*"] should pass org check for any org.
+
+        Phase 8 P02: user must exist in the target org (pilot boundary).
+        Wildcard JWT bypasses the JWT allowed_orgs check but not the pilot
+        lookup. Sign up user directly in the target org to satisfy both.
+        """
+        # Sign up user in the target org so pilot lookup succeeds
+        resp = client.post("/v1/pilot/signup", json={**VALID_SIGNUP, "org_id": "some-other-org"})
+        assert resp.status_code == 201
         uid = resp.json()["user_id"]
 
         token = _make_jwt(scopes=["founder"], allowed_orgs=["*"])
-        # Request with a non-default org_id
+        # Request with matching org_id
         resp = client.post(
-            "/v1/pilot/convert?org_id=some_other_org",
+            "/v1/pilot/convert?org_id=some-other-org",
             json={"user_id": uid, "tier": "starter", "monthly_vnd": 199000},
             headers={"Authorization": f"Bearer {token}"},
         )
-        # User exists → 201 (org check passed)
+        # User exists in org → 201 (auth + pilot check both passed)
         assert resp.status_code == 201
 
 
