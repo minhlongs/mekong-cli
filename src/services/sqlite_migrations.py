@@ -123,5 +123,19 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             FOREIGN KEY (org_id) REFERENCES orgs(org_id)
         );
         CREATE INDEX IF NOT EXISTS idx_org_members_email ON org_members(email);
+
+        CREATE TABLE IF NOT EXISTS org_invites (
+            invite_id            TEXT PRIMARY KEY,
+            org_id               TEXT NOT NULL,
+            invitee_email        TEXT NOT NULL,
+            invited_by_user_id   TEXT NOT NULL,
+            scope                TEXT NOT NULL DEFAULT 'readonly',
+            expires_at           TEXT NOT NULL,
+            redeemed_at          TEXT,
+            created_at           TEXT NOT NULL,
+            FOREIGN KEY (org_id) REFERENCES orgs(org_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_org_invites_org_status
+            ON org_invites(org_id, redeemed_at);
     """)
     conn.commit()
