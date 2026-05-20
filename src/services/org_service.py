@@ -711,3 +711,110 @@ def list_invites(org_id: str) -> list[dict[str, Any]]:
         }
         for r in rows
     ]
+
+
+# =============================================================================
+# Phase 9 P04 — Polar.sh Org Subscription
+# =============================================================================
+
+
+def mark_org_paid(
+    org_id: str,
+    polar_subscription_id: str,
+    period_end: str,
+) -> None:
+    """Mark an org as paid after Polar subscription.created webhook.
+
+    Idempotent: if org is already active with same subscription_id, no-op.
+
+    Args:
+        org_id: Org slug.
+        polar_subscription_id: Polar subscription ID.
+        period_end: ISO timestamp of current period end.
+    """
+    conn = _open_conn()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+
+        # Check if already paid with same subscription (idempotent)
+        existing = conn.execute(
+            "SELECT status, polar_org_subscription_id FROM orgs WHERE org_id = ?",
+            (org_id,),
+        ).fetchone()
+
+        if existing is None:
+            conn.rollback()
+            return  # Org not found — silent no-op (logged by caller)
+
+        if (
+            existing["status"] == "active"
+            and existing["polar_org_subscription_id"] == polar_subscription_id
+        ):
+            conn.rollback()
+            return  # Already processed
+
+        conn.execute(
+            """
+            UPDATE orgs
+            SET status = 'active',
+                polar_org_subscription_id = ?,
+                platform_fee_paid_until = ?
+            WHERE org_id = ?
+            """,
+            (polar_subscription_id, period_end, org_id),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+    audit_admin_action(
+        scope="org.paid",
+        org=org_id,
+        sub=polar_subscription_id,
+        endpoint="/v1/billing/webhook/org",
+    )
+
+
+def mark_org_cancelled(org_id: str) -> None:
+    """Mark an org as cancelled after Polar subscription.cancelled webhook.
+
+    Looks up org by polar_org_subscription_id to handle any org_id aliasing.
+    Falls back to org_id if subscription_id not found.
+
+    Args:
+        org_id: Org slug (used for audit log; lookup is by polar_subscription_id).
+    """
+    conn = _open_conn()
+    try:
+        # First try lookup by polar_org_subscription_id (more reliable)
+        row = conn.execute(
+            "SELECT org_id FROM orgs WHERE org_id = ? AND polar_org_subscription_id IS NOT NULL",
+            (org_id,),
+        ).fetchone()
+
+        if row is None:
+            # Fallback: try by org_id alone (for orgs without subscription_id set yet)
+            row = conn.execute(
+                "SELECT 1 FROM orgs WHERE org_id = ?",
+                (org_id,),
+            ).fetchone()
+            if row is None:
+                return  # Org not found
+
+        conn.execute(
+            "UPDATE orgs SET status = 'cancelled' WHERE org_id = ?",
+            (org_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    audit_admin_action(
+        scope="org.cancelled",
+        org=org_id,
+        sub="polar_webhook",
+        endpoint="/v1/billing/webhook/org",
+    )
