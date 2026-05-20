@@ -137,5 +137,15 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_org_invites_org_status
             ON org_invites(org_id, redeemed_at);
+
+        CREATE TABLE IF NOT EXISTS polar_webhook_events (
+            event_id       TEXT PRIMARY KEY,
+            event_type     TEXT NOT NULL,
+            received_at    TEXT NOT NULL,
+            org_id         TEXT,
+            raw_payload    TEXT NOT NULL,
+            processed_ok   INTEGER NOT NULL DEFAULT 1
+        );
+        CREATE INDEX IF NOT EXISTS idx_polar_evt_org ON polar_webhook_events(org_id);
     """)
     conn.commit()
