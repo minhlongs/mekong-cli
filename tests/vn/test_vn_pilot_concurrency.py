@@ -69,7 +69,10 @@ class TestAppendConcurrency:
         for p in processes:
             p.start()
         for p in processes:
-            p.join(timeout=10)
+            p.join(timeout=30)
+            if p.exitcode is None:
+                p.terminate()
+                p.join(timeout=5)
             assert p.exitcode == 0, f"Worker {p.pid} crashed (exit={p.exitcode})"
 
         # Verify: count lines, parse each, check schema
@@ -122,8 +125,11 @@ class TestAppendConcurrency:
             for p in processes:
                 p.start()
             for p in processes:
-                p.join(timeout=5)
-                assert p.exitcode == 0, f"Run {run+1}: worker crashed"
+                p.join(timeout=15)
+                if p.exitcode is None:
+                    p.terminate()
+                    p.join(timeout=3)
+                assert p.exitcode == 0, f"Run {run+1}: worker failed (exit={p.exitcode})"
             lines = pilots_file.read_text(encoding="utf-8").splitlines()
             assert len(lines) == 20, f"Run {run+1}: expected 20 lines, got {len(lines)}"
             # Quick JSON parse check

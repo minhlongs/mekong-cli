@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "created": "/Users/macbookprom1/mekong-cli",
+  "created": "/Users/macbook/mekong-cli",
   "skills": {
     "research": {
       "name": "research",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/research",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/research"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/research",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/research"
       },
       "path": ".claude-skills/research",
       "merged": true
@@ -14,8 +14,8 @@
     "ui-ux-pro-max": {
       "name": "ui-ux-pro-max",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/ui-ux-pro-max",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/ui-ux-pro-max"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/ui-ux-pro-max",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/ui-ux-pro-max"
       },
       "path": ".claude-skills/ui-ux-pro-max",
       "merged": true
@@ -23,8 +23,8 @@
     "document-skills": {
       "name": "document-skills",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/document-skills",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/document-skills"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/document-skills",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/document-skills"
       },
       "path": ".claude-skills/document-skills",
       "merged": true
@@ -32,8 +32,8 @@
     "backend-development": {
       "name": "backend-development",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/backend-development",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/backend-development"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/backend-development",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/backend-development"
       },
       "path": ".claude-skills/backend-development",
       "merged": true
@@ -41,8 +41,8 @@
     "mobile-development": {
       "name": "mobile-development",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/mobile-development",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/mobile-development"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/mobile-development",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/mobile-development"
       },
       "path": ".claude-skills/mobile-development",
       "merged": true
@@ -50,8 +50,8 @@
     "databases": {
       "name": "databases",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/databases",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/databases"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/databases",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/databases"
       },
       "path": ".claude-skills/databases",
       "merged": true
@@ -59,8 +59,8 @@
     "template-skill": {
       "name": "template-skill",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/template-skill",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/template-skill"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/template-skill",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/template-skill"
       },
       "path": ".claude-skills/template-skill",
       "merged": true
@@ -68,8 +68,8 @@
     "devops": {
       "name": "devops",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/devops",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/devops"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/devops",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/devops"
       },
       "path": ".claude-skills/devops",
       "merged": true
@@ -77,7 +77,7 @@
     "vietnamese-agency": {
       "name": "vietnamese-agency",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/vietnamese-agency"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/vietnamese-agency"
       },
       "path": ".claude-skills/vietnamese-agency",
       "merged": true
@@ -85,7 +85,7 @@
     "plans-kanban": {
       "name": "plans-kanban",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/plans-kanban"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/plans-kanban"
       },
       "path": ".claude-skills/plans-kanban",
       "merged": true
@@ -93,8 +93,8 @@
     "frontend-development": {
       "name": "frontend-development",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/frontend-development",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/frontend-development"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/frontend-development",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/frontend-development"
       },
       "path": ".claude-skills/frontend-development",
       "merged": true
@@ -102,7 +102,7 @@
     "binh-phap-wisdom": {
       "name": "binh-phap-wisdom",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/binh-phap-wisdom"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/binh-phap-wisdom"
       },
       "path": ".claude-skills/binh-phap-wisdom",
       "merged": true
@@ -110,8 +110,8 @@
     "ui-styling": {
       "name": "ui-styling",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/ui-styling",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/ui-styling"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/ui-styling",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/ui-styling"
       },
       "path": ".claude-skills/ui-styling",
       "merged": true
@@ -119,8 +119,8 @@
     "code-review": {
       "name": "code-review",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/code-review",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/code-review"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/code-review",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/code-review"
       },
       "path": ".claude-skills/code-review",
       "merged": true
@@ -128,8 +128,8 @@
     "debugging": {
       "name": "debugging",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/debugging",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/debugging"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/debugging",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/debugging"
       },
       "path": ".claude-skills/debugging",
       "merged": true
@@ -137,7 +137,7 @@
     "cloudflare": {
       "name": "cloudflare",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/cloudflare"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/cloudflare"
       },
       "path": ".claude-skills/cloudflare",
       "merged": true
@@ -145,8 +145,8 @@
     "planning": {
       "name": "planning",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/planning",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/planning"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/planning",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/planning"
       },
       "path": ".claude-skills/planning",
       "merged": true
@@ -154,7 +154,7 @@
     "context-engineering": {
       "name": "context-engineering",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/context-engineering"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/context-engineering"
       },
       "path": ".claude-skills/context-engineering",
       "merged": true
@@ -162,8 +162,8 @@
     "mcp-management": {
       "name": "mcp-management",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/mcp-management",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/mcp-management"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/mcp-management",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/mcp-management"
       },
       "path": ".claude-skills/mcp-management",
       "merged": true
@@ -171,8 +171,8 @@
     "problem-solving": {
       "name": "problem-solving",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/problem-solving",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/problem-solving"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/problem-solving",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/problem-solving"
       },
       "path": ".claude-skills/problem-solving",
       "merged": true
@@ -180,7 +180,7 @@
     "mermaidjs-v11": {
       "name": "mermaidjs-v11",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/mermaidjs-v11"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/mermaidjs-v11"
       },
       "path": ".claude-skills/mermaidjs-v11",
       "merged": true
@@ -188,7 +188,7 @@
     "vibe-development": {
       "name": "vibe-development",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/vibe-development"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/vibe-development"
       },
       "path": ".claude-skills/vibe-development",
       "merged": true
@@ -196,8 +196,8 @@
     "common": {
       "name": "common",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/common",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/common"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/common",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/common"
       },
       "path": ".claude-skills/common",
       "merged": true
@@ -205,8 +205,8 @@
     "skill-creator": {
       "name": "skill-creator",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/skill-creator",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/skill-creator"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/skill-creator",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/skill-creator"
       },
       "path": ".claude-skills/skill-creator",
       "merged": true
@@ -214,8 +214,8 @@
     "media-processing": {
       "name": "media-processing",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/media-processing",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/media-processing"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/media-processing",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/media-processing"
       },
       "path": ".claude-skills/media-processing",
       "merged": true
@@ -223,8 +223,8 @@
     "chrome-devtools": {
       "name": "chrome-devtools",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/chrome-devtools",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/chrome-devtools"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/chrome-devtools",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/chrome-devtools"
       },
       "path": ".claude-skills/chrome-devtools",
       "merged": true
@@ -232,8 +232,8 @@
     "payment-integration": {
       "name": "payment-integration",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/payment-integration",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/payment-integration"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/payment-integration",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/payment-integration"
       },
       "path": ".claude-skills/payment-integration",
       "merged": true
@@ -241,8 +241,8 @@
     "ai-multimodal": {
       "name": "ai-multimodal",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/ai-multimodal",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/ai-multimodal"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/ai-multimodal",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/ai-multimodal"
       },
       "path": ".claude-skills/ai-multimodal",
       "merged": true
@@ -250,7 +250,7 @@
     "brainstorming": {
       "name": "brainstorming",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/brainstorming"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/brainstorming"
       },
       "path": ".claude-skills/brainstorming",
       "merged": true
@@ -258,8 +258,8 @@
     "repomix": {
       "name": "repomix",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/repomix",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/repomix"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/repomix",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/repomix"
       },
       "path": ".claude-skills/repomix",
       "merged": true
@@ -267,7 +267,7 @@
     "markdown-novel-viewer": {
       "name": "markdown-novel-viewer",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/markdown-novel-viewer"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/markdown-novel-viewer"
       },
       "path": ".claude-skills/markdown-novel-viewer",
       "merged": true
@@ -275,7 +275,7 @@
     "antibridge": {
       "name": "antibridge",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/antibridge"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/antibridge"
       },
       "path": ".claude-skills/antibridge",
       "merged": true
@@ -283,8 +283,8 @@
     "docs-seeker": {
       "name": "docs-seeker",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/docs-seeker",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/docs-seeker"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/docs-seeker",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/docs-seeker"
       },
       "path": ".claude-skills/docs-seeker",
       "merged": true
@@ -292,8 +292,8 @@
     "frontend-design": {
       "name": "frontend-design",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/frontend-design",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/frontend-design"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/frontend-design",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/frontend-design"
       },
       "path": ".claude-skills/frontend-design",
       "merged": true
@@ -301,7 +301,7 @@
     "ai-artist": {
       "name": "ai-artist",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/ai-artist"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/ai-artist"
       },
       "path": ".claude-skills/ai-artist",
       "merged": true
@@ -309,8 +309,8 @@
     "web-frameworks": {
       "name": "web-frameworks",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/web-frameworks",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/web-frameworks"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/web-frameworks",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/web-frameworks"
       },
       "path": ".claude-skills/web-frameworks",
       "merged": true
@@ -318,8 +318,8 @@
     "mcp-builder": {
       "name": "mcp-builder",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/mcp-builder",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/mcp-builder"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/mcp-builder",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/mcp-builder"
       },
       "path": ".claude-skills/mcp-builder",
       "merged": true
@@ -327,7 +327,7 @@
     "vibe-testing": {
       "name": "vibe-testing",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/vibe-testing"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/vibe-testing"
       },
       "path": ".claude-skills/vibe-testing",
       "merged": true
@@ -335,8 +335,8 @@
     "sequential-thinking": {
       "name": "sequential-thinking",
       "sources": {
-        "claude": "/Users/macbookprom1/mekong-cli/.claude/skills/sequential-thinking",
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/sequential-thinking"
+        "claude": "/Users/macbook/mekong-cli/.claude/skills/sequential-thinking",
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/sequential-thinking"
       },
       "path": ".claude-skills/sequential-thinking",
       "merged": true
@@ -344,7 +344,7 @@
     "frontend-design-pro": {
       "name": "frontend-design-pro",
       "sources": {
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/frontend-design-pro"
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/frontend-design-pro"
       },
       "path": ".claude-skills/frontend-design-pro",
       "merged": true
@@ -352,7 +352,7 @@
     "shopify": {
       "name": "shopify",
       "sources": {
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/shopify"
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/shopify"
       },
       "path": ".claude-skills/shopify",
       "merged": true
@@ -360,7 +360,7 @@
     "google-adk-python": {
       "name": "google-adk-python",
       "sources": {
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/google-adk-python"
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/google-adk-python"
       },
       "path": ".claude-skills/google-adk-python",
       "merged": true
@@ -368,7 +368,7 @@
     "better-auth": {
       "name": "better-auth",
       "sources": {
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/better-auth"
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/better-auth"
       },
       "path": ".claude-skills/better-auth",
       "merged": true
@@ -376,7 +376,7 @@
     "threejs": {
       "name": "threejs",
       "sources": {
-        "agencyos": "/Users/macbookprom1/mekong-cli/.agencyos/skills/threejs"
+        "agencyos": "/Users/macbook/mekong-cli/.agencyos/skills/threejs"
       },
       "path": ".claude-skills/threejs",
       "merged": true

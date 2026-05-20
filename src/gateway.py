@@ -28,6 +28,7 @@ from src.raas.checkout_router import router as checkout_router
 from src.raas.tenant_use_case_router import router as tenant_router
 from src.raas.reports_router import router as reports_router
 from src.raas.autopilot import router as autopilot_router
+from src.raas.marketplace_router import router as marketplace_router
 from src.api.vn_pricing_routes import router as vn_pricing_router
 from src.api.vn_pilot_routes import router as vn_pilot_router
 from src.api.vn_payments_routes import router as vn_payments_router
@@ -84,6 +85,7 @@ app.include_router(vn_pilot_router)
 app.include_router(vn_payments_router)
 app.include_router(org_router)
 app.include_router(autopilot_router)
+app.include_router(marketplace_router)
 
 # CORS for AgencyOS frontend
 _ALLOWED_ORIGINS: list[str] = [

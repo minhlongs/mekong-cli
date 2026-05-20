@@ -1,14 +1,19 @@
 """
-Polar.sh Webhook Handler — ROIaaS Phase 2 (Hardened)
+Polar.sh Webhook Handler — ROIaaS Phase 2 (Hardened) + MCU Credit Integration
 
-Handles Polar.sh webhooks for automatic license provisioning.
-Events: subscription.created, subscription.cancelled, order.created
+Handles Polar.sh webhooks for automatic license provisioning AND MCU credit allocation.
+Events: subscription.created, subscription.cancelled, subscription.updated, order.created
 
 Security features:
 - HMAC-SHA256 signature verification
 - Timestamp validation (reject > 300s old)
 - Idempotency via SQLite event-log
 - Structured logging for audit trail
+
+MCU Credit Mapping:
+- starter   → 200 MCU
+- growth    → 1,000 MCU
+- premium   → 5,000 MCU
 """
 
 from __future__ import annotations
@@ -19,6 +24,7 @@ from typing import Any
 import hmac
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Optional
@@ -27,13 +33,21 @@ from src.config.logging_config import get_logger
 from src.lib.license_generator import LicenseKeyGenerator
 from src.lib.license_email import send_license_email
 
+logger = get_logger(__name__)
+
 router = APIRouter(prefix="/webhook/polar", tags=["Polar.sh Webhooks"])
 
 # Config
 POLAR_WEBHOOK_SECRET = os.getenv("POLAR_WEBHOOK_SECRET")
 WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 300  # 5 minutes
 
-logger = get_logger(__name__)
+# Tier → MCU credit mapping (matches CLAUDE.md spec)
+TIER_MCU_CREDITS: dict[str, int] = {
+    "starter": 200,
+    "growth": 1_000,
+    "premium": 5_000,
+    "pro": 5_000,  # alias for premium
+}
 
 
 def verify_webhook_signature(payload: bytes, signature: str, timestamp: Optional[int] = None) -> bool:
@@ -93,17 +107,71 @@ def verify_webhook_signature(payload: bytes, signature: str, timestamp: Optional
         return False
 
 
+def _allocate_credits(tenant_id: str, tier: str, subscription_id: str) -> int:
+    """Allocate MCU credits to tenant's CreditStore based on tier.
+
+    Args:
+        tenant_id: Tenant identifier (customer_id from Polar).
+        tier: Subscription tier (starter/growth/premium).
+        subscription_id: Polar subscription ID for audit trail.
+
+    Returns:
+        New credit balance after allocation, or 0 on failure.
+    """
+    credits = TIER_MCU_CREDITS.get(tier, TIER_MCU_CREDITS["starter"])
+    try:
+        from src.raas.credits import CreditStore
+
+        credit_store = CreditStore()
+        new_balance = credit_store.add_credits(
+            tenant_id=tenant_id,
+            amount=credits,
+            reason=f"polar_subscription_{tier}_{subscription_id}",
+        )
+        logger.info(
+            "webhook.credits_allocated",
+            tenant_id=tenant_id,
+            tier=tier,
+            credits=credits,
+            new_balance=new_balance,
+        )
+        return new_balance
+    except Exception as e:
+        logger.error("webhook.credit_allocation_failed", error=str(e))
+        return 0
+
+
+def _update_billing_plan(tenant_id: str, tier: str) -> dict | None:
+    """Update tenant's billing plan limits in BillingService.
+
+    Args:
+        tenant_id: Tenant identifier.
+        tier: Subscription tier.
+
+    Returns:
+        Updated balance dict, or None on failure.
+    """
+    try:
+        from src.api.raas_billing_service import get_billing_service
+
+        service = get_billing_service()
+        return service.update_plan(tenant_id=tenant_id, plan=tier)
+    except Exception as e:
+        logger.error("webhook.plan_update_failed", error=str(e))
+        return None
+
+
 def process_subscription_created(event_data: dict) -> dict:
     """
     Process subscription.created event.
 
-    Generates a new license key for the subscriber.
+    Generates a new license key, allocates MCU credits, and updates billing plan.
 
     Args:
         event_data: Parsed webhook event data
 
     Returns:
-        Dict with status and license details
+        Dict with status, license details, and credit allocation
     """
     subscription = event_data.get("subscription", {})
     customer = subscription.get("customer", {})
@@ -112,10 +180,13 @@ def process_subscription_created(event_data: dict) -> dict:
     email = customer.get("email", "unknown@example.com")
     customer_id = customer.get("id", "unknown")
     product_name = product.get("name", "Unknown Product")
+    subscription_id = subscription.get("id", "")
 
     # Determine tier from product name/metadata (a16z solo tiers)
     tier = "starter"  # Default
-    if "pro" in product_name.lower():
+    if "premium" in product_name.lower():
+        tier = "premium"
+    elif "pro" in product_name.lower():
         tier = "pro"
     elif "growth" in product_name.lower():
         tier = "growth"
@@ -136,7 +207,7 @@ def process_subscription_created(event_data: dict) -> dict:
             licenses = json.load(f)
 
     licenses[license_key] = {
-        "subscription_id": subscription.get("id"),
+        "subscription_id": subscription_id,
         "customer_id": customer_id,
         "customer_email": email,
         "tier": tier,
@@ -147,6 +218,12 @@ def process_subscription_created(event_data: dict) -> dict:
 
     with open(licenses_path, "w") as f:
         json.dump(licenses, f, indent=2)
+
+    # Allocate MCU credits to CreditStore
+    credits_allocated = _allocate_credits(customer_id, tier, subscription_id)
+
+    # Update billing service plan limits
+    _update_billing_plan(customer_id, tier)
 
     # Best-effort email delivery (never blocks the webhook ack)
     try:
@@ -161,6 +238,7 @@ def process_subscription_created(event_data: dict) -> dict:
         tier=tier,
         email=email,
         customer_id=customer_id,
+        credits_allocated=credits_allocated,
     )
 
     return {
@@ -168,6 +246,7 @@ def process_subscription_created(event_data: dict) -> dict:
         "license_key": license_key,
         "tier": tier,
         "email": email,
+        "credits_allocated": credits_allocated,
     }
 
 
@@ -175,7 +254,7 @@ def process_subscription_cancelled(event_data: dict) -> dict:
     """
     Process subscription.cancelled event.
 
-    Revokes the license key for the cancelled subscription.
+    Revokes the license key for the cancelled subscription and downgrades plan.
 
     Args:
         event_data: Parsed webhook event data
@@ -185,6 +264,8 @@ def process_subscription_cancelled(event_data: dict) -> dict:
     """
     subscription = event_data.get("subscription", {})
     subscription_id = subscription.get("id")
+    customer = subscription.get("customer", {})
+    customer_id = customer.get("id", "")
 
     licenses_path = Path.home() / ".mekong" / "licenses.json"
     revoked_path = Path.home() / ".mekong" / "revoked.json"
@@ -225,6 +306,11 @@ def process_subscription_cancelled(event_data: dict) -> dict:
         with open(revoked_path, "w") as f:
             json.dump(revoked, f, indent=2)
 
+    # Downgrade billing plan to free
+    if customer_id:
+        _update_billing_plan(customer_id, "free")
+        logger.info("webhook.plan_downgraded", tenant_id=customer_id, new_plan="free")
+
     return {"status": "success", "revoked": True, "revoked_count": revoked_count}
 
 
@@ -232,7 +318,7 @@ def process_order_created(event_data: dict) -> dict:
     """
     Process order.created event.
 
-    Generates a license key for one-time purchases.
+    Generates a license key for one-time purchases and allocates credits.
 
     Args:
         event_data: Parsed webhook event data
@@ -244,16 +330,32 @@ def process_order_created(event_data: dict) -> dict:
     customer = order.get("customer", {})
 
     email = customer.get("email", "unknown@example.com")
+    customer_id = customer.get("id", "unknown")
+    product = order.get("product", {})
+    product_name = product.get("name", "")
+
+    # Determine tier from product name
+    tier = "starter"
+    if "premium" in product_name.lower():
+        tier = "premium"
+    elif "pro" in product_name.lower():
+        tier = "pro"
+    elif "growth" in product_name.lower():
+        tier = "growth"
 
     # Generate trial license for one-time purchase
     generator = LicenseKeyGenerator()
     license_key = generator.generate_key("trial", email, days=30)  # 30-day trial
 
+    # Allocate credits for one-time purchase
+    credits_allocated = _allocate_credits(customer_id, tier, order.get("id", ""))
+
     logger.info(
         "webhook.order.created",
         license_preview=f"{license_key[:20]}...",
         email=email,
-        tier="trial",
+        tier=tier,
+        credits_allocated=credits_allocated,
     )
 
     return {
@@ -261,6 +363,59 @@ def process_order_created(event_data: dict) -> dict:
         "license_key": license_key,
         "tier": "trial",
         "email": email,
+        "credits_allocated": credits_allocated,
+    }
+
+
+def process_subscription_updated(event_data: dict) -> dict:
+    """
+    Process subscription.updated event (plan upgrade/downgrade).
+
+    Allocates additional credits for upgrades, updates billing plan.
+
+    Args:
+        event_data: Parsed webhook event data
+
+    Returns:
+        Dict with status and credit allocation
+    """
+    subscription = event_data.get("subscription", {})
+    customer = subscription.get("customer", {})
+    product = subscription.get("product", {})
+
+    email = customer.get("email", "unknown@example.com")
+    customer_id = customer.get("id", "unknown")
+    product_name = product.get("name", "Unknown Product")
+    subscription_id = subscription.get("id", "")
+
+    # Determine new tier
+    tier = "starter"
+    if "premium" in product_name.lower():
+        tier = "premium"
+    elif "pro" in product_name.lower():
+        tier = "pro"
+    elif "growth" in product_name.lower():
+        tier = "growth"
+
+    # Allocate additional credits for the new tier
+    credits_allocated = _allocate_credits(customer_id, tier, subscription_id)
+
+    # Update billing plan
+    _update_billing_plan(customer_id, tier)
+
+    logger.info(
+        "webhook.subscription.updated",
+        tier=tier,
+        email=email,
+        customer_id=customer_id,
+        credits_allocated=credits_allocated,
+    )
+
+    return {
+        "status": "success",
+        "tier": tier,
+        "email": email,
+        "credits_allocated": credits_allocated,
     }
 
 
@@ -286,9 +441,10 @@ async def handle_webhook(
     Handle Polar.sh webhook events with security hardening.
 
     Supported events:
-    - subscription.created
-    - subscription.cancelled
-    - order.created
+    - subscription.created (allocates credits + license)
+    - subscription.updated (top-up credits on plan change)
+    - subscription.cancelled (revokes license + downgrades plan)
+    - order.created (one-time purchase + credits)
 
     Security features:
     - HMAC-SHA256 signature verification
@@ -342,6 +498,7 @@ async def handle_webhook(
     handlers = {
         "subscription.created": process_subscription_created,
         "subscription.cancelled": process_subscription_cancelled,
+        "subscription.updated": process_subscription_updated,
         "order.created": process_order_created,
     }
 
@@ -371,4 +528,12 @@ async def test_webhook() -> Any:
     }
 
 
-__all__ = ["router"]
+__all__ = [
+    "router",
+    "verify_webhook_signature",
+    "process_subscription_created",
+    "process_subscription_updated",
+    "process_subscription_cancelled",
+    "process_order_created",
+    "TIER_MCU_CREDITS",
+]
