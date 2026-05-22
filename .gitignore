@@ -134,7 +134,6 @@ Thumbs.db
 .gitmodules
 CHANGELOG.md
 FORK.md
-poetry.lock
 uv.lock
 /config/
 

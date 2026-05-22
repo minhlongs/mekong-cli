@@ -9,12 +9,10 @@ Follows Phase 7 P02 webhook error idiom: 200-on-app-error, 401 on bad sig,
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import src.api.vn_pilot_state as _state
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -50,7 +48,8 @@ def _log_webhook_error(msg: str) -> None:
         if not log_path.exists():
             log_path.touch(mode=0o600)
         ts = datetime.now(timezone.utc).isoformat()
-        with open(log_path, "a") as f:
+        from src.core.file_lock import locked_append
+        with locked_append(log_path) as f:
             f.write(f"{ts} {msg}\n")
     except Exception:
         pass  # Never let logging break the webhook handler

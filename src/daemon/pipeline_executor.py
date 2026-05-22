@@ -91,7 +91,8 @@ def _log_result(name: str, output: str, error: str | None) -> None:
     log_path = LOG_DIR / f"pipeline-{name}.log"
     ts = datetime.now().isoformat(timespec="seconds")
     entry = f"[{ts}] {'ERROR: ' + error if error else 'OK'}\n{output}\n{'─' * 60}\n"
-    with log_path.open("a") as f:
+    from src.core.file_lock import locked_append
+    with locked_append(log_path) as f:
         f.write(entry)
 
 

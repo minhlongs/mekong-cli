@@ -153,7 +153,8 @@ class SocialReplyAgent:
             "ts": int(time.time()),
         }
         try:
-            with self._reply_log.open("a") as fh:
+            from src.core.file_lock import locked_append
+            with locked_append(self._reply_log) as fh:
                 fh.write(json.dumps(record) + "\n")
         except OSError as exc:
             logger.warning("[SocialReplyAgent] Could not write reply log: %s", exc)
