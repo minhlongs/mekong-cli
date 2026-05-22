@@ -141,7 +141,8 @@ def execute_tool(name: str, args: dict[str, Any]) -> str:
             fname = args["filename"].replace("/", "_").replace("..", "")
             log_path = log_dir / fname
             ts = datetime.now().isoformat()
-            with open(log_path, "a") as f:
+            from src.core.file_lock import locked_append
+            with locked_append(log_path) as f:
                 f.write(f"[{ts}] {args['message']}\n")
             return f"Logged to {fname}"
 

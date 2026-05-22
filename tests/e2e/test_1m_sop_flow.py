@@ -7,6 +7,9 @@ Tests the complete tenant lifecycle per AgencyOS 100/100 conditions:
 
 from __future__ import annotations
 
+import os
+os.environ.setdefault("LICENSE_GATE_ENFORCE", "0")
+
 import pytest
 from fastapi.testclient import TestClient
 

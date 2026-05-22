@@ -59,12 +59,14 @@ mcu_billing = MCUBilling()
 # FASTAPI APP
 # =============================================================================
 
+_is_production = _os.getenv("MEKONG_ENV", "development") == "production"
+
 app = FastAPI(
     title="Mekong CLI Gateway API",
     description="Unified API for MekongMind — the one-person company platform",
     version="3.3.0",
-    docs_url="/api-docs",
-    redoc_url="/api-redoc",
+    docs_url=None if _is_production else "/api-docs",
+    redoc_url=None if _is_production else "/api-redoc",
 )
 
 # Mount routers — gateway endpoints
@@ -103,8 +105,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Idempotency-Key"],
 )
 
 
@@ -121,8 +123,25 @@ def _memory_usage_mb() -> float | None:
         import psutil
         proc = psutil.Process()
         return round(proc.memory_info().rss / 1024 / 1024, 2)
-    except Exception:
+    except ImportError:
         return None
+
+
+async def _check_database() -> dict:
+    """Probe PostgreSQL connectivity via asyncpg pool."""
+    db_url = _os.getenv("DATABASE_URL")
+    if not db_url:
+        return {"status": "disabled", "configured": False}
+    try:
+        from src.db.database import get_database
+        db = get_database()
+        if db._pool is None:
+            return {"status": "not_connected", "configured": True}
+        async with db._pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        return {"status": "healthy", "configured": True}
+    except Exception as exc:
+        return {"status": "unhealthy", "configured": True, "error": str(exc)}
 
 
 def _component_status() -> dict[str, dict]:
@@ -171,9 +190,10 @@ async def health_check() -> dict:
     """Enhanced health check with uptime, memory, version, and component status."""
     uptime_seconds = round(_time.monotonic() - _APP_START_TIME, 2)
     components = _component_status()
+    components["database"] = await _check_database()
 
     # Overall status: unhealthy if any required component is unhealthy
-    required = {"billing", "auth"}
+    required = {"billing", "auth", "database"}
     overall = "healthy"
     for name, info in components.items():
         if name in required and info.get("status") == "unhealthy":

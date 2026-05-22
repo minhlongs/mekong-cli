@@ -51,7 +51,8 @@ class BillingAuditTrail:
         """
         entry_id = f"{int(entry.timestamp * 1000)}_{entry.tenant_id}_{entry.action}"
         log_file = self._dir / f"{entry.tenant_id}.jsonl"
-        with open(log_file, "a") as f:
+        from src.core.file_lock import locked_append
+        with locked_append(log_file) as f:
             f.write(json.dumps(asdict(entry)) + "\n")
         return entry_id
 

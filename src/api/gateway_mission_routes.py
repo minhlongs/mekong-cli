@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from src.api.gateway_models import CreateMissionRequest, CreateMissionResponse, MissionStatusResponse
@@ -50,7 +50,7 @@ async def create_mission_endpoint(
     request_id = str(uuid.uuid4())
 
     import os as _os
-    if _os.environ.get("LICENSE_GATE_ENFORCE") == "1":
+    if _os.environ.get("LICENSE_GATE_ENFORCE", "1") != "0":
         gated_tenant = await license_gate(http_request)
         request.tenant_id = gated_tenant
 
