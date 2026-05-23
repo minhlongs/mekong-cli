@@ -105,7 +105,6 @@ exclude = [
 [tool.coverage.run]
 source = ["src"]
 omit = [
-    "*/raas/*",
     "*/main.py",
     "*/nlp_commander.py",
     "*/telegram_bot.py",
@@ -117,7 +116,6 @@ omit = [
     "*/cli/*",
     "*/agi_loop.py",
     "*/cc_spawner.py",
-    "*/llm_client.py",
     "*/config.py",
 ]
 
