@@ -132,7 +132,6 @@ Thumbs.db
 .npmrc
 .pre-commit-config.yaml
 .gitmodules
-CHANGELOG.md
 FORK.md
 uv.lock
 /config/
