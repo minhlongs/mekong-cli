@@ -34,6 +34,9 @@ from src.api.vn_pilot_routes import router as vn_pilot_router
 from src.api.vn_payments_routes import router as vn_payments_router
 from src.api.org_routes import org_router
 from src.api.billing_routes import router as billing_router
+from src.api.metrics_routes import router as metrics_router
+from src.middleware.csrf_middleware import CSRFMiddleware
+from src.middleware.rate_limit_gateway_middleware import RateLimitGatewayMiddleware
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -90,6 +93,7 @@ app.include_router(org_router)
 app.include_router(billing_router)
 app.include_router(autopilot_router)
 app.include_router(marketplace_router)
+app.include_router(metrics_router)
 
 # CORS for AgencyOS frontend
 _ALLOWED_ORIGINS: list[str] = [
@@ -106,8 +110,12 @@ app.add_middleware(
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Idempotency-Key"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Idempotency-Key", "X-CSRF-Token"],
 )
+# CSRF runs after CORS (added after in source → runs before in request chain due to LIFO)
+app.add_middleware(CSRFMiddleware)
+# Rate limiting runs closest to handlers (added last → runs first on inbound)
+app.add_middleware(RateLimitGatewayMiddleware)
 
 
 # =============================================================================
