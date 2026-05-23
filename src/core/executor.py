@@ -14,20 +14,28 @@ from rich.text import Text
 
 from src.core.command_sanitizer import CommandSanitizer
 from src.core.parser import Recipe, RecipeStep
+from src.core.pev_checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now
 from src.core.verifier import ExecutionResult
 
 
 class RecipeExecutor:
     """Executes a Recipe step by step, returning structured results."""
 
-    def __init__(self, recipe: Recipe) -> None:
+    # Agentic reliability: global execution caps prevent infinite loops.
+    MAX_RETRIES_PER_STEP = 5
+    MAX_TOTAL_ITERATIONS = 20
+
+    def __init__(self, recipe: Recipe, checkpoint_store: CheckpointStore | None = None) -> None:
         """Initialize RecipeExecutor with a parsed recipe.
 
         Args:
             recipe: The Recipe object containing steps to execute.
+            checkpoint_store: Optional store for checkpoint/resume support.
         """
         self.recipe = recipe
         self.console = Console()
+        self._total_iterations: int = 0
+        self._checkpoint_store = checkpoint_store
 
     def execute_step(self, step: RecipeStep) -> ExecutionResult:
         """
@@ -37,6 +45,21 @@ class RecipeExecutor:
         Returns:
             ExecutionResult with exit_code, stdout, stderr for verification
         """
+        # Bounded iteration guard: prevent runaway pipelines.
+        self._total_iterations += 1
+        if self._total_iterations > self.MAX_TOTAL_ITERATIONS:
+            msg = (
+                f"Global iteration cap reached ({self.MAX_TOTAL_ITERATIONS}). "
+                "Pipeline aborted to prevent runaway execution."
+            )
+            self.console.print(f"[bold red]ITERATION CAP:[/bold red] {msg}")
+            return ExecutionResult(
+                exit_code=1,
+                stdout="",
+                stderr=msg,
+                metadata={"iteration_cap_hit": True, "total_iterations": self._total_iterations},
+            )
+
         self.console.print(f"\n[bold blue]Step {step.order}:[/bold blue] {step.title}")
 
         # Determine execution mode from step params or description
@@ -44,15 +67,34 @@ class RecipeExecutor:
 
         # Handle different execution types
         if step_type == "llm":
-            return self._execute_llm_step(step)
+            result = self._execute_llm_step(step)
         elif step_type == "api":
-            return self._execute_api_step(step)
+            result = self._execute_api_step(step)
         elif step_type == "tool":
-            return self._execute_tool_step(step)
+            result = self._execute_tool_step(step)
         elif step_type == "browse":
-            return self._execute_browse_step(step)
+            result = self._execute_browse_step(step)
         else:
-            return self._execute_shell_step(step)
+            result = self._execute_shell_step(step)
+
+        # Checkpoint/resume: persist completed step so pipeline can resume on failure.
+        if result.exit_code == 0 and self._checkpoint_store is not None:
+            pipeline_id = self.recipe.name
+            existing = self._checkpoint_store.load(pipeline_id)
+            completed = list(existing.completed_steps) if existing else []
+            if step.order not in completed:
+                completed.append(step.order)
+            checkpoint = PipelineCheckpoint(
+                pipeline_id=pipeline_id,
+                completed_steps=completed,
+                last_step_order=step.order,
+                status="running",
+                created_at=existing.created_at if existing else _utc_now(),
+                updated_at=_utc_now(),
+            )
+            self._checkpoint_store.save(checkpoint)
+
+        return result
 
     def _execute_llm_step(self, step: RecipeStep) -> ExecutionResult:
         """Execute LLM generation step via Antigravity Proxy or OpenAI."""
@@ -309,7 +351,9 @@ class RecipeExecutor:
                 metadata={"mode": "shell", "blocked": True},
             )
 
-        max_attempts = step.params.get("retry", 1) + 1 if step.params else 2
+        raw_attempts = (step.params.get("retry", 1) + 1) if step.params else 2
+        # Cap per-step retries to MAX_RETRIES_PER_STEP (total attempts = cap + 1).
+        max_attempts = min(raw_attempts, self.MAX_RETRIES_PER_STEP + 1)
         retry_delay = step.params.get("retry_delay", 2) if step.params else 2
 
         for attempt in range(1, max_attempts + 1):
