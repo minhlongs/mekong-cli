@@ -3,6 +3,7 @@
 from agent_core.agents.analyst import AnalystAgent
 from agent_core.agents.ceo import CEOAgent
 from agent_core.agents.developer import DeveloperAgent
+from agent_core.agents.nhipdieuxanh_agent import NhipDieuAnhAgent
 from agent_core.agents.ops import OpsAgent
 from agent_core.agents.reviewer import ReviewerAgent
 from agent_core.agents.tester import TesterAgent
@@ -12,6 +13,7 @@ __all__ = [
     "AnalystAgent",
     "CEOAgent",
     "DeveloperAgent",
+    "NhipDieuAnhAgent",
     "OpsAgent",
     "ReviewerAgent",
     "TesterAgent",
