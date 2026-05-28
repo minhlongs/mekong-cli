@@ -20,7 +20,7 @@ Quick check of CI pipeline status.
 // turbo
 
 ```bash
-cd /Users/macbookprom1/mekong-cli
+cd /Users/macbook/mekong-cli
 gh run list --limit 5 --json status,conclusion,name,headBranch,createdAt \
   --template '{{range .}}{{if eq .conclusion "success"}}✅{{else if eq .conclusion "failure"}}❌{{else}}🔄{{end}} {{.name}} ({{.headBranch}}) - {{timeago .createdAt}}
 {{end}}'

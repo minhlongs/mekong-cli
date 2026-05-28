@@ -15,7 +15,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone, timedelta
 
 import sys
-sys.path.insert(0, '/Users/macbookprom1/mekong-cli')
+sys.path.insert(0, '/Users/macbook/mekong-cli')
 
 from src.lib.raas_gate import RaasLicenseGate
 from src.lib.quota_error_messages import (
