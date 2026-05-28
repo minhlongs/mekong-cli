@@ -188,11 +188,13 @@ class TestHandlersReturnJson:
     # ── Tasks ─────────────────────────────────────────────────────────
 
     def test_tasks_list(self, server):
-        """Tasks list should return helpful note."""
+        """Tasks list should return empty list with stats."""
         result = server._handle_tasks_list()
         data = self._check_json(result)
         assert data.get("ok") is True
-        assert "note" in data.get("data", {})
+        tasks = data.get("data", {}).get("tasks", [])
+        assert isinstance(tasks, list)
+        assert "stats" in data.get("data", {})
 
     def test_tasks_list_with_status(self, server):
         """Tasks list with status filtering."""
@@ -202,9 +204,33 @@ class TestHandlersReturnJson:
             assert data.get("ok") is True
 
     def test_tasks_create(self, server):
-        """Tasks create should return helpful note."""
+        """Tasks create should return a new task."""
         result = server._handle_tasks_create("Test task")
         data = self._check_json(result)
+        assert data.get("ok") is True
+        assert data.get("data", {}).get("created") is True
+        task = data.get("data", {}).get("task", {})
+        assert task.get("subject") == "Test task"
+        assert task.get("status") == "todo"
+        assert task.get("task_id", "")
+
+    def test_tasks_done(self, server):
+        """Tasks done should return error for nonexistent task."""
+        result = server._handle_tasks_done("nonexistent")
+        data = self._check_json(result)
+        assert data.get("ok") is False
+
+    def test_tasks_start(self, server):
+        """Tasks start should return error for nonexistent task."""
+        result = server._handle_tasks_start("nonexistent")
+        data = self._check_json(result)
+        assert data.get("ok") is False
+
+    def test_tasks_delete(self, server):
+        """Tasks delete should return error for nonexistent task."""
+        result = server._handle_tasks_delete("nonexistent")
+        data = self._check_json(result)
+        assert data.get("ok") is False
         assert data.get("ok") is True
 
     def test_tasks_done(self, server):
@@ -502,3 +528,62 @@ class TestSkillsListIntegration:
             data = json.loads(result)
             assert data.get("ok") is True
             assert len(data["data"]["skills"]) == 0
+
+
+# =========================================================================
+# Task store integration
+# =========================================================================
+
+
+class TestTaskStoreIntegration:
+    """Verify McpTaskStore CRUD works end-to-end."""
+
+    def test_task_lifecycle(self, server, tmp_path):
+        """Create → list → start → done → delete."""
+        from unittest.mock import patch
+        from src.core.mcp_task_store import McpTaskStore
+
+        mock_store = McpTaskStore(path=tmp_path / "task_store_test.json")
+
+        with patch("src.core.mcp_server.get_task_store", return_value=mock_store):
+            # Create
+            result = json.loads(server._handle_tasks_create("Build login page"))
+            assert result["ok"] is True
+            task_id = result["data"]["task"]["task_id"]
+
+            # List
+            result = json.loads(server._handle_tasks_list())
+            assert result["ok"] is True
+            assert len(result["data"]["tasks"]) == 1
+
+            # Start
+            result = json.loads(server._handle_tasks_start(task_id))
+            assert result["ok"] is True
+            assert result["data"]["task"]["status"] == "in-progress"
+
+            # List filtered
+            result = json.loads(server._handle_tasks_list(status="in-progress"))
+            assert result["ok"] is True
+            assert len(result["data"]["tasks"]) == 1
+
+            result = json.loads(server._handle_tasks_list(status="todo"))
+            assert result["ok"] is True
+            assert len(result["data"]["tasks"]) == 0
+
+            # Done
+            result = json.loads(server._handle_tasks_done(task_id))
+            assert result["ok"] is True
+            assert result["data"]["task"]["status"] == "done"
+
+            # Stats
+            result = json.loads(server._handle_tasks_list())
+            stats = result["data"]["stats"]
+            assert stats["total"] == 1
+            assert stats["done"] == 1
+
+            # Delete
+            result = json.loads(server._handle_tasks_delete(task_id))
+            assert result["ok"] is True
+
+            result = json.loads(server._handle_tasks_list())
+            assert len(result["data"]["tasks"]) == 0
