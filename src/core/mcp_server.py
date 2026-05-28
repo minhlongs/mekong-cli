@@ -88,6 +88,12 @@ try:
 except ImportError:
     pass
 
+try:
+    from src.core.mcp_task_store import get_task_store
+
+    _HAS_MCP_TASK_STORE = True
+except ImportError:
+    _HAS_MCP_TASK_STORE = False
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -238,24 +244,24 @@ class MekongMcpServer:
         # ── Tasks ─────────────────────────────────────────────────────
 
         @app.tool(
-            description="[STUB] List Mekong tasks — use `mekong task list` in CLI instead"
+            description="List Mekong tasks (omit status for all, or: todo / in-progress / done)"
         )
         def cc_tasks_list(status: str = "") -> str:
             return self._handle_tasks_list(status)
 
-        @app.tool(description="[STUB] Create a task — use `mekong task create` in CLI instead")
+        @app.tool(description="Create a new task with a subject line")
         def cc_tasks_create(subject: str) -> str:
             return self._handle_tasks_create(subject)
 
-        @app.tool(description="[STUB] Mark task done — use `mekong task done <id>` in CLI instead")
+        @app.tool(description="Mark a task as done by ID")
         def cc_tasks_done(task_id: str) -> str:
             return self._handle_tasks_done(task_id)
 
-        @app.tool(description="[STUB] Mark task in-progress — use `mekong task start <id>` in CLI instead")
+        @app.tool(description="Mark a task as in-progress by ID")
         def cc_tasks_start(task_id: str) -> str:
             return self._handle_tasks_start(task_id)
 
-        @app.tool(description="[STUB] Delete task — use `mekong task delete <id>` in CLI instead")
+        @app.tool(description="Delete a task by ID")
         def cc_tasks_delete(task_id: str) -> str:
             return self._handle_tasks_delete(task_id)
 
@@ -422,34 +428,68 @@ class MekongMcpServer:
     # ── Tasks ─────────────────────────────────────────────────────────
 
     def _handle_tasks_list(self, status: str = "") -> str:
-        """List tasks — currently a stub pending task system integration."""
-        # Mekong CLI does not yet have a unified task API in core.
-        # This stub returns a helpful message.
-        return _ok({
-            "tasks": [],
-            "note": (
-                "Task management is available via the Mekong CLI shell "
-                "(`mekong task ...`). MCP task support coming in v6.1."
-            ),
-        })
+        """List tasks from McpTaskStore."""
+        try:
+            store = get_task_store()
+            tasks = store.list(status=status)
+            return _ok({
+                "tasks": [t.to_dict() for t in tasks],
+                "count": len(tasks),
+                "stats": store.stats(),
+            })
+        except Exception as exc:
+            logger.warning("Task list failed: %s", exc)
+            return _err(f"Task list error: {exc}")
 
     def _handle_tasks_create(self, subject: str) -> str:
-        return _ok({
-            "created": False,
-            "note": (
-                "Task creation is available via `mekong task create ...` "
-                "in the Mekong CLI shell. MCP task support coming in v6.1."
-            ),
-        })
+        try:
+            store = get_task_store()
+            task = store.create(subject)
+            return _ok({
+                "created": True,
+                "task": task.to_dict(),
+            })
+        except Exception as exc:
+            logger.warning("Task create failed: %s", exc)
+            return _err(f"Task create error: {exc}")
 
     def _handle_tasks_done(self, task_id: str) -> str:
-        return _err("Task management not yet exposed via MCP — use `mekong task done <id>` in CLI")
+        try:
+            store = get_task_store()
+            task = store.update_status(task_id, "done")
+            if task is None:
+                return _err(f"Task '{task_id}' not found")
+            return _ok({
+                "updated": True,
+                "task": task.to_dict(),
+            })
+        except Exception as exc:
+            logger.warning("Task done failed: %s", exc)
+            return _err(f"Task done error: {exc}")
 
     def _handle_tasks_start(self, task_id: str) -> str:
-        return _err("Task management not yet exposed via MCP — use `mekong task start <id>` in CLI")
+        try:
+            store = get_task_store()
+            task = store.update_status(task_id, "in-progress")
+            if task is None:
+                return _err(f"Task '{task_id}' not found")
+            return _ok({
+                "updated": True,
+                "task": task.to_dict(),
+            })
+        except Exception as exc:
+            logger.warning("Task start failed: %s", exc)
+            return _err(f"Task start error: {exc}")
 
     def _handle_tasks_delete(self, task_id: str) -> str:
-        return _err("Task management not yet exposed via MCP — use `mekong task delete <id>` in CLI")
+        try:
+            store = get_task_store()
+            if store.delete(task_id):
+                return _ok({"deleted": True, "task_id": task_id})
+            return _err(f"Task '{task_id}' not found")
+        except Exception as exc:
+            logger.warning("Task delete failed: %s", exc)
+            return _err(f"Task delete error: {exc}")
 
     # ── Agents ────────────────────────────────────────────────────────
 
