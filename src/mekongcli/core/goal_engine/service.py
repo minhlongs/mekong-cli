@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import concurrent.futures
+import threading
 from pathlib import Path
 from typing import Any
+
 
 from src.core.memory import MemoryEntry, MemoryStore
 
@@ -111,6 +114,105 @@ class GoalEngine:
                 graph = TaskGraph(goal_id=goal.id, tasks=self.store.get_tasks(goal.id))
 
         tasks = self.store.get_tasks(goal.id)
+        stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
+        if stop_reason:
+            goal.status = GoalStatus.BLOCKED
+            self.store.save_goal(goal)
+            self._event(goal.id, "goal.blocked", {"reason": stop_reason})
+            return goal
+
+        if any(task.status != TaskStatus.COMPLETED for task in tasks):
+            goal.status = GoalStatus.BLOCKED
+            self.store.save_goal(goal)
+            self._event(goal.id, "goal.blocked", {"reason": "pending_tasks_remain"})
+            return goal
+
+        return self.verify_goal(goal.id, verification_profile)
+
+    def run_goal_parallel(
+        self,
+        goal_id: str,
+        verification_profile: str = "standard",
+        execute_commands: bool = False,
+        max_workers: int = 3,
+    ) -> Goal:
+
+        VerificationPipeline.validate_profile(verification_profile)
+        goal = self._require_goal(goal_id)
+        if goal.status == GoalStatus.CANCELLED:
+            raise RuntimeError(f"Goal {goal_id} is cancelled")
+
+        goal.status = GoalStatus.RUNNING
+        self.store.save_goal(goal)
+        self._event(goal.id, "goal.started", {"profile": verification_profile, "mode": "parallel"})
+
+        db_lock = threading.Lock()
+        active_futures = {}
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            while True:
+                with db_lock:
+                    tasks = self.store.get_tasks(goal.id)
+                    graph = TaskGraph(goal_id=goal.id, tasks=tasks)
+                    ready = graph.ready_tasks()
+                    running_ids = {t.id for t in active_futures.values()}
+                    new_ready = [t for t in ready if t.id not in running_ids]
+
+                if not active_futures and not new_ready:
+                    break
+
+                for task in new_ready:
+                    with db_lock:
+                        task.status = TaskStatus.RUNNING
+                        task.attempts += 1
+                        self.store.save_tasks([task])
+                        assignment = self.roles.assign(task)
+                        self._event(
+                            goal.id,
+                            "task.started",
+                            {
+                                "task_id": task.id,
+                                "role": assignment.role.value,
+                                "rationale": assignment.rationale,
+                            },
+                        )
+
+                    def make_task_runner(t=task, role_val=assignment.role.value):
+                        def run():
+                            return self._execute_task(t.command) if execute_commands and t.command else (
+                                f"{role_val} completed directive: {t.title}"
+                            )
+                        return run
+
+                    future = executor.submit(make_task_runner())
+                    active_futures[future] = task
+
+                done, _ = concurrent.futures.wait(
+                    active_futures.keys(),
+                    return_when=concurrent.futures.FIRST_COMPLETED
+                )
+
+                for future in done:
+                    task = active_futures.pop(future)
+                    try:
+                        summary = future.result()
+                    except Exception as e:
+                        summary = f"Error during task execution: {str(e)}"
+
+                    with db_lock:
+                        task.status = TaskStatus.COMPLETED
+                        task.result_summary = summary
+                        self.store.save_tasks([task])
+                        self._checkpoint(
+                            goal.id,
+                            task.id,
+                            f"task-completed:{task.title}",
+                            {"role": task.role.value, "summary": summary},
+                        )
+                        self._event(goal.id, "task.completed", {"task_id": task.id, "summary": summary})
+
+        with db_lock:
+            tasks = self.store.get_tasks(goal.id)
         stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
         if stop_reason:
             goal.status = GoalStatus.BLOCKED

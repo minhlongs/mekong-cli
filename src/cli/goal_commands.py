@@ -128,6 +128,53 @@ def goal_run(
         raise typer.Exit(code=1)
 
 
+@goal_app.command(name="run-parallel")
+def goal_run_parallel(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    execute_commands: bool = typer.Option(False, "--execute-commands", help="Run task commands when present"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+    max_workers: int = typer.Option(3, "--workers", help="Max parallel execution threads"),
+) -> None:
+    """Run pending goal tasks in parallel, checkpoint progress, then verify."""
+    _validate_profile(profile)
+    engine = _engine(db_path)
+    try:
+        goal = engine.run_goal_parallel(
+            goal_id,
+            verification_profile=profile,
+            execute_commands=execute_commands,
+            max_workers=max_workers,
+        )
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    except RuntimeError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1)
+
+    payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    if json_output:
+        _print_json(payload)
+        if goal.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
+        return
+    style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
+    console.print(
+        Panel(
+            f"[bold]ID:[/bold] {goal.id}\n"
+            f"[bold]Status:[/bold] [{style}]{goal.status.value}[/{style}]\n"
+            f"[bold]Verification Profile:[/bold] {profile}\n"
+            f"[bold]Parallel Execution:[/bold] True (max_workers={max_workers})",
+            title="Goal Run Parallel Complete",
+            border_style=style,
+        )
+    )
+    if goal.status != GoalStatus.SATISFIED:
+        raise typer.Exit(code=1)
+
+
 @goal_app.command(name="resume")
 def goal_resume(
     goal_id: str = typer.Argument(..., help="Goal ID"),

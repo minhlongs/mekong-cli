@@ -24,6 +24,8 @@ Mekong CLI is building the **de facto standard for AI-powered agent orchestratio
 - ✅ Plan-Execute-Verify (PEV) orchestration engine
 - ✅ AgentProtocol for pluggable agents
 - ✅ DAG scheduler with parallel execution
+- ✅ Parallel Task Concurrency Engine (`cook-auto-parallel` & `goal run-parallel`)
+- ✅ SQLite WAL mode journaling, connection busy timeouts & RLock thread synchronization
 - ✅ Built-in agents (Git, File, Shell, RecipeCrawler)
 - ✅ LLM provider abstraction (OpenAI, Gemini, offline)
 - ✅ Multi-tenant credit system (SQLite)
