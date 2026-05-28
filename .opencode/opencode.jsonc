@@ -1,12 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    "AGENTS.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "docs/*.md",
-    ".opencode/agent/*.md"
-  ],
   "provider": {
     "ollama": {
       "models": {
