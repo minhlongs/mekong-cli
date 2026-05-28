@@ -419,7 +419,13 @@ Examples:
 
 function readFileSync(filepath) {
   const fs = require("fs");
-  return fs.readFileSync(filepath, "utf-8").trim();
+  const path = require("path");
+  const resolved = path.resolve(filepath);
+  const cwd = process.cwd();
+  if (!resolved.startsWith(cwd)) {
+    throw new Error(`File path "${filepath}" resolves outside working directory (${cwd})`);
+  }
+  return fs.readFileSync(resolved, "utf-8").trim();
 }
 
 // ──────────────────────────────────────────────
