@@ -1,8 +1,6 @@
 import subprocess
 import sqlite3
 import shutil
-import os
-from pathlib import Path
 
 def test_f2_t1_01_sqlite_schema_initialization(antigravity_bin, clean_db):
     # Running any command initializes the database schema

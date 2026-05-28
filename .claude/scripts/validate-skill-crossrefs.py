@@ -13,7 +13,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 import re
 import sys
 import tempfile
@@ -159,7 +158,6 @@ def build_reference_graph(skills: dict[str, dict]) -> dict:
 def check_expected_workflows(graph: dict, skills: dict) -> list[dict]:
     """Check expected workflow chains for missing consecutive edges."""
     edges = graph["edges"]
-    all_dirs = set(skills.keys())
     missing = []
     for chain_name, chain in EXPECTED_CHAINS.items():
         for i in range(len(chain) - 1):
@@ -176,7 +174,7 @@ def check_expected_workflows(graph: dict, skills: dict) -> list[dict]:
 
 def print_report(skills: dict, graph: dict, missing: list[dict]):
     """Print human-readable audit report."""
-    print(f"\n=== Skill Cross-Reference Audit ===")
+    print("\n=== Skill Cross-Reference Audit ===")
     print(f"Total skills scanned: {len(skills)}")
     print(f"Skills with outward refs: {len(graph['edges'])}")
     print(f"Orphaned skills: {len(graph['orphans'])}")
@@ -185,17 +183,17 @@ def print_report(skills: dict, graph: dict, missing: list[dict]):
     print(f"Missing workflow edges: {len(missing)}")
 
     if graph["hubs"]:
-        print(f"\n--- Hub Skills (in_degree >= 3) ---")
+        print("\n--- Hub Skills (in_degree >= 3) ---")
         for name, count in graph["hubs"]:
             print(f"  {name}: {count} inbound refs")
 
     if missing:
-        print(f"\n--- Missing Workflow Edges ---")
+        print("\n--- Missing Workflow Edges ---")
         for m in missing:
             print(f"  [{m['chain']}] {m['from']} → {m['to']}")
 
     if graph["broken"]:
-        print(f"\n--- Broken References ---")
+        print("\n--- Broken References ---")
         for src, ref in graph["broken"]:
             print(f"  {src} → /ck:{ref} (not found)")
 
@@ -251,7 +249,6 @@ def _run_self_tests():
         cook_in = graph["in_degree"].get("cook", 0)
         _assert(cook_in >= 2, f"T4: Hub-like detection (cook in_degree={cook_in})")
         # T5: Missing chain edge detection
-        test_chains_bak = EXPECTED_CHAINS.copy()
         missing = check_expected_workflows(graph, skills)
         _assert(len(missing) > 0, "T5: Missing chain edges detected")
         # T6: Broken reference detection

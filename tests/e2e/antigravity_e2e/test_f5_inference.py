@@ -1,9 +1,6 @@
 import subprocess
 import os
-import sys
 import socket
-import time
-import shutil
 from pathlib import Path
 
 def test_f5_t1_01_launch_llama_script_args(tmp_path):

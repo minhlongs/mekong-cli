@@ -197,11 +197,11 @@ def resolve_env(
     missing_files = [str(p) for _, p in env_paths if not p.exists()]
     print(f"[!] {var_name} not found in any location", file=sys.stderr)
     if checked_files:
-        print(f"    Checked (file exists, key absent):", file=sys.stderr)
+        print("    Checked (file exists, key absent):", file=sys.stderr)
         for f in checked_files:
             print(f"      - {f}", file=sys.stderr)
     if missing_files and verbose:
-        print(f"    Not found (file missing):", file=sys.stderr)
+        print("    Not found (file missing):", file=sys.stderr)
         for f in missing_files:
             print(f"      - {f}", file=sys.stderr)
     print(f"    Tip: Add {var_name}=<value> to one of the .env files above", file=sys.stderr)

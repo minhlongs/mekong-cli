@@ -2,7 +2,6 @@ import subprocess
 import signal
 import time
 import os
-import sys
 from concurrent.futures import ThreadPoolExecutor
 
 def test_f4_t1_01_shell_command_execution(antigravity_bin):
@@ -67,7 +66,7 @@ def test_f4_t2_01_command_not_found_handling(antigravity_bin):
 
 def test_f4_t2_02_extremely_long_stdout_buffer_handling(antigravity_bin):
     proc = subprocess.run(
-        f"{antigravity_bin} --run-tool 'python3 -c \"for i in range(50000): print(f\\\"line {i}\\\")\"'",
+        f"{antigravity_bin} --run-tool 'python3 -c \"for i in range(50000): print(f\\\"line {{i}}\\\")\"'",
         shell=True, capture_output=True, text=True
     )
     assert proc.returncode == 0
