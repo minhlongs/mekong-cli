@@ -75,10 +75,10 @@ def run_loop():
         ts = datetime.datetime.now().strftime("%Y%m%d-%H%M")
         prompt = f"You are OpenClaw. Dept: {m['dept']}. Command: /{m['cmd']}. Goal: {m['goal']}. Produce structured report. Do NOT use word AI."
         result = call_llm(prompt)
-        fname = f"{ts}-{m[dept]}-{m[cmd]}.md"
+        fname = f"{ts}-{m['dept']}-{m['cmd']}.md"
         path = os.path.join(REPORTS_DIR, fname)
         with open(path, "w") as f:
-            f.write(f"# {m[goal]}\n\n{result}")
+            f.write(f"# {m['goal']}\n\n{result}")
         state.completed += 1
         state.reports.append({"file": fname, "dept": m["dept"], "size": len(result)})
     state.running = False

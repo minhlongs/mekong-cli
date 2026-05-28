@@ -28,7 +28,7 @@ def _build_headers(cfg: MekongdConfig) -> dict:
 
 
 def _estimate_in(req: MessagesRequest) -> int:
-    chars = len(req.system or "")
+    chars = len(req.get_system_text())
     for m in req.messages:
         if isinstance(m.content, str):
             chars += len(m.content)
@@ -60,7 +60,7 @@ async def forward(cfg: MekongdConfig, req: MessagesRequest, persist: PersistFn):
 async def _forward_json(
     url: str, headers: dict, body: dict, req: MessagesRequest, persist: PersistFn
 ) -> JSONResponse:
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=300.0, write=30.0, pool=30.0)) as client:
         resp = await client.post(url, headers=headers, json=body)
     try:
         data = resp.json() if resp.content else {}
@@ -87,7 +87,7 @@ async def _sse_passthrough(
     """Stream raw SSE bytes from Anthropic → client. Parse usage from message_delta."""
     out_tokens = 0
     in_tokens = _estimate_in(req)
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(connect=10.0, read=600.0, write=30.0, pool=30.0)) as client:
         async with client.stream("POST", url, headers=headers, json=body) as resp:
             async for line in resp.aiter_lines():
                 if line.startswith("data:") and "message_delta" in line:

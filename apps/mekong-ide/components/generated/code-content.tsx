@@ -27,16 +27,16 @@ const CodeContent: React.FC = () => {
       <div style={{}}>
         <span style={{ color: 'var(--accent-teal-400)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>pub struct </span>
         <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>McpRouter </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{{</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"{"}</span>
       </div>
       <div style={{}}>
         <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>    agents: </span>
-        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>HashMap<String, AgentHandle></span>
+        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"HashMap<String, AgentHandle>"}</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>,</span>
       </div>
       <div style={{}}>
         <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>    router_tx: </span>
-        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>mpsc::Sender<RoutedMessage></span>
+        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"mpsc::Sender<RoutedMessage>"}</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>,</span>
       </div>
       <div style={{}}>
@@ -44,12 +44,12 @@ const CodeContent: React.FC = () => {
         <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>ModelRoutingConfig</span>
         <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>,</span>
       </div>
-      <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>}}</span>
+      <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"}"}</span>
       <span style={{ color: 'var(--bg-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}> </span>
       <div style={{}}>
         <span style={{ color: 'var(--accent-teal-400)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>impl </span>
         <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>McpRouter </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{{</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"{"}</span>
       </div>
       <div style={{}}>
         <span style={{ color: 'var(--accent-teal-400)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>    pub async fn </span>
@@ -60,9 +60,9 @@ const CodeContent: React.FC = () => {
         <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>RoutedMessage</span>
       </div>
       <div style={{}}>
-        <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>    ) -> </span>
-        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>Result<AgentResponse></span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}> {{</span>
+        <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{") -> "}</span>
+        <span style={{ color: 'var(--model-reasoning)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"Result<AgentResponse>"}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{" {"}</span>
       </div>
       <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>        // Route to appropriate agent model</span>
     </div>

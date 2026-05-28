@@ -56,8 +56,9 @@ function isBashPrompt(output) {
 		.split('\n')
 		.filter((l) => l.trim());
 	const lastLine = (lines[lines.length - 1] || '').trim();
-	// zsh prompt: ends with "%" or has "macbookprom1@" + "%"
-	return /macbookprom1@.*%\s*$/.test(lastLine) || (/^.*%\s*$/.test(lastLine) && !lastLine.includes('bypass permissions'));
+	const username = process.env.USER || require('os').userInfo().username || 'macbook';
+	const userPromptRegex = new RegExp(`${username}@.*%\\s*$`);
+	return userPromptRegex.test(lastLine) || (/^.*%\s*$/.test(lastLine) && !lastLine.includes('bypass permissions'));
 }
 
 /**

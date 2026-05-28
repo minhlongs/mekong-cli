@@ -16,17 +16,18 @@ logger = logging.getLogger(__name__)
 
 LOCAL_LLM_URL = os.getenv(
     "LOCAL_LLM_URL",
-    os.getenv("OLLAMA_URL", "http://localhost:11434/v1"),
+    os.getenv("OLLAMA_URL", "http://localhost:8001/v1"),
 )
 
-# Legacy compat — keep for reference
+# Quantization map for Rapid-MLX models
 QUANTIZATION_MAP: dict[str, str] = {
-    "llama3.3:70b": "q4_K_M",
-    "deepseek-coder-v2:33b": "q4_K_M",
-    "deepseek-coder-v2:16b": "q5_K_M",
-    "llama3.2:3b": "q8_0",
-    "qwen2.5:7b": "q6_K",
-    "mistral:7b": "q5_K_M",
+    "qwen3.6-35b": "q4_K_M",
+    "qwen3.5-35b": "q4_K_M",
+    "qwen3.5-27b": "q4_K_M",
+    "qwen3.5-9b": "q4_K_M",
+    "qwen3.5-4b": "q8_0",
+    "deepseek-r1:32b": "q4_K_M",
+    "nemotron-30b": "q4_K_M",
 }
 
 

@@ -1,0 +1,9 @@
+{
+  "name": "mekong-cli",
+  "description": "Full Mekong CLI command pool (commands, agents, skills) — wraps ~/mekong-cli/.claude/ for use inside the AGY Antigravity Go binary",
+  "author": {
+    "name": "Long Tho",
+    "email": "cashback.mentoring@gmail.com"
+  },
+  "homepage": "https://github.com/long-tho/mekong-cli"
+}

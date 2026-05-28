@@ -15,24 +15,24 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
   ({ className, title, subtitle, primaryCta, secondaryCta, terminal, ...props }, ref) => (
     <section
       className={cn(
-        "flex min-h-[80vh] flex-col items-center justify-center gap-[var(--spacing-8)] px-[var(--spacing-6)] py-[var(--spacing-24)] text-center",
+        "flex minH-[80vh] flexCol itemsCenter justifyCenter gap-[var(-Spacing8)] px-[var(-Spacing6)] py-[var(-Spacing24)] textCenter",
         className
       )}
       ref={ref}
       {...props}
     >
-      <div className="flex max-w-3xl flex-col items-center gap-[var(--spacing-6)]">
-        <h1 className="text-[var(--font-size-hero)] font-bold leading-[1.1] tracking-tight text-[var(--text-primary)]">
+      <div className="flex maxW3xl flexCol itemsCenter gap-[var(-Spacing6)]">
+        <h1 className="text-[var(-FontSizeHero)] fontBold leading-[1.1] trackingTight text-[var(-TextPrimary)]">
           {title}
         </h1>
-        <p className="max-w-xl text-[var(--font-size-lg)] text-[var(--text-secondary)] leading-relaxed">
+        <p className="maxWXl text-[var(-FontSizeLg)] text-[var(-TextSecondary)] leadingRelaxed">
           {subtitle}
         </p>
-        <div className="flex items-center gap-[var(--spacing-4)]">
+        <div className="flex itemsCenter gap-[var(-Spacing4)]">
           {primaryCta && (
             <a
               href={primaryCta.href}
-              className="inline-flex h-12 items-center rounded-[var(--radius-lg)] bg-[var(--accent)] px-8 text-[var(--font-size-base)] font-semibold text-[var(--accent-text)] transition-colors duration-[var(--duration-normal)] hover:bg-[var(--accent-hover)]"
+              className="inlineFlex h12 itemsCenter rounded-[var(-RadiusLg)] bg-[var(-Accent)] px8 text-[var(-FontSizeBase)] fontSemibold text-[var(-AccentText)] transitionColors duration-[var(-DurationNormal)] hover:bg-[var(-AccentHover)]"
             >
               {primaryCta.label}
             </a>
@@ -40,14 +40,14 @@ const HeroSection = React.forwardRef<HTMLElement, HeroSectionProps>(
           {secondaryCta && (
             <a
               href={secondaryCta.href}
-              className="inline-flex h-12 items-center rounded-[var(--radius-lg)] border border-[var(--border-strong)] px-8 text-[var(--font-size-base)] font-semibold text-[var(--text-primary)] transition-colors duration-[var(--duration-normal)] hover:bg-[var(--bg-tertiary)]"
+              className="inlineFlex h12 itemsCenter rounded-[var(-RadiusLg)] border border-[var(-BorderStrong)] px8 text-[var(-FontSizeBase)] fontSemibold text-[var(-TextPrimary)] transitionColors duration-[var(-DurationNormal)] hover:bg-[var(-BgTertiary)]"
             >
               {secondaryCta.label}
             </a>
           )}
         </div>
       </div>
-      {terminal && <div className="w-full max-w-2xl">{terminal}</div>}
+      {terminal && <div className="wFull maxW2xl">{terminal}</div>}
     </section>
   )
 );

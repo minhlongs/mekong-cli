@@ -5,10 +5,10 @@ export interface McuGaugeProps extends React.HTMLAttributes<HTMLDivElement> { us
 const McuGauge = React.forwardRef<HTMLDivElement, McuGaugeProps>(({ className, used, total, tier, ...props }, ref) => {
   const pct = Math.round((used / total) * 100);
   return (
-    <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="flex items-center justify-between mb-[var(--spacing-sm)]"><span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">MCU Credits</span><span className="text-[var(--font-xs)] text-[var(--text-muted)]">{tier}</span></div>
-      <div className="font-mono text-[var(--font-2xl)] font-bold text-[var(--text-primary)]">{used}<span className="text-[var(--font-sm)] text-[var(--text-muted)]">/{total}</span></div>
-      <div className="mt-[var(--spacing-sm)] h-2 w-full rounded-full bg-[var(--bg-tertiary)] overflow-hidden"><div className={cn("h-full rounded-full transition-all", pct > 90 ? "bg-[var(--status-error)]" : pct > 70 ? "bg-[var(--status-warning)]" : "bg-[var(--accent-teal-500)]")} style={{ width: `${pct}%` }} /></div>
+    <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="flex itemsCenter justifyBetween mb-[var(-SpacingSm)]"><span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">MCU Credits</span><span className="text-[var(-FontXs)] text-[var(-TextMuted)]">{tier}</span></div>
+      <div className="fontMono text-[var(-Font2xl)] fontBold text-[var(-TextPrimary)]">{used}<span className="text-[var(-FontSm)] text-[var(-TextMuted)]">/{total}</span></div>
+      <div className="mt-[var(-SpacingSm)] h2 wFull roundedFull bg-[var(-BgTertiary)] overflowHidden"><div className={cn("hFull roundedFull transitionAll", pct > 90 ? "bg-[var(-StatusError)]" : pct > 70 ? "bg-[var(-StatusWarning)]" : "bg-[var(-AccentTeal500)]")} style={{ width: `${pct}%` }} /></div>
     </div>
   );
 });

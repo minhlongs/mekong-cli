@@ -19,7 +19,7 @@ const FeatureBento = React.forwardRef<HTMLDivElement, FeatureBentoProps>(
   ({ className, items, ...props }, ref) => (
     <div
       className={cn(
-        "grid auto-rows-[minmax(180px,auto)] grid-cols-1 gap-[var(--spacing-4)] md:grid-cols-3",
+        "grid autoRows-[minmax(180px,auto)] gridCols1 gap-[var(-Spacing4)] md:gridCols3",
         className
       )}
       ref={ref}
@@ -29,21 +29,21 @@ const FeatureBento = React.forwardRef<HTMLDivElement, FeatureBentoProps>(
         <div
           key={i}
           className={cn(
-            "group flex flex-col gap-[var(--spacing-4)] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-default)] bg-[var(--bg-primary)] p-[var(--spacing-6)] transition-shadow duration-[var(--duration-normal)] hover:shadow-[var(--shadow-md)]",
-            item.span === "2" && "md:col-span-2"
+            "group flex flexCol gap-[var(-Spacing4)] overflowHidden rounded-[var(-RadiusXl)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] p-[var(-Spacing6)] transitionShadow duration-[var(-DurationNormal)] hover:shadow-[var(-ShadowMd)]",
+            item.span === "2" && "md:colSpan2"
           )}
         >
           {item.icon && (
-            <span className="text-[var(--accent)]">{item.icon}</span>
+            <span className="text-[var(-Accent)]">{item.icon}</span>
           )}
-          <h3 className="text-[var(--font-size-lg)] font-semibold text-[var(--text-primary)]">
+          <h3 className="text-[var(-FontSizeLg)] fontSemibold text-[var(-TextPrimary)]">
             {item.title}
           </h3>
-          <p className="text-[var(--font-size-sm)] text-[var(--text-secondary)] leading-relaxed">
+          <p className="text-[var(-FontSizeSm)] text-[var(-TextSecondary)] leadingRelaxed">
             {item.description}
           </p>
           {item.demo && (
-            <div className="mt-auto">{item.demo}</div>
+            <div className="mtAuto">{item.demo}</div>
           )}
         </div>
       ))}

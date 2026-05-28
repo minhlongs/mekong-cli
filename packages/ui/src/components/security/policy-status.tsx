@@ -5,13 +5,13 @@ import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const policyStatusVariants = cva(
-  "inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--font-xs)] font-medium",
+  "inlineFlex itemsCenter rounded-[var(-RadiusSm)] px2 py0.5 text-[var(-FontXs)] fontMedium",
   {
     variants: {
       status: {
-        active: "bg-[var(--status-healthy)]/15 text-[var(--status-healthy)]",
-        draft: "bg-[var(--status-warning)]/15 text-[var(--status-warning)]",
-        expired: "bg-[var(--status-error)]/15 text-[var(--status-error)]",
+        active: "bg-[var(-StatusHealthy)]/15 text-[var(-StatusHealthy)]",
+        draft: "bg-[var(-StatusWarning)]/15 text-[var(-StatusWarning)]",
+        expired: "bg-[var(-StatusError)]/15 text-[var(-StatusError)]",
       },
     },
     defaultVariants: { status: "active" },
@@ -33,27 +33,27 @@ const PolicyStatus = React.forwardRef<HTMLDivElement, PolicyStatusProps>(
     <div
       ref={ref}
       className={cn(
-        "flex flex-col rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden",
+        "flex flexCol rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] overflowHidden",
         className
       )}
       {...props}
     >
-      <div className="border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-sm)]">
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">
+      <div className="borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingSm)]">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">
           Policy Compliance
         </span>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flexCol">
         {policies.map((policy, i) => (
           <div
             key={i}
-            className="flex items-center justify-between border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-md)] last:border-b-0 hover:bg-[var(--surface-hover)]"
+            className="flex itemsCenter justifyBetween borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingMd)] last:borderB0 hover:bg-[var(-SurfaceHover)]"
           >
-            <span className="text-[var(--font-sm)] text-[var(--text-primary)]">
+            <span className="text-[var(-FontSm)] text-[var(-TextPrimary)]">
               {policy.name}
             </span>
-            <div className="flex items-center gap-[var(--spacing-md)]">
-              <span className="text-[var(--font-xs)] text-[var(--text-muted)]">
+            <div className="flex itemsCenter gap-[var(-SpacingMd)]">
+              <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">
                 {policy.lastReview}
               </span>
               <span className={policyStatusVariants({ status: policy.status })}>

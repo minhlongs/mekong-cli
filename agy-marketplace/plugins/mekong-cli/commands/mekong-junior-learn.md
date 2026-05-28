@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.claude/commands/junior-learn.md

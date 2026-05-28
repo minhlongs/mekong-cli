@@ -113,8 +113,9 @@ function _writeSandboxConfigs() {
 	const handPro = getHandForIntent('PLAN');
 	const handApi = getHandForIntent('COOK');
 
-	const profilePro = '/Users/macbookprom1/.claude_antigravity_pro';
-	const profileApi = '/Users/macbookprom1/.claude_antigravity_api';
+	const homeDir = os.homedir();
+	const profilePro = path.join(homeDir, '.claude_antigravity_pro');
+	const profileApi = path.join(homeDir, '.claude_antigravity_api');
 
 	for (const [dir, hand, color] of [
 		[profilePro, handPro, '#A020F0'],
@@ -135,12 +136,13 @@ function _writeSandboxConfigs() {
 
 function _persistAuthCredentials() {
 	try {
-		const srcDir = '/Users/macbookprom1/.claude';
+		const homeDir = os.homedir();
+		const srcDir = path.join(homeDir, '.claude');
 		const tokens = fs.readdirSync(srcDir).filter((f) => f.startsWith('oauth_creds'));
 		for (const token of tokens) {
 			const src = path.join(srcDir, token);
-			fs.copyFileSync(src, path.join('/Users/macbookprom1/.claude_antigravity_pro', token));
-			fs.copyFileSync(src, path.join('/Users/macbookprom1/.claude_antigravity_api', token));
+			fs.copyFileSync(src, path.join(homeDir, '.claude_antigravity_pro', token));
+			fs.copyFileSync(src, path.join(homeDir, '.claude_antigravity_api', token));
 		}
 		log(`BRAIN: Persisted Auth Pro credentials to Sandbox Profiles.`);
 	} catch (e) {

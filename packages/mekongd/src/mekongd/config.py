@@ -41,6 +41,8 @@ class MekongdConfig(BaseSettings):
     # Model + runtime
     model_name: str = "Qwen/Qwen3.6-35B-A3B-MLX-4bit"
     mlx_path: Optional[str] = None  # override for local path
+    local_api_url: str = "http://127.0.0.1:11437/v1"
+    local_api_key: str = "mlx"
 
     # Proxy server
     api_host: str = "127.0.0.1"
@@ -60,6 +62,10 @@ class MekongdConfig(BaseSettings):
     # Optional daily cloud-spend cap (USD, UTC day). None = no enforcement.
     # Set via env MEKONGD_CLOUD_DAILY_BUDGET_USD.
     cloud_daily_budget_usd: Optional[float] = None
+
+    # Cap max_tokens for local requests. Claude Code sends 8192 by default
+    # which wastes KV cache on Qwen-35B. Set via MEKONGD_LOCAL_MAX_TOKENS.
+    local_max_tokens: int = 2048
 
     # Policy
     policy: PolicyConfig = Field(default_factory=PolicyConfig)

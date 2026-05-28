@@ -540,7 +540,7 @@ class ReportingSystem:
 
 
 if __name__ == "__main__":
-    project_root = "/Users/macbookprom1/mekong-cli"
+    project_root = "/Users/macbook/mekong-cli"
     bridge = ClaudeBridge(project_root)
     result = bridge.run()
 

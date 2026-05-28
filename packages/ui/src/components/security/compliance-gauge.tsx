@@ -18,16 +18,16 @@ const ComplianceGauge = React.forwardRef<HTMLDivElement, ComplianceGaugeProps>(
 
     const color =
       pct >= 90
-        ? "var(--status-healthy)"
+        ? "var(-StatusHealthy)"
         : pct >= 70
-          ? "var(--status-warning)"
-          : "var(--status-error)";
+          ? "var(-StatusWarning)"
+          : "var(-StatusError)";
 
     return (
       <div
         ref={ref}
         className={cn(
-          "flex flex-col items-center gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]",
+          "flex flexCol itemsCenter gap-[var(-SpacingSm)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]",
           className
         )}
         {...props}
@@ -38,7 +38,7 @@ const ComplianceGauge = React.forwardRef<HTMLDivElement, ComplianceGaugeProps>(
             cy="50"
             r={radius}
             fill="none"
-            stroke="var(--border-default)"
+            stroke="var(-BorderDefault)"
             strokeWidth="8"
           />
           <circle
@@ -51,17 +51,17 @@ const ComplianceGauge = React.forwardRef<HTMLDivElement, ComplianceGaugeProps>(
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            transform="rotate(-90 50 50)"
-            style={{ transition: "stroke-dashoffset 0.6s ease" }}
+            transform="rotate(90 50 50)"
+            style={{ transition: "strokeDashoffset 0.6s ease" }}
           />
           <text
             x="50"
             y="46"
             textAnchor="middle"
-            fill="var(--text-primary)"
-            fontSize="var(--font-xl)"
+            fill="var(-TextPrimary)"
+            fontSize="var(-FontXl)"
             fontWeight="bold"
-            fontFamily="var(--font-family-mono)"
+            fontFamily="var(-FontFamilyMono)"
           >
             {pct}%
           </text>
@@ -69,14 +69,14 @@ const ComplianceGauge = React.forwardRef<HTMLDivElement, ComplianceGaugeProps>(
             x="50"
             y="62"
             textAnchor="middle"
-            fill="var(--text-muted)"
-            fontSize="var(--font-xs)"
-            fontFamily="var(--font-family-sans)"
+            fill="var(-TextMuted)"
+            fontSize="var(-FontXs)"
+            fontFamily="var(-FontFamilySans)"
           >
             {score}/{maxScore}
           </text>
         </svg>
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">
           {framework}
         </span>
       </div>

@@ -18,18 +18,18 @@ const CreditGauge = React.forwardRef<HTMLDivElement, CreditGaugeProps>(
     const offset = arcLength - (percentage / 100) * arcLength;
 
     const color =
-      percentage > 90 ? "var(--color-danger-500)"
-      : percentage > 70 ? "var(--color-warning-500)"
-      : "var(--accent)";
+      percentage > 90 ? "var(-ColorDanger500)"
+      : percentage > 70 ? "var(-ColorWarning500)"
+      : "var(-Accent)";
 
     return (
-      <div className={cn("flex flex-col items-center gap-[var(--spacing-2)]", className)} ref={ref} {...props}>
+      <div className={cn("flex flexCol itemsCenter gap-[var(-Spacing2)]", className)} ref={ref} {...props}>
         <div className="relative">
           <svg width="120" height="100" viewBox="0 0 120 100">
             <circle
               cx="60" cy="60" r={radius}
               fill="none"
-              stroke="var(--bg-tertiary)"
+              stroke="var(-BgTertiary)"
               strokeWidth="8"
               strokeDasharray={`${arcLength} ${circumference}`}
               strokeLinecap="round"
@@ -44,17 +44,17 @@ const CreditGauge = React.forwardRef<HTMLDivElement, CreditGaugeProps>(
               strokeDashoffset={offset}
               strokeLinecap="round"
               transform="rotate(135 60 60)"
-              className="transition-all duration-[var(--duration-slow)]"
+              className="transitionAll duration-[var(-DurationSlow)]"
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
-            <span className="font-mono text-[var(--font-size-2xl)] font-bold text-[var(--text-primary)]">
+          <div className="absolute inset0 flex flexCol itemsCenter justifyCenter pt2">
+            <span className="fontMono text-[var(-FontSize2xl)] fontBold text-[var(-TextPrimary)]">
               {total - used}
             </span>
-            <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">remaining</span>
+            <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">remaining</span>
           </div>
         </div>
-        <span className="rounded-[var(--radius-full)] bg-[var(--accent)]/15 px-2.5 py-0.5 text-[var(--font-size-xs)] font-semibold text-[var(--accent)]">
+        <span className="rounded-[var(-RadiusFull)] bg-[var(-Accent)]/15 px2.5 py0.5 text-[var(-FontSizeXs)] fontSemibold text-[var(-Accent)]">
           {tier}
         </span>
       </div>

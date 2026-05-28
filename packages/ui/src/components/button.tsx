@@ -5,19 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium transition-colors duration-[var(--duration-normal)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inlineFlex itemsCenter justifyCenter gap2 rounded-[var(-RadiusMd)] fontMedium transitionColors duration-[var(-DurationNormal)] focusVisible:outlineNone focusVisible:ring2 focusVisible:ring-[var(-Accent)] focusVisible:ringOffset2 disabled:pointerEventsNone disabled:opacity50",
   {
     variants: {
       variant: {
-        default: "bg-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-hover)]",
-        secondary: "bg-[var(--bg-tertiary)] text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]",
-        ghost: "hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
-        danger: "bg-[var(--color-danger-500)] text-white hover:bg-[var(--color-danger-600)]",
+        default: "bg-[var(-Accent)] text-[var(-AccentText)] hover:bg-[var(-AccentHover)]",
+        secondary: "bg-[var(-BgTertiary)] text-[var(-TextPrimary)] hover:bg-[var(-BgSecondary)]",
+        ghost: "hover:bg-[var(-BgTertiary)] text-[var(-TextSecondary)]",
+        danger: "bg-[var(-ColorDanger500)] textWhite hover:bg-[var(-ColorDanger600)]",
       },
       size: {
-        sm: "h-8 px-3 text-[var(--font-size-sm)]",
-        md: "h-10 px-4 text-[var(--font-size-base)]",
-        lg: "h-12 px-6 text-[var(--font-size-lg)]",
+        sm: "h8 px3 text-[var(-FontSizeSm)]",
+        md: "h10 px4 text-[var(-FontSizeBase)]",
+        lg: "h12 px6 text-[var(-FontSizeLg)]",
       },
     },
     defaultVariants: { variant: "default", size: "md" },

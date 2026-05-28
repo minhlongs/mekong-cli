@@ -1,0 +1,19 @@
+FROM alpine:3.18 AS builder
+RUN apk add --no-cache git build-base cmake clang-dev libstdc++
+
+# Clone and compile llama.cpp with CPU optimizations inside the Alpine builder
+WORKDIR /app
+RUN git clone https://github.com/ggerganov/llama.cpp.git && \
+    cd llama.cpp && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DLLAMA_AVX2=ON && \
+    cmake --build . --config Release
+
+FROM alpine:3.18
+RUN apk add --no-cache libstdc++ libgcc bash curl sqlite
+COPY --from=builder /app/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server
+
+WORKDIR /workspace
+EXPOSE 8080
+ENTRYPOINT ["llama-server"]

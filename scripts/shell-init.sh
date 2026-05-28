@@ -5,6 +5,7 @@ export PATH="$MEKONG_ROOT/scripts:$PATH"
 
 # Tool shortcuts
 alias mekong='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-agy='MEKONG_TOOL=agy bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-claude='MEKONG_TOOL=claude bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-gemini='MEKONG_TOOL=gemini bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-opencode='MEKONG_TOOL=opencode bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
@@ -25,16 +26,28 @@ alias mekong-local='python3 $MEKONG_ROOT/src/daemon/agent_loop.py'
 alias mekong-raas='bash $MEKONG_ROOT/scripts/raas-bridge.sh'
 
 # Quick
-alias mek='mekong' mkc='mekong-claude' mkg='mekong-gemini' mkq='mekong-qwen'
+alias mek='mekong' mka='mekong-agy' mkc='mekong-claude' mkg='mekong-gemini' mkq='mekong-qwen'
 alias mekong-cto='bash $MEKONG_ROOT/cto-daemon.sh'
+alias mekong-cto-agy='MEKONG_TOOL=agy bash $MEKONG_ROOT/cto-daemon.sh'
 alias mekong-health='bash $MEKONG_ROOT/scripts/cto-health-check.sh'
 
 # Completion
 _mekong_comp() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
   local cmds=$(ls "$MEKONG_ROOT/.claude/commands/" 2>/dev/null | sed 's/\.md$//' | tr '\n' ' ')
-  COMPREPLY=($(compgen -W "--tool --model --interactive --list-tools --status $cmds" -- "$cur"))
+  
+  # Generate slash-prefixed versions of commands
+  local slash_cmds=""
+  local cmd
+  for cmd in $cmds; do
+    slash_cmds="${slash_cmds} /${cmd}"
+  done
+  
+  # Add common slash options/commands
+  slash_cmds="${slash_cmds} /auto /parallel /sandbox /status /help /interactive"
+
+  COMPREPLY=($(compgen -W "--tool --model --interactive --list-tools --status --auto --parallel $cmds $slash_cmds" -- "$cur"))
 }
-complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null
+complete -F _mekong_comp mekong mekong-agy mekong-claude mekong-gemini mekong-opencode mekong-aider mek mka 2>/dev/null
 
 echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 2>/dev/null && echo "Tools: $(list_available_tools)" || echo "")"

@@ -387,7 +387,8 @@ function triggerBrainSurgery(triggers, state) {
 	const triggerSummary = triggers.map((t) => `${t.type}: ${t.detail} (sev ${t.severity})`).join('; ');
 
 	// 🔥LỬA ClaudeKit format: /cook --parallel --auto (Agent Teams 10+ subagents)
-	const missionContent = `/cook "🧬 BRAIN SURGERY — AGI Level 6 Evolution Engine detected degradation: ${triggerSummary}. Working dir: /Users/macbookprom1/mekong-cli/apps/openclaw-worker. TASKS: (1) Read knowledge/memory.md for post-mortem insights, (2) Identify root cause per trigger in lib/ code, (3) Implement targeted fix — NOT full rewrite, (4) npm run build to verify, (5) git commit '🧬 EVOLUTION: fix summary'. SCOPE: Max 5 files, max 200 lines." --parallel --auto`;
+	const homeDir = process.env.HOME || require('os').homedir();
+	const missionContent = `/cook "🧬 BRAIN SURGERY — AGI Level 6 Evolution Engine detected degradation: ${triggerSummary}. Working dir: ${homeDir}/mekong-cli/apps/openclaw-worker. TASKS: (1) Read knowledge/memory.md for post-mortem insights, (2) Identify root cause per trigger in lib/ code, (3) Implement targeted fix — NOT full rewrite, (4) npm run build to verify, (5) git commit '🧬 EVOLUTION: fix summary'. SCOPE: Max 5 files, max 200 lines." --parallel --auto`;
 
 	const taskFile = path.join(TASKS_DIR, `CRITICAL_mission_evolution_surgery_${Date.now()}.txt`);
 	try {

@@ -8,30 +8,30 @@ export interface RiskHeatmapProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const cellColors = [
-  ["bg-[var(--status-healthy)]/20", "bg-[var(--status-healthy)]/30", "bg-[var(--status-warning)]/20", "bg-[var(--status-warning)]/30", "bg-[var(--status-error)]/20"],
-  ["bg-[var(--status-healthy)]/30", "bg-[var(--status-warning)]/20", "bg-[var(--status-warning)]/30", "bg-[var(--status-error)]/20", "bg-[var(--status-error)]/30"],
-  ["bg-[var(--status-warning)]/20", "bg-[var(--status-warning)]/30", "bg-[var(--status-error)]/20", "bg-[var(--status-error)]/30", "bg-[var(--status-error)]/40"],
-  ["bg-[var(--status-warning)]/30", "bg-[var(--status-error)]/20", "bg-[var(--status-error)]/30", "bg-[var(--status-error)]/40", "bg-[var(--status-error)]/60"],
-  ["bg-[var(--status-error)]/20", "bg-[var(--status-error)]/30", "bg-[var(--status-error)]/40", "bg-[var(--status-error)]/60", "bg-[var(--status-error)]/80"],
+  ["bg-[var(-StatusHealthy)]/20", "bg-[var(-StatusHealthy)]/30", "bg-[var(-StatusWarning)]/20", "bg-[var(-StatusWarning)]/30", "bg-[var(-StatusError)]/20"],
+  ["bg-[var(-StatusHealthy)]/30", "bg-[var(-StatusWarning)]/20", "bg-[var(-StatusWarning)]/30", "bg-[var(-StatusError)]/20", "bg-[var(-StatusError)]/30"],
+  ["bg-[var(-StatusWarning)]/20", "bg-[var(-StatusWarning)]/30", "bg-[var(-StatusError)]/20", "bg-[var(-StatusError)]/30", "bg-[var(-StatusError)]/40"],
+  ["bg-[var(-StatusWarning)]/30", "bg-[var(-StatusError)]/20", "bg-[var(-StatusError)]/30", "bg-[var(-StatusError)]/40", "bg-[var(-StatusError)]/60"],
+  ["bg-[var(-StatusError)]/20", "bg-[var(-StatusError)]/30", "bg-[var(-StatusError)]/40", "bg-[var(-StatusError)]/60", "bg-[var(-StatusError)]/80"],
 ];
 
 const RiskHeatmap = React.forwardRef<HTMLDivElement, RiskHeatmapProps>(
   ({ className, data, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">Risk Heat Map</div>
-      <div className="grid grid-cols-5 gap-1">
+    <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">Risk Heat Map</div>
+      <div className="grid gridCols5 gap1">
         {[4, 3, 2, 1, 0].map((row) =>
           [0, 1, 2, 3, 4].map((col) => {
             const items = data.filter((d) => d.likelihood === col + 1 && d.impact === row + 1);
             return (
-              <div key={`${row}-${col}`} className={cn("flex h-12 items-center justify-center rounded-[var(--radius-sm)] text-[var(--font-xs)] text-[var(--text-primary)]", cellColors[row][col])}>
+              <div key={`${row}-${col}`} className={cn("flex h12 itemsCenter justifyCenter rounded-[var(-RadiusSm)] text-[var(-FontXs)] text-[var(-TextPrimary)]", cellColors[row][col])}>
                 {items.map((item) => item.label).join(", ")}
               </div>
             );
           })
         )}
       </div>
-      <div className="mt-[var(--spacing-xs)] flex justify-between text-[var(--font-xs)] text-[var(--text-muted)]">
+      <div className="mt-[var(-SpacingXs)] flex justifyBetween text-[var(-FontXs)] text-[var(-TextMuted)]">
         <span>Low Likelihood</span><span>High Likelihood</span>
       </div>
     </div>

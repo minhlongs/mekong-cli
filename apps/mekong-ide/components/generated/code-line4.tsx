@@ -11,7 +11,7 @@ const CodeLine4: React.FC = () => {
   return (
     <div style={style}>
       <span style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}> 4</span>
-      <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>) -> Result<Response> {{</span>
+      <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{") -> Result<Response> {"}</span>
     </div>
   );
 };

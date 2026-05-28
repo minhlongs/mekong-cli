@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "antigravity": {
-      "command": "python",
+      "command": "python3",
       "args": [
         "-m",
         "antigravity.mcp_server"
@@ -23,7 +23,7 @@
       ]
     },
     "mekong-ai-os": {
-      "command": "python",
+      "command": "python3",
       "args": [
         "-m",
         "src.core.mcp_server"

@@ -7,7 +7,7 @@ const Logo: React.FC = () => {
   const style: React.CSSProperties = {
     width: '32px',
     height: '32px',
-    background: 'url('./images/generated-1775210060510.png') center/cover no-repeat',
+    background: "url('./images/generated-1775210060510.png') center/cover no-repeat",
     borderRadius: '8px',
   };
 

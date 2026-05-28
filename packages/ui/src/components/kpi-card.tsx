@@ -15,27 +15,27 @@ const KpiCard = React.forwardRef<HTMLDivElement, KpiCardProps>(
   ({ className, label, value, trend, trendValue, sparkline, ...props }, ref) => (
     <div
       className={cn(
-        "flex flex-col gap-[var(--spacing-2)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-primary)] p-[var(--spacing-5)]",
+        "flex flexCol gap-[var(-Spacing2)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] p-[var(-Spacing5)]",
         className
       )}
       ref={ref}
       {...props}
     >
-      <span className="text-[var(--font-size-sm)] text-[var(--text-secondary)]">{label}</span>
-      <div className="flex items-end justify-between gap-[var(--spacing-4)]">
-        <span className="font-mono text-[var(--font-size-3xl)] font-bold text-[var(--text-primary)] leading-none">
+      <span className="text-[var(-FontSizeSm)] text-[var(-TextSecondary)]">{label}</span>
+      <div className="flex itemsEnd justifyBetween gap-[var(-Spacing4)]">
+        <span className="fontMono text-[var(-FontSize3xl)] fontBold text-[var(-TextPrimary)] leadingNone">
           {value}
         </span>
-        {sparkline && <div className="h-8 w-20">{sparkline}</div>}
+        {sparkline && <div className="h8 w20">{sparkline}</div>}
       </div>
       {trend && trendValue && (
-        <div className="flex items-center gap-1">
+        <div className="flex itemsCenter gap1">
           <span
             className={cn(
-              "text-[var(--font-size-sm)] font-medium",
-              trend === "up" && "text-[var(--color-success-500)]",
-              trend === "down" && "text-[var(--color-danger-500)]",
-              trend === "flat" && "text-[var(--text-tertiary)]"
+              "text-[var(-FontSizeSm)] fontMedium",
+              trend === "up" && "text-[var(-ColorSuccess500)]",
+              trend === "down" && "text-[var(-ColorDanger500)]",
+              trend === "flat" && "text-[var(-TextTertiary)]"
             )}
           >
             {trend === "up" ? "\u2191" : trend === "down" ? "\u2193" : "\u2192"} {trendValue}

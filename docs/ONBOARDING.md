@@ -92,16 +92,16 @@ git clone https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli
 
 # 2. Install deps
-pip install -r requirements.txt
+ pip install -r requirements.txt
 
-# 3. Start Ollama
-ollama serve &
-ollama pull qwen2.5-coder:7b
+# 3. Start Rapid-MLX
+brew install raullenchai/rapid-mlx/rapid-mlx
+rapid-mlx serve qwen3.6-35b --port 8001 &
 
 # 4. Configure
-export OLLAMA_BASE_URL=http://localhost:11434/v1
-export LLM_API_KEY=ollama
-export LLM_MODEL=qwen2.5-coder:7b
+export OPENAI_BASE_URL=http://localhost:8001/v1
+export LLM_API_KEY=mlx
+export LLM_MODEL=qwen3.6-35b
 
 # 5. Start gateway
 uvicorn src.gateway:app --port 8000

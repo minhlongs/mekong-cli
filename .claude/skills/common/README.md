@@ -1,11 +1,5 @@
 # Common Skill Utilities
 
-> **why-override:** Mekong's `api_key_helper.py` and `api_key_rotator.py`
-> drop unused imports (`vertexai.generative_models`, `os`, `pathlib.Path`)
-> and remove unnecessary `f`-string prefixes — strict-linter-clean vs the
-> stock copy at `~/.claude/skills/common/`. Mekong is canonical for the
-> `common/` skill bundle.
-
 This directory contains shared utilities used across multiple skills.
 
 ## API Key Helper

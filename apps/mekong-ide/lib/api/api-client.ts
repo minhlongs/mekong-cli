@@ -49,7 +49,9 @@ async function apiCall<T>(
       try {
         const data = await res.json();
         message = data?.detail ?? data?.message ?? message;
-      } catch (_) {}
+      } catch (_) {
+        // ignore JSON parsing errors for error responses
+      }
       throw new ApiError(res.status, message);
     }
     if (res.status === 204) return undefined as unknown as T;
