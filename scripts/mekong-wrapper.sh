@@ -57,7 +57,7 @@ fi
 # Direct Typer-backed durable goal commands. These must not be treated as
 # free-form AI prompts when called from AGY/Gemini command descriptors.
 case "${1:-}" in
-  cook-auto|goal)
+  cook-auto|cook-auto-parallel|goal)
     cd "$MEKONG_ROOT" && exec python3 -m src.main "$@"
     ;;
 esac
@@ -83,7 +83,7 @@ DANGEROUSLY_SKIP_PERMISSIONS=false
 
 _dispatch_typer_command() {
   case "${1:-}" in
-    cook-auto)
+    cook-auto|cook-auto-parallel)
       if [ "$DANGEROUSLY_SKIP_PERMISSIONS" = true ]; then
         cd "$MEKONG_ROOT" && exec python3 -m src.main "$@" --auto
       fi

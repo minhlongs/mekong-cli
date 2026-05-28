@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong CLI - Parallel Cook Auto Wireframe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030014;
+      --terminal-bg: #0b0720;
+      --cyan: #00f5ff;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background-color: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 5px;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    p.subtitle {
+      color: var(--text-dim);
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+
+    .terminal-window {
+      width: 100%;
+      max-width: 900px;
+      background-color: var(--terminal-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 245, 255, 0.05);
+      overflow: hidden;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .terminal-header {
+      background-color: rgba(255, 255, 255, 0.03);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      margin-right: 20px;
+    }
+
+    .button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .button.close { background-color: var(--red); }
+    .button.minimize { background-color: var(--yellow); }
+    .button.expand { background-color: var(--green); }
+
+    .title {
+      color: var(--text-dim);
+      font-size: 13px;
+      flex-grow: 1;
+      text-align: center;
+      margin-right: 60px; /* offset buttons to center title */
+    }
+
+    .terminal-body {
+      padding: 25px;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .line {
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+
+    .prompt {
+      color: var(--cyan);
+      font-weight: bold;
+    }
+
+    .output {
+      color: var(--text);
+    }
+
+    .accent {
+      color: var(--purple);
+    }
+
+    .success {
+      color: var(--green);
+    }
+
+    .warning {
+      color: var(--yellow);
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 15px;
+      margin: 15px 0;
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .panel-title {
+      font-weight: bold;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .status-badge.running {
+      background-color: rgba(0, 245, 255, 0.15);
+      color: var(--cyan);
+      border: 1px solid var(--cyan);
+    }
+
+    .status-badge.completed {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .task-table th, .task-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .task-table th {
+      color: var(--text-dim);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .task-row.active {
+      background-color: rgba(0, 245, 255, 0.02);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(0, 245, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--cyan);
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Mekong CLI: cook-auto-parallel</h1>
+  <p class="subtitle">Console interface mockup showing concurrent execution metrics and task state graph.</p>
+
+  <div class="terminal-window">
+    <div class="terminal-header">
+      <div class="buttons">
+        <div class="button close"></div>
+        <div class="button minimize"></div>
+        <div class="button expand"></div>
+      </div>
+      <div class="title">mekong cook-auto-parallel — 95e32647-ca01-4174-92d1-f2c04486bf6e</div>
+    </div>
+    <div class="terminal-body">
+      <div class="line">
+        <span class="prompt">$</span> mekong cook-auto-parallel "Bootstrap agent-marketplace-service on port 5004" --profile standard
+      </div>
+      
+      <div class="panel">
+        <div class="panel-title">
+          <span>🚀 Goal Setup & Decomposition</span>
+          <span class="status-badge running">Running</span>
+        </div>
+        <div class="line">Goal ID: <span class="accent">goal_083a21bc91</span></div>
+        <div class="line">Tasks total: <span class="success">6</span> | Concurrency Limit: <span class="warning">max_workers=3</span></div>
+        <div class="line">SQL Store: <span class="accent">.mekong/goals.sqlite3</span> (WAL Mode enabled)</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>⚙️ Parallel Executor Status</span>
+        </div>
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Task / Role</th>
+              <th>Status</th>
+              <th>Command / Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="task-row active">
+              <td><span class="accent">[Architect]</span> DB migrations</td>
+              <td><span class="spinner"></span> <span style="color: var(--cyan)">RUNNING</span></td>
+              <td><code>run_migrations.sh --postgres</code></td>
+            </tr>
+            <tr class="task-row active">
+              <td><span class="accent">[Backend]</span> Core search APIs</td>
+              <td><span class="spinner"></span> <span style="color: var(--cyan)">RUNNING</span></td>
+              <td><code>implement_endpoints.py --search</code></td>
+            </tr>
+            <tr class="task-row">
+              <td><span class="accent">[Docs]</span> README specs</td>
+              <td><span style="color: var(--green)">✓ COMPLETED</span></td>
+              <td>Saved to docs/api-reference.md</td>
+            </tr>
+            <tr class="task-row">
+              <td><span class="accent">[Security]</span> Secret scans</td>
+              <td><span style="color: var(--text-dim)">⧖ PENDING</span></td>
+              <td>Blocked by: [DB migrations]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="line">
+        [18:36:20] <span style="color: var(--cyan)">INFO</span>: Thread-1 completed directive 'README specs' in 1.4s.
+      </div>
+      <div class="line">
+        [18:36:21] <span style="color: var(--cyan)">INFO</span>: Submitting newly unlocked tasks to ThreadPool...
+      </div>
+      <div class="line">
+        [18:36:22] <span style="color: var(--cyan)">INFO</span>: Thread-2 completed directive 'DB migrations' in 3.2s.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

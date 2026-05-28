@@ -128,3 +128,33 @@ def test_verification_pipeline_rejects_unknown_profile(tmp_path: Path) -> None:
         assert "Unknown verification profile" in str(exc)
     else:
         raise AssertionError("unknown profile should not fall back to standard gates")
+
+
+def test_goal_run_parallel_completes_tasks_with_none_profile(tmp_path: Path) -> None:
+    engine = build_engine(tmp_path)
+    goal = engine.create_goal("Ship parallel autonomous engine")
+
+    result = engine.run_goal_parallel(goal.id, verification_profile="none", max_workers=3)
+    snapshot = engine.status(goal.id)
+
+    assert result.status == GoalStatus.SATISFIED
+    assert all(task["status"] == TaskStatus.COMPLETED.value for task in snapshot["tasks"])
+    assert snapshot["verification"]["passed"] is True
+    assert all(item["satisfied"] is True for item in snapshot["criteria"])
+    assert len(snapshot["events"]) >= 3
+
+
+
+def test_goal_run_parallel_completes_tasks_and_satisfies_with_none_profile(tmp_path: Path) -> None:
+    engine = build_engine(tmp_path)
+    goal = engine.create_goal("Ship parallel engine OS")
+
+    result = engine.run_goal_parallel(goal.id, verification_profile="none")
+    snapshot = engine.status(goal.id)
+
+    assert result.status == GoalStatus.SATISFIED
+    assert all(task["status"] == TaskStatus.COMPLETED.value for task in snapshot["tasks"])
+    assert snapshot["verification"]["passed"] is True
+    assert all(item["satisfied"] is True for item in snapshot["criteria"])
+    assert len(snapshot["events"]) >= 3
+    assert len(snapshot["memory"]) >= 2
