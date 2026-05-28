@@ -280,10 +280,12 @@ class TestHandlersReturnJson:
     # ── Brainstorm ────────────────────────────────────────────────────
 
     def test_brainstorm_no_llm(self, server):
-        """Without LLM client, brainstorm should return error."""
+        """Without LLM client, brainstorm should gracefully degrade."""
         result = server._handle_brainstorm("test topic")
         data = self._check_json(result)
-        assert data.get("ok") is False
+        assert data.get("ok") is True
+        text = data.get("data", {}).get("brainstorm", "")
+        assert "OFFLINE" in text, f"Expected offline fallback, got: {text[:100]}"
 
     # ── Research Lab ──────────────────────────────────────────────────
 

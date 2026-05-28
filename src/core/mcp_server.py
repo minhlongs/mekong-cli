@@ -238,24 +238,24 @@ class MekongMcpServer:
         # ── Tasks ─────────────────────────────────────────────────────
 
         @app.tool(
-            description="List Mekong tasks (omit status for all, or: todo / in-progress / done)"
+            description="[STUB] List Mekong tasks — use `mekong task list` in CLI instead"
         )
         def cc_tasks_list(status: str = "") -> str:
             return self._handle_tasks_list(status)
 
-        @app.tool(description="Create a new task in Mekong")
+        @app.tool(description="[STUB] Create a task — use `mekong task create` in CLI instead")
         def cc_tasks_create(subject: str) -> str:
             return self._handle_tasks_create(subject)
 
-        @app.tool(description="Mark a task as done by ID")
+        @app.tool(description="[STUB] Mark task done — use `mekong task done <id>` in CLI instead")
         def cc_tasks_done(task_id: str) -> str:
             return self._handle_tasks_done(task_id)
 
-        @app.tool(description="Mark a task as in-progress by ID")
+        @app.tool(description="[STUB] Mark task in-progress — use `mekong task start <id>` in CLI instead")
         def cc_tasks_start(task_id: str) -> str:
             return self._handle_tasks_start(task_id)
 
-        @app.tool(description="Delete a task by ID")
+        @app.tool(description="[STUB] Delete task — use `mekong task delete <id>` in CLI instead")
         def cc_tasks_delete(task_id: str) -> str:
             return self._handle_tasks_delete(task_id)
 
@@ -306,47 +306,47 @@ class MekongMcpServer:
 
         # ── Research Lab ──────────────────────────────────────────────
 
-        @app.tool(description="Start Mekong multi-agent research lab on a topic")
+        @app.tool(description="[STUB] Start research lab — use `mekong lab start` in CLI instead")
         def cc_lab_start(topic: str) -> str:
             return self._handle_lab_start(topic)
 
-        @app.tool(description="Check Mekong research lab status")
+        @app.tool(description="[STUB] Check lab status — use `mekong lab status` in CLI instead")
         def cc_lab_status() -> str:
             return self._handle_lab_status()
 
         # ── Trading ───────────────────────────────────────────────────
 
-        @app.tool(description="Analyze a trading symbol with multi-agent debate")
+        @app.tool(description="[STUB] Analyze trading symbol — use `mekong trading analyze` in CLI instead")
         def cc_trading_analyze(symbol: str) -> str:
             return self._handle_trading_analyze(symbol)
 
-        @app.tool(description="Get current price for a trading symbol")
+        @app.tool(description="[STUB] Get price — use `mekong trading price` in CLI instead")
         def cc_trading_price(symbol: str) -> str:
             return self._handle_trading_price(symbol)
 
         # ── Monitor ───────────────────────────────────────────────────
 
-        @app.tool(description="Run Mekong AI monitor on a topic or all subscriptions")
+        @app.tool(description="[STUB] Run AI monitor — use `mekong monitor run` in CLI instead")
         def cc_monitor_run(topic: str = "") -> str:
             return self._handle_monitor_run(topic)
 
-        @app.tool(description="Check Mekong monitor scheduler status")
+        @app.tool(description="[STUB] Check monitor status — use `mekong monitor status` in CLI instead")
         def cc_monitor_status() -> str:
             return self._handle_monitor_status()
 
         # ── Plan Mode ─────────────────────────────────────────────────
 
-        @app.tool(description="Enter Mekong plan mode (write-protect code)")
+        @app.tool(description="[STUB] Enter plan mode — use `mekong plan` in CLI instead")
         def cc_plan_start(description: str) -> str:
             return self._handle_plan_start(description)
 
-        @app.tool(description="Exit Mekong plan mode")
+        @app.tool(description="[STUB] Exit plan mode — use `mekong plan` in CLI instead")
         def cc_plan_done() -> str:
             return self._handle_plan_done()
 
         # ── SSJ (Developer Power Menu) ────────────────────────────────
 
-        @app.tool(description="Open Mekong SSJ Developer Mode power menu")
+        @app.tool(description="[STUB] Open SSJ menu — use `mekong ssj` in CLI instead")
         def cc_ssj() -> str:
             return self._handle_ssj()
 
@@ -591,7 +591,7 @@ class MekongMcpServer:
                 f"Include viewpoints from a CTO, CMO, COO, and a domain expert. "
                 f"Provide structured insights with pros and cons for each perspective."
             )
-            response = client.complete(prompt, max_tokens=2000)
+            response = client.generate(prompt, max_tokens=2000)
             text = response if isinstance(response, str) else getattr(response, "content", str(response))
             return _ok({"topic": topic, "brainstorm": text[:4000]})
         except ImportError:
