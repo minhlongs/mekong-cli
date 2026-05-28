@@ -21,24 +21,24 @@ def main():
         print(f"\nChecking: {file_path}")
         # 1. Existence and size >= 100 bytes check
         if not os.path.exists(file_path):
-            print(f"[-] ERROR: File does not exist!")
+            print("[-] ERROR: File does not exist!")
             all_passed = False
             continue
         
         size = os.path.getsize(file_path)
         print(f"[+] Found file. Size: {size} bytes")
         if size < 100:
-            print(f"[-] ERROR: File is too small (< 100 bytes)!")
+            print("[-] ERROR: File is too small (< 100 bytes)!")
             all_passed = False
             continue
         else:
-            print(f"[+] Size check passed (>= 100 bytes)")
+            print("[+] Size check passed (>= 100 bytes)")
 
         # 2. Format specific checks
         if file_path.endswith('.json'):
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                    json.load(f)
                 print("[+] Format check passed: Valid JSON format")
             except Exception as e:
                 print(f"[-] ERROR parsing JSON: {e}")
@@ -54,7 +54,7 @@ def main():
                     print(f"[-] ERROR: Root tag is not svg, got {root.tag}")
                     all_passed = False
                 else:
-                    print(f"[+] Format check passed: Valid SVG (XML) document")
+                    print("[+] Format check passed: Valid SVG (XML) document")
             except Exception as e:
                 print(f"[-] ERROR parsing SVG (XML): {e}")
                 all_passed = False

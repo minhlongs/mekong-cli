@@ -1,7 +1,5 @@
 import subprocess
 import sqlite3
-import os
-import sys
 
 def test_f3_t1_01_observe_state_change(antigravity_bin):
     proc = subprocess.run(

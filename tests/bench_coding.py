@@ -6,10 +6,8 @@ and asserts the correctness of generated files.
 """
 import os
 import sys
-import shutil
 import tempfile
 import subprocess
-import time
 import json
 import urllib.request
 import urllib.error
@@ -267,7 +265,7 @@ def main():
         print(f"{name}: {status}")
     
     success_rate = (passed_count / len(tasks)) * 100
-    print(f"--------------------------------------------------")
+    print("--------------------------------------------------")
     print(f"Overall Success Rate: {success_rate:.1f}% ({passed_count}/{len(tasks)})")
     print("==================================================")
     

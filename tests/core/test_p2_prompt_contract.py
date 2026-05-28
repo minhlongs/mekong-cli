@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from src.core.p2_prompt_contract import (
     KNOWN_TOOLS,

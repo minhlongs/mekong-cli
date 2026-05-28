@@ -1,6 +1,5 @@
 import subprocess
 import os
-from pathlib import Path
 
 def test_f1_t1_01_heuristic_local_routing(antigravity_bin):
     proc = subprocess.run(

@@ -1,6 +1,5 @@
 """Tests for src/core/tool_output_validator.py."""
 
-import pytest
 
 from src.core.tool_output_validator import (
     ToolOutputSchema,
