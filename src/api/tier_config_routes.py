@@ -5,7 +5,7 @@ RESTful API endpoints for managing tier rate limit configurations and tenant ove
 """
 
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api", tags=["Tier Configuration"])
@@ -349,7 +349,7 @@ async def create_tenant_override(request: CreateTenantOverrideRequest) -> Tenant
         )
 
 
-@router.delete("/tenant-overrides/{tenant_id}/{preset}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/tenant-overrides/{tenant_id}/{preset}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
 async def delete_tenant_override(tenant_id: str, preset: str) -> None:
     """
     Remove a tenant rate limit override.

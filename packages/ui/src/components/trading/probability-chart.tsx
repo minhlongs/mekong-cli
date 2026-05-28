@@ -11,7 +11,7 @@ export interface ProbabilityChartProps extends React.HTMLAttributes<HTMLDivEleme
 
 const ProbabilityChart = React.forwardRef<HTMLDivElement, ProbabilityChartProps>(
   ({ className, data, height = 200, color, ...props }, ref) => {
-    const chartColor = color ?? "var(--accent)";
+    const chartColor = color ?? "var(-Accent)";
     const min = Math.min(...data.map((d) => d.value));
     const max = Math.max(...data.map((d) => d.value));
     const range = max - min || 1;
@@ -27,7 +27,7 @@ const ProbabilityChart = React.forwardRef<HTMLDivElement, ProbabilityChartProps>
     return (
       <div
         className={cn(
-          "rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-primary)] p-[var(--spacing-4)]",
+          "rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] p-[var(-Spacing4)]",
           className
         )}
         ref={ref}
@@ -37,7 +37,7 @@ const ProbabilityChart = React.forwardRef<HTMLDivElement, ProbabilityChartProps>
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
-          className="h-full w-full"
+          className="hFull wFull"
         >
           <polygon
             points={areaPoints}
@@ -49,7 +49,7 @@ const ProbabilityChart = React.forwardRef<HTMLDivElement, ProbabilityChartProps>
             fill="none"
             stroke={chartColor}
             strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
+            vectorEffect="nonScalingStroke"
           />
         </svg>
       </div>

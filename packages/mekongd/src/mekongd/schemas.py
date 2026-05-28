@@ -28,10 +28,17 @@ class MessagesRequest(BaseModel):
     messages: list[Message]
     max_tokens: int = 1024
     stream: bool = False
-    system: Optional[str] = None
+    system: Optional[Union[str, list[ContentBlock]]] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
     stop_sequences: Optional[list[str]] = None
+
+    def get_system_text(self) -> str:
+        if not self.system:
+            return ""
+        if isinstance(self.system, str):
+            return self.system
+        return "".join(cb.text for cb in self.system)
 
 
 class Usage(BaseModel):

@@ -22,27 +22,27 @@ const CodeBlock = React.forwardRef<HTMLDivElement, CodeBlockProps>(
     return (
       <div
         className={cn(
-          "relative rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--color-neutral-950)]",
+          "relative rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-ColorNeutral950)]",
           className
         )}
         ref={ref}
         {...props}
       >
-        <div className="flex items-center justify-between border-b border-[var(--color-neutral-800)] px-4 py-2">
-          <span className="text-[var(--font-size-xs)] font-medium text-[var(--color-neutral-400)]">
+        <div className="flex itemsCenter justifyBetween borderB border-[var(-ColorNeutral800)] px4 py2">
+          <span className="text-[var(-FontSizeXs)] fontMedium text-[var(-ColorNeutral400)]">
             {language}
           </span>
           {showCopy && (
             <button
               onClick={handleCopy}
-              className="text-[var(--font-size-xs)] text-[var(--color-neutral-400)] transition-colors duration-[var(--duration-fast)] hover:text-[var(--color-neutral-200)]"
+              className="text-[var(-FontSizeXs)] text-[var(-ColorNeutral400)] transitionColors duration-[var(-DurationFast)] hover:text-[var(-ColorNeutral200)]"
             >
               {copied ? "Copied!" : "Copy"}
             </button>
           )}
         </div>
-        <pre className="overflow-x-auto p-4">
-          <code className="font-mono text-[var(--font-size-sm)] text-[var(--color-neutral-100)]">
+        <pre className="overflowXAuto p4">
+          <code className="fontMono text-[var(-FontSizeSm)] text-[var(-ColorNeutral100)]">
             {code}
           </code>
         </pre>

@@ -8,7 +8,6 @@ from the last completed step rather than restarting from scratch.
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path

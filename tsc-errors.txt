@@ -1,0 +1,138 @@
+packages/mekong-cli-core/src/cli/commands/agi.ts(8,80): error TS2307: Cannot find module '@openclaw/agi-evolution/self-improver' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/agi.ts(9,31): error TS2307: Cannot find module '@openclaw/agi-evolution/version-tracker' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/agi.ts(10,33): error TS2307: Cannot find module '@openclaw/agi-evolution/benchmark' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/cloud-auth.ts(7,37): error TS2307: Cannot find module '@mekong/raas-sdk' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/cloud-missions.ts(7,48): error TS2307: Cannot find module '@mekong/raas-sdk' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/cloud-run.ts(10,36): error TS2307: Cannot find module '@mekong/raas-sdk' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/raas-marketplace.ts(7,32): error TS2307: Cannot find module '@openclaw/raas-marketplace/catalog' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/raas-marketplace.ts(8,40): error TS2307: Cannot find module '@openclaw/raas-marketplace/storefront' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/raas-marketplace.ts(9,26): error TS2307: Cannot find module '@openclaw/raas-marketplace/sales-bot' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/raas-marketplace.ts(10,32): error TS2307: Cannot find module '@openclaw/raas-marketplace/analytics' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(19,53): error TS2307: Cannot find module '@openclaw/rd-engine/sources/github-trending' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(20,52): error TS2307: Cannot find module '@openclaw/rd-engine/sources/npm-registry' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(21,49): error TS2307: Cannot find module '@openclaw/rd-engine/sources/hackernews' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(22,70): error TS2307: Cannot find module '@openclaw/rd-engine/analyzer' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(38,24): error TS7006: Parameter 'r' implicitly has an 'any' type.
+packages/mekong-cli-core/src/cli/commands/rd.ts(39,23): error TS7006: Parameter 'p' implicitly has an 'any' type.
+packages/mekong-cli-core/src/cli/commands/rd.ts(40,26): error TS7006: Parameter 's' implicitly has an 'any' type.
+packages/mekong-cli-core/src/cli/commands/rd.ts(61,53): error TS2307: Cannot find module '@openclaw/rd-engine/sources/github-trending' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(62,52): error TS2307: Cannot find module '@openclaw/rd-engine/sources/npm-registry' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(63,49): error TS2307: Cannot find module '@openclaw/rd-engine/analyzer' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(64,55): error TS2307: Cannot find module '@openclaw/rd-engine/reporter' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/rd.ts(73,24): error TS7006: Parameter 'r' implicitly has an 'any' type.
+packages/mekong-cli-core/src/cli/commands/rd.ts(74,23): error TS7006: Parameter 'p' implicitly has an 'any' type.
+packages/mekong-cli-core/src/cli/commands/vc-governance.ts(8,32): error TS2307: Cannot find module '@openclaw/vc-governance/pitch-generator' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/vc-governance.ts(9,26): error TS2307: Cannot find module '@openclaw/vc-governance/data-room' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/vc-governance.ts(10,34): error TS2307: Cannot find module '@openclaw/vc-governance/iso-compliance' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/vc-governance.ts(11,28): error TS2307: Cannot find module '@openclaw/vc-governance/exit-engine' or its corresponding type declarations.
+packages/mekong-cli-core/src/cli/commands/vc-governance.ts(69,35): error TS7006: Parameter 'c' implicitly has an 'any' type.
+packages/mekong-cli-core/src/core/pev-bridge.ts(8,57): error TS2307: Cannot find module '@mekong/raas-sdk' or its corresponding type declarations.
+packages/mekong-cli-core/src/core/raas-client.ts(6,30): error TS2307: Cannot find module '@mekong/raas-sdk' or its corresponding type declarations.
+packages/mekong-engine/test/observability-alerts.test.ts(156,14): error TS18046: 'message.attachments' is of type 'unknown'.
+packages/mekong-engine/test/observability-alerts.test.ts(158,26): error TS18046: 'message.attachments' is of type 'unknown'.
+packages/mekong-engine/test/observability-alerts.test.ts(180,14): error TS2571: Object is of type 'unknown'.
+packages/mekong-engine/test/observability-alerts.test.ts(181,14): error TS2571: Object is of type 'unknown'.
+packages/mekong-engine/test/observability-alerts.test.ts(182,14): error TS2571: Object is of type 'unknown'.
+packages/openclaw-engine/src/raas/raas-server.ts(53,40): error TS2352: Conversion of type 'Record<string, unknown>' to type 'OnboardingRequest' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'Record<string, unknown>' is missing the following properties from type 'OnboardingRequest': tenantId, tier, email
+packages/ui/src/components/audit/audit-finding.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/audit/control-card.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/audit/index.ts(1,29): error TS2307: Cannot find module './riskHeatmap' or its corresponding type declarations.
+packages/ui/src/components/audit/index.ts(2,29): error TS2307: Cannot find module './controlCard' or its corresponding type declarations.
+packages/ui/src/components/audit/index.ts(3,29): error TS2307: Cannot find module './soxProgress' or its corresponding type declarations.
+packages/ui/src/components/audit/index.ts(4,30): error TS2307: Cannot find module './auditFinding' or its corresponding type declarations.
+packages/ui/src/components/badge.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/badge.tsx(30,17): error TS2339: Property 'variant' does not exist on type 'BadgeProps'.
+packages/ui/src/components/button.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/button.tsx(32,17): error TS2339: Property 'variant' does not exist on type 'ButtonProps'.
+packages/ui/src/components/button.tsx(32,26): error TS2339: Property 'size' does not exist on type 'ButtonProps'.
+packages/ui/src/components/campaigns/campaign-card.tsx(3,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/campaigns/index.ts(1,30): error TS2307: Cannot find module './campaignCard' or its corresponding type declarations.
+packages/ui/src/components/campaigns/index.ts(2,30): error TS2307: Cannot find module './contentQueue' or its corresponding type declarations.
+packages/ui/src/components/campaigns/index.ts(3,29): error TS2307: Cannot find module './channelCard' or its corresponding type declarations.
+packages/ui/src/components/card.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/card.tsx(26,17): error TS2339: Property 'variant' does not exist on type 'CardProps'.
+packages/ui/src/components/care/index.ts(2,28): error TS2307: Cannot find module './slaTracker' or its corresponding type declarations.
+packages/ui/src/components/care/index.ts(3,28): error TS2307: Cannot find module './ticketCard' or its corresponding type declarations.
+packages/ui/src/components/cdp/index.ts(2,29): error TS2307: Cannot find module './customer360' or its corresponding type declarations.
+packages/ui/src/components/cdp/index.ts(3,28): error TS2307: Cannot find module './journeyMap' or its corresponding type declarations.
+packages/ui/src/components/cdp/index.ts(4,32): error TS2307: Cannot find module './segmentBuilder' or its corresponding type declarations.
+packages/ui/src/components/cs/index.ts(2,27): error TS2307: Cannot find module './churnRisk' or its corresponding type declarations.
+packages/ui/src/components/cs/index.ts(3,29): error TS2307: Cannot find module './healthScore' or its corresponding type declarations.
+packages/ui/src/components/cs/index.ts(4,26): error TS2307: Cannot find module './npsGauge' or its corresponding type declarations.
+packages/ui/src/components/dashboard/command-palette.tsx(13,18): error TS2430: Interface 'CommandPaletteProps' incorrectly extends interface 'HTMLAttributes<HTMLDivElement>'.
+  Types of property 'onSelect' are incompatible.
+    Type '(command: CommandItem) => void' is not assignable to type 'ReactEventHandler<HTMLDivElement>'.
+      Types of parameters 'command' and 'event' are incompatible.
+        Type 'SyntheticEvent<HTMLDivElement, Event>' is missing the following properties from type 'CommandItem': id, label
+packages/ui/src/components/data/index.ts(1,29): error TS2307: Cannot find module './pipelineDag' or its corresponding type declarations.
+packages/ui/src/components/data/index.ts(2,30): error TS2307: Cannot find module './qualityScore' or its corresponding type declarations.
+packages/ui/src/components/data/index.ts(3,30): error TS2307: Cannot find module './lineageGraph' or its corresponding type declarations.
+packages/ui/src/components/data/index.ts(4,34): error TS2307: Cannot find module './metricDefinition' or its corresponding type declarations.
+packages/ui/src/components/data/pipeline-dag.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/finance/index.ts(2,27): error TS2307: Cannot find module './budgetBar' or its corresponding type declarations.
+packages/ui/src/components/finance/index.ts(3,30): error TS2307: Cannot find module './revenueChart' or its corresponding type declarations.
+packages/ui/src/components/governance/index.ts(1,27): error TS2307: Cannot find module './boardCard' or its corresponding type declarations.
+packages/ui/src/components/governance/index.ts(2,26): error TS2307: Cannot find module './irMetric' or its corresponding type declarations.
+packages/ui/src/components/governance/index.ts(3,37): error TS2307: Cannot find module './disclosureChecklist' or its corresponding type declarations.
+packages/ui/src/components/governance/index.ts(4,28): error TS2307: Cannot find module './entityTree' or its corresponding type declarations.
+packages/ui/src/components/hr/index.ts(2,31): error TS2307: Cannot find module './candidateCard' or its corresponding type declarations.
+packages/ui/src/components/hr/index.ts(3,25): error TS2307: Cannot find module './orgNode' or its corresponding type declarations.
+packages/ui/src/components/hr/index.ts(4,27): error TS2307: Cannot find module './perfGauge' or its corresponding type declarations.
+packages/ui/src/components/incident/index.ts(2,30): error TS2307: Cannot find module './oncallRoster' or its corresponding type declarations.
+packages/ui/src/components/incident/index.ts(3,32): error TS2307: Cannot find module './postmortemCard' or its corresponding type declarations.
+packages/ui/src/components/incident/index.ts(4,28): error TS2307: Cannot find module './statusPage' or its corresponding type declarations.
+packages/ui/src/components/ipo/filing-status.tsx(3,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/ipo/index.ts(1,32): error TS2307: Cannot find module './readinessScore' or its corresponding type declarations.
+packages/ui/src/components/ipo/index.ts(2,32): error TS2307: Cannot find module './milestoneTrack' or its corresponding type declarations.
+packages/ui/src/components/ipo/index.ts(3,30): error TS2307: Cannot find module './filingStatus' or its corresponding type declarations.
+packages/ui/src/components/ipo/milestone-track.tsx(3,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/legal/index.ts(2,34): error TS2307: Cannot find module './complianceStatus' or its corresponding type declarations.
+packages/ui/src/components/legal/index.ts(3,30): error TS2307: Cannot find module './contractCard' or its corresponding type declarations.
+packages/ui/src/components/marketing/pricing-table.tsx(15,18): error TS2430: Interface 'PricingTableProps' incorrectly extends interface 'HTMLAttributes<HTMLDivElement>'.
+  Types of property 'onSelect' are incompatible.
+    Type '((tier: PricingTier) => void) | undefined' is not assignable to type 'ReactEventHandler<HTMLDivElement> | undefined'.
+      Type '(tier: PricingTier) => void' is not assignable to type 'ReactEventHandler<HTMLDivElement>'.
+        Types of parameters 'tier' and 'event' are incompatible.
+          Type 'SyntheticEvent<HTMLDivElement, Event>' is missing the following properties from type 'PricingTier': name, price, credits, features, cta
+packages/ui/src/components/ml/eval-suite.tsx(7,18): error TS2430: Interface 'EvalSuiteProps' incorrectly extends interface 'HTMLAttributes<HTMLDivElement>'.
+  Types of property 'results' are incompatible.
+    Type 'EvalResult[]' is not assignable to type 'number'.
+packages/ui/src/components/ml/guardrail-log.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/ml/index.ts(1,27): error TS2307: Cannot find module './modelCard' or its corresponding type declarations.
+packages/ui/src/components/ml/index.ts(2,27): error TS2307: Cannot find module './evalSuite' or its corresponding type declarations.
+packages/ui/src/components/ml/index.ts(3,30): error TS2307: Cannot find module './guardrailLog' or its corresponding type declarations.
+packages/ui/src/components/ml/index.ts(4,29): error TS2307: Cannot find module './costTracker' or its corresponding type declarations.
+packages/ui/src/components/ml/model-card.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/obs/index.ts(2,27): error TS2307: Cannot find module './alertRule' or its corresponding type declarations.
+packages/ui/src/components/obs/index.ts(3,27): error TS2307: Cannot find module './logViewer' or its corresponding type declarations.
+packages/ui/src/components/obs/index.ts(4,28): error TS2307: Cannot find module './metricCard' or its corresponding type declarations.
+packages/ui/src/components/obs/index.ts(5,32): error TS2307: Cannot find module './traceWaterfall' or its corresponding type declarations.
+packages/ui/src/components/pipeline-badge.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/pipeline-badge.tsx(30,17): error TS2339: Property 'phase' does not exist on type 'PipelineBadgeProps'.
+packages/ui/src/components/pipeline-badge.tsx(30,24): error TS2339: Property 'active' does not exist on type 'PipelineBadgeProps'.
+packages/ui/src/components/pm/experiment-card.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/pm/index.ts(1,29): error TS2307: Cannot find module './roadmapLane' or its corresponding type declarations.
+packages/ui/src/components/pm/index.ts(2,29): error TS2307: Cannot find module './featureFlag' or its corresponding type declarations.
+packages/ui/src/components/pm/index.ts(3,32): error TS2307: Cannot find module './experimentCard' or its corresponding type declarations.
+packages/ui/src/components/pm/index.ts(4,32): error TS2307: Cannot find module './pipelineFunnel' or its corresponding type declarations.
+packages/ui/src/components/pm/index.ts(5,34): error TS2307: Cannot find module './attributionChart' or its corresponding type declarations.
+packages/ui/src/components/pm/roadmap-lane.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/pr/index.ts(2,27): error TS2307: Cannot find module './pressCard' or its corresponding type declarations.
+packages/ui/src/components/pr/index.ts(3,30): error TS2307: Cannot find module './sentimentBar' or its corresponding type declarations.
+packages/ui/src/components/raas/tenant-card.tsx(3,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/security/incident-timeline.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/security/policy-status.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/security/threat-feed.tsx(4,21): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/security/vuln-card.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/status-dot.tsx(4,40): error TS2307: Cannot find module 'classVarianceAuthority' or its corresponding type declarations.
+packages/ui/src/components/status-dot.tsx(31,17): error TS2339: Property 'status' does not exist on type 'StatusDotProps'.
+packages/ui/src/components/status-dot.tsx(31,25): error TS2339: Property 'pulse' does not exist on type 'StatusDotProps'.
+packages/zalo-parser/tests/index.test.ts(108,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(145,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(146,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(147,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(148,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(149,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(150,14): error TS18046: 'json' is of type 'unknown'.
+packages/zalo-parser/tests/index.test.ts(151,14): error TS18046: 'json' is of type 'unknown'.

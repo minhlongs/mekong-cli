@@ -17,6 +17,18 @@ Plugin failures are **never fatal** — logged as warnings, CLI continues.
 | `hook` | Lifecycle callbacks (pre/post task) | `mekong.hooks` |
 | `recipe` | YAML task templates | `~/.mekong/recipes/` |
 
+The autonomous OS layer also defines `PluginManifestV2` in
+`src.mekongcli.core.plugins`. It extends plugin metadata for institutional
+runtime use:
+
+| Field | Purpose |
+| --- | --- |
+| `capabilities` | agent, tool, workflow, provider, deployment target, memory backend |
+| `permissions` | explicit runtime permissions requested by the plugin |
+| `dependencies` | package/runtime dependencies for isolation planning |
+| `checksum` | integrity validation |
+| `isolated` | whether the plugin should run in a dependency-isolated runtime |
+
 ---
 
 ## 2. Quick Start (3 Steps)

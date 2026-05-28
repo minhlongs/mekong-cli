@@ -1,0 +1,54 @@
+# OpenClaw RaaS Gateway Brand Typography Scale
+# Headings: Outfit
+# Body: Inter
+
+typography:
+  font_family:
+    headings: "Outfit, sans-serif"
+    body: "Inter, sans-serif"
+    monospace: "Fira Code, JetBrains Mono, monospace"
+
+  weights:
+    light: 300
+    regular: 400
+    medium: 500
+    semibold: 600
+    bold: 700
+
+  scale:
+    h1:
+      size: "2.5rem"
+      line_height: "1.2"
+      weight: "bold"
+      letter_spacing: "-0.02em"
+    h2:
+      size: "2rem"
+      line_height: "1.25"
+      weight: "semibold"
+      letter_spacing: "-0.015em"
+    h3:
+      size: "1.5rem"
+      line_height: "1.3"
+      weight: "semibold"
+      letter_spacing: "-0.01em"
+    h4:
+      size: "1.25rem"
+      line_height: "1.4"
+      weight: "medium"
+    body_large:
+      size: "1.125rem"
+      line_height: "1.5"
+      weight: "regular"
+    body_base:
+      size: "1rem"
+      line_height: "1.5"
+      weight: "regular"
+    body_small:
+      size: "0.875rem"
+      line_height: "1.45"
+      weight: "regular"
+    caption:
+      size: "0.75rem"
+      line_height: "1.4"
+      weight: "medium"
+      letter_spacing: "0.05em"

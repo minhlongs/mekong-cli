@@ -8,7 +8,7 @@ from pathlib import Path
 
 def consolidate_docs():
     """Consolidate documentation systems"""
-    project_root = Path("/Users/macbookprom1/mekong-cli")
+    project_root = Path("/Users/macbook/mekong-cli")
     docs_dir = project_root / "docs"
     claude_dir = project_root / ".claude"
     

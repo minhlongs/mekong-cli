@@ -12,10 +12,10 @@ export interface MissionCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const statusStyles: Record<string, string> = {
-  pending: "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
-  running: "bg-[var(--color-info-500)]/15 text-[var(--color-info-500)]",
-  success: "bg-[var(--color-success-500)]/15 text-[var(--color-success-500)]",
-  failed: "bg-[var(--color-danger-500)]/15 text-[var(--color-danger-500)]",
+  pending: "bg-[var(-BgTertiary)] text-[var(-TextSecondary)]",
+  running: "bg-[var(-ColorInfo500)]/15 text-[var(-ColorInfo500)]",
+  success: "bg-[var(-ColorSuccess500)]/15 text-[var(-ColorSuccess500)]",
+  failed: "bg-[var(-ColorDanger500)]/15 text-[var(-ColorDanger500)]",
 };
 
 const MissionCard = React.forwardRef<HTMLDivElement, MissionCardProps>(
@@ -25,37 +25,37 @@ const MissionCard = React.forwardRef<HTMLDivElement, MissionCardProps>(
     return (
       <div
         className={cn(
-          "rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-primary)] transition-shadow duration-[var(--duration-normal)]",
-          status === "running" && "ring-1 ring-[var(--color-info-500)]/30",
+          "rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] transitionShadow duration-[var(-DurationNormal)]",
+          status === "running" && "ring1 ring-[var(-ColorInfo500)]/30",
           className
         )}
         ref={ref}
         {...props}
       >
         <div
-          className={cn("flex items-center gap-3 p-[var(--spacing-4)]", expandable && "cursor-pointer")}
+          className={cn("flex itemsCenter gap3 p-[var(-Spacing4)]", expandable && "cursorPointer")}
           onClick={expandable ? () => setExpanded(!expanded) : undefined}
         >
-          <div className="flex flex-1 flex-col gap-1">
-            <span className="text-[var(--font-size-sm)] font-medium text-[var(--text-primary)]">{title}</span>
-            <div className="flex items-center gap-2">
+          <div className="flex flex1 flexCol gap1">
+            <span className="text-[var(-FontSizeSm)] fontMedium text-[var(-TextPrimary)]">{title}</span>
+            <div className="flex itemsCenter gap2">
               <span className={cn(
-                "rounded-[var(--radius-full)] px-2 py-0.5 text-[0.625rem] font-semibold uppercase",
+                "rounded-[var(-RadiusFull)] px2 py0.5 text-[0.625rem] fontSemibold uppercase",
                 statusStyles[status]
               )}>
                 {status}
               </span>
-              <span className="font-mono text-[var(--font-size-xs)] text-[var(--text-tertiary)]">
+              <span className="fontMono text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">
                 {creditCost} MCU
               </span>
             </div>
           </div>
           {agents.length > 0 && (
-            <div className="flex -space-x-1">
+            <div className="flex SpaceX1">
               {agents.map((agent) => (
                 <span
                   key={agent}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-[0.625rem] font-bold text-[var(--accent-text)]"
+                  className="flex h6 w6 itemsCenter justifyCenter roundedFull bg-[var(-Accent)] text-[0.625rem] fontBold text-[var(-AccentText)]"
                   title={agent}
                 >
                   {agent[0]}
@@ -65,15 +65,15 @@ const MissionCard = React.forwardRef<HTMLDivElement, MissionCardProps>(
           )}
           {expandable && (
             <span className={cn(
-              "text-[var(--text-tertiary)] transition-transform duration-[var(--duration-fast)]",
-              expanded && "rotate-180"
+              "text-[var(-TextTertiary)] transitionTransform duration-[var(-DurationFast)]",
+              expanded && "rotate180"
             )}>
               &#x25BC;
             </span>
           )}
         </div>
         {expandable && expanded && children && (
-          <div className="border-t border-[var(--border-default)] p-[var(--spacing-4)]">
+          <div className="borderT border-[var(-BorderDefault)] p-[var(-Spacing4)]">
             {children}
           </div>
         )}

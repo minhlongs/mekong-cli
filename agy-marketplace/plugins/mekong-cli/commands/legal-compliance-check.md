@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.opencode/commands/legal-compliance-check.md

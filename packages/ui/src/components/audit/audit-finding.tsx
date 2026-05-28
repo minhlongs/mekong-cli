@@ -4,12 +4,12 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const findingSeverity = cva("inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--font-xs)] font-bold uppercase", {
+const findingSeverity = cva("inlineFlex itemsCenter rounded-[var(-RadiusSm)] px2 py0.5 text-[var(-FontXs)] fontBold uppercase", {
   variants: {
     severity: {
-      "material-weakness": "bg-[var(--status-error)]/20 text-[var(--status-error)]",
-      "significant-deficiency": "bg-[var(--status-warning)]/20 text-[var(--status-warning)]",
-      "deficiency": "bg-[var(--status-idle)]/20 text-[var(--text-secondary)]",
+      "materialWeakness": "bg-[var(-StatusError)]/20 text-[var(-StatusError)]",
+      "significantDeficiency": "bg-[var(-StatusWarning)]/20 text-[var(-StatusWarning)]",
+      "deficiency": "bg-[var(-StatusIdle)]/20 text-[var(-TextSecondary)]",
     },
   },
   defaultVariants: { severity: "deficiency" },
@@ -17,7 +17,7 @@ const findingSeverity = cva("inline-flex items-center rounded-[var(--radius-sm)]
 
 export interface AuditFindingProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
-  severity: "material-weakness" | "significant-deficiency" | "deficiency";
+  severity: "materialWeakness" | "significantDeficiency" | "deficiency";
   owner: string;
   dueDate: string;
   description: string;
@@ -25,15 +25,15 @@ export interface AuditFindingProps extends React.HTMLAttributes<HTMLDivElement> 
 
 const AuditFinding = React.forwardRef<HTMLDivElement, AuditFindingProps>(
   ({ className, title, severity, owner, dueDate, description, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="flex items-center justify-between">
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">{title}</span>
+    <div ref={ref} className={cn("flex flexCol gap-[var(-SpacingSm)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="flex itemsCenter justifyBetween">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">{title}</span>
         <span className={findingSeverity({ severity })}>{severity.replace("-", " ")}</span>
       </div>
-      <p className="text-[var(--font-sm)] text-[var(--text-secondary)]">{description}</p>
-      <div className="flex items-center justify-between border-t border-[var(--border-default)] pt-[var(--spacing-sm)]">
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">Owner: {owner}</span>
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">Due: {dueDate}</span>
+      <p className="text-[var(-FontSm)] text-[var(-TextSecondary)]">{description}</p>
+      <div className="flex itemsCenter justifyBetween borderT border-[var(-BorderDefault)] pt-[var(-SpacingSm)]">
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">Owner: {owner}</span>
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">Due: {dueDate}</span>
       </div>
     </div>
   )

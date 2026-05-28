@@ -15,13 +15,10 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-import stat
 import threading
-from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-import src.api.vn_pilot_state as _state
-from src.services.sqlite_migrations import _db_path, ensure_schema
+from src.services.sqlite_migrations import _db_path
 
 # ---------- Protocol (narrow — only what vn_pilot_common.py uses) ----------
 

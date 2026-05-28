@@ -13,24 +13,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, icon, id, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
     return (
-      <div className="flex flex-col gap-[var(--spacing-1)]">
+      <div className="flex flexCol gap-[var(-Spacing1)]">
         {label && (
-          <label htmlFor={inputId} className="text-[var(--font-size-sm)] font-medium text-[var(--text-primary)]">
+          <label htmlFor={inputId} className="text-[var(-FontSizeSm)] fontMedium text-[var(-TextPrimary)]">
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
+            <span className="absolute left3 top1/2 TranslateY1/2 text-[var(-TextTertiary)]">
               {icon}
             </span>
           )}
           <input
             id={inputId}
             className={cn(
-              "flex h-10 w-full rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 py-2 text-[var(--font-size-base)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] transition-colors duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50",
-              icon && "pl-10",
-              error && "border-[var(--color-danger-500)] focus-visible:ring-[var(--color-danger-500)]",
+              "flex h10 wFull rounded-[var(-RadiusMd)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] px3 py2 text-[var(-FontSizeBase)] text-[var(-TextPrimary)] placeholder:text-[var(-TextTertiary)] transitionColors duration-[var(-DurationFast)] focusVisible:outlineNone focusVisible:ring2 focusVisible:ring-[var(-Accent)] disabled:cursorNotAllowed disabled:opacity50",
+              icon && "pl10",
+              error && "border-[var(-ColorDanger500)] focusVisible:ring-[var(-ColorDanger500)]",
               className
             )}
             ref={ref}
@@ -38,7 +38,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p className="text-[var(--font-size-sm)] text-[var(--color-danger-500)]">{error}</p>
+          <p className="text-[var(-FontSizeSm)] text-[var(-ColorDanger500)]">{error}</p>
         )}
       </div>
     );

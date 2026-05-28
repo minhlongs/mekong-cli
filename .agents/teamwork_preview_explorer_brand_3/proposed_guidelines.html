@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw RaaS Gateway — Brand Guidelines</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            emerald: '#10B981',
+                            emerald50: '#ecfdf5',
+                            emerald100: '#d1fae5',
+                            emerald200: '#a7f3d0',
+                            emerald300: '#6ee7b7',
+                            emerald400: '#34d399',
+                            emerald500: '#10b981',
+                            emerald600: '#059669',
+                            emerald700: '#047857',
+                            emerald800: '#065f46',
+                            emerald900: '#064e3b',
+                            slate: '#0b0f19',
+                            coal: '#111827',
+                            border: '#1f2937',
+                            teal: '#2DD4BF',
+                            textPrimary: '#f9fafb',
+                            textSecondary: '#9ca3af',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Outfit', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f9fafb;
+        }
+        
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(31, 41, 55, 0.6);
+        }
+        
+        .nav-link.active {
+            color: #10B981;
+            border-bottom: 2px solid #10B981;
+        }
+        
+        .color-dot {
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
+            border-color: rgba(45, 212, 191, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-brand-emerald selection:text-brand-slate">
+
+    <!-- Glowing Background Orbs -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-emerald/10 blur-[100px]"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 rounded-full bg-brand-teal/5 blur-[120px]"></div>
+    </div>
+
+    <!-- Header / Navigation -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-brand-border/80">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-brand-emerald to-brand-teal flex items-center justify-center color-dot">
+                    <!-- Emerald Claw Icon in SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-brand-slate" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4M6 6l12 12M6 18L18 6" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-heading text-lg font-bold tracking-tight">OpenClaw RaaS Gateway</h1>
+                    <p class="text-xs text-brand-textSecondary font-mono">BRAND IDENTITY & GUIDELINES</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center gap-6 text-sm font-medium text-brand-textSecondary">
+                <a href="#mission" class="hover:text-brand-emerald transition-colors">Mission</a>
+                <a href="#colors" class="hover:text-brand-emerald transition-colors">Colors</a>
+                <a href="#typography" class="hover:text-brand-emerald transition-colors">Typography</a>
+                <a href="#logos" class="hover:text-brand-emerald transition-colors">Logos</a>
+                <a href="#spacing" class="hover:text-brand-emerald transition-colors">Spacing</a>
+                <a href="#rules" class="hover:text-brand-emerald transition-colors">Do's & Don'ts</a>
+            </nav>
+            
+            <div class="flex items-center gap-3">
+                <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-brand-emerald/10 border border-brand-emerald/20 text-brand-emerald">v1.0.0</span>
+                <span class="text-xs text-brand-textSecondary font-mono">2026-05-28</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-12 space-y-20 relative z-10">
+
+        <!-- Introduction Section -->
+        <section id="mission" class="space-y-6">
+            <div class="max-w-3xl space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-border text-xs font-mono text-brand-teal border border-brand-border">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-teal animate-pulse"></span> SYSTEM FOUNDATION
+                </div>
+                <h2 class="text-4xl md:text-5xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-brand-textPrimary to-brand-textSecondary bg-clip-text text-transparent">
+                    The Sovereign Agent Gateway.
+                </h2>
+                <p class="text-lg text-brand-textSecondary leading-relaxed">
+                    Consistent branding builds trust and makes the sovereign agent stack recognizable. OpenClaw RaaS Gateway combines military-grade security with fluid, edge-first automation. This document outlines our visual identity and patterns.
+                </p>
+            </div>
+
+            <!-- Brand Values Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                <div class="glass-panel p-6 rounded-xl hover:border-brand-emerald/40 transition-all duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-brand-emerald/10 border border-brand-emerald/20 flex items-center justify-center text-brand-emerald mb-4 font-bold group-hover:scale-110 transition-transform">
+                        01
+                    </div>
+                    <h3 class="text-xl font-heading font-bold mb-2">Speed</h3>
+                    <p class="text-sm text-brand-textSecondary">
+                        Sub-millisecond execution start times. Optimized edge routing via Cloudflare Workers. We design lightweight, fast-loading, clean interfaces.
+                    </p>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl hover:border-brand-teal/40 transition-all duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-brand-teal/10 border border-brand-teal/20 flex items-center justify-center text-brand-teal mb-4 font-bold group-hover:scale-110 transition-transform">
+                        02
+                    </div>
+                    <h3 class="text-xl font-heading font-bold mb-2">Security</h3>
+                    <p class="text-sm text-brand-textSecondary">
+                        Sovereign LLM execution with zero-knowledge keys. High-contrast layouts, clean isolation lines, and clear security boundary visuals.
+                    </p>
+                </div>
+                
+                <div class="glass-panel p-6 rounded-xl hover:border-brand-emerald/40 transition-all duration-300 group">
+                    <div class="w-12 h-12 rounded-lg bg-brand-emerald/10 border border-brand-emerald/20 flex items-center justify-center text-brand-emerald mb-4 font-bold group-hover:scale-110 transition-transform">
+                        03
+                    </div>
+                    <h3 class="text-xl font-heading font-bold mb-2">Adaptability</h3>
+                    <p class="text-sm text-brand-textSecondary">
+                        Water Protocol connections linking Studio, Founder, Business, Product, Engineering, and Ops. Interfaces scale smoothly from code terminals to dashboards.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-brand-border/60">
+
+        <!-- Color Palette Section -->
+        <section id="colors" class="space-y-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold tracking-tight">2. Color Palette</h2>
+                <p class="text-sm text-brand-textSecondary mt-1">We utilize a premium, high-contrast dark-mode system as our primary visual context.</p>
+            </div>
+
+            <!-- Primary Colors Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <!-- Primary: Emerald Green -->
+                <div class="glass-panel rounded-xl overflow-hidden glow-hover transition-all duration-300">
+                    <div class="h-32 bg-brand-emerald flex items-end p-4">
+                        <span class="text-xs font-mono font-bold bg-brand-slate text-brand-emerald px-2 py-0.5 rounded">Primary</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm">Emerald Green</h4>
+                            <p class="text-xs text-brand-textSecondary">Active status tags & buttons</p>
+                        </div>
+                        <div class="font-mono text-xs space-y-1 bg-brand-slate/50 p-2 rounded border border-brand-border/50">
+                            <div>HEX: <span class="text-brand-emerald">#10B981</span></div>
+                            <div>HSL: <span class="text-brand-textSecondary">162 72% 39%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary: Dark Slate -->
+                <div class="glass-panel rounded-xl overflow-hidden glow-hover transition-all duration-300">
+                    <div class="h-32 bg-brand-slate flex items-end p-4 border-b border-brand-border">
+                        <span class="text-xs font-mono font-bold bg-brand-coal text-brand-textPrimary px-2 py-0.5 rounded">Secondary</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm">Dark Slate</h4>
+                            <p class="text-xs text-brand-textSecondary">Master background color</p>
+                        </div>
+                        <div class="font-mono text-xs space-y-1 bg-brand-slate/50 p-2 rounded border border-brand-border/50">
+                            <div>HEX: <span class="text-brand-textPrimary">#0b0f19</span></div>
+                            <div>HSL: <span class="text-brand-textSecondary">222 39% 7%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accent: Teal Glow -->
+                <div class="glass-panel rounded-xl overflow-hidden glow-hover transition-all duration-300">
+                    <div class="h-32 bg-brand-teal flex items-end p-4">
+                        <span class="text-xs font-mono font-bold bg-brand-slate text-brand-teal px-2 py-0.5 rounded">Accent</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm">Teal Glow</h4>
+                            <p class="text-xs text-brand-textSecondary">Hover states & telemetry</p>
+                        </div>
+                        <div class="font-mono text-xs space-y-1 bg-brand-slate/50 p-2 rounded border border-brand-border/50">
+                            <div>HEX: <span class="text-brand-teal">#2DD4BF</span></div>
+                            <div>HSL: <span class="text-brand-textSecondary">172 66% 50%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Surface: Coal Grey -->
+                <div class="glass-panel rounded-xl overflow-hidden glow-hover transition-all duration-300">
+                    <div class="h-32 bg-brand-coal flex items-end p-4 border-b border-brand-border">
+                        <span class="text-xs font-mono font-bold bg-brand-slate text-brand-textPrimary px-2 py-0.5 rounded">Surface</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm">Coal Grey</h4>
+                            <p class="text-xs text-brand-textSecondary">Cards, panels, sheets</p>
+                        </div>
+                        <div class="font-mono text-xs space-y-1 bg-brand-slate/50 p-2 rounded border border-brand-border/50">
+                            <div>HEX: <span class="text-brand-textPrimary">#111827</span></div>
+                            <div>HSL: <span class="text-brand-textSecondary">222 47% 11%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Border: Muted Grey -->
+                <div class="glass-panel rounded-xl overflow-hidden glow-hover transition-all duration-300">
+                    <div class="h-32 bg-brand-border flex items-end p-4">
+                        <span class="text-xs font-mono font-bold bg-brand-slate text-brand-textPrimary px-2 py-0.5 rounded">Border</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <h4 class="font-heading font-bold text-sm">Muted Grey</h4>
+                            <p class="text-xs text-brand-textSecondary">Separators & outlines</p>
+                        </div>
+                        <div class="font-mono text-xs space-y-1 bg-brand-slate/50 p-2 rounded border border-brand-border/50">
+                            <div>HEX: <span class="text-brand-textPrimary">#1f2937</span></div>
+                            <div>HSL: <span class="text-brand-textSecondary">222 19% 17%</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shades scale for Emerald -->
+            <div class="glass-panel p-6 rounded-xl space-y-4">
+                <div>
+                    <h3 class="text-sm font-heading font-bold text-brand-textPrimary">Emerald Green Shades</h3>
+                    <p class="text-xs text-brand-textSecondary">Extended palette for overlays, hover variables, and semantic layers.</p>
+                </div>
+                <div class="grid grid-cols-5 md:grid-cols-10 gap-2 font-mono text-[10px] text-center">
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald50 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">50</span>
+                        <span class="block font-bold">#ECFDF5</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald100 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">100</span>
+                        <span class="block font-bold">#D1FAE5</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald200 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">200</span>
+                        <span class="block font-bold">#A7F3D0</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald300 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">300</span>
+                        <span class="block font-bold">#6EE7B7</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald400 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">400</span>
+                        <span class="block font-bold">#34D399</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald500 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">500</span>
+                        <span class="block font-bold">#10B981</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald600 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">600</span>
+                        <span class="block font-bold">#059669</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald700 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">700</span>
+                        <span class="block font-bold">#047857</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald800 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">800</span>
+                        <span class="block font-bold">#065F46</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="h-10 rounded bg-brand-emerald900 border border-brand-border"></div>
+                        <span class="block text-brand-textSecondary">900</span>
+                        <span class="block font-bold">#064E3B</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Semantic / System Colors -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                    <span class="w-4 h-4 rounded bg-[#10B981]"></span>
+                    <div>
+                        <div class="text-xs font-mono font-bold text-brand-textPrimary">SUCCESS</div>
+                        <div class="text-xs text-brand-textSecondary">#10B981 — Active / Verified</div>
+                    </div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                    <span class="w-4 h-4 rounded bg-[#F59E0B]"></span>
+                    <div>
+                        <div class="text-xs font-mono font-bold text-brand-textPrimary">WARNING</div>
+                        <div class="text-xs text-brand-textSecondary">#F59E0B — Warning / Pending</div>
+                    </div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                    <span class="w-4 h-4 rounded bg-[#EF4444]"></span>
+                    <div>
+                        <div class="text-xs font-mono font-bold text-brand-textPrimary">ERROR</div>
+                        <div class="text-xs text-brand-textSecondary">#EF4444 — Fail / Alarm</div>
+                    </div>
+                </div>
+                <div class="glass-panel p-4 rounded-lg flex items-center gap-3">
+                    <span class="w-4 h-4 rounded bg-[#3B82F6]"></span>
+                    <div>
+                        <div class="text-xs font-mono font-bold text-brand-textPrimary">INFO</div>
+                        <div class="text-xs text-brand-textSecondary">#3B82F6 — System Telemetry</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-brand-border/60">
+
+        <!-- Typography Section -->
+        <section id="typography" class="space-y-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold tracking-tight">3. Typography Scale</h2>
+                <p class="text-sm text-brand-textSecondary mt-1">Font family selection and typesetting hierarchy.</p>
+            </div>
+
+            <!-- Font Families Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Heading Font -->
+                <div class="glass-panel p-6 rounded-xl space-y-4">
+                    <div>
+                        <span class="text-[10px] font-mono font-bold bg-brand-emerald/10 text-brand-emerald px-2 py-0.5 rounded uppercase">Heading Font</span>
+                        <h3 class="text-2xl font-heading font-bold mt-2">Outfit</h3>
+                        <p class="text-xs text-brand-textSecondary">Vibrant, geometric, modern.</p>
+                    </div>
+                    <div class="h-20 bg-brand-slate/50 rounded border border-brand-border/50 flex items-center justify-center overflow-hidden">
+                        <span class="font-heading text-3xl font-extrabold tracking-tight">Aa Bb Cc 123</span>
+                    </div>
+                    <p class="text-xs text-brand-textSecondary">Used for main titles, page headers, major section headers, and statistical callouts.</p>
+                </div>
+
+                <!-- Body Font -->
+                <div class="glass-panel p-6 rounded-xl space-y-4">
+                    <div>
+                        <span class="text-[10px] font-mono font-bold bg-brand-teal/10 text-brand-teal px-2 py-0.5 rounded uppercase">Body Font</span>
+                        <h3 class="text-2xl font-sans font-bold mt-2">Inter</h3>
+                        <p class="text-xs text-brand-textSecondary">Highly legible, clean, professional.</p>
+                    </div>
+                    <div class="h-20 bg-brand-slate/50 rounded border border-brand-border/50 flex items-center justify-center overflow-hidden">
+                        <span class="font-sans text-2xl font-medium">Aa Bb Cc 123</span>
+                    </div>
+                    <p class="text-xs text-brand-textSecondary">Used for readable text blocks, input labels, instructions, navigation, and paragraphs.</p>
+                </div>
+
+                <!-- Monospace Font -->
+                <div class="glass-panel p-6 rounded-xl space-y-4">
+                    <div>
+                        <span class="text-[10px] font-mono font-bold bg-brand-border text-brand-textSecondary px-2 py-0.5 rounded uppercase">Monospace Font</span>
+                        <h3 class="text-2xl font-mono font-bold mt-2">Fira Code</h3>
+                        <p class="text-xs text-brand-textSecondary">Code-friendly, developer-oriented.</p>
+                    </div>
+                    <div class="h-20 bg-brand-slate/50 rounded border border-brand-border/50 flex items-center justify-center overflow-hidden">
+                        <span class="font-mono text-lg">const OpenClaw = true;</span>
+                    </div>
+                    <p class="text-xs text-brand-textSecondary">Used for terminal outputs, command flags, variables, shell scripts, and system tokens.</p>
+                </div>
+            </div>
+
+            <!-- Hierarchy Table -->
+            <div class="glass-panel rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-brand-coal border-b border-brand-border text-xs font-mono uppercase text-brand-textSecondary">
+                                <th class="p-4">Role / Tag</th>
+                                <th class="p-4">Size & Line Height</th>
+                                <th class="p-4">Attributes</th>
+                                <th class="p-4">Visual Rendering Example</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-brand-border/50 font-sans">
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Title (H1)</td>
+                                <td class="p-4">
+                                    <div class="font-medium">2.5rem / 40px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.2</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Outfit Bold (-0.02em)</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="font-heading text-3xl md:text-4xl font-extrabold tracking-tight">Sovereign Agent Gateway</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Heading 2 (H2)</td>
+                                <td class="p-4">
+                                    <div class="font-medium">2.0rem / 32px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.25</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Outfit Semibold (-0.015em)</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="font-heading text-2xl font-bold tracking-tight">1. Brand Mission & Values</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Heading 3 (H3)</td>
+                                <td class="p-4">
+                                    <div class="font-medium">1.5rem / 24px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.3</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Outfit Semibold (-0.01em)</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="font-heading text-xl font-semibold">Active Telemetry</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Body Large</td>
+                                <td class="p-4">
+                                    <div class="font-medium">1.125rem / 18px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.5</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Inter Regular</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="text-lg text-brand-textSecondary">Introduction and highlight paragraphs.</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Body Base</td>
+                                <td class="p-4">
+                                    <div class="font-medium">1.0rem / 16px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.5</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Inter Regular</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="text-brand-textSecondary">Consistent branding builds trust and makes the sovereign agent stack recognizable.</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 font-mono text-xs">Caption</td>
+                                <td class="p-4">
+                                    <div class="font-medium">0.75rem / 12px</div>
+                                    <div class="text-xs text-brand-textSecondary">Line height 1.4</div>
+                                </td>
+                                <td class="p-4">
+                                    <div class="text-xs font-mono">Inter Medium (0.05em, ALL CAPS)</div>
+                                </td>
+                                <td class="p-4">
+                                    <span class="text-xs font-medium tracking-wider uppercase text-brand-teal">SYSTEM STATUS: VERIFIED</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-brand-border/60">
+
+        <!-- Logo Variations & Grid -->
+        <section id="logos" class="space-y-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold tracking-tight">4. Logo Variations</h2>
+                <p class="text-sm text-brand-textSecondary mt-1">Official variations for different environments.</p>
+            </div>
+
+            <!-- Logo Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Variation 1: Primary -->
+                <div class="glass-panel rounded-xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-12 bg-slate-950 flex justify-center items-center h-48 relative border-b border-brand-border">
+                        <!-- Checkered dark background -->
+                        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 16px 16px;"></div>
+                        
+                        <!-- Primary Logo Rendered in HTML/SVG -->
+                        <div class="flex items-center gap-3 relative z-10">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-brand-emerald to-brand-teal flex items-center justify-center color-dot">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-brand-slate" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4M6 6l12 12M6 18L18 6" />
+                                </svg>
+                            </div>
+                            <span class="font-heading text-lg font-bold tracking-tight text-white">OpenClaw</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-2">
+                        <span class="text-[10px] font-mono font-bold bg-brand-emerald/10 text-brand-emerald px-2 py-0.5 rounded uppercase">01. Primary Logo</span>
+                        <h4 class="font-heading font-bold text-sm mt-1">Full Color (Dark Background)</h4>
+                        <p class="text-xs text-brand-textSecondary leading-relaxed">
+                            Emerald claw icon with <strong>OpenClaw</strong> text. Standard representation. Recommended on dark (#0b0f19) background layouts.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Variation 2: Monochrome -->
+                <div class="glass-panel rounded-xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-12 bg-white flex justify-center items-center h-48 relative border-b border-brand-border">
+                        <!-- Checkered light background -->
+                        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle, #000000 1px, transparent 1px); background-size: 16px 16px;"></div>
+                        
+                        <!-- Monochrome Logo Rendered in HTML/SVG -->
+                        <div class="flex items-center gap-3 relative z-10">
+                            <div class="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4M6 6l12 12M6 18L18 6" />
+                                </svg>
+                            </div>
+                            <span class="font-heading text-lg font-bold tracking-tight text-black">OpenClaw</span>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-2">
+                        <span class="text-[10px] font-mono font-bold bg-brand-border text-brand-textSecondary px-2 py-0.5 rounded uppercase">02. Monochrome Logo</span>
+                        <h4 class="font-heading font-bold text-sm mt-1">High-Contrast (Light Background)</h4>
+                        <p class="text-xs text-brand-textSecondary leading-relaxed">
+                            For white or light backgrounds, print files, terminal ASCII banners, and physical engravings.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Variation 3: Icon Only -->
+                <div class="glass-panel rounded-xl overflow-hidden flex flex-col justify-between">
+                    <div class="p-12 bg-slate-950 flex justify-center items-center h-48 relative border-b border-brand-border">
+                        <!-- Checkered dark background -->
+                        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 16px 16px;"></div>
+                        
+                        <!-- Icon Only Rendered in HTML/SVG -->
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-brand-emerald to-brand-teal flex items-center justify-center color-dot relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-brand-slate" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4M6 6l12 12M6 18L18 6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-2">
+                        <span class="text-[10px] font-mono font-bold bg-brand-teal/10 text-brand-teal px-2 py-0.5 rounded uppercase">03. Icon Only</span>
+                        <h4 class="font-heading font-bold text-sm mt-1">Claw Icon Mark</h4>
+                        <p class="text-xs text-brand-textSecondary leading-relaxed">
+                            Abstract geometric claw symbol. Ideal for favicons, user profile photos, navigation buttons, and small cards.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-brand-border/60">
+
+        <!-- UI Spacing & Grid System -->
+        <section id="spacing" class="space-y-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold tracking-tight">5. Spacing & Grid System</h2>
+                <p class="text-sm text-brand-textSecondary mt-1">Layout proportions based on the 4dp/8dp spacing rhythm to maintain clean alignments.</p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-xl space-y-6">
+                <!-- Visual Spacing Scale -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-heading font-bold text-brand-textPrimary">Spacing Scale Visualizer</h3>
+                    
+                    <div class="space-y-3 font-mono text-xs">
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">4px (0.25rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 4px;"></div>
+                            <span class="text-brand-textSecondary">Micro gaps, inside padding</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">8px (0.5rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 8px;"></div>
+                            <span class="text-brand-textSecondary">Button padding, vertical content gaps</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">16px (1.0rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 16px;"></div>
+                            <span class="text-brand-textSecondary">Default card margins, layout lists</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">24px (1.5rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 24px;"></div>
+                            <span class="text-brand-textSecondary">Main page padding, card gaps</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">32px (2.0rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 32px;"></div>
+                            <span class="text-brand-textSecondary">Standard layout grids, section gutters</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="w-24 text-brand-textSecondary">64px (4.0rem)</span>
+                            <div class="h-4 bg-brand-emerald rounded" style="width: 64px;"></div>
+                            <span class="text-brand-textSecondary">Section headers spacing, landing layouts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-brand-border/60">
+
+        <!-- Do's and Don'ts Section -->
+        <section id="rules" class="space-y-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold tracking-tight">6. Do's & Don'ts</h2>
+                <p class="text-sm text-brand-textSecondary mt-1">Design rules to maintain consistency across the OpenClaw RaaS Gateway ecosystem.</p>
+            </div>
+
+            <!-- Rules Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Colors & Contrast -->
+                <div class="space-y-4">
+                    <h3 class="font-heading font-bold text-lg border-b border-brand-border pb-2 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></span> Colors & Contrast
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-brand-emerald bg-brand-emerald50/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center font-bold text-sm shrink-0">✓</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-brand-emerald">DO</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Use Emerald Green (#10B981) for active agent states, call-to-actions, status tags, and correct verifications.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-[#EF4444] bg-[#EF4444]/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center font-bold text-sm shrink-0">✕</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-[#EF4444]">DON'T</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Do not layer Emerald Green text on top of Teal Glow or white surfaces, as it fails contrast ratio check rules.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography Usage -->
+                <div class="space-y-4">
+                    <h3 class="font-heading font-bold text-lg border-b border-brand-border pb-2 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-teal"></span> Typography Usage
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-brand-emerald bg-brand-emerald50/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center font-bold text-sm shrink-0">✓</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-brand-emerald">DO</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Use Outfit font for major titles & headers, Inter for normal text copy, and Fira Code for code blocks, CLI commands, and keys.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-[#EF4444] bg-[#EF4444]/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center font-bold text-sm shrink-0">✕</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-[#EF4444]">DON'T</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Do not introduce other web fonts (such as comic or serif fonts) to telemetry dashboards, keeping UI highly technical.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo Manipulation -->
+                <div class="space-y-4">
+                    <h3 class="font-heading font-bold text-lg border-b border-brand-border pb-2 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-emerald"></span> Logo Integrity
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-brand-emerald bg-brand-emerald50/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center font-bold text-sm shrink-0">✓</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-brand-emerald">DO</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Maintain adequate safety margins (minimum 16px equivalent padding) around the logo icon and text variations.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-[#EF4444] bg-[#EF4444]/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center font-bold text-sm shrink-0">✕</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-[#EF4444]">DON'T</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Do not skew, stretch, rotate, recolor, or change the component structure of the glowing claw mark symbol.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout & Spacing -->
+                <div class="space-y-4">
+                    <h3 class="font-heading font-bold text-lg border-b border-brand-border pb-2 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-brand-teal"></span> Layout & Spacing
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-brand-emerald bg-brand-emerald50/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-brand-emerald/20 text-brand-emerald flex items-center justify-center font-bold text-sm shrink-0">✓</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-brand-emerald">DO</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Follow the 4dp/8dp grid system (4px, 8px, 16px, 24px, 32px, 64px) for all component borders, gaps, margins, and layout gutters.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-4 rounded-xl border-l-4 border-l-[#EF4444] bg-[#EF4444]/5">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center font-bold text-sm shrink-0">✕</div>
+                                <div>
+                                    <h4 class="font-heading font-bold text-sm text-[#EF4444]">DON'T</h4>
+                                    <p class="text-xs text-brand-textSecondary mt-1">Do not use random pixel margins (e.g. 13px, 27px, or 5px) which break alignment grids in production code.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="glass-panel border-t border-brand-border/80 mt-20 py-8 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono text-brand-textSecondary">
+            <div>
+                © 2026 OpenClaw RaaS Gateway. Released under BSL 1.1 License.
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="#mission" class="hover:text-brand-emerald">Top</a>
+                <span>•</span>
+                <span>Active Branch: main</span>
+                <span>•</span>
+                <span>Workspace: mekong-cli</span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

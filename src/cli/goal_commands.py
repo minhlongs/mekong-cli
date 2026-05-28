@@ -1,0 +1,257 @@
+"""Goal command group for the autonomous engineering OS vertical slice."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
+from src.mekongcli.core.verification import VerificationPipeline
+
+goal_app = typer.Typer(help="Goal: persistent autonomous mission execution")
+console = Console()
+
+
+def _engine(db_path: str | None = None) -> GoalEngine:
+    store = SQLiteGoalStore(db_path) if db_path else SQLiteGoalStore()
+    return GoalEngine(store=store, cwd=Path.cwd())
+
+
+def _print_json(payload: dict[str, Any] | list[Any]) -> None:
+    typer.echo(json.dumps(payload, indent=2, default=str))
+
+
+def _validate_profile(profile: str) -> None:
+    try:
+        VerificationPipeline.validate_profile(profile)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"must be one of: {VerificationPipeline.profile_options()}",
+            param_hint="--profile",
+        ) from exc
+
+
+def _goal_result_payload(
+    engine: GoalEngine,
+    goal_id: str,
+    title: str,
+    status: GoalStatus,
+    profile: str,
+) -> dict[str, Any]:
+    verification = engine.status(goal_id)["verification"] or {}
+    verification_results = verification.get("results") or []
+    failed_gates = [
+        result["name"]
+        for result in verification_results
+        if result.get("required") and not result.get("passed")
+    ]
+    return {
+        "id": goal_id,
+        "status": status.value,
+        "title": title,
+        "profile": profile,
+        "verification_passed": verification.get("passed"),
+        "failed_gates": failed_gates,
+    }
+
+
+@goal_app.command(name="create")
+def goal_create(
+    title: str = typer.Argument(..., help="Mission objective"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Create and persist a goal with a decomposed role-aware task graph."""
+    goal = _engine(db_path).create_goal(title)
+    payload = {"id": goal.id, "title": goal.title, "status": goal.status.value}
+    if json_output:
+        _print_json(payload)
+        return
+    console.print(
+        Panel(
+            f"[bold]ID:[/bold] {goal.id}\n"
+            f"[bold]Status:[/bold] [cyan]{goal.status.value}[/cyan]\n"
+            f"[bold]Goal:[/bold] {goal.title}",
+            title="Goal Created",
+            border_style="green",
+        )
+    )
+
+
+@goal_app.command(name="run")
+def goal_run(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    execute_commands: bool = typer.Option(False, "--execute-commands", help="Run task commands when present"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Run pending goal tasks, checkpoint progress, then verify."""
+    _validate_profile(profile)
+    engine = _engine(db_path)
+    try:
+        goal = engine.run_goal(
+            goal_id,
+            verification_profile=profile,
+            execute_commands=execute_commands,
+        )
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    except RuntimeError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1)
+
+    payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    if json_output:
+        _print_json(payload)
+        if goal.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
+        return
+    style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
+    console.print(
+        Panel(
+            f"[bold]ID:[/bold] {goal.id}\n"
+            f"[bold]Status:[/bold] [{style}]{goal.status.value}[/{style}]\n"
+            f"[bold]Verification Profile:[/bold] {profile}",
+            title="Goal Run Complete",
+            border_style=style,
+        )
+    )
+    if goal.status != GoalStatus.SATISFIED:
+        raise typer.Exit(code=1)
+
+
+@goal_app.command(name="resume")
+def goal_resume(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Resume a goal from persisted checkpoints."""
+    _validate_profile(profile)
+    engine = _engine(db_path)
+    try:
+        goal = engine.resume_goal(goal_id, verification_profile=profile)
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    except RuntimeError as exc:
+        console.print(f"[bold red]{exc}[/bold red]")
+        raise typer.Exit(code=1)
+    payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    if json_output:
+        _print_json(payload)
+        if goal.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
+        return
+    console.print(f"[green]Resumed[/green] {goal.id}: {goal.status.value}")
+    if goal.status != GoalStatus.SATISFIED:
+        raise typer.Exit(code=1)
+
+
+@goal_app.command(name="verify")
+def goal_verify(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Run verification gates and update goal satisfaction state."""
+    _validate_profile(profile)
+    engine = _engine(db_path)
+    try:
+        goal = engine.verify_goal(goal_id, verification_profile=profile)
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    if json_output:
+        _print_json(payload)
+        if goal.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
+        return
+    style = "green" if goal.status == GoalStatus.SATISFIED else "red"
+    console.print(f"[{style}]{goal.id}: {goal.status.value}[/{style}]")
+    if goal.status != GoalStatus.SATISFIED:
+        raise typer.Exit(code=1)
+
+
+@goal_app.command(name="status")
+def goal_status(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Show full persisted goal state, including tasks, gates, events, and memory."""
+    try:
+        snapshot = _engine(db_path).status(goal_id)
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    if json_output:
+        _print_json(snapshot)
+        return
+
+    goal = snapshot["goal"]
+    console.print(
+        Panel(
+            f"[bold]ID:[/bold] {goal['id']}\n"
+            f"[bold]Status:[/bold] {goal['status']}\n"
+            f"[bold]Title:[/bold] {goal['title']}",
+            title="Goal Status",
+            border_style="cyan",
+        )
+    )
+    table = Table(title="Tasks")
+    table.add_column("Role", style="cyan")
+    table.add_column("Status")
+    table.add_column("Title")
+    for task in snapshot["tasks"]:
+        table.add_row(task["role"], task["status"], task["title"])
+    console.print(table)
+
+
+@goal_app.command(name="list")
+def goal_list(
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """List persisted goals."""
+    goals = _engine(db_path).list_goals()
+    payload = [{"id": goal.id, "title": goal.title, "status": goal.status.value} for goal in goals]
+    if json_output:
+        _print_json(payload)
+        return
+    table = Table(title=f"Goals ({len(goals)})")
+    table.add_column("ID", style="cyan")
+    table.add_column("Status")
+    table.add_column("Title")
+    for goal in goals:
+        table.add_row(goal.id, goal.status.value, goal.title)
+    console.print(table)
+
+
+@goal_app.command(name="cancel")
+def goal_cancel(
+    goal_id: str = typer.Argument(..., help="Goal ID"),
+    db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
+) -> None:
+    """Cancel a goal and prevent future execution."""
+    try:
+        goal = _engine(db_path).cancel_goal(goal_id)
+    except KeyError:
+        console.print(f"[bold red]Goal not found:[/bold red] {goal_id}")
+        raise typer.Exit(code=1)
+    if json_output:
+        _print_json({"id": goal.id, "status": goal.status.value, "title": goal.title})
+        return
+    console.print(f"[yellow]Cancelled[/yellow] {goal.id}")

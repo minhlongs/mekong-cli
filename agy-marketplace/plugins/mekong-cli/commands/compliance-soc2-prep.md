@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.opencode/commands/compliance-soc2-prep.md

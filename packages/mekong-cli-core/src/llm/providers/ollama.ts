@@ -11,12 +11,12 @@ export class LocalLLMProvider implements LlmProvider {
   private baseUrl: string;
 
   constructor(baseUrl?: string, defaultModel?: string) {
-    this.baseUrl = baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11434';
+    this.baseUrl = baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:8001';
     this.inner = new OpenAICompatProvider({
       name: 'local-llm',
       baseUrl: this.baseUrl.endsWith('/v1') ? this.baseUrl : `${this.baseUrl}/v1`,
       apiKey: process.env.LLM_API_KEY ?? 'mlx',
-      defaultModel: defaultModel ?? process.env.LOCAL_LLM_MODEL ?? 'mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit',
+      defaultModel: defaultModel ?? process.env.LOCAL_LLM_MODEL ?? 'qwen3.6-35b',
     });
   }
 

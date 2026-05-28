@@ -3,12 +3,10 @@
 import subprocess
 from unittest.mock import patch
 
-import pytest
 
 from src.core.executor import RecipeExecutor
 from src.core.parser import Recipe, RecipeStep
 from src.core.pev_checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now
-from src.core.verifier import ExecutionResult
 
 
 # ---------------------------------------------------------------------------

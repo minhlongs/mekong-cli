@@ -13,7 +13,7 @@ def zip_folder(folder_path, output_path):
                 zipf.write(file_path, arcname)
 
 if __name__ == "__main__":
-    base_dir = '/Users/macbookprom1/mekong-cli'
+    base_dir = '/Users/macbook/mekong-cli'
     source_dir = os.path.join(base_dir, 'products/paid/search-index-kit')
     output_zip = os.path.join(base_dir, 'products/paid/search-index-kit-v1.0.0.zip')
     zip_folder(source_dir, output_zip)

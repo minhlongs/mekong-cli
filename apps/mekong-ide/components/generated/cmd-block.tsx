@@ -13,7 +13,7 @@ const CmdBlock: React.FC = () => {
 
   return (
     <div style={style}>
-      <span style={{ color: 'var(--accent-teal-400)', fontSize: 'var(--font-body-sm)', fontWeight: 'normal', fontFamily: 'Geist Mono' }}>cargo build --release 2>&1 | tail -5</span>
+      <span style={{ color: 'var(--accent-teal-400)', fontSize: 'var(--font-body-sm)', fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{"cargo build --release 2>&1 | tail -5"}</span>
     </div>
   );
 };

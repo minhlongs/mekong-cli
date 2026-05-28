@@ -14,6 +14,8 @@ while [[ $# -gt 0 ]]; do
     --model|-m) MODEL="$2"; shift 2;;
     --cwd) CWD="$2"; shift 2;;
     --interactive) INTERACTIVE=true; shift;;
+    --sandbox) export MEKONG_PERMISSION_MODE=ask; shift;;
+    --dangerously-skip-permissions) export MEKONG_PERMISSION_MODE=bypass; shift;;
     --timeout) TIMEOUT="$2"; shift 2;;
     *) PROMPT="$1"; shift;;
   esac
@@ -21,8 +23,22 @@ done
 
 cd "$CWD"
 
+# Resolve timeout command (macOS support)
+TIMEOUT_CMD="timeout"
+if ! command -v timeout >/dev/null 2>&1; then
+  if command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_CMD="gtimeout"
+  else
+    TIMEOUT_CMD=""
+  fi
+fi
+
 if [ "$INTERACTIVE" = true ]; then
   exec "$GEMINI_PATH"
 elif [ -n "$PROMPT" ]; then
-  timeout "$TIMEOUT" "$GEMINI_PATH" -p "$PROMPT"
+  if [ -n "$TIMEOUT_CMD" ]; then
+    exec "$TIMEOUT_CMD" "$TIMEOUT" "$GEMINI_PATH" -p "$PROMPT"
+  else
+    exec "$GEMINI_PATH" -p "$PROMPT"
+  fi
 fi

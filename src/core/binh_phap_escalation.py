@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 # Abstract escalation level → concrete provider config
 ESCALATION_PROVIDERS: dict[str, dict[str, str]] = {
     "local_mlx": {
-        "base_url": "http://localhost:11434/v1",
-        "model": "qwen2.5-coder:32b",
-        "provider_name": "m1max-mlx",
-        "fallback_url": "http://192.168.11.111:11434/v1",
-        "fallback_model": "qwen2.5-coder:32b",
-        "fallback_name": "m1max-ollama",
+        "base_url": "http://localhost:8001/v1",
+        "model": "qwen3.6-35b",
+        "provider_name": "rapid-mlx",
+        "fallback_url": "http://localhost:11434/v1",
+        "fallback_model": "qwen3.5-9b",
+        "fallback_name": "ollama-fallback",
     },
     "cloud_sonnet": {
         "base_url": "https://api.anthropic.com/v1",

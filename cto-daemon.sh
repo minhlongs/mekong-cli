@@ -135,6 +135,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Resolve dynamic first window index to support both base-index 0 and 1
+CTO_WINDOW=$(tmux list-windows -t "${CTO_SESSION}" -F '#{window_index}' 2>/dev/null | head -n 1 || echo "0")
+CTO_WIN="${CTO_SESSION}:${CTO_WINDOW}"
+
 # ---- INIT ----
 mkdir -p "$MEKONG_DIR"
 
@@ -438,13 +442,28 @@ refresh_worker_mapping() {
 }
 
 # ---- TMUX HELPERS ----
+get_pane_target() {
+  local idx=$1
+  local pane_ids=($(tmux list-panes -t "${CTO_WIN}" -F '#{pane_id}' 2>/dev/null))
+  echo "${pane_ids[$idx]:-}"
+}
+
 capture_pane() {
-  tmux capture-pane -t "${CTO_SESSION}:0.${1}" -p -S -50 2>/dev/null || echo ""
+  local target=$(get_pane_target "$1")
+  if [[ -n "$target" ]]; then
+    tmux capture-pane -t "$target" -p -S -50 2>/dev/null || echo ""
+  else
+    echo ""
+  fi
 }
 
 send_to_pane() {
   local pane_idx=$1; shift
   local cmd="$*"
+  local target=$(get_pane_target "$pane_idx")
+  if [[ -z "$target" ]]; then
+    return 1
+  fi
   if [[ "$cmd" != "1" ]]; then
     # ANTI-X2: If pane context > 30%, it already has work loaded — block new dispatch
     local ctx_check
@@ -483,18 +502,18 @@ send_to_pane() {
   fi
   # 7-LAYER FIX: Only Escape when in search/copy/rewind mode
   local pane_check
-  pane_check=$(tmux capture-pane -t "${CTO_SESSION}:0.${pane_idx}" -p 2>/dev/null | tail -5)
+  pane_check=$(tmux capture-pane -t "$target" -p 2>/dev/null | tail -5)
   if echo "$pane_check" | grep -qE "search:|copy mode|Rewind|Nothing to rewind"; then
-    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+    tmux send-keys -t "$target" Escape
     sleep 0.3
-    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Escape
+    tmux send-keys -t "$target" Escape
     sleep 0.5
   else
     sleep 0.2
   fi
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" -l "$cmd"
+  tmux send-keys -t "$target" -l "$cmd"
   sleep 0.3
-  tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
+  tmux send-keys -t "$target" Enter
 }
 
 # Launch/respawn a CLI pane via mekong-wrapper (unified entry point)
@@ -559,6 +578,22 @@ cleanup_orphan_nodes() {
     walk_descendants "$tpid"
   done
 
+  # Collect Codex CLI PIDs to protect them from orphan cleanup
+  # Codex is spawned detached by CLEO adapter (not in tmux pane tree)
+  # Match: @openai/codex (npm), .codex/codex (Rust binary), .codex/hooks/*.cjs (node hooks),
+  #        Pencil MCP server (used by codex), codex-tui
+  local codex_pids
+  codex_pids=$(pgrep -f '@openai/codex|\.codex/codex|\.codex/hooks/|codex-tui|Pencil\.app.*mcp-server' 2>/dev/null || true)
+  for cpid in $codex_pids; do
+    allowed_pids+=" $cpid"
+    # Also protect children of codex processes (subagent node workers)
+    local child_pids
+    child_pids=$(pgrep -P "$cpid" 2>/dev/null || true)
+    for chpid in $child_pids; do
+      allowed_pids+=" $chpid"
+    done
+  done
+
   # Find all node processes, kill those NOT in allowed set
   local all_nodes
   all_nodes=$(pgrep -f 'node' 2>/dev/null || true)
@@ -570,7 +605,9 @@ cleanup_orphan_nodes() {
     fi
   done
 
-  [[ $killed -gt 0 ]] && log "🧹 CLEANUP: killed $killed orphan node processes"
+  local codex_protected
+  codex_protected=$(echo "$codex_pids" | wc -l | tr -d ' ')
+  [[ $killed -gt 0 ]] && log "🧹 CLEANUP: killed $killed orphan node processes (protected ${codex_protected:-0} Codex PIDs)"
   return 0
 }
 
@@ -674,6 +711,13 @@ is_idle() {
   # IDLE: non-CC CLI tool prompts
   if echo "$output" | tail -2 | grep -qE "aider>|codex>|Type your message"; then
     return 0
+  fi
+
+  # IDLE: agy (Antigravity CLI) — "? for shortcuts" footer + no busy markers
+  if echo "$output" | tail -5 | grep -qE "\? for shortcuts"; then
+    if ! echo "$output" | tail -15 | grep -qE "Bash\(|Read \(|Write \(|Edit \(|Running\.\.\.|Thinking|Searching"; then
+      return 0
+    fi
   fi
 
   # Default: NOT idle (safe)
@@ -1226,18 +1270,22 @@ except: pass
 verify_worker() {
   local pane_idx=$1 output="$2"
   local name="${WORKER_NAME[$pane_idx]}"
+  local target=$(get_pane_target "$pane_idx")
+  if [[ -z "$target" ]]; then
+    return 0
+  fi
 
   # CC CLI selection dialogs — auto-select option 1 (Enter)
   if echo "$output" | tail -5 | grep -qE "Enter to select|↑/↓ to navigate|Esc to cancel"; then
     log "VERIFY P${pane_idx}: SELECTION DIALOG → Enter (pick default)"
-    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" Enter
+    tmux send-keys -t "$target" Enter
     return 0
   fi
 
   # FIX #18: CC CLI feedback survey — auto-dismiss (option 0) to unblock pane
   if echo "$output" | tail -5 | grep -qE "How is Claude doing.*session|1: Bad.*2: Fine.*3: Good.*0: Dismiss"; then
     log "VERIFY P${pane_idx}: FEEDBACK SURVEY → dismissing (0)"
-    tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" "0" Enter
+    tmux send-keys -t "$target" "0" Enter
     return 0
   fi
 
@@ -1257,7 +1305,7 @@ verify_worker() {
     if echo "$output" | tail -10 | grep -qE "git push|pushed to"; then
       if is_idle "$output"; then
         log "VERIFY P${pane_idx}: CI POLLING STUCK (commit done + idle) → Ctrl-C + /clear"
-        tmux send-keys -t "${CTO_SESSION}:0.${pane_idx}" C-c "" 2>/dev/null
+        tmux send-keys -t "$target" C-c "" 2>/dev/null
         sleep 1
         send_to_pane "$pane_idx" "/clear"
         save_memory "UNSTUCK" "P${pane_idx}: broke CI polling loop after commit"
@@ -1446,33 +1494,44 @@ log "============================================="
 if ! tmux has-session -t "${CTO_SESSION}" 2>/dev/null; then
   log "BOOTSTRAP: tmux session '${CTO_SESSION}' not found — creating with 3 panes"
   tmux new-session -d -s "${CTO_SESSION}" -x 200 -y 50
-  tmux split-window -t "${CTO_SESSION}:0" -h
-  tmux split-window -t "${CTO_SESSION}:0" -v
+  sleep 1
+  CTO_WINDOW=$(tmux list-windows -t "${CTO_SESSION}" -F '#{window_index}' 2>/dev/null | head -n 1 || echo "0")
+  CTO_WIN="${CTO_SESSION}:${CTO_WINDOW}"
+  tmux split-window -t "${CTO_WIN}" -h
+  tmux split-window -t "${CTO_WIN}" -v
   sleep 1
   log "BOOTSTRAP: tmux session '${CTO_SESSION}' created with 3 panes"
 
   # 7-LAYER BOOTSTRAP: Start mekong CLI in each pane
   sleep 2
   for p_idx in 0 1 2; do
-    tmux send-keys -t "${CTO_SESSION}:0.${p_idx}" "source ~/.zshrc 2>/dev/null && mekong --interactive" Enter
-    log "BOOTSTRAP: P${p_idx} -> mekong --interactive"
+    target=$(get_pane_target "$p_idx")
+    if [[ -n "$target" ]]; then
+      tmux send-keys -t "$target" "source ~/.zshrc 2>/dev/null && mekong --interactive" Enter
+      log "BOOTSTRAP: P${p_idx} -> mekong --interactive"
+    fi
   done
   sleep 10  # Wait for CC CLI boot + trust
   for p_idx in 0 1 2; do
-    p_content=$(tmux capture-pane -t "${CTO_SESSION}:0.${p_idx}" -p 2>/dev/null | tail -10)
-    if echo "$p_content" | grep -q "trust this folder"; then
-      tmux send-keys -t "${CTO_SESSION}:0.${p_idx}" Enter
-      log "BOOTSTRAP: P${p_idx} -> confirmed trust"
+    target=$(get_pane_target "$p_idx")
+    if [[ -n "$target" ]]; then
+      p_content=$(tmux capture-pane -t "$target" -p 2>/dev/null | tail -10)
+      if echo "$p_content" | grep -q "trust this folder"; then
+        tmux send-keys -t "$target" Enter
+        log "BOOTSTRAP: P${p_idx} -> confirmed trust"
+      fi
     fi
   done
   sleep 5
 else
+  CTO_WINDOW=$(tmux list-windows -t "${CTO_SESSION}" -F '#{window_index}' 2>/dev/null | head -n 1 || echo "0")
+  CTO_WIN="${CTO_SESSION}:${CTO_WINDOW}"
   # Verify pane count
-  pane_count=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
+  pane_count=$(tmux list-panes -t "${CTO_WIN}" 2>/dev/null | wc -l | tr -d ' ')
   if [[ "$pane_count" -lt 4 ]]; then
     log "BOOTSTRAP: Only ${pane_count} panes in '${CTO_SESSION}' — adding missing panes"
     while [[ "$pane_count" -lt 4 ]]; do
-      tmux split-window -t "${CTO_SESSION}:0" 2>/dev/null || break
+      tmux split-window -t "${CTO_WIN}" 2>/dev/null || break
       pane_count=$((pane_count + 1))
     done
   fi
@@ -1480,7 +1539,7 @@ else
 fi
 
 # FIX #19: Dynamic pane count — never hardcode 4 (departments have 2)
-PANE_COUNT=$(tmux list-panes -t "${CTO_SESSION}:0" 2>/dev/null | wc -l | tr -d ' ')
+PANE_COUNT=$(tmux list-panes -t "${CTO_WIN}" 2>/dev/null | wc -l | tr -d ' ')
 PANE_COUNT=${PANE_COUNT:-4}
 log "PANE_COUNT: ${PANE_COUNT}"
 

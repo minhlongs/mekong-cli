@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.claude/commands/engineering-new-service.md

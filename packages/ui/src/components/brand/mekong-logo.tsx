@@ -14,7 +14,7 @@ const MekongLogo = React.forwardRef<SVGSVGElement, MekongLogoProps>(
       height={size}
       viewBox="0 0 48 48"
       fill="none"
-      className={cn("text-current", className)}
+      className={cn("textCurrent", className)}
       ref={ref}
       {...props}
     >

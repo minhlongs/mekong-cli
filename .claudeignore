@@ -1,0 +1,12 @@
+.agents/
+.gemini/
+.claude/
+.codex/
+__pycache__/
+*.pyc
+node_modules/
+.git/
+*.log
+run_validation.log
+active-plan
+agent-memory/

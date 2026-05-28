@@ -1,6 +1,6 @@
 #!/bin/bash
 # 🚀 Start Gemini CLI with PayPal MCP environment
-cd /Users/macbookprom1/mekong-cli
+cd /Users/macbook/mekong-cli
 
 # Load environment variables from .env
 if [ -f .env ]; then

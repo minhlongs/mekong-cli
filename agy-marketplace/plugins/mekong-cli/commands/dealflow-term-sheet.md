@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.opencode/commands/dealflow-term-sheet.md

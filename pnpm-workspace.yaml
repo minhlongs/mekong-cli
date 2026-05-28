@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
+  - '!packages/cleo-new'
   - 'packages/core/*'
   - 'packages/integrations/*'
   - 'packages/business/*'

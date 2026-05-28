@@ -8,17 +8,31 @@
     ".opencode/agent/*.md"
   ],
   "provider": {
+    "ollama": {
+      "models": {
+        "qwen2.5-coder:7b": { "name": "Qwen 2.5 Coder 7B", "default": true },
+        "qwen2.5-coder:32b": { "name": "Qwen 2.5 Coder 32B" },
+        "deepseek-r1:32b": { "name": "DeepSeek R1 32B" }
+      }
+    },
     "openai-compatible": {
       "options": {
         "baseURL": "http://localhost:11437/v1",
         "apiKey": "mlx"
       },
       "models": {
-        "qwen3.6-35b": {
-          "name": "Qwen 3.6 35B (rapid-mlx local)",
-          "default": true
+        "mlx-community/Qwen3.6-35B-A3B-4bit": {
+          "name": "Qwen 3.6 35B A3B 4bit (rapid-mlx)",
+          "default": false
         }
       }
+    }
+  },
+  "mcp": {
+    "mekong-ai-os": {
+      "command": ["python3", "-m", "src.core.mcp_server"],
+      "enabled": true,
+      "type": "local"
     }
   }
 }

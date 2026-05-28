@@ -1,6 +1,5 @@
 """Tests for MCU Billing — Condition C4 credit accounting system."""
 
-import sqlite3
 
 import pytest
 
