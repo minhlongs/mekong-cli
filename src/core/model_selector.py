@@ -60,17 +60,17 @@ MODEL_ROUTING_MATRIX: dict[tuple[str, str, bool | str, str], str] = {
     ("coo", "standard", False, "*"): "mlx:llama3.2:3b",
     ("coo", "complex", False, "*"): "mlx:llama3.2:3b",
     # CFO/DATA: ANALYSIS
-    ("cfo", "simple", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("cfo", "simple", False, "sensitive"): "mlx:qwen3.6:35b",
     ("cfo", "simple", False, "public"): "gemini-2.0-flash-lite",
-    ("cfo", "standard", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("cfo", "standard", False, "sensitive"): "mlx:qwen3.6:35b",
     ("cfo", "standard", False, "public"): "gemini-2.0-flash-lite",
-    ("cfo", "complex", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("cfo", "complex", False, "sensitive"): "mlx:qwen3.6:35b",
     ("cfo", "complex", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "simple", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("data", "simple", False, "sensitive"): "mlx:qwen3.6:35b",
     ("data", "simple", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "standard", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("data", "standard", False, "sensitive"): "mlx:qwen3.6:35b",
     ("data", "standard", False, "public"): "gemini-2.0-flash-lite",
-    ("data", "complex", False, "sensitive"): "mlx:qwen2.5:7b",
+    ("data", "complex", False, "sensitive"): "mlx:qwen3.6:35b",
     ("data", "complex", False, "public"): "gemini-2.0-flash-lite",
     # CS: SUPPORT
     ("cs", "simple", False, "*"): "mlx:mistral:7b",
@@ -95,7 +95,7 @@ CONTEXT_WINDOW_MAP: dict[str, int] = {
     "mlx:deepseek-coder-v2:16b": 128000,
     "mlx:llama3.2:3b": 128000,
     "mlx:llama3.3:70b": 128000,
-    "mlx:qwen2.5:7b": 128000,
+    "mlx:qwen3.6:35b": 262000,
     "mlx:mistral:7b": 32000,
 }
 
@@ -110,21 +110,23 @@ TEMP_MAP: dict[str, float] = {
 
 # Best local model per domain (for starter tier override)
 BEST_LOCAL_FOR_DOMAIN: dict[str, str] = {
-    "code": "mlx:deepseek-coder-v2:16b",
-    "creative": "mlx:llama3.2:3b",
-    "ops": "mlx:llama3.2:3b",
-    "analysis": "mlx:qwen2.5:7b",
-    "sales": "mlx:mistral:7b",
-    "support": "mlx:mistral:7b",
+    "code": "mlx:qwen3.6:35b",
+    "creative": "mlx:qwen3.6:35b",
+    "ops": "mlx:qwen3.6:35b",
+    "analysis": "mlx:qwen3.6:35b",
+    "sales": "mlx:qwen3.6:35b",
+    "support": "mlx:qwen3.6:35b",
 }
 
 # Smaller local model fallback for VRAM pressure
 LOCAL_DOWNGRADE: dict[str, str] = {
-    "mlx:deepseek-coder-v2:33b": "mlx:deepseek-coder-v2:16b",
-    "mlx:deepseek-coder-v2:16b": "mlx:llama3.2:3b",
-    "mlx:llama3.3:70b": "mlx:deepseek-coder-v2:33b",
-    "mlx:qwen2.5:7b": "mlx:llama3.2:3b",
-    "mlx:mistral:7b": "mlx:llama3.2:3b",
+    "mlx:qwen3.6:35b": "mlx:qwen3.5:9b",
+    "mlx:qwen3.5:27b": "mlx:qwen3.5:9b",
+    "mlx:qwen3.5:9b": "mlx:qwen3.5:4b",
+    "mlx:deepseek-coder-v2:33b": "mlx:qwen3.5:9b",
+    "mlx:deepseek-coder-v2:16b": "mlx:qwen3.5:4b",
+    "mlx:llama3.3:70b": "mlx:qwen3.5:27b",
+    "mlx:mistral:7b": "mlx:qwen3.5:4b",
 }
 
 
@@ -270,14 +272,13 @@ def select_model(profile: TaskProfile, state: SystemState) -> ModelConfig:
 # When task is mechanical, use cheaper model regardless of agent role
 
 # Smart routing: right model for right task on M1 Max 64GB
-# qwen3-coder-next = coding/technical (SOTA agentic coding)
-# qwen3:32b = general content/business (broad knowledge)
-# qwen2.5-coder:7b = fast simple tasks (1.3s)
-# deepseek-r1:32b = heavy reasoning (security, analysis)
+# qwen3.6-35b = primary local model (256 MoE experts, 262K context)
+# qwen3.5:9b = lightweight fallback (6.6GB, fast)
+# qwen3.5:4b = ultra-fast simple tasks
 TASK_TIER_OVERRIDE: dict[str, str | None] = {
-    "mechanical": "ollama:qwen2.5-coder:7b",     # fast: simple tasks, 1.3s
-    "integration": "ollama:qwen3-coder-next",     # coding/agentic workflows
-    "architecture": "ollama:qwen3:32b",           # broad reasoning + content
+    "mechanical": "ollama:qwen3.6-35b",          # fast: simple tasks via Rapid-MLX
+    "integration": "ollama:qwen3.6-35b",          # coding/agentic workflows
+    "architecture": "ollama:qwen3.6-35b",         # broad reasoning + content
 }
 
 

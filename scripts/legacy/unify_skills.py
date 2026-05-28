@@ -235,7 +235,7 @@ When adding new skills:
         readme_path.write_text(readme_content, encoding='utf-8')
 
 if __name__ == "__main__":
-    project_root = "/Users/macbookprom1/mekong-cli"
+    project_root = "/Users/macbook/mekong-cli"
     unifier = SkillUnifier(project_root)
     registry = unifier.run()
     

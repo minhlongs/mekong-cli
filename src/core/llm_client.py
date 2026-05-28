@@ -111,7 +111,7 @@ class LLMClient:
             providers: Explicit provider list. If None, auto-detects from env vars.
 
         """
-        self.model = model or os.getenv("LLM_MODEL", "qwen2.5-coder:7b")
+        self.model = model or os.getenv("LLM_MODEL", "qwen3.6-35b")
         self.timeout = timeout
 
         # Keep legacy attrs for backward compat (some callers read them directly)
@@ -295,10 +295,10 @@ class LLMClient:
         if google_key:
             built.append(GeminiProvider(api_key=google_key, model=self.model))
 
-        # Local LLM — MLX preferred, Ollama fallback
+        # Local LLM — Rapid-MLX preferred, Ollama fallback
         local_url = os.getenv("LOCAL_LLM_URL", "")
         ollama_url = os.getenv("OLLAMA_BASE_URL", "")
-        local_model = os.getenv("LOCAL_LLM_MODEL", "") or os.getenv("OLLAMA_MODEL", "llama3.2")
+        local_model = os.getenv("LOCAL_LLM_MODEL", "") or os.getenv("OLLAMA_MODEL", "qwen3.6-35b")
 
         if local_url:
             built.append(
@@ -313,7 +313,7 @@ class LLMClient:
         elif ollama_url or self._check_local_llm_running():
             built.append(
                 OpenAICompatibleProvider(
-                    base_url=ollama_url or "http://localhost:11434/v1",
+                    base_url=ollama_url or "http://localhost:8001/v1",
                     api_key="mlx",
                     model=local_model,
                     provider_name="local-llm",
@@ -345,7 +345,7 @@ class LLMClient:
         """Probe local LLM health endpoint (cached after first check)."""
         if LLMClient._local_llm_cache is not None:
             return LLMClient._local_llm_cache
-        for port in (11434, 11435):
+        for port in (8001, 11434, 11435):
             try:
                 resp = requests.get(
                     f"http://127.0.0.1:{port}/v1/models", timeout=1
@@ -533,14 +533,20 @@ class LLMClient:
         response = self.chat(messages, json_mode=True, **kwargs)
 
         try:
-            return dict(json.loads(response.content))
+            parsed = json.loads(response.content)
+            if isinstance(parsed, list):
+                return parsed
+            return dict(parsed)
         except json.JSONDecodeError:
             json_match = re.search(
                 r"```(?:json)?\s*\n(.*?)\n```", response.content, re.DOTALL,
             )
             if json_match:
                 try:
-                    return dict(json.loads(json_match.group(1)))
+                    parsed_match = json.loads(json_match.group(1))
+                    if isinstance(parsed_match, list):
+                        return parsed_match
+                    return dict(parsed_match)
                 except json.JSONDecodeError:
                     pass
             return {"raw_content": response.content}

@@ -12,7 +12,7 @@ export interface TerminalDemoProps extends React.HTMLAttributes<HTMLDivElement> 
 const TerminalDemo = React.forwardRef<HTMLDivElement, TerminalDemoProps>(
   ({ className, command = 'mekong cook "Build landing page"', lines = [], typingSpeed = 50, ...props }, ref) => {
     const [displayed, setDisplayed] = React.useState("");
-    const [lineIndex, setLineIndex] = React.useState(-1);
+    const [lineIndex, setLineIndex] = React.useState(1);
     const [showCursor, setShowCursor] = React.useState(true);
 
     React.useEffect(() => {
@@ -39,28 +39,28 @@ const TerminalDemo = React.forwardRef<HTMLDivElement, TerminalDemoProps>(
     return (
       <div
         className={cn(
-          "w-full max-w-2xl overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-neutral-800)] bg-[var(--color-neutral-950)] shadow-[var(--shadow-lg)]",
+          "wFull maxW2xl overflowHidden rounded-[var(-RadiusXl)] border border-[var(-ColorNeutral800)] bg-[var(-ColorNeutral950)] shadow-[var(-ShadowLg)]",
           className
         )}
         ref={ref}
         {...props}
       >
-        <div className="flex items-center gap-2 border-b border-[var(--color-neutral-800)] px-4 py-2.5">
-          <span className="h-3 w-3 rounded-full bg-[var(--color-danger-500)]" />
-          <span className="h-3 w-3 rounded-full bg-[var(--color-warning-500)]" />
-          <span className="h-3 w-3 rounded-full bg-[var(--color-success-500)]" />
-          <span className="ml-2 text-[var(--font-size-xs)] text-[var(--color-neutral-500)]">
+        <div className="flex itemsCenter gap2 borderB border-[var(-ColorNeutral800)] px4 py2.5">
+          <span className="h3 w3 roundedFull bg-[var(-ColorDanger500)]" />
+          <span className="h3 w3 roundedFull bg-[var(-ColorWarning500)]" />
+          <span className="h3 w3 roundedFull bg-[var(-ColorSuccess500)]" />
+          <span className="ml2 text-[var(-FontSizeXs)] text-[var(-ColorNeutral500)]">
             terminal
           </span>
         </div>
-        <div className="p-4 font-mono text-[var(--font-size-sm)] leading-relaxed">
+        <div className="p4 fontMono text-[var(-FontSizeSm)] leadingRelaxed">
           <div>
-            <span className="text-[var(--color-success-500)]">$ </span>
-            <span className="text-[var(--color-neutral-100)]">{displayed}</span>
-            {showCursor && <span className="animate-pulse text-[var(--accent)]">|</span>}
+            <span className="text-[var(-ColorSuccess500)]">$ </span>
+            <span className="text-[var(-ColorNeutral100)]">{displayed}</span>
+            {showCursor && <span className="animatePulse text-[var(-Accent)]">|</span>}
           </div>
           {lineIndex >= 0 && lines.slice(0, lineIndex + 1).map((line, i) => (
-            <div key={i} className="text-[var(--color-neutral-400)]">{line}</div>
+            <div key={i} className="text-[var(-ColorNeutral400)]">{line}</div>
           ))}
         </div>
       </div>

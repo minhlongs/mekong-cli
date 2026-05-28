@@ -444,12 +444,13 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
         description_lower = task.get("description", "").lower()
 
         # File creation tasks
-        if "create" in description_lower or "generate" in description_lower:
+        if ("create" in description_lower or "generate" in description_lower) and "directory" not in description_lower and "folder" not in description_lower:
             # Try to extract filename (basic pattern matching)
             words = task.get("description", "").split()
             for word in words:
-                if "." in word:  # Likely a filename
-                    criteria.file_exists.append(word)
+                clean_word = word.strip("',\"()[]{}")
+                if "." in clean_word and not clean_word.startswith("/") and "/" not in clean_word:
+                    criteria.file_exists.append(clean_word)
 
         # Test tasks
         if "test" in description_lower:

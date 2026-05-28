@@ -12,17 +12,17 @@ from src.core.local_adapter import LocalLLMAdapter, OllamaAdapter, QUANTIZATION_
 class TestQuantizationMap:
     def test_all_models_have_quant(self):
         expected = [
-            "llama3.3:70b", "deepseek-coder-v2:33b", "deepseek-coder-v2:16b",
-            "llama3.2:3b", "qwen2.5:7b", "mistral:7b",
+            "qwen3.6-35b", "qwen3.5-35b", "qwen3.5-27b",
+            "qwen3.5-9b", "qwen3.5-4b", "deepseek-r1:32b", "nemotron-30b",
         ]
         for model in expected:
             assert model in QUANTIZATION_MAP
 
     def test_small_model_higher_quant(self):
-        assert QUANTIZATION_MAP["llama3.2:3b"] == "q8_0"  # full quant for tiny
+        assert QUANTIZATION_MAP["qwen3.5-4b"] == "q8_0"  # full quant for tiny
 
     def test_large_model_lower_quant(self):
-        assert QUANTIZATION_MAP["llama3.3:70b"] == "q4_K_M"  # save VRAM
+        assert QUANTIZATION_MAP["qwen3.6-35b"] == "q4_K_M"  # save VRAM
 
 
 class TestBackwardCompat:
@@ -34,7 +34,7 @@ class TestBackwardCompat:
 class TestLocalLLMAdapterInit:
     def test_default_base_url(self):
         adapter = LocalLLMAdapter()
-        assert "11434" in adapter.base_url
+        assert "8001" in adapter.base_url
 
     def test_custom_base_url(self):
         adapter = LocalLLMAdapter(base_url="http://custom:8080/v1")

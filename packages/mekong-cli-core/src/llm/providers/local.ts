@@ -41,13 +41,13 @@ export class LocalProvider implements LlmProvider {
       });
     } else if (backend === 'mlx') {
       // MLX (Apple Silicon optimized — preferred)
-      const baseUrl = config.baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:11434';
+      const baseUrl = config.baseUrl ?? process.env.LOCAL_LLM_URL ?? 'http://localhost:8001';
       this.healthUrl = baseUrl.endsWith('/v1') ? `${baseUrl}/models` : `${baseUrl}/v1/models`;
       this.inner = new OpenAICompatProvider({
         name: this.name,
         baseUrl: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
         apiKey: process.env.LLM_API_KEY ?? 'mlx',
-        defaultModel: config.defaultModel ?? 'mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit',
+        defaultModel: config.defaultModel ?? 'qwen3.6-35b',
       });
     } else {
       // Ollama (cross-platform fallback)

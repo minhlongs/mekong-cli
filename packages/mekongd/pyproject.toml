@@ -11,7 +11,7 @@ packages = [{include = "mekongd", from = "src"}]
 mekongd = "mekongd.cli:app"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.14"
+python = ">=3.11,<3.16"
 typer = ">=0.12.0"
 rich = "^13.7.0"
 pydantic = "^2.5.0"
@@ -19,7 +19,7 @@ pydantic-settings = "^2.1.0"
 fastapi = "^0.109.0"
 uvicorn = {extras = ["standard"], version = "^0.27.0"}
 sse-starlette = "^2.0.0"
-httpx = ">=0.26.0"
+httpx = ">=0.26.0,<0.28"
 tomli = "^2.0.0"
 
 [tool.poetry.group.mlx.dependencies]

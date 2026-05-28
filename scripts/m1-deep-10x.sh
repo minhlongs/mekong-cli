@@ -36,8 +36,8 @@ while true; do
   done
   
   # Remove massive node_modules log buildups secretly created by agents running endlessly
-  find /Users/macbookprom1/mekong-cli -name "*.log" -size +100M -exec truncate -s 0 {} \; 2>/dev/null
-  find /Users/macbookprom1/.npm/_logs -name "*.log" -delete 2>/dev/null
+  find /Users/macbook/mekong-cli -name "*.log" -size +100M -exec truncate -s 0 {} \; 2>/dev/null
+  find /Users/macbook/.npm/_logs -name "*.log" -delete 2>/dev/null
 
   echo "[$(date '+%H:%M:%S')] Deep 10x Check. Load: $LOAD. Free Pages: $MEM_FREE" >> $LOG
   

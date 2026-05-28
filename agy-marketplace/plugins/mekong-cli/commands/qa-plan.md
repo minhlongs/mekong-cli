@@ -1,0 +1,1 @@
+/Users/macbook/mekong-cli/.opencode/commands/qa-plan.md

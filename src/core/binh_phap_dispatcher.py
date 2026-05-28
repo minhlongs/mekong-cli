@@ -232,7 +232,7 @@ class BinhPhapDispatcher:
                 fallback = OpenAICompatibleProvider(
                     base_url=config.get("fallback_url", "http://localhost:11434/v1"),
                     api_key="local",
-                    model=config.get("fallback_model", "qwen2.5-coder:32b"),
+                    model=config.get("fallback_model", "qwen3.5-9b"),
                     provider_name=config.get("fallback_name", "ollama-fallback"),
                     timeout=120,
                 )

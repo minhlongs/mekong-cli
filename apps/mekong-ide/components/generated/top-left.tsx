@@ -10,13 +10,13 @@ const TopLeft: React.FC = () => {
   return (
     <div style={style}>
       <LogoFrame />
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>></span>
+      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{">"}</span>
       <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist' }}>mekong-cli</span>
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>></span>
+      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{">"}</span>
       <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist' }}>ide-core</span>
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>></span>
+      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{">"}</span>
       <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 'normal', fontFamily: 'Geist' }}>orchestrator</span>
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>></span>
+      <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 'normal', fontFamily: 'Geist Mono' }}>{">"}</span>
       <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: '600', fontFamily: 'Geist' }}>src</span>
     </div>
   );

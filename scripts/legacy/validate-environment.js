@@ -1,6 +1,5 @@
 // Environment validation script for AgencyOS deployment
 const fs = require("fs");
-const path = require("path");
 
 const requiredEnvVars = {
   // Supabase

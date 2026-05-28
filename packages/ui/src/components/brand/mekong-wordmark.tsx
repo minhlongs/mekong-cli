@@ -9,16 +9,16 @@ export interface MekongWordmarkProps extends React.HTMLAttributes<HTMLDivElement
 
 const MekongWordmark = React.forwardRef<HTMLDivElement, MekongWordmarkProps>(
   ({ className, showSubtitle = true, ...props }, ref) => (
-    <div className={cn("flex flex-col", className)} ref={ref} {...props}>
+    <div className={cn("flex flexCol", className)} ref={ref} {...props}>
       <span
-        className="font-sans text-[var(--font-size-2xl)] font-bold tracking-[0.05em] text-[var(--text-primary)]"
+        className="fontSans text-[var(-FontSize2xl)] fontBold tracking-[0.05em] text-[var(-TextPrimary)]"
         style={{ fontWeight: 700 }}
       >
         MEKONG
       </span>
       {showSubtitle && (
         <span
-          className="text-[var(--font-size-sm)] font-normal tracking-wide text-[var(--text-secondary)]"
+          className="text-[var(-FontSizeSm)] fontNormal trackingWide text-[var(-TextSecondary)]"
           style={{ fontWeight: 400 }}
         >
           Binh Pháp Venture Studio

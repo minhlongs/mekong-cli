@@ -7,9 +7,7 @@ if (!DASHSCOPE_API_KEY) {
     process.exit(1);
 }
 
-const TASK_FILE = '/Users/macbookprom1/mekong-cli/tasks/CRITICAL_RAAS_UNIFICATION.txt';
-// Optional: also load the plan if it exists
-const PLAN_FILE = '/Users/macbookprom1/mekong-cli/plans/260309-2004-monorepo-restructure/phase-0a-extract-public.md';
+const TASK_FILE = '/Users/macbook/mekong-cli/tasks/CRITICAL_RAAS_UNIFICATION.txt';
 
 const LOG_FILE = '/tmp/opus_qwen_watcher.log';
 
@@ -22,14 +20,18 @@ function log(msg) {
 function getOpusPane() {
     try {
         return execSync('tmux capture-pane -t opus_algo:0.0 -p 2>/dev/null | tail -n 35', { encoding: 'utf-8' });
-    } catch (e) {
+    } catch {
         return "";
     }
 }
 
 async function askQwen(paneOutput) {
     let taskInfo = "No task file found.";
-    try { taskInfo = fs.readFileSync(TASK_FILE, 'utf-8'); } catch (e) { }
+    try {
+        taskInfo = fs.readFileSync(TASK_FILE, 'utf-8');
+    } catch {
+        // Task file not found, use default message
+    }
 
     const prompt = `You are a Grandmaster CTO AI. You are monitoring a sub-agent named Opus 4.6 running in Tmux.
 The overall mission is:

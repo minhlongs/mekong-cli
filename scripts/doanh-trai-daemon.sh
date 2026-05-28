@@ -152,7 +152,7 @@ respawn_pane() {
   local session=$1 pane_idx=$2
   log "RESPAWN ${session}:${pane_idx} — launching CC CLI"
   tmux send-keys -t "${session}:0.${pane_idx}" \
-    "cd ${PROJECT_ROOT} && claude --dangerously-skip-permissions" Enter 2>/dev/null
+    "cd ${PROJECT_ROOT} && bash scripts/mekong-wrapper.sh --dangerously-skip-permissions" Enter 2>/dev/null
 }
 
 # ---- BRAIN DISPATCH (dept-aware) ----

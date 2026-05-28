@@ -7,7 +7,7 @@ set -uo pipefail
 
 PID_FILE="/tmp/m1-guardian.pid"
 LOG="/tmp/m1-guardian.log"
-COOLER_SCRIPT="/Users/macbookprom1/mekong-cli/scripts/m1-cooler.sh"
+COOLER_SCRIPT="/Users/macbook/mekong-cli/scripts/m1-cooler.sh"
 TMUX_SESSION="tom_hum"
 
 echo $$ > "$PID_FILE"

@@ -330,6 +330,30 @@ class RecipeExecutor:
     def _execute_shell_step(self, step: RecipeStep) -> ExecutionResult:
         """Execute shell command step with automatic retry on failure."""
         command = step.description.strip()
+        import re
+
+        # Extract embedded command if present (e.g. wrapped in backticks or with prefixes)
+        backtick_matches = re.findall(r"`([^`]+)`", command)
+        if backtick_matches:
+            if len(backtick_matches) == 1:
+                command = backtick_matches[0].strip()
+            else:
+                command = backtick_matches[-1].strip()
+        else:
+            if "command to execute is:" in command.lower():
+                parts = re.split(r"(?i)command to execute is:\s*", command)
+                if len(parts) > 1:
+                    command = parts[-1].strip()
+            elif "command is:" in command.lower():
+                parts = re.split(r"(?i)command is:\s*", command)
+                if len(parts) > 1:
+                    command = parts[-1].strip()
+            elif "command:" in command.lower():
+                parts = re.split(r"(?i)command:\s*", command)
+                if len(parts) > 1:
+                    command = parts[-1].strip()
+
+        command = command.strip("`'\" ").strip()
 
         if not command:
             self.console.print("[yellow]Skipping empty step[/yellow]")
@@ -343,11 +367,12 @@ class RecipeExecutor:
         # Sanitize command before execution
         sanitizer = CommandSanitizer()
         if not sanitizer.is_safe_command(command):
-            self.console.print(f"[red]BLOCKED:[/red] Unsafe command: {command}")
+            res = sanitizer.sanitize(command)
+            self.console.print(f"[red]BLOCKED:[/red] Unsafe command: {command}. Reason: {res.blocked_reason}. Patterns: {res.blocked_patterns}. Warnings: {res.warnings}")
             return ExecutionResult(
                 exit_code=1,
                 stdout="",
-                stderr=f"Command blocked by sanitizer: {command}",
+                stderr=f"Command blocked by sanitizer: {command}. Reason: {res.blocked_reason}",
                 metadata={"mode": "shell", "blocked": True},
             )
 

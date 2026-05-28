@@ -22,6 +22,7 @@ def build_app() -> typer.Typer:
     from src.cli.swarm_commands import swarm_app
     from src.cli.schedule_commands import schedule_app
     from src.cli.memory_commands import memory_app
+    from src.cli.goal_commands import goal_app
     from src.cli.autonomous_commands import autonomous_app, telegram_app
     from src.cli.tools_browse_collab_commands import tools_app, browse_app, collab_app
 
@@ -33,6 +34,7 @@ def build_app() -> typer.Typer:
 
     # Phase-03 flat commands (signals loop)
     from src.cli.commands.metrics import register as register_metrics
+    from src.cli.commands.algo_status import register as register_algo_status
     from src.cli.commands.eval_agent import register as register_eval_agent
 
     # Flat command group registrations
@@ -62,6 +64,7 @@ def build_app() -> typer.Typer:
     root.add_typer(swarm_app, name="swarm")
     root.add_typer(schedule_app, name="schedule")
     root.add_typer(memory_app, name="memory")
+    root.add_typer(goal_app, name="goal")
     root.add_typer(telegram_app, name="telegram")
     root.add_typer(autonomous_app, name="autonomous")
     root.add_typer(tools_app, name="tools")
@@ -82,6 +85,7 @@ def build_app() -> typer.Typer:
 
     # Phase-03 signals commands (metrics + offline evals)
     register_metrics(root)
+    register_algo_status(root)
     register_eval_agent(root)
 
     return root

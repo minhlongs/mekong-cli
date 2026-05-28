@@ -4,14 +4,14 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const severityDot = cva("inline-block h-2 w-2 rounded-full", {
+const severityDot = cva("inlineBlock h2 w2 roundedFull", {
   variants: {
     severity: {
-      critical: "bg-[var(--status-error)]",
-      high: "bg-[var(--status-warning)]",
-      medium: "bg-[var(--accent-teal-400)]",
-      low: "bg-[var(--status-idle)]",
-      info: "bg-[var(--model-qwen)]",
+      critical: "bg-[var(-StatusError)]",
+      high: "bg-[var(-StatusWarning)]",
+      medium: "bg-[var(-AccentTeal400)]",
+      low: "bg-[var(-StatusIdle)]",
+      info: "bg-[var(-ModelQwen)]",
     },
   },
   defaultVariants: { severity: "info" },
@@ -33,30 +33,30 @@ const ThreatFeed = React.forwardRef<HTMLDivElement, ThreatFeedProps>(
     <div
       ref={ref}
       className={cn(
-        "flex flex-col rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden",
+        "flex flexCol rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] overflowHidden",
         className
       )}
       {...props}
     >
-      <div className="border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-sm)]">
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">
+      <div className="borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingSm)]">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">
           Threat Feed
         </span>
       </div>
-      <div className="flex max-h-80 flex-col overflow-y-auto">
+      <div className="flex maxH80 flexCol overflowYAuto">
         {events.map((event, i) => (
           <div
             key={i}
-            className="flex items-center gap-[var(--spacing-md)] border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-sm)] last:border-b-0 hover:bg-[var(--surface-hover)]"
+            className="flex itemsCenter gap-[var(-SpacingMd)] borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingSm)] last:borderB0 hover:bg-[var(-SurfaceHover)]"
           >
             <span className={severityDot({ severity: event.severity })} />
-            <span className="min-w-[60px] font-mono text-[var(--font-xs)] text-[var(--text-muted)]">
+            <span className="minW-[60px] fontMono text-[var(-FontXs)] text-[var(-TextMuted)]">
               {event.time}
             </span>
-            <span className="flex-1 text-[var(--font-sm)] text-[var(--text-primary)]">
+            <span className="flex1 text-[var(-FontSm)] text-[var(-TextPrimary)]">
               {event.type}
             </span>
-            <span className="text-[var(--font-xs)] text-[var(--text-secondary)]">
+            <span className="text-[var(-FontXs)] text-[var(-TextSecondary)]">
               {event.source}
             </span>
           </div>

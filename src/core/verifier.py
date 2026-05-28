@@ -112,29 +112,37 @@ class RecipeVerifier:
             actual=result.exit_code,
         )
 
-    def verify_file_exists(self, filepath: str) -> VerificationCheck:
+    def verify_file_exists(self, filepath: str, result: ExecutionResult | None = None) -> VerificationCheck:
         """Verify file existence.
 
         Args:
             filepath: Path to check
+            result: Optional execution result to help resolve paths
 
         Returns:
             VerificationCheck result
 
         """
         path = Path(filepath)
+        if not path.is_absolute() and result and result.metadata:
+            cmd = result.metadata.get("command", "")
+            import re
+            match = re.search(r"(/[^\s'\"`]+/)??" + re.escape(filepath), cmd)
+            if match:
+                path = Path(match.group(0))
+
         if path.exists():
             return VerificationCheck(
                 name=f"file_exists:{filepath}",
                 status=VerificationStatus.PASSED,
-                message=f"File exists: {filepath}",
+                message=f"File exists: {path}",
                 expected=True,
                 actual=True,
             )
         return VerificationCheck(
             name=f"file_exists:{filepath}",
             status=VerificationStatus.FAILED,
-            message=f"File not found: {filepath}",
+            message=f"File not found: {path}",
             expected=True,
             actual=False,
         )
@@ -278,7 +286,7 @@ class RecipeVerifier:
 
         # File existence checks
         for filepath in criteria.get("file_exists", []):
-            check = self.verify_file_exists(filepath)
+            check = self.verify_file_exists(filepath, result)
             report.checks.append(check)
             if check.status == VerificationStatus.FAILED:
                 report.passed = False

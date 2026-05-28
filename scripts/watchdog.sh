@@ -68,8 +68,8 @@ if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
   loaded=$(curl -s http://localhost:11434/api/ps 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo 0)
   if [[ "$loaded" == "0" ]]; then
     log "WARMUP: No models loaded → warming $OLLAMA_MODEL"
-    curl -s --max-time 90 http://localhost:11434/api/generate \
-      -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"hello\",\"stream\":false,\"keep_alive\":\"24h\",\"options\":{\"num_predict\":1}}" >/dev/null 2>&1 &
+      curl -s --max-time 90 http://localhost:11434/api/generate \
+        -d "{\"model\":\"${OLLAMA_MODEL}\",\"prompt\":\"hello\",\"stream\":false,\"keep_alive\":\"5m\",\"options\":{\"num_predict\":1}}" >/dev/null 2>&1 &
     FIXES=$((FIXES + 1))
   fi
 else
@@ -108,17 +108,24 @@ done
 
 # ── 6. CHECK RAM ──
 free_pct=$(vm_stat 2>/dev/null | awk '/Pages free/{free=$3} /speculative/{spec=$3} END{total=free+spec; print int(total*16384/1073741824*100/16)}')
-if [[ "${free_pct:-5}" -lt 3 ]]; then
-  log "RAM CRITICAL: ${free_pct}% free → killing zombie nodes"
-  # Kill orphan node processes
-  bash "$PROJECT_ROOT/scripts/reset-full-panes.sh" 2>/dev/null || true
-  # Cleanup orphan nodes
-  node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
-  if [[ "$node_count" -gt 30 ]]; then
-    log "RAM: $node_count node processes → killall"
-    killall -9 node 2>/dev/null || true
-    FIXES=$((FIXES + 1))
+  if [[ "${free_pct:-5}" -lt 3 ]]; then
+    log "RAM CRITICAL: ${free_pct}% free → killing zombie nodes"
+    # Kill orphan node processes (except Codex)
+    bash "$PROJECT_ROOT/scripts/reset-full-panes.sh" 2>/dev/null || true
+    # Cleanup orphan nodes (protect Codex processes)
+    node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
+    if [[ "$node_count" -gt 30 ]]; then
+      log "RAM: $node_count node processes → killing orphans (protecting Codex)"
+      # Kill node processes except Codex (@openai/codex)
+      pgrep -f 'node' 2>/dev/null | while read -r pid; do
+        # Skip Codex CLI processes
+        if ps -p "$pid" -o command= 2>/dev/null | grep -q '@openai/codex'; then
+          continue
+        fi
+        kill -9 "$pid" 2>/dev/null || true
+      done
+      FIXES=$((FIXES + 1))
+    fi
   fi
-fi
 
 log "Watchdog done: $FIXES fixes applied"

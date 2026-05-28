@@ -1,5 +1,4 @@
-
-export { Alert-rule } from "./alert-rule";
-export { Log-viewer } from "./log-viewer";
-export { Metric-card } from "./metric-card";
-export { Trace-waterfall } from "./trace-waterfall";
+export { AlertRule } from "./alert-rule";
+export { LogViewer } from "./log-viewer";
+export { MetricCard } from "./metric-card";
+export { TraceWaterfall } from "./trace-waterfall";

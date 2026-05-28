@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import uuid
 from typing import AsyncIterator
 
@@ -85,19 +86,25 @@ async def metrics() -> str:
 
 @app.post("/v1/messages")
 async def messages(req: MessagesRequest):
+    t0 = time.monotonic()
     cfg, runtime, router = _get_deps()
     decision = router.decide(req)
-    log.info("route: %s (%s)", decision.destination, decision.reason)
+    in_tok_est = _estimate_in(req)
+    log.info("route: %s (%s) — input_tokens_est=%d, stream=%s",
+             decision.destination, decision.reason, in_tok_est, req.stream)
     message_id = f"msg_{uuid.uuid4().hex[:16]}"
 
     if decision.destination == "cloud":
         _enforce_cloud_budget(cfg)
-        return await cloud_forward(cfg, req, _make_persist(cfg))
+        result = await cloud_forward(cfg, req, _make_persist(cfg))
+        log.info("cloud response: %.1fs", time.monotonic() - t0)
+        return result
 
     if not req.stream:
         text = await runtime.generate(req)
-        in_tok, out_tok = _estimate_in(req), max(1, len(text) // 4)
+        in_tok, out_tok = in_tok_est, max(1, len(text) // 4)
         _persist(cfg, "local", in_tok, out_tok, req.model)
+        log.info("local generate: %.1fs, out_tokens=%d", time.monotonic() - t0, out_tok)
         return MessagesResponse(
             id=message_id,
             model=req.model,
@@ -239,7 +246,7 @@ def _sse(event) -> dict:
 
 
 def _estimate_in(req: MessagesRequest) -> int:
-    chars = len(req.system or "")
+    chars = len(req.get_system_text())
     for m in req.messages:
         if isinstance(m.content, str):
             chars += len(m.content)

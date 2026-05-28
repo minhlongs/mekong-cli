@@ -4,12 +4,12 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const laneBg = cva("rounded-[var(--radius-lg)] border p-[var(--spacing-lg)]", {
+const laneBg = cva("rounded-[var(-RadiusLg)] border p-[var(-SpacingLg)]", {
   variants: {
     lane: {
-      now: "border-[var(--status-healthy)]/30 bg-[var(--status-healthy)]/5",
-      next: "border-[var(--status-warning)]/30 bg-[var(--status-warning)]/5",
-      later: "border-[var(--border-default)] bg-[var(--surface-card)]",
+      now: "border-[var(-StatusHealthy)]/30 bg-[var(-StatusHealthy)]/5",
+      next: "border-[var(-StatusWarning)]/30 bg-[var(-StatusWarning)]/5",
+      later: "border-[var(-BorderDefault)] bg-[var(-SurfaceCard)]",
     },
   },
   defaultVariants: { lane: "later" },
@@ -24,14 +24,14 @@ export interface RoadmapLaneProps extends React.HTMLAttributes<HTMLDivElement> {
 const RoadmapLane = React.forwardRef<HTMLDivElement, RoadmapLaneProps>(
   ({ className, lane, items, ...props }, ref) => (
     <div ref={ref} className={cn(laneBg({ lane }), className)} {...props}>
-      <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-bold uppercase tracking-wider text-[var(--text-secondary)]">{lane}</div>
-      <div className="flex flex-col gap-[var(--spacing-sm)]">
+      <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontBold uppercase trackingWider text-[var(-TextSecondary)]">{lane}</div>
+      <div className="flex flexCol gap-[var(-SpacingSm)]">
         {items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between rounded-[var(--radius-md)] bg-[var(--bg-primary)]/50 px-[var(--spacing-md)] py-[var(--spacing-sm)]">
-            <span className="text-[var(--font-sm)] text-[var(--text-primary)]">{item.title}</span>
-            <div className="flex items-center gap-[var(--spacing-sm)]">
-              <span className="rounded-[var(--radius-sm)] bg-[var(--bg-tertiary)] px-1.5 py-0.5 text-[var(--font-xs)] text-[var(--text-muted)]">{item.tag}</span>
-              <span className="font-mono text-[var(--font-xs)] text-[var(--accent-teal-400)]">{item.score}</span>
+          <div key={i} className="flex itemsCenter justifyBetween rounded-[var(-RadiusMd)] bg-[var(-BgPrimary)]/50 px-[var(-SpacingMd)] py-[var(-SpacingSm)]">
+            <span className="text-[var(-FontSm)] text-[var(-TextPrimary)]">{item.title}</span>
+            <div className="flex itemsCenter gap-[var(-SpacingSm)]">
+              <span className="rounded-[var(-RadiusSm)] bg-[var(-BgTertiary)] px1.5 py0.5 text-[var(-FontXs)] text-[var(-TextMuted)]">{item.tag}</span>
+              <span className="fontMono text-[var(-FontXs)] text-[var(-AccentTeal400)]">{item.score}</span>
             </div>
           </div>
         ))}

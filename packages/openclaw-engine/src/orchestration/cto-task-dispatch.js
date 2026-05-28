@@ -258,7 +258,7 @@ function smartTaskFromReality(pane, log) {
  * Check external task queue directory for project-specific .txt files.
  */
 function checkExternalQueue(pane, log) {
-	const tasksDir = '/Users/macbookprom1/mekong-cli/tasks';
+	const tasksDir = path.join(process.env.HOME || require('os').homedir(), 'mekong-cli/tasks');
 	try {
 		if (!fs.existsSync(tasksDir)) return null;
 		const files = fs.readdirSync(tasksDir).filter((f) => f.endsWith('.txt'));

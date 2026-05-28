@@ -28,6 +28,9 @@ while [[ $# -gt 0 ]]; do
     --cwd) CWD="$2"; shift 2;;
     --interactive) INTERACTIVE=true; shift;;
     --safe) DANGEROUSLY_SKIP=false; shift;;
+    --sandbox) SANDBOX=false; export MEKONG_PERMISSION_MODE=ask; shift;;
+    --dangerously-skip-permissions|--auto) DANGEROUSLY_SKIP=true; export MEKONG_PERMISSION_MODE=bypass; shift;;
+    --parallel) PARALLEL=true; shift;;
     --timeout) TIMEOUT="$2"; shift 2;;
     *) PROMPT="$1"; shift;;
   esac

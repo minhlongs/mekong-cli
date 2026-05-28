@@ -2,16 +2,16 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
-const phaseStatus = cva("flex h-8 w-8 items-center justify-center rounded-full text-[var(--font-xs)] font-bold", {
-  variants: { status: { done: "bg-[var(--status-healthy)] text-[var(--bg-primary)]", active: "bg-[var(--accent-teal-500)] text-[var(--bg-primary)] animate-pulse", pending: "bg-[var(--bg-tertiary)] text-[var(--text-muted)]" } },
+const phaseStatus = cva("flex h8 w8 itemsCenter justifyCenter roundedFull text-[var(-FontXs)] fontBold", {
+  variants: { status: { done: "bg-[var(-StatusHealthy)] text-[var(-BgPrimary)]", active: "bg-[var(-AccentTeal500)] text-[var(-BgPrimary)] animatePulse", pending: "bg-[var(-BgTertiary)] text-[var(-TextMuted)]" } },
   defaultVariants: { status: "pending" },
 });
 export interface Milestone { name: string; date: string; status: "done" | "active" | "pending"; }
 export interface MilestoneTrackProps extends React.HTMLAttributes<HTMLDivElement> { milestones: Milestone[]; }
 const MilestoneTrack = React.forwardRef<HTMLDivElement, MilestoneTrackProps>(({ className, milestones, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-    <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">IPO Milestones</div>
-    <div className="flex items-center">{milestones.map((m, i) => (<React.Fragment key={i}><div className="flex flex-col items-center gap-[var(--spacing-xs)]"><span className={phaseStatus({ status: m.status })}>{m.status === "done" ? "\u2713" : i + 1}</span><span className="text-[var(--font-xs)] text-[var(--text-secondary)] whitespace-nowrap">{m.name}</span><span className="text-[var(--font-xs)] text-[var(--text-muted)]">{m.date}</span></div>{i < milestones.length - 1 && <div className={cn("h-0.5 flex-1 mx-1 min-w-[16px]", m.status === "done" ? "bg-[var(--status-healthy)]" : "bg-[var(--border-default)]")} />}</React.Fragment>))}</div>
+  <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+    <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">IPO Milestones</div>
+    <div className="flex itemsCenter">{milestones.map((m, i) => (<React.Fragment key={i}><div className="flex flexCol itemsCenter gap-[var(-SpacingXs)]"><span className={phaseStatus({ status: m.status })}>{m.status === "done" ? "\u2713" : i + 1}</span><span className="text-[var(-FontXs)] text-[var(-TextSecondary)] whitespaceNowrap">{m.name}</span><span className="text-[var(-FontXs)] text-[var(-TextMuted)]">{m.date}</span></div>{i < milestones.length - 1 && <div className={cn("h0.5 flex1 mx1 minW-[16px]", m.status === "done" ? "bg-[var(-StatusHealthy)]" : "bg-[var(-BorderDefault)]")} />}</React.Fragment>))}</div>
   </div>
 ));
 MilestoneTrack.displayName = "MilestoneTrack";

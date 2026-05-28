@@ -8,12 +8,12 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/macbookprom1/mekong-cli/scripts/vibeos/solo_revenue_daemon.py</string>
+        <string>/Users/macbook/mekong-cli/scripts/vibeos/solo_revenue_daemon.py</string>
         <string>run</string>
     </array>
     
     <key>WorkingDirectory</key>
-    <string>/Users/macbookprom1/mekong-cli</string>
+    <string>/Users/macbook/mekong-cli</string>
     
     <!-- Run every hour -->
     <key>StartInterval</key>
@@ -53,17 +53,17 @@
     </array>
     
     <key>StandardOutPath</key>
-    <string>/Users/macbookprom1/.mekong/logs/revenue-daemon.log</string>
+    <string>/Users/macbook/.mekong/logs/revenue-daemon.log</string>
     
     <key>StandardErrorPath</key>
-    <string>/Users/macbookprom1/.mekong/logs/revenue-daemon-error.log</string>
+    <string>/Users/macbook/.mekong/logs/revenue-daemon-error.log</string>
     
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
         <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
         <key>PYTHONPATH</key>
-        <string>/Users/macbookprom1/mekong-cli</string>
+        <string>/Users/macbook/mekong-cli</string>
     </dict>
     
     <key>RunAtLoad</key>

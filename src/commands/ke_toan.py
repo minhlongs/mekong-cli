@@ -4,11 +4,9 @@ Follows: Nghị định 123/2020/NĐ-CP, TT78/2021, VAS.
 """
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
-from typing import Optional
 from xml.etree.ElementTree import Element, SubElement, tostring
 import xml.dom.minidom
 
@@ -142,7 +140,7 @@ class Invoice:
     def to_summary(self) -> str:
         """Human-readable invoice summary."""
         lines = [
-            f"=== HÓA ĐƠN ĐIỆN TỬ ===",
+            "=== HÓA ĐƠN ĐIỆN TỬ ===",
             f"Số: {self.invoice_series}{self.invoice_number:06d}",
             f"Ngày: {self.invoice_date.strftime('%d/%m/%Y')}",
             f"Người bán: {self.seller_name} (MST: {self.seller_tax_code})",

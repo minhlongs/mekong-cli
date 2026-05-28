@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Plan Subagent Stop Hook - Cook Skill Reminder
+ * Plan Subagent Stop Hook - Next Step Reminder
  *
- * Fires when Plan subagent completes. Reminds to invoke /cook --auto before implementation.
+ * Fires when Plan subagent completes. Presents user-choice next steps before implementation.
  * Also outputs full absolute path so new sessions (after /clear) can find the plan in worktrees.
  *
  * Exit Codes:
@@ -40,15 +40,16 @@ try {
       }
     }
 
-    // Output reminder with full absolute path if available
-    console.log('MUST invoke /cook --auto skill before implementing the plan');
+    // Output neutral next-step options with full absolute path if available
+    console.log('Planning complete. Stop here and ask the user which next step they want: implement, validate, red-team, revise, or end.');
     if (planPath) {
       const planMdPath = path.join(planPath, 'plan.md');
-      console.log(`Best Practice: Run /clear then /cook ${planMdPath}`);
+      console.log(`Optional implementation command after user approval: /ck:cook ${planMdPath}`);
     } else {
       // Fallback when plan path unavailable
-      console.log('Best Practice: Run /clear then /cook {full-absolute-path-to-plan.md}');
+      console.log('Optional implementation command after user approval: /ck:cook {full-absolute-path-to-plan.md}');
     }
+    console.log('Add --auto only if the user explicitly asks for autonomous implementation.');
 
     process.exit(0);
   } catch (error) {

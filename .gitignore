@@ -758,3 +758,4 @@ apps/fnb-caffe-container/
 # VN Hub — local LLM models (large binary files, never commit)
 models/
 !models/.gitkeep
+.cheetahclaws/

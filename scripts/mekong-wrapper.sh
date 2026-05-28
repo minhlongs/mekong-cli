@@ -5,6 +5,9 @@
 #        mekong-wrapper install <name>        # Alias (dept- prefix optional)
 set -uo pipefail
 
+# Load API keys from macOS Keychain
+source "$HOME/scripts/load-keychain-secrets.sh" 2>/dev/null || true
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 export MEKONG_ROOT="${MEKONG_ROOT:-$(dirname "$SCRIPT_DIR")}"
 
@@ -50,6 +53,14 @@ if [ "${1:-}" = "install" ]; then
   shift
   _dept_install "${1:-}" "${@:2}"
 fi
+
+# Direct Typer-backed durable goal commands. These must not be treated as
+# free-form AI prompts when called from AGY/Gemini command descriptors.
+case "${1:-}" in
+  cook-auto|goal)
+    cd "$MEKONG_ROOT" && exec python3 -m src.main "$@"
+    ;;
+esac
 # ─────────────────────────────────────────────────────────────────────────────
 
 source "$MEKONG_ROOT/mekong/adapters/registry.sh"
@@ -67,14 +78,33 @@ _resolve_provider() {
     *)       TOOL="$1";;  # Direct tool name (claude, gemini, etc.)
   esac
 }
+SANDBOX=false
+DANGEROUSLY_SKIP_PERMISSIONS=false
+
+_dispatch_typer_command() {
+  case "${1:-}" in
+    cook-auto)
+      if [ "$DANGEROUSLY_SKIP_PERMISSIONS" = true ]; then
+        cd "$MEKONG_ROOT" && exec python3 -m src.main "$@" --auto
+      fi
+      cd "$MEKONG_ROOT" && exec python3 -m src.main "$@"
+      ;;
+    goal)
+      cd "$MEKONG_ROOT" && exec python3 -m src.main "$@"
+      ;;
+  esac
+}
 
 while [[ $# -gt 0 ]]; do
   case $1 in
     --tool|-t) TOOL="$2"; shift 2;; --provider) _resolve_provider "$2"; shift 2;; --model|-m) MODEL="$2"; shift 2;;
     --cwd) CWD="$2"; shift 2;; --interactive|-i) INTERACTIVE=true; shift;;
     --list-tools) ACTION="list"; shift;; --status) ACTION="status"; shift;;
-    --help|-h) ACTION="help"; shift;; --quiet|-q) shift;; --) shift; PROMPT="$*"; break;;
-    -*) echo "Unknown: $1" >&2; exit 1;; *) PROMPT="$*"; break;;
+    --sandbox) SANDBOX=true; export MEKONG_PERMISSION_MODE=ask; shift;;
+    --dangerously-skip-permissions|--auto) DANGEROUSLY_SKIP_PERMISSIONS=true; export MEKONG_PERMISSION_MODE=bypass; shift;;
+    --parallel) PARALLEL=true; shift;;
+    --help|-h) ACTION="help"; shift;; --quiet|-q) shift;; --) shift; _dispatch_typer_command "$@"; PROMPT="$*"; break;;
+    -*) echo "Unknown: $1" >&2; exit 1;; *) _dispatch_typer_command "$@"; PROMPT="$*"; break;;
   esac
 done
 
@@ -108,7 +138,9 @@ case "$ACTION" in
 esac
 
 SEL=$(select_tool "$TOOL") || exit 1
-ADAPTER="$MEKONG_ROOT/mekong/adapters/${SEL}-cli.sh"
+ADAPTER_NAME="$SEL"
+[ "$SEL" = "claude" ] && ADAPTER_NAME="cc"
+ADAPTER="$MEKONG_ROOT/mekong/adapters/${ADAPTER_NAME}-cli.sh"
 
 if [ ! -f "$ADAPTER" ]; then
   LAUNCH=$(_tool_launch "$SEL")
@@ -125,5 +157,7 @@ ARGS=""
 [ -n "$MODEL" ] && ARGS="$ARGS --model $MODEL"
 [ -n "$CWD" ] && ARGS="$ARGS --cwd $CWD"
 [ -n "$PROMPT" ] && ARGS="$ARGS --prompt \"$PROMPT\""
+[ "$SANDBOX" = true ] && ARGS="$ARGS --sandbox"
+[ "$DANGEROUSLY_SKIP_PERMISSIONS" = true ] && ARGS="$ARGS --dangerously-skip-permissions"
 
 exec bash "$ADAPTER" $ARGS

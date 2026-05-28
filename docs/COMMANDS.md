@@ -1,6 +1,30 @@
 # Mekong CLI — Command Reference
 
-319 commands (230 base + 89 super) across 5 business layers.
+Mekong CLI structures its commands and execution paths across **6 Execution Layers**, which map directly to the AGI v2 agent system architecture. For a deep dive into how these layers coordinate under the Water Protocol (水) and the 9-stage Hybrid Routing Pipeline, see the [AGENT_SYSTEM.md](file:///Users/macbook/mekong-cli/docs/AGENT_SYSTEM.md) guide.
+
+## 6 Execution Layers & Mappings
+
+The CLI's runtime layers align with the platform's 10 organizational layers and 13 Binh Pháp chapters.
+
+| Execution Layer | Description & Focus | Mapped Binh Pháp Chapters | Core Subcommands |
+| :--- | :--- | :--- | :--- |
+| **1. Studio** | Venture studio management, capital allocation, and ROI tracking | - | `/studio-bootstrap`, `/studio-roi` |
+| **2. Founder** | Strategic plans, OKRs, runway forecasting, and fundraising | 始計 (Initial Calculations) | `annual`, `quarterly`, `okr`, `raise` |
+| **3. Business** | Revenue operations, sales pipelines, billing, marketing, and HR | 作戰 (Waging War) | `sales`, `marketing`, `finance` |
+| **4. Product** | Product design, sprint planning, estimation, and user feedback | 謀攻 (Attack by Stratagem) | `plan`, `brainstorm`, `scope`, `estimate` |
+| **5. Engineering** | Structured code generation, unit testing, and code reviews | 軍爭 (Military Contention) | `cook`, `code`, `test`, `review` |
+| **6. Ops** | System health checkups, sync loops, and incident management | 九變 (Nine Variations) | `health`, `status`, `security`, `sync` |
+
+---
+
+## 🎨 Studio Layer (2 commands)
+
+Venture studio portfolio operations and ROI analysis.
+
+| Command | Description |
+|---------|-------------|
+| `studio-bootstrap` | Initialize venture studio structure |
+| `studio-roi` | Calculate studio portfolio return on investment |
 
 ---
 
@@ -322,12 +346,13 @@ Monitor & maintain. Chapter: 九變 — Nine Variations.
 
 | Layer | Base Commands | Super Commands | Total |
 |-------|--------------|----------------|-------|
+| 🎨 Studio | 2 | 0 | 2 |
 | 👑 Founder | 46 | 6 | 52 |
 | 💼 Business | 72 | 40 | 112 |
 | 🎯 Product | 27 | 9 | 36 |
 | ⚙️ Engineering | 67 | 22 | 89 |
 | 🔧 Ops | 42 | 12 | 54 |
-| **Total** | **254** | **89** | **343** |
+| **Total** | **256** | **89** | **345** |
 
 32 roles from CEO to intern. 85 DAG workflow recipes.
 

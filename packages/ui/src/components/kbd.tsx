@@ -9,7 +9,7 @@ const Kbd = React.forwardRef<HTMLElement, KbdProps>(
   ({ className, ...props }, ref) => (
     <kbd
       className={cn(
-        "inline-flex h-5 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-secondary)] px-1.5 font-mono text-[0.625rem] font-medium text-[var(--text-secondary)] shadow-[var(--shadow-xs)]",
+        "inlineFlex h5 itemsCenter justifyCenter rounded-[var(-RadiusSm)] border border-[var(-BorderStrong)] bg-[var(-BgSecondary)] px1.5 fontMono text-[0.625rem] fontMedium text-[var(-TextSecondary)] shadow-[var(-ShadowXs)]",
         className
       )}
       ref={ref}
