@@ -5,25 +5,25 @@ import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const stepIndicator = cva(
-  "flex h-8 w-8 items-center justify-center rounded-full text-[var(--font-xs)] font-bold",
+  "flex h8 w8 itemsCenter justifyCenter roundedFull text-[var(-FontXs)] fontBold",
   {
     variants: {
       status: {
-        done: "bg-[var(--status-healthy)] text-[var(--bg-primary)]",
-        active: "bg-[var(--accent-teal-500)] text-[var(--bg-primary)] animate-pulse",
-        pending: "bg-[var(--bg-tertiary)] text-[var(--text-muted)]",
+        done: "bg-[var(-StatusHealthy)] text-[var(-BgPrimary)]",
+        active: "bg-[var(-AccentTeal500)] text-[var(-BgPrimary)] animatePulse",
+        pending: "bg-[var(-BgTertiary)] text-[var(-TextMuted)]",
       },
     },
     defaultVariants: { status: "pending" },
   }
 );
 
-const stepLine = cva("h-0.5 flex-1", {
+const stepLine = cva("h0.5 flex1", {
   variants: {
     status: {
-      done: "bg-[var(--status-healthy)]",
-      active: "bg-[var(--accent-teal-500)]",
-      pending: "bg-[var(--border-default)]",
+      done: "bg-[var(-StatusHealthy)]",
+      active: "bg-[var(-AccentTeal500)]",
+      pending: "bg-[var(-BorderDefault)]",
     },
   },
   defaultVariants: { status: "pending" },
@@ -44,32 +44,32 @@ const IncidentTimeline = React.forwardRef<HTMLDivElement, IncidentTimelineProps>
     <div
       ref={ref}
       className={cn(
-        "rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]",
+        "rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]",
         className
       )}
       {...props}
     >
-      <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">
+      <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">
         Incident Response Pipeline
       </div>
-      <div className="flex items-center">
+      <div className="flex itemsCenter">
         {steps.map((step, i) => (
           <React.Fragment key={i}>
-            <div className="flex flex-col items-center gap-[var(--spacing-xs)]">
+            <div className="flex flexCol itemsCenter gap-[var(-SpacingXs)]">
               <span className={stepIndicator({ status: step.status })}>
                 {step.status === "done" ? "\u2713" : i + 1}
               </span>
-              <span className="text-[var(--font-xs)] text-[var(--text-secondary)] whitespace-nowrap">
+              <span className="text-[var(-FontXs)] text-[var(-TextSecondary)] whitespaceNowrap">
                 {step.name}
               </span>
               {step.duration && (
-                <span className="text-[var(--font-xs)] text-[var(--text-muted)]">
+                <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">
                   {step.duration}
                 </span>
               )}
             </div>
             {i < steps.length - 1 && (
-              <div className={cn(stepLine({ status: step.status }), "mx-1 min-w-[24px]")} />
+              <div className={cn(stepLine({ status: step.status }), "mx1 minW-[24px]")} />
             )}
           </React.Fragment>
         ))}

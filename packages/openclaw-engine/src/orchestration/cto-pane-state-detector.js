@@ -15,8 +15,10 @@
 function detectPaneState(output) {
 	if (!output || output.includes('Pane is dead')) return 'DEAD';
 
+	const username = process.env.USER || require('os').userInfo().username || 'macbook';
+	const promptPattern = new RegExp(`${username}@`);
 	if (
-		/macbookprom1@/.test(output) ||
+		promptPattern.test(output) ||
 		/Resume this session with:/.test(output) ||
 		/zsh: command not found/.test(output) ||
 		/zsh: no such file or directory/.test(output) ||

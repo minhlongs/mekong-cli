@@ -14,6 +14,18 @@ import { fileURLToPath, pathToFileURL } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const distPath = join(__dirname, '..', 'dist', 'cli.mjs')
 
+// Intercept and handle setting override CLI flags at launch
+const sandboxIndex = process.argv.indexOf('--sandbox')
+if (sandboxIndex !== -1) {
+  process.env.MEKONG_PERMISSION_MODE = 'ask'
+  process.argv.splice(sandboxIndex, 1)
+}
+
+const skipPermsIndex = process.argv.indexOf('--dangerously-skip-permissions')
+if (skipPermsIndex !== -1) {
+  process.env.MEKONG_PERMISSION_MODE = 'bypass'
+}
+
 if (existsSync(distPath)) {
   await import(pathToFileURL(distPath).href)
 } else {

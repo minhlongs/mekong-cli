@@ -55,6 +55,8 @@ export default [
                 HTMLDivElement: 'readonly',
                 HTMLHeadingElement: 'readonly',
                 HTMLParagraphElement: 'readonly',
+                HTMLIFrameElement: 'readonly',
+                MessageEvent: 'readonly',
                 Event: 'readonly',
                 KeyboardEvent: 'readonly',
                 NodeJS: 'readonly',

@@ -46,8 +46,9 @@ class Router:
     @staticmethod
     def _extract_text(request: MessagesRequest) -> str:
         parts: list[str] = []
-        if request.system:
-            parts.append(request.system)
+        system_text = request.get_system_text()
+        if system_text:
+            parts.append(system_text)
         if request.messages:
             first = request.messages[0]
             if isinstance(first.content, str):

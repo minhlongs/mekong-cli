@@ -17,22 +17,24 @@ from src.core.cost_estimator import COST_TABLE
 logger = logging.getLogger(__name__)
 
 FALLBACK_HIERARCHY: dict[str, list[str]] = {
-    # M1 Max 64GB — 4 local models, smart fallback
-    # qwen3-coder-next: coding → fallback to qwen3:32b (broader) → 7b (fast)
-    "ollama:qwen3-coder-next": ["ollama:qwen3:32b", "ollama:qwen2.5-coder:7b"],
-    # qwen3:32b: content/general → fallback to coder-next → 7b
-    "ollama:qwen3:32b": ["ollama:qwen3-coder-next", "ollama:qwen2.5-coder:7b"],
-    # deepseek-r1: reasoning → fallback to qwen3:32b → coder-next
-    "ollama:deepseek-r1:32b": ["ollama:qwen3:32b", "ollama:qwen3-coder-next"],
-    # qwen2.5-coder:7b: fast → fallback to coder-next → qwen3:32b
-    "ollama:qwen2.5-coder:7b": ["ollama:qwen3-coder-next", "ollama:qwen3:32b"],
+    # M1 Max 64GB — Rapid-MLX Qwen 3.6-35B primary
+    # qwen3.6-35b: primary → fallback to qwen3.5:9b (lighter) → qwen3.5:4b (fast)
+    "ollama:qwen3.6-35b": ["ollama:qwen3.5-9b", "ollama:qwen3.5-4b"],
+    # qwen3.5-27b: smart coding → fallback to 9b → 4b
+    "ollama:qwen3.5-27b": ["ollama:qwen3.5-9b", "ollama:qwen3.5-4b"],
+    # qwen3.5-9b: balanced → fallback to 4b → 35b
+    "ollama:qwen3.5-9b": ["ollama:qwen3.5-4b", "ollama:qwen3.6-35b"],
+    # qwen3.5-4b: fast → fallback to 9b → 35b
+    "ollama:qwen3.5-4b": ["ollama:qwen3.5-9b", "ollama:qwen3.6-35b"],
+    # deepseek-r1: reasoning → fallback to qwen3.6-35b → qwen3.5-9b
+    "ollama:deepseek-r1:32b": ["ollama:qwen3.6-35b", "ollama:qwen3.5-9b"],
     # Cloud → always fallback to local
-    "claude-opus-4-6": ["ollama:qwen3:32b", "ollama:deepseek-r1:32b"],
-    "claude-sonnet-4-6": ["ollama:qwen3-coder-next", "ollama:qwen2.5-coder:7b"],
-    "claude-haiku-4-5": ["ollama:qwen2.5-coder:7b"],
-    "gemini-2.0-pro": ["ollama:qwen3:32b"],
-    "gemini-2.0-flash": ["ollama:qwen3-coder-next"],
-    "gpt-4o-mini": ["ollama:qwen2.5-coder:7b"],
+    "claude-opus-4-6": ["ollama:qwen3.6-35b", "ollama:deepseek-r1:32b"],
+    "claude-sonnet-4-6": ["ollama:qwen3.6-35b", "ollama:qwen3.5-9b"],
+    "claude-haiku-4-5": ["ollama:qwen3.5-4b"],
+    "gemini-2.0-pro": ["ollama:qwen3.6-35b"],
+    "gemini-2.0-flash": ["ollama:qwen3.6-35b"],
+    "gpt-4o-mini": ["ollama:qwen3.5-4b"],
 }
 
 MAX_RETRIES = 3

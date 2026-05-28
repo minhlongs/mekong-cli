@@ -38,7 +38,58 @@ function sleep(ms) {
 	return new Promise((r) => setTimeout(r, ms));
 }
 
-// --- AppleScript helpers ---
+function getActiveProvider() {
+	let activeProvider = 'claude';
+	try {
+		const configPath = path.join(process.env.HOME || require('os').homedir(), '.mekong', 'cli-config.json');
+		if (fs.existsSync(configPath)) {
+			const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+			if (cfg.activeProvider) {
+				activeProvider = cfg.activeProvider;
+			}
+		}
+	} catch (e) {
+		// ignore
+	}
+	return activeProvider;
+}
+
+function getProviderBinaryCmd() {
+	const provider = getActiveProvider();
+	if (provider === 'opencode') {
+		return `opencode run --dangerously-skip-permissions`;
+	}
+	if (provider === 'gemini') {
+		return `gemini -p`;
+	}
+	if (provider === 'qwen') {
+		return `qwen -p`;
+	}
+	if (provider === 'blackbox') {
+		return `blackbox -p`;
+	}
+	const homeDir = process.env.HOME || require('os').homedir();
+	return `${homeDir}/.local/bin/claude --dangerously-skip-permissions`;
+}
+
+function getProviderBinaryPattern() {
+	const provider = getActiveProvider();
+	if (provider === 'opencode') {
+		return 'opencode.*dangerously-skip-permissions';
+	}
+	if (provider === 'gemini') {
+		return 'gemini.*-p';
+	}
+	if (provider === 'qwen') {
+		return 'qwen.*-p';
+	}
+	if (provider === 'blackbox') {
+		return 'blackbox.*-p';
+	}
+	return 'claude.*dangerously-skip-permissions';
+}
+
+// --- AppleScript runner helper ---
 
 /**
  * Run AppleScript command
@@ -83,12 +134,13 @@ function spawnBrain() {
 
 	const proxyUrl = config.CLOUD_BRAIN_URL || process.env.LLM_BASE_URL || process.env.ANTHROPIC_BASE_URL || '';
 	const proxyPort = proxyUrl ? (new URL(proxyUrl).port || '') : '';
-	const configDir = proxyPort ? `/Users/macbookprom1/.claude_config_${proxyPort}` : `/Users/macbookprom1/.claude`;
+	const homeDir = process.env.HOME || require('os').homedir();
+	const configDir = proxyPort ? `${homeDir}/.claude_config_${proxyPort}` : `${homeDir}/.claude`;
 
 	// DashScope Direct: keep ANTHROPIC_* env vars from settings.json
 	const envSetup = [`unset CLAUDE_CONFIG_DIR`, `unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`].join(' && ');
 
-	const claudeCmd = `/Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`;
+	const claudeCmd = getProviderBinaryCmd();
 	const fullCmd = `${envSetup} && ${claudeCmd}`;
 
 	// AppleScript to open Terminal.app with CC CLI
@@ -126,7 +178,7 @@ end tell
 
 function isBrainAlive() {
 	try {
-		execSync('pgrep -f "claude.*dangerously-skip-permissions"', { timeout: 3000 });
+		execSync(`pgrep -f "${getProviderBinaryPattern()}"`, { timeout: 3000 });
 		return true;
 	} catch (e) {
 		return false;
@@ -236,7 +288,7 @@ async function runMission(prompt, projectDir, timeoutMs) {
 		if (alive) {
 			// Check CPU usage of claude process to determine busy vs idle
 			try {
-				const cpuInfo = execSync('ps -p $(pgrep -f "claude.*dangerously-skip-permissions" | head -1) -o %cpu= 2>/dev/null', {
+				const cpuInfo = execSync(`ps -p $(pgrep -f "${getProviderBinaryPattern()}" | head -1) -o %cpu= 2>/dev/null`, {
 					encoding: 'utf-8',
 					timeout: 3000,
 				}).trim();

@@ -20,7 +20,7 @@ import logging
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 
 from src.api.vn_pilot_auth import _require_scope
@@ -336,6 +336,8 @@ async def get_org_me(
 @org_router.delete(
     "/members/{user_id}",
     status_code=204,
+    response_class=Response,
+    response_model=None,
     dependencies=[Depends(_require_scope(["org_admin", "founder"]))],
 )
 async def delete_org_member(
@@ -538,6 +540,8 @@ async def join_org_endpoint(
 @org_router.delete(
     "/invites/{invite_id}",
     status_code=204,
+    response_class=Response,
+    response_model=None,
     dependencies=[Depends(_require_scope(["org_admin", "founder"]))],
 )
 async def revoke_invite_endpoint(

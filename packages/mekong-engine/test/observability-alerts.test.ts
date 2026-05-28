@@ -149,7 +149,7 @@ describe('Observability Alerts', () => {
         description: 'Error rate exceeds 1%',
       }
 
-      const message = formatSlackMessage(alert)
+      const message = formatSlackMessage(alert) as any;
 
       expect(message).toHaveProperty('attachments')
       expect(Array.isArray(message.attachments)).toBe(true)
@@ -177,9 +177,9 @@ describe('Observability Alerts', () => {
         description: 'Test',
       } as const
 
-      expect(formatSlackMessage({ ...baseAlert, severity: 'info' }).attachments[0].color).toBe('#36a64f')
-      expect(formatSlackMessage({ ...baseAlert, severity: 'warning' }).attachments[0].color).toBe('#ff9800')
-      expect(formatSlackMessage({ ...baseAlert, severity: 'critical' }).attachments[0].color).toBe('#ff0000')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'info' }) as any).attachments[0].color).toBe('#36a64f')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'warning' }) as any).attachments[0].color).toBe('#ff9800')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'critical' }) as any).attachments[0].color).toBe('#ff0000')
     })
   })
 

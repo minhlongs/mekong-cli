@@ -69,6 +69,8 @@ def __getattr__(name: str):
         "VerificationCheck": ".verifier",
         "VerificationReport": ".verifier",
         "VerificationStatus": ".verifier",
+        "MekongMcpServer": ".mcp_server",
+        "mcp_server": ".mcp_server",
     }
 
     if name in _imports:
@@ -109,4 +111,5 @@ __all__ = [
     "PEVDashboardData", "get_dashboard_data",
     "register_pev_health_checks", "get_pev_health_summary",
     "RecipeVerifier", "VerificationCheck", "VerificationReport", "VerificationStatus",
+    "MekongMcpServer", "mcp_server",
 ]

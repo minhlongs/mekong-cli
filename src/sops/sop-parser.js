@@ -54,17 +54,17 @@ function parseSimpleYAML(yaml) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
 
-    if (trimmed.startsWith('name:')) {
-      result.name = trimmed.split(':')[1].trim();
-    } else if (trimmed.startsWith('description:')) {
-      result.description = trimmed.split(':')[1].trim();
-    } else if (trimmed.startsWith('- action:')) {
+    if (trimmed.startsWith('- action:')) {
       if (currentStep) {
         result.steps.push(currentStep);
       }
       currentStep = { action: trimmed.split(':')[1].trim() };
     } else if (currentStep && trimmed.startsWith('name:')) {
       currentStep.name = trimmed.split(':')[1].trim();
+    } else if (trimmed.startsWith('name:')) {
+      result.name = trimmed.split(':')[1].trim();
+    } else if (trimmed.startsWith('description:')) {
+      result.description = trimmed.split(':')[1].trim();
     } else if (currentStep && trimmed.startsWith('params:')) {
       currentStep.params = JSON.parse(trimmed.split(':')[1].trim());
     }

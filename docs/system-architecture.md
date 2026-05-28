@@ -19,6 +19,25 @@
 
 Mekong CLI v6.0 features a 4-phase "Hạt giống → Cây → Rừng → Đất" (Seed → Tree → Forest → Land) architecture. Phase 01-04 (Seed) is complete, establishing the foundation for autonomous agent orchestration with Plan-Execute-Verify (PEV), pluggable LLM providers, parallel task execution via DAG scheduling, and multi-tenant billing.
 
+### Autonomous Engineering OS Vertical Slice
+
+`mekong goal` adds a persistent mission layer above the existing PEV engine:
+
+```
+Human objective
+  -> GoalEngine
+  -> SQLite goal/task/checkpoint/event store
+  -> role-aware task graph
+  -> local execution runtime
+  -> blocking verification pipeline
+  -> durable memory and replayable status
+```
+
+The canonical implementation lives in `src/mekongcli/core/*`. Existing
+`src.core.*`, `src.cli.*`, and `mekong/*` surfaces remain compatibility layers
+while the platform migrates incrementally. See
+[`docs/autonomous-goal-engine.md`](./autonomous-goal-engine.md).
+
 ### Architecture Phases (2026 Roadmap)
 
 **Phase 01 (Seed - COMPLETE):** Local CLI + Python stdlib agents + memory (ChromaDB + SQLite)
@@ -239,6 +258,9 @@ Coordinates Plan → Execute → Verify pipeline:
 3. **Verify** — Quality gate validates results (type checks, tests, assertions)
 4. **Rollback** — Failed verification reverses completed steps atomically
 
+**AGI v2 Integration:**
+The orchestrator integrates with the **AGI v2 Hybrid Router** (`src/core/hybrid_router.py`) to execute individual recipe steps and direct agent actions. When steps are routed to specific agent roles, they go through the 9-stage hybrid routing pipeline and multi-agent context flow (Water Protocol). For a deep dive into the routing, dispatching, and multi-agent mechanics, see [AGENT_SYSTEM.md](file:///Users/macbook/mekong-cli/docs/AGENT_SYSTEM.md).
+
 **Key Methods:**
 - `cook(goal: str) → ExecutionResult` — Full PEV pipeline
 - `plan(goal: str) → Recipe` — Planning only (dry-run)
@@ -350,15 +372,17 @@ class LLMProvider(ABC):
 2. **GeminiProvider** — Google Gemini API
 3. **OfflineProvider** — Local models (via Ollama/LlamaCPP)
 
-**Local LLM Configuration (M1 Max):**
-- **Endpoint:** 192.168.11.111:11434 (Ollama)
-- **Models Deployed:**
-  - qwen2.5-coder:32b (coding tasks)
-  - qwen3:32b (reasoning tasks)
-- **Usage:** Fallback provider when cloud API unavailable
+**Universal LLM Configuration:**
+AGI v2 supports OpenAI-compatible backends using three environment variables:
+- `LLM_BASE_URL` — Custom endpoint (e.g., `https://openrouter.ai/api/v1` or `http://localhost:11434/v1`)
+- `LLM_API_KEY` — API access credential
+- `LLM_MODEL` — Target model identifier (e.g., `qwen2.5-coder:32b`, `gpt-4o`)
 
-**Failover Strategy:**
-- Primary provider unavailable → Try next in chain
+**Failover Strategy & Provider Fallback Chain:**
+When a model fails due to rate limits or connectivity errors, the system switches providers along a robust fallback chain:
+```
+OpenRouter ──► DashScope ──► DeepSeek ──► Anthropic ──► OpenAI ──► Google ──► Ollama (Local)
+```
 - Circuit breaker (quota errors) → Backoff + retry other providers
 - All providers down → Return error to user
 
@@ -391,6 +415,9 @@ class AgentProtocol(Protocol):
 - `RecipeCrawler` — Recipe file discovery
 
 ### 2.8 Agent Registry & Plugin System
+
+**AGI v2 Registry & Layer Integration:**
+In AGI v2, the registry is enriched by the 6 execution layers (Studio, Founder, Business, Product, Engineering, Ops) that structure agent behaviors and guide multi-agent context routing. For details on how agents map to organizational roles and verticals, see the [AGENT_SYSTEM.md](file:///Users/macbook/mekong-cli/docs/AGENT_SYSTEM.md) guide.
 
 **Agent Registry (`src/agents/__init__.py`):**
 Global registry with 10 built-in agents:
@@ -505,6 +532,34 @@ Multi-department command catalog with 22 ClawHub packages for enterprise team st
 - **Total:** 348 commands, 117 free (PLG tier), 231 premium (paid)
 
 **Usage:** `mekong list skills` displays all 22 departments; `mekong run studio/announce` executes studio command
+
+### 2.8d AGI v2 Agent Harness & Hybrid Router (`src/core/hybrid_router.py`)
+
+The platform's agent execution loop is managed by the **AGI v2 Hybrid Router**, which orchestrates a structured 9-stage pipeline for single or multi-agent goal execution. For detailed architecture, see the dedicated [AGENT_SYSTEM.md](file:///Users/macbook/mekong-cli/docs/AGENT_SYSTEM.md) documentation.
+
+#### 6 Execution Layers
+Agents are mapped to 6 primary execution layers matching the structure defined in [AGENTS.md](file:///Users/macbook/mekong-cli/AGENTS.md):
+- **Studio:** Venture studio management and ROI analysis.
+- **Founder:** Fundraising and runway calculations.
+- **Business:** Sales pipelines, billing tracking, and marketing.
+- **Product:** Backlog prioritization and design blueprints.
+- **Engineering:** PEV code generation and reviews.
+- **Ops:** System health sweeps and incident recovery.
+
+#### Water Protocol (水) Context Flow (`src/core/context_flow.py`)
+Multi-agent task pipelines share context incrementally via the **Water Protocol**, which collects contributions, enforces token budget constraints (capping memory outputs at 3,000 characters and final context prompts at 1,500 characters), and detects `BLOCKED` states to halt loops and refund MCU charges immediately.
+
+#### 9-Stage Hybrid Routing Pipeline
+Every goal processed by `route_and_execute()` follows this pipeline:
+1. **Classify:** Determine task complexity, domain, required MCU cost, and check for multi-agent combinations in `task_classifier.py`.
+2. **Match:** Match goal against `.claude/commands/*.md` templates via `command_loader.py`.
+3. **Lock:** Pre-lock required MCU credits using `MCUGate`.
+4. **Select Model:** Tier-aware selection routes mechanical tasks to cheap models and reasoning tasks to senior models via `model_selector.py`.
+5. **Enrich:** Inject role-based system prompts and domain expertise (`packages/agents/hubs/`).
+6. **Execute:** Run execute loops with fallbacks. If multi-agent, accumulate context via `ContextFlow`.
+7. **Verify Output (Review):** Review the output using `SubagentReviewer` before final confirmation.
+8. **MCU Confirm:** Deduct reserved MCU from the tenant's balance or issue refunds.
+9. **Return Result (Emit):** Inject free-tier watermark links if credit balance is below threshold.
 
 ### 2.9 Credit System (`src/raas/`)
 

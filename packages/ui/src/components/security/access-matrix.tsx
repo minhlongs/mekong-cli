@@ -10,9 +10,9 @@ export interface AccessMatrixProps extends React.HTMLAttributes<HTMLDivElement> 
 }
 
 const cellColor: Record<string, string> = {
-  allow: "bg-[var(--perm-allow)]/20 text-[var(--perm-allow)]",
-  deny: "bg-[var(--perm-deny)]/20 text-[var(--perm-deny)]",
-  na: "bg-[var(--bg-tertiary)] text-[var(--text-muted)]",
+  allow: "bg-[var(-PermAllow)]/20 text-[var(-PermAllow)]",
+  deny: "bg-[var(-PermDeny)]/20 text-[var(-PermDeny)]",
+  na: "bg-[var(-BgTertiary)] text-[var(-TextMuted)]",
 };
 
 const cellLabel: Record<string, string> = {
@@ -26,21 +26,21 @@ const AccessMatrix = React.forwardRef<HTMLDivElement, AccessMatrixProps>(
     <div
       ref={ref}
       className={cn(
-        "overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)]",
+        "overflowXAuto rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)]",
         className
       )}
       {...props}
     >
-      <table className="w-full border-collapse text-[var(--font-xs)]">
+      <table className="wFull borderCollapse text-[var(-FontXs)]">
         <thead>
-          <tr className="border-b border-[var(--border-default)]">
-            <th className="sticky left-0 bg-[var(--surface-card)] px-[var(--spacing-md)] py-[var(--spacing-sm)] text-left font-semibold text-[var(--text-secondary)]">
+          <tr className="borderB border-[var(-BorderDefault)]">
+            <th className="sticky left0 bg-[var(-SurfaceCard)] px-[var(-SpacingMd)] py-[var(-SpacingSm)] textLeft fontSemibold text-[var(-TextSecondary)]">
               Role / System
             </th>
             {systems.map((sys) => (
               <th
                 key={sys}
-                className="px-[var(--spacing-md)] py-[var(--spacing-sm)] text-center font-semibold text-[var(--text-secondary)]"
+                className="px-[var(-SpacingMd)] py-[var(-SpacingSm)] textCenter fontSemibold text-[var(-TextSecondary)]"
               >
                 {sys}
               </th>
@@ -51,18 +51,18 @@ const AccessMatrix = React.forwardRef<HTMLDivElement, AccessMatrixProps>(
           {roles.map((role) => (
             <tr
               key={role}
-              className="border-b border-[var(--border-default)] last:border-b-0 hover:bg-[var(--surface-hover)]"
+              className="borderB border-[var(-BorderDefault)] last:borderB0 hover:bg-[var(-SurfaceHover)]"
             >
-              <td className="sticky left-0 bg-[var(--surface-card)] px-[var(--spacing-md)] py-[var(--spacing-sm)] font-medium text-[var(--text-primary)]">
+              <td className="sticky left0 bg-[var(-SurfaceCard)] px-[var(-SpacingMd)] py-[var(-SpacingSm)] fontMedium text-[var(-TextPrimary)]">
                 {role}
               </td>
               {systems.map((sys) => {
                 const perm = permissions[role]?.[sys] ?? "na";
                 return (
-                  <td key={sys} className="px-[var(--spacing-md)] py-[var(--spacing-sm)] text-center">
+                  <td key={sys} className="px-[var(-SpacingMd)] py-[var(-SpacingSm)] textCenter">
                     <span
                       className={cn(
-                        "inline-flex h-6 w-6 items-center justify-center rounded-[var(--radius-sm)] text-[var(--font-xs)] font-bold",
+                        "inlineFlex h6 w6 itemsCenter justifyCenter rounded-[var(-RadiusSm)] text-[var(-FontXs)] fontBold",
                         cellColor[perm]
                       )}
                     >

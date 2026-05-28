@@ -64,7 +64,7 @@ start_department() {
   # Launch CC CLI in each pane
   for ((i=0; i<panes; i++)); do
     tmux send-keys -t "${session}:0.${i}" \
-      "cd ${PROJECT_ROOT} && claude --dangerously-skip-permissions" Enter
+      "cd ${PROJECT_ROOT} && bash scripts/mekong-wrapper.sh --dangerously-skip-permissions" Enter
   done
 
   echo -e "  ${GREEN}✅${NC} ${desc} (${session}) — started with ${panes} panes"

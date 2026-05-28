@@ -1,0 +1,1 @@
+/Users/macbook/.config/opencode/commands/journal.md

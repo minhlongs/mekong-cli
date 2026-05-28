@@ -16,7 +16,6 @@ import os
 import re
 import sys
 import time
-from typing import Optional
 
 import jwt
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query

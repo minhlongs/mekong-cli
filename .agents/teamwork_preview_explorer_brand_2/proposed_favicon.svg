@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Rounded Background Container for Tab Visibility -->
+  <rect width="32" height="32" rx="7" fill="#10B981" />
+  
+  <!-- Standalone Brand Symbol (Scaled 24x24, centered with translate(4, 4)) -->
+  <g transform="translate(4, 4) scale(0.24)">
+    <!-- Left Wing (White) -->
+    <path d="M 46 15 C 26 30, 16 54, 20 74 C 22 79, 26 83, 32 83 C 38 83, 42 75, 44 65 C 46 52, 41 32, 46 15 Z" fill="#FFFFFF" />
+
+    <!-- Right Wing (Mint / Light Teal) -->
+    <path d="M 54 15 C 74 30, 84 54, 80 74 C 78 79, 74 83, 68 83 C 62 83, 58 75, 56 65 C 54 52, 59 32, 54 15 Z" fill="#A7F3D0" />
+
+    <!-- Center House (Bright Gold) -->
+    <path d="M 50 32 L 64 46 L 59 46 L 59 58 L 41 58 L 41 46 L 36 46 Z" fill="#FBBF24" stroke="#10B981" stroke-width="2" stroke-linejoin="round" />
+
+    <!-- Rhythm Wave (Bright Gold) -->
+    <path d="M 25 70 C 37 60, 42 78, 50 68 C 58 58, 63 76, 75 66" fill="none" stroke="#10B981" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 25 70 C 37 60, 42 78, 50 68 C 58 58, 63 76, 75 66" fill="none" stroke="#FBBF24" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

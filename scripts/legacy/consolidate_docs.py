@@ -467,7 +467,7 @@ All documentation follows markdown format and includes Vietnamese translations w
         }
 
 if __name__ == "__main__":
-    project_root = "/Users/macbookprom1/mekong-cli"
+    project_root = "/Users/macbook/mekong-cli"
     doc_manager = DocumentationManager(project_root)
     result = doc_manager.run_sync()
     

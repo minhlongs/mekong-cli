@@ -85,6 +85,22 @@ def _open_conn() -> sqlite3.Connection:
     return conn
 
 
+def _txn(fn, *args, **kwargs) -> Any:
+    """Run fn inside a transaction; rollback on exception.
+
+    Helper to eliminate the repeated try/commit/rollback/close boilerplate
+    in every write function.  The caller is still responsible for closing
+    the connection (most callers already have their own finally blocks).
+    """
+    conn = _open_conn()
+    try:
+        result = fn(conn, *args, **kwargs)
+        conn.commit()
+        return result
+    except Exception:
+        conn.rollback()
+        raise
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
 

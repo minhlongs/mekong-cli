@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  llama-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.antigravity
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../models:/models
+      - ../.git/antigravity:/workspace/.git/antigravity
+    command: >
+      -m /models/qwen3.6-35b-instruct-q4_k_m.gguf
+      -c 32768
+      -b 512
+      --host 0.0.0.0
+      --port 8080
+      --threads 8
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cpu
+              count: all
+    restart: unless-stopped

@@ -154,7 +154,7 @@ class AntigravityMCPServer:
                 [".venv/bin/python3", "-m", "pytest", path, "-v", "--tb=short"],
                 capture_output=True,
                 text=True,
-                cwd="/Users/macbookprom1/mekong-cli",
+                cwd="/Users/macbook/mekong-cli",
             )
             return {
                 "passed": result.returncode == 0,

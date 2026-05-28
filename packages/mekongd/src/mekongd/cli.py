@@ -42,7 +42,14 @@ def serve(
     reload: bool = typer.Option(False, "--reload", help="Auto-reload (dev only)"),
 ) -> None:
     """Start the Anthropic-compat proxy server."""
+    import logging
     import uvicorn
+
+    # Ensure app-level loggers (mekongd.proxy, mekongd.runtime) emit to stdout
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s:%(name)s: %(message)s",
+    )
 
     cfg = load_config()
     uvicorn.run(

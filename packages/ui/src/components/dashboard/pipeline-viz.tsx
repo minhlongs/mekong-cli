@@ -12,16 +12,16 @@ export interface PipelineVizProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const stepConfig: Record<string, { label: string; color: string; activeColor: string }> = {
-  plan: { label: "Plan", color: "var(--color-info-500)", activeColor: "var(--color-info-500)" },
-  execute: { label: "Execute", color: "var(--color-warning-500)", activeColor: "var(--color-warning-500)" },
-  verify: { label: "Verify", color: "var(--color-success-500)", activeColor: "var(--color-success-500)" },
+  plan: { label: "Plan", color: "var(-ColorInfo500)", activeColor: "var(-ColorInfo500)" },
+  execute: { label: "Execute", color: "var(-ColorWarning500)", activeColor: "var(-ColorWarning500)" },
+  verify: { label: "Verify", color: "var(-ColorSuccess500)", activeColor: "var(-ColorSuccess500)" },
 };
 
 const stateStyles: Record<StepState, string> = {
-  idle: "border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-tertiary)]",
-  active: "ring-2 ring-offset-2 ring-offset-[var(--bg-primary)]",
-  done: "opacity-100",
-  failed: "border-[var(--color-danger-500)] bg-[var(--color-danger-500)]/10 text-[var(--color-danger-500)]",
+  idle: "border-[var(-BorderDefault)] bg-[var(-BgSecondary)] text-[var(-TextTertiary)]",
+  active: "ring2 ringOffset2 ringOffset-[var(-BgPrimary)]",
+  done: "opacity100",
+  failed: "border-[var(-ColorDanger500)] bg-[var(-ColorDanger500)]/10 text-[var(-ColorDanger500)]",
 };
 
 const PipelineViz = React.forwardRef<HTMLDivElement, PipelineVizProps>(
@@ -33,27 +33,27 @@ const PipelineViz = React.forwardRef<HTMLDivElement, PipelineVizProps>(
     ];
 
     return (
-      <div className={cn("flex items-center gap-2", className)} ref={ref} {...props}>
+      <div className={cn("flex itemsCenter gap2", className)} ref={ref} {...props}>
         {steps.map((step, i) => {
           const cfg = stepConfig[step.key];
           return (
             <React.Fragment key={step.key}>
               {i > 0 && (
                 <div className={cn(
-                  "h-0.5 w-8",
+                  "h0.5 w8",
                   step.state === "done" || step.state === "active"
                     ? `bg-[${cfg.color}]`
-                    : "bg-[var(--border-default)]"
+                    : "bg-[var(-BorderDefault)]"
                 )} />
               )}
               <div className={cn(
-                "flex items-center gap-1.5 rounded-[var(--radius-full)] border px-3 py-1.5 text-[var(--font-size-xs)] font-semibold",
+                "flex itemsCenter gap1.5 rounded-[var(-RadiusFull)] border px3 py1.5 text-[var(-FontSizeXs)] fontSemibold",
                 stateStyles[step.state],
                 step.state === "active" && `ring-[${cfg.activeColor}] border-[${cfg.color}] text-[${cfg.color}]`,
                 step.state === "done" && `border-[${cfg.color}] bg-[${cfg.color}]/10 text-[${cfg.color}]`,
               )}>
                 {step.state === "active" && (
-                  <span className={`h-1.5 w-1.5 animate-pulse rounded-full bg-[${cfg.color}]`} />
+                  <span className={`h1.5 w1.5 animatePulse roundedFull bg-[${cfg.color}]`} />
                 )}
                 {step.state === "done" && <span>&#x2713;</span>}
                 {step.state === "failed" && <span>&#x2717;</span>}

@@ -33,8 +33,8 @@ class TestFallbackHierarchy:
 
     def test_opus_fallback_order(self):
         fb = FALLBACK_HIERARCHY["claude-opus-4-6"]
-        # Opus falls back to local Ollama models (qwen3:32b, then deepseek-r1:32b)
-        assert fb[0] == "ollama:qwen3:32b"
+        # Opus falls back to local Rapid-MLX models (qwen3.6-35b, then deepseek-r1:32b)
+        assert fb[0] == "ollama:qwen3.6-35b"
         assert fb[1] == "ollama:deepseek-r1:32b"
 
     def test_no_self_referencing(self):
@@ -56,19 +56,19 @@ class TestRetryConfig:
 class TestGetFallbackModels:
     def test_returns_ordered_fallbacks(self):
         result = get_fallback_models("claude-opus-4-6", [])
-        # Opus falls back to local Ollama models
-        assert result == ["ollama:qwen3:32b", "ollama:deepseek-r1:32b"]
+        # Opus falls back to local Rapid-MLX models
+        assert result == ["ollama:qwen3.6-35b", "ollama:deepseek-r1:32b"]
 
     def test_excludes_attempted(self):
         result = get_fallback_models(
-            "claude-opus-4-6", ["ollama:qwen3:32b"]
+            "claude-opus-4-6", ["ollama:qwen3.6-35b"]
         )
-        assert "ollama:qwen3:32b" not in result
+        assert "ollama:qwen3.6-35b" not in result
         assert "ollama:deepseek-r1:32b" in result
 
     def test_all_attempted_returns_empty(self):
         result = get_fallback_models(
-            "claude-opus-4-6", ["ollama:qwen3:32b", "ollama:deepseek-r1:32b"]
+            "claude-opus-4-6", ["ollama:qwen3.6-35b", "ollama:deepseek-r1:32b"]
         )
         assert result == []
 
@@ -101,23 +101,23 @@ class TestGetFallbackModels:
         result = get_fallback_models(
             "gemini-2.0-flash", [], data_sensitivity="sensitive"
         )
-        # fallbacks: ["ollama:qwen3-coder-next"]
+        # fallbacks: ["ollama:qwen3.6-35b"]
         # Only ollama should remain
-        assert result == ["ollama:qwen3-coder-next"]
+        assert result == ["ollama:qwen3.6-35b"]
 
     def test_public_allows_api_fallbacks(self):
         """Public data allows all fallbacks including API."""
         result = get_fallback_models(
             "claude-haiku-4-5", [], data_sensitivity="public"
         )
-        assert "ollama:qwen2.5-coder:7b" in result
+        assert "ollama:qwen3.5-4b" in result
 
     def test_internal_allows_api_fallbacks(self):
         """Internal data allows API fallbacks (only sensitive blocks)."""
         result = get_fallback_models(
             "gpt-4o-mini", [], data_sensitivity="internal"
         )
-        assert "ollama:qwen2.5-coder:7b" in result
+        assert "ollama:qwen3.5-4b" in result
 
 
 class TestRebuildConfig:

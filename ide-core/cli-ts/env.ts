@@ -1,13 +1,13 @@
 /**
- * Mekong CLI — Environment Configuration for Ollama MLX Engine.
+ * Mekong CLI — Environment Configuration for Rapid-MLX Engine.
  *
- * Centralized env resolution for local Ollama inference.
- * Ollama 0.19+ uses Apple MLX natively on Apple Silicon.
+ * Centralized env resolution for local Rapid-MLX inference.
+ * Rapid-MLX uses Apple MLX natively on Apple Silicon — 4.2x faster than Ollama.
  *
- * Strategy (100/100 model stack):
- *   DEV:  qwen3:30b-a3b (18GB MoE) + deepseek-r1:32b (19GB) = 38.7GB
- *   PROD: qwen2.5-coder:7b + qwen3:8b = 14.7GB (B2B lightweight)
- *   Shared: qwen3:1.7b (tool), phi4-mini-reasoning (trading),
+ * Strategy (Qwen 3.6-35B primary):
+ *   DEV:  qwen3.6-35b (20GB MoE, 262K context) — primary model
+ *   PROD: qwen3.6-35b (lightweight via Rapid-MLX)
+ *   Shared: qwen3.5-4b (tool), phi4-mini-reasoning (trading),
  *   nomic-embed-text (embeddings)
  */
 
@@ -25,17 +25,17 @@ export interface OllamaConfig {
 }
 
 const DEV_MODELS = {
-  default: 'qwen3:30b-a3b',
-  reasoning: 'deepseek-r1:32b',
-  tool: 'qwen3:1.7b',
+  default: 'qwen3.6-35b',
+  reasoning: 'qwen3.6-35b',
+  tool: 'qwen3.5-4b',
   trading: 'phi4-mini-reasoning',
   embed: 'nomic-embed-text',
 } as const
 
 const PROD_MODELS = {
-  default: 'qwen2.5-coder:7b',
-  reasoning: 'qwen3:8b',
-  tool: 'qwen3:1.7b',
+  default: 'qwen3.6-35b',
+  reasoning: 'qwen3.6-35b',
+  tool: 'qwen3.5-4b',
   trading: 'phi4-mini-reasoning',
   embed: 'nomic-embed-text',
 } as const
@@ -66,8 +66,8 @@ export function getOllamaConfig(): OllamaConfig {
   const models = env === 'production' ? PROD_MODELS : DEV_MODELS
 
   return {
-    baseUrl: process.env.OPENAI_BASE_URL ?? 'http://127.0.0.1:11434/v1',
-    apiKey: process.env.OPENAI_API_KEY ?? 'ollama',
+    baseUrl: process.env.OPENAI_BASE_URL ?? 'http://127.0.0.1:8001/v1',
+    apiKey: process.env.OPENAI_API_KEY ?? 'mlx',
     defaultModel: process.env.OPENAI_MODEL ?? models.default,
     reasoningModel: models.reasoning,
     toolModel: models.tool,
@@ -86,7 +86,7 @@ export function getOllamaConfig(): OllamaConfig {
  */
 export function applyOllamaEnv(): void {
   process.env.CLAUDE_CODE_USE_OPENAI ??= '1'
-  process.env.OPENAI_BASE_URL ??= 'http://127.0.0.1:11434/v1'
-  process.env.OPENAI_API_KEY ??= 'ollama'
+  process.env.OPENAI_BASE_URL ??= 'http://127.0.0.1:8001/v1'
+  process.env.OPENAI_API_KEY ??= 'mlx'
   process.env.OPENAI_MODEL ??= getDefaultModel()
 }

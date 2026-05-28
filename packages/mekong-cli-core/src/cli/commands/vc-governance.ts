@@ -66,7 +66,7 @@ export function registerVcGovernanceCommand(program: Command, _engine: MekongEng
         info('── Compliance Audit ──');
         info(`ISO 27001: ${iso27001.score}/${iso27001.maxScore}`);
         info(`SOC 2: ${soc2.score}/${soc2.maxScore}`);
-        info(`GDPR: ${gdpr.filter(c => c.status === 'pass').length}/${gdpr.length} pass`);
+        info(`GDPR: ${gdpr.filter((c: any) => c.status === 'pass').length}/${gdpr.length} pass`);
         const report = engine.generateComplianceReport();
         info(report);
       } catch (err) {

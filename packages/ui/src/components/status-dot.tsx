@@ -5,14 +5,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 const statusDotVariants = cva(
-  "relative inline-block h-2.5 w-2.5 rounded-full",
+  "relative inlineBlock h2.5 w2.5 roundedFull",
   {
     variants: {
       status: {
-        online: "bg-[var(--color-success-500)]",
-        degraded: "bg-[var(--color-warning-500)]",
-        error: "bg-[var(--color-danger-500)]",
-        offline: "bg-[var(--color-neutral-400)]",
+        online: "bg-[var(-ColorSuccess500)]",
+        degraded: "bg-[var(-ColorWarning500)]",
+        error: "bg-[var(-ColorDanger500)]",
+        offline: "bg-[var(-ColorNeutral400)]",
       },
       pulse: {
         true: "",
@@ -29,14 +29,14 @@ export interface StatusDotProps
 
 const StatusDot = React.forwardRef<HTMLSpanElement, StatusDotProps>(
   ({ className, status, pulse, ...props }, ref) => (
-    <span className={cn("relative inline-flex", className)} ref={ref} {...props}>
+    <span className={cn("relative inlineFlex", className)} ref={ref} {...props}>
       {pulse && status !== "offline" && (
         <span
           className={cn(
-            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-            status === "online" && "bg-[var(--color-success-500)]",
-            status === "degraded" && "bg-[var(--color-warning-500)]",
-            status === "error" && "bg-[var(--color-danger-500)]"
+            "absolute inlineFlex hFull wFull animatePing roundedFull opacity75",
+            status === "online" && "bg-[var(-ColorSuccess500)]",
+            status === "degraded" && "bg-[var(-ColorWarning500)]",
+            status === "error" && "bg-[var(-ColorDanger500)]"
           )}
         />
       )}

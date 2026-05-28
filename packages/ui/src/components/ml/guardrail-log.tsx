@@ -4,12 +4,12 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const triggerBadge = cva("rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--font-xs)] font-medium", {
+const triggerBadge = cva("rounded-[var(-RadiusSm)] px2 py0.5 text-[var(-FontXs)] fontMedium", {
   variants: {
     action: {
-      blocked: "bg-[var(--status-error)]/15 text-[var(--status-error)]",
-      flagged: "bg-[var(--status-warning)]/15 text-[var(--status-warning)]",
-      passed: "bg-[var(--status-healthy)]/15 text-[var(--status-healthy)]",
+      blocked: "bg-[var(-StatusError)]/15 text-[var(-StatusError)]",
+      flagged: "bg-[var(-StatusWarning)]/15 text-[var(-StatusWarning)]",
+      passed: "bg-[var(-StatusHealthy)]/15 text-[var(-StatusHealthy)]",
     },
   },
   defaultVariants: { action: "passed" },
@@ -20,17 +20,17 @@ export interface GuardrailLogProps extends React.HTMLAttributes<HTMLDivElement> 
 
 const GuardrailLog = React.forwardRef<HTMLDivElement, GuardrailLogProps>(
   ({ className, events, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] overflow-hidden", className)} {...props}>
-      <div className="border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-sm)]">
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">Guardrail Log</span>
+    <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] overflowHidden", className)} {...props}>
+      <div className="borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingSm)]">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">Guardrail Log</span>
       </div>
-      <div className="max-h-64 overflow-y-auto">
+      <div className="maxH64 overflowYAuto">
         {events.map((e, i) => (
-          <div key={i} className="flex items-center gap-[var(--spacing-md)] border-b border-[var(--border-default)] px-[var(--spacing-lg)] py-[var(--spacing-sm)] last:border-b-0">
-            <span className="font-mono text-[var(--font-xs)] text-[var(--text-muted)] min-w-[48px]">{e.time}</span>
+          <div key={i} className="flex itemsCenter gap-[var(-SpacingMd)] borderB border-[var(-BorderDefault)] px-[var(-SpacingLg)] py-[var(-SpacingSm)] last:borderB0">
+            <span className="fontMono text-[var(-FontXs)] text-[var(-TextMuted)] minW-[48px]">{e.time}</span>
             <span className={triggerBadge({ action: e.action })}>{e.action}</span>
-            <span className="text-[var(--font-xs)] text-[var(--text-secondary)]">{e.rule}</span>
-            <span className="flex-1 truncate text-[var(--font-xs)] text-[var(--text-muted)]">{e.input}</span>
+            <span className="text-[var(-FontXs)] text-[var(-TextSecondary)]">{e.rule}</span>
+            <span className="flex1 truncate text-[var(-FontXs)] text-[var(-TextMuted)]">{e.input}</span>
           </div>
         ))}
       </div>
