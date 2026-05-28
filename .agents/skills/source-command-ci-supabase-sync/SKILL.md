@@ -1,6 +1,13 @@
 ---
-description: Supabase debugger - diagnose database and sync issues
+name: "source-command-ci-supabase-sync"
+description: "Supabase debugger - diagnose database and sync issues"
 ---
+
+# source-command-ci-supabase-sync
+
+Use this skill when the user asks to run the migrated source command `ci-supabase-sync`.
+
+## Command Template
 
 # /supabase-sync - Database Debugger
 

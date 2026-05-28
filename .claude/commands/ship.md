@@ -19,7 +19,7 @@ One command to test, commit, push, and deploy.
 // turbo
 
 ```bash
-cd /Users/macbookprom1/mekong-cli
+cd /Users/macbook/mekong-cli
 echo "🔍 Pre-flight CI/CD check..."
 gh run list --limit 1 --json conclusion --jq '.[0].conclusion' | grep -q "success" && echo "✅ GitHub CI: GREEN" || echo "⚠️ GitHub CI: Check /debugger"
 python3 -m ruff check . --quiet 2>/dev/null && echo "✅ Ruff: 0 errors" || echo "⚠️ Run: ruff check . --fix"
@@ -30,7 +30,7 @@ python3 -m ruff check . --quiet 2>/dev/null && echo "✅ Ruff: 0 errors" || echo
 // turbo
 
 ```bash
-cd /Users/macbookprom1/mekong-cli
+cd /Users/macbook/mekong-cli
 python3 -m ruff check . --fix
 pnpm --filter mekong-docs build
 python3 -m pytest backend/tests -q --tb=no

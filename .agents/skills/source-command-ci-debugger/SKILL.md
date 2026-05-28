@@ -1,6 +1,13 @@
 ---
-description: CI/CD debugger - diagnose Vercel, GitHub, and Supabase issues
+name: "source-command-ci-debugger"
+description: "CI/CD debugger - diagnose Vercel, GitHub, and Supabase issues"
 ---
+
+# source-command-ci-debugger
+
+Use this skill when the user asks to run the migrated source command `ci-debugger`.
+
+## Command Template
 
 # /debugger - Full-Stack Pipeline Debugger
 
