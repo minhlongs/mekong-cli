@@ -42,6 +42,7 @@ def build_app() -> typer.Typer:
     from src.cli.workflow_commands import register_workflow_commands
     from src.cli.recipe_commands import register_recipe_commands
     from src.cli.system_commands import register_system_commands
+    from src.cli.studio_commands import register_studio_commands
 
     # BMAD uses dash naming — not importable as standard package
     spec = importlib.util.spec_from_file_location(
@@ -82,6 +83,7 @@ def build_app() -> typer.Typer:
     register_workflow_commands(root)
     register_recipe_commands(root)
     register_system_commands(root)
+    register_studio_commands(root)
 
     # Phase-03 signals commands (metrics + offline evals)
     register_metrics(root)
