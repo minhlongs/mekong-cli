@@ -36,7 +36,6 @@ _HAS_MEMORY = False
 _HAS_MEMORY_STORE = False
 _HAS_AGENT_REGISTRY = False
 _HAS_PLUGIN_REGISTRY = False
-_HAS_MCU = False
 _HAS_COST = False
 _HAS_ROUTER = False
 
@@ -120,7 +119,6 @@ _memory: Any = None
 _memory_store: Any = None
 _agent_registry: Any = None
 _plugin_registry: Any = None
-_mcu_gate: Any = None
 
 
 def _get_memory() -> Any:
@@ -155,14 +153,6 @@ def _get_plugin_registry() -> Any:
     return _plugin_registry
 
 
-def _get_mcu_gate() -> Any:
-    """Get or create the MCU gate singleton."""
-    global _mcu_gate
-    if _mcu_gate is None and _HAS_MCU:
-        _mcu_gate = MCUGate()
-    return _mcu_gate
-
-
 # ===================================================================
 # MekongMcpServer
 # ===================================================================
@@ -183,6 +173,7 @@ class MekongMcpServer:
     def __init__(self, name: str = "mekong-ai-os") -> None:
         self.name = name
         self._app: Any = None
+        self._tools: list[dict[str, str]] = []
 
     # ------------------------------------------------------------------
     # Factory
@@ -203,6 +194,10 @@ class MekongMcpServer:
 
         app: Any = FastMCP(self.name, log_level="ERROR")
         self._register_tools(app)
+        self._tools = [
+            {"name": t.name, "description": t.description or ""}
+            for t in app._tool_manager.list_tools()
+        ]
         self._app = app
         return app
 
@@ -515,12 +510,15 @@ class MekongMcpServer:
         ]
         for sdir in skill_dirs:
             if sdir.exists():
-                for child in sorted(sdir.iterdir()):
-                    if child.is_dir():
-                        skills.append({
-                            "name": child.name,
-                            "source": str(sdir),
-                        })
+                try:
+                    for child in sorted(sdir.iterdir()):
+                        if child.is_dir():
+                            skills.append({
+                                "name": child.name,
+                                "source": str(sdir),
+                            })
+                except PermissionError:
+                    logger.warning("Cannot read skill directory: %s", sdir)
 
         return _ok({"skills": skills, "count": len(skills)})
 
@@ -528,20 +526,9 @@ class MekongMcpServer:
 
     def _handle_mcp_list(self) -> str:
         """List this MCP server's own tools and any discovered MCP servers."""
-        tools: list[dict[str, str]] = []
-        if self._app is not None:
-            try:
-                for tool in self._app._tool_manager.list_tools():
-                    tools.append({
-                        "name": tool.name,
-                        "description": tool.description or "",
-                    })
-            except Exception:
-                pass
-
         return _ok({
-            "mcp_servers": [{"name": self.name, "tools_count": len(tools)}],
-            "tools": tools,
+            "mcp_servers": [{"name": self.name, "tools_count": len(self._tools)}],
+            "tools": self._tools,
         })
 
     # ── Plugins ───────────────────────────────────────────────────────

@@ -35,8 +35,14 @@ mekong ai-os status       # Check health
 ```
 Server entry in `.claude/mcp.json` as `mekong-ai-os` (stdio, venv-based).
 
-### Tools (24)
-Memory: mem_store, mem_search, mem_recent, mem_stats. Tasks: task_create, task_list, task_status, task_update. Agents: agent_spawn, agent_list, agent_kill. Skills: skill_load, skill_list, skill_search. MCP: mcp_list, mcp_call, mcp_health. Plugins: plugin_install, plugin_list, plugin_remove. Brainstorm, Lab (sandbox), Trading (paper), Monitor (metrics), Plan (decompose), SSJ (supervisor).
+### Tools (24, all prefixed `cc_`)
+Memory: `cc_memory_search`, `cc_memory_consolidate`.
+Tasks: `cc_tasks_list`, `cc_tasks_create`, `cc_tasks_done`, `cc_tasks_start`, `cc_tasks_delete`.
+Agents: `cc_agents_list`, `cc_agents_start`, `cc_agents_stop`.
+Skills: `cc_skills_list`.
+MCP: `cc_mcp_list`.
+Plugins: `cc_plugins_list`, `cc_plugins_install`.
+Brainstorm (`cc_brainstorm`), Lab (`cc_lab_start`, `cc_lab_status`), Trading (`cc_trading_analyze`, `cc_trading_price`), Monitor (`cc_monitor_run`, `cc_monitor_status`), Plan (`cc_plan_start`, `cc_plan_done`), SSJ (`cc_ssj`).
 
 ### Adapters (`mekong/adapters/`)
 `ai-os.sh` (AI OS entry point), `intent-router` (NL→command mapping), `mcp-bridge` (tool proxy), `health-check` (liveness probe), `provider-config` (LLM env setup), `registry.sh` (AI CLI registry).
