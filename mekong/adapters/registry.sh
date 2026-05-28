@@ -5,11 +5,12 @@
 MEKONG_ROOT="${MEKONG_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." 2>/dev/null && pwd || echo "$HOME/mekong-cli")}"
 
 # Tool priority order
-TOOL_PRIORITY="claude gemini qwen opencode aider codex amp"
+TOOL_PRIORITY="agy claude gemini qwen opencode aider codex amp"
 
 # ─── TOOL DATABASE (bash 3.2 compatible — no declare -A) ───
 _tool_binary() {
   case "$1" in
+    agy)      echo "agy";;
     claude)   echo "claude";;
     gemini)   echo "gemini";;
     opencode) echo "opencode";;
@@ -17,12 +18,14 @@ _tool_binary() {
     codex)    echo "codex";;
     amp)      echo "amp";;
     qwen)     echo "qwen";;
+    mekong-ai-os) echo "mekong-ai-os";;
     *)        echo "";;
   esac
 }
 
 _tool_idle() {
   case "$1" in
+    agy)      echo "for shortcuts|❯|bypass";;
     claude)   echo "❯|bypass";;
     gemini)   echo "Type your message";;
     qwen)     echo ">";;
@@ -36,6 +39,7 @@ _tool_idle() {
 
 _tool_launch() {
   case "$1" in
+    agy)      echo "agy --dangerously-skip-permissions";;
     claude)   echo "claude --dangerously-skip-permissions";;
     gemini)   echo "gemini";;
     qwen)     echo "qwen";;
@@ -75,10 +79,15 @@ select_tool() {
 }
 
 # ─── IDLE DETECTION (multi-tool) ───
+_first_window() {
+  tmux list-windows -t "$1" -F '#{window_index}' 2>/dev/null | head -1
+}
+
 is_pane_idle() {
   local pane="$1" session="$2"
+  local win; win=$(_first_window "$session"); win="${win:-0}"
   local tail5
-  tail5=$(tmux capture-pane -t "${session}:0.${pane}" -p 2>/dev/null | tail -5)
+  tail5=$(tmux capture-pane -t "${session}:${win}.${pane}" -p 2>/dev/null | tail -5)
   
   # Check all known idle patterns
   for t in $TOOL_PRIORITY; do
@@ -117,7 +126,8 @@ respawn_in_pane() {
   local pane="$1" session="$2" tool="$3" cwd="${4:-$HOME/mekong-cli}"
   local cmd
   cmd=$(get_launch_cmd "$tool" "$cwd")
-  tmux send-keys -t "${session}:0.${pane}" -l "$cmd" 2>/dev/null || true
+  local win; win=$(_first_window "$session"); win="${win:-0}"
+  tmux send-keys -t "${session}:${win}.${pane}" -l "$cmd" 2>/dev/null || true
   sleep 0.5
-  tmux send-keys -t "${session}:0.${pane}" Enter 2>/dev/null || true
+  tmux send-keys -t "${session}:${win}.${pane}" Enter 2>/dev/null || true
 }

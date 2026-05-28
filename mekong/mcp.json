@@ -21,6 +21,14 @@
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ]
+    },
+    "mekong-ai-os": {
+      "command": "python",
+      "args": [
+        "-m",
+        "src.core.mcp_server"
+      ],
+      "env": {}
     }
   }
 }
