@@ -6,7 +6,7 @@
     "beforeDevCommand": "",
     "devUrl": "http://localhost:3000",
     "beforeBuildCommand": "",
-    "frontendDist": "../ide-ui/out"
+    "frontendDist": "../../ide-ui/out"
   },
   "app": {
     "windows": [

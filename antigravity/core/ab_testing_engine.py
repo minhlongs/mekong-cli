@@ -17,11 +17,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-
 # Statistical imports (with fallbacks)
 try:
-    import pymc as mc
+    import numpy as np
+    import pymc as mc  # noqa: F401
     from scipy import stats as scipy_stats
     from scipy.stats import chi2_contingency
 

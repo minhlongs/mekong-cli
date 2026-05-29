@@ -94,7 +94,10 @@ app.onError((err, c) => {
 app.use('*', payloadSizeLimit())
 app.use('*', cors({
   origin: [
+    'https://mekongmind.com',
     'https://www.mekongmind.com',
+    'https://ide.mekongmind.com',
+    'https://docs.mekongmind.com',
     'https://api.cashclaw.cc',
     'http://localhost:4321',  // astro dev
     'http://localhost:3001',  // dashboard dev
@@ -123,7 +126,11 @@ app.get('/', (c) => c.json({
 }))
 
 // Lightweight liveness probe (no I/O) — preferred for CF/load balancer checks
-app.get('/healthz', (c) => c.json({ status: 'ok', version: '3.2.0' }))
+app.get('/healthz', (c) => c.json({
+  status: 'ok',
+  version: '3.2.0',
+  build: (c.env as Record<string, string>)?.BUILD_SHA || 'dev',
+}))
 
 // Health check + auto-migrate tenant_settings
 app.get('/health', async (c) => {
@@ -165,9 +172,12 @@ app.get('/health', async (c) => {
     }
   }
 
+  const BUILD_SHA = (c.env as Record<string, string>)?.BUILD_SHA || 'dev'
+
   return c.json({
     status: 'ok',
     version: '3.2.0',
+    build: BUILD_SHA,
     uptime: uptime,
     database: {
       connected: databaseConnected,
