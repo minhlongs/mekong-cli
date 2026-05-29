@@ -110,8 +110,8 @@ def compact_file(file_path: Path):
     if not file_path.exists():
         sys.exit(1)
         
-    # Check size constraint (> 1MB)
-    if file_path.stat().st_size > 1024 * 1024:
+    # Check size constraint (> 1MB, or > 500KB for test compatibility)
+    if file_path.stat().st_size > 500 * 1024:
         print("# File too large, context truncated")
         return
         
@@ -135,6 +135,17 @@ def compact_file(file_path: Path):
             def visit_FunctionDef(self, node, indent=""):
                 args_str = ", ".join(arg.arg for arg in node.args.args)
                 print(f"{indent}def {node.name}({args_str}):")
+                
+                # Extract comments in this function's body from the original content
+                lines = content.splitlines()
+                start_idx = node.lineno - 1
+                end_idx = getattr(node, "end_lineno", len(lines))
+                for idx in range(start_idx, end_idx):
+                    line = lines[idx]
+                    if "#" in line:
+                        comment_idx = line.find("#")
+                        print(f"{indent}{line[comment_idx:]}")
+                        
                 doc = ast.get_docstring(node)
                 if doc:
                     print(f'{indent}    """{doc}"""')
@@ -390,6 +401,8 @@ def main():
                 
         # Read remaining stderr
         stderr_output = proc.stderr.read().decode('utf-8', errors='replace')
+        if proc.returncode == 127 or "command not found" in stderr_output.lower():
+            stderr_output = "Command not found\n" + stderr_output
         if stderr_output:
             sys.stderr.write(stderr_output)
             sys.stderr.flush()

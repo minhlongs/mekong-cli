@@ -159,8 +159,8 @@ def test_f2_t2_05_database_purge_and_vacuum(antigravity_bin, clean_db):
     conn = sqlite3.connect(clean_db)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM session_history")
-    cursor.execute("VACUUM")
     conn.commit()
+    cursor.execute("VACUUM")
     
     # Confirm purged successfully
     cursor.execute("SELECT count(*) FROM session_history")

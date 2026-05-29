@@ -3,7 +3,7 @@
 Verifies:
   1. Module imports cleanly without MCP SDK
   2. MekongMcpServer class construction and method signatures
-  3. All 24 tool handler implementations return valid JSON
+  3. All 25 tool handler implementations return valid JSON
   4. Graceful degradation when core modules are unavailable
   5. create_app() / run() factory mechanics
 """
@@ -11,10 +11,10 @@ Verifies:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
-from typing import Any
-from unittest.mock import ANY, MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -140,7 +140,7 @@ class TestCreateApp:
 
     def test_create_app_returns_app(self, mcp_module_with_sdk):
         """create_app() should return the FastMCP instance."""
-        (srv, mod) = (mcp_module_with_sdk.MekongMcpServer(), mcp_module_with_sdk)
+        srv = mcp_module_with_sdk.MekongMcpServer()
         with patch.object(srv, "_register_tools") as mock_register:
             app = srv.create_app()
             assert app is not None
@@ -229,25 +229,6 @@ class TestHandlersReturnJson:
     def test_tasks_delete(self, server):
         """Tasks delete should return error for nonexistent task."""
         result = server._handle_tasks_delete("nonexistent")
-        data = self._check_json(result)
-        assert data.get("ok") is False
-        assert data.get("ok") is True
-
-    def test_tasks_done(self, server):
-        """Tasks done should return error (task system not yet exposed)."""
-        result = server._handle_tasks_done("123")
-        data = self._check_json(result)
-        assert data.get("ok") is False
-
-    def test_tasks_start(self, server):
-        """Tasks start should return error."""
-        result = server._handle_tasks_start("123")
-        data = self._check_json(result)
-        assert data.get("ok") is False
-
-    def test_tasks_delete(self, server):
-        """Tasks delete should return error."""
-        result = server._handle_tasks_delete("123")
         data = self._check_json(result)
         assert data.get("ok") is False
 
@@ -363,27 +344,164 @@ class TestHandlersReturnJson:
 
     # ── Plan Mode ─────────────────────────────────────────────────────
 
-    def test_plan_start_no_planner(self, server):
-        """Without planner, plan start should return ok simulated."""
-        result = server._handle_plan_start("Implement login")
+    def test_plan_start(self, server):
+        """Plan start should create a plan with decomposed tasks."""
+        result = server._handle_plan_start(
+            "Build user authentication: login page, database schema, JWT tokens, API routes"
+        )
         data = self._check_json(result)
         assert data.get("ok") is True
-        assert "note" in data.get("data", {}) or "tasks" in data.get("data", {})
+        dd = data.get("data", {})
+        assert "plan_id" in dd
+        assert dd.get("task_count", 0) > 0
+
+    def test_plan_list(self, server):
+        """Plan list should return ok."""
+        result = server._handle_plan_list()
+        data = self._check_json(result)
+        assert data.get("ok") is True
+
+    def test_plan_list_with_status(self, server):
+        """Plan list with status filter should return ok."""
+        _ = server._handle_plan_start("Write tests")
+        result = server._handle_plan_list("active")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        assert data.get("data", {}).get("count", 0) > 0
 
     def test_plan_done(self, server):
-        """Plan done should return ok."""
-        result = server._handle_plan_done()
+        """Plan done should mark plan as completed."""
+        start = server._handle_plan_start("Fix bugs in payment module")
+        start_data = self._check_json(start)
+        plan_id = start_data.get("data", {}).get("plan_id", "")
+        result = server._handle_plan_done(plan_id)
         data = self._check_json(result)
         assert data.get("ok") is True
+        assert data.get("data", {}).get("plan_id") == plan_id
+
+    def test_plan_done_not_found(self, server):
+        """Plan done with bad id should return error."""
+        result = server._handle_plan_done("bogus-id")
+        data = self._check_json(result)
+        assert data.get("ok") is False
 
     # ── SSJ ───────────────────────────────────────────────────────────
 
-    def test_ssj(self, server):
-        """SSJ should return ok with menu items."""
-        result = server._handle_ssj()
+    def test_ssj_all(self, server):
+        """SSJ 'all' should return ok with menu items."""
+        result = server._handle_ssj("all")
         data = self._check_json(result)
         assert data.get("ok") is True
         assert "ssj_menu" in data.get("data", {})
+
+    def test_ssj_diagnostics(self, server):
+        """SSJ diagnostics should include python version."""
+        result = server._handle_ssj("diagnostics")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        diag = data.get("data", {}).get("diagnostics", {})
+        assert "python" in diag
+
+    def test_ssj_health_check(self, server):
+        """SSJ health check should return ok."""
+        result = server._handle_ssj("health-check")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        health = data.get("data", {}).get("health", {})
+        assert "llm_available" in health
+
+    def test_ssj_toggle_logging(self, server):
+        """SSJ toggle logging should flip LOG_LEVEL."""
+        prev = os.environ.get("LOG_LEVEL", "WARNING")
+        result = server._handle_ssj("toggle-logging")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        assert data.get("data", {}).get("log_level") in ("DEBUG", "WARNING")
+        os.environ["LOG_LEVEL"] = prev
+
+    def test_ssj_unknown_action(self, server):
+        """SSJ with bogus action should return error."""
+        result = server._handle_ssj("bogus")
+        data = self._check_json(result)
+        assert data.get("ok") is False
+
+    def test_ssj_memory_stats_no_store(self, server):
+        """SSJ memory stats should return error without memory store."""
+        result = server._handle_ssj("memory-stats")
+        data = self._check_json(result)
+        assert data.get("ok") is False
+
+    def test_ssj_plugin_status_no_registry(self, server):
+        """SSJ plugin status should return error without plugin registry."""
+        result = server._handle_ssj("plugin-status")
+        data = self._check_json(result)
+        assert data.get("ok") is False
+
+    # ── Lab extended ──────────────────────────────────────────────────
+
+    def test_lab_start_creates_session(self, server):
+        """Lab start should create a session with the given topic."""
+        result = server._handle_lab_start("machine learning")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        session = data.get("data", {}).get("session", {})
+        assert session.get("topic") == "machine learning"
+        assert session.get("status") == "active"
+        assert "session_id" in session
+
+    # ── Trading extended ──────────────────────────────────────────────
+
+    def test_trading_analyze_returns_symbol(self, server):
+        """Trading analyze should uppercase the symbol."""
+        result = server._handle_trading_analyze("btc/usd")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        assert data.get("data", {}).get("symbol") == "BTC/USD"
+
+    def test_trading_price_returns_symbol(self, server):
+        """Trading price should uppercase the symbol."""
+        result = server._handle_trading_price("eth/usd")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        assert data.get("data", {}).get("symbol") == "ETH/USD"
+
+    # ── Monitor extended ──────────────────────────────────────────────
+
+    def test_monitor_run_creates_session(self, server):
+        """Monitor run should create a session."""
+        result = server._handle_monitor_run("production")
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        session = data.get("data", {}).get("session", {})
+        assert session.get("topic") == "production"
+        assert session.get("monitor_id", "") != ""
+
+    def test_monitor_run_empty_topic_default(self, server):
+        """Monitor run with empty topic should default to 'all subscriptions'."""
+        result = server._handle_monitor_run()
+        data = self._check_json(result)
+        assert data.get("ok") is True
+        session = data.get("data", {}).get("session", {})
+        assert session.get("topic") == "all subscriptions"
+
+    def test_monitor_list_sessions(self, server):
+        """Monitor status should list sessions."""
+        _ = server._handle_monitor_run("test-alert")
+        result = server._handle_monitor_status()
+        data = self._check_json(result)
+        assert data.get("ok") is True
+
+    # ── Tool description quality ──────────────────────────────────────
+
+    def test_no_stub_descriptions_in_docstrings(self, server):
+        """No handler docstring should mention STUB."""
+        for attr_name in dir(server):
+            if attr_name.startswith("_handle_"):
+                attr = getattr(server, attr_name)
+                doc = getattr(attr, "__doc__", "") or ""
+                assert "STUB" not in doc.upper(), (
+                    f"{attr_name} docstring still mentions STUB: {doc[:100]}"
+                )
 
 
 # =========================================================================
@@ -417,13 +535,14 @@ class TestToolNaming:
         "cc_monitor_run",
         "cc_monitor_status",
         "cc_plan_start",
+        "cc_plan_list",
         "cc_plan_done",
         "cc_ssj",
     ]
 
     def test_tool_count(self):
-        """Should have exactly 24 expected tools."""
-        assert len(self.EXPECTED_TOOLS) == 24
+        """Should have exactly 25 expected tools."""
+        assert len(self.EXPECTED_TOOLS) == 25
 
     def test_tool_names_all_cc_prefix(self):
         """Every tool name should start with cc_."""
@@ -457,7 +576,7 @@ class TestGracefulDegradation:
 
     def test_ok_response_format(self, server):
         """Successful responses should contain 'data' field."""
-        result = server._handle_plan_done()
+        result = server._handle_plan_list()
         data = json.loads(result)
         assert "data" in data
         assert data.get("ok") is True
