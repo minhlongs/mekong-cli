@@ -1,26 +1,45 @@
 import type { D1Database } from '@cloudflare/workers-types'
+import { addCredits } from './credits'
 import { generateLicenseKey, revokeLicenseKey } from './license-keys'
 import { createTenant } from './tenant'
 
 /**
- * Verify Polar webhook signature using HMAC-SHA256.
- * Polar sends `webhook-signature` header in `<algo>=<hex>` form (Standard Webhooks).
+ * Verify Polar webhook signature using Standard Webhooks format.
+ *
+ * Polar sends:
+ *   webhook-id: <event_id>
+ *   webhook-timestamp: <unix_epoch_seconds>
+ *   webhook-signature: v1,<base64>
+ *
+ * Expected HMAC: base64(HMAC-SHA256(secret, "{id}.{timestamp}.{body}"))
+ * Replay window: 5 minutes.
  */
 export async function verifyPolarSignature(
   body: string,
+  webhookId: string | undefined,
+  webhookTimestamp: string | undefined,
   signature: string | undefined,
   secret: string | undefined,
 ): Promise<boolean> {
-  if (!signature || !secret) return false
+  if (!signature || !secret || !webhookId || !webhookTimestamp) return false
 
-  // Standard Webhooks: signature is `v1,<base64-hmac>` joined by spaces.
-  // We accept either raw hex or `v1=<hex>` for compatibility.
-  const candidate = signature.includes('=') ? signature.split('=').pop() ?? '' : signature
-  const expected = await hmacHex(secret, body)
-  return constantTimeEqual(candidate.trim(), expected)
+  // Replay window check (5 min)
+  const ts = parseInt(webhookTimestamp, 10)
+  if (isNaN(ts)) return false
+  if (Math.abs(Date.now() / 1000 - ts) > 300) return false
+
+  // Standard Webhooks: signature is "v1,<base64>"
+  const sigParts = signature.split(',')
+  if (sigParts.length !== 2 || sigParts[0] !== 'v1') return false
+  const receivedSig = sigParts[1]!.trim()
+
+  // Compute expected: base64(HMAC-SHA256(secret, "{id}.{ts}.{body}"))
+  const signingInput = `${webhookId}.${webhookTimestamp}.${body}`
+  const expected = await hmacBase64(secret, signingInput)
+  return constantTimeEqual(receivedSig, expected)
 }
 
-async function hmacHex(secret: string, message: string): Promise<string> {
+async function hmacBase64(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey(
     'raw',
@@ -30,9 +49,10 @@ async function hmacHex(secret: string, message: string): Promise<string> {
     ['sign'],
   )
   const buf = await crypto.subtle.sign('HMAC', key, enc.encode(message))
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
+  const bytes = new Uint8Array(buf)
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
@@ -43,6 +63,12 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 export type PolarTier = 'starter' | 'growth' | 'pro'
+
+export const SUBSCRIPTION_CREDITS: Record<PolarTier, number> = {
+  starter: 200,
+  growth: 1000,
+  pro: 5000,
+}
 
 export function tierFromProductName(name: string | undefined): PolarTier {
   const n = (name || '').toLowerCase()
@@ -61,7 +87,7 @@ export function tierFromProductName(name: string | undefined): PolarTier {
 export async function handleSubscriptionCreated(
   db: D1Database,
   event: any,
-): Promise<{ licenseKey: string; tenantId: string; tier: PolarTier; email: string } | null> {
+): Promise<{ licenseKey: string; tenantId: string; tier: PolarTier; email: string; creditsGranted: number } | null> {
   const subscription = event?.subscription ?? event?.data?.subscription ?? event?.data ?? {}
   const customer = subscription.customer ?? {}
   const product = subscription.product ?? {}
@@ -89,7 +115,11 @@ export async function handleSubscriptionCreated(
 
   const result = await generateLicenseKey(db, tenantId)
   if (!result) return null
-  return { licenseKey: result.key, tenantId, tier, email }
+
+  const credits = SUBSCRIPTION_CREDITS[tier]
+  await addCredits(db, tenantId, credits, `Polar subscription: ${tier}`)
+
+  return { licenseKey: result.key, tenantId, tier, email, creditsGranted: credits }
 }
 
 /**

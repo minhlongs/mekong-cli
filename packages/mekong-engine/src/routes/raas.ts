@@ -179,9 +179,10 @@ webhookRoutes.post('/polar', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
 
   const raw = await c.req.text()
-  const signature =
-    c.req.header('webhook-signature') ?? c.req.header('Polar-Signature') ?? c.req.header('X-Polar-Signature')
-  const valid = await verifyPolarSignature(raw, signature, c.env.POLAR_WEBHOOK_SECRET)
+  const webhookId = c.req.header('webhook-id')
+  const webhookTimestamp = c.req.header('webhook-timestamp')
+  const signature = c.req.header('webhook-signature')
+  const valid = await verifyPolarSignature(raw, webhookId, webhookTimestamp, signature, c.env.POLAR_WEBHOOK_SECRET)
   if (!valid) {
     return c.json({ error: 'Invalid signature' }, 401)
   }
@@ -205,6 +206,7 @@ webhookRoutes.post('/polar', handleAsync(async (c) => {
         status: 'ok',
         tenant_id: result.tenantId,
         tier: result.tier,
+        credits_granted: result.creditsGranted,
         license_key_preview: `${result.licenseKey.slice(0, 12)}...`,
       })
     }

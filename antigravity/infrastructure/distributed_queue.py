@@ -15,6 +15,7 @@ import json
 import logging
 import pickle
 import uuid
+import threading
 from typing import Dict, Any, List, Optional, Callable, Union
 from dataclasses import dataclass, field
 from enum import Enum
@@ -28,7 +29,8 @@ try:
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 class JobStatus(Enum):
     """Job status tracking."""
@@ -96,6 +98,7 @@ class DistributedQueue:
         self.lock = Lock()
         self.stats = QueueStats()
         self.worker_registry = {}
+        self.redis_available = False
         self.job_timeouts = {
             JobPriority.CRITICAL: 300,      # 5 minutes
             JobPriority.HIGH: 600,         # 10 minutes
@@ -122,17 +125,33 @@ class DistributedQueue:
         """Initialize Redis connection."""
         if not REDIS_AVAILABLE:
             logger.warning("Redis not available, using in-memory fallback")
+            self.redis_available = False
             return
         
         try:
-            self.redis_client = redis.from_url(self.redis_url, decode_responses=True)
+            self.redis_client = redis.from_url(self.redis_url)
             self.redis_client.ping()
+            self.redis_available = True
             logger.info("Distributed queue connected to Redis")
         except Exception as e:
             logger.error(f"Redis connection failed: {e}")
+            self.redis_available = False
             if not self.fallback_to_memory:
                 raise
     
+    def _calculate_priority_score(self, priority: JobPriority, job: Job) -> float:
+        """Calculate priority score for Redis list scoring."""
+        priority_map = {
+            JobPriority.CRITICAL: 1000,
+            JobPriority.HIGH: 100,
+            JobPriority.NORMAL: 10,
+            JobPriority.LOW: 1,
+            JobPriority.BACKGROUND: 0.1
+        }
+        age_factor = max(0, (time.time() - job.created_at) / 300)
+        age_bonus = min(age_factor * 2, 10)
+        return priority_map[priority] - age_bonus
+
     def submit_job(
         self,
         name: str,
@@ -155,42 +174,41 @@ class DistributedQueue:
             metadata=metadata or {}
         )
         
-        # Add to appropriate queue
         if self.redis_available:
             try:
-                # Serialize job
                 job_data = pickle.dumps(job)
                 
-                # Add to Redis queue with priority score
+                # Store job metadata key for status checks
+                self.redis_client.set(f"job:{job.job_id}", job_data)
+                
                 priority_score = self._calculate_priority_score(priority, job)
-                
-                # Use Redis list with priority-based scoring
                 queue_key = self.priority_queues[priority]
-                self.redis_client.lpush(queue_key, f"{priority_score}:{job_data}")
                 
-                # Update stats
+                # Push priority prefix with pickle payload
+                self.redis_client.lpush(queue_key, f"{priority_score}:".encode() + job_data)
+                
                 self.stats.total_jobs += 1
                 self.stats.pending_jobs += 1
+                
+                # Increment global stats in Redis
+                self.redis_client.incr("stats:total_jobs")
+                self.redis_client.incr("stats:pending_jobs")
                 
                 logger.info(f"Job {job.job_id} submitted to {queue_key}")
                 return job.job_id
                 
             except Exception as e:
                 logger.error(f"Failed to submit job to Redis: {e}")
-                # Fallback to memory queue
                 return self._submit_to_memory_queue(job)
         else:
             return self._submit_to_memory_queue(job)
     
     def _submit_to_memory_queue(self, job: Job) -> str:
         """Submit job to in-memory fallback queue."""
-        priority_score = self._calculate_priority_score(job.priority, job)
         queue_key = self.priority_queues[job.priority]
-        
         self.memory_queue[queue_key].append(job)
         self.stats.total_jobs += 1
         self.stats.pending_jobs += 1
-        
         logger.info(f"Job {job.job_id} submitted to memory queue {queue_key}")
         return job.job_id
     
@@ -204,215 +222,258 @@ class DistributedQueue:
     def _get_next_redis_job(self, worker_id: Optional[str] = None, timeout: Optional[float] = None) -> Optional[Job]:
         """Get next job from Redis queue with priority-based selection."""
         try:
-            # Check for jobs in priority order
-            for priority in [JobPriority.CRITICAL, JobPriority.HIGH, JobPriority.NORMAL, JobPriority.LOW]:
+            for priority in [JobPriority.CRITICAL, JobPriority.HIGH, JobPriority.NORMAL, JobPriority.LOW, JobPriority.BACKGROUND]:
                 queue_key = self.priority_queues[priority]
-                if queue_key:
-                    # Use blocking pop with timeout
-                    job_data = self.redis_client.brpoplpush(
-                        queue_key,
-                        count=1,
-                        timeout=max(timeout or self.job_timeouts[priority], 5)
-                    )
-                    
-                    if job_data:
-                        job = pickle.loads(job_data.decode())
-                        if self._is_valid_job(job):
-                            job.status = JobStatus.RUNNING
-                            job.started_at = time.time()
-                            job.worker_id = worker_id
-                            
-                            # Update stats
-                            self.stats.pending_jobs -= 1
-                            self.stats.running_jobs += 1
-                            
-                            logger.info(f"Worker {worker_id} picked up job {job.job_id}")
-                            return job
-            
-            except redis.TimeoutError:
-                logger.warning(f"Timeout getting job from Redis queue for worker {worker_id}")
-                return None
-            except Exception as e:
-                logger.error(f"Error getting job from Redis: {e}")
-                return None
+                dst_queue = f"worker_queue:{worker_id}"
+                
+                # Use Redis brpoplpush to atomically pop and trace active worker tasks
+                job_raw = self.redis_client.brpoplpush(
+                    queue_key,
+                    dst_queue,
+                    timeout=int(max(timeout or self.job_timeouts[priority], 5))
+                )
+                
+                if job_raw:
+                    # Strip priority prefix: score:bytes -> extract bytes
+                    parts = job_raw.split(b":", 1)
+                    if len(parts) == 2:
+                        job_data = parts[1]
+                    else:
+                        job_data = job_raw
+                        
+                    job = pickle.loads(job_data)
+                    if self._is_valid_job(job):
+                        job.status = JobStatus.RUNNING
+                        job.started_at = time.time()
+                        job.worker_id = worker_id
+                        
+                        # Store updated job details
+                        self.redis_client.set(f"job:{job.job_id}", pickle.dumps(job))
+                        
+                        # Adjust running statistics
+                        self.stats.pending_jobs -= 1
+                        self.stats.running_jobs += 1
+                        self.redis_client.decr("stats:pending_jobs")
+                        self.redis_client.incr("stats:running_jobs")
+                        
+                        logger.info(f"Worker {worker_id} picked up job {job.job_id}")
+                        return job
+            return None
+        except Exception as e:
+            logger.error(f"Error getting job from Redis: {e}")
+            return None
         
     def _get_next_memory_job(self, worker_id: Optional[str] = None, timeout: Optional[float] = None) -> Optional[Job]:
         """Get next job from in-memory queue."""
-        if not self.memory_queue:
+        with self.lock:
+            for priority in [JobPriority.CRITICAL, JobPriority.HIGH, JobPriority.NORMAL, JobPriority.LOW, JobPriority.BACKGROUND]:
+                queue_key = self.priority_queues[priority]
+                if not self.memory_queue[queue_key]:
+                    continue
+                
+                job = self.memory_queue[queue_key].popleft()
+                if self._is_valid_job(job):
+                    job.status = JobStatus.RUNNING
+                    job.started_at = time.time()
+                    job.worker_id = worker_id
+                    
+                    self.stats.pending_jobs -= 1
+                    self.stats.running_jobs += 1
+                    logger.info(f"Worker {worker_id} picked up job {job.job_id} from memory queue {queue_key}")
+                    return job
             return None
-        
-        # Check all priority queues in order
-        for priority in [JobPriority.CRITICAL, JobPriority.HIGH, JobPriority.NORMAL, JobPriority.LOW]:
-            queue_key = self.priority_queues[priority]
-            
-            # Check if job available
-            if not self.memory_queue[queue_key]:
-                continue
-            
-            job = self.memory_queue[queue_key].popleft()
-            if self._is_valid_job(job):
-                job.status = JobStatus.RUNNING
-                job.started_at = time.time()
-                job.worker_id = worker_id
-                
-                # Update stats
-                self.stats.pending_jobs -= 1
-                self.stats.running_jobs += 1
-                
-                logger.info(f"Worker {worker_id} picked up job {job.job_id} from memory queue {queue_key}")
-                return job
     
     def complete_job(self, job_id: str, result: Any = None, success: bool = True, worker_id: str = None, error: Optional[str] = None):
         """Mark job as completed."""
         if self.redis_available:
             try:
-                # Update job in Redis
+                key = f"job:{job_id}"
+                job_raw = self.redis_client.get(key)
+                if not job_raw:
+                    logger.error(f"Job {job_id} not found in Redis, cannot complete.")
+                    return
+                
+                job = pickle.loads(job_raw)
                 job.status = JobStatus.COMPLETED if success else JobStatus.FAILED
                 job.completed_at = time.time()
+                job.worker_id = worker_id
                 
                 if error:
                     job.metadata["error"] = error
-                job.failed_at = time.time()
+                    job.failed_at = time.time()
                 elif result is not None:
                     job.metadata["result"] = result
                 
-                job.worker_id = worker_id
-                
-                # Serialize and store
+                # Write back completed job state
                 job_data = pickle.dumps(job)
-                key = f"job:{job_id}"
+                self.redis_client.set(key, job_data)
+                self.redis_client.expire(key, 3600)  # TTL of 1 hour
                 
-                self.redis_client.hset(key, job_data)
-                self.redis_client.expire(key, 3600)  # Keep completed jobs for 1 hour
-                
-                # Update Redis stats
-                self.redis_client.hincrby(f"stats:jobs", "completed", 1)
-                
-                # Update queue stats
+                # Atomically adjust metrics
+                self.redis_client.decr("stats:running_jobs")
                 if success:
-                    self.redis_client.hincrby(f"stats:{self.priority_queues[job.status]}", "completed", 1)
+                    self.redis_client.incr("stats:completed_jobs")
                 else:
-                    self.redis_client.hincrby(f"stats:jobs:{self.priority_queues[job.status]}", "failed", 1)
+                    self.redis_client.incr("stats:failed_jobs")
                 
-                logger.info(f"Job {job_id} completed by worker {worker_id}")
+                # Clean worker queue
+                dst_queue = f"worker_queue:{worker_id}"
+                self.redis_client.lrem(dst_queue, 0, job_raw)
                 
+                logger.info(f"Job {job_id} completed successfully={success} by worker {worker_id}")
             except Exception as e:
                 logger.error(f"Failed to complete job {job_id} in Redis: {e}")
-                
         else:
-            # Fallback to memory update
-            for queue_key, jobs in self.memory_queue.items():
-                for i, job in enumerate(jobs):
-                    if job.job_id == job_id and job.status == JobStatus.RUNNING:
-                        job.status = JobStatus.COMPLETED if success else JobStatus.FAILED
-                        job.completed_at = time.time()
-                        
-                        if error:
-                            job.metadata["error"] = error
-                            job.failed_at = time.time()
-                        elif result is not None:
-                            job.metadata["result"] = result
-                        
-                        job.worker_id = worker_id
-                        
-                        del jobs[i]  # Remove from queue
-                        
+            with self.lock:
+                found = False
+                for queue_key, jobs in self.memory_queue.items():
+                    for i, job in enumerate(jobs):
+                        if job.job_id == job_id:
+                            job.status = JobStatus.COMPLETED if success else JobStatus.FAILED
+                            job.completed_at = time.time()
+                            job.worker_id = worker_id
+                            if error:
+                                job.metadata["error"] = error
+                                job.failed_at = time.time()
+                            elif result is not None:
+                                job.metadata["result"] = result
+                            
+                            del jobs[i]
+                            found = True
+                            break
+                    if found:
+                        break
+                
+                self.stats.running_jobs -= 1
                 if success:
                     self.stats.completed_jobs += 1
                 else:
                     self.stats.failed_jobs += 1
-                
-                logger.info(f"Job {job_id} completed in memory queue by worker {worker_id}")
+                logger.info(f"Job {job_id} completed (in-memory) by worker {worker_id}")
     
     def fail_job(self, job_id: str, reason: str, worker_id: str = None, retry: bool = True):
         """Mark job as failed and optionally retry."""
-        job.status = JobStatus.FAILED
-        job.failed_at = time.time()
-        job.retry_count += 1
-        
-        if retry and job.retry_count < job.max_retries:
-            # Re-queue job
-            if self.redis_available:
-                try:
-                    # Remove from current queue and re-add with lower priority
-                    current_queue = self.priority_queues[job.priority]
-                    new_priority = min(job.priority.value + 1, JobPriority.BACKGROUND.value)
+        if self.redis_available:
+            try:
+                key = f"job:{job_id}"
+                job_raw = self.redis_client.get(key)
+                if not job_raw:
+                    logger.error(f"Job {job_id} not found in Redis, cannot fail.")
+                    return
+                
+                job = pickle.loads(job_raw)
+                job.status = JobStatus.FAILED
+                job.failed_at = time.time()
+                job.retry_count += 1
+                job.metadata["error"] = reason
+                
+                self.redis_client.decr("stats:running_jobs")
+                self.redis_client.incr("stats:failed_jobs")
+                
+                # Remove from worker processing queue
+                dst_queue = f"worker_queue:{worker_id}"
+                self.redis_client.lrem(dst_queue, 0, job_raw)
+                
+                if retry and job.retry_count < job.max_retries:
+                    # Increment priority score to downgrade priority, then re-enqueue
+                    new_priority_val = min(job.priority.value + 1, JobPriority.BACKGROUND.value)
+                    job.priority = JobPriority(new_priority_val)
+                    job.status = JobStatus.PENDING
                     
-                    # Serialize and re-queue
                     job_data = pickle.dumps(job)
-                    self.redis_client.lpush(f"retry_queue:{new_priority}", job_data)
+                    self.redis_client.set(key, job_data)
                     
-                    logger.info(f"Job {job_id} failed and requeued with priority {new_priority} by worker {worker_id}")
+                    priority_score = self._calculate_priority_score(job.priority, job)
+                    queue_key = self.priority_queues[job.priority]
+                    self.redis_client.lpush(queue_key, f"{priority_score}:".encode() + job_data)
                     
-                except Exception as e:
-                    logger.error(f"Failed to requeue job {job_id} in Redis: {e}")
-            else:
-                # Fallback to memory queue
+                    self.redis_client.incr("stats:pending_jobs")
+                    logger.info(f"Job {job_id} failed. Retry={job.retry_count} enqueued with priority {job.priority}")
+                else:
+                    # Move to DLQ
+                    job_data = pickle.dumps(job)
+                    self.redis_client.set(key, job_data)
+                    self.redis_client.lpush("dead_letter_queue", job_data)
+                    self.redis_client.incr("stats:dead_letter_jobs")
+                    logger.info(f"Job {job_id} failed completely. Moved to DLQ.")
+            except Exception as e:
+                logger.error(f"Failed to process fail_job for {job_id} in Redis: {e}")
+        else:
+            with self.lock:
+                found = False
                 for queue_key, jobs in self.memory_queue.items():
-                    if job.job_id == job_id and job.status == JobStatus.FAILED:
-                        if retry:
-                            job.status = JobStatus.PENDING
-                            job.retry_count -= 1 1  # Decrement for retry attempt
-                        del jobs[i]  # Remove from current position
+                    for i, job in enumerate(jobs):
+                        if job.job_id == job_id:
+                            job.status = JobStatus.FAILED
+                            job.failed_at = time.time()
+                            job.retry_count += 1
+                            job.metadata["error"] = reason
                             
-                            # Re-add with lower priority
-                            new_priority = min(job.priority.value + 1, JobPriority.BACKGROUND.value)
-                            self.memory_queue[f"retry_queue:{new_priority}"].append(job)
+                            del jobs[i]
                             
-                            logger.info(f"Job {job_id} requeued in memory with priority {new_priority}")
-                        else:
-                            del jobs[i]  # Remove permanently
-                            
-                            self.stats.dead_letter_jobs += 1
-                            
-                            logger.info(f"Job {job_id} moved to dead letter queue by worker {worker_id}")
-        
-        self.stats.failed_jobs += 1
-        logger.warning(f"Job {job_id} failed: {reason} by worker {worker_id}")
+                            if retry and job.retry_count < job.max_retries:
+                                new_priority_val = min(job.priority.value + 1, JobPriority.BACKGROUND.value)
+                                job.priority = JobPriority(new_priority_val)
+                                job.status = JobStatus.PENDING
+                                
+                                new_queue_key = self.priority_queues[job.priority]
+                                self.memory_queue[new_queue_key].append(job)
+                                logger.info(f"Job {job_id} failed in memory. Re-enqueued in {new_queue_key}")
+                            else:
+                                self.stats.dead_letter_jobs += 1
+                                logger.info(f"Job {job_id} failed in memory completely. Moved to DLQ.")
+                            found = True
+                            break
+                    if found:
+                        break
+                self.stats.running_jobs -= 1
+                self.stats.failed_jobs += 1
     
     def timeout_job(self, job_id: str, worker_id: str = None):
         """Mark job as timed out."""
-        job.status = JobStatus.TIMEOUT
-        job.failed_at = time.time()
-        
         if self.redis_available:
             try:
+                key = f"job:{job_id}"
+                job_raw = self.redis_client.get(key)
+                if not job_raw:
+                    logger.error(f"Job {job_id} not found in Redis, cannot timeout.")
+                    return
+                
+                job = pickle.loads(job_raw)
+                job.status = JobStatus.TIMEOUT
+                job.failed_at = time.time()
+                
                 # Move to dead letter queue
                 job_data = pickle.dumps(job)
+                self.redis_client.set(key, job_data)
                 self.redis_client.lpush("dead_letter_queue", job_data)
-                self.redis_client.expire(f"job:{job_id}", 3600)  # Keep for 1 hour
                 
+                self.redis_client.decr("stats:running_jobs")
+                self.redis_client.incr("stats:timeout_jobs")
+                
+                # Clean worker queue
+                dst_queue = f"worker_queue:{worker_id}"
+                self.redis_client.lrem(dst_queue, 0, job_raw)
+                
+                logger.info(f"Job {job_id} timed out on worker {worker_id}")
             except Exception as e:
                 logger.error(f"Failed to timeout job {job_id} in Redis: {e}")
-                
         else:
-            # Fallback memory handling
-            for queue_key, jobs in self.memory_queue.items():
-                if job.job_id == job_id and job.status == JobStatus.RUNNING:
-                    job.status = JobStatus.TIMEOUT
-                    job.completed_at = time.time()
-                    del jobs[i]
-                    
-                    self.stats.timeout_jobs += 1
-                    
-                    logger.info(f"Job {job_id} timed out by worker {worker_id}")
-    
-    def _calculate_priority_score(self, priority: JobPriority, job: Job) -> float:
-        """Calculate priority score for Redis list scoring."""
-        # Higher priority = lower score (since Redis LPOP returns highest score)
-        priority_map = {
-            JobPriority.CRITICAL: 1000,
-            JobPriority.HIGH: 100,
-            JobPriority.NORMAL: 10,
-            JobPriority.LOW: 1,
-            JobPriority.BACKGROUND: 0.1
-        }
-        
-        # Factor in job age (newer jobs get higher score)
-        age_factor = max(0, (time.time() - job.created_at) / 300)  # 5 minutes max age
-        age_bonus = min(age_factor * 2, 10)  # Max 10 point bonus
-        
-        return priority_map[priority] - age_bonus
+            with self.lock:
+                found = False
+                for queue_key, jobs in self.memory_queue.items():
+                    for i, job in enumerate(jobs):
+                        if job.job_id == job_id:
+                            job.status = JobStatus.TIMEOUT
+                            job.failed_at = time.time()
+                            del jobs[i]
+                            self.stats.timeout_jobs += 1
+                            logger.info(f"Job {job_id} timed out (in-memory)")
+                            found = True
+                            break
+                    if found:
+                        break
+                self.stats.running_jobs -= 1
     
     def _is_valid_job(self, job: Job) -> bool:
         """Validate job integrity."""
@@ -425,9 +486,7 @@ class DistributedQueue:
     
     def _start_background_processors(self):
         """Start background processors for Redis queue monitoring."""
-        # Worker simulation for demonstration
         workers = [f"worker_{i}" for i in range(self.max_workers)]
-        
         for worker_id in workers:
             processor = threading.Thread(
                 target=self._worker_process_loop,
@@ -443,82 +502,77 @@ class DistributedQueue:
         """Worker processing loop for Redis queue."""
         while True:
             try:
-                # Get next job with timeout
                 job = self.get_next_job(worker_id, timeout=1800)  # 30 minutes timeout
-                
                 if job is None:
-                    time.sleep(1)  # Wait 1 second before retrying
+                    time.sleep(1)
                     continue
                 
-                # Process job
                 logger.info(f"Worker {worker_id} processing job {job.job_id}: {job.name}")
-                
                 result = None
                 success = True
                 error = None
                 
                 try:
-                    # Job-specific processing logic would go here
                     time.sleep(2)  # Simulate 2-second job
                     result = {"status": "completed", "data": f"processed_{job.data}"}
-                    
                 except Exception as e:
                     logger.error(f"Job processing error: {e}")
                     success = False
                     error = str(e)
                 
-                # Complete job
-                self.complete_job(job.job_id, result, success, worker_id)
-                
+                self.complete_job(job.job_id, result, success, worker_id, error)
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}")
-                time.sleep(5)  # Wait 5 seconds before retrying
+                time.sleep(5)
     
     def get_queue_stats(self) -> QueueStats:
         """Get queue statistics."""
         if self.redis_available:
             try:
-                # Get Redis stats
                 stats = {
                     "total_jobs": int(self.redis_client.get("stats:total_jobs") or 0),
                     "completed_jobs": int(self.redis_client.get("stats:completed_jobs") or 0),
                     "failed_jobs": int(self.redis_client.get("stats:failed_jobs") or 0),
                     "timeout_jobs": int(self.redis_client.get("stats:timeout_jobs") or 0),
-                    "dead_letter_jobs": int(self.redis_client.get("stats:dead_letter_jobs") or 0)
+                    "dead_letter_jobs": int(self.redis_client.get("stats:dead_letter_jobs") or 0),
+                    "pending_jobs": int(self.redis_client.get("stats:pending_jobs") or 0),
+                    "running_jobs": int(self.redis_client.get("stats:running_jobs") or 0)
                 }
                 
-                # Calculate queue sizes
-                for queue_name in self.priority_queues.values():
-                    queue_size = self.redis_client.llen(queue_name) or 0
-                    stats[f"{queue_name}_size"] = queue_size
-                
-                # Update in-memory stats
                 self.stats = QueueStats(
                     total_jobs=stats["total_jobs"],
-                    pending_jobs=sum(self.memory_queue.get(queue_name, []) for queue_name in self.priority_queues.values()),
-                    running_jobs=sum(1 for job in sum(self.memory_queue.get(queue_name, []) if job.status == JobStatus.RUNNING for job in self.memory_queue.get(queue_name, [])),
-                    completed_jobs=self.stats.completed_jobs,
-                    failed_jobs=self.stats.failed_jobs,
-                    timeout_jobs=self.stats.timeout_jobs,
-                    dead_letter_jobs=self.stats.dead_letter_jobs
+                    pending_jobs=stats["pending_jobs"],
+                    running_jobs=stats["running_jobs"],
+                    completed_jobs=stats["completed_jobs"],
+                    failed_jobs=stats["failed_jobs"],
+                    timeout_jobs=stats["timeout_jobs"],
+                    dead_letter_jobs=stats["dead_letter_jobs"]
                 )
-                
                 return self.stats
-                
             except Exception as e:
                 logger.error(f"Error getting queue stats from Redis: {e}")
                 return self.stats
         
         # Fallback to memory stats
-        return QueueStats(
-            total_jobs=self.stats.total_jobs,
-            pending_jobs=sum(len(jobs) for jobs in sum(self.memory_queue.values()) if job.status == JobStatus.PENDING),
-            running_jobs=sum(1 for jobs in sum(self.memory_queue.values()) if job.status == JobStatus.RUNNING),
-            completed_jobs=self.stats.completed_jobs,
-            failed_jobs=self.stats.failed_jobs,
-            timeout_jobs=self.stats.timeout_jobs,
-            dead_letter_jobs=self.stats.dead_letter_jobs
-        )
+        with self.lock:
+            pending_count = 0
+            running_count = 0
+            for jobs in self.memory_queue.values():
+                for job in jobs:
+                    if job.status == JobStatus.PENDING:
+                        pending_count += 1
+                    elif job.status == JobStatus.RUNNING:
+                        running_count += 1
+                        
+            return QueueStats(
+                total_jobs=self.stats.total_jobs,
+                pending_jobs=pending_count,
+                running_jobs=running_count,
+                completed_jobs=self.stats.completed_jobs,
+                failed_jobs=self.stats.failed_jobs,
+                timeout_jobs=self.stats.timeout_jobs,
+                dead_letter_jobs=self.stats.dead_letter_jobs
+            )
     
     def export_queue_state(self, file_path: str = None) -> str:
         """Export queue state to file."""
@@ -526,12 +580,18 @@ class DistributedQueue:
             "timestamp": time.time(),
             "redis_available": self.redis_available,
             "redis_url": self.redis_url if self.redis_available else None,
-            "queue_stats": self.get_queue_stats() if self.redis_available else None,
-            "memory_queues": {name: list(jobs) for name, jobs in self.memory_queue.items()},
+            "queue_stats": {
                 "total_jobs": self.stats.total_jobs,
-                "workers_registered": len(self.worker_registry),
-                "job_timeouts": self.job_timeouts
+                "pending_jobs": self.stats.pending_jobs,
+                "running_jobs": self.stats.running_jobs,
+                "completed_jobs": self.stats.completed_jobs,
+                "failed_jobs": self.stats.failed_jobs,
+                "timeout_jobs": self.stats.timeout_jobs,
+                "dead_letter_jobs": self.stats.dead_letter_jobs
             },
+            "memory_queues": {name: [j.job_id for j in jobs] for name, jobs in self.memory_queue.items()},
+            "workers_registered": len(self.worker_registry),
+            "job_timeouts": self.job_timeouts,
             "fallback_to_memory": self.fallback_to_memory
         }
         
@@ -543,7 +603,6 @@ class DistributedQueue:
                 json.dump(state, f, indent=2)
             logger.info(f"Queue state exported to {file_path}")
             return file_path
-            
         except Exception as e:
             logger.error(f"Failed to export queue state: {e}")
             return ""
