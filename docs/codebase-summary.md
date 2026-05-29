@@ -210,6 +210,7 @@ apps/
 ├── 84tea/               # E-commerce
 ├── raas-platform/       # Marketplace
 ├── landing-page/        # Next.js 16
+├── nhipdieuxanh-landing/ # Next.js Smart Landing Page & Lead Ingestion Platform
 └── ... (8+ apps)
 
 clipmart/                 # Paperclip AI company templates
@@ -484,6 +485,60 @@ cd mekong-cli/clipmart/mekong-solo-founder
 paperclip company init .
 mekong company/start
 ```
+
+---
+
+## Nhịp Điệu Xanh Cần Thơ Smart Landing Page (`apps/nhipdieuxanh-landing`)
+
+A Next.js 15+ & Tailwind CSS project implementing the smart landing page and lead ingestion gateway.
+
+### File Structure
+```
+apps/nhipdieuxanh-landing/
+├── app/
+│   ├── api/
+│   │   └── leads/
+│   │       └── route.ts             # Lead ingestion API (validation, masking, scoring)
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                     # Main interactive landing page UI
+├── lib/
+│   └── prisma.ts                    # Prisma Client singleton
+├── prisma/
+│   └── schema.prisma                # PostgreSQL schema (Lead, LeadProfile)
+├── scripts/
+│   └── check-leads.ts               # Verification script for database query tests
+├── package.json
+└── tailwind.config.ts
+```
+
+### Component Layout & Core Implementations
+
+1. **`app/page.tsx` (Interactive UI)**:
+   - Uses `use client` with React hooks for reactive state management.
+   - **Dynamic Localization**: Updates promotion banners based on a selected dropdown (e.g. Cần Thơ, An Giang, Cà Mau, Sóc Trăng).
+   - **Mortgage Calculator**: Reactive calculation of monthly principal & interest payments using a standard amortization formula:
+     $$M = \frac{P \cdot r \cdot (1 + r)^n}{(1 + r)^n - 1}$$
+   - **Gated Blueprint Lock**: Intercepts blueprints download. Verifies user email and phone validation states client-side.
+   - **Floating Chatbot Mockup**: Employs client-side regex matching to reply to user FAQs (pricing, location, legal status, loan criteria).
+   - **Ingestion Lead Form**: Sends validated input data (with consent choice) to `POST /api/leads`.
+
+2. **`app/api/leads/route.ts` (API Processing & Ingestion)**:
+   - **Input Validation**: Uses regex validation for Vietnamese phone numbers (`/^(0|84|\+84)(3|5|7|8|9)[0-9]{8}$/`) and standard emails.
+   - **Decree 13 Privacy Compliance Boundary**: Checks the user `consent` flag. If false, executes masking of PII (Name, Phone, Email) prior to database write.
+   - **Uniqueness & Deduplication**: Generates a SHA-256 hash (`leadHash`) based on phone/email to avoid duplicate submissions using a database-level `upsert`.
+   - **Lead Scoring System**: Computes interest score:
+     - Valid Phone: `+20` points.
+     - Valid Email: `+10` points.
+     - Location Cần Thơ: `+30` points (Mekong provinces: `+20`).
+     - Intent Investment: `+10` points.
+     - Budget $\ge 2$B VND: `+10` points.
+     - Maps to category `COLD` (<40), `WARM` (40-69), or `HOT` ($\ge$ 70).
+   - **Persona Classification**: Parses the intent string to map user to a persona: `Phụ huynh học sinh`, `Nhà đầu tư`, or `Người mua nhà định cư`.
+
+3. **`prisma/schema.prisma` (PostgreSQL Database Schema)**:
+   - Sets the database provider to `postgresql`.
+   - Models the `Lead` model mapped to the `leads` table and a 1-to-1 relationship with the `LeadProfile` model mapped to the `lead_profiles` table.
 
 ---
 

@@ -157,6 +157,43 @@ Mekong CLI is building the **de facto standard for AI-powered agent orchestratio
 
 ---
 
+## Nhịp Điệu Xanh (Module 1) — Smart Landing & Ingestion Platform
+
+**Status:** ✅ Fully Completed & Verified | **Completion Date:** 2026-05-28
+
+This module implements the Cần Thơ smart landing page and lead ingestion gateway with strict security and privacy features matching Decree 13.
+
+### Phase 1: Core Landing UI & Dynamic Localization
+- [x] Responsive layout using Tailwind CSS and Lucide icons.
+- [x] Location dropdown selector.
+- [x] Dynamic location-based promotion banners (Cần Thơ, An Giang, Cà Mau, Sóc Trăng).
+- [x] Dark/Light theme switching system.
+
+### Phase 2: Interactive Mortgage Calculator
+- [x] Input fields for property value, down payment, loan percentage, term, and interest rate.
+- [x] Real-time calculations of monthly payments.
+- [x] Amortization schedule visualization.
+
+### Phase 3: Gated Blueprint Lock
+- [x] Floor plan selector and tabbed layout.
+- [x] Architectural blueprint access gated behind contact collection.
+- [x] Client-side email/phone validation.
+
+### Phase 4: Floating FAQ Chatbot Mockup
+- [x] Chatbot widget with open/close state.
+- [x] Natural keyphrase-matching algorithm for local FAQs (pricing, location, legal status, loans).
+- [x] Bot thinking simulations and typing indicator.
+
+### Phase 5: Lead Ingestion API & Decree 13 Compliance Boundary
+- [x] Next.js route handler (`POST /api/leads`) with input validator.
+- [x] Uniqueness hashing (`leadHash`) using SHA-256 to prevent database duplicates.
+- [x] Multi-dimensional lead scoring system (points for phone, email, location, budget, intent).
+- [x] Automatic lead level categorization (`COLD`/`WARM`/`HOT`) and persona classification.
+- [x] Decree 13 compliant PII masking logic (redacts Name, Phone, and Email inside PostgreSQL if consent is false).
+- [x] Database query check verification scripts (`scripts/check-leads.ts`).
+
+---
+
 ## Long-term Vision (v5.0+)
 
 ### Community & Ecosystem
