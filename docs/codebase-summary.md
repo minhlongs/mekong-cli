@@ -211,6 +211,7 @@ apps/
 ├── raas-platform/       # Marketplace
 ├── landing-page/        # Next.js 16
 ├── nhipdieuxanh-landing/ # Next.js Smart Landing Page & Lead Ingestion Platform
+├── nhipdieuxanh/         # Next.js Standard App (TypeScript, TailwindCSS, Prisma v6)
 └── ... (8+ apps)
 
 clipmart/                 # Paperclip AI company templates
@@ -539,6 +540,41 @@ apps/nhipdieuxanh-landing/
 3. **`prisma/schema.prisma` (PostgreSQL Database Schema)**:
    - Sets the database provider to `postgresql`.
    - Models the `Lead` model mapped to the `leads` table and a 1-to-1 relationship with the `LeadProfile` model mapped to the `lead_profiles` table.
+
+---
+
+## Nhịp Điệu Xanh Next.js Standard App (`apps/nhipdieuxanh`)
+
+A Next.js 16+ (Turbopack, App Router) & Tailwind CSS v4 project bootstrapping the standard lead capture application.
+
+### File Structure
+```
+apps/nhipdieuxanh/
+├── app/
+│   ├── api/
+│   │   └── leads/
+│   │       └── route.ts             # Lead ingestion API (validation, PostgreSQL saving)
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                     # Main Vietnamese Landing Page UI (Hero, Form, responsive)
+├── lib/
+│   └── prisma.ts                    # Prisma Client singleton (v6.19.3)
+└── prisma/
+    └── schema.prisma                # PostgreSQL schema (Lead mapped to leads table)
+```
+
+### Component Layout & Core Implementations
+
+1. **`app/page.tsx` (Landing Page)**:
+   - Uses `use client` and React state for client-side validation.
+   - **Form Fields**: Họ tên (`name`), Số điện thoại (`phone`), Email (`email`), Nhu cầu (`need`), Ngân sách (`budget`), Khu vực (`area`).
+   - **Tailwind CSS v4 & Lucide React**: Premium emerald design with responsive grids, interactive dropdowns, and form success screen.
+
+2. **`app/api/leads/route.ts` (API Ingestion)**:
+   - Receives JSON payload, performs Vietnamese phone formatting checks, and writes directly to the `leads` table in the PostgreSQL `nhipdieuxanh_db` database.
+
+3. **`prisma/schema.prisma`**:
+   - Declares the `Lead` model mapped to the `leads` table using PostgreSQL datasource configuration.
 
 ---
 
