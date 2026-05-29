@@ -1,0 +1,43 @@
+import pytest
+import os
+import sqlite3
+import subprocess
+from pathlib import Path
+
+@pytest.fixture(scope="session")
+def antigravity_bin():
+    # Use environment variable or fallback to python mock CLI shim
+    default_shim = str(Path(__file__).parents[1] / "mock_antigravity.py")
+    bin_path = os.getenv("ANTIGRAVITY_BIN", f"python3 {default_shim}")
+    return bin_path
+
+@pytest.fixture(scope="function")
+def clean_db():
+    db_path = Path(os.getenv("ANTIGRAVITY_DB", ".git/antigravity/session.db"))
+    if db_path.exists():
+        try:
+            db_path.unlink()
+        except Exception:
+            pass
+    for ext in ["-wal", "-shm"]:
+        p = Path(str(db_path) + ext)
+        if p.exists():
+            try:
+                p.unlink()
+            except Exception:
+                pass
+                
+    yield db_path
+    
+    if db_path.exists():
+        try:
+            db_path.unlink()
+        except Exception:
+            pass
+    for ext in ["-wal", "-shm"]:
+        p = Path(str(db_path) + ext)
+        if p.exists():
+            try:
+                p.unlink()
+            except Exception:
+                pass

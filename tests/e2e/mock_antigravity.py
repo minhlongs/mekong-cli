@@ -11,7 +11,7 @@ import hashlib
 import subprocess
 from pathlib import Path
 
-DB_PATH = Path(".git/antigravity/session.db")
+DB_PATH = Path(os.getenv("ANTIGRAVITY_DB", ".git/antigravity/session.db"))
 
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
