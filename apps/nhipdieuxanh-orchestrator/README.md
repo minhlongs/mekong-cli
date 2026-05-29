@@ -137,3 +137,39 @@ npm install -g @playwright/test
 npx playwright test tests/e2e/lead-flow.spec.ts --project=chromium --headed
 ```
 Kịch bản test tự động điền họ tên, số điện thoại, nhu cầu, ngân sách của leads, nhấn nút gửi, và xác nhận kết quả lưu vào database thông qua API thành công.
+
+---
+
+## 7. Kiểm thử hiệu năng (Performance Testing with k6)
+
+Để đảm bảo hệ thống có khả năng chịu tải cao (tối thiểu 10.000 người dùng đồng thời), kịch bản load test bằng `k6` đã được xây dựng tại:
+`tests/performance/load-test.js`.
+
+### Cách chạy kiểm thử cục bộ:
+```bash
+# Cài đặt k6 (macOS)
+brew install k6
+
+# Chạy load test giả lập tăng dần tải lên 10,000 VUs hướng tới API Gateway local
+k6 run tests/performance/load-test.js
+
+# Chạy load test hướng tới staging
+k6 run -e GATEWAY_URL=https://staging.nhipdieuxanh.vn tests/performance/load-test.js
+```
+
+---
+
+## 8. Cấu hình Cảnh báo & Giám sát nâng cao (Alerting & Advanced Monitoring)
+
+Bên cạnh Prometheus và Grafana, hệ thống đã được cấu hình Alertmanager để tự động gửi thông báo về Slack/Email và Promtail để thu thập log tập trung:
+
+- **Prometheus Alerts (`monitoring/alerts.yml`)**: Định nghĩa các rule cảnh báo khi có sự cố nghiêm trọng (Lỗi API 500, Database Down, Hết ổ đĩa > 80%, API Latency cao p95 > 500ms).
+- **Alertmanager (`monitoring/alertmanager.yml`)**: Cấu hình phân phối cảnh báo trực tiếp về kênh Slack `#nhipdieuxanh-alerts` và email trực ban `devops-team@nhipdieuxanh.vn`.
+- **Promtail (`monitoring/promtail-config.yml`)**: Daemon thu thập log từ Docker containers và log file của Nginx Gateway để đẩy về Loki/Elasticsearch phục vụ phân tích.
+
+---
+
+## 9. Kế hoạch Ra mắt & Go-Live (Launch & Go-Live Plan)
+
+Chi tiết danh sách kiểm tra kỹ thuật (Checklists) về Domain, SSL, Database Backup, cùng chiến lược phát hành từng bước (Private Beta -> Soft Launch -> Grand Launch) được ghi nhận đầy đủ tại file:
+`docs/launch-plan.md`

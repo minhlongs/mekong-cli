@@ -90,6 +90,18 @@ services:
     networks:
       - ndx-network
 
+  # --- BLOCKCHAIN PRIVATE NODE ---
+  blockchain-node:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.blockchain
+    container_name: ndx-blockchain
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+    networks:
+      - ndx-network
+
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: ndx-kafka
