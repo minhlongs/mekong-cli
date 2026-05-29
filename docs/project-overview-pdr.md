@@ -108,6 +108,14 @@ Per-tenant credit ledger: simple tasks cost 1 credit, complex tasks cost 5+ cred
 ### DAG Execution
 Dependency-aware scheduling: runs independent steps in parallel, waits on dependencies, cancels downstream on failure
 
+### Module 1: Nhịp Điệu Xanh Landing Page (Smart Landing & Ingestion Platform)
+Newly bootstrapped Next.js project (`apps/nhipdieuxanh-landing`) serving as the primary capture layer for lead acquisition:
+- **Dynamic Localization**: Auto-adjusts promotional banners, specific region perks, and investment copy based on the visitor's selected location (e.g. Cần Thơ, An Giang, Cà Mau, Sóc Trăng).
+- **Interactive Mortgage Calculator**: Allows clients to customize property values, loan percentages, payment terms, and interest rates to calculate monthly payables dynamically.
+- **Decree 13 Privacy Consent Checkbox**: Captures explicit user consent for PII processing. Submitting without checking invokes automated database-level masking.
+- **Gated Blueprint Lock**: Restricts view of architectural blueprints until user provides verified email and phone.
+- **Floating AI Chatbot Mockup**: Employs client-side keyword matching for common developer/investor inquiries (pricing, legal status, location, loan criteria).
+
 ## 5. Development Roadmap
 
 | Version | Features | Timeline |

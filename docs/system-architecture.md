@@ -1550,3 +1550,103 @@ from src.core.event_bus import get_event_bus, EventType
 event_bus = get_event_bus()
 event_bus.emit(EventType.LICENSE_CRITICAL, {"data": ...})
 ```
+
+---
+
+## 13. Nhịp Điệu Xanh: Lead Database & Privacy Compliance
+
+This section documents the PostgreSQL schema model and data masking boundary for the `apps/nhipdieuxanh-landing` project, ensuring strict adherence to **Vietnam Decree 13/2023/ND-CP on Personal Data Protection (PDPD)**.
+
+### 13.1 PostgreSQL Schema Model
+
+The database is built on PostgreSQL (accessed via Prisma ORM) with a schema consisting of the `leads` table and a related `lead_profiles` table.
+
+```mermaid
+erDiagram
+    leads {
+        string id PK "UUID"
+        string workspace_id
+        string name "Masked if consent false"
+        string phone "Masked if consent false"
+        string email "Masked if consent false"
+        string location
+        decimal budget "Decimal(18,2)"
+        string intent
+        string lead_hash UK "SHA-256 unique identifier"
+        datetime consent_at "Nullable"
+        string utm_source
+        string utm_medium
+        string utm_campaign
+        datetime created_at
+    }
+    lead_profiles {
+        string lead_id PK, FK
+        integer score
+        string level "COLD, WARM, HOT"
+        string persona "Phụ huynh học sinh, Nhà đầu tư, etc."
+    }
+    leads ||--o| lead_profiles : "1:1 relation (onDelete: Cascade)"
+```
+
+#### SQL Schema Definitions
+
+```sql
+-- Leads Table
+CREATE TABLE leads (
+    id VARCHAR(36) PRIMARY KEY,
+    workspace_id VARCHAR(255) NOT NULL DEFAULT 'default-workspace',
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    location VARCHAR(255) NOT NULL,
+    budget DECIMAL(18, 2) NOT NULL,
+    intent VARCHAR(255) NOT NULL,
+    lead_hash VARCHAR(64) UNIQUE NOT NULL,
+    consent_at TIMESTAMP,
+    utm_source VARCHAR(100),
+    utm_medium VARCHAR(100),
+    utm_campaign VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Lead Profiles Table (1-to-1 Relationship with Leads)
+CREATE TABLE lead_profiles (
+    lead_id VARCHAR(36) PRIMARY KEY,
+    score INTEGER NOT NULL,
+    level VARCHAR(20) NOT NULL, -- 'COLD', 'WARM', 'HOT'
+    persona VARCHAR(100) NOT NULL, -- 'Phụ huynh học sinh', 'Nhà đầu tư', 'Người mua nhà định cư'
+    FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+);
+```
+
+### 13.2 Decree 13 Privacy Compliance Boundary
+
+To comply with **Decree 13/2023/ND-CP**, the ingestion pipeline enforces a strict data privacy boundary. When a user submits their information via the landing page form, they are prompted for explicit privacy consent.
+
+If **consent is false** (checkbox is unchecked):
+1. **Uniqueness Retention**: The unique `lead_hash` is still generated using SHA-256 on the raw identifier (phone or email). This allows tracking unique registrations and preventing database duplication without storing raw PII.
+2. **PII Masking at Ingestion Boundary**: Prior to any write operations (Prisma `upsert`), raw personal identifiers are redacted inside the application layer. The database only stores masked/hashed values.
+3. **Nullified Consent Timestamp**: `consent_at` is set to `NULL` to indicate that no active data processing consent was given.
+
+#### Masking Logic Details
+
+| Field | Raw Value Example | Masked Storage Example | Masking Algorithm |
+|-------|-------------------|------------------------|-------------------|
+| **Name** | `Nguyễn Văn A` | `N****** V** A*` | Split by whitespace. Mask characters except first (and last in multi-word names). |
+| **Phone** | `0912345678` | `091*****78` | Keep first 3 digits and last 2 digits; replace the middle digits with `*****`. |
+| **Email** | `admin@example.com` | `a***n@example.com` | Keep first and last char of username; mask the rest; keep domain. |
+| **Consent Date** | N/A | `NULL` | Hardset to `NULL`. |
+
+#### Security Boundary Architecture
+
+```
+User UI (Consent Checkbox)
+       │
+       ├─► Consent Checked (consent = true) ────────► Stores raw Name/Phone/Email + consent_at timestamp
+       │
+       └─► Consent Unchecked (consent = false) ──────► Masking logic applied in app/api/leads/route.ts
+                                                     ├── Name: "N* V* A*"
+                                                     ├── Phone: "091*****78"
+                                                     ├── Email: "a***n@example.com"
+                                                     └── Stores SHA-256 identifier hash (leadHash) for dedup
+```
