@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ai
+  labels:
+    app: ai
+spec:
+  replicas: {{ .Values.replicaCount.ai }}
+  selector:
+    matchLabels:
+      app: ai
+  template:
+    metadata:
+      labels:
+        app: ai
+    spec:
+      containers:
+        - name: ai
+          image: "{{ .Values.image.ai.repository }}:{{ .Values.image.ai.tag }}"
+          imagePullPolicy: {{ .Values.image.ai.pullPolicy }}
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_URL
+              value: "{{ .Values.database.url }}"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "{{ .Values.kafka.bootstrapServers }}"
+            - name: PORT
+              value: "5000"
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 500m
+              memory: 512Mi

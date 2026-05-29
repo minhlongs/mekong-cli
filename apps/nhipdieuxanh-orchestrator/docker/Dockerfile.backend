@@ -1,0 +1,39 @@
+# --- STAGE 1: Build Dependencies ---
+FROM node:18-alpine AS builder
+RUN apk add --no-cache openssl
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml* ./
+COPY prisma ./prisma/
+
+# Install dependencies including Prisma CLI
+RUN pnpm install
+
+# Copy source code and build
+COPY . .
+RUN npx prisma generate
+
+# --- STAGE 2: Production Runtime ---
+FROM node:18-alpine AS runner
+RUN apk add --no-cache openssl
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3010
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/dist ./dist
+
+USER nestjs
+
+EXPOSE 3010
+
+# Run migrations and start application in production
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/main.js"]
