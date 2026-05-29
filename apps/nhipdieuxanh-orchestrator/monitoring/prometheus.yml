@@ -2,15 +2,15 @@ global:
   scrape_interval: 15s # Scrape targets every 15 seconds
   evaluation_interval: 15s # Evaluate rules every 15 seconds
 
-# Alertmanager configuration (optional for alerts routing)
+# Alertmanager configuration
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: []
+        - targets: ['alertmanager:9093']
 
 # Load rules once and periodically evaluate them according to the global evaluation_interval.
 rule_files:
-  # - "first_rules.yml"
+  - "alerts.yml"
 
 # Scrape configurations
 scrape_configs:

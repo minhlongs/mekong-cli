@@ -55,3 +55,29 @@ database:
 
 kafka:
   bootstrapServers: "kafka-service:9092"
+
+# External dependencies configurations
+postgres:
+  image: postgres:15-alpine
+  port: 5432
+  user: postgres
+  password: postgres
+  db: nhipdieuxanh_db
+  storage:
+    size: 2Gi
+    storageClass: "" # Empty to use default dynamic provisioner
+
+zookeeper:
+  image: confluentinc/cp-zookeeper:7.4.0
+  port: 2181
+
+kafkaBroker:
+  image: confluentinc/cp-kafka:7.4.0
+  port: 9092
+  zookeeperConnect: "zookeeper-service:2181"
+
+blockchain:
+  image: mekong/ndx-blockchain:latest
+  portHttp: 8545
+  portWs: 8546
+

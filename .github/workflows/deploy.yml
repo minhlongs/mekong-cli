@@ -112,6 +112,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Run Trivy Scanner on Frontend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE_FRONTEND }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy Scanner on Backend Image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.IMAGE_BACKEND }}:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
   # --- STAGE 3: DEPLOY TO STAGING (AUTO) ---
   deploy-staging:
     name: Deploy to Staging
@@ -141,10 +161,27 @@ jobs:
             --set ingress.hosts[0].host="staging.nhipdieuxanh.vn" \
             --values ./apps/nhipdieuxanh-orchestrator/helm/nhipdieuxanh/values.yaml
 
+  # --- STAGE 3.5: WEB SECURITY SCAN (OWASP ZAP) ---
+  security-scan:
+    name: OWASP ZAP Security Scan
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target: 'https://staging.nhipdieuxanh.vn'
+          allow_issue_writing: false
+          fail_action: false
+
   # --- STAGE 4: DEPLOY TO PRODUCTION (MANUAL GATE) ---
   deploy-production:
     name: Deploy to Production
-    needs: deploy-staging
+    needs: [deploy-staging, security-scan]
     runs-on: ubuntu-latest
     environment:
       name: production # Enables GitHub manual review & approval workflow
