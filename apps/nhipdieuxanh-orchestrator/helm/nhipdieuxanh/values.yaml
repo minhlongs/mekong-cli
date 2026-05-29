@@ -1,0 +1,57 @@
+# Default values for Nhịp Điệu Xanh application.
+
+replicaCount:
+  frontend: 2
+  backend: 2
+  ai: 1
+
+image:
+  frontend:
+    repository: mekong/ndx-frontend
+    tag: latest
+    pullPolicy: Always
+  backend:
+    repository: mekong/ndx-backend
+    tag: latest
+    pullPolicy: Always
+  ai:
+    repository: mekong/ndx-ai
+    tag: latest
+    pullPolicy: Always
+
+service:
+  frontend:
+    type: ClusterIP
+    port: 3000
+  backend:
+    type: ClusterIP
+    port: 3010
+  ai:
+    type: ClusterIP
+    port: 5000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: nhipdieuxanh.vn
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: frontend
+        - path: /api/leads
+          pathType: Prefix
+          serviceName: backend
+        - path: /api/ai
+          pathType: Prefix
+          serviceName: ai
+
+database:
+  url: "postgresql://postgres:postgres@postgres-service:5432/nhipdieuxanh_db"
+
+kafka:
+  bootstrapServers: "kafka-service:9092"

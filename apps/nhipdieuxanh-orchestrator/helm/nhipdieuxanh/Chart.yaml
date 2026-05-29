@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nhipdieuxanh
+description: Helm Chart cho hệ sinh thái Proptech Nhịp Điệu Xanh
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
