@@ -309,11 +309,30 @@ if __name__ == "__main__":
 
 ## 6. How to Run E2E Tests
 
-Verify the infrastructure and runner by specifying the `ANTIGRAVITY_BIN` environment variable:
+The most robust way to run the test suite is by using the custom Test Harness runner (`tests/e2e/harness.py`). It configures environment variables automatically, supports execution modes, and writes a report to `docs/reports/harness-run-report.md`:
+
+```bash
+# Run tests against the mock CLI shim sequentially (default)
+python3 tests/e2e/harness.py --mock
+
+# Run tests in parallel to speed up execution
+python3 tests/e2e/harness.py --mock --parallel
+
+# Run tests filtering by Feature ID (F1-F5)
+python3 tests/e2e/harness.py --mock --feature F1
+
+# Run tests filtering by Tier (1-4)
+python3 tests/e2e/harness.py --mock --tier 2
+
+# Run tests against the compiled Rust binary
+python3 tests/e2e/harness.py --prod
+```
+
+Alternatively, you can run raw `pytest` by specifying the `ANTIGRAVITY_BIN` environment variable manually:
 
 ```bash
 # Verify using the mock CLI shim
-ANTIGRAVITY_BIN="python3 tests/e2e/mock_antigravity.py" python3 -m pytest tests/e2e/antigravity_e2e/
+ANTIGRAVITY_BIN="python3 tests/e2e/mock_antigravity.py" ANTHROPIC_API_KEY="mock_key" python3 -m pytest tests/e2e/antigravity_e2e/
 
 # Verify using the compiled Rust binary
 ANTIGRAVITY_BIN="/Users/macbook/mekong-cli/antigravity/hybrid_runtime/target/debug/antigravity" python3 -m pytest tests/e2e/antigravity_e2e/
