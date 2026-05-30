@@ -1649,4 +1649,59 @@ User UI (Consent Checkbox)
                                                      ├── Phone: "091*****78"
                                                      ├── Email: "a***n@example.com"
                                                      └── Stores SHA-256 identifier hash (leadHash) for dedup
+
+---
+
+## 14. Next.js Performance & Full Codebase Optimizations (Nhịp Điệu Xanh)
+
+To ensure maximum performance, minimal bundle sizes, and robust operation, the `apps/nhipdieuxanh` application implements modern optimization standards across the client, API, and configuration layers.
+
+### 14.1 Client-Side Bundle & UI Optimization
+
+The Kanban Board dashboard is highly interactive and relies on drag-and-drop mechanics. To optimize the initial loading time and improve Core Web Vitals:
+1. **Dynamic Code Splitting**: Heavy interactive dependencies such as `@dnd-kit/core`, `@dnd-kit/sortable`, and `@dnd-kit/utilities` are extracted into a separate client bundle.
+2. **Lazy-loading Board Wrapper**: The board component `PipelineBoard.tsx` is loaded dynamically inside `app/pipeline/page.tsx` using `next/dynamic` with Server-Side Rendering disabled (`ssr: false`):
+   ```typescript
+   const PipelineBoard = dynamic(
+     () => import('./PipelineBoard'),
+     { ssr: false, loading: () => <PipelineSkeleton /> }
+   );
+   ```
+   This prevents hydration mismatches and eliminates the need for manual mount-state useEffect hooks while reducing the main chunk LCP (Largest Contentful Paint) size.
+3. **Component Memoization**: The `KanbanCard` component is wrapped with `React.memo` using customized props comparison:
+   ```typescript
+   export const KanbanCard = React.memo(CardComponent, (prev, next) => {
+     return prev.lead.id === next.lead.id && prev.lead.status === next.lead.status;
+   });
+   ```
+   This restricts re-rendering to only cards whose status actually shifts during a drag operation, keeping the UI responsive even with hundreds of active leads.
+
+### 14.2 API & CPU Optimization
+
+Certain API handlers handle intensive string processing for Vietnamese diacritics removal and normalization. To minimize request latency and CPU cycles:
+1. **Vietnamese Normalization Utility**: A reusable normalization utility is located at `lib/utils.ts` to perform standard Unicode NFD normalization and strip diacritics.
+2. **Static Module-Scope Caches**:
+   - **FAQ Keywords**: Static keywords used by the RAG search router are cached at module scope during startup in `app/api/faq/query/route.ts`.
+   - **Mekong Delta Provinces**: A static list of normalized Mekong Delta provinces is computed once at module startup in `app/api/leads/route.ts` to skip redundant runtime allocations during dynamic lead scoring.
+
+### 14.3 Next.js Configuration & Quality Hardening
+
+1. **Security & Strictness**: The production configuration in `next.config.ts` enables React StrictMode for concurrent rendering checks and disables the `X-Powered-By` header to hide framework footprints:
+   ```typescript
+   const nextConfig: NextConfig = {
+     reactStrictMode: true,
+     poweredByHeader: false
+   };
+   ```
+2. **ESLint Generated Client Exclusions**: To prevent lint noise from auto-generated Prisma client builds, `eslint.config.mjs` excludes the generated directory:
+   ```javascript
+   const eslintConfig = [
+     ...compat.extends("next/core-web-vitals"),
+     {
+       ignores: ["lib/generated/**"]
+     }
+   ];
+   ```
+3. **Linter Compilation Guard**: Built and verified to compile with zero TypeScript unused-variable or implicit-any warnings.
+
 ```

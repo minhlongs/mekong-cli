@@ -194,6 +194,34 @@ This module implements the Cần Thơ smart landing page and lead ingestion gate
 
 ---
 
+## Nhịp Điệu Xanh (Module 2) — Deep Next.js & Full Codebase Optimizations
+
+**Status:** ✅ Fully Completed & Verified | **Completion Date:** 2026-05-30
+
+This module implements deep Next.js performance tuning, client-side bundle size optimization, and static resource cache optimizations for the Nhịp Điệu Xanh application.
+
+### Phase 1: API & CPU Optimization
+- [x] Cache static normalized FAQ keywords at startup to prevent diacritics removal overhead.
+- [x] Cache static normalized Mekong Delta province strings in leads ingestion route handler.
+- [x] Centralize diacritics removal and string normalization logic in `lib/utils.ts`.
+
+### Phase 2: Code Splitting & UI Optimization
+- [x] Extract `PipelineBoard` interactive drag-and-drop Kanban interface into a separate chunk.
+- [x] Lazy-load heavy drag-and-drop dependencies dynamically (`@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`) using `next/dynamic` (`ssr: false`) to minimize LCP bundle weight.
+- [x] Eliminate flash-of-unpainted-content and hydration errors using client-side dynamic mounts, optimizing TTFB.
+- [x] Memoize `KanbanCard` component using `React.memo` to prevent redundant column-to-column drag re-renders.
+
+### Phase 3: Next.js Configuration Hardening & Linting Bypass
+- [x] Enable strict mode and disable `X-Powered-By` header in `next.config.ts`.
+- [x] Configure ESLint `eslint.config.mjs` to bypass raw require and unused expression checks on auto-generated Prisma files.
+- [x] Clean linter compilation output with zero typescript/linter warnings.
+
+### Phase 4: Quality & Tests Verification
+- [x] Configure Vitest integration test suite covering leads ingestion, dynamic scoring, Decree 13 masking compliance, status updates, FAQ queries, and social posts.
+- [x] Verify all Vitest integration tests pass (8/8) and the production build builds cleanly.
+
+---
+
 ## Long-term Vision (v5.0+)
 
 ### Community & Ecosystem

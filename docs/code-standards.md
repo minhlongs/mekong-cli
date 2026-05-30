@@ -11,15 +11,21 @@
 - **Linter**: Ruff (with strict settings)
 - **Type Checker**: mypy (strict mode)
 
-## 1.5. TypeScript Code Standards (Mekong Engine + Dashboard)
+## 1.5. TypeScript & Next.js Code Standards (Mekong Engine + Apps + Dashboard)
 
 ### Style Guide
 
 - **TypeScript Version**: 5.6+
-- **Framework**: Hono.js (Workers) / React 19 (Dashboard)
+- **Framework**: Hono.js (Workers) / React 19 (Dashboard) / Next.js 16+ (App Router)
 - **Formatter**: Prettier (default)
 - **Linter**: ESLint with @typescript-eslint
-- **Build**: Wrangler (Workers) / Vite (Dashboard)
+- **Build**: Wrangler (Workers) / Vite (Dashboard) / Turbopack (Next.js)
+
+### Next.js Performance & Bundle Standards
+- **Lazy Loading heavy components**: Use `next/dynamic` with `{ ssr: false }` for client-only components that import heavy library dependencies (e.g., drag-and-drop engines, charts) to reduce Largest Contentful Paint (LCP) bundle weight.
+- **Render Memoization**: Use `React.memo` with precise props comparison on high-frequency UI components (e.g., Kanban cards) to prevent redundant rendering cascades.
+- **Static In-Memory Cache**: Pre-compute and cache static mappings, regexes, and strings at the module scope level to avoid runtime CPU cycles on diacritics normalization.
+- **ESLint Ignores for Generated Artifacts**: Explicitly ignore auto-generated client artifacts (e.g., Prisma generated files `lib/generated/**`) in ESLint configuration to bypass checks on raw require statements.
 
 ### Type Safety
 
