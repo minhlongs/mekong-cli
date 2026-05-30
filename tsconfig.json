@@ -11,7 +11,7 @@
     "baseUrl": ".",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["vitest/globals", "node", "@cloudflare/workers-types", "react", "react-dom"],
+    "types": ["vitest/globals", "node", "@cloudflare/workers-types", "react", "react-dom", "bun-types"],
     "paths": {
       "classVarianceAuthority": ["node_modules/class-variance-authority"],
       "@mekong/raas-sdk": ["packages/raas-sdk/src/index.ts"],
