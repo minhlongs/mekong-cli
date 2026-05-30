@@ -288,7 +288,10 @@ class TestHandlersReturnJson:
 
     def test_brainstorm_no_llm(self, server):
         """Without LLM client, brainstorm should gracefully degrade."""
-        result = server._handle_brainstorm("test topic")
+        mock_client = MagicMock()
+        mock_client.generate.return_value = "[OFFLINE MODE] LLM unavailable"
+        with patch("src.core.llm_client.get_client", return_value=mock_client):
+            result = server._handle_brainstorm("test topic")
         data = self._check_json(result)
         assert data.get("ok") is True
         text = data.get("data", {}).get("brainstorm", "")
