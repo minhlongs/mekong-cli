@@ -1,107 +1,81 @@
-# 📚 BillMentor Documentation Hub
+# 📚 Mekong CLI Documentation Hub
 
-Welcome to the official documentation for BillMentor products.
+Welcome to the official documentation for **Mekong CLI**, **Mekong IDE**, and **AgencyOS** products.
 
-## 🏠 Quick Links
+---
 
-| Product         | Documentation       | Support                     |
-| :-------------- | :------------------ | :-------------------------- |
-| AgencyOS Pro    | [Docs](/agencyos)   | [Help](/support/agencyos)   |
-| FastAPI Starter | [Docs](/fastapi)    | [Help](/support/fastapi)    |
-| Admin Dashboard | [Docs](/dashboard)  | [Help](/support/dashboard)  |
-| Mekong Mail     | [Docs](/newsletter) | [Help](/support/newsletter) |
+## 🏠 Project Overview
+
+Mekong CLI is an autonomous multi-agent operational platform designed to **empower solo founders with a 10-layer AI agent workforce for $49/mo**. The core platform automates planning, software development, quality assurance, system operations, copy generation, and business workflows through structured agency protocols.
+
+### Core Execution Loop: Plan-Execute-Verify (PEV)
+Mekong CLI operates on a rigid **Plan-Execute-Verify (PEV)** cycle:
+1. **Plan**: Natural language requests are parsed, mapping goals to Directed Acyclic Graphs (DAG) of discrete tasks.
+2. **Execute**: The `DAGScheduler` runs steps concurrently or sequentially, routing execution to local system shells, local/cloud LLMs, or automated browser agents.
+3. **Verify**: The validation engine evaluates execution outputs against quality gates and assertions, triggering self-healing recovery loops if a step fails.
+
+---
+
+## 👥 The 10-Layer Workforce
+
+Our system organizes autonomous agents into 10 specialized operational layers:
+
+1. **Founder**: Sets long-term vision, manages capital allocation, rebalances budgets, and governs core risk levels.
+2. **Business**: Conducts market research, develops pricing structures, handles monetization strategies, and tracks customer acquisition costs.
+3. **Product**: Creates Product Requirement Documents (PRDs), handles feature planning, and designs user feedback loops.
+4. **Engineering**: Translates PRDs into concrete software designs, manages database schemas, and outlines system integrations.
+5. **Ops (Operations)**: Monitors application health, coordinates alert handlers, and manages deployment infrastructure.
+6. **Studio (Creative/Design)**: Designs UI layouts, styles user interfaces, and generates marketing and visual assets.
+7. **CTO**: Manages technical debt, enforces coding standards, reviews system performance, and regulates backend architecture.
+8. **PM (Project Manager)**: Tracks issue backlogs, maps task dependencies, and manages the team's Kanban board.
+9. **Dev (Developer)**: Writes clean, minimal code, implements new features, and fixes bugs on target environments.
+10. **Worker**: Performs atomic tasks, runs tests, triggers builds, and executes low-level shell actions.
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Download Your Product
+### 1. Set Up Your System
+Configure your environment using the [Developer Setup Guide](./setup-guide.md) to install Python 3.11, Node.js, and tmux.
 
-After purchase, you'll receive an email with:
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` and fill in necessary LLM, database, and webhook credentials as documented in the [Environment Variables Guide](./env-vars.md).
 
-- Download link (valid for 30 days)
-- License key
-- Quick start guide
-
-### 2. Install Dependencies
-
+### 3. Start Local Environment
 ```bash
-# For Python products
-pip install -r requirements.txt
+# Start backend API server
+make server
 
-# For Node.js products
-npm install
-```
-
-### 3. Configure Environment
-
-Copy `.env.example` to `.env` and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Run the Project
-
-```bash
-# Python
-python main.py
-
-# Node.js
-npm run dev
+# Start dashboard UI
+pnpm dev
 ```
 
 ---
 
-## 📖 Product Documentation
+## 💳 Pricing & Subscriptions
 
-### AgencyOS Pro
-
-- [Installation Guide](/agencyos/install)
-- [Binh Pháp Framework](/agencyos/binh-phap)
-- [CRM Setup](/agencyos/crm)
-- [Automation Workflows](/agencyos/workflows)
-
-### FastAPI Starter
-
-- [Quick Start](/fastapi/quickstart)
-- [Authentication](/fastapi/auth)
-- [Database (Supabase)](/fastapi/database)
-- [Deployment](/fastapi/deploy)
-
-### Admin Dashboard
-
-- [Components Library](/dashboard/components)
-- [Theming](/dashboard/theming)
-- [Charts & Analytics](/dashboard/charts)
+| Plan | Pricing | Core Target | Features |
+| :--- | :--- | :--- | :--- |
+| **Starter** | $49 / month | Solo Founders | 10-layer AI workforce, basic PEV loop execution, local LLM integrations. |
+| **Growth** | $149 / month | Growing Startups | Parallel command runs, shared vector memory caches, cloud LLM fallback. |
+| **Pro** | $499 / month | Scaleups & Agencies | Unlimited credits, custom agent templates, dedicated macOS node tunnels. |
 
 ---
 
-## 🛟 Support
+## 🛟 Support & Community
 
-| Channel       | Response Time |
-| :------------ | :------------ |
-| Email         | 24-48 hours   |
-| Discord       | Same day      |
-| GitHub Issues | 48-72 hours   |
+For support and community discussions:
 
-### Contact
-
-- **Email**: billwill.mentor@gmail.com
-- **Discord**: [Join Server](https://discord.gg/billmentor)
-- **Twitter**: [@billmentor](https://twitter.com/billmentor)
+- **Email Support**: support@mekongmind.com (or visit [mekongmind.com/support](https://mekongmind.com/support))
+- **Discord Server**: [Join our Discord community](https://discord.gg/mekongmind)
+- **Twitter / X**: [@mekongmind](https://twitter.com/mekongmind)
 
 ---
 
-## 📄 License
+## 📄 License & Terms
 
-All products are licensed under the BillMentor Commercial License.
-
-- ✅ Use in unlimited personal/commercial projects
-- ✅ Modify and customize
-- ❌ Redistribute or resell
-- ❌ Share license key
-
----
-
-_Last updated: January 2026_
+Mekong CLI is licensed under the Mekong Commercial License.
+- ✅ Use in personal and commercial projects.
+- ✅ Modify and customize codebase for internal business operations.
+- ❌ Redistribute, resell, or white-label the core orchestrator without prior agreement.
+- ❌ Share active license keys across unauthorized tenants.
