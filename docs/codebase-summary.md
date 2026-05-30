@@ -545,22 +545,36 @@ apps/nhipdieuxanh-landing/
 
 ## Nhịp Điệu Xanh Next.js Standard App (`apps/nhipdieuxanh`)
 
-A Next.js 16+ (Turbopack, App Router) & Tailwind CSS v4 project bootstrapping the standard lead capture application.
+A Next.js 16+ (Turbopack, App Router) & Tailwind CSS v4 project bootstrapping the standard lead capture application. Optimized for bundle size, static caches, and client-side performance.
 
 ### File Structure
 ```
 apps/nhipdieuxanh/
 ├── app/
 │   ├── api/
-│   │   └── leads/
-│   │       └── route.ts             # Lead ingestion API (validation, PostgreSQL saving)
+│   │   ├── faq/
+│   │   │   └── query/
+│   │   │       └── route.ts         # Static-cached keyword matching RAG FAQ API
+│   │   ├── leads/
+│   │   │   ├── route.ts             # Lead ingestion API (validation, dynamic scoring, static cache, Decree 13 PII masking)
+│   │   │   └── update-status/
+│   │   │       └── route.ts         # Update lead status API for Kanban board
+│   │   └── posts/
+│   │       └── route.ts             # Social post generator (local LLM with fallback)
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx                     # Main Vietnamese Landing Page UI (Hero, Form, responsive)
+│   ├── page.tsx                     # Main Vietnamese Landing Page UI (Hero, Form, responsive)
+│   └── pipeline/
+│       ├── page.tsx                 # Dynamic Next.js client board page wrapper (lazy-load)
+│       ├── PipelineBoard.tsx        # Standalone interactive Kanban board component
+│       └── context.tsx              # React Context for Kanban board state & optimistic updates
 ├── lib/
-│   └── prisma.ts                    # Prisma Client singleton (v6.19.3)
-└── prisma/
-    └── schema.prisma                # PostgreSQL schema (Lead mapped to leads table)
+│   ├── prisma.ts                    # Prisma Client singleton (v6.19.3)
+│   └── utils.ts                     # Vietnamese string normalization utilities
+├── prisma/
+│   └── schema.prisma                # PostgreSQL schema (Lead with status and level fields)
+└── tests/
+    └── crm.test.ts                  # Integration tests (leads, posts, faq, updates, Decree 13)
 ```
 
 ### Component Layout & Core Implementations
@@ -570,11 +584,28 @@ apps/nhipdieuxanh/
    - **Form Fields**: Họ tên (`name`), Số điện thoại (`phone`), Email (`email`), Nhu cầu (`need`), Ngân sách (`budget`), Khu vực (`area`).
    - **Tailwind CSS v4 & Lucide React**: Premium emerald design with responsive grids, interactive dropdowns, and form success screen.
 
-2. **`app/api/leads/route.ts` (API Ingestion)**:
-   - Receives JSON payload, performs Vietnamese phone formatting checks, and writes directly to the `leads` table in the PostgreSQL `nhipdieuxanh_db` database.
+2. **`app/pipeline/page.tsx` & `PipelineBoard.tsx` (Kanban Board)**:
+   - Dynamic lazy-loading of `@dnd-kit/core` and `@dnd-kit/sortable` inside `app/pipeline/page.tsx` via `next/dynamic` (`ssr: false`) to minimize Largest Contentful Paint (LCP) bundle overhead.
+   - Elegant dark theme UI (#0b0f19) with 5-column stage flow (Mới, Đã liên hệ, Xem thực tế, Đàm phán, Chốt thành công).
+   - Card memoization (`React.memo`) to restrict re-renders to shifting cards.
+   - State managed via React Context (`pipeline/context.tsx`) supporting optimistic updates and immediate rollback.
 
-3. **`prisma/schema.prisma`**:
-   - Declares the `Lead` model mapped to the `leads` table using PostgreSQL datasource configuration.
+3. **`app/api/leads/route.ts` & `update-status/route.ts`**:
+   - Ingestion handler computes unique `leadHash` (SHA-256) for deduplication, evaluates dynamic score based on phone, email, budgets, and location criteria, and formats leads category (`COLD`/`WARM`/`HOT`).
+   - Full Decree 13 privacy compliance masking on Name, Phone, and Email when `consent` flag is false.
+   - Employs static module-scope caching for Mekong Delta province strings to prevent redundant memory allocations.
+   - `update-status` handles database status writes in PostgreSQL database.
+
+4. **`app/api/faq/query/route.ts` (RAG FAQ API)**:
+   - Normalizes question strings against static cached keywords (caching computed regexes at module scope).
+   - Returns structured Vietnamese property citations (e.g. Luật Đất đai 2024). Triggers mock email alerts and fallback flag on unresolved queries.
+
+5. **`app/api/posts/route.ts` (AI Social Post Generator)**:
+   - Connects to local Qwen 35B model at `http://localhost:11437/v1/chat/completions` with robust JSON-fallback template matching if backend is offline.
+
+6. **`prisma/schema.prisma`**:
+   - Configures PostgreSQL datasource mapping standard database tables with Prisma client. Declares `Lead` schema.
+
 
 ---
 

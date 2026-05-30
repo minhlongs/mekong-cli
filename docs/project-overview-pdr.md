@@ -116,6 +116,14 @@ Newly bootstrapped Next.js project (`apps/nhipdieuxanh-landing`) serving as the 
 - **Gated Blueprint Lock**: Restricts view of architectural blueprints until user provides verified email and phone.
 - **Floating AI Chatbot Mockup**: Employs client-side keyword matching for common developer/investor inquiries (pricing, legal status, location, loan criteria).
 
+### Module 2: Nhịp Điệu Xanh AI CRM & Kanban (Performance Optimizations)
+Bootstrapped Next.js 16+ & Tailwind CSS v4 lead classification CRM platform (`apps/nhipdieuxanh`) featuring advanced codebase performance optimizations:
+- **Code Splitting & Lazy Loading**: Optimizes LCP by lazy-loading the drag-and-drop board dependencies dynamically (`ssr: false`) inside the hydrated client.
+- **React.memo Optimization**: Restricts Kanban card re-render logic, maintaining smooth interactions during column shifts.
+- **Module-Scope Cache System**: Eliminates string processing and allocation overhead by caching static normalized FAQ keyphrase regexes and province strings at startup.
+- **Config & Build Hardening**: Enabled React StrictMode, disabled `X-Powered-By` headers, bypassed auto-generated Prisma files in ESLint, and compiled cleanly with zero warnings.
+- **Vitest Verification**: Integration test suite verifying leads ingestion, Decree 13 masking compliance, status updates, FAQ queries, and social posts.
+
 ## 5. Development Roadmap
 
 | Version | Features | Timeline |
