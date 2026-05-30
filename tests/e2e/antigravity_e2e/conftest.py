@@ -1,8 +1,12 @@
 import pytest
 import os
-import sqlite3
-import subprocess
 from pathlib import Path
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_api_keys():
+    # Set mock ANTHROPIC_API_KEY if not present, to prevent fallback in E2E tests
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = "mock_api_key_for_testing"
 
 @pytest.fixture(scope="session")
 def antigravity_bin():
@@ -10,6 +14,7 @@ def antigravity_bin():
     default_shim = str(Path(__file__).parents[1] / "mock_antigravity.py")
     bin_path = os.getenv("ANTIGRAVITY_BIN", f"python3 {default_shim}")
     return bin_path
+
 
 @pytest.fixture(scope="function")
 def clean_db():

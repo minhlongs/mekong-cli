@@ -16,12 +16,11 @@ import logging
 import pickle
 import uuid
 import threading
-from typing import Dict, Any, List, Optional, Callable, Union
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from collections import defaultdict, deque
 from threading import Lock
-import asyncio
 
 # Redis support (with fallback)
 try:
