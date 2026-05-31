@@ -1,11 +1,8 @@
 """Unit tests for DeveloperAgent and TesterAgent."""
 
-import os
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from seed.agents.developer import DeveloperAgent
 from seed.agents.tester import TesterAgent

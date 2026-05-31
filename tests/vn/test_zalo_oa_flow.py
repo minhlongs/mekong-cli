@@ -4,9 +4,6 @@ Không gọi Zalo API thật — mock requests.Session.
 """
 from __future__ import annotations
 
-import json
-import os
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import pytest

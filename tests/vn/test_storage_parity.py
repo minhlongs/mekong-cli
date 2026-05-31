@@ -8,7 +8,6 @@ Backend cache is reset between parametrize runs via _reset_backend_cache().
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Generator
 
@@ -212,7 +211,8 @@ class TestOrgIsolationParity:
         user_a = ra.json()["user_id"]
 
         # Use JWT with wildcard orgs so the /convert org check passes
-        import time, jwt as _jwt
+        import time
+        import jwt as _jwt
         token = _jwt.encode(
             {
                 "sub": "founder@test.cc",

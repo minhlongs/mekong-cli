@@ -1,10 +1,7 @@
 """Unit tests for seed/config.py — ENV var overrides."""
 
-import os
-import importlib
 import sys
 
-import pytest
 
 
 def _reload_config(monkeypatch, **env_overrides):

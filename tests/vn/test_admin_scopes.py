@@ -19,7 +19,6 @@ import json
 import logging
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 import jwt
 import pytest

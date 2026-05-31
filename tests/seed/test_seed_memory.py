@@ -1,9 +1,7 @@
 """Unit tests for seed/memory.py — uses temp dirs, no real data persisted."""
 
-import json
 import os
-import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 

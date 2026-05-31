@@ -28,20 +28,10 @@ from fastapi.testclient import TestClient
 
 import src.api.vn_pilot_state as _state
 from src.services.sqlite_migrations import ensure_schema
-from src.services import org_service, magic_link_service
 from src.services.org_service import (
-    AlreadyMemberError,
-    InviteAlreadyUsedError,
-    InviteEmailMismatchError,
-    InviteExpiredError,
-    InviteInvalidError,
-    InviteRevokedOrUsedError,
     InvalidInviteScopeError,
-    accept_invite,
     create_invite,
     create_org,
-    list_invites,
-    revoke_invite,
 )
 
 _JWT_SECRET=REDACTED = "test-jwt-secret-32chars-minimum!"

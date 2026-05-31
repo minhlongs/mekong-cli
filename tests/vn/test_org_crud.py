@@ -6,7 +6,6 @@ JWT signed with test secret (MEKONG_JWT_SECRET=REDACTED monkeypatched).
 """
 from __future__ import annotations
 
-import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -19,19 +18,16 @@ from fastapi.testclient import TestClient
 
 import src.api.vn_pilot_state as _state
 from src.services.sqlite_migrations import ensure_schema
-from src.services import org_service, magic_link_service
+from src.services import magic_link_service
 from src.services.org_service import (
     InvalidSlugError,
     LastAdminError,
     MemberNotFoundError,
-    OrgNotFoundError,
-    ReservedSlugError,
     SlugCollisionError,
     canonicalize_slug,
     create_org,
     get_org_summary,
     remove_member,
-    suggest_alternatives,
 )
 
 _JWT_SECRET=REDACTED = "test-jwt-secret-32chars-minimum!"

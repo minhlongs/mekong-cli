@@ -1,10 +1,8 @@
 """Unit tests for seed/llm_client.py — mocked HTTP, no real Ollama needed."""
 
 import json
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from seed.llm_client import LLMClient, _post_json, _get_json
 
