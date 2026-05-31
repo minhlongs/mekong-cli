@@ -86,17 +86,33 @@ class GoalTask:
     updated_at: float = field(default_factory=_now)
 
 
-@dataclass
 class TaskGraph:
-    goal_id: str
-    tasks: list[GoalTask]
+    def __init__(self, goal_id: str, tasks: list[GoalTask]) -> None:
+        self.goal_id = goal_id
+        self.tasks = tasks
+
+    @staticmethod
+    def _is_terminal(status: TaskStatus) -> bool:
+        return status in (
+            TaskStatus.COMPLETED,
+            TaskStatus.FAILED,
+            TaskStatus.BLOCKED,
+            TaskStatus.SKIPPED,
+        )
+
+    def _get_task(self, task_id: str) -> GoalTask | None:
+        for task in self.tasks:
+            if task.id == task_id:
+                return task
+        return None
 
     def ready_tasks(self) -> list[GoalTask]:
         completed = {task.id for task in self.tasks if task.status == TaskStatus.COMPLETED}
         return [
             task
             for task in self.tasks
-            if task.status == TaskStatus.PENDING and all(dep in completed for dep in task.depends_on)
+            if task.status == TaskStatus.PENDING
+            and all(dep in completed for dep in task.depends_on)
         ]
 
 

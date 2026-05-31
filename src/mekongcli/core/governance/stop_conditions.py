@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.mekongcli.core.goal_engine.models import Goal, GoalTask
+from src.mekongcli.core.goal_engine.models import Goal, GoalTask, TaskStatus
 
 
 class StopConditionPolicy:
@@ -17,7 +17,7 @@ class StopConditionPolicy:
     )
 
     def should_stop_for_retries(self, goal: Goal, tasks: list[GoalTask]) -> str:
-        failed_attempts = sum(task.attempts for task in tasks if task.status.value == "failed")
-        if failed_attempts >= goal.retry_limit:
-            return "verification_repeatedly_fails"
+        for task in tasks:
+            if task.status == TaskStatus.FAILED and task.attempts >= task.max_attempts:
+                return "verification_repeatedly_fails"
         return ""

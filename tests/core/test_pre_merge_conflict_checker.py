@@ -32,11 +32,13 @@ def clean_repo(tmp_path: Path) -> Path:
     """main + feature branch with no overlapping edits."""
     p = _base_repo(tmp_path)
     (p / "a.txt").write_text("line1\n")
-    _git(["add", "."], p); _git(["commit", "-m", "init"], p)
+    _git(["add", "."], p)
+    _git(["commit", "-m", "init"], p)
 
     _git(["checkout", "-b", "feature"], p)
     (p / "b.txt").write_text("feature-only\n")
-    _git(["add", "."], p); _git(["commit", "-m", "feat"], p)
+    _git(["add", "."], p)
+    _git(["commit", "-m", "feat"], p)
     _git(["checkout", "main"], p)
     return p
 
@@ -46,15 +48,18 @@ def conflict_repo(tmp_path: Path) -> Path:
     """main + feature both modify the same line in a.txt."""
     p = _base_repo(tmp_path)
     (p / "a.txt").write_text("shared\n")
-    _git(["add", "."], p); _git(["commit", "-m", "init"], p)
+    _git(["add", "."], p)
+    _git(["commit", "-m", "init"], p)
 
     _git(["checkout", "-b", "feature"], p)
     (p / "a.txt").write_text("feature edit\n")
-    _git(["add", "."], p); _git(["commit", "-m", "feature edit"], p)
+    _git(["add", "."], p)
+    _git(["commit", "-m", "feature edit"], p)
 
     _git(["checkout", "main"], p)
     (p / "a.txt").write_text("main edit\n")
-    _git(["add", "."], p); _git(["commit", "-m", "main edit"], p)
+    _git(["add", "."], p)
+    _git(["commit", "-m", "main edit"], p)
     return p
 
 

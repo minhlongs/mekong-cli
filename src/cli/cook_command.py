@@ -123,6 +123,11 @@ def register_cook_command(app: typer.Typer) -> None:
             "--auto",
             help="Accept AGY auto mode; cook-auto is already non-interactive",
         ),
+    timeout_seconds: float | None = typer.Option(
+        None,
+        "--timeout",
+        help="Max seconds before cancelling goal execution",
+    ),
         db_path: str | None = typer.Option(
             None,
             "--db",
@@ -146,6 +151,7 @@ def register_cook_command(app: typer.Typer) -> None:
             created.id,
             verification_profile=profile,
             execute_commands=execute_commands,
+        timeout_seconds=timeout_seconds,
         )
         snapshot = engine.status(created.id)
         payload = _cook_auto_payload(
@@ -207,51 +213,55 @@ def register_cook_command(app: typer.Typer) -> None:
         ),
         max_workers: int = typer.Option(
             3,
-            "--workers",
-            help="Max parallel execution threads",
+            ),
+        timeout_seconds: float | None = typer.Option(
+            None,
+            "--timeout",
+            help="Max seconds before cancelling goal execution",
         ),
-    ) -> None:
-        """Create, run in parallel, checkpoint, and verify a durable autonomous goal."""
-        _validate_profile(profile)
-        if max_workers <= 0:
-            raise typer.BadParameter("workers must be a positive integer", param_hint="--workers")
-        goal_title = " ".join(goal).strip()
-        if not goal_title:
-            raise typer.BadParameter("goal cannot be empty", param_hint="GOAL")
-        engine = _goal_engine(db_path)
-        created = engine.create_goal(goal_title)
-        completed = engine.run_goal_parallel(
-            created.id,
-            verification_profile=profile,
-            execute_commands=execute_commands,
-            max_workers=max_workers,
-        )
-        snapshot = engine.status(created.id)
-        payload = _cook_auto_payload(
-            completed.status,
-            completed.id,
-            completed.title,
-            profile,
-            snapshot,
-            db_path,
-            auto,
-        )
-
-        if json_output:
-            _print_json(payload)
-        else:
-            style = "green" if completed.status == GoalStatus.SATISFIED else "red"
-            console.print(
-                Panel(
-                    _cook_auto_panel_body(payload),
-                    title="Cook Auto Parallel Complete",
-                    border_style=style,
-                )
+        ) -> None:
+            """Create, run in parallel, checkpoint, and verify a durable autonomous goal."""
+            _validate_profile(profile)
+            if max_workers <= 0:
+                raise typer.BadParameter("workers must be a positive integer", param_hint="--workers")
+            goal_title = " ".join(goal).strip()
+            if not goal_title:
+                raise typer.BadParameter("goal cannot be empty", param_hint="GOAL")
+            engine = _goal_engine(db_path)
+            created = engine.create_goal(goal_title)
+            completed = engine.run_goal_parallel(
+                created.id,
+                verification_profile=profile,
+                execute_commands=execute_commands,
+                max_workers=max_workers,
+            timeout_seconds=timeout_seconds,
             )
-
-        if completed.status != GoalStatus.SATISFIED:
-            raise typer.Exit(code=1)
-
+            snapshot = engine.status(created.id)
+            payload = _cook_auto_payload(
+                completed.status,
+                completed.id,
+                completed.title,
+                profile,
+                snapshot,
+                db_path,
+                auto,
+            )
+    
+            if json_output:
+                _print_json(payload)
+            else:
+                style = "green" if completed.status == GoalStatus.SATISFIED else "red"
+                console.print(
+                    Panel(
+                        _cook_auto_panel_body(payload),
+                        title="Cook Auto Parallel Complete",
+                        border_style=style,
+                    )
+                )
+    
+            if completed.status != GoalStatus.SATISFIED:
+                raise typer.Exit(code=1)
+    
     @app.command()
     def cook(
         goal: str = typer.Argument(..., help="High-level goal to plan, execute, and verify"),
