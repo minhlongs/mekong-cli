@@ -105,6 +105,8 @@ class TestGetApiKey:
 class TestAPIAdapterSyncFallback:
     def test_sync_anthropic_returns_empty_on_error(self, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "fake")
+        monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+        from unittest.mock import patch
         adapter = APIAdapter()
         config = ModelConfig(
             model_id="claude-haiku-4-5",
@@ -112,11 +114,12 @@ class TestAPIAdapterSyncFallback:
             max_tokens=100,
             temperature=0.3,
         )
-        # Will fail to connect — should return empty string
-        result = adapter._sync_anthropic(config, [{"role": "user", "content": "hi"}], None, "fake")
+        with patch("urllib.request.urlopen", side_effect=OSError("network unreachable")):
+            result = adapter._sync_anthropic(config, [{"role": "user", "content": "hi"}], None, "fake")
         assert result == ""
 
     def test_sync_google_returns_empty_on_error(self):
+        from unittest.mock import patch
         adapter = APIAdapter()
         config = ModelConfig(
             model_id="gemini-2.0-flash",
@@ -124,10 +127,12 @@ class TestAPIAdapterSyncFallback:
             max_tokens=100,
             temperature=0.3,
         )
-        result = adapter._sync_google(config, [{"role": "user", "content": "hi"}], None, "fake")
+        with patch("urllib.request.urlopen", side_effect=OSError("network unreachable")):
+            result = adapter._sync_google(config, [{"role": "user", "content": "hi"}], None, "fake")
         assert result == ""
 
     def test_sync_openai_returns_empty_on_error(self):
+        from unittest.mock import patch
         adapter = APIAdapter()
         config = ModelConfig(
             model_id="gpt-4o-mini",
@@ -135,5 +140,6 @@ class TestAPIAdapterSyncFallback:
             max_tokens=100,
             temperature=0.3,
         )
-        result = adapter._sync_openai(config, [{"role": "user", "content": "hi"}], None, "fake")
+        with patch("urllib.request.urlopen", side_effect=OSError("network unreachable")):
+            result = adapter._sync_openai(config, [{"role": "user", "content": "hi"}], None, "fake")
         assert result == ""

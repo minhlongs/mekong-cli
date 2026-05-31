@@ -9,11 +9,14 @@ from __future__ import annotations
 import json
 import logging
 import os
+import aiohttp
 from typing import AsyncIterator
 
 from src.core.model_selector import ModelConfig
 
 logger = logging.getLogger(__name__)
+
+ANTHROPIC_DEFAULT_BASE_URL = "https://api.anthropic.com"
 
 
 def detect_provider(model_id: str) -> str:
@@ -64,8 +67,69 @@ def format_for_gemini(messages: list[dict], system_prompt: str | None) -> list[d
     return contents
 
 
+def _anthropic_messages_url(base_url: str) -> str:
+    """Build the Messages API URL without double-appending the path."""
+    base = base_url.rstrip("/")
+    if base.endswith("/messages"):
+        return base
+    if "zunef.com" in base.lower():
+        return f"{base}/messages"
+    if base.endswith("/v1"):
+        return f"{base}/messages"
+    return f"{base}/v1/messages"
+
+
+def _anthropic_headers(api_key: str) -> dict[str, str]:
+    """Build Anthropic API headers with optional custom headers."""
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    }
+    custom = os.getenv("ANTHROPIC_CUSTOM_HEADERS", "").strip()
+    if custom:
+        try:
+            extra = json.loads(custom)
+            headers.update(extra)
+        except json.JSONDecodeError:
+            logger.warning("Invalid ANTHROPIC_CUSTOM_HEADERS JSON, skipping")
+    return headers
+
+
 class APIAdapter:
-    """Unified adapter for cloud LLM providers."""
+    """Unified adapter for cloud LLM providers with connection reuse."""
+
+    def __init__(self) -> None:
+        self._session: "aiohttp.ClientSession | None" = None
+
+    async def _get_session(self) -> "aiohttp.ClientSession":
+        """Get or create a reused aiohttp session with connection pooling."""
+        import aiohttp
+        if self._session is None or self._session.closed:
+            connector = aiohttp.TCPConnector(
+                limit=20,
+                limit_per_host=10,
+                ttl_dns_cache=300,
+                keepalive_timeout=30,
+            )
+            timeout = aiohttp.ClientTimeout(total=600, connect=10, sock_read=60)
+            self._session = aiohttp.ClientSession(
+                connector=connector,
+                timeout=timeout,
+                headers={"connection": "keep-alive"},
+            )
+        return self._session
+
+    async def close(self) -> None:
+        """Close the underlying HTTP session."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+
+    async def __aenter__(self) -> "APIAdapter":
+        return self
+
+    async def __aexit__(self, *exc) -> None:
+        await self.close()
 
     async def generate(
         self,
@@ -73,18 +137,8 @@ class APIAdapter:
         messages: list[dict],
         system_prompt: str | None = None,
     ) -> AsyncIterator[str]:
-        """Stream generate from cloud provider.
-
-        Args:
-            model_config: Model configuration with provider info.
-            messages: Chat messages in OpenAI format.
-            system_prompt: Optional system prompt.
-
-        Yields:
-            Text chunks from the model.
-        """
+        """Stream generate from cloud provider."""
         provider = detect_provider(model_config.model_id)
-
         if provider == "anthropic":
             async for token in self._generate_anthropic(model_config, messages, system_prompt):
                 yield token
@@ -100,12 +154,10 @@ class APIAdapter:
     async def _generate_anthropic(
         self, config: ModelConfig, messages: list[dict], system_prompt: str | None
     ) -> AsyncIterator[str]:
-        """Generate via Anthropic API using HTTP."""
-        import aiohttp
-
+        """Generate via Anthropic API using HTTP with connection reuse."""
         api_key = _get_api_key("anthropic")
-        base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
-
+        base_url = os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL)
+        url = _anthropic_messages_url(base_url)
         payload = {
             "model": config.model_id,
             "max_tokens": config.max_tokens,
@@ -115,45 +167,31 @@ class APIAdapter:
         }
         if system_prompt:
             payload["system"] = system_prompt
-
-        headers = {
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{base_url}/v1/messages",
-                json=payload,
-                headers=headers,
-                timeout=aiohttp.ClientTimeout(total=300),
-            ) as resp:
-                async for line in resp.content:
-                    text = line.decode("utf-8").strip()
-                    if not text or not text.startswith("data: "):
-                        continue
-                    data_str = text[6:]
-                    if data_str == "[DONE]":
-                        break
-                    try:
-                        event = json.loads(data_str)
-                        delta = event.get("delta", {})
-                        content = delta.get("text", "")
-                        if content:
-                            yield content
-                    except json.JSONDecodeError:
-                        continue
+        headers = _anthropic_headers(api_key)
+        session = await self._get_session()
+        async with session.post(url, json=payload, headers=headers) as resp:
+            async for line in resp.content:
+                text = line.decode("utf-8").strip()
+                if not text or not text.startswith("data: "):
+                    continue
+                data_str = text[6:]
+                if data_str == "[DONE]":
+                    break
+                try:
+                    event = json.loads(data_str)
+                    delta = event.get("delta", {})
+                    content = delta.get("text", "")
+                    if content:
+                        yield content
+                except json.JSONDecodeError:
+                    continue
 
     async def _generate_google(
         self, config: ModelConfig, messages: list[dict], system_prompt: str | None
     ) -> AsyncIterator[str]:
-        """Generate via Google Gemini API using HTTP."""
-        import aiohttp
-
+        """Generate via Google Gemini API using HTTP with connection reuse."""
         api_key = _get_api_key("google")
         contents = format_for_gemini(messages, system_prompt)
-
         payload = {
             "contents": contents,
             "generationConfig": {
@@ -161,42 +199,33 @@ class APIAdapter:
                 "temperature": config.temperature,
             },
         }
-
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"{config.model_id}:streamGenerateContent?alt=sse&key={api_key}"
         )
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                url,
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=300),
-            ) as resp:
-                async for line in resp.content:
-                    text = line.decode("utf-8").strip()
-                    if not text or not text.startswith("data: "):
-                        continue
-                    try:
-                        event = json.loads(text[6:])
-                        candidates = event.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
-                            for part in parts:
-                                if part.get("text"):
-                                    yield part["text"]
-                    except json.JSONDecodeError:
-                        continue
+        session = await self._get_session()
+        async with session.post(url, json=payload) as resp:
+            async for line in resp.content:
+                text = line.decode("utf-8").strip()
+                if not text or not text.startswith("data: "):
+                    continue
+                try:
+                    event = json.loads(text[6:])
+                    candidates = event.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        for part in parts:
+                            if part.get("text"):
+                                yield part["text"]
+                except json.JSONDecodeError:
+                    continue
 
     async def _generate_openai(
         self, config: ModelConfig, messages: list[dict], system_prompt: str | None
     ) -> AsyncIterator[str]:
-        """Generate via OpenAI API using HTTP."""
-        import aiohttp
-
+        """Generate via OpenAI API using HTTP with connection reuse."""
         api_key = _get_api_key("openai")
         formatted = format_for_openai(messages, system_prompt)
-
         payload = {
             "model": config.model_id,
             "messages": formatted,
@@ -204,34 +233,31 @@ class APIAdapter:
             "temperature": config.temperature,
             "stream": True,
         }
-
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://api.openai.com/v1/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=aiohttp.ClientTimeout(total=300),
-            ) as resp:
-                async for line in resp.content:
-                    text = line.decode("utf-8").strip()
-                    if not text or not text.startswith("data: "):
-                        continue
-                    data_str = text[6:]
-                    if data_str == "[DONE]":
-                        break
-                    try:
-                        event = json.loads(data_str)
-                        delta = event["choices"][0].get("delta", {})
-                        content = delta.get("content", "")
-                        if content:
-                            yield content
-                    except (json.JSONDecodeError, KeyError, IndexError):
-                        continue
+        session = await self._get_session()
+        async with session.post(
+            "https://api.openai.com/v1/chat/completions",
+            json=payload,
+            headers=headers,
+        ) as resp:
+            async for line in resp.content:
+                text = line.decode("utf-8").strip()
+                if not text or not text.startswith("data: "):
+                    continue
+                data_str = text[6:]
+                if data_str == "[DONE]":
+                    break
+                try:
+                    event = json.loads(data_str)
+                    delta = event["choices"][0].get("delta", {})
+                    content = delta.get("content", "")
+                    if content:
+                        yield content
+                except (json.JSONDecodeError, KeyError, IndexError):
+                    continue
 
     def generate_sync(
         self,
@@ -239,11 +265,9 @@ class APIAdapter:
         messages: list[dict],
         system_prompt: str | None = None,
     ) -> str:
-        """Synchronous generation (non-streaming) for simple use cases."""
-
+        """Synchronous generation (non-streaming)."""
         provider = detect_provider(model_config.model_id)
         api_key = _get_api_key(provider)
-
         if provider == "anthropic":
             return self._sync_anthropic(model_config, messages, system_prompt, api_key)
         if provider == "google":
@@ -252,10 +276,10 @@ class APIAdapter:
             return self._sync_openai(model_config, messages, system_prompt, api_key)
         return ""
 
-    def _sync_anthropic(self, config: ModelConfig, messages: list[dict], system_prompt: str | None, api_key: str) -> str:
+    def _sync_anthropic(self, config, messages, system_prompt, api_key):
         import urllib.request
-
-        base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+        base_url = os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL)
+        url = _anthropic_messages_url(base_url)
         payload = {
             "model": config.model_id,
             "max_tokens": config.max_tokens,
@@ -264,15 +288,10 @@ class APIAdapter:
         }
         if system_prompt:
             payload["system"] = system_prompt
-
         req = urllib.request.Request(
-            f"{base_url}/v1/messages",
+            url,
             data=json.dumps(payload).encode(),
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
+            headers=_anthropic_headers(api_key),
             method="POST",
         )
         try:
@@ -284,9 +303,8 @@ class APIAdapter:
             logger.error("Anthropic sync failed: %s", e)
             return ""
 
-    def _sync_google(self, config: ModelConfig, messages: list[dict], system_prompt: str | None, api_key: str) -> str:
+    def _sync_google(self, config, messages, system_prompt, api_key):
         import urllib.request
-
         contents = format_for_gemini(messages, system_prompt)
         payload = {
             "contents": contents,
@@ -312,14 +330,13 @@ class APIAdapter:
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     return "".join(p.get("text", "") for p in parts)
-                return ""
+            return ""
         except Exception as e:
             logger.error("Google sync failed: %s", e)
             return ""
 
-    def _sync_openai(self, config: ModelConfig, messages: list[dict], system_prompt: str | None, api_key: str) -> str:
+    def _sync_openai(self, config, messages, system_prompt, api_key):
         import urllib.request
-
         formatted = format_for_openai(messages, system_prompt)
         payload = {
             "model": config.model_id,
@@ -330,10 +347,7 @@ class APIAdapter:
         req = urllib.request.Request(
             "https://api.openai.com/v1/chat/completions",
             data=json.dumps(payload).encode(),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=_anthropic_headers(api_key),
             method="POST",
         )
         try:
@@ -343,3 +357,14 @@ class APIAdapter:
         except Exception as e:
             logger.error("OpenAI sync failed: %s", e)
             return ""
+
+
+_adapter: "APIAdapter | None" = None
+
+
+def get_adapter() -> APIAdapter:
+    """Get or create the singleton APIAdapter instance."""
+    global _adapter
+    if _adapter is None:
+        _adapter = APIAdapter()
+    return _adapter
