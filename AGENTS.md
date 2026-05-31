@@ -25,6 +25,18 @@ Commits: conventional (feat/fix/refactor/docs/test). No AI refs in messages.
 Studio → Founder → Business → Product → Engineering → Ops
 Water Protocol 水: multi-agent context flow between layers.
 
+## Harness Engineering
+Mekong applies harness engineering principles for reliable agentic operations.
+
+**Runtime Contract:** `HARNESS.md` — context budget, guardrails, delegation matrix, escalation paths.
+**SOPs:** `sops/` — Standard Operating Procedures organized by business layer (ceo, business, engineering, ops, shared).
+**Agent Registry:** `agents/registry.yaml` — declarative agent definitions with role, tools, SOP scope.
+**Observability:** `observability/` — OpenTelemetry traces, Prometheus + Grafana dashboards.
+**Evals:** `evals/` — harness quality eval suite (not model benchmarks).
+**Docs:** `docs/harness-engineering.md` — Mekong harness architecture.
+
+**CEO Solo Model:** One CEO delegates to 4 layer agents (Business, Product, Engineering, Ops). CEO has override authority. All high-risk actions require approval.
+
 ## AI OS (CheetahClaws)
 
 ### MCP Server

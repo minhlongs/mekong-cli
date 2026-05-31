@@ -1,0 +1,98 @@
+# Agent Registry — CEO Solo Agentic Harness
+# Version: 1.0.0
+# Declarative agent definitions for Claude Code subagent dispatch
+
+version: "1.0.0"
+harness: HARNESS.md
+sops_dir: sops/
+
+agents:
+
+  - id: ceo
+    name: "CEO Solo"
+    role: "Chief Executive Officer"
+    description: "Strategic decision-maker and final authority. Delegates to layer agents. Has override authority."
+    model: sonnet
+    tools: [Read, Write, Edit, Bash, Task, AskUserQuestion]
+    context_budget: 30000
+    sop_fragments: ["sops/ceo/"]
+    can_override: true
+    can_escalate_to_human: true
+    max_concurrent_subagents: 4
+
+  - id: ae
+    name: "AE — Account Executive"
+    role: "Business Development"
+    description: "Handles client lifecycle: leads, proposals, contracts, delivery handoff, renewals."
+    model: sonnet
+    tools: [Read, Write, Bash, Task]
+    context_budget: 16000
+    sop_fragments: ["sops/business/", "sops/shared/"]
+    reports_to: ceo
+    slash_commands:
+      - ae-outreach
+      - ae-deal-prep
+      - ae-follow-up
+      - ae-close-report
+    approval_required:
+      - contract_signing
+      - pricing_change > 20%
+
+  - id: pm
+    name: "PM — Product Manager"
+    role: "Product Strategy"
+    description: "Roadmap, specs, priorities, feature definition. Bridges CEO vision and engineering execution."
+    model: sonnet
+    tools: [Read, Write, Edit, Bash, Task]
+    context_budget: 20000
+    sop_fragments: ["sops/shared/"]
+    reports_to: ceo
+    slash_commands:
+      - product-spec
+      - roadmap-update
+      - priority-review
+
+  - id: eng
+    name: "ENG — Engineer"
+    role: "Engineering"
+    description: "Code, review, deploy, incident response. Follows engineering SOPs strictly."
+    model: sonnet
+    tools: [Read, Write, Edit, Bash, Task]
+    context_budget: 24000
+    sop_fragments: ["sops/engineering/", "sops/shared/"]
+    reports_to: ceo
+    slash_commands:
+      - backend-api-build
+      - backend-db-task
+      - audit-execute
+      - audit-itgc
+      - audit-sox
+    hard_gates:
+      - code_review_required
+      - ci_checks_pass
+      - no_force_push_main
+
+  - id: ops
+    name: "OPS — Operations"
+    role: "Operations & Observability"
+    description: "Monitoring, incidents, vendor management, cost tracking."
+    model: sonnet
+    tools: [Read, Bash, Task]
+    context_budget: 16000
+    sop_fragments: ["sops/ops/", "sops/shared/"]
+    reports_to: ceo
+    slash_commands:
+      - audit-trail
+      - audit-compliance
+      - algo-status
+    observability:
+      traces: "observability/traces/"
+      dashboards: "observability/dashboards/"
+
+delegation_rules:
+  - if task_type == "strategy" or task_type == "approval": route to ceo
+  - if task_type == "client" or task_type == "revenue": route to ae
+  - if task_type == "product" or task_type == "spec": route to pm
+  - if task_type == "code" or task_type == "deploy": route to eng
+  - if task_type == "monitoring" or task_type == "incident": route to ops
+  - if ambiguous: ask ceo via AskUserQuestion
