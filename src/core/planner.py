@@ -597,8 +597,31 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
             if s.order not in failed_and_downstream
         ]
 
+        original_dependencies = []
+        if hasattr(failed_step, "dependencies") and failed_step.dependencies:
+            original_dependencies.extend(failed_step.dependencies)
+        elif failed_step.params and "dependencies" in failed_step.params:
+            original_dependencies.extend(failed_step.params["dependencies"])
+
+        original_dependencies = [
+            d for d in original_dependencies
+            if d not in failed_and_downstream
+        ]
+
         next_order = max((s.order for s in kept_steps), default=0) + 1
         for idx, task in enumerate(new_tasks):
+            new_deps = [
+                next_order + d for d in task.get("dependencies", [])
+                if isinstance(d, int)
+            ]
+
+            # If this is the first new task, or if it has no dependencies, inherit original upstreams
+            if idx == 0 or not new_deps:
+                valid_kept_orders = {s.order for s in kept_steps}
+                for od in original_dependencies:
+                    if od in valid_kept_orders and od not in new_deps:
+                        new_deps.append(od)
+
             step = RecipeStep(
                 order=next_order + idx,
                 title=task["title"],
@@ -606,10 +629,7 @@ Example: [{{"title": "Setup", "description": "npm install", "dependencies": []}}
                 agent=task.get("agent"),
                 params={
                     "type": task.get("type", "shell"),
-                    "dependencies": [
-                        next_order + d for d in task.get("dependencies", [])
-                        if isinstance(d, int)
-                    ],
+                    "dependencies": new_deps,
                     "verification": self.generate_verification_criteria(
                         task,
                     ).__dict__,
