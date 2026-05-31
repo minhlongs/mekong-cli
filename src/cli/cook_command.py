@@ -1,7 +1,4 @@
-"""
-Cook command: Plan -> Execute -> Verify (PEV) workflow.
-Primary Mekong CLI execution entry point with AGI v2 integration.
-"""
+"""Cook command: Plan -> Execute -> Verify (PEV) workflow."""
 
 import json
 import shlex
@@ -13,8 +10,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.core.llm_client import get_client
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
+from src.core.llm_client import get_client
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
 from src.mekongcli.core.verification import VerificationPipeline
 
@@ -49,7 +46,7 @@ def _cook_auto_payload(
     db_path: str | None = None,
     auto: bool = False,
 ) -> dict[str, Any]:
-    verification = snapshot["verification"] or {}
+    verification = snapshot.get("verification") or {}
     verification_results = verification.get("results") or []
     failed_gates = [
         result["name"]
@@ -63,11 +60,11 @@ def _cook_auto_payload(
         "title": title,
         "profile": profile,
         "auto": auto,
-        "tasks_total": len(snapshot["tasks"]),
+        "tasks_total": len(snapshot.get("tasks", [])),
         "tasks_completed": len(
-            [task for task in snapshot["tasks"] if task["status"] == "completed"]
+            [t for t in snapshot.get("tasks", []) if t.get("status") == "completed"]
         ),
-        "verification_runs": 1 if snapshot["verification"] else 0,
+        "verification_runs": 1 if verification else 0,
         "verification_passed": verification.get("passed"),
         "failed_gates": failed_gates,
         "status_command": f"mekong goal status {goal_id}{db_option}",
@@ -86,9 +83,9 @@ def _cook_auto_panel_body(payload: dict[str, Any]) -> str:
         f"[bold]Verification Profile:[/bold] {payload['profile']}",
         f"[bold]Tasks:[/bold] {payload['tasks_completed']}/{payload['tasks_total']}",
     ]
-    if payload["verification_passed"] is not None:
+    if payload.get("verification_passed") is not None:
         lines.append(f"[bold]Verification Passed:[/bold] {payload['verification_passed']}")
-    if payload["failed_gates"]:
+    if payload.get("failed_gates"):
         lines.append(f"[bold red]Failed Gates:[/bold red] {', '.join(payload['failed_gates'])}")
     lines.append(f"[bold]Status Command:[/bold] {payload['status_command']}")
     lines.append(f"[bold]Resume Command:[/bold] {payload['resume_command']}")
@@ -121,13 +118,13 @@ def register_cook_command(app: typer.Typer) -> None:
         auto: bool = typer.Option(
             False,
             "--auto",
-            help="Accept AGY auto mode; cook-auto is already non-interactive",
+            help="Accept AGY auto mode",
         ),
-    timeout_seconds: float | None = typer.Option(
-        None,
-        "--timeout",
-        help="Max seconds before cancelling goal execution",
-    ),
+        timeout_seconds: float | None = typer.Option(
+            None,
+            "--timeout",
+            help="Max seconds before cancelling goal execution",
+        ),
         db_path: str | None = typer.Option(
             None,
             "--db",
@@ -151,7 +148,7 @@ def register_cook_command(app: typer.Typer) -> None:
             created.id,
             verification_profile=profile,
             execute_commands=execute_commands,
-        timeout_seconds=timeout_seconds,
+            timeout_seconds=timeout_seconds,
         )
         snapshot = engine.status(created.id)
         payload = _cook_auto_payload(
@@ -213,55 +210,57 @@ def register_cook_command(app: typer.Typer) -> None:
         ),
         max_workers: int = typer.Option(
             3,
-            ),
+            "--workers",
+            help="Max parallel execution threads",
+        ),
         timeout_seconds: float | None = typer.Option(
             None,
             "--timeout",
             help="Max seconds before cancelling goal execution",
         ),
-        ) -> None:
-            """Create, run in parallel, checkpoint, and verify a durable autonomous goal."""
-            _validate_profile(profile)
-            if max_workers <= 0:
-                raise typer.BadParameter("workers must be a positive integer", param_hint="--workers")
-            goal_title = " ".join(goal).strip()
-            if not goal_title:
-                raise typer.BadParameter("goal cannot be empty", param_hint="GOAL")
-            engine = _goal_engine(db_path)
-            created = engine.create_goal(goal_title)
-            completed = engine.run_goal_parallel(
-                created.id,
-                verification_profile=profile,
-                execute_commands=execute_commands,
-                max_workers=max_workers,
+    ) -> None:
+        """Create, run in parallel, checkpoint, and verify a durable autonomous goal."""
+        _validate_profile(profile)
+        if max_workers <= 0:
+            raise typer.BadParameter("workers must be a positive integer", param_hint="--workers")
+        goal_title = " ".join(goal).strip()
+        if not goal_title:
+            raise typer.BadParameter("goal cannot be empty", param_hint="GOAL")
+        engine = _goal_engine(db_path)
+        created = engine.create_goal(goal_title)
+        completed = engine.run_goal_parallel(
+            created.id,
+            verification_profile=profile,
+            execute_commands=execute_commands,
+            max_workers=max_workers,
             timeout_seconds=timeout_seconds,
-            )
-            snapshot = engine.status(created.id)
-            payload = _cook_auto_payload(
-                completed.status,
-                completed.id,
-                completed.title,
-                profile,
-                snapshot,
-                db_path,
-                auto,
-            )
-    
-            if json_output:
-                _print_json(payload)
-            else:
-                style = "green" if completed.status == GoalStatus.SATISFIED else "red"
-                console.print(
-                    Panel(
-                        _cook_auto_panel_body(payload),
-                        title="Cook Auto Parallel Complete",
-                        border_style=style,
-                    )
+        )
+        snapshot = engine.status(created.id)
+        payload = _cook_auto_payload(
+            completed.status,
+            completed.id,
+            completed.title,
+            profile,
+            snapshot,
+            db_path,
+            auto,
+        )
+
+        if json_output:
+            _print_json(payload)
+        else:
+            style = "green" if completed.status == GoalStatus.SATISFIED else "red"
+            console.print(
+                Panel(
+                    _cook_auto_panel_body(payload),
+                    title="Cook Auto Parallel Complete",
+                    border_style=style,
                 )
-    
-            if completed.status != GoalStatus.SATISFIED:
-                raise typer.Exit(code=1)
-    
+            )
+
+        if completed.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
+
     @app.command()
     def cook(
         goal: str = typer.Argument(..., help="High-level goal to plan, execute, and verify"),
@@ -272,7 +271,7 @@ def register_cook_command(app: typer.Typer) -> None:
         json_output: bool = typer.Option(False, "--json", "-j", help="Machine-readable JSON output"),
         agi_dash: bool = typer.Option(False, "--agi-dash", help="Show AGI dashboard after execution"),
     ) -> None:
-        """Cook: Plan -> Execute -> Verify workflow (Binh Phap engine + AGI v2)"""
+        """Cook: Plan -> Execute -> Verify workflow."""
         from src.cli.agi_dashboard import show_agi_dashboard
 
         llm_client = get_client()
@@ -281,11 +280,13 @@ def register_cook_command(app: typer.Typer) -> None:
             from src.core.planner import RecipePlanner
             planner = RecipePlanner(llm_client=llm_client if llm_client.is_available else None)
             recipe = planner.plan(goal)
-            console.print(Panel(
-                f"[bold]{recipe.name}[/bold]\n{recipe.description}",
-                title="📋 Dry Run — Plan Only",
-                border_style="yellow",
-            ))
+            console.print(
+                Panel(
+                    f"[bold]{recipe.name}[/bold]\n{recipe.description}",
+                    title="Dry Run - Plan Only",
+                    border_style="yellow",
+                )
+            )
             plan_table = Table(title="Steps (not executed)")
             plan_table.add_column("#", style="bold cyan", justify="right")
             plan_table.add_column("Task", style="bold")
@@ -293,7 +294,7 @@ def register_cook_command(app: typer.Typer) -> None:
             for step in recipe.steps:
                 plan_table.add_row(str(step.order), step.title, step.description[:80])
             console.print(plan_table)
-            console.print("\n[yellow]Dry run complete — no steps executed.[/yellow]")
+            console.print("\n[yellow]Dry run complete - no steps executed.[/yellow]")
             return
 
         orchestrator = RecipeOrchestrator(
@@ -303,13 +304,15 @@ def register_cook_command(app: typer.Typer) -> None:
         )
 
         if verbose:
-            console.print(Panel(
-                f"[bold]Goal:[/bold] {goal}\n"
-                f"[bold]Strict:[/bold] {strict}\n"
-                f"[bold]Rollback:[/bold] {not no_rollback}",
-                title="⚙️ Cook Configuration",
-                border_style="dim",
-            ))
+            console.print(
+                Panel(
+                    f"[bold]Goal:[/bold] {goal}\n"
+                    f"[bold]Strict:[/bold] {strict}\n"
+                    f"[bold]Rollback:[/bold] {not no_rollback}",
+                    title="Cook Configuration",
+                    border_style="dim",
+                )
+            )
 
         result = orchestrator.run_from_goal(goal)
 
@@ -335,9 +338,9 @@ def register_cook_command(app: typer.Typer) -> None:
                 ],
             }
             console.print(json.dumps(output, indent=2))
-            if result.status != OrchestrationStatus.SUCCESS:
-                raise typer.Exit(code=1)
-            return
+        if result.status != OrchestrationStatus.SUCCESS:
+            raise typer.Exit(code=1)
+        return
 
         if verbose and result.step_results:
             detail_table = Table(title="Step Details")
@@ -348,29 +351,36 @@ def register_cook_command(app: typer.Typer) -> None:
             for sr in result.step_results:
                 status = "[green]PASS[/green]" if sr.verification.passed else "[red]FAIL[/red]"
                 detail_table.add_row(
-                    str(sr.step.order), sr.step.title, status, sr.verification.summary
+                    str(sr.step.order),
+                    sr.step.title,
+                    status,
+                    sr.verification.summary,
                 )
             console.print(detail_table)
 
         if result.status == OrchestrationStatus.SUCCESS:
-            console.print("\n[bold green]🎉 Mission accomplished![/bold green]")
+            console.print("\n[bold green]Mission accomplished![/bold green]")
         elif result.status == OrchestrationStatus.PARTIAL:
-            console.print("\n[bold yellow]⚠️  Partial completion[/bold yellow]")
+            console.print("\n[bold yellow]Partial completion[/bold yellow]")
             if result.errors:
-                console.print(Panel(
-                    "\n".join(f"• {e}" for e in result.errors),
-                    title="[red]Errors[/red]",
-                    border_style="red",
-                ))
+                console.print(
+                    Panel(
+                        "\n".join(f"- {e}" for e in result.errors),
+                        title="Errors",
+                        border_style="red",
+                    )
+                )
             raise typer.Exit(code=1)
         else:
-            console.print("\n[bold red]❌ Mission failed[/bold red]")
+            console.print("\n[bold red]Mission failed[/bold red]")
             if result.errors:
-                console.print(Panel(
-                    "\n".join(f"• {e}" for e in result.errors),
-                    title="[red]Errors[/red]",
-                    border_style="red",
-                ))
+                console.print(
+                    Panel(
+                        "\n".join(f"- {e}" for e in result.errors),
+                        title="Errors",
+                        border_style="red",
+                    )
+                )
             raise typer.Exit(code=1)
 
         if agi_dash or verbose:
