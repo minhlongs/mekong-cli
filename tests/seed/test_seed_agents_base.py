@@ -1,11 +1,7 @@
 """Unit tests for seed/agents/base.py — pure logic + mocked LLM/memory."""
 
-import json
-import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from seed.agents.base import BaseAgent
 

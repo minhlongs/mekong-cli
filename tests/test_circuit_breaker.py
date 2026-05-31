@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import threading
 import time
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,7 +14,6 @@ from src.core.circuit_breaker import (
     CircuitBreaker,
     CircuitOpenError,
     CircuitState,
-    CircuitStats,
     get_circuit_breaker,
     reset_all_breakers,
 )
@@ -334,7 +332,7 @@ class TestRegistry:
         assert cb.recovery_timeout == 120.0
 
     def test_thresholds_not_overridden_on_second_get(self):
-        cb1 = get_circuit_breaker("svc", failure_threshold=10)
+        get_circuit_breaker("svc", failure_threshold=10)
         cb2 = get_circuit_breaker("svc", failure_threshold=999)
         # Second get returns existing instance with original thresholds
         assert cb2.failure_threshold == 10

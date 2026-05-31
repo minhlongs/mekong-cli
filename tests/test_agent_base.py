@@ -16,10 +16,8 @@ Covers:
 from __future__ import annotations
 
 import warnings
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 from src.core.agent_base import AgentBase, Result, Task, TaskStatus
 
@@ -343,7 +341,6 @@ class TestRunRetry:
 
     def test_task_status_retry_during_retries(self):
         """Task is set to RETRY after first failed verify, before re-execution."""
-        statuses_seen: list[TaskStatus] = []
         a = _FailingAgent("f", max_retries=3)
 
         original_verify = a.verify

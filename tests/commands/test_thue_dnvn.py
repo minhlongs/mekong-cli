@@ -4,11 +4,8 @@ Verify TNCN biểu lũy tiến, TNDN SME rate, GTGT.
 """
 from decimal import Decimal
 
-import pytest
 
 from src.commands.thue_dnvn import (
-    TNCNResult,
-    TNDNResult,
     calculate_gtgt,
     calculate_tncn,
     calculate_tndn,

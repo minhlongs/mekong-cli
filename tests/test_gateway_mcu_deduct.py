@@ -5,7 +5,6 @@ from __future__ import annotations
 import sqlite3
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 
 from src.gateway import app
 from src.raas.credits import CreditStore

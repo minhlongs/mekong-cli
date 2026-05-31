@@ -18,7 +18,6 @@ import base64
 import hashlib
 import hmac
 import json
-import os
 import sqlite3
 import time
 from pathlib import Path
@@ -28,8 +27,6 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 import src.api.vn_pilot_state as _state
-from src.services import org_service
-from src.services.polar_client import verify_webhook_signature
 from src.services.sqlite_migrations import ensure_schema
 
 # ---------- Constants ----------

@@ -83,7 +83,7 @@ class TestSchemaCreation:
         monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
         _make_db(tmp_path)
         db = tmp_path / "pilot.db"
-        mode = stat.S_IMODE(db.stat().st_mode)
+        stat.S_IMODE(db.stat().st_mode)
         # ensure_schema creates it; chmod is the migration script's job
         # SqliteBackend doesn't set perms — we just verify the file exists
         assert db.exists()

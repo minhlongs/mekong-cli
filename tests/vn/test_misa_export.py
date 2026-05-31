@@ -20,7 +20,6 @@ from fastapi.testclient import TestClient
 from src.api import vn_pilot_routes as vpr
 from src.services.misa_exporter import (
     MISA_HEADERS,
-    MISARow,
     UTF8_BOM,
     build_misa_rows,
     to_csv_bytes,
