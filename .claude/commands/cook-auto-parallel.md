@@ -12,7 +12,7 @@ and verify the final state through the autonomous goal engine.
 ## Execution
 
 ```bash
-mekong cook-auto-parallel "$ARGUMENTS" --profile smoke --auto
+python3 -m src.main cook-auto-parallel "$ARGUMENTS" --profile smoke --auto
 ```
 
 ## Options

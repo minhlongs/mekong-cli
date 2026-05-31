@@ -9,5 +9,5 @@ Implement features, plans, and fixes with structured workflow. Use for feature d
 
 ## Execution
 ```bash
-mekong cook $ARGUMENTS
+python3 -m src.main cook $ARGUMENTS
 ```

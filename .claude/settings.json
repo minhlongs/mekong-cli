@@ -43,7 +43,10 @@
       "Bash(pnpm lint:*)",
       "Bash(pytest:*)",
       "Bash(python3 -m pytest:*)",
-      "Bash(bash .ci/*:*)"
+      "Bash(bash .ci/*:*)",
+      "Bash(python3 -m src.main cook:*)",
+      "Bash(python3 -m src.main cook-auto:*)",
+      "Bash(python3 -m src.main cook-auto-parallel:*)"
     ],
     "deny": [
       "Read(./.env)",
