@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import concurrent.futures
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
-
 from src.core.memory import MemoryEntry, MemoryStore
-
 from src.mekongcli.core.execution import LocalExecutor
-from src.mekongcli.core.governance import StopConditionPolicy
 from src.mekongcli.core.swarm import RoleRegistry
 from src.mekongcli.core.telemetry import GoalEventBusAdapter
 from src.mekongcli.core.verification import VerificationPipeline
@@ -19,6 +17,7 @@ from src.mekongcli.core.verification import VerificationPipeline
 from .models import (
     Checkpoint,
     Goal,
+    GoalTask,
     GoalStatus,
     TaskGraph,
     TaskStatus,
@@ -38,6 +37,7 @@ class GoalEngine:
         cwd: str | Path = ".",
         memory_store: MemoryStore | None = None,
     ) -> None:
+        from src.mekongcli.core.governance import StopConditionPolicy
         self.store = store or SQLiteGoalStore()
         self.cwd = Path(cwd)
         self.planner = GoalPlanner()
@@ -47,10 +47,11 @@ class GoalEngine:
         self.memory_store = memory_store
 
     def create_goal(self, title: str) -> Goal:
+        from src.mekongcli.core.governance import StopConditionPolicy as _SCP
         goal = Goal(
             id=new_id("goal"),
             title=title,
-            stop_conditions=list(StopConditionPolicy.DEFAULTS),
+            stop_conditions=list(_SCP.DEFAULTS),
         )
         tasks, criteria = self.planner.decompose(goal.id, title)
         goal.status = GoalStatus.PLANNED
@@ -67,6 +68,7 @@ class GoalEngine:
         goal_id: str,
         verification_profile: str = "standard",
         execute_commands: bool = False,
+        timeout_seconds: float | None = None,
     ) -> Goal:
         VerificationPipeline.validate_profile(verification_profile)
         goal = self._require_goal(goal_id)
@@ -97,8 +99,10 @@ class GoalEngine:
                     },
                 )
 
-                summary = self._execute_task(task.command) if execute_commands and task.command else (
-                    f"{assignment.role.value} completed directive: {task.title}"
+                summary = (
+                    self._execute_task(task.command)
+                    if execute_commands and task.command
+                    else f"{assignment.role.value} completed directive: {task.title}"
                 )
                 task.status = TaskStatus.COMPLETED
                 task.result_summary = summary
@@ -113,13 +117,13 @@ class GoalEngine:
                 completed_any = True
                 graph = TaskGraph(goal_id=goal.id, tasks=self.store.get_tasks(goal.id))
 
-        tasks = self.store.get_tasks(goal.id)
-        stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
-        if stop_reason:
-            goal.status = GoalStatus.BLOCKED
-            self.store.save_goal(goal)
-            self._event(goal.id, "goal.blocked", {"reason": stop_reason})
-            return goal
+            tasks = self.store.get_tasks(goal.id)
+            stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
+            if stop_reason:
+                goal.status = GoalStatus.BLOCKED
+                self.store.save_goal(goal)
+                self._event(goal.id, "goal.blocked", {"reason": stop_reason})
+                return goal
 
         if any(task.status != TaskStatus.COMPLETED for task in tasks):
             goal.status = GoalStatus.BLOCKED
@@ -135,8 +139,8 @@ class GoalEngine:
         verification_profile: str = "standard",
         execute_commands: bool = False,
         max_workers: int = 3,
+        timeout_seconds: float | None = None,
     ) -> Goal:
-
         VerificationPipeline.validate_profile(verification_profile)
         goal = self._require_goal(goal_id)
         if goal.status == GoalStatus.CANCELLED:
@@ -147,7 +151,7 @@ class GoalEngine:
         self._event(goal.id, "goal.started", {"profile": verification_profile, "mode": "parallel"})
 
         db_lock = threading.Lock()
-        active_futures = {}
+        active_futures: dict[concurrent.futures.Future, GoalTask] = {}
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             while True:
@@ -179,8 +183,10 @@ class GoalEngine:
 
                     def make_task_runner(t=task, role_val=assignment.role.value):
                         def run():
-                            return self._execute_task(t.command) if execute_commands and t.command else (
-                                f"{role_val} completed directive: {t.title}"
+                            return (
+                                self._execute_task(t.command)
+                                if execute_commands and t.command
+                                else f"{role_val} completed directive: {t.title}"
                             )
                         return run
 
@@ -189,7 +195,7 @@ class GoalEngine:
 
                 done, _ = concurrent.futures.wait(
                     active_futures.keys(),
-                    return_when=concurrent.futures.FIRST_COMPLETED
+                    return_when=concurrent.futures.FIRST_COMPLETED,
                 )
 
                 for future in done:
@@ -211,22 +217,21 @@ class GoalEngine:
                         )
                         self._event(goal.id, "task.completed", {"task_id": task.id, "summary": summary})
 
-        with db_lock:
             tasks = self.store.get_tasks(goal.id)
-        stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
-        if stop_reason:
-            goal.status = GoalStatus.BLOCKED
-            self.store.save_goal(goal)
-            self._event(goal.id, "goal.blocked", {"reason": stop_reason})
-            return goal
+            stop_reason = self.stop_policy.should_stop_for_retries(goal, tasks)
+            if stop_reason:
+                goal.status = GoalStatus.BLOCKED
+                self.store.save_goal(goal)
+                self._event(goal.id, "goal.blocked", {"reason": stop_reason})
+                return goal
 
-        if any(task.status != TaskStatus.COMPLETED for task in tasks):
-            goal.status = GoalStatus.BLOCKED
-            self.store.save_goal(goal)
-            self._event(goal.id, "goal.blocked", {"reason": "pending_tasks_remain"})
-            return goal
+            if any(task.status != TaskStatus.COMPLETED for task in tasks):
+                goal.status = GoalStatus.BLOCKED
+                self.store.save_goal(goal)
+                self._event(goal.id, "goal.blocked", {"reason": "pending_tasks_remain"})
+                return goal
 
-        return self.verify_goal(goal.id, verification_profile)
+            return self.verify_goal(goal.id, verification_profile)
 
     def resume_goal(self, goal_id: str, verification_profile: str = "standard") -> Goal:
         return self.run_goal(goal_id, verification_profile=verification_profile)
