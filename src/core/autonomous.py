@@ -122,6 +122,15 @@ class AutonomousEngine:
         except Exception:
             pass
 
+        # Learner depends on memory
+        if self._learner is None and self._memory:
+            try:
+                from .learner import PatternAnalyzer
+                self._learner = PatternAnalyzer(memory_store=self._memory)
+            except Exception:
+                pass
+
+
         # AGI v2: Reflection Engine
         if self._reflection is None:
             try:

@@ -84,6 +84,8 @@ class WorkerPool:
         self.workers: dict[str, WorkerInfo] = {}
         self._health_check_interval = 30  # seconds
         self._last_health_check = 0.0
+        self.refresh_cache_ttl = 5.0
+        self._last_refresh = 0.0
 
     def _pm2_available(self) -> bool:
         """Check if PM2 is installed and available in PATH."""
@@ -212,8 +214,13 @@ class WorkerPool:
             self.workers[name].tasks_failed += 1
             logger.warning(f"[WorkerPool] Marked {name} as failed")
 
-    def refresh_status(self) -> None:
+    def refresh_status(self, force: bool = False) -> None:
         """Refresh worker status from PM2."""
+        now = time.time()
+        if not force and (now - self._last_refresh) < self.refresh_cache_ttl:
+            return
+        self._last_refresh = now
+
         result = self._run_pm2(["jlist"])
         if result.returncode != 0 or not result.stdout.strip():
             # Mark all as offline
