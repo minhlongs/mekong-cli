@@ -8,13 +8,19 @@ from .models import AcceptanceCriterion, AgentRole, GoalTask, new_id
 class GoalPlanner:
     """Builds a practical starter task graph from a high-level goal."""
 
-    def decompose(self, goal_id: str, title: str) -> tuple[list[GoalTask], list[AcceptanceCriterion]]:
+    def decompose(
+        self,
+        goal_id: str,
+        title: str,
+        retry_limit: int = 3,
+    ) -> tuple[list[GoalTask], list[AcceptanceCriterion]]:
         architect = GoalTask(
             id=new_id("task"),
             goal_id=goal_id,
             title="Define architecture and module boundaries",
             description=f"Architect the delivery plan for: {title}",
             role=AgentRole.ARCHITECT,
+            max_attempts=retry_limit,
         )
         backend = GoalTask(
             id=new_id("task"),
@@ -23,6 +29,7 @@ class GoalPlanner:
             description="Build the service interfaces, persistence, and orchestration behavior.",
             role=AgentRole.BACKEND,
             depends_on=[architect.id],
+            max_attempts=retry_limit,
         )
         infra = GoalTask(
             id=new_id("task"),
@@ -31,6 +38,7 @@ class GoalPlanner:
             description="Wire local runtime, compose profile, telemetry, and operational defaults.",
             role=AgentRole.INFRA,
             depends_on=[architect.id],
+            max_attempts=retry_limit,
         )
         qa = GoalTask(
             id=new_id("task"),
@@ -39,6 +47,7 @@ class GoalPlanner:
             description="Run the verification profile and record evidence.",
             role=AgentRole.QA,
             depends_on=[backend.id, infra.id],
+            max_attempts=retry_limit,
         )
         security = GoalTask(
             id=new_id("task"),
@@ -47,6 +56,7 @@ class GoalPlanner:
             description="Check command safety, permissions, and dependency/security gates.",
             role=AgentRole.SECURITY,
             depends_on=[backend.id, infra.id],
+            max_attempts=retry_limit,
         )
         docs = GoalTask(
             id=new_id("task"),
@@ -55,6 +65,7 @@ class GoalPlanner:
             description="Update user-facing docs, architecture notes, and examples.",
             role=AgentRole.DOCS,
             depends_on=[backend.id, infra.id],
+            max_attempts=retry_limit,
         )
         reviewer = GoalTask(
             id=new_id("task"),
@@ -63,6 +74,7 @@ class GoalPlanner:
             description="Check consistency, duplicate systems, and acceptance criteria.",
             role=AgentRole.REVIEWER,
             depends_on=[qa.id, security.id, docs.id],
+            max_attempts=retry_limit,
         )
         criteria = [
             AcceptanceCriterion(

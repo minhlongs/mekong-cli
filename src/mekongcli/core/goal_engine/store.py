@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import threading
 import time
@@ -21,6 +22,8 @@ from .models import (
     VerificationRun,
 )
 
+_logger = logging.getLogger(__name__)
+
 
 class SQLiteGoalStore:
     """Durable local-first store for goals, tasks, checkpoints, events, and gates."""
@@ -31,6 +34,14 @@ class SQLiteGoalStore:
         self.lock = threading.RLock()
         self._init_schema()
 
+    @staticmethod
+    def _safe_json(raw: str, fallback: Any) -> Any:
+        try:
+            return json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            _logger.warning("corrupted JSON in store, using fallback")
+            return fallback
+
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), timeout=30.0)
         conn.row_factory = sqlite3.Row
@@ -38,9 +49,8 @@ class SQLiteGoalStore:
             conn.execute("PRAGMA journal_mode=WAL;")
             conn.execute("PRAGMA synchronous=NORMAL;")
         except sqlite3.OperationalError:
-            pass
+            _logger.warning("WAL mode unavailable")
         return conn
-
 
     def _init_schema(self) -> None:
         with self.lock:
@@ -119,7 +129,7 @@ class SQLiteGoalStore:
                 conn.execute(
                     """
                     INSERT INTO goals
-                        (id, title, status, created_at, updated_at, retry_limit, stop_conditions, metadata)
+                    (id, title, status, created_at, updated_at, retry_limit, stop_conditions, metadata)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         title=excluded.title,
@@ -144,39 +154,48 @@ class SQLiteGoalStore:
     def get_goal(self, goal_id: str) -> Goal | None:
         with self.lock:
             with self._connect() as conn:
-                row = conn.execute("SELECT * FROM goals WHERE id = ?", (goal_id,)).fetchone()
-            if row is None:
-                return None
-            return Goal(
-                id=row["id"],
-                title=row["title"],
-                status=GoalStatus(row["status"]),
-                created_at=row["created_at"],
-                updated_at=row["updated_at"],
-                retry_limit=row["retry_limit"],
-                stop_conditions=json.loads(row["stop_conditions"]),
-                metadata=json.loads(row["metadata"]),
-            )
+                row = conn.execute(
+                    "SELECT * FROM goals WHERE id = ?", (goal_id,)
+                ).fetchone()
+                if row is None:
+                    return None
+                return Goal(
+                    id=row["id"],
+                    title=row["title"],
+                    status=GoalStatus(row["status"]),
+                    created_at=row["created_at"],
+                    updated_at=row["updated_at"],
+                    retry_limit=row["retry_limit"],
+                    stop_conditions=self._safe_json(row["stop_conditions"], []),
+                    metadata=self._safe_json(row["metadata"], {}),
+                )
 
     def list_goals(self) -> list[Goal]:
         with self.lock:
             with self._connect() as conn:
-                rows = conn.execute("SELECT * FROM goals ORDER BY updated_at DESC").fetchall()
-            goals: list[Goal] = []
-            for row in rows:
-                goal = self.get_goal(row["id"])
-                if goal is not None:
-                    goals.append(goal)
-            return goals
+                rows = conn.execute(
+                    "SELECT * FROM goals ORDER BY updated_at DESC"
+                ).fetchall()
+                goals: list[Goal] = []
+                for row in rows:
+                    goal = self.get_goal(row["id"])
+                    if goal is not None:
+                        goals.append(goal)
+                return goals
 
-    def save_criteria(self, goal_id: str, criteria: list[AcceptanceCriterion]) -> None:
+    def save_criteria(
+        self, goal_id: str, criteria: list[AcceptanceCriterion]
+    ) -> None:
         with self.lock:
             with self._connect() as conn:
-                conn.execute("DELETE FROM acceptance_criteria WHERE goal_id = ?", (goal_id,))
+                conn.execute(
+                    "DELETE FROM acceptance_criteria WHERE goal_id = ?",
+                    (goal_id,),
+                )
                 conn.executemany(
                     """
                     INSERT INTO acceptance_criteria
-                        (id, goal_id, description, satisfied, evidence)
+                    (id, goal_id, description, satisfied, evidence)
                     VALUES (?, ?, ?, ?, ?)
                     """,
                     [
@@ -198,15 +217,15 @@ class SQLiteGoalStore:
                     "SELECT * FROM acceptance_criteria WHERE goal_id = ? ORDER BY rowid",
                     (goal_id,),
                 ).fetchall()
-            return [
-                AcceptanceCriterion(
-                    id=row["id"],
-                    description=row["description"],
-                    satisfied=bool(row["satisfied"]),
-                    evidence=row["evidence"],
-                )
-                for row in rows
-            ]
+                return [
+                    AcceptanceCriterion(
+                        id=row["id"],
+                        description=row["description"],
+                        satisfied=bool(row["satisfied"]),
+                        evidence=row["evidence"],
+                    )
+                    for row in rows
+                ]
 
     def save_tasks(self, tasks: list[GoalTask]) -> None:
         with self.lock:
@@ -214,8 +233,8 @@ class SQLiteGoalStore:
                 conn.executemany(
                     """
                     INSERT INTO tasks
-                        (id, goal_id, title, description, role, status, depends_on,
-                         attempts, max_attempts, command, result_summary, created_at, updated_at)
+                    (id, goal_id, title, description, role, status, depends_on,
+                     attempts, max_attempts, command, result_summary, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         status=excluded.status,
@@ -251,24 +270,24 @@ class SQLiteGoalStore:
                     "SELECT * FROM tasks WHERE goal_id = ? ORDER BY created_at, rowid",
                     (goal_id,),
                 ).fetchall()
-            return [
-                GoalTask(
-                    id=row["id"],
-                    goal_id=row["goal_id"],
-                    title=row["title"],
-                    description=row["description"],
-                    role=AgentRole(row["role"]),
-                    status=TaskStatus(row["status"]),
-                    depends_on=json.loads(row["depends_on"]),
-                    attempts=row["attempts"],
-                    max_attempts=row["max_attempts"],
-                    command=row["command"],
-                    result_summary=row["result_summary"],
-                    created_at=row["created_at"],
-                    updated_at=row["updated_at"],
-                )
-                for row in rows
-            ]
+                return [
+                    GoalTask(
+                        id=row["id"],
+                        goal_id=row["goal_id"],
+                        title=row["title"],
+                        description=row["description"],
+                        role=AgentRole(row["role"]),
+                        status=TaskStatus(row["status"]),
+                        depends_on=self._safe_json(row["depends_on"], []),
+                        attempts=row["attempts"],
+                        max_attempts=row["max_attempts"],
+                        command=row["command"],
+                        result_summary=row["result_summary"],
+                        created_at=row["created_at"],
+                        updated_at=row["updated_at"],
+                    )
+                    for row in rows
+                ]
 
     def add_checkpoint(self, checkpoint: Checkpoint) -> None:
         with self.lock:
@@ -295,24 +314,25 @@ class SQLiteGoalStore:
                     "SELECT * FROM checkpoints WHERE goal_id = ? ORDER BY created_at",
                     (goal_id,),
                 ).fetchall()
-            return [
-                Checkpoint(
-                    id=row["id"],
-                    goal_id=row["goal_id"],
-                    task_id=row["task_id"],
-                    label=row["label"],
-                    state=json.loads(row["state"]),
-                    created_at=row["created_at"],
-                )
-                for row in rows
-            ]
+                return [
+                    Checkpoint(
+                        id=row["id"],
+                        goal_id=row["goal_id"],
+                        task_id=row["task_id"],
+                        label=row["label"],
+                        state=json.loads(row["state"]),
+                        created_at=row["created_at"],
+                    )
+                    for row in rows
+                ]
 
     def save_verification_run(self, run: VerificationRun) -> None:
         with self.lock:
             with self._connect() as conn:
                 conn.execute(
                     """
-                    INSERT INTO verification_runs (id, goal_id, profile, passed, results, created_at)
+                    INSERT INTO verification_runs
+                    (id, goal_id, profile, passed, results, created_at)
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (
@@ -325,7 +345,9 @@ class SQLiteGoalStore:
                     ),
                 )
 
-    def get_latest_verification(self, goal_id: str) -> VerificationRun | None:
+    def get_latest_verification(
+        self, goal_id: str
+    ) -> VerificationRun | None:
         with self.lock:
             with self._connect() as conn:
                 row = conn.execute(
@@ -337,18 +359,23 @@ class SQLiteGoalStore:
                     """,
                     (goal_id,),
                 ).fetchone()
-            if row is None:
-                return None
-            return VerificationRun(
-                id=row["id"],
-                goal_id=row["goal_id"],
-                profile=row["profile"],
-                passed=bool(row["passed"]),
-                results=json.loads(row["results"]),
-                created_at=row["created_at"],
-            )
+                if row is None:
+                    return None
+                return VerificationRun(
+                    id=row["id"],
+                    goal_id=row["goal_id"],
+                    profile=row["profile"],
+                    passed=bool(row["passed"]),
+                    results=json.loads(row["results"]),
+                    created_at=row["created_at"],
+                )
 
-    def add_event(self, goal_id: str, event_name: str, payload: dict[str, Any]) -> None:
+    def add_event(
+        self,
+        goal_id: str,
+        event_name: str,
+        payload: dict[str, Any],
+    ) -> None:
         with self.lock:
             with self._connect() as conn:
                 conn.execute(
@@ -366,14 +393,14 @@ class SQLiteGoalStore:
                     "SELECT * FROM goal_events WHERE goal_id = ? ORDER BY id",
                     (goal_id,),
                 ).fetchall()
-            return [
-                {
-                    "event_name": row["event_name"],
-                    "payload": json.loads(row["payload"]),
-                    "created_at": row["created_at"],
-                }
-                for row in rows
-            ]
+                return [
+                    {
+                        "event_name": row["event_name"],
+                        "payload": json.loads(row["payload"]),
+                        "created_at": row["created_at"],
+                    }
+                    for row in rows
+                ]
 
     def add_memory(self, goal_id: str, kind: str, content: str) -> None:
         with self.lock:
@@ -393,7 +420,7 @@ class SQLiteGoalStore:
                     "SELECT * FROM memory_records WHERE goal_id = ? ORDER BY id",
                     (goal_id,),
                 ).fetchall()
-            return [dict(row) for row in rows]
+                return [dict(row) for row in rows]
 
     def snapshot(self, goal_id: str) -> dict[str, Any]:
         with self.lock:
@@ -402,12 +429,16 @@ class SQLiteGoalStore:
                 raise KeyError(goal_id)
             return {
                 "goal": asdict(goal) | {"status": goal.status.value},
-                "criteria": [asdict(item) for item in self.get_criteria(goal_id)],
+                "criteria": [
+                    asdict(item) for item in self.get_criteria(goal_id)
+                ],
                 "tasks": [
                     asdict(task) | {"role": task.role.value, "status": task.status.value}
                     for task in self.get_tasks(goal_id)
                 ],
-                "checkpoints": [asdict(item) for item in self.get_checkpoints(goal_id)],
+                "checkpoints": [
+                    asdict(item) for item in self.get_checkpoints(goal_id)
+                ],
                 "verification": (
                     asdict(self.get_latest_verification(goal_id))
                     if self.get_latest_verification(goal_id)
@@ -416,4 +447,3 @@ class SQLiteGoalStore:
                 "events": self.get_events(goal_id),
                 "memory": self.get_memory(goal_id),
             }
-
