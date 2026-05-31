@@ -45,6 +45,34 @@ curl -fsSL https://www.mekongmind.com/install.sh | bash
 | [Growth](https://buy.polar.sh/polar_cl_TDhelBvQfsZq3Rayqf9to4tl0UD6D04OBFqXm1zJDVC) | $149/mo | 1,000 |
 | [Pro](https://buy.polar.sh/polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j) | $499/mo | 5,000 |
 
+## Harness Engineering
+
+Mekong is built on **harness engineering** principles: shaping the environment around AI agents for reliability, not just writing better prompts.
+
+> Inspired by [walkinglabs/awesome-harness-engineering](https://github.com/walkinglabs/awesome-harness-engineering)
+
+### The 6 Harness Principles
+
+| Principle | Mekong Implementation |
+|-----------|----------------------|
+| **Context Engineering** | `HARNESS.md` — context budget rules, layer-specific allowlists, CEO override clauses |
+| **Constraints & Guardrails** | `.claude/settings.json` — deny list for destructive actions, ask list for high-risk, SOP hard gates |
+| **Specs & Workflow Design** | `sops/` — Standard Operating Procedures as executable specs with acceptance criteria |
+| **Evals & Observability** | `observability/` — OpenTelemetry traces, Grafana dashboards, `evals/solo-ceo-eval.md` |
+| **Orchestration** | `agents/registry.yaml` — declarative agent definitions, `/cook-auto-parallel` for concurrent execution |
+| **Safe Autonomy** | CEO override available at any point, high-risk actions always require approval, all-fail halt |
+
+### Quick Links
+
+- **Harness Config:** [`HARNESS.md`](./HARNESS.md)
+- **Architecture:** [`docs/harness-engineering.md`](./docs/harness-engineering.md)
+- **SOPs:** [`sops/`](./sops/)
+- **Agent Registry:** [`agents/registry.yaml`](./agents/registry.yaml)
+- **Eval Suite:** [`evals/solo-ceo-eval.md`](./evals/solo-ceo-eval.md)
+- **Observability:** [`observability/`](./observability/)
+
+---
+
 ## Links
 
 - **Website:** [mekongmind.com](https://www.mekongmind.com)

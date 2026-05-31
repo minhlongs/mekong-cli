@@ -16,7 +16,12 @@
       "packages",
       "recipes",
       "factory/contracts",
-      "clipmart"
+      "clipmart",
+    "sops",
+    "agents",
+    "evals",
+    "observability",
+    "docs"
     ],
     "allow": [
       "Bash(git status:*)",
