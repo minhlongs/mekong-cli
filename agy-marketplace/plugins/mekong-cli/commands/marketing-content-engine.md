@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/marketing-content-engine.md

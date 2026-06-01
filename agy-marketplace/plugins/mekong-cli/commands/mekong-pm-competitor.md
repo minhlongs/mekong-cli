@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.claude/commands/pm-competitor.md

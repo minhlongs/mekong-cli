@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "allowJs": true,
     "checkJs": false,
+    "types": ["node", "bun-types"],
     "paths": {
       "@openclaw/agi-evolution/*": ["../agi-evolution/src/*"],
       "@openclaw/cli-adapter/*": ["../cli-adapter/src/*"],

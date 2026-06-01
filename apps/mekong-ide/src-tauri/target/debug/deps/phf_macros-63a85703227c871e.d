@@ -1,5 +1,0 @@
-/Users/macbook/mekong-cli/apps/mekong-ide/src-tauri/target/debug/deps/phf_macros-63a85703227c871e.d: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/phf_macros-0.10.0/src/lib.rs
-
-/Users/macbook/mekong-cli/apps/mekong-ide/src-tauri/target/debug/deps/libphf_macros-63a85703227c871e.dylib: /Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/phf_macros-0.10.0/src/lib.rs
-
-/Users/macbook/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/phf_macros-0.10.0/src/lib.rs:

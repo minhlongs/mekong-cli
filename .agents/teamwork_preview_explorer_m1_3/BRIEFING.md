@@ -1,40 +1,55 @@
-# BRIEFING — 2026-05-28T07:26:56Z
+# BRIEFING — 2026-05-30T11:58:40Z
 
 ## Mission
-Investigate package configuration, dependency graph, and static analysis setup at /Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory.
+Perform a Security and Reliability Gap Analysis across the entire mekong-cli repository focusing on:
+1. DB connections & concurrency locks (PostgreSQL/SQLite)
+2. Queue & blockchain integration (Kafka/Geth)
+3. Decree 13 PII compliance
+4. Hardcoded configs, APIs, credentials, and environments
 
 ## 🔒 My Identity
 - Archetype: Explorer
-- Roles: Explorer 3 (Configuration Specialist)
-- Working directory: /Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/
-- Original parent: 84ad3be4-b1e0-4555-b258-168eee86321b
-- Milestone: Static analysis investigation
+- Roles: Explorer 3
+- Working directory: /Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3
+- Original parent: 45678537-61c7-40fd-a57e-8300c21de0f5
+- Milestone: Security and Reliability Gap Analysis
 
 ## 🔒 Key Constraints
-- Read-only investigation — do NOT implement
-- Network mode: CODE_ONLY (No external calls)
-- Work within mekong-cli/.agents/teamwork_preview_explorer_m1_3/ for agent files
+- Read-only investigation — do NOT implement or modify any source code files
+- Save analysis to `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/findings.md`
+- Provide `handoff.md` with observations, logic chain, caveats, conclusion, and verification method
+- Call send_message to report completion
 
 ## Current Parent
-- Conversation ID: 84ad3be4-b1e0-4555-b258-168eee86321b
-- Updated: 2026-05-28T07:26:56Z
+- Conversation ID: 45678537-61c7-40fd-a57e-8300c21de0f5
+- Updated: 2026-05-30T11:58:40Z
 
 ## Investigation State
 - **Explored paths**:
-  * Root folder (`/Users/macbook/projects/sophia-ai-factory/`) configs (`package.json`, `package-lock.json`, `pnpm-lock.yaml`, directory structure).
-  * Application folder (`apps/sophia-ai-factory/`) configs (`package.json`, `pnpm-lock.yaml`, `package-lock.json`, `eslint.config.mjs`, `tsconfig.json`, `vitest.config.ts`).
-  * Logs of static checks (`lint_output.txt`, `lint_output_new.txt`).
+  - `/Users/macbook/mekong-cli/src/raas/tenant.py` (TenantStore)
+  - `/Users/macbook/mekong-cli/src/raas/credits.py` (CreditStore)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh/lib/prisma.ts` (Prisma helper)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh/app/api/leads/route.ts` (Ingestion endpoint)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh/app/api/payments/sepay/route.ts` (SePay Webhook)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh/lib/kafka.ts` (Kafka publisher)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh/lib/blockchain.ts` (Geth Notarizer)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/mock-services/ai-service/main.py` (AI FastAPI core)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/mock-services/ai-service/retriever.py` (AI retriever engine)
+  - `/Users/macbook/mekong-cli/.env` (Root environment file)
+  - `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/helm/nhipdieuxanh/values.yaml` (Production IaC config)
 - **Key findings**:
-  * **Critical Dependency Mismatch**: Parent directory forces React 18 / Next 15; App subdirectory requires React 19 / Next 16. Leads to dual installation conflicts and type resolution risks.
-  * **ESLint Warnings Flood & Gate Failure**: `react-hooks/purity` has false-positives against Next.js Server Components (such as `Date.now()`). Lacking parameter ignore rules for unused variables also contributes to warning count (370+). Because the warnings exceed `--max-warnings=341`, the `ci:lint` check fails.
-  * **Missing Caching**: ESLint is run without `--cache`, causing it to parse TS ASTs from scratch on every run. This is a severe local-dev and build bottleneck requiring 14GB of heap memory.
-- **Unexplored areas**:
-  * None. The package and static check configuration has been thoroughly mapped.
+  - SQLite connection leaks in `TenantStore` and `CreditStore` (connections are never closed).
+  - Schema alteration write-locks running on every single read query request in `AskPythonRetriever` triggering `database is locked` issues.
+  - Check-then-act race conditions on lead ingestion (`POST /api/leads`).
+  - Unauthenticated `GET /api/leads` endpoint exposing plaintext PII (name, phone, email).
+  - Unlocked Geth node wallet reliance and nonce collisions on blockchain notarization.
+  - Hardcoded active secrets (`POLAR_API_KEY`) and default credentials (`postgres:postgres` for production Helm values).
+- **Unexplored areas**: None.
 
 ## Key Decisions Made
-- Confirmed that `tsc --noEmit` compiles with zero errors, while `ci:lint` fails with exit code 137 (OOM) and vitest completes with unit test failures that require runtime setup.
-- Synthesized and verified findings inside `analysis.md` and `handoff.md`.
+- Performed codebase audits across 11 key files spanning Next.js, FastAPI, Python scripting, and Helm configs.
+- Created `findings.md` and `handoff.md` detailing security gaps and reliability risks.
 
 ## Artifact Index
-- `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/analysis.md` — Detailed analysis report on configurations, package manager conflicts, rule conflicts, and performance bottlenecks.
-- `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/handoff.md` — The 5-component handoff report.
+- `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/findings.md` — Detailed analysis report
+- `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3/handoff.md` — Handoff report

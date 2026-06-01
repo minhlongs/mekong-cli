@@ -11,14 +11,19 @@ from __future__ import annotations
 
 import logging
 import os
-
 import structlog
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Return a standard library logger for the given module name."""
+    return logging.getLogger(name)
 
 
 def configure_logging() -> None:
     """Configure structured JSON logging for production.
 
     Reads LOG_LEVEL (default INFO) and LOG_FORMAT (default json).
+
     json format: machine-readable JSON lines for log aggregators.
     console format: human-readable colored output for local dev.
     """

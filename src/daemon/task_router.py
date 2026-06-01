@@ -333,23 +333,26 @@ class TaskRouter:
             except ValueError:
                 pass
 
-        # Load existing journal
-        missions = []
-        if JOURNAL_FILE.exists():
+        # Load existing journal, append and save under lock
+        from src.core.file_lock import locked_read_write
+        with locked_read_write(JOURNAL_FILE) as f:
+            missions = []
             try:
                 import json
-                data = json.loads(JOURNAL_FILE.read_text())
-                missions = data.get("missions", [])
+                content = f.read()
+                if content:
+                    data = json.loads(content)
+                    missions = data.get("missions", [])
             except (json.JSONDecodeError, KeyError):
                 missions = []
 
-        # Append and save
-        missions.append(journal_entry)
-        if len(missions) > 1000:
-            missions = missions[-1000:]  # Keep last 1000
+            missions.append(journal_entry)
+            if len(missions) > 1000:
+                missions = missions[-1000:]  # Keep last 1000
 
-        import json
-        JOURNAL_FILE.write_text(json.dumps({"missions": missions}, indent=2))
+            f.seek(0)
+            f.write(json.dumps({"missions": missions}, indent=2))
+            f.truncate()
 
     def load_pending_from_journal(self) -> int:
         """
@@ -363,7 +366,10 @@ class TaskRouter:
 
         try:
             import json
-            data = json.loads(JOURNAL_FILE.read_text())
+            from src.core.file_lock import locked_read
+            with locked_read(JOURNAL_FILE) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
             missions = data.get("missions", [])
 
             # Find incomplete tasks

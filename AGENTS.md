@@ -2,66 +2,98 @@
 # Read by: Claude Code, Gemini CLI, OpenCode, Cursor, Codex, Amp
 
 ## Project
-AI-operated business platform. 6 layers, 300+ commands. BSL 1.1.
-Universal LLM: 3 env vars (LLM_BASE_URL, LLM_API_KEY, LLM_MODEL), any provider.
+**CEO Solo Agentic Harness Engineering Platform.**
+One CEO delegates to 4 layer agents (Business, Product, Engineering, Ops).
+Harness engineering: shape the environment around AI agents for reliability.
 
 ## Commands
-Commands live in `.claude/commands/*.md`. Execute via: `mekong <name> <args>`
-Engine: Python CLI (Typer) → PEV orchestrator → LLM Router → Agent Layer
+Commands live in `.claude/commands/*.md`. Execute via: `python3 -m src.main <name> <args>`
+Engine: Python CLI (Typer) → Harness PEV → LLM Router → Agent Layer
 
 ## Build & Test
 ```bash
-pip install -e .           # Python CLI
-pnpm install               # TypeScript packages
-python3 -m pytest tests/   # Tests
-mekong doctor check        # Health
+pip install -e .       # Python CLI
+python3 -m pytest tests/  # Tests
+python3 -m src.main --help
 ```
 
 ## Style
-Python: snake_case, type hints, < 200 lines. TypeScript: strict, ESM.
-Commits: conventional (feat/fix/refactor/docs/test). No AI refs in messages.
+Python: snake_case, type hints. Commits: conventional (feat/fix/refactor/docs/test).
 
 ## Architecture
-Studio → Founder → Business → Product → Engineering → Ops
-Water Protocol 水: multi-agent context flow between layers.
+
+```
+mekong cook "your goal"
+        │
+        ▼
+┌─────────────────────────┐
+│  Harness Engine         │  src/harness/
+│  ├── pev/               │  Plan → Execute → Verify
+│  ├── agents/            │  Agent dispatcher, classifier, queue
+│  ├── core/              │  LLM router, config, permissions, governance
+│  └── observability/     │  Traces, metrics, Prometheus
+└─────────────────────────┘
+        │
+        ▼
+┌─────────────────────────┐
+│  SOPs (sops/)           │  CEO / Business / Engineering / Ops
+│  Agent Registry         │  agents/registry.yaml
+│  Evals                  │  evals/solo-ceo-eval.md
+│  Runtime Contract       │  HARNESS.md
+└─────────────────────────┘
+```
 
 ## Harness Engineering
-Mekong applies harness engineering principles for reliable agentic operations.
 
-**Runtime Contract:** `HARNESS.md` — context budget, guardrails, delegation matrix, escalation paths.
-**SOPs:** `sops/` — Standard Operating Procedures organized by business layer (ceo, business, engineering, ops, shared).
-**Agent Registry:** `agents/registry.yaml` — declarative agent definitions with role, tools, SOP scope.
-**Observability:** `observability/` — OpenTelemetry traces, Prometheus + Grafana dashboards.
-**Evals:** `evals/` — harness quality eval suite (not model benchmarks).
-**Docs:** `docs/harness-engineering.md` — Mekong harness architecture.
+Mekong applies **harness engineering** principles (shaping the environment around AI agents for reliability).
 
-**CEO Solo Model:** One CEO delegates to 4 layer agents (Business, Product, Engineering, Ops). CEO has override authority. All high-risk actions require approval.
+> Inspired by [walkinglabs/awesome-harness-engineering](https://github.com/walkinglabs/awesome-harness-engineering)
 
-## AI OS (CheetahClaws)
+### Runtime Contract
+- **`HARNESS.md`** — context budget, guardrails, CEO override, high-risk gates, delegation matrix
 
-### MCP Server
-```bash
-mekong ai-os start        # Start MCP server (port 8199)
-mekong ai-os stop         # Stop server
-mekong ai-os status       # Check health
+### Directory Structure
 ```
-Server entry in `.claude/mcp.json` as `mekong-ai-os` (stdio, venv-based).
-
-### Tools (25, all prefixed `cc_`)
-Memory: `cc_memory_search`, `cc_memory_consolidate`.
-Tasks: `cc_tasks_list`, `cc_tasks_create`, `cc_tasks_done`, `cc_tasks_start`, `cc_tasks_delete`.
-Agents: `cc_agents_list`, `cc_agents_start`, `cc_agents_stop`.
-Skills: `cc_skills_list`.
-MCP: `cc_mcp_list`.
-Plugins: `cc_plugins_list`, `cc_plugins_install`.
-Brainstorm (`cc_brainstorm`), Lab (`cc_lab_start`, `cc_lab_status`), Trading (`cc_trading_analyze`, `cc_trading_price`), Monitor (`cc_monitor_run`, `cc_monitor_status`), Plan (`cc_plan_start`, `cc_plan_list`, `cc_plan_done`), SSJ (`cc_ssj`).
-
-### Adapters (`mekong/adapters/`)
-`ai-os.sh` (AI OS entry point), `intent-router` (NL→command mapping), `mcp-bridge` (tool proxy), `health-check` (liveness probe), `provider-config` (LLM env setup), `registry.sh` (AI CLI registry).
-
-### Provider Config
-```bash
-export LLM_BASE_URL=<url>   # Any OpenAI-compatible API
-export LLM_API_KEY=<key>
-export LLM_MODEL=<model>    # e.g. gpt-4, claude-3, deepseek
+mekong-cli/
+├── HARNESS.md            # Runtime contract (load at session start)
+├── sops/                 # Standard Operating Procedures
+│   ├── ceo/             # CEO decision-making, weekly-review, approval-gate
+│   ├── business/        # Client lifecycle, revenue engine
+│   ├── engineering/     # Code review, deployment
+│   ├── ops/             # Incident response, monitoring
+│   └── shared/          # Review cycles (shared across layers)
+├── agents/
+│   └── registry.yaml    # Declarative agent definitions (CEO/AE/PM/ENG/OPS)
+├── evals/
+│   └── solo-ceo-eval.md # 6 harness quality evals
+├── observability/
+│   ├── traces/          # OpenTelemetry-compatible traces
+│   └── dashboards/      # Prometheus + Grafana
+├── docs/
+│   └── harness-engineering.md
+├── .claude/commands/    # Slash commands
+│   ├── cook.md          # PEV workflow
+│   ├── cook-auto.md     # Autonomous goal runner
+│   └── cook-auto-parallel.md
+├── src/harness/         # Core engine modules
+│   ├── pev/             # Plan-Execute-Verify engine
+│   ├── agents/          # Agent layer (dispatcher, classifier, queue)
+│   ├── core/            # LLM router, config, governance, permissions
+│   └── observability/   # Tracing, metrics, health
+└── .archive/            # Archived legacy code (not deleted, preserved)
 ```
+
+### CEO Solo Model
+One CEO → 4 layer agents (AE/PM/ENG/OPS). CEO has override authority.
+All high-risk actions require approval (`.claude/settings.json` deny/ask lists).
+
+### 6 Harness Principles
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Context Engineering** | HARNESS.md context budget (≤40k tokens), layer-specific tool allowlists |
+| **Constraints & Guardrails** | `.claude/settings.json` deny/ask lists, SOP hard gates |
+| **Specs & Workflow** | `sops/` as executable specs with acceptance criteria |
+| **Evals & Observability** | `evals/` + `observability/` (OTel, Prometheus, dashboards) |
+| **Orchestration** | `agents/registry.yaml`, `/cook-auto-parallel` |
+| **Safe Autonomy** | CEO override (`--ceo-override`), high-risk approval gates |

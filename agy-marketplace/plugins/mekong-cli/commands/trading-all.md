@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/all.md
+/Users/macbook/.claude/commands/trading/all.md

@@ -1,1 +1,0 @@
-/Users/macbook/.config/opencode/command/content-enhance.md

@@ -1,73 +1,44 @@
-# Handoff Report — ESLint Audit
+# Handoff Report — Subsystem Analysis
 
 ## 1. Observation
-We observed the following configurations, script parameters, and warning logs in the `sophia-ai-factory` workspace:
-
-* **Target Project Directory**: `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory`
-* **Warning Count**: The `lint_output_new.txt` report ends with:
+The following file paths, code blocks, and execution results were observed during investigation:
+- **`packages/ask-core/package.json`**: Explicitly configures `"main": "./src/index.ts"` (Line 6) and `"test": "bun test"` (Line 9).
+- **`packages/ask-core/src/db.ts`**: SQLite schema and FTS5 virtual table initialization (Lines 55-93):
+  ```typescript
+  CREATE TABLE IF NOT EXISTS chunks (...);
+  CREATE VIRTUAL TABLE IF NOT EXISTS fts_index USING fts5(...);
+  CREATE TABLE IF NOT EXISTS chunk_vectors (...);
   ```
-  ✖ 370 problems (0 errors, 370 warnings)
-  ```
-* **CI Warning Threshold**: In `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/package.json` (line 50):
-  ```json
-  "ci:lint": "node --max-old-space-size=14336 ./node_modules/eslint/bin/eslint.js src --max-warnings=341"
-  ```
-* **ESLint Configuration**: Inside `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/eslint.config.mjs`, the following React Compiler rules are set to `"warn"`:
-  ```javascript
-  "react-hooks/set-state-in-effect": "warn",
-  "react-hooks/static-components": "warn",
-  "react-hooks/purity": "warn",
-  "react-hooks/immutability": "warn",
-  ```
-* **Unused Variables**: Warnings like the following are highly prevalent (e.g., in `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/src/app/[locale]/dashboard/account/page.tsx` line 61):
-  ```
-  32:19  warning  '_locale' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  ```
-* **Inner Components**: In `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/src/app/[locale]/dashboard/admin/actions/admin-actions-console.tsx` (lines 62-69):
-  ```tsx
-  function Card({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-4">
-        ...
-      </div>
-    )
-  }
-  ```
-  Is flagged as `react-hooks/static-components` (Cannot create components during render).
+- **`packages/ask-core/src/retriever.ts`**: In-memory dense similarity computation (Lines 117-128) pulling all vectors via `db.getAllVectors()`, and Reciprocal Rank Fusion (Lines 130-149) using `k = 60`.
+- **`apps/nhipdieuxanh/package.json`**: Shows mekong workspace reference `"@mekong/ask-core": "workspace:*"` (Line 16) and test script `"test": "vitest run"` (Line 10).
+- **`apps/nhipdieuxanh/lib/prisma.ts`**: Implements `$transactionWithRetry` (Lines 47-89) wrapping transient code checking (Line 11: `['P2034', 'P2028', 'P1001', 'P1008', 'P1017']`) and using random jitter backoff.
+- **`apps/nhipdieuxanh/app/api/leads/route.ts`**: dynamic lead scoring logic (Lines 80-138) grading leads, Decree 13 PII masking (Lines 172-183) overriding values if `consent === false`, and manual duplicate updates (Lines 185-228).
+- **`apps/nhipdieuxanh/app/api/payments/sepay/route.ts`**: payment webhook logic using `crypto.timingSafeEqual` in `timingSafeCompare` (Lines 28-36), checking webhook signature headers (Lines 63-91), checking amount matches 10,000,000 VND (Lines 115-121), and updating lead status to `won`.
+- **`apps/nhipdieuxanh/app/api/faq/query/route.ts`**: require override hook (Lines 7-17) overriding Node's global `require` to return `tests/bun-sqlite-mock` when requesting `bun:sqlite`. The SQLite connection is closed in the `finally` block (Lines 183-191).
+- **Tests Execution**:
+  - `bun test` inside `packages/ask-core` successfully ran 12 tests across 4 files.
+  - `pnpm test` inside `apps/nhipdieuxanh` successfully ran 35 tests across 4 files.
 
 ## 2. Logic Chain
-1. **CI Build Failure**: The warning count in the latest run (`370`) is greater than the configured maximum warnings parameter (`341`) in the `ci:lint` npm command. Therefore, running the `npm run ci:lint` command fails the build step, blocking production deploys.
-2. **Ignored Variables**: About 290 of the 370 warnings are `@typescript-eslint/no-unused-vars`. A significant number of these correspond to parameters/variables with an underscore prefix (like `_locale`). Since `eslint.config.mjs` does not configure `argsIgnorePattern` or `varsIgnorePattern` for typescript-eslint, these intentionally ignored variables are flagged.
-3. **React 19 / Compiler Warnings**: The remaining warnings (~80) originate from strict rules of the React Compiler (`purity`, `set-state-in-effect`, `immutability`, `static-components`). These are set to `"warn"` rather than `"off"`, contributing to the warning budget.
-4. **Conclusion Support**: By modifying the ESLint configuration to ignore variables with an underscore prefix, the warning count will drop significantly below 341. Alternatively, addressing the specific React Compiler warnings in code (such as refactoring recursive hooks with `useRef`, moving inner components to file/module scope, and calling `location.assign` instead of mutating `.href` directly) will cleanly resolve the remaining warnings.
+- **LC-1**: By checking `packages/ask-core/package.json` and `src/index.ts`, we see that the package is designed as a TypeScript module exposing retrieval services (`AskRetriever`, `AskDatabase`).
+- **LC-2**: Examining `packages/ask-core/src/retriever.ts` reveals that dense vector similarity checks iterate over all vectors from the database synchronously. Under 10x load, this causes a major CPU/memory bottleneck scaling at $O(N)$ where $N$ is the total chunks.
+- **LC-3**: Investigating `apps/nhipdieuxanh/app/api/faq/query/route.ts` shows the require override which hooks module loading. This indicates a high level of coupling to the Bun runtime that had to be polyfilled to work inside Node.js (which runs Next.js server actions).
+- **LC-4**: Observing `apps/nhipdieuxanh/lib/prisma.ts` indicates transient database failures are handled cleanly using custom middleware retries, which improves reliability under high concurrency.
+- **LC-5**: Reading `apps/nhipdieuxanh/app/api/payments/sepay/route.ts` shows strict validation of amount (10M VND) and transfer type, coupled with timing safe compares, mitigating transaction spoofing and timing attacks.
 
 ## 3. Caveats
-* **Live Command Testing**: We could not run a live CLI lint check via `run_command` in this session due to automated environment limitations (permission prompts timing out). All findings are derived directly from the audited codebase configuration (`eslint.config.mjs`, `package.json`) and the pre-existing, updated logs (`lint_output_new.txt` and `lint_output.txt`).
-* **Source Code Changes**: As an Explorer role, we only analyzed and documented recommended diffs/refactorings, without modifying the source files directly.
+- The external API endpoints (e.g. `MODEL_SERVER_URL` chat completions, Geth JSON-RPC node accounts) are mocked/simulated in test environments; actual network latency or gateway timeouts could diverge from local test behaviors.
+- Evaluated performance of the trigram hashing fallback under large datasets has not been analyzed.
 
 ## 4. Conclusion
-To resolve the failing linting checks and unblock CI/CD builds, we recommend:
-1. **Structural Configuration Fix (Immediate)**: Update `eslint.config.mjs` to ignore variables/arguments prefixed with `_`:
-   ```javascript
-   "@typescript-eslint/no-unused-vars": [
-     "warn",
-     {
-       "argsIgnorePattern": "^_",
-       "varsIgnorePattern": "^_",
-       "caughtErrorsIgnorePattern": "^_"
-     }
-   ]
-   ```
-2. **Code Cleanups (Actionable Refactorings)**:
-   * **Circular Recursive Hooks**: Use `useRef` to store hook callbacks that recursively schedule themselves via timers (e.g. `use-image-generation.ts`, `use-agent-stream.ts`) to avoid TDZ errors.
-   * **Nested Components**: Move component declarations (like `Card` and `Input` in `admin-actions-console.tsx`) outside the render body of their parent component.
-   * **State Purity**: Extract impure operations like `Date.now()` to helper methods defined outside of Server Component renders.
-   * **External State Mutability**: Replace `window.location.href = data.url` with `window.location.assign(data.url)`.
+- **`packages/ask-core`** is a functional document search & RAG indexer engine that works natively in Bun. Its main structural bottleneck is the in-memory cosine similarity loop. It should be refactored to use native database vector indices (like `sqlite-vec`).
+- **`apps/nhipdieuxanh`** is a feature-rich Next.js real-estate landing page and CRM backend. It includes robust security (timing safe compares, strict webhook amounts, PII masking under Decree 13) and recovery patterns (Prisma transaction retries). However, it relies on a global `require` override hook to run Bun dependencies in Node, which poses a reliability concern.
 
 ## 5. Verification Method
-1. Navigate to `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory`.
-2. Run the lint command:
-   ```bash
-   npm run ci:lint
-   ```
-3. Invalidation Conditions: The linting step will fail if the count of warnings remains above `341`. If the configuration fix is applied, the warnings will drop by ~150-200, successfully passing the build gate.
+- **`packages/ask-core` Unit Tests**:
+  - Command: `bun test` in `/Users/macbook/mekong-cli/packages/ask-core`.
+  - Verification: 12 tests pass successfully.
+- **`apps/nhipdieuxanh` Integration Tests**:
+  - Command: `pnpm test` in `/Users/macbook/mekong-cli/apps/nhipdieuxanh`.
+  - Verification: 35 tests pass successfully.
+- **Invalidation Condition**: If the database schema changes without running Prisma generate (`prisma generate`), the integration tests will fail due to missing TypeScript types.

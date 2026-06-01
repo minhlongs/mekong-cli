@@ -10,18 +10,13 @@
   },
   "permissions": {
     "additionalDirectories": [
-      ".ci",
-      "bin",
-      "tools",
-      "packages",
-      "recipes",
-      "factory/contracts",
-      "clipmart",
-    "sops",
-    "agents",
-    "evals",
-    "observability",
-    "docs"
+      "sops",
+      "agents",
+      "evals",
+      "observability",
+      "docs",
+      "src/harness",
+      "tests"
     ],
     "allow": [
       "Bash(git status:*)",

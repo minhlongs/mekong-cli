@@ -9,6 +9,11 @@ export default defineConfig({
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
+    poolOptions: {
+      forks: {
+        maxForks: 2,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/product-analyst.md
+/Users/macbook/.claude/commands/trading/product-analyst.md

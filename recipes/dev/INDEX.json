@@ -1,4 +1,0 @@
-{
-  "role": "dev",
-  "commands": ["dev-feature.json", "dev-bug-sprint.json", "dev-pr-review.json"]
-}

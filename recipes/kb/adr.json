@@ -1,1 +1,0 @@
-{"id":"kb-adr","name":"Architecture Decision Records","description":"Create and manage ADRs for key technical decisions","trigger":"/kb:adr","output_dir":"reports/kb/adr","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"create","name":"Create ADR","mode":"sequential","commands":[{"id":"create-adr","args":"--template madr"}],"depends_on":[]}]}}

@@ -1,25 +1,20 @@
-# Handoff Report — Sentinel
+# Handoff Report — Sentinel Orchestrator Gen3 Restart Checkpoint
 
-## Observation
-- The TypeScript compilation, type definition, and workspace dependency resolution project has been completed.
-- The active orchestrator `c7ee87de-d103-4253-b55e-869f1f4f6ff8` successfully completed all milestones.
-- The Victory Auditor `9999d8ef-0665-475f-8f65-0e87bb69d239` ran an independent audit on all deliverables:
-  - Root and package-level `tsconfig.json` path mappings and React types.
-  - UI component import casing corrections in `packages/ui`.
-  - ESLint configuration scaffolded in `apps/mekong-ide/.eslintrc.json`.
-  - Ambient type stubs generated in `packages/mekong-cli-core/src/types/openclaw-stubs.d.ts`.
-- Verified that `npx tsc --noEmit` and `npx eslint .` run and pass with exit code 0 and 0 errors.
+## 1. Observation
+- Orchestrator Gen2 (`a810f1c0-6a08-465f-b322-9cae2f9071bd`) crashed/stopped due to a Google API stream 429 rate limit (RESOURCE_EXHAUSTED).
+- Prior to the crash, Worker 3 (`teamwork_preview_worker_daemon_test_opt`) had successfully configured the test concurrency limits to `maxForks: 2` across the main package config files, and the orchestrator had entered the Review phase with Reviewer 1 and Reviewer 2 in-progress.
+- Cloned the Gen2 workspace to `/Users/macbook/mekong-cli/.agents/teamwork_preview_orchestrator_daemon_optimization_gen3`.
 
-## Logic Chain
-- Victory Audit is blocking and mandatory.
-- The Victory Auditor has delivered a **VICTORY CONFIRMED** verdict.
-- Therefore, project completion can be reported to the user.
+## 2. Logic Chain
+- Re-spawned the Project Orchestrator as Gen3 (`339398c3-d1f3-4774-8ee8-98f4d9c385af`) to resume tracking reviews and verification.
+- Re-pointed the Sentinel's `BRIEFING.md` tracking ID to the Gen3 orchestrator.
+- Executed the Progress Reporting cron to scan recently modified vitest configurations.
 
-## Caveats
-- Ambient stubbing was used for private/gitignored files (like `@openclaw/*` and generated prisma client structures) to prevent compile failures without exposing private repository assets.
+## 3. Caveats
+- Ongoing 429 rate limiting indicates server pressure; we must keep agent calls lightweight.
 
-## Conclusion
-- Victory is confirmed. The `mekong-cli` monorepo now compiles type-safely and is free of compilation and linter errors.
+## 4. Conclusion
+- The Gen3 orchestrator is active and has resumed supervision of the review tasks.
 
-## Verification Method
-- Independent command-line audit executed by the Victory Auditor (`npx tsc --noEmit` and `npx eslint .` completed successfully).
+## 5. Verification Method
+- Monitor `progress.md` in the Gen3 directory for step completion.

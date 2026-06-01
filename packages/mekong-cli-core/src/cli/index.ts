@@ -38,6 +38,7 @@ import { registerEnterpriseCommand } from './commands/enterprise.js';
 import { registerWhiteLabelCommand } from './commands/white-label.js';
 import { registerOpenClawMissionCommand } from './commands/openclaw-mission.js';
 import { registerOpenClawHealthCommand } from './commands/openclaw-health.js';
+import { registerAskCommand } from './commands/ask.js';
 import { registerOpenClawCostCommand } from './commands/openclaw-cost.js';
 import { registerOpenClawBenchmarkCommand } from './commands/openclaw-benchmark.js';
 import { registerSalesCrmCommand } from './commands/sales-crm.js';
@@ -122,6 +123,7 @@ export async function main(argv?: string[]): Promise<void> {
   registerWhiteLabelCommand(program);
   registerOpenClawMissionCommand(program, engine);
   registerOpenClawHealthCommand(program, engine);
+  registerAskCommand(program, engine);
   registerOpenClawCostCommand(program, engine);
   registerOpenClawBenchmarkCommand(program, engine);
   registerSalesCrmCommand(program, engine);

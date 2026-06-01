@@ -1,86 +1,219 @@
-# Handoff Report — Explorer 3 (Configuration Specialist)
+# Handoff Report — Security and Reliability Gap Analysis
+
+**From:** Explorer 3  
+**Working Directory:** `/Users/macbook/mekong-cli/.agents/teamwork_preview_explorer_m1_3`  
+**Status:** Task Complete  
+
+---
 
 ## 1. Observation
-We directly observed the following configuration settings, commands, and outputs in `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory` and its parent directories:
 
-* **Duplicate Package Files & conflicting React/Next Versions**:
-  * Parent directory `/Users/macbook/projects/sophia-ai-factory/package.json` contains:
-    * `"name": "sophia-ai-factory"` (Line 2)
-    * `"next": "15.5.14"` (Line 52)
-    * `"react": "18.3.1"` (Line 55)
-    * `"react-dom": "18.3.1"` (Line 57)
-    * `package-lock.json` and a legacy `pnpm-lock.yaml`.
-  * Application directory `apps/sophia-ai-factory/package.json` contains:
-    * `"name": "sophia-ai-factory"` (Line 2)
-    * `"next": "^16.2.5"` (Line 108 in pnpm-lock)
-    * `"react": "19.2.3"` (Line 127 in pnpm-lock)
-    * `"react-dom": "19.2.3"` (Line 133 in pnpm-lock)
-    * `package-lock.json` and a v9 `pnpm-lock.yaml`.
-* **Database & Migrations Stale Config**:
-  * Parent directory `migrations/` contains only 1 file: `0129_sop_templates.sql` (Line 1 in list_dir).
-  * Application directory `apps/sophia-ai-factory/migrations/` contains 151 files (ranging from `0001-init.sql` to `0147_thumbnail_variants.sql`).
-* **ESLint Configuration & Maximum Warnings Limit**:
-  * `apps/sophia-ai-factory/eslint.config.mjs` configures React Compiler rules to `"warn"`:
-    ```javascript
-    "react-hooks/set-state-in-effect": "warn",
-    "react-hooks/static-components": "warn",
-    "react-hooks/purity": "warn",
-    "react-hooks/immutability": "warn",
+### 1.1 SQLite Connection Leaks
+*   **Source:** `/Users/macbook/mekong-cli/src/raas/tenant.py` (lines 94-99, 134-143):
+    ```python
+    def _connect(self) -> sqlite3.Connection:
+        """Open a WAL-mode connection with row_factory enabled."""
+        conn = sqlite3.connect(str(self._db_path))
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL;")
+        return conn
+
+    def create_tenant(self, name: str) -> Tenant:
+        ...
+        try:
+            with self._connect() as conn:
+                conn.execute(
+                    "INSERT INTO tenants (id, name, api_key_hash, created_at, is_active) "
+                    "VALUES (?, ?, ?, ?, 1)",
+                    (tenant_id, name, key_hash, created_at),
+                )
+                conn.commit()
+        ...
     ```
-  * `apps/sophia-ai-factory/package.json` line 50 defines `ci:lint`:
-    `"ci:lint": "node --max-old-space-size=14336 ./node_modules/eslint/bin/eslint.js src --max-warnings=341"`
-  * Running `npm run ci:lint` exited with **Exit code: 137**, indicating that it was terminated (Out Of Memory / SIGKILL) before completion, showing that without caching, AST compilation memory consumption exceeds platform limits.
-  * Standard data-fetching and random-access code (e.g. `const now = Math.floor(Date.now() / 1000);` in `src/app/[locale]/dashboard/admin/affiliate-leaderboard/page.tsx:50`) is flagged as a warning by `react-hooks/purity`.
-  * Prefixed parameters/variables (e.g. `_locale`, `_userId`) are flagged as warnings by `@typescript-eslint/no-unused-vars` because no parameter ignore pattern is defined in ESLint configuration.
-* **TypeScript & Test Compilation**:
-  * Running `npm run ci:typecheck` runs `tsc --noEmit` and succeeds with zero errors.
-  * Running `npm run ci:test` runs `vitest run` and completes, but encounters 9 failing unit tests (including `migration-coverage-guard.test.ts`, `edge-runtime-safety-guard.test.ts`, `signals.test.ts`, and others).
-* **Missing ESLint Cache**:
-  * Neither the local `lint` nor `ci:lint` scripts contain the `--cache` flag, causing ESLint to re-compile the full TS AST tree on every run, leading to high resource exhaustion.
+*   **Source:** `/Users/macbook/mekong-cli/src/raas/credits.py` (lines 245-264):
+    ```python
+    def add(self, tenant_id: str, amount: int, reason: str) -> int:
+        ...
+        try:
+            with self._connect() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO credit_accounts (tenant_id, balance, total_earned, total_spent)
+                    ...
+    ```
+
+### 1.2 Schema Modification Lock Collision (DDL on Query)
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/mock-services/ai-service/retriever.py` (lines 26-29):
+    ```python
+    def init_db(self):
+        """Initializes tables if they do not exist (useful for testing/mock)."""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chunks (
+                ...
+    ```
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/mock-services/ai-service/main.py` (lines 147-152):
+    ```python
+    @app.post("/api/ai/query-agent")
+    def query_agent(req: QueryAgentRequest):
+        retriever = None
+        try:
+            retriever = AskPythonRetriever()
+            # Retrieve relevant chunks using the new retriever
+            chunks = retriever.retrieve(req.question, limit=req.limit)
+    ```
+
+### 1.3 Lead Ingestion Race Conditions
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh/app/api/leads/route.ts` (lines 187-228):
+    ```typescript
+    const existingLead = consent ? await prisma.lead.findFirst({
+      where: {
+        OR: [
+          { leadHash },
+          { phone: cleanPhone }
+        ]
+      }
+    }) : null
+    ...
+    if (existingLead) {
+      lead = await prisma.lead.update({ ... })
+    } else {
+      lead = await prisma.lead.create({ ... })
+    }
+    ```
+
+### 1.4 API Gateway Rate Limiting Deficiencies
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/gateway/nginx.conf` (lines 58-69):
+    ```nginx
+        # Route for Backend Core APIs
+        location /api/leads {
+            proxy_pass http://backend_service;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            
+            # Rate limiting / Timeout config
+            proxy_connect_timeout 5s;
+            proxy_read_timeout 30s;
+        }
+    ```
+
+### 1.5 Exposed Unlocked Wallet in Blockchain Notarization
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh/lib/blockchain.ts` (lines 13-57):
+    ```typescript
+    const accountsRes = await fetch(blockchainRpcUrl, {
+      method: 'POST',
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_accounts', params: [], id: 1 })
+    })
+    ...
+    const fromAccount = accounts[0]
+    ...
+    const txRes = await fetch(blockchainRpcUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_sendTransaction',
+        params: [{
+          from: fromAccount,
+          to: '0x0000000000000000000000000000000000000000',
+          data: hexPayload
+        }],
+        id: 2
+      })
+    })
+    ```
+
+### 1.6 Unauthenticated PII Leakage Endpoint
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh/app/api/leads/route.ts` (lines 272-286):
+    ```typescript
+    export async function GET() {
+      try {
+        const leads = await prisma.lead.findMany({
+          orderBy: { createdAt: 'desc' }
+        })
+        return NextResponse.json({ success: true, leads })
+    ```
+
+### 1.7 Hardcoded API Keys & Production Configs
+*   **Source:** `/Users/macbook/mekong-cli/.env` (lines 7-8):
+    ```bash
+    POLAR_API_KEY=polar_oat_wgwxXaiow4uWlHzzEkF2nG04YhoKi2SeqwM4R2i3jnc
+    POLAR_WEBHOOK_SECRET=polar_whs_wDXSPG4aiQBMDGqSWXVor7aEnXEvMY3IdadBN1UvKPE
+    ```
+*   **Source:** `/Users/macbook/mekong-cli/apps/nhipdieuxanh-orchestrator/helm/nhipdieuxanh/values.yaml` (lines 53-65):
+    ```yaml
+    database:
+      url: "postgresql://postgres:postgres@postgres-service:5432/nhipdieuxanh_db"
+    ...
+    postgres:
+      image: postgres:15-alpine
+      port: 5432
+      user: postgres
+      password: postgres
+      db: nhipdieuxanh_db
+    ```
 
 ---
 
 ## 2. Logic Chain
-1. **Fact**: The parent project directory has an active `package.json` specifying React 18 / Next 15, and has node module trees.
-2. **Fact**: The target application subdirectory `apps/sophia-ai-factory` requires React 19 / Next 16.
-3. **Inference**: Having a root node modules setup with React 18 above a React 19 subdirectory creates conflicts. Node's resolution behavior causes imports to fall back to the parent folder when package managers conflict, leading to compile-time type incompatibilities or runtime crashes.
-4. **Fact**: The `ci:lint` command enforces `--max-warnings=341`.
-5. **Fact**: The React Compiler rules and unsuppressed `@typescript-eslint/no-unused-vars` rules generate 370+ warnings across the codebase.
-6. **Inference**: Because 370 > 341, the `ci:lint` command inevitably exits with a non-zero exit code (1) in CI pipelines, blocking builds.
-7. **Fact**: `react-hooks/purity` flags `Date.now()` inside Server Components as impure.
-8. **Inference**: Since Server Components only execute once on the server, `Date.now()` is completely valid and deterministic for the request lifespan, making this warning a false-positive rule conflict.
-9. **Fact**: ESLint is run on all files without cache and requires a 14GB heap allocation.
-10. **Inference**: The lack of caching causes severe build and local-dev bottlenecks because all TypeScript files must be re-parsed from scratch on every run.
+
+1. **SQLite Connection Leakage**: 
+   - *Observation:* `TenantStore._connect` and `CreditStore.add` open SQLite connections in `with` context blocks but never execute `conn.close()`.
+   - *Reasoning:* In Python, a `with connection:` block commits/rolls back transactions but keeps the connection open.
+   - *Conclusion:* File descriptors accumulate on the RaaS daemon until exhaustion, crashing the gateway service.
+
+2. **SQLite Lock Conflicts**:
+   - *Observation:* `query_agent` instantiates `AskPythonRetriever` on every query, which runs `init_db()` containing DDL queries (`CREATE TABLE IF NOT EXISTS`).
+   - *Reasoning:* Schema alterations require write locks in SQLite.
+   - *Conclusion:* Under concurrent requests, SQLite locks up and throws `database is locked` on simple read operations.
+
+3. **Check-Then-Act Concurrency**:
+   - *Observation:* `leads/route.ts` runs a `findFirst` query followed by a `create` or `update` block.
+   - *Reasoning:* Concurrent requests for the same lead phone number can bypass `findFirst` concurrently, triggering database-level unique constraint violations (`P2002`) on `create()`.
+   - *Conclusion:* Bypassing the transactional outbox pattern or retry queues causes unhandled 500 server errors on the ingestion endpoint.
+
+4. **Broken Access Control & PII Exposure**:
+   - *Observation:* `GET /api/leads` is completely unauthenticated and dumps the entire `leads` list containing plaintext names, phone numbers, and emails.
+   - *Reasoning:* Accessing sensitive personal information without authorization token checks violates basic OWASP standards.
+   - *Conclusion:* The endpoint is fully exposed to public data harvesting, violating Vietnam's Decree 13.
+
+5. **Blockchain Node Wallet Expositions**:
+   - *Observation:* `blockchain.ts` uses JSON-RPC `eth_accounts` and `eth_sendTransaction` relying on the Geth node to sign and hold keys.
+   - *Reasoning:* Exposing JSON-RPC `8545` with unlocked wallets is a severe security vulnerability that allows direct asset theft.
+   - *Conclusion:* Notarization must use local transaction signing with private keys and `eth_sendRawTransaction`.
+
+6. **Hardcoded Credentials & IaC Exposure**:
+   - *Observation:* Root `.env` has active `POLAR_API_KEY` and Helm `values.yaml` defaults credentials to `postgres:postgres` for production.
+   - *Reasoning:* Hardcoding secrets in git config maps allows anyone with repository or cluster read access to compromise credentials.
+   - *Conclusion:* Credentials must be managed via secret-injectors (Vault/Kubernetes Secrets) rather than static Helm values files.
 
 ---
 
 ## 3. Caveats
-* We assumed that the parent root `package.json` and its lockfiles are no longer needed because the code instructions explicitly mandate executing commands inside the `apps/sophia-ai-factory/` folder. We have not checked if `apps/84tea` or external orchestrators depend on root-level modules.
-* We did not investigate why both `pnpm-lock.yaml` and `package-lock.json` lockfiles coexist. It is possible some deploy systems use npm while local developers prefer pnpm.
+
+- We did not perform a live penetration test or load test on Geth to capture real-time nonce assignment behavior, relying on source code analysis of the JSON-RPC calls.
+- We assumed `POLAR_API_KEY` in the root `.env` is active based on prefixing and naming, but did not perform HTTP requests to verify its authorization scopes.
+- We did not evaluate the integrity of the private Geth network setup outside the `nhipdieuxanh-orchestrator` project directory.
 
 ---
 
 ## 4. Conclusion
-1. **Conflict 1 (Package/Workspace)**: Stale root configuration (React 18 / Next 15) conflicts with target application configuration (React 19 / Next 16), risking type resolution errors. Dual lockfiles (`pnpm-lock.yaml` and `package-lock.json`) are present, leading to out-of-sync dependency trees.
-2. **Conflict 2 (Linting Gate)**: The CI lint gate `ci:lint` is permanently blocked because the warning count (370+) exceeds the hard limit of 341. This is driven by React Compiler purity false-positives in Next.js Server Components and missing ignores for unused variables prefixed with an underscore.
-3. **Bottleneck (Performance)**: Missing ESLint caching forces ESLint to analyze all TypeScript ASTs from scratch on every run, resulting in a major performance bottleneck (taking up to 2 minutes) and high memory usage (14GB).
+
+The codebase contains major security and reliability gaps. While architectural reports claim full production authorization, the existence of public unauthenticated PII endpoints, database connection leaks in core RaaS managers, schema alteration locks on search queries, and exposed Geth unlocked accounts represent significant liabilities. Decoupling SQLite DDL migrations, implementing JWT authentication on lead routes, moving wallet keys to application client instances, and scrubbing hardcoded API tokens are urgent remediation tasks.
 
 ---
 
 ## 5. Verification Method
-* To independently verify the TypeScript and Vitest compiler checks:
+
+- **SQLite Connection Leak:** Run a test loop calling `create_tenant` or `list_tenants` 1000 times, and check open file handles using `lsof -p <PID_OF_DAEMON> | grep tenants.db`. The count will climb continuously if not closed.
+- **Unauthenticated PII Exposure:** Run:
   ```bash
-  cd apps/sophia-ai-factory
-  npm run ci:typecheck
-  npm run ci:test
+  curl -i -X GET http://localhost/api/leads
   ```
-* To reproduce the lint gate failure and verify the warning count:
+  Check that it returns a JSON response containing raw lead names and emails with an HTTP 200 status instead of HTTP 401 Unauthorized.
+- **DDL Query Lock:** Simulate concurrent requests on `/api/ai/query-agent` using `ab` or `k6` to observe lock exceptions:
   ```bash
-  cd apps/sophia-ai-factory
-  npm run ci:lint
-  # Inspect the console output and exit code
-  echo "Exit code: $?"
+  k6 run tests/performance/load-test.js
   ```
-* To verify the file structure and check lockfiles:
-  * Inspect the contents of `/Users/macbook/projects/sophia-ai-factory/package.json` vs. `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/package.json`.
-  * Confirm that there are no type errors but that the warning limit is breached.
+  Inspect FastAPI logs for `sqlite3.OperationalError: database is locked` stack traces.

@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/qa-e2e.md

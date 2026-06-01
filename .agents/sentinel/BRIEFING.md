@@ -1,13 +1,13 @@
-# BRIEFING — 2026-05-28T10:10:00Z
+# BRIEFING — 2026-05-31T08:32:00Z
 
 ## Mission
-Audit and resolve typescript compilation, type definition, and package dependency resolution errors across the mekong-cli monorepo workspace to achieve a clean compilation.
+Optimize the agent execution framework (specifically the `cto-daemon.sh`, `m1-cooler.sh`, and worker execution loops in `~/mekong-cli`) to eliminate system lag, reduce excessive file scans, bound parallel worker CPU consumption, and resolve macOS M1 Max overheating.
 
 ## 🔒 My Identity
 - Archetype: sentinel
-- Working directory: /Users/macbook/mekong-cli/.agents/sentinel/
-- Orchestrator: c7ee87de-d103-4253-b55e-869f1f4f6ff8
-- Victory Auditor: 9999d8ef-0665-475f-8f65-0e87bb69d239
+- Working directory: /Users/macbook/mekong-cli/.agents/sentinel
+- Orchestrator: 339398c3-d1f3-4774-8ee8-98f4d9c385af
+- Victory Auditor: [TBD]
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
@@ -16,20 +16,20 @@ Audit and resolve typescript compilation, type definition, and package dependenc
 - Integrity mode: development
 
 ## User Context
-- **Last user request**: Audit and resolve typescript compilation, type definition, and package dependency resolution errors across the mekong-cli monorepo workspace.
+- **Last user request**: Optimize the agent execution framework to eliminate system lag, reduce excessive file scans, bound parallel worker CPU, and resolve M1 Max overheating.
+- **New instruction (2026-05-31T08:25:50Z)**: Restrict parallel CPU load during tests (e.g. `vitest run`) by enforcing worker limits (`--poolOptions.forks.maxForks=2` or `--runInBand`) to prevent event-loop blockages.
 - **Pending clarifications**: none
-- **Delivered results**: Clean compilation (tsc --noEmit) and linter (eslint) validation confirmed.
+- **Delivered results**: none
 
 ## Project Status
-- **Phase**: complete
+- **Phase**: in progress (Worker 3 implementing R4 test concurrency limits)
 
 ## Victory Audit Status
-- **Triggered**: yes
-- **Verdict**: VICTORY CONFIRMED
+- **Triggered**: no
+- **Verdict**: pending
 - **Retry count**: 0
 
 ## Artifact Index
 - /Users/macbook/mekong-cli/ORIGINAL_REQUEST.md — Authoritative record of user requests
 - /Users/macbook/mekong-cli/.agents/original_prompt.md — Work-in-progress input log
 - /Users/macbook/mekong-cli/.agents/sentinel/BRIEFING.md — Persistent memory state
-- /Users/macbook/mekong-cli/.agents/teamwork_preview_victory_auditor_tsc_compilation/victory_audit_report.md — Victory audit report for TS compilation

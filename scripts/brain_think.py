@@ -13,7 +13,7 @@ import time
 
 CMD_NAMES = (
     # Core commands
-    "cook|fix|debug|review|test|plan(?::hard|:fast)?|code|ask|scout|"
+    "cook|fix|debug|review|test|plan(?:(?:\s+|:)hard|(?:\s+|:)fast)?|code|ask|scout|"
     "backend-api-build|frontend-ui-build|check-and-commit|deploy|ship|brainstorm|"
     # Engineering layer (from cto-command-catalog.json)
     "engineering-refactor|eng-sprint-execute|eng-tech-debt|"
@@ -114,6 +114,35 @@ def normalize(cmd):
     return " ".join(parts).rstrip(".,;:!?").strip()
 
 
+def call_external_brain(api_url, api_key, model_name, prompt, timeout=30):
+    """Call external chat completions API with native urllib.request."""
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 100
+    }
+    data = json.dumps(payload).encode('utf-8')
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    target_url = api_url
+    if not target_url.endswith("/chat/completions"):
+        target_url = f"{target_url.rstrip('/')}/chat/completions"
+    req = urllib.request.Request(
+        target_url,
+        data=data,
+        headers=headers,
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        res_data = json.loads(resp.read().decode('utf-8'))
+        return res_data["choices"][0]["message"]["content"]
+
+
 def main():
     url = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
     model = os.environ.get("OLLAMA_MODEL", "qwen3:32b")
@@ -129,6 +158,27 @@ def main():
         'Format: /command "specific task" (NEVER use colon — /plan hard NOT /plan:hard)\n\n'
         + stdin_text
     )
+
+    api_url = os.environ.get("BRAIN_API_URL")
+    api_key = os.environ.get("BRAIN_API_KEY")
+    brain_model = os.environ.get("BRAIN_MODEL") or model
+
+    if api_url and api_key:
+        try:
+            content = call_external_brain(api_url, api_key, brain_model, prompt)
+            cmd = extract_cmd(content)
+            if not cmd:
+                cmd = extract_from_thinking(content)
+            if not cmd and content:
+                # Check for any slash command in the response as a fallback
+                m = re.search(rf'(/{CMD_NAMES}(?:\s+"[^"]+")?)', content, re.IGNORECASE)
+                if m:
+                    cmd = normalize(m.group(1))
+            if cmd:
+                print(cmd)
+                return
+        except Exception as e:
+            print(f"BRAIN_EXTERNAL_ERROR: {e}. Falling back to Ollama.", file=sys.stderr)
 
     try:
         # Strategy 1: think:false (clean response, may be slow/timeout)

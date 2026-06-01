@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --poolOptions.forks.maxForks=2"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

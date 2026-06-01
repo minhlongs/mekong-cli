@@ -53,13 +53,9 @@ function colorize(text, color) {
  * Get .ckignore config path
  *
  * @param {string} claudeDir - Path to .claude directory
- * @param {string} [configPath] - Explicit config path to prefer
  * @returns {string}
  */
-function formatConfigPath(claudeDir, configPath) {
-  if (configPath) {
-    return configPath;
-  }
+function formatConfigPath(claudeDir) {
   if (claudeDir) {
     return path.join(claudeDir, '.ckignore');
   }
@@ -76,12 +72,11 @@ function formatConfigPath(claudeDir, configPath) {
  * @param {string} details.pattern - The pattern that matched
  * @param {string} details.tool - The tool that was blocked
  * @param {string} details.claudeDir - Path to .claude directory
- * @param {string} [details.configPath] - Explicit config path to edit
  * @returns {string}
  */
 function formatBlockedError(details) {
-  const { path: blockedPath, pattern, tool, claudeDir, configPath } = details;
-  const resolvedConfigPath = formatConfigPath(claudeDir, configPath);
+  const { path: blockedPath, pattern, tool, claudeDir } = details;
+  const configPath = formatConfigPath(claudeDir);
 
   // Truncate path if too long
   const displayPath = blockedPath.length > 60
@@ -97,10 +92,10 @@ function formatBlockedError(details) {
     `  ${colorize('Pattern:', 'yellow')}  ${pattern}`,
     `  ${colorize('Tool:', 'yellow')}     ${tool || 'unknown'}`,
     '',
-    `  ${colorize('To allow, add to', 'blue')} ${resolvedConfigPath}:`,
+    `  ${colorize('To allow, add to', 'blue')} ${configPath}:`,
     `    !${pattern}`,
     '',
-    `  ${colorize('Config:', 'dim')} ${resolvedConfigPath}`,
+    `  ${colorize('Config:', 'dim')} ${configPath}`,
     ''
   ];
 
@@ -126,16 +121,16 @@ function formatSimpleError(pattern, blockedPath) {
  * @returns {string}
  */
 function formatMachineError(details) {
-  const { path: blockedPath, pattern, tool, claudeDir, configPath } = details;
-  const resolvedConfigPath = formatConfigPath(claudeDir, configPath);
+  const { path: blockedPath, pattern, tool, claudeDir } = details;
+  const configPath = formatConfigPath(claudeDir);
 
   return JSON.stringify({
     error: 'BLOCKED',
     path: blockedPath,
     pattern: pattern,
     tool: tool,
-    config: resolvedConfigPath,
-    fix: `Add '!${pattern}' to ${resolvedConfigPath} to allow this path`
+    config: configPath,
+    fix: `Add '!${pattern}' to ${configPath} to allow this path`
   });
 }
 

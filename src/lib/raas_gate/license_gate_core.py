@@ -26,8 +26,6 @@ from src.lib.quota_error_messages import (
     get_warning_threshold,
     QuotaWarningContext,
 )
-from src.raas.credit_rate_limiter import CreditRateLimiter, TIER_LIMITS
-from src.raas.quota_cache import get_cached_quota, cache_quota, GRACE_PERIOD_SECONDS
 from src.core.license_monitor import record_failure as record_license_failure
 
 from .license_gate_check_mixin import LicenseGateCheckMixin
@@ -75,7 +73,7 @@ class RaasLicenseGate(LicenseGateCheckMixin, LicenseGateSyncMixin):
         self._key_id: Optional[str] = None
         self._enable_remote = enable_remote
         self._remote_url = os.getenv("RAAS_API_URL", "https://api.cashclaw.cc")
-        self._rate_limiter: Optional[CreditRateLimiter] = None
+        self._rate_limiter = None
         self._warning_displayed: set = set()
         self._license_status: str = "active"
         self._license_expires_at: Optional[int] = None
@@ -208,6 +206,14 @@ class RaasLicenseGate(LicenseGateCheckMixin, LicenseGateSyncMixin):
         Returns:
             Tuple of (is_valid, license_info, error_message)
         """
+        try:
+            from src.raas.credit_rate_limiter import TIER_LIMITS
+            from src.raas.quota_cache import get_cached_quota, cache_quota, GRACE_PERIOD_SECONDS
+        except ImportError:
+            TIER_LIMITS = {}
+            get_cached_quota = lambda *a, **k: None
+            cache_quota = lambda *a, **k: None
+            GRACE_PERIOD_SECONDS = 0
         if not self._enable_remote:
             is_valid, info, error = _get_validate_license()(license_key)
             if is_valid:

@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/sre.md
+/Users/macbook/.claude/commands/trading/sre.md

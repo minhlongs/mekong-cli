@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/cmo/growth.md
+/Users/macbook/.claude/commands/trading/cmo/growth.md

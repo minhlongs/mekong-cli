@@ -7,6 +7,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Unreleased]
 
 ### Added
+- Developer Documentation Hub containing comprehensive guides:
+  - `docs/setup-guide.md` (System prerequisites and model setups)
+  - `docs/local-development-guide.md` (Workspace configurations, formatting)
+  - `docs/env-vars.md` (Config variables for LLM, DB, and payments)
+  - `docs/testing-guide.md` (pytest seed and core test suites)
+  - `docs/troubleshooting.md` (Diagnostics for locks, ports, and model servers)
+  - `docs/architecture-overview.md` (Core PEV loops and daemon processes)
+  - `docs/deployment-notes.md` (Cloudflare RaaS infrastructure details)
+  - `docs/glossary.md` (Vocabulary for Binh Phap strategic terms)
+  - `docs/onboarding.md` (Sandbox guidelines for new developers and agents)
 - `GET /metrics` — Prometheus text format endpoint for MCU/PEV/uptime gauges
 - CSRF middleware (double-submit cookie, env-gated `CSRF_ENABLED=1`)
 - Rate-limit gateway middleware wiring existing `RateLimiter` (`RATE_LIMIT_ENABLED=1`)

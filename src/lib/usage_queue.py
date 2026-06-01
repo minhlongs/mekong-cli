@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 
-from src.config.logging_config import get_logger
+from src.core.logging_config import get_logger
 from src.lib.usage_meter import UsageMeter
 
 

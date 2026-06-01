@@ -1,1 +1,0 @@
-{"id":"obs-alert","name":"Alert Management","description":"Alert rule creation, routing, and silencing","trigger":"/obs:alert","output_dir":"reports/obs/alert","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"manage","name":"Manage Alerts","mode":"sequential","commands":[{"id":"alert-manage","args":"--evaluate-rules"}],"depends_on":[]}]}}

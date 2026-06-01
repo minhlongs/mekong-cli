@@ -183,3 +183,234 @@ Verify that the codebase is free of linting errors.
 ### Compilation & Build Quality
 - [ ] `npx tsc --noEmit` executes successfully with exit code `0` and `0` errors.
 - [ ] `npx eslint .` (or local package lint check) executes with `0` errors.
+
+## 2026-05-30T06:55:34Z
+
+Phát triển mở rộng hệ thống Nhịp Điệu Xanh AI CRM: tích hợp thanh toán VietQR (SePay), nâng cấp giao diện Landing Page, và viết tài liệu hướng dẫn vận hành chi tiết.
+
+Working directory: `/Users/macbook/mekong-cli`
+Integrity mode: `development`
+
+## Requirements
+
+### R1. Tích hợp cổng thanh toán VietQR (SePay)
+- Hiện thực API Endpoint (`POST /api/payments/sepay`) để tiếp nhận và xác thực webhook callback từ SePay khi có giao dịch chuyển khoản thành công.
+- Cập nhật trạng thái đặt cọc hoặc giao dịch của Lead tương ứng trong cơ sở dữ liệu PostgreSQL.
+- Tạo component/modal hiển thị mã VietQR động cùng thông tin chuyển khoản (tài khoản, số tiền, nội dung chuyển khoản tự động kèm mã giao dịch) tại Landing Page khi người dùng đặt chỗ.
+
+### R2. Tối ưu hóa Landing Page & Trải nghiệm UI/UX
+- Thiết kế và nâng cấp Landing Page (`apps/nhipdieuxanh/app/page.tsx`) theo chuẩn giao diện Emerald Green (`#10B981`) sang trọng và hiện đại.
+- Thêm hiệu ứng micro-animations cho nút bấm (độ rộng click target >= 44px), loading states rõ ràng khi đang gọi API, và tối ưu hoàn toàn cho mobile responsive.
+
+### R3. Tài liệu hướng dẫn vận hành (Operations Guide)
+- Viết tài liệu hướng dẫn vận hành chi tiết tại `docs/nhipdieuxanh_operations.md` giải thích cách khởi tạo cơ sở dữ liệu, chạy local, kiểm thử các API (Leads, FAQ, Payments), và cách xử lý sự cố.
+
+## Acceptance Criteria
+
+### API & Payments
+- [ ] Endpoint `POST /api/payments/sepay` nhận mock webhook payload từ SePay và cập nhật trạng thái thanh toán thành công của Lead trong PostgreSQL.
+- [ ] Giao diện hiển thị đúng mã QR VietQR động (chứa URL định dạng `https://img.vietqr.io/image/...`) dựa trên thông tin số tiền và nội dung chuyển khoản động.
+
+### UI/UX & Responsive
+- [ ] Modal đặt chỗ/thanh toán hiển thị đầy đủ thông tin, không bị vỡ layout trên màn hình nhỏ.
+- [ ] Target tương tác có chiều cao/rộng tối thiểu 44px và các nút bấm có trạng thái hover/loading trực quan.
+
+### Documentation
+- [ ] File `docs/nhipdieuxanh_operations.md` mô tả rõ ràng các bước vận hành hệ thống.
+
+## 2026-05-30T07:18:14Z
+
+Thực hiện kiểm thử, phân tích cấu trúc, sơ đồ hóa kiến trúc luồng dữ liệu, phát hiện các điểm rủi ro kỹ thuật, và cập nhật/bổ sung bộ tài liệu kỹ thuật toàn diện cho toàn bộ kho mã nguồn (codebase) hiện tại.
+
+Working directory: `/Users/macbook/mekong-cli`
+Integrity mode: `development`
+
+## Requirements
+
+### R1. Kiểm toán cấu trúc kho mã nguồn (Repository Audit)
+- Sơ đồ hóa chi tiết vai trò, ranh giới trách nhiệm, các dependency nội bộ/ngoài, vai trò runtime, và mức độ rủi ro của từng thư mục/thành phần chính (`apps/`, `packages/`, `services/`, `scripts/`, `infra/`, `configs/`, `tooling/`, CI/CD, `tests/`, `docs/`).
+
+### R2. Sơ đồ hóa kiến trúc & Luồng dữ liệu (Architecture & Data Flow)
+- Xác định và làm rõ các entrypoints của hệ thống, luồng di chuyển dữ liệu/yêu cầu, các tác vụ chạy nền (background jobs), hệ thống hàng đợi (queue), bộ lập lịch (cron/schedulers), tích hợp bên thứ ba, quản lý state, cơ chế lưu trữ (persistence), luồng auth/authz, sơ đồ triển khai (deployment topology), quản lý biến môi trường, và feature flags.
+
+### R3. Bổ sung & Hoàn thiện tài liệu kỹ thuật (Documentation Backfill)
+- Cập nhật hoặc viết mới các tài liệu hướng dẫn vận hành chuẩn hóa tại thư mục `docs/` bao gồm:
+  - `README.md` (Tổng quan dự án)
+  - `docs/setup-guide.md` (Hướng dẫn cài đặt)
+  - `docs/local-development-guide.md` (Hướng dẫn phát triển cục bộ)
+  - `docs/env-vars.md` (Tài liệu chi tiết biến môi trường)
+  - `docs/deployment-notes.md` (Ghi chú triển khai/deploy)
+  - `docs/testing-guide.md` (Hướng dẫn chạy test)
+  - `docs/troubleshooting.md` (Cách khắc phục lỗi phổ biến)
+  - `docs/architecture-overview.md` (Tổng quan kiến trúc)
+  - `docs/glossary.md` (Bảng thuật ngữ dự án)
+  - `docs/onboarding.md` (Tài liệu hướng dẫn onboard cho lập trình viên mới)
+
+### R4. Đánh giá rủi ro & Phát hiện nợ kỹ thuật (Gap & Risk Analysis)
+- Phát hiện và ghi nhận các mẫu ngầm định (implicit patterns), nợ kỹ thuật (technical debt), mã nguồn thừa/chết (dead code), code trùng lặp, các điểm thắt cổ chai (bottlenecks), và lỗ hổng bảo mật/cấu hình thông tin nhạy cảm. Phân loại mức độ tự tin (High, Medium, Needs Verification).
+
+## Acceptance Criteria
+
+### Audit & Architecture Outputs
+- [ ] Tạo hoặc cập nhật sơ đồ kiến trúc hệ thống rõ ràng trong `docs/architecture-overview.md` (sử dụng Mermaid diagram nếu phù hợp).
+- [ ] Tài liệu `docs/architecture-overview.md` giải thích chi tiết step-by-step luồng xử lý yêu cầu và tích hợp dịch vụ.
+
+### Knowledge & Documentation Backfill
+- [ ] Tất cả 10 đầu mục tài liệu kỹ thuật nêu ở yêu cầu R3 đều được tạo mới hoặc cập nhật đầy đủ thông tin thực tế, không chứa placeholder trống.
+- [ ] Tài liệu `docs/env-vars.md` liệt kê 100% các biến môi trường thực tế đang được sử dụng trong codebase kèm mô tả và giá trị ví dụ.
+
+### Risk & Tech Debt Catalog
+- [ ] Tạo tài liệu báo cáo rủi ro `docs/codebase_risk_report.md` liệt kê các nợ kỹ thuật, code trùng lặp hoặc điểm nghẽn hiệu năng đã xác thực.
+
+## 2026-05-30T11:54:34Z
+
+Thực hiện kiểm toán kiến trúc, lập bản đồ vận hành (system mapping), đánh giá độ tin cậy và bảo mật, tối ưu hóa nền tảng (platformization) cho toàn bộ kho mã nguồn `mekong-cli` theo tiêu chuẩn kỹ thuật Staff/Principal Engineer ("ABSOLUTE MODE").
+
+Working directory: `/Users/macbook/mekong-cli`
+Integrity mode: development
+
+## Requirements
+
+### R1. Kiểm toán & Bản đồ hệ thống (Subsystem Mapping & Audit)
+Phân tích và lập bản đồ chi tiết cho từng subsystem chính (`apps/nhipdieuxanh`, `packages/ask-core`, `apps/nhipdieuxanh-orchestrator`, `packages/mekong-cli-core`). Đối với mỗi subsystem, tạo tài liệu chi tiết bắt buộc phải gồm:
+1. **Purpose**: Vai trò nghiệp vụ và kỹ thuật.
+2. **Entry Points**: Điểm khởi chạy / luồng chạy chính.
+3. **Runtime Lifecycle**: Vòng đời chạy chi tiết từng bước.
+4. **State Management**: Nơi lưu trữ và thay đổi trạng thái.
+5. **Dependencies**: Các dependency nội bộ và bên ngoài.
+6. **Failure Modes**: Các kịch bản lỗi có thể xảy ra.
+7. **Recovery Behavior**: Cơ chế phục hồi hiện tại.
+8. **Scale Limits**: Giới hạn chịu tải khi tăng quy mô gấp 10 lần.
+9. **Security Surface**: Điểm phơi nhiễm bảo mật tiềm năng.
+10. **Observability**: Cách thức debug và ghi nhận sự cố.
+11. **Technical Debt**: Các nợ kỹ thuật tồn tại.
+12. **Missing Knowledge**: Điểm chưa rõ ràng cần xác minh thêm.
+
+### R2. Đánh giá rủi ro an toàn (Reliability & Security Gap Analysis)
+Tìm kiếm và đánh giá các rủi ro liên quan đến:
+* Kết nối PostgreSQL/SQLite và khả năng xử lý concurrency lock.
+* Event-driven queues (Kafka) và block chain notarization (Geth node).
+* Masking thông tin cá nhân (Decree 13 PII compliance).
+* Các điểm hardcoded cấu hình API.
+
+### R3. Báo cáo Gap Analysis & Remediation Roadmap
+Tạo báo cáo tổng hợp rủi ro phân loại theo mức độ ưu tiên:
+* **P0 — Existential Risks**: Rò rỉ thông tin nhạy cảm, lỗi mất dữ liệu.
+* **P1 — Scale Blockers**: Các điểm thắt nút cổ chai dưới tải cao.
+* **P2 — Velocity Killers**: Code trùng lặp, thiếu test hoặc cấu hình phức tạp.
+* **P3 — Optimization**: Các điểm tối ưu hóa tiềm năng.
+
+## Acceptance Criteria
+
+### Documentation Coverage
+- [ ] Tất cả các subsystem nêu trên đều có file tài liệu chi tiết riêng biệt định dạng Markdown tại `docs/absolute-audit/` tuân thủ đầy đủ 12 hạng mục thông tin bắt buộc.
+- [ ] Có sơ đồ Mermaid chi tiết mô tả luồng chạy runtime và mối quan hệ dependency giữa các subsystem tại `docs/absolute-audit/architecture-overview.md`.
+
+### System Verification & Tests
+- [ ] Tất cả các test cases hiện tại trong `apps/nhipdieuxanh` và `packages/ask-core` chạy pass 100%.
+- [ ] Toàn bộ monorepo thực hiện compile production build thành công không lỗi.
+
+## 2026-05-31T01:11:56Z
+
+Dự án rà soát mã nguồn (Codebase Review) và kiểm toán hệ thống hooks của Mekong-CLI (thư mục `.codex` và `.claude`) nhằm đảm bảo tính nhất quán, bảo mật và tuân thủ các nguyên tắc thiết kế tối ưu.
+
+Working directory: /Users/macbook/mekong-cli
+Integrity mode: development
+
+## Requirements
+
+### R1. Target Codebase Quality Scan
+Quét mã nguồn trọng tâm của Mekong-CLI tại các thư mục `src/`, `mekong/` và các scripts quan trọng. Nhận diện các vùng mã nguồn trùng lặp, dư thừa, hoặc vi phạm các nguyên tắc thiết kế YAGNI, KISS, DRY.
+
+### R2. Codex & Claude Hooks Consistency Audit
+Kiểm tra tính đồng bộ và an toàn giữa hai thư mục cấu hình `.codex/` và `.claude/`. Đảm bảo các hooks như `pre-tool-use-guard`, `privacy-block`, `stop-checkpoint` được định nghĩa chính xác, không bị xung đột cấu hình và không gây rò rỉ dữ liệu nhạy cảm.
+
+### R3. Quality Gates & Vulnerability Assessment
+Đánh giá mức độ an toàn của các kịch bản chạy lệnh (shell scripts), phát hiện các lỗ hổng bảo mật tiềm ẩn, và kiểm tra sự tuân thủ đối với các chốt chặn kiểm định chất lượng (quality gates).
+
+## Acceptance Criteria
+
+### Audit & Security
+- Báo cáo kiểm toán chi tiết (được lưu tại `reports/codex-review-report.md`) chỉ rõ tất cả các điểm cần cải thiện, phân loại theo độ ưu tiên (High/Medium/Low).
+- Đánh giá chi tiết sự tương thích và đồng bộ giữa cấu hình `.codex/hooks.json` và `.claude/hooks.json`.
+- Nhận diện và đề xuất giải pháp xử lý cho bất kỳ nguy cơ rò rỉ khóa bí mật hoặc thông tin nhạy cảm nào trong hệ thống hooks.
+
+### Quality & Tests
+- Đảm bảo 100% các bài test liên quan của mekong-cli tiếp tục PASS sau khi chạy rà soát và thực hiện điều chỉnh (nếu có).
+- 0 lỗi biên dịch TypeScript trong các thư mục được quét.
+
+## 2026-05-31T05:06:36Z
+
+# Teamwork Project Prompt
+
+Sửa chữa và tối ưu hóa các lỗi liên quan đến Daemon Orchestration và Core Execution của `mekong-cli` được phát hiện trong `aggregated-summary-report.md`.
+
+Working directory: /Users/macbook/mekong-cli
+Integrity mode: development
+
+## Requirements
+
+### R1. Khắc phục Event Loop Blocks (Daemon & Core Execution)
+- Chuyển đổi các cuộc gọi PM2 đồng bộ (`subprocess.run(["pm2", ...])`) hoặc các lệnh subprocess đồng bộ khác trong daemon thành asynchronous (`asyncio.create_subprocess_exec`) hoặc chạy trong thread pool (`asyncio.to_thread`) để tránh nghẽn Event Loop.
+- Chuyển đổi các tiến trình thực thi đồng bộ và các lệnh ngủ (`time.sleep`) trong core executor và verifier sang async equivalents (`asyncio.sleep`, `asyncio.create_subprocess_exec`).
+- Các file cần lưu ý: `src/daemon/dispatcher.py`, `src/daemon/worker_pool.py`, `src/daemon/mission_control.py`, `src/core/executor.py`, `src/core/verifier.py`.
+
+### R2. Tối ưu hóa PM2 Queries và File I/O trong Mission Control
+- Tối ưu hóa hàm `get_status_summary()` trong `src/daemon/mission_control.py` để tránh việc lặp đi lặp lại việc đọc file `missions.json` đồng bộ và gọi PM2 liên tiếp. Thực hiện đọc và parse file `missions.json` một lần duy nhất rồi truyền dữ liệu cho các helper functions.
+
+### R3. Triển khai File Locking cho missions.json
+- Sử dụng thư viện khóa file tiêu chuẩn (như `filelock` hoặc `portalocker`) để quản lý việc đọc/ghi đồng thời vào file `missions.json` trong `src/daemon/task_router.py` và `src/daemon/mission_control.py`, ngăn ngừa lỗi hỏng dữ liệu JSON khi chạy song song.
+
+### R4. Sửa lỗi KeyError trên Tool Call ID
+- Sửa lỗi KeyError tiềm ẩn khi truy cập `tc["id"]` trong `src/daemon/agent_loop.py` bằng cách sử dụng phương thức an toàn `.get("id")` và fallback về một giá trị UUID ngẫu nhiên nếu không tìm thấy ID.
+
+### R5. Bảo toàn Upstream Dependencies khi Re-planning DAG
+- Cập nhật hàm `replan_failed_branch()` trong `src/core/planner.py` để đảm bảo các phụ thuộc gốc (upstream dependencies) chỉ đến các bước chạy thành công trước đó không bị xóa bỏ khi tạo nhánh thay thế mới.
+
+## Verification Resources
+- Sử dụng bộ kiểm thử Pytest hiện có trong repo `mekong-cli`: `poetry run pytest`.
+
+## Acceptance Criteria
+
+### Chạy thử nghiệm và xác thực chất lượng
+- [ ] Tất cả các bài kiểm tra hiện tại trong `tests/` của `mekong-cli` phải pass 100% sau khi sửa đổi mã nguồn.
+- [ ] Không phát sinh bất kỳ lỗi `json.JSONDecodeError` nào do tranh chấp ghi file `missions.json` khi daemon hoạt động.
+- [ ] Tiến trình daemon không crash hoặc gặp lỗi KeyError khi chạy với các payload local LLM thiếu tool call ID.
+- [ ] Báo cáo chi tiết về các sửa đổi mã nguồn đã thực hiện lưu tại `/Users/macbook/projects/sophia-ai-factory/plans/reports/daemon-debug-execution-report.md`.
+
+## 2026-05-31T08:14:13Z
+
+Optimize the agent execution framework (specifically the `cto-daemon.sh`, `m1-cooler.sh`, and worker execution loops in `~/mekong-cli`) to eliminate system lag, reduce excessive file scans, bound parallel worker CPU consumption, and resolve macOS M1 Max overheating.
+
+Working directory: `/Users/macbook/mekong-cli`
+Integrity mode: development
+
+## Requirements
+
+### R1. Optimize filesystem scans and cache purge in `m1-cooler.sh`
+- The script `m1-cooler.sh` currently runs an aggressive loop every 10 seconds performing massive disk searches (`find`) and recursively deleting directories (like `.next`). This causes continuous rebuilding of Next.js apps, leading to high CPU/GPU load.
+- Increase the sleep duration, cache search results, or remove the aggressive periodic `.next` deletions entirely during development.
+
+### R2. Optimize `cto-daemon.sh` and cleanup loops
+- The `cto-daemon.sh` daemon polls pane outputs and runs `cleanup_orphan_nodes` frequently.
+- Optimize `cleanup_orphan_nodes` to run only when needed (not every cycle) and use highly efficient, non-recursive filtering to identify zombie processes.
+- Ensure the daemon's own cycle intervals are throttled when no active work is being run.
+
+### R3. Provide model-shifting hooks to offload CPU
+- Provide clear switches or environmental configurations in `cto-daemon.sh` to route heavy LLM tasks (like the brain decisions) to external endpoints (Zunef portal or official APIs) rather than forcing local Ollama execution of `qwen3:32b` on the M1 Max.
+
+## Acceptance Criteria
+
+### Execution & Performance
+- [ ] Idle system CPU utilization of the agent suite drops below 5% on average.
+- [ ] Next.js `.next` compilation cache is not forcefully deleted during active runs, preventing infinite recompilation loops.
+- [ ] TMUX role panes run smoothly and do not freeze or lag the terminal.
+- [ ] External API fallbacks can be toggled via environment variables or configuration files.
+
+## 2026-05-31T08:25:50Z
+
+Chào subagent, mình là agent chính. Mình thấy hệ thống đang rất nóng và lag (CPU 100%, load average > 130) do vitest và eslint chạy song song chiếm dụng tài nguyên. Điều này làm nghẽn Event Loop của claude-adapter khiến việc call API stream bị chậm trễ nặng. Cậu có thể điều chỉnh để khi chạy test (ví dụ vitest run) sử dụng giới hạn worker (như --poolOptions.forks.maxForks=2 hoặc --runInBand) để giảm tải CPU được không? Đồng thời cập nhật cho mình tiến trình vá lỗi cto-daemon.sh nhé.
+
+## 2026-05-31T08:27:54Z
+
+Mình đã nhận được thông tin phục hồi tự động của hệ thống. Rất tốt khi các cậu đã tự động clone và tạo mới Orchestrator Gen2 (ID: a810f1c0-6a08-465f-b322-9cae2f9071bd) để tiếp tục tiến trình tối ưu hóa mà không bị gián đoạn do lỗi Google API stream OAuth2. Hãy tiếp tục giám sát tiến độ của Orchestrator mới này và áp dụng giới hạn concurrency test như chỉ thị nhé.

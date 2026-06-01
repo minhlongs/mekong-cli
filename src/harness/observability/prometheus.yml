@@ -1,0 +1,23 @@
+# Prometheus scrape config — Mekong CLI observability stack
+# Scrapes OTel Collector's Prometheus exporter endpoint every 15s
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: mekong-m1max
+    env: production
+
+scrape_configs:
+  - job_name: otel-collector
+    static_configs:
+      - targets: ["otel-collector:8889"]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: "m1max"
+
+  # Scrape Prometheus itself for meta-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

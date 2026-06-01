@@ -759,3 +759,39 @@ apps/fnb-caffe-container/
 models/
 !models/.gitkeep
 .cheetahclaws/
+# Archived legacy code (preserved but not tracked)
+.archive/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.pnpm-store/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Mekong legacy runtime state (not code)
+.mekong/*.log
+.mekong/*.json
+.mekong/*.sqlite3
+.mekong/events.jsonl
+.mekong/*.db

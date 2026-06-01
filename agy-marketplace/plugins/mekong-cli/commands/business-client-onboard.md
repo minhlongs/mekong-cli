@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/business-client-onboard.md

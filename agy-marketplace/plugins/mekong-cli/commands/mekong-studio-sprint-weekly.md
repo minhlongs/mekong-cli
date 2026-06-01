@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.claude/commands/studio-sprint-weekly.md

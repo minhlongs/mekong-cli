@@ -4,5 +4,10 @@ export default {
     environment: 'node',
     include: ['packages/**/src/**/*.test.ts', 'src/**/*.test.ts'],
     exclude: ['**/node_modules/**', 'dist', '.next', 'apps/**/*', 'lib/**/*'],
+    poolOptions: {
+      forks: {
+        maxForks: 2,
+      },
+    },
   },
 };

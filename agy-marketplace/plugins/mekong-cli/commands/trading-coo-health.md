@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/coo/health.md
+/Users/macbook/.claude/commands/trading/coo/health.md
