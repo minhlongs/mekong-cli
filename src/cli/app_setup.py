@@ -96,22 +96,20 @@ def build_app() -> typer.Typer:
     from src.cli.recipe_commands import register_recipe_commands
     from src.cli.system_commands import register_system_commands
     from src.cli.studio_commands import register_studio_commands
-
+    from src.cli.slash_commands import register_slash_commands
     # BMAD uses dash naming - not importable as standard package
     spec = importlib.util.spec_from_file_location(
-        "bmad_commands", Path(__file__).parent / "bmad-commands.py"
+    "bmad_commands", Path(__file__).parent / "bmad-commands.py"
     )
     bmad_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(bmad_module)
     bmad_app = bmad_module.app
-
     root = typer.Typer(
-        name="mekong",
-        help="🚀 Mekong CLI: RaaS Agency Operating System",
-        add_completion=False,
-        cls=MekongGroup,
+    name="mekong",
+    help="🚀 Mekong CLI: RaaS Agency Operating System",
+    add_completion=False,
+    cls=MekongGroup,
     )
-
     # Wire sub-apps
     root.add_typer(bmad_app, name="bmad", help="BMAD workflow management")
     root.add_typer(binh_phap_app, name="binh-phap", help="Binh Pháp Strategy: Infinite loops & Standards")
@@ -125,24 +123,21 @@ def build_app() -> typer.Typer:
     root.add_typer(tools_app, name="tools")
     root.add_typer(browse_app, name="browse")
     root.add_typer(collab_app, name="collab")
-
     # Wire SDLC scaffold sub-apps (phase-04)
     root.add_typer(spec_app, name="spec", help="Spec phase: feature request - requirements")
     root.add_typer(design_app, name="design", help="Design phase: requirements - architecture")
     root.add_typer(code_app, name="code", help="Code phase: architecture - task backlog")
     root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates - ship/hold")
-
     # Register flat command groups
     register_cook_command(root)
     register_workflow_commands(root)
     register_recipe_commands(root)
     register_system_commands(root)
     register_studio_commands(root)
-
     # Phase-03 signals commands (metrics + offline evals)
     register_metrics(root)
     register_algo_status(root)
     register_eval_agent(root)
-
+    register_slash_commands(root)
     # mk group is registered lazily by MekongGroup - no eager call here
     return root
