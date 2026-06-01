@@ -1,7 +1,7 @@
 """Stub: memory store for PEV orchestrator."""
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from datetime import datetime, timezone
 
 @dataclass

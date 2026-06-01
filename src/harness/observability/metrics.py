@@ -50,7 +50,7 @@ def timed(metric_name: str) -> Callable:
                 record(metric_name, time.perf_counter() - start)
                 increment(f"{metric_name}.success")
                 return result
-            except Exception as e:
+            except Exception:
                 increment(f"{metric_name}.error")
                 record(f"{metric_name}.error_time", time.perf_counter() - start)
                 raise
