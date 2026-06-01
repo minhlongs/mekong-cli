@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/ck-vercel-debug.md

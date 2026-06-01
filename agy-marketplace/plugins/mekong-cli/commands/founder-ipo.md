@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/founder-ipo.md

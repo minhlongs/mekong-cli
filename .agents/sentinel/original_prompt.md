@@ -115,3 +115,52 @@ Compile the tokens and usage guidelines into a single, clean static HTML guideli
 ### Guidelines Output
 - [ ] File `/Users/macbook/nhipdieuxanh-agent/brand/guidelines.html` exists.
 - [ ] Opening `guidelines.html` in a web browser renders the complete branding guide without console errors or broken resource links.
+
+## 2026-05-30T11:54:34Z
+
+Thực hiện kiểm toán kiến trúc, lập bản đồ vận hành (system mapping), đánh giá độ tin cậy và bảo mật, tối ưu hóa nền tảng (platformization) cho toàn bộ kho mã nguồn `mekong-cli` theo tiêu chuẩn kỹ thuật Staff/Principal Engineer ("ABSOLUTE MODE").
+
+Working directory: `/Users/macbook/mekong-cli`
+Integrity mode: development
+
+## Requirements
+
+### R1. Kiểm toán & Bản đồ hệ thống (Subsystem Mapping & Audit)
+Phân tích và lập bản đồ chi tiết cho từng subsystem chính (`apps/nhipdieuxanh`, `packages/ask-core`, `apps/nhipdieuxanh-orchestrator`, `packages/mekong-cli-core`). Đối với mỗi subsystem, tạo tài liệu chi tiết bắt buộc phải gồm:
+1. **Purpose**: Vai trò nghiệp vụ và kỹ thuật.
+2. **Entry Points**: Điểm khởi chạy / luồng chạy chính.
+3. **Runtime Lifecycle**: Vòng đời chạy chi tiết từng bước.
+4. **State Management**: Nơi lưu trữ và thay đổi trạng thái.
+5. **Dependencies**: Các dependency nội bộ và bên ngoài.
+6. **Failure Modes**: Các kịch bản lỗi có thể xảy ra.
+7. **Recovery Behavior**: Cơ chế phục hồi hiện tại.
+8. **Scale Limits**: Giới hạn chịu tải khi tăng quy mô gấp 10 lần.
+9. **Security Surface**: Điểm phơi nhiễm bảo mật tiềm năng.
+10. **Observability**: Cách thức debug và ghi nhận sự cố.
+11. **Technical Debt**: Các nợ kỹ thuật tồn tại.
+12. **Missing Knowledge**: Điểm chưa rõ ràng cần xác minh thêm.
+
+### R2. Đánh giá rủi ro an toàn (Reliability & Security Gap Analysis)
+Tìm kiếm và đánh giá các rủi ro liên quan đến:
+* Kết nối PostgreSQL/SQLite và khả năng xử lý concurrency lock.
+* Event-driven queues (Kafka) và block chain notarization (Geth node).
+* Masking thông tin cá nhân (Decree 13 PII compliance).
+* Các điểm hardcoded cấu hình API.
+
+### R3. Báo cáo Gap Analysis & Remediation Roadmap
+Tạo báo cáo tổng hợp rủi ro phân loại theo mức độ ưu tiên:
+* **P0 — Existential Risks**: Rò rỉ thông tin nhạy cảm, lỗi mất dữ liệu.
+* **P1 — Scale Blockers**: Các điểm thắt nút cổ chai dưới tải cao.
+* **P2 — Velocity Killers**: Code trùng lặp, thiếu test hoặc cấu hình phức tạp.
+* **P3 — Optimization**: Các điểm tối ưu hóa tiềm năng.
+
+## Acceptance Criteria
+
+### Documentation Coverage
+- [ ] Tất cả các subsystem nêu trên đều có file tài liệu chi tiết riêng biệt định dạng Markdown tại `docs/absolute-audit/` tuân thủ đầy đủ 12 hạng mục thông tin bắt buộc.
+- [ ] Có sơ đồ Mermaid chi tiết mô tả luồng chạy runtime và mối quan hệ dependency giữa các subsystem tại `docs/absolute-audit/architecture-overview.md`.
+
+### System Verification & Tests
+- [ ] Tất cả các test cases hiện tại trong `apps/nhipdieuxanh` và `packages/ask-core` chạy pass 100%.
+- [ ] Toàn bộ monorepo thực hiện compile production build thành công không lỗi.
+

@@ -386,7 +386,9 @@ class RecipeExecutor:
                 self.console.print(
                     f"[yellow]Retry {attempt - 1}/{max_attempts - 1} after {retry_delay}s...[/yellow]"
                 )
-                time.sleep(retry_delay)
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    pool.submit(time.sleep, retry_delay).result()
 
             self.console.print(f"[dim]Running:[/dim] {command}")
 
@@ -395,9 +397,13 @@ class RecipeExecutor:
                 # CommandSanitizer already vetted `command`, but shell=True still
                 # allows metachar injection (;, &&, $()) on unsanitised sub-parts.
                 cmd_args = shlex.split(command) if isinstance(command, str) else command
-                process = subprocess.run(
-                    cmd_args, shell=False, check=True, text=True, capture_output=True
-                )
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    future = pool.submit(
+                        subprocess.run,
+                        cmd_args, shell=False, check=True, text=True, capture_output=True
+                    )
+                    process = future.result()
 
                 if process.stdout:
                     self.console.print(

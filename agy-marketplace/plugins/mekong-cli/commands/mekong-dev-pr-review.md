@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.claude/commands/dev-pr-review.md

@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/ipo-readiness-check.md

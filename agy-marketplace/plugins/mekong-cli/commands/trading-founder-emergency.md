@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/founder/emergency.md
+/Users/macbook/.claude/commands/trading/founder/emergency.md

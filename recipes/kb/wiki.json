@@ -1,1 +1,0 @@
-{"id":"kb-wiki","name":"Wiki Management","description":"Internal wiki creation, organization, and search","trigger":"/kb:wiki","output_dir":"reports/kb/wiki","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"manage","name":"Wiki Management","mode":"sequential","commands":[{"id":"wiki-manage","args":"--create-or-update"}],"depends_on":[]}]}}

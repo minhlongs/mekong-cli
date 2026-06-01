@@ -292,6 +292,22 @@ Full roadmap: [`docs/BINH_PHAP_ROADMAP.md`](docs/BINH_PHAP_ROADMAP.md) · Scaffo
 
 ---
 
+## Developer Documentation Hub
+
+For developers and agent teams looking to onboard, run, test, and deploy Mekong CLI:
+
+*   **[Setup Guide](file:///Users/macbook/mekong-cli/docs/setup-guide.md)**: Requirements, installation steps, and local model setup.
+*   **[Local Development Guide](file:///Users/macbook/mekong-cli/docs/local-development-guide.md)**: Workspaces, command registration, and linting.
+*   **[Environment Variables Reference](file:///Users/macbook/mekong-cli/docs/env-vars.md)**: Details on LLM credentials, gateway, database, and telemetry variables.
+*   **[Testing Guide](file:///Users/macbook/mekong-cli/docs/testing-guide.md)**: Instructions on running seed and core test suites.
+*   **[Troubleshooting Guide](file:///Users/macbook/mekong-cli/docs/troubleshooting.md)**: Resolution of LLM timeouts, sqlite locks, and port collisions.
+*   **[Architecture Overview](file:///Users/macbook/mekong-cli/docs/architecture-overview.md)**: Core PEV engine and daemon loops structure.
+*   **[Deployment Notes](file:///Users/macbook/mekong-cli/docs/deployment-notes.md)**: Cloudflare Pages, Workers, D1 database, and tunnel setups.
+*   **[Glossary & Terminology](file:///Users/macbook/mekong-cli/docs/glossary.md)**: Platform vocabulary and concepts.
+*   **[Onboarding Notes](file:///Users/macbook/mekong-cli/docs/onboarding.md)**: Developer sandbox setup checklist and coding guidelines.
+
+---
+
 ## Contributing
 
 ```bash

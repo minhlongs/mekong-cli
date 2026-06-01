@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/coo/incident.md
+/Users/macbook/.claude/commands/trading/coo/incident.md

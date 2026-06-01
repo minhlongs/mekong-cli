@@ -1,57 +1,42 @@
-# BRIEFING — 2026-05-28T09:28:00Z
+# BRIEFING — 2026-05-31T12:09:26+07:00
 
 ## Mission
-Implement TypeScript compilation, type definition, and ESLint config fixes in the mekong-cli monorepo.
+Implement daemon orchestration and core execution bug fixes in mekong-cli.
 
 ## 🔒 My Identity
-- Archetype: teamwork_preview_worker_fixes
+- Archetype: worker
 - Roles: implementer, qa, specialist
 - Working directory: /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_fixes
-- Original parent: c7ee87de-d103-4253-b55e-869f1f4f6ff8
-- Milestone: monorepo_fixes
+- Original parent: 72c7f082-eb98-419f-8326-1da0aa46d452
+- Milestone: bug-fixes
 
 ## 🔒 Key Constraints
-- CODE_ONLY network mode: no external web access, curl, wget, etc.
-- No cd commands in run_command.
-- Keep agent metadata only in `.agents/teamwork_preview_worker_fixes/` — do not place source code, tests, or data files there.
-- Write only to your folder, read any folder.
-- Follow conventional commits format.
+- CODE_ONLY network mode: no external HTTP/HTTPS connections.
+- Follow minimal change principle.
+- Verify everything: run tests before and after code modifications.
+- File workspace convention: only write to our folder /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_fixes/ when writing agent metadata.
+- CC CLI input rule: not applicable since we are not sending commands to CC CLI but running commands locally. But we will make sure we verify correctly.
 
 ## Current Parent
-- Conversation ID: c7ee87de-d103-4253-b55e-869f1f4f6ff8
+- Conversation ID: 72c7f082-eb98-419f-8326-1da0aa46d452
 - Updated: not yet
 
 ## Task Summary
-- **What to build**: Update tsconfig.json, fix casing mismatches in imports in `packages/ui/src/components` (raas, sales, security), create ESLint config in `apps/mekong-ide`, verify with `npx tsc --noEmit` and `npx turbo run lint --concurrency=1`.
-- **Success criteria**: TypeScript typechecking passes cleanly without errors, and ESLint check passes cleanly. Handoff report written and orchestrator notified.
-- **Interface contracts**: GEMINI.md, AGENTS.md
-- **Code layout**: packages/ui/src/components, apps/mekong-ide, tsconfig.json
+- **What to build**: Daemon Orchestration & Core Execution bug fixes.
+  - Event loop blocks (async PM2/dispatch, worker_pool status cache, executor subprocess, vercel verifier subprocess).
+  - Optimize PM2 queries & file I/O in mission_control.
+  - File locking for missions.json.
+  - Safe Tool Call ID access in agent_loop.py.
+  - Upstream dependencies preservation in replan_failed_branch.
+- **Success criteria**: All tests pass under pytest, implementation is genuine, handoff report written to workspace, message sent to orchestrator.
+- **Interface contracts**: Source code files in mekong-cli repository.
+- **Code layout**: Python source code in src/.
 
 ## Key Decisions Made
-- Updated root tsconfig.json to add types (react, react-dom) and exclude packages/cleo-new/**/*
-- Corrected imports with casing mismatches in raas, sales, and security components
-- Added next/core-web-vitals ESLint configuration for apps/mekong-ide
-
-## Change Tracker
-- **Files modified**:
-  - `tsconfig.json` — Update types and exclude patterns
-  - `packages/ui/src/components/raas/index.ts` — Fix casing in exports
-  - `packages/ui/src/components/sales/index.ts` — Fix casing in exports
-  - `packages/ui/src/components/security/index.ts` — Fix casing in exports
-  - `apps/mekong-ide/.eslintrc.json` — (New) Add ESLint config
-- **Build status**: Typechecking passes cleanly for modified packages; global monorepo build has pre-existing issues.
-- **Pending issues**: None.
-
-## Quality Status
-- **Build/test result**: Typechecking passes cleanly for target components.
-- **Lint status**: Local lint checks for mekong-ide has circular dependency issue; other packages have pre-existing lint issues.
-- **Tests added/modified**: None.
-
-## Loaded Skills
-- a2ui-renderer — /Users/macbook/mekong-cli/.agents/skills/a2ui-renderer/SKILL.md
-- systematic-debugging — /Users/macbook/mekong-cli/.agent/skills/systematic-debugging/SKILL.md
-- clean-code — /Users/macbook/mekong-cli/.agent/skills/clean-code/SKILL.md
+- Wrapped synchronous subprocess runs and sleep calls in thread pools via ThreadPoolExecutor to prevent event loop blocking while keeping synchronous API signatures intact.
+- Added TTL caching (5.0s) for WorkerPool status refreshes to avoid redundant PM2 checks.
+- Implemented Unix-compliant shared/exclusive file locks on missions.json reads/writes to serialize concurrent access and prevent data corruption.
+- Updated planner's replan function to map predecessor step dependencies to newly generated root steps.
 
 ## Artifact Index
-- /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_fixes/handoff.md — Handoff Report
-- /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_fixes/progress.md — Liveness Heartbeat
+- /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_fixes/handoff.md — Completion report detailing changes and verification.

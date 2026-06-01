@@ -1,1 +1,0 @@
-/Users/macbook/.config/opencode/commands/plan-two.md

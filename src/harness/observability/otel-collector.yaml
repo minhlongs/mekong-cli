@@ -1,0 +1,53 @@
+# OpenTelemetry Collector config — Mekong CLI
+# Receives OTLP gRPC :4317 from Python/TS agents
+# Exports to Prometheus /metrics :8889
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+
+processors:
+  # Drop PII attributes before export
+  attributes/strip_pii:
+    actions:
+      - key: user.email
+        action: delete
+      - key: api_key
+        action: delete
+      - key: bearer_token
+        action: delete
+
+  # Batch for efficiency (max 512 spans, 5s timeout)
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 256
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: mekong
+    const_labels:
+      env: production
+      service: mekong-cli
+
+  # Debug logging (disable in production by removing this exporter from pipelines)
+  # logging:
+  #   verbosity: detailed
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/strip_pii, batch]
+      exporters: [prometheus]
+
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/strip_pii, batch]
+      exporters: []

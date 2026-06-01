@@ -47,30 +47,34 @@
   },
   "output": {
     "type": "object",
+    "required": [
+      "answer",
+      "components_analyzed",
+      "mermaid_diagram",
+      "recommendations"
+    ],
     "properties": {
-      "summary": {
-        "type": "string"
-      },
-      "status": {
+      "answer": {
         "type": "string",
-        "enum": [
-          "healthy",
-          "degraded",
-          "down",
-          "completed"
-        ]
+        "description": "Technical or architectural response detail"
       },
-      "findings": {
+      "components_analyzed": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "List of component names/files scanned and analyzed"
       },
-      "actions_taken": {
+      "mermaid_diagram": {
+        "type": "string",
+        "description": "Visual architecture layout formatted in Mermaid.js syntax"
+      },
+      "recommendations": {
         "type": "array",
         "items": {
           "type": "string"
-        }
+        },
+        "description": "Actionable design guidelines or recommendations"
       }
     }
   },

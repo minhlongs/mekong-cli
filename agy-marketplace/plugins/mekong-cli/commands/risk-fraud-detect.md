@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/risk-fraud-detect.md

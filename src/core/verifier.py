@@ -384,12 +384,17 @@ class RecipeVerifier:
         try:
             # SECURITY: Enforce timeout on custom checks to prevent hangs
             import shlex
-            proc = subprocess.run(
-                shlex.split(command),
-                capture_output=True,
-                text=True,
-                timeout=30,  # Hard timeout for security
-            )
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                def run_verify():
+                    return subprocess.run(
+                        shlex.split(command),
+                        capture_output=True,
+                        text=True,
+                        timeout=30,  # Hard timeout for security
+                    )
+                future = pool.submit(run_verify)
+                proc = future.result()
 
             if proc.returncode != 0:
                 return VerificationCheck(

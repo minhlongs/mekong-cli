@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/ceo/risk.md
+/Users/macbook/.claude/commands/trading/ceo/risk.md

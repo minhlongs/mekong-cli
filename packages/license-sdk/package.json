@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run --poolOptions.forks.maxForks=2"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

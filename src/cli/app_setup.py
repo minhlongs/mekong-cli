@@ -1,5 +1,4 @@
-"""
-Typer app factory and sub-app + command registration for Mekong CLI.
+"""Typer app factory and sub-app + command registration for Mekong CLI.
 
 Creates the root Typer app, wires in all sub-apps (swarm, schedule, memory, etc.),
 and registers all flat command groups (cook, plan, recipe, system commands).
@@ -12,6 +11,60 @@ import importlib.util
 from pathlib import Path
 
 import typer
+
+
+class MekongGroup(typer.core.TyperGroup):
+    """Lazy-loads the mk sub-app on first access to avoid import cascade.
+
+    Also transparently routes ``mk-<name>`` invocations to the corresponding
+    command inside the ``mk`` sub-group, so both
+    ``python -m src.main mk cook`` and ``python -m src.main mk-cook`` work.
+    """
+
+    _mk_built: bool = False
+
+    def _ensure_mk_built(self) -> None:
+        if self._mk_built:
+            return
+        self._mk_built = True
+        from src.cli.mk_commands import build_mk_app as _build
+        mk_app = _build()
+        from typer.main import get_group
+        mk_click_group = get_group(mk_app)
+        self.add_command(mk_click_group)
+
+    def _resolve_mk_alias(self, cmd_name: str):
+        """If cmd_name looks like ``mk-<leaf>``, return the command from the mk group."""
+        if not cmd_name.startswith("mk-"):
+            return None
+        self._ensure_mk_built()
+        leaf = cmd_name[len("mk-"):]          # e.g. "mk-cook" → "cook"
+        mk_group = self.commands.get("mk")
+        if mk_group is None:
+            return None
+        # Try exact match first (for commands already named mk-* in mk group)
+        cmd = mk_group.commands.get(cmd_name)
+        if cmd is not None:
+            return cmd
+        # Try stripping mk- prefix to find the original command
+        cmd = mk_group.commands.get(leaf)
+        return cmd
+
+    def list_commands(self, ctx):
+        self._ensure_mk_built()
+        return super().list_commands(ctx)
+
+    def get_command(self, ctx, cmd_name):
+        # Try mk-* alias routing first
+        alias_cmd = self._resolve_mk_alias(cmd_name)
+        if alias_cmd is not None:
+            return alias_cmd
+        self._ensure_mk_built()
+        return super().get_command(ctx, cmd_name)
+
+    def invoke(self, ctx):
+        self._ensure_mk_built()
+        return super().invoke(ctx)
 
 
 def build_app() -> typer.Typer:
@@ -44,7 +97,7 @@ def build_app() -> typer.Typer:
     from src.cli.system_commands import register_system_commands
     from src.cli.studio_commands import register_studio_commands
 
-    # BMAD uses dash naming — not importable as standard package
+    # BMAD uses dash naming - not importable as standard package
     spec = importlib.util.spec_from_file_location(
         "bmad_commands", Path(__file__).parent / "bmad-commands.py"
     )
@@ -56,6 +109,7 @@ def build_app() -> typer.Typer:
         name="mekong",
         help="🚀 Mekong CLI: RaaS Agency Operating System",
         add_completion=False,
+        cls=MekongGroup,
     )
 
     # Wire sub-apps
@@ -73,10 +127,10 @@ def build_app() -> typer.Typer:
     root.add_typer(collab_app, name="collab")
 
     # Wire SDLC scaffold sub-apps (phase-04)
-    root.add_typer(spec_app, name="spec", help="Spec phase: feature request → requirements")
-    root.add_typer(design_app, name="design", help="Design phase: requirements → architecture")
-    root.add_typer(code_app, name="code", help="Code phase: architecture → task backlog")
-    root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates → ship/hold")
+    root.add_typer(spec_app, name="spec", help="Spec phase: feature request - requirements")
+    root.add_typer(design_app, name="design", help="Design phase: requirements - architecture")
+    root.add_typer(code_app, name="code", help="Code phase: architecture - task backlog")
+    root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates - ship/hold")
 
     # Register flat command groups
     register_cook_command(root)
@@ -90,4 +144,5 @@ def build_app() -> typer.Typer:
     register_algo_status(root)
     register_eval_agent(root)
 
+    # mk group is registered lazily by MekongGroup - no eager call here
     return root

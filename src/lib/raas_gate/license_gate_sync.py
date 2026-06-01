@@ -15,25 +15,36 @@ from typing import Any, Dict, Optional, Tuple
 
 import requests
 
-from src.raas.credit_rate_limiter import TIER_LIMITS
-
 logger = logging.getLogger(__name__)
+
+
+def _get_tier_limits_sync():
+    """Lazy wrapper — deferred import to avoid circular cascade."""
+    try:
+        from src.raas.credit_rate_limiter import TIER_LIMITS
+        return TIER_LIMITS
+    except ImportError:
+        return {}
 
 
 class LicenseGateSyncMixin:
     """Mixin for gateway sync and rate-limit status operations."""
+
+    @property
+    def _tier_limits(self):
+        return _get_tier_limits_sync()
 
     def sync_license_state(self) -> Tuple[bool, Optional[str]]:
         """
         Sync license state with RaaS Gateway and AgencyOS dashboard.
 
         Returns:
-            Tuple of (success, error_message)
+        Tuple of (success, error_message)
 
         Side Effects:
-            - Updates _gateway_rate_limit with latest from gateway
-            - Updates _last_gateway_sync timestamp
-            - Syncs usage metering to gateway
+        - Updates _gateway_rate_limit with latest from gateway
+        - Updates _last_gateway_sync timestamp
+        - Syncs usage metering to gateway
         """
         if not self._license_key:
             return False, "No license key to sync"
@@ -67,7 +78,7 @@ class LicenseGateSyncMixin:
         Get current gateway connection status.
 
         Returns:
-            Dict with url, last_sync, rate_limit, license_synced
+        Dict with url, last_sync, rate_limit, license_synced
         """
         return {
             "url": self._remote_url,
@@ -81,13 +92,14 @@ class LicenseGateSyncMixin:
         Get current rate limit info from gateway or tier defaults.
 
         Returns:
-            Dict with limit, remaining, resetIn
+        Dict with limit, remaining, resetIn
         """
         if self._gateway_rate_limit:
             return self._gateway_rate_limit
-        tier_limits = TIER_LIMITS.get(self._license_tier or "free", TIER_LIMITS["free"])
+        tier_limits = self._tier_limits.get(self._license_tier or "free", self._tier_limits["free"])
         return {
             "limit": tier_limits.get("daily", 10),
             "remaining": tier_limits.get("daily", 10),
             "resetIn": 60,
         }
+

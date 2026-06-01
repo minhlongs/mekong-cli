@@ -44,9 +44,15 @@ echo '{"hook_event_name":"Stop","cwd":"'"$(pwd)"'","session_id":"test123"}' | \
 
 ---
 
+## Legacy Bash Scripts (Deprecated)
+
+The original `telegram_notify.sh` is **deprecated** due to jq PATH issues in Claude Code's subprocess environment. Use `notify.cjs` instead.
+
+---
+
 ## Overview
 
-Telegram notifications are sent via `notify.cjs` + `providers/telegram.cjs`. The bash script (`telegram_notify.sh`) has been **removed** — only the CJS approach is supported.
+The Telegram hook (`telegram_notify.sh`) automatically sends notifications when Claude Code sessions stop or subagents complete tasks. It provides detailed summaries including tool usage, files modified, and operation counts.
 
 ## Features
 
@@ -225,13 +231,13 @@ Hooks are configured in `.claude/settings.local.json`:
     "Stop": [{
       "hooks": [{
         "type": "command",
-        "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/notifications/notify.cjs"
+        "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/telegram_notify.sh"
       }]
     }],
     "SubagentStop": [{
       "hooks": [{
         "type": "command",
-        "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/notifications/notify.cjs"
+        "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/telegram_notify.sh"
       }]
     }]
   }
@@ -244,7 +250,13 @@ Hooks are configured in `.claude/settings.local.json`:
 - `"SubagentStop"`: Triggers when specialized subagents complete (planner, tester, etc.)
 - `${CLAUDE_PROJECT_DIR}`: Environment variable for project directory path
 
-### 5. Verify Setup
+### 5. Make Script Executable
+
+```bash
+chmod +x .claude/hooks/telegram_notify.sh
+```
+
+### 6. Verify Setup
 
 Test the hook with a mock event:
 
@@ -253,10 +265,15 @@ echo '{
   "hook_event_name": "Stop",
   "cwd": "'"$(pwd)"'",
   "session_id": "test-session-123"
-}' | node .claude/hooks/notifications/notify.cjs
+}' | ./.claude/hooks/notifications/telegram_notify.sh
 ```
 
 > **Note:** Claude Code hooks use snake_case field names. The `Stop` hook does not include tool usage data.
+
+**Expected output:**
+```
+Telegram notification sent for Stop event in project claudekit-engineer
+```
 
 Check your Telegram chat for the test notification.
 
@@ -506,34 +523,74 @@ jq --version
 
 ### Hook Not Triggering
 
-**Cause:** Claude Code hook configuration incorrect
+**Cause:** Claude Code hook configuration incorrect or hook script not executable
 
 **Solutions:**
 
-1. **Verify `.claude/settings.local.json` exists and is valid JSON:**
+1. **Verify `.claude/config.json` exists and is valid JSON:**
    ```bash
-   cat .claude/settings.local.json | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d)))"
+   cat .claude/config.json | jq .
    ```
 
-2. **Check hook configuration references `notify.cjs`** (not the old bash script)
+2. **Check hook configuration:**
+   ```bash
+   cat .claude/config.json | jq '.hooks'
+   ```
 
-3. **Test hook manually (see "Verify Setup" section)**
+3. **Verify script is executable:**
+   ```bash
+   ls -l .claude/hooks/telegram_notify.sh
+   # Should show: -rwxr-xr-x
+   ```
+
+4. **Make script executable if needed:**
+   ```bash
+   chmod +x .claude/hooks/telegram_notify.sh
+   ```
+
+5. **Test hook manually (see "Verify Setup" section)**
 
 ### Messages Showing Escaped Markdown
 
 **Cause:** Telegram parse mode or escaping issues
 
+**Example Problem:**
+```
+\*\*Project:\*\* my-project
+```
+
 **Solutions:**
 
 1. **Verify Telegram bot supports Markdown:**
    - All bots support basic Markdown
+   - Script uses `"parse_mode": "Markdown"`
 
-2. **Test with simple message via curl:**
+2. **Check message escaping in script:**
+   - Edit `telegram_notify.sh`
+   - Look for line: `local escaped_message=$(echo "$message" | jq -Rs .)`
+   - This should properly escape for JSON
+
+3. **Test with simple message:**
    ```bash
    curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
      -H "Content-Type: application/json" \
      -d "{\"chat_id\": \"$TELEGRAM_CHAT_ID\", \"text\": \"*bold* _italic_\", \"parse_mode\": \"Markdown\"}"
    ```
+
+### Script Permission Denied
+
+**Cause:** Script not executable or no execute permission
+
+**Solution:**
+```bash
+chmod +x .claude/hooks/telegram_notify.sh
+```
+
+**Verify:**
+```bash
+ls -l .claude/hooks/telegram_notify.sh
+# Output should show: -rwxr-xr-x
+```
 
 ## Advanced Configuration
 
@@ -549,15 +606,74 @@ TELEGRAM_CHAT_ID_SUCCESS=123456789  # Success notifications
 TELEGRAM_CHAT_ID_ERROR=987654321    # Error notifications
 ```
 
-**Set per-event env vars in `.env`:**
+**Modified script logic:**
 ```bash
-TELEGRAM_CHAT_ID_SUCCESS=123456789  # Success notifications
-TELEGRAM_CHAT_ID_ERROR=987654321    # Error notifications
+# In telegram_notify.sh, add conditional chat ID selection
+if [[ "$HOOK_TYPE" == "Stop" ]] && [[ $TOTAL_TOOLS -gt 20 ]]; then
+    # Large operations go to success channel
+    TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID_SUCCESS:-$TELEGRAM_CHAT_ID}"
+fi
 ```
 
 ### Filtering Notifications
 
-Filtering logic lives in `providers/telegram.cjs`. Edit that file to add custom filtering rules (e.g., skip small operations, off-hours throttling).
+Only send notifications for significant events:
+
+**Edit `telegram_notify.sh`:**
+```bash
+# After line 65 (TOTAL_TOOLS calculation), add:
+
+# Skip notifications for very small operations
+if [[ $TOTAL_TOOLS -lt 3 ]]; then
+    echo "Skipping notification: operation too small ($TOTAL_TOOLS tools)" >&2
+    exit 0
+fi
+```
+
+**Filter by tools used:**
+```bash
+# Skip if only Read operations
+if echo "$TOOLS_USED" | grep -q "Read" && [[ $TOTAL_TOOLS -eq $(echo "$TOOLS_USED" | grep "Read" | awk '{print $1}') ]]; then
+    echo "Skipping notification: read-only operation" >&2
+    exit 0
+fi
+```
+
+**Filter by time of day:**
+```bash
+# Don't send notifications during off-hours
+HOUR=$(date +%H)
+if [[ $HOUR -lt 8 ]] || [[ $HOUR -gt 22 ]]; then
+    echo "Skipping notification: off-hours" >&2
+    exit 0
+fi
+```
+
+### Custom Message Formatting
+
+Modify notification format in `telegram_notify.sh`:
+
+**Add Git branch info:**
+```bash
+# After line 73, add:
+BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+MESSAGE="${MESSAGE}
+🌿 *Branch:* ${BRANCH}"
+```
+
+**Add commit hash:**
+```bash
+COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+MESSAGE="${MESSAGE}
+📝 *Commit:* \`${COMMIT_HASH}\`"
+```
+
+**Add environment info:**
+```bash
+ENV=${NODE_ENV:-development}
+MESSAGE="${MESSAGE}
+🔧 *Environment:* ${ENV}"
+```
 
 ### Different Bots for Different Projects
 
@@ -575,6 +691,32 @@ TELEGRAM_BOT_TOKEN=222222222:BBB_ProjectB_Bot_Token
 TELEGRAM_CHAT_ID=987654321
 ```
 
+### Rate Limiting
+
+Prevent notification spam:
+
+**Create rate limit file:**
+```bash
+# Add to telegram_notify.sh, after line 55:
+
+RATE_LIMIT_FILE="/tmp/telegram_notify_last_sent"
+RATE_LIMIT_SECONDS=60
+
+if [[ -f "$RATE_LIMIT_FILE" ]]; then
+    LAST_SENT=$(cat "$RATE_LIMIT_FILE")
+    NOW=$(date +%s)
+    DIFF=$((NOW - LAST_SENT))
+
+    if [[ $DIFF -lt $RATE_LIMIT_SECONDS ]]; then
+        echo "Rate limit: last notification sent ${DIFF}s ago" >&2
+        exit 0
+    fi
+fi
+
+# Update timestamp after successful send
+date +%s > "$RATE_LIMIT_FILE"
+```
+
 ### Testing with Mock Data
 
 Test different hook scenarios:
@@ -585,7 +727,7 @@ echo '{
   "hook_event_name": "Stop",
   "cwd": "'"$(pwd)"'",
   "session_id": "test-123"
-}' | node .claude/hooks/notifications/notify.cjs
+}' | ./.claude/hooks/notifications/telegram_notify.sh
 ```
 
 **SubagentStop event:**
@@ -595,7 +737,7 @@ echo '{
   "cwd": "'"$(pwd)"'",
   "session_id": "test-456",
   "agent_type": "planner"
-}' | node .claude/hooks/notifications/notify.cjs
+}' | ./.claude/hooks/notifications/telegram_notify.sh
 ```
 
 > **Note:** Claude Code hooks use snake_case field names per the official API.
@@ -645,9 +787,9 @@ echo '{
 
 ## Reference
 
-**Implementation:** `.claude/hooks/notifications/notify.cjs` + `providers/telegram.cjs`
+**Script Location:** `.claude/hooks/telegram_notify.sh`
 
-**Configuration:** `.claude/settings.local.json`
+**Configuration:** `.claude/config.json`
 
 **Environment Variables:**
 - `TELEGRAM_BOT_TOKEN` (required)
@@ -657,7 +799,10 @@ echo '{
 - `Stop` - Main session completion
 - `SubagentStop` - Subagent completion
 
-**Dependencies:** Node.js only (no `bash`, `curl`, or `jq` required)
+**Dependencies:**
+- `bash`
+- `curl`
+- `jq` (required)
 
 **Telegram Bot API:** https://core.telegram.org/bots/api
 

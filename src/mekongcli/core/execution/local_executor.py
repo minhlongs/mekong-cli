@@ -25,6 +25,12 @@ class ExecutionOutcome:
         return self.exit_code == 0 and not self.blocked_reason
 
 
+@dataclass
+class TaskResult:
+    summary: str
+    success: bool
+
+
 class LocalExecutor:
     """Executes allowed local commands without invoking a shell."""
 

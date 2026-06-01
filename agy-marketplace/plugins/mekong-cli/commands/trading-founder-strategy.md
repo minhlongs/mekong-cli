@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/founder/strategy.md
+/Users/macbook/.claude/commands/trading/founder/strategy.md

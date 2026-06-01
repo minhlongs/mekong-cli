@@ -21,12 +21,13 @@
   "scripts": {
     "build": "tsup src/cli/index.ts --format esm --dts",
     "dev": "tsx watch src/cli/index.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --poolOptions.forks.maxForks=2",
+    "test:watch": "vitest --poolOptions.forks.maxForks=2",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@openclaw/cli-adapter": "workspace:*",
+    "@mekong/ask-core": "workspace:*",
     "@mekongcli/openclaw-engine": "^1.0.0",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
@@ -58,6 +59,7 @@
     "@types/nodemailer": "^7.0.11",
     "@types/semver": "^7.7.1",
     "@types/tar": "^7.0.87",
+    "bun-types": "^1.1.0",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.25.0",
     "tsup": "^8.4.0",

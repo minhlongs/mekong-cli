@@ -1,1 +1,0 @@
-/Users/macbook/.config/opencode/command/design-3d.md

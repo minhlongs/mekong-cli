@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/founder/budget.md
+/Users/macbook/.claude/commands/trading/founder/budget.md

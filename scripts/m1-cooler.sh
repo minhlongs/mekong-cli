@@ -82,8 +82,8 @@ purge_memory() {
 
 clear_temp_files() {
   # Clean up large temp files that stress SSD
-  find /tmp -name "*.dat" -size +50M -delete 2>/dev/null
-  find /tmp -name "test_file*" -delete 2>/dev/null
+  find /tmp -maxdepth 1 -name "*.dat" -size +50M -delete 2>/dev/null
+  find /tmp -maxdepth 1 -name "test_file*" -delete 2>/dev/null
 }
 
 pause_if_critical() {

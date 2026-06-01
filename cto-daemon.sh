@@ -176,9 +176,9 @@ log() {
 }
 
 # ---- OLLAMA HEALTH CHECK + AUTO-RECOVERY ----
-# HARDCODED — never depend on env vars for Ollama native API
-OLLAMA_URL="http://127.0.0.1:11434"
-OLLAMA_MODEL="${OPENCLAW_WORKER_MODEL:-qwen3:32b}"
+# Allow environment variables configuration for Ollama URL and model
+OLLAMA_URL="${OLLAMA_BASE_URL:-${OLLAMA_URL:-http://127.0.0.1:11434}}"
+OLLAMA_MODEL="${OLLAMA_MODEL:-${OPENCLAW_WORKER_MODEL:-qwen3:32b}}"
 BRAIN_CONSECUTIVE_FAILS=0
 BRAIN_MAX_FAILS=3
 
@@ -265,6 +265,7 @@ cto_brain_think() {
 
   # Run brain in background with hard timeout
   (OLLAMA_URL="${OLLAMA_URL}" OLLAMA_MODEL="${OLLAMA_MODEL}" \
+    BRAIN_API_URL="${BRAIN_API_URL:-}" BRAIN_API_KEY="${BRAIN_API_KEY:-}" BRAIN_MODEL="${BRAIN_MODEL:-}" \
     python3 "${sd}/scripts/brain_think.py" <<< "$prompt" \
     > "$tmpfile" 2>>"${MEKONG_DIR}/brain-errors.log") &
   local brain_pid=$!
@@ -527,6 +528,13 @@ launch_pane_cc() {
 # CC CLI spawns node subprocesses. When panes restart/crash, orphans accumulate.
 # Also catches: pnpm install fork bombs, zombie tmux send-keys processes.
 cleanup_orphan_nodes() {
+  # Pre-check gate: Return early if total node processes is less than 15
+  local total_node_count
+  total_node_count=$(pgrep -f 'node' 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$total_node_count" -lt 15 ]]; then
+    return 0
+  fi
+
   local killed=0
   local MAX_NODE_COUNT=30
 
@@ -550,53 +558,50 @@ cleanup_orphan_nodes() {
 
   # FIX #9: only count/kill CC CLI-related node processes (not system-wide)
   local node_count
-  node_count=$(pgrep -f 'node.*claude\|node.*@anthropic' 2>/dev/null | wc -l | tr -d ' ')
+  node_count=$(pgrep -f 'node.*claude|node.*@anthropic' 2>/dev/null | wc -l | tr -d ' ')
   if [[ "$node_count" -gt "$MAX_NODE_COUNT" ]]; then
     log "⚠️  GUARD: $node_count CC CLI node processes (>${MAX_NODE_COUNT}) — killing CC CLI nodes"
     pkill -9 -f 'node.*claude|node.*@anthropic' 2>/dev/null || true
     return 0
   fi
 
-  # Build set of ALL PIDs in tmux pane process trees (recursive)
-  local allowed_pids=""
+  # Build set of ALL PIDs in tmux pane process trees (recursive BFS)
   local tmux_pids
   tmux_pids=$(tmux list-panes -t "${CTO_SESSION}" -F '#{pane_pid}' 2>/dev/null || true)
-  [[ -z "$tmux_pids" ]] && return 0
+  tmux_pids=$(echo "$tmux_pids" | tr -s '[:space:]' ' ' | xargs)
 
-  # Walk tree: collect pid + all descendants via pgrep -P (recursive)
-  walk_descendants() {
-    local parent=$1
-    allowed_pids+=" $parent"
-    local children
-    children=$(pgrep -P "$parent" 2>/dev/null || true)
-    for child in $children; do
-      walk_descendants "$child"
+  local allowed_pids=""
+  local seed_pids=""
+  local codex_pids=""
+  if [[ -n "$tmux_pids" ]]; then
+    # Collect Codex CLI PIDs to protect them from orphan cleanup
+    codex_pids=$(pgrep -f '@openai/codex|\.codex/codex|\.codex/hooks/|codex-tui|Pencil\.app.*mcp-server' 2>/dev/null || true)
+    codex_pids=$(echo "$codex_pids" | tr -s '[:space:]' ' ' | xargs)
+
+    # Combine seed PIDs
+    seed_pids=$(echo "$tmux_pids $codex_pids" | tr -s '[:space:]' ' ' | xargs)
+
+    allowed_pids=" $seed_pids "
+    local parents_csv
+    parents_csv=$(echo "$seed_pids" | tr ' ' ',')
+
+    while [[ -n "$parents_csv" ]]; do
+      local children
+      children=$(pgrep -P "$parents_csv" 2>/dev/null || true)
+      children=$(echo "$children" | tr -s '[:space:]' ' ' | xargs)
+
+      if [[ -n "$children" ]]; then
+        allowed_pids+="$children "
+        parents_csv=$(echo "$children" | tr ' ' ',')
+      else
+        parents_csv=""
+      fi
     done
-  }
-
-  for tpid in $tmux_pids; do
-    walk_descendants "$tpid"
-  done
-
-  # Collect Codex CLI PIDs to protect them from orphan cleanup
-  # Codex is spawned detached by CLEO adapter (not in tmux pane tree)
-  # Match: @openai/codex (npm), .codex/codex (Rust binary), .codex/hooks/*.cjs (node hooks),
-  #        Pencil MCP server (used by codex), codex-tui
-  local codex_pids
-  codex_pids=$(pgrep -f '@openai/codex|\.codex/codex|\.codex/hooks/|codex-tui|Pencil\.app.*mcp-server' 2>/dev/null || true)
-  for cpid in $codex_pids; do
-    allowed_pids+=" $cpid"
-    # Also protect children of codex processes (subagent node workers)
-    local child_pids
-    child_pids=$(pgrep -P "$cpid" 2>/dev/null || true)
-    for chpid in $child_pids; do
-      allowed_pids+=" $chpid"
-    done
-  done
+  fi
 
   # Find all node processes, kill those NOT in allowed set
   local all_nodes
-  all_nodes=$(pgrep -f 'node' 2>/dev/null || true)
+  all_nodes=$(pgrep -f 'node.*claude|node.*@anthropic' 2>/dev/null || true)
   [[ -z "$all_nodes" ]] && return 0
 
   for pid in $all_nodes; do
@@ -676,8 +681,8 @@ is_idle() {
     return 1  # BUSY — has queued messages
   fi
 
-  # PRIORITY CHECK: clean ❯ prompt = IDLE (check BEFORE busy guards)
-  if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$"; then
+  # PRIORITY CHECK: clean ❯ prompt or raw shell prompts (e.g., % or $) = IDLE
+  if echo "$tail10" | grep -qE "^[[:space:]]*❯[[:space:]]*$|[%\$\#][[:space:]]*$"; then
     return 0
   fi
 
@@ -908,7 +913,7 @@ build_delegation_task() {
   local name="${WORKER_NAME[$pane_idx]}"
   local dir="${WORKER_DIR[$pane_idx]}"
   local deploy="${WORKER_DEPLOY[$pane_idx]}"
-  local retries="${WORKER_RETRIES[$pane_idx]}"
+  local retries="${WORKER_RETRIES[$pane_idx]:-0}"
 
   # ── L6: Kill switch — abort immediately if ~/.openclaw/STOP exists ──
   if [[ -f "${HOME}/.openclaw/STOP" ]]; then
@@ -1150,7 +1155,7 @@ except: pass
         if [[ "$first_word" != /* ]]; then
           next_cmd="/cook \"$next_cmd\""
         fi
-        full_cmd="${next_cmd} "Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.""
+        full_cmd="${next_cmd} \"Project: ${name}, Dir: ${project_dir_p0}. Execute toward \$1M ARR. Commit when done.\""
         if ! is_duplicate_dispatch "$pane_idx" "$next_cmd"; then
           log "P${pane_idx} (${name}): COMPANY.JSON → ${next_cmd}"
           if send_to_pane "$pane_idx" "$full_cmd"; then
@@ -1368,13 +1373,13 @@ verify_worker() {
   if has_error "$output" && is_idle "$output" && ! is_busy "$output"; then
     local error_msg
     error_msg=$(get_error "$output")
-    WORKER_RETRIES[$pane_idx]=$((${WORKER_RETRIES[$pane_idx]} + 1))
+    WORKER_RETRIES[$pane_idx]=$(( ${WORKER_RETRIES[$pane_idx]:-0} + 1 ))
 
-    if [[ ${WORKER_RETRIES[$pane_idx]} -le 3 ]]; then
-      log "VERIFY P${pane_idx}: ERROR DETECTED — re-delegating (retry ${WORKER_RETRIES[$pane_idx]})"
+    if [[ ${WORKER_RETRIES[$pane_idx]:-0} -le 3 ]]; then
+      log "VERIFY P${pane_idx}: ERROR DETECTED — re-delegating (retry ${WORKER_RETRIES[$pane_idx]:-0})"
       log "  Error: $error_msg"
       dispatch_worker "$pane_idx" "$output"
-      save_memory "RE-DELEGATE" "P${pane_idx} retry ${WORKER_RETRIES[$pane_idx]}: ${error_msg}"
+      save_memory "RE-DELEGATE" "P${pane_idx} retry ${WORKER_RETRIES[$pane_idx]:-0}: ${error_msg}"
     else
       log "VERIFY P${pane_idx}: MAX RETRIES REACHED — escalating (cooldown ${ESCALATION_COOLDOWN}s)"
       ESCALATION_TIME[$pane_idx]=$(date +%s)
@@ -1718,5 +1723,42 @@ while true; do
     fi
   }
 
-  sleep "$POLL_INTERVAL"
+  # Check if completely idle (no panes are busy and no missions are pending)
+  local any_busy=false
+  for ((idx=0; idx<PANE_COUNT; idx++)); do
+    local pane_out
+    pane_out=$(capture_pane "$idx") || pane_out=""
+    if [[ -n "$pane_out" ]]; then
+      if ! is_idle "$pane_out"; then
+        any_busy=true
+        break
+      fi
+    fi
+  done
+
+  local pending_missions=false
+  local mission_dir="${MEKONG_DIR}/missions"
+  if [[ -d "$mission_dir" ]]; then
+    for mf in "$mission_dir"/*.json; do
+      if [[ -f "$mf" ]]; then
+        pending_missions=true
+        break
+      fi
+    done
+  fi
+
+  local poll_sec="${POLL_INTERVAL:-30}"
+  poll_sec="${poll_sec//[^0-9]/}"
+  poll_sec="${poll_sec:-30}"
+
+  if [[ "$any_busy" == false && "$pending_missions" == false ]]; then
+    local idle_sleep=$((poll_sec * 2))
+    if [[ $idle_sleep -gt 120 ]]; then
+      idle_sleep=120
+    fi
+    log "DAEMON IDLE: Sleeping for ${idle_sleep}s (throttling)..."
+    sleep "$idle_sleep"
+  else
+    sleep "$poll_sec"
+  fi
 done

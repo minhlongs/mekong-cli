@@ -1,1 +1,0 @@
-{"id":"incident-status","name":"Status Page","description":"Public and internal status page management","trigger":"/incident:status","output_dir":"reports/incident/status","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"update","name":"Check + Update","mode":"sequential","commands":[{"id":"status-page-update","args":"--auto-detect"}],"depends_on":[]}]}}

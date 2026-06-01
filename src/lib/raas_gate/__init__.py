@@ -2,22 +2,29 @@
 RaaS Gate package — public API re-exports.
 
 Usage:
-    from src.lib.raas_gate import RaasLicenseGate, get_license_gate, require_license, check_license
-    from src.lib.raas_gate import LicenseService, LicenseTier, PREMIUM_FEATURES
+from src.lib.raas_gate import RaasLicenseGate, get_license_gate, require_license, check_license
+from src.lib.raas_gate import LicenseService, LicenseTier, PREMIUM_FEATURES
 """
 
 from .license_gate_core import RaasLicenseGate
-from .license_compat import LicenseService, LicenseTier, PREMIUM_FEATURES, _ValidationResult  # noqa: F401
-from .async_helper import _run_async_safe  # noqa: F401
+from .license_compat import LicenseService, LicenseTier, PREMIUM_FEATURES, _ValidationResult # noqa: F401
+from .async_helper import _run_async_safe # noqa: F401
 
 # Re-export dependencies so existing patch() targets remain valid
-import requests  # noqa: F401
-from src.lib.license_generator import validate_license  # noqa: F401
-from src.lib.usage_meter import record_usage  # noqa: F401
-from src.lib.jwt_license_generator import validate_jwt_license  # noqa: F401
-from src.raas.quota_cache import get_cached_quota  # noqa: F401
-from src.core.license_monitor import record_failure as record_license_failure  # noqa: F401
-from src.lib.quota_error_messages import (  # noqa: F401
+import requests # noqa: F401
+from src.lib.license_generator import validate_license # noqa: F401
+from src.lib.usage_meter import record_usage # noqa: F401
+from src.lib.jwt_license_generator import validate_jwt_license # noqa: F401
+
+
+def get_cached_quota(key_id):
+    """Lazy wrapper - defers import until first call."""
+    from src.raas.quota_cache import get_cached_quota as _f
+    return _f(key_id)
+
+
+from src.core.license_monitor import record_failure as record_license_failure # noqa: F401
+from src.lib.quota_error_messages import ( # noqa: F401
     format_grace_period_expired,
     format_license_expired,
     format_license_revoked,

@@ -1,1 +1,0 @@
-{"id":"kb-decision","name":"Decision Log","description":"Log and track important business and technical decisions","trigger":"/kb:decision","output_dir":"reports/kb/decision","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"log","name":"Log Decision","mode":"sequential","commands":[{"id":"log-decision","args":"--context --alternatives"}],"depends_on":[]}]}}

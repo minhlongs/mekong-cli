@@ -107,7 +107,7 @@ def test_cook_auto_creates_runs_and_persists_goal(tmp_path: Path) -> None:
     assert snapshot["verification"]["passed"] is True
 
 
-def test_cook_auto_json_reports_blocked_verification(
+def test_cook_auto_json_reports_failed_verification(
     monkeypatch,
     tmp_path: Path,
 ) -> None:
@@ -138,7 +138,7 @@ def test_cook_auto_json_reports_blocked_verification(
 
     assert result.exit_code == 1, result.output
     payload = json.loads(result.output)
-    assert payload["status"] == "blocked"
+    assert payload["status"] == "failed"
     assert payload["verification_passed"] is False
     assert payload["failed_gates"] == ["missing-smoke-tool"]
 
@@ -148,7 +148,7 @@ def test_cook_auto_json_reports_blocked_verification(
     )
     assert status.exit_code == 0, status.output
     snapshot = json.loads(status.output)
-    assert snapshot["goal"]["status"] == "blocked"
+    assert snapshot["goal"]["status"] == "failed"
     assert snapshot["verification"]["passed"] is False
 
 
@@ -200,7 +200,7 @@ def test_goal_run_json_exits_nonzero_when_verification_blocks(
     assert result.exit_code == 1, result.output
     payload = json.loads(result.output)
     assert payload["id"] == goal_id
-    assert payload["status"] == "blocked"
+    assert payload["status"] == "failed"
     assert payload["profile"] == "smoke"
     assert payload["verification_passed"] is False
     assert payload["failed_gates"] == ["missing-smoke-tool"]

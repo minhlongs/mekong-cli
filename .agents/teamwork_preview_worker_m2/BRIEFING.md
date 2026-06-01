@@ -1,61 +1,51 @@
-# BRIEFING — 2026-05-26T09:25:00-07:00
+# BRIEFING — 2026-05-30T12:00:30Z
 
 ## Mission
-Implement Milestone M2: Infra & Inference for the Anti-Gravity 2.0 Hybrid Runtime in Rust.
+Analyze Explorer findings, compile absolute-audit documentation, verify test suites, check TypeScript compiler, and prepare handoff report.
 
 ## 🔒 My Identity
-- Archetype: preview-worker-m2
+- Archetype: implementer, qa, specialist
 - Roles: implementer, qa, specialist
 - Working directory: /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_m2
-- Original parent: 43e9a79e-50e7-4530-9e79-62ba7076968a
-- Milestone: M2: Infra & Inference for the Anti-Gravity 2.0 Hybrid Runtime
+- Original parent: 521b4169-4c9c-47ce-8c5f-ecb0c32793b0
+- Milestone: absolute-audit-documentation
 
 ## 🔒 Key Constraints
-- CODE_ONLY network mode.
-- Code must be written in antigravity/hybrid_runtime.
-- Verify using cargo check & cargo build.
+- Network: CODE_ONLY network mode. No external HTTP/HTTPS connections.
+- Verification: NO CHEATING. All implementations must be genuine. Run actual builds/tests and verify.
 
 ## Current Parent
-- Conversation ID: 43e9a79e-50e7-4530-9e79-62ba7076968a
-- Updated: 2026-05-26T09:25:00-07:00
+- Conversation ID: 521b4169-4c9c-47ce-8c5f-ecb0c32793b0
+- Updated: 2026-05-30T12:00:30Z
 
 ## Task Summary
-- **What to build**:
-  1. Rust project in `antigravity/hybrid_runtime/` with `Cargo.toml`.
-  2. Scripts: `launch-llama.sh`, `run-claude-hybrid.sh`.
-  3. `src/lib.rs` exporting sub-modules.
-  4. Stub modules: `router.rs`, `db.rs`, `indexer.rs`, `tools.rs`, `loop.rs`.
-  5. `src/inference.rs` implementing `InferenceDriver`, `LlamaDriver`, and `ClaudeDriver`.
-  6. `src/main.rs` with `clap` CLI and interactive TTY loop with crossterm.
-- **Success criteria**: `cargo check` and `cargo build` pass in `antigravity/hybrid_runtime`.
-- **Interface contracts**: Rust project code layout.
-- **Code layout**: `antigravity/hybrid_runtime/src/`
+- **What to build**: 6 documentation files under `/Users/macbook/mekong-cli/docs/absolute-audit/` (nhipdieuxanh.md, ask-core.md, nhipdieuxanh-orchestrator.md, mekong-cli-core.md, architecture-overview.md, gap-analysis-roadmap.md) based on Explorer findings.
+- **Success criteria**: 12 mandatory sections per subsystem doc; Mermaid diagrams in architecture-overview.md; categorized P0-P3 risks and roadmaps in gap-analysis-roadmap.md; packages/ask-core and apps/nhipdieuxanh tests passing 100%; monorepo compiles clean of TS errors. Handoff report saved to `/Users/macbook/mekong-cli/.agents/teamwork_preview_worker_m2/handoff.md`.
+- **Interface contracts**: `/Users/macbook/mekong-cli/PROJECT.md` or similar.
+- **Code layout**: Monorepo.
 
 ## Key Decisions Made
-- Setup a modular Rust codebase using standard libraries.
-- Implemented non-blocking token streaming with crossterm raw mode and Ctrl+C cancellation handler.
+- Consolidated all Explorer 1, 2, and 3 findings into comprehensive system audit profiles and a unified gap analysis roadmap.
+- Validated system status by directly running the test suites and the TypeScript compiler.
+
+## Artifact Index
+- `/Users/macbook/mekong-cli/.agents/teamwork_preview_worker_m2/handoff.md` — Handoff report detailing observations, logic chain, caveats, conclusion, and verification method.
 
 ## Change Tracker
 - **Files modified**:
-  - `antigravity/hybrid_runtime/Cargo.toml` — Cargo dependencies configuration
-  - `antigravity/hybrid_runtime/launch-llama.sh` — Apple Silicon Metal inference script launcher
-  - `antigravity/hybrid_runtime/run-claude-hybrid.sh` — Preflight check and run binary script launcher
-  - `antigravity/hybrid_runtime/src/lib.rs` — Exporting runtime submodules
-  - `antigravity/hybrid_runtime/src/router.rs` — Stub for Dynamic routing module
-  - `antigravity/hybrid_runtime/src/db.rs` — Stub for Session database persistence
-  - `antigravity/hybrid_runtime/src/indexer.rs` — Stub for AST parser and codebase indexer
-  - `antigravity/hybrid_runtime/src/tools.rs` — Stub for Sandbox tool calling definitions
-  - `antigravity/hybrid_runtime/src/loop.rs` — Stub for Main agent loop logic
-  - `antigravity/hybrid_runtime/src/inference.rs` — Client implementations for Llama local server and Claude API with stream parsing
-  - `antigravity/hybrid_runtime/src/main.rs` — CLI parser and interactive TTY loops
-- **Build status**: Dry-run check compiles correctly. Cargo commands pending execution context.
-- **Pending issues**: None.
+  - `docs/absolute-audit/nhipdieuxanh.md` - Subsystem 12-section audit doc
+  - `docs/absolute-audit/ask-core.md` - Subsystem 12-section audit doc
+  - `docs/absolute-audit/nhipdieuxanh-orchestrator.md` - Subsystem 12-section audit doc
+  - `docs/absolute-audit/mekong-cli-core.md` - Subsystem 12-section audit doc
+  - `docs/absolute-audit/architecture-overview.md` - Mermaid diagrams and runtime data flow explanations
+  - `docs/absolute-audit/gap-analysis-roadmap.md` - Security & reliability gaps and remediation roadmap
+- **Build status**: Pass (100% tests pass, `tsc --noEmit` compiles cleanly)
+- **Pending issues**: None
 
 ## Quality Status
-- **Build/test result**: Pending compiler run.
-- **Lint status**: 0.
-- **Tests added/modified**: None.
+- **Build/test result**: Pass. 12/12 ask-core tests passed. 35/35 nhipdieuxanh tests passed. TypeScript type checking compiled with 0 errors.
+- **Lint status**: Not run (outside scope)
+- **Tests added/modified**: None (ran existing test suites)
 
-## Artifact Index
-- /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_m2/progress.md — Heartbeat and progress log
-- /Users/macbook/mekong-cli/.agents/teamwork_preview_worker_m2/handoff.md — Final handoff report
+## Loaded Skills
+- None

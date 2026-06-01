@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/sec-analyst.md
+/Users/macbook/.claude/commands/trading/sec-analyst.md

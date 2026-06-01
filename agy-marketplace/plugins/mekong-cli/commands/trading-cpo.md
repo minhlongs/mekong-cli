@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/cpo.md
+/Users/macbook/.claude/commands/trading/cpo.md

@@ -1,1 +1,1 @@
-/Users/macbook/mekong-cli/.claude/commands/trading/exec-spec.md
+/Users/macbook/.claude/commands/trading/exec-spec.md

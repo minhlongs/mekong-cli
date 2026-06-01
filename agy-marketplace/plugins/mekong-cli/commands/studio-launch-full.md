@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/studio-launch-full.md

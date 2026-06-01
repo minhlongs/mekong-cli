@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.claude/commands/releng-pre-release.md

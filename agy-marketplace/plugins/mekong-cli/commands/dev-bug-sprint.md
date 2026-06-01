@@ -1,1 +1,0 @@
-/Users/macbook/mekong-cli/.opencode/commands/dev-bug-sprint.md

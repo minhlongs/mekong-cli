@@ -1,1 +1,0 @@
-/Users/macbook/.claude/commands/cc-cli-input-rules.md

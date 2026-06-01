@@ -1,101 +1,214 @@
-# TypeScript Compiler Investigation Report
+# Nhịp Điệu Xanh CRM & Payment Integration Analysis
 
-**Target application:** `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory`
-**Role:** Explorer 2 (TypeScript Specialist)
-**Date:** 2026-05-28
+## 1. SePay Webhook Endpoint (POST /api/payments/sepay)
 
----
+### 1.1 Signature Verification
+To verify webhook notifications from SePay:
+1. **Header Parsing**: The webhook will send a signature in either `x-sepay-signature` or `sepay-signature` headers.
+2. **Raw Body Reading**: Next.js App Router route handlers must read the request body as raw text (`await req.text()`) rather than parsed JSON. Comparing signature hashes against formatted JSON can lead to validation failures due to spacing or key ordering differences.
+3. **Bypass Checks**: If the environment variable `SEPAY_WEBHOOK_SECRET` is not set or set to `insecure_dev`, the webhook signature check is bypassed for easy testing and local development.
+4. **HMAC Calculation**: We calculate the HMAC-SHA256 signature on the raw request text using the secret key, then compare it using `crypto.timingSafeEqual` to protect against timing attacks.
 
-## 1. Executive Summary
-
-We investigated the TypeScript compiler (`tsc --noEmit`) status in the Next.js application `sophia-ai-factory`.
-- **Main Next.js App (`tsconfig.json`):** Compiles successfully with **0 errors**.
-- **Worker Configuration (`tsconfig.worker.json`):** Currently broken. The `include` path is configured as `"src/worker/**/*"`, but the worker codebase is located in `"src/forest/worker/**/*"`. This results in `TS18003: No inputs were found in config file`.
-- **Worker Codebase (`src/forest/worker`):** After creating a corrected temporary configuration to compile the worker code, the TypeScript compiler reported **2 compilation errors** related to the missing or unimported `Env` type declaration.
-
----
-
-## 2. Configuration File Analysis
-
-We analyzed the two local configuration files:
-
-### A. `tsconfig.json` (Main App)
-Located at `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/tsconfig.json`.
-- Configured for Next.js with path aliases (`@/*` -> `./src/*` and specific subfolders like `@/seed/*`, `@/tree/*`, `@/forest/*`, `@/land/*`).
-- Target: `ES2020`
-- Module resolution: `bundler`
-- Successfully typechecks the entire Next.js codebase (exiting with code 0).
-
-### B. `tsconfig.worker.json` (Cloudflare Workers)
-Located at `/Users/macbook/projects/sophia-ai-factory/apps/sophia-ai-factory/tsconfig.worker.json`.
-- Targeting workers with types `@cloudflare/workers-types`.
-- Target: `ES2021`
-- Module resolution: `Bundler`
-- **Issue:** `"include": ["src/worker/**/*"]` is defined, but no such folder exists. The actual files are in `src/forest/worker/**/*`.
-
----
-
-## 3. Compilation Errors Found
-
-When type-checking is run on the worker folder using the correct include pattern, the following two compilation errors are produced:
-
-### Error 1: Missing `Env` Type in Validators
-- **File:** `src/forest/worker/middleware/raas-auth-middleware-validators.ts` (Line 16)
-- **Error:** `error TS2304: Cannot find name 'Env'.`
-- **Context:**
+### 1.2 Memo Parsing & Robust Lead ID Formatting
+The transfer description will be parsed from the webhook payload's `content` field.
+* **Regex Extraction**: We extract the ID matching the pattern: `/NDX([0-9a-f]{8}-?[0-9a-f]{4}-?-?[0-9a-f]{4}-?-?[0-9a-f]{4}-?-?[0-9a-f]{12})/i`.
+* **UUID Formatting Utility**: Customers or payment gateways might strip hyphens from the UUID (resulting in a 32-character string). To look up the lead correctly using Prisma's default `uuid()` fields, we format it back to the standard hyphenated 8-4-4-4-12 pattern:
   ```typescript
-  export async function validateLicense(
-    request: Request,
-    env: Env, // <-- Env is undefined/unimported in this file
-  ): Promise<{ valid: boolean; context?: AuthContext; error?: string }> {
+  function formatToUUID(idStr: string): string {
+    const clean = idStr.replace(/[^0-9a-f]/gi, '').toLowerCase();
+    if (clean.length === 32) {
+      return `${clean.substring(0, 8)}-${clean.substring(8, 12)}-${clean.substring(12, 16)}-${clean.substring(16, 20)}-${clean.substring(20)}`;
+    }
+    return idStr;
+  }
   ```
-- **Rationale:** The validator functions require the `Env` object to interact with KV namespaces (`(env as unknown as { KV_KV: KVNamespace }).KV_KV`), but the `Env` type definition (which is exported from `src/forest/worker/index.ts`) is never imported in this validator file.
 
-### Error 2: Missing `Env` Type in Middleware
-- **File:** `src/forest/worker/middleware/raas-auth-middleware.ts` (Line 29)
-- **Error:** `error TS2304: Cannot find name 'Env'.`
-- **Context:**
-  ```typescript
-  const validationResult = await validateLicense(request, env as unknown as Env) // <-- Env is not in scope
-  ```
-- **Rationale:** The `Env` interface is imported as `WorkerEnv` on line 10 (`import type { Env as WorkerEnv } from '../index'`), but line 29 attempts to cast using `Env`, which is not imported under that name in the scope of this file.
+### 1.3 Database & Event Updates
+Upon valid verification and matching:
+* Query the database to ensure the lead exists: `prisma.lead.findUnique(...)`. If not found, return `404 Not Found`.
+* Update the lead's status to `'won'`.
+* Trigger `publishLeadEvent` (to Kafka) with the updated status. This maintains consistency with the lead lifecycle.
 
----
+### 1.4 Webhook Implementation Design
 
-## 4. Recommended Resolution Strategies
+```typescript
+// apps/nhipdieuxanh/app/api/payments/sepay/route.ts
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import crypto from 'crypto'
+import { publishLeadEvent } from '@/lib/kafka'
 
-We propose three precise changes to restore clean type-checking across both the worker compilation and main app.
+function formatToUUID(idStr: string): string {
+  const clean = idStr.replace(/[^0-9a-f]/gi, '').toLowerCase()
+  if (clean.length === 32) {
+    return `${clean.substring(0, 8)}-${clean.substring(8, 12)}-${clean.substring(12, 16)}-${clean.substring(16, 20)}-${clean.substring(20)}`
+  }
+  return idStr
+}
 
-### Strategy A: Correct `tsconfig.worker.json` Include Path
-Fix the `include` path to point to the actual worker source directory.
+export async function POST(req: Request) {
+  try {
+    const rawBody = await req.text()
+    const signatureHeader = req.headers.get('x-sepay-signature') || req.headers.get('sepay-signature')
+    const secret = process.env.SEPAY_WEBHOOK_SECRET
 
-```json
-// tsconfig.worker.json
-{
-  "compilerOptions": { ... },
-  "include": ["src/forest/worker/**/*"],
-  "exclude": ["node_modules", "dist", ".next"]
+    // Signature Verification
+    if (secret && secret !== 'insecure_dev') {
+      if (!signatureHeader) {
+        return NextResponse.json({ error: 'missing_signature', message: 'Signature header is missing' }, { status: 401 })
+      }
+      
+      const computedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(rawBody)
+        .digest('hex')
+
+      try {
+        const sigBuffer = Buffer.from(signatureHeader, 'hex')
+        const compBuffer = Buffer.from(computedSignature, 'hex')
+        
+        if (sigBuffer.length !== compBuffer.length || !crypto.timingSafeEqual(sigBuffer, compBuffer)) {
+          return NextResponse.json({ error: 'invalid_signature', message: 'Signature verification failed' }, { status: 401 })
+        }
+      } catch (err) {
+        return NextResponse.json({ error: 'invalid_signature', message: 'Signature verification failed' }, { status: 401 })
+      }
+    }
+
+    const payload = JSON.parse(rawBody)
+    const memo = payload.content || ''
+    
+    // Parse Lead ID using regular expression
+    const ndxRegex = /NDX([0-9a-f]{8}-?[0-9a-f]{4}-?-?[0-9a-f]{4}-?-?[0-9a-f]{4}-?-?[0-9a-f]{12})/i
+    const match = memo.match(ndxRegex)
+    
+    if (!match) {
+      return NextResponse.json({ 
+        error: 'lead_id_not_found', 
+        message: 'Could not parse Lead ID from transfer content' 
+      }, { status: 400 })
+    }
+
+    const rawLeadId = match[1]
+    const leadId = formatToUUID(rawLeadId)
+
+    // Verify Lead existence
+    const existingLead = await prisma.lead.findUnique({
+      where: { id: leadId }
+    })
+
+    if (!existingLead) {
+      return NextResponse.json({ 
+        error: 'lead_not_found', 
+        message: `Lead with ID ${leadId} not found` 
+      }, { status: 404 })
+    }
+
+    // Update status to 'won'
+    const updatedLead = await prisma.lead.update({
+      where: { id: leadId },
+      data: { status: 'won' }
+    })
+
+    // Publish event to Kafka
+    publishLeadEvent({
+      id: updatedLead.id,
+      name: updatedLead.name,
+      phone: updatedLead.phone,
+      email: updatedLead.email,
+      need: updatedLead.need,
+      budget: updatedLead.budget,
+      area: updatedLead.area,
+      status: updatedLead.status,
+      level: updatedLead.level,
+      consent: true,
+      source: updatedLead.source
+    }).catch(err => console.error('[SePay Webhook] Kafka publish event failed:', err))
+
+    return NextResponse.json({
+      success: true,
+      message: `Lead status updated to 'won' for lead ID: ${leadId}`,
+      lead: { id: updatedLead.id, status: updatedLead.status }
+    }, { status: 200 })
+
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('[POST /api/payments/sepay] Error:', errMsg)
+    return NextResponse.json({ error: 'server_error', message: 'Internal server error' }, { status: 500 })
+  }
 }
 ```
 
-### Strategy B: Import `Env` in Validator Middleware
-Import `Env` type from the worker index entrypoint inside the validator file.
+---
 
-```typescript
-// Proposed change in src/forest/worker/middleware/raas-auth-middleware-validators.ts
-// Add import at line 13:
-import type { Env } from '../index'
-```
+## 2. Booking Modal on Landing Page
 
-### Strategy C: Correct Cast Type in Auth Middleware
-Update the cast in the middleware to use the locally imported `WorkerEnv` alias instead of `Env`.
+### 2.1 UI Flow Integration
+* After the lead forms is successfully submitted, instead of a static message, show an options screen:
+  1. A primary **"Đặt Cọc Giữ Chỗ Ngay" (Deposit 10M to Book)** button.
+  2. A secondary **"Đăng ký nhu cầu mới" (Register new demand)** button.
+* When clicked, "Đặt Cọc Giữ Chỗ Ngay" launches a Booking Modal.
 
-```typescript
-// Proposed change in src/forest/worker/middleware/raas-auth-middleware.ts (Line 29)
-// Before:
-const validationResult = await validateLicense(request, env as unknown as Env)
+### 2.2 Dynamic VietQR Generation
+Using the `img.vietqr.io` API, generate a QR image:
+* Bank Account Info is configurable via environment variables (`NEXT_PUBLIC_BANK_ID`, `NEXT_PUBLIC_BANK_ACCOUNT`, `NEXT_PUBLIC_BANK_ACCOUNT_NAME`).
+* **URL Syntax**:
+  `https://img.vietqr.io/image/${bankId}-${accountNo}-compact.png?amount=10000000&addInfo=NDX${leadId}&accountName=${encodeURIComponent(accountName)}`
 
-// After:
-const validationResult = await validateLicense(request, env as unknown as WorkerEnv)
-```
-*(Alternatively, simply pass `env` without a cast if the validator has been updated to import `Env` from `../index`, since `WorkerEnv` is an alias of `Env`).*
+### 2.3 Status Polling and React Design
+To check payment status dynamically, the frontend polls the lead status endpoint.
+* **Polling Endpoint**: Design a dynamic route `apps/nhipdieuxanh/app/api/leads/[id]/status/route.ts` which returns `{ success: true, status: string }`.
+* **Important Next.js 16 Detail**: In Next.js 16, `params` in dynamic routes is a `Promise` and must be awaited:
+  ```typescript
+  export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const lead = await prisma.lead.findUnique({
+      where: { id },
+      select: { status: true }
+    });
+    ...
+  }
+  ```
+* **React Polling Hook**:
+  - The modal uses a `setInterval` to fetch lead status every 3 seconds.
+  - Clears interval immediately once status becomes `'won'`.
+  - Clears interval on unmount or modal close to prevent memory leaks.
+  - Implements a 10-minute timeout limit to avoid indefinite polling.
+
+---
+
+## 3. Landing Page Emerald Green Upgrade
+
+### 3.1 Animations
+Premium interactive elements:
+* **Fade-in-up animations**: On hero elements and section headings.
+* **Hover transforms**: Scale buttons up (`hover:scale-[1.02] active:scale-[0.98] duration-300`).
+* **Loading Spinners**: For form submission, VietQR loading skeleton, and payment verification states.
+
+### 3.2 Touch Targets (>= 44px)
+Audit of existing interactive targets:
+* Header CTA "Liên Hệ Ngay": Upgrade padding to `px-6 py-3.5` to ensure height is >= 44px on all viewports.
+* Inputs: Ensure `py-3` is used (equal to 44px height).
+* Select menus: Standardize heights to match inputs.
+* Close buttons and links: Add `min-w-[44px] min-h-[44px]` touch target sizing.
+
+### 3.3 Form Loading States
+Enhance form behavior:
+* Disable all inputs (`disabled={loading}`) during form processing to prevent double submission.
+* Disable select menus and buttons during ingest operations.
+
+### 3.4 Mobile Layout & Responsiveness
+To avoid horizontal scroll at 375px:
+* Use Tailwind's grid structure properly. Hero columns should wrap to a single column (`grid lg:grid-cols-12`).
+* Ensure elements with absolute positioning (such as blur blobs) use `overflow-hidden` container limits to prevent horizontal layout leakage.
+* Wrap the header using `flex-wrap` and scale logo text down on smaller devices to avoid squeezing or clipping contents.
+
+---
+
+## 4. Operations Guide Structure
+The `docs/nhipdieuxanh_operations.md` file has been drafted and saved in the workspace. It covers:
+1. Operational Architecture & Webhook Flows
+2. Environment Configuration
+3. Webhook Setup Instructions
+4. Testing and Mocking Playbooks (verifying HMAC validation bypass or active keys)
+5. Troubleshooting common payment matching and Kafka connection issues.
