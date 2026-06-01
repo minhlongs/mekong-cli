@@ -1,6 +1,6 @@
 """Stub: DAG scheduler for PEV orchestrator."""
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 def validate_dag(steps: List[Dict[str, Any]]) -> Tuple[bool, Optional[str]]:
     return True, None
