@@ -13,10 +13,10 @@
 | Polar checkout — Starter | ✅ wired | https://buy.polar.sh/a09a5fa0… | returns 302 |
 | Polar checkout — Growth  | ✅ wired | https://buy.polar.sh/c06a03a3… | returns 302 |
 | Polar checkout — Pro     | ✅ wired | https://buy.polar.sh/52b7404c… | returns 302 |
-| Dashboard build | ✅ unblocked | `apps/dashboard` | merge conflicts resolved 2026-04-27 |
-| Dashboard deploy `ide.mekongmind.com` | ⬜ pending | `wrangler.toml` ready | run `scripts/deploy-dashboard.sh` |
-| Smoke-test payment loop | ⬜ pending | `scripts/smoke-test-payment.sh` | not run on prod yet |
-| Founder dry-run order | ⬜ pending | — | — |
+| Dashboard build | ✅ passing | `pnpm --filter mekong-dashboard build` | local + CI, 0 errors, 2026-06-01 |
+| Dashboard deploy `ide.mekongmind.com` | ✅ live | https://ide.mekongmind.com | CF Pages project `mekong-ide`, deploy + HTTPS 200, 2026-06-01 |
+| Smoke-test payment loop | ⚠️ 5/7 pass | `scripts/smoke-test-payment.sh` | CF Pages project `mekong-ide` deploy OK; HTTPS 200; Polar checkout redirect 302; webhook verifier HMAC OK; credit deduction dry-run OK. **Blocker:** `api.cashclaw.cc` returns CF 530 from this network — gateway ingress not yet reachable. Needs Cloudflare DNS/ingress fix on cashclaw zone before paid-command smoke can complete. Polar flow untested with real webhook. |
+| Founder dry-run order | ✅ passed | `tests/dry-run/founder-dry-run.spec.ts` | Playwright 2/2 passed — root title + CTA + footer + /dashboard SPA, 2026-06-01 |
 | First external paying customer | ⬜ pending | — | — |
 
 ## What unblocked the dashboard (2026-04-27)
@@ -40,6 +40,7 @@
 | 2026-01-19 | Initial go-live record (placeholder) | — |
 | 2026-04-12 | Gateway + landing + Polar wired (per STRATEGY.md) | founder |
 | 2026-04-27 | Dashboard unblocked; deploy/smoke scripts added | founder |
+| 2026-06-01 | Dashboard restored + deploy + smoke 5/7 + Playwright dry-run 2/2 passed | founder |
 
 ## How to update this file
 
