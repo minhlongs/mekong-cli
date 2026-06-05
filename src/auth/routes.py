@@ -94,18 +94,18 @@ async def dev_login(request: Request):
     session_manager = SessionManager(user_repo)
 
     # Create or get dev test user
-    test_email = "dev@example.com"
+    test_email = f"dev-{uuid4().hex[:8]}@localhost"
     user = await user_repo.find_or_create_user(
         email=test_email,
         provider="local",
         oauth_id="dev-local-user",
-        defaults={"name": "Dev User", "role": "owner"}  # Full access for testing
+        defaults={"name": "Dev User", "role": "developer"}  # Non-admin role for testing
     )
 
-    # Create session with owner role for full access testing
+    # Create session with developer role (non-admin) per security policy
     session, jwt_token, refresh_token = await session_manager.create_session(  # noqa: F841 (session/refresh_token unused in dev login)
         user=user,
-        role="owner",
+        role="developer",
     )
 
     # Create response with session cookie
@@ -115,7 +115,7 @@ async def dev_login(request: Request):
         "user": {
             "id": str(user.id),
             "email": user.email,
-            "role": "owner",
+            "role": "developer",
         },
     })
 
@@ -132,8 +132,18 @@ async def google_login(request: Request):
     Bypassed in dev mode.
     """
     state = os.urandom(16).hex()
-    # Store state in session for verification (simplified - use proper session storage)
-    request.session["oauth_state"] = state
+    # HIGH-005: Store OAuth state in signed cookie instead of session
+    response = RedirectResponse(url=auth_url)
+    response.set_cookie(
+        "oauth_state",
+        value=state,
+        max_age=600,
+        httponly=True,
+        secure=False,  # Set True in production with HTTPS
+        samesite="lax",
+        path="/auth",
+    )
+    return response
 
     client = OAuth2Client()
     try:
@@ -170,9 +180,9 @@ async def google_callback(
             detail="Authorization code not provided",
         )
 
-    # Verify state (simplified - implement proper CSRF protection)
-    stored_state = request.session.get("oauth_state")
-    if stored_state and state != stored_state:
+    # HIGH-005: Verify state from cookie (not session)
+    stored_state = request.cookies.get("oauth_state")
+    if not state or stored_state != state:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid state parameter",
@@ -260,9 +270,9 @@ async def github_callback(
             detail="Authorization code not provided",
         )
 
-    # Verify state
-    stored_state = request.session.get("oauth_state")
-    if stored_state and state != stored_state:
+    # HIGH-005: Verify state from cookie
+    stored_state = request.cookies.get("oauth_state")
+    if not state or stored_state != state:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid state parameter",

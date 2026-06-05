@@ -17,59 +17,59 @@ from starlette.responses import RedirectResponse
 from src.models.user import User, UserSession
 from src.auth.user_repository import UserRepository
 
-
 # JWT Configuration
-# JWT_SECRET starts as None and is resolved lazily via get_jwt_secret().
-# Keeping it as a module attribute allows tests to patch it directly:
-#   with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'): ...
-# PYTEST_CURRENT_TEST is only set during test execution, not collection, so
-# we cannot evaluate it at import time — deferred resolution fixes that.
 JWT_SECRET: Optional[str] = None
 JWT_ALGORITHM = "HS256"
+JWT_KEY_ID = os.getenv("JWT_KEY_ID", "mekong-key-1")
+# Key rotation: map of kid -> secret. Always include at least the active key.
+_active_jwt_keys: dict[str, str] = {}
+
+
+def register_jwt_key(kid: str, secret: str) -> None:
+    """Register a JWT signing key for rotation support."""
+    _active_jwt_keys[kid] = secret
+
+
+def get_jwt_keys() -> dict[str, str]:
+    """Return all active JWT keys for verification (rotation: old keys stay valid)."""
+    if not _active_jwt_keys:
+        # Auto-register the default secret on first access
+        _active_jwt_keys[JWT_KEY_ID] = get_jwt_secret()
+    return dict(_active_jwt_keys)
+JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "mekong-cli")
+JWT_ISSUER = os.getenv("JWT_ISSUER", "mekong-auth")
+JWT_KEY_ID = os.getenv("JWT_KEY_ID", "mekong-key-v1")
+_revoked_tokens: set[str] = set()
 
 
 def get_jwt_secret() -> str:
-    """Return JWT secret, resolving from environment on first call.
+    """Return JWT secret from environment variable.
 
-    Checks module-level JWT_SECRET first (supports unittest.mock.patch),
-    then falls back to JWT_SECRET env var, then to test/CI defaults.
-    Defers RuntimeError to actual usage so pytest collection succeeds.
+    Raises RuntimeError if JWT_SECRET is not set (in all environments,
+    including CI/test). Secrets must never be hardcoded.
 
     Returns:
         JWT secret string
 
     Raises:
-        RuntimeError: If JWT_SECRET is not set outside test/CI environments
+        RuntimeError: If JWT_SECRET env var is not set or too short
     """
     global JWT_SECRET
     if JWT_SECRET is None:
         JWT_SECRET = os.getenv("JWT_SECRET")
         if not JWT_SECRET:
-            if (
-                os.getenv("CI") == "true"
-                or os.getenv("PYTEST_CURRENT_TEST")
-                or os.getenv("TESTING")
-            ):
-                JWT_SECRET = "test-secret-for-ci-only-not-for-production"
-            else:
-                raise RuntimeError(
-                    "JWT_SECRET environment variable is required. "
-                    "Generate one with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))' "
-                    "and add to your .env file."
-                )
-        else:
-            # Enforce minimum 32-byte secret in non-test environments
-            _is_test = (
-                os.getenv("CI") == "true"
-                or os.getenv("PYTEST_CURRENT_TEST")
-                or os.getenv("TESTING")
+            raise RuntimeError(
+                "JWT_SECRET environment variable is required. "
+                "Generate one with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))' "
+                "and add to your .env file."
             )
-            if not _is_test and len(JWT_SECRET.encode()) < 32:
-                raise RuntimeError(
-                    f"JWT_SECRET is too short: {len(JWT_SECRET.encode())} bytes. "
-                    "Minimum 32 bytes required for production security. "
-                    "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
-                )
+        # Enforce minimum 32-byte secret
+        if len(JWT_SECRET.encode()) < 32:
+            raise RuntimeError(
+                f"JWT_SECRET is too short: {len(JWT_SECRET.encode())} bytes. "
+                "Minimum 32 bytes required for production security. "
+                "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
     return JWT_SECRET
 
 
@@ -77,10 +77,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))
 
 # Cookie configuration
-COOKIE_NAME = "session_token"
+COOKIE_NAME = "__Host-session_token"
 COOKIE_SECURE = os.getenv("AUTH_ENVIRONMENT", "dev") == "production"
 COOKIE_HTTPONLY = True
 COOKIE_SAMESITE = "lax" if not COOKIE_SECURE else "none"
+
+
+def revoke_token(jti: str) -> None:
+    """Add a token JTI to the revocation blacklist."""
+    _revoked_tokens.add(jti)
+
+
+def is_token_revoked(jti: str) -> bool:
+    """Check if a token JTI is in the revocation blacklist."""
+    return jti in _revoked_tokens
 
 
 class SessionManager:
@@ -115,7 +125,9 @@ class SessionManager:
         )
 
         return {
-            "sub": user_id,
+            "aud": JWT_AUDIENCE,
+  "iss": JWT_ISSUER,
+  "sub": user_id,
             "email": email,
             "role": role,
             "type": token_type,
@@ -140,7 +152,12 @@ class SessionManager:
             role=role,
             token_type="access",
         )
-        return jwt.encode(claims, get_jwt_secret(), algorithm=JWT_ALGORITHM)
+        return jwt.encode(
+            claims,
+            get_jwt_secret(),
+            algorithm=JWT_ALGORITHM,
+            headers={"kid": JWT_KEY_ID},
+        )
 
     def create_refresh_token(self, user: User) -> str:
         """Create JWT refresh token for user.
@@ -156,7 +173,12 @@ class SessionManager:
             email=user.email,
             token_type="refresh",
         )
-        return jwt.encode(claims, get_jwt_secret(), algorithm=JWT_ALGORITHM)
+        return jwt.encode(
+            claims,
+            get_jwt_secret(),
+            algorithm=JWT_ALGORITHM,
+            headers={"kid": JWT_KEY_ID},
+        )
 
     def decode_token(self, token: str) -> Tuple[bool, Optional[Dict[str, Any]], Optional[str]]:
         """Decode and validate JWT token.
@@ -166,12 +188,15 @@ class SessionManager:
 
         Returns:
             Tuple of (is_valid, payload_dict, error_message)
-            - is_valid: True if token is valid and not expired
-            - payload: Decoded claims if valid, None otherwise
-            - error: Error message if invalid, None otherwise
         """
         try:
-            payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+            payload = jwt.decode(
+                token,
+                get_jwt_secret(),
+                algorithms=[JWT_ALGORITHM],
+                audience=JWT_AUDIENCE,
+                issuer=JWT_ISSUER,
+            )
             return True, payload, None
         except jwt.ExpiredSignatureError:
             return False, None, "Token has expired"
@@ -197,15 +222,10 @@ class SessionManager:
         access_token = self.create_access_token(user, role)
         refresh_token = self.create_refresh_token(user)
 
-        # Store session in database (hash the token)
-        import hashlib
-        _ = hashlib.sha256(access_token.encode()).hexdigest()  # token_hash intentionally unused
-        _ = datetime.now(timezone.utc) + timedelta(days=7)  # expires_at intentionally unused
-
         session = await self._user_repo.create_session(
             user_id=user.id,
             token=access_token,
-            expires_hours=168,  # 7 days
+            expires_hours=168,
         )
 
         return session, access_token, refresh_token
@@ -213,14 +233,21 @@ class SessionManager:
     async def validate_session(self, token: str) -> Optional[User]:
         """Validate session token and return user.
 
+        Checks JWT signature, expiry, and revocation blacklist.
+
         Args:
             token: JWT access token
 
         Returns:
             User object if valid, None otherwise
         """
-        is_valid, payload, error = self.decode_token(token)  # noqa: F841 (error unused)
+        is_valid, payload, error = self.decode_token(token)
         if not is_valid:
+            return None
+
+        # Reject revoked tokens
+        token_jti = payload.get("jti") if isinstance(payload, dict) else None
+        if token_jti and is_token_revoked(token_jti):
             return None
 
         user_id = payload.get("sub")
@@ -258,6 +285,9 @@ class SessionManager:
     async def refresh_session(self, refresh_token: str) -> Optional[Tuple[str, str]]:
         """Refresh session using refresh token.
 
+        Validates the refresh token type claim, generates new tokens,
+        and revokes the old refresh token to prevent reuse.
+
         Args:
             refresh_token: JWT refresh token
 
@@ -269,7 +299,7 @@ class SessionManager:
         if not is_valid:
             return None
 
-        # Verify it's a refresh token
+        # Enforce token type — reject access tokens presented as refresh
         if payload.get("type") != "refresh":
             return None
 
@@ -288,6 +318,11 @@ class SessionManager:
             # Generate new tokens
             new_access = self.create_access_token(user)
             new_refresh = self.create_refresh_token(user)
+
+            # Revoke old refresh token to prevent reuse
+            old_jti = payload.get("jti")
+            if old_jti:
+                revoke_token(old_jti)
 
             return new_access, new_refresh
         except (ValueError, Exception):
@@ -309,17 +344,12 @@ class SessionManager:
         Returns:
             Dictionary of cookie parameters for Response.set_cookie()
         """
-        # Read environment variables dynamically for each call
-        current_env = os.getenv("AUTH_ENVIRONMENT", "dev")
-        cookie_secure = current_env == "production"
-        cookie_samesite = "none" if cookie_secure else "lax"
-
         return {
             "key": COOKIE_NAME,
             "value": token,
             "httponly": COOKIE_HTTPONLY,
-            "secure": cookie_secure,
-            "samesite": cookie_samesite,
+            "secure": COOKIE_SECURE,
+            "samesite": COOKIE_SAMESITE,
             "max_age": expires_in_days * 24 * 60 * 60,
             "path": "/",
         }

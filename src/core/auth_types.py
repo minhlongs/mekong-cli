@@ -6,6 +6,9 @@ Shared types for RaaS authentication module.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Any, Optional, Dict
@@ -163,8 +166,8 @@ class SessionCache:
         return datetime.now(timezone.utc) >= self.session_expires_at
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize to dictionary."""
-        return {
+        """Serialize to dictionary with HMAC-SHA256 signature."""
+        payload = {
             "tenant_id": self.tenant_id,
             "tier": self.tier,
             "role": self.role,
@@ -175,10 +178,18 @@ class SessionCache:
             "ttl_seconds": self.ttl_seconds,
             "refresh_token": self.refresh_token,
         }
+        raw = json.dumps(payload, sort_keys=True).encode()
+        payload["hmac"] = _compute_cache_hmac(raw)
+        return payload
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SessionCache":
-        """Deserialize from dictionary."""
+        """Deserialize from dictionary, verifying HMAC first."""
+        hmac_sig = data.pop("hmac", None)
+        if hmac_sig:
+            raw = json.dumps(data, sort_keys=True).encode()
+            if not _verify_cache_hmac(raw, hmac_sig):
+                raise ValueError("Session cache HMAC verification failed — rejecting")
         return cls(
             tenant_id=data["tenant_id"],
             tier=data["tier"],
@@ -193,6 +204,40 @@ class SessionCache:
 
 
 # Module constants
+_CACHE_HMAC_SALT = b"mekong-cli-session-cache-v1"
+
+
+def _get_cache_hmac_key() -> bytes:
+    """Derive HMAC-SHA256 key from machine-specific entropy.
+
+    Uses machine-id + salt so the key is stable across restarts but
+    not guessable from the cache file alone.
+    """
+    machine_id = ""
+    mid_paths = ["/etc/machine-id", "/var/lib/dbus/machine-id"]
+    for p in mid_paths:
+        try:
+            with open(p) as f:
+                machine_id = f.read().strip()
+            if machine_id:
+                break
+        except OSError:
+            continue
+    if not machine_id:
+        machine_id = os.uname().nodename if hasattr(os, "uname") else "default"
+    return hashlib.sha256(machine_id.encode() + _CACHE_HMAC_SALT).digest()
+
+
+def _compute_cache_hmac(data: bytes) -> str:
+    """Compute HMAC-SHA256 hex digest for session cache data."""
+    return hmac.new(_get_cache_hmac_key(), data, hashlib.sha256).hexdigest()
+
+
+def _verify_cache_hmac(data: bytes, expected: str) -> bool:
+    """Constant-time HMAC verification for session cache data."""
+    return hmac.compare_digest(_compute_cache_hmac(data), expected)
+
+
 DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
 VERIFY_ENDPOINT = "/v1/verify"
 VALIDATION_ENDPOINT_V1 = "/v1/auth/validate"

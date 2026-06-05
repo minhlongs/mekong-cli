@@ -11,6 +11,7 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Dict, List, Optional
 
 # Default MCU limits per plan
@@ -21,6 +22,7 @@ PLAN_LIMITS: dict[str, int] = {
     "pro": 5000,
     "enterprise": 50000,
 }
+KNOWN_PLANS = frozenset(PLAN_LIMITS.keys())
 
 # MCU cost per task complexity tier
 MCU_COSTS: dict[str, int] = {
@@ -52,7 +54,7 @@ class TenantLedger:
     mcu_limit: int = PLAN_LIMITS["free"]
     history: List[UsageEntry] = field(default_factory=list)
     overage_credits: int = 0
-    overage_charges_usd: float = 0.0
+    overage_charges_usd: Decimal = Decimal(0)
 
     @property
     def mcu_remaining(self) -> int:
@@ -134,6 +136,10 @@ class BillingService:
         Returns:
             Remaining MCU balance after recording.
         """
+        if mcu_cost < 0:
+            raise ValueError(
+                f"mcu_cost must be non-negative, got {mcu_cost}"
+            )
         with self._lock:
             ledger = self._get_or_create(tenant_id)
             ledger.mcu_used += mcu_cost
@@ -144,8 +150,9 @@ class BillingService:
                 if overage_cfg.allow_overage:
                     new_overage = ledger.mcu_used - ledger.mcu_limit
                     ledger.overage_credits = new_overage
-                    ledger.overage_charges_usd = round(
-                        new_overage * overage_cfg.overage_rate_per_credit, 4
+                    ledger.overage_charges_usd = (
+                        Decimal(str(new_overage))
+                        * Decimal(str(overage_cfg.overage_rate_per_credit))
                     )
             entry = UsageEntry(
                 entry_id=uuid.uuid4().hex,
@@ -213,16 +220,24 @@ class BillingService:
 
         Args:
             tenant_id: Target tenant identifier.
-            plan: New plan name (free/pro/enterprise).
+            plan: New plan name. Must be a key in PLAN_LIMITS.
             mcu_limit: Override limit; defaults to PLAN_LIMITS[plan].
 
         Returns:
             Updated balance dict.
+
+        Raises:
+            ValueError: If plan is not a known plan.
         """
+        if plan not in PLAN_LIMITS:
+            raise ValueError(
+                f"Unknown plan {plan!r}. "
+                f"Valid plans: {sorted(PLAN_LIMITS.keys())}"
+            )
         with self._lock:
             ledger = self._get_or_create(tenant_id)
             ledger.plan = plan
-            ledger.mcu_limit = mcu_limit or PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
+            ledger.mcu_limit = mcu_limit or PLAN_LIMITS[plan]
             return {
                 "tenant_id": tenant_id,
                 "plan": ledger.plan,

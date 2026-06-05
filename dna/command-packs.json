@@ -1,0 +1,79 @@
+{
+  "schema": "mekong.command_packs.v1",
+  "version": "2026.06.03",
+  "description": "Reviewed native command packs. Root commands must originate from command fabric catalog or one of these native packs.",
+  "packs": [
+    {
+      "id": "core-runtime",
+      "layer": "ops",
+      "source": "src/cli",
+      "commands": [
+        "command-fabric",
+        "dash",
+        "eval-agent",
+        "evolve",
+        "evolve-code",
+        "gateway",
+        "halt",
+        "harness-eval",
+        "init",
+        "list",
+        "metrics",
+        "run",
+        "search",
+        "ui",
+        "version"
+      ]
+    },
+    {
+      "id": "workflow-native",
+      "layer": "engineering",
+      "source": "src/cli/workflow_commands.py",
+      "commands": [
+        "debug"
+      ]
+    },
+    {
+      "id": "agentic-systems",
+      "layer": "ops",
+      "source": "src/cli/*_commands.py",
+      "commands": [
+        "agi",
+        "autonomous",
+        "browse",
+        "collab",
+        "goal",
+        "memory",
+        "schedule",
+        "swarm",
+        "telegram",
+        "tools"
+      ]
+    },
+    {
+      "id": "sdlc",
+      "layer": "product-engineering",
+      "source": "src/cli/sdlc/",
+      "commands": [
+        "code",
+        "deploy",
+        "design",
+        "spec"
+      ]
+    },
+    {
+      "id": "studio",
+      "layer": "studio",
+      "source": "src/cli/studio_commands.py",
+      "commands": [
+        "bmad",
+        "dealflow",
+        "expert",
+        "match",
+        "portfolio",
+        "studio",
+        "venture"
+      ]
+    }
+  ]
+}

@@ -108,7 +108,7 @@ class TenantManager:
         Returns:
             Mock tenant ID (e.g., "local_abc123def")
         """
-        hash_value = hashlib.md5(token.encode()).hexdigest()[:8]
+        hash_value = hashlib.sha256(token.encode()).hexdigest()[:8]
         return f"local_{hash_value}"
 
     def local_validate(self, token: str) -> AuthResult:
@@ -191,7 +191,7 @@ class TenantManager:
         features = self.TIER_FEATURES.get(tier, self.TIER_FEATURES["free"])
 
         return TenantContext(
-            tenant_id=f"ak_{hashlib.md5(token.encode()).hexdigest()[:8]}",
+            tenant_id=f"ak_{hashlib.sha256(token.encode()).hexdigest()[:8]}",
             tier=tier,
             role=tier,
             license_key=token,

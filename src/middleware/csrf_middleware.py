@@ -20,7 +20,8 @@ from starlette.types import ASGIApp
 # Only active when explicitly enabled — avoids breaking API-token clients / tests
 _CSRF_ACTIVE = os.getenv("CSRF_ENABLED", "0") == "1"
 
-# Paths that skip CSRF (webhooks use HMAC, health/metrics need no protection)
+# Actions that require token rotation — each privileged action gets a fresh token
+_CSRF_PRIVILEGED_PATHS = {"/v1/auth/login", "/v1/auth/password-change"}
 _CSRF_SKIP_PREFIXES = (
     "/v1/webhook/",
     "/v1/polar/",
@@ -74,8 +75,9 @@ class CSRFMiddleware(BaseHTTPMiddleware):
 
         response: Response = await call_next(request)  # type: ignore[misc]
 
-        # Issue new cookie on GET if absent
-        if method == "GET" and not existing_token:
+        # Rotate token after privileged actions; otherwise issue on GET if absent
+        is_privileged = path in _CSRF_PRIVILEGED_PATHS
+        if (method == "GET" and not existing_token) or is_privileged:
             token = secrets.token_hex(32)
             host = request.url.hostname or "localhost"
             is_secure = not _is_localhost(host)

@@ -38,7 +38,7 @@ _ZALO_RE = re.compile(r"^(\+84\d{9,10}|0\d{9})$")
 # ---------- Pydantic models ----------
 
 class SignupRequest(BaseModel):
-    name: str = Field(min_length=2, max_length=80)
+    name: str = Field(min_length=2, max_length=200)
     zalo: str = Field(description="Số Zalo: +84xxx hoặc 0xxx")
     business_type: str
     city: str = "HCM"
@@ -53,6 +53,18 @@ class SignupRequest(BaseModel):
         if not _ZALO_RE.match(cleaned):
             raise ValueError("Zalo phone invalid — phải là +84xxx hoặc 0xxx")
         return cleaned
+
+    @field_validator("name")
+    @classmethod
+    def _validate_name(cls, v: str) -> str:
+        """Strip control chars, reject HTML/script injection, cap at 200."""
+        import re
+        # Remove all control characters (U+0000-U+001F and U+007F-U+009F)
+        cleaned = "".join(ch for ch in v if not (ord(ch) <= 0x1F or 0x7F <= ord(ch) <= 0x9F))
+        # Reject if contains HTML/script tags
+        if re.search(r"<[^>]+>", cleaned, re.IGNORECASE):
+            raise ValueError("Tên không được chứa thẻ HTML hoặc script")
+        return cleaned[:200]
 
     @field_validator("business_type")
     @classmethod

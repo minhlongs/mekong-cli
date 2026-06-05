@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from src.api.gateway_models import (
     MCUDeductRequest,
@@ -67,7 +67,7 @@ async def webhook_schema() -> dict:
 
 
 @router.post("/mcu/deduct", response_model=MCUDeductResponse)
-async def mcu_deduct(request: MCUDeductRequest) -> MCUDeductResponse:
+async def mcu_deduct(tenant: TenantContext = Depends(require_tenant), request: MCUDeductRequest = ...) -> MCUDeductResponse:
     """Deduct MCU credits for a mission execution."""
     error = validate_required(request.tenant_id, "tenant_id")
     if error:
@@ -80,11 +80,28 @@ async def mcu_deduct(request: MCUDeductRequest) -> MCUDeductResponse:
     if error:
         raise HTTPException(status_code=400, detail=error.to_dict())
 
+    # HIGH-009: Idempotency key prevents double-deduction on retry
+    idempotency_key = request.idempotency_key or f"{request.tenant_id}:{request.mission_id or 'direct'}:{request.complexity}"
+
     try:
         from src.raas.credits import CreditStore
 
         cost = MCU_COSTS.get(request.complexity, 1)
         credit_store = CreditStore()
+
+        # Check idempotency: skip if this key was already processed
+        existing = credit_store.get_transaction(idempotency_key)
+        if existing is not None:
+            balance_after = credit_store.get_balance(request.tenant_id)
+            return MCUDeductResponse(
+                success=True,
+                balance_before=balance_after + cost,
+                balance_after=balance_after,
+                amount_deducted=cost,
+                low_balance=balance_after < 10,
+                idempotent=True,
+            )
+
         balance_before = credit_store.get_balance(request.tenant_id)
 
         if balance_before < cost:
@@ -102,6 +119,7 @@ async def mcu_deduct(request: MCUDeductRequest) -> MCUDeductResponse:
             tenant_id=request.tenant_id,
             amount=cost,
             reason=f"mcu_{request.complexity}_{request.mission_id or 'direct'}",
+            idempotency_key=idempotency_key,
         )
         balance_after = credit_store.get_balance(request.tenant_id)
 

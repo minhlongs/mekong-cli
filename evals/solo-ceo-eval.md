@@ -86,8 +86,89 @@ These evals test the **harness** — the structure, context, guardrails, and wor
 
 ---
 
+## EVAL-07: Core DNA Feature Gate
+**Test:** Undeclared local features are blocked unless they come through PR evidence.
+
+**Procedure:**
+1. Run `python3 -m src.main binh-phap dna --feature private-local-updater`
+2. Verify exit code is `2`
+3. Run `python3 -m src.main binh-phap dna --feature cook-auto-parallel`
+4. Verify exit code is `0`
+
+**Pass:** Unknown local feature blocked, declared feature allowed
+**Fail:** Unknown local feature runs without PR/manifest evidence
+
+---
+
+## EVAL-08: Binh Phap Doctrine Completeness
+**Test:** Solo-company operating doctrine covers all 13 chapters and all agent/SOP references exist.
+
+**Procedure:**
+1. Run `python3 -m src.main binh-phap doctrine --json`
+2. Verify `valid: true`
+3. Verify exactly 13 chapters
+4. Verify layers map to `ceo`, `ae`, `pm`, `eng`, `ops`
+
+**Pass:** Doctrine valid, 13 chapters, 5 operating layers
+**Fail:** Missing chapter, unknown agent, missing SOP, or invalid doctrine
+
+---
+
+## EVAL-09: Core DNA Attestation
+**Test:** Immutable Core DNA roots produce a deterministic fingerprint with no missing roots.
+
+**Procedure:**
+1. Run `python3 -m src.main binh-phap dna --attest`
+2. Verify algorithm is `sha256`
+3. Verify digest is present
+4. Verify `Complete` is `yes`
+
+**Pass:** Attestation complete and digest emitted
+**Fail:** Missing immutable root, empty file set, or no digest
+
+---
+
+## EVAL-10: Hermes Learning Loop
+**Test:** Closed learning loop has memory, scoped memory, procedural memory, MCP gateway, and skill surface.
+
+**Procedure:**
+1. Run `python3 -m src.main harness-eval --json`
+2. Verify `EVAL-10` passed
+3. Verify capability count is at least 5
+4. Verify capabilities include `persistent-memory`, `procedural-memory`, and `mcp-tool-gateway`
+
+**Pass:** Learning-loop contract valid and required files exist
+**Fail:** Missing capability, missing loop step, or missing runtime file
+
+---
+
+## EVAL-11: Command Surface Manifest
+**Test:** Current root CLI commands match the reviewed command-surface manifest.
+
+**Procedure:**
+1. Run `python3 -m src.main harness-eval --json`
+2. Verify `EVAL-11` passed
+3. Verify `missing_from_manifest` is empty
+4. Verify `stale_in_manifest` is empty
+
+**Pass:** No root command surface drift
+**Fail:** New command added without `dna/command-surface.json` update, or stale command remains declared
+
+---
+
 ## Eval Execution
 Run via: `/analyst-report --eval solo-ceo-eval`
 Or manually: execute each EVAL-NN procedure and record results.
+
+Executable deterministic subset:
+
+```bash
+python3 -m src.main harness-eval
+python3 -m src.main harness-eval --json
+python3 -m src.main binh-phap dna --attest
+```
+
+The PR workflow `.github/workflows/core-dna-gate.yml` also runs this subset
+after validating Core DNA manifest changes.
 
 Eval results stored in: `evals/results/YYYY-MM-DD-solo-ceo-eval.md`

@@ -1,0 +1,111 @@
+{
+  "schema": "mekong.core_dna.v1",
+  "project": "mekong-cli",
+  "version": "2026.06.03",
+  "sources": [
+    {
+      "name": "Harness Engineering for Coding Agent Users",
+      "url": "https://martinfowler.com/articles/harness-engineering.html",
+      "principles": [
+        "model plus harness",
+        "feedforward controls",
+        "feedback controls",
+        "steering loop",
+        "keep quality left"
+      ]
+    },
+    {
+      "name": "Hermes Agent Docs",
+      "url": "https://hermes-agent.nousresearch.com/docs/",
+      "principles": [
+        "closed learning loop",
+        "portable skills",
+        "persistent memory",
+        "MCP integration",
+        "safe tool gateways"
+      ]
+    },
+    {
+      "name": "Binh Phap operating doctrine",
+      "url": "HARNESS.md",
+      "principles": [
+        "calculate before acting",
+        "win through strategy",
+        "momentum through orchestration",
+        "terrain-aware execution",
+        "intelligence-led verification"
+      ]
+    }
+  ],
+  "immutable_roots": [
+    "HARNESS.md",
+    "agents/registry.yaml",
+    "sops/",
+    "evals/",
+    "src/harness/",
+    "src/binh_phap/",
+    "src/core/core_dna.py",
+    "dna/binh-phap-operating-system.json",
+    "dna/hermes-learning-loop.json",
+    "dna/command-surface.json",
+    "dna/command-packs.json"
+  ],
+  "control_loops": {
+    "feedforward": [
+      "HARNESS.md",
+      "sops/",
+      "agents/registry.yaml",
+      "dna/core-dna.json",
+      "dna/binh-phap-operating-system.json",
+      "dna/hermes-learning-loop.json",
+      "dna/command-surface.json"
+    ],
+    "feedback": [
+      "tests/",
+      "evals/",
+      "observability/",
+      ".github/workflows/"
+    ],
+    "steering": [
+      "src/harness/pev/",
+      "src/binh_phap/topology.py",
+      "src/binh_phap/reactions.py"
+    ]
+  },
+  "feature_policy": {
+    "free_commands": [
+      "help",
+      "version",
+      "status",
+      "doctor",
+      "binh-phap:chapters",
+      "binh-phap:dna",
+      "binh-phap:doctrine",
+      "command-fabric",
+      "harness-eval"
+    ],
+    "advanced_features": [
+      "cook",
+      "cook-auto",
+      "cook-auto-parallel",
+      "autonomous",
+      "swarm",
+      "agi",
+      "binh-phap:daemon",
+      "binh-phap:immortal"
+    ],
+    "new_feature_rule": "Any feature not listed here is locked until it is contributed through a pull request or shipped in an upstream-signed manifest."
+  },
+  "contribution_gate": {
+    "required_for_new_features": true,
+    "accepted_evidence": [
+      "GITHUB_EVENT_NAME=pull_request",
+      "GITHUB_REF starts with refs/pull/",
+      "MEKONG_CONTRIBUTION_PR is set"
+    ],
+    "reviewers": [
+      "project owner",
+      "community maintainers"
+    ]
+  }
+}
