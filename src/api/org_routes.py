@@ -142,11 +142,7 @@ def _extract_email_from_jwt(authorization: Optional[str]) -> str:
         )
     raw_token = authorization[len("Bearer "):].strip()
 
-    # Allow legacy admin token through (returns a placeholder email)
-    legacy = os.environ.get("MEKONG_ADMIN_TOKEN")
-    if legacy and raw_token == legacy:
-        return "admin@legacy"
-
+    # Require authenticated JWT — legacy admin token bypass removed
     try:
         claims = decode_jwt(raw_token, jwt_secret)
     except JWTExpiredError:
@@ -255,9 +251,7 @@ async def get_org_me(
     - 401/503: auth failure
     """
     jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
-    legacy = os.environ.get("MEKONG_ADMIN_TOKEN")
-
-    if not jwt_secret and not legacy:
+    if not jwt_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Auth disabled — MEKONG_JWT_SECRET=REDACTED not configured",
@@ -269,30 +263,21 @@ async def get_org_me(
             detail="Missing 'Authorization: Bearer <token>' header",
         )
     raw_token = authorization[len("Bearer "):].strip()
-
-    # Legacy admin token bypasses org resolution restriction
-    is_legacy = legacy and raw_token == legacy
     allowed_orgs: list[str] = []
 
-    if not is_legacy:
-        if not jwt_secret:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="JWT auth disabled",
-            )
-        try:
-            claims = decode_jwt(raw_token, jwt_secret)
-        except JWTExpiredError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token expired",
-            )
-        except JWTInvalidError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
-            )
-        allowed_orgs = claims.get("allowed_orgs", [])
+    try:
+        claims = decode_jwt(raw_token, jwt_secret)
+    except JWTExpiredError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+        )
+    except JWTInvalidError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+    allowed_orgs = claims.get("allowed_orgs", [])
 
     # Resolve org_id: from param, or auto-resolve for single-org JWTs
     resolved_org_id = org_id
@@ -420,15 +405,13 @@ async def create_invite_endpoint(
     actor_user_id = actor_email  # fallback if JWT decode fails
     if authorization and authorization.startswith("Bearer ") and jwt_secret:
         raw_token = authorization[len("Bearer "):].strip()
-        legacy = os.environ.get("MEKONG_ADMIN_TOKEN")
-        if not (legacy and raw_token == legacy):
-            from src.services.admin_token_service import decode_jwt as _decode
-            try:
-                claims = _decode(raw_token, jwt_secret)
-                # sub is email; use email as user_id proxy (invite.invited_by_user_id)
-                actor_user_id = claims.get("sub", actor_email)
-            except Exception:
-                pass
+        from src.services.admin_token_service import decode_jwt as _decode
+        try:
+            claims = _decode(raw_token, jwt_secret)
+            # sub is email; use email as user_id proxy (invite.invited_by_user_id)
+            actor_user_id = claims.get("sub", actor_email)
+        except Exception:
+            pass
 
     try:
         result = create_invite(

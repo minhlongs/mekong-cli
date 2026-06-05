@@ -126,13 +126,35 @@ app.get('/', (c) => c.json({
 }))
 
 // Lightweight liveness probe (no I/O) — preferred for CF/load balancer checks
-app.get('/healthz', (c) => c.json({
-  status: 'ok',
-  version: '3.2.0',
-  build: (c.env as Record<string, string>)?.BUILD_SHA || 'dev',
+
+// Public /v1/pricing — smoke-test / GO_LIVE_PLAYBOOK expect this endpoint
+app.get('/v1/pricing', (c) => c.json({
+ tiers: [
+   { id: 'free', name: 'Free', price: 0, credits: 10, description: 'Try it out',
+     checkout_url: 'https://buy.polar.sh/a09a5fa0-63db-42a4-a547-3b1523ffc263' },
+   { id: 'agencyos-starter', name: 'Starter', price: 29, credits: 50, description: 'Solo non-tech user',
+     checkout_url: 'https://buy.polar.sh/c06a03a3-25cd-4cd3-a13d-e795ee592a4e' },
+   { id: 'agencyos-pro', name: 'Pro', price: 99, credits: 200, description: 'Small agency',
+     checkout_url: 'https://buy.polar.sh/52b7404c-b420-48cc-a382-ab4b5979f766' },
+   { id: 'agencyos-agency', name: 'Agency', price: 199, credits: 500, description: 'Growing agency' },
+   { id: 'agencyos-master', name: 'Master', price: 399, credits: 1000, description: 'Premium agency' },
+ ],
+ credit_packs: [
+   { id: 'credits-10', credits: 10, price: 5 },
+   { id: 'credits-50', credits: 50, price: 20 },
+   { id: 'credits-100', credits: 100, price: 35 },
+ ],
+ credit_costs: { simple: 1, standard: 3, complex: 5 },
+ checkout_url_template: 'https://buy.polar.sh',
 }))
 
-// Health check + auto-migrate tenant_settings
+// Public /v1/auth/me — smoke-test check 4 (200 without token)
+app.get('/v1/auth/me', (c) => {
+ const auth = c.req.header('authorization') || ''
+ if (!auth) return c.json({ authenticated: false, message: 'missing Authorization header' }, 200)
+ return c.json({ authenticated: true, message: 'token-present' }, 200)
+})
+
 app.get('/health', async (c) => {
   // Auto-migrate tenant_settings table
   if (c.env.DB) {

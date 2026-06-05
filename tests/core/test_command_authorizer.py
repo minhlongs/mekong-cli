@@ -95,6 +95,29 @@ class TestCommandTierMapping:
             assert authorizer.get_command_tier(cmd) == CommandTier.ENTERPRISE
 
 
+class TestCoreDnaGate:
+    def test_unknown_local_command_blocked_before_license(self):
+        authorizer, gateway, _ = _make_authorizer(license_valid=True)
+        from src.core.command_authorizer import AuthorizationReason
+
+        result = authorizer.authorize_command("private-local-updater")
+
+        assert result.allowed is False
+        assert result.reason == AuthorizationReason.CORE_DNA_BLOCKED
+        assert "Core DNA" in result.message
+        gateway.get.assert_not_called()
+
+    def test_unknown_command_allowed_with_contribution_evidence(self):
+        authorizer, gateway, _ = _make_authorizer(license_valid=True)
+
+        with patch.dict("os.environ", {"MEKONG_CONTRIBUTION_PR": "123"}, clear=False):
+            result = authorizer.authorize_command("community-feature")
+
+        assert result.allowed is True
+        assert result.tier == "pro"
+        gateway.get.assert_called_once()
+
+
 # ---------------------------------------------------------------------------
 # authorize_command — FREE path
 # ---------------------------------------------------------------------------

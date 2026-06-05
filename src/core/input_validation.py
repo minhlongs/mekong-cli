@@ -1,5 +1,6 @@
 """Reusable input validation helpers for Mekong CLI API."""
 
+import re
 from typing import Any, Optional
 from src.core.error_responses import (
     ErrorCode,
@@ -7,6 +8,47 @@ from src.core.error_responses import (
     ErrorResponse,
     error_response,
 )
+
+# Maximum string length for any input field
+MAX_STRING_LENGTH = 4096
+
+# Characters to strip from input (control chars except tab/newline)
+_CONTROL_CHAR_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def strip_control_chars(value: str) -> str:
+    """Remove control characters from a string (except tab and newline)."""
+    return _CONTROL_CHAR_RE.sub("", value)
+
+
+def reject_null_bytes(value: str) -> str:
+    """Reject null bytes from a string. Raises ValueError if found."""
+    if "\x00" in value:
+        raise ValueError("Null byte detected in input — rejected for security.")
+    return value
+
+
+def limit_string_length(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
+    """Truncate a string to max_length characters."""
+    if len(value) > max_length:
+        return value[:max_length]
+    return value
+
+
+def sanitize_string(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
+    """Full sanitization: strip null bytes, strip control chars, limit length.
+
+    Args:
+        value: Raw input string
+        max_length: Maximum allowed length (default 4096)
+
+    Returns:
+        Sanitized string safe for further processing
+    """
+    reject_null_bytes(value)
+    value = strip_control_chars(value)
+    value = limit_string_length(value, max_length)
+    return value
 
 
 def validate_required(
@@ -137,4 +179,8 @@ __all__ = [
     "validate_string_length",
     "validate_url",
     "validate_enum_value",
+    "sanitize_string",
+    "strip_control_chars",
+    "reject_null_bytes",
+    "limit_string_length",
 ]

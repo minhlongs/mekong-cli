@@ -107,4 +107,27 @@ Eval runs use `evals/solo-ceo-eval.md` as the test suite.
 - Update SOP after task completion if process was found inadequate
 - SOP version tracked in frontmatter; bump when behavior changes
 
-HARNESS.md v1.0.0 — CEO Solo Agentic Platform — Mekong CLI
+---
+
+## 9. Core DNA and Contribution Gate
+
+Mekong is open source, but the official runtime feature surface is governed
+by `dna/core-dna.json`.
+
+- Existing shipped features must be declared in the Core DNA manifest.
+- New local-only features are blocked by `src/core/core_dna.py` unless they
+  run in a pull-request contribution context.
+- Advanced Binh Phap and autonomous features remain usable only when declared
+  by the manifest or contributed for owner/community review.
+- The harness roots are public and auditable: `HARNESS.md`, `sops/`,
+  `agents/registry.yaml`, `evals/`, `src/harness/`, `src/binh_phap/`.
+- The CLI command `mekong binh-phap dna --feature <name>` explains the gate.
+- The Binh Phap operating doctrine is declared in
+  `dna/binh-phap-operating-system.json` and validated by
+  `mekong binh-phap doctrine`.
+- The Hermes-style learning loop is declared in
+  `dna/hermes-learning-loop.json` and validated by `mekong harness-eval`.
+- The root CLI command surface is declared in `dna/command-surface.json`;
+  new commands must update it through PR review.
+
+HARNESS.md v1.1.0 — CEO Solo Agentic Platform — Mekong CLI

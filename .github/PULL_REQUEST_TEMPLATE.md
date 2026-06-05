@@ -24,6 +24,14 @@ Vui lòng kiểm tra các mục sau trước khi yêu cầu review:
 - [ ] **Tests**: Đã chạy và pass tất cả tests (`mekong cook "verify"`).
 - [ ] **Docs**: Đã cập nhật tài liệu nếu cần thiết.
 
+## Core DNA Contribution Gate
+
+- [ ] Nếu thêm command/feature mới, đã cập nhật `dna/core-dna.json` và/hoặc `dna/command-surface.json`.
+- [ ] Nếu thay đổi doctrine/agent operating model, đã cập nhật `dna/binh-phap-operating-system.json`.
+- [ ] Đã chạy `python3 -m src.main binh-phap dna --feature <feature-name>`.
+- [ ] Đã chạy `python3 -m src.main harness-eval --json`.
+- [ ] Feature không tự ý mở local-only bypass; phải qua PR owner/community review.
+
 ## Ảnh Chụp Màn Hình (Nếu có)
 <!-- Thêm ảnh minh họa cho thay đổi UI/UX -->
 

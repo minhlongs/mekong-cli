@@ -6,6 +6,7 @@ Handles dev/prod mode detection and configuration loading.
 
 import os
 import secrets
+from pathlib import Path
 from enum import Enum
 from typing import Dict, Any
 from dataclasses import dataclass
@@ -39,16 +40,26 @@ class AuthConfig:
     # JWT settings - Use secrets.token_urlsafe for secure random generation
     JWT_SECRET=REDACTED_KEY = os.getenv("JWT_SECRET=REDACTED_KEY")
     if not JWT_SECRET=REDACTED_KEY:
-        # Generate a random secret for dev mode only
-        if ENVIRONMENT == AuthEnvironment.DEV:
-            JWT_SECRET=REDACTED_KEY = secrets.token_urlsafe(32)
-        else:
-            # In staging/production, require JWT_SECRET=REDACTED_KEY
+        # In production/staging, require JWT_SECRET=REDACTED_KEY from environment
+        if os.environ.get("AUTH_ENVIRONMENT", "dev") != "dev":
             raise ValueError(
                 "JWT_SECRET=REDACTED_KEY environment variable is required for staging/production. "
                 "Generate a secure random string (min 32 characters) and set it."
             )
+        # Dev mode: persist file-based secret so multi-worker processes share the same key
+        _secret_file = Path.home() / ".mekong" / ".jwt_secret"
+        try:
+            _secret_file.parent.mkdir(parents=True, exist_ok=True)
+            if _secret_file.exists():
+                JWT_SECRET=REDACTED_KEY = _secret_file.read_text().strip()
+            else:
+                JWT_SECRET=REDACTED_KEY = secrets.token_urlsafe(32)
+                _secret_file.write_text(JWT_SECRET=REDACTED_KEY)
+                os.chmod(_secret_file, 0o600)
+        except OSError:
+            JWT_SECRET=REDACTED_KEY = secrets.token_urlsafe(32)
     JWT_ALGORITHM = "HS256"
+    JWT_KEY_ID = "mekong-key-1"  # kid header for key rotation support
     JWT_ACCESS_EXPIRY_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
     JWT_REFRESH_EXPIRY_DAYS = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))
 

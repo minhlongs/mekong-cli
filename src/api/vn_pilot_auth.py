@@ -31,6 +31,8 @@ from src.services.audit_logger import audit_admin_action
 
 logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+
 
 def _require_admin_token(authorization: Optional[str] = Header(default=None)) -> None:
     """Bearer-token gate for founder-only admin endpoints.
@@ -100,19 +102,24 @@ def _require_scope(required: list[str]) -> Callable:
             )
         raw_token = authorization[len("Bearer "):].strip()
 
-        # --- Legacy backdoor: exact match on MEKONG_ADMIN_TOKEN ---
-        if legacy_token and raw_token == legacy_token:
-            org_id = request.query_params.get("org_id", "default")
-            _audit_log(scope="legacy", org=org_id, sub="legacy", endpoint=request.url.path)
-            return  # allow
-
-        # --- JWT path ---
-        if not jwt_secret:
-            # Legacy did not match and JWT disabled → no valid path
+    # --- Legacy token: allowed only when DEBUG=true, JWT path preferred ---
+    if legacy_token and raw_token == legacy_token:
+        if os.environ.get("DEBUG") != "true":
+            logger.warning("Legacy admin token used without DEBUG=true — rejecting per security policy")
             raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="JWT auth disabled — MEKONG_JWT_SECRET=REDACTED not set on gateway",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Legacy admin token is disabled in non-debug mode. Use JWT authentication instead.",
             )
+        org_id = request.query_params.get("org_id", "default")
+        _audit_log(scope="legacy_admin_debug", org=org_id, sub="legacy", endpoint=request.url.path)
+        logger.warning("Legacy admin token bypass active (DEBUG=true) for %s on %s", org_id, request.url.path)
+        claims_or_legacy = {"sub": "legacy_admin"}
+        if not check_org(claims_or_legacy, org_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid org context for legacy admin token",
+            )
+        return  # admin scope, org-validated, debug-only
 
         try:
             claims = decode_jwt(raw_token, jwt_secret)

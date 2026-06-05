@@ -20,6 +20,15 @@ _YM_RE = re.compile(r"^\d{4}-\d{2}$")
 _ORG_ID_PATTERN = r"^[a-z0-9][a-z0-9-]{0,31}$"
 
 
+def _sanitize_org_id(org_id: str) -> str:
+    """Sanitize org_id for safe use in filenames.
+
+    Replaces non-alphanumeric chars with underscores and limits length.
+    """
+    sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", org_id)
+    return sanitized[:32]
+
+
 @export_router.get(
     "/export/misa",
     dependencies=[Depends(_export_auth)],
@@ -56,7 +65,7 @@ async def export_misa(
         )
 
     csv_bytes = to_csv_bytes(rows)
-    filename = f"misa-pilots-{org_id}-{from_ym}-{to_ym}.csv"
+    filename = f"misa-pilots-{_sanitize_org_id(org_id)}-{from_ym}-{to_ym}.csv"
     return Response(
         content=csv_bytes,
         media_type="text/csv; charset=utf-8",
