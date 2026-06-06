@@ -6,6 +6,8 @@ Manages a registry of remote nodes with health checking.
 
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import logging
 import time
 import uuid
@@ -192,18 +194,41 @@ class SwarmDispatcher:
         self._init_local_agents()
 
     def _init_local_agents(self) -> None:
-        """Lazy-load local agents to avoid circular imports."""
-        try:
-            from src.agents.file_agent import FileAgent
-            from src.agents.git_agent import GitAgent
-            from src.agents.shell_agent import ShellAgent
-            self._local_agents = {
-                "git": GitAgent(),
-                "file": FileAgent(),
-                "shell": ShellAgent(),
-            }
-        except ImportError:
-            self._local_agents = {}
+        """Lazy-load local agents to avoid circular imports.
+
+        Uses importlib.util.spec_from_file_location so we can distinguish
+        between a missing module file (ImportError / FileNotFoundError) and
+        a syntactically invalid module (SyntaxError). Both are logged and
+        fall back to an empty agent registry rather than silently crashing.
+        """
+        base = Path(__file__).resolve().parent.parent
+        agent_map = {
+            "git": base / "agents" / "git_agent.py",
+            "file": base / "agents" / "file_agent.py",
+            "shell": base / "agents" / "shell_agent.py",
+        }
+        self._local_agents = {}
+        for role, agent_path in agent_map.items():
+            try:
+                spec = importlib.util.spec_from_file_location(
+                    f"src.agents.{role}_agent", agent_path,
+                )
+                if spec is None or spec.loader is None:
+                    logger.debug("Agent spec unavailable for %s (%s)", role, agent_path)
+                    continue
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                agent_cls = getattr(module, role.capitalize() + "Agent", None)
+                if agent_cls is None:
+                    logger.debug("No %s class found in %s", role, agent_path)
+                    continue
+                self._local_agents[role] = agent_cls()
+            except FileNotFoundError:
+                logger.debug("Agent module not found: %s", agent_path)
+            except SyntaxError as exc:
+                logger.warning("Agent module has syntax error (%s): %s", agent_path, exc)
+            except ImportError as exc:
+                logger.debug("Agent module import failed (%s): %s", agent_path, exc)
 
     def get_healthy_nodes(self) -> list[SwarmNode]:
         """Return all nodes with status='healthy'."""

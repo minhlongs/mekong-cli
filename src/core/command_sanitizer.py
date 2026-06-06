@@ -135,8 +135,11 @@ class CommandSanitizer:
     """
     result = SanitizationResult(
       is_safe=True,
-      sanitized_command=command.strip(),
+     sanitized_command=strip_invisible_chars(command.strip()),
     )
+
+    command = strip_invisible_chars(command)
+
 
     if not command or not command.strip():
       result.is_safe = False
@@ -288,19 +291,34 @@ __all__ = [
 ]
 
 
-# --- Module-level helper (Finding #9) ---
+# Characters stripped to prevent visual-spoofing attacks.
+# See https://owasp.org/www-community/attacks/Unicode_Injection
+# Covers: ZWSP(U+200B), ZWNJ(U+200C), ZWJ(U+200D), BOM(U+FEFF),
+#         LRM(U+200E), RLM(U+200F), LRE(U+202A), RLO(U+202E)
+_INVISIBLE_CHARS_RE = re.compile(r"[\u200b\u200c\u200d\ufeff\u200e\u200f\u202a\u202e]")
 
+# Module-level chaining detector (fast pre-filter before full regex scan)
 _CHAINING_RE = re.compile(r"[;&|]|\n")
 
 
 def _has_command_chaining(command: str) -> bool:
-  """Return True if the command contains chaining characters.
+    """Return True if the command contains chaining characters.
 
-  Checks for ; && || | and literal newlines that allow chaining
-  multiple commands. This is a fast pre-filter before regex matching.
-  """
-  # A single | within a quoted string is not chaining, but at the
-  # sanitization layer we have no shell parser — safest is to reject
-  # any chaining character since the caller should not pass multi-command
-  # input to begin with.
-  return bool(_CHAINING_RE.search(command))
+    Checks for ; && || | and literal newlines that allow chaining
+    multiple commands. This is a fast pre-filter before regex matching.
+    """
+    if _CHAINING_RE.search(command):
+        return True
+    return False
+
+
+def strip_invisible_chars(command: str) -> str:
+    """Remove zero-width and RTL/LTR override characters.
+
+    These characters can be used to visually spoof a command into
+    looking safe while the hidden payload executes (e.g. RLO U+202E
+    reverses text rendering). Stripping them ensures the regex
+    patterns below see the real command text.
+    """
+    return _INVISIBLE_CHARS_RE.sub("", command)
+

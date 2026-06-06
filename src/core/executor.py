@@ -7,7 +7,6 @@ Returns ExecutionResult for orchestrator integration.
 
 import concurrent.futures
 import ipaddress
-import os
 import re
 import shlex
 import socket

@@ -122,8 +122,21 @@ class SessionManager:
                 self.clear()
                 return None
 
-        except (json.JSONDecodeError, IOError, KeyError, ValueError):
+        except (json.JSONDecodeError, IOError, KeyError) as exc:
             # Corrupted cache - clear and return None
+            self._logger.warning("Session cache corrupted: %s", exc)
+            self.clear()
+            return None
+        except ValueError as exc:
+            # HMAC key mismatch
+            if "HMAC" in str(exc):
+                self._logger.warning(
+                    "Session cache invalidated: machine identifier changed "
+                    "(VM migration or container restart). "
+                    "User will need to re-authenticate."
+                )
+            else:
+                self._logger.warning("Session cache validation error: %s", exc)
             self.clear()
             return None
 
