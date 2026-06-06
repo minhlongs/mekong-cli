@@ -116,48 +116,53 @@ class RecipeExecutor:
 
         return result
 
-    @staticmethod
-    def _validate_url(url: str) -> str | None:
-        """Validate URL against SSRF attacks.
+def _validate_url(self, url: str) -> tuple:
+    """Validate URL against SSRF attacks with IP pinning.
 
-        Resolves the hostname to an IP and checks against blocked networks
-        (private, loopback, link-local, reserved, metadata endpoints).
+    Resolves hostname to IP, checks against blocked networks, and returns
+    the resolved IP for callers to re-validate immediately before the
+    HTTP request (prevents DNS rebinding / TOCTOU attacks).
 
-        Args:
-            url: The URL to validate.
+    Args:
+        url: The URL to validate.
 
-        Returns:
-            Error message string if blocked, None if safe.
-        """
+    Returns:
+        (error_message, pinned_ip) -- error_message is None if safe,
+        pinned_ip is the resolved IP string (or None if unresolvable).
+    """
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+        if not host:
+            return f"No hostname in URL: {url}", None
+
+        # Resolve IP and capture for pinning
         try:
-            parsed = urlparse(url)
-            host = parsed.hostname or ""
-            if not host:
-                return f"No hostname in URL: {url}"
-
-            # Try parsing as literal IP first
+            addr = ipaddress.ip_address(host)
+            pinned_ip = str(addr)
+        except ValueError:
+            # Resolve hostname - capture IP for pinning
             try:
-                addr = ipaddress.ip_address(host)
-            except ValueError:
-                # Resolve hostname
-                try:
-                    addr = ipaddress.ip_address(socket.gethostbyname(host))
-                except (socket.gaierror, OSError):
-                    # Cannot resolve — allow (conservative: block only known-bad IPs)
-                    return None
+                pinned_ip = socket.gethostbyname(host)
+                addr = ipaddress.ip_address(pinned_ip)
+            except (socket.gaierror, OSError, ValueError):
+                # Cannot resolve - allow
+                return None, None
 
-            if not isinstance(addr, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-                return None
+        if not isinstance(addr, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+            return None, None
 
-            # Check against all blocked networks
-            for network in _SSRF_BLOCKED_NETWORKS:
-                if addr in network:
-                    return f"SSRF blocked — target {host} ({addr}) is in blocked range {network}"
+        # Check against all blocked networks
+        for network in _SSRF_BLOCKED_NETWORKS:
+            if addr in network:
+                return (
+                    f"SSRF blocked - target {host} ({addr}) is in blocked range {network}",
+                    pinned_ip,
+                )
 
-            return None
-        except Exception as e:
-            return f"URL validation error: {e}"
-
+        return None, pinned_ip
+    except Exception as e:
+        return f"URL validation error: {e}", None
     def _sanitize_llm_prompt(self, text: str, max_length: int = 8000) -> str:
         """Sanitize text before passing to LLM to prevent prompt injection.
 
@@ -276,7 +281,7 @@ class RecipeExecutor:
             )
 
         # SSRF prevention: validate URL before making request
-        ssrf_error = self._validate_url(url)
+        ssrf_error, pinned_ip = self._validate_url(url)
         if ssrf_error:
             self.console.print(f"[bold red]SECURITY:[/bold red] {ssrf_error}")
             return ExecutionResult(
@@ -286,6 +291,23 @@ class RecipeExecutor:
                 metadata={"mode": "api", "ssrf_blocked": True},
             )
 
+
+        # Re-validate pinned IP immediately before request (defense-in-depth
+        # against DNS rebinding: if DNS changed since validation, block it).
+        if pinned_ip:
+            _addr = ipaddress.ip_address(pinned_ip)
+            for network in _SSRF_BLOCKED_NETWORKS:
+                if _addr in network:
+                    self.console.print(
+                        f"[bold red]SECURITY:[/bold red] "
+                        f"SSRF blocked - pinned IP {pinned_ip} in blocked range {network}"
+                    )
+                    return ExecutionResult(
+                        exit_code=1,
+                        stdout="",
+                        stderr=f"SSRF blocked (pinned IP): {url}",
+                        metadata={"mode": "api", "ssrf_blocked": True},
+                    )
         self.console.print(f"[cyan][API] {method}:[/cyan] {url}")
 
         try:
@@ -393,7 +415,7 @@ class RecipeExecutor:
             url = step.description.strip()
 
         # SSRF prevention: validate URL before browser fetch
-        ssrf_error = self._validate_url(url)
+        ssrf_error, pinned_ip = self._validate_url(url)
         if ssrf_error:
             self.console.print(f"[bold red]SECURITY:[/bold red] {ssrf_error}")
             return ExecutionResult(
@@ -402,6 +424,23 @@ class RecipeExecutor:
                 stderr=f"SSRF blocked: {url}",
                 metadata={"mode": "browse", "ssrf_blocked": True},
             )
+
+        # Re-validate pinned IP immediately before browser fetch
+        # (DNS rebinding guard)
+        if pinned_ip:
+            _addr = ipaddress.ip_address(pinned_ip)
+            for network in _SSRF_BLOCKED_NETWORKS:
+                if _addr in network:
+                    self.console.print(
+                        f"[bold red]SECURITY:[/bold red] "
+                        f"SSRF blocked - pinned IP {pinned_ip} in blocked range {network}"
+                    )
+                    return ExecutionResult(
+                        exit_code=1,
+                        stdout="",
+                        stderr=f"SSRF blocked (pinned IP browse): {url}",
+                        metadata={"mode": "browse", "ssrf_blocked": True},
+                    )
 
         self.console.print(f"[cyan][Browse] {browse_action}:[/cyan] {url}")
 

@@ -18,6 +18,7 @@ Usage:
 
 from __future__ import annotations
 
+import os
 from cryptography.fernet import Fernet
 import hashlib
 import hmac
@@ -29,6 +30,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 from enum import Enum
 
+import base64
 logger = __import__("logging").getLogger(__name__)
 
 
