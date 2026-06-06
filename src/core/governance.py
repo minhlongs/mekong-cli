@@ -133,8 +133,7 @@ class Governance:
       decision.approved = True
       return True
 
-    decision.approved = True
-    return True
+
 
   def record_audit(self, entry: AuditEntry) -> None:
     """Record an audit entry with FIFO eviction."""

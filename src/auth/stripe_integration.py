@@ -9,6 +9,7 @@ import os
 import json
 import hashlib
 import hmac
+import time
 import logging
 from typing import Optional, Dict, Any
 from dataclasses import dataclass
@@ -216,7 +217,11 @@ class StripeService:
       if not sub_info:
         new_role = Role.VIEWER
       else:
-        new_role = self.map_tier_to_role(sub_info["price_id"]) or Role.MEMBER
+        new_role = self.map_tier_to_role(sub_info["price_id"])
+        if new_role is None:
+            raise ValueError(
+                f"Unknown Stripe price ID: {sub_info['price_id']}"
+            )
 
       await user_repo.update_user_role(user.id, new_role.value)
       logger.info("Updated user %s role to %s", user_id, new_role.value)
@@ -249,6 +254,20 @@ class StripeService:
 
       if not timestamp or not signature:
         return False
+
+        # Reject webhooks outside the 5-minute tolerance window
+        try:
+            stripe_ts = float(timestamp)
+            local_ts = time.time()
+            if abs(local_ts - stripe_ts) > 300:
+                logger.warning(
+                    "Stripe webhook timestamp drift too large: %.0fs",
+                    abs(local_ts - stripe_ts),
+                )
+                return False
+        except (ValueError, TypeError) as exc:
+            logger.warning("Invalid Stripe webhook timestamp: %s", exc)
+            return False
 
       signed_payload = f"{timestamp}.{payload.decode('utf-8')}"
 
