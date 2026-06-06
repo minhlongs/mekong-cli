@@ -9,10 +9,14 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Any, Optional, Dict
 
+
+_logger = logging.getLogger(__name__)
 
 @dataclass
 class TenantContext:
@@ -207,35 +211,61 @@ class SessionCache:
 _CACHE_HMAC_SALT = b"mekong-cli-session-cache-v1"
 
 
-def _get_cache_hmac_key() -> bytes:
+def _get_cache_hmac_key() -> tuple[bytes, str]:
     """Derive HMAC-SHA256 key from machine-specific entropy.
 
-    Uses machine-id + salt so the key is stable across restarts but
-    not guessable from the cache file alone.
+    Returns (key, source_label) so callers can identify which
+    entropy source was used for logging.
+
+    Sources (in priority order):
+      1. /etc/machine-id
+      2. /var/lib/dbus/machine-id
+      3. os.uname().nodename
+      4. "default" (fallback)
     """
     machine_id = ""
+    source_label = "default"
     mid_paths = ["/etc/machine-id", "/var/lib/dbus/machine-id"]
     for p in mid_paths:
         try:
             with open(p) as f:
                 machine_id = f.read().strip()
             if machine_id:
+                source_label = p
                 break
         except OSError:
             continue
     if not machine_id:
         machine_id = os.uname().nodename if hasattr(os, "uname") else "default"
-    return hashlib.sha256(machine_id.encode() + _CACHE_HMAC_SALT).digest()
+        source_label = "nodename"
+    key = hashlib.sha256(machine_id.encode() + _CACHE_HMAC_SALT).digest()
+    return key, source_label
 
 
 def _compute_cache_hmac(data: bytes) -> str:
     """Compute HMAC-SHA256 hex digest for session cache data."""
-    return hmac.new(_get_cache_hmac_key(), data, hashlib.sha256).hexdigest()
+    key, _ = _get_cache_hmac_key()
+    return hmac.new(key, data, hashlib.sha256).hexdigest()
 
 
 def _verify_cache_hmac(data: bytes, expected: str) -> bool:
-    """Constant-time HMAC verification for session cache data."""
-    return hmac.compare_digest(_compute_cache_hmac(data), expected)
+    """Constant-time HMAC verification for session cache data.
+
+    Logs a warning when the HMAC key source has changed (machine-id
+    or hostname differs), indicating a VM migration or container
+    restart rather than tampering.
+    """
+    current_key, current_source = _get_cache_hmac_key()
+    computed = hmac.new(current_key, data, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(computed, expected):
+        _logger.warning(
+            "HMAC key mismatch: cache was signed with a different machine "
+            "identifier (current source: %s). "
+            "This typically happens after VM migration or container restart.",
+            current_source,
+        )
+        return False
+    return True
 
 
 DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"

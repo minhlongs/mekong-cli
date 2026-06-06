@@ -7,6 +7,7 @@ Session cache persistence, TTL management, and auto-refresh.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,6 +34,8 @@ class SessionManager:
 
     DEFAULT_TTL_SECONDS = 900 # 15 minutes
     DEFAULT_REFRESH_BUFFER = 300 # 5 minutes
+
+    _logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(
         self,
