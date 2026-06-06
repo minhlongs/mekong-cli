@@ -18,6 +18,8 @@ from src.core.usage_metering import UsageEvent
 
 logger = logging.getLogger(__name__)
 
+VALID_PLANS = {"free", "starter", "growth", "pro", "enterprise"}
+
 
 @dataclass
 class RateCard:
@@ -162,6 +164,13 @@ class RateCardResolver:
             return None
 
         plan_tier = license_info.get("tier", "free")
+
+        if plan_tier not in VALID_PLANS:
+            logger.error("Invalid plan tier %s for license %s", plan_tier, license_key)
+            raise ValueError(
+                f"Invalid plan tier {plan_tier!r} for license {license_key}. "
+                f"Valid: {sorted(VALID_PLANS)}"
+            )
 
         # Check cache
         cache_key = f"{plan_tier}:{event_type}:{model_name or '*'}"

@@ -94,7 +94,6 @@ class BatchBillingResponse(BaseModel):
     """Batch billing response."""
 
     batch_id: str
-    license_key: str
     status: str
     billing_record_id: Optional[str]
     total_charge: str
@@ -300,7 +299,6 @@ async def submit_batch_billing(
 
     return BatchBillingResponse(
         batch_id=batch_result.batch_id,
-        license_key=batch_result.license_key,
         status=batch_result.status.value,
         billing_record_id=batch_result.billing_record_id,
         total_charge=str(batch_result.total_charge),
@@ -457,6 +455,7 @@ async def trigger_reconciliation(
 async def get_reconciliation_status(
     license_key: str,
     audit_date: date = Query(..., description="Audit date"),
+    tenant_context = Depends(require_tenant),
     repository: LicenseRepository = Depends(lambda: get_repository()),
 ) -> ReconciliationStatusResponse:
     """Get reconciliation status for a license on a specific date."""
