@@ -24,11 +24,7 @@ from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
 from ..retry_policy import RetryPolicy
 from ..workflow_state import WorkflowState, WorkflowStatus, StepStatus
 from ..dag_scheduler import DAGScheduler, validate_dag
-
-from .models import OrchestrationStatus, OrchestrationResult, StepResult
-from .display import display_report, format_status
-from .rollback import handle_failure
-from .agi import AGIComponents
+from ..constitution import Constitution, ConstitutionalReview as ConReview
 
 
 class RecipeOrchestrator:
@@ -46,6 +42,8 @@ class RecipeOrchestrator:
         enable_rollback: bool = True,
         use_swarm: bool = False,
         retry_policy: Optional[RetryPolicy] = None,
+        constitution: Optional[Constitution] = None,
+        constitutional_mode: str = "audit",  # "monitor", "audit", "enforce"
     ) -> None:
         self.planner = RecipePlanner(llm_client=llm_client)
         self.verifier = RecipeVerifier(strict_mode=strict_verification)
@@ -56,6 +54,10 @@ class RecipeOrchestrator:
         self.nlu = IntentClassifier(llm_client=llm_client)
         self.retry_policy = retry_policy or RetryPolicy()
         self.history = ExecutionHistory()
+
+        # Constitutional AI
+        self.constitution = constitution or Constitution(llm_client=llm_client)
+        self.constitutional_mode = constitutional_mode
 
         # AGI v2 subsystems
         self._agi = AGIComponents(llm_client=llm_client)
@@ -128,10 +130,42 @@ class RecipeOrchestrator:
             self.console.print("[yellow]⚠️  Plan validation warnings:[/yellow]")
             for issue in plan_issues:
                 self.console.print(f"  • {issue}")
+
+        # Constitutional review of plan (PLAN hook)
+        plan_constitutional_review = self._review_plan_constitution(recipe, goal)
+        if plan_constitutional_review.blocked:
+            self.console.print("[bold red]🚫 Plan blocked by Constitutional AI[/bold red]")
+            self.console.print(f"Score: {plan_constitutional_review.overall_score:.2f}")
+            for result in plan_constitutional_review.principle_results:
+                if not result.passed:
+                    self.console.print(f"  • {result.principle.value}: {result.reason}")
+            if self.constitutional_mode == "enforce":
+                raise ValueError(f"Plan failed constitutional review (score={plan_constitutional_review.overall_score:.2f})")
+            else:
+                self.console.print("[yellow]⚠️  Continuing in non-enforce mode[/yellow]")
+
         self.console.print(f"[green]✓[/green] Generated {len(recipe.steps)} steps")
+        self._record_constitutional_metric(
+            phase="plan",
+            score=plan_constitutional_review.overall_score,
+            recipe_name=recipe.name,
+        )
 
         # PHASE 2 & 3: EXECUTE → VERIFY
         result = self.run_from_recipe(recipe, progress_callback=progress_callback)
+
+        # Attach plan constitutional score
+        result.constitutional_plan_score = plan_constitutional_review.overall_score
+
+        # Calculate average step constitutional score
+        step_scores = [sr.constitutional_score for sr in result.step_results if sr.constitutional_score is not None]
+        if step_scores:
+            result.constitutional_average_step_score = sum(step_scores) / len(step_scores)
+
+        # Overall compliance (plan + average steps)
+        if result.constitutional_plan_score and result.constitutional_average_step_score:
+            combined = (result.constitutional_plan_score + result.constitutional_average_step_score) / 2
+            result.constitutional_compliant = combined >= 0.7
 
         self.telemetry.finish_trace()
         duration_ms = (time.time() - goal_start_time) * 1000
@@ -421,9 +455,40 @@ class RecipeOrchestrator:
         workflow_id: str = "",
         wf_state: Optional[WorkflowState] = None,
     ) -> StepResult:
-        """Execute single step and verify results, with optional LLM self-healing."""
+        """Execute single step and verify results, with optional LLM self-healing and constitutional review."""
         step_start = time.time()
         self_healed = False
+
+        # Constitutional review before execution (EXECUTE hook)
+        step_review = None
+        if self.constitution:
+            step_review = self._review_step_constitution(step, workflow_id)
+            if step_review.blocked and self.constitutional_mode == "enforce":
+                self.console.print(f"[bold red]🚫 Step {step.order} blocked by Constitutional AI[/bold red]")
+                from ..verifier import ExecutionResult, VerificationReport
+                blocked_result = ExecutionResult(
+                    exit_code=1,
+                    stderr=f"Constitutional violation: {step_review.summary}",
+                )
+                verification = VerificationReport(
+                    passed=False,
+                    errors=[f"Constitutional AI: {r.reason}" for r in step_review.principle_results if not r.passed],
+                )
+                return StepResult(
+                    step=step,
+                    execution=blocked_result,
+                    verification=verification,
+                    self_healed=False,
+                    constitutional_score=step_review.overall_score if step_review else None,
+                    constitutional_review={
+                        "overall_score": step_review.overall_score,
+                        "blocked": step_review.blocked,
+                        "principles": [
+                            {"principle": r.principle.value, "score": r.score, "passed": r.passed}
+                            for r in step_review.principle_results
+                        ],
+                    } if step_review else None,
+                )
 
         execution_result = executor.execute_step(step)
 
@@ -459,6 +524,16 @@ class RecipeOrchestrator:
             execution=execution_result,
             verification=verification_report,
             self_healed=self_healed,
+            constitutional_score=step_review.overall_score if step_review else None,
+            constitutional_review={
+                "overall_score": step_review.overall_score,
+                "blocked": step_review.blocked,
+                "passed": step_review.passed,
+                "principles": [
+                    {"principle": r.principle.value, "score": r.score, "passed": r.passed, "reason": r.reason}
+                    for r in step_review.principle_results
+                ],
+            } if step_review else None,
         )
 
     def _self_heal_step(
@@ -514,6 +589,123 @@ class RecipeOrchestrator:
             self.telemetry.record_error(f"Self-heal error: {e}")
 
         return execution_result, False
+
+    # ------------------------------------------------------------------
+    # Constitutional AI Hooks (PEV Integration)
+    # ------------------------------------------------------------------
+
+    def _review_plan_constitution(
+        self, recipe: Recipe, goal: str
+    ) -> ConReview:
+        """
+        Constitutional review of entire plan (PLAN hook).
+
+        Args:
+            recipe: The planned recipe
+            goal: Original goal statement
+
+        Returns:
+            Constitutional review result
+        """
+        context = {
+            "goal": goal,
+            "recipe_name": recipe.name,
+            "step_count": len(recipe.steps),
+        }
+
+        parameters = {
+            "action_type": "plan",
+            "steps": [
+                {
+                    "title": step.title,
+                    "type": step.params.get("type", "shell") if step.params else "shell",
+                    "agent": step.agent,
+                }
+                for step in recipe.steps
+            ],
+        }
+
+        metadata = {
+            "source": "orchestrator",
+            "phase": "plan",
+            "recipe": recipe.name,
+        }
+
+        return self.constitution.review(
+            action="plan:review",
+            context=context,
+            parameters=parameters,
+            metadata=metadata,
+        )
+
+    def _review_step_constitution(
+        self, step: RecipeStep, workflow_id: str = ""
+    ) -> ConReview:
+        """
+        Constitutional review of single step (EXECUTE hook).
+
+        Args:
+            step: The step to review
+            workflow_id: Current workflow ID
+
+        Returns:
+            Constitutional review result
+        """
+        context = {
+            "workflow_id": workflow_id,
+            "step_order": step.order,
+            "step_title": step.title,
+        }
+
+        parameters = {
+            "command": step.description.strip(),
+            "type": step.params.get("type", "shell") if step.params else "shell",
+            "agent": step.agent,
+            "verification": step.params.get("verification", {}),
+        }
+
+        metadata = {
+            "source": "orchestrator",
+            "phase": "execute",
+            "step": step.order,
+        }
+
+        return self.constitution.review(
+            action="step:execute",
+            context=context,
+            parameters=parameters,
+            metadata=metadata,
+        )
+
+    def _record_constitutional_metric(
+        self,
+        phase: str,
+        score: float,
+        recipe_name: Optional[str] = None,
+        step_order: Optional[int] = None,
+    ) -> None:
+        """
+        Record constitutional score metric.
+
+        Args:
+            phase: "plan", "execute", or "verify"
+            score: Constitutional score 0-1
+            recipe_name: Recipe name (for plan phase)
+            step_order: Step order (for execute phase)
+        """
+        if hasattr(self.telemetry, 'record_constitutional_score'):
+            self.telemetry.record_constitutional_score(
+                phase=phase,
+                score=score,
+                recipe=recipe_name,
+                step=step_order,
+            )
+        else:
+            # Fallback to generic metric
+            self.logger.info(
+                f"Constitutional score [{phase}]: {score:.3f}",
+                extra={"phase": phase, "score": score, "recipe": recipe_name, "step": step_order},
+            )
 
     # ------------------------------------------------------------------
     # Backward-compat display helpers (previously private methods)

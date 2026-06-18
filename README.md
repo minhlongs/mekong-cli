@@ -31,6 +31,90 @@ The platform that enables the **one-person billion-dollar company**. 10 business
 | OpenClaw daemon orchestration | ❌ not yet | scaffolded only |
 | First paying customer | ❌ not yet | tracked in [`STRATEGY.md`](./STRATEGY.md) |
 
+## ZenOS Vision: The Operating System for One-Person Companies
+
+Mekong is evolving into **ZenOS** — a constitutional operating system where every economic entity (particle) has:
+
+- **Constitutional AI governance** — 9 principles embedded in every decision
+- **Founder Genome** — Encrypted psychological profile for AI personalization
+- **Economic Particles** — Atomic financial events with immutable audit trails
+- **Behavior Graph** — Knowledge graph tracking entity relationships and trust
+- **Treasury** — Multi-currency fund management with allocation rules
+- **Right to Exit** — Data portability and self-custody guarantees
+
+### Core Concepts
+
+#### Economic Particles
+
+Replace monolithic tenant accounts with composable economic identity:
+
+```
+Particle {
+  id: UUID
+  type: "opc" | "cooperative" | "micro_enterprise" | "creator"
+  mission: string
+  constitution: Constitution (ZenOS + custom rules)
+  founder: FounderGenome (encrypted profile)
+  behavior_graph: portable knowledge graph
+  treasury: multi-currency with auto-allocation
+  trust_score: 0-100 (reputation)
+  lifecycle: birth → active → (merge/split) → dissolve
+}
+```
+
+Every API call, command execution, or financial transaction creates a particle — an immutable record in the economic ledger.
+
+#### Constitutional AI
+
+All actions are evaluated against 9 principles:
+
+1. **Human Dignity First** — Humans > AI > Capital
+2. **AI as Assistant** — AI serves, doesn't command
+3. **Transparency** — All decisions explainable
+4. **Freedom to Exit** — No lock-in
+5. **Anti-Extraction** — Fair value exchange
+6. **Micro-Enterprise First** — Solo founders as primary persona
+7. **Mission Alignment** — Revenue serves mission
+8. **Polycentric Governance** — Multiple protocol jurisdictions
+9. **Right to Repair** — Owners control their infrastructure
+
+Actions scoring below 0.7 trigger warnings or blocks (configurable per deployment).
+
+#### Founder Genome
+
+Founder profiles are captured via wizard, encrypted locally, and used to:
+
+- Personalize AI agent communication style
+- Adjust constitutional principle weights
+- Match with complementary co-founders
+- Recommend investor types and growth strategies
+
+10 core traits scored 0.0-1.0: risk_tolerance, execution_speed, capital_efficiency, vision_clarity, team_building, customer_obsession, adaptability, resilience, strategic_thinking, founder_market_fit.
+
+Clusters: Serial Entrepreneur, Visionary, Operator, Experimenter, Specialist, Challenger.
+
+### Migration Path
+
+Existing tenants migrate automatically to particles with:
+
+- 1:1 ID mapping (backwards compatible)
+- Default ZenOS constitution attached
+- Empty behavior graph (ready for GraphRAG)
+- Treasury with allocation rules (30% reserve, 25% tax, 30% reinvest, 15% draw)
+
+Run migration: `python3 scripts/migrate-tenants-to-particles.py`
+
+Full backwards compatibility layer maintains legacy `/v1/raas/tenant/*` APIs during transition.
+
+### Documentation
+
+- **[ZenOS Migration Guide](docs/zenos-migration-guide.md)** — Step-by-step migration from tenants to particles
+- **[Economic Particles](docs/economic-particles.md)** — Deep dive into particle architecture and treasury
+- **[Constitutional AI](docs/constitutional-ai.md)** — 9-principle ethical review system
+- **[Founder Genome](docs/founder-genome.md)** — Founder profiling and AI analysis
+
+---
+
 ## Quick Start
 
 ```bash
@@ -98,7 +182,7 @@ cd mekong-cli && source scripts/shell-init.sh
 
 # Set any OpenAI-compatible LLM (3 env vars)
 export LLM_BASE_URL=https://openrouter.ai/api/v1
-export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_API_KEY=<openrouter-key>
 export LLM_MODEL=anthropic/claude-sonnet-4
 
 mekong cook "Create a REST API with auth"
@@ -264,7 +348,7 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 
 ## Project Stats
 
-*Verified counts as of 2026-04-17. Evidence: [`docs/claims-audit.md`](docs/claims-audit.md)*
+*Verified counts as of 2026-04-17.*
 
 | Metric | Count | Evidence |
 |--------|-------|----------|
@@ -286,7 +370,7 @@ Mekong IDE is the AI kernel. 13 vertical products are built on top of it.
 | PARTIAL | MekongPay, MekongMind, MekongEye | 6, 8, 13 |
 | SCAFFOLD | MekongHQ, MekongCounsel, MekongVault, MekongStudio, MekongBridge, MekongPulse, MekongMap, MekongForce, MekongLaunch | 1,3,4,5,7,9,10,11,12 |
 
-Full roadmap: [`docs/BINH_PHAP_ROADMAP.md`](docs/BINH_PHAP_ROADMAP.md) · Scaffold plans: [`verticals/scaffold/`](verticals/scaffold/)
+Full roadmap: [`docs/harness-engineering.md`](docs/harness-engineering.md) · Scaffold plans: [`docs/command-fabric.md`](docs/command-fabric.md)
 
 > XONG = $ in bank. Not PR merged. Not scaffold created.
 
@@ -296,15 +380,12 @@ Full roadmap: [`docs/BINH_PHAP_ROADMAP.md`](docs/BINH_PHAP_ROADMAP.md) · Scaffo
 
 For developers and agent teams looking to onboard, run, test, and deploy Mekong CLI:
 
-*   **[Setup Guide](file:///Users/macbook/mekong-cli/docs/setup-guide.md)**: Requirements, installation steps, and local model setup.
-*   **[Local Development Guide](file:///Users/macbook/mekong-cli/docs/local-development-guide.md)**: Workspaces, command registration, and linting.
-*   **[Environment Variables Reference](file:///Users/macbook/mekong-cli/docs/env-vars.md)**: Details on LLM credentials, gateway, database, and telemetry variables.
-*   **[Testing Guide](file:///Users/macbook/mekong-cli/docs/testing-guide.md)**: Instructions on running seed and core test suites.
-*   **[Troubleshooting Guide](file:///Users/macbook/mekong-cli/docs/troubleshooting.md)**: Resolution of LLM timeouts, sqlite locks, and port collisions.
-*   **[Architecture Overview](file:///Users/macbook/mekong-cli/docs/architecture-overview.md)**: Core PEV engine and daemon loops structure.
-*   **[Deployment Notes](file:///Users/macbook/mekong-cli/docs/deployment-notes.md)**: Cloudflare Pages, Workers, D1 database, and tunnel setups.
-*   **[Glossary & Terminology](file:///Users/macbook/mekong-cli/docs/glossary.md)**: Platform vocabulary and concepts.
-*   **[Onboarding Notes](file:///Users/macbook/mekong-cli/docs/onboarding.md)**: Developer sandbox setup checklist and coding guidelines.
+*   **[ZenOS Migration Guide](docs/zenos-migration-guide.md)**: Tenant-to-particle migration and compatibility mode.
+*   **[Economic Particles](docs/economic-particles.md)**: Particle model, lifecycle, and use cases.
+*   **[Constitutional AI](docs/constitutional-ai.md)**: Principles, review process, and configuration.
+*   **[Founder Genome](docs/founder-genome.md)**: Genome capture wizard, encryption, and storage.
+*   **[Harness Engineering](docs/harness-engineering.md)**: Harness architecture and operating model.
+*   **[Command Fabric](docs/command-fabric.md)**: Command registry and orchestration patterns.
 
 ---
 
