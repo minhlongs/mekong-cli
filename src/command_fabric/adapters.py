@@ -2,36 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any
 
-from src.command_fabric.catalog import CommandRecord, build_global_command_catalog
-
-
-AdapterName = Literal[
-    "canonical",
-    "claude-code",
-    "codex",
-    "gemini-cli",
-    "opencode",
-    "mcp",
-    "vscode",
-    "cursor",
-    "jetbrains",
-    "shell",
-]
-
-SUPPORTED_ADAPTERS: tuple[str, ...] = (
-    "canonical",
-    "claude-code",
-    "codex",
-    "gemini-cli",
-    "opencode",
-    "mcp",
-    "vscode",
-    "cursor",
-    "jetbrains",
-    "shell",
+from src.command_fabric.adapter_targets import (
+    AGENT_CLI_ADAPTERS,
+    IDE_ADAPTERS,
+    SUPPORTED_ADAPTERS,
+    AdapterName,
 )
+from src.command_fabric.catalog import CommandRecord, build_global_command_catalog
 
 
 def _agent_command(record: CommandRecord, runtime: str) -> dict[str, Any]:
@@ -117,7 +96,7 @@ def export_adapter_manifest(
 
         return export_command_catalog(command_records)
 
-    if adapter in {"claude-code", "codex", "gemini-cli", "opencode"}:
+    if adapter in AGENT_CLI_ADAPTERS:
         return {
             "schema": f"mekong.command_fabric.adapter.{adapter}.v1",
             "adapter": adapter,
@@ -125,7 +104,7 @@ def export_adapter_manifest(
             "commands": [_agent_command(record, adapter) for record in command_records],
         }
 
-    if adapter in {"vscode", "cursor", "jetbrains"}:
+    if adapter in IDE_ADAPTERS:
         return {
             "schema": f"mekong.command_fabric.adapter.{adapter}.v1",
             "adapter": adapter,
