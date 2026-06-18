@@ -601,6 +601,7 @@ docs/*.yaml
 !docs/roadmap-post-launch.md
 !docs/ARCHITECTURE.md
 !docs/COMMANDS.md
+!docs/command-fabric.md
 !docs/BINH_PHAP_*.md
 !docs/codebase-summary.md
 !docs/project-overview-pdr.md
@@ -803,3 +804,5 @@ Thumbs.db
 .mekong/*.sqlite3
 .mekong/events.jsonl
 .mekong/*.db
+*.pyc
+__pycache__/
