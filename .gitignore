@@ -602,6 +602,8 @@ docs/*.yaml
 !docs/ARCHITECTURE.md
 !docs/COMMANDS.md
 !docs/command-fabric.md
+!docs/zenos-migration-guide.md
+!docs/zenos-staging-deployment.md
 !docs/BINH_PHAP_*.md
 !docs/codebase-summary.md
 !docs/project-overview-pdr.md
