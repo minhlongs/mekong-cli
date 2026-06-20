@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from integrations.zalo import ZaloOAClient, generate_vn_caption
-from src.commands import zalo_oa as zalo_cli
+from src.commands.zalo_oa import main as zalo_main
 
 
 @pytest.fixture
@@ -108,14 +108,14 @@ class TestCliEntrypoint:
 
     def test_caption_subcommand_runs_without_token(self, capsys):
         """Caption không cần ZALO_OA_ACCESS_TOKEN (offline)."""
-        zalo_cli.main(["caption", "bánh mì", "--tone", "vui_ve"])
+        zalo_main(["caption", "bánh mì", "--tone", "vui_ve"])
         captured = capsys.readouterr()
         assert "bánh mì" in captured.out.lower()
 
     def test_send_requires_token_env(self, monkeypatch, capsys):
         monkeypatch.delenv("ZALO_OA_ACCESS_TOKEN", raising=False)
         with pytest.raises(SystemExit) as exc_info:
-            zalo_cli.main(["send", "user_999", "hello"])
+            zalo_main(["send", "user_999", "hello"])
         assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "ZALO_OA_ACCESS_TOKEN" in captured.err
@@ -125,8 +125,8 @@ class TestCliEntrypoint:
         monkeypatch.setenv("ZALO_APP_ID", "fake_app")
         mock_client = MagicMock()
         mock_client.send_message.return_value = {"error": 0, "message_id": "m_001"}
-        with patch.object(zalo_cli, "_get_client", return_value=mock_client):
-            zalo_cli.main(["send", "user_999", "Xin chào"])
+        with patch('src.commands.zalo_oa._get_client', return_value=mock_client):
+            zalo_main(["send", "user_999", "Xin chào"])
         captured = capsys.readouterr()
         assert "m_001" in captured.out
         mock_client.send_message.assert_called_once_with("user_999", "Xin chào")
@@ -135,8 +135,8 @@ class TestCliEntrypoint:
         monkeypatch.setenv("ZALO_OA_ACCESS_TOKEN", "fake")
         mock_client = MagicMock()
         mock_client.broadcast.return_value = {"error": 0, "broadcast_id": "bc_42"}
-        with patch.object(zalo_cli, "_get_client", return_value=mock_client):
-            zalo_cli.main(["broadcast", "Khuyến mãi Tết 2026"])
+        with patch('src.commands.zalo_oa._get_client', return_value=mock_client):
+            zalo_main(["broadcast", "Khuyến mãi Tết 2026"])
         captured = capsys.readouterr()
         assert "bc_42" in captured.out
 
@@ -152,8 +152,8 @@ class TestCliEntrypoint:
                 ],
             }
         }
-        with patch.object(zalo_cli, "_get_client", return_value=mock_client):
-            zalo_cli.main(["followers", "--count", "10"])
+        with patch('src.commands.zalo_oa._get_client', return_value=mock_client):
+            zalo_main(["followers", "--count", "10"])
         captured = capsys.readouterr()
         assert "1,234" in captured.out
         assert "Khách 1" in captured.out
@@ -167,12 +167,12 @@ class TestPilotReadiness:
         monkeypatch.setenv("ZALO_OA_ACCESS_TOKEN", "fake")
         # caption không cần network → safe to test parse-only
         try:
-            zalo_cli.main(["caption", "test"])
+            zalo_main(["caption", "test"])
         except SystemExit:
             pass
 
         # Verify khác bằng cách parse với --help (should exit 0)
         for cmd in ("send", "broadcast", "followers", "caption", "post"):
             with pytest.raises(SystemExit) as exc_info:
-                zalo_cli.main([cmd, "--help"])
+                zalo_main([cmd, "--help"])
             assert exc_info.value.code == 0, f"Subcommand `{cmd}` failed --help"
