@@ -97,9 +97,9 @@ def test_prune_cmd_reports_deleted(tmp_path, monkeypatch, capsys):
     for _ in range(4):
         _seed_session(mem)
     monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
-    cli.prune_cmd(keep=1, prune_all=False)
+    cli.prune_cmd(keep=1)
     out = capsys.readouterr().out
-    assert "Đã xoá 3 row cũ của feedback_session" in out
+    assert "Đã xoá 3 round cũ" in out
     assert len(mem.get_recent("feedback_session", limit=10)) == 1
 
 
@@ -109,40 +109,4 @@ def test_prune_cmd_rejects_negative(tmp_path, monkeypatch):
 
     monkeypatch.setattr(cli, "SeedMemory", lambda: SeedMemory(root=tmp_path / "ac2"))
     with pytest.raises(typer.Exit):
-        cli.prune_cmd(keep=-1, prune_all=False)
-
-
-def test_prune_cmd_all_flag_prunes_every_agent(tmp_path, monkeypatch, capsys):
-    mem = SeedMemory(root=tmp_path / "ac3")
-    # 4 rows each for 3 different agent_ids
-    for agent_id in ("feedback_session", "CEO", "Developer"):
-        for _ in range(4):
-            mem.remember(agent_id=agent_id, content="x", metadata={})
-    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
-    cli.prune_cmd(keep=1, prune_all=True)
-    out = capsys.readouterr().out
-    # 3 rows deleted * 3 agents = 9 total
-    assert "Đã xoá 9 row cũ trên 3 agent_id" in out
-    for agent_id in ("feedback_session", "CEO", "Developer"):
-        assert len(mem.get_recent(agent_id, limit=10)) == 1
-
-
-def test_prune_cmd_all_flag_empty_memory_reports_nothing_to_do(tmp_path, monkeypatch, capsys):
-    mem = SeedMemory(root=tmp_path / "ac4")
-    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
-    cli.prune_cmd(keep=1, prune_all=True)
-    out = capsys.readouterr().out
-    assert "Memory đang trống" in out
-
-
-def test_prune_cmd_default_leaves_non_feedback_agents_alone(tmp_path, monkeypatch, capsys):
-    mem = SeedMemory(root=tmp_path / "ac5")
-    for _ in range(3):
-        mem.remember(agent_id="feedback_session", content="f", metadata={})
-    for _ in range(3):
-        mem.remember(agent_id="CEO", content="c", metadata={})
-    monkeypatch.setattr(cli, "SeedMemory", lambda: mem)
-    cli.prune_cmd(keep=1, prune_all=False)
-    # CEO untouched, only feedback_session pruned
-    assert len(mem.get_recent("CEO", limit=10)) == 3
-    assert len(mem.get_recent("feedback_session", limit=10)) == 1
+        cli.prune_cmd(keep=-1)
