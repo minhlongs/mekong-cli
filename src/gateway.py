@@ -21,7 +21,7 @@ from src.api.gateway_mission_routes import router as mission_router
 from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.api.coupon_router import router as coupon_router
 from src.api.polar_webhook import router as polar_webhook_router
-from src.api.auth_routes import router as auth_router
+from src.api.auth_routes import router as auth_router, vn_auth_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
@@ -31,6 +31,7 @@ from src.raas.autopilot import router as autopilot_router
 from src.api.vn_pricing_routes import router as vn_pricing_router
 from src.api.vn_pilot_routes import router as vn_pilot_router
 from src.api.vn_payments_routes import router as vn_payments_router
+from src.api.org_routes import org_router
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -70,6 +71,7 @@ app.include_router(webhook_mcu_router)
 app.include_router(coupon_router)
 app.include_router(polar_webhook_router)
 app.include_router(auth_router)
+app.include_router(vn_auth_router)
 
 # Mount routers — RaaS endpoints
 app.include_router(raas_router)
@@ -80,6 +82,7 @@ app.include_router(reports_router)
 app.include_router(vn_pricing_router)
 app.include_router(vn_pilot_router)
 app.include_router(vn_payments_router)
+app.include_router(org_router)
 app.include_router(autopilot_router)
 
 # CORS for AgencyOS frontend

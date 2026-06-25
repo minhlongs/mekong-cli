@@ -14,12 +14,11 @@ from src.api.vn_pilot_common import (
     SignupRequest,
     SignupResponse,
     _add_credits,
-    _append_jsonl,
+    _append_pilot,
     _find_by_zalo,
     _credit_balance,
     _org_filter,
     _load_pilots,
-    _pilots_path,
     _stable_user_id,
 )
 import src.api.vn_pilot_state as _state
@@ -104,7 +103,7 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
         "pilot_end_at": (now + timedelta(weeks=PILOT_DURATION_WEEKS)).isoformat(timespec="seconds"),
         "status": "active",
     }
-    _append_jsonl(_pilots_path(), record)
+    _append_pilot(record)
     balance = _add_credits(user_id, INITIAL_FREE_CREDITS)
 
     # Resolve _notify_founder_signup through vn_pilot_routes so that

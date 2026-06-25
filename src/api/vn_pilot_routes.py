@@ -11,8 +11,9 @@ All route logic lives in focused sub-modules. This file:
    and direct assignment propagate to vn_pilot_state (sub-modules
    read _state.CONFIG_DIR at call time).
 
-STORAGE NOTE: MEKONG_PILOT_STORAGE=sqlite is reserved for Phase 8;
-jsonl is the active backend. Warning logged if sqlite requested.
+STORAGE: MEKONG_PILOT_STORAGE=sqlite enables SqliteBackend (Phase 8 P05).
+SqliteBackend raises RuntimeError at init if pilot.db is missing —
+fail-fast at gateway boot, not mid-traffic. Run migration script first.
 """
 from __future__ import annotations
 
@@ -30,11 +31,19 @@ import src.api.vn_pilot_state as _state
 
 PILOT_STORAGE = os.getenv("MEKONG_PILOT_STORAGE", "jsonl").lower()
 if PILOT_STORAGE == "sqlite":
-    logging.warning(
-        "MEKONG_PILOT_STORAGE=sqlite requested but unimplemented in Phase 7 — "
-        "falling back to jsonl. SQLite migration scheduled for Phase 8."
-    )
-    PILOT_STORAGE = "jsonl"
+    # Eagerly attempt backend init so gateway fails at boot (not mid-traffic)
+    # if pilot.db is missing. RuntimeError propagates to launchd stderr.
+    try:
+        from src.services.storage_backend import _backend
+        _backend()  # raises RuntimeError if DB missing
+        logging.info("MEKONG_PILOT_STORAGE=sqlite: SqliteBackend initialized OK")
+    except RuntimeError as _exc:
+        logging.error(
+            "MEKONG_PILOT_STORAGE=sqlite: %s — "
+            "run scripts/migrate-jsonl-to-sqlite.py then restart gateway",
+            _exc,
+        )
+        raise
 
 # ---------- Module-level CONFIG_DIR / MAX_PILOTS ----------
 # Authoritative values, kept in sync with vn_pilot_state via
@@ -99,7 +108,10 @@ from src.api.vn_pilot_common import (  # noqa: E402, F401
     SignupResponse,
     _ZALO_RE,
     _add_credits,
+    _append_conversion,
     _append_jsonl,
+    _append_pilot,
+    _append_response,
     _conversions_path,
     _count_by_key,
     _credit_balance,
@@ -107,6 +119,8 @@ from src.api.vn_pilot_common import (  # noqa: E402, F401
     _current_iso_week,
     _ensure_dir,
     _find_by_zalo,
+    _jsonl_add_credits,
+    _jsonl_credit_balance,
     _load_conversions,
     _load_jsonl,
     _load_pilots,
