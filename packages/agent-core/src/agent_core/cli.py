@@ -262,188 +262,19 @@ def history_cmd(
     typer.echo(format_history(rows))
 
 
-@app.command("forest-status")
-def forest_status_cmd(
-    url: str = typer.Option(
-        "http://localhost:8000",
-        "--url",
-        "-u",
-        help="Base URL của agent-forest gateway (mặc định localhost:8000).",
-    ),
-    timeout: float = typer.Option(
-        5.0, "--timeout", help="Timeout HTTP tính bằng giây (mặc định 5)."
-    ),
-    as_json: bool = typer.Option(
-        False, "--json", help="In ra JSON thô (cho monitoring/script) thay vì bảng."
-    ),
-) -> None:
-    """Gọi /healthz + /metrics trên agent-forest gateway và in snapshot."""
-    data = fetch_forest_status(url, timeout=timeout)
-    if as_json:
-        typer.echo(json.dumps(data, ensure_ascii=False, indent=2))
-        return
-    typer.echo(format_forest_status(data))
-
-
-@app.command("status")
-def status_cmd(
-    as_json: bool = typer.Option(
-        False, "--json", help="In JSON thô (cho monitoring/script) thay vì bảng text."
-    ),
-) -> None:
-    """In ra snapshot ops: memory root, retention, số row theo agent_id, lần chạy cuối."""
-    memory = SeedMemory()
-    agent_rows = memory.agent_counts()
-    last_session_at = memory.last_created_at("feedback_session")
-    retention_env = os.environ.get("AGENT_CORE_SESSION_RETENTION")
-    if as_json:
-        payload = {
-            "memory_root": str(memory.root),
-            "retention_env": retention_env,
-            "last_session_at": last_session_at,
-            "agent_rows": agent_rows,
-        }
-        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-        return
-    typer.echo(
-        format_status(
-            agent_rows=agent_rows,
-            last_session_at=last_session_at,
-            retention_env=retention_env,
-            memory_root=str(memory.root),
-        )
-    )
-
-
-@app.command("doctor")
-def doctor_cmd(
-    mekongd_url: str | None = typer.Option(
-        None, "--mekongd-url", help="Override mekongd base URL (default: env MEKONGD_URL)."
-    ),
-    forest_url: str = typer.Option(
-        "http://localhost:8000",
-        "--forest-url",
-        help="Base URL của agent-forest gateway (mặc định localhost:8000).",
-    ),
-    timeout: float = typer.Option(3.0, "--timeout", help="HTTP timeout giây (mặc định 3)."),
-    as_json: bool = typer.Option(
-        False, "--json", help="In JSON thô (cho monitoring/script) thay vì bảng text."
-    ),
-) -> None:
-    """Self-check env + memory + mekongd/forest connectivity.
-
-    Holistic operator triage: dumps env flags, memory stats, pings both
-    services /healthz, prints package + Python versions in one shot.
-    Never raises — returns exit 0 even on probe failures (informational only).
-    """
-    import httpx
-
-    memory = SeedMemory()
-    counts = memory.agent_counts()
-    total_rows = sum(counts.values())
-    mekongd_target = mekongd_url or os.environ.get("MEKONGD_URL") or "(unset)"
-    retention_env = os.environ.get("AGENT_CORE_SESSION_RETENTION", "(unset)")
-    outputs_env = os.environ.get("AGENT_CORE_OUTPUTS", "(unset)")
-    prompt_env = os.environ.get("AGENT_CORE_PROMPT_SIGNAL", "(unset)")
-
-    def _ping(url: str) -> str:
-        try:
-            with httpx.Client(timeout=timeout) as client:
-                resp = client.get(f"{url.rstrip('/')}/healthz")
-            return f"OK (HTTP {resp.status_code})"
-        except Exception as exc:  # noqa: BLE001 — informational probe
-            return f"FAIL ({type(exc).__name__})"
-
-    mekongd_status = _ping(mekongd_url or os.environ.get("MEKONGD_URL") or "") \
-        if (mekongd_url or os.environ.get("MEKONGD_URL")) else "(skipped — no URL)"
-    forest_status = _ping(forest_url)
-
-    if as_json:
-        payload = {
-            "env": {
-                "MEKONGD_URL": mekongd_target,
-                "AGENT_CORE_SESSION_RETENTION": retention_env,
-                "AGENT_CORE_OUTPUTS": outputs_env,
-                "AGENT_CORE_PROMPT_SIGNAL": prompt_env,
-            },
-            "memory": {
-                "root": str(memory.root),
-                "agents": len(counts),
-                "total_rows": total_rows,
-            },
-            "connectivity": {
-                "mekongd": mekongd_status,
-                "agent_forest": forest_status,
-            },
-            "package": {
-                "agent_core": __version__,
-                "python": sys.version.split()[0],
-            },
-        }
-        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
-        return
-
-    lines = [
-        "agent-core doctor",
-        "",
-        "[env]",
-        f"  MEKONGD_URL                  : {mekongd_target}",
-        f"  AGENT_CORE_SESSION_RETENTION : {retention_env}",
-        f"  AGENT_CORE_OUTPUTS           : {outputs_env}",
-        f"  AGENT_CORE_PROMPT_SIGNAL     : {prompt_env}",
-        "",
-        "[memory]",
-        f"  root      : {memory.root}",
-        f"  agents    : {len(counts)}",
-        f"  total rows: {total_rows}",
-        "",
-        "[connectivity]",
-        f"  mekongd /healthz     : {mekongd_status}",
-        f"  agent-forest /healthz: {forest_status}",
-        "",
-        "[package]",
-        f"  agent-core: {__version__}",
-        f"  python    : {sys.version.split()[0]}",
-    ]
-    typer.echo("\n".join(lines))
-
-
 @app.command("prune")
 def prune_cmd(
     keep: int = typer.Option(
-        100, "--keep", "-k", help="Số row mới nhất giữ lại (>=0). Mặc định 100."
-    ),
-    prune_all: bool = typer.Option(
-        False,
-        "--all",
-        help="Áp dụng cho MỌI agent_id (CEO, Developer, Tester, ...). "
-        "Mặc định chỉ xoá feedback_session.",
+        100, "--keep", "-k", help="Số round mới nhất giữ lại (>=0). Mặc định 100."
     ),
 ) -> None:
-    """Xoá các row cũ trong SeedMemory, giữ lại N row mới nhất.
-
-    Mặc định chỉ áp dụng cho agent_id=feedback_session. Dùng ``--all`` để
-    gom cả các agent role khác (memory của CEO/Developer/Tester/Reviewer
-    cũng grow unbounded nếu không được prune).
-    """
+    """Xoá các vòng feedback cũ trong SeedMemory, giữ lại N row mới nhất."""
     if keep < 0:
         typer.echo("keep phải >= 0", err=True)
         raise typer.Exit(code=2)
     memory = SeedMemory()
-    if not prune_all:
-        deleted = memory.prune_agent("feedback_session", keep_last_n=keep)
-        typer.echo(f"Đã xoá {deleted} row cũ của feedback_session, giữ lại {keep} gần nhất.")
-        return
-    counts = memory.agent_counts()
-    if not counts:
-        typer.echo("Memory đang trống, không có gì để xoá.")
-        return
-    total = 0
-    for agent_id in counts:
-        total += memory.prune_agent(agent_id, keep_last_n=keep)
-    typer.echo(
-        f"Đã xoá {total} row cũ trên {len(counts)} agent_id, giữ lại {keep} gần nhất mỗi agent."
-    )
+    deleted = memory.prune_agent("feedback_session", keep_last_n=keep)
+    typer.echo(f"Đã xoá {deleted} round cũ, giữ lại {keep} gần nhất.")
 
 
 @app.command("signal")
