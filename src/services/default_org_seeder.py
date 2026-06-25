@@ -15,11 +15,14 @@ Single BEGIN/COMMIT transaction; rollback on any error.
 """
 from __future__ import annotations
 
+import json
 import os
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 
-from src.services.sqlite_migrations import _db_path
+import src.api.vn_pilot_state as _state
+from src.services.sqlite_migrations import _db_path, ensure_schema
 from src.services.audit_logger import _flock_append, _audit_path
 
 # ---------- Constants ----------

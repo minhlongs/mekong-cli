@@ -194,24 +194,6 @@ class SeedMemory:
                 log.debug("chroma prune failed: %s", e)
         return len(stale_ids)
 
-    def agent_counts(self) -> dict[str, int]:
-        """Return row count per agent_id, newest-first by most recent activity."""
-        with self._connect() as conn:
-            rows = conn.execute(
-                "SELECT agent_id, COUNT(*) AS n, MAX(created_at) AS last "
-                "FROM memories GROUP BY agent_id ORDER BY last DESC"
-            ).fetchall()
-        return {r[0]: int(r[1]) for r in rows}
-
-    def last_created_at(self, agent_id: str) -> str | None:
-        """Return ISO timestamp of the newest row for ``agent_id``, or None."""
-        with self._connect() as conn:
-            row = conn.execute(
-                "SELECT MAX(created_at) FROM memories WHERE agent_id = ?",
-                (agent_id,),
-            ).fetchone()
-        return row[0] if row and row[0] else None
-
     def clear_agent(self, agent_id: str) -> int:
         with self._connect() as conn:
             cur = conn.execute("DELETE FROM memories WHERE agent_id = ?", (agent_id,))
