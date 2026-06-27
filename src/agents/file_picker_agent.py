@@ -112,6 +112,9 @@ class FilePickerAgent(AgentBase):
         scored: list[tuple[int, Path]] = []
         try:
             for path in root.rglob("*"):
+                # Skip symlinks to prevent following outside project root
+                if path.is_symlink():
+                    continue
                 if not path.is_file():
                     continue
                 if path.suffix not in extensions:
