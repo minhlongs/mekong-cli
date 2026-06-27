@@ -8,6 +8,9 @@ Mirrors Codebuff's editor agent.
 from __future__ import annotations
 
 import logging
+import re
+import subprocess
+from pathlib import Path
 from typing import Any
 
 from ..core.agent_base import AgentBase, Task, Result
@@ -48,7 +51,6 @@ class EditorAgent(AgentBase):
         Returns:
             List of edit tasks.
         """
-        # Simple single-task plan; production version would decompose
         return [
             Task(
                 id="editor_apply",
@@ -72,27 +74,53 @@ class EditorAgent(AgentBase):
         description = task.input.get("description", "")
         logger.info("EditorAgent would apply: %s", description[:100])
 
-        # Return a structured plan for the edit
-        # Actual file modifications happen via tool calls in the orchestrator
         return Result(
             task_id=task.id,
             success=True,
             output=f"Edit planned: {description}\n"
-                   f"Use tools: read_files, str_replace, write_file to apply.",
+            f"Use tools: read_files, str_replace, write_file to apply.",
         )
 
     def apply_patch(self, file_path: str, patch: str) -> Result:
         """Apply a unified diff patch to a file.
 
+        Validates that the patch does not contain path traversal attempts
+        before applying. Only patches within the project root are allowed.
+
         Args:
-            file_path: Path to the file to patch.
+            file_path: Path to the file to patch (must be within project root).
             patch: Unified diff patch string.
 
         Returns:
             Result indicating success or failure.
         """
         try:
-            import subprocess
+            # Security: validate file_path is within project root
+            resolved_path = Path(file_path).resolve()
+            cwd = Path.cwd().resolve()
+
+            try:
+                resolved_path.relative_to(cwd)
+            except ValueError:
+                return Result(
+                    task_id="apply_patch",
+                    success=False,
+                    output=None,
+                    error=f"Path traversal detected: {file_path} is outside project root",
+                )
+
+            # Security: reject patches with path traversal in diff headers
+            traversal_pattern = re.compile(
+                r"^(---|\+\+\+).*\.\.[\\/]|^(---|\+\+\+)\s*/", re.MULTILINE
+            )
+            if traversal_pattern.search(patch):
+                return Result(
+                    task_id="apply_patch",
+                    success=False,
+                    output=None,
+                    error="Path traversal detected in patch headers",
+                )
+
             result = subprocess.run(
                 ["patch", "-p1", "-u"],
                 input=patch,
@@ -102,10 +130,13 @@ class EditorAgent(AgentBase):
             )
             if result.returncode == 0:
                 return Result(task_id="apply_patch", success=True, output=result.stdout)
-            return Result(task_id="apply_patch", success=False, output=None, error=result.stderr)
+            return Result(
+                task_id="apply_patch", success=False, output=None, error=result.stderr
+            )
         except Exception as e:
-            return Result(task_id="apply_patch", success=False, output=None, error=str(e))
+            return Result(
+                task_id="apply_patch", success=False, output=None, error=str(e)
+            )
 
 
-# Export
 __all__ = ["EditorAgent"]
