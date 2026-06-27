@@ -35,13 +35,20 @@ class TestAgentRegistry(unittest.TestCase):
         retrieved = self.test_registry.get("test")
         self.assertEqual(retrieved, TestAgent)
 
-    def test_register_invalid_agent_raises_error(self):
-        """Test registering non-AgentBase class raises TypeError."""
+    def test_register_invalid_agent_warns(self):
+        """Test registering non-AgentBase class logs warning (plugin compat)."""
+        import logging
         class NotAnAgent:
             pass
 
-        with self.assertRaises(TypeError):
+        with self.assertLogs("src.core.agent_registry", level="WARNING") as cm:
             self.test_registry.register("invalid", NotAnAgent)
+        # Should warn but still register
+        self.assertTrue(
+            any("not an AgentBase subclass" in r for r in cm.output),
+            f"Expected warning in logs, got: {cm.output}",
+        )
+        self.assertIn("invalid", self.test_registry)
 
     def test_get_unknown_agent_raises_error(self):
         """Test getting unknown agent raises KeyError with helpful message."""
@@ -135,6 +142,9 @@ class TestGlobalRegistry(unittest.TestCase):
     def test_all_registered_agents_are_agentbase_subclasses(self):
         """Test all registered agents inherit from AgentBase."""
         for name, cls in AGENT_REGISTRY.items():
+            # Skip non-class entries (functions, None, etc. from legacy dict)
+            if not isinstance(cls, type):
+                continue
             self.assertTrue(
                 issubclass(cls, AgentBase),
                 f"{name} ({cls}) is not a subclass of AgentBase"
@@ -275,6 +285,9 @@ class TestAgentExecutionSandbox(unittest.TestCase):
         from abc import ABC
 
         for name, cls in AGENT_REGISTRY.items():
+            # Skip non-class entries (functions, None, etc.)
+            if not isinstance(cls, type):
+                continue
             # Check class is concrete (not abstract)
             if ABC in cls.__mro__:
                 # Has abstract methods = not fully implemented

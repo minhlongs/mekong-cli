@@ -400,6 +400,45 @@ class ToolRegistry:
             tools = [t for t in tools if t.tool_type == tool_type]
         return tools
 
+    def list_for_agent(self, agent: Any) -> List[Tool]:
+        """List tools available to a specific agent based on its allowed_tools.
+
+        If agent.allowed_tools is empty, returns all registered tools (backward compat).
+        If agent.allowed_tools contains "*", returns all tools.
+
+        Args:
+            agent: An AgentBase instance (or any object with .allowed_tools list).
+
+        Returns:
+            List of Tool objects the agent is authorized to use.
+        """
+        allowed = getattr(agent, "allowed_tools", [])
+        if not allowed or "*" in allowed:
+            return self.list_tools()
+        # Resolve aliases and filter
+        from .tool_names import resolve_tool_name, ALL_TOOL_NAMES
+        canonical_allowed = set()
+        for name in allowed:
+            canonical_allowed.add(resolve_tool_name(name))
+        return [t for t in self._tools.values() if t.name in canonical_allowed]
+
+    def validate_call(self, agent: Any, tool_name: str) -> bool:
+        """Check if an agent is authorized to call a specific tool.
+
+        Args:
+            agent: An AgentBase instance (or any object with .allowed_tools list).
+            tool_name: The tool name to check.
+
+        Returns:
+            True if the agent can call this tool.
+        """
+        allowed = getattr(agent, "allowed_tools", [])
+        if not allowed or "*" in allowed:
+            return True
+        from .tool_names import resolve_tool_name
+        canonical = resolve_tool_name(tool_name)
+        return canonical in allowed or tool_name in allowed
+
     def get_stats(self) -> Dict[str, Any]:
         """Return registry statistics."""
         type_counts: Dict[str, int] = {}

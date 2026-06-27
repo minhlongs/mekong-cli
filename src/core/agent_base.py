@@ -2,12 +2,23 @@
 
 Core logic inherited from ClaudeKit DNA.
 Pattern: Plan-Execute-Verify
+Extended with Codebuff-inspired fields (backward compatible).
 """
 
+from __future__ import annotations
+
+import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Callable, Coroutine, Union
+
+logger = logging.getLogger(__name__)
+
+# Step hook type: async callbacks for generator-like control flow
+# (mirrors Codebuff's handleSteps pattern without breaking sync contract)
+StepHook = Coroutine[Any, Any, None]
+StepHooksDict = dict[str, StepHook]
 
 
 class TaskStatus(Enum):
@@ -46,9 +57,15 @@ class AgentBase(ABC):
     """Base class for all Mekong CLI agents.
 
     Follows ClaudeKit's Plan-Execute-Verify pattern:
-    1. Plan: Parse input → Task list
+    1. Plan: Parse input -> Task list
     2. Execute: Run each task
     3. Verify: Validate output
+
+    Extended with Codebuff-inspired fields (all optional, backward compat):
+    - allowed_tools: restrict which tools this agent can invoke
+    - spawnable_agents: agent IDs this agent can delegate to
+    - output_mode: control result format
+    - step_hooks: async callbacks for lifecycle events
     """
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -68,17 +85,34 @@ class AgentBase(ABC):
                 stacklevel=2,
             )
 
-    def __init__(self, name: str, max_retries: int = 3) -> None:
+    def __init__(
+        self,
+        name: str,
+        max_retries: int = 3,
+        allowed_tools: list[str] | None = None,
+        spawnable_agents: list[str] | None = None,
+        output_mode: str = "last_message",
+        step_hooks: dict[str, Any] | None = None,
+    ) -> None:
         """Initialize AgentBase with name and retry configuration.
 
         Args:
             name: Unique identifier for this agent.
             max_retries: Maximum retry attempts per task before marking as failed.
-
+            allowed_tools: Tool names this agent may invoke. Empty = all tools.
+            spawnable_agents: Agent IDs this agent can delegate to.
+            output_mode: Result format: 'last_message', 'all_messages', 'structured'.
+            step_hooks: Async callbacks for lifecycle events
+                (on_step_start, on_step_end, on_tool_call, on_error).
         """
         self.name = name
         self.max_retries = max_retries
         self.tasks: list[Task] = []
+        # Codebuff-inspired extensions (all have safe defaults)
+        self.allowed_tools: list[str] = allowed_tools if allowed_tools is not None else []
+        self.spawnable_agents: list[str] = list(spawnable_agents) if spawnable_agents else []
+        self.output_mode: str = output_mode
+        self.step_hooks: dict[str, Any] = dict(step_hooks) if step_hooks else {}
 
     @abstractmethod
     def plan(self, input_data: str) -> list[Task]:
@@ -89,7 +123,6 @@ class AgentBase(ABC):
 
         Returns:
             List of Task objects to execute
-
         """
 
     @abstractmethod
@@ -101,7 +134,6 @@ class AgentBase(ABC):
 
         Returns:
             Result with output or error
-
         """
 
     def verify(self, result: Result) -> bool:
@@ -114,9 +146,28 @@ class AgentBase(ABC):
 
         Returns:
             True if valid, False to retry
-
         """
         return result.success
+
+    async def _fire_hook(self, hook_name: str, **kwargs: Any) -> None:
+        """Fire a step hook if registered. Non-blocking on errors.
+
+        Args:
+            hook_name: One of: on_step_start, on_step_end, on_tool_call, on_error.
+            **kwargs: Hook payload data.
+        """
+        hook = self.step_hooks.get(hook_name)
+        if hook is None:
+            return
+        try:
+            import inspect
+            if inspect.iscoroutinefunction(hook):
+                await hook(**kwargs)
+            else:
+                # Sync callback - call directly
+                hook(**kwargs)
+        except Exception:
+            logger.debug("Step hook %r raised (non-fatal)", hook_name, exc_info=True)
 
     def run(self, input_data: str) -> list[Result]:
         """Main execution loop.
@@ -126,7 +177,6 @@ class AgentBase(ABC):
 
         Returns:
             List of results from all tasks
-
         """
         results: list[Result] = []
 
@@ -162,4 +212,4 @@ class AgentBase(ABC):
 
 
 # Export
-__all__ = ["AgentBase", "Result", "Task", "TaskStatus"]
+__all__ = ["AgentBase", "Result", "Task", "TaskStatus", "StepHooksDict"]
