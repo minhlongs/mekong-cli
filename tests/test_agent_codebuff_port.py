@@ -2,25 +2,22 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from src.core.agent_base import AgentBase, Result, Task, TaskStatus
+from src.core.agent_base import AgentBase, Result, Task
 from src.core.agent_registry import AgentRegistry
 from src.core.agent_schema import (
-    ALL_TOOLS,
-    OUTPUT_MODES,
-    STEP_HOOKS,
     merge_definition_defaults,
     validate_agent_definition,
 )
 from src.core.tool_names import ALL_TOOL_NAMES, ALIASES, resolve_tool_name
-from src.core.tool_registry import ToolRegistry, ToolType
+from src.core.tool_registry import ToolRegistry
 from src.core.pipeline_stages import (
     ALL_STAGES,
-    DEFAULT_PIPELINE,
     EDITOR_STAGE,
     FILE_PICKER_STAGE,
-    PipelineStage,
     REVIEWER_STAGE,
     compose_pipeline,
     get_stage,
@@ -411,9 +408,10 @@ def test_stages_by_phase():
 
 
 def test_compose_pipeline_default():
-    """compose_pipeline with no args returns empty (all stages are opt-in)."""
+    """compose_pipeline with no args returns DEFAULT_PIPELINE (all 3 stages)."""
     stages = compose_pipeline()
-    assert stages == []  # all stages are optional by default
+    assert len(stages) == 3
+    assert [s.name for s in stages] == ["file-picker", "editor", "reviewer"]
 
 
 def test_compose_pipeline_explicit():
@@ -455,6 +453,28 @@ def test_file_picker_find_relevant(tmp_path):
     assert "auth.py" in result.output
 
 
+def test_file_picker_skips_symlinks(tmp_path):
+    """Symlinks are not followed — prevents symlink DoS."""
+    # Create a real file and a symlink pointing outside the tree
+    (tmp_path / "real.py").write_text("# real module")
+    outside = tmp_path / "outside.py"
+    outside.write_text("# outside file")
+    symlink = tmp_path / "link_to_outside.py"
+    symlink.symlink_to(outside)
+
+    agent = FilePickerAgent(root=str(tmp_path), max_files=10)
+    task = Task(id="scan", description="find files", input={})
+    result = agent.execute(task)
+
+    assert result.success is True
+    # The symlinked path must NOT appear in results
+    assert "link_to_outside.py" not in result.output
+    # The real file should still be found
+    assert "real.py" in result.output
+
+
+
+
 def test_editor_agent():
     """EditorAgent has correct tool restriction."""
     agent = EditorAgent()
@@ -483,3 +503,126 @@ def test_specialized_agents_backward_compat():
         assert hasattr(agent, "execute")
         assert hasattr(agent, "verify")
         assert hasattr(agent, "run")
+
+
+# ─── build_message_chain tool restriction ──────────────────────────────────────
+
+@pytest.fixture
+def registry_with_tools() -> ToolRegistry:
+    reg = ToolRegistry(persist_path=None)
+    reg._tools.clear()
+    reg.register("read_files", "Read files", handler=lambda: None)
+    reg.register("write_file", "Write file", handler=lambda: None)
+    reg.register("code_search", "Search code", handler=lambda: None)
+    reg.register("shell_run", "Run shell", handler=lambda: None)
+    return reg
+
+
+def test_build_message_chain_with_tool_restriction(
+    registry_with_tools: ToolRegistry,
+) -> None:
+    """build_message_chain returns filtered available_tools when agent has allowed_tools."""
+    from src.core.agent_dispatcher import build_message_chain
+
+    class RestrictedAgent:
+        allowed_tools = ["read_files", "code_search"]
+
+    agent = RestrictedAgent()
+
+    messages, system_prompt, available_tools = build_message_chain(
+        goal="find auth files",
+        agent_role="file-picker",
+        domain="code",
+        agent=agent,
+        tool_registry=registry_with_tools,
+    )
+
+    assert len(available_tools) == 2
+    assert "read_files" in available_tools
+    assert "code_search" in available_tools
+    assert "write_file" not in available_tools
+    assert "shell_run" not in available_tools
+
+
+def test_build_message_chain_no_agent_no_filter(
+    registry_with_tools: ToolRegistry,
+) -> None:
+    """Without agent, available_tools is empty (no restriction applied)."""
+    from src.core.agent_dispatcher import build_message_chain
+
+    messages, system_prompt, available_tools = build_message_chain(
+        goal="test",
+        agent_role="test",
+        domain="code",
+        tool_registry=registry_with_tools,
+    )
+
+    assert available_tools == []
+
+
+def test_build_message_chain_wildcard_agent(
+    registry_with_tools: ToolRegistry,
+) -> None:
+    """Agent with wildcard '*' gets all registered tools."""
+    from src.core.agent_dispatcher import build_message_chain
+
+    class WildAgent:
+        allowed_tools = ["*"]
+
+    messages, system_prompt, available_tools = build_message_chain(
+        goal="test",
+        agent_role="test",
+        domain="code",
+        agent=WildAgent(),
+        tool_registry=registry_with_tools,
+    )
+
+    assert len(available_tools) == 4
+
+
+# ─── FilePickerAgent depth limit ────────────────────────────────────────────────
+
+def test_file_picker_depth_limit(tmp_path: Path) -> None:
+    """FilePickerAgent respects max_depth and does not crash on deep trees."""
+    # Build a nested directory structure deeper than the default max_depth of 10
+    deep_dir = tmp_path
+    for i in range(12):
+        deep_dir = deep_dir / f"level_{i}"
+    deep_dir.mkdir(parents=True)
+    (deep_dir / "deep_file.py").write_text("# deep file")
+
+    # Also place a file at a shallow depth so the agent has something to find
+    (tmp_path / "shallow.py").write_text("# shallow file")
+
+    agent = FilePickerAgent(root=str(tmp_path), max_depth=10, max_files=20)
+    # Use a goal that matches the filenames (keyword matching checks path strings)
+    task = Task(id="scan", description="find shallow deep file", input={})
+    result = agent.execute(task)
+
+    assert result.success is True
+    # shallow.py should be found; the deep file at depth 12 should be excluded
+    assert "shallow.py" in result.output
+    assert "deep_file.py" not in result.output
+
+
+# ─── FilePickerAgent hidden directory skipping ──────────────────────────────────
+
+def test_file_picker_skips_hidden_dirs(tmp_path: Path) -> None:
+    """FilePickerAgent skips files inside directories starting with '.'."""
+    hidden_dir = tmp_path / ".hidden"
+    hidden_dir.mkdir()
+    (hidden_dir / "secret.py").write_text("# secret code")
+    (hidden_dir / "config.yaml").write_text("key: value")
+
+    visible_dir = tmp_path / "src"
+    visible_dir.mkdir()
+    (visible_dir / "main.py").write_text("# main code")
+
+    agent = FilePickerAgent(root=str(tmp_path), max_depth=10, max_files=20)
+    task = Task(id="scan", description="find source files", input={})
+    result = agent.execute(task)
+
+    assert result.success is True
+    assert "main.py" in result.output
+    assert "secret.py" not in result.output
+    assert ".hidden" not in result.output

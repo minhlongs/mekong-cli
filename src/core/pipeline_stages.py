@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +129,7 @@ def compose_pipeline(
         Ordered list of PipelineStage objects.
     """
     if stage_names is None:
-        # Include all non-optional stages by default
-        stage_names = [n for n, s in ALL_STAGES.items() if not s.optional]
+        stage_names = DEFAULT_PIPELINE
 
     stages = []
     for name in stage_names:
