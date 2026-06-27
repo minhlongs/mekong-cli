@@ -13,10 +13,9 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 
 from .agent_registry import AgentRegistry
-from .agent_base import AgentBase, Task, Result
+from .agent_base import AgentBase, Result
 
 logger = logging.getLogger(__name__)
 
