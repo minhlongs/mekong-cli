@@ -1,15 +1,21 @@
 ---
-description: "Board reporting"
-argument-hint: [report scope]
-allowed-tools: Read, Write, Bash
+description: "Board meeting report — KPIs, financial summary, strategic updates, risk register. 4 steps, ~30 min."
+argument-hint: [quarter or meeting date]
+allowed-tools: Read, Write, Bash, Task
 ---
 
-# /board-report — Board Report
+# /venture:board-report — Board Report
 
-Generate board-level reports and dashboards.
+**Super command** — chains steps via DAG pipeline.
 
-## Usage
+## Pipeline
 
-```bash
-mekong board-report
 ```
+SEQUENTIAL:
+  ├── kpi-extraction          → kpi-dashboard.md
+  ├── financial-summary       → financials.md
+  ├── strategic-update        → strategy-update.md
+  └── risk-register           → risk-summary.md
+```
+
+## Output directory: reports/venture/board-report/

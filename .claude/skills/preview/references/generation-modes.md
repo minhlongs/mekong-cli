@@ -101,7 +101,7 @@ For full SVG layout rules (spacing minimums, arrow connection points, z-index or
 1. Write generated content to determined path
 2. Start preview server with the generated file:
 ```bash
-node .claude/skills/markdown-novel-viewer/scripts/server.cjs \
+node $HOME/.claude/skills/markdown-novel-viewer/scripts/server.cjs \
   --file "<generated-file-path>" --host 0.0.0.0 --open --foreground
 ```
 

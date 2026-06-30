@@ -2,7 +2,7 @@
 
 Documents the iterative saturation algorithm absorbed from upstream `/autoresearch:scenario`.
 
-Source: `uditgoenka/autoresearch` — `.claude/skills/autoresearch/references/scenario-workflow.md`
+Source: `uditgoenka/autoresearch` — `$HOME/.claude/skills/autoresearch/references/scenario-workflow.md`
 License: MIT
 
 ---

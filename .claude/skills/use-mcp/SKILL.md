@@ -1,10 +1,10 @@
 ---
 name: ck:use-mcp
-description: "Discover and execute MCP server tools. Two execution paths: Gemini CLI (LLM-driven, all tasks) or direct scripts (deterministic, specific tool/server). Use for MCP integrations, tool execution, capability discovery, persistent tool catalog."
+description: "Discover and execute MCP server tools. Two execution paths: agy (Antigravity) CLI (LLM-driven, all tasks) or direct scripts (deterministic, specific tool/server). Use for MCP integrations, tool execution, capability discovery, persistent tool catalog."
 user-invocable: true
 when_to_use: "Invoke for MCP tool discovery or controlled tool execution."
 category: dev-tools
-keywords: [MCP, tools, execute, discovery, gemini, mcp-client]
+keywords: [MCP, tools, execute, discovery, agy, antigravity, mcp-client]
 argument-hint: "[task]"
 metadata:
   author: claudekit
@@ -17,45 +17,59 @@ Two execution paths for the Model Context Protocol (MCP):
 
 | Path | When | Trade-off |
 |------|------|-----------|
-| **Gemini CLI** | Default. LLM picks the right tool from natural language. | Non-deterministic; needs `gemini` installed. |
-| **Direct Scripts** | Specific tool, specific server, scripted/CI workflows, Gemini unavailable. | Deterministic; you must know the tool name + arg shape. |
+| **agy CLI** | Default. LLM picks the right tool from natural language. | Non-deterministic; needs `agy` installed. |
+| **Direct Scripts** | Specific tool, specific server, scripted/CI workflows, agy unavailable. | Deterministic; you must know the tool name + arg shape. |
 
-Both paths read MCP servers from `.claude/.mcp.json`. Both paths preserve main-context budget — the LLM never has to load every tool definition.
+Both paths cover the MCP servers in `$HOME/.claude/.mcp.json`. Both paths preserve main-context budget — the LLM never has to load every tool definition.
 
-## Path 1: Gemini CLI (primary)
+## Path 1: agy (Antigravity) CLI (primary)
+
+`agy` replaced the retired `gemini` CLI. Unlike `gemini`, `agy` does **not**
+auto-load a project file (such as `GEMINI.md`) as a system prompt — verified
+empirically, `agy` loads only `AGENTS.md` from the workspace, and reads MCP
+servers from a global config (see Setup). So `/ck:use-mcp` **prepends the JSON
+proxy contract into the piped prompt itself**, then pipes to `agy` in print mode:
 
 ```bash
-# Use stdin piping for MCP tasks — historically more reliable for MCP server init.
-# Read model from .claude/.ck.json: gemini.model (default: gemini-3-flash-preview).
-echo "$ARGUMENTS. Return JSON only per GEMINI.md instructions." | gemini -y -m <gemini.model>
+# Read model from $HOME/.claude/.ck.json: gemini.model (default: gemini-3-flash-preview).
+# CONTRACT = the text of references/mcp-proxy-contract.md (between its markers).
+printf '%s\n\nTASK: %s' "$CONTRACT" "$ARGUMENTS" \
+  | agy --dangerously-skip-permissions --model <gemini.model> -p
 ```
 
-`GEMINI.md` at the project root is auto-loaded by Gemini CLI and enforces structured JSON responses:
+The prepended contract enforces a structured single-line JSON response:
 
 ```json
 {"server":"name","tool":"name","success":true,"result":<data>,"error":null}
 ```
 
+(Full contract: [`references/mcp-proxy-contract.md`](references/mcp-proxy-contract.md).)
+
 **Error detection.** Treat as failure when:
-- `gemini` exit code != 0
+- `agy` exit code != 0
 - Output contains `GaxiosError` / `RESOURCE_EXHAUSTED` / `MODEL_CAPACITY_EXHAUSTED` / `PERMISSION_DENIED` / `UNAUTHENTICATED`
 
 On failure → fall through to Path 2.
 
-**Setup.** Symlink `.claude/.mcp.json` into Gemini's settings location:
+**Setup.** `agy` reads MCP servers from the global `~/.gemini/config/mcp_config.json`
+(NOT `.gemini/settings.json`, NOT the workspace `.agents/` folder). Merge the
+project's servers in once:
 
 ```bash
-mkdir -p .gemini && ln -sf .claude/.mcp.json .gemini/settings.json
+GLOBAL=~/.gemini/config/mcp_config.json
+mkdir -p ~/.gemini/config
+[ -f "$GLOBAL" ] || echo '{"mcpServers":{}}' > "$GLOBAL"
+node -e 'const fs=require("fs"),os=require("os"),p=require("path");const g=p.join(os.homedir(),".gemini/config/mcp_config.json");const proj=JSON.parse(fs.readFileSync("$HOME/.claude/.mcp.json","utf8"));const cur=JSON.parse(fs.readFileSync(g,"utf8"));cur.mcpServers={...(cur.mcpServers||{}),...(proj.mcpServers||{})};fs.writeFileSync(g,JSON.stringify(cur,null,2));'
 ```
 
-See [`references/gemini-cli-integration.md`](references/gemini-cli-integration.md) for the full integration guide and error-marker reference.
+See [`references/agy-cli-integration.md`](references/agy-cli-integration.md) for install, the full integration guide, and error-marker reference.
 
 ## Path 2: Direct Scripts (fallback / scripted workflows)
 
-The `scripts/` directory ships a self-contained MCP client built on `@modelcontextprotocol/sdk`. Use it when Gemini is unavailable, or when you need deterministic invocation of a specific tool with specific args (CI scripts, debugging, reproducible runs).
+The `scripts/` directory ships a self-contained MCP client built on `@modelcontextprotocol/sdk`. Use it when `agy` is unavailable, or when you need deterministic invocation of a specific tool with specific args (CI scripts, debugging, reproducible runs).
 
 ```bash
-cd .claude/skills/use-mcp/scripts && npm install      # one-time
+cd $HOME/.claude/skills/use-mcp/scripts && npm install      # one-time
 npx tsx cli.ts list-tools                             # snapshot all tools → assets/tools.json
 npx tsx cli.ts list-prompts
 npx tsx cli.ts list-resources
@@ -78,30 +92,32 @@ npx tsx cli.ts call-tool <server> <tool> '<json-args>'
 
 | Pattern | Use |
 |---------|-----|
-| **Gemini auto-execution** | Default. Natural-language task → Gemini picks tool → JSON result. |
+| **agy auto-execution** | Default. Natural-language task → agy picks tool → JSON result. |
 | **Deterministic invocation** | `cli.ts call-tool <server> <tool> '<json>'` when you know exactly what you want. |
 | **LLM-driven selection from catalog** | Run `list-tools` once, then have the main LLM read `assets/tools.json` and pick. Cheaper than re-querying servers. |
 | **Multi-server orchestration** | Each tool is tagged with its source server; the client routes calls correctly across N configured servers. |
 
 ## Important Notes
 
-- **Stdin piping is mandatory for Gemini MCP tasks.** `--prompt` is fine for non-MCP tasks (research, analysis) but historically reports MCP init issues in headless mode.
-- **GEMINI.md is the response-format contract.** Don't bypass it — parseable JSON is what makes the output usable.
-- **Direct scripts are not optional infrastructure.** They are the only path when Gemini is unavailable, when MCP servers are stdio-only and not registered with Claude Code's own MCP layer, or when a task needs deterministic tool selection. Built-in `ListMcpResourcesTool` / `ReadMcpResourceTool` only see servers Claude Code itself has registered — different namespace from `.claude/.mcp.json`.
+- **`agy` runs MCP in print mode.** Pass `-p` (alias `--print` / `--prompt`); `agy` loads MCP servers from `~/.gemini/config/mcp_config.json` even in headless runs (verified empirically). Stdin piping is used here only to carry the multi-line prepended contract cleanly; an inline `-p "<contract>\n\nTASK: ..."` also works.
+- **The prepended proxy contract is the response-format contract.** Don't drop it — parseable JSON is what makes the output usable.
+- **Direct scripts are not optional infrastructure.** They are the only path when Gemini is unavailable, when MCP servers are stdio-only and not registered with Claude Code's own MCP layer, or when a task needs deterministic tool selection. Built-in `ListMcpResourcesTool` / `ReadMcpResourceTool` only see servers Claude Code itself has registered — different namespace from `$HOME/.claude/.mcp.json`.
+- **Chrome DevTools MCP is profile-blind.** Before using Chrome DevTools MCP navigation, decide whether the task needs a specific real Chrome profile. If not, use the MCP tools normally for generic browser inspection. If it does, invoke `ck:chrome-profile` first. Use `chrome-profile open --json <key> <url>`, select the page whose URL contains the returned `bind_selector`, then use Chrome DevTools MCP only to inspect or operate on that selected page. Do not use raw `new_page` or `navigate_page` for profile-scoped work.
 - **`mcp-builder` is NOT a fallback for tool execution.** `mcp-builder` builds new MCP servers from templates; it does not consume existing ones. If a needed server is missing entirely, that's when `mcp-builder` applies.
 
 ## Anti-Pattern for MCP Tasks
 
 ```bash
-# AVOID for MCP tasks — historically reports MCP init issues in headless mode
-gemini -y -m <gemini.model> --prompt "..."
+# AVOID — no prepended contract → agy replies in prose, breaking JSON parsing
+echo "$ARGUMENTS" | agy --dangerously-skip-permissions --model <gemini.model> -p
 
-# Use stdin piping instead
-echo "..." | gemini -y -m <gemini.model>
+# CORRECT — prepend the proxy contract, then pipe to agy in print mode
+printf '%s\n\nTASK: %s' "$CONTRACT" "$ARGUMENTS" | agy --dangerously-skip-permissions --model <gemini.model> -p
 ```
 
 ## Technical Details
 
 - [`references/configuration.md`](references/configuration.md) — `.mcp.json` schema, env file lookup order, validation
 - [`references/mcp-protocol.md`](references/mcp-protocol.md) — JSON-RPC details, transports (stdio / HTTP+SSE), error codes
-- [`references/gemini-cli-integration.md`](references/gemini-cli-integration.md) — Gemini setup, error markers, model-tier guidance
+- [`references/agy-cli-integration.md`](references/agy-cli-integration.md) — agy install, MCP config, error markers, model-tier guidance
+- [`references/mcp-proxy-contract.md`](references/mcp-proxy-contract.md) — the JSON contract `/ck:use-mcp` prepends to each agy call

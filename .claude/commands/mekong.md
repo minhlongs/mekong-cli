@@ -1,34 +1,109 @@
 ---
-description: "Run any mekong-cli command — passthrough wrapper for the full RaaS Agency OS CLI"
-argument-hint: "[mekong subcommand] [options]"
-allowed-tools: Bash
+description: 🔗 Bridge to Mekong CLI — invoke SDLC commands (spec/design/code/deploy) + metrics + eval
+argument-hint: <subcommand> [args...]  e.g., spec new auth | metrics | eval-agent cto
 ---
 
-# /mekong — Mekong CLI Passthrough
+# Mekong CLI Bridge — Sophia Factory Deep Integration
 
-Invoke the **mekong-cli** binary directly. Every argument you pass after `/mekong` is forwarded as-is to the `mekong` command (via `poetry run mekong`).
+[VN] Cầu nối tới Mekong CLI v3.3.0+ tại `/Users/macbook/mekong-cli/`. Cho phép Sophia dùng SDLC scaffold + observability + signals của Mekong CLI.
+[EN] Bridge to Mekong CLI v3.3.0+ at `/Users/macbook/mekong-cli/`. Lets Sophia use Mekong's SDLC scaffold + observability + signals.
 
-## Usage
+## Request
+<command>$ARGUMENTS</command>
 
-```bash
-/mekong <subcommand> [args...]
+## Subcommand routing
+
+| Mekong subcommand | Purpose | Bash invocation |
+|---|---|---|
+| `spec new <feat>` | Create specification document | `cd ~/mekong-cli && mekong spec new <feat>` |
+| `design <feat>` | Create design document | `cd ~/mekong-cli && mekong design <feat>` |
+| `code <feat>` | Implement feature per design | `cd ~/mekong-cli && mekong code <feat>` |
+| `deploy <feat>` | Deploy with CI/CD gates | `cd ~/mekong-cli && mekong deploy <feat>` |
+| `metrics` | View local SQLite metrics | `cd ~/mekong-cli && mekong metrics` |
+| `eval-agent <id>` | Evaluate agent performance | `cd ~/mekong-cli && mekong eval-agent <id>` |
+
+## Workflow
+
+1. Parse `$ARGUMENTS` to extract subcommand + args
+2. Validate subcommand against routing table above
+3. Run via Bash tool: `cd /Users/macbook/mekong-cli && mekong $ARGUMENTS`
+4. Capture output, return to user
+5. If creating spec/design/code/deploy artifact, COPY artifact path into Sophia's plans/ for cross-repo reference
+
+## Cross-repo design
+
+```
+sophia-ai-factory/
+├── .sophia-factory/
+│   ├── agents/               # Sophia C-Level (CTO/CMO/CSO/COO)
+│   ├── orchestrator.md       # Sophia supervisor
+│   ├── CLAUDE.{spec,design,code,deploy}.md   # Sophia's own SDLC instructions
+│   └── mekong-bridge/
+│       └── phases/ → /Users/macbook/mekong-cli/.mekong/phases/  # SYMLINK
+│
+mekong-cli/
+├── .mekong/
+│   ├── phases/               # CANONICAL SDLC (Sophia symlinks here)
+│   │   ├── CLAUDE.spec.md
+│   │   ├── CLAUDE.design.md
+│   │   ├── CLAUDE.code.md
+│   │   ├── CLAUDE.deploy.md
+│   │   ├── signals/          # SQLite offline evals
+│   │   └── templates/
+│   └── ...
+├── src/cli/commands/         # Python CLI: eval_agent.py, metrics.py
+└── observability/            # OTel + Grafana stack (Docker-blocked on M1 Max)
 ```
 
-## Examples
+## When to use Sophia C-Level vs Mekong SDLC
 
+- **Sophia C-Level (`/sophia <request>`)**: business-layer decisions (CTO/CMO/CSO/COO routing). Constrained to Sophia repo paths.
+- **Mekong CLI Agent (`mekong-cli`)**: cross-repo SDLC, observability, symlinks, subagent orchestration between Sophia and Mekong CLI.
+- **Mekong SDLC (`/mekong <subcommand>`)**: technical SDLC scaffold (spec→design→code→deploy). Cross-repo, includes Mekong's observability + signals.
+
+Typical flow:
+1. `/sophia "new feature: weekly tier-upgrade nudge email"` → CMO drafts copy + CTO drafts technical spec
+2. Orchestrator routes SDLC task → `mekong-cli` agent (via Skill spawn)
+3. `mekong-cli` runs: `mekong spec new tier-upgrade-nudge` → copies artifact to Sophia `plans/`
+4. `mekong-cli` runs: `mekong design tier-upgrade-nudge` → architecture
+5. `mekong-cli` runs: `mekong code tier-upgrade-nudge` → implementation (Mekong's CI/CD gates)
+6. `mekong-cli` runs: `mekong deploy tier-upgrade-nudge` → deploy with canary + auto-rollback
+7. `mekong-cli` runs: `mekong eval-agent cmo` → assess CMO output quality after rollout
+8. `/mekong metrics` → view unified observability dashboard (Sophia Better Stack + Mekong Grafana)
+
+## Agent Teams Routing
+
+| Sophia Team | C-Level Agents Invoked | Primary Use Case |
+|---|---|---|
+| `ceo` | `cto`, `cso`, `cmo`, `coo` | Strategic synthesis, founder decisions |
+| `marketing-team` | `cmo`, `cso` | Go-to-market campaigns, pricing, positioning |
+| `tech-team` | `cto`, `coo` | Code quality, infra, incident response |
+
+**Usage:**
 ```bash
-/mekong --help                          # Show all available commands
-/mekong cook "Add JWT auth to /api/users"   # Cook a feature
-/mekong plan "Refactor payment module"      # Plan only
-/mekong goal "Launch VN-Hub phase 9"        # Run a persistent goal
-/mekong status                              # License / quota status
-/mekong agi status                           # AGI daemon health
-/mekong dash                                 # Open action menu
+/sophia "ceo: review Q3 roadmap with market data"
+/sophia "marketing-team: launch affiliate program"
+/sophia "tech-team: scale video pipeline to 100k users"
 ```
 
-## Notes
+Orchestrator auto-detects `ENABLE_AGENT_TEAMS=true` and routes to team agent definitions in `.sophia-factory/agents/`.
 
-- The `mekong` binary is resolved via `poetry run mekong` from the project root.
-- Optional components (`mem0ai`, `qdrant-client`) produce non-fatal warnings on startup; they do not block execution.
-- For long-running or autonomous commands (`goal`, `cook-auto`, `cook-auto-parallel`), use the `--profile` flag to control verification depth.
-- Command reference: run `mekong --help` or `mekong <subcommand> --help`.
+## Observability bridge (when Docker activated on M1 Max)
+
+Sophia's Better Stack logs + Mekong's Grafana metrics CAN merge:
+- Sophia pushes Worker logs → Better Stack (managed)
+- Mekong pushes Python agent metrics → Prometheus → Grafana (self-host on M1 Max)
+- Cross-link via `commit_sha` field (Sophia P2 D1 column) and `agent.invocation_id` (Mekong OTel attribute)
+- Future: unified dashboard at `grafana.m1max.cashclaw.cc` showing both
+
+## Docs
+- Sophia plan: `plans/260416-2328-sophia-factory-raas-solo-platform/plan.md`
+- Mekong audit: `/Users/macbook/mekong-cli/plans/reports/audit-260417-0820-mekong-vs-claudekit-gap.md`
+- Activation: `docs/sophia-activation-runbook.md`
+- Architecture: `docs/sophia-mekong-integration.md` (this bridge documented in detail)
+
+## Constraints
+- Mekong CLI is INDEPENDENT repo at `/Users/macbook/mekong-cli/` — DO NOT mutate from Sophia directly
+- `/mekong` slash from Sophia operates READ-ONLY against Mekong (or via official `mekong` CLI binary which has own permissions)
+- ALL cross-repo writes MUST go through the `mekong-cli` agent — it is the sole authorized mutator of Mekong state from Sophia context
+- Cross-repo writes go through PR workflow on respective repo

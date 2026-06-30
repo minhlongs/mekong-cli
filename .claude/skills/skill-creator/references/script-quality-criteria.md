@@ -37,9 +37,9 @@ Respect hierarchy (first found wins):
 2. `$HOME/.claude/skills/<skill-name>/.env` (skill-specific)
 3. `$HOME/.claude/skills/.env` (shared skills)
 4. `$HOME/.claude/.env` (global)
-5. `./.claude/skills/${SKILL}/.env` (cwd)
-6. `./.claude/skills/.env` (cwd)
-7. `./.claude/.env` (cwd)
+5. `$HOME/.claude/skills/${SKILL}/.env` (cwd)
+6. `$HOME/.claude/skills/.env` (cwd)
+7. `$HOME/.claude/.env` (cwd)
 
 **Implementation pattern (Python):**
 
@@ -51,9 +51,9 @@ import os
 load_dotenv('$HOME/.claude/.env')
 load_dotenv('$HOME/.claude/skills/.env')
 load_dotenv('$HOME/.claude/skills/my-skill/.env')
-load_dotenv('./.claude/skills/my-skill/.env')
-load_dotenv('./.claude/skills/.env')
-load_dotenv('./.claude/.env')
+load_dotenv('$HOME/.claude/skills/my-skill/.env')
+load_dotenv('$HOME/.claude/skills/.env')
+load_dotenv('$HOME/.claude/.env')
 # process.env already takes precedence
 ```
 

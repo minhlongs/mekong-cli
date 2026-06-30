@@ -32,12 +32,12 @@ First, you will clearly define the research scope by:
 You will employ a multi-source research strategy:
 
 1. **Search Strategy**:
-   - **Gemini Toggle**: Check `.claude/.ck.json` (or `~/.claude/.ck.json`) for `skills.research.useGemini` (default: `false`). If `false` or absent, skip Gemini and use WebSearch directly.
-   - **Gemini Model**: Read from `.claude/.ck.json`: `gemini.model` (default: `gemini-3-flash-preview`)
-   - If `useGemini` is `true`: first validate Gemini CLI works: `command -v gemini >/dev/null 2>&1 && cd /tmp && timeout 15 gemini -y -m <gemini.model> --prompt "ping" >/dev/null 2>&1`. If validation fails or times out, fall back to WebSearch and warn: "Gemini CLI unavailable or auth failed, using WebSearch."
-   - If validation passes, execute research from a temp dir to avoid project GEMINI.md interception (note: global `~/.gemini/GEMINI.md` still loads): `cd /tmp && timeout 180 gemini -y -m <gemini.model> --prompt "...your search prompt..." 2>&1`. Check exit code — if non-zero or output contains `GaxiosError`, `RESOURCE_EXHAUSTED`, `MODEL_CAPACITY_EXHAUSTED`, `PERMISSION_DENIED`, or `UNAUTHENTICATED`, fall back to WebSearch for that query and warn: "Gemini CLI failed, falling back to WebSearch." Save successful output using `Report:` path from `## Naming` section (including all citations).
-   - If `useGemini` is disabled or `gemini` bash command is not available, use `WebSearch` tool.
-   - Run multiple `gemini` bash commands or `WebSearch` tools in parallel to search for relevant information.
+   - **Gemini Toggle**: Check `$HOME/.claude/.ck.json` (or `~/.claude/.ck.json`) for `skills.research.useGemini` (default: `false`). If `false` or absent, skip Gemini and use WebSearch directly.
+   - **Gemini Model**: Read from `$HOME/.claude/.ck.json`: `gemini.model` (default: `gemini-3-flash-preview`)
+   - If `useGemini` is `true`: first validate the `agy` (Antigravity) CLI works: `command -v agy >/dev/null 2>&1 && cd /tmp && agy --dangerously-skip-permissions --model <gemini.model> --print-timeout 15s --prompt "ping" >/dev/null 2>&1`. If validation fails or times out, fall back to WebSearch and warn: "agy CLI unavailable or auth failed, using WebSearch."
+   - If validation passes, execute research from a temp dir so the project `AGENTS.md` (which `agy` auto-loads from the workspace) does not interfere with the search prompt: `cd /tmp && agy --dangerously-skip-permissions --model <gemini.model> --print-timeout 180s --prompt "...your search prompt..." 2>&1`. Check exit code — if non-zero or output contains `GaxiosError`, `RESOURCE_EXHAUSTED`, `MODEL_CAPACITY_EXHAUSTED`, `PERMISSION_DENIED`, or `UNAUTHENTICATED`, fall back to WebSearch for that query and warn: "agy CLI failed, falling back to WebSearch." Save successful output using `Report:` path from `## Naming` section (including all citations).
+   - If `useGemini` is disabled or the `agy` bash command is not available, use `WebSearch` tool.
+   - Run multiple `agy` bash commands or `WebSearch` tools in parallel to search for relevant information.
    - Craft precise search queries with relevant keywords
    - Include terms like "best practices", "2024", "latest", "security", "performance"
    - Search for official documentation, GitHub repositories, and authoritative blogs

@@ -92,7 +92,7 @@ Show preview, then ask confirmation:
 
 Run generation:
 ```bash
-cd .claude/skills/ai-artist && .venv/bin/python3 scripts/generate.py "[concept]" \
+cd $HOME/.claude/skills/ai-artist && .venv/bin/python3 scripts/generate.py "[concept]" \
   -o ./generated-$(date +%Y%m%d-%H%M%S).png \
   --mode [mode] \
   -ar [ratio] \

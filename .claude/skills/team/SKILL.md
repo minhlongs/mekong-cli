@@ -63,7 +63,7 @@ When `--delegate` flag is passed:
 
 ```
 Agent(
-  subagent_type: "researcher" | "fullstack-developer" | "code-reviewer" | "debugger" | "tester" | ...,
+  subagent_type: "ck:researcher" | "ck:fullstack-developer" | "ck:code-reviewer" | "ck:debugger" | "ck:tester" | ...,
   description: "short task summary",
   prompt: "full instructions + CK Context Block",
   model: "opus",                    # Required for Agent Teams teammates
@@ -112,6 +112,8 @@ CK Context:
 - Active plan: {CK_ACTIVE_PLAN or "none"}
 - Commits: conventional (feat:, fix:, docs:, refactor:, test:, chore:)
 - Refer to teammates by NAME, not agent ID
+- Team rules: MUST read `$HOME/.claude/skills/team/references/team-coordination-rules.md` before work
+- Follow team rules for file ownership, task status, messaging, and shutdown
 ```
 
 ---
@@ -135,14 +137,14 @@ IMMEDIATELY execute in order:
    - Description: `Investigate <angle> for topic: <topic>. Save report to: {CK_REPORTS_PATH}/researcher-{N}-{CK_NAME_PATTERN}-{topic-slug}.md. Format: Executive summary, key findings, evidence, recommendations. Mark task completed when done. Send findings summary to lead.`
 
 4. **SPAWN** teammates x N via `Agent` tool:
-   - `subagent_type: "researcher"`, `model: "opus"`
+   - `subagent_type: "ck:researcher"`, `model: "opus"`
    - `run_in_background: true` (non-blocking -- spawn all N concurrently)
    - `name: "researcher-{N}"`
    - Prompt: task description + CK Context Block
 
-5. **MONITOR** via TaskCompleted hook events + TaskList fallback:
-   - TaskCompleted events auto-notify when researchers finish
-   - Fallback: Check TaskList if no event received in 60s
+5. **MONITOR** via TaskList + direct messages:
+   - Check TaskList after 60s or when a teammate messages completion
+   - Do not rely on ClaudeKit custom TaskCompleted/TeammateIdle handlers; they are not shipped by default
    - If stuck >5 min, message teammate directly
 
 6. **READ** all researcher reports from `{CK_REPORTS_PATH}/`
@@ -166,7 +168,7 @@ IMMEDIATELY execute in order:
 IMMEDIATELY execute in order:
 
 1. **READ** plan (if path provided) OR create via planner teammate:
-   - If description only: spawn `Agent(subagent_type: "planner")` to create plan first
+   - If description only: spawn `Agent(subagent_type: "ck:planner")` to create plan first
    - Parse plan into N independent task groups with file ownership boundaries
 
 2. **CALL** `TeamCreate(team_name: "<feature-slug>")`
@@ -177,7 +179,7 @@ IMMEDIATELY execute in order:
    - Each task description includes: implementation scope, file ownership, acceptance criteria
 
 4. **SPAWN** developer teammates x N via `Agent` tool:
-   - `subagent_type: "fullstack-developer"`, `model: "opus"`
+   - `subagent_type: "ck:fullstack-developer"`, `model: "opus"`
    - `isolation: "worktree"` -- each dev gets isolated git worktree (no file conflicts)
    - `run_in_background: true`
    - `name: "dev-{N}"`
@@ -185,12 +187,11 @@ IMMEDIATELY execute in order:
    - If `--plan-approval`: include instruction to plan first, await approval
    - REVIEW and APPROVE each developer's plan via `plan_approval_response`
 
-5. **MONITOR** dev completion via TaskCompleted events:
-   - TaskCompleted hook notifies when each dev task finishes
+5. **MONITOR** dev completion via TaskList + direct messages:
+   - Check TaskList after 60s or when a teammate messages completion
    - When all N dev tasks show completed, spawn tester immediately
-   - TeammateIdle events confirm devs are available for shutdown
-   - Fallback: Check TaskList if no events received in 60s
-   - Spawn tester: `Agent(subagent_type: "tester", model: "opus", name: "tester")`
+   - Idle state is not a completion signal; verify task status before shutdown
+   - Spawn tester: `Agent(subagent_type: "ck:tester", model: "opus", name: "tester")`
    - Tester runs full test suite, reports pass/fail
 
 6. **MERGE** worktree branches (if `isolation: "worktree"` was used):
@@ -233,14 +234,14 @@ IMMEDIATELY execute in order:
    - Description: `Review <scope> for <focus>. Output severity-rated findings only. Format: [CRITICAL|IMPORTANT|MODERATE] <finding> -- <evidence> -- <recommendation>. No "seems" or "probably" -- concrete evidence only. Save to: {CK_REPORTS_PATH}/reviewer-{N}-{CK_NAME_PATTERN}-{scope-slug}.md. Mark task completed when done.`
 
 4. **SPAWN** reviewers x N via `Agent` tool:
-   - `subagent_type: "code-reviewer"`, `model: "opus"`
+   - `subagent_type: "ck:code-reviewer"`, `model: "opus"`
    - `run_in_background: true`
    - `name: "reviewer-{N}"`
    - Prompt: task description + CK Context Block
 
-5. **MONITOR** via TaskCompleted hook events + TaskList fallback:
-   - TaskCompleted events auto-notify when reviewers finish
-   - Fallback: Check TaskList if no event received in 60s
+5. **MONITOR** via TaskList + direct messages:
+   - Check TaskList after 60s or when a teammate messages completion
+   - If a reviewer is idle but task status is stale, message the reviewer before synthesizing
 
 6. **SYNTHESIZE** into: `{CK_REPORTS_PATH}/review-{scope-slug}.md`
    - Deduplicate findings across reviewers
@@ -273,15 +274,14 @@ IMMEDIATELY execute in order:
    - Description: `Investigate hypothesis: <theory>. For issue: <issue>. ADVERSARIAL: actively try to disprove other theories. Message other debuggers to challenge findings. Report evidence FOR and AGAINST your theory. Save findings to: {CK_REPORTS_PATH}/debugger-{N}-{CK_NAME_PATTERN}-{issue-slug}.md. Mark task completed when done.`
 
 4. **SPAWN** debugger teammates x N via `Agent` tool:
-   - `subagent_type: "debugger"`, `model: "opus"`
+   - `subagent_type: "ck:debugger"`, `model: "opus"`
    - `run_in_background: true`
    - `name: "debugger-{N}"`
    - Prompt: task description + CK Context Block
 
-5. **MONITOR** via TaskCompleted events. Debuggers should message each other -- let them converge.
-   - TaskCompleted events notify as each hypothesis is tested
-   - TeammateIdle events indicate debugger awaiting peer input
-   - Fallback: Check TaskList if no events in 60s
+5. **MONITOR** via TaskList + messages. Debuggers should message each other -- let them converge.
+   - Check TaskList after 60s or when a debugger reports findings
+   - Idle state indicates waiting, not completion; inspect task status and messages before acting
 
 6. **READ** all debugger reports. Identify surviving theory as root cause.
 
@@ -319,13 +319,13 @@ IMMEDIATELY execute in order:
 
 ## Agent Memory
 
-Teammates with `memory: project` in their agent definition retain learnings across team sessions. Memory persists in `.claude/agent-memory/<name>/` (gitignored). Useful for:
+Teammates with `memory: project` in their agent definition retain learnings across team sessions. Memory persists in `$HOME/.claude/agent-memory/<name>/` (gitignored). Useful for:
 - Code reviewer remembering project conventions
 - Debugger recalling past failure patterns
 - Tester tracking flaky tests and coverage gaps
 - Researcher accumulating domain knowledge
 
-Memory persists after team cleanup -- it's in `.claude/agent-memory/`, not `~/.claude/teams/`.
+Memory persists after team cleanup -- it's in `$HOME/.claude/agent-memory/`, not `~/.claude/teams/`.
 
 ## Worktree Isolation (Cook Template)
 
@@ -360,6 +360,6 @@ If unresponsive: close terminal or kill session. Clean orphaned configs at `~/.c
 
 ## Rules Reference
 
-See `.claude/rules/team-coordination-rules.md` for teammate behavior rules.
+See `$HOME/.claude/skills/team/references/team-coordination-rules.md` for teammate behavior rules. Keep these rules skill-local so normal sessions do not spend startup context on Agent Teams.
 
 > v3.0.0: Agent tool migration, worktree isolation for cook devs, run_in_background spawning, updated model requirements.

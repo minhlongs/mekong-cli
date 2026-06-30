@@ -31,10 +31,13 @@ The running Chrome receives the message and creates a new tab in `Profile 17`. T
 
 Without an anchor, after `chrome-profile cognition https://x` the agent only knows "a new tab in Cognition exists somewhere." `list_pages` returns all tabs. Race conditions (e.g. the user opens another tab manually in the same moment) make "find the newest tab" unreliable.
 
-The `#cdp-profile=<key>` fragment is:
+The `#cdp-profile=<key>&cdp-open=<token>` fragment is:
 - **Client-only** — never sent in HTTP requests, never logged by upstream servers.
-- **Deterministic** — the agent matches `url.includes("cdp-profile=<key>")` with zero ambiguity for that operation.
-- **Unique per `chrome-profile` invocation** — even repeated calls in the same profile produce identical fragments, so the agent should pick the most recently opened match (highest pageId).
+- **Profile-labelled** — `cdp-profile=<key>` gives the agent a CLI marker sanity check for the requested key; profile identity is resolved before launch by `chrome-profile`.
+- **Unique per open** — `cdp-open=<token>` is generated for each `chrome-profile open` call, so repeated calls in the same profile do not collide.
+- **Deterministic for MCP binding** — the agent matches `url.includes("<bind_selector>")`, where `bind_selector` is the exact `cdp-open=<token>` returned by `chrome-profile open --json`.
+
+The profile marker is a sanity check and fallback. The open marker is the primary selector because old tabs from prior runs can still carry the same profile marker.
 
 ## Why copy-profile (rsync to /tmp) does NOT work on macOS
 

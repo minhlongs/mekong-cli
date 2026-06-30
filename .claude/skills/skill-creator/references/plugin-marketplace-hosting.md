@@ -39,7 +39,7 @@ CI/CD: configure as secret env variable. GitHub Actions auto-provides `GITHUB_TO
 
 ### Auto-Prompt Marketplace Install
 
-Add to `.claude/settings.json` in your repo:
+Add to `$HOME/.claude/settings.json` in your repo:
 
 ```json
 {

@@ -74,6 +74,7 @@ Commands grouped by AEAD phase.
 | `/techstack [domain]` | Technology fingerprint (CMS, analytics, CDN, server) | `/techstack example.com` |
 | `/competitors [domain]` | Competitor & related site discovery | `/competitors example.com` |
 | `/secrets [target]` | Exposed credentials in repos and paste sites | `/secrets github.com/org` |
+| `/github-osint [target]` | GitHub profile, org, repo, code, commit metadata, and collaboration recon | `/github-osint github.com/org/repo` |
 | `/threat-check [target]` | IP/domain/URL/hash threat intelligence | `/threat-check 185.1.1.1` |
 | `/scam-check [domain]` | Phishing/scam/malicious domain check | `/scam-check susp-site.xyz` |
 | `/vuln-check [query]` | CVE/vulnerability lookup (CIRCL + NVD) | `/vuln-check CVE-2024-1234` or `/vuln-check apache/httpd` |

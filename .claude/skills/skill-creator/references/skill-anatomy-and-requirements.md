@@ -3,7 +3,7 @@
 ## Directory Structure
 
 ```
-.claude/skills/
+$HOME/.claude/skills/
 └── skill-name/
     ├── SKILL.md          (required, <300 lines)
     │   ├── YAML frontmatter (name, description required)

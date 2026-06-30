@@ -90,7 +90,7 @@ Agent(
 
 **Built-in subagent types:** `general-purpose`, `Explore`, `Plan`, `researcher`, `fullstack-developer`, `code-reviewer`, `debugger`, `tester`, `planner`, `docs-manager`, `brainstormer`, and more.
 
-**Custom subagents:** Define in `.claude/agents/` with frontmatter (name, description, tools, model).
+**Custom subagents:** Define in `$HOME/.claude/agents/` with frontmatter (name, description, tools, model).
 
 ### TeamCreate
 
@@ -130,6 +130,8 @@ Task claiming uses file locking to prevent race conditions.
 Task dependencies resolve automatically -- completing a blocker unblocks dependents.
 
 ## Hook Events
+
+These are Claude Code platform events. ClaudeKit does not ship custom handlers for them by default; team workflows should monitor TaskList and teammate messages unless a project deliberately adds and validates its own handlers.
 
 ### TaskCompleted
 
@@ -177,7 +179,7 @@ Agents can declare `memory` in frontmatter for persistent cross-session learning
 | Scope | Location | Persists across |
 |-------|----------|-----------------|
 | `user` | `~/.claude/agent-memory/<name>/` | All projects |
-| `project` | `.claude/agent-memory/<name>/` | Sessions in same project |
+| `project` | `$HOME/.claude/agent-memory/<name>/` | Sessions in same project |
 
 First 200 lines of `MEMORY.md` auto-injected into system prompt.
 

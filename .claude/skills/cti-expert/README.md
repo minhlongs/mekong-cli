@@ -285,7 +285,7 @@ claude   # opens Claude Code CLI
    | Platform | How to navigate |
    |----------|----------------|
    | **macOS** | Open **Finder** &rarr; Press **Cmd + Shift + G** &rarr; Type `~/.claude/skills/` &rarr; Press **Go** &rarr; Move the folder here |
-   | **Windows** | Open **File Explorer** &rarr; Type `%USERPROFILE%\.claude\skills\` in the address bar &rarr; Press **Enter** &rarr; Move the folder here |
+   | **Windows** | Open **File Explorer** &rarr; Type `$HOME/.claude/skills\` in the address bar &rarr; Press **Enter** &rarr; Move the folder here |
 
    > **Note:** If the `skills` folder does not exist, create it inside the `.claude` folder first.
 
@@ -1024,7 +1024,7 @@ claude   # mở Claude Code CLI
    | Hệ điều hành | Cách điều hướng |
    |-------------|----------------|
    | **macOS** | Mở **Finder** &rarr; Nhấn **Cmd + Shift + G** &rarr; Nhập `~/.claude/skills/` &rarr; Nhấn **Go** |
-   | **Windows** | Mở **File Explorer** &rarr; Nhập `%USERPROFILE%\.claude\skills\` vào thanh địa chỉ &rarr; Nhấn **Enter** |
+   | **Windows** | Mở **File Explorer** &rarr; Nhập `$HOME/.claude/skills\` vào thanh địa chỉ &rarr; Nhấn **Enter** |
 
 4. **Chạy installer** &mdash; Mở terminal trong Claude Code Desktop:
 
@@ -1239,7 +1239,7 @@ claude   # 打开 Claude Code CLI
    | 操作系统 | 路径 |
    |---------|------|
    | **macOS** | `~/.claude/skills/` （Finder &rarr; Cmd+Shift+G） |
-   | **Windows** | `%USERPROFILE%\.claude\skills\` （文件资源管理器地址栏） |
+   | **Windows** | `$HOME/.claude/skills\` （文件资源管理器地址栏） |
 
 4. **运行安装脚本** &mdash; 在 Claude Code Desktop 终端中运行：
 

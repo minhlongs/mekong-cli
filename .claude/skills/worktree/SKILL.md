@@ -20,7 +20,7 @@ Create an isolated git worktree for parallel feature development.
 ### Step 1: Get Repo Info
 
 ```bash
-node .claude/skills/worktree/scripts/worktree.cjs info --json
+node $HOME/.claude/skills/worktree/scripts/worktree.cjs info --json
 ```
 
 Parse JSON response for: `repoType`, `baseBranch`, `projects`, `worktreeRoot`,
@@ -70,12 +70,12 @@ AskUserQuestion({
 
 **Monorepo:**
 ```bash
-node .claude/skills/worktree/scripts/worktree.cjs create "<PROJECT>" "<SLUG>" --prefix <TYPE>
+node $HOME/.claude/skills/worktree/scripts/worktree.cjs create "<PROJECT>" "<SLUG>" --prefix <TYPE>
 ```
 
 **Standalone:**
 ```bash
-node .claude/skills/worktree/scripts/worktree.cjs create "<SLUG>" --prefix <TYPE>
+node $HOME/.claude/skills/worktree/scripts/worktree.cjs create "<SLUG>" --prefix <TYPE>
 ```
 
 **Options:**

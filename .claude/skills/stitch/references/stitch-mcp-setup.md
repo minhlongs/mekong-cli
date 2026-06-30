@@ -13,7 +13,7 @@ Simplest setup. No Google Cloud dependency.
 3. Click "Generate New Key"
 4. Copy `sk_...` key
 
-### 2. Add to `.claude/.mcp.json`
+### 2. Add to `$HOME/.claude/.mcp.json`
 
 ```json
 {
@@ -49,7 +49,7 @@ gcloud config set project YOUR_PROJECT_ID
 gcloud beta services mcp enable stitch.googleapis.com
 ```
 
-### 2. Add to `.claude/.mcp.json`
+### 2. Add to `$HOME/.claude/.mcp.json`
 
 ```json
 {
@@ -92,4 +92,4 @@ npx stitch-mcp-auto
 | Windows | `%AppData%\Claude\claude_desktop_config.json` |
 | Linux | `~/.config/Claude/claude_desktop_config.json` |
 
-For Claude Code CLI: use `.claude/.mcp.json` in project root (preferred for ClaudeKit).
+For Claude Code CLI: use `$HOME/.claude/.mcp.json` in project root (preferred for ClaudeKit).

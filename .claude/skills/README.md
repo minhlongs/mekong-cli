@@ -29,7 +29,7 @@ Some skills require external dependencies (FFmpeg, ImageMagick, Node.js packages
 
 **Linux/macOS:**
 ```bash
-cd .claude/skills
+cd $HOME/.claude/skills
 ./install.sh
 ```
 

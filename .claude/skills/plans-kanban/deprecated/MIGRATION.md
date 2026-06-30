@@ -10,7 +10,7 @@
 ## Current workflow
 
 ```bash
-node .claude/skills/plans-kanban/scripts/open-dashboard.cjs
+node $HOME/.claude/skills/plans-kanban/scripts/open-dashboard.cjs
 ```
 
 If the dashboard is not already running, the launcher starts:

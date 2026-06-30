@@ -29,7 +29,7 @@ Turn any folder of code, docs, papers, or images into a queryable knowledge grap
 
 **Note:** The PyPI package is `graphifyy` (double-y). Other `graphify*` packages on PyPI are unaffiliated.
 
-CK already bundles this skill at `.claude/skills/ck-graphify/`. Do not run
+CK already bundles this skill at `$HOME/.claude/skills/ck-graphify/`. Do not run
 `graphify install` for CK setup: upstream uses that command to install its
 standalone Claude skill at `~/.claude/skills/graphify/SKILL.md`.
 
@@ -87,7 +87,7 @@ python -m graphify.serve graphify-out/graph.json
 
 ### Claude Code MCP Setup
 
-Add to `.claude/.mcp.json`:
+Add to `$HOME/.claude/.mcp.json`:
 ```json
 {
   "mcpServers": {

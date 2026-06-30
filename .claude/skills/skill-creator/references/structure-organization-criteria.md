@@ -5,7 +5,7 @@ Proper structure enables discovery and maintainability.
 ## Required Directory Layout
 
 ```
-.claude/skills/
+$HOME/.claude/skills/
 └── skill-name/
     ├── SKILL.md          # Required, uppercase
     ├── scripts/          # Optional: executable code

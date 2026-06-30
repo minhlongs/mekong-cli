@@ -36,8 +36,8 @@ Fast, token-efficient codebase scouting using parallel agents to find files need
 
 ## Configuration
 
-Read from `.claude/.ck.json`:
-- `gemini.model` - Gemini model (default: `gemini-3-flash-preview`)
+Read from `$HOME/.claude/.ck.json`:
+- `gemini.model` - model id passed to the `agy` (Antigravity) CLI (default: `gemini-3-flash-preview`)
 
 ## Workflow
 
@@ -61,7 +61,7 @@ Read from `.claude/.ck.json`:
 ### 4. Spawn Parallel Agents
 Load appropriate reference based on decision tree:
 - **Internal (Default):** `references/internal-scouting.md` (Explore subagents)
-- **External:** `references/external-scouting.md` (Gemini/OpenCode)
+- **External:** `references/external-scouting.md` (agy/OpenCode)
 
 **Notes:**
 - `TaskUpdate` each task to `in_progress` before spawning its agent (skip if Task tools unavailable)

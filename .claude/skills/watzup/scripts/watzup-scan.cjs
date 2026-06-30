@@ -5,6 +5,9 @@ const { spawnSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { scanPlanDirectory } = require('./lib/checkboxes.cjs');
+const { scanRoadmaps } = require('./lib/roadmap.cjs');
+const { buildRankedNextSteps, planProgressLabel } = require('./lib/priority.cjs');
 
 const DEFAULTS = {
   maxBranches: 12,
@@ -58,7 +61,7 @@ function printHelp() {
   console.log(`watzup-scan
 
 Usage:
-  node .claude/skills/watzup/scripts/watzup-scan.cjs [--json] [--fetch]
+  node $HOME/.claude/skills/watzup/scripts/watzup-scan.cjs [--json] [--fetch]
 
 Options:
   --json                  Emit machine-readable evidence
@@ -343,19 +346,17 @@ function sortPlans(plans, current) {
   return plans.sort((a, b) => (rankPlan(b, current) - rankPlan(a, current)) || a.title.localeCompare(b.title));
 }
 
-function buildNextSteps(payload) {
-  const steps = [];
-  if (payload.current.dirty) steps.push('Review or commit current worktree changes before handoff.');
-  if (payload.current.detached) steps.push('Create or switch to a named branch before shipping work from this checkout.');
-  const currentBranch = payload.branches.find((branch) => branch.name === payload.current.branch);
-  if (currentBranch) steps.push(`Continue from current branch ${currentBranch.name} if this is the active feature.`);
-  if (payload.plans.unfinished.length > 0) {
-    steps.push(`Resume unfinished plan: ${payload.plans.unfinished[0].title}.`);
+// Attach checkbox progress data to filesystem-sourced plans so the priority
+// scorer can compute momentum and the renderer can show "X/Y todos done".
+function attachPlanProgress(plans, warnings) {
+  for (const plan of plans) {
+    const sources = plan.sources || [plan.source];
+    const fsSource = sources.find((source) => source && source.type === 'filesystem' && source.worktree);
+    if (!fsSource) continue;
+    const planDir = path.join(fsSource.worktree, path.dirname(plan.path));
+    const progress = scanPlanDirectory(planDir, warnings);
+    if (progress) plan.progress = progress;
   }
-  const activeRemote = payload.branches.find((branch) => branch.type === 'remote');
-  if (activeRemote) steps.push(`Check recent remote branch ${activeRemote.name} for related work before duplicating effort.`);
-  if (steps.length === 0) steps.push('No obvious in-flight work found; start from the highest-priority user request.');
-  return steps.slice(0, 5);
 }
 
 function buildPayload(options, cwd = process.cwd()) {
@@ -390,8 +391,10 @@ function buildPayload(options, cwd = process.cwd()) {
     warnings.push(`Tracked plan scan limited to ${planRefs.length} ranked refs out of ${refs.length}.`);
   }
   const plans = sortPlans(dedupePlans([...scanFilesystemPlans(worktrees, warnings), ...scanTrackedPlans(root, planRefs)]), current);
+  attachPlanProgress(plans, warnings);
   const unfinished = plans.filter((plan) => plan.unfinished).slice(0, options.planLimit);
   const completedRecent = plans.filter((plan) => !plan.unfinished).slice(0, options.planLimit);
+  const roadmaps = scanRoadmaps(worktrees, warnings);
   const payload = {
     generatedAt: new Date().toISOString(),
     options: {
@@ -413,9 +416,10 @@ function buildPayload(options, cwd = process.cwd()) {
     },
     branches,
     plans: { unfinished, completedRecent, total: plans.length },
+    roadmaps,
     warnings,
   };
-  payload.nextSteps = buildNextSteps(payload);
+  payload.nextSteps = buildRankedNextSteps(payload);
   if (options.redactPaths) redactPaths(payload);
   return payload;
 }
@@ -450,6 +454,14 @@ function redactPaths(payload) {
       if (source.worktree) source.worktree = labelFor(source.worktree);
     }
   }
+  for (const roadmap of payload.roadmaps || []) {
+    if (roadmap.worktree) roadmap.worktree = labelFor(roadmap.worktree);
+  }
+  for (const step of payload.nextSteps || []) {
+    if (step.planId) step.planId = redactText(step.planId);
+    if (step.rationale) step.rationale = redactText(step.rationale);
+    if (step.action) step.action = redactText(step.action);
+  }
   payload.warnings = payload.warnings.map(redactText);
 }
 
@@ -471,10 +483,24 @@ function renderText(payload) {
   if (payload.plans.unfinished.length === 0) lines.push('- none found');
   for (const plan of payload.plans.unfinished.slice(0, 5)) {
     const source = plan.sources?.[0]?.ref || plan.sources?.[0]?.branch || plan.sources?.[0]?.type;
-    lines.push(`- ${plan.title} (${plan.status}, ${source})`);
+    lines.push(`- ${plan.title} (${plan.status}, ${source}; ${planProgressLabel(plan)})`);
   }
-  lines.push('', 'Next steps:');
-  payload.nextSteps.forEach((step, index) => lines.push(`${index + 1}. ${step}`));
+  if (payload.roadmaps && payload.roadmaps.length > 0) {
+    lines.push('', 'Roadmaps:');
+    for (const roadmap of payload.roadmaps) {
+      const pct = roadmap.progress ? ` (${Math.round(roadmap.progress.complete * 100)}% done)` : '';
+      const top = roadmap.activeMilestones?.[0]?.heading || 'no active milestone';
+      lines.push(`- ${roadmap.path}${pct} → next: ${top}`);
+    }
+  }
+  lines.push('', 'Next steps (priority-ranked):');
+  payload.nextSteps.forEach((step, index) => {
+    const action = typeof step === 'string' ? step : step.action;
+    lines.push(`${index + 1}. ${action}`);
+    if (typeof step === 'object' && step.rationale) {
+      lines.push(`   ${step.rationale}`);
+    }
+  });
   if (payload.warnings.length > 0) {
     lines.push('', 'Warnings:');
     payload.warnings.forEach((warning) => lines.push(`- ${warning}`));

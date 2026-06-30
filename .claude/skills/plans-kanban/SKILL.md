@@ -21,7 +21,7 @@ If `3456` is already in use, the CLI may auto-fallback to `3457-3460` and the la
 ## Quick Start
 
 ```bash
-node .claude/skills/plans-kanban/scripts/open-dashboard.cjs
+node $HOME/.claude/skills/plans-kanban/scripts/open-dashboard.cjs
 ```
 
 If the dashboard is not already running, the launcher starts:
@@ -50,7 +50,7 @@ Scope note:
 
 ```bash
 # Open the plans dashboard
-node .claude/skills/plans-kanban/scripts/open-dashboard.cjs
+node $HOME/.claude/skills/plans-kanban/scripts/open-dashboard.cjs
 
 # Run the dashboard manually if you want to keep it in the foreground
 ck config ui --port 3456
@@ -106,7 +106,7 @@ The legacy standalone server, renderer, and assets have been retired from this s
 For migration details:
 
 ```text
-.claude/skills/plans-kanban/deprecated/MIGRATION.md
+$HOME/.claude/skills/plans-kanban/deprecated/MIGRATION.md
 ```
 
 ## Troubleshooting

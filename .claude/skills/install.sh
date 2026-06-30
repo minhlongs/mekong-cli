@@ -867,11 +867,11 @@ setup_python_env() {
         fi
     done
 
-    # Install .claude/scripts requirements (contains pyyaml for scan_skills.py)
+    # Install $HOME/.claude/scripts requirements (contains pyyaml for scan_skills.py)
     local SCRIPTS_REQ="$SCRIPT_DIR/../scripts/requirements.txt"
     if [ -f "$SCRIPTS_REQ" ]; then
         local SCRIPTS_LOG="$LOG_DIR/install-scripts.log"
-        print_info "Installing .claude/scripts dependencies..."
+        print_info "Installing $HOME/.claude/scripts dependencies..."
 
         local pkg_success=0
         local pkg_fail=0
@@ -891,10 +891,10 @@ setup_python_env() {
         done < "$SCRIPTS_REQ"
 
         if [[ $pkg_fail -eq 0 ]]; then
-            print_success ".claude/scripts: all $pkg_success packages installed"
+            print_success "$HOME/.claude/scripts: all $pkg_success packages installed"
             track_success "optional" "scripts"
         else
-            print_warning ".claude/scripts: $pkg_success installed, $pkg_fail failed"
+            print_warning "$HOME/.claude/scripts: $pkg_success installed, $pkg_fail failed"
         fi
     fi
 
@@ -1342,10 +1342,10 @@ EOF
 # Print usage instructions (now just brief tips)
 print_usage() {
     echo -e "${GREEN}To use the Python virtual environment:${NC}"
-    echo -e "  source .claude/skills/.venv/bin/activate"
+    echo -e "  source $HOME/.claude/skills/.venv/bin/activate"
     echo ""
     echo -e "${BLUE}For more information, see:${NC}"
-    echo -e "  .claude/skills/INSTALLATION.md"
+    echo -e "  $HOME/.claude/skills/INSTALLATION.md"
     echo ""
 }
 

@@ -965,11 +965,11 @@ function Setup-PythonEnv {
         }
     }
 
-    # Install .claude/scripts requirements (contains pyyaml for scan_skills.py)
+    # Install $HOME/.claude/scripts requirements (contains pyyaml for scan_skills.py)
     $scriptsReqPath = Join-Path $ScriptDir "..\scripts\requirements.txt"
     if (Test-Path $scriptsReqPath) {
         $scriptsLogFile = Join-Path $LogDir "install-scripts.log"
-        Write-Info "Installing .claude/scripts dependencies..."
+        Write-Info "Installing $HOME/.claude/scripts dependencies..."
 
         $pkgSuccess = 0
         $pkgFail = 0
@@ -992,10 +992,10 @@ function Setup-PythonEnv {
         }
 
         if ($pkgFail -eq 0) {
-            Write-Success ".claude/scripts: all $pkgSuccess packages installed"
+            Write-Success "$HOME/.claude/scripts: all $pkgSuccess packages installed"
             Track-Success -Category "optional" -Name "scripts"
         } else {
-            Write-Warning ".claude/scripts: $pkgSuccess installed, $pkgFail failed"
+            Write-Warning "$HOME/.claude/scripts: $pkgSuccess installed, $pkgFail failed"
         }
     }
 

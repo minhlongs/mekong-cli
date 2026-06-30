@@ -29,7 +29,7 @@ Build high-performance 3D web applications using Three.js. Contains 556 searchab
 Use the search CLI to find relevant examples and API references:
 
 ```bash
-python3 .claude/skills/threejs/scripts/search.py "<query>" [--domain <domain>] [-n <max_results>]
+python3 $HOME/.claude/skills/threejs/scripts/search.py "<query>" [--domain <domain>] [-n <max_results>]
 ```
 
 ### Search Domains
@@ -45,19 +45,19 @@ python3 .claude/skills/threejs/scripts/search.py "<query>" [--domain <domain>] [
 
 ```bash
 # Find particle/compute examples
-python3 .claude/skills/threejs/scripts/search.py "particle compute webgpu"
+python3 $HOME/.claude/skills/threejs/scripts/search.py "particle compute webgpu"
 
 # Search API for camera classes
-python3 .claude/skills/threejs/scripts/search.py "camera" --domain api
+python3 $HOME/.claude/skills/threejs/scripts/search.py "camera" --domain api
 
 # Get examples for a use case
-python3 .claude/skills/threejs/scripts/search.py "product configurator" --use-case
+python3 $HOME/.claude/skills/threejs/scripts/search.py "product configurator" --use-case
 
 # Filter by category
-python3 .claude/skills/threejs/scripts/search.py --category webgpu -n 10
+python3 $HOME/.claude/skills/threejs/scripts/search.py --category webgpu -n 10
 
 # Filter by complexity
-python3 .claude/skills/threejs/scripts/search.py --complexity high -n 5
+python3 $HOME/.claude/skills/threejs/scripts/search.py --complexity high -n 5
 ```
 
 ## Example Categories

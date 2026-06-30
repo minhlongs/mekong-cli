@@ -1,13 +1,8 @@
 ---
-description: "Generate short handoff reports from Git branches, remote refs, worktrees, and unfinished plans. Use when the user asks whats in flight, wants progress/next steps, is in a fresh worktree or detached checkout, or needs end-of-session status."
-argument-hint: ""
-allowed-tools: Bash
+description: ⚡ Review recent changes and wrap up the work
 ---
-# /watzup — ck:watzup
+Review my current branch and the most recent commits. 
+Provide a detailed summary of all changes, including what was modified, added, or removed. 
+Analyze the overall impact and quality of the changes.
 
-Generate short handoff reports from Git branches, remote refs, worktrees, and unfinished plans. Use when the user asks whats in flight, wants progress/next steps, is in a fresh worktree or detached checkout, or needs end-of-session status.
-
-## Execution
-```bash
-mekong watzup $ARGUMENTS
-```
+**IMPORTANT**: **Do not** start implementing.

@@ -1,5 +1,5 @@
 ---
-name: ckm:design
+name: ck:design
 description: "Design brand identity, logos, banners, and visual assets. Use for brand systems, design tokens, corporate identity programs. Not for UI code patterns."
 user-invocable: true
 when_to_use: "Invoke for brand systems and visual identity, not UI code."
@@ -229,7 +229,7 @@ Load `references/social-photos-design.md` for sizes, templates, best practices.
 1. **Orchestrate** — `project-management` skill for TODO tasks; parallel subagents for independent work
 2. **Analyze** — Parse prompt: subject, platforms, style, brand context, content elements
 3. **Ideate** — 3-5 concepts, present via `AskUserQuestion`
-4. **Design** — `/ckm:brand` → `/ckm:design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
+4. **Design** — `brand` → `design-system` → randomly invoke `/ck:ui-ux-pro-max` OR `/ck:frontend-design`; HTML per idea × size
 5. **Export** — `ck:agent-browser`, Chrome headless, or Playwright screenshot at exact px (2x deviceScaleFactor)
 6. **Verify** — Use Chrome MCP / `chrome-devtools-mcp`, `ck:agent-browser`, `ck:chrome-profile`, or Playwright to visually inspect exported designs; fix layout/styling issues and re-export
 7. **Report** — Summary to `plans/reports/` with design decisions

@@ -6,7 +6,7 @@
 1. Download skill folder
 2. Zip the folder
 3. Upload to Claude.ai: Settings > Capabilities > Skills
-4. Or place in Claude Code skills directory: `.claude/skills/`
+4. Or place in Claude Code skills directory: `$HOME/.claude/skills/`
 
 ### Organization-Level
 - Admins deploy skills workspace-wide

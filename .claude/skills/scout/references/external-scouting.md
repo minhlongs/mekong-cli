@@ -1,18 +1,18 @@
-# External Scouting with Gemini/OpenCode
+# External Scouting with agy/OpenCode
 
 Use external agentic tools for faster searches with large context windows (1M+ tokens).
 
 ## Tool Selection
 
 ```
-SCALE <= 3  → gemini CLI
+SCALE <= 3  → agy CLI (Antigravity)
 SCALE 4-5   → opencode CLI
 SCALE >= 6  → Use internal scouting instead
 ```
 
 ## Configuration
 
-Read from `.claude/.ck.json`:
+Read from `$HOME/.claude/.ck.json`:
 ```json
 {
   "gemini": {
@@ -21,18 +21,18 @@ Read from `.claude/.ck.json`:
 }
 ```
 
-Default model: `gemini-3-flash-preview`
+Default model: `gemini-3-flash-preview` (the `gemini.model` config key is unchanged; `agy` accepts the `gemini-*` model ids).
 
-## Gemini CLI (SCALE <= 3)
+## agy CLI (SCALE <= 3)
 
 ### Command
 ```bash
-timeout 120 gemini -y -m <model> --prompt "[prompt]" 2>&1
+agy --dangerously-skip-permissions --model <model> --print-timeout 120s --prompt "[prompt]" 2>&1
 ```
 
 ### Example
 ```bash
-timeout 120 gemini -y -m gemini-3-flash-preview --prompt "Search src/ for authentication files. List paths with brief descriptions." 2>&1
+agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt "Search src/ for authentication files. List paths with brief descriptions." 2>&1
 ```
 
 ## OpenCode CLI (SCALE 4-5)
@@ -51,7 +51,7 @@ opencode run "Find all payment-related files in lib/ and api/" --model opencode/
 
 Before using, verify tools installed:
 ```bash
-which gemini
+which agy
 which opencode
 ```
 
@@ -64,9 +64,9 @@ If not installed, ask user:
 Use `Task` tool with `subagent_type: "Bash"` to spawn parallel agents:
 
 ```
-Task 1: subagent_type="Bash", prompt="Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt '[prompt1]' 2>&1"
-Task 2: subagent_type="Bash", prompt="Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt '[prompt2]' 2>&1"
-Task 3: subagent_type="Bash", prompt="Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt '[prompt3]' 2>&1"
+Task 1: subagent_type="Bash", prompt="Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt '[prompt1]' 2>&1"
+Task 2: subagent_type="Bash", prompt="Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt '[prompt2]' 2>&1"
+Task 3: subagent_type="Bash", prompt="Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt '[prompt3]' 2>&1"
 ```
 
 Spawn all in single message for parallel execution.
@@ -84,9 +84,9 @@ User: "Find database migration files"
 
 Spawn 3 parallel Bash agents via Task tool:
 ```
-Task 1 (Bash): "Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt 'Search db/, migrations/ for migration files' 2>&1"
-Task 2 (Bash): "Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt 'Search lib/, src/ for database schema files' 2>&1"
-Task 3 (Bash): "Run: timeout 120 gemini -y -m gemini-3-flash-preview --prompt 'Search config/ for database configuration' 2>&1"
+Task 1 (Bash): "Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt 'Search db/, migrations/ for migration files' 2>&1"
+Task 2 (Bash): "Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt 'Search lib/, src/ for database schema files' 2>&1"
+Task 3 (Bash): "Run: agy --dangerously-skip-permissions --model gemini-3-flash-preview --print-timeout 120s --prompt 'Search config/ for database configuration' 2>&1"
 ```
 
 ## Reading File Content
@@ -134,7 +134,7 @@ Spawn all in single message for parallel execution.
 
 ## Timeout and Error Handling
 
-- Wrap all gemini calls: `timeout 120 gemini -y -m <model> --prompt "[prompt]" 2>&1`
+- Use the native print-mode timeout on all agy calls: `agy --dangerously-skip-permissions --model <model> --print-timeout 120s --prompt "[prompt]" 2>&1`
 - Check exit code: non-zero means failure
 - Check output for error markers: `GaxiosError`, `RESOURCE_EXHAUSTED`, `MODEL_CAPACITY_EXHAUSTED`, `PERMISSION_DENIED`, `UNAUTHENTICATED`
 - On failure: skip that agent's result, do NOT retry

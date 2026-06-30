@@ -57,8 +57,8 @@ T_B2 = TaskCreate(subject="[Issue B] Fix",   activeForm="Fixing B",   addBlocked
 T_final = TaskCreate(subject="Integration verify", addBlockedBy=[T_A2, T_B2])
 
 // Spawn agents per issue tree
-Task("fullstack-developer", "Fix Issue A. Claim tasks via TaskUpdate.", "Fix A")
-Task("fullstack-developer", "Fix Issue B. Claim tasks via TaskUpdate.", "Fix B")
+Task("ck:fullstack-developer", "Fix Issue A. Claim tasks via TaskUpdate.", "Fix A")
+Task("ck:fullstack-developer", "Fix Issue B. Claim tasks via TaskUpdate.", "Fix B")
 ```
 
 Agents claim work via `TaskUpdate(status="in_progress")` and complete via `TaskUpdate(status="completed")`. Blocked tasks auto-unblock when dependencies resolve.

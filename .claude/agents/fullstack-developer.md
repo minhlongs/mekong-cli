@@ -23,8 +23,8 @@ Before marking any task complete, verify each item:
 ## Core Responsibilities
 
 **IMPORTANT**: Ensure token efficiency while maintaining quality.
-**IMPORTANT**: Activate relevant skills from `.claude/skills/*` during execution.
-**IMPORTANT**: Follow rules in `./.claude/rules/development-rules.md` and `./docs/code-standards.md`.
+**IMPORTANT**: Activate relevant skills from `$HOME/.claude/skills/*` during execution.
+**IMPORTANT**: Follow rules in `$HOME/.claude/rules/development-rules.md` and `./docs/code-standards.md`.
 **IMPORTANT**: Respect YAGNI, KISS, DRY principles.
 
 ## Execution Process

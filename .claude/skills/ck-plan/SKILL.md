@@ -1,11 +1,11 @@
 ---
 name: ck:plan
-description: "Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation."
+description: "Plan implementations, design architectures, create technical roadmaps with detailed phases. Use for feature planning, system design, solution architecture, implementation strategy, phase documentation, editorial self-contained HTML plan artifacts with --html, and AgentWiki publishing with --wiki."
 user-invocable: true
 when_to_use: "Invoke when work needs phases, architecture, or a roadmap."
 category: utilities
-keywords: [planning, architecture, phases, roadmap]
-argument-hint: "[task] [--fast|--hard|--deep|--parallel|--two] [--tdd|--no-tasks] OR [archive|red-team|validate]"
+keywords: [planning, architecture, phases, roadmap, html, github, wiki, agentwiki, publish]
+argument-hint: "[task] [--fast|--hard|--deep|--parallel|--two] [--tdd|--no-tasks] [--html] [--github] [--wiki] OR [archive|red-team|validate]"
 license: MIT
 metadata:
   author: claudekit
@@ -50,6 +50,10 @@ ck config ui --port 3456
 
 Rules:
 - Use `ck plan create` to scaffold `plan.md` and `phase-*.md` when the CLI is available.
+- When `--html` is present, the final user-facing plan artifact is `plan.html`.
+  Use `ck plan create` only when a plan directory, active-plan metadata, or a
+  `--github` companion `plan.md` index is needed. Do not duplicate the full plan
+  body across Markdown and HTML.
 - Default scope is project-local (`./plans/` under the current project).
 - Global scope is conditional: use `ck plan create --global ...` or fall back to global scope only when no project context exists.
 - Use `ck plan check` / `ck plan uncheck` for phase status changes.
@@ -78,7 +82,6 @@ phase: <N>
 title: "<Phase Name>"
 status: pending       # pending | in-progress | completed
 priority: P2          # P1 | P2 | P3
-effort: ""            # e.g. "4h", "2d"
 dependencies: []      # phase IDs this blocks on
 ---
 
@@ -180,6 +183,166 @@ Default: auto-detect planning mode (analyze task complexity and pick mode).
 |------|--------|
 | `--tdd` | Add tests-first structure to each phase for regression-safe refactors |
 | `--no-tasks` | Skip task hydration |
+| `--html` | Output a self-contained editorial interactive HTML plan with visible phase outlines, markdown detail modals, and optional generated watercolor technical sketch imagery |
+| `--github` | Create or update a GitHub issue after plan validation with branch, summary, plan links, open questions, and `ready to review` |
+| `--wiki` | Publish the final reviewed plan docs or HTML artifact to AgentWiki via CLI or MCP when available |
+
+### HTML Output Mode (`--html`)
+
+When `--html` is present, activate `/ck:frontend-design` before composing the
+HTML artifact. If `ck:frontend-design` requires design intelligence, follow its
+`ck:ui-ux-pro-max` activation rule before styling.
+
+**Artifact rules:**
+- Write the primary output as `plan.html` in the selected plan directory.
+- The HTML file must be self-contained: inline CSS and JavaScript, no build
+  step, no network-required assets.
+- If generated image assets are used, embed selected images as data URIs so
+  `plan.html` remains portable; keep source images under `{plan-dir}/assets/`
+  for review only.
+- Generate `plan.html` after red-team and validation gates so the HTML reflects
+  the final reviewed plan. Markdown files produced for CLI scaffolding or gate
+  compatibility are not the user-facing deliverable in this mode.
+- If another workflow requires `plan.md` (for example `--github`), keep
+  `plan.md` as a concise index that points to `plan.html`; do not duplicate the
+  full plan body unless a downstream `/ck:cook` handoff explicitly needs it.
+- Include accessible responsive UI, keyboard-friendly controls, and reduced
+  motion handling.
+
+**Content requirements:**
+- Plan overview and phase roadmap.
+- Main page must show a concise outline summary for every phase: title, status,
+  priority, dependencies, objective, 3-6 key bullets, related files,
+  success criteria highlights, and test/validation gate when known.
+- Each phase outline must open a detail modal rendering the full phase markdown:
+  headings, lists, checkboxes, tables, fenced code, inline code, blockquotes,
+  links, horizontal rules, and frontmatter metadata. Escape raw HTML unless a
+  trusted sanitizer is bundled inline.
+- User flows.
+- Diagrams and charts rendered directly in HTML/CSS/SVG/Canvas.
+- Interactive affordances such as tabs, filters, expandable risks, or chart
+  toggles when useful.
+- Citations as visible URLs for external sources, GitHub issues, docs, and
+  any web references used.
+- Open questions section; write "None" when there are no unresolved questions.
+
+**Generated illustration requirements:**
+- If `imagegen`, built-in `image_gen`, or `create_image` is available, generate
+  1-3 raster illustrations for the HTML.
+- Prompt style: technical sketch, watercolor wash, hand-drawn engineering
+  notebook, ink linework, warm paper, muted red/gold accents, no text, no logo,
+  no watermark.
+- If image generation is unavailable or fails, continue with typographic
+  diagrams / CSS-only structure and state the limitation in the final response.
+
+**Design direction:**
+- Use the editorial magazine style contract from the user's supplied guideline
+  when present; otherwise use this built-in contract.
+- Use warm paper `#faf7f2`, paper panels `#f0ebe1`, ink `#0a0a0a`, muted
+  `#6b6258`, accent red `#b8232c`, hairline dividers, serif display, mono
+  labels, and restrained sans body.
+- Use print-editorial structure: cover section, running mono slide tags/folios,
+  generous whitespace, asymmetric grids, rule lines, pull quotes, stat bands,
+  and fixed nav dots when useful.
+- Avoid gradients, drop shadows, rounded cards, pure white backgrounds, generic
+  SaaS styling, decorative bokeh/orbs, emoji icons, and hidden instructions.
+- Use accent only for italic serif emphasis, eyebrows, active states, left
+  rules, and small data highlights. Include subtle CSS paper grain.
+- Keep typography readable on mobile and desktop; no horizontal scrolling.
+
+### GitHub Issue Mode (`--github`)
+
+When `--github` is present, create or update a GitHub issue after validation and
+red-team gates finish and before implementation handoff.
+
+**Required issue fields:**
+- Branch name from `git branch --show-current`.
+- Plan summary.
+- Repo-relative link to `plan.md`.
+- Repo-relative link to `plan.html` when `--html` is present.
+- Repo-relative link to the brainstorm report when one exists; otherwise state
+  `Brainstorm report: None found`.
+- Open questions when present; otherwise state `Open questions: None`.
+- Acceptance criteria from the validated plan.
+
+**Required label:** `ready to review`.
+
+**Issue creation rules:**
+```bash
+gh label list --json name --jq '.[].name' | grep -Fx "ready to review" >/dev/null \
+  || gh label create "ready to review" --color "0E8A16" --description "Plan ready for human review"
+gh issue create --title "<plan title>" --body-file "<body.md>" --label "ready to review"
+```
+
+- If an issue already exists for the same plan or branch, update/comment on it
+  instead of creating a duplicate.
+- All links posted to GitHub must be repo-relative. Do not post absolute local
+  filesystem paths.
+- Redact secrets, env values, tokens, customer data, private logs, and local
+  machine-specific details before writing issue bodies or comments.
+- If `gh` cannot create labels or issues, stop and report the exact error.
+
+### Combined `--html --github`
+
+`plan.html` is the authoritative plan. Create a short companion `plan.md` index
+only to satisfy the GitHub issue's stable `plan.md` link requirement. The issue
+must include both relative links.
+
+### AgentWiki Publish Mode (`--wiki`)
+
+When `--wiki` is present, publish the final reviewed plan artifact to AgentWiki
+after validation/red-team gates and after `plan.html` generation when `--html`
+is also present.
+
+**Availability check:**
+1. Prefer AgentWiki CLI when `command -v agentwiki` succeeds and
+   `agentwiki whoami` confirms auth.
+2. If CLI is unavailable, use AgentWiki MCP tools when exposed in the session
+   for document create/update, file upload, share links, or static site upload.
+3. If neither is available or auth fails, do not block plan creation. Report
+   "AgentWiki publish skipped" with the exact missing capability.
+
+**Markdown/document publish:**
+- Publish a reviewed Markdown artifact. If the plan spans `phase-*.md` files,
+  create `{plan-dir}/wiki-publish.md` as a concise combined document or index
+  before uploading.
+- CLI path:
+  ```bash
+  agentwiki doc upload "{publish-md}" \
+    --title "{plan title}" \
+    --description "{short summary}" \
+    --category "plans" \
+    --tags "ck-plan,{repo-slug},{branch}" \
+    --json
+  agentwiki doc publish "{document-id}" \
+    --description "{short summary}" \
+    --json
+  ```
+- If public publish is not desired or unavailable, use
+  `agentwiki doc share "{document-id}" --json` and report the share URL.
+
+**HTML/static-site publish:**
+- For `--html`, upload the self-contained `plan.html`:
+  ```bash
+  agentwiki sites upload "{plan-dir}/plan.html" \
+    --description "{plan title} - ck:plan HTML artifact" \
+    --auto-summary
+  ```
+- Capture the returned site URL and include it in the final response. If
+  `--github` is also present, comment on or update the issue with the wiki URL.
+
+**MCP fallback:**
+- Use AgentWiki MCP document tools for Markdown content when available
+  (`document_create`/`document_update`, upload, share-link equivalents).
+- Use MCP static-site upload only if the active toolset exposes that exact
+  capability. Do not fake a hosted URL from a raw file upload.
+
+**Security rules:**
+- Redact secrets, env values, tokens, customer data, private logs, and
+  local-machine-only paths before publishing.
+- Prefer repo-relative paths and public-safe summaries.
+- Publish only final reviewed artifacts; do not publish intermediate research
+  notes unless the user explicitly asks.
 
 Load: `references/workflow-modes.md` for auto-detection logic, per-mode workflows, context reminders.
 
@@ -234,10 +397,19 @@ flowchart TD
     I -->|No| K{Validate?}
     J --> K
     K -->|Yes| V[Verification Pass]
-    K -->|No| M[Hydrate Tasks]
+    K -->|No| X{HTML?}
     V --> L[Validation Interview]
-    L --> M
-    M --> N[Present Boundary Reminder]
+    L --> X
+    X -->|Yes| Y[Activate ck:frontend-design<br/>Write plan.html]
+    X -->|No| M[Hydrate Tasks]
+    Y --> M
+    M --> Q{GitHub?}
+    Q -->|Yes| R[Create or update issue<br/>Label ready to review]
+    Q -->|No| W{Wiki?}
+    R --> W
+    W -->|Yes| S[Publish docs or HTML<br/>via AgentWiki]
+    W -->|No| N[Present Boundary Reminder]
+    S --> N
     N --> P[Post-Plan Handoff<br/>AskUserQuestion: skip gates already auto-run]
     P --> O[Journal]
 ```
@@ -256,9 +428,12 @@ flowchart TD
 5. **Plan Documentation** → Write comprehensive plan via planner subagent
 6. **Red Team Review** → Run `/ck:plan red-team {plan-path}` (hard/deep/parallel/two modes)
 7. **Post-Plan Validation** → Run `/ck:plan validate {plan-path}` (hard/deep/parallel/two modes)
-8. **Hydrate Tasks** → Create Claude Tasks from phases (default on, `--no-tasks` to skip)
-9. **Boundary Reminder** → Present optional next-step commands with absolute path
-10. **Journal** → Run `/ck:journal` to write a concise technical journal entry upon completion
+8. **HTML Artifact** → If `--html`, activate `/ck:frontend-design` and write final reviewed `plan.html` as the primary output
+9. **Hydrate Tasks** → Create Claude Tasks from phases (default on, `--no-tasks` to skip)
+10. **GitHub Issue** → If `--github`, create/update issue and apply `ready to review`
+11. **AgentWiki Publish** → If `--wiki`, publish final docs or `plan.html` when AgentWiki CLI/MCP is available
+12. **Boundary Reminder** → Present optional next-step commands with absolute path
+13. **Journal** → Run `/ck:journal` to write a concise technical journal entry upon completion
 
 ### Whole-Plan Consistency Gate
 
@@ -276,6 +451,12 @@ If unresolved contradictions remain, report them and ask the user. Do not recomm
 - Respond with plan file path and summary
 - Ensure self-contained plans with necessary context
 - Include code snippets/pseudocode when clarifying
+- With `--html`, respond with the `plan.html` path, the companion `plan.md`
+  index path when one exists, and a short note that HTML is authoritative.
+- With `--github`, respond with the GitHub issue URL and confirm the
+  `ready to review` label was applied.
+- With `--wiki`, respond with the AgentWiki document/share/site URL when
+  published, or state the exact reason publishing was skipped.
 - Fully respect the `./docs/development-rules.md` file
 
 ## Task Management
@@ -292,7 +473,7 @@ Load: `references/task-management.md` for hydration pattern, TaskCreate patterns
 1. Write plan.md + phase files (persistent layer)
 2. TaskCreate per phase with `addBlockedBy` chain (skip if Task tools unavailable)
 3. TaskCreate for critical/high-risk steps within phases (skip if Task tools unavailable)
-4. Metadata: phase, priority, effort, planDir, phaseFile
+4. Metadata: phase, priority, planDir, phaseFile
 5. Cook picks up via TaskList (same session) or re-hydrates (new session)
 
 ## Active Plan State
@@ -302,7 +483,7 @@ Check `## Plan Context` injected by hooks:
 - **"Suggested: {path}"** → Branch hint only. Ask if activate or create new.
 - **"Plan: none"** → Create new using `Plan dir:` from `## Naming`
 
-After creating plan: `node .claude/scripts/set-active-plan.cjs {plan-dir}`
+After creating plan: `node $HOME/.claude/scripts/set-active-plan.cjs {plan-dir}`
 Reports: Active plans → plan-specific path. Suggested → default path.
 
 ### Important
@@ -341,6 +522,157 @@ After `plan.md` + phase files are written and the user has reviewed/approved the
 - If both gates already ran, the Post-Plan Handoff still fires but offers only `/ck:cook <plan-path>` and `End session`.
 
 After selection: invoke the chosen command with the plan path as argument for continuity.
+
+## PEV Engine Execution Bridge
+
+Plans produced by this skill can be executed through the PEV engine (`pev-engine` skill) for DAG-aware parallel execution, retry with backoff, and verification gates. This section documents the mapping between ClaudeKit plan artifacts and PEV recipe format, and provides the bridge for automated execution.
+
+### When to Use PEV Execution
+
+- Plan has 3+ phases with identifiable parallel opportunities
+- Phases have explicit dependency chains that benefit from DAG scheduling
+- Verification criteria are well-defined (build passes, tests pass, files exist)
+- Long-running or multi-step workflows need retry/rollback safety
+
+### Plan-to-PEV Mapping
+
+Each `phase-XX-*.md` file maps to one or more PEV recipe steps. The mapping follows this table:
+
+| ClaudeKit Plan Field | PEV Recipe Field | Notes |
+|---|---|---|
+| `phase` (frontmatter) | `id` | e.g. `phase: 3` → `id: phase-03` |
+| `title` (frontmatter) | `title` | Direct copy |
+| `dependencies` (frontmatter) | `deps` | List of phase IDs this phase depends on |
+| Overview section | `title` (enriched) | Human-readable description |
+| Implementation Steps (numbered list) | `command` | Converted to shell commands or LLM prompts |
+| Success Criteria | `verify` | Converted to `exit_code`, `file_exists`, `output_contains` checks |
+| Risk Assessment | `retry` / `rollback` | Retry policy and rollback actions derived from risks |
+| Priority (P1/P2/P3) | (informational) | Used for scheduling weight, not a PEV field |
+
+### Execution Mode Selection
+
+Choose the PEV `mode` based on the phase's primary activity:
+
+| Phase Activity | PEV Mode | `command` Format |
+|---|---|---|
+| Run build, test, lint, deploy commands | `shell` | Bash command string |
+| Research, analysis, design review | `llm` | Prompt text describing the analysis task |
+| Call external APIs or webhooks | `api` | URL + optional JSON body |
+| Invoke Claude Code tools (Read, Edit, Bash) | `tool` | Tool name + arguments JSON |
+| Fetch and analyze documentation | `browse` | URL to fetch |
+
+### Recipe Generation Pattern
+
+To convert a plan to a PEV recipe, follow this pattern:
+
+1. **Read `plan.md`** to get the phase list and their dependency order
+2. **Read each `phase-XX-*.md`** to extract Implementation Steps and Success Criteria
+3. **Generate one PEV step per phase** (or split complex phases into multiple steps)
+4. **Wire `deps`** from the phase `dependencies` frontmatter
+5. **Generate `verify` checks** from Success Criteria checklist items
+6. **Add `rollback` actions** for phases with side effects (file creation, deployments)
+
+### Example: Phase to Recipe Step
+
+Given this phase file (`phase-03-implement-api.md`):
+
+```markdown
+---
+phase: 3
+title: "Implement API Endpoints"
+status: pending
+priority: P1
+dependencies: [2]
+---
+
+## Overview
+Create REST endpoints for video generation and campaign management.
+
+## Implementation Steps
+1. Create route handlers in src/app/api/v1/
+2. Add Zod validation schemas
+3. Wire up Inngest event triggers
+
+## Success Criteria
+- [ ] `npm run build` passes with 0 errors
+- [ ] All routes return 200 on health check
+- [ ] Zod schemas validate all inputs
+```
+
+The corresponding PEV recipe step:
+
+```yaml
+- id: phase-03
+  title: "Implement API Endpoints"
+  mode: shell
+  command: |
+    npm run build && npm test -- --run src/app/api/v1/
+  deps: ["phase-02"]
+  verify:
+    exit_code: 0
+    output_contains: ["error TS"]
+    output_not_contains: ["error TS"]
+  retry:
+    max_attempts: 3
+    backoff: exponential
+  rollback:
+    - "git checkout -- src/app/api/v1/"
+```
+
+### Execution Flow
+
+```
+plan.md + phase-*.md
+        │
+        ▼  (bridge: read plan, generate recipe YAML)
+  recipe.yaml
+        │
+        ▼  (PEV engine: DAG scheduling + execution)
+  Parallel execution of independent phases
+        │
+        ▼  (PEV engine: verification gates)
+  VerificationReport per step
+        │
+        ▼  (on failure: retry or rollback)
+  Final status: completed | failed | partial
+```
+
+### Concurrency Model
+
+- Phases with no dependencies run in parallel (up to `concurrency` limit, default 4)
+- Phases with satisfied `dependencies` enter the ready queue immediately
+- Failed phases cancel all transitive dependents and trigger rollback
+- Use `concurrency: N` in recipe header to override the default worker count
+
+### Integration with ClaudeKit Workflow
+
+The PEV bridge fits into the standard ClaudeKit workflow at the execution stage:
+
+```
+/ck:plan          →  plan.md + phase-*.md  (this skill)
+        │
+        ▼  (optional: generate recipe.yaml from plan)
+/ck:cook --pev    →  PEV recipe execution  (pev-engine skill)
+        │
+        ▼  (verification gates auto-run)
+npm run verify    →  SHA match + health checks
+```
+
+To execute a plan via PEV after planning is complete:
+
+1. Confirm the plan is finalized (validation/red-team gates passed)
+2. Generate a `recipe.yaml` from the plan's phase files using the mapping above
+3. Invoke the `pev-engine` skill with the recipe path
+4. Review the PEV execution report for any failed steps
+5. Proceed to `/ck:cook` for manual implementation of any steps that require human judgment
+
+### Constraints
+
+- Max 50 steps per recipe (matches PEV engine limit)
+- Step output truncated to 10KB (PEV engine default)
+- Rollback only runs for steps that completed successfully before the failure
+- Shell commands are sanitized: no `rm -rf /`, no `sudo`, no `eval`
+- LLM steps are skipped (not failed) when no LLM is available
 
 ## Quality Standards
 

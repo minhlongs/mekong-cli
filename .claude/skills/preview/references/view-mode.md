@@ -4,14 +4,14 @@
 
 **IMPORTANT:** Run server as Claude Code background task using `run_in_background: true` with the Bash tool.
 
-The skill is located at `.claude/skills/markdown-novel-viewer/`.
+The skill is located at `$HOME/.claude/skills/markdown-novel-viewer/`.
 
 ### Stop Server
 
 If `--stop` flag is provided:
 
 ```bash
-node .claude/skills/markdown-novel-viewer/scripts/server.cjs --stop
+node $HOME/.claude/skills/markdown-novel-viewer/scripts/server.cjs --stop
 ```
 
 ### Start Server
@@ -21,10 +21,10 @@ Run the `markdown-novel-viewer` server as CC background task with `--foreground`
 ```bash
 INPUT_PATH="<resolved-path>"
 if [[ -d "$INPUT_PATH" ]]; then
-  node .claude/skills/markdown-novel-viewer/scripts/server.cjs \
+  node $HOME/.claude/skills/markdown-novel-viewer/scripts/server.cjs \
     --dir "$INPUT_PATH" --host 0.0.0.0 --open --foreground
 else
-  node .claude/skills/markdown-novel-viewer/scripts/server.cjs \
+  node $HOME/.claude/skills/markdown-novel-viewer/scripts/server.cjs \
     --file "$INPUT_PATH" --host 0.0.0.0 --open --foreground
 fi
 ```

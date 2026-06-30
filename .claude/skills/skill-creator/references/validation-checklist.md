@@ -22,7 +22,7 @@ Quick validation before packaging. Run `scripts/package_skill.py` for automated 
 
 - [ ] Tests exist and pass
 - [ ] Cross-platform (Node.js/Python preferred)
-- [ ] Env vars: respects hierarchy `process.env` > `$HOME/.claude/skills/${SKILL}/.env` (global) > `$HOME/.claude/skills/.env` (global) > `$HOME/.claude/.env` (global) > `./.claude/skills/${SKILL}/.env` (cwd) > `./.claude/skills/.env` (cwd) > `./.claude/.env` (cwd)
+- [ ] Env vars: respects hierarchy `process.env` > `$HOME/.claude/skills/${SKILL}/.env` (global) > `$HOME/.claude/skills/.env` (global) > `$HOME/.claude/.env` (global) > `$HOME/.claude/skills/${SKILL}/.env` (cwd) > `$HOME/.claude/skills/.env` (cwd) > `$HOME/.claude/.env` (cwd)
 - [ ] Dependencies documented (requirements.txt, .env.example)
 - [ ] Manually tested with real use cases
 
@@ -78,6 +78,6 @@ When a skill requires subagent delegation (via Task tool):
 
 **Correct pattern (enforceable):**
 ```
-- **MUST** spawn `tester` subagent: `Task(subagent_type="tester", prompt="Run tests", description="Test")`
+- **MUST** spawn `tester` subagent: `Task(subagent_type="ck:tester", prompt="Run tests", description="Test")`
 - DO NOT run tests yourself - DELEGATE
 ```

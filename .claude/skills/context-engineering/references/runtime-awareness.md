@@ -41,7 +41,7 @@ Requires OAuth Bearer token with `anthropic-beta: oauth-2025-04-20` header.
 | Platform | Method | Location |
 |----------|--------|----------|
 | macOS | Keychain | `Claude Code-credentials` |
-| Windows | File | `%USERPROFILE%\.claude\.credentials.json` |
+| Windows | File | `$HOME/.claude/.credentials.json` |
 | Linux | File | `~/.claude/.credentials.json` |
 
 ### Response Structure
@@ -168,7 +168,7 @@ Context: 91% [CRITICAL - compaction needed]
 
 ## Configuration
 
-### Hook Settings (`.claude/settings.json`)
+### Hook Settings (`$HOME/.claude/settings.json`)
 
 ```json
 {
@@ -178,7 +178,7 @@ Context: 91% [CRITICAL - compaction needed]
         "matcher": "*",
         "hooks": [{
           "type": "command",
-          "command": "node .claude/hooks/usage-quota-cache-refresh.cjs"
+          "command": "node $HOME/.claude/hooks/usage-quota-cache-refresh.cjs"
         }]
       }
     ]
