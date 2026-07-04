@@ -30,46 +30,50 @@ First, classify the idea into ONE stage:
 - **Scale-Up**: Series B+, proven unit economics
 - **Pre-IPO/IPO**: Governance-ready, audit trails
 
-## 25-Step Company Architecture Generation
+## 25-Step Company Architecture → 25 Files
 
-Execute ALL steps sequentially. For each, output a concise section (not full skill — key decisions only):
+Execute ALL steps sequentially. **Each step writes 1 file:**
 
-### Phase 1: Foundation (Steps 0-4)
-1. **Master Framework** — Map idea to BizPlan 2026 structure: Business/Agentic/Governance layers
-2. **Refactor to 2026 Frame** — If existing plan, modernize. If new, scaffold from scratch
-3. **Agentic OS Design** — Define which agents run which departments, automation %
-4. **IPO Readiness Score** — VN/SEA compliance checklist (even at Zero stage — plan ahead)
-5. **Gap Report + Roadmap** — What's missing? 6-month action plan
+```bash
+mkdir -p plans/company-blueprint/
+```
 
-### Phase 2: Business Model (Steps 5-6)
-6. **Business Model Patterns** — Identify archetype (SaaS B2B, Marketplace, Fintech, etc.) + Unit Economics (ARPU, LTV, CAC, Payback)
-7. **Customer Psychology + Personas** — ICP, pain points, Jobs-to-be-Done, decision triggers
+### Phase 1: Foundation — L1 Founder · Đạo (Steps 0-4)
+1. `plans/company-blueprint/00-framework.md` — **L1 Founder · Đạo** — Master Framework: Tri-Layer architecture, mission, stage detection
+2. `plans/company-blueprint/01-agency-os.md` — **L1 Founder · Đạo** — Agentic OS Design: AI governance, constitution
+3. `plans/company-blueprint/02-ipo-readiness.md` — **L2 CEO · Tướng** — IPO Readiness Score: VN/SEA compliance checklist
+4. `plans/company-blueprint/03-gap-report.md` — **L3 COO · Pháp** — Gap Report + 6-month Roadmap
+5. `plans/company-blueprint/04-refactor-frame.md` — **L1 Founder · Đạo** — Refactor to 2026 Frame
 
-### Phase 3: Brand + Content (Steps 7-11)
-8. **Brand Positioning** — Unique value prop, category design, competitive moat
-9. **Content Pillars + TOF** — Top-of-funnel content strategy, SEO pillars
-10. **Website/Landing Narrative** — Conversion-optimized page structure
-11. **Performance Ads + Creatives** — Ad creative framework, channels, budgets
-12. **Advertorial + Storytelling** — Long-form narrative, case studies
+### Phase 2: Business Model — L5 CSO · Thiên (Steps 5-6)
+6. `plans/company-blueprint/05-business-model.md` — **L5 CSO · Thiên** — Business Model Patterns: archetype, unit economics
+7. `plans/company-blueprint/06-customer-psychology.md` — **L5 CSO · Thiên** — Customer Psychology + Personas
 
-### Phase 4: Revenue Engine (Steps 12-14)
-13. **Email + Lifecycle Sequences** — Onboarding, nurture, upsell, win-back
-14. **Sales Process + Channels** — Pipeline stages, qualification, closing playbook
-15. **GTM Experiments + Bullseye** — Go-to-market experiments, channel testing
+### Phase 3: Brand + Content — L5 CMO · Thiên (Steps 7-11)
+8. `plans/company-blueprint/07-brand-positioning.md` — **L5 CMO · Thiên** — Brand Positioning, category design
+9. `plans/company-blueprint/08-content-pillars.md` — **L5 CMO · Thiên** — Content Pillars + TOF strategy
+10. `plans/company-blueprint/09-landing-narrative.md` — **L5 CMO · Thiên** — Website/Landing Narrative
+11. `plans/company-blueprint/10-performance-ads.md` — **L5 CMO · Thiên** — Performance Ads + Creatives
+12. `plans/company-blueprint/11-advertorial.md` — **L5 CMO · Thiên** — Advertorial + Storytelling
 
-### Phase 5: Operations (Steps 15-21)
-16. **AARRR + Lean Analytics** — Metrics dashboard, North Star metric
-17. **Fundraising + VC Narrative** — Pitch structure, investor targeting
-18. **Risk + Scenario OS** — Risk map, downside scenarios, contingency
-19. **Talent + Org Design** — Team structure, hiring plan, culture code
-20. **Industry Patterns + IPO Archetypes** — Comparable companies, growth benchmarks
-21. **Data Room + Investor Materials** — Deck, one-pager, financial model template
+### Phase 4: Revenue Engine — L5 CSO · Thiên (Steps 12-14)
+13. `plans/company-blueprint/12-email-lifecycle.md` — **L5 CSO · Thiên** — Email + Lifecycle Sequences
+14. `plans/company-blueprint/13-sales-process.md` — **L5 CSO · Thiên** — Sales Process + Channels
+15. `plans/company-blueprint/14-gtm-experiments.md` — **L5 CSO · Thiên** — GTM Experiments + Bullseye
 
-### Phase 6: Execution (Steps 22-24)
-22. **Agentic Execution + OKR** — OKRs per quarter, agent task assignment
-23. **Board Governance** — Board structure, advisory, reporting cadence
-24. **ESG + Impact** — Sustainability framework, impact metrics
-25. **Crisis + Reputation OS** — Crisis playbook, reputation monitoring
+### Phase 5: Operations — L2 CEO + L3 COO + L2 CFO + L3 CHRO (Steps 15-21)
+16. `plans/company-blueprint/15-aarrr-analytics.md` — **L3 COO · Pháp** — AARRR + Lean Analytics
+17. `plans/company-blueprint/16-fundraising.md` — **L2 CFO · Tướng** — Fundraising + VC Narrative
+18. `plans/company-blueprint/17-risk-scenario.md` — **L2 CEO · Tướng** — Risk + Scenario OS
+19. `plans/company-blueprint/18-talent-org.md` — **L3 CHRO · Pháp** — Talent + Org Design
+20. `plans/company-blueprint/19-industry-patterns.md` — **L2 CEO · Tướng** — Industry Patterns + IPO Archetypes
+21. `plans/company-blueprint/20-data-room.md` — **L3 COO · Pháp** — Data Room + Investor Materials
+
+### Phase 6: Execution — L3 COO + L2 CEO + L2 CFO (Steps 22-25)
+22. `plans/company-blueprint/21-okr-execution.md` — **L3 COO · Pháp** — Agentic Execution + OKR
+23. `plans/company-blueprint/22-board-governance.md` — **L2 CEO · Tướng** — Board Governance
+24. `plans/company-blueprint/23-esg-impact.md` — **L2 CFO · Tướng** — ESG + Impact
+25. `plans/company-blueprint/24-crisis-os.md` — **L3 COO · Pháp** — Crisis + Reputation OS
 
 ## Output Requirements
 
@@ -92,7 +96,41 @@ After all 25 steps, generate:
     "/sales-pipeline-build",
     "/marketing-campaign-run",
     "/release-ship"
-  ]
+  ],
+  "distribution": [
+    { "file": "00-framework.md", "layer": "L1", "owner": "Founder", "sequence": 1, "binh_phap": "dao" },
+    { "file": "01-agency-os.md", "layer": "L1", "owner": "Founder", "sequence": 1, "binh_phap": "dao" },
+    { "file": "02-ipo-readiness.md", "layer": "L2", "owner": "CEO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "03-gap-report.md", "layer": "L3", "owner": "COO", "sequence": 5, "binh_phap": "phap" },
+    { "file": "04-refactor-frame.md", "layer": "L1", "owner": "Founder", "sequence": 1, "binh_phap": "dao" },
+    { "file": "05-business-model.md", "layer": "L5", "owner": "CSO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "06-customer-psychology.md", "layer": "L5", "owner": "CSO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "07-brand-positioning.md", "layer": "L5", "owner": "CMO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "08-content-pillars.md", "layer": "L5", "owner": "CMO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "09-landing-narrative.md", "layer": "L5", "owner": "CMO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "10-performance-ads.md", "layer": "L5", "owner": "CMO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "11-advertorial.md", "layer": "L5", "owner": "CMO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "12-email-lifecycle.md", "layer": "L5", "owner": "CSO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "13-sales-process.md", "layer": "L5", "owner": "CSO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "14-gtm-experiments.md", "layer": "L5", "owner": "CSO", "sequence": 2, "binh_phap": "thien" },
+    { "file": "15-aarrr-analytics.md", "layer": "L3", "owner": "COO", "sequence": 5, "binh_phap": "phap" },
+    { "file": "16-fundraising.md", "layer": "L2", "owner": "CFO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "17-risk-scenario.md", "layer": "L2", "owner": "CEO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "18-talent-org.md", "layer": "L3", "owner": "CHRO", "sequence": 5, "binh_phap": "phap" },
+    { "file": "19-industry-patterns.md", "layer": "L2", "owner": "CEO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "20-data-room.md", "layer": "L3", "owner": "COO", "sequence": 5, "binh_phap": "phap" },
+    { "file": "21-okr-execution.md", "layer": "L3", "owner": "COO", "sequence": 5, "binh_phap": "phap" },
+    { "file": "22-board-governance.md", "layer": "L2", "owner": "CEO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "23-esg-impact.md", "layer": "L2", "owner": "CFO", "sequence": 4, "binh_phap": "tuong" },
+    { "file": "24-crisis-os.md", "layer": "L3", "owner": "COO", "sequence": 5, "binh_phap": "phap" }
+  ],
+  "distribution_state": {
+    "status": "pending",
+    "current_layer": 0,
+    "completed_layers": [],
+    "dispatched_agents": [],
+    "gates_passed": []
+  }
 }
 ```
 
@@ -175,11 +213,37 @@ Add `binh_phap_state` to track chain progress:
 }
 ```
 
+## Step 25: Bootstrap Economic Particle
+
+After all 24 steps complete, bootstrap the project as a ZenOS Economic Particle:
+
+```bash
+# Derive project name from the business idea
+PROJECT_NAME=$(echo "$ARGUMENTS" | sed 's/[^a-zA-Z0-9]/–/g' | tr '[:upper:]' '[:lower:]' | cut -c1-30)
+
+# Create particle with CK init + 39 agents + 2-guard deploy
+mekong init "$PROJECT_NAME"
+
+# Update ZENOS.md with the company mission from this plan
+sed -i "s/Mission: _/Mission: $(echo "$ARGUMENTS" | head -c 80)/" "$PROJECT_NAME/ZENOS.md"
+```
+
+The result: a fully bootstrapped Economic Particle with:
+- CK init harness (.claude/ + hooks)
+- 39 AI agents (7 C-Level + 31 Dept Heads)
+- 2-Guard deploy pipeline (.github/workflows/)
+- ZENOS.md constitution populated with the business mission
+- Git init with initial commit
+- Ready for: `cd $PROJECT_NAME && mekong audit . --fix`
+
+# Auto-Dispatch Trigger 🔄
+After `mekong init` completes, RUN `/dispatch --project "$PROJECT_NAME"` to auto-route the 25 files to C-Level agents following the Binh Phap sequence (Đạo→Thiên→Địa→Tướng→Pháp).
+
+
 ## IMPORTANT
 - This is the ENTRY POINT for every new project
+- Step 25 auto-bootstraps as a ZenOS Economic Particle
+- After /idea completes → `cd <project>` → COO dispatch workflows
 - OpenClaw reads `.mekong/company.json` on boot
-- If no company.json → suggest running `/idea` first
-- After /idea completes → auto-dispatch Binh Phap Chain (5 phases, 15+ commands)
-- Each chain execution = 1 campaign cycle toward $1M ARR
-- User can interrupt at any phase gate: "pause" stops, "continue" resumes
+- Each campaign cycle = 1 GTM sprint toward $1M ARR
 - Target: $1M ARR per project within GTM 2026

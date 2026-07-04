@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from src.mekong.graph.schema import init_db
-from src.mekong.graph.types import Behavior, CollusionFlag, Entity, TrustScore
+from src.mekong.graph.types import Behavior, CollusionFlag, TrustScore
 
 # ---------------------------------------------------------------------------
 # Connection management
@@ -76,6 +76,51 @@ def ensure_entity(
                metadata = excluded.metadata""",
         (entity_id, name, kind, json.dumps(metadata or {})),
     )
+
+
+def get_entity(
+    conn: sqlite3.Connection,
+    entity_id: str,
+) -> dict[str, Any] | None:
+    """Retrieve a single entity by its ID.
+
+    Returns a dict with keys *id*, *name*, *kind*, *metadata*, *created_at*
+    or ``None`` if not found.
+    """
+    row = conn.execute(
+        "SELECT id, name, kind, metadata, created_at FROM entities WHERE id = ?",
+        (entity_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "kind": row["kind"],
+        "metadata": json.loads(row["metadata"]) if isinstance(row["metadata"], str) else {},
+        "created_at": row["created_at"],
+    }
+
+
+def query_entities_by_kind(
+    conn: sqlite3.Connection,
+    kind: str,
+) -> list[dict[str, Any]]:
+    """Return all entities matching *kind*, ordered by creation time ascending."""
+    rows = conn.execute(
+        "SELECT id, name, kind, metadata, created_at FROM entities WHERE kind = ? ORDER BY created_at ASC",
+        (kind,),
+    ).fetchall()
+    return [
+        {
+            "id": r["id"],
+            "name": r["name"],
+            "kind": r["kind"],
+            "metadata": json.loads(r["metadata"]) if isinstance(r["metadata"], str) else {},
+            "created_at": r["created_at"],
+        }
+        for r in rows
+    ]
 
 
 # ---------------------------------------------------------------------------

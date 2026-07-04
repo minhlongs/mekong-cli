@@ -1,0 +1,29 @@
+name: 2-Guard Deploy (Git + Cloudflare)
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+env:
+  NODE_VERSION: "20"
+jobs:
+  guard-1-ci:
+    name: "Guard 1: CI"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: npm ci && npm test
+  guard-2-deploy:
+    name: "Guard 2: Deploy"
+    needs: guard-1-ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: npm ci && npm run build
+      - run: echo "Deploy to production"

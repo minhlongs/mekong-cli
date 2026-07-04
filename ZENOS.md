@@ -1,5 +1,8 @@
 # ZENOS: The Constitutional Operating System for One-Person Companies
 
+> **Canonical constitution:** [`mekong/constitution/ZENOS.md`](mekong/constitution/ZENOS.md) (9 articles)
+> This file is a research-grounded overview. See the canonical for the definitive manifesto.
+
 > **Version:** 0.1.0 (Founding Draft)
 > **Status:** Ratified by first 3 Mekong founders
 > **Last revised:** 2026-07-04

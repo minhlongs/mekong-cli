@@ -15,7 +15,6 @@ Caveats about self-report limitations:
 
 from __future__ import annotations
 
-from typing import Any
 
 # ---------------------------------------------------------------------------
 # Big Five scoring (TIPI-10)

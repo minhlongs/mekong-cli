@@ -76,14 +76,6 @@ def dashboard_cmd():
     show_dashboard()
 
 
-@app.command(name="init")
-def init_cmd(name: str = typer.Argument(..., help="Tên của dự án/agency mới")):
-    """🏗️ Khởi tạo dự án Agency OS mới từ template."""
-    from cli.project import init
-
-    init(name)
-
-
 @app.command(name="activate")
 def activate_cmd(
     key: str = typer.Option(

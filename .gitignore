@@ -678,3 +678,37 @@ apps/fnb-caffe-container/
 !src/api/gateway_mission_routes.py
 !src/api/gateway_webhook_mcu_routes.py
 !src/api/coupon_router.py
+
+# KHO LUONG — generated/temp
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.benchmarks/
+.test-temp/
+.coverage/
+__pycache__/
+*.pyc
+
+# HANH LANG — orphan configs
+.agent/
+.agents/
+.antigravity/
+.gemini/
+.opencode/
+.cursorrules/
+.claude-backup/
+.claude-skills/
+
+# Reports
+reports/
+*.log
+repomix-output.xml
+
+# Embedded repos
+cloudflare-skills/
+packages/cleo-new/
+particle/
+zenos-test/
+test-particle/

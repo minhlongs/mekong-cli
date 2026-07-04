@@ -17,7 +17,6 @@ from src.mekong.constitution.format_schema import (
     CONSTITUTION_HEADER_RE,
     MAX_LINES,
     MIN_ARTICLES,
-    REQUIRED_ARTICLES,
     has_required_articles,
 )
 

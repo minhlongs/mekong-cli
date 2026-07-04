@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from src.mekong.constitution.parser import parse_constitution
-from src.mekong.constitution.rules import RULES, Rule, RuleCheck
+from src.mekong.constitution.rules import RULES, Rule
 
 
 # ---------------------------------------------------------------------------

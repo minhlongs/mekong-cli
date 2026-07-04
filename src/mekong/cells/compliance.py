@@ -10,10 +10,9 @@ text to detect potential violations of the particle's constitution.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 from src.mekong.cells.types import CellRecommendation, ComplianceResult
-from src.mekong.constitution.parser import Article, Constitution, parse_constitution
+from src.mekong.constitution.parser import Article, parse_constitution
 from src.mekong.graph.store import get_behaviors, open_db
 
 # ---------------------------------------------------------------------------

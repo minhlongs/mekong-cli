@@ -38,3 +38,6 @@ _mekong_comp() {
 complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null
 
 echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 2>/dev/null && echo "Tools: $(list_available_tools)" || echo "")"
+
+# Mekong bootstrap init (CK init harness)
+source "$MEKONG_ROOT/scripts/bootstrap-init.sh" --quiet 2>/dev/null || true

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -135,6 +137,198 @@ AGENT_PROMPTS: dict[str, str] = {
 
 AGENT_ROLES = list(AGENT_PROMPTS.keys())
 
+# Thresholds for output scrubbing
+_SCRUB_MAX_RENDERED_BYTES = 2048  # 2 KB per rendered prompt
+_SCRUB_JSON_KEY_THRESHOLD = 5  # warn when raw JSON has >5 keys at top level
+
+# Regex patterns to detect leaked secrets in rendered prompt text
+_SECRET_PATTERNS = [
+    re.compile(r"\bapi[_\s-]?key\s*[:=]\s*\S+", re.IGNORECASE),
+    re.compile(r"\bauthorization\s*[:=]\s*bearer\s+\S+", re.IGNORECASE),
+    re.compile(r"\bbearer\s+[a-zA-Z0-9_\-]{20,}\b"),
+    re.compile(r"\bsk-[a-zA-Z0-9]{20,}\b"),
+    re.compile(r"\b(?:password|passwd|pwd|secret|token)\s*[:=]\s*\S+", re.IGNORECASE),
+]
+
+
+def _get_llm_api_key() -> str | None:
+    """Return the first available LLM API key from the environment.
+
+    Checks ANTHROPIC_API_KEY first, then LLM_API_KEY.
+    Returns None if neither is set.
+    """
+    return os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("LLM_API_KEY")
+
+
+def _get_llm_base_url() -> str:
+    """Return LLM base URL from env, with a sensible default for Anthropic."""
+    return os.environ.get("LLM_BASE_URL", "https://api.anthropic.com/v1")
+
+
+def _get_llm_model() -> str:
+    """Return the LLM model identifier from env, with a default."""
+    return os.environ.get("LLM_MODEL", "claude-sonnet-4-6-20250514")
+
+
+def scrub_secrets(rendered: str, context: str = "") -> None:
+    """Raise ValueError if *rendered* appears to contain leaked secrets.
+
+    Checks for API keys, bearer tokens, common credential patterns, and
+    suspiciously dense JSON blocks.  Called before any rendered prompt is
+    accepted.
+
+    Args:
+        rendered: The rendered prompt text to inspect.
+        context: Optional caller label for error messages (e.g. role name).
+
+    Raises:
+        ValueError: With a description of the detected secret pattern.
+    """
+    label = f"[{context}] " if context else ""
+
+    # Size guard
+    if len(rendered.encode("utf-8")) > _SCRUB_MAX_RENDERED_BYTES:
+        raise ValueError(
+            f"{label}Rendered prompt exceeds {_SCRUB_MAX_RENDERED_BYTES} bytes "
+            f"({len(rendered.encode('utf-8'))} bytes)"
+        )
+
+    # Secret pattern scan
+    for pattern in _SECRET_PATTERNS:
+        match = pattern.search(rendered)
+        if match:
+            # Redact the actual secret value in the error message
+            secret_snippet = match.group(0)
+            redacted = re.sub(r"\S{8,}", "***REDACTED***", secret_snippet)
+            raise ValueError(
+                f"{label}Possible secret leak detected — pattern: {pattern.pattern!r}. "
+                f"Matched text: {redacted}"
+            )
+
+    # Markdown-fenced blocks that look like they contain secrets
+    for fence in re.finditer(
+        r"```(?:json|yaml|env|config|toml)?\s*\n(.*?)\n```", rendered, re.DOTALL
+    ):
+        body = fence.group(1)
+        # Count look like key-value pairs
+        kv_count = len(re.findall(r"^\s*[\w\-]+\s*[:=]", body, re.MULTILINE))
+        if kv_count > _SCRUB_JSON_KEY_THRESHOLD:
+            # Check for secret keywords inside the block
+            if any(
+                re.search(p, body, re.IGNORECASE)
+                for p in [r"api[_\s-]?key", r"secret", r"token", r"password", r"sk-"]
+            ):
+                raise ValueError(
+                    f"{label}Markdown fenced block appears to contain secrets "
+                    f"({kv_count} key-value pairs)"
+                )
+
+
+def render_agent_prompts_llm(
+    config: CompanyConfig,
+    templates: dict[str, str],
+    api_key: str,
+) -> dict[str, str]:
+    """Call an LLM to personalise agent prompts for a specific company context.
+
+    For each of the 8 agent roles, sends a rendering request to the configured
+    LLM endpoint.  The LLM receives the original template and must produce a
+    personalised version that preserves the template's structural directives
+    (focus areas, rules, escalation paths) while adapting language, tone, and
+    examples to the company's product type, scenario, and primary language.
+
+    Args:
+        config: Validated CompanyConfig with company details.
+        templates: Dict mapping role name to its template string (with
+                   ``{company_name}`` and ``{lang}`` placeholders already
+                   resolved, or still raw — the LLM handles both).
+        api_key: API key for the LLM provider (Anthropic or compatible).
+
+    Returns:
+        Dict mapping role -> rendered prompt string.
+
+    Raises:
+        ValueError: If any rendered prompt exceeds the size limit or appears
+                    to contain leaked secrets.
+        RuntimeError: If the LLM call fails for a role (individual failures
+                      are raised — caller decides on partial success).
+    """
+    import urllib.error
+    import urllib.request
+
+    base_url = _get_llm_base_url()
+    model = _get_llm_model()
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+
+    rendered: dict[str, str] = {}
+
+    for role in AGENT_ROLES:
+        template = templates.get(role, "")
+        render_prompt = (
+            f"Personalize this agent system prompt for the company "
+            f"'{config.company_name}' operating in the "
+            f"{config.product_type} industry, using the "
+            f"{config.scenario} deployment scenario, "
+            f"for {config.primary_language} speakers.\n\n"
+            f"Role: {role}\n\n"
+            f"Template:\n---\n{template}\n---\n\n"
+            f"Instructions:\n"
+            f"1. Preserve ALL structural directives (focus areas, rules, "
+            f"escalation paths, format requirements).\n"
+            f"2. Adapt tone/examples to the company context above.\n"
+            f"3. Stay under 2 KB total.\n"
+            f"4. Output ONLY the prompt - no explanations, no markdown fences."
+        )
+
+        payload = json.dumps(
+            {
+                "model": model,
+                "max_tokens": 1024,
+                "temperature": 0.4,
+                "messages": [{"role": "user", "content": render_prompt}],
+            }
+        ).encode("utf-8")
+
+        url = f"{base_url}/chat/completions"
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            raise RuntimeError(
+                f"LLM rendering failed for role '{role}': HTTP {exc.code}"
+            ) from exc
+        except (urllib.error.URLError, OSError) as exc:
+            raise RuntimeError(
+                f"LLM rendering failed for role '{role}': {exc}"
+            ) from exc
+
+        content = data["choices"][0]["message"]["content"]
+
+        # Size guard
+        if len(content.encode("utf-8")) > _SCRUB_MAX_RENDERED_BYTES:
+            raise ValueError(
+                f"[{role}] Rendered prompt exceeds {_SCRUB_MAX_RENDERED_BYTES} bytes "
+                f"({len(content.encode('utf-8'))} bytes)"
+            )
+
+        # Secret scan
+        for pattern in _SECRET_PATTERNS:
+            if pattern.search(content):
+                raise ValueError(
+                    f"[{role}] Possible secret leak after LLM render: "
+                    f"pattern {pattern.pattern!r} matched"
+                )
+
+        rendered[role] = content
+        logger.debug("Rendered prompt for role '%s' (%d bytes)", role, len(content))
+
+    return rendered
+
 
 def validate_config(config: CompanyConfig) -> list[str]:
     """Validate wizard answers. Returns list of error messages."""
@@ -156,6 +350,7 @@ def generate_config_files(
     config: CompanyConfig,
     base_dir: str | Path = ".",
     mcu_gate: MCUGate | None = None,
+    llm_render: bool | None = None,
 ) -> dict[str, str]:
     """Generate all 12 config files from wizard answers.
 
@@ -163,13 +358,29 @@ def generate_config_files(
         config: Validated CompanyConfig from wizard.
         base_dir: Project root directory.
         mcu_gate: Optional MCUGate for seeding balance (uses file fallback if None).
+        llm_render: Force LLM rendering.  True — always use LLM.  False — never use
+                    LLM.  None (default) — auto-detect from environment
+                    (ANTHROPIC_API_KEY or LLM_API_KEY).
 
     Returns:
         Dict mapping relative file paths to their content.
+
+    Raises:
+        ValueError: If LLM rendering produces oversized or secret-containing output.
+        RuntimeError: If the LLM call fails while rendering agent prompts.
     """
     errors = validate_config(config)
     if errors:
         raise ValueError(f"Invalid config: {'; '.join(errors)}")
+
+    # --- LLM vs static prompt resolution ---
+    if llm_render is True:
+        use_llm = True
+    elif llm_render is False:
+        use_llm = False
+    else:
+        # Auto-detect from environment
+        use_llm = bool(_get_llm_api_key())
 
     now = datetime.now(timezone.utc).isoformat()
     files: dict[str, str] = {}
@@ -204,11 +415,25 @@ def generate_config_files(
     files[".openclaw/config.json"] = json.dumps(openclaw_config, indent=2, ensure_ascii=False)
 
     # Files 3-10: .mekong/agents/{role}.md
-    lang = config.primary_language
-    for role in AGENT_ROLES:
-        template = AGENT_PROMPTS[role]
-        content = template.format(company_name=config.company_name, lang=lang)
-        files[f".mekong/agents/{role}.md"] = content
+    if use_llm:
+        api_key = _get_llm_api_key()
+        resolved_templates: dict[str, str] = {}
+        # Pre-fill placeholders so the LLM sees the concrete values
+        for role in AGENT_ROLES:
+            resolved_templates[role] = AGENT_PROMPTS[role].format(
+                company_name=config.company_name,
+                lang=config.primary_language,
+            )
+        rendered = render_agent_prompts_llm(config, resolved_templates, api_key)
+        for role in AGENT_ROLES:
+            files[f".mekong/agents/{role}.md"] = rendered[role]
+    else:
+        # Static template path (zero behavior change when no API key is set)
+        lang = config.primary_language
+        for role in AGENT_ROLES:
+            template = AGENT_PROMPTS[role]
+            content = template.format(company_name=config.company_name, lang=lang)
+            files[f".mekong/agents/{role}.md"] = content
 
     # File 11: company section for CLAUDE.md
     claude_section = (
@@ -284,7 +509,7 @@ def init_company(
     mcu_gate: MCUGate | None = None,
     tenant_id: str = "default",
 ) -> dict:
-    """Full init pipeline: validate → generate → write → seed MCU.
+    """Full init pipeline: validate -> generate -> write -> seed MCU.
 
     Returns summary dict with all created files and MCU status.
     """

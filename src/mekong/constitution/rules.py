@@ -13,7 +13,7 @@ Rule severities follow the P0/P1/P2 scheme from the Constitutional Sandbox plan:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable
 
 from src.mekong.constitution.parser import Constitution

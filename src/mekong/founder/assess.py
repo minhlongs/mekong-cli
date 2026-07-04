@@ -17,14 +17,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from src.mekong.founder.questions import (
-    BIAS_QUESTIONS,
-    FEAR_QUESTIONS,
-    RISK_DIMENSIONS,
-    RISK_QUESTIONS,
-    SCHWARTZ_VALUES,
-    TIPI_QUESTIONS,
-)
 from src.mekong.founder.scoring import (
     classify_risk_level,
     extract_biases,
