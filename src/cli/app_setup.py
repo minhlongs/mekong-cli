@@ -41,6 +41,21 @@ def build_app() -> typer.Typer:
     from src.cli.recipe_commands import register_recipe_commands
     from src.cli.system_commands import register_system_commands
 
+    # Phase-01: company-init CLI surface (mekong company init | reset | status)
+    from src.cli.commands.company_init import app as company_app
+
+    # Phase-03: particle init CLI surface (mekong particle init)
+    from src.cli.commands.particle_init import particle_app
+
+    # Phase-04: particle graph CLI surface (mekong particle graph)
+    from src.cli.commands.particle_graph import graph_app
+
+    # Phase-02: plan CLI surface (mekong plan from-init)
+    from src.cli.commands.plan import app as plan_app
+
+    # Phase-02: build CLI surface (mekong build from-plan)
+    from src.cli.commands.build import app as build_app
+
     # BMAD uses dash naming — not importable as standard package
     spec = importlib.util.spec_from_file_location(
         "bmad_commands", Path(__file__).parent / "bmad-commands.py"
@@ -79,6 +94,38 @@ def build_app() -> typer.Typer:
     register_workflow_commands(root)
     register_recipe_commands(root)
     register_system_commands(root)
+
+    root.add_typer(
+        company_app,
+        name="company",
+        help="Company / workspace configuration",
+    )
+
+    # Phase-02: plan and build sub-apps
+    root.add_typer(
+        plan_app,
+        name="plan",
+        help="Plan generation from company init",
+    )
+    root.add_typer(
+        build_app,
+        name="build",
+        help="Build task generation from spec",
+    )
+
+    # Phase-03: particle management
+    root.add_typer(
+        particle_app,
+        name="particle",
+        help="ZenOS particle lifecycle management",
+    )
+
+    # Phase-04: particle graph sub-app (mekong particle graph ...)
+    particle_app.add_typer(
+        graph_app,
+        name="graph",
+        help="Behavior graph — trust & collusion detection",
+    )
 
     # Phase-03 signals commands (metrics + offline evals)
     register_metrics(root)

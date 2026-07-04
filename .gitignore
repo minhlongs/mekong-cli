@@ -422,7 +422,7 @@ generated-sales-deck/
 sales-templates/
 sales/
 sops/
-constitution/
+/constitution/  # Root-only — mekong/constitution/ IS tracked (phase-5 zenos)
 design-assets/
 frontend/
 reports/
@@ -646,7 +646,8 @@ conftest.py
 # Private apps — ALL blocked by apps/ rule above (line 123)
 # Only apps/raas-gateway/ is whitelisted (line 124)
 mekong/daemon/
-mekong/hooks/
+# mekong/hooks/ removed below — committed to repo as canonical hook source
+# mekong/hooks/
 
 # Non-public packages (SaaS frontends, internal tooling)
 packages/raas-dashboard/
